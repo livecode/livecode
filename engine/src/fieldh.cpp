@@ -1013,15 +1013,17 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
-
-#ifdef _MACOSX
+        
+#if defined _MACOSX
+        
 		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
 		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
 		char t_derived_font_name[256];
 		if (macmatchfontname(t_font_name, t_derived_font_name))
 			t_font_name = t_derived_font_name;
-#endif
 		
+#endif
+        
         MCAutoStringRef t_font_name_ref;
         MCStringCreateWithCString(t_font_name, &t_font_name_ref);
         t_block -> SetTextFont(ctxt, *t_font_name_ref);

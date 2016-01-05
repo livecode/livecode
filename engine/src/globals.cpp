@@ -1122,6 +1122,11 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
         if (!t_success)
             return false;
     }
+    else
+    {
+        MCcommandname = MCValueRetain(kMCEmptyString);
+        MCcommandarguments = MCValueRetain(kMCEmptyArray);
+    }
     
     MCDeletedObjectsSetup();
 
@@ -1490,9 +1495,11 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
-    
+
+#ifdef MCSSL
     MCSocketsFinalize();
-    
+#endif /* MCSSL */
+
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
     MCAdFinalize();

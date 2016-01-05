@@ -5313,6 +5313,20 @@ void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas)
 
 //////////
 
+MC_DLLEXPORT_DEF
+void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	MCGRectangle t_bounds;
+	t_bounds = MCGContextGetClipBounds(t_canvas->context);
+	
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_bounds, r_bounds);
+}
+
+//////////
+
 void MCCanvasApplySolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint)
 {
 	__MCCanvasColorImpl *t_color;

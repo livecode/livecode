@@ -3901,6 +3901,8 @@ public foreign handler MCCanvasSetDashes(in pDashes as List, in pCanvas as Canva
 public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 
+public foreign handler MCCanvasGetClipBounds(in pCanvas as Canvas, out rBounds as Rectangle) returns nothing binds to "<builtin>"
+
 //////////
 
 /*
@@ -4214,6 +4216,33 @@ syntax CanvasPropertyDashPhase is prefix operator with property precedence
 begin
 	MCCanvasGetDashPhase(mCanvas, output)
 	MCCanvasSetDashPhase(input, mCanvas)
+end syntax
+
+//////////
+
+/*
+Summary:	The current clipping bounds of the canvas.
+
+mCanvas:	An expression which evaluates to a canvas.
+
+Description:	The clipping bounds of the canvas. Drawing operations on <mCanvas> will be confined to the clip region.
+
+Example:
+	// Set the canvas clip
+	clip to rectangle [50,50,100,100] on this canvas
+
+	// Fill rectangle path on canvas, covering only the current clip region.
+	variable tBounds as Rectangle
+	put the clipping bounds of this canvas into tBounds
+	fill rectangle path of tBounds on this canvas
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyClippingBounds is prefix operator with property precedence
+	"the" "clipping" "bounds" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetClipBounds(mCanvas, output)
 end syntax
 
 //////////

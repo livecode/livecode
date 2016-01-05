@@ -35,7 +35,8 @@ end if
 end TestMultimedia1
 on TestMultimedia2
 
-if the platform is not "linux" and the qtversion is not "0.0" then
+if the platform is not among the items of "linux,HTML5" and \
+      the qtversion is not "0.0" then
   TestAssert "test", the qteffects is not empty
 else
   TestAssert "test", the qteffects is empty

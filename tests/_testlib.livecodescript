@@ -16,9 +16,20 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+on revLoadLibrary
+	insert the script of me into back
+end revLoadLibrary
+
 ----------------------------------------------------------------
 -- Helper functions
 ----------------------------------------------------------------
+
+private function _TestValidateCount pCount
+   if pCount is not an integer or pCount <= 0 then
+      throw "Bad test count '" & pCount & "': must be positive integer"
+   end if
+   return pCount
+end _TestValidateCount
 
 private function _TestValidateDescription pDescription
    if the number of lines in pDescription > 1 then
@@ -100,6 +111,10 @@ end _TestWriteOutput
 -- Unit test library functions
 ----------------------------------------------------------------
 
+on TestPlan pCount
+   _TestWriteOutput "1.." & _TestValidateCount(pCount) & return
+end TestPlan
+
 on TestDiagnostic pMessage
    local tLine
    repeat for each line tLine in pMessage
@@ -157,16 +172,12 @@ on TestLoadExtension pName
       delete item -1 of tPath
    end repeat
    
-   TestDiagnostic tExtensionsFolder
-
    local tExtensionFolder
    if tExtensionsFolder is not empty then
       if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
         put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
       end if
    end if
-   
-    TestDiagnostic tExtensionFolder
    
    local tExtensionFile
    if tExtensionFolder is not empty then

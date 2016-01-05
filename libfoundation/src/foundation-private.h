@@ -624,6 +624,9 @@ __MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
 
 #define __MCAssertValueType(x,T) MCAssert(MCValueGetTypeCode(x) == kMCValueTypeCode##T)
 
+// A valid ValueRef must have references > 0 and flags != -1
+#define __MCAssertIsValue(x)    MCAssert(((__MCValue *)x) -> flags != UINT32_MAX && ((__MCValue *)x) -> references > 0);
+
 #define __MCAssertIsNumber(x)   __MCAssertValueType(x,Number)
 #define __MCAssertIsName(x)     __MCAssertValueType(x,Name)
 #define __MCAssertIsString(x)   __MCAssertValueType(x,String)

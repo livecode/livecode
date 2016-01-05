@@ -90,6 +90,12 @@ end testRtfExport
 // Tests
 ////////////////////////////////////////////////////////////////////////////////
 
+on TestSetup
+   if the platform is "HTML5" then
+      return "SKIP bug 16545"
+   end if
+end TestSetup
+
 // Test backgroundColour on its own
 on TestRtfExportWithBackgroundColour
    createField

@@ -123,7 +123,7 @@ component Uninstaller
 			register value "Version" as "[[VersionTag]]"
 			register value "UninstallString" as path "\q[[TargetFolder]]/.setup.exe\q uninstall"
 	if TargetPlatform is "Linux" then
-		place uninstaller at "[[TargetFolder]]/.setup.x86"
+		place uninstaller at "[[TargetFolder]]/setup.[[TargetArchitecture]]"
 	if TargetPlatform is "MacOSX" then
 		place uninstaller at "[[TargetFolder]]/LiveCode Setup.app"
 
@@ -357,10 +357,7 @@ component Documentation
 		file "ide:Documentation/rev/Shortcut Reference.rev"
 		file "ide:Documentation/rev/Supported Platforms Referen.rev"
 		file "ide:Documentation/rev/videos.rev"
-	into [[ToolsFolder]]/Documentation/guides place
-		file "ide:Documentation/guides/Extending LiveCode.md"
-		file "ide:Documentation/guides/LiveCode Script.md"
-		file "ide:Documentation/guides/LiveCode Builder Style Guide.md"
+
 	into [[ToolsFolder]]/Documentation/html_viewer place
 		file ide:Documentation/html_viewer/css/bootstrap.min.css as css/bootstrap.min.css
 		file ide:Documentation/html_viewer/css/codestyle.css as css/codestyle.css
@@ -537,7 +534,12 @@ component Documentation
 		// Temporary work-around
 		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
-		file ide::Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/api.sqlite
+		file ide:Documentation/html_viewer/resources/data/api/api.sqlite as resources/data/api/api.sqlite
+		
+	into [[ToolsFolder]]/Documentation place
+		rfolder "ide:Documentation/guides"
+		rfolder "repo:docs/guides"
+		
 component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser

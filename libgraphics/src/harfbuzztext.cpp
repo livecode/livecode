@@ -315,7 +315,7 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
             // TODO: This currently seems to return nil all the time.
             if (t_fallback != nil)
             {
-                MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . ascent, p_font . descent, p_font . ideal);
+                MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . m_ascent, p_font . m_descent, p_font . m_leading, p_font . ideal);
                 
                 MCGlyphRun *t_fallback_runs;
                 uindex_t t_fallback_run_count;

@@ -169,8 +169,6 @@ public:
 	coord_t getsubwidth(MCDC *dc, coord_t x, findex_t i, findex_t l);
 	coord_t getwidth(MCDC *dc, coord_t x);
 	void reset();
-	uint2 getascent(void);
-	uint2 getdescent(void);
     coord_t GetAscent() const;
     coord_t GetDescent() const;
     coord_t GetLeading() const;

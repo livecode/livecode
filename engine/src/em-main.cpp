@@ -162,8 +162,6 @@ platform_main(int argc, char *argv[], char *envp[])
 	while (X_main_loop_iteration());
 
 	/* ---------- Shutdown */
-	MCLog("Shutdown", nil);
-
 	int t_exit_code = X_close();
 
 	MCFinalize();

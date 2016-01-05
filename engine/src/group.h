@@ -55,7 +55,6 @@ class MCGroup : public MCControl
 	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCGroup();
-	MCGroup(const MCGroup &gref);
 	MCGroup(const MCGroup &gref, bool p_copy_ids);
 	// virtual functions from MCObject
 	virtual ~MCGroup();

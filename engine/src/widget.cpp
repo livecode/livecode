@@ -926,6 +926,11 @@ bool MCWidget::SetNativeView(void *p_view)
 			delete m_native_layer;
 		
 		m_native_layer = t_layer;
+		if (opened && m_native_layer != nil)
+		{
+			m_native_layer->OnOpen();
+			m_native_layer->OnAttach();
+		}
 	}
 	
 	return t_success;

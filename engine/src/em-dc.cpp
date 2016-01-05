@@ -280,6 +280,8 @@ MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, u
     
     switch (p_button_count)
     {
+		case 0:
+			// If no buttons specified, assume that an "OK" button is fine
         case 1:
             // Only one button - treat it as an "OK" button
             t_result = MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());

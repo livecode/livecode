@@ -74,7 +74,7 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          end repeat
          break
       case "Notes"
-         dispatch "releaseNotesBuilderRun" to stack builderNotesBuilderStack() with pEdition, tVersion
+         dispatch "releaseNotesBuilderRun" to stack builderNotesBuilderStack() with pEdition, tVersion, pType, builderOutputFolder()
          break
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
@@ -94,7 +94,37 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
    builderFinalize	
 end builderBuild
 
+-- Fetch the platform string for the platform on which the builder is
+-- currently running
+function builderPlatform
+   switch the platform
+      case "linux"
+         if the processor ends with "86" then
+            return "linux-x86"
+         end if
+         if the processor ends with "64" then
+            return "linux-x86_64"
+         end if
+         throw "Unknown Linux architecture:" && the processor
+      case "win32"
+         return "windows"
+      case "macos"
+         return "macosx"
+      case "iphone"
+         return "ios"
+      case "html5"
+         return "emscripten"
+      case "android"
+         return "android"
+      default
+         return the platform
+   end switch
+end builderPlatform
+
 command builderFetchEngine pVersion, pPlatform
+   if pPlatform is empty then
+      put builderPlatform() into pPlatform
+   end if
    if sEngineDir is not empty then
       switch pPlatform
          case "windows"

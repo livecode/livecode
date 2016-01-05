@@ -17,10 +17,9 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestFolderInListing
-   
-   
    set the defaultFolder to specialFolderPath("temporary")
    
+   local tTestFolder
    put "evalThereIsAFolderTest" into tTestFolder
    create folder tTestFolder
    
@@ -37,12 +36,14 @@ end TestFolderInListing
 
 on TestBugfix12039
    // 12039
+   local tOldCwd, tTestFile
    put the defaultFolder into tOldCwd
    set the defaultFolder to specialFolderPath("temporary")
    
    put "evalfilestest.txt" into tTestfile
    put "some text" into url ("binfile:" & tTestfile)
    TestAssert merge("[[tTestFile]] is amongs the files"), tTestfile is among the lines of the files
+   
    delete file tTestfile
    TestAssert merge("[[tTestFile]] is not amongst the files after deletion"), tTestfile is not among the lines of the files
    
@@ -69,8 +70,11 @@ on TestRegistryKeys
       TestAssert merge("Key [tTestKey]] has right value"), listRegistry(tTestKey) is ("Key1" & return & "Key2")
       TestAssert merge("Key [tTestKey]]Key1 has right value"), listRegistry(tTestKey & "Key1") is "Key1"
       TestAssert merge("Key [tTestKey]]Key2 has right value"), listRegistry(tTestKey & "Key2") is empty
+   else
+      testSkip
+      testSkip
+      testSkip
    end if
-   
 end TestRegistryKeys
 
 on TestShortFilePath
@@ -81,13 +85,13 @@ on TestShortFilePath
       	
       TestAssert "test", (the longfilepath of tShortFolder) is tFolder
       
-   else if the platform is "MacOS" then
+   else if the environment is not "mobile" then
       TestAssert "test", (the longfilepath of the defaultFolder) is (the defaultFolder)
-      
    else
-      // Doesn't run on other platforms
+      TestSkip
    end if
 end TestShortFilePath
+
 
 on TestFileCreationWithOpenForWrite
    set the defaultFolder to specialFolderPath("temporary")
@@ -100,12 +104,13 @@ on TestFileCreationWithOpenForWrite
    TestAssert "Open file for write creates the file", tFileName is among the lines of the openFiles
    
    close file tFileName
-   
 end TestFileCreationWithOpenForWrite
+
 
 on TestProcessID
    TestAssert "processID is an integer", the processId is an integer
 end TestProcessID
+
 
 on TestShortFilePath2
    if the platform is "win32" then
@@ -126,49 +131,126 @@ on TestShortFilePath2
             TestAssert "test", (tOffset <= 9) and (tLength - tOffset <= 3)
          end if
       end repeat
-      	
-      TestAssert "test", (the longfilepath of tShortFolder) is tLongFolder
-      
    else
-      TestAssert "test", (the shortfilepath of the defaultFolder) is (the defaultFolder)
+      TestSkip
    end if
 end TestShortFilePath2
 
-on TestSpecialFolderPath
-   local tFolder, tHome
-   put specialFolderPath("Temporary") into tFolder
-   TestAssert "temporary folder is not empty", tFolder is not empty
-   TestAssert "temporary folder exists", there is a folder tFolder
-   
-   // windows numeric folder codes
-   if the platform is "win32" then
-      put specialFolderPath("home") into tHome
-      
-      // user app data
-      put specialFolderPath("0x1a") into tFolder
-      TestAssert "user app data folder is not empty", tFolder is not empty
-      TestAssert "user app data folder exists", there is a folder tFolder
-      	
-      TestAssert "home folder is empty", tHome is not empty 
-      TestAssert "home folder is not user app data folder", tFolder is not tHome
-      TestAssert "user app data folder is in home folder", tFolder begins with tHome
+
+private command __testFolderExists pSkip, pFolder, pFolderType
+   local tMess
+   put merge("[[pFolderType]] folder exists") into tMess
+   if pSkip then
+      TestSkip tMess
+   else
+      TestAssert tMess, there is a folder pFolder
    end if
+end __testFolderExists
+
+private command __testSpecialFolder pSkip, pSpecialFolder, pFolderName
+   if pFolderName is empty then
+      put pSpecialFolder into pFolderName
+   end if
+   
+   __testFolderExists  pSkip, specialFolderPath(pSpecialFolder), pFolderName
+end __testSpecialFolder
+
+on TestSpecialFolderPath
+   exit TestSpecialFolderPath
+   local tEngine,tResources
+   local tSkip
+
+   put false into tSkip
+
+   put specialFolderPath("engine") into tEngine
+   __testFolderExists tSkip, tEngine, "engine"
+
+   local tFolder, tHome
+   
+   put specialFolderPath("resources") into tResources
+   if the platform is "macos" and the environment is "standalone" then
+      // Standalone on Mac have their non-executable resource in a specific folder
+      set the itemDelimiter to slash
+      TestAssert "Resources folder on standalone Mac app in is  Resources/_MacOS", item -2 to -1 of tResources is "Resources/_MacOS"
+   else if the environment is "mobile" then
+      testAssert "Resources and Engine specialfolderPaths are the same on mobile", tResources is tEngine
+   else
+      TestSkip "resources folder exists"
+   end if
+   
+   // Only Linux and HTML5 do not have a Document special folder
+   put the platform contains "linux" or the platform is "html5" into tSkip
+   __testSpecialFolder tSkip, "documents"
+   
+   // Only mobiles have Cache special folder
+   put the environment is not "mobile" into tSkip
+   __testSpecialFolder tSkip, "cache"
+   
+   put the platform is "android" into tSkip
+   __testSpecialFolder tSkip, "home"
+   __testSpecialFolder tSkip, "temporary"
+   
+   // Not all the platforms actually have a Desktop folder - such as servers
+   // so we only check that the path returned is not empty.
+   if the environment is "mobile" or the platform is "html5" then
+      TestSkip  "specialFolderPath(desktop) is not empty"
+   else
+      TestAssert "specialFolderPath(desktop) is not empty", specialFolderPath("desktop") is not empty
+   end if
+   
+   put the environment is "mobile" or the platform contains "linux" or the platform is "html5" into tSkip
+   __testSpecialFolder tSkip, "system"
+   __testSpecialFolder tSkip, "support"
+
+   put the environment is "mobile" or the platform contains "linux" into tSkip
+   __testSpecialFolder tSkip, "fonts"
+   
+   //////////////////////////////////////////////////////////////////////////////////////////
+   TestDiagnostic "Windows numeric folder codes"
+   put the platform is not "win32" into tSkip
+   __testSpecialFolder tSkip, "0x001a", "User app"
+   __testSpecialFolder tSkip, "0x0023", "All user app"
+   __testSpecialFolder tSkip, "0x000d", "My Music"
+   __testSpecialFolder tSkip, "0x00e", "My Videos"
+   __testSpecialFolder tSkip, "0x0027", "My Pictures"
+   __testSpecialFolder tSkip, "0x000a", "Recycle bin"
+   __testSpecialFolder tSkip, "start"
+   
+   
+   //////////////////////////////////////////////////////////////////////////////////////////
+   // Mac-specific
+   TestDiagnostic "Mac-specific special folders"
+   put the platform is not "macos" into tSkip
+   
+   // Preferences folder
+   __testSpecialFolder tSkip, "Preferences"
    
    // mac 4-letter codes
-   if the platform is "macos" then
-      put specialFolderPath("home") into tHome
-      
-      // user public folder
-      put specialFolderPath("pubb") into tFolder
-      TestAssert "user public folder is not empty", tFolder is not empty
-      TestAssert "user public folder  exists", there is a folder tFolder
-      	
-      	
-      TestAssert "home folder is empty", tHome is not empty 
-      TestAssert "home folder is not user public folder", tFolder is not tHome
-      TestAssert "user public folder is in home folder", tFolder begins with tHome
-   end if
+   __testSpecialFolder tSkip, "desk", "Desktop"
+   __testSpecialFolder tSkip, "trsh", "Trash"
+   __testSpecialFolder tSkip, "empt", "Empty trash"
+   __testSpecialFolder tSkip, "font", "font"
+   __testSpecialFolder tSkip, "pref", "preferences"
+   __testSpecialFolder tSkip, "sprf", "PreferencePanes"
+   __testSpecialFolder tSkip, "temp", "Temporary files"
+   __testSpecialFolder tSkip, "vtmp", "Temporary cachedf files"
+   __testSpecialFolder tSkip, "apps", "Applications"
+   __testSpecialFolder tSkip, "root", "Root"
+   __testSpecialFolder tSkip, "dtop", "System top level"
+   __testSpecialFolder tSkip, "dlib", "Library"
+   __testSpecialFolder tSkip, "usrs", "Users"
+   __testSpecialFolder tSkip, "cusr", "Current user"
+   __testSpecialFolder tSkip, "sdat", "Shared"
    
+   __testSpecialFolder tSkip, "docs", "User docs"
+   __testSpecialFolder tSkip, "pdoc", "User pictures"
+   __testSpecialFolder tSkip, "mdoc", "User movies"
+   __testSpecialFolder tSkip, "pubb", "User public"
+   
+   ////////////////////////////////////////////////////////////////////////////////
+   // iOS-specific
+   put the platform is not "ios" into tSkip
+   __testSpecialFolder tSkip, "library"
 end TestSpecialFolderPath
 
 
@@ -185,7 +267,8 @@ end TestTempName
 on TestThereIsAFile
    set the defaultFolder to specialFolderPath("temporary")
    
-   put "evalThereIsAFileTest.txt" into tTestfile
+   local tTestFile
+   put "evalThereIsAFileTest.txt" into tTestFile
    put "some text" into url ("binfile:" & tTestfile)
    
    TestAssert merge("after creation - there is a file [[tTestFile]]"), there is a file tTestFile
@@ -201,6 +284,7 @@ end TestThereIsAFile
 on TestThereIsAFolder
    set the defaultFolder to specialFolderPath("temporary")
    
+   local tTestFolder
    put "evalThereIsAFolderTest" into tTestFolder
    create folder tTestFolder
    
@@ -240,8 +324,7 @@ on TestDeleteFile
    
    delete file tFileName
    
-   TestAssert "Delete file", there is not a file "Test.tmp"
-   
+   TestAssert "Delete file", there is not a file tFileName
 end TestDeleteFile
 
 
@@ -274,11 +357,20 @@ on TestLaunch
       local tPID
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)
+   else if the platform is "HTML5" then
+      TestSkip "launch subprocess", "HTML5 platform does not support subprocesses"
+   else
+      testSkip
    end if	
 end TestLaunch
 
 
 on TestLaunchWith
+   if the platform is "HTML5" then
+      TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
+      exit TestLaunchWith
+   end if
+
    set the defaultFolder to specialFolderPath("Desktop")
    
    open file "Test.txt" for write
@@ -311,59 +403,68 @@ on TestLaunchWith
       local tPID
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)	
-      
+   else
+      testSkip
    end if	
 end TestLaunchWith
 
 
 on TestWriteInCacheFolder
    if the platform is not "Android" and the platform is not "iphone" then 
-      exit TestWriteInCacheFolder
+      testSkip
+   else
+      set the defaultFolder to specialFolderPath("cache")
+      
+      open file "Test.tmp" for write
+      close file "Test.tmp"
+      
+      TestAssert "file created", there is a file "Test.tmp"
+      
+      delete file "Test.tmp"
    end if
-   set the defaultFolder to specialFolderPath("cache")
-   open file "Test.tmp" for write
-   
-   close file "Test.tmp"
-   
-   TestAssert "file created", there is a file "Test.tmp"
-   
-   delete file "Test.tmp"
 end TestWriteInCacheFolder
 
 
 on TestReadFromProcess
-   local tOutput
+   local tOutput, tProcess
    
-   if the platform is "Win32" then	
-      put shell("tasklist /V") into taskList
+   if the platform is "Win32" then      
+      put "cmd.exe" into tProcess
+      open process tProcess for text update
       
-      if taskList contains "cmd.exe" then
-         get shell("taskkill /IM notepad.exe")
-      end if
+      write "echo foo" & CR to process tProcess
       
-      open process "cmd.exe" for text update
+      read from process tProcess until "echo foo"
       
-      write "echo foo" & CR to process "cmd.exe"
+      read from process tProcess for 1 line
       
-      read from process "cmd.exe" until "echo foo"
-      
-      read from process "cmd.exe" for 1 line
-      
-      read from process "cmd.exe" for 1 line
+      read from process tProcess for 1 line
       
       put char 1 to 3 of it into tOutput
       
-      TestAssert "test", tOutput is "foo"
+      TestAssert "Reading from process", tOutput is "foo"
       
-      close process "cmd.exe"
+      close process tProcess
+   else if the platform is "macos" or the platform contains "linux" then
+      put "/bin/sh" into tProcess
+      
+      open process tProcess for update
+      
+      write "echo " & quote & "foo" & quote & LF to process tProcess
+      
+      read from process tProcess for  1 line
+      put char 1 to 3 of  it into tOutput
+      
+      TestAssert "Reading from process", tOutput is "foo"
+      
+      close process tProcess
+   else
+      testSkip
    end if
-   
 end TestReadFromProcess
 
 
 on TestRenameFile
-   
-   
    if the platform is "Android" or the platform is "iphone" then set the defaultFolder to specialFolderPath("cache")
    
    open file "Test.tmp" for write
@@ -375,8 +476,8 @@ on TestRenameFile
    TestAssert "File renamed", there is a file "Test2.tmp" and there is not a file "Test.tmp"
    
    delete file "Test2.tmp"
-   
 end TestRenameFile
+
 
 on TestFoldersFirstLine
    // ".." must be the first folder listed
@@ -389,12 +490,13 @@ end TestFoldersFirstLine
 on TestFoldersInEmptyFolder
    // Bug 16223: if no folder is listed by 'the folders', there should still
    // be ".." at the head of the list
-   local tFolders, tNewFolder
+   local tFolders, tNewFolder, tOldCwd
    
    // Create a new, empty folder
-   put the tempName into tNewFolder
+   put "files__TestFoldersInEmptyFolder" into tNewFolder
    create folder tNewFolder
    
+   put the defaultFolder into tOldCwd
    set the defaultFolder to tNewFolder
    
    put the folders into tFolders
@@ -402,5 +504,5 @@ on TestFoldersInEmptyFolder
    TestAssert "'..' is the only folder in an empty folder", the folders is ".."
    
    delete folder tNewFolder
-   
+   set the defaultFolder to tOldCwd
 end TestFoldersInEmptyFolder
