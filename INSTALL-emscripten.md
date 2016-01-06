@@ -16,7 +16,7 @@ You will need a 64-bit Linux machine or VM with at least 4 GB of RAM
 Unsurprisingly, the Emscripten SDK must be installed in order to build
 an Emscripten engine.
 
-1. Download the portable Emscripten SDK from <https://kripken.github.io/emscripten/site>.  Put it in `/opt/emsdk_portable`, for example.
+1. Download the portable Emscripten SDK from <https://kripken.github.io/emscripten-site>.  Put it in `/opt/emsdk_portable`, for example.
 
 2. Check what SDKs are available by running:
 
