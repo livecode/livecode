@@ -10,7 +10,7 @@ Summary: <return|Returns> the version number of the operating system.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,windows,linux,ios,android,html5
 
 Platforms: desktop,server,web,mobile
 
@@ -51,5 +51,7 @@ On Android the <systemVersion> will return the Android OS version number. For ex
 Android 2.3.1 installed, this property will return 2.3.1.
 
 >*Note:* When running a Mac OS application in the Classic box on an OS X system, the <systemVersion> function returns the version number of the Classic system folder.
+
+On HTML5 the <systemVersion> is empty.
 
 References: string (keyword), function (control_st), environment (function), buildNumber (function), libURLVersion (function), QTVersion (function), return (glossary)
