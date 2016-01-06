@@ -848,19 +848,26 @@ private function ExtensionsGetSectionName pExtPath
 end ExtensionsGetSectionName
 
 private function ExtensionsGetName pExtPath
-   -- Compute the path to the installed widget data
+   -- Horrible-ish hack for extracting the "real" name of the LiveCode
+   -- module.  See also tools/build-extensions.sh.
    local tShortName
    set the itemdelimiter to slash
    put item -1 of pExtPath into tShortName
-   
-   local tBuiltPath
-   put FileGetPath("built-extensions") into tBuiltPath
-   put "/com.livecode.extensions.livecode." after tBuiltPath
-   put tShortName after tBuiltPath
-   
-   -- ...and the path of the manifest file
+
+   local tLcbSource, tLine, tModuleName
+   put FileGetUTF8Contents(merge("[[pExtPath]]/[[tShortName]].lcb")) into tLcbSource
+   repeat for each line tLine in tLcbSource
+      get matchText(tLine, "(?i)^\s*(?:module|widget|library)\s+([\w.]*)", tModuleName)
+      if tModuleName is not empty then
+         exit repeat
+      end if
+   end repeat
+
+   -- Try to figure out the path for the compiled manifest file
    local tManifestFile
-   put tBuiltPath & "/manifest.xml" into tManifestFile
+   put FileGetPath("built-extensions") into tManifestFile
+   put slash & tModuleName after tManifestFile
+   put slash & "manifest.xml" after tManifestFile
    
    local tManifest, tXmlId
    put FileGetContents(tManifestFile) into tManifest
