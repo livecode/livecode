@@ -105,7 +105,7 @@ widget com.livecode.widget.lineGraph
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in LiveCode

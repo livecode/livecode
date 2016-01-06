@@ -25,7 +25,7 @@ widget com.livecode.widget.colorSwatch
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 
 --
 
