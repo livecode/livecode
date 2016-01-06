@@ -96,11 +96,74 @@ static inline bool
 __MCNativeChar_CheckedFold(char_t p_char,
                            char_t& r_folded_char)
 {
+	/* These bit-tables can be automatically generated from the tables
+	 in __MCNativeChar__Fold() and __MCNativeChar_Uppercase() using a
+	 script like:
+
+	 function MakeCheckMap pLowerMap, pUpperMap
+	    local tResult, tRow, tBit, tChar, tBitMap
+	    put empty into tResult
+	    repeat with tRow = 1 to 8
+	       put 0 into tBitMap
+	       repeat with tBit = 1 to 32
+	          put (tRow - 1) * 32 + tBit into tChar
+
+	          if (item tChar of pLowerMap) is not \
+	                (item tChar of pUpperMap) then
+	             add 1 * (2 ^ (tBit - 1)) to tBitMap
+	          end if
+	       end repeat
+	       put baseConvert(tBitMap, 10, 16) into tBitMap
+	       repeat while the number of chars in tBitMap < 8
+	          put "0" before tBitMap
+	       end repeat
+	       put "0x" & tBitMap & "U" after tResult
+	       put comma & return after tResult
+	    end repeat
+	    return tResult
+	 end MakeCheckMap
+	*/
+	uint8_t t_hi = p_char >> 5;
+	uint8_t t_lo = p_char & 0x1F;
+#if defined(__WINDOWS_1252__) || defined(__ISO_8859_1__)
+	static const uint32_t kMCStringCheckFoldWindows1252_Mapping[8] =
+		{
+			0x00000000U,
+			0x00000000U,
+			0x07FFFFFEU,
+			0x07FFFFFEU,
+			0xD4005400U,
+			0x00000000U,
+			0x7F7FFFFFU,
+			0xFF7FFFFFU,
+		};
+	if (!(kMCStringCheckFoldWindows1252_Mapping[t_hi] & (1 << t_lo)))
+	{
+		r_folded_char = p_char;
+		return false;
+	}
+#elif defined(__MACROMAN__)
+	static const uint32_t kMCStringCheckFoldMacRoman_Mapping[8] =
+		{
+			0x00000000U,
+			0x00000000U,
+			0x07FFFFFEU,
+			0x07FFFFFEU,
+			0xFFFFFFFFU,
+			0xC000C000U,
+			0x0300F800U,
+			0x003EFFE0U,
+		};
+	if (!(kMCStringCheckFoldMacRoman_Mapping[t_hi] & (1 << t_lo)))
+	{
+		r_folded_char = p_char;
+		return false;
+	}
+#else
+	#error Unknown native encoding
+#endif
     r_folded_char = __MCNativeChar_Fold(p_char);
-    
-    // TODO: This can be improved in the future to be more 'accurate' - there
-    //   are uncased chars further up in the native encodings.
-    return p_char >= 0x40;
+    return true;
 }
 
 // Fold 'length' characters in 'chars', placing them into 'out_chars'.
