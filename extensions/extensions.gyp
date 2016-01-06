@@ -25,7 +25,6 @@
 				'libraries/json/json.lcb',
 
 				'widgets/browser/browser.lcb',
-				#'widgets/button-popup/button-popup.lcb',
 				#’widgets/chart/chart.lcb',
 				'widgets/checkbox/checkbox.lcb',
 				'widgets/clock/clock.lcb',
@@ -41,7 +40,6 @@
 				'widgets/pushbutton/pushbutton.lcb',
 				'widgets/radiobutton/radiobutton.lcb',
 				'widgets/segmented/segmented.lcb',
-				#'widgets/segmented-popup/segmented-popup.lcb',
 				'widgets/selector/selector.lcb',
 				'widgets/svgpath/svgpath.lcb',
 				'widgets/switchbutton/switchbutton.lcb',
