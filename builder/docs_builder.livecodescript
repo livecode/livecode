@@ -2065,9 +2065,10 @@ command docsBuilderGenerateDistributedGuide
             get textDecode(it, "utf-8")
             replace "[toc]" with empty in it
             put tab & "{" & CR after tGuideData
-            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
-            put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
-            put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
+            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
+            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
+            put tab & escape("location") & ":" & escape("ide") & comma & return after tGuideData
+            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
          end if
       end repeat
    end repeat
