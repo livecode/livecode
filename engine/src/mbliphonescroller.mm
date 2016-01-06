@@ -45,7 +45,7 @@ extern UIView *MCIPhoneGetView(void);
 
 class MCiOSScrollerControl;
 
-@interface MCiOSScrollViewDelegate : NSObject <UIScrollViewDelegate>
+@interface com_runrev_livecode_MCiOSScrollViewDelegate : NSObject <UIScrollViewDelegate>
 {
 	MCiOSScrollerControl *m_instance;
 }
@@ -53,7 +53,7 @@ class MCiOSScrollerControl;
 - (id)initWithInstance:(MCiOSScrollerControl *)instance;
 @end
 
-@interface MCNativeViewEventForwarder : UIView
+@interface com_runrev_livecode_MCNativeViewEventForwarder : UIView
 {
 	UIView *m_target;
 	
@@ -146,8 +146,8 @@ protected:
 	virtual ~MCiOSScrollerControl(void);
 	
 private:
-	MCiOSScrollViewDelegate *m_delegate;
-	MCNativeViewEventForwarder *m_forwarder;
+	com_runrev_livecode_MCiOSScrollViewDelegate *m_delegate;
+	com_runrev_livecode_MCNativeViewEventForwarder *m_forwarder;
 	MCRectangle32 m_content_rect;
 };
 
@@ -1198,9 +1198,9 @@ UIView *MCiOSScrollerControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCiOSScrollViewDelegate alloc] initWithInstance: this];
+	m_delegate = [[com_runrev_livecode_MCiOSScrollViewDelegate alloc] initWithInstance: this];
 	[t_view setDelegate: m_delegate];
-	m_forwarder = [[MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
+	m_forwarder = [[com_runrev_livecode_MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
 	[t_view addSubview: m_forwarder];
 	
 	if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
@@ -1310,7 +1310,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCiOSScrollViewDelegate
+@implementation com_runrev_livecode_MCiOSScrollViewDelegate
 
 - (id)initWithInstance:(MCiOSScrollerControl*)instance
 {
@@ -1385,7 +1385,7 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCNativeViewEventForwarder
+@implementation com_runrev_livecode_MCNativeViewEventForwarder
 
 - (id) initWithFrame: (CGRect)withFrame
 {

@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 UIView *MCIPhoneGetView(void);
 
-@interface BusyIndicator : NSObject <UIApplicationDelegate, UIActionSheetDelegate>
+@interface com_runrev_livecode_MCBusyIndicator : NSObject <UIApplicationDelegate, UIActionSheetDelegate>
 {
     UIView* m_indicator_view;
     UIView* m_view;
@@ -46,9 +46,9 @@ UIView *MCIPhoneGetView(void);
  }
 @end
 
-static BusyIndicator *s_busy_indicator = nil;
+static com_runrev_livecode_MCBusyIndicator *s_busy_indicator = nil;
 
-@implementation BusyIndicator
+@implementation com_runrev_livecode_MCBusyIndicator
 
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 - (void) showBusy: (NSString*) p_title withOpacity: (int32_t) p_opacity
@@ -179,7 +179,7 @@ bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int
                 [s_busy_indicator hideBusy];
                 [s_busy_indicator release];
             }
-            s_busy_indicator = [[BusyIndicator alloc] init];
+            s_busy_indicator = [[com_runrev_livecode_MCBusyIndicator alloc] init];
             if (p_label == nil)
                 [s_busy_indicator showBusy:@"" withOpacity:p_opacity];
             else
