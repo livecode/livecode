@@ -523,7 +523,7 @@ Boolean MCPlayer::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCPlayer::setrect(const MCRectangle &nrect)
+void MCPlayer::doSetRect(const MCRectangle &nrect)
 {
 #ifdef FEATURE_QUICKTIME
 	if (usingQT())
