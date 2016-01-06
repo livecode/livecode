@@ -394,7 +394,7 @@ Press enter to execute the commands.
 
 The resulting print out will look like the figure below.
 
-![Printing 9 label-sized cards with default settings](images/printing-label_sized_cards.png)
+![Printing 9 label-sized cards with default settings](images/printing-label_sized_cards_default.png)
 
 If we modify the print commands to include an additional line to turn
 off the printRowsFirst:
@@ -548,7 +548,7 @@ To print these onto a single sheet:
 	close`printing
 
 
-![Result of layout printing command with multiple stacks](images/printing-layout_mulitple_stacks.png)
+![Result of layout printing command with multiple stacks](images/printing-layout_multiple_stacks.png)
 
 ### Printing a complex layout
 
@@ -577,7 +577,7 @@ to the stack (see the figure below). The footer 1 graphic is set to scale
 the right edge and position the bottom edge. And footer 2 is set to
 position both the right and bottom.
 
-![](images/printing-example_geometry_property1.png)![Example geometry properties for print layout stack](images/printing-example_geometry_property2.png)
+![Example geometry properties for print layout stack](images/printing-example_geometry_property1.png)![Example geometry properties for print layout stack](images/printing-example_geometry_property2.png)
 
 To make the printing template stack take on the size of the paper, we
 can add the following handler to the stack script:
