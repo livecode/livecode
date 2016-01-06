@@ -788,64 +788,83 @@ static size_t __MCNativeOp_Scan(const char_t *p_haystack_chars,
                                 MCStringOptions p_options,
                                 size_t *r_offset)
 {
-    if (p_needle_length > p_haystack_length)
-        return 0;
-    
-    if (p_needle_length == 1)
-    {
-        if (__MCNativeOp_IsFolded(p_options))
-        {
-            char_t t_folded_needle_char;
-            if (__MCNativeChar_CheckedFold(p_needle_chars[0], t_folded_needle_char))
-                return Actions<__MCNativeChar_Equal_Prefolded>::CharScan
-                                    (p_haystack_chars,
-                                     p_haystack_length,
-                                     t_folded_needle_char,
-                                     p_max_count,
-                                     r_offset);
-        }
-        
-        return Actions<__MCNativeChar_Equal_Unfolded>::CharScan
-                            (p_haystack_chars,
-                             p_haystack_length,
-                             p_needle_chars[0],
-                             p_max_count,
-                             r_offset);
-    }
-    
-    if (__MCNativeOp_IsFolded(p_options))
-    {
-        if (p_needle_length < __NATIVEOP_PREFOLD_LIMIT)
-        {
-            char_t t_folded_needle[__NATIVEOP_PREFOLD_LIMIT];
-            if (__MCNativeStr_CheckedFold(p_needle_chars, p_needle_length, t_folded_needle))
-                return Actions<__MCNativeChar_Equal_Prefolded>::Scan
-                            (p_haystack_chars,
-                             p_haystack_length,
-                             t_folded_needle,
-                             p_needle_length,
-                             p_max_count,
-                             r_offset);
-        }
-        else
-        {
-            return Actions<__MCNativeChar_Equal_Folded>::Scan
-                        (p_haystack_chars,
-                         p_haystack_length,
-                         p_needle_chars,
-                         p_needle_length,
-                         p_max_count,
-                         r_offset);
-        }
-    }
-    
-    return Actions<__MCNativeChar_Equal_Unfolded>::Scan
-                (p_haystack_chars,
-                 p_haystack_length,
-                 p_needle_chars,
-                 p_needle_length,
-                 p_max_count,
-                 r_offset);
+	char_t t_folded_needle_char;
+	char_t t_folded_needle[__NATIVEOP_PREFOLD_LIMIT];
+
+	if (p_needle_length > p_haystack_length)
+		return 0;
+
+	if (!__MCNativeOp_IsFolded(p_options))
+	{
+		if (p_needle_length == 1)
+		{
+			goto unfolded_char;
+		}
+		else
+		{
+			goto unfolded;
+		}
+	}
+	else
+	{
+		if (p_needle_length == 1)
+		{
+			if (__MCNativeChar_CheckedFold(p_needle_chars[0], t_folded_needle_char))
+				goto prefolded_char;
+			else
+				goto unfolded_char;
+		}
+		else if (p_needle_length < __NATIVEOP_PREFOLD_LIMIT)
+		{
+			if (__MCNativeStr_CheckedFold(p_needle_chars, p_needle_length, t_folded_needle))
+				goto prefolded;
+			else
+				goto unfolded;
+		}
+		else
+		{
+			goto folded;
+		}
+	}
+
+ unfolded_char:
+	return Actions<__MCNativeChar_Equal_Unfolded>::CharScan
+		(p_haystack_chars,
+		 p_haystack_length,
+		 p_needle_chars[0],
+		 p_max_count,
+		 r_offset);
+ unfolded:
+	return Actions<__MCNativeChar_Equal_Unfolded>::Scan
+		(p_haystack_chars,
+		 p_haystack_length,
+		 p_needle_chars,
+		 p_needle_length,
+		 p_max_count,
+		 r_offset);
+ prefolded_char:
+	return Actions<__MCNativeChar_Equal_Prefolded>::CharScan
+		(p_haystack_chars,
+		 p_haystack_length,
+		 t_folded_needle_char,
+		 p_max_count,
+		 r_offset);
+ prefolded:
+	return Actions<__MCNativeChar_Equal_Prefolded>::Scan
+		(p_haystack_chars,
+		 p_haystack_length,
+		 t_folded_needle,
+		 p_needle_length,
+		 p_max_count,
+		 r_offset);
+ folded:
+	return Actions<__MCNativeChar_Equal_Folded>::Scan
+		(p_haystack_chars,
+		 p_haystack_length,
+		 p_needle_chars,
+		 p_needle_length,
+		 p_max_count,
+		 r_offset);
 }
 
 #define __MCNativeOp_ForwardScan __MCNativeOp_Scan<__MCNativeStr_Forward>
