@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
 #include "libscript/script.h"
 #include "script-private.h"
@@ -64,6 +65,7 @@ struct MCScriptModuleBuilder
     uindex_t current_line;
     
     MCProperListRef current_list_value;
+	MCArrayRef current_array_value;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +127,7 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     self -> current_line = 0;
     
     self -> current_list_value = nil;
+    self -> current_array_value = nil;
     
     r_builder = self;
 }
@@ -164,6 +167,7 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
     MCMemoryDeleteArray(self -> operands);
     
     MCValueRelease(self -> current_list_value);
+    MCValueRelease(self -> current_array_value);
     
     MCMemoryDelete(self);
 
@@ -323,6 +327,49 @@ void MCScriptEndListValueInModule(MCScriptModuleBuilderRef self, uindex_t& r_ind
     
     MCValueRelease(self -> current_list_value);
     self -> current_list_value = nil;
+}
+
+void MCScriptBeginArrayValueInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    if (self -> current_array_value != nil ||
+        !MCArrayCreateMutable(self -> current_array_value))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptContinueArrayValueInModule(MCScriptModuleBuilderRef self,
+                                        uindex_t p_key_idx,
+                                        uindex_t p_value_idx)
+{
+	MCNewAutoNameRef t_key;
+
+    if (self == nil || !self -> valid)
+        return;
+
+    if (self -> current_array_value == nil ||
+        !MCNameCreate(reinterpret_cast<MCStringRef>(self->module.values[p_key_idx]), &t_key) ||
+        !MCArrayStoreValue(self -> current_array_value, false,
+                           *t_key, self -> module . values[p_value_idx]))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptEndArrayValueInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    MCScriptAddValueToModule(self, self -> current_array_value, r_index);
+
+    MCValueRelease(self -> current_array_value);
+    self -> current_array_value = nil;
 }
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
@@ -1391,6 +1438,31 @@ void MCScriptEmitEndAssignListInModule(MCScriptModuleBuilderRef self)
     if (self == nil || !self -> valid)
         return;
     
+    __end_instruction(self);
+}
+
+void MCScriptEmitBeginAssignArrayInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    __begin_instruction(self, kMCScriptBytecodeOpAssignArray);
+    __continue_instruction(self, p_reg);
+}
+
+void MCScriptEmitContinueAssignArrayInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    __continue_instruction(self, p_reg);
+}
+
+void MCScriptEmitEndAssignArrayInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+
     __end_instruction(self);
 }
 
