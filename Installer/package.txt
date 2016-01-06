@@ -339,8 +339,6 @@ component Resources
 
 component Documentation
 	into [[ToolsFolder]]/Documentation place
-		file "ide:Documentation/glos.rsindex"
-		file "ide:Documentation/GlossaryQuickRef"
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "ide:Documentation/pdf/user_guide.pdf" as "LiveCode User Guide.pdf"
