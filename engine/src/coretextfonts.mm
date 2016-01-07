@@ -111,9 +111,9 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
     // On OSX, use the special "system" and "user" fonts where requested. OSX
     // doesn't actually let you get the display-optimised fonts by name (in
     // particular, the optimised Helvetica Neue and San Fransisco fonts).
-    if (MCStringIsEqualToCString(p_name, "System", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - System", kMCStringOptionCompareCaseless))
         return coretext_font_create_system(p_size);
-    if (MCStringIsEqualToCString(p_name, "User", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - User", kMCStringOptionCompareCaseless))
         return coretext_font_create_user(p_size);
 #endif
     

@@ -1684,12 +1684,12 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 	return fonts->getfont(fname, size, style, printer);
 }
 
-MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
+MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef p_name)
 {
 #if defined(_MACOSX) || defined (_MAC_SERVER)
     if (fonts == nil)
         fonts = new MCFontlist;
-    return fonts->getfontbyhandle(p_handle);
+    return fonts->getfontbyhandle(p_handle, p_name);
 #else
     return NULL;
 #endif

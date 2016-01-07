@@ -282,6 +282,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     static MCFontRef s_system_font_13;
     
     MCFontRef* t_which_fontref = nil;
+    MCNameRef t_font_name;
     
     NSFont* t_font = nil;
     switch (p_type)
@@ -290,12 +291,14 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
             t_which_fontref = t_font_size == 11 ? &s_user_font_11 : &s_user_font_13;
             if (*t_which_fontref == nil)
                 t_font = [[NSFont userFontOfSize: t_font_size] retain];
+            t_font_name = MCNAME("Aqua UI Font - User");
             break;
             
         default:
             t_which_fontref = t_font_size == 11 ? &s_system_font_11 : &s_system_font_13;
             if (*t_which_fontref == nil)
                 t_font = [[NSFont systemFontOfSize: t_font_size] retain];
+            t_font_name = MCNAME("Aqua UI Font - System");
             break;
     }
     
@@ -305,7 +308,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     if (*t_which_fontref == nil)
     {
         // Create the in-engine font representation
-        MCFontCreateWithHandle((MCSysFontHandle)t_font, *t_which_fontref);
+        MCFontCreateWithHandle((MCSysFontHandle)t_font, t_font_name, *t_which_fontref);
     }
 
     r_font = MCFontRetain(*t_which_fontref);

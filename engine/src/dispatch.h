@@ -178,7 +178,7 @@ public:
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
 	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
-    MCFontStruct *loadfontwithhandle(MCSysFontHandle);
+    MCFontStruct *loadfontwithhandle(MCSysFontHandle, MCNameRef p_name);
 	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
