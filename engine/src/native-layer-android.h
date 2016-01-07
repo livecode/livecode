@@ -26,17 +26,14 @@ public:
     
 	virtual bool GetCanRenderToContext();
 
-    MCNativeLayerAndroid(MCWidgetRef p_widget, jobject p_view);
+    MCNativeLayerAndroid(MCObject *p_object, jobject p_view);
     ~MCNativeLayerAndroid();
     
 	virtual bool GetNativeView(void *&r_view);
 
 private:
     
-    // Wrapper class for android.view.View
-    class AndroidView;
-    
-    AndroidView *m_view;
+    jobject m_view;
     
     // Returns the NSWindow* for the stack containing this widget
     //NSWindow* getStackWindow();
@@ -54,6 +51,8 @@ private:
     
     // Show/hide operations
     void addToMainView();
+	
+	bool getParentView(jobject &r_view);
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_ANDROID__
