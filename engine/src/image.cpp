@@ -2215,7 +2215,7 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 
 // MW-2012-03-28: [[ Bug 10130 ]] This is a no-op as the image object has no
 //   font.
-bool MCImage::recomputefonts(MCFontRef p_parent_font)
+bool MCImage::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	return false;
 }

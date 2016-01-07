@@ -2907,11 +2907,11 @@ void MCField::textchanged(void)
 
 // MW-2012-02-14: [[ FontRefs ]] Update the field's fontref and all its blocks
 //   based on having the given parent fontref.
-bool MCField::recomputefonts(MCFontRef p_parent_font)
+bool MCField::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// First update our font ref (if opened etc.), doing nothing further if it
 	// hasn't changed.
-	if (!MCObject::recomputefonts(p_parent_font))
+	if (!MCObject::recomputefonts(p_parent_font, p_force))
 		return false;
 
 	// Now loop through all paragraphs, keeping track if anything changed so

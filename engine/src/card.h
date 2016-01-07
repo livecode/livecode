@@ -101,7 +101,7 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// MW-2012-06-08: [[ Relayer ]] Move a control to before target.
 	virtual void relayercontrol(MCControl *p_source, MCControl *p_target);

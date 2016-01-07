@@ -4763,14 +4763,14 @@ void MCObject::unmapfont(void)
 
 // MW-2012-02-14: [[ FontRefs ]] New method which updates the object's concrete font
 //   when a text property, or inherited text property changes.
-bool MCObject::recomputefonts(MCFontRef p_parent_font)
+bool MCObject::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// MW-2012-02-19: [[ SplitTextAttrs ]] If the object has no font attrs, then just
 	//   inherit.
 	if (!hasfontattrs())
 	{
 		if (p_parent_font == m_font)
-			return false;
+			return p_force;
 
 		MCFontRelease(m_font);
 		m_font = MCFontRetain(p_parent_font);
@@ -4779,7 +4779,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 	}
 
 	MCFontRef t_current_font;
-	t_current_font = MCFontRetain(m_font);
+    t_current_font = m_font ? MCFontRetain(m_font) : nil;
 	
 	unmapfont();
 	mapfont();
