@@ -1229,7 +1229,7 @@ enum
     
     kMCPlatformControlStateCompatibility    = (1<<31),   // Use backwards-compatible theming
     
-    kMCPlatformControlStateNormal           = kMCPlatformControlStateCompatibility
+    kMCPlatformControlStateNormal           = 0
 };
 
 enum MCPlatformControlPart

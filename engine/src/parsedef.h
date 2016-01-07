@@ -1719,6 +1719,8 @@ enum Properties {
     P_FULL_CLIPBOARD_DATA,
     P_FULL_DRAGBOARD_DATA,
     
+    P_THEME,
+    
     __P_LAST,
 };
 

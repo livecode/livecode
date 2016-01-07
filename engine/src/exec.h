@@ -3468,6 +3468,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceTextStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo;
 
 ///////////
 

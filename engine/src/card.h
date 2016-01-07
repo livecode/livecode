@@ -335,7 +335,7 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
-	
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t p_theme);
 };
 
 #endif

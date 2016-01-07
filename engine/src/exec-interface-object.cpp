@@ -1199,6 +1199,22 @@ MCExecEnumTypeInfo _kMCInterfaceListStyleTypeInfo =
 	_kMCInterfaceListStyleElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeElementInfo[] =
+{
+    { "", kMCInterfaceThemeEmpty, false },
+    { "native", kMCInterfaceThemeNative, false },
+    { "legacy", kMCInterfaceThemeLegacy, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeTypeInfo =
+{
+    "Interface.Theme",
+    sizeof (_kMCInterfaceThemeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1209,6 +1225,7 @@ MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInf
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4292,4 +4309,33 @@ void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, ui
 	}
     
     t_names . Take(r_names, r_count);
+}
+
+void MCObject::GetTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme;
+}
+
+void MCObject::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme = MCInterfaceTheme(p_theme);
+    
+    // Changing the theme probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = gettheme();
+    
+    if (parent)
+        parent->GetEffectiveTheme(ctxt, r_theme);
+    else
+    {
+        // Default to the native theme if none has been set at any level
+        r_theme = kMCInterfaceThemeNative;
+    }
 }

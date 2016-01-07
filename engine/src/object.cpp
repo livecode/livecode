@@ -158,6 +158,9 @@ MCObject::MCObject()
     // Object's do not begin in the parentScript table.
     m_is_parent_script = false;
     
+    // Objects inherit the theme by default
+    m_theme = kMCInterfaceThemeEmpty;
+    
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
@@ -255,6 +258,9 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     // Cloned objects have a different identifier so are not in the parentScript
     // table at the start.
     m_is_parent_script = false;
+    
+    // Duplicate the theming state
+    m_theme = oref.m_theme;
     
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
@@ -4662,7 +4668,7 @@ bool MCObject::mapfont(bool recursive)
     // This may be called even when the font has already been mapped
     if (m_font != nil)
     {
-        if (hasfontattrs())
+        if (!inheritfont())
             return true;
         if (parent == nil)
             return false;
@@ -4697,7 +4703,7 @@ bool MCObject::mapfont(bool recursive)
 	//   as this requires new font computation.
 	// If we have a font setting, then we create a new font. Otherwise we just
 	// copy the parent's font.
-	if (hasfontattrs() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
+	if (!inheritfont() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
 	{
         t_explicit_font = true;
         
@@ -4767,7 +4773,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// MW-2012-02-19: [[ SplitTextAttrs ]] If the object has no font attrs, then just
 	//   inherit.
-	if (!hasfontattrs())
+	if (inheritfont())
 	{
 		if (p_parent_font == m_font)
 			return p_force;
@@ -4974,6 +4980,13 @@ bool MCObject::hasfontattrs(void) const
 bool MCObject::needtosavefontflags(void) const
 {
 	return needtosavefontrecord() && (m_font_flags & FF_HAS_ALL_FATTR) != FF_HAS_ALL_FATTR;
+}
+
+bool MCObject::inheritfont() const
+{
+    return !hasfontattrs()
+        && (gettheme() == kMCInterfaceThemeLegacy)
+        /*&& (m_theme_type == kMCPlatformControlTypeGeneric)*/;
 }
 
 // MW-2012-02-19: [[ SplitTextAttrs ]] This method returns true if a font record
