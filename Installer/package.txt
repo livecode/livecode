@@ -373,11 +373,14 @@ component Documentation
 		file ide:Documentation/html_viewer/js/jquery.session.js as js/jquery.session.js
 		file ide:Documentation/html_viewer/js/marked.js as js/marked.js
 		file ide:Documentation/html_viewer/js/remarkable.min.js as js/remarkable.min.js
+		file ide:Documentation/html_viewer/js/dictionary_functions.js as js/dictionary_functions.js
 		file ide:Documentation/html_viewer/resources/data/api/distributed_api.js as resources/data/api/distributed_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/distributed_guide.js as resources/data/guide/distributed_guide.js
 		file ide:Documentation/html_viewer/resources/media/spinner.gif as resources/media/spinner.gif
+
 		file ide:Documentation/html_viewer/guide.html.template
 		file ide:Documentation/html_viewer/api.html.template
+		
 		file ide:Documentation/html_viewer/resources/data/api/api.sqlite as resources/data/api/api.sqlite
 		
 	into [[ToolsFolder]]/Documentation place
@@ -386,41 +389,41 @@ component Documentation
 		
 component Extensions
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser
+		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.clock
+		rfolder macosx:packaged_extensions/com.livecode.widget.clock
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.colorswatch
+		rfolder macosx:packaged_extensions/com.livecode.widget.colorSwatch
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.gradientrampeditor
+		rfolder macosx:packaged_extensions/com.livecode.widget.gradientRampEditor
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph
+		rfolder macosx:packaged_extensions/com.livecode.widget.lineGraph
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header
+		rfolder macosx:packaged_extensions/com.livecode.widget.headerBar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker
+		rfolder macosx:packaged_extensions/com.livecode.widget.iconPicker
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg
+		rfolder macosx:packaged_extensions/com.livecode.library.iconSVG
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.json
+		rfolder macosx:packaged_extensions/com.livecode.library.json
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar
+		rfolder macosx:packaged_extensions/com.livecode.widget.navbar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.paletteactions
+		rfolder macosx:packaged_extensions/com.livecode.widget.paletteActions
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.pushbutton
+		rfolder macosx:packaged_extensions/com.livecode.widget.pushbutton
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented
+		rfolder macosx:packaged_extensions/com.livecode.widget.segmented
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector
+		rfolder macosx:packaged_extensions/com.livecode.widget.selector
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.svgpath		
+		rfolder macosx:packaged_extensions/com.livecode.widget.svgpath
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton
+		rfolder macosx:packaged_extensions/com.livecode.widget.switchbutton
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview
+		rfolder macosx:packaged_extensions/com.livecode.widget.treeView
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.widget-utils
+		rfolder macosx:packaged_extensions/com.livecode.widget-utils
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place

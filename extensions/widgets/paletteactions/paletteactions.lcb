@@ -25,7 +25,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 
 metadata title is "Palette Actions"
 metadata author is "LiveCode"
