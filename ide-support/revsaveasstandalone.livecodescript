@@ -2235,8 +2235,10 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end if
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
+   -- PM-2015-12-07: [[ Bug 15706 ]] Put double quotes around the stack name to avoid confusing the 
+   -- parser when the stack name is 'copy of ...'
    repeat for each line tLine in sUserScriptLibraries
-      put return & "if there is a stack" && tLine && "then library" && tLine after sStandaloneSettingsA["startup_script"]
+      put return & "if there is a stack" && quote & tLine & quote && "then library" && quote & tLine & quote after sStandaloneSettingsA["startup_script"]
    end repeat
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add OSX App icons to deploy parameters
