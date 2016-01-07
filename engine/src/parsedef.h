@@ -1720,6 +1720,7 @@ enum Properties {
     P_FULL_DRAGBOARD_DATA,
     
     P_THEME,
+    P_THEME_CONTROL_TYPE,
     
     __P_LAST,
 };

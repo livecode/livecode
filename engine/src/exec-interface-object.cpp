@@ -1215,6 +1215,40 @@ MCExecEnumTypeInfo _kMCInterfaceThemeTypeInfo =
     _kMCInterfaceThemeElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeControlTypeElementInfo[] =
+{
+    { "", kMCPlatformControlTypeGeneric, false },
+    { "button", kMCPlatformControlTypeButton, false },
+    { "checkbox", kMCPlatformControlTypeCheckbox, false },
+    { "radiobutton", kMCPlatformControlTypeRadioButton, false },
+    { "tabbutton", kMCPlatformControlTypeTabButton, false },
+    { "tabpane", kMCPlatformControlTypeTabPane, false },
+    { "label", kMCPlatformControlTypeLabel, false },
+    { "inputfield", kMCPlatformControlTypeInputField, false },
+    { "list", kMCPlatformControlTypeList, false },
+    { "menu", kMCPlatformControlTypeMenu, false },
+    { "menuitem", kMCPlatformControlTypeMenuItem, false },
+    { "optionmenu", kMCPlatformControlTypeOptionMenu, false },
+    { "pulldownmenu", kMCPlatformControlTypePulldownMenu, false },
+    { "combobox", kMCPlatformControlTypeComboBox, false },
+    { "popupmenu", kMCPlatformControlTypePopupMenu, false },
+    { "progressbar", kMCPlatformControlTypeProgressBar, false },
+    { "scrollbar", kMCPlatformControlTypeScrollBar, false },
+    { "slider", kMCPlatformControlTypeSlider, false },
+    { "spinarrows", kMCPlatformControlTypeSpinArrows, false },
+    { "window", kMCPlatformControlTypeWindow, false },
+    { "messagebox", kMCPlatformControlTypeMessageBox, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
+{
+    "Interface.ControlType",
+    sizeof (_kMCInterfaceThemeControlTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeControlTypeElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1226,6 +1260,7 @@ MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInf
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4330,12 +4365,25 @@ void MCObject::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
 void MCObject::GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme)
 {
     r_theme = gettheme();
+}
+
+void MCObject::GetThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme_type;
+}
+
+void MCObject::SetThemeControlType(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme_type = MCPlatformControlType(p_theme);
     
-    if (parent)
-        parent->GetEffectiveTheme(ctxt, r_theme);
-    else
-    {
-        // Default to the native theme if none has been set at any level
-        r_theme = kMCInterfaceThemeNative;
-    }
+    // Changing the theming type probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = getcontroltype();
 }

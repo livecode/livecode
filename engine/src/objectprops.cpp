@@ -239,6 +239,9 @@ MCPropertyInfo MCObject::kProperties[] =
     
     DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME, InterfaceTheme, MCObject, Theme)
     DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME, InterfaceTheme, MCObject, Theme)
+    
+    DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
+    DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -2645,7 +2648,7 @@ void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 
 MCPlatformControlType MCObject::getcontroltype()
 {
-    return kMCPlatformControlTypeGlobal;
+    return m_theme_type;
 }
 
 MCPlatformControlPart MCObject::getcontrolsubpart()

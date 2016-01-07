@@ -160,6 +160,7 @@ MCObject::MCObject()
     
     // Objects inherit the theme by default
     m_theme = kMCInterfaceThemeEmpty;
+    m_theme_type = kMCPlatformControlTypeGeneric;
     
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
@@ -261,6 +262,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     
     // Duplicate the theming state
     m_theme = oref.m_theme;
+    m_theme_type = oref.m_theme_type;
     
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);

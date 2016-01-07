@@ -3584,7 +3584,12 @@ bool MCField::IsCursorMovementVisual()
 MCPlatformControlType MCField::getcontroltype()
 {
     MCPlatformControlType t_type;
-    t_type = kMCPlatformControlTypeInputField;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        t_type = kMCPlatformControlTypeInputField;
     
     if (flags & F_LIST_BEHAVIOR)
         t_type = kMCPlatformControlTypeList;

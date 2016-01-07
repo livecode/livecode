@@ -3799,7 +3799,13 @@ void MCCard::scheduledelete(bool p_is_child)
 
 MCPlatformControlType MCCard::getcontroltype()
 {
-    return kMCPlatformControlTypeWindow;
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        return kMCPlatformControlTypeWindow;
 }
 
 MCPlatformControlPart MCCard::getcontrolsubpart()

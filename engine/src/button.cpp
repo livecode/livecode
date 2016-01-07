@@ -4834,7 +4834,13 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 MCPlatformControlType MCButton::getcontroltype()
 {
     MCPlatformControlType t_type;
-    t_type = kMCPlatformControlTypeButton;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        t_type = kMCPlatformControlTypeButton;
+    
     if (getstyleint(flags) == F_MENU)
     {
         t_type = kMCPlatformControlTypeMenu;

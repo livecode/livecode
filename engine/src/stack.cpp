@@ -3441,7 +3441,13 @@ void MCStack::setasscriptonly(MCStringRef p_script)
 
 MCPlatformControlType MCStack::getcontroltype()
 {
-    return kMCPlatformControlTypeWindow;
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        return kMCPlatformControlTypeWindow;
 }
 
 MCPlatformControlPart MCStack::getcontrolsubpart()

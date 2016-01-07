@@ -286,6 +286,9 @@ protected:
     
     // Whether to use legacy theming (or native-like theming)
     MCInterfaceTheme m_theme;
+    
+    // Override the type of the control for theming purposes
+    MCPlatformControlType m_theme_type;
 	
 	MCStringRef tooltip;
 	
@@ -1171,6 +1174,10 @@ public:
     void GetTheme(MCExecContext& ctxt, intenum_t& r_theme);
     virtual void SetTheme(MCExecContext& ctxt, intenum_t  p_theme);
     void GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    
+    void GetThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetThemeControlType(MCExecContext& ctxt, intenum_t  p_type);
+    void GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
     
 	////////// ARRAY PROPS
     
