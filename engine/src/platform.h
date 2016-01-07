@@ -989,6 +989,7 @@ enum MCPlatformPlayerProperty
 	
 	kMCPlatformPlayerPropertyLoop,
     kMCPlatformPlayerPropertyMirrored,
+	kMCPlatformPlayerPropertyScalefactor,
     	
 	kMCPlatformPlayerPropertyQTVRNode,
 	kMCPlatformPlayerPropertyQTVRPan,
