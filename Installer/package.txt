@@ -525,12 +525,14 @@ component Documentation
 		file ide:Documentation/html_viewer/js/jquery.session.js as js/jquery.session.js
 		file ide:Documentation/html_viewer/js/marked.js as js/marked.js
 		file ide:Documentation/html_viewer/js/remarkable.min.js as js/remarkable.min.js
+		file ide:Documentation/html_viewer/js/dictionary_functions.js as js/dictionary_functions.js
 		file ide:Documentation/html_viewer/resources/data/api/distributed_api.js as resources/data/api/distributed_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/distributed_guide.js as resources/data/guide/distributed_guide.js
 		file ide:Documentation/html_viewer/resources/media/spinner.gif as resources/media/spinner.gif
 		stack ide:Documentation/html_viewer/dictionary.livecode
 		file ide:Documentation/html_viewer/guide.html
 		file ide:Documentation/html_viewer/viewer.html
+		file ide:Documentation/html_viewer/viewer_external.html
 		// Temporary work-around
 		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
