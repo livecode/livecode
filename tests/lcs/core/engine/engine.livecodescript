@@ -191,11 +191,11 @@ end TestSysError
 
 
 on TestSystemVersion
-if the platform is "HTML5" then
-TestSkip "systemVersion not empty", "bug 16539"
-exit TestSystemVersion
-end if
-TestAssert "the systemVersion is not empty", the systemVersion is not empty
+   if the platform is "HTML5" then
+      TestAssert "the systemVersion is empty", the systemVersion is empty
+   else
+      TestAssert "the systemVersion is not empty", the systemVersion is not empty
+   end if
 end TestSystemVersion
 
 
