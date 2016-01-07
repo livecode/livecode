@@ -46,7 +46,7 @@
   </security>
   <summary>Defines a <glossary tag="message handler">message handler</glossary>.</summary>
   <examples>
-    <example>after mouseUp</p><p>  answer "after mouse up received"</p><p>end resizeStack</example>
+    <example>after mouseUp</p><p>  answer "after mouse up received"</p><p>end mouseUp</example>
   </examples>
   <description>
   <p>The <b>after</b> handler is exclusive to behavior scripts and is sent to a behavior script after all messages.</p><p/>
