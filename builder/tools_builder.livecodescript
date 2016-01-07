@@ -80,6 +80,10 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
          put "Commercial" into tBaseEditionType
          break
    end switch
+
+   -- Escape the version (by replacing all non-alphanumeric characters with "_")
+   local tVersionEscaped
+   put replaceText(pVersion,"\W","_") into tVersionEscaped
    
    -- Compute the package temp folder
    local tTempFolder
@@ -137,6 +141,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    packageCompilerConfigureVariable tPackager, "TodaysDate", "[[todaysDate]]"
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
+   packageCompilerConfigureVariable tPackager, "EscapedVersionTag", tVersionEscaped
    packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
    if pPlatform is "linux-x86" then

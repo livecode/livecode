@@ -144,7 +144,7 @@ component Misc
 			textfile "private:License Agreement.txt"
 			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
-		file "ide:Release Notes.pdf"
+		file "repo:LiveCodeNotes-[[EscapedVersionTag]].pdf" as "Release Notes.pdf"
 
 component Plugins
 	into [[ToolsFolder]]/Plugins place
