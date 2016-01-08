@@ -2124,9 +2124,6 @@ MCSave::~MCSave()
 
 Parse_stat MCSave::parse(MCScriptPoint &sp)
 {
-	Symbol_type type;
-	const LT *te;
-
 	initpoint(sp);
 	target = new MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
