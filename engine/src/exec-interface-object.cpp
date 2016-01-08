@@ -1240,6 +1240,8 @@ MCExecEnumTypeElementInfo _kMCInterfaceThemeControlTypeElementInfo[] =
     { "spinarrows", kMCPlatformControlTypeSpinArrows, false },
     { "window", kMCPlatformControlTypeWindow, false },
     { "messagebox", kMCPlatformControlTypeMessageBox, false },
+    { "richtext", kMCPlatformControlTypeRichText, false },
+    { "tooltip", kMCPlatformControlTypeTooltip, false },
 };
 
 MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =

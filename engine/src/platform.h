@@ -1207,9 +1207,11 @@ enum MCPlatformControlType
     kMCPlatformControlTypeComboBox,     // Input field/option menu combination
     kMCPlatformControlTypePopupMenu,    // Menu as appears when right-clicking
     kMCPlatformControlTypeProgressBar,  // Visual indicator of progress
+    kMCPlatformControlTypeRichText,     // Text editing with user formatting control
     kMCPlatformControlTypeScrollBar,    // For scrolling, apparently
     kMCPlatformControlTypeSlider,       // Selects a value between two extremes
     kMCPlatformControlTypeSpinArrows,   // Up-down arrows for value adjustment
+    kMCPlatformControlTypeTooltip,      // Tooltip popups
     kMCPlatformControlTypeWindow,       // Windows can have theming props too
     kMCPlatformControlTypeMessageBox    // Pop-up alert dialogue
 };
