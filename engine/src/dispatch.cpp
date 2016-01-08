@@ -373,7 +373,7 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
     }
     
 	if (MCmessagemessages && stat != ES_PASS)
-		MCtargetptr->sendmessage(htype, mess, False);
+		MCtargetptr . object -> sendmessage(htype, mess, False);
 		
 	if (t_has_passed)
 		return ES_PASS;

@@ -1272,7 +1272,8 @@ public:
     MCExecContext(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
     {
         memset(this, 0, sizeof(MCExecContext));
-        m_object = object;
+        m_object . object = object;
+        m_object . part_id = 0;
         m_hlist = hlist;
         m_curhandler = handler;
         m_itemdel = MCValueRetain(kMCCommaString);
@@ -1651,10 +1652,21 @@ public:
     
     MCObject *GetObject(void) const
 	{
-        return m_object;
+        return m_object . object;
 	}
 
-	void SetObject(MCObject *p_object)
+    MCObjectPtr GetObjectPtr(void) const
+    {
+        return m_object;
+    }
+    
+    void SetObject(MCObject *p_object)
+    {
+        m_object . object = p_object;
+        m_object . part_id = 0;
+    }
+    
+	void SetObjectPtr(MCObjectPtr p_object)
 	{
         m_object = p_object;
     }
@@ -1778,7 +1790,7 @@ private:
 #endif
 	Exec_stat m_stat;
 
-    MCObject *m_object;
+    MCObjectPtr m_object;
 
     // MW-2009-01-30: [[ Inherited parentScripts ]]
     // We store a reference to the parentScript use which is the current context

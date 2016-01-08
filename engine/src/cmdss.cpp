@@ -1611,6 +1611,7 @@ void MCHide::exec_ctxt(MCExecContext &ctxt)
 		MCInterfaceExecHideGroups(ctxt);
 		break;
 	case SO_OBJECT:
+    {
 		MCObjectPtr t_target;
         if (!object->getobj(ctxt, t_target, True))
 		{
@@ -1621,6 +1622,7 @@ void MCHide::exec_ctxt(MCExecContext &ctxt)
 			MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
 		else
 			MCInterfaceExecHideObject(ctxt, t_target);
+    }
 		break;
 	case SO_MENU:
 		MCInterfaceExecHideMenuBar(ctxt);

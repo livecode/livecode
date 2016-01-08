@@ -277,9 +277,9 @@ void MCCard::GetDefaultButton(MCExecContext& ctxt, MCStringRef& r_button)
 		return;
 	else
 		if (defbutton != nil)
-			defbutton -> GetLongId(ctxt, r_button);
+			defbutton -> GetLongId(ctxt, 0, r_button);
 		else
-			odefbutton -> GetLongId(ctxt, r_button);
+			odefbutton -> GetLongId(ctxt, 0, r_button);
 }
 
 void MCCard::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)

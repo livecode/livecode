@@ -1154,7 +1154,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
         case kMCExternalContextQueryTarget:
         {
             MCObjectHandle *t_handle;
-            t_handle = MCtargetptr -> gethandle();
+            t_handle = MCtargetptr . object -> gethandle();
             if (t_handle == nil)
                 return kMCExternalErrorOutOfMemory;
             *(MCObjectHandle **)result = t_handle;

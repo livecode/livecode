@@ -88,7 +88,7 @@ bool MCCardlist::GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which
 				if (which == P_SHORT_NAME)
 					tmp -> card -> GetShortName(ctxt, &t_property);
 				else
-					tmp -> card -> GetLongId(ctxt, &t_property);
+					tmp -> card -> GetLongId(ctxt, 0, &t_property);
 					
 				t_success = !ctxt . HasError();
 				if (t_success)

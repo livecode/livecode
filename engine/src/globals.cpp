@@ -273,7 +273,7 @@ MCCard *MCdynamiccard;
 Boolean MCdynamicpath;
 MCObject *MCerrorptr;
 MCObject *MCerrorlockptr;
-MCObject *MCtargetptr;
+MCObjectPtr MCtargetptr;
 MCObject *MCmenuobjectptr;
 MCGroup *MCsavegroupptr;
 MCGroup *MCdefaultmenubar;
@@ -663,7 +663,7 @@ void X_clear_globals(void)
 	MCdynamicpath = False;
 	MCerrorptr = nil;
 	MCerrorlockptr = nil;
-	MCtargetptr = nil;
+	memset(&MCtargetptr, 0, sizeof(MCObjectPtr));
 	MCmenuobjectptr = nil;
 	MCsavegroupptr = nil;
 	MCdefaultmenubar = nil;
