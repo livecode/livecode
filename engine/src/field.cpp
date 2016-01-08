@@ -3593,6 +3593,8 @@ MCPlatformControlType MCField::getcontroltype()
     
     if (flags & F_LIST_BEHAVIOR)
         t_type = kMCPlatformControlTypeList;
+    else if ((flags & F_LOCK_TEXT) && !(flags & F_OPAQUE))
+        t_type = kMCPlatformControlTypeLabel;
     
     return t_type;
 }
