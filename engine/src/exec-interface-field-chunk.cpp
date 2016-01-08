@@ -1820,6 +1820,8 @@ void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
     {
         MCInterfaceFieldRanges t_paragraphRanges;
         sptr -> getflaggedranges(p_part_id, si, ei, t_index_offset, t_paragraphRanges);
+		// PM-2016-01-08: [[ Bug 16666 ]] Update the offset to be relative to the beginning of the text
+		t_index_offset += sptr -> gettextlengthcr();
 
         for (uindex_t i = 0; i < t_paragraphRanges . count; ++i)
             t_ranges . Push(t_paragraphRanges . ranges[i]);
