@@ -1,1 +1,1 @@
-#   getting FlaggedRanges doesn't provide correct offsets
+#   getting FlaggedRanges now provides correct offsets
