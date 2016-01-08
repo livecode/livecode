@@ -4775,7 +4775,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// MW-2012-02-19: [[ SplitTextAttrs ]] If the object has no font attrs, then just
 	//   inherit.
-	if (inheritfont())
+	if (p_parent_font != nil && inheritfont())
 	{
 		if (p_parent_font == m_font)
 			return p_force;
@@ -4987,7 +4987,8 @@ bool MCObject::needtosavefontflags(void) const
 bool MCObject::inheritfont() const
 {
     return !hasfontattrs()
-        && (gettheme() == kMCInterfaceThemeLegacy)
+        && (gettheme() == kMCInterfaceThemeLegacy)  /* Fonts depend on control type in non-legacy themes */
+        && (m_theme == kMCInterfaceThemeEmpty)      /* Can only inherit if theme is inherited too */
         /*&& (m_theme_type == kMCPlatformControlTypeGeneric)*/;
 }
 
