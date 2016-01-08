@@ -1066,20 +1066,22 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t
     }
     else
     {
-        // MW-2014-12-17: [[ Widgets ]] Force writing out as 8.0 version stack if it
-        //   contains widgets, and only write out as 8.0 if it contains widgets.
-        uint32_t t_old_stackfileversion;
-        t_old_stackfileversion = MCstackfileversion;
-        if (sptr -> haswidgets() || sptr -> substackhaswidgets())
-            MCstackfileversion = 8000;
-        else if (MCstackfileversion == 8000)
-            MCstackfileversion = 7000;
-        
-        stat = dosavestack(sptr, p_fname, MCstackfileversion);
+		/* If no version was specified, assume that 8.0 format was requested */
+		if (UINT32_MAX == p_version)
+		{
+			p_version = 8000;
+		}
+
+		/* If the stack doesn't contain widgets, and 8.0 format was requested,
+		 * use 7.0 format. */
+		if (8000 == p_version && !sptr->haswidgets())
+		{
+			p_version = 7000;
+		}
+
+        stat = dosavestack(sptr, p_fname, p_version);
         
         MCLogicalFontTableFinish();
-        
-        MCstackfileversion = t_old_stackfileversion;
     }
     
 	return stat;
