@@ -721,6 +721,12 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 
 IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
+	/* If the file format doesn't support widgets, skip the widget */
+	if (p_version < 8000)
+	{
+		return IO_NORMAL;
+	}
+
     // Make the widget generate a rep.
     MCAutoValueRef t_rep;
     if (m_widget != nil)
