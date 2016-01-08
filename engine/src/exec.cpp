@@ -1187,7 +1187,7 @@ MCVarref* MCExecContext::GetIt() const
 #ifdef _SERVER
     // If we are here it means we must be in global scope, executing in a
     // MCServerScript object.
-    return static_cast<MCServerScript *>(m_object) -> GetIt();
+    return static_cast<MCServerScript *>(m_object . object) -> GetIt();
 #else
     // We should never get here as execution only occurs within handlers unless
     // in server mode.
