@@ -2135,19 +2135,32 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 		(PE_SAVE_BADEXP, sp);
 		return PS_ERROR;
 	}
-	if (sp.next(type) != PS_NORMAL)
-		return PS_NORMAL;
-	if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->which != PT_AS)
+
+	/* Parse optional "as _" clause */
+	if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
 	{
-		sp.backup();
-		return PS_NORMAL;
+		if (sp.parseexp(False, True, &filename) != PS_NORMAL)
+		{
+			MCperror->add(PE_SAVE_BADFILEEXP, sp);
+			return PS_ERROR;
+		}
 	}
-	if (sp.parseexp(False, True, &filename) != PS_NORMAL)
+
+	/* Parse optional "with format _" clause */
+	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		MCperror->add
-		(PE_SAVE_BADFILEEXP, sp);
-		return PS_ERROR;
+		if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+		{
+			MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+			return PS_ERROR;
+		}
+		if (sp.parseexp(False, True, &format) != PS_NORMAL)
+		{
+			MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+			return PS_ERROR;
+		}
 	}
+
 	return PS_NORMAL;
 }
 
@@ -2205,16 +2218,45 @@ void MCSave::exec_ctxt(MCExecContext &ctxt)
         ctxt . LegacyThrow(EE_SAVE_NOTASTACK);
         return;
 	}
+
+	MCStack *t_stack = static_cast<MCStack *>(optr);
+
+	MCAutoStringRef t_filename;
 	if (filename != NULL)
 	{
-		MCAutoStringRef t_filename;
         if (!ctxt . EvalExprAsStringRef(filename, EE_SAVE_BADNOFILEEXP, &t_filename))
             return;
+	}
 
-		MCInterfaceExecSaveStackAs(ctxt, (MCStack *)optr, *t_filename);
+	MCAutoStringRef t_format;
+	if (format != NULL)
+	{
+		if (!ctxt.EvalExprAsStringRef(format, EE_SAVE_BADNOFORMATEXP, &t_format))
+			return;
+	}
+
+	if (NULL != filename)
+	{
+		if (NULL != format)
+		{
+			MCInterfaceExecSaveStackAsWithVersion(ctxt, t_stack, *t_filename, *t_format);
+		}
+		else
+		{
+			MCInterfaceExecSaveStackAs(ctxt, t_stack, *t_filename);
+		}
 	}
 	else
-        MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
+	{
+		if (NULL != format)
+		{
+			MCInterfaceExecSaveStackWithVersion(ctxt, t_stack, *t_format);
+		}
+		else
+		{
+			MCInterfaceExecSaveStack(ctxt, t_stack);
+		}
+	}
 }
 
 void MCSave::compile(MCSyntaxFactoryRef ctxt)

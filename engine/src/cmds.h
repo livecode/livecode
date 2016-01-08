@@ -1919,12 +1919,9 @@ class MCSave : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *filename;
+	MCExpression *format;
 public:
-	MCSave()
-	{
-		target = NULL;
-		filename = NULL;
-	}
+	MCSave() : target(NULL), filename(NULL), format(NULL) {}
 	virtual ~MCSave();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
