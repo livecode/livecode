@@ -4841,7 +4841,11 @@ MCPlatformControlType MCButton::getcontroltype()
     else
         t_type = kMCPlatformControlTypeButton;
     
-    if (getstyleint(flags) == F_MENU)
+    if (getstyleint(flags) == F_CHECK)
+        t_type = kMCPlatformControlTypeCheckbox;
+    else if (getstyleint(flags) == F_RADIO)
+        t_type = kMCPlatformControlTypeRadioButton;
+    else if (getstyleint(flags) == F_MENU)
     {
         t_type = kMCPlatformControlTypeMenu;
         switch (menumode)
@@ -4860,6 +4864,10 @@ MCPlatformControlType MCButton::getcontroltype()
                 
             case WM_PULLDOWN:
                 t_type = kMCPlatformControlTypePulldownMenu;
+                break;
+                
+            case WM_TOP_LEVEL:
+                t_type = kMCPlatformControlTypeTabPane;
                 break;
                 
             default:
