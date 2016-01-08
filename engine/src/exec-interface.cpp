@@ -2507,7 +2507,7 @@ void MCInterfaceExecSaveStackAs(MCExecContext& ctxt, MCStack *p_target, MCString
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 	
-	p_target -> saveas(p_new_filename);
+	p_target -> saveas(p_new_filename, MCstackfileversion);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -719,7 +719,7 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
     return checkloadstat(t_stat);
 }
 
-IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
+IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
     // Make the widget generate a rep.
     MCAutoValueRef t_rep;
@@ -739,7 +739,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
         return t_stat;
     
     // Save the object state.
-	if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext)) != IO_NORMAL)
+    if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return t_stat;
     
     // Now the widget kind.
@@ -750,7 +750,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
     if ((t_stat = IO_write_valueref_new(*t_rep, p_stream)) != IO_NORMAL)
         return t_stat;
     
-    if ((t_stat = savepropsets(p_stream)) != IO_NORMAL)
+    if ((t_stat = savepropsets(p_stream, p_version)) != IO_NORMAL)
         return t_stat;
     
     // We are done.

@@ -3368,9 +3368,9 @@ IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, 
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCCard::load(IO_handle stream, uint32_t version)
@@ -3489,7 +3489,7 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 	return checkloadstat(stat);
 }
 
-IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -3501,7 +3501,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 //---- 2.7+: 
 //  . F_OPAQUE valid - must be true in older versions
 //  . ink valid - must be GXcopy in older versions
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		t_old_flags = flags;
 		t_old_ink = GXcopy;
@@ -3509,18 +3509,18 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 //---- 2.7+
 
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 //---- 2.7+
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		flags = t_old_flags;
 		ink = t_old_ink;
 	}
 //---- 2.7+
 
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (objptrs != NULL)
 	{
@@ -3536,7 +3536,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCCard::saveobjects(IO_handle p_stream, uint4 p_part)
+IO_stat MCCard::saveobjects(IO_handle p_stream, uint4 p_part, uint32_t p_version)
 {
 	IO_stat t_stat;
 
@@ -3546,7 +3546,7 @@ IO_stat MCCard::saveobjects(IO_handle p_stream, uint4 p_part)
 		t_objptr = objptrs;
 		do
 		{
-			if ((t_stat = t_objptr -> getref() -> save(p_stream, p_part, false)) != IO_NORMAL)
+			if ((t_stat = t_objptr -> getref() -> save(p_stream, p_part, false, p_version)) != IO_NORMAL)
 				return t_stat;
 			t_objptr = t_objptr -> next();
 		}
