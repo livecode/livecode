@@ -239,6 +239,12 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                         t_color = [NSColor textBackgroundColor];
                         break;
                         
+                    case kMCPlatformControlTypeTooltip:
+                        // Undocumented but it works (and other mac apps use it)
+                        t_color = [NSColor toolTipColor];
+                        t_found = t_color != nil;
+                        break;
+                        
                     case kMCPlatformControlTypeWindow:
                         // In compatibility mode, handle window colour the old way
                         if (p_state & kMCPlatformControlStateCompatibility)
