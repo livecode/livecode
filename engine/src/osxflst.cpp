@@ -100,9 +100,13 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
     calculatemetrics();
 }
 
-MCFontnode::MCFontnode(MCSysFontHandle p_handle)
+MCFontnode::MCFontnode(MCSysFontHandle p_handle, MCNameRef p_name)
 {
-    coretext_get_font_name(p_handle, reqname);
+    if (p_name == nil)
+        coretext_get_font_name(p_handle, reqname);
+    else
+        reqname = MCValueRetain(p_name);
+    
     reqsize = coretext_get_font_size(p_handle);
     reqstyle = FA_DEFAULT_STYLE | FA_SYSTEM_FONT;
     
@@ -177,7 +181,7 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 	return tmp->getfont(fname, size, style);
 }
 
-MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid)
+MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid, MCNameRef p_name)
 {
     MCFontnode *tmp = fonts;
     if (tmp != NULL)
@@ -191,7 +195,7 @@ MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid)
     while (tmp != fonts);
     
     // Font has not yet been added to the list
-    tmp = new MCFontnode(p_fid);
+    tmp = new MCFontnode(p_fid, p_name);
     tmp->appendto(fonts);
     return tmp->getfontstruct();
 }
