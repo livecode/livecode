@@ -2146,18 +2146,30 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 		}
 	}
 
-	/* Parse optional "with format _" clause */
+	/* Parse optional "with format _" or "with newest format" clauses */
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_NEWEST) == PS_NORMAL)
 		{
-			MCperror->add(PE_SAVE_BADFORMATEXP, sp);
-			return PS_ERROR;
+			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+			newest_format = true;
 		}
-		if (sp.parseexp(False, True, &format) != PS_NORMAL)
+		else
 		{
-			MCperror->add(PE_SAVE_BADFORMATEXP, sp);
-			return PS_ERROR;
+			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+			if (sp.parseexp(False, True, &format) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
 		}
 	}
 
@@ -2241,6 +2253,10 @@ void MCSave::exec_ctxt(MCExecContext &ctxt)
 		{
 			MCInterfaceExecSaveStackAsWithVersion(ctxt, t_stack, *t_filename, *t_format);
 		}
+		else if (newest_format)
+		{
+			MCInterfaceExecSaveStackAsWithNewestVersion(ctxt, t_stack, *t_filename);
+		}
 		else
 		{
 			MCInterfaceExecSaveStackAs(ctxt, t_stack, *t_filename);
@@ -2251,6 +2267,10 @@ void MCSave::exec_ctxt(MCExecContext &ctxt)
 		if (NULL != format)
 		{
 			MCInterfaceExecSaveStackWithVersion(ctxt, t_stack, *t_format);
+		}
+		else if (newest_format)
+		{
+			MCInterfaceExecSaveStackWithNewestVersion(ctxt, t_stack);
 		}
 		else
 		{

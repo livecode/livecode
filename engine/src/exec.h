@@ -3050,8 +3050,10 @@ void MCInterfaceExecHiliteObject(MCExecContext& ctxt, MCObjectPtr p_targets);
 
 void MCInterfaceExecSaveStack(MCExecContext& ctxt, MCStack *p_target);
 void MCInterfaceExecSaveStackWithVersion(MCExecContext & ctxt, MCStack *p_target, MCStringRef p_version);
+void MCInterfaceExecSaveStackWithNewestVersion(MCExecContext & ctxt, MCStack *p_target);
 void MCInterfaceExecSaveStackAs(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename);
 void MCInterfaceExecSaveStackAsWithVersion(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename, MCStringRef p_version);
+void MCInterfaceExecSaveStackAsWithNewestVersion(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename);
 
 void MCInterfaceExecMoveObjectBetween(MCExecContext& ctxt, MCObject *p_target, MCPoint p_from, MCPoint p_to, double p_duration, int p_units, bool p_wait, bool p_dispatch);
 void MCInterfaceExecMoveObjectAlong(MCExecContext& ctxt, MCObject *p_target, MCPoint *p_motion, uindex_t p_motion_count, bool p_is_relative, double p_duration, int p_units, bool p_wait, bool p_dispatch);
