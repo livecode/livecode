@@ -1414,9 +1414,29 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
 				        && !(flags & F_DISABLED))
 				{
-                    //if (di == DI_BACK)
-                    //	c = dc->getwhite();
-                    //else
+                    if (di == DI_BACK)
+                    {
+                        // Use the themed colours and ignore inheritance. We do
+                        // this so that controls always have the appropriate
+                        // background colour (particularly fields).
+                        MCPlatformControlType t_control_type;
+                        MCPlatformControlPart t_control_part;
+                        MCPlatformControlState t_control_state;
+                        MCPlatformThemeProperty t_theme_prop;
+                        MCPlatformThemePropertyType t_theme_prop_type;
+                        if (o->getthemeselectorsforprop(P_BACK_COLOR, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
+                        {
+                            if (selected)
+                                t_control_state |= kMCPlatformControlStateSelected;
+                            
+                            if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
+                                return True;
+                        }
+                        
+                        // No themed colour available; fall back to white
+                        c = dc->getwhite();
+                    }
+                    else
 						parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 					return True;
 				}
