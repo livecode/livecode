@@ -117,11 +117,8 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       put tBootPath & slash & "extensions" into tExtensionsPath
       
       -- Store the initial stack
-      logDebug "boot-stack", "Storing" && tStackFile
-      revZipAddUncompressedItemWithFile tBuildZip, tBootStackPath, tStackFile
-      if the result is not empty then
-         throw "could not store initial stack in standalone archive"
-      end if
+      local tBootHash
+      storeBootStack tBuildZip, tBootStackPath, tBuildFolder, tStackFile, tBootHash
 
       -- Store auxiliary stacks
       local tZipAuxPath, tAuxStackFile
@@ -141,7 +138,7 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
       storeExtensions tBuildZip, tExtensions, tExtensionsPath
       
       -- Deploy and store the startup script
-      storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tStackFile
+      storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tBootHash
       
       -- Store extra, copied files
       storeAssets tBuildZip, tFiles, tStandalonePath, tBaseFolder
@@ -298,7 +295,7 @@ end getExtensionFilesByKind
 -- Startup stack
 ----------------------------------------------------------------
 
-private command storeStartupStack pZip, pStartupPath, pBuildFolder, pStackFile
+private command storeStartupStack pZip, pStartupPath, pBuildFolder, pBootHash
    local tTempStack, tTempStackPath, tStartupScript, tDeployInfo
 
    ---------- Generate the startup stack
@@ -306,7 +303,7 @@ private command storeStartupStack pZip, pStartupPath, pBuildFolder, pStackFile
 
    put pBuildFolder & slash & "revEmscriptenStandaloneStartup.livecode" into tTempStackPath
 
-   put getStartupScript(pStackFile) into tStartupScript
+   put getStartupScript(pBootHash) into tStartupScript
 
    create invisible stack "revEmscriptenStandaloneStartup"
    put it into tTempStack
@@ -358,9 +355,9 @@ end storeStartupStack
 -- Create the startup script by processing the startup stack template.
 -- Engine-specific and standalone-specific data is substituted into the
 -- template in order 
-private function getStartupScript pStackFile
-   local tTemplateFile, tScript, tStackData
-   local tStackHash, tStackHashString
+private function getStartupScript pStackHash
+   local tTemplateFile, tScript
+   local tStackHashString
    
    -- Load template
    put getStartupTemplateFile() into tTemplateFile
@@ -377,23 +374,11 @@ private function getStartupScript pStackFile
    
    -- Trim to the actual script
    delete line 1 of tScript
-   
-   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
-   open file pStackFile for binary read
-   if the result is not empty then
-      throw pStackFile & ":" && the result
-   end if
-   read from file pStackFile until end
-   put it into tStackData
-   if the result is not "eof" then
-      throw pStackFile & ":" && the result
-   end if
-   close file pStackFile
-   
-   put the sha1Digest of (byte 1 to 1024 of tStackData) into tStackHash
+      
+   -- Compute a hex string representation of the boot stack hash
    put empty into tStackHashString
    local tByte, tByteString
-   repeat for each byte tByte in tStackHash
+   repeat for each byte tByte in pStackHash
       put baseConvert(byteToNum(tByte), 10, 16) into tByteString
       switch the number of chars in tByteString
          case 1
@@ -409,6 +394,26 @@ private function getStartupScript pStackFile
    
    return tScript
 end getStartupScript
+
+----------------------------------------------------------------
+-- Boot stack
+----------------------------------------------------------------
+
+private command storeBootStack pZip, pBootStackPath, pBuildFolder, pStackFile, @rStackHash
+   logDebug "boot-stack", "Storing" && pStackFile
+   
+   local tStackData
+   put getPreparedStackAsData(pStackFile, pBuildFolder) into tStackData
+   
+   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
+   -- This is needed when building the startup script
+   put the sha1Digest of (byte 1 to 1024 of tStackData) into rStackHash
+   
+   revZipAddUncompressedItemWithData pZip, pBootStackPath, "tStackData"
+   if the result is not empty then
+      throw "could not store initial stack in standalone archive"
+   end if   
+end storeBootStack
 
 ----------------------------------------------------------------
 -- Extra files from "copy files"
@@ -458,6 +463,90 @@ private command getAssetFilesFromPath pPath, pBaseFolder, @xFiles, @xCount
       throw "could not store asset from '" & pPath & "': not a file or directory"
    end if
 end getAssetFilesFromPath
+
+----------------------------------------------------------------
+-- Stack manipulation functions
+----------------------------------------------------------------
+
+-- Modifies a copy of <pStackFile> to prepare it for deployment,
+-- and then returns the modified stack file's contents as data. 
+-- <pStackFile> is not modified.
+private function getPreparedStackAsData pStackFile, pBuildFolder
+   local tStack, tError, tResult
+   local tTempFile
+   local tStandaloneSettings
+   local tStackData
+   
+   put the long id of stack pStackFile into tStack
+   
+   if revIDEStackNameIsIDEStack(the name of tStack) then
+      -- Don't manipulate IDE stacks if for some reason someone
+      -- tries to put one into a standalone
+      put the filename of tStack into tTempFile
+      
+   else
+      try
+         
+         -- Get a temporary filename
+         put getTemporaryBuildFile(pBuildFolder, ".livecode") into tTempFile
+         
+         -- Clear standalone settings
+         if isCommercialDeployment() then
+            set the customProperties["cRevStandaloneSettings"] of tStack to empty
+         else
+            -- For Community edition deployment to retain everything
+            -- but the deployment password (which isn't relevant to
+            -- Community edition anyway).  Keeping the deployment
+            -- settings is GPL-required information.
+            put the customProperties["cRevStandaloneSettings"] of tStack into tStandaloneSettings
+            delete variable tStandaloneSettings["password"]
+            set the customProperties["cRevStandaloneSettings"] of tStack to tStandaloneSettings
+         end if
+         
+         -- Save the modified stack to the temporary file, and
+         -- destroy it
+         lock messages
+         lock screen
+         
+         save tStack as tTempFile with newest format
+         put the result into tResult
+         if tResult is not empty then
+            throw tTempFile & ":" && tResult
+         end if
+         
+         set the filename of tStack to pStackFile
+         set the cantDelete of tStack to false
+         delete tStack
+         
+         unlock screen
+         unlock messages
+         
+      catch tError
+         if there is a file tTempFile then
+            delete file tTempFile
+         end if
+      end try
+      
+      if tError is not empty then 
+         throw tError
+      end if
+   end if
+   
+   
+   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
+   open file tTempFile for binary read
+   if the result is not empty then
+      throw tTempFile & ":" && the result
+   end if
+   read from file tTempFile until end
+   put it into tStackData
+   if the result is not "eof" then
+      throw tTempFile & ":" && the result
+   end if
+   close file tTempFile
+      
+   return tStackData
+end getPreparedStackAsData
 
 ----------------------------------------------------------------
 -- File & path helper functions
@@ -665,6 +754,23 @@ end getRepoBinariesFolder
 private function getRepoResourceFolder
    return revEnvironmentRepositoryPath() & slash & "engine" & slash & "rsrc"
 end getRepoResourceFolder
+
+-- Get a temporary filename in <pBuildFolder> with the extension
+-- <pExtension>
+private function getTemporaryBuildFile pBuildFolder pExtension
+   local tFile
+   repeat forever
+      put pBuildFolder & slash & (the random of 1000000) & pExtension into tFile
+      if there is not a file tFile then
+         exit repeat
+      end if
+   end repeat
+   return tFile
+end getTemporaryBuildFile
+
+----------------------------------------------------------------
+-- Other utility functions
+----------------------------------------------------------------
 
 -- Check if the license permits HTML5 deployment
 private function isPermittedDeployment
