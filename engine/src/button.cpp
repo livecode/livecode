@@ -3408,11 +3408,13 @@ public:
 
 		newbutton->menubutton = parent->menubutton;
 		newbutton->menucontrol = MENUCONTROL_ITEM;
+        newbutton->m_theme_type = kMCPlatformControlTypeMenu;
 		if (MCNameGetCharAtIndex(newbutton -> getname(), 0) == '-')
 		{
 			newbutton->rect.height = 2;
 			newbutton->flags = DIVIDER_FLAGS;
 			newbutton->menucontrol = MENUCONTROL_SEPARATOR;
+            newbutton->m_theme_type = kMCPlatformControlTypeMenu;
 			if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
 			{
 				newbutton->rect.height = 1;
@@ -4845,7 +4847,7 @@ MCPlatformControlType MCButton::getcontroltype()
         t_type = kMCPlatformControlTypeCheckbox;
     else if (getstyleint(flags) == F_RADIO)
         t_type = kMCPlatformControlTypeRadioButton;
-    else if (getstyleint(flags) == F_MENU)
+    else if (getstyleint(flags) == F_MENU || menucontrol != MENUCONTROL_NONE)
     {
         t_type = kMCPlatformControlTypeMenu;
         switch (menumode)
