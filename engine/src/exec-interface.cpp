@@ -2501,13 +2501,58 @@ void MCInterfaceExecSaveStack(MCExecContext& ctxt, MCStack *p_target)
 	MCInterfaceExecSaveStackAs(ctxt, p_target, kMCEmptyString);
 }
 
+void
+MCInterfaceExecSaveStackWithVersion(MCExecContext & ctxt,
+                                    MCStack *p_target,
+                                    MCStringRef p_version)
+{
+	MCInterfaceExecSaveStackAsWithVersion(ctxt, p_target, kMCEmptyString, p_version);
+}
+
+void
+MCInterfaceExecSaveStackWithNewestVersion(MCExecContext & ctxt,
+                                          MCStack *p_target)
+{
+	MCInterfaceExecSaveStackAsWithNewestVersion(ctxt, p_target, kMCEmptyString);
+}
+
 void MCInterfaceExecSaveStackAs(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename)
 {
 	ctxt . SetTheResultToEmpty();
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 	
-	p_target -> saveas(p_new_filename);
+	p_target -> saveas(p_new_filename, MCstackfileversion);
+}
+
+void
+MCInterfaceExecSaveStackAsWithVersion(MCExecContext & ctxt,
+                                      MCStack *p_target,
+                                      MCStringRef p_new_filename,
+                                      MCStringRef p_version)
+{
+	ctxt.SetTheResultToEmpty();
+	if (!ctxt.EnsureDiskAccessIsAllowed())
+		return;
+
+	MCInterfaceStackFileVersion t_version;
+	MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
+	if (ctxt.HasError())
+		return;
+
+	p_target->saveas(p_new_filename, t_version.version);
+}
+
+void
+MCInterfaceExecSaveStackAsWithNewestVersion(MCExecContext & ctxt,
+                                            MCStack * p_target,
+                                            MCStringRef p_new_filename)
+{
+	ctxt.SetTheResultToEmpty();
+	if (!ctxt.EnsureDiskAccessIsAllowed())
+		return;
+
+	p_target->saveas(p_new_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

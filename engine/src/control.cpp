@@ -889,9 +889,9 @@ void MCControl::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p
 	fprintf(stderr, "Control: ERROR tried to draw control id %d\n", obj_id);
 }
 
-IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
-	return MCObject::save(stream, p_part, p_force_ext);
+	return MCObject::save(stream, p_part, p_force_ext, p_version);
 }
 
 Boolean MCControl::kfocusset(MCControl *target)

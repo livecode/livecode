@@ -713,7 +713,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 }
 
 // **** require blocks
-IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
+IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 {
 	IO_stat stat;
 	defrag();
@@ -721,7 +721,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 	// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph has attributes and 5.5
 	//   stackfile format has been requested, then output an extended paragraph.
 	bool t_is_ext;
-	if (MCstackfileversion >= 5500 && attrs != nil)
+	if (p_version >= 5500 && attrs != nil)
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -729,7 +729,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 	if ((stat = IO_write_uint1(t_is_ext ? OT_PARAGRAPH_EXT : OT_PARAGRAPH, stream)) != IO_NORMAL)
 		return stat;
 	
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		// The string data that will get written out. It can't be just done as a
 		// StringRef without breaking file format compatibility.
@@ -785,7 +785,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended paragraph then
 	//   write out the attribtues.
 	if (t_is_ext)
-		if ((stat = saveattrs(stream)) != IO_NORMAL)
+		if ((stat = saveattrs(stream, p_version)) != IO_NORMAL)
 			return IO_ERROR;
  
 	// Write out the blocks
@@ -794,7 +794,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part)
 		MCBlock *tptr = blocks;
 		do
 		{
-			if ((stat = tptr->save(stream, p_part)) != IO_NORMAL)
+			if ((stat = tptr->save(stream, p_part, p_version)) != IO_NORMAL)
 				return stat;
 
 			tptr = tptr->next();

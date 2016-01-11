@@ -279,7 +279,7 @@ public:
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this paragraph
 	//   has an attribute extension.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
-	IO_stat save(IO_handle stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, uint32_t p_version);
 	
 	// MW-2012-02-14: [[ FontRefs ]] Now takes the parent fontref so it can compute
 	//   block's fontrefs.
@@ -643,7 +643,7 @@ public:
 	// Unserializes the paragraph attributes from stream.
 	IO_stat loadattrs(IO_handle stream, uint32_t version);
 	// Serializes the paragraph attributes into stream.
-	IO_stat saveattrs(IO_handle stream);
+	IO_stat saveattrs(IO_handle stream, uint32_t p_version);
 	// MW-2012-02-21: [[ FieldExport ]] Fills in the appropriate members of the
 	//   field export struct.
 	void exportattrs(MCFieldParagraphStyle& x_style);
@@ -651,7 +651,7 @@ public:
 	//  by the style.
 	void importattrs(const MCFieldParagraphStyle& x_style);
 	// MW-2012-03-03: [[ StackFile5500 ]] Computes the size of the attrs when serialized.
-	uint32_t measureattrs(void);
+	uint32_t measureattrs(uint32_t p_version);
     // SN-2015-05-01: [[ Bug 15175 ]] Make easier to find out whether we need an extra flag
     bool hasextraflag(void);
 

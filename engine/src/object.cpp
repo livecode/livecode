@@ -3395,15 +3395,15 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	return IO_NORMAL;
 }
 
-IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	uint2 i;
 	bool t_extended;
-	t_extended = MCstackfileversion >= 2700 && p_force_ext;
+	t_extended = p_version >= 2700 && p_force_ext;
 
 	// Check whether there are any custom properties with array values and if so, force extension
-	if (MCstackfileversion < 7000 && hasarraypropsets_legacy())
+	if (p_version < 7000 && hasarraypropsets_legacy())
 		t_extended = true;
 
 	// MW-2008-10-28: [[ ParentScripts ]] Make sure we mark this as extended if there
@@ -3442,7 +3442,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(_name, stream, p_version >= 7000)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))
@@ -3461,7 +3461,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000 then we need to encode for
 	//   long scripts, and put extended data after it.
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		if ((flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2) || t_extended)
 		{
@@ -3472,7 +3472,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	
 	stat = IO_write_uint4(flags, stream);
 	
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		if (addflags & AF_LONG_SCRIPT && !MCStringIsEmpty(_script))
 			flags |= F_SCRIPT;
@@ -3498,7 +3498,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
         getstack() -> unsecurescript(this);
-        stat = IO_write_stringref_new(_script, stream, MCstackfileversion >= 7000);
+        stat = IO_write_stringref_new(_script, stream, p_version >= 7000);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3513,7 +3513,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL)
 			return stat;
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_write_stringref_new(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	if (props != NULL)
@@ -3530,7 +3530,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		addflags |= AF_INK;
 
 //---- New in 2.7
-	if (MCstackfileversion >= 2700)
+	if (p_version >= 2700)
 	{
 		if (blendlevel != 100)
 			addflags |= AF_BLEND_LEVEL;
@@ -3558,7 +3558,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	if ((stat = IO_write_uint2(rect.height, stream)) != IO_NORMAL)
 		return stat;
-	if (MCstackfileversion < 7000 && addflags & AF_CUSTOM_PROPS)
+	if (p_version < 7000 && addflags & AF_CUSTOM_PROPS)
 		if ((stat = saveunnamedpropset_legacy(stream)) != IO_NORMAL)
 			return stat;
 	if (addflags & AF_BORDER_WIDTH)
@@ -3574,14 +3574,14 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   versions.
 		// MW-2012-03-13: [[ UnicodeToolTip ]] If the file format is older than 5.5
 		//   then convert utf-8 to native before saving.
-		if (MCstackfileversion < 5500)
+		if (p_version < 5500)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv < 5500, so native output.
             // Tooltip is encoded in the native format
             if ((stat = IO_write_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
 				return stat;
 		}
-		else if (MCstackfileversion < 7000)
+		else if (p_version < 7000)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format - uses UTF-8.
 			// Tooltip is encoded as UTF-8
@@ -3601,7 +3601,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 //---- New in 2.7
 	uint1 t_converted_ink;
-	if (MCstackfileversion >= 2700)
+	if (p_version >= 2700)
 		t_converted_ink = ink;
 	else
 		t_converted_ink = ink >= 0x19 ? GXcopy : ink;
@@ -3613,7 +3613,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000 then here we write
 	//   longscript or script+extended. Otherwise we just write out the extended area.
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		if (t_extended)
 		{
@@ -3631,7 +3631,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 				stat = t_stream -> WriteStringRefNew(_script, false);
 				getstack() -> securescript(this);
 				if (stat == IO_NORMAL)
-					stat = extendedsave(*t_stream, p_part);
+					stat = extendedsave(*t_stream, p_part, p_version);
 				if (stat == IO_NORMAL)
 					stat = t_stream -> Flush(true);
 				
@@ -3657,7 +3657,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			getstack() -> unsecurescript(this);
-			stat = IO_write_stringref_new(_script, stream, MCstackfileversion >= 7000, 4);
+			stat = IO_write_stringref_new(_script, stream, p_version >= 7000, 4);
 			getstack() -> securescript(this);
 			if (stat != IO_NORMAL)
 				return stat;
@@ -3675,7 +3675,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 				MCObjectOutputStream *t_stream = nil;
 				/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
 				if (stat == IO_NORMAL)
-					stat = extendedsave(*t_stream, p_part);
+					stat = extendedsave(*t_stream, p_part, p_version);
 				if (stat == IO_NORMAL)
 					stat = t_stream -> Flush(true);
 				delete t_stream;
@@ -3697,7 +3697,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 
 //---- New in 2.7
-	if (MCstackfileversion >= 2700)
+	if (p_version >= 2700)
 	{
 		if (addflags & AF_BLEND_LEVEL)
 			if ((stat = IO_write_uint1(blendlevel, stream)) != IO_NORMAL)
@@ -3748,23 +3748,23 @@ IO_stat MCObject::defaultextendedload(MCObjectInputStream& p_stream, uint32_t p_
 	return t_stat;
 }
 
-IO_stat MCObject::defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCObject::defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	IO_stat t_stat;
 	t_stat = checkloadstat(p_stream . WriteTag(0, 0));
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
 
-IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// First calculate the size of the array custom property data
 	uint32_t t_prop_size;
 	t_prop_size = 0;
 	
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 		t_prop_size += measurearraypropsets_legacy();
 
 	// Calculate the tag to write out
@@ -3801,8 +3801,8 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         // here from the char count of the string.
         // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
         t_size += 1 + 1 + 4
-                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), MCstackfileversion >= 7000)
-                + p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
+                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), p_version >= 7000)
+                + p_stream . MeasureStringRefNew(kMCEmptyString, p_version >= 7000);
 	}
 
 	// MW-2009-09-24: Slight oversight on my part means that there is no record
@@ -3853,10 +3853,10 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 			t_stat = p_stream . WriteU32(parent_script -> GetParent() -> GetObjectId());
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteNameRefNew(parent_script -> GetParent() -> GetObjectStack(), MCstackfileversion >= 7000);
+			t_stat = p_stream . WriteNameRefNew(parent_script -> GetParent() -> GetObjectStack(), p_version >= 7000);
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteStringRefNew(kMCEmptyString, MCstackfileversion >= 7000); // was mainstack reference
+			t_stat = p_stream . WriteStringRefNew(kMCEmptyString, p_version >= 7000); // was mainstack reference
 	}
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
