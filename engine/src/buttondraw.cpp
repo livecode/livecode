@@ -676,7 +676,8 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 		fascent = MCFontGetAscent(m_font);
 		dc->drawline(sx, sy - (fascent >> 1), sx + twidth, sy - (fascent >> 1));
 	}
-	if (!IsMacLF() && mnemonic)
+	if (!IsMacLF() && mnemonic
+        && (gettheme() == kMCInterfaceThemeLegacy || (MCscreen->querymods() & MS_ALT)))
 	{
 		if (p_mnemonic > 0)
 		{

@@ -50,6 +50,7 @@ class MCDispatch : public MCObject
 	bool m_drag_source;
 	bool m_drag_target;
 	bool m_drag_end_sent;
+    bool m_showing_mnemonic_underline;
 
 	MCExternalHandlerList *m_externals;
 

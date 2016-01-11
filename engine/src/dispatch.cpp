@@ -150,6 +150,8 @@ MCDispatch::MCDispatch()
 	m_drag_source = false;
 	m_drag_target = false;
 	m_drag_end_sent = false;
+    
+    m_showing_mnemonic_underline = false;
 
 	m_externals = nil;
 
@@ -1344,15 +1346,22 @@ void MCDispatch::wkunfocus(Window w)
 
 Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 {
-	if (menu != NULL)
+    // Trigger a redraw as mnemonic underlines will need to be drawn
+    if ((MCmodifierstate & MS_ALT) && !m_showing_mnemonic_underline)
+    {
+        m_showing_mnemonic_underline = true;
+        MCRedrawDirtyScreen();
+    }
+    
+    if (menu != NULL)
 		return menu->kdown(p_string, key);
-
+    
 	MCStack *target = findstackd(w);
 	if (target == NULL || !target->kdown(p_string, key))
 	{
 		if (MCmodifierstate & MS_MOD1)
 		{
-			MCButton *bptr = MCstacks->findmnemonic(key);
+            MCButton *bptr = MCstacks->findmnemonic(key);
 			if (bptr != NULL)
 			{
 				bptr->activate(True, key);
@@ -1368,11 +1377,18 @@ Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 
 void MCDispatch::wkup(Window w, MCStringRef p_string, KeySym key)
 {
-	if (menu != NULL)
+    // Trigger a redraw as mnemonic underlines will need to be cleared
+    if (!(MCmodifierstate & MS_ALT) && m_showing_mnemonic_underline)
+    {
+        m_showing_mnemonic_underline = false;
+        MCRedrawDirtyScreen();
+    }
+    
+    if (menu != NULL)
 		menu->kup(p_string, key);
 	else
 	{
-		MCStack *target = findstackd(w);
+        MCStack *target = findstackd(w);
 		if (target != NULL)
 			target->kup(p_string, key);
 	}
