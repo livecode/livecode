@@ -2757,6 +2757,21 @@ void MCObject::positionrel(const MCRectangle &drect,
 	}
 }
 
+void MCObject::drawmarquee(MCContext *p_context, const MCRectangle& p_rect)
+{
+    p_context -> setforeground(MCscreen -> getblack());
+    p_context -> setlineatts(0, LineOnOffDash, CapButt, JoinRound);
+    p_context -> setdashes(0, dashlist, 2);
+    p_context -> drawrect(p_rect);
+    
+    p_context -> setforeground(MCscreen -> getwhite());
+    p_context -> setdashes(dashlist[0], dashlist, 2);
+    p_context -> drawrect(p_rect);
+    
+    // Reset line atts
+    p_context -> setlineatts(0, LineSolid, CapButt, JoinBevel);
+}
+
 // SN-2014-04-03 [[ Bug 12075 ]] Tooltips need to be able to resolve the text direction of their label
 void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font)
 {

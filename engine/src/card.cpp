@@ -3315,13 +3315,7 @@ void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 // IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
 void MCCard::drawselectionrect(MCContext *p_context)
 {
-	p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
-	p_context->setforeground(p_context->getblack());
-	p_context->setbackground(p_context->getwhite());
-	p_context->setdashes(0, dashlist, 2);
-	p_context->drawrect(selrect);
-	p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
-	p_context->setbackground(MCzerocolor);
+    drawmarquee(p_context, selrect);
 }
 
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
