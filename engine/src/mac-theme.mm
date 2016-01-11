@@ -37,9 +37,29 @@
 #import <CoreText/CoreText.h>
 
 
-// Returns the correct font for a control of the given type
-static NSFont* font_for_control(MCPlatformControlType p_type, MCNameRef* r_name = nil)
+// Returns the name of the legacy font
+static NSString* get_legacy_font_name()
 {
+    if (MCmajorosversion < 0x10A0)
+        return @"Lucida Grande";
+    if (MCmajorosversion > 0x10B0)
+        return @"San Francisco";
+    else
+        return @"Helvetica Neue";
+}
+
+// Returns the correct font for a control of the given type
+static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlState p_state, MCNameRef* r_name = nil)
+{
+    // Always return the same font regardless of control type in legacy mode
+    if (p_state & kMCPlatformControlStateCompatibility)
+    {
+        static NSFont* s_legacy_font = [[NSFont fontWithName:get_legacy_font_name() size:11] retain];
+        if (r_name)
+            *r_name = nil;
+        return s_legacy_font;
+    }
+    
     switch (p_type)
     {
         case kMCPlatformControlTypeRichText:
@@ -127,7 +147,7 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
             if (p_state & kMCPlatformControlStateCompatibility)
                 r_int = 11;
             else
-                return [font_for_control(p_type) pointSize];
+                return [font_for_control(p_type, p_state) pointSize];
         }
         
         // Property is not known
@@ -343,7 +363,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
 {
     // Get the font for the given control type
     MCNameRef t_font_name = nil;
-    NSFont* t_font = font_for_control(p_type, &t_font_name);
+    NSFont* t_font = font_for_control(p_type, p_state, &t_font_name);
     if (t_font == nil)
         return false;
     
