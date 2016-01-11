@@ -683,13 +683,20 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 		{
 			MCRange t_before = MCRangeMake(0, mnemonic - 1);
 			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
-
-            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before, getstack() -> getdevicetransform());
             int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter, getstack() -> getdevicetransform());
 
+#ifdef TARGET_PLATFORM_WINDOWS
+			// No idea why this fudge-factor is required on Windows...
+			// Without it, the mnemonic underlines are drawn too far
+			// to the left, mis-aligning them with the mnemonic letter.
+			mstart -= 1;
+#endif
+
 			sy += mnemonicoffset;
-			dc->drawline(mstart, sy, mstart + mwidth, sy);
+			dc->drawline(mstart, sy, mstart + mwidth - 1, sy);
 		}
 	}
 }

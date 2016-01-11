@@ -52,7 +52,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-uint2 MCButton::mnemonicoffset = 2;
+uint2 MCButton::mnemonicoffset = 1;
 MCRectangle MCButton::optionrect = {0, 0, 12, 8};
 uint4 MCButton::clicktime;
 uint2 MCButton::menubuttonheight = 4;
