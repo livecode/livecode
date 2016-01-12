@@ -554,6 +554,10 @@ bool MCClipboard::AddPrivateData(MCDataRef p_private_data)
         MCValueRelease(m_private_data);
     m_private_data = MCValueRetain(p_private_data);
     
+    // Ensure that an item is always on the clipboard, even if it is empty
+    if (m_clipboard->GetItemCount() == 0)
+        m_clipboard->AddItem(m_clipboard->CreateNewItem());
+    
     return true;
 }
 
