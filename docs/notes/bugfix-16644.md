@@ -1,0 +1,1 @@
+# Concatenation logic was causing tree view to appear pink

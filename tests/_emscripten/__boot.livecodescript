@@ -8,7 +8,6 @@ private command TestLoadLibrary pBasename
 end TestLoadLibrary
 
 on startup
-	set the defaultfolder to "/boot/standalone"
 
 	-- Load test libraries
 	write "# Loading test libraries" & return to stdout
@@ -17,9 +16,16 @@ on startup
 	TestLoadLibrary "_inputlib"
 
 	-- Run tests
-	local tTestFile, tStackName, tCommand, tSetupResult
+	local tTestFiles, tTestFile, tStackName, tCommand, tSetupResult
 
-	repeat for each element tTestFile in TesterGetTestFileNames()
+	put TesterGetTestFileNames("/boot/standalone") into tTestFiles
+
+	repeat for each element tTestFile in tTestFiles
+		-- Ensure that the test stack filename is absolute
+		if the first char of tTestFile is not slash then
+			put "/boot/standalone/" before tTestFile
+		end if
+
 		put the name of stack tTestFile into tStackName
 
 		TestDiagnostic "framework: Running tests from" && tTestFile

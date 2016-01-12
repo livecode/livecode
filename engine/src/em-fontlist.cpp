@@ -16,6 +16,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <SkPaint.h>
 #include <SkTypeface.h>
 
 #include "em-fontlist.h"
@@ -70,10 +71,22 @@ MCFontnode::MCFontnode(MCNameRef p_name,
     // Load the font as requested
     m_font_info.fid = emscripten_get_font_by_name(p_name);
 
-    /* FIXME Dummy values */
-	m_font_info.size = p_size;
-	m_font_info.ascent = p_size - 1;
-	m_font_info.descent = p_size * 2 / 14 + 1;
+    // Calculate the metrics for this typeface and size
+    SkPaint t_paint;
+    t_paint.setTypeface((SkTypeface*)m_font_info.fid);
+    t_paint.setTextSize(p_size);
+        
+    SkPaint::FontMetrics t_metrics;
+        
+    t_paint.getFontMetrics(&t_metrics);
+        
+    // SkPaint::FontMetrics gives the ascent value as a negative offset from the baseline, where we expect the (positive) distance.
+    m_font_info.m_ascent = -t_metrics.fAscent;
+    m_font_info.m_descent = t_metrics.fDescent;
+    m_font_info.m_leading = t_metrics.fLeading;
+    m_font_info.m_xheight = t_metrics.fXHeight;
+
+    m_font_info.size = p_size;
 
     //MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
 }

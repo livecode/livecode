@@ -602,18 +602,18 @@ void MCEngineEvalMe(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCEngineEvalTarget(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr == nil)
+	if (MCtargetptr . object == nil)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr->getstringprop(ctxt, 0, P_NAME, False, r_string);
+		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, P_NAME, False, r_string);
 }
 
 void MCEngineEvalTargetContents(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCtargetptr == nil)
+	if (MCtargetptr . object == nil)
 		r_string = MCValueRetain(kMCEmptyString);
 	else
-		MCtargetptr->getstringprop(ctxt, 0, MCtargetptr->gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
+		MCtargetptr . object -> getstringprop(ctxt, MCtargetptr . part_id, MCtargetptr . object -> gettype() == CT_FIELD ? P_TEXT : P_NAME, False, r_string);
 }
 
 //////////
@@ -1169,22 +1169,22 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	}
 	
 	// Work out the target object
-	MCObject *t_object;
+	MCObjectPtr t_object;
 	if (p_target != nil)
-		t_object = p_target -> object;
+		t_object = *p_target;
 	else
-		t_object = ctxt . GetObject();
+		t_object = ctxt . GetObjectPtr();
 		
 	// Fetch current default stack and target settings
 	MCStack *t_old_stack;
 	t_old_stack = MCdefaultstackptr;
-	MCObject *t_old_target;
+	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
 	// Cache the current 'this stack' (used to see if we should switch back
 	// the default stack).
 	MCStack *t_this_stack;
-	t_this_stack = t_object -> getstack();
+	t_this_stack = t_object . object -> getstack();
 	
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
@@ -1212,7 +1212,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	Boolean olddynamic = MCdynamicpath;
 	MCdynamicpath = MCdynamiccard != NULL;
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
-		switch(t_stat = t_object->handle((Handler_type)p_handler_type, p_message, p_parameters, t_object))
+		switch(t_stat = t_object . object -> handle((Handler_type)p_handler_type, p_message, p_parameters, t_object . object))
 		{
 		case ES_ERROR:
 			ctxt . LegacyThrow(EE_DISPATCH_BADCOMMAND, p_message);
@@ -1856,20 +1856,12 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     // refers to the derived object context, otherwise it is the object
     // we were compiled in.
     
-    MCObject *t_object;
+    MCObjectPtr t_object;
     
     if (ctxt . GetParentScript() == NULL)
-        t_object = nil; // destobj!
+        r_object . object = nil; // destobj!
     else
-        t_object = ctxt . GetObject();
-
-        r_object . object = t_object;
-        r_object . part_id = 0;
-    
-    if (t_object != nil)
-        return;
-    
-  //  ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+        r_object = ctxt . GetObjectPtr();
 }
 
 void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
@@ -1886,10 +1878,9 @@ void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 
 void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
-    if (MCtargetptr != nil)
+    if (MCtargetptr . object != nil)
     {
-        r_object . object = MCtargetptr;
-        r_object . part_id = 0;
+        r_object = MCtargetptr;
         return;
     }
     

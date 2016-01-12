@@ -3819,7 +3819,7 @@ void MCInterfaceExecResolveImageById(MCExecContext& ctxt, MCObject *p_object, ui
     if (t_found_image != nil)
     {
         
-        t_found_image -> GetLongId(ctxt, &t_long_id);
+        t_found_image -> GetLongId(ctxt, 0, &t_long_id);
         if (!ctxt . HasError())
             ctxt . SetItToValue(*t_long_id);
     }
@@ -3837,7 +3837,7 @@ void MCInterfaceExecResolveImageByName(MCExecContext& ctxt, MCObject *p_object, 
     
     if (t_found_image != nil)
     {
-        t_found_image -> GetLongId(ctxt, &t_long_id);
+        t_found_image -> GetLongId(ctxt, 0, &t_long_id);
         if (!ctxt . HasError())
             ctxt . SetItToValue(*t_long_id);
     }

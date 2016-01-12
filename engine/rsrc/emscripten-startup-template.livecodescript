@@ -2,28 +2,37 @@
 constant kBootHash = "@BOOT_HASH@"
 constant kEngineVersion = "@ENGINE_VERSION@"
 
+-- Directories that engine expects to normally be present
+constant kStandardFolders = "/tmp:/livecode:/boot:/boot/standalone:/boot/fonts"
+
+-- Directory containing the initial stack files
+constant kStartupFolder = "/boot/standalone"
+-- Startup stack file
+constant kStartupStackFile = "/boot/standalone/__boot.livecode"
+-- Directory containing auxiliary stack files
+constant kAuxStackFolder = "/boot/auxiliary_stackfiles"
+-- Directory containing extensions
+constant kExtensionFolder = "/boot/extensions"
+-- Extension list file
+constant kExtensionListFile = "/boot/extensions/extensions.txt"
+
 on startup
-   -- Directory containing the initial stack files
-   local tStartupFolder
-   put "/boot/standalone" into tStartupFolder
-   
-   -- Startup stack file
-   local tStartupStack
-   put tStartupFolder & slash & "__boot.livecode" into tStartupStack
-   
-   -- Directory containing auxiliary stack files
-   local tAuxFolder
-   put "/boot/auxiliary_stackfiles" into tAuxFolder
-   
-   -- Directory containing extensions
-   local tExtensionFolder, tExtensionListFile
-   put "/boot/extensions" into tExtensionFolder
-   put tExtensionFolder & slash & "extensions.txt" into tExtensionListFile
-   
    local tError, tFolder, tFile, tByteString, tByte
    local tStackName, tStackData, tStackHashString
    local tModuleList, tModuleName
    try
+      ----------------------------------------------------------------
+      -- Create standard filesystem layout
+      set the itemdelimiter to ":"
+      repeat for each item tFolder in kStandardFolders
+         if there is not a folder tFolder then
+            create folder tFolder
+            if the result is not empty then
+               throw the result
+            end if
+         end if
+      end repeat
+
       -------------------------------------------------------------
       -- Validate engine version
       if the version is not kEngineVersion then
@@ -32,16 +41,16 @@ on startup
       
       -------------------------------------------------------------
       -- Validate boot stack hash
-      open file tStartupStack for binary read
+      open file kStartupStackFile for binary read
       if the result is not empty then
          throw the result
       end if
-      read from file tStartupStack until end
+      read from file kStartupStackFile until end
       put it into tStackData
       if the result is not empty and the result is not "eof" then
          throw the result
       end if
-      close file tStartupStack
+      close file kStartupStackFile
 
       put the sha1Digest of (byte 1 to 1024 of tStackData) into tStackData
       put empty into tStackHashString
@@ -61,8 +70,8 @@ on startup
       
       -------------------------------------------------------------
       -- Load auxiliary stack files and run their load handlers
-      if there is a directory tAuxFolder then
-         set the defaultfolder to tAuxFolder
+      if there is a directory kAuxStackFolder then
+         set the defaultfolder to kAuxStackFolder
          
          repeat for each line tFile in the files
             
@@ -78,16 +87,16 @@ on startup
       
       -------------------------------------------------------------
       -- Load extensions
-      if there is a file tExtensionListFile then
+      if there is a file kExtensionListFile then
          
          -- Read list of extensions
-         open file tExtensionListFile for "UTF-8" text read
-         read from file tExtensionListFile until end
+         open file kExtensionListFile for "UTF-8" text read
+         read from file kExtensionListFile until end
          put it into tModuleList
-         close file tExtensionListFile
+         close file kExtensionListFile
          
          repeat for each line tModuleName in tModuleList
-            put tExtensionFolder & slash & tModuleName into tFolder
+            put kExtensionFolder & slash & tModuleName into tFolder
             
             load extension from file (tFolder & slash & "module.lcm") \
                   with resource path (tFolder & slash & "resources")
@@ -103,11 +112,11 @@ on startup
    
    -- Set the initial working directory to the directory that contains
    -- the initial stack.
-   set the defaultfolder to tStartupFolder
+   set the defaultfolder to kStartupFolder
    
    -- Try to print something vaguely helpful to the the log
    if tError is not empty then
-      write "startup failed:" && tError to stderr
+      write "startup failed:" && tError & return to stderr
    end if
    
    return tError

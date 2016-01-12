@@ -24,6 +24,13 @@ end revLoadLibrary
 -- Helper functions
 ----------------------------------------------------------------
 
+private function _TestValidateCount pCount
+   if pCount is not an integer or pCount <= 0 then
+      throw "Bad test count '" & pCount & "': must be positive integer"
+   end if
+   return pCount
+end _TestValidateCount
+
 private function _TestValidateDescription pDescription
    if the number of lines in pDescription > 1 then
       throw "Bad test description '" & line 1 of pDescription & "...': multiple lines"
@@ -104,6 +111,10 @@ end _TestWriteOutput
 -- Unit test library functions
 ----------------------------------------------------------------
 
+on TestPlan pCount
+   _TestWriteOutput "1.." & _TestValidateCount(pCount) & return
+end TestPlan
+
 on TestDiagnostic pMessage
    local tLine
    repeat for each line tLine in pMessage
@@ -141,7 +152,7 @@ end TestGetIDERepositoryPath
 on TestLoadExtension pName	
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
-   put "com.livecode.extensions.livecode." & toLower(item -1 of pName) into tExtensionUnzipFolder
+   put pName into tExtensionUnzipFolder
 
    local tPath, tRepoPath
    put specialfolderpath("engine") into tPath
@@ -161,16 +172,12 @@ on TestLoadExtension pName
       delete item -1 of tPath
    end repeat
    
-   TestDiagnostic tExtensionsFolder
-
    local tExtensionFolder
    if tExtensionsFolder is not empty then
       if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
         put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
       end if
    end if
-   
-    TestDiagnostic tExtensionFolder
    
    local tExtensionFile
    if tExtensionFolder is not empty then

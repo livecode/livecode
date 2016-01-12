@@ -17,11 +17,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestFolderInListing
-   if the platform is "HTML" then
-      TestSkip "(folder) is in the folder listing", "bug 16543"
-      exit TestFolderInListing
-   end if
-
    set the defaultFolder to specialFolderPath("temporary")
    
    local tTestFolder
@@ -40,11 +35,6 @@ on TestFolderInListing
 end TestFolderInListing
 
 on TestBugfix12039
-   if the platform is "HTML" then
-      TestSkip "(file) is among the files", "bug 16543"
-      exit TestBugfix12039
-   end if
-
    // 12039
    local tOldCwd, tTestFile
    put the defaultFolder into tOldCwd
@@ -104,11 +94,6 @@ end TestShortFilePath
 
 
 on TestFileCreationWithOpenForWrite
-   if the platform is "HTML" then
-      TestSkip "Open file for write creates the file", "bug 16543"
-      exit TestFileCreationWithOpenForWrite
-   end if
-
    set the defaultFolder to specialFolderPath("temporary")
    
    local tFileName
@@ -181,18 +166,6 @@ on TestSpecialFolderPath
    __testFolderExists tSkip, tEngine, "engine"
 
    local tFolder, tHome
-
-   if the platform is "html" then
-      TestSkip "temporary folder is not empty", "bug 16543"
-      TestSkip "temporary folder exists", "bug 16543"
-   else if the platform is "android" then
-      TestSkip "temporary folder is not empty", "temporary folder not available on android"
-      TestSkip "temporary folder exists", "temporary folder not available on android"
-   else
-      put specialFolderPath("Temporary") into tFolder
-      TestAssert "temporary folder is not empty", tFolder is not empty
-      TestAssert "temporary folder exists", there is a folder tFolder
-   end if
    
    put specialFolderPath("resources") into tResources
    if the platform is "macos" and the environment is "standalone" then
@@ -202,11 +175,11 @@ on TestSpecialFolderPath
    else if the environment is "mobile" then
       testAssert "Resources and Engine specialfolderPaths are the same on mobile", tResources is tEngine
    else
-      TestSkip
+      TestSkip "resources folder exists"
    end if
    
    // Only Linux and HTML5 do not have a Document special folder
-   put the platform contains "linux" or the platform is "html" into tSkip
+   put the platform contains "linux" or the platform is "html5" into tSkip
    __testSpecialFolder tSkip, "documents"
    
    // Only mobiles have Cache special folder
@@ -219,13 +192,13 @@ on TestSpecialFolderPath
    
    // Not all the platforms actually have a Desktop folder - such as servers
    // so we only check that the path returned is not empty.
-   if the environment is "mobile" or the platform is "html" then
+   if the environment is "mobile" or the platform is "html5" then
       TestSkip  "specialFolderPath(desktop) is not empty"
    else
       TestAssert "specialFolderPath(desktop) is not empty", specialFolderPath("desktop") is not empty
    end if
    
-   put the environment is "mobile" or the platform contains "linux" or the platform is "html" into tSkip
+   put the environment is "mobile" or the platform contains "linux" or the platform is "html5" into tSkip
    __testSpecialFolder tSkip, "system"
    __testSpecialFolder tSkip, "support"
 
@@ -233,7 +206,7 @@ on TestSpecialFolderPath
    __testSpecialFolder tSkip, "fonts"
    
    //////////////////////////////////////////////////////////////////////////////////////////
-   // windows numeric folder codes
+   TestDiagnostic "Windows numeric folder codes"
    put the platform is not "win32" into tSkip
    __testSpecialFolder tSkip, "0x001a", "User app"
    __testSpecialFolder tSkip, "0x0023", "All user app"
@@ -246,6 +219,7 @@ on TestSpecialFolderPath
    
    //////////////////////////////////////////////////////////////////////////////////////////
    // Mac-specific
+   TestDiagnostic "Mac-specific special folders"
    put the platform is not "macos" into tSkip
    
    // Preferences folder
@@ -291,14 +265,6 @@ end TestTempName
 
 
 on TestThereIsAFile
-   if the platform is "HTML" then
-      TestSkip "after creation - there is a file (file)", "bug 16543"
-      TestSkip "after creation - not (there is not a file (file))", "bug 16543"
-      TestSkip "after deletion - not (there is a file (file))", "bug 16543"
-      TestSkip "after deletion - there is not a file (file)", "bug 16543"
-      exit TestThereIsAFile
-   end if
-
    set the defaultFolder to specialFolderPath("temporary")
    
    local tTestFile
@@ -316,14 +282,6 @@ end TestThereIsAFile
 
 
 on TestThereIsAFolder
-   if the platform is "HTML" then
-      TestSkip "after creation - there is a folder (folder)", "bug 16543"
-      TestSkip "after creation - not (there is not a folder (folder))", "bug 16543"
-      TestSkip "after deletion - not (there is a folder (folder))", "bug 16543"
-      TestSkip "after deletion - there is not a folder (folder)", "bug 16543"
-      exit TestThereIsAFolder
-   end if
-
    set the defaultFolder to specialFolderPath("temporary")
    
    local tTestFolder
@@ -399,7 +357,7 @@ on TestLaunch
       local tPID
       put word 1 of line it of taskList into tPID
       get shell ("kill" && tPID)
-   else if the platform is "HTML" then
+   else if the platform is "HTML5" then
       TestSkip "launch subprocess", "HTML5 platform does not support subprocesses"
    else
       testSkip
@@ -408,7 +366,7 @@ end TestLaunch
 
 
 on TestLaunchWith
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       TestSkip "launch subprocess with", "HTML5 platform does not support subprocesses"
       exit TestLaunchWith
    end if

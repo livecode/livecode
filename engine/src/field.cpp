@@ -3229,7 +3229,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 // SN-2015-04-30: [[ Bug 15175 ]] TabAlignment flag added
 #define FIELD_EXTRA_TABALIGN        (1 << 1)
 
-IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3266,7 +3266,7 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
     }
     
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3337,7 +3337,7 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	int4 savex = textx;
@@ -3351,7 +3351,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     bool t_has_extension;
     t_has_extension = text_direction != kMCTextDirectionAuto || nalignments != 0;
     
-	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 	if ((stat = IO_write_int2(leftmargin, stream)) != IO_NORMAL)
@@ -3373,7 +3373,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			if ((stat = IO_write_uint2(tabs[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (fdata != NULL)
 	{
@@ -3389,7 +3389,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCCdata *tptr;
 			tptr = getcarddata(fdata, 0, False);
 			if (tptr != NULL)
-				if ((stat = tptr -> save(stream, OT_FDATA, 0)) != IO_NORMAL)
+				if ((stat = tptr -> save(stream, OT_FDATA, 0, p_version)) != IO_NORMAL)
 					return stat;
 		}
 		else
@@ -3397,7 +3397,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCCdata *tptr = fdata;
 			do
 			{
-				if ((stat = tptr->save(stream, OT_FDATA, p_part)) != IO_NORMAL)
+				if ((stat = tptr->save(stream, OT_FDATA, p_part, p_version)) != IO_NORMAL)
 					return stat;
 				tptr = tptr->next();
 			}
@@ -3405,10 +3405,10 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		}
 	}
 	if (vscrollbar != NULL)
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	if (hscrollbar != NULL)
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	if (opened)
 	{

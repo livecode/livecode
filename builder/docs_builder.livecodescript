@@ -2044,28 +2044,38 @@ command errorShow pError
 end errorShow
 */
 command docsBuilderGenerateDistributedGuide
-   local tGuideFolder
-   put builderIDEDocsFolder() & slash & "guides" into tGuideFolder
-   set the defaultfolder to tGuideFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+
+   local tGuideFolders
+   put builderIDEDocsFolder() & slash & "guides" into tGuideFolders
+   put return & builderRepoFolder() & slash & "docs" & slash & "guides" after tGuideFolders
    
-   local tGuideData, tGuideName
-   set the itemdelimiter to "."
-   repeat for each line tFile in the files
-      if tFile begins with "."  then next repeat
-      docsBuilderProgressUpdate "", "Building guide" && tGuideFolder & slash & tFile
-      put item 1 to -2 of tFile into tGuideName
-      get url ("binfile:" & tGuideFolder & slash & tFile)
-      if it is not empty then
-         get textDecode(it, "utf-8")
-         replace "[toc]" with empty in it
-         put tab & "{" & CR after tGuideData
-         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
-         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
-         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
-      end if
+   local tGuideFolder, tGuideData, tGuideName
+   repeat for each line tGuideFolder in tGuideFolders
+      set the defaultfolder to tGuideFolder
+   
+      set the itemdelimiter to "."
+      repeat for each line tFile in the files
+         if tFile begins with "."  then next repeat
+         docsBuilderProgressUpdate "", "Building guide" && tGuideFolder & slash & tFile
+         put item 1 to -2 of tFile into tGuideName
+         get url ("binfile:" & tGuideFolder & slash & tFile)
+         if it is not empty then
+            get textDecode(it, "utf-8")
+            replace "[toc]" with empty in it
+            put tab & "{" & CR after tGuideData
+            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
+            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
+            put tab & escape("location") & ":" & escape("ide") & comma & return after tGuideData
+            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
+         end if
+      end repeat
    end repeat
    delete the last char of tGuideData
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & builderGuideFolder() & slash & "distributed_guide.js")
+   
+   set the defaultFolder to tDefaultFolder
 end docsBuilderGenerateDistributedGuide
 
 /*
@@ -2199,6 +2209,8 @@ on docsBuilderPopulateDatabase pLibrariesA
       exit docsBuilderPopulateDatabase
    end if
    
+   revExecuteSQL tConnection,"BEGIN TRANSACTION"
+   
    repeat for each key tKey in pLibrariesA   	  
    	  builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
       revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
@@ -2207,6 +2219,9 @@ on docsBuilderPopulateDatabase pLibrariesA
          exit docsBuilderPopulateDatabase
       end if
    end repeat
+   
+   revExecuteSQL tConnection,"COMMIT"
+   revCloseDatabase tConnection
 end docsBuilderPopulateDatabase
 
 --- LEGACY

@@ -129,7 +129,8 @@ static bool key_to_name(CFStringRef p_key, MCNameRef &r_name)
 	{
 		if (CFStringCompare(s_key_map[i].key, p_key, 0) == kCFCompareEqualTo)
 		{
-			r_name = *s_key_map[i].name;
+			// PM-2015-12-09: [[ Bug 16156 ]] Prevent crash caused by underretain
+			r_name = MCValueRetain(*s_key_map[i].name);
 			return true;
 		}
 	}

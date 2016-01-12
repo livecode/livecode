@@ -433,9 +433,9 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 }
 #endif
 
-IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
@@ -443,13 +443,13 @@ IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, u
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
 	if ((stat = IO_write_uint1(OT_MCEPS, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_uint4(size, stream)) != IO_NORMAL)
 		return stat;
@@ -474,7 +474,7 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint2(ey, stream)) != IO_NORMAL)
 		return stat;
 	if (flags & F_RETAIN_IMAGE)
-		if ((stat = image->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = image->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	if ((stat = IO_write_uint2(curpage, stream)) != IO_NORMAL)
 		return stat;
@@ -484,7 +484,7 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	for (i = 0 ; i < pagecount ; i++)
 		if ((stat = IO_write_uint4(pageIndex[i], stream)) != IO_NORMAL)
 			return stat;
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 MCControl *MCEPS::clone(Boolean attach, Object_pos p, bool invisible)

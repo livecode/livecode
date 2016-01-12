@@ -115,38 +115,50 @@ MCObjectPropertyTable MCGroup::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGroup::MCGroup()
+MCGroup::MCGroup() :
+  MCControl(),
+  controls(NULL),
+  kfocused(NULL),
+  oldkfocused(NULL),
+  newkfocused(NULL),
+  mfocused(NULL),
+  vscrollbar(NULL),
+  hscrollbar(NULL),
+  scrollx(0),
+  scrolly(0),
+  scrollbarwidth(MCscrollbarwidth),
+  label(MCValueRetain(kMCEmptyString)),
+  minrect(MCU_make_rect(0, 0, 0, 0)),
+  number(MAXUINT2),
+  mgrabbed(False),
+  m_updates_locked(false),
+  m_clips_to_rect(false)
 {
 	flags |= F_TRAVERSAL_ON | F_RADIO_BEHAVIOR | F_GROUP_ONLY;
 	flags &= ~(F_SHOW_BORDER | F_OPAQUE);
-	label = MCValueRetain(kMCEmptyString);
-	controls = NULL;
-	kfocused = mfocused = NULL;
-	newkfocused = oldkfocused = NULL;
-	number = MAXUINT2;
-	leftmargin = rightmargin = topmargin = bottommargin = defaultmargin;
-	vscrollbar = hscrollbar = NULL;
-	scrollx = scrolly = 0;
-	scrollbarwidth = MCscrollbarwidth;
-	minrect.x = minrect.y = minrect.width = minrect.height = 0;
-	
-	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
-	//   when created.
-    m_updates_locked = false;
-    
-    // MW-2014-06-20: [[ ClipsToRect ]] Initialize to false.
-    m_clips_to_rect = false;
+    leftmargin = rightmargin = topmargin = bottommargin = defaultmargin;
 }
 
-MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
+MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) :
+  MCControl(gref),
+  controls(NULL),
+  kfocused(NULL),
+  oldkfocused(NULL),
+  newkfocused(NULL),
+  mfocused(NULL),
+  vscrollbar(NULL),
+  hscrollbar(NULL),
+  scrollx(gref.scrollx),
+  scrolly(gref.scrolly),
+  scrollbarwidth(gref.scrollbarwidth),
+  label(MCValueRetain(gref.label)),
+  minrect(gref.minrect),
+  number(MAXUINT2),
+  mgrabbed(False),
+  m_updates_locked(false),
+  m_clips_to_rect(gref.m_clips_to_rect)
 {
-	MCGroup(gref, false);
-}
-
-MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
-{
-	label = MCValueRetain(gref.label);
-	controls = NULL;
+    // Copy the controls
 	if (gref.controls != NULL)
 	{
 		MCControl *optr = gref.controls;
@@ -173,9 +185,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		}
 		while (optr != gref.controls);
 	}
-	minrect = gref.minrect;
-	kfocused = mfocused = NULL;
-	number = MAXUINT2;
+
+    // Copy the vertical scrollbar
 	if (gref.vscrollbar != NULL)
 	{
 		vscrollbar = new MCScrollbar(*gref.vscrollbar);
@@ -184,8 +195,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		vscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
 		vscrollbar->setembedded();
 	}
-	else
-		vscrollbar = NULL;
+
+    // Copy the horizontal scrollbar
 	if (gref.hscrollbar != NULL)
 	{
 		hscrollbar = new MCScrollbar(*gref.hscrollbar);
@@ -194,18 +205,6 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		hscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
 		hscrollbar->setembedded();
 	}
-	else
-		hscrollbar = NULL;
-	scrollx = gref.scrollx;
-	scrolly = gref.scrolly;
-	scrollbarwidth = gref.scrollbarwidth;
-	
-    // MW-2014-06-20: [[ ClipsToRect ]] Copy other group's value.
-    m_clips_to_rect = gref.m_clips_to_rect;
-    
-	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
-	//   when cloned.
-    m_updates_locked = false;
 }
 
 MCGroup::~MCGroup()
@@ -3141,7 +3140,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 
 #define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
 
-IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3155,7 +3154,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3191,7 +3190,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -3205,14 +3204,14 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_clips_to_rect)
         t_has_extensions = true;
 
-	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3254,16 +3253,16 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (vscrollbar != NULL)
 	{
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (hscrollbar != NULL)
 	{
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (controls != NULL)
@@ -3271,7 +3270,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCControl *cptr = controls;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = cptr->next();
 		}

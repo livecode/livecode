@@ -1001,7 +1001,7 @@ void MCStack::SetIcon(MCExecContext& ctxt, uinteger_t p_id)
 void MCStack::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
 	if (parent != nil && !MCdispatcher -> ismainstack(this))
-		parent -> GetLongId(ctxt, r_owner);
+		parent -> GetLongId(ctxt, 0, r_owner);
 }
 
 void MCStack::GetMainStack(MCExecContext& ctxt, MCStringRef& r_main_stack)

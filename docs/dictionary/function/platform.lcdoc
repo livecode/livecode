@@ -10,7 +10,7 @@ Summary: <return|Returns> the name of the operating system LiveCode is running o
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,windows,linux,ios,android,html5
 
 Platforms: desktop,server,web,mobile
 
@@ -20,26 +20,23 @@ the platform
 Example:
 if the platform is "MacOS" then set the activatePalettes to true
 
-Returns (enum): The platform function returns one of the following strings:SGI IRIS               Silicon Graphics IRIXIBM RS/6000    AIXIntel SCO        SCO Open DeskTopIntel SVR4  Solaris for x86 architectureSPARC Solaris    SPARC SolarisWin32   Windows (any version post-3.1)iphoneiOS devicesandroidAndroid devices
--MacOS : any Mac OS, OS X, or Darwin system
--Linux : Linux for Intel or PowerPC architecture
--BSD : BSD UNIX (BSDI, FreeBSD)
--HP:9000/700 HP:UX
--SPARC : SPARC SunOS
+Returns (string): "Win32", "MacOS", "Linux", "iphone", "android", or "HTML5"
 
 Description:
 Use the <platform> <function> to change a <stack|stack's> <behavior> or <appearance> depending on the operating system.
 
 The <platform> <function> is compiled into each version of the LiveCode <engine>. This means that, for example, if you're developing on a <Mac OS|Mac OS system> and you build a <standalone application> for <Unix|Linux>, when you run the <standalone application> on a <Unix|Linux> system, the <platform> <function> <return|returns> "Linux".
 
->*Tip:*  To determine whether a Mac system is running <Mac OS> or <OS X>, use the <systemVersion> <function> along with the platform <function>, as in the following example:
+The possible values returned by the <platform> function are:
 
-  set the itemDelimiter to "." -- versions are of the form "x.y.z"
-  if the platform is "MacOS" and item 1 of the systemVersion &gt;= 10 then
-    answer "This is an OS X system."
-  end if
+* "Win32" on any version of Windows
+* "Linux" on all Linux distributions
+* "MacOS" on any version of Mac OS X
+* "iphone" on iPhones, iPads and other iOS devices
+* "android" on smartphones, tablets and other Android devices
+* "HTML5" when running in a web browser
 
 Changes:
-Support for Alpha Digital UNIX was removed and support for OS X was added in version 1.1.
+Support for HTML5 was added in version 8.0.0.
 
 References: function (control_st), stack (object), systemVersion (function), buildNumber (function), deleteRegistry (function), processor (function), MCISendString (function), return (glossary), OS X (glossary), engine (glossary), appearance (glossary), Unix (glossary), Mac OS (glossary), standalone application (glossary), behavior (glossary)

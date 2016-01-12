@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
-   if the platform is "HTML" then
+   if the platform is "HTML5" then
       return "SKIP DNS and socket APIs unavailable on HTML5"
    end if
 end TestSetup

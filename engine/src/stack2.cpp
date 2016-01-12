@@ -706,7 +706,7 @@ Boolean MCStack::checkid(uint4 cardid, uint4 controlid)
 	return False;
 }
 
-IO_stat MCStack::saveas(const MCStringRef p_fname)
+IO_stat MCStack::saveas(const MCStringRef p_fname, uint32_t p_version)
 {
 	Exec_stat stat = curcard->message(MCM_save_stack_request);
 	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
@@ -714,7 +714,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname)
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)sptr->parent;
-		return MCdispatcher->savestack(sptr, p_fname);
+		return MCdispatcher->savestack(sptr, p_fname, p_version);
 	}
 	return IO_NORMAL;
 }

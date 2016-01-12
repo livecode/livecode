@@ -2691,7 +2691,10 @@ enum Exec_errors
 	EE_DO_BADWIDGETEXP,
 
     // {EE-0881} documentFilename: bad filename
-    EE_DOCUMENTFILENAME_BADFILENAME,    
+    EE_DOCUMENTFILENAME_BADFILENAME, 
+
+	// {EE-0882} save: error in file format expression
+	EE_SAVE_BADNOFORMATEXP,
 };
 
 extern const char *MCexecutionerrors;

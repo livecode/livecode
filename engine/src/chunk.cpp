@@ -902,10 +902,12 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case DT_ME:
                     //MCEngineEvalMeAsObject(ctxt, t_object);
                     if (ctxt . GetParentScript() == NULL)
+                    {
                         t_object . object = destobj;
+                        t_object . part_id = 0;
+                    }
                     else
-                        t_object . object = ctxt . GetObject();
-                    t_object . part_id = 0;
+                        t_object = ctxt . GetObjectPtr();
                     break;
                 case DT_MENU_OBJECT:
                     MCEngineEvalMenuObjectAsObject(ctxt, t_object);

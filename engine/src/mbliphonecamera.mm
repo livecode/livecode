@@ -179,10 +179,10 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 		t_main_controller = MCIPhoneGetViewController();
 		
 		CGRect t_rect;
-		if (MCtargetptr != nil)
+		if (MCtargetptr . object != nil)
 		{
 			MCRectangle t_mc_rect;
-			t_mc_rect = MCtargetptr -> getrect();
+			t_mc_rect = MCtargetptr . object -> getrect();
 			t_rect = MCUserRectToLogicalCGRect(t_mc_rect);
 		}
 		else

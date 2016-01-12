@@ -110,7 +110,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(__EMSCRIPTEN__)
 
-#define PLATFORM_STRING "HTML"
+#define PLATFORM_STRING "HTML5"
 
 #define FEATURE_PLATFORM_URL 1
 
@@ -309,8 +309,6 @@ struct MCFontStruct
 {
 	MCSysFontHandle fid;
 	uint16_t size;
-	int ascent;
-	int descent;
 	Boolean printer;
     
     coord_t m_ascent;
@@ -372,8 +370,6 @@ struct MCFontStruct
 	MCSysFontHandle fid;
 	uint2 size;
 	uint2 style;
-	int ascent;
-	int descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -438,8 +434,6 @@ struct MCFontStruct
 {
     MCSysFontHandle fid;
     uint16_t size;
-	uint2 ascent;
-	uint2 descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -491,8 +485,6 @@ struct MCFontStruct
 	MCSysFontHandle fid;
 	uint2 size;
 	uint2 style;
-	int ascent;
-	int descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -536,8 +528,6 @@ inline uint1 MCS_toupper(uint1 p_char)
 struct MCFontStruct
 {
 	uint16_t size;
-	int ascent;
-	int descent;
 	MCSysFontHandle fid;
     
     coord_t m_ascent;
@@ -1384,6 +1374,13 @@ struct MCObjectPtr
 {
 	MCObject *object;
 	uint32_t part_id;
+    
+    MCObjectPtr& operator = (const MCObjectPtr& p_obj_ptr)
+    {
+        object = p_obj_ptr . object;
+        part_id = p_obj_ptr . part_id;
+        return *this;
+    }
 };
 
 // NOTE: the indices in this structure are UTF-16 code unit indices if the value is a stringref,

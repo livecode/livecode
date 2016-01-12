@@ -664,7 +664,7 @@ bool MCExecContext::CopyElementAsEnum(MCArrayRef p_array, MCNameRef p_key, bool 
 		return false;
 		
 	MCExecValue t_value;
-	t_value . valueref_value = t_val;
+	t_value . valueref_value = MCValueRetain(t_val);
 	t_value . type = kMCExecValueTypeValueRef;
 	
 	MCExecParseEnum(*this, p_enum_type_info, t_value, r_intenum);
@@ -1187,7 +1187,7 @@ MCVarref* MCExecContext::GetIt() const
 #ifdef _SERVER
     // If we are here it means we must be in global scope, executing in a
     // MCServerScript object.
-    return static_cast<MCServerScript *>(m_object) -> GetIt();
+    return static_cast<MCServerScript *>(m_object . object) -> GetIt();
 #else
     // We should never get here as execution only occurs within handlers unless
     // in server mode.
