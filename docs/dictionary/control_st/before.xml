@@ -46,7 +46,7 @@
   </security>
   <summary>Defines a <glossary tag="message handler">message handler</glossary>.</summary>
   <examples>
-    <example>before mouseUp</p><p>  answer "before mouse up received"</p><p>end resizeStack</example>
+    <example>before mouseUp</p><p>  answer "before mouse up received"</p><p>end mouseUp</example>
   </examples>
   <description>
   <p>The <b>before</b> handler is exclusive to behavior scripts and is sent to a behavior script before all messages.</p><p/>

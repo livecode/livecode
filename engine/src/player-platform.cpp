@@ -1140,6 +1140,7 @@ Boolean MCPlayer::doubleup(uint2 which)
     return True;
 }
 
+
 void MCPlayer::setrect(const MCRectangle &nrect)
 {
 	rect = nrect;
@@ -2079,6 +2080,15 @@ void MCPlayer::showcontroller(Boolean show)
             drect . height -= t_height;
         
         layer_setrect(drect, true);
+	}
+}
+
+void MCPlayer::scale_native_rect(void)
+{
+	if (m_platform_player != nil)
+	{
+		double t_scale_factor = getstack() -> view_get_content_scale();
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyScalefactor, kMCPlatformPropertyTypeDouble, &t_scale_factor);
 	}
 }
 
