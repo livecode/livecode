@@ -1342,20 +1342,20 @@ void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 	ctxt . Throw();
 }
 
-void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
+void MCObject::GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name)
 {
 	MCAutoValueRef t_long_name;
-	if (names(P_LONG_NAME, &t_long_name))
+	if (getnameproperty(P_LONG_NAME, p_part_id, &t_long_name))
 		if (ctxt.ConvertToString(*t_long_name, r_long_name))
 			return;
 	
 	ctxt . Throw();
 }
 
-void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
+void MCObject::GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id)
 {
 	MCAutoValueRef t_long_id;
-	if (names(P_LONG_ID, &t_long_id))
+	if (getnameproperty(P_LONG_ID, p_part_id, &t_long_id))
 		if (ctxt.ConvertToString(*t_long_id, r_long_id))
 			return;
 	
@@ -3252,10 +3252,10 @@ void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
-void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
+void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
 	if (parent != nil)
-		parent -> GetLongName(ctxt, r_owner);
+        parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)

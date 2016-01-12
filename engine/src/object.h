@@ -687,6 +687,8 @@ public:
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
 	bool names(Properties which, MCValueRef& r_name);
+    bool getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val);
+    
 #ifdef LEGACY_EXEC
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
@@ -917,8 +919,8 @@ public:
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);
 	virtual void SetId(MCExecContext& ctxt, uint32_t id);
 	void GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id);
-	void GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name);
-	void GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id);
+	void GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name);
+	void GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id);
 	void GetName(MCExecContext& ctxt, MCStringRef& r_name);
 	virtual void SetName(MCExecContext& ctxt, MCStringRef name);
 	void GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name);
@@ -1080,7 +1082,7 @@ public:
 	void GetOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner);
-	void GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner);
 
 	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
