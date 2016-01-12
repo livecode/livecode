@@ -597,8 +597,8 @@ character – there isn’t a 1 to 1 mapping between code point and glyph.
 |----------------|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Roman**      | Small script      | The Roman encoding has relatively few distinct characters. Each character has a single way of being written. It is written from left to right, top to bottom. Every character has a unique glyph. Characters do not join when written. For example: The quick brown fox.     |
 | **Chinese**    | Large script      | The Chinese encoding has a large number of distinct characters. Each character has a single way of being written.                                                                                                                                                            |
-| **Greek**      | Contextual script | Every character except sigma has a unique glyph. Sigma changes depending on whether it is at the end of a word or not. Characters do not join when written. The text runs left to right, top to bottom. For example: ![](images/image90.png)                            |
-| **Arabic**     | Contextual script | The glyph chosen is dependent on its position in a word. All characters have initial, medial and terminal glyphs. This results in a calligraphic (joined up) style of display. The text runs right to left, top to bottom display. For example: ![](images/image91.png) |
+| **Greek**      | Contextual script | Every character except sigma has a unique glyph. Sigma changes depending on whether it is at the end of a word or not. Characters do not join when written. The text runs left to right, top to bottom. For example: ![](images/text-contextual_greek.png)                            |
+| **Arabic**     | Contextual script | The glyph chosen is dependent on its position in a word. All characters have initial, medial and terminal glyphs. This results in a calligraphic (joined up) style of display. The text runs right to left, top to bottom display. For example: ![](images/text-contextual_arabic.png) |
 | **Devanagari** | Complex script    | In this script there is no direct mapping from character to glyph. Sequences of glyphs combine depending on their context. The text runs from left to right, top to bottom.                                                                                                  |
 
 Figure 52 – Common scripts
@@ -974,9 +974,7 @@ represented a simple stack file as XML. The stack file has a single
 stack with two cards. On the first card there is a field named "Hello"
 with the contents "Hello World!". There is a second card, which is blank.
 
-![](images/image92.png)
-
-Figure 56 – XML Tree Representation of a Stack
+![XML Tree Representation of a Stack](images/text-xml_representation_stack.png)
 
 | &nbsp;| &nbsp;| &nbsp;|
 |----------------------|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -1092,7 +1090,7 @@ information from within the tree.
 > be in the encoding specified in the root node of the XML tree.
 
 > **Note:** All the examples in this section assume that we have loaded
-> the XML tree depicted in Figure 52 – XML Tree Representation of a
+> the XML tree depicted in the figure below – XML Tree Representation of a
 > Stack, above. We assume that you have loaded this tree using the
 > `revCreateXMLTree`function described above, and that this function has
 > returned a value of 1 as the ID of the tree.
