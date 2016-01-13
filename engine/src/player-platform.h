@@ -138,6 +138,7 @@ public:
 	MCRectangle getactiverect(void);
     // End MCObjet functions
     
+
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
@@ -158,7 +159,7 @@ public:
     virtual void setdontuseqt(bool noqt); // platform player-specific
     
     virtual void gettracks(MCStringRef& r_tracks);
-    
+	
     virtual MCRectangle getpreferredrect();
 	virtual uint2 getloudness();
     virtual void updateloudness(int2 newloudness);
@@ -207,6 +208,7 @@ public:
 		scale = s;
     }
 
+	void scale_native_rect(void);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();
