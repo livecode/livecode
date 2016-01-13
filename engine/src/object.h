@@ -170,6 +170,7 @@ struct MCObjectVisitor
 // MW-2012-02-19: [[ SplitTextAttrs ]] If this flag is set, then there is a font-flags
 //   byte in the extended data section.
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
+#define OBJECT_EXTRA_THEME_INFO     (1U << 5)
 
 class MCObjectHandle
 {

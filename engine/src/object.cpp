@@ -3860,6 +3860,30 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		t_flags |= OBJECT_EXTRA_FONTFLAGS;
 		t_size += 1;
 	}
+    
+    // Do we need to saving theming information?
+    MCAutoStringRef t_theme_string;
+    MCAutoStringRef t_theme_type_string;
+    if (m_theme != kMCInterfaceThemeEmpty || m_theme_type != kMCPlatformControlTypeGeneric)
+    {
+        t_flags |= OBJECT_EXTRA_THEME_INFO;
+        
+        // Calculate the size of the serialised data
+        MCExecContext ctxt;
+        MCExecValue t_value;
+        
+        MCExecFormatEnum(ctxt, kMCInterfaceThemeTypeInfo, m_theme, t_value);
+        if (t_value.type != kMCExecValueTypeStringRef)
+            return IO_ERROR;
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, MCstackfileversion >= 7000);
+        t_theme_string.Give(t_value.stringref_value);
+        
+        MCExecFormatEnum(ctxt, kMCInterfaceThemeControlTypeTypeInfo, m_theme_type, t_value);
+        if (t_value.type != kMCExecValueTypeStringRef)
+            return IO_ERROR;
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, MCstackfileversion >= 7000);
+        t_theme_type_string.Give(t_value.stringref_value);
+    }
 
 	// If the tag is of zero length, write nothing.
 	if (t_size == 0)
@@ -3902,6 +3926,14 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		// Write out the three persistent font flags.
 		t_stat = p_stream . WriteU8(m_font_flags & (FF_HAS_ALL_FATTR));
 	}
+    
+    if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_THEME_INFO))
+    {
+        // Write out the theme name and theming type
+        t_stat = p_stream.WriteStringRefNew(*t_theme_string, MCstackfileversion >= 7000);
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream.WriteStringRefNew(*t_theme_type_string, MCstackfileversion >= 7000);
+    }
 
 	return IO_NORMAL;
 }
@@ -3990,6 +4022,42 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 			m_font_flags = (t_font_flags & ~FF_HAS_ALL_FATTR) | (t_font_flags & FF_HAS_ALL_FATTR);
 	}
 
+    if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_THEME_INFO) != 0)
+    {
+        MCAutoStringRef t_theme_string;
+        MCAutoStringRef t_theme_type_string;
+        t_stat = p_stream.ReadStringRefNew(&t_theme_string, MCstackfileversion >= 7000);
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream.ReadStringRefNew(&t_theme_type_string, MCstackfileversion >= 7000);
+        
+        if (t_stat == IO_NORMAL)
+        {
+            // Parse the theme name and theme type
+            MCExecContext ctxt;
+            MCExecValue t_value;
+            intenum_t t_result;
+            t_value.type = kMCExecValueTypeStringRef;
+            
+            t_value.stringref_value = MCValueRetain(*t_theme_string);
+            MCExecParseEnum(ctxt, kMCInterfaceThemeTypeInfo, t_value, t_result);
+            if (ctxt.HasError())
+            {
+                t_result = kMCInterfaceThemeEmpty;
+                ctxt.IgnoreLastError();
+            }
+            m_theme = MCInterfaceTheme(t_result);
+            
+            t_value.stringref_value = MCValueRetain(*t_theme_type_string);
+            MCExecParseEnum(ctxt, kMCInterfaceThemeControlTypeTypeInfo, t_value, t_result);
+            if (ctxt.HasError())
+            {
+                t_result = kMCPlatformControlTypeGeneric;
+                ctxt.IgnoreLastError();
+            }
+            m_theme_type = MCPlatformControlType(t_result);
+        }
+    }
+    
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . Skip(t_length);
 
