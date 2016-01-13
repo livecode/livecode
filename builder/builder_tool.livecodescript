@@ -164,14 +164,18 @@ end __loadExternal
 
 command __builderLog pType, pMessage
    local tLine
+
+   -- Promote builder warnings to errors, if requested
+   if pType is "warning" and sWarnAsError then
+      put "error" into pType
+   end if
    
    put toUpper(char 1 of pType) into char 1 of pType
    
    repeat for each line tLine in pMessage
       write ("[" && the internet date && "]" && ":" && pType && ":" && tLine & return) to stderr
    end repeat
-   if pType is "warning" and sWarnAsError or \
-         pType is "error" then
+   if pType is "error" then
       quit 1
    end if
 end __builderLog
