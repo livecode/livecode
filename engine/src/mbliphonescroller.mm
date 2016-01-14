@@ -1182,7 +1182,8 @@ void MCiOSScrollerControl::HandleScrollEvent(void)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target->message_with_args(MCM_scroller_did_scroll, m_content_rect.x + t_x, m_content_rect.y + t_y);
+		// PM-2016-01-14: [[Bug 16705]] Pass the correct offset - relative to the contentRect
+		t_target->message_with_args(MCM_scroller_did_scroll, t_x, t_y);
 		ChangeTarget(t_old_target);
 	}
 }
