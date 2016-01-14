@@ -51,6 +51,32 @@ The glossary-level entries have part of their content generated from the API-lev
 A description of how to use or call this facet of the API. May just be the name itself, for keywords etc.
 An entry may have a number of Syntax elements, if there are variations within the same entry.
 
+The following can be used to specify livecode syntax:
+- [optional]
+- ... (repeated)
+- { variant 1 | variant 2 }
+- <parameterName>
+
+For example, the syntax for the first variant of the `split` command:
+
+	split <variable> {by | using | with} <primaryDelimiter> [and <secondaryDelimiter>]
+	
+describes the following possible usages:
+- `split tVar by comma`
+- `split tVar using return`
+- `split tVar with "a"`
+- `split tVar by comma and return`
+- `split tVar using the rowdel and the columndel`
+- `split tVar with tDelim1 and tDelim2`
+
+The syntax for `answer file with type`:
+
+	answer file[s] <prompt> [with <defaultPath>] [with type <types> [or type <types> ...]] [titled <windowTitle>] [as sheet]
+
+gives an example of the repetition notation, namely it allows something like
+
+	answer files with type tType1 or type tType2 or type tType3 or type tType4
+
 >*Note:* For inline docs, the Syntax elements are automatically generated
 
 ### Summary (required)

@@ -1,34 +1,77 @@
-# Contributing to the LiveCode Dictionary
+# Contributing to LiveCode Documentation
 
-*Note this document is specifically about contributing to the documentation of LiveCode.
-If you are looking for a general guide to contributing to the LiveCode source, see the 
+*Note this document is specifically about contributing to the 
+documentation of LiveCode. If you are looking for a general guide to 
+contributing to the LiveCode source, see the 
 [toplevel CONTRIBUTING.md document](../CONTRIBUTING.md)*
 
-Have you noticed an error in the documentation? Do you want to add an instructive example? 
-Or can you explain a concept better than it is currently explained? Please consider submitting
-your proposed changes directly to the livecode repo on GitHub.
+Have you noticed an error in the documentation? Do you want to add an 
+instructive example? Or can you explain a concept better than it is 
+currently explained? Please consider submitting your proposed changes 
+directly to the LiveCode repo on GitHub.
 
-Before you start, please familiarize yourself with the [documentation format specification](../../../../livecode-ide/blob/develop/Documentation/guides/Extending LiveCode.md#documentation-markup).
+If your changes constitute a substantial rewrite of a dictionary entry, 
+please familiarize yourself with the 
+[documentation format specification](guides/LiveCode Documentation Format Reference.md).
 
 # Documentation Objectives
 
+Our objectives for the LiveCode documentation can be categorised as
+- Completeness
+- Correctness
+- Instructiveness
+
 ## Completeness
+
+In the context of the dictionary, completeness clearly entails the 
+documentation of all LiveCode syntax. The most basic form of 
+incompleteness is a completely missing dictionary entry. If you intend 
+to write a missing dictionary entry, please bear these documentation 
+objectives in mind and consult the 
+[documentation format specification](guides/LiveCode Documentation Format Reference.md),
+
+The dictionary ought to contain *all* the relevant information about a
+particular piece of LiveCode syntax. Every syntax variant should be 
+explained in detail in the description. Some of the most commonly 
+missing information in our current dictionary is as follows:
+- Inadequate or missing explanation of a parameter's function
+- Omitted description of side effects, especially when `the result` or
+`it` may be affected
+- Omitted description of the function of optional syntax elements
 
 ## Correctness
 
-## Runnable examples
+Correctness of documentation comes in two forms.
 
-Where possible, the `Example:` elements of the docs should be complete and runnable.
+Firstly, the information contained in the descriptions of elements 
+should be accurate and up-to-date. Some of our documentation was written 
+prior to major developments in both our software and the hardware it 
+runs on.
+
+Secondly, dictionary Syntax elements must be correct. The
+[documentation format specification](guides/LiveCode Documentation Format Reference.md)
+contains a description of the Syntax element.
+
+Thirdly, the dictionary files must be formatted correctly. This means 
+conforming to the aforementioned format reference, and also for 
+parameters defined in the Syntax elements to correspond exactly to those
+described later on in the entry.
+
+## Instructiveness
+
+One major objective we have with our documentation is to improve our
+code examples. Where possible, the `Example:` elements of the docs 
+should be complete and runnable.
 This means that where possible one of the following should apply:
-	* The example can be copied, pasted into the message box and executed to demonstrate 
-	  the functionality being described.
-	* The example contains commented commands and functions which, can be copied and pasted
-	  into the script of an object, and which when called with appropriate parameters 
-	  demonstrates the functionality being described.
+-The example can be copied, pasted into the message box and executed to 
+demonstrate the functionality being described.
+-The example contains commented commands and functions which, can be 
+copied and pasted into the script of an object, and which when called 
+with appropriate parameters demonstrates the functionality being 
+described.
 
-
-In general, the way to ensure this is to use constants where possible, rather than 
-variables and objects:
+In general, the way to ensure this is to use constants where possible, 
+rather than variables and objects:
 
 (Good)
 `put sentence 1 of "Hello! Is it me you're looking for?"  -- output is 'Hello! '`
@@ -72,21 +115,23 @@ end fibonacciNumber
 
 ## Tags
 
-Tags are a great way to help users find what they want in the dictionary. However badly  
-coordinated tags can quickly become a hindrance. Ensure the tag you want to add doesn't 
-exist already in a slightly different form, and consider starting a dialogue about a new
-tag and what entries could be most usefully tagged with it.
+Tags are a great way to help users find what they want in the dictionary. 
+However badly coordinated tags can quickly become a hindrance. Ensure 
+the tag you want to add doesn't exist already in a slightly different 
+form, and consider starting a dialogue about a new tag and what entries 
+could be most usefully tagged with it.
 
 # Community Documentation Contribution Process
 
-After creating an account on GitHub at https://github.com/join, there are three main ways 
-of submitting pull requests. The first exclusively uses the GitHub website, and is most suitable
-for people with no experience of git or other version control systems.
+After creating an account on GitHub at https://github.com/join, there 
+are three main ways of submitting pull requests. The first exclusively 
+uses the GitHub website, and is most suitable for people with no 
+experience of git or other version control systems.
 
 ## Using the GitHub Web Interface
 
-It is possible to contribute to the LiveCode dictionary using the GitHub website, without
-having to download any software or use the command line.
+It is possible to contribute to the LiveCode dictionary using the GitHub 
+website, without having to download any software or use the command line.
 
 ### Making your dictionary change
 
