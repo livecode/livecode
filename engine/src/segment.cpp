@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -374,7 +374,7 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
     }
     else    // m_HAlign == kMCSegmentTextHAlignJustify
     {
-        MCAssert(false);
+        MCUnreachableReturn();
     }
     
     // TODO: vertical alignment

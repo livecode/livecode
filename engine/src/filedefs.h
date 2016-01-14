@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 #ifndef	FILEDEFS_H
 #define	FILEDEFS_H
+
+#include "typedefs.h"
 
 #define SIGNATURE "# MetaCard "
 

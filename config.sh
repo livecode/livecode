@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2015 Runtime Revolution Ltd.
+# Copyright (C) 2015 LiveCode Ltd.
 #
 # This file is part of LiveCode.
 #
@@ -242,6 +242,7 @@ if test -z "$XCODE_HOST_SDK"; then
 fi
 
 # Default target architectures
+# iOS architectures are restricted to 32-bit only for iOS 5.1, 6.1 and 7.1
 if test -z "$TARGET_ARCH"; then
   case ${PLATFORM} in
     *-x86)     TARGET_ARCH="x86" ;;
@@ -251,11 +252,15 @@ if test -z "$TARGET_ARCH"; then
 
     mac*|ios*)
       case ${XCODE_TARGET_SDK} in
-        macosx*)           TARGET_ARCH="i386" ;;
-        iphoneos8*)        TARGET_ARCH="armv7 arm64" ;;
-        iphoneos*)         TARGET_ARCH="armv7" ;;
-        iphonesimulator8*) TARGET_ARCH="i386 x86_64" ;;
-        iphonesimulator*)  TARGET_ARCH="i386" ;;
+        macosx*)         		TARGET_ARCH="i386" ;;
+        iphoneos5* | \
+        iphoneos6* | \
+        iphoneos7*)		 		TARGET_ARCH="armv7" ;;
+        iphoneos*)       		TARGET_ARCH="armv7 arm64" ;;
+        iphonesimulator5* | \
+        iphonesimulator6* | \
+        iphonesimulator7*) 		TARGET_ARCH="i386" ;;
+        iphonesimulator*)  	TARGET_ARCH="i386 x86_64" ;;
       esac
       ;;
 
@@ -342,19 +347,35 @@ if test "${OS}" = "android" ; then
 
 fi # End of Android defaults & tools
 
+
+# Emscripten default settings and tools
+if test "${OS}" = "emscripten" ; then
+    NODE_JS=${NODE_JS:-node}
+fi
+
+
 ################################################################
 # Invoke gyp
 ################################################################
 
 format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
-basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+
+if test "${OS}" = "win" ; then
+	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+else
+	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT} -G default_target=default"
+fi
 
 if [ "${BUILD_EDITION}" == "commercial" ] ; then
   basic_args="${basic_args} ../livecode-commercial.gyp"
 fi
 
 case ${OS} in
-  linux|emscripten)
+  linux)
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    ;;
+  emscripten)
+    export NODE_JS
     invoke_gyp $basic_args "-DOS=${OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
     ;;
   android)

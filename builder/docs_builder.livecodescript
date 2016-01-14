@@ -1911,8 +1911,10 @@ end escape
 command docsBuilderGenerateDocsNew
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
    builderLog "report", "Building guide into" && builderGuideFolder() & slash & "distributed_guide.js"
+   pathEnsure (builderGuideFolder())
    docsBuilderGenerateDistributedGuide
    builderLog "report", "Building api into" && builderAPIFolder() & slash & "distributed_api.js"
+   pathEnsure (builderAPIFolder())
    docsBuilderGenerateDistributedAPI   
    
    # Build the actual JSON data for the dictionary. This is needed until the docs are built on the fly in a 
@@ -2042,28 +2044,38 @@ command errorShow pError
 end errorShow
 */
 command docsBuilderGenerateDistributedGuide
-   local tGuideFolder
-   put builderIDEDocsFolder() & slash & "guides" into tGuideFolder
-   set the defaultfolder to tGuideFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+
+   local tGuideFolders
+   put builderIDEDocsFolder() & slash & "guides" into tGuideFolders
+   put return & builderRepoFolder() & slash & "docs" & slash & "guides" after tGuideFolders
    
-   local tGuideData, tGuideName
-   set the itemdelimiter to "."
-   repeat for each line tFile in the files
-      if tFile begins with "."  then next repeat
-      docsBuilderProgressUpdate "", "Building guide" && tGuideFolder & slash & tFile
-      put item 1 to -2 of tFile into tGuideName
-      get url ("binfile:" & tGuideFolder & slash & tFile)
-      if it is not empty then
-         get textDecode(it, "utf-8")
-         replace "[toc]" with empty in it
-         put tab & "{" & CR after tGuideData
-         put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & CR after tGuideData 
-         put tab & escape("display name") & ":" & escape(tGuideName) & comma & CR after tGuideData 
-         put tab & escape("data") & ":" & escape(it, true) & CR & tab & "}," after tGuideData
-      end if
+   local tGuideFolder, tGuideData, tGuideName
+   repeat for each line tGuideFolder in tGuideFolders
+      set the defaultfolder to tGuideFolder
+   
+      set the itemdelimiter to "."
+      repeat for each line tFile in the files
+         if tFile begins with "."  then next repeat
+         docsBuilderProgressUpdate "", "Building guide" && tGuideFolder & slash & tFile
+         put item 1 to -2 of tFile into tGuideName
+         get url ("binfile:" & tGuideFolder & slash & tFile)
+         if it is not empty then
+            get textDecode(it, "utf-8")
+            replace "[toc]" with empty in it
+            put tab & "{" & CR after tGuideData
+            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
+            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
+            put tab & escape("location") & ":" & escape("ide") & comma & return after tGuideData
+            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
+         end if
+      end repeat
    end repeat
    delete the last char of tGuideData
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & builderGuideFolder() & slash & "distributed_guide.js")
+   
+   set the defaultFolder to tDefaultFolder
 end docsBuilderGenerateDistributedGuide
 
 /*
@@ -2113,7 +2125,8 @@ end docsBuilderParseDictionaryToLibraryArray
 function docsBuilderParseDictionary pLibraryName, pAuthor, pRootDir, pRecursive
    local tLibraryA
    if there is a folder pRootDir then
-      put pLibraryName into tLibraryA["name"]
+      put revDocsModifyForUrl(pLibraryName) into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
       put pAuthor into tLibraryA["author"]
       put "dictionary" into tLibraryA["type"]
       
@@ -2172,7 +2185,8 @@ command docsBuilderGenerateDistributedAPI
       end repeat
       put empty into tParsedA
    end repeat
-   put "LiveCode Builder" into tLibrariesA[tCount]["name"]
+   put "LiveCode Builder" into tLibrariesA[tCount]["display name"]
+   put revDocsModifyForUrl("LiveCode Builder") into tLibrariesA[tCount]["name"]
    put "LiveCode" into tLibrariesA[tCount]["author"]
    put "dictionary" into tLibrariesA[tCount]["type"]
    add 1 to tCount
@@ -2180,8 +2194,35 @@ command docsBuilderGenerateDistributedAPI
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
    
+   docsBuilderPopulateDatabase tLibrariesA
+   
    put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
 end docsBuilderGenerateDistributedAPI
+
+on docsBuilderPopulateDatabase pLibrariesA
+   local tConnection
+   revDocsOpenAPIDatabase builderAPIFolder()
+   
+   put the result into tConnection
+   if tConnection is not a number then
+      builderLog "error", the result
+      exit docsBuilderPopulateDatabase
+   end if
+   
+   revExecuteSQL tConnection,"BEGIN TRANSACTION"
+   
+   repeat for each key tKey in pLibrariesA   	  
+   	  builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
+      revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
+      if the result is not empty then
+         builderLog "error", the result
+         exit docsBuilderPopulateDatabase
+      end if
+   end repeat
+   
+   revExecuteSQL tConnection,"COMMIT"
+   revCloseDatabase tConnection
+end docsBuilderPopulateDatabase
 
 --- LEGACY
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -13,6 +13,10 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+
+#include "typedefs.h"
+
 
 extern const uint1 MCisotranslations[256];
 extern const uint1 MCmactranslations[256];
@@ -147,6 +151,12 @@ extern MCNameRef MCN_private;
 extern MCNameRef MCN_text;
 //extern MCNameRef MCN_unicode;
 extern MCNameRef MCN_styles;
+extern MCNameRef MCN_styledtext;
+extern MCNameRef MCN_rtftext;
+extern MCNameRef MCN_htmltext;
+extern MCNameRef MCN_png;
+extern MCNameRef MCN_gif;
+extern MCNameRef MCN_jpeg;
 extern MCNameRef MCN_rtf;
 extern MCNameRef MCN_html;
 
@@ -541,6 +551,7 @@ extern MCNameRef MCM_push_notification_received;
 extern MCNameRef MCM_push_notification_registered;
 extern MCNameRef MCM_push_notification_registration_error;
 extern MCNameRef MCM_url_wake_up;
+extern MCNameRef MCM_launch_data_changed;
 
 extern MCNameRef MCM_browser_started_loading;
 extern MCNameRef MCM_browser_finished_loading;

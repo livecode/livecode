@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -262,8 +262,9 @@ bool MCImageImport(IO_handle p_stream, IO_handle p_mask_stream, MCPoint &r_hotsp
 			t_frames = nil;
 			
 			uint32_t t_count;
-            
-            if (t_success)
+            t_count = 0;
+			
+			if (t_success)
 				t_success = t_loader->GetHotSpot(t_xhot, t_yhot);
 			
 			if (t_success)

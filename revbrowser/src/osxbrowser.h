@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -35,7 +35,7 @@ public:
 	TAltBrowser(void);
 	virtual ~TAltBrowser(void);
 	
-	void init(unsigned int p_window_id);
+	void init(uintptr_t p_window_id);
  
  	virtual void SetVisible(bool p_visible);
 	virtual void SetBrowser(const char *p_type);
@@ -52,7 +52,7 @@ public:
 	virtual void SetInst(int p_id);
 	virtual void SetVScroll(int p_vscroll_pixels);
 	virtual void SetHScroll(int p_hscroll_pixels);
-	virtual void SetWindowId(int p_new_id);
+	virtual void SetWindowId(uintptr_t p_new_id);
 	virtual void SetUserAgent(const char *p_user_agent);
 
 	virtual bool GetBusy(void);
@@ -77,7 +77,7 @@ public:
 	virtual int GetFormattedHeight(void);
 	virtual int GetFormattedWidth(void);
 	virtual void GetFormattedRect(int& r_left, int& r_top, int& r_right, int& r_bottom);
-	virtual int GetWindowId(void);
+	virtual uintptr_t GetWindowId(void);
 	virtual char *GetUserAgent(void);
 
 	virtual char *ExecuteScript(const char *p_javascript_string);

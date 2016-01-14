@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -126,6 +126,12 @@ static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
     
     if (t_left_converted && t_right_converted)
     {
+        if (t_left_num == t_right_num)
+        {
+            r_result = true;
+            return true;
+        }
+        
         real64_t t_dleft, t_dright;
         t_dleft = fabs(t_left_num);
         t_dright = fabs(t_right_num);
@@ -180,6 +186,12 @@ static bool MCLogicCompareTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 		
 	if (t_left_converted && t_right_converted)
 	{
+        if (t_left_num == t_right_num)
+        {
+            r_result = 0;
+            return true;
+        }
+        
 		real64_t t_dleft, t_dright;
 		t_dleft = fabs(t_left_num);
 		t_dright = fabs(t_right_num);

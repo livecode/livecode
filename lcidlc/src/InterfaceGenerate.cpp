@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1186,7 +1186,7 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 							
 		bool t_has_param;
 		t_has_param = false;
-		if (t_variant -> return_type_indirect)
+		if (t_return_type_mapper != nil && t_variant -> return_type_indirect)
 		{
 			CoderWrite(p_coder, "%s%s", t_return_type_mapper -> GetTypedef(kParameterTypeOut), InterfaceGetReferenceSuffix(self));
 			t_has_param = true;
@@ -1809,11 +1809,13 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 		
 	if (t_success)
 		t_success = CoderFinish(t_coder);
-	else
+	else if (t_coder != nil)
 		CoderCancel(t_coder);
 	
 	if (t_success && t_java_output_filename != nil)
 	{
+        t_coder = nil;
+        
 		if (t_success)
 			t_success = CoderStart(t_java_output_filename, t_coder);
 		
@@ -1822,7 +1824,7 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 		
 		if (t_success)
 			t_success = CoderFinish(t_coder);
-		else
+		else if (t_coder != nil)
 			CoderCancel(t_coder);
 	}
 	

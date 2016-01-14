@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,6 +16,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_SYSDEFS__
 #define __MC_SYSDEFS__
+
+
+#include "globdefs.h"
+
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -43,11 +47,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
 #define FEATURE_NOTIFY 1
+
+// QuickTime is not supported in 64-bit OSX applications as it has been
+// deprecated by Apple.
+#ifndef __LP64__
+#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#endif
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -100,7 +110,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(__EMSCRIPTEN__)
 
-#define PLATFORM_STRING "HTML"
+#define PLATFORM_STRING "HTML5"
 
 #define FEATURE_PLATFORM_URL 1
 
@@ -262,13 +272,6 @@ typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
-#define PLACEMENT_NEW_DEFINED
-#define __PLACEMENT_NEW_INLINE
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-
 #if defined(_DEBUG)
 
 #include <crtdbg.h>
@@ -306,8 +309,6 @@ struct MCFontStruct
 {
 	MCSysFontHandle fid;
 	uint16_t size;
-	int ascent;
-	int descent;
 	Boolean printer;
     
     coord_t m_ascent;
@@ -369,8 +370,6 @@ struct MCFontStruct
 	MCSysFontHandle fid;
 	uint2 size;
 	uint2 style;
-	int ascent;
-	int descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -435,8 +434,6 @@ struct MCFontStruct
 {
     MCSysFontHandle fid;
     uint16_t size;
-	uint2 ascent;
-	uint2 descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -488,8 +485,6 @@ struct MCFontStruct
 	MCSysFontHandle fid;
 	uint2 size;
 	uint2 style;
-	int ascent;
-	int descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -533,8 +528,6 @@ inline uint1 MCS_toupper(uint1 p_char)
 struct MCFontStruct
 {
 	uint16_t size;
-	int ascent;
-	int descent;
 	MCSysFontHandle fid;
     
     coord_t m_ascent;
@@ -1222,8 +1215,8 @@ class MCParameter;
 class MCStack;
 class MCExecContext;
 
-typedef uint4 MCDragAction;
-typedef uint4 MCDragActionSet;
+typedef uint32_t MCDragAction;
+typedef uint32_t MCDragActionSet;
 
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
@@ -1381,6 +1374,13 @@ struct MCObjectPtr
 {
 	MCObject *object;
 	uint32_t part_id;
+    
+    MCObjectPtr& operator = (const MCObjectPtr& p_obj_ptr)
+    {
+        object = p_obj_ptr . object;
+        part_id = p_obj_ptr . part_id;
+        return *this;
+    }
 };
 
 // NOTE: the indices in this structure are UTF-16 code unit indices if the value is a stringref,

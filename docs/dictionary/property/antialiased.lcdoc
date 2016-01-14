@@ -2,7 +2,7 @@ Name: antialiased
 
 Type: property
 
-Syntax: set the antialiased of <graphic> to [ true | false ]
+Syntax: set the antialiased of <graphic> to { true | false }
 
 Summary: Specifies whether the edges of the graphic object should be smoothed or not.
 

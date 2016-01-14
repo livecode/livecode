@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -244,10 +244,11 @@ uint2 MCiconicstacks;
 uint2 MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
-MCClipboardData *MCclipboarddata;
-MCSelectionData *MCselectiondata;
+MCClipboard* MCclipboard;
+MCClipboard* MCselection;
+MCClipboard* MCdragboard;
+uindex_t MCclipboardlockcount;
 
-MCDragData *MCdragdata;
 MCDragAction MCdragaction;
 MCDragActionSet MCallowabledragactions;
 uint4 MCdragimageid;
@@ -272,7 +273,7 @@ MCCard *MCdynamiccard;
 Boolean MCdynamicpath;
 MCObject *MCerrorptr;
 MCObject *MCerrorlockptr;
-MCObject *MCtargetptr;
+MCObjectPtr MCtargetptr;
 MCObject *MCmenuobjectptr;
 MCGroup *MCsavegroupptr;
 MCGroup *MCdefaultmenubar;
@@ -383,13 +384,13 @@ MCPlatformSoundRecorderRef MCrecorder;
 #endif
 
 // AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
-uint4 MCstackfileversion = 7000;
+uint4 MCstackfileversion = 8000;
 uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
 uint2 MCttsize;
-uint2 MCtrylock;
-uint2 MCerrorlock;
+MCSemaphore MCtrylock;
+MCSemaphore MCerrorlock;
 Boolean MCwatchcursor;
 Boolean MClockcursor;
 MCCursorRef MCcursor;
@@ -635,9 +636,10 @@ void X_clear_globals(void)
 	MCiconicstacks = 0;
 	MCwaitdepth = 0;
 	MCrecursionlimit = 400000;
-	MCclipboarddata = nil;
-	MCselectiondata = nil;
-	MCdragdata = nil;
+	MCclipboard = NULL;
+	MCselection = NULL;
+    MCdragboard = NULL;
+    MCclipboardlockcount = 0;
 	MCdragaction = 0;
 	MCallowabledragactions = 0;
 	MCdragimageid = 0;
@@ -661,7 +663,7 @@ void X_clear_globals(void)
 	MCdynamicpath = False;
 	MCerrorptr = nil;
 	MCerrorlockptr = nil;
-	MCtargetptr = nil;
+	memset(&MCtargetptr, 0, sizeof(MCObjectPtr));
 	MCmenuobjectptr = nil;
 	MCsavegroupptr = nil;
 	MCdefaultmenubar = nil;
@@ -762,15 +764,15 @@ void X_clear_globals(void)
 #endif
     
 	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
-	MCstackfileversion = 7000;
+	MCstackfileversion = 8000;
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
     MCttfont = MCSTR(DEFAULT_TEXT_FONT);
     MCttsize = 12;
 
-	MCtrylock = 0;
-	MCerrorlock = 0;
+    MCtrylock = MCSemaphore("try");
+    MCerrorlock = MCSemaphore("error");
 	MCwatchcursor = False;
 	MClockcursor = False;
 	MCcursor = nil;
@@ -1120,6 +1122,11 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
         if (!t_success)
             return false;
     }
+    else
+    {
+        MCcommandname = MCValueRetain(kMCEmptyString);
+        MCcommandarguments = MCValueRetain(kMCEmptyArray);
+    }
     
     MCDeletedObjectsSetup();
 
@@ -1138,9 +1145,10 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	MCtooltip = new MCTooltip;
 
-	MCclipboarddata = new MCClipboardData;
-	MCdragdata = new MCDragData;
-	MCselectiondata = new MCSelectionData;
+    MCclipboard = MCClipboard::CreateSystemClipboard();
+    MCdragboard = MCClipboard::CreateSystemDragboard();
+    MCselection = MCClipboard::CreateSystemSelectionClipboard();
+    MCclipboardlockcount = 0;
 	
 	MCundos = new MCUndolist;
 	MCselected = new MCSellist;
@@ -1296,7 +1304,10 @@ int X_close(void)
 	MClockmessages = True;
 	MCS_killall();
 
-	MCscreen -> flushclipboard();
+    // Flush all engine clipboards to the system clipboards
+    MCclipboard->FlushData();
+    MCselection->FlushData();
+    MCdragboard->FlushData();
 
     MCdispatcher -> remove_transient_stack(MCtooltip);
 	delete MCtooltip;
@@ -1391,9 +1402,9 @@ int X_close(void)
 	delete MCperror;
 	delete MCeerror;
 
-	delete MCclipboarddata;
-	delete MCdragdata;
-	delete MCselectiondata;
+    MCclipboard->Release();
+    MCselection->Release();
+    MCdragboard->Release();
 
 	MCValueRelease(MCshellcmd);
 	MCValueRelease(MCvcplayer);
@@ -1484,9 +1495,11 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
-    
+
+#ifdef MCSSL
     MCSocketsFinalize();
-    
+#endif /* MCSSL */
+
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
     MCAdFinalize();

@@ -2,7 +2,7 @@ Name: folders
 
 Type: function
 
-Syntax: the [detailed | long] folders
+Syntax: the [{ detailed | long }] folders
 
 Syntax: folders()
 

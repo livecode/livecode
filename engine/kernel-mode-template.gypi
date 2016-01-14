@@ -1,11 +1,13 @@
 {		
 	'dependencies':
 	[
-		'encode_version',
+		'engine-common.gyp:encode_version',
 		
 		'../libfoundation/libfoundation.gyp:libFoundation',
 		'../libgraphics/libgraphics.gyp:libGraphics',
 		'../libscript/libscript.gyp:libScript',
+
+		'../libbrowser/libbrowser.gyp:libbrowser',
 	],
 
 	'conditions':

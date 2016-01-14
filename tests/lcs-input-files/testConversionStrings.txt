@@ -1,0 +1,7 @@
+ascii,a,A,97,65,a,A
+nativeAsUnicode,à,À,224,192,à,À  
+nativeNotUnicode,€,€,8364,8364,€,€  
+simpleUnicode,α,Α,945,913,α,Α 
+unicode,⺧,⺧,11943,11943,⺧,⺧
+sigma,ς,Σ,962,931
+sharpS,ß,SS,223,83,83

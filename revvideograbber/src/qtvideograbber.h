@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -19,6 +19,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define QTVIDEO_H
 #include "videograbber.h"
 #ifdef WIN32
+// This is really nasty but required to avoid breaking revvideograbber for Windows:
+//    The QuickTime SDK includes a bundled stdint.h header that conflicts with the
+//    version supplied with VS2010 and later, so we need to prevent its inclusion.
+#define _STDINT_H
 #include <windows.h>
 #include <QTML.h>
 #include <QuickTimeComponents.h>

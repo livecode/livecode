@@ -2,17 +2,17 @@ Name: relayer
 
 Type: command
 
-Syntax: relayer <control> {<before> | <after>} <layer> <index> 
+Syntax: relayer <control> {before | after} <layer> <index> 
 
-Syntax: relayer <control> {<before> | <after>} control <target> 
+Syntax: relayer <control> {before | after} control <target> 
 
-Syntax: relayer <control> {<before> | <after>} <owner> 
+Syntax: relayer <control> {before | after} <owner> 
 
-Syntax: relayer <control> to {<before> | <after>} of <layer> <index> 
+Syntax: relayer <control> to {front | back} of <layer> <index> 
 
-Syntax: relayer <control> to {<before> | <after>} of control <target> 
+Syntax: relayer <control> to {front | back} of control <target> 
 
-Syntax: relayer <control> to {<before> | <after>} of <owner> 
+Syntax: relayer <control> to {front | back} of <owner> 
 
 Summary: Aids the manipulation of layers.
 
@@ -30,18 +30,19 @@ relayer button "b1" to back of card "testCard" -- send button b1 to the back of 
 
 Parameters:
 control: The target control is the given control.
-before: The owner of the control becomes the owner of the target and is inserted before the target. The layer of the control becomes the layer of the target and the target and all subsequent controls shift up one.
-after: The owner of the control becomes the owner of the target and is inserted after the target. The layer of the control becomes one greater than the layer of the last child of the target and all subsequent controls sift one up.
 layer: The target control is the control with layer <index>.
 index: 
 target: 
 owner: The target control is the owner of the control.
-front: The owner of the control becomes the owner of the target and is inserted after the last child of the target (only valid if <target> is a container).
-back: The owner of the control becomes the owner of the target and is inserted before the first child of the target (only valid if <target> is a container).
 
 Description:
 Use the <relayer> command to aid the manipulation of layers.
 
 Use the <relayer> command move a control relative to a target in a number of ways. The <relayer> command can only be used within a card. Attempts to relayer controls from one card or another stack would throw an exception.
+
+When using "before" the owner of the control becomes the owner of the target and is inserted before the target. The layer of the control becomes the layer of the target and the target and all subsequent controls shift up one.
+When using "after" the owner of the control becomes the owner of the target and is inserted after the target. The layer of the control becomes one greater than the layer of the last child of the target and all subsequent controls sift one up.
+When using "front" the owner of the control becomes the owner of the target and is inserted after the last child of the target (only valid if <target> is a container).
+When using "back" the owner of the control becomes the owner of the target and is inserted before the first child of the target (only valid if <target> is a container).
 
 References: tabGroupBehavior (property), relayerGroupedControls (property), layer (property), control (keyword), group (command), ungroup (command), intersect (function), number (function), mouseControl (function)

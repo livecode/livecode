@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -284,6 +284,6 @@ public:
     virtual bool Next();
 };
 
-MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCStringOptions p_options);
+MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCStringRef p_item_delimiter, MCStringOptions p_options);
 
 #endif // __MC_FOUNDATION_CHUNK__

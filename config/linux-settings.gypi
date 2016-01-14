@@ -68,6 +68,7 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
+					'-Werror=return-type',
 				],
 			},
 			{
@@ -103,6 +104,7 @@
 		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
+		'-fcheck-new',
 	],
 	
 	'configurations':
@@ -113,6 +115,7 @@
 			[
 				'-O0',
 				'-g3',
+				'-Werror=uninitialized',
 			],
 			
 			'defines':
@@ -142,6 +145,7 @@
 			[
 				'-O0',
 				'-g0',
+				'-Werror=uninitialized',
 			],
 			
 			'defines':

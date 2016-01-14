@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -403,7 +403,8 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 				}
 				else
 					close(0);
-				execvp(name, argv);
+                // The executable name should be argv[0].
+                execvp(argv[0], argv);
 				_exit(-1);
 			}
 			MCS_checkprocesses();

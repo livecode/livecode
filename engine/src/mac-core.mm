@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -206,6 +206,7 @@ enum
 
 - (NSError *)application:(NSApplication *)application willPresentError:(NSError *)error
 {
+    return error;
 }
 
 //////////
@@ -217,7 +218,7 @@ enum
 
 //////////
 
-static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, long p_context)
+static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_reply, SRefCon p_context)
 {
     return [[NSApp delegate] preDispatchAppleEvent: p_event withReply: p_reply];
 }
@@ -551,12 +552,23 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
 	switch(p_property)
 	{
 		case kMCPlatformSystemPropertyDoubleClickInterval:
-			*(uint16_t *)r_value = GetDblTime() * 1000.0 / 60.0;
+            // Get the double-click interval, in milliseconds
+            *(uint16_t *)r_value = uint16_t([NSEvent doubleClickInterval] * 1000.0);
 			break;
 			
 		case kMCPlatformSystemPropertyCaretBlinkInterval:
-			*(uint16_t *)r_value = GetCaretTime() * 1000.0 / 60.0;
+        {
+            // Query the user's settings for the cursor blink rate
+            NSInteger t_rate_ms = [[NSUserDefaults standardUserDefaults] integerForKey:@"NSTextInsertionPointBlinkPeriod"];
+            
+            // If the query failed, use the standard value (this seems to be
+            // 567ms on OSX, not that this is documented anywhere).
+            if (t_rate_ms == 0)
+                t_rate_ms = 567;
+            
+            *(uint16_t *)r_value = uint16_t(t_rate_ms);
 			break;
+        }
 			
 		case kMCPlatformSystemPropertyHiliteColor:
 		{
@@ -738,7 +750,11 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
                                  untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
                                     inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
                                    dequeue: YES];
-	if (t_modal)
+    
+    // Run the modal session, if it has been created yet (it might not if this
+    // wait was triggered by reacting to an event caused as part of creating
+    // the modal session, e.g. when losing window focus).
+	if (t_modal && s_modal_sessions[s_modal_session_count - 1].session != nil)
 		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
     
 	s_in_blocking_wait = false;
@@ -1152,7 +1168,7 @@ void MCPlatformGetScreenPixelScale(uindex_t p_index, MCGFloat& r_scale)
 	NSScreen *t_screen;
 	t_screen = [[NSScreen screens] objectAtIndex: p_index];
 	if ([t_screen respondsToSelector: @selector(backingScaleFactor)])
-		r_scale = objc_msgSend_fpret(t_screen, @selector(backingScaleFactor));
+		r_scale = objc_msgSend_fpret_type<CGFloat>(t_screen, @selector(backingScaleFactor));
 	else
 		r_scale = 1.0f;
 }
@@ -1972,7 +1988,7 @@ static void display_reconfiguration_callback(CGDirectDisplayID display, CGDispla
 extern "C" bool MCModulesInitialize(void);
 extern "C" void MCModulesFinalize(void);
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	extern bool MCS_mac_elevation_bootstrap_main(int argc, char* argv[]);
 	if (argc == 2 && strcmp(argv[1], "-elevated-slave") == 0)

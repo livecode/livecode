@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -47,6 +47,7 @@
 
 #include "widget-ref.h"
 #include "widget-events.h"
+#include "native-layer.h"
 
 #include "module-canvas.h"
 
@@ -639,6 +640,128 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetEvalIsPointNotWithinRect(MCCanvasPointR
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNativeLayerOfWidget(MCWidgetRef p_widget, void *&r_native_layer)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	MCWidgetGetHost(p_widget)->GetNativeView(r_native_layer);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetNativeLayerOfWidget(void *p_native_layer, MCWidgetRef p_widget)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	MCWidgetGetHost(p_widget)->SetNativeView(p_native_layer);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNativeLayerCanRenderToContext(MCWidgetRef p_widget, bool &r_can_render)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	void *t_view;
+	if (MCWidgetGetHost(p_widget)->getNativeLayer() == nil)
+	{
+		// TODO - throw error: no native layer
+		return;
+	}
+	
+	r_can_render = MCWidgetGetHost(p_widget)->getNativeLayer()->GetCanRenderToContext();
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetNativeLayerCanRenderToContext(bool p_can_render, MCWidgetRef p_widget)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	void *t_view;
+	if (MCWidgetGetHost(p_widget)->getNativeLayer() == nil)
+	{
+		// TODO - throw error: no native layer
+		return;
+	}
+	
+	MCWidgetGetHost(p_widget)->getNativeLayer()->SetCanRenderToContext(p_can_render);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetStackNativeViewOfWidget(MCWidgetRef p_widget, void *&r_native_view)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	r_native_view = MCscreen->GetNativeWindowHandle(MCWidgetGetHost(p_widget)->getw());
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetStackNativeDisplayOfWidget(MCWidgetRef p_widget, void *&r_display)
+{
+	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
+		return;
+	
+	/* UNCHECKED */
+	if (!MCscreen->platform_get_display_handle(r_display))
+	{
+		// TODO - throw error
+		return;
+	}
+}
+
+//////////
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyNativeLayer(void *&r_native_layer)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetNativeLayerOfWidget(MCcurrentwidget, r_native_layer);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetMyNativeLayer(void *p_native_layer)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetSetNativeLayerOfWidget(p_native_layer, MCcurrentwidget);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyNativeLayerCanRenderToContext(bool &r_can_render)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetNativeLayerCanRenderToContext(MCcurrentwidget, r_can_render);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetSetMyNativeLayerCanRenderToContext(bool p_can_render)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetSetNativeLayerCanRenderToContext(p_can_render, MCcurrentwidget);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyStackNativeView(void *&r_view)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetStackNativeViewOfWidget(MCcurrentwidget, r_view);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyStackNativeDisplay(void *&r_display)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	MCWidgetGetStackNativeDisplayOfWidget(MCcurrentwidget, r_display);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void __MCWidgetDestroy(MCValueRef p_value)
 {
     MCWidgetBase *t_widget;
@@ -689,6 +812,9 @@ static MCValueCustomCallbacks kMCWidgetCustomValueCallbacks =
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetNoCurrentWidgetErrorTypeInfo = nil;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetSizeFormatErrorTypeInfo = nil;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCWidgetTypeInfo = nil;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCWidgetTypeInfo()
+{ return kMCWidgetTypeInfo; }
 
 bool com_livecode_widget_InitializePopups(void);
 void com_livecode_widget_FinalizePopups(void);

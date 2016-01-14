@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -496,7 +496,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					{
 						if (indicator && !(flags & F_SHOW_ICON))
 						{
-							sx += CHECK_SIZE + leftmargin;
+							sx += GetCheckSize() + leftmargin;
 							if (MClook == LF_WIN95)
 							{
 								sy++;
@@ -703,6 +703,17 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 	if (!(flags & F_AUTO_ARM) && MCcurtheme &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_CHECKBOX))
 	{
+        if (IsNativeGTK())
+        {
+            int32_t t_size, t_spacing;
+            t_size = MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
+            t_spacing = MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING);
+            trect . x = srect . x + leftmargin - t_spacing;
+            trect . y = srect . y;
+            trect . width = t_size + 2*t_spacing;
+            trect . height = srect . height;
+        }
+        
 		MCWidgetInfo widgetinfo;
 		widgetinfo.type = WTHEME_TYPE_CHECKBOX;
 		getwidgetthemeinfo(widgetinfo);
@@ -859,9 +870,9 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 			int32_t t_size, t_spacing;
 			t_size = MCcurtheme -> getmetric(WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE);
 			t_spacing = MCcurtheme -> getmetric(WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING);
-			trect . x = srect . x + leftmargin - 2 + t_spacing;
+			trect . x = srect . x + leftmargin - t_spacing;
 			trect . y = srect . y;
-			trect . width = t_size;
+			trect . width = t_size + 2*t_spacing;
 			trect . height = srect . height;
 		}
 
@@ -2004,4 +2015,13 @@ void MCButton::unlockshape(MCObjectShape& p_shape)
 {
 	if (p_shape . type == kMCObjectShapeMask)
 		icons -> curicon -> unlockbitmap(p_shape . mask . bits);
+}
+
+int16_t MCButton::GetCheckSize() const
+{
+    // If we aren't using GTK at the theming engine, return the fixed size
+    if (!IsNativeGTK())
+        return CHECK_SIZE;
+    
+    return MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
 }

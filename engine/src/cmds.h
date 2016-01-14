@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -90,6 +90,7 @@ class MCDo : public MCStatement
 {
 	MCExpression *source;
 	MCExpression *alternatelang;
+	MCChunk *widget;
 protected:
 	bool browser : 1;
 	Boolean debug : 1;
@@ -102,6 +103,7 @@ public:
 		browser = false;
 		debug = False;
 		caller = false;
+		widget = nil;
 	}
 	virtual ~MCDo();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -688,6 +690,7 @@ class MCLaunch : public MCStatement
 {
 	MCExpression *doc;
 	MCExpression *app;
+	MCChunk *widget;
 	bool as_url;
 
 public:
@@ -695,6 +698,7 @@ public:
 	{
 		doc = app = NULL;
 		as_url = false;
+		widget = nil;
 	}
 	virtual ~MCLaunch();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1549,13 +1553,17 @@ class MCRead : public MCStatement
 	Functions timeunits;
 	MCExpression *at;
 public:
-	MCRead()
+    MCRead() :
+      arg(OA_UNDEFINED),
+      fname(NULL),
+      cond(RF_UNDEFINED),
+      stop(NULL),
+      unit(FU_CHARACTER),
+      maxwait(NULL),
+      timeunits(F_UNDEFINED),
+      at(NULL)
 	{
-		fname = NULL;
-		maxwait = NULL;
-		stop = NULL;
-		unit = FU_CHARACTER;
-		at = NULL;
+        ;
 	}
 	virtual ~MCRead();
 #ifdef LEGACY_EXEC
@@ -1817,6 +1825,9 @@ class MCGo : public MCStatement
 	Boolean marked;
 	Boolean visible;
 	Boolean thisstack;
+	
+	MCChunk *widget;
+	Chunk_term direction;
 public:
 	MCGo()
 	{
@@ -1825,6 +1836,7 @@ public:
 		window = NULL;
 		marked = thisstack = False;
 		visible = True;
+		widget = nil;
 	}
 	virtual ~MCGo();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1907,12 +1919,10 @@ class MCSave : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *filename;
+	MCExpression *format;
+	bool newest_format;
 public:
-	MCSave()
-	{
-		target = NULL;
-		filename = NULL;
-	}
+	MCSave() : target(NULL), filename(NULL), format(NULL), newest_format(false) {}
 	virtual ~MCSave();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);

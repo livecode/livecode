@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -299,8 +299,8 @@ public:
 	// virtual functions from MCControl
 	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 
@@ -512,7 +512,7 @@ public:
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
 #endif
 	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
-	Exec_stat setpartialtext(uint4 parid, const MCString &data, bool unicode);
+	Exec_stat setpartialtext(uint4 parid, MCStringRef p_text);
 #ifdef LEGACY_EXEC
 	Exec_stat gethtml(uint4 parid, MCExecPoint &ep);
 	Exec_stat getparagraphhtml(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
@@ -533,7 +533,7 @@ public:
 	MCParagraph *styledtexttoparagraphs(MCExecPoint& ep);
 #endif
 	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
-	MCParagraph *texttoparagraphs(const MCString &data, Boolean isunicode);
+	MCParagraph *texttoparagraphs(MCStringRef p_text);
 	
     MCParagraph *parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef metadata, bool p_split, MCParagraph*& x_paragraphs);
 	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, MCStringRef p_string, MCStringRef p_metadata);

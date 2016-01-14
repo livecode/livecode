@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -125,7 +125,7 @@ public:
 	int GetFormattedHeight(void);
 	int GetFormattedWidth(void);
 	void GetFormattedRect(int &r_left, int &t_top, int &r_right, int &r_bottom);
-	int GetWindowId(void);
+	uintptr_t GetWindowId(void);
 	char *GetUserAgent(void);
 
 	void SetScale(bool willscale);
@@ -143,7 +143,7 @@ public:
 	void SetInst(int linst);
 	void SetVScroll(int p_vscroll_pixels);
 	void SetHScroll(int p_hscroll_pixels);
-	void SetWindowId(int id);
+	void SetWindowId(uintptr_t id);
 	void SetUserAgent(const char *p_user_agent);
 
 	virtual void AddJavaScriptHandler(const char *p_handler);

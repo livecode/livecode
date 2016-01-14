@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -157,23 +157,29 @@ static void ParserMark(ParserRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool ParserWillMatchToken(ParserRef self, TokenType p_type)
+static bool ParserWillMatchToken(ParserRef self, TokenType p_type, bool p_same_row = false)
 {
 	const Token *t_token;
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
 
-	if (t_token -> type != p_type)
+    if (p_same_row && PositionGetRow(self -> position) != PositionGetRow(t_token -> start))
+        return false;
+    
+    if (t_token -> type != p_type)
 		return false;
 	
 	return true;
 }
 
-static bool ParserWillMatchKeyword(ParserRef self, ParserKeyword p_keyword)
+static bool ParserWillMatchKeyword(ParserRef self, ParserKeyword p_keyword, bool p_same_row = false)
 {
-	const Token *t_token;
+    const Token *t_token;
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
+    
+    if (p_same_row && PositionGetRow(self -> position) != PositionGetRow(t_token -> start))
+        return false;
 
 	if (t_token -> type != kTokenTypeIdentifier ||
 		!NameEqualToCString(t_token -> value, s_parser_keyword_strings[p_keyword]))
@@ -182,10 +188,10 @@ static bool ParserWillMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 	return true;
 }
 
-static bool ParserWillMatchKeywords(ParserRef self, ParserKeyword *p_keywords)
+static bool ParserWillMatchKeywords(ParserRef self, ParserKeyword *p_keywords, bool p_same_row = false)
 {
 	for(uint32_t i = 0; p_keywords[i] != kParserKeyword__None; i++)
-		if (ParserWillMatchKeyword(self, p_keywords[i]))
+		if (ParserWillMatchKeyword(self, p_keywords[i], p_same_row))
 			return true;
 
 	return false;
@@ -331,9 +337,9 @@ static bool ParserMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 	return true;
 }
 
-static bool ParserSkipKeyword(ParserRef self, ParserKeyword p_keyword, bool& r_skipped)
+static bool ParserSkipKeyword(ParserRef self, ParserKeyword p_keyword, bool& r_skipped, bool p_same_row = false)
 {
-	if (ParserWillMatchKeyword(self, p_keyword))
+	if (ParserWillMatchKeyword(self, p_keyword, p_same_row))
 	{
 		if (!ParserMatchKeyword(self, p_keyword))
 			return false;
@@ -346,9 +352,9 @@ static bool ParserSkipKeyword(ParserRef self, ParserKeyword p_keyword, bool& r_s
 	return true;
 }
 
-static bool ParserSkipToken(ParserRef self, TokenType p_token, bool& r_skipped)
+static bool ParserSkipToken(ParserRef self, TokenType p_token, bool& r_skipped, bool p_same_row = false)
 {
-	if (ParserWillMatchToken(self, p_token))
+	if (ParserWillMatchToken(self, p_token, p_same_row))
 	{
 		const Token *t_token;
 		if (!ScannerRetrieve(self -> scanner, t_token))
@@ -400,7 +406,6 @@ static bool ParserMatchKeywords(ParserRef self, ParserKeyword *p_keywords, Parse
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool ParserReduceInterface(ParserRef self);
-static bool ParserReduceUseClause(ParserRef self);
 static bool ParserReduceHookClause(ParserRef self);
 static bool ParserReduceDefinition(ParserRef self);
 static bool ParserReduceEnumDefinition(ParserRef self);
@@ -433,7 +438,7 @@ static bool ParserReduceInterface(ParserRef self)
 		return false;
 	
 	while(ParserWillMatchKeyword(self, kParserKeywordUse))
-		if (!ParserReduceUseClause(self))
+		if (!ParserReduceUseDefinition(self))
 			return false;
 	
 	while(ParserWillMatchKeyword(self, kParserKeywordOn))
@@ -449,29 +454,6 @@ static bool ParserReduceInterface(ParserRef self)
 		return false;
 		
 	if (!InterfaceEnd(self -> interface))
-		return false;
-		
-	return true;
-}
-
-// use-clause
-//   : 'use' ID
-//
-static bool ParserReduceUseClause(ParserRef self)
-{
-	ParserMark(self);
-	
-	if (!ParserMatchKeyword(self, kParserKeywordUse))
-		return false;
-
-	Position t_position;
-	t_position = self -> position;
-
-	NameRef t_use_name;
-	if (!ParserMatchIdentifier(self, t_use_name))
-		return false;
-	
-	if (!InterfaceDefineUse(self -> interface, t_position, t_use_name))
 		return false;
 		
 	return true;
@@ -603,8 +585,10 @@ static bool ParserReduceEnumElementDefinition(ParserRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2015-11-16: Ensure use clause doesn't clobber use definition
+
 // use-definition
-//   : 'use' ID 'on' { ID , ',' }
+//   : 'use' ID [ 'on' { ID , ',' } ]
 //
 static bool ParserReduceUseDefinition(ParserRef self)
 {
@@ -619,10 +603,14 @@ static bool ParserReduceUseDefinition(ParserRef self)
 	NameRef t_type_name;
 	if (!ParserMatchIdentifier(self, t_type_name))
 		return false;
-	
-	if (!ParserMatchKeyword(self, kParserKeywordOn))
-		return false;
-	
+    
+    bool t_skipped;
+    if (!ParserSkipKeyword(self, kParserKeywordOn, t_skipped, true))
+        return false;
+    
+    if (!t_skipped)
+        return InterfaceDefineUse(self -> interface, t_position, t_type_name);
+        
 	for(;;)
 	{
 		NameRef t_platform_name;
@@ -633,7 +621,7 @@ static bool ParserReduceUseDefinition(ParserRef self)
 			return false;
 		
 		bool t_skipped_comma;
-		if (!ParserSkipToken(self, kTokenTypeComma, t_skipped_comma))
+		if (!ParserSkipToken(self, kTokenTypeComma, t_skipped_comma, true))
 			return false;
 		
 		if (!t_skipped_comma)

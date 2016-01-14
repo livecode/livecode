@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -88,7 +88,7 @@ MCPropertyInfo MCGroup::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_BACK_SIZE, Point, MCGroup, BackSize)
 	DEFINE_RW_OBJ_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, MCGroup, SelectGroupedControls)
     DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCGroup, CardNames)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCGroup, CardIds)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfLooseUInt, MCGroup, CardIds)
     // MERG-2013-05-01: [[ ChildControlProps ]] Add ability to list both
     //   immediate and all descendent controls of a group.
     DEFINE_RO_OBJ_PART_PROPERTY(P_CONTROL_IDS, String, MCGroup, ControlIds)
@@ -115,38 +115,50 @@ MCObjectPropertyTable MCGroup::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGroup::MCGroup()
+MCGroup::MCGroup() :
+  MCControl(),
+  controls(NULL),
+  kfocused(NULL),
+  oldkfocused(NULL),
+  newkfocused(NULL),
+  mfocused(NULL),
+  vscrollbar(NULL),
+  hscrollbar(NULL),
+  scrollx(0),
+  scrolly(0),
+  scrollbarwidth(MCscrollbarwidth),
+  label(MCValueRetain(kMCEmptyString)),
+  minrect(MCU_make_rect(0, 0, 0, 0)),
+  number(MAXUINT2),
+  mgrabbed(False),
+  m_updates_locked(false),
+  m_clips_to_rect(false)
 {
 	flags |= F_TRAVERSAL_ON | F_RADIO_BEHAVIOR | F_GROUP_ONLY;
 	flags &= ~(F_SHOW_BORDER | F_OPAQUE);
-	label = MCValueRetain(kMCEmptyString);
-	controls = NULL;
-	kfocused = mfocused = NULL;
-	newkfocused = oldkfocused = NULL;
-	number = MAXUINT2;
-	leftmargin = rightmargin = topmargin = bottommargin = defaultmargin;
-	vscrollbar = hscrollbar = NULL;
-	scrollx = scrolly = 0;
-	scrollbarwidth = MCscrollbarwidth;
-	minrect.x = minrect.y = minrect.width = minrect.height = 0;
-	
-	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
-	//   when created.
-    m_updates_locked = false;
-    
-    // MW-2014-06-20: [[ ClipsToRect ]] Initialize to false.
-    m_clips_to_rect = false;
+    leftmargin = rightmargin = topmargin = bottommargin = defaultmargin;
 }
 
-MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
+MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) :
+  MCControl(gref),
+  controls(NULL),
+  kfocused(NULL),
+  oldkfocused(NULL),
+  newkfocused(NULL),
+  mfocused(NULL),
+  vscrollbar(NULL),
+  hscrollbar(NULL),
+  scrollx(gref.scrollx),
+  scrolly(gref.scrolly),
+  scrollbarwidth(gref.scrollbarwidth),
+  label(MCValueRetain(gref.label)),
+  minrect(gref.minrect),
+  number(MAXUINT2),
+  mgrabbed(False),
+  m_updates_locked(false),
+  m_clips_to_rect(gref.m_clips_to_rect)
 {
-	MCGroup(gref, false);
-}
-
-MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
-{
-	label = MCValueRetain(gref.label);
-	controls = NULL;
+    // Copy the controls
 	if (gref.controls != NULL)
 	{
 		MCControl *optr = gref.controls;
@@ -173,9 +185,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		}
 		while (optr != gref.controls);
 	}
-	minrect = gref.minrect;
-	kfocused = mfocused = NULL;
-	number = MAXUINT2;
+
+    // Copy the vertical scrollbar
 	if (gref.vscrollbar != NULL)
 	{
 		vscrollbar = new MCScrollbar(*gref.vscrollbar);
@@ -184,8 +195,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		vscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
 		vscrollbar->setembedded();
 	}
-	else
-		vscrollbar = NULL;
+
+    // Copy the horizontal scrollbar
 	if (gref.hscrollbar != NULL)
 	{
 		hscrollbar = new MCScrollbar(*gref.hscrollbar);
@@ -194,18 +205,6 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		hscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
 		hscrollbar->setembedded();
 	}
-	else
-		hscrollbar = NULL;
-	scrollx = gref.scrollx;
-	scrolly = gref.scrolly;
-	scrollbarwidth = gref.scrollbarwidth;
-	
-    // MW-2014-06-20: [[ ClipsToRect ]] Copy other group's value.
-    m_clips_to_rect = gref.m_clips_to_rect;
-    
-	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
-	//   when cloned.
-    m_updates_locked = false;
 }
 
 MCGroup::~MCGroup()
@@ -2109,7 +2108,10 @@ MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
 		count(otype, NULL, num);
 		// MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
 		//   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
-		if (otype == CT_GROUP)
+		
+		// PM-2015-08-31: [[ Bug 15763 ]] Same as above - If we're counting controls, we get one too many as it
+		//   includes the owner - thus we adjust (this means you can do 'the last control of group ...')
+		if (otype == CT_GROUP || otype == CT_LAYER)
 			num--;
 		switch (etype)
 		{
@@ -2391,6 +2393,7 @@ void MCGroup::clearfocus(MCControl *cptr)
 	if (cptr == kfocused)
 	{
 		kfocused = NULL;
+        state &= ~CS_KFOCUSED;
 		if (parent -> gettype() == CT_CARD)
 			static_cast<MCCard *>(parent) -> erasefocus(this);
 		else
@@ -3117,7 +3120,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 
 #define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
 
-IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3131,7 +3134,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3144,10 +3147,10 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ ClipsToRect ]] ClipsToRect doesn't require any storage
         //   as if the flag is present its true, otherwise false.
@@ -3155,7 +3158,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             m_clips_to_rect = true;
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
         
 		if (t_stat == IO_NORMAL)
 			p_remaining -= t_length + t_header_length;
@@ -3167,7 +3170,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -3181,14 +3184,14 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_clips_to_rect)
         t_has_extensions = true;
 
-	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3230,16 +3233,16 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (vscrollbar != NULL)
 	{
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (hscrollbar != NULL)
 	{
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (controls != NULL)
@@ -3247,7 +3250,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCControl *cptr = controls;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = cptr->next();
 		}
@@ -3266,7 +3269,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2011-08-10: [[ Groups ]] Make sure the group has F_GROUP_SHARED set
 	//   if it is a background.
@@ -3284,25 +3287,25 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 	
 	if (flags & F_MARGINS)
 	{
 		if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (leftmargin == defaultmargin
 		        && leftmargin == rightmargin
 		        && leftmargin == topmargin
@@ -3312,21 +3315,21 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 	if (flags & F_BOUNDING_RECT)
 	{
 		if ((stat = IO_read_int2(&minrect.x, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&minrect.y, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&minrect.width, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&minrect.height, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		switch (type)
 		{
 		case OT_GROUP:
@@ -3336,7 +3339,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newgroup->load(stream, version)) != IO_NORMAL)
 				{
 					delete newgroup;
-					return stat;
+					return checkloadstat(stat);
 				}
 				MCControl *newcontrol = newgroup;
 				
@@ -3355,7 +3358,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newbutton->load(stream, version)) != IO_NORMAL)
 				{
 					delete newbutton;
-					return stat;
+					return checkloadstat(stat);
 				}
 				MCControl *cptr = (MCControl *)newbutton;
 				cptr->appendto(controls);
@@ -3368,7 +3371,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newfield->load(stream, version)) != IO_NORMAL)
 				{
 					delete newfield;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newfield->appendto(controls);
 			}
@@ -3380,7 +3383,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newimage->load(stream, version)) != IO_NORMAL)
 				{
 					delete newimage;
-					return stat;
+					return checkloadstat(stat);
 				}
 				MCControl *cptr = (MCControl *)newimage;
 				cptr->appendto(controls);
@@ -3393,7 +3396,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newscrollbar->load(stream, version)) != IO_NORMAL)
 				{
 					delete newscrollbar;
-					return stat;
+					return checkloadstat(stat);
 				}
 				if (flags & F_VSCROLLBAR && vscrollbar == NULL)
 				{
@@ -3419,7 +3422,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newgraphic->load(stream, version)) != IO_NORMAL)
 				{
 					delete newgraphic;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newgraphic->appendto(controls);
 			}
@@ -3431,7 +3434,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = neweps->load(stream, version)) != IO_NORMAL)
 				{
 					delete neweps;
-					return stat;
+					return checkloadstat(stat);
 				}
 				neweps->appendto(controls);
 			}
@@ -3443,7 +3446,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
             if ((stat = neweps->load(stream, version)) != IO_NORMAL)
             {
                 delete neweps;
-                return stat;
+                return checkloadstat(stat);
             }
             neweps->appendto(controls);
         }
@@ -3455,7 +3458,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newmag->load(stream, version)) != IO_NORMAL)
 				{
 					delete newmag;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newmag->appendto(controls);
 			}
@@ -3467,7 +3470,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newcolors->load(stream, version)) != IO_NORMAL)
 				{
 					delete newcolors;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newcolors->appendto(controls);
 			}
@@ -3479,7 +3482,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 				if ((stat = newplayer->load(stream, version)) != IO_NORMAL)
 				{
 					delete newplayer;
-					return stat;
+					return checkloadstat(stat);
 				}
 				newplayer->appendto(controls);
 			}

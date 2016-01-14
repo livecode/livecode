@@ -5,8 +5,8 @@ Synonyms: Animation library,Animation libraries
 Type: library
 
 Description:
-The <Revolution custom library|LiveCode custom library> that supports animations created with the Animation Builder. The <revGoToFramePaused>, <revPlayAnimation>, and <revStopAnimation> <command|commands> are part of the Animation library.
+The <LiveCode custom library|LiveCode custom library> that supports animations created with the Animation Builder. The <revGoToFramePaused>, <revPlayAnimation>, and <revStopAnimation> <command|commands> are part of the Animation library.
 
-References: revGoToFramePaused (command), revPlayAnimation (command), revStopAnimation (command), command (glossary), Revolution custom library (library)
+References: revGoToFramePaused (command), revPlayAnimation (command), revStopAnimation (command), command (glossary), LiveCode custom library (library)
 
 Tags: multimedia

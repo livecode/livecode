@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -403,6 +403,18 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
+                    case kMCScriptBytecodeOpAssignArray:
+	                    // assignarray <dst>, [ <key_1>, <value_1>, ..., <key_n>, <value_n> ]
+	                    if (t_arity < 1)
+		                    goto invalid_bytecode_error;
+	                    if (t_arity % 2 != 1) // parameters must come in pairs
+		                    goto invalid_bytecode_error;
+
+	                    for (uindex_t i = 0; i < t_arity; ++i)
+	                    {
+		                    t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
+	                    }
+	                    break;
                 }
             }
             
@@ -742,6 +754,10 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 void *t_symbol;
 #ifdef _WIN32
 				t_symbol = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(t_type -> binding));
+#elif defined(__EMSCRIPTEN__)
+				void *t_handle = dlopen(NULL, RTLD_LAZY);
+				t_symbol = dlsym(t_handle, MCStringGetCString(t_type->binding));
+				dlclose(t_handle);
 #else
                 t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
 #endif
@@ -752,8 +768,10 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                                                    nil);
 					goto error_cleanup;
                 }
-                
-                t_typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
+
+                /* The symbol is a function that returns a type info reference. */
+                MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
+                t_typeinfo = MCValueRetain(t_type_func());
             }
             break;
             case kMCScriptTypeKindRecord:

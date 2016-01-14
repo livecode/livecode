@@ -18,11 +18,13 @@
 
 			'sources':
 			[
+				'modules/widget-utils/widget-utils.lcb',
+			
 				'libraries/canvas/canvas.lcb',
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 
-				'widgets/button/button.lcb',
+				'widgets/browser/browser.lcb',
 				#'widgets/button-popup/button-popup.lcb',
 				#’widgets/chart/chart.lcb',
 				'widgets/checkbox/checkbox.lcb',
@@ -36,6 +38,7 @@
 				'widgets/paletteactions/paletteactions.lcb',
 				#’widgets/pinkcircle/pinkcircle.lcb',
 				'widgets/progressbar/progressbar.lcb',
+				'widgets/pushbutton/pushbutton.lcb',
 				'widgets/radiobutton/radiobutton.lcb',
 				'widgets/segmented/segmented.lcb',
 				#'widgets/segmented-popup/segmented-popup.lcb',

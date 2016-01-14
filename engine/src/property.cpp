@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -184,7 +184,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfLooseUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -254,8 +254,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, Name, Interface, DefaultMenubar)
 	DEFINE_RW_CUSTOM_PROPERTY(P_STACK_FILE_VERSION, InterfaceStackFileVersion, Interface, StackFileVersion)
 	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
-	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
-	DEFINE_RW_PROPERTY(P_CURSOR, UInt32, Interface, Cursor)
+    DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
+    DEFINE_RW_PROPERTY(P_CURSOR, OptionalUInt32, Interface, Cursor)
 
 	DEFINE_RW_PROPERTY(P_TWELVE_TIME, Bool, DateTime, TwelveTime)
 
@@ -363,6 +363,15 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragData)
     DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardTextData)
     DEFINE_RW_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragTextData)
+    
+    DEFINE_RW_ARRAY_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardData)
+    DEFINE_RW_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragData)
+    DEFINE_RW_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardData)
+    DEFINE_RW_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragData)
+    DEFINE_RW_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
@@ -382,7 +391,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALE, Double, Interface, ScreenPixelScale)
     // IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
     // list of the pixel scales of all connected screens
-    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfDouble, Interface, ScreenPixelScales)
+    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfLooseDouble, Interface, ScreenPixelScales)
     
     // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
     DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
@@ -403,6 +412,42 @@ static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, c
 			r_info = &kMCPropertyInfoTable[i];
 			return true;
 		}
+	
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct Property_Override
+{
+	LT lt;
+	Properties property;
+};
+
+// List of syntax marks that should be interpreted as properties (if preceded by "the")
+Property_Override property_overrides[] =
+{
+	{{"url", TT_CHUNK, CT_URL}, P_URL},
+};
+extern const uint32_t property_overrides_size = ELEMENTS(property_overrides);
+
+bool lookup_property_override(const LT&p_lt, Properties &r_property)
+{
+	for (uint32_t i = 0; i < property_overrides_size; i++)
+		if (p_lt.type == property_overrides[i].lt.type && p_lt.which == property_overrides[i].lt.which)
+		{
+			r_property = property_overrides[i].property;
+			return true;
+		}
+	
+	return false;
+}
+
+bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name)
+{
+	for (uint32_t i = 0; i < property_overrides_size; i++)
+		if (property_overrides[i].property == p_property)
+			return MCNameCreateWithCString(property_overrides[i].lt.token, r_name);
 	
 	return false;
 }
@@ -510,13 +555,19 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	}
 	else
 		if (te->type != TT_PROPERTY)
+		{
+			Properties t_override;
+			
 			if (te->type == TT_CLASS && te->which == CT_MARKED)
 				which = P_MARKED;
+			else if (the && lookup_property_override(*te, t_override))
+				which = t_override;
 			else
 			{
 				MCperror->add(PE_PROPERTY_NOTAPROP, sp);
 				return PS_ERROR;
 			}
+		}
 		else
 			which = (Properties)te->which;
 
@@ -915,6 +966,10 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_REV_LICENSE_INFO:
 	case P_DRAG_DATA:
 	case P_CLIPBOARD_DATA:
+    case P_RAW_CLIPBOARD_DATA:
+    case P_RAW_DRAGBOARD_DATA:
+    case P_FULL_CLIPBOARD_DATA:
+    case P_FULL_DRAGBOARD_DATA:
 		if (sp.next(type) != PS_NORMAL)
 			return PS_NORMAL;
 		if (type != ST_LB)

@@ -5,6 +5,6 @@ Synonyms: setProp handler
 Type: glossary
 
 Description:
-A <Revolution|LiveCode> <handler> you write that defines optional actions when a <custom property's> <value> is set. SetProp <handler|handlers> begin with the <setProp> <control structure>.
+A <LiveCode> <handler> you write that defines optional actions when a <custom property's> <value> is set. SetProp <handler|handlers> begin with the <setProp> <control structure>.
 
-References: custom property (property), handler (glossary), Revolution (glossary), value (glossary), control structure (glossary), setProp (control_st)
+References: custom property (property), handler (glossary), LiveCode (glossary), value (glossary), control structure (glossary), setProp (control_st)

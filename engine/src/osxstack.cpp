@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -77,6 +77,9 @@ void MCStack::sethints(void)
 {
 }
 
+extern void MCMacDisableScreenUpdates();
+extern void MCMacEnableScreenUpdates();
+
 void MCStack::setgeom()
 {
 	//set stack(window) size or position from script
@@ -109,7 +112,7 @@ void MCStack::setgeom()
 	//   just disabling screen updates and enabling them between setting the frame and resizing
 	//   should be enough...
 	
-	DisableScreenUpdates();
+	MCMacDisableScreenUpdates();
 	
 	rect = view_setstackviewport(rect);
 	
@@ -120,7 +123,7 @@ void MCStack::setgeom()
 	if (t_old_rect.x != rect.x || t_old_rect.y != rect.y || t_old_rect.width != rect.width || t_old_rect.height != rect.height)
 		resize(t_old_rect.width, t_old_rect.height);
 	
-	EnableScreenUpdates();
+	MCMacEnableScreenUpdates();
 }
 
 // MW-2011-09-12: [[ MacScroll ]] This is called to apply the Mac menu scroll. It

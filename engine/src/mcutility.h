@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -17,12 +17,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MCUTILITY_H
 #define __MCUTILITY_H
 
-#ifndef _STRING_H
+#include <ctype.h>
 #include <string.h>
-#endif
 
 #include "foundation-unicode.h"
-#include <ctype.h>
+#include "typedefs.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -215,6 +215,9 @@ inline uint4 MCU_max(uint4 one, uint4 two) {return one > two ? one : two;}
 
 inline float32_t MCU_max(float32_t one, float32_t two) {return one > two ? one : two;}
 inline float32_t MCU_min(float32_t one, float32_t two) {return one > two ? two : one;}
+
+inline float64_t MCU_max(float64_t one, float64_t two) {return one > two ? one : two;}
+inline float64_t MCU_min(float64_t one, float64_t two) {return one > two ? two : one;}
 
 inline int4 MCU_clamp(int4 v, int4 lower, int4 upper) {return v < lower ? lower : (v > upper ? upper : v);}
 

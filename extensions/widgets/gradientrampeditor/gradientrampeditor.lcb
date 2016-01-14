@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -220,6 +220,7 @@ public handler OnMouseMove() returns nothing
       -- Reorder the ramp to put things back into line (required for gradient rendering).
       reorderGradientRamp()
       redraw all
+      gradientStopsChanged()
    end if
 end handler
 
@@ -281,6 +282,13 @@ public handler OnMouseDoubleUp() returns nothing
       end if
    end if
 
+   redraw all
+   gradientStopsChanged()
+end handler
+
+public handler onMouseCancel() returns nothing
+   put false into mIsDraggingStop
+   put xCoordToStopNumber(the x of the mouse position) into mCurrentlySelectedStopIndex
    redraw all
    gradientStopsChanged()
 end handler

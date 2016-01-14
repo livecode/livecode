@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -33,6 +33,7 @@ extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptNotAStringValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
@@ -91,10 +92,10 @@ extern void __MCScriptAssertFailed__(const char *label, const char *expr, const 
 
 #else
 
-#define __MCScriptValidateObject__(obj)
-#define __MCScriptValidateObjectAndKind__(obj, kind)
-#define __MCScriptAssert__(expr, label)
-#define __MCScriptUnreachable__(label)
+#define __MCScriptValidateObject__(obj) do { } while (false)
+#define __MCScriptValidateObjectAndKind__(obj, kind) do { } while (false)
+#define __MCScriptAssert__(expr, label) do { } while (false)
+#define __MCScriptUnreachable__(label) do { } while (false)
 
 #endif
 
@@ -576,6 +577,13 @@ enum MCScriptBytecodeOp
     // build a list. (This will be replaced by an invoke when variadic bindings are
     // implemented).
     kMCScriptBytecodeOpAssignList,
+
+	// Array creation assignment.
+	//   assign-array <dst>, <key_1>, <value_1>, ..., <key_n>, <value_n>
+	// Dst is a register.  The remaining arguments are registers and
+	// are used, pair-wise, to build an array. (This will be replaced by an invoke
+	// when variadic bindings are implemented).
+	kMCScriptBytecodeOpAssignArray,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);

@@ -51,16 +51,22 @@ The <clipboardData> property is populated automatically when the clipboard conte
 
 You can query the keys of the <clipboardData> to determine what types of data are on the clipboard. For example, if the clipboard contains styled text, you can put that text (in htmlText format) in a variable with the following statement:
 
-put the clipboardData["html"] into tHTML
+	put the clipboardData["html"] into tHTML
 
->*Note:*  The objects type can now be queried and will return a binary string that can be re-used.  Furthermore, this type is now published to all applications and so object cut/copy/paste operaions can occur between LiveCode processes.  To change the contents of the clipboard, you can set the <clipboardData> property directly. For example, the following statement places the text "Hello World" on the clipboard:
+To change the contents of the clipboard, you can set the <clipboardData> property directly. For example, the following statement places the text "Hello World" on the clipboard:
 
-set the clipboardData["text"] to "Hello World"
+	set the clipboardData["text"] to "Hello World"
 
 The above statement is equivalent to selecting the text "Hello World" in a field and choosing Edit menu, or to using the <copy> command. The data you place on the clipboard is accessible to your application using the <paste> command, and to other applications (that support pasting text) using the application's Paste menu item.
 
 >*Tip:*  To quickly find out what kind of data is on the clipboard, use the <clipboard> function.
 
-References: copy (command), dragData (property), clipboard (function), paste (command)
+>*Tip:*  The "objects" type can be used to capture the binary form of a LiveCode object that was placed on the clipboard. This binary data can be passed to another instance of LiveCode or saved to a file and re-loaded at a later time.
 
-Tags: ui
+>*Tip:*  If you require low-level access to the clipboard contents, use the <rawClipboardData> property instead.
+
+>*Tip:*  To prevent the clipboard from being changed by other apps while you are accessing it, use the <lock clipboard> and <unlock clipboard> commands.
+
+References: copy (command), dragData (property), clipboard (function), paste (command), lock clipboard (command), unlock clipboard (command), fullClipboardData (property), rawClipboardData (property)
+
+Tags: ui, clipboard

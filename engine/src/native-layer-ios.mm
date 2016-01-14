@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -52,12 +52,12 @@
 #include "mbliphoneapp.h"
 #include "mblcontrol.h"
 
+#include "graphics_util.h"
 
-MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget) :
-  m_widget(p_widget),
-  m_view(nil)
+MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget, UIView *p_native_view) :
+  m_view([p_native_view retain])
 {
-    ;
+	m_widget = p_widget;
 }
 
 MCNativeLayerIOS::~MCNativeLayerIOS()
@@ -66,86 +66,17 @@ MCNativeLayerIOS::~MCNativeLayerIOS()
     {
         doDetach();
         MCIPhoneRunBlockOnMainFiber(^{[m_view release];});
-        [m_view release];
     }
-}
-
-void MCNativeLayerIOS::OnToolChanged(Tool p_new_tool)
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Make visible if requested
-        if (t_widget->getflags() & F_VISIBLE)
-            MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:NO];});
-        t_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:YES];});
-        t_widget->Redraw();
-    }
-}
-
-void MCNativeLayerIOS::OnOpen()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // Unhide the widget, if required
-    if (isAttached() && t_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerIOS::OnClose()
-{
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (isAttached() && t_widget->getopened() == 1)
-        doDetach();
-}
-
-#import <UIKit/UIButton.h>
-
-void MCNativeLayerIOS::OnAttach()
-{
-    m_attached = true;
-    doAttach();
 }
 
 void MCNativeLayerIOS::doAttach()
 {
     MCWidget* t_widget = MCWidgetGetHost(m_widget);
     
-    if (m_view == nil)
-    {
-        // TESTING
-        /*
-        UIButton *t_button;
-        t_button = [[UIButton buttonWithType:UIButtonTypeRoundedRect] retain];
-        [t_button setTitle:@"Native button" forState:UIControlStateNormal];
-        [t_button setHidden:YES];
-        m_view = t_button;
-        doSetRect(m_widget->getrect());
-        */
-    }
-    
     // Act as if there was a re-layer to put the widget in the right place
     doRelayer();
     
-    // Restore the visibility state of the widget (in case it changed due to a
-    // tool change while on another card - we don't get a message then)
-    if ((t_widget->getflags() & F_VISIBLE) && t_widget->isInRunMode())
-        MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:NO];});
-    else
-        MCIPhoneRunBlockOnMainFiber(^{[m_view setHidden:YES];});
-}
-
-void MCNativeLayerIOS::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+	doSetVisible(ShouldShowWidget(t_widget));
 }
 
 void MCNativeLayerIOS::doDetach()
@@ -156,26 +87,18 @@ void MCNativeLayerIOS::doDetach()
     });
 }
 
-void MCNativeLayerIOS::OnPaint(MCGContextRef)
+// Rendering view to context not supported on iOS.
+bool MCNativeLayerIOS::GetCanRenderToContext()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    // If the widget is not in edit mode, we trust it to paint itself
-    if (t_widget->isInRunMode())
-        return;
-    
-    // Edit mode is not supported on iOS
-    return;
+	return false;
 }
 
-void MCNativeLayerIOS::OnGeometryChanged(const MCRectangle& p_old_rect)
+bool MCNativeLayerIOS::doPaint(MCGContextRef p_context)
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    doSetRect(t_widget->getrect());
+	return false;
 }
 
-void MCNativeLayerIOS::doSetRect(const MCRectangle& p_rect)
+void MCNativeLayerIOS::doSetGeometry(const MCRectangle& p_rect)
 {
     CGRect t_nsrect;
     MCGRectangle t_xformed;
@@ -188,16 +111,13 @@ void MCNativeLayerIOS::doSetRect(const MCRectangle& p_rect)
     });
 }
 
-void MCNativeLayerIOS::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerIOS::doSetVisible(bool p_visible)
 {
     MCIPhoneRunBlockOnMainFiber(^{
         [m_view setHidden:p_visible ? NO : YES];
     });
-}
-
-void MCNativeLayerIOS::OnLayerChanged()
-{
-    doRelayer();
+	if (p_visible)
+		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
 }
 
 void MCNativeLayerIOS::doRelayer()
@@ -241,9 +161,20 @@ UIView* MCNativeLayerIOS::getMainView()
     return MCIPhoneGetView();
 }
 
+bool MCNativeLayerIOS::GetNativeView(void *&r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
 {
-    return new MCNativeLayerIOS(getwidget());
+	return new MCNativeLayerIOS(p_widget, (UIView*)p_native_view);
 }
+
+////////////////////////////////////////////////////////////////////////////////

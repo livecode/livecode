@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -457,8 +457,8 @@ void MCGPathAddEllipse(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGF
 		{
 			// Use Skia implementation
 			SkRect t_bounds;
-			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
-										MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
+			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - p_radii . width), MCGCoordToSkCoord(p_center . y - p_radii . height),
+										MCGFloatToSkScalar(p_radii . width * 2), MCGFloatToSkScalar(p_radii . height * 2));
 			self -> path -> addOval(t_bounds);
 		}
 	}
@@ -488,8 +488,8 @@ void MCGPathAddArc(MCGPathRef self, MCGPoint p_center, MCGSize p_radii, MCGFloat
 		{
 			// Use Skia implementation
 			SkRect t_bounds;
-			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - (p_radii . width * 0.5f)), MCGCoordToSkCoord(p_center . y - (p_radii . height * 0.5f)),
-										MCGFloatToSkScalar(p_radii . width), MCGFloatToSkScalar(p_radii . height));
+			t_bounds = SkRect::MakeXYWH(MCGCoordToSkCoord(p_center . x - p_radii . width), MCGCoordToSkCoord(p_center . y - p_radii . height),
+			                            MCGFloatToSkScalar(p_radii . width * 2), MCGFloatToSkScalar(p_radii . height * 2));
 			self -> path -> addArc(t_bounds, MCGFloatToSkScalar(p_start_angle), MCGFloatToSkScalar(p_finish_angle - p_start_angle));
 		}
 	}

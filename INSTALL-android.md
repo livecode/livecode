@@ -37,7 +37,7 @@ Create a standalone toolchain (this simplifies setting up the build environment)
 ````bash
 android-ndk-r10e/build/tools/make-standalone-toolchain.sh \
     --toolchain=arm-linux-androideabi-clang3.5 \
-    --platform=android-8 \
+    --platform=android-10 \
     --install-dir=${HOME}/android/toolchain/standalone
 ````
 
@@ -75,11 +75,11 @@ LINK="${BINDIR}/${TRIPLE}-clang ${COMMON_FLAGS} -fuse-ld=bfd"
 AR="${BINDIR}/${TRIPLE}-ar"
 
 # Android platform information
-ANDROID_NDK_VERSION=r10d
-ANDROID_PLATFORM=android-8
-ANDROID_NDK=${TOOLCHAIN}/android-ndk-r10d
+ANDROID_NDK_VERSION=r10e
+ANDROID_PLATFORM=android-10
+ANDROID_NDK=${TOOLCHAIN}/android-ndk-r10e
 ANDROID_SDK=${TOOLCHAIN}/android-sdk-linux
-ANDROID_BUILD_TOOLS=22.0.1
+ANDROID_BUILD_TOOLS=23.0.1
 
 export JAVA_SDK
 export CC CXX LINK AR

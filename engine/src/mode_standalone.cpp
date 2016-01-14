@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -524,16 +524,55 @@ IO_stat MCDispatch::startup(void)
 
 #elif defined(__EMSCRIPTEN__)
 
+#include "stacksecurity.h"
+
 #define kMCEmscriptenBootStackFilename "/boot/standalone/__boot.livecode"
-#define kMCEmscriptenStartupScriptFilename "/boot/__startup"
+#define kMCEmscriptenStartupStackFilename "/boot/__startup.livecode"
 
 IO_stat
 MCDispatch::startup()
 {
 	/* The standalone data should already have been unpacked by now */
 
+	/* Load & run the startup script in a temporary stack */
+	MCStack *t_startup_stack = nil;
+	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenStartupStackFilename),
+	                                        t_startup_stack))
+	{
+		MCresult->sets("failed to load startup stack");
+		return IO_ERROR;
+	}
+
+	/* Check the stack */
+	if (!MCStackSecurityEmscriptenStartupCheck(t_startup_stack))
+	{
+		MCresult->sets("startup stack checks failed");
+		return IO_ERROR;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = t_startup_stack;
+
+	/* Attempt to run the startup handler */
+	if (ES_NORMAL != t_startup_stack->message(MCM_start_up, nil, false, true))
+	{
+		/* Handler couldn't be run at all, or threw an error */
+		MCresult->sets("failed to run startup stack");
+	}
+	/* The startup stack *should* set the result on failure */
+	{
+		MCExecContext ctxt;
+		MCAutoValueRef t_result;
+		MCresult->eval(ctxt, &t_result);
+		if (!MCValueIsEmpty(*t_result))
+		{
+			return IO_ERROR;
+		}
+	}
+
+	/* Delete the startup stack */
+	MCdispatcher->destroystack(t_startup_stack, true);
+
 	/* Load the initial stack */
-	/* FIXME Hardcoded boot stack path*/
 	MCStack *t_stack;
 	if (IO_NORMAL != MCdispatcher->loadfile(MCSTR(kMCEmscriptenBootStackFilename),
 	                                        t_stack))
@@ -544,21 +583,6 @@ MCDispatch::startup()
 
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 
-	/* Load & run the startup script */
-	MCAutoStringRef t_startup_script;
-	if (!MCS_loadtextfile(MCSTR(kMCEmscriptenStartupScriptFilename),
-	                      &t_startup_script))
-	{
-		MCresult->sets("failed to read startup script");
-		return IO_ERROR;
-	}
-
-	if (ES_NORMAL != t_stack->domess(*t_startup_script))
-	{
-		MCresult->sets("failed to execute startup script");
-		return IO_ERROR;
-	}
-
 	/* Complete startup tasks and send the startup message */
 
 	MCModeResetCursors();
@@ -566,13 +590,13 @@ MCDispatch::startup()
 
 	MCallowinterrupts = false;
 
-	t_stack->extraopen(false);
+	MCdefaultstackptr->extraopen(false);
 
 	send_startup_message();
 
 	if (!MCquit)
 	{
-		t_stack->open();
+		MCdefaultstackptr->open();
 	}
 
 	return IO_NORMAL;

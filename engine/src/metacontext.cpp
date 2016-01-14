@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -467,16 +467,16 @@ void MCMetaContext::drawtext_substring(coord_t x, int2 y, MCStringRef p_string, 
             t_mark -> text . data = new_array<char>(t_length);
             t_mark -> text . length = t_length;
             if (t_mark -> text . data != NULL)
-                memcpy(t_mark -> text . data, MCStringGetNativeCharPtr(p_string) + p_range.offset , t_length);
+                MCStringGetNativeChars(p_string, p_range, (char_t *)t_mark -> text . data);
             t_mark -> text . unicode_override = false;
         }
         else
         {
             t_mark -> text . data = new_array<unichar_t>(t_length);
             t_mark -> text . length = t_length;
+            // SN-2014-06-17 [[ Bug 12595 ]] Printing to PDF does not yield all information
             if (t_mark -> text . data != NULL)
-                // SN-2014-06-17 [[ Bug 12595 ]] Printing to PDF does not yield all information
-                memcpy(t_mark -> text . data, MCStringGetCharPtr(p_string) + p_range.offset, t_length * 2);
+                MCStringGetChars(p_string, p_range, (unichar_t *)t_mark -> text . data);
             t_mark -> text . unicode_override = true;
         }
 	}
@@ -663,8 +663,7 @@ void MCMetaContext::clear(const MCRectangle *rect)
 
 MCRegionRef MCMetaContext::computemaskregion(void)
 {
-	MCUnreachable();
-	return NULL;
+    MCUnreachableReturn(NULL);
 }
 
 

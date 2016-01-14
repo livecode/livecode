@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -61,7 +61,7 @@ extern void MCServerDebugAction(MCStringRef p_action);
 extern void MCServerDebugBreakpoint(MCStringRef p_action, MCStringRef p_file, uint32_t p_row, uint32_t p_column);
 
 // Get one of a handful of current state variables
-const char *MCServerDebugGet(const char *property);
+void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result);
 
 // Set one of a handful of current state variables
 void MCServerDebugPut(MCStringRef p_property, MCStringRef value);

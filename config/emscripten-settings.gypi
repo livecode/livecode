@@ -19,13 +19,15 @@
 
 	'cflags':
 	[
+		'-s ALLOW_MEMORY_GROWTH=1',
 		'-s ASSERTIONS=1',
 		'-s DEMANGLE_SUPPORT=1',
-		'-s WARN_ON_UNDEFINED_SYMBOLS=1',
-		'-s ALLOW_MEMORY_GROWTH=1',
-
 		'-s EMTERPRETIFY=1',
 		'-s EMTERPRETIFY_ASYNC=1',
+		'-s LINKABLE=1',
+		'-s RESERVED_FUNCTION_POINTERS=1024',
+		'-s TOTAL_MEMORY=67108864',
+		'-s WARN_ON_UNDEFINED_SYMBOLS=1',
 	],
 
 	'cflags_c':
@@ -40,6 +42,9 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 		'-std=<(c++_std)',
+
+		'-Werror=mismatched-tags',
+		'-Werror=overloaded-virtual',
 	],
 
 	'target_conditions':

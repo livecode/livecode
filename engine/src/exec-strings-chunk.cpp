@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1182,7 +1182,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStr
         return tci;
     }
     
-    return MCChunkCreateTextChunkIterator(p_text, nil, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
+    return MCChunkCreateTextChunkIterator(p_text, nil, MCChunkTypeFromChunkTerm(p_chunk_type), ctxt . GetLineDelimiter(), ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
 }
 
 MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ctxt, MCStringRef p_text, MCRange p_range, Chunk_term p_chunk_type)
@@ -1194,7 +1194,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ct
         return tci;
     }
     
-    return MCChunkCreateTextChunkIterator(p_text, &p_range, MCChunkTypeFromChunkTerm(p_chunk_type), p_chunk_type == CT_LINE ? ctxt . GetLineDelimiter() : ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
+    return MCChunkCreateTextChunkIterator(p_text, &p_range, MCChunkTypeFromChunkTerm(p_chunk_type), ctxt . GetLineDelimiter(), ctxt . GetItemDelimiter(), ctxt . GetStringComparisonType());
 }
 
 bool MCStringsTextChunkIteratorNext(MCExecContext& ctxt, MCTextChunkIterator *tci)

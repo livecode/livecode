@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1009,10 +1009,15 @@ static void MCInterfaceShadowParse(MCExecContext& ctxt, MCStringRef p_input, MCI
 
 static void MCInterfaceShadowFormat(MCExecContext& ctxt, const MCInterfaceShadow& p_input, MCStringRef& r_output)
 {
-	if (p_input . flag)
-		r_output = (MCStringRef)MCValueRetain(kMCTrue);
-	else
-		r_output = (MCStringRef)MCValueRetain(kMCFalse);
+    if (p_input . is_flag)
+    {
+        if (p_input . flag)
+            r_output = MCValueRetain(kMCTrueString);
+        else
+            r_output = MCValueRetain(kMCFalseString);
+    }
+    else
+        ctxt . FormatInteger(p_input . shadow, r_output);
 }
 
 static void MCInterfaceShadowFree(MCExecContext& ctxt, MCInterfaceShadow& p_input)
@@ -1337,20 +1342,20 @@ void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 	ctxt . Throw();
 }
 
-void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
+void MCObject::GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name)
 {
 	MCAutoValueRef t_long_name;
-	if (names(P_LONG_NAME, &t_long_name))
+	if (getnameproperty(P_LONG_NAME, p_part_id, &t_long_name))
 		if (ctxt.ConvertToString(*t_long_name, r_long_name))
 			return;
 	
 	ctxt . Throw();
 }
 
-void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
+void MCObject::GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id)
 {
 	MCAutoValueRef t_long_id;
-	if (names(P_LONG_ID, &t_long_id))
+	if (getnameproperty(P_LONG_ID, p_part_id, &t_long_id))
 		if (ctxt.ConvertToString(*t_long_id, r_long_id))
 			return;
 	
@@ -2294,7 +2299,14 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
-		if (t_new_offset > t_old_offset)
+		// PM-2015-12-02: [[ Bug 16524 ]] Make sure empty lines reset color props
+		if (t_new_offset == t_old_offset)
+		{
+			uint2 i;
+			if (getcindex(index, i))
+				destroycindex(index, i);
+		}
+		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
 			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
@@ -3043,6 +3055,7 @@ void MCObject::SetOpaque(MCExecContext& ctxt, bool setting)
 }
 void MCObject::GetShadow(MCExecContext& ctxt, MCInterfaceShadow& r_shadow)
 {
+    r_shadow . is_flag = true;
 	r_shadow . flag = getflag(F_SHADOW);
 }
 
@@ -3101,7 +3114,11 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 		t_old_effective_rect = static_cast<MCControl *>(this) -> geteffectiverect();
 	
     if (dirty)
+    {
         signallisteners(P_VISIBLE);
+        // AL-2015-09-23: [[ Bug 15197 ]] Hook up widget OnVisibilityChanged.
+        visibilitychanged((flags & F_VISIBLE) != 0);
+    }
     
     if (dirty && opened)
     {
@@ -3235,10 +3252,10 @@ void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
-void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
+void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
 	if (parent != nil)
-		parent -> GetLongName(ctxt, r_owner);
+        parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)

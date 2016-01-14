@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -898,14 +898,6 @@ MCPasteboard *MCScreenDC::getclipboard(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
-{
-	return DRAG_ACTION_NONE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
@@ -943,7 +935,7 @@ void MCScreenDC::platform_setmouse(int16_t p_x, int16_t p_y)
 	device_setmouse(t_loc.x, t_loc.y);
 }
 
-void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable)
 {
 	MCRectangle t_rect;
 	t_rect = rect;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -65,8 +65,6 @@ public handler OnSave(out rProperties as Array)
 	put mTheme into rProperties["theme"]
 	put mLabel into rProperties["label"]
 	put mIsChecked into rProperties["checked"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)

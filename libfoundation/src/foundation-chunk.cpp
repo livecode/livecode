@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -172,13 +172,13 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
     }
     
     if (p_first < 0)
-    {
         p_first = 0;
-        t_chunk_count = 0;
-    }
     
-    r_chunk_count = t_chunk_count;
-    r_first = p_first;
+    if (t_chunk_count < 0)
+        t_chunk_count = 0;
+    
+    r_chunk_count = (uindex_t)t_chunk_count;
+    r_first = (uindex_t)p_first;
     return true;
 }
 
@@ -496,10 +496,17 @@ MCTextChunkIterator_Codepoint::~MCTextChunkIterator_Codepoint()
 bool MCTextChunkIterator_Codepoint::Next()
 {
     m_range . offset = m_range . offset + m_range . length;
+    
     if (m_range . offset >= m_length)
         return false;
     
-    m_range . length = MCStringIsValidSurrogatePair(m_text, m_range . offset) ? 2 : 1;
+    if (MCStringIsValidSurrogatePair(m_text, m_range . offset))
+        m_range . length = 2;
+    else
+        m_range . length = 1;
+    
+    if (m_range . offset + m_range . length == m_length)
+        m_exhausted = true;
     
     return true;
 }
@@ -536,7 +543,9 @@ MCTextChunkIterator_Codeunit::~MCTextChunkIterator_Codeunit()
 bool MCTextChunkIterator_Codeunit::Next()
 {
     m_range . offset = m_range . offset + m_range . length;
-    if (m_range . offset >= m_length)
+    if (m_range . offset == m_length - 1)
+        m_exhausted = true;
+    else if (m_range . offset >= m_length)
         return false;
     
     m_range . length = 1;
@@ -619,6 +628,9 @@ bool MCTextChunkIterator_Delimited::Next()
         m_range . length = t_found_range . offset - m_range . offset;
         // AL-2014-10-15: [[ Bug 13671 ]] Keep track of matched delimiter length to increment offset correctly
         m_delimiter_length = t_found_range . length;
+        
+        if (t_found_range . offset + t_found_range . length == m_length)
+            m_exhausted = true;
     }
 
     return true;
@@ -892,7 +904,7 @@ bool MCTextChunkIterator_Word::Next()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCStringOptions p_options)
+MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCStringRef p_item_delimiter, MCStringOptions p_options)
 {
     if (p_chunk_type == kMCChunkTypeCharacter && (MCStringIsNative(p_text) || (MCStringIsSimple(p_text) && MCStringIsUncombined(p_text))))
         p_chunk_type = kMCChunkTypeCodeunit;
@@ -911,10 +923,16 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
             break;
         case kMCChunkTypeLine:
         case kMCChunkTypeItem:
-            if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, p_delimiter, *p_range);
+            MCStringRef t_delimiter;
+            if (p_chunk_type == kMCChunkTypeLine)
+                t_delimiter = p_line_delimiter;
             else
-                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, p_delimiter);
+                t_delimiter = p_item_delimiter;
+ 
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Delimited(p_text, p_chunk_type, t_delimiter);
             break;
 
             break;
@@ -926,10 +944,12 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
             break;
             break;
         case kMCChunkTypeWord:
+            // AL-2015-10-08: [[ Bug 16161 ]] Word chunk needs to be passed line delimiter
+            //  as words are also delimited by line breaks.
             if (p_range != nil)
-                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_delimiter, *p_range);
+                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter, *p_range);
             else
-                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_delimiter);
+                t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter);
             break;
         case kMCChunkTypeCodepoint:
             if (p_range != nil)

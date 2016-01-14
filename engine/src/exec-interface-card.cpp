@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -170,7 +170,10 @@ void MCCard::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id
                     static_cast<MCGroup *>(t_object) -> GetControlIds(ctxt, part_id, &t_group_props);
                 else
                     static_cast<MCGroup *>(t_object) -> GetControlNames(ctxt, part_id, &t_group_props);
-                t_success = MCListAppend(*t_prop_list, *t_group_props);
+                
+                // MERG-2013-11-03: [[ ChildControlProps ]] Handle empty groups
+                if (!MCStringIsEmpty(*t_group_props))
+                    t_success = MCListAppend(*t_prop_list , *t_group_props);
             }
 
 		}
@@ -274,9 +277,9 @@ void MCCard::GetDefaultButton(MCExecContext& ctxt, MCStringRef& r_button)
 		return;
 	else
 		if (defbutton != nil)
-			defbutton -> GetLongId(ctxt, r_button);
+			defbutton -> GetLongId(ctxt, 0, r_button);
 		else
-			odefbutton -> GetLongId(ctxt, r_button);
+			odefbutton -> GetLongId(ctxt, 0, r_button);
 }
 
 void MCCard::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)

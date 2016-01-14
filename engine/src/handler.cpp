@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1024,9 +1024,8 @@ void MCHandler::compile(MCSyntaxFactoryRef ctxt)
 		case HT_AFTER:
 			t_type = kMCSyntaxHandlerTypeAfterMessage;
 			break;
-		default:
-			MCAssert(false);
-			break;
+        default:
+            MCUnreachableReturn();
 	}
 	
 	MCSyntaxFactoryBeginHandler(ctxt, t_type, name);

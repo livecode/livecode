@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -19,6 +19,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
+
+#include "mcutility.h"
+#include "sysdefs.h"
 
 typedef struct _constant
 {
@@ -649,6 +652,14 @@ enum Is_type {
 	IT_NOT_AMONG_THE_DRAG_DATA,
 	IT_AMONG_THE_CLIPBOARD_DATA,
 	IT_NOT_AMONG_THE_CLIPBOARD_DATA,
+    IT_AMONG_THE_RAW_CLIPBOARD_DATA,
+    IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA,
+    IT_AMONG_THE_RAW_DRAGBOARD_DATA,
+    IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA,
+    IT_AMONG_THE_FULL_CLIPBOARD_DATA,
+    IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA,
+    IT_AMONG_THE_FULL_DRAGBOARD_DATA,
+    IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA,
     IT_REALLY,
     IT_NOT_REALLY,
 };
@@ -683,6 +694,7 @@ enum Lock_constants {
     LC_RECENT,
     LC_SCREEN,
 	LC_SCREEN_FOR_EFFECT,
+    LC_CLIPBOARD,
 };
 
 enum Mark_constants {
@@ -849,6 +861,7 @@ enum Preposition_type {
 	PT_MARKUP,
 	PT_BINARY,
 	PT_COOKIE,
+	PT_NEWEST,
 };
 
 enum Print_mode {
@@ -1315,6 +1328,7 @@ enum Properties {
     P_CURRENT_TIME,
     P_DURATION,
     P_LOOPING,
+    P_MIRRORED,
     P_PLAY_RATE,
     P_SHOW_BADGE,
     P_SHOW_CONTROLLER,
@@ -1603,7 +1617,10 @@ enum Properties {
     // MW-2014-08-12: [[ EditionType ]] Returns whether the engine is commercial or community
     P_EDITION_TYPE,
     
-	// ARRAY STYLE PROPERTIES
+    // MERG-2015-10-11: [[ DocumentFilename ]] Property tag for documentFilename
+    P_DOCUMENT_FILENAME,
+    
+    // ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
     P_CUSTOM_KEYS = P_FIRST_ARRAY_PROP,
     P_CUSTOM_PROPERTIES,
@@ -1675,6 +1692,8 @@ enum Properties {
     P_IS_PREPARED_TO_PLAY,
     P_LOAD_STATE,
     P_PLAYBACK_STATE,
+    // SN-2015-09-04: [[ Bug 9744 ]] readyForDisplay property added for players
+    P_READY_FOR_DISPLAY,
     
     // MOBILE STORE PROPERTIES
     P_PRODUCT_IDENTIFIER,
@@ -1695,6 +1714,11 @@ enum Properties {
 
     // MW-2014-12-10: [[ Extensions ]] 'loadedExtensions' global property
     P_LOADED_EXTENSIONS,
+    
+    P_RAW_CLIPBOARD_DATA,
+    P_RAW_DRAGBOARD_DATA,
+    P_FULL_CLIPBOARD_DATA,
+    P_FULL_DRAGBOARD_DATA,
     
     __P_LAST,
 };

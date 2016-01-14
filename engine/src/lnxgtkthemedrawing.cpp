@@ -596,13 +596,13 @@ moz_gtk_checkbox_get_metrics(gint * indicator_size, gint * indicator_spacing)
 
 	if (indicator_size)
 	{
-		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator_size",
+		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator-size",
 		                       indicator_size, NULL);
 	}
 
 	if (indicator_spacing)
 	{
-		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator_spacing",
+		gtk_widget_style_get_ptr(gCheckboxWidget, "indicator-spacing",
 		                       indicator_spacing, NULL);
 	}
 
@@ -616,13 +616,13 @@ gint moz_gtk_radiobutton_get_metrics(gint * indicator_size,
 
 	if (indicator_size)
 	{
-		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator_size",
+		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator-size",
 		                       indicator_size, NULL);
 	}
 
 	if (indicator_spacing)
 	{
-		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator_spacing",
+		gtk_widget_style_get_ptr(gRadiobuttonWidget, "indicator-spacing",
 		                       indicator_spacing, NULL);
 	}
 
@@ -654,7 +654,7 @@ GtkStateType state_type = ConvertGtkState(state);
      * vertically center in the box, since XUL sometimes ignores our
      * GetMinimumWidgetSize in the vertical dimension
      */
-    x = rect->x;
+    x = rect->x + indicator_spacing;
     y = rect->y + (rect->height - indicator_size) / 2;
     width = indicator_size;
     height = indicator_size;

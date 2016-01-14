@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+extern int s_is_werror_enabled;
 extern int s_verbose_level;
 
 void InitializeReports(void);

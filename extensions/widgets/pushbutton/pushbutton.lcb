@@ -1,0 +1,834 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This widget is a push button that dispatches mouse events to its script object.
+*/
+
+-- declaring the extension as a widget, followed by the identifier
+widget com.livecode.widget.pushbutton
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.iconSVG
+use com.livecode.library.widgetutils
+--
+
+-- adding metadata to ensure the extension displays correctly in LiveCode
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata title is "Push Button"
+metadata preferredSize is "64,36"
+metadata svgicon is "M49.2,0h-34C6.8,0,0,6.8,0,15.2c0,8.4,6.8,15.2,15.2,15.2h34c8.4,0,15.2-6.8,15.2-15.2C64.3,6.8,57.5,0,49.2,0z M18.5,19.6c-0.2,0.3-0.4,0.6-0.7,0.8c-0.3,0.2-0.7,0.4-1.1,0.5s-0.9,0.1-1.4,0.1h-4.5v-2.9h2v1.2h2.4c0.4,0,0.8-0.1,1-0.2c0.4-0.2,0.7-0.6,0.7-1.3c0-0.5-0.2-0.9-0.6-1.1c-0.2-0.1-0.6-0.2-1-0.2h-2.5v1.2h-2V14h2v1h2.4c0.4,0,0.8-0.1,1.1-0.2c0.3-0.2,0.4-0.5,0.4-0.9c0-0.5-0.2-0.8-0.5-0.9c-0.3-0.1-0.7-0.2-1.2-0.2h-2.2v1h-2V11h4.9c1.2,0,2.1,0.4,2.6,1.1c0.3,0.4,0.5,0.9,0.5,1.5c0,0.6-0.2,1.1-0.5,1.5c-0.2,0.2-0.4,0.4-0.8,0.6c0.5,0.2,0.9,0.5,1.2,0.9S19,17.5,19,18C19,18.6,18.8,19.2,18.5,19.6z M27.3,21.1h-1.9V20c0,0-0.1,0.1-0.1,0.2c-0.1,0.1-0.2,0.2-0.3,0.3c-0.3,0.3-0.6,0.5-0.9,0.6s-0.6,0.2-1,0.2c-1.1,0-1.8-0.4-2.2-1.2c-0.2-0.4-0.3-1.1-0.3-1.9v-4.5h2v4.5c0,0.4,0,0.7,0.1,1c0.2,0.4,0.5,0.6,1,0.6c0.7,0,1.1-0.3,1.4-0.8c0.1-0.3,0.2-0.7,0.2-1.2v-4.1h2V21.1z M32.6,15.1h-1.2V19c0,0.3,0,0.5,0.1,0.6s0.3,0.1,0.7,0.1c0.1,0,0.1,0,0.2,0c0.1,0,0.1,0,0.2,0v1.5l-0.9,0c-0.9,0-1.5-0.1-1.9-0.5c-0.2-0.2-0.3-0.6-0.3-1v-4.6h-1v-1.4h1v-2.1h1.9v2.1h1.2V15.1z M37.2,15.1H36V19c0,0.3,0,0.5,0.1,0.6s0.3,0.1,0.7,0.1c0.1,0,0.1,0,0.2,0c0.1,0,0.1,0,0.2,0v1.5l-0.9,0c-0.9,0-1.5-0.1-1.9-0.5c-0.2-0.2-0.3-0.6-0.3-1v-4.6h-1v-1.4h1v-2.1H36v2.1h1.2V15.1z M44.7,20.2c-0.6,0.8-1.6,1.2-2.9,1.2s-2.2-0.4-2.9-1.2c-0.6-0.7-0.9-1.6-0.9-2.6h2c0,0.7,0.2,1.2,0.5,1.6c0.3,0.4,0.7,0.6,1.3,0.6s1-0.2,1.3-0.6c0.3-0.4,0.5-1,0.5-1.7c0-0.7-0.2-1.3-0.5-1.7c-0.3-0.4-0.7-0.6-1.3-0.6s-1,0.2-1.3,0.6c-0.3,0.4-0.4,0.9-0.5,1.6h-2c0-1,0.3-1.9,0.9-2.6c0.6-0.8,1.6-1.2,2.9-1.2s2.2,0.4,2.9,1.2s0.9,1.7,0.9,2.8C45.7,18.5,45.3,19.4,44.7,20.2z M53.8,21.1h-2v-4.5c0-0.4-0.1-0.7-0.2-0.9c-0.2-0.4-0.6-0.6-1.1-0.6c-0.7,0-1.1,0.3-1.3,0.8C49.1,16.2,49,16.6,49,17v4h-1.9v-7.4h1.9v1.1c0.2-0.4,0.5-0.7,0.7-0.8c0.4-0.3,0.9-0.5,1.5-0.5c0.8,0,1.4,0.2,1.9,0.6c0.5,0.4,0.7,1.1,0.7,2V21.1z M47.2,5.5h-30c-6,0-13.1,3.2-14.6,7.8C3.6,7.5,9.7,3,17.2,3h30c8.1,0,14.7,5.3,14.7,11.9C61.9,9.5,53.8,5.5,47.2,5.5z"
+--
+
+/*
+Syntax: set the widgetTheme of <widget> to <pWidgetTheme>
+Syntax: get the widgetTheme of <widget>
+
+Summary: The theme of the widget
+
+Parameters:
+pWidgetTheme(enum): The theme of the widget
+-"iOS"
+-"Android(Floating Action)"
+-"Android(Raised)"
+-"Android(Flat)"
+
+Description:
+Use the <widgetTheme> property to set the theme of the widget.
+*/
+property widgetTheme get mWidgetTheme set setWidgetTheme
+metadata widgetTheme.editor is "com.livecode.pi.enum"
+metadata widgetTheme.options is "iOS,Android(Floating Action),Android(Raised),Android(Flat)"
+metadata widgetTheme.default is "iOS"
+metadata widgetTheme.label is "Widget Theme"
+
+/*
+Syntax: set the labelStyle of <widget> to <pStyle>
+Syntax: get the labelStyle of <widget>
+
+Summary: The display style of the widget's label
+
+Parameters:
+pStyle(enum): The display style
+-"text"
+-"icon"
+
+Description:
+Use the <labelStyle> property to set the display style of the widget's label, either text or an icon.
+
+This property can only be changed if the theme of the widget is "iOS".
+This property is fixed for the Android themes.
+*/
+property labelStyle get mLabelStyle set setLabelStyle
+metadata labelStyle.editor is "com.livecode.pi.enum"
+metadata labelStyle.options is "text,icon"
+metadata labelStyle.default is "text"
+metadata labelStyle.label is "Label Type"
+
+/*
+Syntax: set the labelText of <widget> to <pText>
+Syntax: get the labelText of <widget>
+
+Summary: The text displayed on the button
+
+Parameters:
+pText(string): The text shown on the button
+
+Description:
+Use the <labelText> property to set the text of the widget's label.
+*/
+property labelText get mLabelText set setLabelText
+metadata labelText.default is "Button"
+metadata labelText.label is "Label Text"
+
+/*
+Syntax: set the labelIcon of <widget> to <pIconName>
+Syntax: get the labelIcon of <widget>
+
+Summary: The icon displayed on the button
+
+Parameters:
+pIconName(enum): The name of the icon shown on the button
+- a list of predefined values
+
+Description:
+Use the <labelIcon> property to set the icon of the widget's label  to one of the predefined values.
+The complete list of preset values is available by executing
+
+``` put iconNames()```
+
+*/
+property labelIcon get mLabelIcon set setLabelIcon
+metadata labelIcon.editor is "com.livecode.pi.enum"
+metadata labelIcon.options is "execute: get iconNames()"
+metadata labelIcon.default is "Star"
+metadata labelIcon.label is "Label Icon"
+
+/*
+Syntax: set the <labelColor> of <widget> to <pLabelColor>
+Syntax: get the <labelColor> of <widget>
+
+Summary: The color of the label shown on the button
+
+Parameters:
+pLabelColor(color): The color of the label
+
+Description:
+Use the <labelColor> property to set the color of the label on the button.
+
+If the theme of the widget is "Android(Raised)" and the background color of the widget is not white, then the text color of the widget will always be set to white.
+This property is fixed to white if the theme of the widget is "Android(Floating Action)".
+*/
+property labelColor get getLabelColor set setLabelColor
+metadata labelColor.editor is "com.livecode.pi.color"
+metadata labelColor.label is "Label Color"
+metadata labelColor.default is "0,121,255"
+
+/*
+Syntax: set the <backgroundOpacity> of <widget> to <pOpacity>
+Syntax: get the <backgroundOpacity> of <widget>
+
+Summary: The background opacity of the button
+
+Parameters:
+pOpacity(enum): The background opacity of the button
+-"Opaque"
+-"Translucent"
+-"Transparent"
+
+Description:
+Use the <backgroundOpacity> property to set the opacity of the button's background.
+
+This property is fixed at "Opaque" for the Android(Raised) and Android(Floating Action) themes and fixed at "Transparent" for the Android(Flat) theme.
+This property can only be changed if the theme of the widget is "iOS".
+*/
+property backgroundOpacity get mBackgroundOpacity set setBackgroundOpacity
+metadata backgroundOpacity.editor is "com.livecode.pi.enum"
+metadata backgroundOpacity.options is "Opaque,Translucent,Transparent"
+metadata backgroundOpacity.default is "Transparent"
+metadata backgroundOpacity.label is "Background Opacity"
+
+/*
+Syntax: set the colorScheme of <widget> to <pColorScheme>
+Syntax: get the colorScheme of <widget>
+
+Summary: The color scheme of the widget
+
+Parameters:
+pColorScheme(enum): The color scheme of the widget
+-"Black"
+-"Red"
+-"Pink"
+-"Purple"
+-"Deep Purple"
+-"Indigo"
+-"Blue"
+-"Light Blue"
+-"Cyan"
+-"Teal"
+-"Green"
+-"Light Green"
+-"Lime"
+-"Yellow"
+-"Amber"
+-"Orange"
+-"Deep Orange"
+-"Brown"
+-"Grey"
+-"Blue Grey"
+
+Description:
+Use the <colorScheme> property to set the color scheme of the widget, Android only.
+*/
+property colorScheme get mColorScheme set setColorScheme
+metadata colorScheme.editor is "com.livecode.pi.enum"
+metadata colorScheme.options is "Black,Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
+metadata colorScheme.default is "Blue"
+metadata colorScheme.label is "Color Scheme"
+
+/*
+Syntax: set the colorTheme of <widget> to <pColorTheme>
+Syntax: get the colorTheme of <widget>
+
+Summary: The color theme of the widget
+
+Parameters:
+pColorTheme(enum): The color theme of the widget
+-"Light"
+-"Dark"
+
+Description:
+Use the <colorTheme> property to set the color theme of the widget, Android only.
+*/
+property colorTheme get mColorTheme set setColorTheme
+metadata colorTheme.editor is "com.livecode.pi.enum"
+metadata colorTheme.options is "Light,Dark"
+metadata colorTheme.default is "Light"
+metadata colorTheme.label is "Color Theme"
+
+/*
+Syntax: set the miniFloatingAction of <widget> to {true | false}
+Syntax: get the miniFloatingAction of <widget>
+
+Summary: Whether the floating action button is the default size or mini
+
+Description:
+Use this property to determine whether the Android Floating Action button is the default size (false) or mini (true), Android only.
+*/
+property miniFloatingAction get mIsMiniFloatingAction set setMiniFloatingAction
+metadata miniFloatingAction.default is "false"
+metadata miniFloatingAction.label is "Mini Floating Action"
+
+-- private instance variables
+private variable mWidgetTheme as String
+private variable mLabelStyle as String
+private variable mLabelText as String
+private variable mLabelIcon as String
+private variable mLabelColor as Color
+private variable mBackgroundOpacity as String
+private variable mColorScheme as String
+private variable mColorTheme as String
+private variable mIsMiniFloatingAction as Boolean
+
+private variable mShowBorder as Boolean
+private variable mDefaultColor as Color
+private variable mIosFontSize as Real
+private variable mAndroidFontSize as Real
+private variable mIosBackgroundColor as Color
+private variable mWidth as Real
+private variable mHeight as Real
+
+private variable mAndroidColors as Array
+private variable mAndroidColorsPressed as Array
+private variable mAndroidBackgroundColor as Color
+private variable mAndroidLabelColor as Color
+
+private variable mFloatingActionRadius as Real
+private variable mFloatingActionIconDimension as Real
+
+private variable mIsPressed as Boolean
+
+-- constants
+constant kWidgetThemeIos is "iOS"
+constant kWidgetThemeAndroidFloatingAction is "Android(Floating Action)"
+constant kWidgetThemeAndroidRaised is "Android(Raised)"
+constant kWidgetThemeAndroidFlat is "Android(Flat)"
+
+constant kLabelStyleText is "text"
+constant kLabelStyleIcon is "icon"
+
+constant kOpaqueBackground is "Opaque"
+constant kTranslucentBackground is "Translucent"
+constant kTransparentBackground is "Transparent"
+
+constant kIosDefaultFontSize is 17
+constant kIosDefaultHeight is 29
+constant kAndroidDefaultFontSize is 14
+constant kAndroidDefaultHeight is 36
+
+constant kAndroidDefaultIconDimension is 24
+constant kDefaultFloatingActionDiameter is 56
+constant kDefaultMiniFloatingActionDiameter is 40
+
+public handler OnSave(out rProperties as Array)
+   put the empty array into rProperties
+
+   put mWidgetTheme into rProperties["theme"]
+   put mLabelStyle into rProperties["labelStyle"]
+   put mLabelText into rProperties["labelText"]
+   put mLabelIcon into rProperties["labelIcon"]
+   put colorToString(mLabelColor, false) into rProperties["labelColor"]
+   put mBackgroundOpacity into rProperties["opacity"]
+   put mColorScheme into rProperties["colorScheme"]
+   put mColorTheme into rProperties["colorTheme"]
+   put mIsMiniFloatingAction into rProperties["miniFloatingAction"]
+
+end handler
+
+public handler OnLoad(in pProperties as Array)
+   put pProperties["theme"] into mWidgetTheme
+   put pProperties["labelStyle"] into mLabelStyle
+   put pProperties["labelText"] into mLabelText
+   put pProperties["labelIcon"] into mLabelIcon
+   put stringToColor(pProperties["labelColor"]) into mLabelColor
+   put pProperties["opacity"] into mBackgroundOpacity
+   put pProperties["colorScheme"] into mColorScheme
+   put pProperties["colorTheme"] into mColorTheme
+   put pProperties["miniFloatingAction"] into mIsMiniFloatingAction
+end handler
+
+public handler OnCreate() returns nothing
+   put "iOS" into mWidgetTheme
+   put "text" into mLabelStyle
+   put "Button" into mLabelText
+   put "Star" into mLabelIcon
+   put color [0, 121/255, 1] into mLabelColor
+   put "Transparent" into mBackgroundOpacity
+   put "Blue" into mColorScheme
+   put "Light" into mColorTheme
+   put false into mIsMiniFloatingAction
+
+   put false into mShowBorder
+   put color [0, 121/255, 1] into mDefaultColor
+   put color [1,1,1,0] into mIosBackgroundColor
+
+   updateVariables()
+   fetchAndroidColors()
+
+   put false into mIsPressed
+end handler
+
+public handler OnPaint() returns nothing
+   updateVariables()
+
+   if mWidgetTheme is kWidgetThemeIos then
+      drawIosButton()
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      drawAndroidFloatingActionButton()
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      drawAndroidRaisedButton()
+   else if mWidgetTheme is kWidgetThemeAndroidFlat then
+      drawAndroidFlatButton()
+   end if
+
+end handler
+
+private handler drawIosButton() returns nothing
+   -- background
+   set the paint of this canvas to fetchPaint("background")
+   fill fetchPath("background") on this canvas
+
+   -- label
+   set the font of this canvas to fetchFont()
+   set the paint of this canvas to fetchPaint("label")
+   if mLabelStyle is kLabelStyleText then
+      fill text mLabelText at center of my bounds on this canvas
+   else if mLabelStyle is kLabelStyleIcon then
+      fill fetchIconPath(mLabelIcon) on this canvas
+   end if
+
+end handler
+
+private handler drawAndroidFloatingActionButton() returns nothing
+   -- shadow
+   variable tShadow as Effect
+   put drawDropShadow() into tShadow
+
+   begin layer with tShadow on this canvas
+   -- background
+   set the paint of this canvas to fetchPaint("background")
+   fill fetchPath("background") on this canvas
+
+   -- border
+   set the paint of this canvas to solid paint with color [209/255,209/255,209/255]
+   set the stroke width of this canvas to 0.5
+   stroke fetchPath("background") on this canvas
+
+   -- label
+   set the paint of this canvas to fetchPaint("label")
+   fill fetchIconPath(mLabelIcon) on this canvas
+   end layer on this canvas
+end handler
+
+private handler drawAndroidRaisedButton() returns nothing
+   -- shadow if widget is enabled
+   if my enabled then
+      variable tShadow as Effect
+      put drawDropShadow() into tShadow
+
+      begin layer with tShadow on this canvas
+      -- background
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+
+      -- border
+      if mShowBorder then
+         set the paint of this canvas to fetchPaint("border")
+         set the stroke width of this canvas to 0.5
+         stroke fetchPath("border") on this canvas
+      end if
+      end layer on this canvas
+
+   else
+      -- background only
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+
+   end if
+
+   -- label
+   variable tLabel as String
+   put the upper of mLabelText into tLabel
+
+   set the font of this canvas to fetchFont()
+   set the paint of this canvas to fetchPaint("label")
+   fill text tLabel at center of rectangle [0, 0, mWidth-5, mHeight-5] on this canvas
+end handler
+
+private handler drawAndroidFlatButton() returns nothing
+   -- background if button is pressed
+   if mIsPressed then
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
+   end if
+
+   -- label
+   variable tLabel as String
+   put the upper of mLabelText into tLabel
+
+   set the font of this canvas to fetchFont()
+   set the paint of this canvas to fetchPaint("label")
+   fill text tLabel at center of my bounds on this canvas
+end handler
+
+private handler drawDropShadow() returns Effect
+   variable tProps as Array
+   put the empty array into tProps
+
+   put color [39/255, 39/255, 39/255, 0.2] into tProps["color"]
+   put "source over" into tProps["blend mode"]
+
+   if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put 0.5 into tProps["spread"]
+      put 5 into tProps["size"]
+      put 7 into tProps["distance"]
+      put 90 into tProps["angle"]
+
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      put 0.6 into tProps["spread"]
+      put 1 into tProps["size"]
+      put 4 into tProps["distance"]
+      put 60 into tProps["angle"]
+
+   end if
+
+   variable tEffect as Effect
+   put outer shadow effect with properties tProps into tEffect
+   return tEffect
+end handler
+
+private handler fetchPaint(in pObject as String) returns Paint
+   if pObject is "background" then
+      if mWidgetTheme is kWidgetThemeIos then
+         return solid paint with mIosBackgroundColor
+      else if mWidgetTheme contains "Android" then
+         return solid paint with mAndroidBackgroundColor
+      end if
+
+   else if pObject is "label" then
+      if mWidgetTheme is kWidgetThemeIos then
+         if mIsPressed then
+            return solid paint with color [the red of mLabelColor, the green of mLabelColor, the blue of mLabelColor, 0.5]
+         else
+            return solid paint with mLabelColor
+         end if
+
+      else if mWidgetTheme contains "Android" then
+         return solid paint with mAndroidLabelColor
+      end if
+
+   else if pObject is "border" then
+      return solid paint with color [167/255, 167/255, 167/255]
+
+   end if
+end handler
+
+private handler fetchPath(in pObject as String) returns Path
+   if pObject is "background" then
+      if mWidgetTheme is kWidgetThemeIos then
+         return rounded rectangle path of my bounds with radius 5
+      else if mWidgetTheme is kWidgetThemeAndroidRaised or mWidgetTheme is kWidgetThemeAndroidFlat then
+         return rounded rectangle path of rectangle [0, 0, mWidth-5, mHeight-5] with radius 2
+      else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+         return circle path centered at point [mWidth/2, mFloatingActionRadius] with radius mFloatingActionRadius
+      end if
+   else if pObject is "border" then
+      return rounded rectangle path of rectangle [0, 0, mWidth-5, mHeight-5] with radius 2
+   end if
+end handler
+
+private handler fetchIconPath(in pIconName as String) returns Path
+   variable tIconPath as Path
+   put path iconSVGPathFromName(pIconName) into tIconPath
+
+   variable tIconRect as Rectangle
+   if mWidgetTheme is kWidgetThemeIos then
+      put rectangle [0, mHeight/4, mWidth, 3*mHeight/4] into tIconRect
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put rectangle [(mWidth-mFloatingActionIconDimension)/2, mFloatingActionRadius-mFloatingActionIconDimension/2, (mWidth+mFloatingActionIconDimension)/2, mFloatingActionRadius+mFloatingActionIconDimension/2] into tIconRect
+   end if
+
+   constrainPathToRect(tIconRect, tIconPath)
+   return tIconPath
+end handler
+
+private handler fetchFont() returns Font
+   if mWidgetTheme is kWidgetThemeIos then
+      return font "Helvetica Neue" at size mIosFontSize
+   else if mWidgetTheme contains "Android" then
+      return font "Roboto Medium" at size mAndroidFontSize
+   end if
+end handler
+
+private handler fetchAndroidColors() returns nothing
+
+	put the empty array into mAndroidColors
+   put "0,0,0" into mAndroidColors["Black"]
+	put "238,43,41" into mAndroidColors["Red"]
+	put "224,0,81" into mAndroidColors["Pink"]
+	put "137,0,161" into mAndroidColors["Purple"]
+	put "83,33,168" into mAndroidColors["Deep Purple"]
+	put "48,58,165" into mAndroidColors["Indigo"]
+	put "30,128,240" into mAndroidColors["Blue"]
+	put "20,150,241" into mAndroidColors["Light Blue"]
+	put "22,175,202" into mAndroidColors["Cyan"]
+	put "17,133,117" into mAndroidColors["Teal"]
+	put "63,164,63" into mAndroidColors["Green"]
+	put "122,186,58" into mAndroidColors["Light Green"]
+	put "194,215,45" into mAndroidColors["Lime"]
+	put "254,233,46" into mAndroidColors["Yellow"]
+	put "253,182,13" into mAndroidColors["Amber"]
+	put "253,133,9" into mAndroidColors["Orange"]
+	put "251,63,28" into mAndroidColors["Deep Orange"]
+	put "101,67,56" into mAndroidColors["Brown"]
+	put "140,140,140" into mAndroidColors["Grey"]
+	put "78,106,120" into mAndroidColors["Blue Grey"]
+
+   put the empty array into mAndroidColorsPressed
+   put "46,46,46" into mAndroidColorsPressed["Black"]
+	put "199,25,36" into mAndroidColorsPressed["Red"]
+	put "179,0,73" into mAndroidColorsPressed["Pink"]
+	put "102,0,145" into mAndroidColorsPressed["Purple"]
+	put "63,23,151" into mAndroidColorsPressed["Deep Purple"]
+	put "36,42,142" into mAndroidColorsPressed["Indigo"]
+	put "23,95,199" into mAndroidColorsPressed["Blue"]
+	put "14,114,198" into mAndroidColorsPressed["Light Blue"]
+	put "17,134,150" into mAndroidColorsPressed["Cyan"]
+	put "13,104,88" into mAndroidColorsPressed["Teal"]
+	put "46,127,46" into mAndroidColorsPressed["Green"]
+	put "87,145,43" into mAndroidColorsPressed["Light Green"]
+	put "160,168,33" into mAndroidColorsPressed["Lime"]
+	put "249,180,36" into mAndroidColorsPressed["Yellow"]
+	put "253,142,9" into mAndroidColorsPressed["Amber"]
+	put "240,103,8" into mAndroidColorsPressed["Orange"]
+	put "222,51,21" into mAndroidColorsPressed["Deep Orange"]
+	put "74,49,42" into mAndroidColorsPressed["Brown"]
+	put "78,78,78" into mAndroidColorsPressed["Grey"]
+	put "54,72,81" into mAndroidColorsPressed["Blue Grey"]
+
+end handler
+
+private handler updateVariables() returns nothing
+   put my width into mWidth
+   put my height into mHeight
+
+   put mHeight*(kIosDefaultFontSize/kIosDefaultHeight) into mIosFontSize
+   put mHeight*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
+
+   if mIsMiniFloatingAction then
+      put ((mHeight-10)/2)*(kDefaultMiniFloatingActionDiameter/kDefaultFloatingActionDiameter) into mFloatingActionRadius
+      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultMiniFloatingActionDiameter) into mFloatingActionIconDimension
+   else
+      put (mHeight-10)/2 into mFloatingActionRadius
+      put mFloatingActionRadius*2*(kAndroidDefaultIconDimension/kDefaultFloatingActionDiameter) into mFloatingActionIconDimension
+   end if
+
+   if mWidgetTheme is kWidgetThemeIos then
+      updateIosColors()
+   else if mWidgetTheme contains "Android" then
+      updateAndroidColors()
+   end if
+
+end handler
+
+private handler updateIosColors() returns nothing
+   if mBackgroundOpacity is kOpaqueBackground then
+      if mIsPressed then
+         put color [0.98,0.98,0.98] into mIosBackgroundColor
+      else
+         put color [1,1,1] into mIosBackgroundColor
+      end if
+
+   else if mBackgroundOpacity is kTranslucentBackground then
+      if mIsPressed then
+         put color [0.9,0.9,0.9,204/255] into mIosBackgroundColor
+      else
+         put color [1,1,1,204/255] into mIosBackgroundColor
+      end if
+
+   else if mBackgroundOpacity is kTransparentBackground then
+      put color [1,1,1,0] into mIosBackgroundColor
+
+   end if
+end handler
+
+private handler updateAndroidColors() returns nothing
+   if mColorTheme is "Light" then
+      if my enabled then
+         put stringToColor(mAndroidColors[mColorScheme]) into mAndroidLabelColor
+         if mIsPressed then
+            put color [153/255, 153/255, 153/255, 0.4] into mAndroidBackgroundColor
+         else
+            put color [1,1,1] into mAndroidBackgroundColor
+         end if
+      else
+         put color [0,0,0,0.26] into mAndroidLabelColor
+         if mWidgetTheme is kWidgetThemeAndroidRaised then
+            put color [0,0,0,0.12] into mAndroidBackgroundColor
+         end if
+      end if
+
+   else if mColorTheme is "Dark" then
+      if my enabled then
+         put color [1,1,1] into mAndroidLabelColor
+         if mIsPressed then
+            if mWidgetTheme is kWidgetThemeAndroidFlat then
+               put color [204/255, 204/255, 204/255, 0.25] into mAndroidBackgroundColor
+            else if mWidgetTheme is kWidgetThemeAndroidRaised then
+               put stringToColor(mAndroidColorsPressed[mColorScheme]) into mAndroidBackgroundColor
+            end if
+         else
+            put stringToColor(mAndroidColors[mColorScheme]) into mAndroidBackgroundColor
+         end if
+      else
+         put color [1,1,1,0.3] into mAndroidLabelColor
+         if mWidgetTheme is kWidgetThemeAndroidRaised then
+            put color [1,1,1,0.12] into mAndroidBackgroundColor
+         end if
+      end if
+
+   end if
+end handler
+
+public handler OnMouseDown() returns nothing
+   put true into mIsPressed
+   redraw all
+end handler
+
+public handler OnMouseUp() returns nothing
+   put false into mIsPressed
+   redraw all
+   post "mouseUp"
+end handler
+
+public handler OnMouseCancel() returns nothing
+   put false into mIsPressed
+   redraw all
+   post "mouseCancel"
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Getting and Setting Properties
+--
+--------------------------------------------------------------------------------
+
+private handler setWidgetTheme(in pWidgetTheme as String)
+   if pWidgetTheme is mWidgetTheme then
+      return
+   end if
+
+   variable tThemeList as List
+   put [kWidgetThemeIos, kWidgetThemeAndroidFloatingAction, kWidgetThemeAndroidRaised, kWidgetThemeAndroidFlat] into tThemeList
+
+   if not(pWidgetTheme is in tThemeList) then
+      throw "invalid widget theme"
+   end if
+
+   put pWidgetTheme into mWidgetTheme
+
+   if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put kOpaqueBackground into mBackgroundOpacity
+      put kLabelStyleIcon into mLabelStyle
+
+   else if mWidgetTheme is kWidgetThemeAndroidRaised then
+      put kOpaqueBackground into mBackgroundOpacity
+      put kLabelStyleText into mLabelStyle
+      if mColorTheme is "Light" then
+         put true into mShowBorder
+      else if mColorTheme is "Dark" then
+         put false into mShowBorder
+      end if
+
+   else if mWidgetTheme is kWidgetThemeAndroidFlat then
+      put kTransparentBackground into mBackgroundOpacity
+      put kLabelStyleText into mLabelStyle
+
+   end if
+
+   redraw all
+end handler
+
+private handler setLabelStyle(in pStyle as String)
+   if pStyle is mLabelStyle then
+      return
+   end if
+
+   variable tStyleList as List
+   put [kLabelStyleText, kLabelStyleIcon] into tStyleList
+
+   if not(pStyle is in tStyleList) then
+      throw "invalid label style"
+   end if
+
+   if mWidgetTheme is kWidgetThemeIos then
+      put pStyle into mLabelStyle
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction then
+      put kLabelStyleIcon into mLabelStyle
+   else if mWidgetTheme is kWidgetThemeAndroidRaised or mWidgetTheme is kWidgetThemeAndroidRaised then
+      put kLabelStyleText into mLabelStyle
+   end if
+
+   redraw all
+end handler
+
+private handler setLabelText(in pText as String)
+   put pText into mLabelText
+   redraw all
+end handler
+
+private handler setLabelIcon(in pIconName as String)
+   put pIconName into mLabelIcon
+   redraw all
+end handler
+
+public handler getLabelColor() returns String
+   return colorToString(mLabelColor, false)
+end handler
+
+constant kWhiteColorString is "255,255,255"
+constant kDefaultColorString is "0,121,255"
+
+public handler setLabelColor(in pLabelColor as String) returns nothing
+   if pLabelColor is kWhiteColorString then
+      put kDefaultColorString into pLabelColor
+   end if
+
+   put stringToColor(pLabelColor) into mLabelColor
+   redraw all
+end handler
+
+private handler setBackgroundOpacity(in pOpacity as String)
+
+   if pOpacity is mBackgroundOpacity then
+      return
+   end if
+
+   variable tOpacityList as List
+   put [kOpaqueBackground, kTranslucentBackground, kTransparentBackground] into tOpacityList
+
+   if not(pOpacity is in tOpacityList) then
+      throw "invalid background opacity"
+   end if
+
+   if mWidgetTheme is kWidgetThemeIos then
+      put pOpacity into mBackgroundOpacity
+
+   else if mWidgetTheme is kWidgetThemeAndroidFloatingAction or mWidgetTheme is kWidgetThemeAndroidRaised then
+      put kOpaqueBackground into mBackgroundOpacity
+
+   else if mWidgetTheme is kWidgetThemeAndroidFlat then
+      put kTransparentBackground into mBackgroundOpacity
+
+   end if
+
+   redraw all
+end handler
+
+private handler setColorScheme(in pColorScheme as String) returns nothing
+
+   if pColorScheme is mColorScheme then
+      return
+   end if
+
+   if pColorScheme is not among the keys of mAndroidColors then
+      throw "invalid color scheme"
+   end if
+
+   put pColorScheme into mColorScheme
+   redraw all
+
+end handler
+
+private handler setColorTheme(in pColorTheme as String) returns nothing
+
+   if pColorTheme is mColorTheme then
+      return
+   end if
+
+   variable tThemeList as List
+   put ["Dark","Light"] into tThemeList
+   if not(pColorTheme is in tThemeList) then
+      throw "invalid color theme"
+   end if
+
+   put pColorTheme into mColorTheme
+   redraw all
+
+end handler
+
+private handler setMiniFloatingAction(in pIsMiniFloatingAction as Boolean) returns nothing
+   put pIsMiniFloatingAction into mIsMiniFloatingAction
+   redraw all
+end handler
+
+end widget

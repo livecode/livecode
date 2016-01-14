@@ -2,7 +2,7 @@ Name: time
 
 Type: function
 
-Syntax: the [long | abbr[rev[iated]] | short] [english | system ] time
+Syntax: the [{ long | abbr[ev[iated]] | short }] [{ english | system }] time
 
 Syntax: time()
 
@@ -38,6 +38,8 @@ Use the <time> <function> to display the current time to the user, or to store t
 If the twelveHourTime <property> is set to false, the value <return|returned> by the <time> <function> does not include "AM" or "PM".
 
 The format of the system time forms is set by the Date & Time control panel (on Mac OS systems), the Date control panel (on <Windows|Windows systems>), or the LANG environment variable (on <Unix|Unix systems>).
+
+>*Note:* Linux systems don't have a short system time, so the engine modifies the system time format string to remove the seconds. This works in most locales, but not all and our advice is to stick to using the long system time on Linux systems.
 
 Changes:
 The ability to use the time format preferred by the user was introduced in version 1.1. In previous versions, the time function, along with the date function, consistently used the standard U.S. format, even if the operating system's settings specified another language or time format.

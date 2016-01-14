@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -88,7 +88,7 @@ bool MCCardlist::GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which
 				if (which == P_SHORT_NAME)
 					tmp -> card -> GetShortName(ctxt, &t_property);
 				else
-					tmp -> card -> GetLongId(ctxt, &t_property);
+					tmp -> card -> GetLongId(ctxt, 0, &t_property);
 					
 				t_success = !ctxt . HasError();
 				if (t_success)

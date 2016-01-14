@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -702,8 +702,7 @@ void MCPrintingExecPrintCardIntoRect(MCExecContext& ctxt, MCCard *p_card, MCRect
 
 void MCPrintingExecOpenPrintingToDestination(MCExecContext& ctxt, MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options)
 {
-	extern Exec_stat MCCustomPrinterCreate(MCStringRef, MCStringRef, MCArrayRef , MCPrinter*&);
-	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, MCprinter) == ES_NORMAL)
+	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, (MCCustomPrinter*&)MCprinter) == ES_NORMAL)
 		MCPrintingExecOpenPrinting(ctxt);
 }
 
@@ -739,7 +738,7 @@ void MCPrintingExecClosePrinting(MCExecContext& ctxt)
 {
 	MCprinter -> Close();
 	if (MCsystemprinter != MCprinter)	
-	{	
+	{
 		delete MCprinter;
 		MCprinter = MCsystemprinter;
 	}

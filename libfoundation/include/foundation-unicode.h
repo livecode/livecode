@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -346,12 +346,12 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 // Returns whether the first string begins with the second
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption);
+                         MCUnicodeCompareOption, uindex_t *r_first_match_length);
 
 // Returns whether the first string ends with the second
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                       MCUnicodeCompareOption);
+                       MCUnicodeCompareOption, uindex_t *r_first_match_length);
 
 // Returns whether the string contains the given substring
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,

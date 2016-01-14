@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the remapColor to {true | false}
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <SuperCard> projects.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
 
 Introduced: 1.0
 
@@ -15,4 +15,4 @@ In SuperCard, the <remapColor> <property> determines the behavior of <object|obj
 
 The <remapColor> <property> is always set to true. A <handler> can set it to any <value> without causing a <error|script error>, but the actual <value> is not changed.
 
-References: privateColors (property), lockColorMap (property), colorMap (property), card (keyword), value (function), screenColors (function), property (glossary), handler (glossary), SuperCard (glossary), Revolution (glossary), error (glossary), color table (glossary), stack (object), object (object)
+References: privateColors (property), lockColorMap (property), colorMap (property), card (keyword), value (function), screenColors (function), property (glossary), handler (glossary), SuperCard (glossary), LiveCode (glossary), error (glossary), color table (glossary), stack (object), object (object)

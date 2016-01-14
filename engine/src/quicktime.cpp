@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -50,7 +50,7 @@
 extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
-#include "osxprefix.h"
+#include <QuickTime/QuickTime.h>
 
 #ifdef __LITTLE_ENDIAN__
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
@@ -58,6 +58,7 @@ extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 #define PIXEL_FORMAT_32 k32ARGBPixelFormat
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 inline void SetRect(Rect *t_rect, int l, int t, int r, int b)
 {
     t_rect -> left = l;
@@ -79,6 +80,7 @@ void *GetPixBaseAddr(PixMapHandle pix);
 void LockPixels(PixMapHandle pix);
 void UnlockPixels(PixMapHandle pix);
 }
+#endif
 
 #endif
 
@@ -224,7 +226,9 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 	if (t_success)
 	{
 		OSErr t_error;
-		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTNativeDefaultPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
+		// PM-2015-10-06: [[ Bug 15321 ]] Use kQTPOSIXPathStyle, since filename is of the form C:/dir1/dir2/filename.wav
+		// Using kQTNativeDefaultPathStyle results in QTNewDataReferenceFromFullPathCFString() failure (returns -50)
+		t_error = QTNewDataReferenceFromFullPathCFString(t_cf_path, kQTPOSIXPathStyle, 0, &r_rec . dataRef, &r_rec . dataRefType);
 		t_success = noErr == t_error;
 	}
 	CFRelease(t_cf_path);
@@ -360,8 +364,18 @@ void MCQTStopRecording(void)
 			exportToSoundFile(recordtempfile, recordexportfile);
 			MCS_unlink(recordtempfile);
 		}
-		MCValueRelease(recordexportfile);
-		recordexportfile = NULL;
+
+		if (recordexportfile != NULL)
+		{
+			MCValueRelease(recordexportfile);
+			recordexportfile = NULL;
+		}
+
+		if (recordtempfile != NULL)
+		{
+			MCValueRelease(recordtempfile);
+			recordtempfile = NULL;
+		}
 	}
 }
 
@@ -1140,6 +1154,11 @@ void MCQTEffectEnd(void)
 }
 
 #else    // if not FEATURE_QUICKTIME_EFFECTS
+
+bool MCQTInit()
+{
+    return false;
+}
 
 void MCQTEffectsList(MCStringRef &r_list)
 {

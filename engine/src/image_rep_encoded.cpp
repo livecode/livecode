@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -80,8 +80,12 @@ bool MCEncodedImageRep::SetupImageLoader()
 	}
 	else
 	{
-		delete t_loader;
-		MCS_close(t_stream);
+		if (t_loader != nil)
+			delete t_loader;
+		
+		// PM-2015-10-20: [[ Bug 15256 ]] Prevent crash when loading a remote image and there is no internet connection
+		if (t_stream != nil)
+			MCS_close(t_stream);
 	}
 	
 	return t_success;

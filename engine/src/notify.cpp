@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define USE_PINGORPIPE
 #define PING_FUNC MCMacBreakWait
 #elif defined(_MAC_SERVER)
+#include <unistd.h>
 #include <pthread.h>
 #define USE_PTHREADS
 #define USE_PIPE

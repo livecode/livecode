@@ -1,6 +1,6 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2013 Runtime Revolution Ltd.
+Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -126,6 +126,14 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 
     MCHtmlCanvasStackSurface t_surface(t_rect);
 	view_surface_redrawwindow(&t_surface, t_region);
+}
+
+MCRectangle
+MCStack::view_platform_setgeom(const MCRectangle &p_rect)
+{
+	MCRectangle t_old = MCEmscriptenViewGetBounds();
+	/* UNCHECKED */ MCEmscriptenViewSetBounds(p_rect);
+	return t_old;
 }
 
 /* ================================================================

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -113,7 +113,17 @@ static int char_to_nibble(char p_char, unsigned int *r_nibble)
 
 void append_utf8_char(char *p_string, int *x_index, int p_char)
 {
-    if (p_char < 128)
+	// If the char is NUL (i.e. U+0000) we can't represent it directly
+	// in a nul-terminated string.  However, we *can* use a 2-byte
+	// overlong encoding to represent it safely (i.e. "Modified
+	// UTF-8")
+	if (p_char == 0)
+	{
+		p_string[*x_index]     = 0xc0;
+		p_string[*x_index + 1] = 0x80;
+		(*x_index) += 2;
+	}
+	else if (p_char < 128)
     {
         p_string[*x_index] = p_char;
         (*x_index) += 1;

@@ -1,6 +1,6 @@
 /*                                                              -*-Javascript-*-
 
-Copyright (C) 2003-2013 Runtime Revolution Ltd.
+Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -82,6 +82,10 @@ mergeInto(LibraryManager.library, {
 
 			// Make it a target for text input events
 			target.setAttribute('contentEditable', 'true');
+
+			// Force the canvas to use a normal mouse cursor by
+			// default
+			target.style.cursor = 'default';
 
 			LiveCodeEvents._initialised = false;
 		},

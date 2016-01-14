@@ -74,7 +74,7 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
          end repeat
          break
       case "Notes"
-         dispatch "releaseNotesBuilderRun" to stack builderNotesBuilderStack() with pEdition, tVersion
+         dispatch "releaseNotesBuilderRun" to stack builderNotesBuilderStack() with pEdition, tVersion, pType, builderOutputFolder()
          break
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
@@ -87,14 +87,44 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
       case "Archive"
          local tBuildNumber
          put builderGetBuildNumber() into tBuildNumber
-         dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with pEdition, tVersion, tBuildNumber, pType
+         dispatch "archiveBuilderRun" to stack builderArchiveBuilderStack() with tVersion, tBuildNumber, pType
          break
    end switch
    	
    builderFinalize	
 end builderBuild
 
+-- Fetch the platform string for the platform on which the builder is
+-- currently running
+function builderPlatform
+   switch the platform
+      case "linux"
+         if the processor ends with "86" then
+            return "linux-x86"
+         end if
+         if the processor ends with "64" then
+            return "linux-x86_64"
+         end if
+         throw "Unknown Linux architecture:" && the processor
+      case "win32"
+         return "windows"
+      case "macos"
+         return "macosx"
+      case "iphone"
+         return "ios"
+      case "html5"
+         return "emscripten"
+      case "android"
+         return "android"
+      default
+         return the platform
+   end switch
+end builderPlatform
+
 command builderFetchEngine pVersion, pPlatform
+   if pPlatform is empty then
+      put builderPlatform() into pPlatform
+   end if
    if sEngineDir is not empty then
       switch pPlatform
          case "windows"
@@ -210,6 +240,11 @@ function builderSystemFolder
    return item 1 to -2 of the filename of me
 end builderSystemFolder
 
+-- Return the folder of the private builder system
+function builderSystemPrivateFolder
+   return builderPrivateRepoFolder() & slash & "builder" 
+end builderSystemPrivateFolder
+
 -- Returns the folder where intermediate products should be placed
 function builderWorkFolder
    if sWorkDir is not empty then
@@ -269,7 +304,7 @@ function builderBuiltDocsFolder
 end builderBuiltDocsFolder
 
 function builderBuiltNotesFolder
-   return builderRepoFolder() & slash & "_build/notes"
+   return builderRepoFolder()
 end builderBuiltNotesFolder
 
 function builderCommercialFolder
@@ -320,7 +355,7 @@ function builderNotesBuilderStack
 end builderNotesBuilderStack
 
 function builderArchiveBuilderStack
-   return builderSystemFolder() & slash & "archive_builder.livecodescript"
+   return builderSystemPrivateFolder() & slash & "archive_builder.livecodescript"
 end builderArchiveBuilderStack
 
 function builderModuleInterfaceFolder

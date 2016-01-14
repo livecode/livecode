@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -75,8 +75,6 @@ public handler OnSave(out rProperties as Array)
 	
 	put mNumSelections into rProperties["numSelections"]
 	put mSelected into rProperties["selected"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -97,7 +95,7 @@ public handler OnPaint()
 		set the paint of this canvas to getPaint("background",tCount)
 		fill getPath("circle",tCount) on this canvas
 			
-		set the font of this canvas to font getFontName() at size (my width)/(3*mNumSelections)
+		set the font of this canvas to font getFontName() at size (my width/(3*mNumSelections))
 		set the paint of this canvas to getPaint("labels",0)
 		fill text getLabel(tCount) at center of getRect("label", tCount) on this canvas
 		
@@ -146,7 +144,7 @@ private handler getPath(in pShape as String, in pSelection as Integer) returns P
 	put (my width)/(2*mNumSelections) + (pSelection-1)*(my width)/mNumSelections into tCenterX
 	
 	if pShape is "circle" then
-		return circle path centered at point [tCenterX, (my height)/2] with radius (my width)/(3*mNumSelections)
+		return circle path centered at point [tCenterX, (my height)/2] with radius (my width/(3*mNumSelections))
 	end if
 
 end handler

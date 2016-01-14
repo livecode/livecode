@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1119,6 +1119,8 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
         t_new_stack -> setparent(MCdispatcher -> gethome());
         t_new_stack -> message(MCM_new_stack);
         t_new_stack -> setflag(False, F_VISIBLE);
+		// PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
+		t_new_stack -> open();
         ep . clear();
         t_new_stack -> setasscriptonly(ep);
         optr = t_new_stack;
@@ -1974,17 +1976,28 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 	Symbol_type type;
 	const LT *te;
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+	
+	// Allow flipping the portion currently selected with the Select paint tool
+	// In this case an image is not specified, i.e. "flip vertical"
+	if (sp.next(type) == PS_NORMAL && sp.lookup(SP_FLIP, te) == PS_NORMAL)
 	{
-		sp.backup();
-		image = new MCChunk(False);
-		if (image->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FLIP_BADIMAGE, sp);
-			return PS_ERROR;
-		}
+		direction = (Flip_dir)te->which;
+		return PS_NORMAL;
 	}
+	
+	sp.backup();
+	
+	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
+	
+	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCFlip::exec
+	image = new MCChunk(False);
+	if (image->parse(sp, False) != PS_NORMAL)
+	{
+		MCperror->add(PE_FLIP_BADIMAGE, sp);
+		return PS_ERROR;
+	}
+	
+	
 	if (sp.next(type) != PS_NORMAL || sp.lookup(SP_FLIP, te) != PS_NORMAL)
 	{
 		MCperror->add
@@ -2155,6 +2168,7 @@ MCLaunch::~MCLaunch()
 {
 	delete doc;
 	delete app;
+	delete widget;
 }
 
 // Syntax should be:
@@ -2204,6 +2218,15 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 		as_url = t_is_url;
 	}
 
+	if (t_is_url && sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
+	{
+		widget = new MCChunk(False);
+		if (widget->parse(sp, False) != PS_NORMAL)
+		{
+			MCperror->add(PE_LAUNCH_BADWIDGETEXP, sp);
+			return PS_ERROR;
+		}
+	}
 	return PS_NORMAL;
 }
 
@@ -2309,7 +2332,23 @@ void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 	else if (doc != NULL)
 	{
 		if (as_url)
-			MCFilesExecLaunchUrl(ctxt, *t_document);
+		{
+			if (widget != nil)
+			{
+				MCObject *t_object;
+				uint32_t t_parid;
+				
+				if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+				{
+					ctxt.LegacyThrow(EE_LAUNCH_BADWIDGETEXP);
+					return;
+				}
+				
+				MCInterfaceExecLaunchUrlInWidget(ctxt, *t_document, (MCWidget*)t_object);
+			}
+			else
+				MCFilesExecLaunchUrl(ctxt, *t_document);
+		}
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
@@ -2331,7 +2370,15 @@ void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
 		doc -> compile(ctxt);
 
 		if (as_url)
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		{
+			if (widget)
+			{
+				widget->compile(ctxt);
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecLaunchUrlInWidgetMethodInfo);
+			}
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		}
 		else
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchDocumentMethodInfo);
 	}
@@ -4386,6 +4433,7 @@ void MCRelayer::exec_ctxt(MCExecContext& ctxt)
             MCInterfaceExecRelayer(ctxt, relation, t_source, t_layer);
             break;
         case kMCRelayerFormRelativeToControl:
+        {
             MCObjectPtr t_target;
             if (!target -> getobj(ctxt, t_target, True))
             {
@@ -4393,6 +4441,7 @@ void MCRelayer::exec_ctxt(MCExecContext& ctxt)
                 return;
             }
             MCInterfaceExecRelayerRelativeToControl(ctxt, relation, t_source, t_target);
+        }
             break;
         case kMCRelayerFormRelativeToOwner:
             MCInterfaceExecRelayerRelativeToOwner(ctxt, relation, t_source);

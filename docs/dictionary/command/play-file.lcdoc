@@ -44,6 +44,6 @@ This feature uses the built-in sound playback facilities in the iPhone (AVAudioP
 
 >*Cross-platform note:* This feature works the same way on bith Android and iOS platforms, although the list of supported audio formats will vary between devices.
 
-References: play video (command), play (command), result (function), sound (function), playLoudness (property)
+References: play video (command), play (command), result (function), sound (function), playLoudness (property), iphoneSetAudioCategory (command)
 
 Tags: multimedia

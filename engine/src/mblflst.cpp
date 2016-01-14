@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -58,13 +58,8 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
     /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
 
     font -> fid = (MCSysFontHandle)iphone_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
-
-	font -> ascent = size - 1;
-	font -> descent = size * 2 / 14 + 1;
 	
 	iphone_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
-	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
-		font -> ascent++;
     
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	font = new MCFontStruct;
@@ -80,12 +75,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
     /* UNCHECKED */ MCStringCopySubstring(*reqname_str, MCRangeMake(0, t_comma - 1), &t_before_comma);
     font -> fid = (MCSysFontHandle)android_font_create(*t_before_comma, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	
-	font -> ascent = size - 1;
-	font -> descent = size * 2 / 14 + 1;
-	
 	android_font_get_metrics(font -> fid,  font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
-	if (ceilf(font->m_ascent) + ceilf(font->m_descent) > size)
-		font -> ascent++;
 	
 #endif
 }

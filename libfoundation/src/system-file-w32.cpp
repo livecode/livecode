@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -99,14 +99,14 @@ static bool
 __MCSFileThrowWriteErrorWithErrorCode (MCStringRef p_native_path,
                                        DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to write to file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to write to file '%{path}': %{description}"), p_error_code);
 }
 
 static bool
 __MCSFileThrowOpenErrorWithErrorCode (MCStringRef p_native_path,
                                       DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to open file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to open file '%{path}': %{description}"), p_error_code);
 }
 
 /* ================================================================
@@ -184,7 +184,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 		uint32_t t_bytes_request;
 		DWORD t_bytes_read;
 
-		t_bytes_request = MCMax ((t_file_size - t_total_read), UINT32_MAX);
+		t_bytes_request = MCMin ((t_file_size - t_total_read), UINT32_MAX);
 
 		if (!ReadFile (t_handle, t_buffer,
 		               t_bytes_request, &t_bytes_read, NULL))

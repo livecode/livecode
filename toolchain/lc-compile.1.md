@@ -7,7 +7,7 @@ lc-compile(1) -- compile LiveCode Builder source code
 
 **lc-compile** [_OPTION_ ...] --outputc _OUTFILE_ [--] _LCBFILE_
 
-**lc-compile** [_OPTION_ ...] --deps [make|order|changed-order] [--] _LCBFILE_ ... _LCBFILE_...
+**lc-compile** [_OPTION_ ...] --deps [_DEPSMODE_] [--] _LCBFILE_...
 
 ## DESCRIPTION
 
@@ -33,21 +33,18 @@ specified.
   Generate LiveCode bytecode as a static array embedded in C source code in
   _OUTFILE_, which should be the path to a `.c` file.  If _OUTFILE_ already
   exists, it will be overwritten.
-  
-* --deps [make]:
-  Generate lci file dependencies in make format for the input source files.
 
-* --deps order:
-  Output the input source files in dependency order, the one that needs to be
-  compiled first being first.
-
-* --deps changed-order:
-  Output the input source files in dependency order, the one that needs to be
-  compiled first being first. Any source files which don't need to be recompiled
-  (based on timestamp comparisons with the interface files) will be omitted.
+* --deps [_DEPSMODE_]:
+  Generate dependency information on standard output.  _DEPSMODE_ may
+  be `order`, `changed-order`, or `make`.  If _DEPSMODE_ is omitted,
+  `make` is assumed.  See also the **DEPENDENCY INFORMATION** section
+  below.
 
 * --manifest _MANIFEST_:
   Generate a module manifest in _MANIFEST_.  This is used by the LiveCode IDE.
+
+* -Werror:
+  Turn all warnings into errors.
 
 * -h, --help:
   Print some basic usage information.
@@ -56,6 +53,29 @@ specified.
   Stop processing options.  This is useful in case _LCBFILE_ begins with `--`.
 
 The `--output` and `--outputc` options cannot be used together.
+
+## DEPENDENCY INFORMATION
+
+**lc-compile**'s `--deps` mode is used to assist in compiling multiple
+`.lcb` source files that depend on each other in the correct order.
+In this mode, you should usually specify all of the source files for a
+project as command-line parameters; **lc-compile** will output the
+dependency information between them on standard output.
+
+If _DEPSMODE_ is `order`, the output is a list of input files in the
+order in which they need to be compiled in order to satisfy all
+dependencies.  If _DEPSMODE_ is `changed-order`, the output is the
+same list, but with all input files that are up-to-date omitted.
+Input files are considered up-to-date if the corresponding interface
+file is newer than its dependencies.
+
+If _DEPSMODE_ is `make`, or is not specified, then the output is a
+Makefile fragment declaring the dependencies between the input files
+and any interface files that they depend on.  `--deps make` can also
+be used with a single input file and the `--output` option.  In this
+mode, **lc-compile** the output is a Makefile fragment that declares
+the dependencies between the input file, the output file, and the
+corresponding interface file.
 
 ## COPYRIGHT
 
@@ -66,4 +86,4 @@ warranty; not even for MERCHATABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 ## SEE ALSO
 
-lc-run(1).
+lc-run(1), make(1).

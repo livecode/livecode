@@ -1,7 +1,7 @@
 ﻿script "InstallerUtilities"
 # This is the back-end installer, updater and uninstaller code. 
 # This code doesn't know anything about the product it is installing, and should be capable
-# of being re-used for products other than Revolution. It reads a "manifest" file, which contains
+# of being re-used for products other than LiveCode. It reads a "manifest" file, which contains
 # a list of files to be installed and some metadata. The files are then installed according to command
 # line options. Uninstallation uses a "record" file, which is created by the installer. This is basically the same
 # as the manifest file, but with a little less information.
@@ -244,7 +244,14 @@ end runFacelessInstall
 
 -- Faceless uninstall option
 command runFacelessUninstall
-   send "runFaceless" to stack "UninstallerUI"
+   put true into sIsFaceless
+   
+   try
+      send "runFaceless" to stack "UninstallerUI"
+   catch tError
+      quit 1
+   end try
+   quit 0
 end runFacelessUninstall
 
 -- InstallerActions mode is backend process for installation. It reads the
@@ -709,9 +716,21 @@ private command installCopyUninstaller pTarget
       set the itemDel to comma
    else
       put url ("binfile:" & the effective filename of stack "Installer") into url ("binfile:" & installShortenPath(pTarget))
+      
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
          reportError "Unable to installer uninstaller at '" & pTarget & "'."
+      end if
+      
+      // SN-2014-10-28: [[ Bug 16410 ]] The uninstaller needs the execution permission
+      // (on Linux)
+      if the platform contains "linux" then
+         local tChmodResult
+         get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
+         if it is not empty then
+            log "CopyUninstaller:    setting executable permission failed - " & it
+            reportError "Unable to install uninstaller at '" & pTarget * "'."
+         end if
       end if
    end if
 end installCopyUninstaller
@@ -1227,9 +1246,9 @@ command actionUninstall pPath, pRecord, pPreInstall
       end if
    end if
    
-   -- Notify the master that we are done (but only if this is not a pre-install uninstall)
+   -- Notify the master that uninstalling is done (but only if this is not a pre-install uninstall)
    if not pPreInstall then
-      reportFinished
+      reportFinished true
    end if
 end actionUninstall
 
@@ -1400,14 +1419,18 @@ private command reportProgress pProgress, pMessage
    end if
 end reportProgress
 
-private command reportFinished
+private command reportFinished pIsUninstall
    if not sIsFaceless then
       if the environment is "installer" then
          log "Done"
          write "done" & return to stdout
       end if
    else
-      write "Installation succeded." & return to stdout
+      if pIsUninstall then
+         write "Successfully uninstalled." & return to stdout
+      else
+         write "Installation succeeded." & return to stdout
+      end if
    end if
 end reportFinished
 

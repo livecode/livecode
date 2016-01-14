@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -726,6 +726,7 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdargs", TT_FUNCTION, F_COMMAND_ARGUMENTS},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
+        {"cmdname", TT_FUNCTION, F_COMMAND_NAME},
         {"codepoint", TT_CHUNK, CT_CODEPOINT},
         {"codepointoffset", TT_FUNCTION, F_CODEPOINT_OFFSET},
         {"codepointproperty", TT_FUNCTION, F_CODEPOINT_PROPERTY},
@@ -734,7 +735,6 @@ LT factor_table[] =
         {"codeunit", TT_CHUNK, CT_CODEUNIT},
         {"codeunitoffset", TT_FUNCTION, F_CODEUNIT_OFFSET},
         {"codeunits", TT_CLASS, CT_CODEUNIT},
-        {"cmdname", TT_FUNCTION, F_COMMAND_NAME},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
 		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
 		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
@@ -823,7 +823,9 @@ LT factor_table[] =
         {"div", TT_BINOP, O_DIV},
         {"dnsservers", TT_FUNCTION, F_DNS_SERVERS},
 		{"document", TT_CHUNK, CT_DOCUMENT},
-		// MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the documents folder'.
+        // MERG-2015-10-11: [[ DocumentFilename ]] Property tag for documentFilename
+        {"documentfilename", TT_PROPERTY, P_DOCUMENT_FILENAME},
+        // MW-2011-11-24: [[ Nice Folders ]] The adjective for 'the documents folder'.
 		{"documents", TT_PROPERTY, P_DOCUMENTS_FOLDER},
         {"dontdither", TT_PROPERTY, P_DONT_DITHER},
         {"dontrefresh", TT_PROPERTY, P_DONT_REFRESH},
@@ -970,6 +972,8 @@ LT factor_table[] =
         {"from", TT_FROM, PT_FROM},
         {"frontscripts", TT_FUNCTION, F_FRONT_SCRIPTS},
         {"ftpproxy", TT_PROPERTY, P_FTP_PROXY},
+        {"fullclipboarddata", TT_PROPERTY, P_FULL_CLIPBOARD_DATA},
+        {"fulldragdata", TT_PROPERTY, P_FULL_DRAGBOARD_DATA},
 		{"fullscreen", TT_PROPERTY, P_FULLSCREEN},
 		// IM-2013-09-23: [[ FullscreenMode ]] New property for 'fullscreenmode'
 		{"fullscreenmode", TT_PROPERTY, P_FULLSCREENMODE},
@@ -1220,6 +1224,7 @@ LT factor_table[] =
         {"minheight", TT_PROPERTY, P_MIN_HEIGHT},
         {"minimizebox", TT_PROPERTY, P_MINIMIZE_BOX},
         {"minwidth", TT_PROPERTY, P_MIN_WIDTH},
+        {"mirrored", TT_PROPERTY, P_MIRRORED},
 		{"miterlimit", TT_PROPERTY, P_MITER_LIMIT},
         {"mnemonic", TT_PROPERTY, P_MNEMONIC},
         {"mod", TT_BINOP, O_MOD},
@@ -1253,6 +1258,7 @@ LT factor_table[] =
         {"nativechartonum", TT_FUNCTION, F_NATIVE_CHAR_TO_NUM},
         {"navigationarrows", TT_PROPERTY, P_NAVIGATION_ARROWS},
 		{"networkinterfaces", TT_PROPERTY, P_NETWORK_INTERFACES},
+        {"newest", TT_PREP, PT_NEWEST},
         {"next", TT_CHUNK, CT_NEXT},
         {"ninth", TT_CHUNK, CT_NINTH},
         {"no", TT_UNOP, O_NOT},
@@ -1410,6 +1416,8 @@ LT factor_table[] =
         {"random", TT_FUNCTION, F_RANDOM},
 		{"randombytes", TT_FUNCTION, F_RANDOM_BYTES},
         {"randomseed", TT_PROPERTY, P_RANDOM_SEED},
+        {"rawclipboarddata", TT_PROPERTY, P_RAW_CLIPBOARD_DATA},
+        {"rawdragdata", TT_PROPERTY, P_RAW_DRAGBOARD_DATA},
         {"recent", TT_CHUNK, CT_RECENT},
         {"recentcards", TT_PROPERTY, P_RECENT_CARDS},
         {"recentnames", TT_PROPERTY, P_RECENT_NAMES},
@@ -1888,6 +1896,7 @@ static LT insert_table[] =
 
 static LT lock_table[] =
     {
+        {"clipboard", TT_UNDEFINED, LC_CLIPBOARD},
         {"colormap", TT_UNDEFINED, LC_COLORMAP},
         {"cursor", TT_UNDEFINED, LC_CURSOR},
         {"dialog", TT_UNDEFINED, LC_ERRORS},
@@ -2201,7 +2210,7 @@ static LT unit_table[] =
         {"codepoint", TT_UNDEFINED, FU_CODEPOINT},
         {"codepoints", TT_UNDEFINED, FU_CODEPOINT},
         {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
-        {"codeunit", TT_UNDEFINED, FU_CODEUNIT},
+        {"codeunits", TT_UNDEFINED, FU_CODEUNIT},
         {"element", TT_UNDEFINED, FU_ELEMENT},
         {"int1", TT_UNDEFINED, FU_INT1},
         {"int1s", TT_UNDEFINED, FU_INT1},
@@ -2360,6 +2369,7 @@ LT *table_pointers[] =
     visual_table,
 	server_table
 };
+extern const uint4 table_pointers_size = ELEMENTS(table_pointers);
 
 uint2 table_sizes[] =
 {
@@ -2398,3 +2408,4 @@ uint2 table_sizes[] =
     ELEMENTS(visual_table),
 	ELEMENTS(server_table),
 };
+extern const uint4 table_sizes_size = ELEMENTS(table_sizes);

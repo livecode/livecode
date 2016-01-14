@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -611,7 +611,7 @@ void X_main_loop(void)
 extern "C" bool MCModulesInitialize();
 extern "C" void MCModulesFinalize();
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
@@ -655,10 +655,6 @@ int main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
-    MCScriptFinalize();
-    MCModulesFinalize();
-	MCFinalize();
-
 	for (int i = 0; i < argc; i++)
 	{
 		MCValueRelease(t_new_argv[i]);
@@ -670,6 +666,10 @@ int main(int argc, char *argv[], char *envp[])
 		MCValueRelease(t_new_envp[i]);
 	}
 	MCMemoryDeleteArray(t_new_envp);
+
+    MCScriptFinalize();
+    MCModulesFinalize();
+	MCFinalize();
 
 	exit(t_exit_code);
 }

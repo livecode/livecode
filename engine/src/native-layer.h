@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -23,27 +23,50 @@ class MCNativeLayer
 {
 public:
     
-    virtual void OnOpen() = 0;
-    virtual void OnClose() = 0;
-    virtual void OnAttach() = 0;
-    virtual void OnDetach() = 0;
-    virtual void OnPaint(MCGContextRef) = 0;
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect) = 0;
-    virtual void OnVisibilityChanged(bool p_visible) = 0;
-    virtual void OnToolChanged(Tool p_new_tool) = 0;
-    virtual void OnLayerChanged() = 0;
+    virtual void OnOpen();
+    virtual void OnClose();
+    virtual void OnAttach();
+    virtual void OnDetach();
+	virtual bool OnPaint(MCGContextRef p_context);
+    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
+    virtual void OnVisibilityChanged(bool p_visible);
+    virtual void OnToolChanged(Tool p_new_tool);
+    virtual void OnLayerChanged();
     
     virtual ~MCNativeLayer() = 0;
     
     // Returns true if the layer would be attached if its card were visible
     bool isAttached() const;
-    
+	
+	virtual bool GetNativeView(void *&r_view) = 0;
+	
+	// Implemented by the platform-specific native layers: creates a new layer
+	static MCNativeLayer* CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view);
+
+	void SetCanRenderToContext(bool p_can_render);
+	virtual bool GetCanRenderToContext();
+
 protected:
-    
+	
+	// Platform-specific implementations
+	virtual void doAttach() = 0;
+	virtual void doDetach() = 0;
+	virtual bool doPaint(MCGContextRef p_context) = 0;
+	virtual void doSetVisible(bool p_visible) = 0;
+	virtual void doSetGeometry(const MCRectangle &p_rect) = 0;
+	virtual void doRelayer() = 0;
+	
+	MCWidgetRef m_widget;
+	
     bool m_attached;
+    bool m_can_render_to_context;
+	bool m_defer_geometry_changes;
     
     MCNativeLayer();
     
+	// Returns true if the widget should be currently visible
+	virtual bool ShouldShowWidget(MCWidget *p_widget);
+
     // Utility function for subclasses: given a widget, finds the native layer
     // immediately below or above it. If none exist, returns nil.
     static MCWidget* findNextLayerBelow(MCWidget*);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -211,6 +211,10 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 		else
 			t_layer_mode = kMCLayerModeHintStatic;
 	}
+    else
+    {
+        MCUnreachableReturn(m_layer_mode);
+    }
 
 	// Now compute the sprite attribute.
 	bool t_is_sprite;
@@ -1361,8 +1365,16 @@ void MCRedrawDoUpdateScreen(void)
 		if (sptr->getstate(CS_NEED_RESIZE))
 		{
 			sptr->setgeom();
-			sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
-			MCRedrawUpdateScreen();
+            sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+
+            // SN-2015-08-31: [[ Bug 15705 ]] From 6.7.7, MCRedrawUpdateScreen
+            //  also removes kMCActionUpdateScreen from MCactionsrequired,
+            //  which was not the case beforehand - and the redrawing could nest
+            //  here, and eventually set s_screen_is_dirty to false (l.1383)
+            if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+                MCActionsSchedule(kMCActionsUpdateScreen);
+
+            MCRedrawUpdateScreen();
 			return;
 		}
 

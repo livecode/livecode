@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2249,7 +2249,7 @@ void MCFontStyles::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(fontname, EE_FONTSTYLES_BADFONTNAME, &t_fontname))
         return;
     uinteger_t fsize;
-    if (!ctxt . EvalExprAsUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
+    if (!ctxt . EvalExprAsStrictUInt(fontsize, EE_FONTSTYLES_BADFONTSIZE, fsize))
         return;
     
 	MCTextEvalFontStyles(ctxt, *t_fontname, fsize, r_value . stringref_value);
@@ -3051,7 +3051,12 @@ Parse_stat MCKeys::parse(MCScriptPoint &sp, Boolean the)
 			return PS_ERROR;
 		}
 		if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
-		        || (te->which != P_DRAG_DATA && te->which != P_CLIPBOARD_DATA))
+		        || (te->which != P_DRAG_DATA
+                    && te->which != P_CLIPBOARD_DATA
+                    && te->which != P_RAW_CLIPBOARD_DATA
+                    && te->which != P_RAW_DRAGBOARD_DATA
+                    && te->which != P_FULL_CLIPBOARD_DATA
+                    && te->which != P_FULL_DRAGBOARD_DATA))
 		{
 			MCperror->add(PE_KEYS_BADPARAM, sp);
 			return PS_ERROR;
@@ -3191,8 +3196,18 @@ void MCKeys::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 	{
 		if (which == P_DRAG_DATA)
 			MCPasteboardEvalDragDropKeys(ctxt, r_value . stringref_value);
-		else
+        else if (which == P_RAW_CLIPBOARD_DATA)
+            MCPasteboardEvalRawClipboardKeys(ctxt, r_value . stringref_value);
+        else if (which == P_RAW_DRAGBOARD_DATA)
+            MCPasteboardEvalRawDragKeys(ctxt, r_value . stringref_value);
+        else if (which == P_FULL_CLIPBOARD_DATA)
+            MCPasteboardEvalFullClipboardKeys(ctxt, r_value . stringref_value);
+        else if (which == P_FULL_DRAGBOARD_DATA)
+            MCPasteboardEvalFullDragKeys(ctxt, r_value . stringref_value);
+		else if (which == P_CLIPBOARD_DATA)
 			MCPasteboardEvalClipboardKeys(ctxt, r_value . stringref_value);
+        else
+            MCUnreachable();
         r_value . type = kMCExecValueTypeStringRef;
 	}
 }
@@ -3210,8 +3225,18 @@ void MCKeys::compile(MCSyntaxFactoryRef ctxt)
 	{
 		if (which == P_DRAG_DATA)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalDragDropKeysMethodInfo);
-		else
+        else if (which == P_RAW_CLIPBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawClipboardKeysMethodInfo);
+        else if (which == P_RAW_DRAGBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalRawDragKeysMethodInfo);
+		else if (which == P_CLIPBOARD_DATA)
 			MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalClipboardKeysMethodInfo);
+        else if (which == P_FULL_CLIPBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullClipboardKeysMethodInfo);
+        else if (which == P_FULL_DRAGBOARD_DATA)
+            MCSyntaxFactoryEvalMethod(ctxt, kMCPasteboardEvalFullDragKeysMethodInfo);
+        else
+            MCUnreachable();
 	}
 
 	MCSyntaxFactoryEndExpression(ctxt);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -124,7 +124,7 @@ extern "C" UIView *LiveCodeGetView(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	int t_exit_code;
 	

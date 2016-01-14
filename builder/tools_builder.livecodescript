@@ -80,6 +80,10 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
          put "Commercial" into tBaseEditionType
          break
    end switch
+
+   -- Escape the version (by replacing all non-alphanumeric characters with "_")
+   local tVersionEscaped
+   put replaceText(pVersion,"\W","_") into tVersionEscaped
    
    -- Compute the package temp folder
    local tTempFolder
@@ -137,6 +141,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    packageCompilerConfigureVariable tPackager, "TodaysDate", "[[todaysDate]]"
    packageCompilerConfigureVariable tPackager, "VersionTag", pVersion
+   packageCompilerConfigureVariable tPackager, "EscapedVersionTag", tVersionEscaped
    packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
    if pPlatform is "linux-x86" then
@@ -148,23 +153,27 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    
    -- Now all the names
+   local tProductName
    if pEdition is "Community" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Community" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodecommunity_" & getTaggedVersion(pVersion)
-      if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
-         packageCompilerConfigureVariable tPackager, "ProductName", "livecodecommunity"
-      else
-         packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Community"
-      end if
+      put "LiveCode Community" into tProductName
    else if pEdition is "Indy" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Indy" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodeindy_" & getTaggedVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Indy"
+      put "LiveCode Indy" into tProductName
    else if pEdition is "Business" then
       packageCompilerConfigureVariable tPackager, "ProductTitle", "LiveCode Business" && getReadableVersion(pVersion)
       packageCompilerConfigureVariable tPackager, "ProductTag", "livecodebusiness_" & getTaggedVersion(pVersion)
-      packageCompilerConfigureVariable tPackager, "ProductName", "LiveCode Business"
+      put "LiveCode Business" into tProductName
    end if
+   -- For Linux only, case-fold the product name to lowercase and
+   -- remove all spaces
+   if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
+      put toLower(tProductName) into tProductName
+      replace " " with "" in tProductName
+   end if
+   packageCompilerConfigureVariable tPackager, "ProductName", tProductName
    
    -- The edition tags.
    packageCompilerConfigureVariable tPackager, "EditionTagLower", "-" & toLower(char 1 of tEditionType) & char 2 to -1 of tEditionType
@@ -320,7 +329,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    end repeat
    delete the last char of tParams["auxiliary_stackfiles"]
    
-   put "insert script of stack" && quote & "revLibUrl" & quote && "into back" into tParams["startup_script"]
+   // revLibURL needs to initialise its custom props, and revLoadLibrary must therefore be called.
+   put merge("send [[quote]]revLoadLibrary[[quote]] to stack [[quote]]revLibUrl[[quote]]") into tParams["startup_script"]
    put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform
@@ -364,7 +374,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put tCertificatesFolder & "/runrev.pvk" into tSignParams["privatekey"]
             put word 1 of url ("file:" & tCertificatesFolder & "/runrev_password.txt") into tSignParams["passphrase"]
             put "http://timestamp.verisign.com/scripts/timstamp.dll" into tSignParams["timestamper"]
-            put "http://www.runrev.com" into tSignParams["url"]
+            put "http://www.livecode.com" into tSignParams["url"]
             if pEdition is "Community" then
                put "LiveCode Community Installer" into tSignParams["description"]
             else
@@ -412,7 +422,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          local tPlistFile
          put macPList() into tPlistFile
          replace "[[BundleId]]" with "com.runrev.installer" in tPlistFile
-         replace "[[BundleName]]" with "runrevinstaller" in tPlistFile
+         replace "[[BundleName]]" with "livecodeinstaller" in tPlistFile
          
          create folder tOutputFileStub & ".app"
          create folder tOutputFileStub & ".app" & slash & "Contents"

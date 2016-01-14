@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -783,7 +783,7 @@ void MCGradientFillDeleteCombiner(MCGradientAffineCombiner *p_combiner)
 	MCMemoryDelete(p_combiner);
 }
 
-MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip)
+MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient_ref, MCGRectangle &r_clip, const MCGAffineTransform &p_transform)
 {
     // MM-2014-07-31: [[ ThreadedRendering ]] Removed use of single static combiner to make things thread safe.
 	MCAutoCustomPointer<MCGradientAffineCombiner, MCGradientFillDeleteCombiner> t_combiner;
@@ -794,11 +794,13 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	(*t_combiner) -> advance = gradient_affine_combiner_advance;
 	(*t_combiner) -> combine = NULL;
 	
+    MCGAffineTransform t_transform;
+    t_transform = MCGAffineTransformConcat(p_transform, p_gradient_ref -> transform);
     
-	int4 vx = (int4) p_gradient_ref -> transform . a;
-	int4 vy = (int4) p_gradient_ref -> transform . b;
-	int4 wx = (int4) p_gradient_ref -> transform . c;
-	int4 wy = (int4) p_gradient_ref -> transform . d;
+    int4 vx = (int4) t_transform . a;
+    int4 vy = (int4) t_transform . b;
+    int4 wx = (int4) t_transform . c;
+    int4 wy = (int4) t_transform . d;
 	
 	int4 d = vy * wx - vx *wy;
 	
@@ -856,8 +858,8 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 	// MW-2013-10-26: [[ Bug 11315 ]] Index shuold be i - 1 (otherwise memory overrun occurs!).
 	(*t_combiner)->ramp[i - 1] . difference = (uint4) (STOP_DIFF_MULT / STOP_INT_MAX);
 	
-	(*t_combiner) -> origin . x = (int2) p_gradient_ref -> transform . tx;
-	(*t_combiner) -> origin . y = (int2) p_gradient_ref -> transform . ty;
+    (*t_combiner) -> origin . x = (int2) t_transform . tx;
+    (*t_combiner) -> origin . y = (int2) t_transform . ty;
 	(*t_combiner) -> ramp_length = p_gradient_ref -> ramp_length;
 	(*t_combiner) -> mirror = p_gradient_ref -> mirror;
 	(*t_combiner) -> repeat = p_gradient_ref -> repeats;
@@ -977,7 +979,6 @@ bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint
 	MCGAffineTransform t_matrix;
 	MCGAffineTransformFromSkMatrix(p_matrix, t_matrix);	
 	m_clip = MCGRectangleApplyAffineTransform(m_clip, t_matrix);
-	m_gradient_ref -> transform = MCGAffineTransformConcat(t_matrix, m_gradient_ref -> transform);
 	
 	uint32_t t_width;
 	t_width = (uint32_t) ceilf(m_clip . size . width);
@@ -991,7 +992,7 @@ bool MCGLegacyGradientShader::setContext(const SkBitmap& p_bitmap, const SkPaint
 	if (t_success)
 	{	
 		memset(m_mask, 0xFF, t_width);
-		m_gradient_combiner = MCGradientFillCreateCombiner(m_gradient_ref, m_clip);
+		m_gradient_combiner = MCGradientFillCreateCombiner(m_gradient_ref, m_clip, t_matrix);
 		t_success = m_gradient_combiner != NULL;		
 	}
 	

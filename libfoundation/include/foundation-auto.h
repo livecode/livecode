@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -48,10 +48,12 @@ public:
 		: m_value(nil)
 	{
 	}
-
-	inline MCAutoValueRefBase(T p_value)
-		: m_value(MCValueRetain(p_value))
+    
+    inline explicit MCAutoValueRefBase(T p_value)
+		: m_value(nil)
 	{
+        if (p_value)
+            m_value = MCValueRetain(p_value);
 	}
 
 	inline ~MCAutoValueRefBase(void)
@@ -77,6 +79,13 @@ public:
 		return m_value;
 	}
     
+    void Reset(T value = nil)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = (value) ? (T)MCValueRetain(value) : NULL;
+    }
+    
     inline T& operator ! (void)
     {
 		return m_value;
@@ -86,7 +95,8 @@ public:
     // retaining it - the auto container is considered to now own the value.
     inline void Give(T value)
     {
-        MCAssert(m_value == nil);
+        if (m_value)
+            MCValueRelease(m_value);
         m_value = value;
     }
     
@@ -130,10 +140,22 @@ private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
-template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)> class MCAutoMutableValueRefBase: public MCAutoValueRefBase<T>
+template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)>
+class MCAutoMutableValueRefBase :
+  public MCAutoValueRefBase<T>
 {
 public:
-	inline T operator = (T value)
+    inline MCAutoMutableValueRefBase() :
+      MCAutoValueRefBase<T>()
+    {
+    }
+    
+    inline explicit MCAutoMutableValueRefBase(T p_value) :
+      MCAutoValueRefBase<T>(p_value)
+    {
+    }
+    
+    inline T operator = (T value)
 	{
         return MCAutoValueRefBase<T>::operator =(value);
 	}
@@ -323,6 +345,7 @@ private:
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;
 typedef MCAutoValueRefArrayBase<MCNumberRef> MCAutoNumberRefArray;
 typedef MCAutoValueRefArrayBase<MCStringRef> MCAutoStringRefArray;
+typedef MCAutoValueRefArrayBase<MCDataRef> MCAutoDataRefArray;
 typedef MCAutoValueRefArrayBase<MCArrayRef> MCAutoArrayRefArray;
 typedef MCAutoValueRefArrayBase<MCListRef> MCAutoListRefArray;
 typedef MCAutoValueRefArrayBase<MCBooleanRef> MCAutoBooleanRefArray;
@@ -550,7 +573,57 @@ private:
     CFStringRef m_cfstring;
 };
 
-#endif // __MAC__ || __IOS__
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCAutoStringRefAsPascalString
+{
+public:
+    MCAutoStringRefAsPascalString(void)
+    {
+        m_pascal_string = nil;
+    }
+    
+    ~MCAutoStringRefAsPascalString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        // A Pascal-style counted string can only contain a maximum of 255 chars
+        // so the string length has to be clamped to that.
+        uindex_t t_length = MCStringGetLength(p_string);
+        if (t_length > 255)
+            return false;
+        
+        // Allocate a buffer, adding an extra char for the count byte
+        MCMemoryNewArray(t_length + 1, m_pascal_string);
+        
+        // Copy the string to the buffer, leaving a byte at the beginning for
+        // the count.
+        MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), m_pascal_string+1);
+        
+        // Write the count byte
+        *m_pascal_string = uint8_t(t_length);
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_pascal_string);
+        m_pascal_string = nil;
+    }
+    
+    unsigned char* operator * (void)
+    {
+        return m_pascal_string;
+    }
+    
+private:
+    unsigned char *m_pascal_string;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -986,12 +1059,12 @@ public:
 
 	//////////
 
-	T& operator [] (int p_index)
+	T& operator [] (uindex_t p_index)
 	{
 		return m_ptr[p_index];
 	}
     
-    const T& operator [] (int p_index) const
+    const T& operator [] (uindex_t p_index) const
     {
         return m_ptr[p_index];
     }

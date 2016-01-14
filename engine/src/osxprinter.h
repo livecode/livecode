@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -46,7 +46,7 @@ public:
 private:
 	MCPrinterResult BeginPage(void);
 
-	MCPrinterResult HandleError(OSErr p_error, const char *p_message);
+	MCPrinterResult HandleError(OSStatus p_error, const char *p_message);
 
 	PMPrintSession m_session;
 	PMPrintSettings m_settings;

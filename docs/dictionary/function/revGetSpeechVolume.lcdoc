@@ -19,11 +19,11 @@ Returns:
 The <revGetSpeechVolume> function returns a number between 0 and 100.
 The default volume is 100 on both Windows and Mac OS X.
 
-<img src="202653"/> >*Important:* The revGetSpeechVolume  <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries..
+<img src="202653"/> >*Important:* The revGetSpeechVolume  <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries..
 
 Description:
 Use the <revGetSpeechVolume> function to find out what the current volume that LiveCode will speak at is.
 
->*Important:*  The revGetSpeechVolume  <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <Revolution custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
+>*Important:*  The revGetSpeechVolume  <function> is part of the <Speech library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "Speech" is selected in the list of script libraries.
 
-References: revSetSpeechSpeed (command), revSetSpeechVolume (command), function (control_st), Standalone Application Settings (glossary), standalone application (glossary), Speech library (library), Revolution custom library (library)
+References: revSetSpeechSpeed (command), revSetSpeechVolume (command), function (control_st), Standalone Application Settings (glossary), standalone application (glossary), Speech library (library), LiveCode custom library (library)

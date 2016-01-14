@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -388,7 +388,7 @@ MCExpression *MCN_new_function(int2 which)
 	case F_CLICK_V:
 		return new MCClickV;
 	case F_CLIPBOARD:
-		return new MCClipboard;
+		return new MCClipboardFunc;
     case F_CODEPOINT_OFFSET:
         return new MCCodepointOffset;
     case F_CODEUNIT_OFFSET:

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -112,6 +112,7 @@ MCScreenDC::~MCScreenDC()
 		delete allocs;
 	}
 	
+    MCNameDelete(vendorname);
 	
 	while (pendingevents != NULL)
 	{
@@ -438,6 +439,12 @@ bool MCScreenDC::platform_get_display_handle(void *&r_display)
 	r_display = x11::gdk_x11_display_get_xdisplay(getDisplay());
 	
 	return true;
+}
+
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+	// x11 window handle - dtouint returns the X11 Window id.
+	return (void*)dtouint(p_window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

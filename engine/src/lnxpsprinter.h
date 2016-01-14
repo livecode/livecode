@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,28 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __PSPRINTER_H__
 #define __PSPRINTER_H__
-
-typedef struct
-{
-	char *fontname;
-	char *printerfontname;
-	char *normal;
-	char *bold;
-	char *italic;
-	char *bolditalic;
-}
-FontTable;
-
-typedef struct
-{
-	const char *fontname;
-	const char *printerfontname;
-	const char *normal;
-	const char *bold;
-	const char *italic;
-	const char *bolditalic;
-}
-ConstFontTable;
 
 // This structure will hold all our printer settings.
 struct PSPrinterSettings
@@ -61,45 +39,10 @@ struct PSPrinterSettings
 	
 };
 
-
-
-class MCPSPrinterDevice: public MCPrinterDevice
-{
-public:
-	MCPSPrinterDevice(void);
-	~MCPSPrinterDevice(void);
-
-	const char *Error(void) const;
-
-	MCPrinterResult Cancel(void);
-
-	MCPrinterResult Show(void);
-	
-	MCPrinterResult Begin(const MCPrinterRectangle& p_src_rect, const MCPrinterRectangle& p_dst_rect, MCContext*& r_context) ;
-	MCPrinterResult End(MCContext *p_context);
-
-	MCPrinterResult Anchor(const char *name, double x, double y);
-	MCPrinterResult Link(const char *dest, const MCPrinterRectangle& area, MCPrinterLinkType type);
-	MCPrinterResult Bookmark(const char *title, double x, double y, int depth, bool closed);
-
-private:
-
-	char *m_error;
-	bool m_page_started;
-	
-	uint4 page_count ;
-	
-	void BeginPage(void);
-	void EndPage(void);
-
-};
-
-
-
 class MCPSPrinter : public MCPrinter
 {
 public:
-		
+    
 protected:
 	void DoInitialize(void);
 	void DoFinalize(void);
@@ -117,19 +60,14 @@ protected:
 
 	MCPrinterResult DoBeginPrint(MCStringRef p_document_name, MCPrinterDevice*& r_device);
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
-
 	
 private:
-		
-	PSPrinterSettings m_printersettings ;
-	char *m_error;
-	bool m_page_started;
-
+	PSPrinterSettings m_printersettings;
+    MCCustomPrinter *m_pdf_printer;
+    
 	// This flushes the settings from m_printersettings into the Object's knowledge of them
-	void FlushSettings ( void ) ;
-	void SyncSettings (void);
-
-	
+	void FlushSettings(void);
+	void SyncSettings(void);
 };
 
 

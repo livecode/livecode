@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -80,8 +80,8 @@ extern int lstat(const char *path, struct stat *sb);
 
 inline char *pStrcpy(unsigned char *dest, const unsigned char *src)
 {
-  BlockMove(src, dest, (long)*src + 1);
-  return (char*)dest;
+    memmove(dest, src, ((size_t)*src) + 1);
+    return (char*)dest;
 }
 
 char *MCS_getcurdir();

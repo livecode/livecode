@@ -1,7 +1,0 @@
-module com.livecode.lc_run_lib
-
-public handler lib_main()
-	-- Do nothing
-end handler
-
-end module

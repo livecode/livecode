@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -21,10 +21,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	OBJECT_H
 
 #include "dllst.h"
-#include "parsedef.h"
-#include "objdefs.h"
 #include "globals.h"
 #include "imagebitmap.h"
+#include "objdefs.h"
+#include "parsedef.h"
 #include "platform.h"
 
 enum {
@@ -335,8 +335,8 @@ public:
 	virtual bool visit_self(MCObjectVisitor *p_visitor);
 	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
 
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -393,6 +393,9 @@ public:
     
     // FG-2014-10-14: [[ Native Widgets ]] Informs the object that its layer has changed
     virtual void layerchanged();
+    
+    // AL-2015-09-23: [[ Native Widgets ]] Informs the object that its visibility has changed
+    virtual void visibilitychanged(bool p_visible);
     
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
@@ -684,6 +687,8 @@ public:
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
 	bool names(Properties which, MCValueRef& r_name);
+    bool getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val);
+    
 #ifdef LEGACY_EXEC
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
@@ -695,6 +700,7 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
+    void drawmarquee(MCContext *p_context, const MCRectangle &p_rect);
     
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
@@ -914,8 +920,8 @@ public:
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);
 	virtual void SetId(MCExecContext& ctxt, uint32_t id);
 	void GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id);
-	void GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name);
-	void GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id);
+	void GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name);
+	void GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id);
 	void GetName(MCExecContext& ctxt, MCStringRef& r_name);
 	virtual void SetName(MCExecContext& ctxt, MCStringRef name);
 	void GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name);
@@ -1077,7 +1083,7 @@ public:
 	void GetOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner);
-	void GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner);
 
 	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
@@ -1182,13 +1188,13 @@ public:
     void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
 
 protected:
-	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+    IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_remaining);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are the new propset pickle routines. If
 	//   sfv < 7000 then the legacy ones are used; otherwise new ones are.
 	IO_stat loadpropsets(IO_handle stream, uint32_t version);
-	IO_stat savepropsets(IO_handle stream);
+	IO_stat savepropsets(IO_handle stream, uint32_t p_version);
 	
 	// MW-2012-02-16: [[ LogFonts ]] Load the font attrs with the given index.
 	//   This method is protected as MCStack needs to call it to resolve its

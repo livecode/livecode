@@ -1,3 +1,19 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -419,7 +435,7 @@ void RunloopWait(int *r_success)
 }
 
 // IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
-void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+void StackToWindowRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success)
 {
     char *t_result;
     
@@ -429,12 +445,12 @@ void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-    t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])((const void*)(uintptr_t)p_win_id, x_rect, NULL, r_success);
+    t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])((const void*)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
 
-void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+void WindowToStackRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success)
 {
 	char *t_result;
     
@@ -444,7 +460,7 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])((const void*)(uintptr_t)p_win_id, x_rect, NULL, r_success);
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])((const void*)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }

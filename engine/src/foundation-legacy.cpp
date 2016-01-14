@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1785,12 +1785,19 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 		t_str_value = nil;
 		break;
 	case kMCValueTypeCodeArray:
-		t_type = VF_ARRAY;
-		t_str_value = nil;
+        if (MCArrayGetCount((MCArrayRef)p_value) != 0)
+        {
+            t_type = VF_ARRAY;
+            t_str_value = nil;
+        }
+        else
+        {
+            t_type = VF_STRING;
+            t_str_value = kMCEmptyString;
+        }
 		break;
-	default:
-		MCAssert(false);
-		break;
+    default:
+        MCUnreachableReturn(false);
 	}
 
 	IO_stat t_stat;

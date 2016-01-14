@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "external.h"
 
 #include "exec-interface.h"
+#include "osspec.h"
 
 //////////
 
@@ -344,6 +345,8 @@ void MCStack::SetFullscreen(MCExecContext& ctxt, bool setting)
         // IM-2014-01-16: [[ StackScale ]] Save the old rect here as view_setfullscreen() will update the stack rect
         if (setting)
             old_rect = rect;
+        else
+            rect = old_rect;
         
         // IM-2014-02-12: [[ Bug 11783 ]] We may also need to reset the fonts on Windows when
         //   fullscreen is changed
@@ -835,12 +838,12 @@ void MCStack::SetMetal(MCExecContext& ctxt, bool setting)
 	SetDecoration(P_METAL, setting);
 }
 
-void MCStack::GetShadow(MCExecContext& ctxt, bool& r_setting)
+void MCStack::GetWindowShadow(MCExecContext& ctxt, bool& r_setting)
 {
 	r_setting = (flags & F_DECORATIONS && decorations & WD_NOSHADOW) == False;
 }
 
-void MCStack::SetShadow(MCExecContext& ctxt, bool setting)
+void MCStack::SetWindowShadow(MCExecContext& ctxt, bool setting)
 {
 	SetDecoration(P_SHADOW, setting);
 }
@@ -998,7 +1001,7 @@ void MCStack::SetIcon(MCExecContext& ctxt, uinteger_t p_id)
 void MCStack::GetOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 {
 	if (parent != nil && !MCdispatcher -> ismainstack(this))
-		parent -> GetLongId(ctxt, r_owner);
+		parent -> GetLongId(ctxt, 0, r_owner);
 }
 
 void MCStack::GetMainStack(MCExecContext& ctxt, MCStringRef& r_main_stack)
@@ -2180,3 +2183,30 @@ void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
 {
     m_is_script_only = p_script_only;
 }
+
+// MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+void MCStack::GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename)
+{
+    r_document_filename = MCValueRetain(m_document_filename);
+}
+
+void MCStack::SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename)
+{
+    MCStringRef t_resolved_filename;
+    
+    if (MCStringIsEmpty(p_document_filename))
+    {
+        t_resolved_filename = p_document_filename;
+    }
+    else if (!MCS_resolvepath(p_document_filename, t_resolved_filename))
+    {
+        ctxt . LegacyThrow(EE_DOCUMENTFILENAME_BADFILENAME);
+        return;
+    }
+    
+    MCValueAssign(m_document_filename, t_resolved_filename);
+    
+    updatedocumentfilename();
+
+}
+

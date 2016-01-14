@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -935,22 +935,30 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared prefix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedPrefix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared suffix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedSuffix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,
@@ -970,12 +978,28 @@ bool MCUnicodeFirstIndexOf(const void *p_string, uindex_t p_string_length, bool 
         return false;
     
     // Shortcut for native char - for which we are sure to have only one char to compare, and no composing characters
-    if (p_needle_length == 1 && *(codepoint_t *)p_needle < 0x10)
-    {
-        // if we got here, the string should not have been native.
-        MCAssert(!p_string_native);
-        return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, *(codepoint_t *)p_needle, p_option, r_index);
-    }
+	if (p_needle_length == 1)
+	{
+		codepoint_t t_needle;
+		bool t_ok_fast;
+		if (p_needle_native)
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const char_t *>(p_needle));
+			t_ok_fast = t_needle < 0x80; /* Needle is one ASCII char */
+		}
+		else
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const unichar_t *>(p_needle));
+			t_ok_fast = t_needle < 0xd800; /* Needle is in BMP */
+		}
+
+		if (t_ok_fast)
+		{
+			// if we got here, the string should not have been native.
+			MCAssert(!p_string_native);
+			return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, t_needle, p_option, r_index);
+		}
+	}
     
     // Create filter chains for the strings being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, p_string_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
@@ -2275,7 +2299,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
 							{
                                 // we're still ok if the current source grapheme falls within the appropriate range.
                                 // If not, there may be other options within this pair of brackets
-								if (t_source_cp >= t_lower_limit || t_source_cp <= t_pattern_cp)
+								if (t_source_cp >= t_lower_limit && t_source_cp <= t_pattern_cp)
 									ok = true;
 							}
 						}
@@ -2323,8 +2347,6 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                 // try and match the rest of the source string recursively.
                 while (t_source_filter -> HasData())
                 {
-                    t_source_cp = t_source_filter -> GetNextCodepoint();
-                    
                     uindex_t t_sindex, t_pindex;
                     // if this is a candidate for a match, recurse.
                     if (t_source_cp == t_pattern_cp)
@@ -2356,6 +2378,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                     
                     // if we don't find a match, eat the source codepoint and continue.
                     t_source_filter -> AdvanceCursor();
+                    t_source_cp = t_source_filter -> GetNextCodepoint();
                 }
             }
                 return false;

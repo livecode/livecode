@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -227,18 +227,6 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	GetTextMetricsW(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
 	font->size = size;
-	// MW-2013-12-19: [[ Bug 11606 ]] Use Mac-style metric adjustment in printer (ideal
-	//   layout mode).
-	if (!printer)
-	{
-		font->ascent = MulDiv(tm.tmAscent, 15, 16);
-		font->descent = tm.tmDescent;
-	}
-	else
-	{
-		font -> ascent = size - 1;
-		font -> descent = size * 2 / 14 + 1;
-	}
 	font->printer = printer;
     
     font->m_ascent = tm.tmAscent;

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -263,7 +263,7 @@ Boolean MCScreenDC::open()
 
 	// The System and Input codepages are used to translate input characters.
 	// A keyboard layout will present characters via WM_CHAR in the
-	// input_codepage, while Revolution is running in the system_codepage.
+	// input_codepage, while LiveCode is running in the system_codepage.
 	//
 	system_codepage = GetACP();
 
@@ -319,11 +319,7 @@ Boolean MCScreenDC::close(Boolean force)
 			timeKillEvent(mousetimer);
 	timeEndPeriod(1);
 	opened = 0;
-	if (dnddata != NULL)
-	{
-		dnddata->Release();
-		dnddata = NULL;
-	}
+
 	return True;
 }
 
@@ -420,13 +416,20 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	if (w == NULL)
 		return;
 
+	MCStack *t_stack;
+	t_stack = MCdispatcher -> findstackd(w);
+
 	if (override)
 		ShowWindow((HWND)w->handle.window, SW_SHOWNA);
 	else
-		ShowWindow((HWND)w->handle.window, SW_SHOW);
+		// CW-2015-09-28: [[ Bug 15873 ]] If the stack state is iconic, restore the window minimised.
+		if (t_stack != NULL && t_stack -> getstate(CS_ICONIC))
+			ShowWindow((HWND)w->handle.window, SW_SHOWMINIMIZED);
+		else if (IsIconic((HWND)w->handle.window))
+			ShowWindow((HWND)w->handle.window, SW_RESTORE);
+		else 
+			ShowWindow((HWND)w->handle.window, SW_SHOW);
 
-	MCStack *t_stack;
-	t_stack = MCdispatcher -> findstackd(w);
 	if (t_stack != NULL)
 	{
 		if (t_stack -> getmode() == WM_SHEET || t_stack -> getmode() == WM_MODAL)

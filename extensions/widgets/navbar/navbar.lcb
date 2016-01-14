@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -44,11 +44,12 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
+use com.livecode.library.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata author is "LiveCode"
-metadata version is "1.0.2"
+metadata version is "1.0.3"
 metadata title is "Navigation Bar"
 metadata preferredSize is "320,49"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
@@ -85,6 +86,27 @@ will be added, and set to their defaults - "circle" for the icons, and "New Item
 property navData get getNavData set setNavData
 metadata navData.editor is "com.livecode.pi.navbar"
 metadata navData.label is "Navigation Data"
+
+/*
+Syntax: set the widgetTheme of <widget> to <pWidgetTheme>
+Syntax: get the widgetTheme of <widget>
+
+Summary: The theme of the widget
+
+Parameters:
+pWidgetTheme(enum): The theme of the widget
+-"iOS"
+-"Android(Dark)"
+-"Android(Light)"
+
+Description:
+Use the <widgetTheme> property to set the theme of the widget.
+*/
+property widgetTheme get mWidgetTheme set setWidgetTheme
+metadata widgetTheme.editor is "com.livecode.pi.enum"
+metadata widgetTheme.options is "iOS,Android(Dark),Android(Light)"
+metadata widgetTheme.default is "iOS"
+metadata widgetTheme.label is "Widget Theme"
 
 /*
 Syntax: set the itemStyle of <widget> to <pItemStyle>
@@ -248,18 +270,26 @@ property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
 
 /*
-Syntax: set the <opaqueBackground> of <widget> to {true | false}
-Syntax: get the <opaqueBackground> of <widget>
+Syntax: set the <backgroundOpacity> of <widget> to <pOpacity>
+Syntax: get the <backgroundOpacity> of <widget>
 
-Summary: Whether the background of the navbar is drawn opaque or not
+Summary: The opacity of the background of the navbar
+
+Parameters:
+pOpacity(enum): The opacity of the background
+-"Opaque"
+-"Translucent"
+-"Transparent"
 
 Description:
-Use the <opaqueBackground> property to determine whether objects underneath the navbar are visible or not.
-
+Use the <backgroundOpacity> property to determine whether objects underneath the navbar are visible or not.
 */
-property opaqueBackground get mOpaque set setOpaque
-metadata opaqueBackground.default is "true"
-metadata opaqueBackground.label is "Opaque Background"
+
+property backgroundOpacity get mOpacity set setOpacity
+metadata backgroundOpacity.editor is "com.livecode.pi.enum"
+metadata backgroundOpacity.options is "Opaque,Translucent,Transparent"
+metadata backgroundOpacity.default is "Opaque"
+metadata backgroundOpacity.label is "Background Opacity"
 
 /*
 Syntax: set the <showDivide> of <widget> to {true | false}
@@ -291,6 +321,8 @@ be changed by clicking on the outlined regions, and new items to be added with t
 -- private instance variables
 private variable mNavData as List
 
+private variable mWidgetTheme as String
+
 private variable mSelectedItem as Integer
 private variable mItemStyle as String
 
@@ -311,7 +343,7 @@ private variable mDragData as Array
 
 private variable mHiliteColor as Color
 
-private variable mOpaque as Boolean
+private variable mOpacity as String
 private variable mShowDivide as Boolean
 
 --
@@ -333,11 +365,10 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 
 	put getNavData() into rProperties["items"]
+	put mWidgetTheme into rProperties["theme"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
-	put colorToString(mHiliteColor) into rProperties["hiliteColor"]
-
-	return rProperties
+	put colorToString(mHiliteColor, false) into rProperties["hiliteColor"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -345,6 +376,10 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["selected"] into mSelectedItem
 	put pProperties["itemStyle"] into mItemStyle
 	put stringToColor(pProperties["hiliteColor"]) into mHiliteColor
+
+	if "theme" is among the keys of pProperties then
+    	put pProperties["theme"] into mWidgetTheme
+	end if
 end handler
 
 public handler OnCreate() returns nothing
@@ -391,6 +426,7 @@ public handler OnCreate() returns nothing
 
 	put tNavItems into mNavData
 
+	put "iOS" into mWidgetTheme
 	put 1 into mSelectedItem
 	put the empty array into mDragData
 	put "icons and names" into mItemStyle
@@ -408,7 +444,7 @@ public handler OnCreate() returns nothing
 
 	put color [0, 121/255,1] into mHiliteColor
 
-	put true into mOpaque
+	put "Opaque" into mOpacity
 	put true into mShowDivide
 end handler
 
@@ -426,28 +462,34 @@ public handler OnPaint() returns nothing
 end handler
 
 private handler drawNavBar() returns nothing
-	// background
-	if mOpaque then
-		set the paint of this canvas to getPaint("background","fill")
-		fill getPath("background") on this canvas
+	if mWidgetTheme is "iOS" then
+		drawIos()
+	else if mWidgetTheme contains "Android" then
+		drawAndroid()
 	end if
+end handler
+
+private handler drawIos() returns nothing
+	-- background
+	set the paint of this canvas to getPaint("background",mOpacity)
+	fill getPath("background") on this canvas
 
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
-			-- Draw the text of the nav bar
-			if mItemStyle contains "names" then
-				drawLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"], tX is mSelectedItem)
+		-- Draw the text of the nav bar
+		if mItemStyle contains "names" then
+			drawLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"], tX is mSelectedItem)
+		end if
+
+		if mItemStyle contains "icons" then
+			-- Draw the icon
+			if tX is mSelectedItem then
+				drawIcon(mNavData[tX]["selected_icon_path"], true)
+			else
+				drawIcon(mNavData[tX]["icon_path"], false)
 			end if
 
-			if mItemStyle contains "icons" then
-				-- Draw the icon
-				if tX is mSelectedItem then
-					drawIcon(mNavData[tX]["selected_icon_path"], true)
-				else
-					drawIcon(mNavData[tX]["icon_path"], false)
-				end if
-
-			end if
+		end if
 	end repeat
 
 	-- Draw the top line
@@ -456,6 +498,30 @@ private handler drawNavBar() returns nothing
 		set the stroke width of this canvas to 0
 		stroke getPath("line") on this canvas
 	end if
+end handler
+
+private handler drawAndroid() returns nothing
+	-- background
+	variable tBackground as Path
+	put rectangle path of my bounds into tBackground
+	if mOpacity is "Opaque" or mOpacity is "Translucent" then
+		set the paint of this canvas to getPaint("background", mOpacity)
+		fill tBackground on this canvas
+	end if
+
+	-- border
+	if mOpacity is "Opaque" and mWidgetTheme is "Android(Light)" then
+		set the paint of this canvas to solid paint with color [236/255, 236/255, 235/255]
+		set the stroke width of this canvas to 2
+		stroke tBackground on this canvas
+	end if
+
+	-- icons
+	variable tX as Integer
+	repeat with tX from 1 up to mNavItemCount
+		-- Draw the icon (same whether selected or not)
+		drawAndroidIcon(mNavData[tX]["icon_path"])
+	end repeat
 end handler
 
 private handler drawNavBarEditMode() returns nothing
@@ -533,6 +599,12 @@ private handler drawIcon(in pIconPath as Path, in pSelected as Boolean)
 	else
 		set the paint of this canvas to getPaint("text","fill")
 	end if
+
+	fill pIconPath on this canvas
+end handler
+
+private handler drawAndroidIcon(in pIconPath as Path)
+	set the paint of this canvas to getPaint("icon", mOpacity)
 	fill pIconPath on this canvas
 end handler
 
@@ -628,7 +700,11 @@ private handler updateParameters()
 	if mEditMode then
 		calculateEditModeIconRects()
 	else
-		calculateIconRects()
+		if mWidgetTheme is "iOS" then
+			calculateIosIconRects()
+		else if mWidgetTheme contains "Android" then
+			calculateAndroidIconRects()
+		end if
 	end if
 	put false into mRecalculate
 end handler
@@ -668,7 +744,7 @@ private handler calculateEditModeIconRects() returns nothing
 		put tLabelRight + kEditModePaddingUnit into tLeft
 
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["icon_path"]
 		put tIconRect into mNavData[tX]["icon_rect"]
 
@@ -682,7 +758,7 @@ private handler calculateEditModeIconRects() returns nothing
 
 		add tLineHeight to tLeft
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["selected_icon_path"]
 		put tIconRect into mNavData[tX]["selected_icon_rect"]
 
@@ -695,20 +771,20 @@ private handler calculateEditModeIconRects() returns nothing
 		put mAddIcon into tIconPath
 		add tLineHeight + kEditModePaddingUnit to tLeft
 		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["add_icon_path"]
 		setActionRect("add_icon", tX, tIconRect, addItem, true)
 
 		put mReorderIcon into tIconPath
 		add tLineHeight * tActionFraction + kEditModePaddingUnit to tLeft
 		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["reorder_icon_path"]
 		setActionRect("reorder_icon", tX, tIconRect, reorderItem, false)
 
 		put mDeleteIcon into tIconPath
 		put rectangle [kEditModePaddingUnit, tLineTop + tLineHeight * (1 - tActionFraction) / 2, kEditModePaddingUnit + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mNavData[tX]["delete_icon_path"]
 		setActionRect("delete_icon", tX, tIconRect, deleteItem, true)
 	end repeat
@@ -747,7 +823,7 @@ private handler calculateDragRow(in pY as Real) returns nothing
 		put tLabelRight + kEditModePaddingUnit into tLeft
 
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mDragData["icon_path"]
 
 		if mNavData[mDragData["item"]]["selected_icon"] is not "" then
@@ -756,11 +832,11 @@ private handler calculateDragRow(in pY as Real) returns nothing
 
 		add tLineHeight to tLeft
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
-		setIconPath(tIconRect, tIconPath)
+		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mDragData["selected_icon_path"]
 end handler
 
-private handler calculateIconRects() returns nothing
+private handler calculateIosIconRects() returns nothing
 	// calculate the drawing rects
 	variable tX as Integer
 	variable tIconPath as Path
@@ -786,11 +862,15 @@ private handler calculateIconRects() returns nothing
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
 			else if mItemStyle is "icons" then
 				variable tIconSpacing
-				put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                if mNavItemCount is 1 then
+                    put 0 into tIconSpacing
+                else
+                    put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                end if
 				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
 			end if
 
-			setIconPath(tIconRect, tIconPath)
+			constrainPathToRect(tIconRect, tIconPath)
 			put tIconPath into mNavData[tX]["icon_path"]
 			put tIconRect into mNavData[tX]["icon_rect"]
 
@@ -804,13 +884,54 @@ private handler calculateIconRects() returns nothing
 				put path mNavData[tX]["selected_icon"] into tIconPath
 			end if
 
-			setIconPath(tIconRect, tIconPath)
+			constrainPathToRect(tIconRect, tIconPath)
 			put tIconPath into mNavData[tX]["selected_icon_path"]
 			put tIconRect into mNavData[tX]["selected_icon_rect"]
 		end if
 	end repeat
 end handler
 
+private handler calculateAndroidIconRects() returns nothing
+
+	variable tX as Integer
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+
+	repeat with tX from 1 up to mNavItemCount
+		-- on Android, navbar always displays icons only
+
+		-- Ensure the icon name has been resolved into a path
+		if mNavData[tX]["icon_name"] is not "" then
+			put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
+		end if
+
+		put path mNavData[tX]["icon"] into tIconPath
+
+		-- calculate the drawing rect
+		variable tCenter
+		put tX*(mWidth/(mNavItemCount + 1)) into tCenter
+		put rectangle [tCenter - mHeight/4, mHeight/4, tCenter + mHeight/4, 3*mHeight/4] into tIconRect
+
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mNavData[tX]["icon_path"]
+		put tIconRect into mNavData[tX]["icon_rect"]
+
+		-- Ensure the selected icon name has been resolved into a path
+		if mNavData[tX]["selected_icon_name"] is not empty then
+			put iconSVGPathFromName(mNavData[tX]["selected_icon_name"]) into mNavData[tX]["selected_icon"]
+		end if
+
+		-- If there is no selected icon then just use the non-selected icon
+		if mNavData[tX]["selected_icon"] is not "" then
+			put path mNavData[tX]["selected_icon"] into tIconPath
+		end if
+
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mNavData[tX]["selected_icon_path"]
+		put tIconRect into mNavData[tX]["selected_icon_rect"]
+
+	end repeat
+end handler
 
 public handler OnGeometryChanged()
 	put true into mRecalculate
@@ -862,56 +983,13 @@ private handler yPosToLine(in pY as Number) returns Integer
 	return the floor of (pY / tLineHeight) + 1
 end handler
 
---Translate and scale xPath so that it fits within pTargetRect
-private handler setIconPath(in pTargetRect as Rectangle, inout xPath as Path)
-
-	// Scale the icon
-	variable tBounds
-	put the bounding box of xPath into tBounds
-
-	// Scale appropriately
-	variable tXScale as Real
-	variable tYScale as Real
-
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-
-    scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-
-    put the bounding box of xPath into tBounds
-
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	// align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
-end handler
-
 public handler setHiliteColor(in pColor as String) returns nothing
 	put stringToColor(pColor) into mHiliteColor
 	redraw all
 end handler
 
 public handler getHiliteColor() returns String
-	return colorToString(mHiliteColor)
+	return colorToString(mHiliteColor, false)
 end handler
 
 public handler getPath(in pObject as String) returns Path
@@ -928,31 +1006,65 @@ public handler getPath(in pObject as String) returns Path
 end handler
 
 public handler getPaint(pLocation, pType) returns Paint
-	if pLocation is "background" then
-		if pType is "fill" then
-			return solid paint with color [246/255, 246/255, 247/255]
-		else if pType is "drag-fill" then
-			return solid paint with color [200/255, 200/255, 200/255]
-		else if pType is "stroke" then
-			return solid paint with color [0, 0, 0, 0.2]
-		else if pType is "editmode-stroke" then
-			return solid paint with color [193/255, 193/255, 193/255]
-		else if pType is "additem" then
-			return solid paint with color [0, 122/255 ,1]
-		else if pType is "deleteitem" then
-			return solid paint with color [240/255, 0 ,0]
-		else if pType is "editmode-fill" then
-			return solid paint with color [1, 1, 1]
+	if mWidgetTheme is "Android(Dark)" then
+		if pLocation is "background" then
+			if pType is "Opaque" then
+				return solid paint with color [0, 0, 0]
+			else if pType is "Translucent" then
+				return solid paint with color [0, 0, 0, 0.5]
+			end if
+		else if pLocation is "icon" then
+			return solid paint with color [1, 1, 1, 0.9]
 		end if
-	else if pLocation is "text" then
-		if pType is "fill" then
-			return solid paint with color [146/255, 146/255, 146/255]
-		else if pType is "selected-fill" then
-			return solid paint with mHiliteColor
-		else if pType is "additem" or pType is "deleteitem" then
-			return solid paint with color [1, 1, 1]
-		else if pType is "editmode-fill" then
-			return solid paint with color [0, 0, 0]
+
+	else if mWidgetTheme is "Android(Light)" then
+		if pLocation is "background" then
+			if pType is "Opaque" then
+				return solid paint with color [1, 1, 1]
+			else if pType is "Translucent" then
+				return solid paint with color [0, 0, 0, 0.149]
+			end if
+		else if pLocation is "icon" then
+			if pType is "Opaque" then
+				return solid paint with color [147/255, 147/255, 147/255]
+			else if pType is "Translucent" then
+				return solid paint with color [147/255, 147/255, 147/255, 0.81]
+			else if pType is "Transparent" then
+				return solid paint with color [147/255, 147/255, 147/255, 0.97]
+			end if
+		end if
+
+	else
+		if pLocation is "background" then
+			if pType is "Opaque" then
+				return solid paint with color [246/255, 246/255, 247/255]
+			else if pType is "Translucent" then
+				return solid paint with color [246/255, 246/255, 247/255, 0.5]
+			else if pType is "Transparent" then
+				return solid paint with color [246/255, 246/255, 247/255, 0]
+			else if pType is "drag-fill" then
+				return solid paint with color [200/255, 200/255, 200/255]
+			else if pType is "stroke" then
+				return solid paint with color [0, 0, 0, 0.2]
+			else if pType is "editmode-stroke" then
+				return solid paint with color [193/255, 193/255, 193/255]
+			else if pType is "additem" then
+				return solid paint with color [0, 122/255 ,1]
+			else if pType is "deleteitem" then
+				return solid paint with color [240/255, 0 ,0]
+			else if pType is "editmode-fill" then
+				return solid paint with color [1, 1, 1]
+			end if
+		else if pLocation is "text" then
+			if pType is "fill" then
+				return solid paint with color [146/255, 146/255, 146/255]
+			else if pType is "selected-fill" then
+				return solid paint with mHiliteColor
+			else if pType is "additem" or pType is "deleteitem" then
+				return solid paint with color [1, 1, 1]
+			else if pType is "editmode-fill" then
+				return solid paint with color [0, 0, 0]
+			end if
 		end if
 	end if
 
@@ -1174,25 +1286,25 @@ private handler defaultNavArray() returns Array
 end handler
 
 private handler navDataDifferent(in pLeft as List, in pRight as List) returns Boolean
+    if the number of elements in pLeft is not the number of elements in pRight then
+        return true
+    end if
+
 	variable tIndex as Number
 	repeat with tIndex from 1 up to the number of elements in pLeft
-			if tIndex > the number of elements in pRight then
-				return true
-			end if
+        if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
+            return true
+        end if
 
-			if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
-				return true
-			end if
+        if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+            return true
+        end if
 
-			if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
-				return true
-			end if
-
-			if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
-				if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
-					return true
-				end if
-			end if
+        if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
+            if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
+                return true
+            end if
+        end if
 	end repeat
 	return false
 end handler
@@ -1210,6 +1322,30 @@ private handler setNavData(in pNavData as Array)
 		post "navDataChanged"
 		redraw all
 	end if
+end handler
+
+constant kNavbarThemeIos is "iOS"
+constant kNavbarThemeAndroidDark is "Android(Dark)"
+constant kNavbarThemeAndroidLight is "Android(Light)"
+
+private handler setWidgetTheme(in pWidgetTheme as String)
+
+	variable tThemeList as List
+	variable tInList as Boolean
+
+	put [kNavbarThemeIos, kNavbarThemeAndroidDark, kNavbarThemeAndroidLight] into tThemeList
+	put pWidgetTheme is in tThemeList into tInList
+
+	if tInList is false then
+		throw "invalid widget theme"
+	end if
+
+	if pWidgetTheme is mWidgetTheme then
+		return
+	end if
+
+	put pWidgetTheme into mWidgetTheme
+	redraw all
 end handler
 
 private handler getNavNames() returns String
@@ -1314,12 +1450,27 @@ private handler getDesiredHeight() returns Number
 	end if
 end handler
 
-private handler setOpaque(in pOpaque as Boolean) returns nothing
-	if pOpaque is mOpaque then
+constant kOpaqueBackground is "Opaque"
+constant kTranslucentBackground is "Translucent"
+constant kTransparentBackground is "Transparent"
+
+private handler setOpacity(in pOpacity as String) returns nothing
+
+	variable tOpacityList as List
+	variable tInList as Boolean
+
+	put [kOpaqueBackground, kTranslucentBackground, kTransparentBackground] into tOpacityList
+	put pOpacity is in tOpacityList into tInList
+
+	if tInList is false then
+		throw "invalid background opacity"
+	end if
+
+	if pOpacity is mOpacity then
 		return
 	end if
 
-	put pOpaque into mOpaque
+	put pOpacity into mOpacity
 	redraw all
 end handler
 
@@ -1451,59 +1602,5 @@ private handler addEditableField(in pElement as Array)
 	-- Work around the fact that LCB currently doesn't have editable text fields
 	post "editField" with [formatRectAsString(pElement["rect"]), pElement["number"]]
 end handler
-
--- this handler converts a string of numbers to an RGBA color
-private handler stringToColor(in pString as String) returns Color
-	variable tRed as Real
-	variable tGreen as Real
-	variable tBlue as Real
-	variable tAlpha as Real
-
-	variable tComponentList as List
-	split pString by "," into tComponentList
-
-	variable tComponentCount
-	put the number of elements in tComponentList into tComponentCount
-	if tComponentCount is not 3 and tComponentCount is not 4 then
-		// Invalid number of components detected
-		throw "Invalid color"
-	end if
-
-	put (element 1 of tComponentList) parsed as number into tRed
-	put (element 2 of tComponentList) parsed as number into tGreen
-	put (element 3 of tComponentList) parsed as number into tBlue
-
-	if tComponentCount is 4 then
-		put (element 4 of tComponentList) parsed as number into tAlpha
-	else
-		put 255 into tAlpha
-	end if
-
-	return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-end handler
-----------
-
--- this handler converts an RGBA color to a string
-private handler colorToString(in pColor as Color) returns String
-	return stripZeros((the rounded of ((the red of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the green of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the blue of pColor) * 255)) formatted as string) & "," & stripZeros((the rounded of ((the alpha of pColor) * 255)) formatted as string)
-end handler
-----------
-
--- this handler strips the zeros when a integer is formatted as a string
-private handler stripZeros(in tString as String) returns String
-	if tString contains "." then
-		variable tCount as Integer
-		repeat while ((the last char of tString) is in ".0")
-			if the last char of tString is "." then
-				delete the last char of tString
-				exit repeat
-			else
-				delete the last char of tString
-			end if
-		end repeat
-	end if
-	return tString
-end handler
-----------
 
 end widget

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -98,7 +98,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_LIVE_RESIZING, Bool, MCStack, LiveResizing)
 	DEFINE_RW_OBJ_PROPERTY(P_SYSTEM_WINDOW, Bool, MCStack, SystemWindow)
 	DEFINE_RW_OBJ_PROPERTY(P_METAL, Bool, MCStack, Metal)
-	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, Shadow)
+	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, WindowShadow)
 	DEFINE_RW_OBJ_PROPERTY(P_RESIZABLE, Bool, MCStack, Resizable)
 
     // AL-2014-05-26: [[ Bug 12510 ]] Stack decoration synonyms not implemented in 7.0
@@ -125,7 +125,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_IDS, String, MCStack, BackgroundIds)
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_NAMES, String, MCStack, SharedGroupNames)
 	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCStack, SharedGroupIds)
-	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfUInt, MCStack, CardIds)
+	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_IDS, LinesOfLooseUInt, MCStack, CardIds)
 	DEFINE_RO_OBJ_LIST_PROPERTY(P_CARD_NAMES, LinesOfString, MCStack, CardNames)
 
 	DEFINE_RW_OBJ_PROPERTY(P_EDIT_BACKGROUND, Bool, MCStack, EditBackground)
@@ -198,6 +198,9 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // MERG-2015-08-31: [[ ScriptOnly ]] Add stack scriptOnly property
     DEFINE_RW_OBJ_PROPERTY(P_SCRIPT_ONLY, Bool, MCStack, ScriptOnly)
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+    DEFINE_RW_OBJ_PROPERTY(P_DOCUMENT_FILENAME, String, MCStack, DocumentFilename)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -291,6 +294,9 @@ MCStack::MCStack()
     
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
+    m_document_filename = MCValueRetain(kMCEmptyString);
 
 	m_view_need_redraw = false;
 	m_view_need_resize = false;
@@ -499,6 +505,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	m_view_need_resize = sref.m_view_need_resize;
 
     m_attachments = nil;
+    
+    // MERG-2015-10-12: [[ DocumentFilename ]] No document filename to begin with
+    m_document_filename = MCValueRetain(kMCEmptyString);
     
 	view_copy(sref);
 }
@@ -740,8 +749,7 @@ void MCStack::close()
 		MCacptr->setmessagestack(NULL);
 	if (state & CS_ICONIC)
 	{
-		MCiconicstacks--;
-		state &= ~CS_ICONIC;
+		seticonic(false);
 	}
 	if (MCmousestackptr == this)
 	{

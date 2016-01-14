@@ -4,7 +4,7 @@ Type: operator
 
 Syntax: bitNot <number> 
 
-Summary: Performs a "bitwise not" <operation> on the <binary> representation of a number.
+Summary: Performs a "bitwise not" <operation> on the <binary> representation of a number as an unsigned, 32-bit integer
 
 Introduced: 1.0
 
@@ -13,10 +13,10 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-bitNot 1 -- evaluates to 0
+bitNot 1 -- evaluates to 4294967294
 
 Example:
-bitNot 14 -- in binary: bitNot 1110; evaluates to 0001; converted to 1
+bitNot 14 -- in binary: bitNot 0000000000001110; evaluates to 1111111111110001; converted to 4294967281
 
 Parameters:
 number: A number, or an expression that evaluates to a number, between zero and 4,294,967,295 (2^32 - 1).

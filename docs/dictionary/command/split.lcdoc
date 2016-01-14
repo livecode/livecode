@@ -12,6 +12,8 @@ Summary: Transforms a list into an <array>.
 
 Introduced: 1.1
 
+Changed: 8.0.0
+
 OS: mac,windows,linux,ios,android
 
 Platforms: desktop,server,web,mobile
@@ -25,10 +27,10 @@ split tData by comma
 // tData[3] = "three"
 
 Example:
-put "one,two,three" into line 1 of tData
-put "ben,fraser,elanor" into line 2 of tData
-put "apple,orange,grape" into line 3 of tData
-set the rowdel to comma
+put "one;;two;;three" into line 1 of tData
+put "ben;;fraser;;elanor" into line 2 of tData
+put "apple;;orange;;grape" into line 3 of tData
+set the columndel to ";;"
 split tData by column
 // RESULT
 // tData[1] = 
@@ -46,12 +48,14 @@ split tData by column
 
 Parameters:
 variable: Any variable that is not an array
-primaryDelimiter: A character or an expression that evaluates to a character.
-secondaryDelimiter: A character or an expression that evaluates to a character.
+primaryDelimiter: A string of <character|characters> or an expression that evaluates to a string of <character|characters>.
+secondaryDelimiter: A string of <character|characters> or an expression that evaluates to a string of <character|characters>.
 
 The result: If the first form of the <split> command is used, the parts that become elements are defined by the <primaryDelimiter>. For example, if the <primaryDelimiter> is <return>, each line of the variable becomes an element in the resulting array.The resulting array looks like this:. If the second form of the <split> command is used, the string is split into elements of an array where each element using the <rowDelimiter> or <columnDelimiter>, where each element of the resulting array is a row or column of the string respectively.
 
 Description:
+From LiveCode 7.0, you can pass a string of <character|characters> as a column and row delimiter (it is no longer restricted to a single character).  From LiveCode 8.0, you can split by empty delimiters, which are treated as never appearing in the input string.
+
 Use the <split> command to place a list in an array so you can easily address each part of the list.
 
 The <split> command separates the parts of the variable into elements of an array. After the command is finished executing, the variable specified is an array. 
@@ -64,10 +68,10 @@ If you use the as set form the <split> command converts the passed variable to a
  
 For example, the following statements create an array: 
  
-put "A apple,B bottle,C cradle" into myVariable 
-split myVariable by comma and space 
+put "A apple;;B bottle;;C cradle" into myVariable 
+split myVariable by ";;" and space 
  
-KEY	VALUE 
+	KEY	VALUE 
 	A	apple 
 	B	bottle 
 	C	cradle 

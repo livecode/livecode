@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -110,7 +110,7 @@ public handler TestDivide()
 	test "divide (operator, int)" when 30 / tInt = 6
 
 	divide tInt by 2
-	test diagnostic "Expecting floor"
+	test diagnostic "Expecting trunc"
 	broken test "divide (syntax, int)" when tInt = 2 because "bug 14592"
 
 	variable tReal as Real
@@ -126,11 +126,46 @@ public handler TestDivide()
 	test "divide (operator, number)" when tNumber / 8 = 2.5
 end handler
 
-public handler TestMod()
-	test "mod (+ve, +ve)" when 10 mod 3 = 1
-	broken test "mod (-ve, +ve)" when -10 mod 3 = 2 because "bug 14593"
-	broken test "mod (+ve, -ve)" when 10 mod -3 = -2 because "bug 14593"
-	test "mod (-ve, -ve)" when -10 mod -3 = -1
+private handler ModInvariantDiagnostic(in pX, in pY, in pZ, in pR)
+	test diagnostic pX formatted as string && "mod" && pY formatted as string
+	test diagnostic pY formatted as string && "*" && \
+		pZ formatted as string && "+" && \
+		pR formatted as string && "=" && \
+		(pY * pZ + pR) formatted as string
+end handler
+
+private handler ModInvariantInteger(in pX as Integer, in pY as Integer) \
+		returns Boolean
+	variable tZ as Integer
+	variable tR as Integer
+	put (pX / pY) into tZ
+	put (pX mod pY) into tR
+
+	ModInvariantDiagnostic(pX, pY, tZ, tR)
+	return (pY * tZ + tR) is pX
+end handler
+
+private handler ModInvariantReal(in pX as Real, in pY as Real) \
+		returns Boolean
+	variable tZ as Real
+	variable tR as Real
+	put the trunc of (pX / pY) into tZ -- because there is no "div" operator
+	put (pX mod pY) into tR
+
+	ModInvariantDiagnostic(pX, pY, tZ, tR)
+	return (pY * tZ + tR) is pX
+end handler
+
+public handler TestModInteger()
+	broken test "mod int (+ve, +ve)" when ModInvariantInteger(10, 3) because "bug 14592"
+	broken test "mod (-ve, +ve)" when ModInvariantInteger(-10, 3) because "bug 14592"
+	broken test "mod int (+ve, -ve)" when ModInvariantInteger(10, -3) because "bug 14592"
+	broken test "mod int (-ve, -ve)" when ModInvariantInteger(-10, -3) because "bug 14592"
+
+	test "mod real (+ve, +ve)" when ModInvariantReal(16, 3.75)
+	test "mod real (-ve, +ve)" when ModInvariantReal(-16, 3.75) 
+	test "mod real (+ve, -ve)" when ModInvariantReal(16, -3.75)
+	test "mod real (-ve, -ve)" when ModInvariantReal(-16, -3.75)
 end handler
 
 public handler TestWrap()
@@ -173,14 +208,9 @@ public handler TestLessThanEqual()
 end handler
 
 public handler TestFormatString()
-	test diagnostic "TODO -1 formatted as string (bug 14594)"
-	broken test "format as string (int)" when (-1) formatted as string is "-1" because "bug 14546"
+	test "format as string (int)" when (-1) formatted as string is "-1"
 
-	variable tNum
-	put (-1.0) formatted as string into tNum
-	test diagnostic "TODO test full string, not just prefix"
-	test diagnostic tNum
-	test "format as string (real)" when tNum begins with "-1."
+	test "format as string (real)" when (-1.1) formatted as string is "-1.1"
 end handler
 
 public handler TestParseString()

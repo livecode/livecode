@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -461,40 +461,3 @@ uint32_t coretext_get_font_size(void *p_font)
 {
     return CTFontGetSize((CTFontRef)p_font);
 }
-
-#ifdef _MACOSX
-ATSUFontID coretext_font_to_atsufontid(void *p_font)
-{
-    bool t_success;
-    t_success = true;
-    
-    CTFontRef t_ctfont;
-    t_ctfont = NULL;
-    if (t_success)
-    {
-        t_ctfont = (CTFontRef)p_font;
-        t_success = t_ctfont != NULL;
-    }
-    
-    char t_name[256];
-    if (t_success)
-    {
-        CFStringRef t_cfname;
-        t_cfname = CTFontCopyPostScriptName(t_ctfont);
-        t_success = t_cfname != NULL && CFStringGetCString(t_cfname, t_name, 256, kCFStringEncodingMacRoman);
-        if (t_cfname != NULL)
-            CFRelease(t_cfname);
-    }
-    
-    ATSUFontID t_font_id;
-    t_font_id = 0;
-    if (t_success)
-    {
-        uint32_t t_name_length;
-        t_name_length = MCCStringLength(t_name);
-        t_success = ATSUFindFontFromName(t_name, t_name_length, kFontPostscriptName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr;
-    }
-    
-    return t_font_id;
-}
-#endif

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -280,6 +280,8 @@ hash_t MCHashDouble(double d)
 MC_DLLEXPORT_DEF
 hash_t MCHashBytes(const void *p_bytes, size_t length)
 {
+	MCAssert(nil != p_bytes || 0 == length);
+
 	uint8_t *bytes = (uint8_t *)p_bytes;
 
     /* The ELF hash algorithm, used in the ELF object file format */
@@ -309,6 +311,7 @@ hash_t MCHashBytes(const void *p_bytes, size_t length)
 MC_DLLEXPORT_DEF
 hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
 {
+	MCAssert(p_bytes != nil || length == 0);
     MCAssert((length % 4) == 0);
     uint8_t *bytes = (uint8_t *)p_bytes;
     

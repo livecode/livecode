@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -28,6 +28,7 @@ extern int IsDependencyCompile(void);
 
 static int s_error_count;
 int s_verbose_level;
+int s_is_werror_enabled;
 
 void InitializeReports(void)
 {
@@ -162,9 +163,16 @@ static void _Warning(long p_position, const char *p_message)
 {
     if (IsDependencyCompile())
         return;
-    
-    _PrintPosition(p_position);
-    fprintf(stderr, "warning: %s\n", p_message);
+
+    if (s_is_werror_enabled)
+    {
+        _Error(p_position, p_message);
+    }
+    else
+    {
+        _PrintPosition(p_position);
+        fprintf(stderr, "warning: %s\n", p_message);
+    }
 }
 
 static void _ErrorS(long p_position, const char *p_message, const char *p_string)
@@ -173,6 +181,7 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     GetColumnOfPosition(p_position, &t_column);
     GetRowOfPosition(p_position, &t_row);
     _PrintPosition(p_position);
+    fprintf(stderr, "error: ");
     fprintf(stderr, p_message, p_string);
     fprintf(stderr, "\n");
     s_error_count += 1;
@@ -184,13 +193,20 @@ static void _WarningS(long p_position, const char *p_message, const char *p_stri
     
     if (IsDependencyCompile())
         return;
-    
-    GetColumnOfPosition(p_position, &t_column);
-    GetRowOfPosition(p_position, &t_row);
-    _PrintPosition(p_position);
-    fprintf(stderr, "warning: ");
-    fprintf(stderr, p_message, p_string);
-    fprintf(stderr, "\n");
+
+    if (s_is_werror_enabled)
+    {
+       _ErrorS(p_position, p_message, p_string);
+    }
+    else
+    {
+        GetColumnOfPosition(p_position, &t_column);
+        GetRowOfPosition(p_position, &t_row);
+        _PrintPosition(p_position);
+        fprintf(stderr, "warning: ");
+        fprintf(stderr, p_message, p_string);
+        fprintf(stderr, "\n");
+    }
 }
 
 static void _ErrorI(long p_position, const char *p_message, NameRef p_name)
@@ -304,6 +320,10 @@ DEFINE_ERROR(ExitRepeatOutOfContext, "'exit repeat' must appear within a repeat"
 DEFINE_ERROR(NoReturnTypeSpecifiedForForeignHandler, "Foreign handlers must specify a return type")
 DEFINE_ERROR(NoTypeSpecifiedForForeignHandlerParameter, "Foreign handler parameters must be typed")
 
+DEFINE_ERROR(ConstantArrayKeyIsNotStringLiteral, "Array keys must be strings")
+DEFINE_ERROR(ListExpressionTooLong, "List expressions can have at most 254 elements")
+DEFINE_ERROR(ArrayExpressionTooLong, "Array expressions can have at most 127 keys")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \
@@ -315,7 +335,6 @@ DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no ni
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
-DEFINE_WARNING(UsingAsForHandlerReturnTypeDeprecated, "Deprecated syntax: use 'returns <Type>'")
 DEFINE_WARNING(UndefinedConstantDeprecated, "Deprecated keyword: use 'nothing' rather than 'undefined'");
 DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
 

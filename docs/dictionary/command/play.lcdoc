@@ -54,6 +54,6 @@ On Unix systems, the "xanim" program must be located in a directory in the PATH 
 
   put newPath into $PATH
 
-References: looping (property), dontRefresh (property), playRate (property), showSelection (property), frameCount (property), playLoudness (property), callbacks (property), currentTime (property), playDestination (property), playStarted (message), playStopped (message), stop (command), prepare (command), import (command), start (command), beep (command), revStopAnimation (command), QTVersion (function), result (function), MCISendString (function), function (control_st), Unix (glossary), current card (glossary), message (glossary), command (glossary), return (glossary), execute (glossary)
+References: looping (property), dontRefresh (property), playRate (property), showSelection (property), frameCount (property), playLoudness (property), callbacks (property), currentTime (property), playDestination (property), playStarted (message), playStopped (message), stop (command), prepare (command), import (command), start (command), beep (command), revStopAnimation (command), QTVersion (function), result (function), MCISendString (function), function (control_st), Unix (glossary), current card (glossary), message (glossary), command (glossary), return (glossary), execute (glossary), iphoneSetAudioCategory (command)
 
 Tags: multimedia

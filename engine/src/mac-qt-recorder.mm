@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -43,6 +43,8 @@
 #import <sys/stat.h>
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef FEATURE_QUICKTIME
 
 class MCQTSoundRecorder;
 
@@ -489,8 +491,10 @@ void MCQTSoundRecorder::GetASBD(AudioStreamBasicDescription &r_description)
             break;
         case kAudioFormatMPEG4AAC_LD:
         case kAudioFormatMPEG4AAC_ELD:
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
         case kAudioFormatMPEG4AAC_ELD_SBR:
         case kAudioFormatMPEG4AAC_ELD_V2:
+#endif
             if (m_configuration . sample_rate < 16)
                 r_description . mSampleRate = 16000;
             r_description . mFramesPerPacket = 1 << 9;
@@ -857,12 +861,21 @@ double MCQTSoundRecorder::GetLoudness()
     
     MCMemoryDeleteArray(t_levels);
     
-    return MCU_min(t_loudness * 100, 100);
+    return MCU_min(t_loudness * 100.0, 100.0);
 }
 
 MCQTSoundRecorder *MCQTSoundRecorderCreate(void)
 {
     return new MCQTSoundRecorder;
 }
+
+#else   /* ifdef FEATURE_QUICKTIME */
+
+class MCQTSoundRecorder* MCQTSoundRecorderCreate()
+{
+    return NULL;
+}
+
+#endif
 
 ////////////////////////////////////////////////////////

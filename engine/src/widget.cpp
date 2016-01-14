@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -54,6 +54,8 @@
 
 #include "dispatch.h"
 #include "graphics_util.h"
+
+#include "native-layer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -274,7 +276,12 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 		(getflag(F_DISABLED) && (getstack() -> gettool(this) == T_BROWSE)))
 		return False;
 	
-	if (getstack() -> gettool(this) != T_BROWSE)
+	if (getstack() -> gettool(this) != T_BROWSE ||
+#ifdef WIDGETS_HANDLE_DND
+        false)
+#else
+        MCdispatcher -> isdragtarget())
+#endif
 		return MCControl::mfocus(p_x, p_y);
 	
 	// Update the mouse loc.
@@ -289,7 +296,12 @@ Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 
 void MCWidget::munfocus(void)
 {
-	if (getstack() -> gettool(this) != T_BROWSE)
+	if (getstack() -> gettool(this) != T_BROWSE ||
+#ifdef WIDGETS_HANDLE_DND
+        false)
+#else
+        MCdispatcher -> isdragtarget())
+#endif
 	{
 		MCControl::munfocus();
 		return;
@@ -366,7 +378,11 @@ static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
             /* UNCHECKED */ MCNameCreateWithCString(factor_table[i] . token, r_name);
             return;
         }
-    
+	
+	extern bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name);
+	if (lookup_property_override_name(p_which, r_name))
+		return;
+
     assert(false);
 }
 
@@ -436,8 +452,10 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_ABBREV_OWNER:
 		case P_LONG_OWNER:
 		case P_PROPERTIES:
+		case P_CUSTOM_PROPERTIES:
 		case P_CUSTOM_PROPERTY_SET:
 		case P_CUSTOM_PROPERTY_SETS:
+        case P_CUSTOM_KEYS:
 		case P_INK:
 		case P_CANT_SELECT:
 		case P_BLEND_LEVEL:
@@ -539,8 +557,10 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_ABBREV_OWNER:
 		case P_LONG_OWNER:
 		case P_PROPERTIES:
+		case P_CUSTOM_PROPERTIES:
 		case P_CUSTOM_PROPERTY_SET:
 		case P_CUSTOM_PROPERTY_SETS:
+        case P_CUSTOM_KEYS:
 		case P_INK:
 		case P_CANT_SELECT:
 		case P_BLEND_LEVEL:
@@ -654,6 +674,14 @@ void MCWidget::layerchanged()
     MCwidgeteventmanager -> event_layerchanged(this);
 }
 
+void MCWidget::visibilitychanged(bool p_visible)
+{
+    if (m_widget == nil)
+        return;
+    
+    MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+}
+
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
 {
 	return MCControl::handle(p_type, p_method, p_parameters, p_passing_object);
@@ -664,15 +692,15 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 	IO_stat t_stat;
     
 	if ((t_stat = MCObject::load(p_stream, p_version)) != IO_NORMAL)
-		return t_stat;
+		return checkloadstat(t_stat);
     
     MCNewAutoNameRef t_kind;
     if ((t_stat = IO_read_nameref_new(&t_kind, p_stream, true)) != IO_NORMAL)
-        return t_stat;
+        return checkloadstat(t_stat);
     
     MCAutoValueRef t_rep;
     if ((t_stat = IO_read_valueref_new(&t_rep, p_stream)) != IO_NORMAL)
-        return t_stat;
+        return checkloadstat(t_stat);
     
     if (t_stat == IO_NORMAL)
     {
@@ -686,13 +714,19 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
     }
     
 	if ((t_stat = loadpropsets(p_stream, p_version)) != IO_NORMAL)
-		return t_stat;
+		return checkloadstat(t_stat);
     
-    return t_stat;
+    return checkloadstat(t_stat);
 }
 
-IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
+IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
+	/* If the file format doesn't support widgets, skip the widget */
+	if (p_version < 8000)
+	{
+		return IO_NORMAL;
+	}
+
     // Make the widget generate a rep.
     MCAutoValueRef t_rep;
     if (m_widget != nil)
@@ -711,7 +745,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
         return t_stat;
     
     // Save the object state.
-	if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext)) != IO_NORMAL)
+    if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return t_stat;
     
     // Now the widget kind.
@@ -722,7 +756,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
     if ((t_stat = IO_write_valueref_new(*t_rep, p_stream)) != IO_NORMAL)
         return t_stat;
     
-    if ((t_stat = savepropsets(p_stream)) != IO_NORMAL)
+    if ((t_stat = savepropsets(p_stream, p_version)) != IO_NORMAL)
         return t_stat;
     
     // We are done.
@@ -868,6 +902,44 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
+}
+
+bool MCWidget::GetNativeView(void *&r_view)
+{
+	if (m_native_layer == nil)
+		return false;
+	
+	return m_native_layer->GetNativeView(r_view);
+}
+
+bool MCWidget::SetNativeView(void *p_view)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCNativeLayer *t_layer;
+	t_layer = nil;
+	
+	if (t_success && p_view != nil)
+	{
+		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
+		t_success = t_layer != nil;
+	}
+	
+	if (t_success)
+	{
+		if (m_native_layer != nil)
+			delete m_native_layer;
+		
+		m_native_layer = t_layer;
+		if (opened && m_native_layer != nil)
+		{
+			m_native_layer->OnOpen();
+			m_native_layer->OnAttach();
+		}
+	}
+	
+	return t_success;
 }
 
 MCWidgetRef MCWidget::getwidget(void) const

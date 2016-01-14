@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -190,10 +190,14 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 	
 	if (t_success)
 	{
-		MCHarfbuzzSkiaFace *t_hb_sk_face;
-		t_hb_sk_face = (MCHarfbuzzSkiaFace *)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
-		if (t_hb_sk_face != nil)
+        MCHarfbuzzSkiaFace *t_hb_sk_face;
+        MCHarfbuzzSkiaFace **t_hb_sk_face_ptr;
+        // IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
+        //    instead of its contents.
+        t_hb_sk_face_ptr = (MCHarfbuzzSkiaFace **)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
+        if (t_hb_sk_face_ptr != nil)
 		{
+            t_hb_sk_face = *t_hb_sk_face_ptr;
             // AL-2014-10-27: [[ Bug 13802 ]] Make sure to set the size when we retrieve the cached face
             t_hb_sk_face -> skia_face -> size = p_size;
 			MCMemoryDelete(t_key);
@@ -214,7 +218,9 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
         t_hb_sk_face -> skia_face = t_face;
         p_typeface -> ref();
         
-        //MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), &t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace*));
+        // IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
+        //    instead of its contents.
+        MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), &t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace*));
         return t_hb_sk_face;
 	}
 	
@@ -309,7 +315,7 @@ void shape(const unichar_t* p_text, uindex_t p_char_count, MCGPoint p_location, 
             // TODO: This currently seems to return nil all the time.
             if (t_fallback != nil)
             {
-                MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . ascent, p_font . descent, p_font . ideal);
+                MCGFont t_font = MCGFontMake(t_fallback, p_font . size, p_font . fixed_advance, p_font . m_ascent, p_font . m_descent, p_font . m_leading, p_font . ideal);
                 
                 MCGlyphRun *t_fallback_runs;
                 uindex_t t_fallback_run_count;

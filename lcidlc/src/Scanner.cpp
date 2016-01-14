@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -410,13 +410,21 @@ static bool TextFileFetch(const char *p_filename, char*& r_data, uint32_t& r_dat
 	
 	uint32_t t_file_size;
 	t_file_size = 0;
+    
 	if (t_success)
-	{
-		fseek(t_stream, 0, SEEK_END);
-		t_file_size = ftell(t_stream);
-		fseek(t_stream, 0, SEEK_SET);
-	}
-	
+        t_success = fseek(t_stream, 0, SEEK_END) == 0;
+    
+    if (t_success)
+    {
+        long t_size;
+        t_size = ftell(t_stream);
+        t_file_size = (uint32_t) t_size;
+        t_success = (t_size >= 0);
+    }
+        
+    if (t_success)
+        t_success = fseek(t_stream, 0, SEEK_SET) == 0;
+    
 	char *t_file_data;
 	t_file_data = nil;
 	if (t_success)

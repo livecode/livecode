@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -552,16 +552,12 @@ Boolean MCScreenDC::open()
 		MCuselibgnome = initialise_weak_link_libgnome();
 		gnome_vfs_init();
 	}
-	
-	// Create the various Transfer data stores....
-	m_DND_store = new MCGdkTransferStore(dpy);
-	m_Clipboard_store = new MCGdkTransferStore(dpy);
-	m_Selection_store = new MCGdkTransferStore(dpy);
     
     // There are also some atoms that we need to set up
     MCworkareaatom = gdk_atom_intern_static_string("_NET_WORKAREA");
     MCclientlistatom = gdk_atom_intern_static_string("_NET_CLIENT_LIST");
     MCstrutpartialatom = gdk_atom_intern_static_string("_NET_WM_STRUT_PARTIAL");
+    MCdndselectionatom = gdk_atom_intern_static_string("XdndSelection");
 
 	return True; 
 }
@@ -578,7 +574,7 @@ Atom  MCScreenDC::make_atom ( char * p_atom_name )
 }
 
 //XDND
-void shutdown_xdnd(void) ;
+extern void MCLinuxDragAndDropFinalize();
 
 Boolean MCScreenDC::close(Boolean force)
 {
@@ -591,7 +587,7 @@ Boolean MCScreenDC::close(Boolean force)
     g_object_unref(gc);
 
 	//XDND
-	shutdown_xdnd();
+	MCLinuxDragAndDropFinalize();
 	
     gdk_display_close(dpy);
 	

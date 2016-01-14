@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1044,9 +1044,7 @@ MCExecEnumTypeInfo *kMCInterfaceGradientFillQualityTypeInfo = &_kMCInterfaceGrad
 void MCGraphic::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color)
 {
     // PM-2015-21-01: When the graphic has a strokegradient, make sure we can set a fore color of the form "rrr,ggg,bbb" (where color.name == nil)
-    bool t_has_color;
-    t_has_color = &color . color != NULL;
-    if (t_has_color && m_stroke_gradient != nil)
+    if (m_stroke_gradient != nil)
     {
         MCGradientFillFree(m_stroke_gradient);
         m_stroke_gradient = nil;
@@ -1058,9 +1056,7 @@ void MCGraphic::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& c
 {
     // PM-2015-21-01: [[ Bug 14399 ]] Remove fillgradient when setting the bg color of a graphic
     // Also make sure we can set a bg color of the form "rrr,ggg,bbb" (where color.name == nil)
-    bool t_has_color;
-    t_has_color = &color . color != NULL;
-    if (t_has_color && m_fill_gradient != nil)
+    if (m_fill_gradient != nil)
     {
         MCGradientFillFree(m_fill_gradient);
         m_fill_gradient = nil;

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -23,25 +23,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 std::map<std::string, ATSFontContainerRef> s_font_map;
 
-bool path_to_fsspec(const char *p_filename, FSSpec* r_fsspec)
+bool path_to_fsref(const char *p_filename, FSRef* r_fsref)
 {
 	bool t_success;
 	t_success = true;
 	
-	FSRef t_ref;
 	if (t_success)
 	{
 		OSStatus t_status;
-		t_status = FSPathMakeRef((const UInt8 *)p_filename, &t_ref, NULL);
+		t_status = FSPathMakeRef((const UInt8 *)p_filename, r_fsref, NULL);
 		if (t_status != noErr)
-			t_success = false;
-	}
-	
-	if (t_success)
-	{
-		OSErr t_error;
-		t_error = FSGetCatalogInfo(&t_ref, kFSCatInfoNone, NULL, NULL, r_fsspec, NULL);
-		if (t_error != noErr)
 			t_success = false;
 	}
 	
@@ -53,19 +44,18 @@ FontLoadStatus FontLoad(const char *p_filename)
 	FontLoadStatus t_status;
 	t_status = kFontLoadStatusSuccess;
 
-	FSSpec t_fsspec;
+	FSRef t_fsref;
 	if (t_status == kFontLoadStatusSuccess)
 	{
-		if (!path_to_fsspec(p_filename, &t_fsspec))
+		if (!path_to_fsref(p_filename, &t_fsref))
 			t_status = kFontLoadStatusNotFound;
 	}
 
-	ATSFontContainerRef t_container;
-	t_container = NULL;
+    ATSFontContainerRef t_container = nil;
 	if (t_status == kFontLoadStatusSuccess)
 	{
 		OSStatus t_os_status;
-		t_os_status = ATSFontActivateFromFileSpecification(&t_fsspec, kATSFontContextLocal, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
+		t_os_status = ATSFontActivateFromFileReference(&t_fsref, kATSFontContextLocal, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
 		if (t_os_status != noErr)
 			t_status = kFontLoadStatusBadFont;
 	}

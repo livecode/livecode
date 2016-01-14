@@ -1,7 +1,23 @@
 {
+	'variables':
+	{
+		'module_name': 'libFoundation',
+		'module_test_dependencies':
+		[
+			'libFoundation',
+		],
+		'module_test_sources':
+		[
+			'test/environment.cpp',
+			'test/test_string.cpp',
+		],
+	},
+
+
 	'includes':
 	[
 		'../common.gypi',
+		'../config/cpptest.gypi'
 	],
 	
 	'targets':
@@ -40,7 +56,6 @@
 				'include/foundation-math.h',
 				'include/foundation-objc.h',
 				'include/foundation-stdlib.h',
-				'include/foundation-string.h',
 				'include/foundation-system.h',
 				'include/foundation-text.h',
 				'include/foundation-unicode.h',
@@ -69,7 +84,6 @@
 				'src/foundation-locale.cpp',
 				'src/foundation-math.cpp',
 				'src/foundation-name.cpp',
-				'src/foundation-nativechars.cpp',
 				'src/foundation-number.cpp',
 				'src/foundation-pickle.cpp',
 				'src/foundation-proper-list.cpp',
@@ -78,6 +92,7 @@
 				'src/foundation-stream.cpp',
 				'src/foundation-string.cpp',
 				'src/foundation-string-cf.cpp',
+                'src/foundation-string-native.cpp.h',
 				'src/foundation-text.cpp',
 				'src/foundation-typeconvert.cpp',
 				'src/foundation-typeinfo.cpp',
@@ -85,6 +100,7 @@
 				'src/foundation-unicodechars.cpp',
 				'src/foundation-value.cpp',
 				'src/foundation-objc.mm',
+				'src/foundation-ffi-js.cpp',
 				'src/system-commandline.cpp',
 				'src/system-file.cpp',
 				'src/system-file-posix.cpp',
@@ -136,6 +152,15 @@
 					'_toolset != "target"',
 					{
 						'product_name': 'libFoundation->(_toolset)',
+					},
+				],
+				[
+					'toolset_os != "emscripten"',
+					{
+						'sources!':
+						[
+							'src/foundation-ffi-js.cpp',
+						],
 					},
 				],
 			],

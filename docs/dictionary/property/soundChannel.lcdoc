@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the soundChannel to <channelNumber> 
 
-Summary: Has no effect and is included in <Revolution|LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
 
 Introduced: 1.0
 
@@ -15,4 +15,4 @@ In HyperCard, the <soundChannel> <property> determines which sound channel is us
 
 By default, the <soundChannel> <property> is set to zero. A <handler> can set it to any number without causing a <error|script error>, but the change has no effect.
 
-References: play (command), sound (function), property (glossary), Revolution (glossary), error (glossary), handler (glossary), resource (glossary), HyperCard (glossary), Mac OS (glossary)
+References: play (command), sound (function), property (glossary), LiveCode (glossary), error (glossary), handler (glossary), resource (glossary), HyperCard (glossary), Mac OS (glossary)

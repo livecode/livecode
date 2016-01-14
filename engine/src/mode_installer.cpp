@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -323,6 +323,7 @@ private:
 	// MM-2011-03-23: Takes a file path and memory maps its contents to r_payload_data, also returning the file size.
 	static bool mmap_payload_from_file(const char *p_file_name, const void *&r_payload_data, uint32_t &r_payload_size)
 	{
+        bool t_success;
 #if defined(_MACOSX)
 		// The OS X code is just refactored from the method funciton.
 		s_payload_mapped_data = nil;
@@ -356,18 +357,19 @@ private:
 		}
 
 		if (s_payload_mapped_data == nil && s_payload_loaded_data == nil)
-			return false;
-
-		r_payload_data = s_payload_mapped_data != nil ? s_payload_mapped_data : s_payload_loaded_data;
-		r_payload_size = s_payload_mapped_size;
-		return true;
+            t_success = false;
+        else
+        {
+            r_payload_data = s_payload_mapped_data != nil ? s_payload_mapped_data : s_payload_loaded_data;
+            r_payload_size = s_payload_mapped_size;
+            t_success = true;
+        }
 #elif defined(_WINDOWS)
 		s_payload_file_handle = nil;
 		s_payload_file_map = nil;
 		s_payload_mapped_data = nil;
 
-		// Fetch a handle to the file and map the contents to memory.
-		bool t_success;
+        // Fetch a handle to the file and map the contents to memory.
 		t_success = true;
 		if (t_success)
 		{
@@ -401,11 +403,12 @@ private:
 				CloseHandle(s_payload_file_map);
 			if (s_payload_file_handle != INVALID_HANDLE_VALUE)
 				CloseHandle(s_payload_file_handle);
-		}
-		return t_success;
+        }
 #else
-		return false;
+        t_success = false;
 #endif
+
+        return t_success;
 	}
 };
 
@@ -606,7 +609,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr -> gethandle();
+			t_context . target = MCtargetptr . object -> gethandle();
 			t_context . name = *t_item;
             t_context . var = ctxt . GetIt() -> evalvar(ctxt);
 			t_context . stream = nil;

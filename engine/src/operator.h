@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -242,6 +242,9 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         MCExecValue t_left, t_right;
+		t_left . type = kMCExecValueTypeNone;
+		t_right . type = kMCExecValueTypeNone;
+		
         Boolean t_old_expectation;
         
         t_old_expectation = ctxt . GetNumberExpected();

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -20,7 +20,12 @@
 #include "textlayout.h"
 
 #include <Foundation/Foundation.h>
+
+#if defined(_MACOSX) && MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_6
+#include <ApplicationServices/ApplicationServices.h>
+#else
 #include <CoreText/CoreText.h>
+#endif
 
 struct MCTextLayoutFont
 {
@@ -51,7 +56,7 @@ void MCTextLayoutFinalize(void)
 	}
 }
 
-static CTFontRef ctfont_from_fontstruct(MCFontStruct *p_font_struct)
+CTFontRef ctfont_from_fontstruct(MCFontStruct *p_font_struct)
 {
     // MM-2014-06-04: [[ CoreText ]] Fonts are now already coretext font refs. No extra work needed here anymore.
     return (CTFontRef)CFRetain((CTFontRef) p_font_struct -> fid);

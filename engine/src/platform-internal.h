@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -125,7 +125,7 @@ public:
 	void HandleKeyDown(MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 	void HandleKeyUp(MCPlatformKeyCode key_code, codepoint_t mapped_codepoint, codepoint_t unmapped_codepoint);
 	
-	void HandleDragEnter(MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
+	void HandleDragEnter(class MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation);
 	void HandleDragMove(MCPoint location, MCPlatformDragOperation& r_operation);
 	void HandleDragLeave(void);
 	void HandleDragDrop(bool& r_accepted);
@@ -188,6 +188,9 @@ protected:
         
         // MERG-2014-06-02: [[ IgnoreMouseEvents ]] Changed flag for ignore mouse events.
         bool ignore_mouse_events_changed : 1;
+        
+        // MERG-2015-10-11: [[ DocumentFilename ]] Changed flag for docuent filename
+        bool document_filename_changed : 1;
 	} m_changes;
 	MCPlatformWindowStyle m_style;
 	MCStringRef m_title;
@@ -195,6 +198,8 @@ protected:
 	float m_opacity;
 	MCRectangle m_content;
 	MCCursorRef m_cursor;
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    MCStringRef m_document_filename;
 	struct
 	{
 		bool m_has_title_widget : 1;
@@ -302,7 +307,7 @@ void MCPlatformCallbackSendMouseLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendMouseMove(MCPlatformWindowRef window, MCPoint location);
 void MCPlatformCallbackSendMouseScroll(MCPlatformWindowRef window, int32_t dx, int32_t dy);
 
-void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, MCPlatformPasteboardRef pasteboard, MCPlatformDragOperation& r_operation);
+void MCPlatformCallbackSendDragEnter(MCPlatformWindowRef window, class MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragLeave(MCPlatformWindowRef window);
 void MCPlatformCallbackSendDragMove(MCPlatformWindowRef window, MCPoint location, MCPlatformDragOperation& r_operation);
 void MCPlatformCallbackSendDragDrop(MCPlatformWindowRef window, bool& r_accepted);
@@ -321,8 +326,6 @@ void MCPlatformCallbackSendTextInputAction(MCPlatformWindowRef window, MCPlatfor
 
 void MCPlatformCallbackSendMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
-
-void MCPlatformCallbackSendPasteboardResolve(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void *handle, void*& r_data, size_t& r_data_size);
 
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 

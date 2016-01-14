@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	DLLIST_H
 #define	DLLIST_H
 
+#include "foundation-legacy.h"
+
 // Forward declarations
 class MCObject;
 
@@ -39,7 +41,7 @@ public:
 	}
 	virtual ~MCDLlist();
 	// shared by buttons and text blocks
-	virtual void removelink(MCObject *optr);
+	virtual void removelink(class MCObject *optr);
 	MCDLlist *next()
 	{
 		return nptr;
@@ -62,6 +64,18 @@ public:
 	void append(MCDLlist *node);
 	void splitat(MCDLlist *node);
 	MCDLlist *remove(MCDLlist *&list);
+    
+    // This function is called on all 'IO_stat' return in load methods. It
+    // provides an easy hook for a breakpoint to work out why a particular file
+    // failed to load.
+    inline static IO_stat checkloadstat(IO_stat stat)
+    {
+        if (stat != IO_NORMAL)
+        {
+            return stat;
+        }
+        return stat;
+    }
 
 #ifdef  _DEBUG_MALLOC_INC
 	void verify(char *where);

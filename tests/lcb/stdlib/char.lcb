@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -302,6 +302,11 @@ public handler TestOffset()
 
 	-- For chars, "index" is synonymous with "offset"
 	test "index" when the index of "x" in ".xx." is 2
+end handler
+
+public handler TestOffsetUnicode()
+	test "offset (native, BMP)" when the index of " " in "\u{2192} right" is 2
+	test "offset (BMP, BMP)" when the index of "\u{2192}" in "\u{2192} right" is 1
 end handler
 
 public handler TestOffsetAfter()

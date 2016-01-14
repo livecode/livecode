@@ -62,6 +62,7 @@
 	<array>
 		${DEVICE_SUPPORT}
 	</array>
+	${DISABLE_ATS}
 	<key>UIRequiredDeviceCapabilities</key>
 	<dict>
 		${DEVICE_CAPABILITY}
@@ -81,6 +82,10 @@
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		${IPAD_SUPPORTED_ORIENTATIONS}
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		${PLAY_AUDIO_WHEN_IN_BACKGROUND}
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>

@@ -1,0 +1,75 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.item
+
+use com.livecode.foreign
+
+public foreign handler FetchItemOf(in Index as index, in Target as string, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreItemOf(in Value as string, in Index as index, inout Target as string) returns nothing binds to "<builtin>"
+public foreign handler FetchItemRangeOf(in Start as index, in Finish as index, in Target as data, out Value as string) returns nothing binds to "<builtin>"
+public foreign handler StoreItemRangeOf(in Value as string, in Start as index, in Finish as index, inout Target as string) returns nothing binds to "<builtin>"
+
+public foreign handler EvalNumberOfItemsIn(in Target as string, out Count as index) returns nothing binds to "<builtin>"
+
+public foreign handler EvalIsAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
+public foreign handler EvalIsNotAmongTheItemsOf(in Needle as string, in Target as string, out Result as bool) returns nothing binds to "<builtin>"
+
+public foreign handler EvalOffsetOfItemIn(in Needle as string, in Target as string, out Offset as index) returns nothing binds to "<builtin>"
+
+--
+
+syntax SingletonItemOf is prefix operator with precedence 1
+	"item" <Index: Expression> "of" <Target: Expression>
+begin
+	FetchItemOf(Index, Target, output)
+	StoreItemOf(input, Index, Target)
+end syntax
+
+syntax RangeItemOf is prefix operator with precedence 1
+	"item" <Start: Expression> "to" <Finish: Expression> "of" <Target: Expression>
+begin
+	FetchItemRangeOf(Start, Finish, Target, output)
+	StoreItemRangeOf(input, Start, Finish, Target)
+end syntax
+
+syntax CountItemsOf is prefix operator with precedence 1
+	"the" "number" "of" "items" "in" <Target: Expression>
+begin
+	EvalNumberOfItemsIn(Target, output)
+end syntax
+
+syntax AmongItemsOf is left binary operator with precedence 1
+	<Needle: Expression> "is" "among" "the" "items" "of" <Target: Expression>
+begin
+	EvalIsAmongTheItemsOf(Needle, Target, output)
+end syntax
+
+syntax NotAmongItemsOf is left binary operator with precedence 1
+	<Needle: Expression> "is" "not" "among" "the" "items" "of" <Target: Expression>
+begin
+	EvalIsNotAmongTheItemsOf(Needle, Target, output)
+end syntax
+
+syntax ItemOffset is prefix operator with precedence 1
+	"the" "offset" "of" "item" <Needle: Expression> "in" <Target: Expression>
+begin
+	EvalOffsetOfItemIn(Needle, Target, output)
+end syntax
+
+--
+
+end module

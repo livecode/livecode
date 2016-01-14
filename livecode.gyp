@@ -7,6 +7,18 @@
 	'targets':
 	[
 		{
+			'target_name': 'default',
+			'type': 'none',
+			'dependencies': [ 'binzip-copy', ],
+		},
+
+		{
+			'target_name': 'check',
+			'type': 'none',
+			'dependencies': [ 'cpptest-run-all', ],
+		},
+
+		{
 			'target_name': 'LiveCode-all',
 			'type': 'none',
 			
@@ -20,6 +32,9 @@
 
 				# Widgets and libraries
 				'extensions/extensions.gyp:extensions',
+
+				# lcidlc
+				'lcidlc/lcidlc.gyp:lcidlc',
 			],
 			
 			'conditions':
@@ -177,5 +192,33 @@
 				'files': [ '>@(dist_files)', '>@(dist_aux_files)', ],
 			}],
 		},
+		
+		{
+			'target_name': 'cpptest-run-all',
+			'type': 'none',
+
+			'dependencies':
+			[
+				'libcpptest/libcpptest.gyp:run-test-libcpptest',
+				'libfoundation/libfoundation.gyp:run-test-libFoundation',
+				'engine/kernel-standalone.gyp:run-test-kernel-standalone',
+			],
+
+			'conditions':
+			[
+				[
+					'mobile == 0',
+					{
+						'dependencies':
+						[
+							'engine/kernel-server.gyp:run-test-kernel-server',
+							'engine/kernel-development.gyp:run-test-kernel-development',
+							'engine/kernel-installer.gyp:run-test-kernel-installer',
+						],
+					},
+				],
+			],
+		},
+
 	],
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -116,13 +116,8 @@ MCFontnode::MCFontnode(MCSysFontHandle p_handle)
 
 void MCFontnode::calculatemetrics()
 {
-	font -> ascent = reqsize - 1;
-	font -> descent = reqsize * 2 / 14 + 1;
-
     // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
     coretext_font_get_metrics(font -> fid, font -> m_ascent, font -> m_descent, font -> m_leading, font -> m_xheight);
-    if (ceilf(font -> m_ascent) + ceilf(font -> m_descent) > reqsize)
-        font -> ascent++;
 }
 
 MCFontnode::~MCFontnode()

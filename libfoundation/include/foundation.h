@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -87,8 +87,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef __SMALL__
 // __MEDIUM__ will be defined if pointers are 64-bit and indicies are 32-bit.
 #undef __MEDIUM__
-// __HUGE__ will be defined if pointers are 64-bit and indicies are 64-bit.
-#undef __HUGE__
+// __LARGE__ will be defined if pointers are 64-bit and indicies are 64-bit.
+#undef __LARGE__
 
 // __WINDOWS_1252__ will be defined if it is the native charset of the platform.
 #undef __WINDOWS_1252__
@@ -132,7 +132,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
 #define __LLP64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #else
 #error Unknown target architecture
 #endif
@@ -176,7 +176,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __X86_64__ 1
 #define __LP64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -275,7 +275,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__ 1
 #define __ARM64__
 #define __LP64__ 1
-#define __HUGE__ 1
+#define __MEDIUM__ 1
 #endif
 
 // Native char set
@@ -380,9 +380,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
 #  define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
 #  define ATTRIBUTE_UNUSED __attribute__((__unused__))
+#  define ATTRIBUTE_PURE __attribute__((__pure__))
 #else
 #  define ATTRIBUTE_NORETURN
 #  define ATTRIBUTE_UNUSED
+#  define ATTRIBUTE_PURE
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -581,17 +583,25 @@ typedef int32_t compare_t;
 #define INDEX_MIN INT32_MIN
 #define INDEX_MAX INT32_MAX
 
-#else
+#elif defined(__LARGE__)
 
-typedef uint32_t uindex_t;
-typedef int32_t index_t;
+// This memory model would allow 64-bit indicies in Foundation types. This,
+// however, has never been tested and so is only here for completeness at
+// this time.
+
+typedef uint64_t uindex_t;
+typedef int64_t index_t;
 typedef uint64_t hash_t;
 typedef int64_t compare_t;
 
-#define UINDEX_MIN UINT32_MIN
-#define UINDEX_MAX UINT32_MAX
-#define INDEX_MIN INT32_MIN
-#define INDEX_MAX INT32_MAX
+#define UINDEX_MIN UINT64_MIN
+#define UINDEX_MAX UINT64_MAX
+#define INDEX_MIN INT64_MIN
+#define INDEX_MAX INT64_MAX
+
+#else
+
+#error No memory model defined for this platform and architecture combination
 
 #endif
 
@@ -638,6 +648,9 @@ typedef unsigned char char_t;
 
 // The 'byte_t' type is used to hold a char in a binary string (native).
 typedef uint8_t byte_t;
+
+// Constants used to represent the minimum and maximum values of a byte_t.
+#define BYTE_MIN UINT8_MIN
 #define BYTE_MAX UINT8_MAX
 
 // The 'codepoint_t' type is used to hold a single Unicode codepoint (20-bit
@@ -648,12 +661,20 @@ typedef uint32_t codepoint_t;
 // further characters)
 #define CODEPOINT_NONE UINT32_MAX
 
+// Constants used to represent the minimum and maximum values of a codepoint_t.
+#define CODEPOINT_MIN 0
+#define CODEPOINT_MAX 0x10ffff
+
 // The 'unichar_t' type is used to hold a UTF-16 codeunit.
 #ifdef __WINDOWS__
 typedef wchar_t unichar_t;
 #else
 typedef uint16_t unichar_t;
 #endif
+
+// Constants used to represent the minimum and maximum values of a unichar_t.
+#define UNICHAR_MIN UINT16_MIN
+#define UNICHAR_MAX UINT16_MAX
 
 #ifdef __WINDOWS__
 typedef wchar_t *BSTR;
@@ -950,7 +971,22 @@ void MCFinalize(void);
 //  DEBUG HANDLING
 //
 
-#ifdef _DEBUG
+#if defined(_DEBUG)
+#	define DEBUG_LOG 1
+#endif
+
+#define MCUnreachableReturn(x) { MCUnreachable(); return x;}
+
+// If we are using GCC or Clang, we can give the compiler the hint that the
+// assertion functions do not return. This is particularly useful for Clang's
+// static analysis feature.
+#if defined(__GNUC__) || defined (__clang__) || defined (__llvm__)
+#define ATTRIBUTE_NORETURN  __attribute__((__noreturn__))
+#else
+#define ATTRIBUTE_NORETURN
+#endif
+
+#if defined(DEBUG_LOG)
 
 extern void __MCAssert(const char *file, uint32_t line, const char *message) ATTRIBUTE_NORETURN;
 #define MCAssert(m_expr) (void)( (!!(m_expr)) || (__MCAssert(__FILE__, __LINE__, #m_expr), 0) )
@@ -972,7 +1008,15 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #define MCLogWithTrace(m_format, ...)
 
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
+
+#define MCUnreachable() __builtin_unreachable()
+
+#else // Neither GCC >= 4.5 or Clang compiler
+
 #define MCUnreachable()
+
+#endif
 
 #endif
 
@@ -1440,6 +1484,8 @@ extern "C" {
 // The 'any' type is essentially a union of all typeinfos.
 MC_DLLEXPORT extern MCTypeInfoRef kMCAnyTypeInfo;
 
+MC_DLLEXPORT MCTypeInfoRef MCAnyTypeInfo(void) ATTRIBUTE_PURE;
+
 // These are typeinfos for all the 'builtin' valueref types.
 MC_DLLEXPORT extern MCTypeInfoRef kMCNullTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCBooleanTypeInfo;
@@ -1452,6 +1498,17 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCSetTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCListTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCProperListTypeInfo;
 
+MC_DLLEXPORT MCTypeInfoRef MCNullTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCBooleanTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCNumberTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCStringTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCNameTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCDataTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCArrayTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCSetTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCListTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCProperListTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCBoolTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCIntTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCUIntTypeInfo;
@@ -1459,8 +1516,18 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCFloatTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCDoubleTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCPointerTypeInfo;
 
+MC_DLLEXPORT MCTypeInfoRef MCForeignBoolTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignUIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignIntTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignFloatTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignDoubleTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignPointerTypeInfo(void) ATTRIBUTE_PURE;
+
 MC_DLLEXPORT extern MCTypeInfoRef kMCSizeTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCSSizeTypeInfo;
+
+MC_DLLEXPORT MCTypeInfoRef MCForeignSizeTypeInfo(void) ATTRIBUTE_PURE;
+MC_DLLEXPORT MCTypeInfoRef MCForeignSSizeTypeInfo(void) ATTRIBUTE_PURE;
 
 //////////
 
@@ -1635,9 +1702,6 @@ MC_DLLEXPORT bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *fields, in
 
 // Return the base type of the record.
 MC_DLLEXPORT MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef typeinfo);
-
-// Return the base type of the record.
-MC_DLLEXPORT MCTypeInfoRef MCRecordTypeGetBaseTypeInfo(MCTypeInfoRef typeinfo);
 
 // Return the number of fields in the record.
 MC_DLLEXPORT uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef typeinfo);
@@ -1826,7 +1890,9 @@ enum
 	kMCStringEncodingMacRoman,
 	// The standard Linux (Latin-1) encoding.
 	kMCStringEncodingISO8859_1,
-	// The UTF-8 string encoding.
+	// The UTF-8 string encoding.  In LiveCode, this permits overlong
+	// sequences when decoding, but does not generate them when
+	// encoding.
 	kMCStringEncodingUTF8,
 	// The UTF-16 string encoding in little endian byte-order.
 	kMCStringEncodingUTF16LE,
@@ -1859,11 +1925,16 @@ enum
 	kMCStringOptionCompareExact = 0,
 	// Compare the strings codepoint for codepoint after normalization.
 	kMCStringOptionCompareNonliteral = 1,
+    // Compare strings without normalization but with case folding
+    kMCStringOptionCompareFolded = 2,
 	// Compare the strings codepoint for codepoint after normalization and
 	// folding.
-	kMCStringOptionCompareCaseless = 2,
-    // Compare strings without normalization but with case folding
-    kMCStringOptionCompareFolded = 3,
+	kMCStringOptionCompareCaseless = 3,
+    
+    // If this bit is set it means the strings are normalized.
+    kMCStringOptionNormalizeBit = 1 << 0,
+    // If this bit is set it means the strings are folded.
+    kMCStringOptionFoldBit = 1 << 1,
 };
 
 /////////
@@ -1914,6 +1985,7 @@ MC_DLLEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStri
 // Create an immutable string from the given native char sequence.
 MC_DLLEXPORT bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithNativeCharBufferAndRelease(char_t* buffer, uindex_t char_count, uindex_t buffer_length, MCStringRef& r_string);
 
 // Create an immutable string from the given (native) c-string.
 MC_DLLEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
@@ -1925,10 +1997,22 @@ MC_DLLEXPORT bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef&
 MC_DLLEXPORT bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
+// Create a string from a Pascal-style (counted) string. This always uses the MacRoman encoding.
+MC_DLLEXPORT bool MCStringCreateWithPascalString(const unsigned char* pascal_string, MCStringRef& r_string);
+    
 #if !defined(__WINDOWS__)
 // Create a string from a C string in the system encoding
 MC_DLLEXPORT bool MCStringCreateWithSysString(const char *sys_string, MCStringRef &r_string);
 #endif
+
+// Creates a string from existing strings. The first variant exists to provide
+// an optimised implementation in the (very common) case of only two strings.
+MC_DLLEXPORT bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two);
+//MC_DLLEXPORT bool MCStringCreateWithStrings(MCStringRef& r_string, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
+
+// Creates a string from existing strings, using the given in-fix character
+MC_DLLEXPORT bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two);
+//MC_DLLEXPORT bool MCStringCreateWithStringsAndSeparator(MCStringRef& r_string, unichar_t t_separator, MCStringRef p_one, MCStringRef p_two, MCStringRef p_three, ...);
 
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
@@ -2186,14 +2270,20 @@ MC_DLLEXPORT compare_t MCStringCompareTo(MCStringRef string, MCStringRef other, 
 
 // Returns true if the string begins with the prefix string, processing as
 // appropriate according to options.
-MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options);
-MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_self_match_length);
+// If 'r_string_match_length' is used, then it will contain the length of the
+// match in 'string'. This might not be the same as the length of 'prefix' due
+// to case folding and normalization concerns in unicode strings.
+MC_DLLEXPORT bool MCStringBeginsWith(MCStringRef string, MCStringRef prefix, MCStringOptions options, uindex_t *r_string_match_length = nil);
+MC_DLLEXPORT bool MCStringSharedPrefix(MCStringRef self, MCRange p_range, MCStringRef p_prefix, MCStringOptions p_options, uindex_t& r_string_match_length);
 MC_DLLEXPORT bool MCStringBeginsWithCString(MCStringRef string, const char_t *prefix_cstring, MCStringOptions options);
 
 // Returns true if the string ends with the suffix string, processing as
 // appropriate according to options.
-MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options);
-MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_self_match_length);
+// If 'r_string_match_length' is used, then it will contain the length of the
+// match in 'string'. This might not be the same as the length of 'suffix' due
+// to case folding and normalization concerns in unicode strings.
+MC_DLLEXPORT bool MCStringEndsWith(MCStringRef string, MCStringRef suffix, MCStringOptions options, uindex_t *r_string_match_length = nil);
+MC_DLLEXPORT bool MCStringSharedSuffix(MCStringRef self, MCRange p_range, MCStringRef p_suffix, MCStringOptions p_options, uindex_t& r_string_match_length);
 MC_DLLEXPORT bool MCStringEndsWithCString(MCStringRef string, const char_t *suffix_cstring, MCStringOptions options);
 
 // Returns true if the string contains the given needle string, processing as
@@ -2233,10 +2323,10 @@ MC_DLLEXPORT bool MCStringLastIndexOfChar(MCStringRef string, codepoint_t needle
 MC_DLLEXPORT bool MCStringFind(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options, MCRange* r_result);
 
 // Search 'range' of 'string' for 'needle' processing as appropriate to options
-// and returning the number of occurances found.
+// and returning the number of occurrences found.
 MC_DLLEXPORT uindex_t MCStringCount(MCStringRef string, MCRange range, MCStringRef needle, MCStringOptions options);
 MC_DLLEXPORT uindex_t MCStringCountChar(MCStringRef string, MCRange range, codepoint_t needle, MCStringOptions options);
-
+    
 //////////
 
 // Find the first index of separator in string processing as according to
@@ -2254,7 +2344,35 @@ MC_DLLEXPORT bool MCStringDivideAtIndex(MCStringRef self, uindex_t p_offset, MCS
 MC_DLLEXPORT bool MCStringBreakIntoChunks(MCStringRef string, codepoint_t separator, MCStringOptions options, MCRange*& r_ranges, uindex_t& r_range_count);
 
 //////////
+    
+// Search 'range' of 'string' for 'needle' processing as appropriate to options
+// and taking into account 'delimiter' and 'skip'.
+// The function searches for 'needle' after 'skip' occurrences of 'delimiter'.
+// The total number of delimiters encountered before 'needle' is found is
+// returned in 'r_index'.
+// If 'r_found' is not nil, it will return the range of the needle string in
+// 'string'.
+// If 'r_before' is not nil, it will return the range of the last delimiter before
+// the found 'needle' string.
+// If 'r_after' is not nil, it will return the range of the first delimiter after
+// the found 'needle' string.
+// If 'needle' is not found in the given range (after skipping) then false is
+// returned.
+// Additionally, if 'needle' is the empty string, then
+// Note: The search done for 'needle' is as a string, in particular 'needle'
+//   can contain 'delimiter'.
+// Note: If needle is the empty string then false will be returned.
+MC_DLLEXPORT bool MCStringDelimitedOffset(MCStringRef string, MCRange range, MCStringRef needle, MCStringRef delimiter, uindex_t skip, MCStringOptions options, uindex_t& r_index, MCRange *r_found, MCRange *r_before, MCRange *r_after);
 
+MC_DLLEXPORT bool MCStringForwardDelimitedRegion(MCStringRef string,
+                                                 MCRange range,
+                                                 MCStringRef delimiter,
+                                                 MCRange region,
+                                                 MCStringOptions options,
+                                                 MCRange& r_range);
+
+//////////
+    
 // Transform the string to its folded form as specified by 'options'. The folded
 // form of a string is that which is used to perform comparisons.
 //
@@ -2355,7 +2473,6 @@ MC_DLLEXPORT bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, M
 //////////
 
 // Proper list versions of string splitting
-MC_DLLEXPORT bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 MC_DLLEXPORT bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 
 //////////
@@ -2395,11 +2512,19 @@ MC_DLLEXPORT extern MCDataRef kMCEmptyData;
 MC_DLLEXPORT bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 MC_DLLEXPORT bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 
+// Creates data from existing data. The first variant exists to provide an
+// optimised implementation in the (very common) case of only two DataRefs.
+MC_DLLEXPORT bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two);
+//MC_DLLEXPORT bool MCDataCreateWithData(MCDataRef& r_string, MCDataRef p_one, MCDataRef p_two, MCDataRef p_three, ...);
+
 MC_DLLEXPORT bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data);
 
 MC_DLLEXPORT bool MCDataIsEmpty(MCDataRef p_data);
 
 MC_DLLEXPORT uindex_t MCDataGetLength(MCDataRef p_data);
+/* Return a pointer to the data string's underlying byte array.  Note
+ * that if p_data is empty (i.e. has length zero) then
+ * MCDataGetBytePtr() may return null. */
 MC_DLLEXPORT const byte_t *MCDataGetBytePtr(MCDataRef p_data);
 
 MC_DLLEXPORT byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index);

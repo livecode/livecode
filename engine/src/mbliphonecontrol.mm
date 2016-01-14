@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -350,8 +350,9 @@ void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
         
         r_rect . x = (int32_t) roundf(t_user_rect.origin.x);
         r_rect . y = (int32_t) roundf(t_user_rect.origin.y);
-        r_rect . width = (int32_t) (roundf(t_user_rect.origin.x) + roundf(t_user_rect.size.width));
-        r_rect . height = (int32_t) (roundf(t_user_rect.origin.y) + roundf(t_user_rect.size.height));
+		// PM-2015-11-23: [[ Bug 16467 ]] We want width and height, NOT right and bottom
+        r_rect . width = (int32_t) roundf(t_user_rect.size.width);
+        r_rect . height = (int32_t) roundf(t_user_rect.size.height);
     }
 }
 

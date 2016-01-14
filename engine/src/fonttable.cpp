@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -41,6 +41,13 @@ struct MCLogicalFontTableEntry
 	uint2 textsize;
 };
 
+inline bool operator== (const MCLogicalFontTableEntry& a, const MCLogicalFontTableEntry& b)
+{
+    return a.textfont == b.textfont
+            && a.textstyle == b.textstyle
+            && a.textsize == b.textsize;
+}
+
 static uint32_t s_logical_font_table_size = 0;
 static uint32_t s_logical_font_table_capacity = 0;
 static MCLogicalFontTableEntry *s_logical_font_table = nil;
@@ -57,7 +64,7 @@ static void MCLogicalFontTableGetEntry(uint32_t p_index, MCNameRef& r_textfont, 
 
 static void MCLogicalFontTableSetEntry(uint32_t p_index, MCNameRef p_textfont, uint2 p_textstyle, uint2 p_textsize, bool p_unicode)
 {
-	s_logical_font_table[p_index] . textfont = p_textfont;
+    s_logical_font_table[p_index] . textfont = p_textfont;
 	s_logical_font_table[p_index] . textstyle = p_textstyle;
 	s_logical_font_table[p_index] . textsize = p_textsize & 0x7fff;
 	if (p_unicode)
@@ -74,7 +81,7 @@ static uint32_t MCLogicalFontTableLookupEntry(MCNameRef p_textfont, uint2 p_text
 		t_entry . textsize |= 0x8000;
 	
 	for(uint32_t i = 0; i < s_logical_font_table_size; i++)
-		if (memcmp(&t_entry, &s_logical_font_table[i], sizeof(MCLogicalFontTableEntry)) == 0)
+		if (t_entry == s_logical_font_table[i])
 			return i;
 
 	if (p_add)

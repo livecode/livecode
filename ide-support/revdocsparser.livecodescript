@@ -19,7 +19,7 @@ value (string): the value associated with this optional key }
 pEnumParam (enum): An enum parameter
 -"option 1" : description of option 1
 - option 2 : description of option 2
-- option 3 : description of option 3
+- option 3 : description of option 3 
 
 pOptionalParam (optional integer): An integer parameter
 pParam: A param afterward with no space
@@ -170,7 +170,6 @@ Each element of it represents the documentation for a handler contained in the l
 
 There are a number of ways of creating a library array:
 * <revDocsParseDirectoryToLibraryArray> creates a library array from all of the (non-inline) docs entries of a given type in a directory
-* <revDocsParseScriptToLibraryArray> creates a library array from the inline docs of a script
 * <revDocsParseDictionaryToLibraryArray> creates the dictionary library array
 
 */
@@ -233,34 +232,6 @@ function revDocsParseDirectoryToLibraryArray pLibraryName, pAuthor, pRootDir, pT
    return empty
 end revDocsParseDirectoryToLibraryArray
 
-/*
-Summary : Creates a library array from the given script
-
-pObjName: The name of the object whose script is being parsed
-pText: The script to be parsed
-pAuthor: The author name
-*/
-
-function revDocsParseScriptToLibraryArray pObjName, pText, pAuthor
-   local tLibraryA
-   
-   put pObjName into tLibraryA["name"]
-   put pAuthor into tLibraryA["author"]
-   
-   local tBlocksA, tParsedA
-   put revDocsParseScriptDocs(pText) into tBlocksA
-   put revDocsParseDocBlocks(tBlocksA) into tParsedA
-   
-   local tCount
-   put 1 into tCount
-   repeat for each key tEntry in tParsedA
-      put tParsedA[tEntry] into tLibraryA["doc"][tCount]
-      put tEntry into tLibraryA["doc"][tCount]["name"]
-      add 1 to tCount
-   end repeat
-   
-   return tLibraryA
-end revDocsParseScriptToLibraryArray
 
 /*
 Summary: Parses the current directory into a library array.
@@ -401,6 +372,10 @@ Convert inline docs to the standard format (that can be parsed without code bloc
 */
 
 function revDocsGenerateDocsFileFromModular pText, pFilename
+   return revDocsGenerateDocsFileFromText(pText, pFilename)
+end revDocsGenerateDocsFileFromModular
+
+function revDocsGenerateDocsFileFromText pText, pSource
    local tEntryType
    put empty into tEntryType
    
@@ -413,6 +388,74 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
    local tHandlerData, tPhraseData
    
    local tLibraryData, tAPIData
+   revDocsExtractDocBlocks pText, pSource, tAPIData, tLibraryData
+   
+   # Allow inline module description as valid docs
+   if tAPIData is empty then
+      logWarning "No handlers documented", pSource
+   end if
+   
+   if tLibraryData["name"] is empty then
+      logError "No extension name found", pSource
+   end if
+   
+   local tOutput
+   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
+   
+   if tOutput is empty then
+      logWarning "Invalid library-level docs", pSource
+   end if
+   
+   repeat for each key tKey in tAPIData
+      local tFormatted
+      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
+      if tFormatted is empty then
+         logWarning "No docs for element" && tKey, pSource
+      else
+         put tFormatted & return & return after tOutput
+      end if
+   end repeat
+   return tOutput
+end revDocsGenerateDocsFileFromText
+
+##################################################
+#
+#          PARSING UTILITIES
+#
+##################################################
+
+/*
+Extracts the comment blocks that live in between functions which contain the documentation for those functions 
+
+pText: The script to extract comment blocks from
+pSource : The source of the script (either a filename or an object id)
+Returns (array) : An array containing the details for the comment blocks associated with each api entry
+
+*/
+on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
+   local tEntryType
+   put empty into tEntryType
+   
+   local tInComment, tInEntry, tEntryEnded
+   put false into tInComment
+   put false into tInEntry
+   
+   local tFirstWord, tEntryData
+   local tComment, tData
+   local tHandlerData, tPhraseData
+   
+   local tLibraryData, tAPIData
+   
+   # Keep track of if this is a widget module or not
+   local tIsWidget
+   put false into tIsWidget
+   
+   # If the source is an object, then we are parsing script
+   local tIsScript
+   put there is a pSource into tIsScript
+   
+   # Keep track of whether we should warn about the comment style
+   local tNumCommentStars
    
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
@@ -435,6 +478,7 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                put true into tEntryData["need_docs"]
                break
             case "widget"
+               put true into tIsWidget
                put "widget" into tEntryData["type"]
                put word 2 to -1 of tLine into tEntryData["name"]
                put true into tEntryEnded
@@ -461,7 +505,9 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   # eat the word 'public'
                   put word 2 to -1 of tLine into tLine
                   put token 2 of tLine into tEntryData["name"]
-                  put true into tEntryData["need_docs"]
+                  
+                  # If we have a widget, then public handlers are not in the message path and so don't need docs.
+                  put not tIsWidget into tEntryData["need_docs"]
                else 
                   put true into tEntryData["private"]
                   if word 2 of tLine is "foreign" then
@@ -492,17 +538,45 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                put true into tEntryEnded
                put true into tEntryData["need_docs"]
                break
+            case "on"
+            case "command"
+            case "function"
+               if tFirstWord is "function" then
+                  put "function" into tEntryData["type"]
+               else
+                  put "command" into tEntryData["type"]
+               end if
+               put word 2 of tLine into tEntryData["name"]
+               put true into tEntryData["need_docs"]
+               break
             default
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
                if tFirstWord begins with "/*" then
+                  
+                  # Warn when docs are contained in /* comments instead of /**                  
+                  if tFirstWord begins with "/**" then
+                     put 2 into tNumCommentStars
+                  else
+                     put 1 into tNumCommentStars
+                  end if
+                  
+                  # If this is script, and this is an initial block of comments,
+                  # then treat as the library description
+                  if tIsScript and tAPIData is empty and tComment is not empty then
+                     put "library" into tLibraryData["type"]
+                     put tComment into tLibraryData["comments"]
+                     put the short name of pSource into tLibraryData["name"]
+                  end if
+                  
                   # Discard any previous comments
                   put empty into tComment
                   local tCommentOffset
                   put true into tInComment
                   put offset("/*", tLine) into tCommentOffset
-                  put char tCommentOffset + 2 to -1 of tLine into tLine
+                  put char (tCommentOffset + tNumCommentStars + 1) to -1 of tLine into tLine
+                  
                   # If there's nothing else on this line, don't add it.
                   if word 1 of tLine is empty then next repeat
                end if
@@ -515,7 +589,13 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
          if word -1 of tLine ends with "*/" then
             put false into tInComment
             put offset("*/", tLine) into tCommentOffset
-            put char 1 to tCommentOffset - 1 of tLine into tLine
+            delete char tCommentOffset to -1 of tLine
+            
+            # Remove another star if this is a double-star comment closer
+            if char -1 of tLine is "*" then
+               delete char -1 of tLine
+            end if
+            
             # If there's nothing else on this line, don't add it.
             if word 1 of tLine is empty then
                next repeat
@@ -552,6 +632,10 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   revDocsParseHandler line 1 of tData, tHandlerData
                   revDocsUpdateDocBlocks true, "handler", line 1 of tData, tComment, tAPIData
                   break
+               case "function"
+               case "command"
+                  revDocsUpdateDocBlocks false, tEntryData["type"], line 1 of tData, tComment, tAPIData
+                  break
                case "type"
                   break
                case "phrase"
@@ -564,9 +648,16 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
                   revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
                   break
             end switch
+            
+            # Warn about comment format if appropriate
+            if tNumCommentStars is 1 then
+               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pSource
+            end if	
+            put empty into tNumCommentStars
+            
          else
             if tEntryData["need_docs"] then
-               logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pFilename
+               logError "Required documentation not found for" && tEntryData["type"] && tEntryData["name"], pSource
             end if
          end if
          put empty into tEntryData
@@ -576,42 +667,12 @@ function revDocsGenerateDocsFileFromModular pText, pFilename
       end if
    end repeat
    
-   # Allow inline module description as valid docs
-   if tAPIData is empty then
-      logWarning "No handlers documented", pFilename
-   end if
-   
-   if tLibraryData["name"] is empty then
-      logError "No extension name found", pFilename
-   end if
-   
-   local tOutput
-   put revDocsFormatInlineComments(tLibraryData, true) into tOutput
-   
-   if tOutput is empty then
-      logWarning "Invalid library-level docs", pFilename
-   end if
-   
-   repeat for each key tKey in tAPIData
-      local tFormatted
-      put revDocsFormatInlineComments(tAPIData[tKey], false) into tFormatted
-      if tFormatted is empty then
-         logWarning "No docs for element" && tKey, pFilename
-      else
-         put tFormatted & return & return after tOutput
-      end if
-   end repeat
-   return tOutput
-end revDocsGenerateDocsFileFromModular
-
-##################################################
-#
-#          PARSING UTILITIES
-#
-##################################################
+   put tAPIData into rAPIData
+   put tLibraryData into rLibraryData
+end revDocsExtractDocBlocks 
 
 private command log pOutput
-      write pOutput & return to stdout
+   write pOutput & return to stdout
 end log
 
 private command logError pError, pFilename
@@ -711,6 +772,7 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
    repeat with x = tStart to tEnd
       put empty into tHasA
       put empty into tEntryDoc
+      put empty into tSyntax
       put tEntriesA[x] into tEntryA
       repeat with y = 1 to the number of elements in tEntryA["elements"]
          put tEntryA["elements"][y] into tElementA
@@ -804,8 +866,8 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
       if tHasA["Syntax"] is not true then
          put pDataA["syntax"] into tSyntax
       end if
-      repeat with x = 1 to the number of elements in tSyntax
-         put "Syntax:" && tSyntax[x] & return & return before tEntryDoc
+      repeat with z = 1 to the number of elements in tSyntax
+         put "Syntax:" && tSyntax[z] & return & return before tEntryDoc
       end repeat
       
       if tHasA["Type"] is not true then
@@ -837,10 +899,6 @@ function revDocsFormatInlineComments pDataA, pIsLibrary
    
    return tDocData
 end revDocsFormatInlineComments
-
-function revDocsParseScriptDocs pText
-   return revDocsExtractDocBlocksFromScript(pText)
-end revDocsParseScriptDocs
 
 function revDocsCollectGlossarySynonyms pRoot
    local tGlossaryA, tText, tName, tSynonyms
@@ -880,7 +938,7 @@ end revDocsCollectGlossarySynonyms
 private function __elementRegex
    # Regex used to determine if this line starts a new element
    # Matched substrings are element name, (optional) param type, same line element content
-   return "^ *([tT]he [rR]esult|\w*) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
+   return "^ *([tT]he [rR]esult|\w+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __elementRegex
 
 /*
@@ -946,9 +1004,15 @@ function revDocsExtractElements pText
             add 1 to tInternalBlankLines
          end if
          next repeat
-      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then        
+      else if matchText(tLine, tElementRegex, tNextElementName, tParamType, tAfterElement) then   
+         if tAccumulatedContent is not empty and tElementCount is 0 then
+            add 1 to tElementCount
+         end if
          if tElementCount is not 0 then
             put tElementA into tElementsA[tElementCount]
+            if tElementA["name"] is empty then
+               put "Summary" into tElementsA[tElementCount]["name"]
+            end if
             delete the last char of tAccumulatedContent
             put tAccumulatedContent into tElementsA[tElementCount]["content"]
          end if
@@ -982,8 +1046,16 @@ function revDocsExtractElements pText
    end repeat
    
    # Add any remaining text to the last element
-   put tElementA into tElementsA[tElementCount]
-   put tAccumulatedContent into tElementsA[tElementCount]["content"]
+   if tAccumulatedContent is not empty and tElementCount is 0 then
+      add 1 to tElementCount
+   end if
+   if tElementCount is not 0 then
+      put tElementA into tElementsA[tElementCount]
+      if tElementA["name"] is empty then
+         put "Summary" into tElementsA[tElementCount]["name"]
+      end if
+      put tAccumulatedContent into tElementsA[tElementCount]["content"]
+   end if
    
    return tElementsA
 end revDocsExtractElements
@@ -1045,43 +1117,6 @@ private command __nameToKeyAndType pName, @rKey, @rType
          break
    end switch
 end __nameToKeyAndType
-/*
-Summary: Iterates through the keys of <pBlocksA> parsing the "comments" element
-
-Parameters:
-pBlocksA (array): An array representing all the docs data for each handler / syntax element
-{ key (string): the handler name, dictionary entry or lcb syntax name
-value (array): The array of details for this element
-{ key: "comments"
-value (string) : the comment block associated with this element }
-key: "params"
-value (string): a comma-delimited list of the parameters associated with this element
-}
-
-Returns (array): An array consisting of a key for each docs element, containing its corresponding value
-*/
-
-function revDocsParseDocBlocks pBlocksA, pFilename
-   local tParsedBlocksA
-   repeat for each key tHandler in pBlocksA
-      
-      if pBlocksA[tHandler]["comments"] is empty then
-         next repeat
-      end if
-      
-      # Extract the elements from the comment block
-      local tExtractedA
-      put revDocsExtractElements(pBlocksA[tHandler]["comments"]) into tExtractedA
-      
-      # Then parse them
-      local tParsedA
-      put revDocsParseElements(tExtractedA, pBlocksA[tHandler], pFilename) into tParsedA
-      
-      put tParsedA into tParsedBlocksA[tHandler]
-   end repeat
-   
-   return tParsedBlocksA
-end revDocsParseDocBlocks
 
 function revDocsParseElements pExtractedA, pBlocksA, pFilename
    local tParsedA
@@ -1131,7 +1166,7 @@ function revDocsParseElements pExtractedA, pBlocksA, pFilename
             local tCount
             put 1 into tCount
             repeat for each item tItem in tElementA["content"]
-               put word 1 to -1 of tItem into tParsedA[tKey][tCount]
+               put tolower(word 1 to -1 of tItem) into tParsedA[tKey][tCount]
                add 1 to tCount
             end repeat
             break
@@ -1231,7 +1266,8 @@ function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText, pFile) into tLibraryA
    if pLibraryName is not empty then
-      put pLibraryName into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
+      put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
    return tLibraryA
@@ -1309,7 +1345,8 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
+            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1339,7 +1376,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["name"] into tAssociationsDefault["content"]
+   put tParsedA["display name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1383,13 +1420,13 @@ function revDocsParseDocText pText, pFilename
    
    // Add association and tag to the last element, if they were not found
    if tParsedA["name"] is not empty and tSeenAssociations is not true and tEntryCount is not 0 then
-      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
       add 1 to tEntryElementCount
+      put tAssociationsDefault into tEntriesA[tEntryCount]["elements"][tEntryElementCount]
    end if
    if tParsedA["tags"] is not empty and tSeenTags is not true and tEntryCount is not 0 then
+      add 1 to tEntryElementCount
       put "Tags" into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["name"]
       put tParsedA["tags"] into tEntriesA[tEntryCount]["elements"][tEntryElementCount]["content"]
-      add 1 to tEntryElementCount
    end if
    
    // Add a library entry
@@ -1411,105 +1448,6 @@ function revDocsParseDocText pText, pFilename
    
    return tParsedA
 end revDocsParseDocText
-
-/*
-Extracts the comment blocks that live in between functions which contain the documentation for those functions 
-
-pScript: The script to extract comment blocks from
-pObjId (optional id) : The id of the object that the script belongs to
-Returns (array) : An array containing the details for the comment blocks associated with each handler
-
-*/
-function revDocsExtractDocBlocksFromScript pScript, pObjId
-   local tData
-   local tEntryType
-   put empty into tEntryType
-   
-   local tInComment
-   put false into tInComment
-   
-   local tComment, tParams, tFirstLine
-   
-   repeat for each line tLine in pScript
-      // Check to see if this is the start of a block of code or a block of comments 
-      get word 1 of tLine 
-      if not tInComment and tEntryType is empty then
-         if (it is "on") then 
-            put "command" into tEntryType
-         else if (it is "function" or it is "command") then
-            put it into tEntryType
-         end if
-         
-         if it begins with "/*" then
-            // if we have a new comment block, discard the previous one
-            put empty into tComment
-            local tCommentOffset
-            put true into tInComment
-            put offset("/*", tLine) into tCommentOffset
-            put char tCommentOffset + 2 to -1 of tLine into tLine
-            // If there's nothing else on this line, don't add it.
-            if word 1 of tLine is empty then next repeat
-         end if
-      end if
-      
-      // If we're in a handler, check to see if this is the end of a block of code.
-      if tEntryType is not empty  then
-         // ignore empty lines
-         if word 1 of tLine is empty then
-            next repeat
-         end if
-         // If so, then flush all the data
-         if it is "end" then
-            revDocsUpdateDocBlocks false, tEntryType, tFirstLine, tComment, tData
-            put empty into tComment
-            put empty into tFirstLine
-            put empty into tEntryType
-            // Otherwise gather the data from this line
-         else 
-            // Name, Syntax & Params all on the same line for non-syntax
-            if tFirstLine is empty then
-               put tLine into tFirstLine
-            end if
-         end if
-      end if
-      // If we're in comments check to see if this is the end of a block of comments
-      if tInComment then
-         if word -1 of tLine ends with "*/" then
-            put false into tInComment
-            put offset("*/", tLine) into tCommentOffset
-            put char 1 to tCommentOffset - 1 of tLine into tLine
-            // If there's nothing else on this line, don't add it.
-            if word 1 of tLine is empty then
-               next repeat
-            end if
-         else if tComment is empty and word 1 of tLine is empty then
-            next repeat
-         end if
-         put tLine & return after tComment
-      end if
-      
-   end repeat
-   return tData
-end revDocsExtractDocBlocksFromScript
-
-/* 
-Summary: Parses a script's documentation into array format
-
-pScript (string): The script to parse
-pObjId (optional id) : The id of the object that the script belongs to
-Returns (array): An array representing all the information contained in the inline docs
-
-*/
-function revDocsParseDocsFromScript pScript, pObjId
-   local tLibraryA
-   put revDocsExtractDocBlocksFromScript(pScript, pObjId) into tLibraryA
-   
-   return revDocsParseDocBlocks(tLibraryA["data"], the filename of revIDEStackOfObject(pObjID))
-end revDocsParseDocsFromScript
-
-function revDocsParseDocsFromID pObjId
-   return revDocsParseDocsFromScript(the script of pObjId, pObjId)
-end revDocsParseDocsFromID
 
 /*
 Removes the unnecessary (from the point of view of docs) parts of a lcb syntax declaration
@@ -1722,6 +1660,7 @@ command revDocsUpdateDocBlocks pModular, pType, pLine, pComment, @xDataA
    put tSyntax into xDataA[tEntryName]["syntax"][1]
    put tParamArray into xDataA[tEntryName]["params"]
    put pType into xDataA[tEntryName]["type"]
+   put tEntryName into xDataA[tEntryName]["name"]
    
    # Output the comments that preceded this function definition
    put pComment into xDataA[tEntryName]["comments"]
@@ -1958,8 +1897,8 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put return & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryA["display name"]) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",pLibraryA["name"]) & comma after tJSON
    put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
    put return & __tabs(2) & escape("doc") & ":[" after tJSON
    
@@ -2346,3 +2285,141 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    return tJSON
    
 end revDocsFormatLibraryDataAsJSON
+
+##################################################
+#
+#        Docs API database
+#
+##################################################
+
+constant kAPIDatabaseFile = "api.sqlite"
+
+on revDocsOpenAPIDatabase pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tConnection
+   put revOpenDatabase("sqlite",kAPIDatabaseFile,,,,,,) into tConnection
+   
+   if tConnection is not a number then
+      return "unable to create sqlite API database" & return & the result
+   end if
+   
+   return tConnection
+end revDocsOpenAPIDatabase
+
+on revDocsUpdateDatabase pConnection, pLibraryA
+   if pConnection is empty then
+      return "no database connection"
+   end if
+   
+   local tSQL, tResult
+   
+   # Create the libraries table. This might already exist, so do it unchecked.
+   put "CREATE TABLE libraries(library_id integer primary key, library_name text, author text, type text)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   local tName
+   put pLibraryA["name"] into tName
+   if tName is empty then
+      put revDocsModifyForURL(pLibraryA["display name"]) into tName
+   end if 
+   
+   local tAuthor
+   put pLibraryA["author"] into tAuthor
+   
+   local tType
+   put pLibraryA["type"] into tType
+   
+   # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+   put "UPDATE libraries SET author = :1, type = :2 WHERE library_name = :3" into tSQL
+   revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
+   put the result into tResult
+   if tResult is not a number or tResult is 0 then
+      put "INSERT into libraries VALUES(NULL, :1, :2, :3)" into tSQL
+      revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
+      put the result into tResult
+   end if
+   
+   if tResult is not a number then
+      return "unable to open table 'libraries'" & return & tResult
+   end if
+   
+   # Create the library data table. This might already exist, so do it unchecked.
+   put "CREATE TABLE dictionary_data(library_id integer, entry_name text, entry_type text, entry_data blob)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
+   if the result is not empty then
+      return "unable to update data for library" && tName & return & the result
+   end if
+   
+   return empty
+end revDocsUpdateDatabase
+
+on revDocsUpdateLibrary pConnection, pName, pDocDataA
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, "pName") into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   local tDocA, tDocName
+   repeat for each element tDocA in pDocDataA
+      put tDocA["name"] into tDocName
+      if tDocName is empty then
+         put revDocsModifyForURL(tDocA["display name"]) into tDocName
+      end if 
+      
+      local tType
+      put tDocA["type"] into tType
+      
+      local tEncodedData, tResult
+      put arrayEncode(tDocA) into tEncodedData
+      # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+      put "UPDATE dictionary_data SET entry_data = :1 WHERE entry_name = :2 AND entry_type = :3 AND library_id = :4" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType", "tLibraryID"
+      put the result into tResult
+      if tResult is not a number or tResult is 0 then
+         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tLibraryID", "tDocName", "tType", "*btEncodedData"
+         put the result into tResult
+      end if
+      
+      if tResult is not a number then
+         return "unable to insert data for" && pName & ":" & tDocName & return & the result
+      end if
+   end repeat
+   return empty
+end revDocsUpdateLibrary
+
+on revDocsRemoveLibrary pConnection, pName
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, pName) into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   # Delete all entries associated with this library
+   put "DELETE * FROM dictionary_data WHERE library_id = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, "tLibraryID"
+   if the result is not a number then
+      return "unable to delete data for" && pName & return & the result
+   end if
+   
+   # Delete the library entry from the libraries table
+   put "DELETE * FROM libraries WHERE library_name = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, pName 
+   if the result is not a number then
+      return "unable to remove library" && pName && "from libraries table" & return & the result
+   end if	
+   
+   return empty
+end revDocsRemoveLibrary

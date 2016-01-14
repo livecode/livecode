@@ -198,6 +198,8 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
    local tResourceList
    local tResult
    
+   put revSBReadLink(pSource) into pSource
+   
    local tOldFolder
    put the defaultfolder into tOldFolder
    if there is no folder pSource then
@@ -559,6 +561,38 @@ function revSBGenerateUUID
   return the result
 end revSBGenerateUUID
 
+private function __readlink pPath
+   if the platform is "Win32" then
+      return empty
+   end if
+   
+   local tLink
+   put shell("readlink " & quote & pPath & quote) into tLink
+   if the last char of tLink is cr then
+      delete the last char of tLink
+   end if
+   return tLink
+end __readlink
+
+// Resolve symbolic links
+private function revSBReadLink pPath
+   repeat forever
+      local tLink
+      put __readlink(pPath) into tLink
+      
+      if tLink is empty then
+         return pPath
+      end if
+      
+      if the first char of tLink is not slash then
+         set the itemdel to slash
+         put revSBCalculateAbsolutePath(item 1 to -2 of pPath, tLink) into tLink
+      end if
+      
+      put tLink into pPath
+   end repeat
+end revSBReadLink
+
 ----------
 
 local sWarnings
@@ -698,6 +732,13 @@ on revDefaultStandaloneSettings pStack
    -- Since the intel choice, set the default here:
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Only create standalone setting for Intel (for OS X) by default.
    if tStandaloneSettingsA["MacOSX x86-32"] is empty then put true into tStandaloneSettingsA["MacOSX x86-32"]
+   
+   -- Auto-remove stack passwords from community stacks
+   if revLicenseType() is "community" then
+      if tStandaloneSettingsA["password"] is not empty then
+         delete variable tStandaloneSettingsA["password"]
+      end if
+   end if
    
    set the customproperties["cRevStandaloneSettings"] of stack pStack to tStandaloneSettingsA
 end revDefaultStandaloneSettings
@@ -926,7 +967,8 @@ function revSBLibraryList
    local tPath,tSave,tLibrariesA,tBtn,tExternals
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
-   repeat for each item tItem in "Animation,Geometry,Internet,Printing,Table,XMLRPC"
+   // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
+   repeat for each item tItem in "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
       put empty into tLibrariesA[tItem]
    end repeat
    

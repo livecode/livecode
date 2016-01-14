@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -589,9 +589,14 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 					mfocused = tptr;
 
                 // The widget event manager handles enter/leave itself
-				if (newfocused && mfocused != NULL
-                    && mfocused -> getref() -> gettype() != CT_GROUP
-                    && mfocused -> getref() -> gettype() != CT_WIDGET)
+				if (newfocused && mfocused != NULL &&
+                    mfocused -> getref() -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
+                    mfocused -> getref() -> gettype() != CT_WIDGET)
+#else
+                    (MCdispatcher -> isdragtarget() ||
+                    mfocused -> getref() -> gettype() != CT_WIDGET))
+#endif
 				{
 					mfocused->getref()->enter();
 					
@@ -2853,10 +2858,7 @@ void MCCard::erasefocus(MCObject *p_object)
 MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 {
 	if (opened)
-	{
 		cptr->setparent(this);
-		cptr->open();
-	}
 
 	MCObjptr *newptr = new MCObjptr;
 	newptr->setparent(this);
@@ -2866,6 +2868,9 @@ MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 	// MW-2011-08-19: [[ Layers ]] Notify the stack that a layer may have ben inserted.
 	layer_added(cptr, objptrs != newptr ? newptr -> prev() : nil, nil);
 
+	if (opened)
+		cptr->open();
+	
 	return newptr;
 }
 
@@ -3138,8 +3143,22 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		Boolean was, is;
 		if (MCselectintersect)
 		{
-			was = cptr->maskrect(oldrect);
-			is = cptr->maskrect(selrect);
+            was = cptr->maskrect(oldrect);
+            is = cptr->maskrect(selrect);
+
+            // AL-2015-10-07:: [[ External Handles ]] If either dimension is 0,
+            //  recheck the selection intersect
+            MCRectangle t_rect;
+            t_rect = cptr -> getrect();
+
+            if (t_rect . width == 0 || t_rect . height == 0)
+            {
+                if (!was)
+                    was = MCU_line_intersect_rect(oldrect, t_rect);
+                
+                if (!is)
+                    is = MCU_line_intersect_rect(selrect, t_rect);
+            }
 		}
 		else
 		{
@@ -3296,13 +3315,7 @@ void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 // IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
 void MCCard::drawselectionrect(MCContext *p_context)
 {
-	p_context->setlineatts(0, LineDoubleDash, CapButt, JoinBevel);
-	p_context->setforeground(p_context->getblack());
-	p_context->setbackground(p_context->getwhite());
-	p_context->setdashes(0, dashlist, 2);
-	p_context->drawrect(selrect);
-	p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
-	p_context->setbackground(MCzerocolor);
+    drawmarquee(p_context, selrect);
 }
 
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
@@ -3349,9 +3362,9 @@ IO_stat MCCard::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, 
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCCard::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCCard::load(IO_handle stream, uint32_t version)
@@ -3359,7 +3372,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
@@ -3373,19 +3386,19 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 
 	rect.y = 0; // in case saved on mac with editMenus false
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_PTR)
 		{
 			MCObjptr *newptr = new MCObjptr;
 			if ((stat = newptr->load(stream)) != IO_NORMAL)
 			{
 				delete newptr;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newptr->setparent(this);
 			newptr->appendto(objptrs);
@@ -3411,7 +3424,7 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 		{
 			uint1 t_object_type;
 			if ((stat = IO_read_uint1(&t_object_type, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			MCControl *t_control;
 			switch(t_object_type)
@@ -3450,14 +3463,14 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 				t_control = new MCColors;
 			break;
 			default:
-				return IO_ERROR;
+				return checkloadstat(IO_ERROR);
 			break;
 			}
 
 			if ((stat = t_control -> load(stream, version)) != IO_NORMAL)
 			{
 				delete t_control;
-				return stat;
+				return checkloadstat(stat);
 			}
 
 			t_objptr -> setref(t_control);
@@ -3467,10 +3480,10 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 		while(t_objptr != objptrs);
 	}
 
-	return stat;
+	return checkloadstat(stat);
 }
 
-IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -3482,7 +3495,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 //---- 2.7+: 
 //  . F_OPAQUE valid - must be true in older versions
 //  . ink valid - must be GXcopy in older versions
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		t_old_flags = flags;
 		t_old_ink = GXcopy;
@@ -3490,18 +3503,18 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 //---- 2.7+
 
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 //---- 2.7+
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		flags = t_old_flags;
 		ink = t_old_ink;
 	}
 //---- 2.7+
 
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (objptrs != NULL)
 	{
@@ -3517,7 +3530,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCCard::saveobjects(IO_handle p_stream, uint4 p_part)
+IO_stat MCCard::saveobjects(IO_handle p_stream, uint4 p_part, uint32_t p_version)
 {
 	IO_stat t_stat;
 
@@ -3527,7 +3540,7 @@ IO_stat MCCard::saveobjects(IO_handle p_stream, uint4 p_part)
 		t_objptr = objptrs;
 		do
 		{
-			if ((t_stat = t_objptr -> getref() -> save(p_stream, p_part, false)) != IO_NORMAL)
+			if ((t_stat = t_objptr -> getref() -> save(p_stream, p_part, false, p_version)) != IO_NORMAL)
 				return t_stat;
 			t_objptr = t_objptr -> next();
 		}

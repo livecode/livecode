@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "lnxflst.h"
-#include "lnxtransfer.h"
+#include "lnx-clipboard.h"
 
 #define XLOOKUPSTRING_SIZE 32
 #define CONFIGURE_WAIT 0.5
@@ -104,6 +104,7 @@ extern Atom MCclipboardatom;*/
 extern Atom MCclientlistatom;
 extern Atom MCstrutpartialatom;
 extern Atom MCworkareaatom;
+extern Atom MCdndselectionatom;
 
 extern Boolean tripleclick;
 
@@ -148,10 +149,6 @@ class MCScreenDC : public MCUIDC
 	bool m_has_native_color_dialogs;
 	bool m_has_native_print_dialogs;
 	bool m_has_native_file_dialogs;
-	
-	class MCGdkTransferStore * m_DND_store ;
-	class MCGdkTransferStore * m_Clipboard_store ;
-	class MCGdkTransferStore * m_Selection_store ;
     
     // Set if GTK is available
     bool m_has_gtk;
@@ -255,11 +252,13 @@ public:
 	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 	
 	virtual bool platform_get_display_handle(void *&r_display);
+
+	virtual void *GetNativeWindowHandle(Window p_window);
 	
 	// IM-2014-01-29: [[ HiDPI ]] Convenience methods to convert logical to screen coords and back
 	MCPoint logicaltoscreenpoint(const MCPoint &p_point);
@@ -288,19 +287,7 @@ public:
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();
 
-	// SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-    virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
-    //virtual MCTransferType querydragdata(void);
-    
-	// Clipboard and selection interface
-	virtual bool ownsselection(void);
-	virtual bool setselection(MCPasteboard *p_pasteboard);
-	virtual MCPasteboard *getselection(void);
-	
-	virtual bool ownsclipboard(void);
-	virtual bool setclipboard(MCPasteboard *p_pasteboard);
-	virtual MCPasteboard *getclipboard(void);
-	virtual void flushclipboard(void);
+    virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
 
 	void setupcolors();
 	GdkScreen* getscreen();
@@ -346,11 +333,11 @@ public:
 #endif
     
     // Processes all outstanding GDK events and adds them to the event queue
-    void EnqueueGdkEvents();
+    void EnqueueGdkEvents(bool p_may_block = false);
     
     // Searches the event queue for an event that passes the given filter
     typedef bool (*event_filter)(GdkEvent*, void *);
-    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *);
+    bool GetFilteredEvent(event_filter, GdkEvent* &r_event, void *, bool p_may_block = false);
     
     // Utility function - maps an X drawing operation to the GDK equivalent
     static GdkFunction XOpToGdkOp(int op);

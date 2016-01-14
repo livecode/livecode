@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -21,8 +21,8 @@
 
 extern "C" MC_DLLEXPORT_DEF void MCStringEvalConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
-    if (!MCStringFormat(r_output, "%@%@", p_left, p_right))
-        return;
+	if (!MCStringCreateWithStrings(r_output, p_left, p_right))
+		return;
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCStringExecPutStringBefore(MCStringRef p_source, MCStringRef& x_target)
@@ -64,8 +64,8 @@ extern "C" MC_DLLEXPORT_DEF void MCStringExecReplace(MCStringRef p_pattern, MCSt
 
 extern "C" MC_DLLEXPORT_DEF void MCStringEvalConcatenateWithSpace(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_output)
 {
-    if (!MCStringFormat(r_output, "%@ %@", p_left, p_right))
-        return;
+	if (!MCStringCreateWithStringsAndSeparator(r_output, ' ', p_left, p_right))
+		return;
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCStringEvalLowercaseOf(MCStringRef p_source, MCStringRef& r_output)

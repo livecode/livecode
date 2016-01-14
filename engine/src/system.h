@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -222,7 +222,7 @@ public:
 		
 		int64_t t_new_offset;
 		t_new_offset = p_offset + t_base;
-		if (t_new_offset < 0 || t_new_offset > m_length)
+		if (t_new_offset < 0 || size_t(t_new_offset) > m_length)
 			return false;
 		
         // SN-2015-02-11: [[ Bug 14531 ]] We are no longer at

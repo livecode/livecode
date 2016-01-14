@@ -1,0 +1,67 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.compiler.invoke.tests
+
+/* From Bug 15013 */
+public handler TestInvokeIndexes()
+	variable tArray
+
+   put the empty array into tArray
+   put 1 into tArray["foo"]
+	test "single index" when tArray["foo"] is 1
+
+   put the empty array into tArray
+   put the empty array into tArray["foo"]
+   put 1 into tArray["foo"]["bar"]
+	test "double index" when tArray["foo"]["bar"] is 1
+
+   put the empty array into tArray
+   put the empty array into tArray["foo"]
+   put the empty array into tArray["foo"]["bar"]
+   put 1 into tArray["foo"]["bar"]["baz"]
+	test "triple index" when tArray["foo"]["bar"]["baz"] is 1
+end handler
+
+/* From Bug 15429 */
+private handler DoMutateInOut(inout xVar)
+   add 1 to xVar
+end handler
+
+public handler TestInvokeInOutIndex()
+	variable tArray
+
+   put the empty array into tArray
+   put 0 into tArray["foo"]
+   DoMutateInOut(tArray["foo"])
+	test "single index after inout" when tArray["foo"] is 1
+
+   put the empty array into tArray
+   put the empty array into tArray["foo"]
+   put 0 into tArray["foo"]["bar"]
+   DoMutateInOut(tArray["foo"]["bar"])
+	test "double index after inout" when tArray["foo"]["bar"] is 1
+
+   put the empty array into tArray
+   put the empty array into tArray["foo"]
+   put the empty array into tArray["foo"]["bar"]
+   put 0 into tArray["foo"]["bar"]["baz"]
+   DoMutateInOut(tArray["foo"]["bar"]["baz"])
+	test "triple index after inout" when tArray["foo"]["bar"]["baz"] is 1
+end handler
+
+end module

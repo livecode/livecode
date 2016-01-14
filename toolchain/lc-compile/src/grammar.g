@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -481,10 +481,6 @@
 
 'nonterm' OptionalReturnsClause(-> TYPE)
 
-    'rule' OptionalReturnsClause(-> Type):
-        "as" @(-> Position) Type(-> Type)
-        Warning_UsingAsForHandlerReturnTypeDeprecated(Position)
-
     'rule' OptionalReturnsClause(-> Type)
         "returns" @(-> Position) Type(-> Type)
 
@@ -580,13 +576,13 @@
         "is" "iterator"
 
     'rule' SyntaxClass(-> prefix(Precedence)):
-        "is" "prefix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" "prefix" "operator" "with" SyntaxPrecedence(-> Precedence) "precedence"
 
     'rule' SyntaxClass(-> postfix(Precedence)):
-        "is" "postfix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" "postfix" "operator" "with" SyntaxPrecedence(-> Precedence) "precedence"
 
     'rule' SyntaxClass(-> binary(Assoc, Precedence)):
-        "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" SyntaxPrecedence(-> Precedence) "precedence"
 
     'rule' SyntaxClass(-> phrase):
         "is" "phrase"
@@ -601,6 +597,77 @@
         
     'rule' SyntaxAssoc(-> right):
         "right"
+
+'nonterm' SyntaxPrecedence(-> SYNTAXPRECEDENCE)
+
+    'rule' SyntaxPrecedence(-> scoperesolution):
+        "scope" "resolution"
+
+    'rule' SyntaxPrecedence(-> functioncall):
+        "function" "call"
+
+    'rule' SyntaxPrecedence(-> subscript):
+        "subscript"
+
+    'rule' SyntaxPrecedence(-> property):
+        "property"
+
+    'rule' SyntaxPrecedence(-> subscriptchunk):
+        "subscript chunk"
+
+    'rule' SyntaxPrecedence(-> functionchunk):
+        "function chunk"
+
+    'rule' SyntaxPrecedence(-> constructor):
+        "constructor"
+
+    'rule' SyntaxPrecedence(-> conversion):
+        "conversion"
+
+    'rule' SyntaxPrecedence(-> exponentiation):
+        "exponentiation"
+
+    'rule' SyntaxPrecedence(-> modifier):
+        "modifier"
+
+    'rule' SyntaxPrecedence(-> multiplication):
+        "multiplication"
+
+    'rule' SyntaxPrecedence(-> addition):
+        "addition"
+
+    'rule' SyntaxPrecedence(-> bitwiseshift):
+        "bitwise shift"
+
+    'rule' SyntaxPrecedence(-> concatenation):
+        "concatenation"
+
+    'rule' SyntaxPrecedence(-> comparison):
+        "comparison"
+
+    'rule' SyntaxPrecedence(-> classification):
+        "classification"
+
+    'rule' SyntaxPrecedence(-> bitwiseand):
+        "bitwise and"
+
+    'rule' SyntaxPrecedence(-> bitwisexor):
+        "bitwise xor"
+
+    'rule' SyntaxPrecedence(-> bitwiseor):
+        "bitwise or"
+
+    'rule' SyntaxPrecedence(-> logicalnot):
+        "logical not"
+
+    'rule' SyntaxPrecedence(-> logicaland):
+        "logical and"
+
+    'rule' SyntaxPrecedence(-> logicalor):
+        "logical or"
+
+    'rule' SyntaxPrecedence(-> sequence):
+        "sequence"
 
 'nonterm' SyntaxMethods(-> SYNTAXMETHODLIST)
 
@@ -927,6 +994,9 @@
     'rule' TermExpression(-> list(Position, List)):
         "[" @(-> Position) OptionalExpressionList(-> List) "]"
 
+    'rule' TermExpression(-> array(Position, Pairs)):
+        "{" @(-> Position) OptionalExpressionArray(-> Pairs) "}"
+
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
@@ -990,6 +1060,29 @@
 
     'rule' ExpressionListAsExpression(-> list(Position, List)):
         ExpressionList(-> List) @(-> Position)
+
+----------
+
+'nonterm' OptionalExpressionArray(-> EXPRESSIONLIST)
+
+    'rule' OptionalExpressionArray(-> Pairs):
+        ExpressionArray(-> Pairs)
+
+    'rule' OptionalExpressionArray(-> nil):
+        -- empty
+
+'nonterm' ExpressionArray(-> EXPRESSIONLIST)
+
+    'rule' ExpressionArray(-> expressionlist(Head, Tail)):
+        ExpressionArrayEntry(-> Head) "," ExpressionArray(-> Tail)
+
+    'rule' ExpressionArray(-> expressionlist(Head, nil)):
+        ExpressionArrayEntry(-> Head)
+
+'nonterm' ExpressionArrayEntry(-> EXPRESSION)
+
+    'rule' ExpressionArrayEntry(-> pair(Position, Key, Value)):
+        Expression(-> Key) ":" @(-> Position) Expression(-> Value)
 
 --------------------------------------------------------------------------------
 -- Syntax Syntax

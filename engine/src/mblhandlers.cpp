@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -1273,6 +1273,8 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
         ctxt . SetTheResultToValue(kMCTrue);
     else
         ctxt . SetTheResultToValue(kMCFalse);
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1752,6 +1754,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
 	ctxt . SetTheResultToEmpty();
     
     int t_timeout;
+    t_timeout = 0;
     if (p_parameters)
     {
         MCAutoValueRef t_value;
@@ -1760,8 +1763,15 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_timeout = MCNumberFetchAsInteger(*t_number);
     }
+    else
+    {
+        // We need a parameter
+        ctxt . Throw();
+    }
     
-    MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
+    if (!ctxt . HasError())
+        MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
+    
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -3111,14 +3121,17 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
     
     ctxt.SetTheResultToEmpty();
     if (p_parameters != nil)
+    {
 		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
     
-    if (t_success)
-    {
-        MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
+        if (t_success)
+            MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
     }
+    else
+        t_success = false;
     
-    if (!ctxt.HasError())
+    
+    if (t_success && ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -4418,7 +4431,7 @@ Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
     if (t_success)
         MCMiscSetUseDeviceResolution(ctxt, t_use_device_res, t_use_control_device_res);
     
-    if (!ctxt.HasError() && t_success)
+    if (t_success && !ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -5663,31 +5676,37 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
             }
         }
     }
-    
-    MCPickButtonType t_type = kMCPickButtonNone;
-    // now process any additional parameters
-    while (t_success && t_has_buttons && p_parameters != nil)
+	
+    // PM-2015-09-01: [[ Bug 15816 ]] Process any additional parameters correctly
+    while (t_success && t_has_buttons && t_string_param != nil)
     {
         if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless))
             t_use_checkmark = true;
         else if (MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless))
-            t_type = kMCPickButtonCancel;
+			t_use_cancel = true;
         else if (MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless))
-            t_type = kMCPickButtonDone;
+			t_use_done = true;
         else if (MCStringIsEqualToCString(t_string_param, "canceldone", kMCCompareCaseless))
-            t_type = kMCPickButtonCancelAndDone;
+		{
+			t_use_cancel = true;
+			t_use_done = true;
+		}
         else if (MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
             t_use_picker = true;
         
         MCValueRelease(t_string_param);
-        t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		t_string_param = nil;
+		
+		if (p_parameters != nil)
+			t_success = MCParseParameters(p_parameters, "x", &t_string_param);
+		
     }
     
     ctxt.SetTheResultToEmpty();
         
 	// call the Exec method to process the pick wheel
     // The function sets the result itself.
-	MCPickExecPickOptionByIndex(ctxt, kMCChunkTypeLine, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
+	MCPickExecPickOptionByIndex(ctxt, kMCChunkTypeLine, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr . object -> getrect());
     
     // Free memory
     for (uindex_t i = 0; i < t_option_lists . Size(); i++)
@@ -5885,13 +5904,13 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     {
         // MM-2012-03-15: [[ Bug ]] Make sure we handle no type being passed.
         if (t_type == nil)
-            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
         else if (MCCStringEqualCaseless("time", t_type))
-            MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
         else if (MCCStringEqualCaseless("datetime", t_type))
-            MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
         else
-            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
     }
     
     MCCStringFree(t_type);
@@ -6052,7 +6071,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
     ctxt.SetTheResultToEmpty();
     
 	if (t_success)
-		MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+		MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -6211,7 +6230,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
     ctxt.SetTheResultToEmpty();
        
 	if (t_success)
-		MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+		MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -6321,8 +6340,13 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
         /* UNCHECKED */ MCListAppendCString(*t_list, "rear flash");
     
     MCAutoStringRef t_features_string;
-    /* UNCHECKED */ MCListCopyAsString(*t_list, &t_features_string);
+
+    if (!MCListCopyAsString(*t_list, &t_features_string))
+        return ES_ERROR;
+
     ctxt . SetTheResultToValue(*t_features_string);
+
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
@@ -6621,6 +6645,8 @@ Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
     MCNativeControlIdentifierFree(ctxt, t_identifier);
     if (*t_string != nil)
         ctxt . SetTheResultToValue(*t_string);
+    
+    return ES_NORMAL;
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)
@@ -6663,12 +6689,13 @@ Exec_stat MCHandleLibUrlSetSSLVerification(void *context, MCParameter *p_paramet
     
     MCExecContext ctxt(nil, nil, nil);
     
-    MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
+    if (t_success)
+        MCMiscExecLibUrlSetSSLVerification(ctxt, t_enabled);
     
-    if (!ctxt . HasError())
+    if (t_success && !ctxt . HasError())
         return ES_NORMAL;
 	
-	return ES_NORMAL;
+	return ES_ERROR;
 }
 
 // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
@@ -6744,6 +6771,11 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
     
     if (t_success)
         MCMiscSetRemoteControlDisplayProperties(ctxt, *t_props);
+    
+    if (t_success)
+        return ES_NORMAL;
+    else
+        return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

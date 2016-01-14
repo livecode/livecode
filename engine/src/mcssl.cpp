@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -906,6 +906,7 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 #ifdef TARGET_PLATFORM_MACOS_X
 bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 	bool t_success = true;
 	
 	CFArrayRef t_anchors = NULL;
@@ -946,6 +947,9 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 		free_x509_stack(t_stack);
 
 	return t_success;
+#else
+    return false;
+#endif
 }
 
 bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)

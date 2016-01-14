@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -125,11 +125,9 @@ static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGR
 		return kMCCustomPrinterImageRawXRGB;
 	case kMCGRasterFormat_A:
 	case kMCGRasterFormat_U_ARGB:
+    default:
 		// Unsupported
-		MCAssert(false);
-		return kMCCustomPrinterImageNone;
-	default:
-		MCUnreachable();
+        MCUnreachableReturn(kMCCustomPrinterImageNone);
 	}
 }
 
@@ -1031,6 +1029,7 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	MCAutoStringRef t_string;
     // SN-2014-06-17 [[ Bug 12595 ]] Not properly causing the bug, but it never hurts to get to use the right encoding
     MCStringCreateWithBytes((byte_t*)p_span->chars, p_span->char_count * 2, kMCStringEncodingUTF16, false, &t_string);
+    
 	byte_t *t_bytes;
 	uindex_t t_byte_count;
 	/* UNCHECKED */ MCStringConvertToBytes(*t_string, kMCStringEncodingUTF8, false, t_bytes, t_byte_count);
@@ -1039,7 +1038,10 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	uint32_t *t_clusters;
 	t_clusters = nil;
 	if (!MCMemoryNewArray(t_byte_count, t_clusters))
+    {
+        MCMemoryDeleteArray(t_bytes);
 		return false;
+    }
 	
 	// Now loop through and build up the cluster array. Notice we keep track of
 	// UTF-16 codepoint index by taking note of leading UTF-8 bytes.
@@ -1090,7 +1092,8 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	extern int32_t MCCustomPrinterComputeFontSize(void *font);
 	t_font_size = MCCustomPrinterComputeFontSize(p_span -> font);
 	t_font_handle = p_span -> font;
-#elif defined(_SERVER)
+#else
+    // Neither servers nor Android have an implementation
 	t_font_size = 0;
 	t_font_handle = NULL;
 #endif
@@ -1103,6 +1106,7 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	t_success = context -> device -> DrawText((const MCCustomPrinterGlyph *)p_span -> glyphs, p_span -> glyph_count, (const char *)t_bytes, t_byte_count, t_clusters, t_font, context -> paint, context -> transform, context -> clip);
 
 	MCMemoryDeleteArray(t_clusters);
+    MCMemoryDeleteArray(t_bytes);
 	
 	return t_success;
 }
@@ -1577,38 +1581,6 @@ bool MCCustomPrinterDevice::StartPage(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class MCCustomPrinter: public MCPrinter
-{
-public:
-	MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device);
-	~MCCustomPrinter(void);
-
-	void SetDeviceOptions(MCArrayRef p_options);
-
-protected:
-	void DoInitialize(void);
-	void DoFinalize(void);
-
-	bool DoReset(MCStringRef p_name);
-	bool DoResetSettings(MCDataRef p_settings);
-
-	const char *DoFetchName(void);
-	void DoFetchSettings(void*& r_bufer, uint4& r_length);
-
-	void DoResync(void);
-
-	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner);
-	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner);
-
-	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device);
-	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
-
-private:
-	MCStringRef m_device_name;
-	MCCustomPrintingDevice *m_device;
-	MCArrayRef m_device_options;
-};
 
 MCCustomPrinter::MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device)
 {
@@ -2141,7 +2113,7 @@ private:
 
 typedef MCCustomPrintingDevice *(*MCCustomPrinterCreateProc)(void);
 
-Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCPrinter*& r_printer)
+Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer)
 {
 	MCCustomPrintingDevice *t_device;
 	t_device = nil;
@@ -2185,8 +2157,8 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
             // AL-2014-09-19: Range argument to MCStringFormat is a pointer to an MCRange.
 			MCStringFormat(&t_module_path, "%*@/revpdfprinter.dylib", &t_range, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
-#elif defined(_SERVER)
-			
+#else
+			// Neither servers nor Android have an implementation
 			t_module = nil;
 #endif
 			if (t_module != nil)

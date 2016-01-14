@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -35,45 +35,55 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "text.h"
 
+
 bool MCField::macmatchfontname(const char *p_font_name, char p_derived_font_name[])
 {
-	ATSUFontID t_font_id;
-	if (ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontFullName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr ||
-		ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontUniqueName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr ||
-		ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontFamilyName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr ||
-		ATSUFindFontFromName(p_font_name, strlen(p_font_name), kFontNoName, kFontNoPlatform, kFontNoScript, kFontNoLanguage, &t_font_id) == noErr)
-	{
-		// Fetch the style name
-		char t_style_name[64];
-		ByteCount t_style_name_length;
-		t_style_name_length = 0;
-		ATSUFindFontName(t_font_id, kFontStyleName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, 63, t_style_name, &t_style_name_length, NULL);
-		t_style_name[t_style_name_length] = '\0';
-		
-		// Fetch the full name
-		char t_full_name[256];
-		ByteCount t_full_name_length;
-		t_full_name_length = 0;
-		ATSUFindFontName(t_font_id, kFontFullName, kFontMacintoshPlatform, kFontNoScript, kFontNoLanguage, 255, t_full_name, &t_full_name_length, NULL);
-		t_full_name[t_full_name_length] = '\0';
-		
-		// MW-2011-09-02: Make sure we don't do anything at all if style is regular
-		//   (output name should be fullname!)
-		if (MCCStringEqualCaseless(t_style_name, "Regular"))
-			p_font_name = p_font_name; // Do nothing
-		else if (MCCStringEndsWithCaseless(t_full_name, "Bold Italic"))
-			t_full_name[t_full_name_length - 12] = '\0';
-		else if (MCCStringEndsWithCaseless(t_full_name, "Bold"))
-			t_full_name[t_full_name_length - 5] = '\0';
-		else if (MCCStringEndsWithCaseless(t_full_name, "Italic"))
-			t_full_name[t_full_name_length - 7] = '\0';
-		
-		strcpy(p_derived_font_name, t_full_name);
-		
-		return true;
-	}
-	
-	return false;
+    // Create a CTFont using the given name. It performs fall-back processing of
+    // the name (which we had to previously do by hand for ATSUI): it checks for
+    // a font with that exact name, then family name, etc.
+    //
+    // The size and transform matrix here are arbitrary. We just want to know
+    // that the font exists.
+    //
+    CTFontRef t_font_ref = nil;
+    CFStringRef t_font_name = CFStringCreateWithCString(kCFAllocatorDefault, p_font_name, kCFStringEncodingMacRoman);
+    if (t_font_name != nil)
+    {
+        t_font_ref = CTFontCreateWithName(t_font_name, 12, &CGAffineTransformIdentity);
+        CFRelease(t_font_name);
+    }
+    
+    // Get the proper name for the font as well as its style name
+    CFStringRef t_font_full_name = nil;
+    if (t_font_ref != nil)
+    {
+        t_font_full_name = CTFontCopyFullName(t_font_ref);
+        CFRelease(t_font_ref);
+    }
+    
+    // Check for various stylistic variants at the end of the font name
+    CFStringRef t_real_font_name = nil;
+    if (t_font_full_name != nil)
+    {
+        CFIndex t_length = CFStringGetLength(t_font_full_name);
+        if (CFStringHasSuffix(t_font_full_name, CFSTR("Bold Italic")))
+            t_real_font_name = CFStringCreateWithSubstring(kCFAllocatorDefault, t_font_full_name, CFRangeMake(0, t_length-12));
+        else if (CFStringHasSuffix(t_font_full_name, CFSTR("Bold")))
+            t_real_font_name = CFStringCreateWithSubstring(kCFAllocatorDefault, t_font_full_name, CFRangeMake(0, t_length-5));
+        else if (CFStringHasSuffix(t_font_full_name, CFSTR("Italic")))
+            t_real_font_name = CFStringCreateWithSubstring(kCFAllocatorDefault, t_font_full_name, CFRangeMake(0, t_length-7));
+        else
+            t_real_font_name = (CFStringRef)CFRetain(t_font_full_name);
+        CFRelease(t_font_full_name);
+    }
+    
+    if (t_real_font_name != nil)
+    {
+        bool t_success;
+        t_success = CFStringGetCString(t_real_font_name, p_derived_font_name, 256, kCFStringEncodingMacRoman);
+        CFRelease(t_real_font_name);
+        return t_success;
+    }
+    
+    return false;
 }
-
-

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -229,9 +229,15 @@
     EmitBeginListConstant
     EmitContinueListConstant
     EmitEndListConstant
+    EmitBeginArrayConstant
+    EmitContinueArrayConstant
+    EmitEndArrayConstant
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
+    EmitBeginAssignArray
+    EmitContinueAssignArray
+    EmitEndAssignArray
     EmitFetch
     EmitStore
     EmitReturn
@@ -318,10 +324,12 @@
     Error_InterfaceFileNameMismatch
     Error_NoReturnTypeSpecifiedForForeignHandler
     Error_NoTypeSpecifiedForForeignHandlerParameter
+    Error_ConstantArrayKeyIsNotStringLiteral
+    Error_ListExpressionTooLong
+    Error_ArrayExpressionTooLong
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
-    Warning_UsingAsForHandlerReturnTypeDeprecated
     Warning_UndefinedConstantDeprecated
     Warning_DeprecatedSyntax
 
@@ -595,9 +603,15 @@
 'action' EmitBeginListConstant()
 'action' EmitContinueListConstant(ConstIndex: INT)
 'action' EmitEndListConstant(-> ConstIndex: INT)
+'action' EmitBeginArrayConstant()
+'action' EmitContinueArrayConstant(ConstKeyIndex: INT, ConstValueIndex: INT)
+'action' EmitEndArrayConstant(-> ConstIndex: INT)
 'action' EmitBeginAssignList(Register: INT)
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
+'action' EmitBeginAssignArray(Register: INT)
+'action' EmitContinueAssignArray(Register: INT)
+'action' EmitEndAssignArray()
 'action' EmitFetch(Register: INT, Var: INT, Level: INT)
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
@@ -704,10 +718,13 @@
 'action' Error_NoReturnTypeSpecifiedForForeignHandler(Position: POS)
 'action' Error_NoTypeSpecifiedForForeignHandlerParameter(Position: POS)
 
+'action' Error_ConstantArrayKeyIsNotStringLiteral(Position: POS)
+'action' Error_ListExpressionTooLong(Position: POS)
+'action' Error_ArrayExpressionTooLong(Position: POS)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
-'action' Warning_UsingAsForHandlerReturnTypeDeprecated(Position: POS)
 'action' Warning_UndefinedConstantDeprecated(Position: POS)
 'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 

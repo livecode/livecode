@@ -1,0 +1,102 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.unittest.__IMPL
+-- DON'T USE THIS MODULE, USE com.livecode.unittest INSTEAD
+
+use com.livecode.foreign
+
+foreign handler MCValueCopyDescription(in Value as any, out Description as String) returns CBool binds to "<builtin>"
+
+----------------------------------------------------------------
+-- Main functions used by tests
+----------------------------------------------------------------
+
+public handler MCUnitPlan(in pCount as Number)
+	variable tNumberString as String
+	put pCount formatted as string into tNumberString
+
+	-- We have to do a bit of a dance to format strings correctly
+	-- at the moment
+	if "." is in tNumberString then
+		variable tDotOffset
+		put the first offset of "." in tNumberString into tDotOffset
+		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+	end if
+
+	MCUnitOutput("1.." & tNumberString)
+end handler
+
+public handler MCUnitDiagnostic(in pMessage as any)
+	variable tCopyMessage as String
+	MCValueCopyDescription(pMessage, tCopyMessage)
+
+	variable tMessageLines as List
+	split tCopyMessage by "\n" into tMessageLines
+
+	variable tLine as String
+	repeat for each element tLine in tMessageLines
+		MCUnitOutput("#" && tLine)
+	end repeat
+end handler
+
+----------------------------------------------------------------
+-- Helper functions for outputting test results
+----------------------------------------------------------------
+
+public handler MCUnitOutputTest(in pCondition as Boolean, in pDescription as String, in pDirective as String, in pReason as String)
+	variable tMessage as String
+
+	if pCondition then
+		put "ok" into tMessage
+	else
+		put "not ok" into tMessage
+	end if
+
+	if pDescription is not empty then
+		put " - " & pDescription after tMessage
+	end if
+
+	if pDirective is not empty then
+		put " #" && pDirective after tMessage
+
+		if pReason is not empty then
+			put " " & pReason after tMessage
+		end if
+	end if
+
+	MCUnitOutput(tMessage)
+end handler
+
+foreign handler MCStringEncode(in Source as String, in Encoding as CInt, in IsExternalRep as CBool, out Encoded as Data) returns CBool binds to "<builtin>"
+
+public handler MCUnitOutput(in pMessage as String)
+	variable tEncoded as Data
+
+	if the last char of pMessage is not "\n" then
+		put "\n" after pMessage
+	end if
+
+	-- Encode as UTF-8, always.
+	-- FIXME this should use LCB encoding library rather than directly
+	-- calling into libfoundation
+	MCStringEncode(pMessage, 4 /* UTF-8 */, false, tEncoded)
+
+	write tEncoded to the output stream
+end handler
+
+end module

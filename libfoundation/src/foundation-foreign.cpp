@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -32,6 +32,17 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCSSizeTypeInfo;
 
 MCTypeInfoRef kMCForeignImportErrorTypeInfo;
 MCTypeInfoRef kMCForeignExportErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignBoolTypeInfo() { return kMCBoolTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignUIntTypeInfo() { return kMCUIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignIntTypeInfo() { return kMCIntTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignFloatTypeInfo() { return kMCFloatTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignDoubleTypeInfo() { return kMCDoubleTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignPointerTypeInfo() { return kMCPointerTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSizeTypeInfo() { return kMCSizeTypeInfo; }
+MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSSizeTypeInfo() { return kMCSSizeTypeInfo; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -694,6 +705,7 @@ void __MCForeignValueFinalize(void)
     MCValueRelease(kMCDoubleTypeInfo);
     MCValueRelease(kMCPointerTypeInfo);
 	MCValueRelease(kMCSizeTypeInfo);
+	MCValueRelease(kMCSSizeTypeInfo);
 
 	MCValueRelease (kMCForeignImportErrorTypeInfo);
 	MCValueRelease (kMCForeignExportErrorTypeInfo);

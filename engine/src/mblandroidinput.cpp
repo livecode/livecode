@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -637,6 +637,8 @@ void MCAndroidInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInp
     t_view = GetView();
     
     MCInputTextAlign t_align;
+    // Default to the switch's default
+    t_align = kMCInputTextAlignLeft;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getTextAlign", "v", &t_align);
@@ -662,6 +664,8 @@ void MCAndroidInputControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeCo
     t_view = GetView();
     
     MCInputVerticalAlign t_align;
+    // Default to the switch's default
+    t_align = kMCInputVerticalAlignCenter;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getVerticalAlign", "i", &t_align);
@@ -698,6 +702,8 @@ void MCAndroidInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNat
     t_view = GetView();
     
     MCInputCapitalizationType t_type;
+    // Default to the switch default
+    t_type = kMCInputCapitalizeNone;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getCapitalization", "i", &t_type);
@@ -739,6 +745,8 @@ void MCAndroidInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControl
     t_view = GetView();
 
     MCInputKeyboardType t_type;
+    // Default to the switch's default
+    t_type = kMCInputKeyboardTypeDefault;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getKeyboardType", "v", &t_type);
@@ -776,6 +784,8 @@ void MCAndroidInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInp
     t_view = GetView();
 
     MCInputReturnKeyType t_type;
+    // Default to the switch's default
+    t_type = kMCInputReturnKeyTypeDefault;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getReturnKeyType", "i", &t_type);

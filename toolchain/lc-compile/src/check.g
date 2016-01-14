@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -46,6 +46,10 @@
         
         -- Check that repeat-specific commands are appropriate
         CheckRepeats(Module, 0)
+
+        -- Check that all composite value expressions are built from
+        -- compatible value expressions
+        CheckLiterals(Module)
 
 --------------------------------------------------------------------------------
 
@@ -452,6 +456,13 @@
 
     'rule' IsExpressionSimpleConstant(list(_, List)):
         IsExpressionListSimpleConstant(List)
+
+    'rule' IsExpressionSimpleConstant(array(_, Pairs)):
+        IsExpressionListSimpleConstant(Pairs)
+
+    'rule' IsExpressionSimpleConstant(pair(_, Key, Value)):
+        IsExpressionSimpleConstant(Key)
+        IsExpressionSimpleConstant(Value)
 
     'rule' IsExpressionSimpleConstant(invoke(Position, invokelist(Info, nil), expressionlist(Operand, nil))):
         Info'Name -> SyntaxName
@@ -1586,6 +1597,7 @@
     'rule' GetExpressionPosition(list(Position, _) -> Position):
     'rule' GetExpressionPosition(call(Position, _, _) -> Position):
     'rule' GetExpressionPosition(invoke(Position, _, _) -> Position):
+    'rule' GetExpressionPosition(result(Position) -> Position):
     'rule' GetExpressionPosition(nil -> Position)
         GetUndefinedPosition(-> Position)
 
@@ -1790,6 +1802,47 @@
 
 --------------------------------------------------------------------------------
 
+'sweep' CheckLiterals(ANY)
+
+    'rule' CheckLiterals(EXPRESSION'list(Position, Elements)):
+        (|
+            IsExpressionSimpleConstant(list(Position, Elements))
+        ||
+            QueryExpressionListLength(Elements -> ElementCount)
+            [|
+                gt(ElementCount, 254)
+                Error_ListExpressionTooLong(Position)
+            |]
+        |)
+        CheckLiterals(Elements)
+
+    'rule' CheckLiterals(EXPRESSION'array(Position, Pairs)):
+        (|
+            IsExpressionSimpleConstant(array(Position, Pairs))
+        ||
+            QueryExpressionListLength(Pairs -> PairCount)
+            [|
+                gt(PairCount, 127)
+                Error_ArrayExpressionTooLong(Position)
+            |]
+        |)
+        CheckLiterals(Pairs)
+
+    'rule' CheckLiterals(EXPRESSION'pair(Position, Key, Value)):
+        (|
+            IsExpressionSimpleConstant(Key)
+            (|
+                where(Key -> string(_, _))
+            ||
+                Error_ConstantArrayKeyIsNotStringLiteral(Position)
+            |)
+        ||
+            CheckLiterals(Key)
+        |)
+        CheckLiterals(Value)
+
+--------------------------------------------------------------------------------
+
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 
     'rule' QueryHandlerIdSignature(Id -> Signature)
@@ -1854,5 +1907,15 @@
         Id'Meaning -> Meaning
         
 'condition' QuerySymbolId(ID -> SYMBOLINFO)
+
+--------------------------------------------------------------------------------
+
+'action' QueryExpressionListLength(EXPRESSIONLIST -> INT)
+
+    'rule' QueryExpressionListLength(expressionlist(_, Tail) -> TailCount + 1)
+        QueryExpressionListLength(Tail -> TailCount)
+
+    'rule' QueryExpressionListLength(nil -> 0)
+        -- nothing
 
 --------------------------------------------------------------------------------

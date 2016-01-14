@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -101,7 +101,7 @@ public:
 	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
-	IO_stat savestack(MCStack *sptr, const MCStringRef);
+	IO_stat savestack(MCStack *sptr, const MCStringRef, uint32_t p_version = UINT32_MAX);
 	IO_stat startup(void);
 	
 	void wreshape(Window w);
@@ -131,7 +131,7 @@ public:
 	// This method is invoked when this application is acting as a drag-drop
 	// target and the mouse pointer has entered the given window.
 	//
-	void wmdragenter(Window w, MCPasteboard* p_data);
+	void wmdragenter(Window w);
 
 	// This method is invoked when this application is acting as a drag-drop
 	// target and the mouse pointer has moved within the given window to the
@@ -270,7 +270,7 @@ private:
 	IO_stat doreadfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
     //   is wrapped by savestack to handle logical font table.
-    IO_stat dosavestack(MCStack *sptr, const MCStringRef);
+	IO_stat dosavestack(MCStack *sptr, const MCStringRef, uint32_t p_version);
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Save a stack if it is marked as script-only.
     IO_stat dosavescriptonlystack(MCStack *sptr, const MCStringRef);
 };

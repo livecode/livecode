@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -121,12 +121,12 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfUInt, MCField, HilitedLines)
+	DEFINE_RW_OBJ_LIST_PROPERTY(P_HILITED_LINES, ItemsOfLooseUInt, MCField, HilitedLines)
     DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_FLAGGED_RANGES, InterfaceFieldRanges, MCField, FlaggedRanges)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_STOPS, ItemsOfLooseUInt, MCField, TabStops)
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfUInt, MCField, PageHeights)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_PAGE_HEIGHTS, LinesOfLooseUInt, MCField, PageHeights)
     DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_PAGE_RANGES, InterfaceFieldRanges, MCField, PageRanges)
 
     DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
@@ -180,8 +180,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_SPACE_ABOVE, UInt16, MCField, SpaceAbove)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_SPACE_BELOW, OptionalUInt16, MCField, SpaceBelow)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_SPACE_BELOW, UInt16, MCField, SpaceBelow)
-	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
-	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfUInt, MCField, TabStops)
+	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfLooseUInt, MCField, TabStops)
+	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_STOPS, ItemsOfLooseUInt, MCField, TabStops)
     DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
     DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_TAB_ALIGN, InterfaceFieldTabAlignments, MCField, TabAlignments)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_BORDER_WIDTH, OptionalUInt8, MCField, BorderWidth)
@@ -198,8 +198,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_DONT_WRAP, Bool, MCField, DontWrap)
 	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_PROPERTY(P_PADDING, OptionalUInt8, MCField, Padding)
 	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_PROPERTY(P_PADDING, UInt8, MCField, Padding)
-	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
-	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfUInt, MCField, TabWidths)
+	DEFINE_RW_OBJ_LINE_CHUNK_NON_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
+	DEFINE_RO_OBJ_LINE_CHUNK_EFFECTIVE_MIXED_LIST_PROPERTY(P_TAB_WIDTHS, ItemsOfLooseUInt, MCField, TabWidths)
 	DEFINE_RW_OBJ_LINE_CHUNK_MIXED_PROPERTY(P_INVISIBLE, Bool, MCField, Invisible)
 
 	DEFINE_RW_OBJ_CHAR_CHUNK_NON_EFFECTIVE_MIXED_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCField, ForeColor)
@@ -569,7 +569,12 @@ void MCField::kfocus()
 		uint2 t_old_trans;
 		t_old_trans = gettransient();
 		state |= CS_KFOCUSED;
-
+        
+        if (MCactivefield != NULL && MCactivefield != this)
+            MCactivefield->unselect(True, True);
+        MCactivefield = this;
+        clearfound();
+        
 		if (flags & F_LIST_BEHAVIOR)
 		{
 			if (!(flags & F_TOGGLE_HILITE))
@@ -588,10 +593,6 @@ void MCField::kfocus()
 		}
 		else
 		{
-			if (MCactivefield != NULL && MCactivefield != this)
-				MCactivefield->unselect(True, True);
-			MCactivefield = this;
-			clearfound();
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object, noting
 			//   possible change in transient.
 			layer_transientchangedandredrawall(t_old_trans);
@@ -959,32 +960,45 @@ void MCField::munfocus()
 
 void MCField::mdrag(void)
 {
-	// MW-2008-02-27: [[ Bug 5968 ]] dragStart sent if click started in scrollbar
+	// Don't act as a field drag if the cursor is within a scrollbar
 	if (getstate(CS_HSCROLL) || getstate(CS_VSCROLL))
 		return;
 
-	// MW-2008-03-31: [[ Bug 6294 ]] dragStart should only be sent to an unlocked
-	//   field if there's a selection already.
+	// We can do an automatic (engine-based) drag from a field if the following
+    // conditions are true:
+    //  - the drag start message was not handled (or failed, or passed)
+    //  - the field contains draggable text
+    //
 	bool t_auto_start;
 	if (getflag(F_LOCK_TEXT) || getstate(CS_SOURCE_TEXT))
 		t_auto_start = message(MCM_drag_start) != ES_NORMAL;
 	else
 		t_auto_start = false;
 
+    // This field is the object being dragged
 	MCdragtargetptr = this;
 
+    // If we're not using engine-based dragging, there isn't anything more to
+    // do for the moment.
 	if (!t_auto_start)
 		return;
 
+    // If there is nothing to drag, there are no contents to put on the drag
+    // board.
 	if (!getstate(CS_SOURCE_TEXT))
 		return;
 
+    // Serialise the current selection and place it on the drag board.
 	MCAutoDataRef t_data;
 	pickleselection(&t_data);
 	if (*t_data != nil)
 	{
 		MCallowabledragactions = DRAG_ACTION_MOVE | DRAG_ACTION_COPY;
-		MCdragdata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+		if (!MCdragboard->AddLiveCodeStyledText(*t_data))
+        {
+            // If we failed to put the data on the drag board, prohibit the drag
+            MCallowabledragactions = 0;
+        }
 	}
 }
 
@@ -1233,16 +1247,36 @@ Boolean MCField::mup(uint2 which, bool p_release)
 			else
 				message_with_valueref_args(MCM_mouse_release, MCSTR("2"));
 		}
-		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
+		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION))
 		{
-			MCAutoStringRef t_string;
-			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, (MCValueRef&)&t_string))
-			{
-				extend = extendwords = False;
-				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
-				setfocus(mx, my);
-				typetext(*t_string);
-			}
+            // Lock the selection
+            MCselection->Lock();
+            
+            // Pasting styled text with middle-click isn't currently supported.
+            // On the only platform where we support selection pasting (Linux),
+            // a large number of apps use HTML to supply styled text but our
+            // HTML parsing code doesn't really understand HTML so trying to
+            // paste styled text here just causes a mess.
+            //
+            // Strangely, this doesn't seem to affect normal pasting as the
+            // affected apps also supply RTF there, which we can parse fairly
+            // well.
+            if (MCselection->HasText())
+            {
+                MCAutoStringRef t_text;
+                if (MCselection->CopyAsText(&t_text))
+                {
+                    // Set the focus position based on the current mouse
+                    // position and enter the text as if it came from the
+                    // keyboard.
+                    extend = extendwords = False;
+                    setfocus(mx, my);
+                    typetext(*t_text);
+                }
+            }
+            
+            // Unlock the selection
+            MCselection->Unlock();
 		}
 		break;
 	case Button3:
@@ -3195,7 +3229,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 // SN-2015-04-30: [[ Bug 15175 ]] TabAlignment flag added
 #define FIELD_EXTRA_TABALIGN        (1 << 1)
 
-IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3232,7 +3266,7 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
     }
     
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3245,16 +3279,16 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
     if (p_length > 0)
     {
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ 13315 ]] Load the textDirection of the field.
         if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_TEXTDIRECTION) != 0)
         {
             uint8_t t_value;
-            t_stat = p_stream . ReadU8(t_value);
+            t_stat = checkloadstat(p_stream . ReadU8(t_value));
             if (t_stat == IO_NORMAL)
                 text_direction = (MCTextDirection)t_value;
         }
@@ -3266,17 +3300,17 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             intenum_t *t_alignments;
             t_alignments = NULL;
 
-            t_stat = p_stream . ReadU16(t_nalign);
+            t_stat = checkloadstat(p_stream . ReadU16(t_nalign));
 
             if (t_stat == IO_NORMAL && t_nalign != 0)
             {
                 if (!MCMemoryAllocate(sizeof(intenum_t) * t_nalign, t_alignments))
-                    t_stat = IO_ERROR;
+                    t_stat = checkloadstat(IO_ERROR);
 
                 for (uint2 i = 0; i < t_nalign && t_stat == IO_NORMAL; ++i)
                 {
                     int8_t t_align;
-                    if ((t_stat = p_stream . ReadS8(t_align)) == IO_NORMAL)
+                    if ((t_stat = checkloadstat(p_stream . ReadS8(t_align))) == IO_NORMAL)
                         t_alignments[i] = t_align;
                 }
 
@@ -3291,7 +3325,7 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
         }
         
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream . Skip(t_length);
+            t_stat = checkloadstat(p_stream . Skip(t_length));
         
         if (t_stat == IO_NORMAL)
             p_length -= t_length + t_header_length;
@@ -3303,7 +3337,7 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	int4 savex = textx;
@@ -3317,7 +3351,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     bool t_has_extension;
     t_has_extension = text_direction != kMCTextDirectionAuto || nalignments != 0;
     
-	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 	if ((stat = IO_write_int2(leftmargin, stream)) != IO_NORMAL)
@@ -3339,7 +3373,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			if ((stat = IO_write_uint2(tabs[i], stream)) != IO_NORMAL)
 				return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (fdata != NULL)
 	{
@@ -3355,7 +3389,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCCdata *tptr;
 			tptr = getcarddata(fdata, 0, False);
 			if (tptr != NULL)
-				if ((stat = tptr -> save(stream, OT_FDATA, 0)) != IO_NORMAL)
+				if ((stat = tptr -> save(stream, OT_FDATA, 0, p_version)) != IO_NORMAL)
 					return stat;
 		}
 		else
@@ -3363,7 +3397,7 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			MCCdata *tptr = fdata;
 			do
 			{
-				if ((stat = tptr->save(stream, OT_FDATA, p_part)) != IO_NORMAL)
+				if ((stat = tptr->save(stream, OT_FDATA, p_part, p_version)) != IO_NORMAL)
 					return stat;
 				tptr = tptr->next();
 			}
@@ -3371,10 +3405,10 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		}
 	}
 	if (vscrollbar != NULL)
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	if (hscrollbar != NULL)
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	if (opened)
 	{
@@ -3399,26 +3433,26 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&indent, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_TABS)
 	{
 		if ((stat = IO_read_uint2(&ntabs, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		tabs = new uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 	}
 	if (version <= 2000)
 	{
@@ -3429,19 +3463,19 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	if (flags & F_VGRID)
 		flags |= F_DONT_WRAP;
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_FDATA)
 		{
 			MCCdata *newfdata = new MCCdata;
 			if ((stat = newfdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newfdata;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newfdata->appendto(fdata);
 		}
@@ -3453,7 +3487,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 					vscrollbar = new MCScrollbar;
 					vscrollbar->setparent(this);
 					if ((stat = vscrollbar->load(stream, version)) != IO_NORMAL)
-						return stat;
+						return checkloadstat(stat);
 					vscrollbar->setflag(getflag(F_DISABLED), F_DISABLED);
 					vscrollbar->allowmessages(False);
 					vscrollbar->setembedded();
@@ -3465,7 +3499,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 						hscrollbar = new MCScrollbar;
 						hscrollbar->setparent(this);
 						if ((stat = hscrollbar->load(stream, version)) != IO_NORMAL)
-							return stat;
+							return checkloadstat(stat);
 						hscrollbar->setflag(getflag(F_DISABLED), F_DISABLED);
 						hscrollbar->allowmessages(False);
 						hscrollbar->setembedded();

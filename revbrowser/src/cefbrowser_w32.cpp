@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -49,7 +49,7 @@ public:
 
 	virtual bool PlatformGetRect(int32_t &r_left, int32_t &r_top, int32_t &r_right, int32_t &r_bottom);
 	virtual bool PlatformSetRect(int32_t p_left, int32_t p_top, int32_t p_right, int32_t p_bottom);
-	virtual bool PlatformGetWindowID(int32_t &r_id);
+	virtual bool PlatformGetWindowID(uintptr_t &r_id);
 
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password);
 
@@ -274,7 +274,7 @@ bool MCCefWin32Browser::PlatformSetVisible(bool p_visible)
 	return true;
 }
 
-bool MCCefWin32Browser::PlatformGetWindowID(int32_t &r_id)
+bool MCCefWin32Browser::PlatformGetWindowID(uintptr_t &r_id)
 {
 	r_id = (int32_t) m_parent_window;
 

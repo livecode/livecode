@@ -1,3 +1,19 @@
+/* Copyright (C) 2009-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include "core.h"
 #include "filesystem.h"
 #include "module.h"
@@ -147,6 +163,7 @@ bool MCModuleGetFilename(MCModuleRef p_module, char*& r_path)
 bool MCModuleLoad(const char *p_filename, MCModuleRef& r_module)
 {
 	MCModuleRef t_module;
+    t_module = nil;
 	if (MCCStringEndsWith(p_filename, ".dylib"))
 	{
 		t_module = (void *)dlopen(p_filename, (RTLD_NOW | RTLD_LOCAL));
@@ -158,7 +175,7 @@ bool MCModuleLoad(const char *p_filename, MCModuleRef& r_module)
 		CFURLRef t_url;
 		t_url = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)p_filename, MCCStringLength(p_filename), TRUE);
 		if (t_url != nil)
-		{
+		{   
 			t_module = (void *)CFBundleCreate(kCFAllocatorDefault, t_url);
 			if (t_module != nil)
 				t_module = (void *)((uintptr_t)t_module | 1);

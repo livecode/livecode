@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1303,7 +1303,8 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		}
 		if (menudepth > mymenudepth)
 		{
-			menu->mup(which, p_release);
+            // Forward the click to the nested menu
+            menu->mup(which, p_release);
 			if (menudepth > mymenudepth)
 				return True;
 		}
@@ -1342,14 +1343,18 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 		MCmenupoppedup = true;
 		menu->menumup(which, &t_pick, menuhistory);
 		MCmenupoppedup = false;
-		closemenu(True, True);
-		if (!(state & CS_IGNORE_MENU))
+		if (state & CS_IGNORE_MENU)
+            closemenu(True, True);
+        else
 		{
 			// An empty string means something handled the menumup while the
 			// null string means nothing responded to it.
 			if (*t_pick != nil)
 			{
-				if (menumode == WM_OPTION || menumode == WM_COMBO)
+                // Something was selected so close the sub-menu
+                closemenu(True, True);
+                
+                if (menumode == WM_OPTION || menumode == WM_COMBO)
 				{
 					MCValueAssign(label, *t_pick);
                     // SN-2014-08-05: [[ Bug 13100 ]] An empty label is not an issue,
@@ -1361,7 +1366,40 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 				docascade(*t_pick);
 			}
 			else
-				message_with_args(MCM_mouse_release, which);
+            {
+                // If the mouse release was handled, close the submenu. This
+                // takes care of backwards compatibility. Otherwise, ignore the
+                // mouse-up event.
+                //
+                // We also need to close the menu if the button release happened
+                // outside of the menu tree.
+                bool t_outside = true;
+                MCObject* t_menu = this;
+                while (t_outside && t_menu != NULL)
+                {
+                    // Check whether the click was inside the menu (the rect
+                    // that we need to check is the rect of the stack containing
+                    // the menu).
+                    MCRectangle t_rect = t_menu->getstack()->getrect();
+                    t_outside = !MCU_point_in_rect(rect, mx, my);
+                    
+                    // Move to the parent menu, if it exists
+                    if (t_menu->getstack()->getparent()    // Stack's parent
+                        && t_menu->getstack()->getparent()->gettype() == CT_BUTTON)
+                    {
+                        // This is a submenu
+                        t_menu = t_menu->getstack()->getparent();
+                    }
+                    else
+                    {
+                        // We walked up to the top of the submenu tree
+                        t_menu = NULL;
+                    }
+                }
+                Exec_stat es = message_with_args(MCM_mouse_release, which);
+                if (t_outside || (es != ES_NOT_HANDLED && es != ES_PASS))
+                    closemenu(True, True);
+            }
 		}
 		state &= ~CS_IGNORE_MENU;
 		if (MCmenuobjectptr == this)
@@ -1654,6 +1692,8 @@ void MCButton::setrect(const MCRectangle &nrect)
 			winfo.type = WTHEME_TYPE_COMBOTEXT;
 			MCcurtheme->getwidgetrect(winfo, WTHEME_METRIC_CONTENTSIZE,comboentryrect,trect);
 
+			// PM-2015-10-12: [[ Bug 16193 ]] Make sure the label stays always within the combobox when resizing
+			trect.y = nrect.y + nrect.height / 2 - trect.height / 2;
 		}
 		else
 		{
@@ -3816,7 +3856,9 @@ void MCButton::docascade(MCStringRef p_pick)
 	
 	if (pptr != this)
 	{
-		if (m_menu_handler == nil || !m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
+		// IM-2015-10-06: [[ Bug 15502 ]] Call the handler of the *parent*
+		//    menu button, rather than of this one.
+		if (pptr->m_menu_handler == nil || !pptr->m_menu_handler->OnMenuPick(pptr, *t_pick, nil))
 		{
 			MCParameter *param = new MCParameter;
 			param->setvalueref_argument(*t_pick);
@@ -4364,7 +4406,7 @@ void MCButton::trytochangetonative(void)
 
 #define BUTTON_EXTRA_ICONGRAVITY (1 << 0)
 
-IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// Extended data area for a button consists of:
 	//   uint4 hover_icon;
@@ -4397,7 +4439,7 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_stat = p_stream . WriteU32(m_icon_gravity);
     
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
@@ -4410,7 +4452,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	if (p_remaining >= 4)
 	{
 		uint4 t_hover_icon_id;
-		t_stat = p_stream . ReadU32(t_hover_icon_id);
+		t_stat = checkloadstat(p_stream . ReadU32(t_hover_icon_id));
 		if (t_stat == IO_NORMAL)
 		{
 			icons = new iconlist;
@@ -4425,22 +4467,22 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
     if (p_remaining > 0)
     {
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
         
         // MW-2014-06-20: [[ IconGravity ]] Read in the iconGravity property.
         if (t_stat == IO_NORMAL && (t_flags & BUTTON_EXTRA_ICONGRAVITY) != 0)
         {
             uint32_t t_value;
-            t_stat = p_stream . ReadU32(t_value);
+            t_stat = checkloadstat(p_stream . ReadU32(t_value));
             if (t_stat == IO_NORMAL)
                 m_icon_gravity = (MCGravity)t_value;
         }
         
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream . Skip(t_length);
+            t_stat = checkloadstat(p_stream . Skip(t_length));
         
         if (t_stat == IO_NORMAL)
             p_remaining -= t_length + t_header_length;
@@ -4452,7 +4494,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	return t_stat;
 }
 
-IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -4477,7 +4519,8 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_icon_gravity != kMCGravityNone)
         t_has_extension = true;
     
-	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext,
+	                           p_version)) != IO_NORMAL)
 		return stat;
 
 	if (flags & F_HAS_ICONS)
@@ -4493,7 +4536,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     //  we need to rely on the F_LABEL flag
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -4519,13 +4562,13 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 	}
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(menuname, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(menuname, stream, p_version >= 7000)) != IO_NORMAL)
 		return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_MENU_STRING)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -4554,7 +4597,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		if ((stat = IO_write_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
 			return stat;
@@ -4572,7 +4615,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint1(mnemonic, stream)) != IO_NORMAL)
 		return stat;
 
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 
 	MCCdata *tptr = bdata;
@@ -4580,7 +4623,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	{
 		do
 		{
-			if ((stat = tptr->save(stream, OT_BDATA, p_part)) != IO_NORMAL)
+			if ((stat = tptr->save(stream, OT_BDATA, p_part, p_version)) != IO_NORMAL)
 				return stat;
 			tptr = (MCCdata *)tptr->next();
 		}
@@ -4594,7 +4637,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCControl::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-02-17: [[ IntrinsicUnicode ]] If the unicode tag is set, then we are unicode.
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
@@ -4605,10 +4648,10 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		uint4 iconid;
 		uint4 hiliteiconid = 0;
 		if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (flags & F_HAS_ICONS)
 			if ((stat = IO_read_uint4(&hiliteiconid, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		if (iconid != 0 || hiliteiconid != 0)
 		{
 			flags |= F_HAS_ICONS;
@@ -4636,7 +4679,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 			uint2 i;
 			for (i = CI_ARMED ; i < CI_FILE_NICONS ; i++)
 				if ((stat = IO_read_uint4(&icons->iconids[i], stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 		}
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
@@ -4646,29 +4689,29 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 
 	if (flags & F_LABEL_WIDTH)
 		if ((stat = IO_read_uint2(&labelwidth, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	if (!(flags & F_NO_MARGINS))
 	{
 		if ((stat = IO_read_int2(&leftmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&rightmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&topmargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_int2(&bottommargin, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (leftmargin == defaultmargin
 		        && leftmargin == rightmargin
 		        && leftmargin == topmargin
@@ -4678,7 +4721,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if ((stat = IO_read_nameref_new(menuname, stream, version >= 7000)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
@@ -4687,51 +4730,51 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(menustring, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 
 	if ((stat = IO_read_uint1(&menubutton, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	family = menubutton >> 4;
 	menubutton &= 0x0F;
 
 	if ((stat = IO_read_uint1(&menumode, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	if (menumode > WM_MODAL)
 		menumode++;
 	if ((menumode == WM_OPTION || menumode == WM_TOP_LEVEL)
 	        && (!MCNameIsEmpty(menuname) || flags & F_MENU_STRING))
 		if ((stat = IO_read_uint2(&menuhistory, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	if (flags & F_MENU_LINES)
 		if ((stat = IO_read_uint2(&menulines, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
 	if (version < 7000)
 	{
 		if ((stat = IO_read_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	else
 	{
 		if ((stat = IO_read_stringref_new(acceltext, stream, true)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 
 	uint4 tacceltextsize;
 
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (accelkey < 256)
 #ifdef __MACROMAN__
 		accelkey = MCisotranslations[accelkey];
@@ -4740,9 +4783,9 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 #endif
 
 	if ((stat = IO_read_uint1(&accelmods, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint1(&mnemonic, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (version <= 2000)
 	{
 		if (flags & F_DEFAULT)
@@ -4761,20 +4804,20 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	}
 
 	if ((stat = loadpropsets(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	while (True)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_BDATA)
 		{
 			MCCdata *newbdata = new MCCdata;
 			if ((stat = newbdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newbdata;
-				return stat;
+				return checkloadstat(stat);
 			}
 			newbdata->appendto(bdata);
 		}

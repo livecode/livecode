@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -166,6 +166,7 @@ Exec_stat MCDeployToLinux(const MCDeployParameters& p_params);
 Exec_stat MCDeployToMacOSX(const MCDeployParameters& p_params);
 Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool embedded);
 Exec_stat MCDeployToAndroid(const MCDeployParameters& p_params);
+Exec_stat MCDeployToEmscripten(const MCDeployParameters& p_params);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -429,6 +430,9 @@ enum MCDeployError
 	kMCDeployErrorMacOSXUnknownLoadCommand,
 	kMCDeployErrorMacOSXBadCpuType,
 	kMCDeployErrorMacOSXBadTarget,
+
+	/* An error occurred while creating the startup stack */
+	kMCDeployErrorEmscriptenBadStack,
 
 	// SIGN ERRORS
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -51,7 +51,7 @@ void X_main_loop(void)
 extern "C" bool MCModulesInitialize();
 extern "C" void MCModulesFinalize();
 
-int main(int argc, char *argv[], char *envp[])
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	// On Linux, the argv and envp could be in pretty much any format. The
 	// safest thing to do is let the C library's iconv convert to a known

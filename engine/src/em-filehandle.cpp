@@ -1,6 +1,6 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 Runtime Revolution Ltd.
+Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -274,8 +274,9 @@ MCEmscriptenFileHandle::Truncate()
 bool
 MCEmscriptenFileHandle::Sync()
 {
-	errno = 0;
-	return (0 == fsync(m_fd));
+	/* Assume that the filesystem is fully in-memory and therefore fsync()
+	 * is meaningless! */
+	return true;
 }
 
 bool

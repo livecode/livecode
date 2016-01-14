@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -37,6 +37,7 @@
     SYNTAXINFO
     SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
+    SYNTAXPRECEDENCE
 
 --------------------------------------------------------------------------------
 
@@ -171,6 +172,8 @@
     list(Position: POS, List: EXPRESSIONLIST)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
+    array(Position: POS, Pairs: EXPRESSIONLIST)
+    pair(Position: POS, Key: EXPRESSION, Value: EXPRESSION)
     nil
 
 'type' INVOKELIST
@@ -202,9 +205,9 @@
     statement
     iterator
     expression
-    prefix(Precedence: INT)
-    postfix(Precedence: INT)
-    binary(Assoc: SYNTAXASSOC, Precedence: INT)
+    prefix(Precedence: SYNTAXPRECEDENCE)
+    postfix(Precedence: SYNTAXPRECEDENCE)
+    binary(Assoc: SYNTAXASSOC, Precedence: SYNTAXPRECEDENCE)
     expressionphrase
     expressionlistphrase
 
@@ -314,6 +317,48 @@
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)
 
 'table' TYPEINFO(Position: POS)
+
+--------------------------------------------------------------------------------
+
+-- All operators are classified as particular types representing their syntactic
+-- structure. These patterns have fixed precedence when used in expressions to
+-- ensure consistent interpretation.
+--
+-- These classifications easy syntactic description and ensure consistency. The
+-- parser maps them to concrete operator type and precedence level before
+-- building the AST.
+--
+-- Some classifications have the same underlying syntactic pattern but distinction
+-- is made to make it clear what the intent of the syntax is. Generally, if two
+-- classifications share a syntax pattern, then they must share the same precedence
+-- and operator type to ensure the principal of least surprise is enforced.
+--
+-- See also /docs/specs/lcb-precedence.md
+--
+'type' SYNTAXPRECEDENCE
+    scoperesolution,  -- com.livecode.module.Identifier
+    functioncall,     -- Handler()
+    subscript,        -- tList[5]
+    property,         -- the paint of tCanvas
+    subscriptchunk,   -- char 5 of tString
+    conversion,       -- tString parsed as number
+    functionchunk,    -- the length of tList
+    modifier,         -- -tNumber, bitwise not tNumber
+    exponentiation,   -- 2 ^ 10
+    multiplication,   -- /, *, div, mod
+    addition,         -- +, -
+    concatenation,    -- &, &&
+    bitwiseshift,     -- 1 shifted left by 3 bitwise
+    bitwiseand,       -- 5 bitwise and 1
+    bitwisexor,       -- 5 bitwise xor 1
+    bitwiseor,        -- 5 bitwise or 1
+    constructor,      -- rectangle tList
+    comparison,       -- <=, <, is, =
+    classification,   -- 5 is a number
+    logicalnot,       -- not tBoolean
+    logicaland,       -- tLeft and tRight
+    logicalor,        -- tLeft or tRight
+    sequence          -- ,
 
 --------------------------------------------------------------------------------
 

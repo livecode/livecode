@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -287,6 +287,9 @@ protected:
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
     
+    // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
+    MCStringRef m_document_filename;
+    
     virtual MCPlatformControlType getcontroltype();
     virtual MCPlatformControlPart getcontrolsubpart();
 
@@ -403,7 +406,7 @@ public:
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure the view rect & transform are in sync with the configured view properties
 	// (stack viewport, fullscreen mode, fullscreen, scale factor)
-	void view_update_transform(void);
+	void view_update_transform(bool p_ensure_onscreen = false);
 	
 	// IM-2014-01-16: [[ StackScale ]] Calculate the new view rect, transform, and adjusted stack rect for the given stack rect
 	void view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectangle &r_adjusted_stack_rect, MCRectangle &r_view_rect, MCGAffineTransform &r_transform);
@@ -582,6 +585,8 @@ public:
 	              const MCRectangle *srect, const MCRectangle *drect);
 	void resize(uint2 oldw, uint2 oldh);
 	void configure(Boolean user);
+	// CW-2015-09-28: [[ Bug 15873 ]] Separate the application of stack iconic properties from the (un)iconify actions.
+	void seticonic(Boolean on);
 	void iconify();
 	void uniconify();
 	Window_mode getmode();
@@ -593,6 +598,7 @@ public:
 	Boolean hcaddress();
 	Boolean hcstack();
 	
+	virtual bool haspassword() { return false; }
 	virtual bool iskeyed() { return true; }
 	virtual void securescript(MCObject *) { }
 	virtual void unsecurescript(MCObject *) { }
@@ -668,7 +674,7 @@ public:
 	MCStack *clone();
 	void compact();
 	Boolean checkid(uint4 cardid, uint4 controlid);
-	IO_stat saveas(const MCStringRef);
+	IO_stat saveas(const MCStringRef, uint32_t p_version = UINT32_MAX);
 	MCStack *findname(Chunk_term type, MCNameRef);
 	MCStack *findid(Chunk_term type, uint4 inid, Boolean alt);
 	void setmark();
@@ -737,14 +743,15 @@ public:
 	void getstackfile(MCStringRef p_name, MCStringRef &r_name);
 	void setfilename(MCStringRef f);
 
+	virtual IO_stat load(IO_handle stream, uint32_t version); /* Don't use this */
 	virtual IO_stat load(IO_handle stream, uint32_t version, uint1 type);
 	IO_stat load_stack(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	virtual IO_stat load_substacks(IO_handle stream, uint32_t version);
 	
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	Exec_stat resubstack(MCStringRef p_data);
 	MCCard *getcardid(uint4 inid);
@@ -1045,8 +1052,8 @@ public:
 
 	void mode_constrain(MCRectangle& rect);
 	bool mode_needstoopen(void);
-
-	////////// PROPERTY SUPPORT METHODS
+    
+    ////////// PROPERTY SUPPORT METHODS
 
 	void SetDecoration(Properties which, bool setting);
 	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
@@ -1107,8 +1114,8 @@ public:
 	void SetSystemWindow(MCExecContext& ctxt, bool setting);
 	void GetMetal(MCExecContext& ctxt, bool& r_setting);
 	void SetMetal(MCExecContext& ctxt, bool setting);
-	void GetShadow(MCExecContext& ctxt, bool& r_setting);
-	void SetShadow(MCExecContext& ctxt, bool setting);
+	void GetWindowShadow(MCExecContext& ctxt, bool& r_setting);
+	void SetWindowShadow(MCExecContext& ctxt, bool setting);
 	void GetResizable(MCExecContext& ctxt, bool& r_setting);
 	void SetResizable(MCExecContext& ctxt, bool setting);
 	void GetMinWidth(MCExecContext& ctxt, uinteger_t& r_width);
@@ -1213,6 +1220,10 @@ public:
     void GetScriptOnly(MCExecContext &ctxt, bool &r_script_only);
     void SetScriptOnly(MCExecContext &ctxt, bool p_script_only);
     
+    // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
+    void GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename);
+    void SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1252,6 +1263,9 @@ public:
 private:
 	void loadexternals(void);
 	void unloadexternals(void);
+    
+    // MERG-2015-10-12: [[ DocumentFilename ]] documentFilename property
+    void updatedocumentfilename(void);
 
 	void mode_load(void);
 

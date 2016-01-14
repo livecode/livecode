@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -26,6 +26,9 @@
 MC_DLLEXPORT_DEF
 bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callbacks, void *p_context, MCHandlerRef& r_handler)
 {
+	MCAssert(MCTypeInfoIsHandler(p_typeinfo));
+	MCAssert(p_callbacks != nil);
+
     // The context data for an MCHandler is stored after the common elements. The
     // start of this is a field 'context' in the struct so we must adjust for its
     // length.
@@ -47,12 +50,16 @@ bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callb
 MC_DLLEXPORT_DEF
 bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
+	__MCAssertIsHandler(self);
+	MCAssert(p_arguments != nil || p_argument_count == 0);
     return self -> callbacks -> invoke(MCHandlerGetContext(self), p_arguments, p_argument_count, r_value);
 }
 
 MC_DLLEXPORT_DEF
 MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef self, MCProperListRef& x_arguments, MCValueRef& r_value)
 {
+	__MCAssertIsHandler(self);
+	__MCAssertIsProperList(x_arguments);
     MCAutoValueRefArray t_args;
     MCAutoProperListRef t_out_args;
     
@@ -87,12 +94,14 @@ error_exit:
 MC_DLLEXPORT_DEF
 void *MCHandlerGetContext(MCHandlerRef self)
 {
+	__MCAssertIsHandler(self);
     return (void *)self -> context;
 }
 
 MC_DLLEXPORT_DEF
 const MCHandlerCallbacks *MCHandlerGetCallbacks(MCHandlerRef self)
 {
+	__MCAssertIsHandler(self);
     return self -> callbacks;
 }
 
@@ -217,6 +226,8 @@ cleanup:
 MC_DLLEXPORT_DEF
 bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 {
+	__MCAssertIsHandler(self);
+
     if (self -> function_ptr != nil)
     {
         r_function_ptr = self -> function_ptr;
@@ -246,8 +257,6 @@ bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 
 void __MCHandlerDestroy(__MCHandler *self)
 {
-    if (self -> callbacks -> release != nil)
-        self -> callbacks -> release(MCHandlerGetContext(self));
     if (self -> function_ptr != nil)
         ffi_closure_free(self -> function_ptr);
 }

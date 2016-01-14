@@ -1,6 +1,6 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 Runtime Revolution Ltd.
+Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -47,7 +47,7 @@ MCEmscriptenBootError(const char *p_message)
 }
 
 MC_DLLEXPORT_DEF int
-main(int argc, char *argv[])
+platform_main(int argc, char *argv[], char *envp[])
 {
 	/* ---------- Core initialisation */
 	/* Record the address of the bottom of the stack */
@@ -91,7 +91,7 @@ main(int argc, char *argv[])
 	/* ---------- Process the environment */
 	/* Count env variables */
 	int t_envc;
-	for (t_envc = 0; environ[t_envc] != nil; ++t_envc);
+	for (t_envc = 0; envp[t_envc] != nil; ++t_envc);
 
 	/* Import. Note that the envp array is null-terminated */
 	MCStringRef *t_envp;
@@ -102,10 +102,10 @@ main(int argc, char *argv[])
 
 	for (int i = 0; i < t_envc; ++i)
 	{
-		MCLog("env: %s", environ[i]);
+		MCLog("env: %s", envp[i]);
 
 		/* FIXME should probably be UTF-8 */
-		if (!MCStringCreateWithSysString(environ[i], t_envp[i]))
+		if (!MCStringCreateWithSysString(envp[i], t_envp[i]))
 		{
 			MCEmscriptenBootError("environment import");
 		}
@@ -162,8 +162,6 @@ main(int argc, char *argv[])
 	while (X_main_loop_iteration());
 
 	/* ---------- Shutdown */
-	MCLog("Shutdown", nil);
-
 	int t_exit_code = X_close();
 
 	MCFinalize();

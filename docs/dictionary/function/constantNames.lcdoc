@@ -6,7 +6,7 @@ Syntax: the constantNames
 
 Syntax: constantNames()
 
-Summary: <return|Returns> a list of all built-in <constant|constants> in <Revolution|LiveCode>.
+Summary: <return|Returns> a list of all built-in <constant|constants> in <LiveCode>.
 
 Introduced: 2.0
 
@@ -23,8 +23,8 @@ if it is among the lines of the constantNames then askForAnotherName
 Returns: The <constantNames> <function> <return|returns> a list of <constant> names, one per <line>.
 
 Description:
-Use the <constantNames> <function> to check whether a particular <constant(command)> already exists in <Revolution|LiveCode>, to avoid using a <reserved word> for your own <constant(glossary)|constants> and <variable|variables>.
+Use the <constantNames> <function> to check whether a particular <constant(command)> already exists in <LiveCode>, to avoid using a <reserved word> for your own <constant(glossary)|constants> and <variable|variables>.
 
-The <constantNames> <function> <return|returns> all the <constant(glossary)|constants> that are predefined in <Revolution|LiveCode>, including synonyms.
+The <constantNames> <function> <return|returns> all the <constant(glossary)|constants> that are predefined in <LiveCode>, including synonyms.
 
-References: line (keyword), constant (command), propertyNames (function), functionNames (function), constant (glossary), Revolution (glossary), variable (glossary), return (glossary), reserved word (glossary), function (control_st)
+References: line (keyword), constant (command), propertyNames (function), functionNames (function), constant (glossary), LiveCode (glossary), variable (glossary), return (glossary), reserved word (glossary), function (control_st)

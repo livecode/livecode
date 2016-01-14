@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -2752,13 +2752,20 @@ void MCField::cuttext()
 
 void MCField::copytext()
 {
-	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
+    // Do nothing if there is nothing to copy
+    if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
 		return;
 
+    // Serialise the text. Failures are ignored here as there isn't really a
+    // good way to alert the user that a copy-to-clipboard operation failed.
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ pickleselection(&t_data);
+	pickleselection(&t_data);
 	if (*t_data != nil)
-		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+    {
+        // Clear the clipboard and copy the selection to it
+        MCclipboard->Clear();
+        MCclipboard->AddLiveCodeStyledText(*t_data);
+    }
 }
 
 void MCField::cuttextindex(uint4 parid, findex_t si, findex_t ei)

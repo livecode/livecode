@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -35,8 +35,6 @@ class MCLine : public MCDLlist
     MCSegment *firstsegment;
     MCSegment *lastsegment;
 	coord_t width;
-	uint2 ascent;
-	uint2 descent;
 	coord_t dirtywidth;
     coord_t m_ascent;
     coord_t m_descent;
@@ -64,9 +62,6 @@ public:
 	void clean();
 	void getindex(uint2 &i, uint2 &l);
 	uint2 getwidth();
-	uint2 getheight();
-	uint2 getascent();
-	uint2 getdescent();
     coord_t GetAscent() const;
     coord_t GetDescent() const;
     coord_t GetLeading() const;

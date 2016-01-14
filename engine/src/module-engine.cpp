@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -35,6 +35,7 @@
 #include "eventqueue.h"
 
 #include "dispatch.h"
+#include "notify.h"
 
 #include "module-engine.h"
 
@@ -51,6 +52,9 @@ struct __MCScriptObjectImpl
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCEngineScriptObjectTypeInfo()
+{ return kMCEngineScriptObjectTypeInfo; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -450,7 +454,11 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
     
     if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, t_params))
         goto cleanup;
-    
+
+	/* Clear any existing value from the result to enable testing
+	 * whether dispatching generated a result. */
+	MCresult->clear();
+
     Exec_stat t_stat;
     t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
     if (t_stat == ES_ERROR)
@@ -463,8 +471,9 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
         s_last_message_was_handled = true;
     else
         s_last_message_was_handled = false;
-    
-    t_result = MCValueRetain(MCresult -> getvalueref());
+
+	/* Provide a return value iff the result was set */
+	t_result = MCValueRetain(MCresult->isclear() ? kMCNull : MCresult->getvalueref());
     
 cleanup:
     MCEngineFreeScriptParameters(t_params);
@@ -726,6 +735,29 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecLogWithValues(MCStringRef p_message
     }
     
     MCEngineExecLog(*t_formatted_message);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" MC_DLLEXPORT_DEF bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	return MCscreen->AddRunloopAction(p_callback, p_context, r_action);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action)
+{
+	MCscreen->RemoveRunloopAction(p_action);
+}
+
+extern "C" MC_DLLEXPORT_DEF bool MCEngineRunloopWait()
+{
+	MCscreen->wait(60.0, True, True);
+	return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
+{
+	MCNotifyPing(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -655,7 +655,7 @@ private command revCreateStandalone pStack, pFolder
       -- Necessary as some "users" might rename the actual executable file, arghhhh!
       if (line 1 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 1 of tEngineSourceFile[tPlatform]) and \
             (line 2 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 2 of tEngineSourceFile[tPlatform]) then
-         throw "Standalone: Ensure that you have not renamed the main Revolution executable file: " &cr& tEngineSourceFile[tPlatform]
+         throw "Standalone: Ensure that you have not renamed the main LiveCode executable file: " &cr& tEngineSourceFile[tPlatform]
       end if
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath[tPlatform]
       if tPlatform is "Windows" then
@@ -680,6 +680,13 @@ private command revCreateStandalone pStack, pFolder
       revCopyDatabaseDrivers tPlatform, tStackSourceFile[tPlatform], tStandalonePath[tPlatform], tEngineSourceFile[tPlatform]
       -- copy externals
       revCopyExternals tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
+      
+      // IM-2015-10-14: [[ BrowserWidget ]] Copy CEF files needed for the browser widget.
+      // IM-2014-03-20: [[ revBrowserCEF ]] Ensure CEF support files are copied if requested
+      local tRevBrowser, tLibBrowser
+      put "Browser (CEF)" is among the lines of sStandaloneSettingsA["scriptLibraries"] into tRevBrowser
+      put "com.livecode.widget.browser" is among the lines of sStandaloneSettingsA["extensions"] into tLibBrowser
+      revCopyCEFResources tPlatform, tStandalonePath[tPlatform], tRevBrowser, tLibBrowser
       
       revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
@@ -874,7 +881,10 @@ private command revCopyScriptLibraries pStack, pPlatform
    revAddLibrary "Common"
    
    -- data grid
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+   // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
+   //  will load stacks using DataGrid, for instance.
+   if ("data grid templates" is in the subStacks of stack pStack or "DataGrid" is among the lines of sStandaloneSettingsA["scriptLibraries"]) \
+         and there is a stack "revDataGridLibrary" then
       set the mainStack of stack "revDataGridLibrary" to pStack
    end if
    
@@ -1948,6 +1958,136 @@ private command revCopyModule pPlatform, pModuleName, pSourceFile, pSourceFolder
    revAddMapping pPlatform, pModuleName, tTargetModule
 end revCopyModule
 
+private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserResources, pCopyLibBrowserResources
+   if not (pCopyRevBrowserResources or pCopyLibBrowserResources) then
+      // No CEF resources required
+      exit revCopyCEFResources
+   end if
+   
+   // IM-2014-08-14: [[ LibCef2062 ]] Reorganisation of libcef framework files
+   local tDetails
+   put revStandalonePlatformDetails(pPlatform) into tDetails
+   local tExternalPath
+   put revExternalPath("Browser", tDetails["platform"], tDetails["architecture"]) into tExternalPath
+   // AL-2015-03-13: [[ Bug 14936 ]] Switch where case takes an expression should not switch on a value
+   local tCurrentLocation, tCEFResources, tCEFDest
+   set the itemdel to slash
+   put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
+   put item 1 to -2 of pStandalonePath into tCurrentLocation
+   switch
+      case pPlatform contains "MacOSX"
+         local tCEFFramework
+         put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
+         
+         revSBEnsureFolder tCEFFramework
+         if the result is not empty then
+            revStandaloneAddWarning "MacOS, external failed to create folder:" && quote & tCEFFramework & quote
+         end if
+         revSBCopyFolderToDestination tCefResources & "/Chromium Embedded Framework.framework", tCEFFramework, "revStandaloneProgressCallback", the long id of me
+         if the result is not empty then
+            revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/Resources" & quote
+         end if
+         
+         local tHelpers
+         if pCopyRevBrowserResources then
+            put "revbrowser-cefprocess.app" & return after tHelpers
+            put "revbrowser-cefprocess EH.app" & return after tHelpers
+            put "revbrowser-cefprocess NP.app" & return after tHelpers
+         end if
+         if pCopyLibBrowserResources then
+            put "libbrowser-cefprocess.app" & return after tHelpers
+            put "libbrowser-cefprocess EH.app" & return after tHelpers
+            put "libbrowser-cefprocess NP.app" & return after tHelpers
+         end if
+         repeat for each line tHelper in tHelpers
+            revSBCopyFolderToDestination tCefResources & slash & tHelper, tCEFFramework, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & slash & tHelper & quote
+            end if
+         end repeat
+         break
+      case pPlatform = "Windows"
+         put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
+         
+         revSBEnsureFolder tCEFDest
+         if the result is not empty then
+            revStandaloneAddWarning "Windows, external failed to create folder:" && quote & tCEFDest & quote
+         end if
+         
+         local tCEFFiles
+         // make sure we only copy the required helper process executable
+         put revListFiles(tCEFResources) into tCEFFiles
+         filter lines of tCEFFIles not matching "*.exe"
+         if the last char of tCEFFiles is not return then
+            put return after tCEFFiles
+         end if
+         if pCopyRevBrowserResources then
+            put "revbrowser-cefprocess.exe" & return after tCEFFiles
+         end if
+         if pCopyLibBrowserResources then
+            put "libbrowser-cefprocess.exe" & return after tCEFFiles
+         end if
+         repeat for each line tCEFFile in tCEFFiles
+            revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
+            end if
+         end repeat
+         
+         revSBCopyFolderToDestination tCefResources & slash & "locales", tCEFDest, "revStandaloneProgressCallback", the long id of me
+         if the result is not empty then
+            revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
+         end if
+         break
+      case pPlatform contains "Linux"
+         put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
+         
+         revSBEnsureFolder tCEFDest
+         if the result is not empty then
+            revStandaloneAddWarning "Linux, external failed to create folder:" && quote & tCEFDest & quote
+         end if
+         
+         // make sure we only copy the required helper process executable
+         put revListFiles(tCEFResources) into tCEFFiles
+         filter lines of tCEFFiles not matching "*-cefprocess"
+         // icudtl.dat needs to be placed alongside the executable
+         filter lines of tCEFFiles not matching "icudtl.dat"
+
+         // Copy files to CEF resource folder.
+         repeat for each line tCEFFile in tCEFFiles
+            revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
+            end if
+         end repeat
+         
+         revSBCopyFolderToDestination tCefResources & slash & "locales", tCEFDest, "revStandaloneProgressCallback", the long id of me
+         if the result is not empty then
+            revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & "locales" & quote
+         end if
+
+         // Copy files to standalone folder
+         put "icudtl.dat" & return into tCEFFiles
+         if pCopyRevBrowserResources then
+            put "revbrowser-cefprocess" & return after tCEFFiles
+         end if
+         if pCopyLibBrowserResources then
+            put "libbrowser-cefprocess" & return after tCEFFiles
+         end if
+         
+         repeat for each line tCEFFile in tCEFFiles
+            revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCurrentLocation, "revStandaloneProgressCallback", the long id of me
+            if the result is not empty then
+               revStandaloneAddWarning "Linux, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
+            end if
+         end repeat
+         
+         break
+      default
+         break
+   end switch
+end revCopyCEFResources
+
 private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStandalonePath
    local tExternalRes, tColors, tCursorName, tCurrentLocation, tExternalPath, tExternals, tExternalLibrary
    local tCopyFiles, tOrigVisible, tPath, tExternalFile, x, tColor, tPattern, tExternalName
@@ -2110,66 +2250,6 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       revAddExternal tExternal
    end repeat
    
-   
-   // IM-2014-03-20: [[ revBrowserCEF ]] Ensure CEF support files are copied if requested
-   // IM-2014-08-14: [[ LibCef2062 ]] Reorganisation of libcef framework files
-   if "Browser (CEF)" is among the lines of tScriptLibraries then
-      put revExternalPath("Browser", tPlatform, tArch) into tExternalPath
-      // AL-2015-03-13: [[ Bug 14936 ]] Switch where case takes an expression should not switch on a value
-      switch
-         case pPlatform contains "MacOSX"
-            put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
-            put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
-            
-            revSBEnsureFolder tCEFFramework
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to create folder:" && quote & tCEFFramework & quote
-            end if
-            revSBCopyFolderToDestination tCefResources & "/Chromium Embedded Framework.framework", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/Resources" & quote
-            end if
-            revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess.app" & quote
-            end if
-            revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess EH.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess EH.app" & quote
-            end if
-            revSBCopyFolderToDestination tCefResources & "/revbrowser-cefprocess NP.app", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/revbrowser-cefprocess NP.app" & quote
-            end if
-            break
-         case pPlatform = "Windows"
-            put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
-            put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
-            
-            revSBEnsureFolder tCEFDest
-            if the result is not empty then
-               revStandaloneAddWarning "Windows, external failed to create folder:" && quote & tCEFDest & quote
-            end if
-            repeat for each line tCEFFile in revListFiles(tCEFResources)
-               revSBCopyFileToFolder tCefResources & slash & tCEFFile, tCEFDest, "revStandaloneProgressCallback", the long id of me
-               if the result is not empty then
-                  revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFile & quote
-               end if
-            end repeat
-            
-            repeat for each line tCEFFolder in revListFolders(tCEFResources)
-               revSBCopyFolderToDestination tCefResources & slash & tCEFFolder, tCEFDest, "revStandaloneProgressCallback", the long id of me
-               if the result is not empty then
-                  revStandaloneAddWarning "Windows, external failed to copy:" && quote & tCefResources & slash & tCEFFolder & quote
-               end if
-            end repeat
-            break
-            # We don't support CEF on Linux yet
-         case pPlatform contains "Linux"
-         default
-            break
-      end switch
-   end if
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
    //  a saveStackRequest handler in the standalone stack
    lock messages
@@ -2513,7 +2593,7 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
       put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
       put false into sStandaloneSettingsA["pdfPrinter"]
       
-      # OK-2007-11-13 : Support for revolution print dialogs
+      # OK-2007-11-13 : Support for LiveCode print dialogs
       put false into sStandaloneSettingsA["revolutionPrintDialogs"]
    end if
    
@@ -2644,7 +2724,7 @@ private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
          put true into sStandaloneSettingsA["pdfPrinter"]
       end if
       
-      # OK-2007-11-13 : Support for revolution print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
+      # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
       # or if we are building for linux. (This might include the files more often than they are required).
       if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
          put true into sStandaloneSettingsA["revolutionPrintDialogs"]

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -430,5 +430,6 @@ int MCSystemElevatedMain(int argc, char* argv[])
 	execvp(t_args[0], t_args);
 
 	// we will only reach here if the execvp call fails
+	free(t_args);
 	return -1;
 }

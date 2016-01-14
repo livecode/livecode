@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -187,8 +187,6 @@ public handler OnSave(out rProperties as Array)
 	put mShowHGrid into rProperties["showXGrid"]
 	put mShowVGrid into rProperties["showYGrid"]
 	put mChartColors into rProperties["chartColors"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)

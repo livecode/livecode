@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -130,8 +130,8 @@ public:
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
     
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
     
@@ -156,6 +156,7 @@ public:
 	virtual void editmovie(Boolean edit);
 	virtual void playselection(Boolean play);     //play the selected part of QT moive only
     virtual Boolean ispaused();
+    virtual void setdontuseqt(bool noqt); // platform player-specific
     
     virtual void gettracks(MCStringRef& r_tracks);
     
@@ -342,6 +343,9 @@ public:
     
     void GetStatus(MCExecContext& ctxt, intenum_t& r_status);
     
+    void SetMirrored(MCExecContext& ctxt, bool p_mirrored);
+    void GetMirrored(MCExecContext& ctxt, bool& r_mirrored);
+    
     ////////////////////////////////////////////////////////////////////////////////
     // MCPlayer specific implementation for the platform player
     
@@ -416,6 +420,8 @@ public:
     // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
     void attachplayer(void);
     void detachplayer(void);
+    
+    void setmirrored(bool p_mirrored);
 };
 #endif
 

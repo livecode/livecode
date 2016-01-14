@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -37,9 +37,9 @@ MCLine::MCLine(MCParagraph *paragraph)
 	parent = paragraph;
 	firstblock = lastblock = NULL;
     firstsegment = lastsegment = NULL;
-	width = ascent = descent = 0;
+    width = 0.0f;
     m_ascent = m_descent = m_leading = 0.0f;
-	dirtywidth = 0;
+    dirtywidth = 0.0f;
     m_offset = 0;
 }
 
@@ -274,7 +274,6 @@ void MCLine::appendall(MCBlock *bptr, bool p_flow)
 	coord_t oldwidth = width;
 	width = 0;
 	bptr = lastblock;
-	ascent = descent = 0;
     SegmentLine();
     
     // Only resolve the display order if this line is not flowed (if it is
@@ -296,7 +295,7 @@ void MCLine::appendsegments(MCSegment *first, MCSegment *last)
     firstsegment = first;
     lastsegment = last;
     
-    ascent = descent = 0;
+    m_ascent = m_descent = m_leading = 0;
     
     coord_t oldwidth = width;
     width = 0;
@@ -325,13 +324,6 @@ void MCLine::draw(MCDC *dc, int2 x, int2 y, findex_t si, findex_t ei, MCStringRe
 
 void MCLine::setscents(MCBlock *bptr)
 {
-	uint2 aheight = bptr->getascent();
-	if (aheight > ascent)
-		ascent = aheight;
-	uint2 dheight = bptr->getdescent();
-	if (dheight > descent)
-		descent = dheight;
-    
     coord_t t_aheight, t_dheight, t_leading;
     t_aheight = bptr->GetAscent();
     t_dheight = bptr->GetDescent();
@@ -425,12 +417,13 @@ findex_t MCLine::GetCursorIndex(coord_t cx, Boolean chunk, bool moving_forward)
             
             // SN-2014-08-14: [[ Bug 13106 ]] We want the outside left edge
             coord_t origin = bptr->getorigin() + sgptr->GetLeft();
+
             // Different cases, according to the alignment:
             //  right-aligned: the origin belongs to the previous block
             //  others:        the origin belongs to the current block
             if ((sgptr -> GetHorizontalAlignment() == kMCSegmentTextHAlignRight
                         && cx > origin && cx <= (origin + bptr->getwidth()))
-                    || (cx >= origin && cx < (origin + bptr->getwidth())))
+                    || (cx >= origin && cx <= (origin + bptr->getwidth())))
             {
                 done = true;
                 break;
@@ -509,21 +502,6 @@ uint2 MCLine::getwidth()
 {
     // AL-2014-10-21: [[ Bug 13403 ]] Returned line width as integer needs to be rounded up
 	return ceil(width);
-}
-
-uint2 MCLine::getheight()
-{
-	return ascent + descent;
-}
-
-uint2 MCLine::getascent()
-{
-	return ascent;
-}
-
-uint2 MCLine::getdescent()
-{
-	return descent;
 }
 
 coord_t MCLine::GetAscent() const

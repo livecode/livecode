@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -552,7 +552,7 @@ MCExternalError MCExternalVariable::AppendString(MCExternalValueOptions p_option
 		return t_error;
 	
 	MCAutoStringRef t_new_value;
-	if (!MCStringFormat(&t_new_value, "%@%@", *t_current_value, p_value))
+    if (!MCStringCreateWithStrings(&t_new_value, *t_current_value, p_value))
 		return kMCExternalErrorOutOfMemory;
 	
 	SetValueRef(*t_new_value);	
@@ -1154,7 +1154,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
         case kMCExternalContextQueryTarget:
         {
             MCObjectHandle *t_handle;
-            t_handle = MCtargetptr -> gethandle();
+            t_handle = MCtargetptr . object -> gethandle();
             if (t_handle == nil)
                 return kMCExternalErrorOutOfMemory;
             *(MCObjectHandle **)result = t_handle;

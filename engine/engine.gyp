@@ -3,11 +3,6 @@
 	[
 		'../common.gypi',
 		'engine-sources.gypi',
-		'kernel.gypi',
-		'kernel-development.gypi',
-		'kernel-installer.gypi',
-		'kernel-standalone.gypi',
-		'kernel-server.gypi',
 	],
 	
 	'target_defaults':
@@ -15,7 +10,7 @@
 		'conditions':
 		[
 			[
-				'OS == "linux" or OS == "android"',
+				'OS == "linux" or OS == "android" or OS == "emscripten"',
 				{
 					# Ensure that the symbols LCB binds to are exported from the engine
 					'ldflags': [ '-rdynamic' ],
@@ -26,73 +21,6 @@
 	
 	'targets':
 	[
-		{
-			'target_name': 'encode_version',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'encode_version',
-					'inputs':
-					[
-						'../util/encode_version.pl',
-						'../version',
-						'include/revbuild.h.in',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/include/revbuild.h',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/encode_version.pl',
-						'.',
-						'<(SHARED_INTERMEDIATE_DIR)',
-					],
-				},
-			],
-			
-			'direct_dependent_settings':
-			{
-				'include_dirs':
-				[
-					'<(SHARED_INTERMEDIATE_DIR)/include',
-				],
-			},
-		},
-		
-		{
-			'target_name': 'quicktime_stubs',
-			'type': 'none',
-			
-			'actions':
-			[
-				{
-					'action_name': 'quicktime_stubs',
-					'inputs':
-					[
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-					],
-					'outputs':
-					[
-						'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
-					],
-					
-					'action':
-					[
-						'<@(perl)',
-						'../util/weak_stub_maker.pl',
-						'src/quicktime.stubs',
-						'<@(_outputs)',
-					],
-				},
-			],
-		},
-		
 		{
 			'target_name': 'encode_environment_stack',
 			'type': 'none',
@@ -123,26 +51,7 @@
 				},
 			],
 		},
-		
-		{
-			'target_name': 'security-community',
-			'type': 'static_library',
-			
-			'dependencies':
-			[
-				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl',
 				
-				# Because our headers are so messed up...
-				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../libgraphics/libgraphics.gyp:libGraphics',
-			],
-			
-			'sources':
-			[
-				'<@(engine_security_source_files)',
-			],
-		},
-		
 		{
 			'target_name': 'server',
 			'type': 'executable',
@@ -150,7 +59,7 @@
 			
 			'dependencies':
 			[
-				'kernel-server',
+				'kernel-server.gyp:kernel-server',
 				
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
@@ -159,8 +68,14 @@
 			'sources':
 			[
 				'<@(engine_security_source_files)',
+				'src/main.cpp',
 			],
-			
+
+			'include_dirs':
+			[
+				'../libfoundation/include',
+			],
+
 			'conditions':
 			[
 				[
@@ -205,8 +120,8 @@
 			
 			'dependencies':
 			[
-				'kernel-standalone',
-				'security-community',
+				'kernel-standalone.gyp:kernel-standalone',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -214,9 +129,22 @@
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -403,6 +331,7 @@
 									'rsrc/mobile-splashscreen-template.plist',
 									'rsrc/mobile-template.plist',
 									'rsrc/mobile-url-scheme-template.plist',
+									'rsrc/mobile-disable-ats-template.plist',
 									'rsrc/template-entitlements.xcent',
 									'rsrc/template-store-entitlements.xcent',
 									'rsrc/template-remote-notification-entitlements.xcent',
@@ -416,7 +345,6 @@
 				[
 					'OS == "emscripten"',
 					{
-						'product_name': 'standalone-community.bc',
 						'all_dependent_settings':
 						{
 							'variables':
@@ -424,6 +352,7 @@
 								'dist_aux_files':
 								[
 									'rsrc/emscripten-standalone-template/',
+									'rsrc/emscripten-startup-template.livecodescript/',
 									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
 									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
 									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
@@ -490,8 +419,8 @@
 			
 			'dependencies':
 			[
-				'kernel-installer',
-				'security-community',
+				'kernel-installer.gyp:kernel-installer',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -499,9 +428,22 @@
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -589,14 +531,14 @@
 			
 			'variables':
 			{
-				'app_plist': 'rsrc/Revolution-Info.plist',
+				'app_plist': 'rsrc/LiveCode-Info.plist',
 			},
 			
 			'dependencies':
 			[
-				'kernel-development',
+				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
-				'security-community',
+				'engine-common.gyp:security-community',
 			],
 			
 			'sources':
@@ -607,6 +549,19 @@
 
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "mac"',
 					{
@@ -661,9 +616,22 @@
 			[
 				'standalone',
 			],
-			
+
 			'conditions':
 			[
+				[
+					'OS != "win" and OS != "android"',
+					{
+						'sources':
+						[
+							'src/main.cpp',
+						],
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+					},
+				],
 				[
 					'OS == "ios"',
 					{
@@ -756,14 +724,21 @@
 			
 						'dependencies':
 						[
-							'kernel-standalone',
-							'security-community',
+							'kernel-standalone.gyp:kernel-standalone',
+							'engine-common.gyp:security-community',
 						],
 			
 						'sources':
 						[
 							'src/dummy.cpp',
+							'src/main.cpp',
 						],
+
+						'include_dirs':
+						[
+							'../libfoundation/include',
+						],
+
 					},
 				],
 			},
@@ -790,15 +765,49 @@
 						'actions':
 						[
 							{
+								'action_name': 'genwhitelist',
+								'message': 'Generating the Emterpreter whitelist',
+
+								'inputs':
+								[
+									'../util/emscripten-genwhitelist.py',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'src/em-whitelist.json',
+									'src/em-blacklist.json',
+								],
+
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
+									'<(PRODUCT_DIR)/standalone-community-blacklist.json',
+								],
+
+								'action':
+								[
+									'../util/emscripten-genwhitelist.py',
+									'--input',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
+									'<(PRODUCT_DIR)/standalone-community-blacklist.json',
+									'--include',
+									'src/em-whitelist.json',
+									'--exclude',
+									'src/em-blacklist.json',
+								],
+							},
+							{
 								'action_name': 'javascriptify',
 								'message': 'Javascript-ifying the Emscripten engine',
 
 								'inputs':
 								[
-									'emscripten-javascriptify.sh',
+									'../util/emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/standalone-community.bc',
-									'src/em-whitelist.json',
+									'rsrc/emscripten-html-template.html',
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
 									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
 									'src/em-util.js',
 									'src/em-async.js',
 									'src/em-dialog.js',
@@ -817,11 +826,19 @@
 
 								'action':
 								[
-									'./emscripten-javascriptify.sh',
+									'../util/emscripten-javascriptify.py',
+									'--input',
 									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
 									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
-									'src/em-whitelist.json',
+									'--shell-file',
+									'rsrc/emscripten-html-template.html',
+									'--whitelist',
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
+									'--pre-js',
 									'src/em-preamble.js',
+									'src/em-preamble-overlay.js',
+									'--js-library',
 									'src/em-util.js',
 									'src/em-async.js',
 									'src/em-dialog.js',

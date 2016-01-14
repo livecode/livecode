@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -200,6 +200,12 @@ MCNameRef MCN_private;
 MCNameRef MCN_text;
 //MCNameRef MCN_unicode;
 MCNameRef MCN_styles;
+MCNameRef MCN_styledtext;
+MCNameRef MCN_rtftext;
+MCNameRef MCN_htmltext;
+MCNameRef MCN_png;
+MCNameRef MCN_gif;
+MCNameRef MCN_jpeg;
 MCNameRef MCN_rtf;
 MCNameRef MCN_html;
 
@@ -568,6 +574,7 @@ MCNameRef MCM_push_notification_received;
 MCNameRef MCM_push_notification_registered;
 MCNameRef MCM_push_notification_registration_error;
 MCNameRef MCM_url_wake_up;
+MCNameRef MCM_launch_data_changed;
 MCNameRef MCM_browser_started_loading;
 MCNameRef MCM_browser_finished_loading;
 MCNameRef MCM_browser_load_failed;
@@ -644,6 +651,12 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("text", MCN_text);
 //	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
 	/* UNCHECKED */ MCNameCreateWithCString("styles", MCN_styles);
+    /* UNCHECKED */ MCNameCreateWithCString("styledtext", MCN_styledtext);
+    /* UNCHECKED */ MCNameCreateWithCString("rtftext", MCN_rtftext);
+    /* UNCHECKED */ MCNameCreateWithCString("htmltext", MCN_htmltext);
+    /* UNCHECKED */ MCNameCreateWithCString("png", MCN_png);
+    /* UNCHECKED */ MCNameCreateWithCString("gif", MCN_gif);
+    /* UNCHECKED */ MCNameCreateWithCString("jpeg", MCN_jpeg);
 	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
 	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
 
@@ -1013,6 +1026,7 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistered", MCM_push_notification_registered);
     /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistrationError", MCM_push_notification_registration_error);
     /* UNCHECKED */ MCNameCreateWithCString("urlWakeUp", MCM_url_wake_up);
+	/* UNCHECKED */ MCNameCreateWithCString("launchDataChanged", MCM_launch_data_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("browserStartedLoading", MCM_browser_started_loading);
 	/* UNCHECKED */ MCNameCreateWithCString("browserFinishedLoading", MCM_browser_finished_loading);
 	/* UNCHECKED */ MCNameCreateWithCString("browserLoadFailed", MCM_browser_load_failed);
@@ -1086,6 +1100,12 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_text);
 //	MCNameDelete(MCN_unicode);
 	MCNameDelete(MCN_styles);
+    MCNameDelete(MCN_styledtext);
+    MCNameDelete(MCN_rtftext);
+    MCNameDelete(MCN_htmltext);
+    MCNameDelete(MCN_png);
+    MCNameDelete(MCN_gif);
+    MCNameDelete(MCN_jpeg);
 	MCNameDelete(MCN_rtf);
 	MCNameDelete(MCN_html);
 
@@ -1450,6 +1470,7 @@ void MCU_finalize_names(void)
     MCNameDelete(MCM_push_notification_registered);
     MCNameDelete(MCM_push_notification_registration_error);
     MCNameDelete(MCM_url_wake_up);
+	MCNameDelete(MCM_launch_data_changed);
 	MCNameDelete(MCM_browser_started_loading);
 	MCNameDelete(MCM_browser_finished_loading);
 	MCNameDelete(MCM_browser_load_failed);

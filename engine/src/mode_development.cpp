@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -150,7 +150,7 @@ MCPropertyInfo MCStack::kModeProperties[] =
 {
     DEFINE_RW_OBJ_PROPERTY(P_IDE_OVERRIDE, Bool, MCStack, IdeOverride)
     DEFINE_RO_OBJ_PROPERTY(P_REFERRING_STACK, String, MCStack, ReferringStack)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfUInt, MCStack, UnplacedGroupIds)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfLooseUInt, MCStack, UnplacedGroupIds)
 };
 
 MCObjectPropertyTable MCStack::kModePropertyTable =
@@ -197,7 +197,7 @@ public:
 
 static MCStringRef s_command_path = nil;
 
-static void restart_revolution(void)
+static void restart_livecode(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
     MCAutoStringRefAsUTF8String t_command_path;
@@ -264,7 +264,7 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	
 	s_command_path = MCValueRetain(*t_command_path);
 
-	atexit(restart_revolution);
+	atexit(restart_livecode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1006,6 +1006,7 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 					{ "server", kMCLicenseDeployToServer },
 					{ "ios-embedded", kMCLicenseDeployToIOSEmbedded },
 					{ "android-embedded", kMCLicenseDeployToIOSEmbedded },
+					{ "html5", kMCLicenseDeployToHTML5 },
 				};
 
 				MClicenseparameters . deploy_targets = 0;
@@ -1985,34 +1986,56 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("multiplicity"), t_value))
-        MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+    {
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger(*t_number);
+	    }
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("scriptlimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("dolimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("usinglimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("insertlimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("deploy"), t_value))
@@ -2248,13 +2271,15 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
 #ifdef FEATURE_PROPERTY_LISTENER
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
-#endif			
+#else
     r_count = 0;
+#endif
 }
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
-#endif			
+#else
     r_time = 0;
+#endif
 }
