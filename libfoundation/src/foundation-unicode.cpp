@@ -556,6 +556,21 @@ bool MCUnicodeIsIdentifierContinue(codepoint_t p_codepoint)
     return !!u_hasBinaryProperty(p_codepoint, UCHAR_ID_CONTINUE);
 }
 
+bool MCUnicodeIsCombining(codepoint_t p_codepoint)
+{
+    // All non-combining characters have canonical combining class 0 but
+    // the converse is *not* true. The class of combining characters is
+    // precisely the union of the following three character classes:
+    // Non-spacing mark, Enclosing mark and Combining spacing mark.
+
+    UCharCategory t_category;
+    t_category = (UCharCategory)u_charType(p_codepoint);
+    
+    return t_category == U_NON_SPACING_MARK
+            || t_category == U_ENCLOSING_MARK
+            || t_category == U_COMBINING_SPACING_MARK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCUnicodeNormaliseNFC(const unichar_t *p_in, uindex_t p_in_length,

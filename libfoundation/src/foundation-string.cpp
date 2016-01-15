@@ -1870,7 +1870,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
         else
             t_length = 1;
         
-        if (MCUnicodeGetIntegerProperty(MCStringGetCharAtIndex(self, t_counter), kMCUnicodePropertyCanonicalCombiningClass))
+        if (MCUnicodeIsCombining(MCStringGetCharAtIndex(self, t_counter)))
             t_is_uncombined = false;
         
         // Increment the counters
