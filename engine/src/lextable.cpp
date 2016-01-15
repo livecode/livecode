@@ -1699,7 +1699,7 @@ LT factor_table[] =
         {"textstyle", TT_PROPERTY, P_TEXT_STYLE},
         {"the", TT_THE, F_UNDEFINED},
         {"theme", TT_PROPERTY, P_THEME},
-        {"themetype", TT_PROPERTY, P_THEME_CONTROL_TYPE},
+        {"themeclass", TT_PROPERTY, P_THEME_CONTROL_TYPE},
         {"there", TT_UNOP, O_THERE},
         {"third", TT_CHUNK, CT_THIRD},
         {"thirdcolor", TT_PROPERTY, P_HILITE_COLOR},
