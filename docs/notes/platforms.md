@@ -39,7 +39,7 @@ LiveCode supports Linux installations which meet the following requirements:
 
 **Note:** If the optional requirements are not present then LiveCode will still run but the specified features will be disabled.
 
-**Note:** The requirements for GUI functionality are also required by Firefox and Chrome, so if your Linux distritution runs one of those, it will run LiveCode.
+**Note:** The requirements for GUI functionality are also required by Firefox and Chrome, so if your Linux distribution runs one of those, it will run LiveCode.
 
 **Note:** It may be possible to compile and run LiveCode Community for Linux on other architectures but this is not officially supported.
 
@@ -61,8 +61,8 @@ Currently, the supported versions of Xcode are:
 *Xcode 4.6 on MacOS X 10.7
 *Xcode 5.1 on MacOS X 10.8
 *Xcode 6.2 on MacOS X 10.9
-*Xcode 6.2, 6.4 and 7.1 on Mac OS X 10.10
-*Xcode 7.1 on MacOS X 10.11
+*Xcode 6.2, 6.4 and 7.2 on Mac OS X 10.10
+*Xcode 7.2 on MacOS X 10.11
 
 It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on Yosemite, you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
 
@@ -72,7 +72,7 @@ We currently support the following iOS Simulators:
 *7.1
 *8.2
 *8.4
-*9.1
+*9.2
 
 ## Android
 LiveCode allows you to save your stack as an Android application, and also to deploy it on an Android device or simulator from the IDE.
