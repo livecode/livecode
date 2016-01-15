@@ -3905,13 +3905,13 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
         MCExecFormatEnum(ctxt, kMCInterfaceThemeTypeInfo, m_theme, t_value);
         if (t_value.type != kMCExecValueTypeStringRef)
             return IO_ERROR;
-        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, MCstackfileversion >= 7000);
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= 7000);
         t_theme_string.Give(t_value.stringref_value);
         
         MCExecFormatEnum(ctxt, kMCInterfaceThemeControlTypeTypeInfo, m_theme_type, t_value);
         if (t_value.type != kMCExecValueTypeStringRef)
             return IO_ERROR;
-        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, MCstackfileversion >= 7000);
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= 7000);
         t_theme_type_string.Give(t_value.stringref_value);
     }
 
@@ -3960,9 +3960,9 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
     if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_THEME_INFO))
     {
         // Write out the theme name and theming type
-        t_stat = p_stream.WriteStringRefNew(*t_theme_string, MCstackfileversion >= 7000);
+        t_stat = p_stream.WriteStringRefNew(*t_theme_string, p_version >= 7000);
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream.WriteStringRefNew(*t_theme_type_string, MCstackfileversion >= 7000);
+            t_stat = p_stream.WriteStringRefNew(*t_theme_type_string, p_version >= 7000);
     }
 
 	return IO_NORMAL;
@@ -4056,9 +4056,9 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
     {
         MCAutoStringRef t_theme_string;
         MCAutoStringRef t_theme_type_string;
-        t_stat = p_stream.ReadStringRefNew(&t_theme_string, MCstackfileversion >= 7000);
+        t_stat = p_stream.ReadStringRefNew(&t_theme_string, version >= 7000);
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream.ReadStringRefNew(&t_theme_type_string, MCstackfileversion >= 7000);
+            t_stat = p_stream.ReadStringRefNew(&t_theme_type_string, version >= 7000);
         
         if (t_stat == IO_NORMAL)
         {
