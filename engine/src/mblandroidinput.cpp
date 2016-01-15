@@ -219,6 +219,7 @@ public:
     void SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align);
     void SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align);
     void SetEnabled(MCExecContext& ctxt, bool p_value);
+	void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type);
     void SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type);
     void SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type);
@@ -235,6 +236,7 @@ public:
     void GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align);
     void GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align);
     void GetEnabled(MCExecContext& ctxt, bool& r_value);
+	void GetEditable(MCExecContext& ctxt, bool& r_value);
     void GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type);
     void GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type);
     void GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type);
@@ -267,7 +269,7 @@ MCPropertyInfo MCAndroidInputControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_FONT_SIZE, UInt32, MCAndroidInputControl, TextSize)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_TEXT_ALIGN, NativeControlInputTextAlign, MCAndroidInputControl, TextAlign)
     DEFINE_RW_CTRL_PROPERTY(P_ENABLED, Bool, MCAndroidInputControl, Enabled)
-    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCAndroidInputControl, Enabled)
+    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCAndroidInputControl, Editable)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTO_CAPITALIZATION_TYPE, NativeControlInputCapitalizationType, MCAndroidInputControl, AutoCapitalizationType)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTOCORRECTION_TYPE, NativeControlInputAutocorrectionType, MCAndroidInputControl, AutoCorrectionType)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_KEYBOARD_TYPE, NativeControlInputKeyboardType, MCAndroidInputControl, KeyboardType)
@@ -420,6 +422,17 @@ void MCAndroidInputControl::SetEnabled(MCExecContext& ctxt, bool p_value)
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "setEnabled", "vb", nil, p_value);
 }
+
+// PM-2015-01-14: [[ Bug 16704 ]] Allow a non-editable multiline fld to be scrolled
+void MCAndroidInputControl::SetEditable(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setEditable", "vb", nil, p_value);
+}
+
 
 void MCAndroidInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type)
 {
@@ -692,6 +705,17 @@ void MCAndroidInputControl::GetEnabled(MCExecContext& ctxt, bool& r_value)
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getEnabled", "b", &r_value);
+    else
+        r_value = false;
+}
+
+void MCAndroidInputControl::GetEditable(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getEditable", "b", &r_value);
     else
         r_value = false;
 }
