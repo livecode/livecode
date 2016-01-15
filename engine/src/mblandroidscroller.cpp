@@ -166,11 +166,7 @@ void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_r
 {
     jobject t_view;
     t_view = GetView();
-    
-    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
-    MCGRectangle t_rect;
-    t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2], p_rect[3]));
-    
+	
     // SN-2014-11-27: [[ Bug 14046 ]] m_content_rect stores user-pixel values
     m_content_rect . x = p_rect[0];
     m_content_rect . y = p_rect[1];
@@ -179,7 +175,12 @@ void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_r
     
 	// PM-2016-01-14: [[Bug 16705]] Pass the correct width and height
     if (t_view != nil)
+	{
+		// SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
+		MCGRectangle t_rect;
+		t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2], p_rect[3]));
         MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, (integer_t)(t_rect.size.width), (integer_t)(t_rect.size.height));
+	}
 }
 
 void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
