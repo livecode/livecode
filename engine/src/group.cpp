@@ -3120,7 +3120,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 
 #define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
 
-IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3134,7 +3134,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3170,7 +3170,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -3184,14 +3184,14 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_clips_to_rect)
         t_has_extensions = true;
 
-	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3233,16 +3233,16 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (vscrollbar != NULL)
 	{
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (hscrollbar != NULL)
 	{
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (controls != NULL)
@@ -3250,7 +3250,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCControl *cptr = controls;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = cptr->next();
 		}

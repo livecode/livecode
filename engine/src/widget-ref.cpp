@@ -781,13 +781,14 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
 	
-    MCObject *t_old_target;
+    MCObjectPtr t_old_target;
     if (GetHost() != nil)
     {
         t_old_target = MCtargetptr;
         
-        MCtargetptr = GetHost();
-        t_this_stack = MCtargetptr->getstack();
+        MCtargetptr . object = GetHost();
+        MCtargetptr . part_id = 0;
+        t_this_stack = MCtargetptr . object -> getstack();
         MCdefaultstackptr = t_this_stack;
     }
     else

@@ -1611,6 +1611,7 @@ void MCHide::exec_ctxt(MCExecContext &ctxt)
 		MCInterfaceExecHideGroups(ctxt);
 		break;
 	case SO_OBJECT:
+    {
 		MCObjectPtr t_target;
         if (!object->getobj(ctxt, t_target, True))
 		{
@@ -1621,6 +1622,7 @@ void MCHide::exec_ctxt(MCExecContext &ctxt)
 			MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
 		else
 			MCInterfaceExecHideObject(ctxt, t_target);
+    }
 		break;
 	case SO_MENU:
 		MCInterfaceExecHideMenuBar(ctxt);
@@ -2124,9 +2126,6 @@ MCSave::~MCSave()
 
 Parse_stat MCSave::parse(MCScriptPoint &sp)
 {
-	Symbol_type type;
-	const LT *te;
-
 	initpoint(sp);
 	target = new MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
@@ -2135,19 +2134,44 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 		(PE_SAVE_BADEXP, sp);
 		return PS_ERROR;
 	}
-	if (sp.next(type) != PS_NORMAL)
-		return PS_NORMAL;
-	if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->which != PT_AS)
+
+	/* Parse optional "as _" clause */
+	if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
 	{
-		sp.backup();
-		return PS_NORMAL;
+		if (sp.parseexp(False, True, &filename) != PS_NORMAL)
+		{
+			MCperror->add(PE_SAVE_BADFILEEXP, sp);
+			return PS_ERROR;
+		}
 	}
-	if (sp.parseexp(False, True, &filename) != PS_NORMAL)
+
+	/* Parse optional "with format _" or "with newest format" clauses */
+	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		MCperror->add
-		(PE_SAVE_BADFILEEXP, sp);
-		return PS_ERROR;
+		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_NEWEST) == PS_NORMAL)
+		{
+			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+			newest_format = true;
+		}
+		else
+		{
+			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+			if (sp.parseexp(False, True, &format) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+		}
 	}
+
 	return PS_NORMAL;
 }
 
@@ -2205,16 +2229,53 @@ void MCSave::exec_ctxt(MCExecContext &ctxt)
         ctxt . LegacyThrow(EE_SAVE_NOTASTACK);
         return;
 	}
+
+	MCStack *t_stack = static_cast<MCStack *>(optr);
+
+	MCAutoStringRef t_filename;
 	if (filename != NULL)
 	{
-		MCAutoStringRef t_filename;
         if (!ctxt . EvalExprAsStringRef(filename, EE_SAVE_BADNOFILEEXP, &t_filename))
             return;
+	}
 
-		MCInterfaceExecSaveStackAs(ctxt, (MCStack *)optr, *t_filename);
+	MCAutoStringRef t_format;
+	if (format != NULL)
+	{
+		if (!ctxt.EvalExprAsStringRef(format, EE_SAVE_BADNOFORMATEXP, &t_format))
+			return;
+	}
+
+	if (NULL != filename)
+	{
+		if (NULL != format)
+		{
+			MCInterfaceExecSaveStackAsWithVersion(ctxt, t_stack, *t_filename, *t_format);
+		}
+		else if (newest_format)
+		{
+			MCInterfaceExecSaveStackAsWithNewestVersion(ctxt, t_stack, *t_filename);
+		}
+		else
+		{
+			MCInterfaceExecSaveStackAs(ctxt, t_stack, *t_filename);
+		}
 	}
 	else
-        MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
+	{
+		if (NULL != format)
+		{
+			MCInterfaceExecSaveStackWithVersion(ctxt, t_stack, *t_format);
+		}
+		else if (newest_format)
+		{
+			MCInterfaceExecSaveStackWithNewestVersion(ctxt, t_stack);
+		}
+		else
+		{
+			MCInterfaceExecSaveStack(ctxt, t_stack);
+		}
+	}
 }
 
 void MCSave::compile(MCSyntaxFactoryRef ctxt)

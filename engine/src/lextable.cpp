@@ -1258,6 +1258,7 @@ LT factor_table[] =
         {"nativechartonum", TT_FUNCTION, F_NATIVE_CHAR_TO_NUM},
         {"navigationarrows", TT_PROPERTY, P_NAVIGATION_ARROWS},
 		{"networkinterfaces", TT_PROPERTY, P_NETWORK_INTERFACES},
+        {"newest", TT_PREP, PT_NEWEST},
         {"next", TT_CHUNK, CT_NEXT},
         {"ninth", TT_CHUNK, CT_NINTH},
         {"no", TT_UNOP, O_NOT},

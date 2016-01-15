@@ -375,7 +375,7 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
     }
     
 	if (MCmessagemessages && stat != ES_PASS)
-		MCtargetptr->sendmessage(htype, mess, False);
+		MCtargetptr . object -> sendmessage(htype, mess, False);
 		
 	if (t_has_passed)
 		return ES_PASS;
@@ -1056,7 +1056,7 @@ void MCDispatch::cleanup(IO_handle stream, MCStringRef linkname, MCStringRef bna
 		MCS_unbackup(bname, linkname);
 }
 
-IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
+IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t p_version)
 {
     IO_stat stat;
     
@@ -1068,20 +1068,22 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
     }
     else
     {
-        // MW-2014-12-17: [[ Widgets ]] Force writing out as 8.0 version stack if it
-        //   contains widgets, and only write out as 8.0 if it contains widgets.
-        uint32_t t_old_stackfileversion;
-        t_old_stackfileversion = MCstackfileversion;
-        if (sptr -> haswidgets() || sptr -> substackhaswidgets())
-            MCstackfileversion = 8000;
-        else if (MCstackfileversion == 8000)
-            MCstackfileversion = 7000;
-        
-        stat = dosavestack(sptr, p_fname);
+		/* If no version was specified, assume that 8.0 format was requested */
+		if (UINT32_MAX == p_version)
+		{
+			p_version = 8000;
+		}
+
+		/* If the stack doesn't contain widgets, and 8.0 format was requested,
+		 * use 7.0 format. */
+		if (8000 == p_version && !sptr->haswidgets())
+		{
+			p_version = 7000;
+		}
+
+        stat = dosavestack(sptr, p_fname, p_version);
         
         MCLogicalFontTableFinish();
-        
-        MCstackfileversion = t_old_stackfileversion;
     }
     
 	return stat;
@@ -1166,7 +1168,7 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
     return IO_NORMAL;
 }
 
-IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
+IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32_t p_version)
 {
 	if (MCModeCheckSaveStack(sptr, p_fname) != IO_NORMAL)
 		return IO_ERROR;
@@ -1219,13 +1221,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-    if (MCstackfileversion >= 8000)
+    if (p_version >= 8000)
 		t_header = newheader8000, t_header_size = 8;
-	else if (MCstackfileversion >= 7000)
+	else if (p_version >= 7000)
 		t_header = newheader7000, t_header_size = 8;
-	else if (MCstackfileversion >= 5500)
+	else if (p_version >= 5500)
 		t_header = newheader5500, t_header_size = 8;
-	else if (MCstackfileversion >= 2700)
+	else if (p_version >= 2700)
 		t_header = newheader, t_header_size = 8;
 	else
 		t_header = header, t_header_size = HEADERSIZE;
@@ -1253,7 +1255,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCgroupedobjectoffset . y = 0;
 	
 	MCresult -> clear();
-	if (sptr->save(stream, 0, false) != IO_NORMAL
+	if (sptr->save(stream, 0, false, p_version) != IO_NORMAL
 	        || IO_write_uint1(OT_END, stream) != IO_NORMAL)
 	{
 		if (MCresult -> isclear())
@@ -1605,6 +1607,8 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	static uint4 s_old_modifiers = 0;
 
 	MCStack *target = findstackd(w);
+    if (target == nil)
+        return DRAG_ACTION_NONE;
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Translate mouse location to stack coords
 	MCPoint t_mouseloc;

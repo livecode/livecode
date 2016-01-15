@@ -279,6 +279,11 @@ bool MCScriptThrowNotABooleanError(MCValueRef p_value)
     return MCErrorCreateAndThrow(kMCScriptNotABooleanValueErrorTypeInfo, "value", p_value, nil);
 }
 
+bool MCScriptThrowNotAStringError(MCValueRef p_value)
+{
+	return MCErrorCreateAndThrow(kMCScriptNotAStringValueErrorTypeInfo, "value", p_value, nil);
+}
+
 bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_provided)
 {
     // TODO: Encode provided / expected.
@@ -1413,6 +1418,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 t_argument = nil;
                 
                 // Nothing to free.
+                t_arg_new[t_arg_index] = false;
             }
         }
         
@@ -2360,6 +2366,58 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     MCMemoryDeleteArray(t_values);
             }
             break;
+			case kMCScriptBytecodeOpAssignArray:
+			{
+				int t_dst;
+				t_dst = t_arguments[0];
+
+				MCAutoArrayRef t_array;
+				if (!MCArrayCreateMutable(&t_array))
+				{
+					t_success = false;
+				}
+
+				for (int t_arg_ofs = 1; t_success && t_arg_ofs + 1 < t_arity; t_arg_ofs += 2)
+				{
+					MCValueRef t_raw_key, t_value;
+					MCNewAutoNameRef t_key;
+					if (t_success)
+					{
+						t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[t_arg_ofs], t_raw_key);
+					}
+					if (t_success)
+					{
+						t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[t_arg_ofs + 1], t_value);
+					}
+					if (t_success)
+					{
+						// FIXME allow construction of arrays from
+						// string-bridging foreign values.
+						if (MCValueGetTypeCode(t_raw_key) != kMCValueTypeCodeString)
+						{
+							t_success = MCScriptThrowNotAStringError(t_raw_key);
+						}
+					}
+					if (t_success)
+					{
+						t_success = MCNameCreate(reinterpret_cast<MCStringRef>(t_raw_key), &t_key);
+					}
+					if (t_success)
+					{
+						t_success = MCArrayStoreValue(*t_array, false, *t_key, t_value);
+					}
+				}
+
+				if (t_success)
+				{
+					t_success = t_array.MakeImmutable();
+				}
+				if (t_success)
+				{
+					t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, *t_array);
+				}
+			}
+			break;
         }
         
         // If we failed, then make sure the frame address is up to date.

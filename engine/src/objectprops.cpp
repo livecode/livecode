@@ -69,12 +69,12 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_ID, UInt32, MCObject, Id)
 	DEFINE_RW_OBJ_PROPERTY(P_SHORT_ID, UInt32, MCObject, Id)
 	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_ID, String, MCObject, AbbrevId)
-	DEFINE_RO_OBJ_PROPERTY(P_LONG_ID, String, MCObject, LongId)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_LONG_ID, String, MCObject, LongId)
 	DEFINE_RW_OBJ_PROPERTY(P_NAME, String, MCObject, Name)
     // SN-2014-08-25: [[ Bug 13276 ]] Added the property definition for 'abbreviated name'
     DEFINE_RO_OBJ_PROPERTY(P_ABBREV_NAME, String, MCObject, AbbrevName)
 	DEFINE_RO_OBJ_PROPERTY(P_SHORT_NAME, String, MCObject, ShortName)
-	DEFINE_RO_OBJ_PROPERTY(P_LONG_NAME, String, MCObject, LongName)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_LONG_NAME, String, MCObject, LongName)
 	DEFINE_RW_OBJ_PROPERTY(P_ALT_ID, UInt32, MCObject, AltId)
 	DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_LAYER, InterfaceLayer, MCObject, Layer)
 	DEFINE_RW_OBJ_PROPERTY(P_SCRIPT, String, MCObject, Script)
@@ -183,7 +183,7 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_OWNER, OptionalString, MCObject, Owner)
 	DEFINE_RO_OBJ_PROPERTY(P_SHORT_OWNER, OptionalString, MCObject, ShortOwner)
 	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_OWNER, OptionalString, MCObject, AbbrevOwner)
-	DEFINE_RO_OBJ_PROPERTY(P_LONG_OWNER, OptionalString, MCObject, LongOwner)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_LONG_OWNER, OptionalString, MCObject, LongOwner)
 
 	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
     // MERG-2013-05-07: [[ RevisedPropsProp ]] Add support for 'the effective
@@ -456,8 +456,9 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
         
 		MCStack *oldstackptr = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
-		MCObject *oldtargetptr = MCtargetptr;
-		MCtargetptr = this;
+		MCObjectPtr oldtargetptr = MCtargetptr;
+		MCtargetptr . object = this;
+        MCtargetptr . part_id = 0;
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
@@ -1642,8 +1643,9 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		
 		MCStack *oldstackptr = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
-		MCObject *oldtargetptr = MCtargetptr;
-		MCtargetptr = this;
+		MCObjectPtr oldtargetptr = MCtargetptr;
+		MCtargetptr . object = this;
+        MCtargetptr . part_id = 0;
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{

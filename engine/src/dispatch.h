@@ -102,7 +102,7 @@ public:
 	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
-	IO_stat savestack(MCStack *sptr, const MCStringRef);
+	IO_stat savestack(MCStack *sptr, const MCStringRef, uint32_t p_version = UINT32_MAX);
 	IO_stat startup(void);
 	
 	void wreshape(Window w);
@@ -271,7 +271,7 @@ private:
 	IO_stat doreadfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
     //   is wrapped by savestack to handle logical font table.
-    IO_stat dosavestack(MCStack *sptr, const MCStringRef);
+	IO_stat dosavestack(MCStack *sptr, const MCStringRef, uint32_t p_version);
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Save a stack if it is marked as script-only.
     IO_stat dosavescriptonlystack(MCStack *sptr, const MCStringRef);
 };

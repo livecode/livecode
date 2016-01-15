@@ -181,7 +181,7 @@ extern MCStack *MCstaticdefaultstackptr;
 extern MCStack *MCmousestackptr;
 extern MCStack *MCclickstackptr;
 extern MCStack *MCfocusedstackptr;
-extern MCObject *MCtargetptr;
+extern MCObjectPtr MCtargetptr;
 extern MCObject *MCmenuobjectptr;
 extern MCCard *MCdynamiccard;
 extern Boolean MCdynamicpath;

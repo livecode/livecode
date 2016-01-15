@@ -313,26 +313,37 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 		else if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN)
 			curinfo->keymove = KM_KEY_DOWN;
 
-		// If the window receiving the key message is a stack window then we
-		// only want to see WM_CHAR and not WM_KEYDOWN. However, if it is a
-		// non-stack window (like CEF Browser's) we don't want to fiddle with
-		// the message flow.
-		if ((t_keymessage || t_syskeymessage) && MCdispatcher -> findstackwindowid((uintptr_t)msg . hwnd) != NULL)
+		// IM-2016-01-11: [[ Bug 16415 ]] Always use DispatchMessage for non-stack windows		
+		bool t_foreign_window;
+		t_foreign_window = MCdispatcher->findstackwindowid((uintptr_t)msg.hwnd) == nil;
+		bool t_os_dispatch;
+		t_os_dispatch = !dispatch || t_foreign_window;
+
+		if (t_keymessage || t_syskeymessage)
 		{
+			// IM-2016-01-11: [[ Bug 16415 ]] Call TranslateMessage for any hwnd.
+			//    Only remove WM_(SYS)KEYDOWN for stack windows.
 			TranslateMessage(&msg);
 
-			// SN-2014-09-05: [[ Bug 13348 ]] Remove the WM_KEYDOWN, WM_SYSKEYDOWN messages
-			// in case TranslateMessage succeeded, and queued a WM_[SYS]CHAR message
-			if (t_keymessage)
-				PeekMessageW(&msg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE);				
-			else if (t_syskeymessage)
-				PeekMessageW(&msg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+			// If the window receiving the key message is a stack window then we
+			// only want to see WM_CHAR and not WM_KEYDOWN. However, if it is a
+			// non-stack window (like CEF Browser's) we don't want to fiddle with
+			// the message flow.
+			if (!t_foreign_window)
+			{
+				// SN-2014-09-05: [[ Bug 13348 ]] Remove the WM_KEYDOWN, WM_SYSKEYDOWN messages
+				// in case TranslateMessage succeeded, and queued a WM_[SYS]CHAR message
+				if (t_keymessage)
+					PeekMessageW(&msg, NULL, WM_CHAR, WM_DEADCHAR, PM_REMOVE);				
+				else if (t_syskeymessage)
+					PeekMessageW(&msg, NULL, WM_SYSCHAR, WM_SYSDEADCHAR, PM_REMOVE);
+			}
 		}
 
-		if (dispatch)
-			MCWindowProc(msg.hwnd, msg.message, msg.wParam, msg.lParam);
-		else
+		if (t_os_dispatch)
 			DispatchMessageW(&msg);
+		else
+			MCWindowProc(msg.hwnd, msg.message, msg.wParam, msg.lParam);
 	}
 	
 	extern void MCQTHandleRecord(void);

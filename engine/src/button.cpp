@@ -4408,7 +4408,7 @@ void MCButton::trytochangetonative(void)
 
 #define BUTTON_EXTRA_ICONGRAVITY (1 << 0)
 
-IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// Extended data area for a button consists of:
 	//   uint4 hover_icon;
@@ -4441,7 +4441,7 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_stat = p_stream . WriteU32(m_icon_gravity);
     
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
@@ -4496,7 +4496,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	return t_stat;
 }
 
-IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -4521,7 +4521,8 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_icon_gravity != kMCGravityNone)
         t_has_extension = true;
     
-	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext,
+	                           p_version)) != IO_NORMAL)
 		return stat;
 
 	if (flags & F_HAS_ICONS)
@@ -4537,7 +4538,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     //  we need to rely on the F_LABEL flag
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -4563,13 +4564,13 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 	}
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(menuname, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(menuname, stream, p_version >= 7000)) != IO_NORMAL)
 		return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_MENU_STRING)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -4598,7 +4599,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		if ((stat = IO_write_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
 			return stat;
@@ -4616,7 +4617,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint1(mnemonic, stream)) != IO_NORMAL)
 		return stat;
 
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 
 	MCCdata *tptr = bdata;
@@ -4624,7 +4625,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	{
 		do
 		{
-			if ((stat = tptr->save(stream, OT_BDATA, p_part)) != IO_NORMAL)
+			if ((stat = tptr->save(stream, OT_BDATA, p_part, p_version)) != IO_NORMAL)
 				return stat;
 			tptr = (MCCdata *)tptr->next();
 		}

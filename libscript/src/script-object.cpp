@@ -28,6 +28,7 @@ MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptNotAStringValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
@@ -256,6 +257,8 @@ bool MCScriptInitialize(void)
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ArgumentValueTypeError"), MCNAME("runtime"), MCSTR("Value is not of correct type for passing as argument - expected type %{type} for passing to parameter %{parameter} of %{module}.%{handler}"), kMCScriptInvalidArgumentValueErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotABooleanValueError"), MCNAME("runtime"), MCSTR("Value is not a boolean"), kMCScriptNotABooleanValueErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotAStringValueError"), MCNAME("runtime"), MCSTR("Value is not a string"), kMCScriptNotAStringValueErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCNAME("runtime"), MCSTR("Wrong number of arguments passed to handler %{module}.%{handler}"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo))
 			return false;

@@ -146,7 +146,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part)
+IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -177,7 +177,7 @@ IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part)
 			if (tptr != NULL)
 				do
 				{
-					if ((stat = tptr->save(stream, p_part)) != IO_NORMAL)
+					if ((stat = tptr->save(stream, p_part, p_version)) != IO_NORMAL)
 						return stat;
 					tptr = (MCParagraph *)tptr->next();
 				}

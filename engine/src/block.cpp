@@ -332,14 +332,14 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
+IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 {
 	IO_stat stat;
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If the block has metadata and 5.5 stackfile
 	//   format has been requested then this is an extended block.
 	bool t_is_ext;
-	if (MCstackfileversion >= 5500 && getflag(F_HAS_METADATA))
+	if (p_version >= 5500 && getflag(F_HAS_METADATA))
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -352,7 +352,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then write out
 	//   the length of the attrs.
 	if (t_is_ext)
-		if ((stat = IO_write_uint2or4(measureattrs(), stream)) != IO_NORMAL)
+		if ((stat = IO_write_uint2or4(measureattrs(p_version), stream)) != IO_NORMAL)
 			return stat;
 
 	uint4 oldflags = flags;
@@ -368,7 +368,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	
     // The "has unicode" flag depends on whether the paragraph is native
 	bool t_is_unicode;
-    if (MCstackfileversion < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
+    if (p_version < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
 	{
 		t_is_unicode = false;
         flags &= ~F_HAS_UNICODE;
@@ -380,7 +380,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	}
 
     // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
-    if (MCstackfileversion < 7000)
+    if (p_version < 7000)
     {
         if (segment && segment != segment -> next())
             flags |= F_HAS_TAB;
@@ -437,11 +437,11 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	//   strings.
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_LINK)
-        if ((stat = IO_write_stringref_new(atts->linktext, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->linktext, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_IMAGE)
-        if ((stat = IO_write_stringref_new(atts->imagesource, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->imagesource, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -450,7 +450,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if (flags & F_HAS_METADATA)
-            if ((stat = IO_write_stringref_new(atts -> metadata, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(atts -> metadata, stream, p_version >= 7000)) != IO_NORMAL)
 				return stat;
 	}
 	
@@ -2245,13 +2245,13 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 }
 
 // SN-2014-10-31: [[ Bug 13879 ]] Update the way the string is measured.
-uint32_t measure_stringref(MCStringRef p_string)
+uint32_t measure_stringref(MCStringRef p_string, uint32_t p_version)
 {
     MCStringEncoding t_encoding;
     uint32_t t_additional_bytes = 0;
     
 
-    if (MCstackfileversion < 7000)
+    if (p_version < 7000)
         t_encoding = kMCStringEncodingNative;
     else
         t_encoding = kMCStringEncodingUTF8;
@@ -2262,7 +2262,7 @@ uint32_t measure_stringref(MCStringRef p_string)
     uint32_t t_length;
     t_length = MCDataGetLength(*t_data);
     
-    if (MCstackfileversion < 7000)
+    if (p_version < 7000)
     {
         // Full string is written in 5.5 format:
         //  - length is written as a uint2
@@ -2283,14 +2283,14 @@ uint32_t measure_stringref(MCStringRef p_string)
 
 // MW-2012-03-04: [[ StackFile5500 ]] Utility routine for computing the length of
 //   a nameref when serialized to disk.
-uint32_t measure_nameref(MCNameRef p_name)
+uint32_t measure_nameref(MCNameRef p_name, uint32_t p_version)
 {
-	return measure_stringref(MCNameGetString(p_name));
+	return measure_stringref(MCNameGetString(p_name), p_version);
 }
 
 // MW-2012-03-04: [[ StackFile5500 ]] Compute the number of bytes the attributes will
 //   take up when serialized.
-uint32_t MCBlock::measureattrs(void)
+uint32_t MCBlock::measureattrs(uint32_t p_version)
 {
 	// If there are no attrs, then the size is 0.
 	if (!hasatts())
@@ -2315,11 +2315,11 @@ uint32_t MCBlock::measureattrs(void)
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
 	if ((flags & F_HAS_LINK) != 0)
-		t_size += measure_stringref(atts -> linktext);
+		t_size += measure_stringref(atts -> linktext, p_version);
 	if ((flags & F_HAS_IMAGE) != 0)
-		t_size += measure_stringref(atts -> imagesource);
+		t_size += measure_stringref(atts -> imagesource, p_version);
 	if ((flags & F_HAS_METADATA) != 0)
-		t_size += measure_stringref((MCStringRef)atts -> metadata);
+		t_size += measure_stringref((MCStringRef)atts -> metadata, p_version);
 
 	return t_size;
 }

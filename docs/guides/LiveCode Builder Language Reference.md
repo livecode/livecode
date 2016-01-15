@@ -522,6 +522,7 @@ The return value of a handler is subsequently available by using **the result** 
       | VariableExpression
       | ResultExpression
       | ListExpression
+      | ArrayExpression
       | CallExpression
 
 There are a number of expressions which are built-in and allow constant values, access to call results, list construction and calls. The remaining syntax for expressions is defined in auxiliary modules.
@@ -576,6 +577,23 @@ A list expression evaluates all the elements in the expression list from left to
 The elements list is optional, so the empty list can be specified as *[]*.
 
 List expressions are not assignable.
+
+## Array Expressions
+
+    ArrayExpression
+      : '{' [ <Contents: ArrayDatumList> ] '}'
+    ArrayDatumList
+      : <Head: ArrayDatum> [ ',' <Tail: ArrayDatumList> ]
+    ArrayDatum
+      : <Key: Expression> ':' <Value: Expression>
+
+An array expression evaluates all of the key and value expressions
+from left to right, and constructs an **Array** value as appropriate.
+Each key expression must evaluate to a **String**.
+
+The contents are optional, so the empty array can be written as `{}`.
+
+Array expressions are not assignable.
 
 ## Call Expressions
 
