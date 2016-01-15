@@ -256,6 +256,12 @@ void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[
     // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
     MCGRectangle t_rect;
     t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2] - p_rect[0], p_rect[3] - p_rect[1]));
+	
+	// PM-2016-01-14: [[ Bug 16722]] m_content_rect stores user-pixel values - make sure we update it
+	m_content_rect . x = p_rect[0];
+    m_content_rect . y = p_rect[1];
+    m_content_rect . width = p_rect[2] - p_rect[0];
+    m_content_rect . height = p_rect[3] - p_rect[1];
     
     if (t_view != nil)
         [t_view setContentSize:CGSizeMake(t_rect . size . width, t_rect . size . height)];
