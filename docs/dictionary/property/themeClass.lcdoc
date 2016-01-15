@@ -1,0 +1,29 @@
+Name: themeClass
+
+Type: property
+
+Syntax: set the themeClass of tObject to tThemeClass
+
+Summary: Specifies which set of theming parameters should be used for an object.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the themeClass of field "mylabel" to "label"
+
+Value (string): The <themeClass> of an object or control is what kind of object to treat it as for UI theming purposes.
+
+Description:
+Use the <themeClass> property of an object or control to change which set of theming parameters it uses. These parameters include fonts, colors and sizes. For example, setting the <themeClass> of a field to "label" will cause it to use the fonts and colors of a label rather than a text entry box.
+
+If no <themeClass> is specified, the engine will auto-detect the appropriate type based on the properties of the object. To retrieve this auto-detected type when the property is empty use <the effective themeClass>.
+
+Unlike many other appearance-related properties, the <themeClass> property is not inherited.
+
+References: theme (property)
+
+Tags: ui
