@@ -1,0 +1,1 @@
+# Handle unicode variation selector codepoints correctly

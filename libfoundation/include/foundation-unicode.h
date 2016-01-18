@@ -277,6 +277,7 @@ bool    MCUnicodeIsBlank(codepoint_t);
 bool    MCUnicodeIsControl(codepoint_t);
 bool    MCUnicodeIsGraphic(codepoint_t);
 bool    MCUnicodeIsPrinting(codepoint_t);
+bool    MCUnicodeIsCombining(codepoint_t p_codepoint);
 
 // Shortcuts for identifier name properties
 bool    MCUnicodeIsIdentifierInitial(codepoint_t);      // Can begin an identifier
