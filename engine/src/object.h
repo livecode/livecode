@@ -107,9 +107,9 @@ enum MCPropertyChangedMessageType
 
 enum MCInterfaceTheme
 {
-    kMCInterfaceThemeEmpty = 0,
-    kMCInterfaceThemeNative = 1,
-    kMCInterfaceThemeLegacy = 2
+    kMCInterfaceThemeEmpty = 0,         // Inherit the theme
+    kMCInterfaceThemeNative = 1,        // Native appearance
+    kMCInterfaceThemeLegacy = 2         // Backwards-compatibility theming
 };
 
 struct MCObjectShape
@@ -170,7 +170,7 @@ struct MCObjectVisitor
 // MW-2012-02-19: [[ SplitTextAttrs ]] If this flag is set, then there is a font-flags
 //   byte in the extended data section.
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
-#define OBJECT_EXTRA_THEME_INFO     (1U << 5)
+#define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
 class MCObjectHandle
 {
@@ -416,6 +416,7 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// MW-2012-02-14: [[ FontRefs ]] Remap any fonts this object uses as font related property has changed.
+    // Set force to true to recompute even if it looks like nothing needs updated
 	virtual bool recomputefonts(MCFontRef parent_font, bool force = false);
 
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
@@ -1242,6 +1243,7 @@ protected:
     virtual MCPlatformControlState getcontrolstate();
     bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
     
+    // Returns the effective theme for this object
     MCInterfaceTheme gettheme() const;
     
 private:
