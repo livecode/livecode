@@ -953,8 +953,7 @@ bool MCTextChunkIterator_Word::Next()
 
 MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCStringRef p_item_delimiter, MCStringOptions p_options)
 {
-    if (p_chunk_type == kMCChunkTypeCharacter && (MCStringIsNative(p_text) || (MCStringIsSimple(p_text) && MCStringIsUncombined(p_text))))
-        p_chunk_type = kMCChunkTypeCodeunit;
+    p_chunk_type = MCChunkTypeSimplify(p_text, p_chunk_type);
     
     MCTextChunkIterator *t_iterator = nil;
     
@@ -1025,3 +1024,42 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCChunkType MCChunkTypeSimplify(MCStringRef p_string, MCChunkType p_type)
+{
+    MCStringCheck(p_string);
+    
+    switch (p_type)
+    {
+        case kMCCharChunkTypeGrapheme:
+        {
+            if (MCStringIsTrivial(p_string))
+                return kMCChunkTypeCodeunit;
+            
+            break;
+        }
+        case kMCCharChunkTypeCodepoint:
+        {
+            if (MCStringIsBasic(p_string))
+                return kMCChunkTypeCodeunit;
+            break;
+        }
+        default:
+            break;
+    }
+    
+    return p_type;
+}
+
+MCChunkType MCChunkTypeFromCharChunkType(MCCharChunkType p_char_type)
+{
+    switch (p_char_type)
+    {
+        case kMCCharChunkTypeCodeunit:
+            return kMCChunkTypeCodeunit;
+        case kMCCharChunkTypeCodepoint:
+            return kMCChunkTypeCodepoint;
+        case kMCCharChunkTypeGrapheme:
+            return kMCChunkTypeCharacter;
+    }
+}

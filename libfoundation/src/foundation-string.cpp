@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 #include "foundation-bidi.h"
+#include "foundation-chunk.h"
 
 #ifdef __LINUX__
 #include <errno.h>
@@ -2320,17 +2321,20 @@ bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char
 {
 	__MCAssertIsString(self);
 
-    switch (p_type)
+    MCChunkType t_simple_chunk_type;
+    t_simple_chunk_type = MCChunkTypeSimplify(self, MCChunkTypeFromCharChunkType(p_type));
+    
+    switch (t_simple_chunk_type)
     {
-        case kMCCharChunkTypeCodeunit:
+        case kMCChunkTypeCodeunit:
             r_cu_range = p_char_range;
             return true;
             
-        case kMCCharChunkTypeCodepoint:
+        case kMCChunkTypeCodepoint:
             return MCStringMapCodepointIndices(self, p_char_range, r_cu_range);
             
-        case kMCCharChunkTypeGrapheme:
-            return MCStringMapGraphemeIndices(self, kMCLocaleBasic, p_char_range, r_cu_range);
+        case kMCChunkTypeCharacter:
+            return MCStringMapGraphemeIndices(self, p_char_range, r_cu_range);
     }
     
     MCAssert(false);
@@ -2342,17 +2346,20 @@ bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu
 {
 	__MCAssertIsString(self);
 
-    switch (p_type)
+    MCChunkType t_simple_chunk_type;
+    t_simple_chunk_type = MCChunkTypeSimplify(self, MCChunkTypeFromCharChunkType(p_type));
+    
+    switch (t_simple_chunk_type)
     {
-        case kMCCharChunkTypeCodeunit:
+        case kMCChunkTypeCodeunit:
             r_char_range = p_cu_range;
             return true;
             
-        case kMCCharChunkTypeCodepoint:
+        case kMCChunkTypeCodepoint:
             return MCStringUnmapCodepointIndices(self, p_cu_range, r_char_range);
             
-        case kMCCharChunkTypeGrapheme:
-            return MCStringUnmapGraphemeIndices(self, kMCLocaleBasic, p_cu_range, r_char_range);
+        case kMCChunkTypeCharacter:
+            return MCStringUnmapGraphemeIndices(self, p_cu_range, r_char_range);
     }
     
     MCAssert(false);

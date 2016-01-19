@@ -297,4 +297,7 @@ public:
 
 MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCStringRef p_item_delimiter, MCStringOptions p_options);
 
+MCChunkType MCChunkTypeSimplify(MCStringRef p_string, MCChunkType p_type);
+MCChunkType MCChunkTypeFromCharChunkType(MCCharChunkType p_type);
+
 #endif // __MC_FOUNDATION_CHUNK__
