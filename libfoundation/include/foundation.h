@@ -2088,10 +2088,10 @@ MC_DLLEXPORT bool MCStringCantBeEqualToNative(MCStringRef string, MCStringOption
 MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
 
 // Returns true if the string only requires BMP characters to represent.
-MC_DLLEXPORT bool MCStringIsSimple(MCStringRef string);
+MC_DLLEXPORT bool MCStringIsBasic(MCStringRef string);
 
-// Returns true if the string only comprises non-combining characters.
-MC_DLLEXPORT bool MCStringIsUncombined(MCStringRef string);
+// Returns true if the string is basic and only comprises non-combining characters.
+MC_DLLEXPORT bool MCStringIsTrivial(MCStringRef string);
 
 /////////
 
@@ -2504,6 +2504,10 @@ MC_DLLEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 MC_DLLEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
 MC_DLLEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
+//////////
+    
+MC_DLLEXPORT void MCStringCheck(MCStringRef self);
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  DATA DEFINITIONS

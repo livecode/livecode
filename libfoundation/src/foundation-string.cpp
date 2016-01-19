@@ -94,18 +94,18 @@ static bool __MCStringIsChecked(MCStringRef self)
     return (self -> flags & kMCStringFlagIsChecked) != 0;
 }
 
-static bool __MCStringIsUncombined(MCStringRef self)
+static bool __MCStringIsTrivial(MCStringRef self)
 {
     MCAssert(!__MCStringIsIndirect(self));
     
-    return (self -> flags & kMCStringFlagIsUncombined) != 0;
+    return (self -> flags & kMCStringFlagIsTrivial) != 0;
 }
 
-static bool __MCStringIsSimple(MCStringRef self)
+static bool __MCStringIsBasic(MCStringRef self)
 {
     MCAssert(!__MCStringIsIndirect(self));
     
-    return (self -> flags & kMCStringFlagIsSimple) != 0;
+    return (self -> flags & kMCStringFlagIsBasic) != 0;
 }
 
 static bool __MCStringCanBeNative(MCStringRef self)
@@ -140,12 +140,12 @@ static bool __MCStringCantBeEqualToNative(MCStringRef self, MCStringOptions p_op
                     // If there are no combining chars, then normalization is not
                     // going to make a difference - there's no way this string
                     // can be native.
-                    if (__MCStringIsUncombined(self))
+                    if (__MCStringIsTrivial(self))
                         return true;
                 
                     // If the string is not simple, then even though it contains
                     // combining chars it can't be native.
-                    if (!__MCStringIsSimple(self))
+                    if (!__MCStringIsBasic(self))
                         return true;
                 }
                 break;
@@ -1720,28 +1720,28 @@ bool MCStringCanBeNative(MCStringRef self)
     return __MCStringCanBeNative(self);
 }
 
-// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'simple' flag is checked against the direct string.
+// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'basic' flag is checked against the direct string.
 MC_DLLEXPORT_DEF
-bool MCStringIsSimple(MCStringRef self)
+bool MCStringIsBasic(MCStringRef self)
 {
 	__MCAssertIsString(self);
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    return __MCStringIsSimple(self);
+    return __MCStringIsBasic(self);
 }
 
-// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'uncombined' flag is checked against the direct string.
+// AL-2015-02-06: [[ Bug 14504 ]] Ensure 'trivial' flag is checked against the direct string.
 MC_DLLEXPORT_DEF
-bool MCStringIsUncombined(MCStringRef self)
+bool MCStringIsTrivial(MCStringRef self)
 {
 	__MCAssertIsString(self);
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    return __MCStringIsUncombined(self);
+    return __MCStringIsTrivial(self);
 }
 
 MC_DLLEXPORT_DEF
@@ -1754,8 +1754,10 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     
     MCAssert(self != nil);
     
+    MCStringCheck(self);
+    
     // Shortcut for strings containing only BMP characters
-    if (__MCStringIsNative(self) || (__MCStringIsSimple(self) && __MCStringIsUncombined(self)))
+    if (__MCStringCanBeNative(self) || __MCStringIsBasic(self))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -1763,38 +1765,20 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     }
     
     uindex_t char_count = __MCStringGetLength(self);
-    
-    // If the string has not yet been scanned for simplicity, scan the whole
-    // thing (assuming multiple mapping requests will be made)
-    uindex_t t_scan_end;
-    if (__MCStringIsChecked(self))
-        t_scan_end = p_in_range.offset + p_in_range.length;
-    else
-    {
-        t_scan_end = char_count;
-        // The whole string is going to be checked for simplicity
-        self -> flags |= kMCStringFlagIsChecked;
-    }
-    
     // Scan through the string, counting the number of codepoints
-    bool t_is_simple = true;
-    bool t_is_uncombined = true;
     uindex_t t_cp_counter = 0;
     uindex_t t_codeunit_pos = 0;
     MCRange t_units = MCRangeMake(0, 0);
     // If we are scanning the whole string, the end comes when all the codeunits have been processed
     // Otherwise, we have an amount of codepoints to read, not codeunits
-    while (t_codeunit_pos < t_scan_end)
+    while (t_codeunit_pos < p_in_range . offset + p_in_range . length)
     {
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
         if (MCStringIsValidSurrogatePair(self, t_codeunit_pos))
-            t_length = 2, t_is_simple = false;
+            t_length = 2;
         else
             t_length = 1;
-        
-        if (MCUnicodeGetIntegerProperty(MCStringGetCharAtIndex(self, t_codeunit_pos), kMCUnicodePropertyCanonicalCombiningClass))
-            t_is_uncombined = false;
             
         // Update the appropriate field of the output
         if (t_codeunit_pos < p_in_range.offset)
@@ -1818,15 +1802,6 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
         t_codeunit_pos += t_length;
     }
     
-    // If no surrogates were found, mark the string as simple
-    if (t_is_simple && t_scan_end == char_count)
-        self -> flags |= kMCStringFlagIsSimple;
-    
-    if (t_is_uncombined)
-        self -> flags |= kMCStringFlagIsUncombined;
-    else
-        self -> flags &= ~kMCStringFlagIsUncombined;
-    
     // All done
     r_out_range = t_units;
     return true;
@@ -1842,7 +1817,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
         self = self -> string;
     
     // Shortcut for strings containing only BMP characters
-    if (__MCStringIsNative(self) || (__MCStringIsSimple(self) && __MCStringIsUncombined(self)))
+    if (__MCStringCanBeNative(self) || (__MCStringIsBasic(self)))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -1856,9 +1831,6 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
         return false;
     
     // Scan through the string, counting the number of code points
-    bool t_is_simple = true;
-    bool t_is_uncombined = true;
-    
     uindex_t t_counter = 0;
     MCRange t_codepoints = MCRangeMake(0, 0);
     while (t_counter < p_in_range.offset + p_in_range.length)
@@ -1866,12 +1838,9 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
         // Is this a single code unit or a valid surrogate pair?
         uindex_t t_length;
         if (MCStringIsValidSurrogatePair(self, t_counter))
-            t_length = 2, t_is_simple = false;
+            t_length = 2;
         else
             t_length = 1;
-        
-        if (MCUnicodeGetIntegerProperty(MCStringGetCharAtIndex(self, t_counter), kMCUnicodePropertyCanonicalCombiningClass))
-            t_is_uncombined = false;
         
         // Increment the counters
         if (t_counter < p_in_range.offset)
@@ -1880,18 +1849,7 @@ bool MCStringUnmapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange
             t_codepoints.length++;
         t_counter += t_length;
     }
-    
-    // If no surrogates were found, mark the string as simple
-    if (t_is_simple && p_in_range.offset + p_in_range.length >= char_count)
-        self -> flags |= kMCStringFlagIsSimple;
-            
-    if (t_is_uncombined)
-        self -> flags |= kMCStringFlagIsUncombined;
-    else
-        self -> flags &= ~kMCStringFlagIsUncombined;
-    
-    // The string has been checked
-    self -> flags |= kMCStringFlagIsChecked;
+
     // All done
     r_out_range = t_codepoints;
     return true;
@@ -1901,6 +1859,12 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
 {
 	__MCAssertIsString(self);
 	__MCAssertIsLocale(p_locale);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (!__MCStringIsChecked(self))
+        MCStringCheck(self);
     
     // Create the appropriate break iterator
     MCAutoCustomPointer<__MCBreakIterator,MCLocaleBreakIteratorRelease> t_iter;
@@ -1946,21 +1910,13 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    // SN-2014-04-11 [[ FasterStrings ]] Process a checking of the string - in case we can ensure it is
-    // combining chars/surrogate pairs-free
-    if (!__MCStringIsChecked(self))
-    {        
-        MCRange t_input, t_out;
-        t_input . offset = 0;
-        t_input . length = self -> char_count;
-        MCStringMapCodepointIndices(self, t_input, t_out);
-    }
+    MCStringCheck(self);
     
     // Quick-n-dirty workaround
-    if (__MCStringIsNative(self) || (__MCStringIsUncombined(self) && __MCStringIsSimple(self)))
+    if (__MCStringIsNative(self) || __MCStringIsTrivial(self))
     {
-        __MCStringClampRange(self, p_in_range);
-        r_out_range = p_in_range;
+        __MCStringClampRange(self, p_grapheme_range);
+        r_cu_range = p_grapheme_range;
         return true;
     }
 
@@ -2187,19 +2143,12 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
+
+    MCStringCheck(self);
     
-    // SN-2014-04-11 [[ FasterStrings ]] Process a checking of the string - in case we can ensure it is
-    // combining chars/surrogate pairs-free
-    if (!__MCStringIsChecked(self))
-    {
-        MCRange t_input, t_out;
-        t_input . offset = 0;
-        t_input . length = self -> char_count;
-        MCStringUnmapCodepointIndices(self, t_input, t_out);
-    }
+    __MCStringClampRange(self, p_cu_range);
     
-    // Quick-n-dirty workaround
-    if (__MCStringIsNative(self) || (__MCStringIsUncombined(self) && __MCStringIsSimple(self)))
+    if (__MCStringCanBeNative(self) || __MCStringIsTrivial(self))
     {
         r_char_range = p_cu_range;
         return true;
@@ -5962,23 +5911,23 @@ static void __MCStringUnnativize(MCStringRef self)
     self -> flags |= kMCStringFlagCanBeNative;
 }
 
-static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncombined, uindex_t native)
+static void __MCStringSetFlags(MCStringRef self, uindex_t basic, uindex_t trivial, uindex_t native)
 {
     MCAssert(!__MCStringIsIndirect(self));
     
-	// String changed to assume that it is no longer simple
-    if (simple == kMCStringFlagSetTrue)
-        self -> flags |=  kMCStringFlagIsSimple;
-    else if (simple == kMCStringFlagSetFalse)
-        self -> flags &= ~kMCStringFlagIsSimple;
+    // String changed to assume that it is no longer simple
+    if (basic == kMCStringFlagSetTrue)
+        self -> flags |=  kMCStringFlagIsBasic;
+    else if (basic == kMCStringFlagSetFalse)
+    {
+        self -> flags &= ~kMCStringFlagIsBasic;
+        self -> flags &= ~kMCStringFlagIsTrivial;
+    }
     
-    if (uncombined == kMCStringFlagSetTrue)
-        self -> flags |= kMCStringFlagIsUncombined;
-    else if (uncombined == kMCStringFlagSetFalse)
-        self -> flags &= ~kMCStringFlagIsUncombined;
-
-    self -> flags &= ~kMCStringFlagIsChecked;
-    self -> flags &= ~kMCStringFlagHasNumber;
+    if (trivial == kMCStringFlagSetTrue)
+        self -> flags |= kMCStringFlagIsTrivial;
+    else if (trivial == kMCStringFlagSetFalse)
+        self -> flags &= ~kMCStringFlagIsTrivial;
     
     if (native == kMCStringFlagSetFalse)
     {
@@ -5986,7 +5935,21 @@ static void __MCStringChanged(MCStringRef self, uindex_t simple, uindex_t uncomb
         self -> flags |= kMCStringFlagIsNotNative;
     }
     else if (native == kMCStringFlagSetTrue)
+    {
         self -> flags |= kMCStringFlagCanBeNative;
+        self -> flags |= kMCStringFlagIsTrivial;
+        self -> flags &= ~kMCStringFlagIsBasic;
+    }
+}
+
+static void __MCStringChanged(MCStringRef self, uindex_t basic, uindex_t trivial, uindex_t native)
+{
+    MCAssert(!__MCStringIsIndirect(self));
+
+    self -> flags &= ~kMCStringFlagIsChecked;
+    self -> flags &= ~kMCStringFlagHasNumber;
+    
+    __MCStringSetFlags(self, basic, trivial, native);
 }
 
 MC_DLLEXPORT_DEF
@@ -6631,6 +6594,39 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
     else
         return false;
 }
+
+MC_DLLEXPORT_DEF
+void MCStringCheck(MCStringRef self)
+{
+    __MCAssertIsString(self);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsChecked(self))
+        return;
+    
+    if (__MCStringCanBeNative(self))
+        return;
+    
+    for (uindex_t i = 0; i < self -> char_count; i++)
+    {
+        if (MCStringIsValidSurrogatePair(self, i))
+        {
+            __MCStringSetFlags(self, false, false, false);
+            break;
+        }
+        
+        if (!MCUnicodeIsGraphemeClusterBoundary(self -> chars[i], self -> chars[i + 1]))
+        {
+            __MCStringSetFlags(self, kMCStringFlagNoChange, false, false);
+            break;
+        }
+    }
+    
+    self -> flags |= kMCStringFlagIsChecked;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
