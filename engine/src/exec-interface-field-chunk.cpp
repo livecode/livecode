@@ -2554,7 +2554,8 @@ void MCParagraph::GetListDepth(MCExecContext& ctxt, uinteger_t*& r_depth)
     if (attrs == nil || (attrs -> flags & PA_HAS_LIST_STYLE) == 0)
         r_depth = nil;
     else
-        *r_depth = getlistdepth();
+		// PM-2016-01-19: [[ Bug 16742 ]] Default listDepth should be 1 (to match the LC 6.x behavior)
+        *r_depth = getlistdepth() + 1;
 }
 
 void MCParagraph::GetEffectiveListDepth(MCExecContext& ctxt, uinteger_t& r_depth)
