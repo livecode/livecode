@@ -333,8 +333,9 @@ void MCParagraph::SetBlockDirectionLevel(findex_t si, findex_t ei, uint8_t level
         bptr->SetDirectionLevel(level);
         bptr = bptr->next();
     }
+	// PM-2016-01-19: [[ Bug 16741]] If bptr == bptr->next() then LC never exits this endless loop and hangs
     while (t_block_index + t_block_length < gettextlength()
-           && t_block_index + t_block_length < ei);
+           && t_block_index + t_block_length < ei && bptr != bptr->next());
 }
 
 void MCParagraph::resolvetextdirections()
