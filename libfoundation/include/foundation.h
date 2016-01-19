@@ -2178,7 +2178,8 @@ MC_DLLEXPORT bool MCStringCodepointIsWordPart(codepoint_t p_codepoint);
 
 // Returns the index of the beginning of the next grapheme after p_from.
 uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from);
-    
+// Returns the index of the beginning of the previous grapheme before p_from.
+uindex_t MCStringGraphemeBreakIteratorRetreat(MCStringRef self, uindex_t p_from);
 // Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
 enum MCCharChunkType
 {

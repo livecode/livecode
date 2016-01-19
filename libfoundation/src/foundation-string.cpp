@@ -2113,6 +2113,60 @@ uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from)
     return t_next;
 }
 
+uindex_t MCStringGraphemeBreakIteratorRetreat(MCStringRef self, uindex_t p_from)
+{
+    codepoint_t t_left_codepoint, t_right_codepoint;
+    
+    uindex_t t_previous;
+    t_previous = p_from;
+    
+    for (;;)
+    {
+        // If we 1 or 0 unichars left, we're done.
+        if (t_previous < 1)
+            return kMCLocaleBreakIteratorDone;
+        
+        // Resolve the previous two codepoints
+        if (MCStringIsValidSurrogatePair(self, t_previous - 2))
+        {
+            t_right_codepoint = MCStringSurrogatesToCodepoint(MCStringGetCharAtIndex(self, t_previous - 2),
+                                                             MCStringGetCharAtIndex(self, t_previous - 1));
+            t_previous -= 2;
+        }
+        else
+        {
+            t_right_codepoint = MCStringGetCharAtIndex(self, t_previous - 1);
+            t_previous--;
+        }
+        
+        // If there's no 'left' codepoint, we're done
+        if (t_previous == 0)
+            return kMCLocaleBreakIteratorDone;
+        
+        if (t_previous > 1 && MCStringIsValidSurrogatePair(self, t_previous - 2))
+        {
+            t_left_codepoint = MCStringSurrogatesToCodepoint(
+                                                              MCStringGetCharAtIndex(self, t_previous - 2),
+                                                              MCStringGetCharAtIndex(self, t_previous - 1));
+        }
+        else
+        {
+            t_left_codepoint = MCStringGetCharAtIndex(self, t_previous - 1);
+        }
+        
+        if (MCUnicodeIsGraphemeClusterBoundary(t_left_codepoint, t_right_codepoint))
+            break;
+    }
+    
+    if (t_previous == 0)
+        return kMCLocaleBreakIteratorDone;
+    
+    // This was a grapheme boundary, so t_next is the offset of the next
+    // grapheme
+    return t_previous;
+}
+
+
 uindex_t __MCStringCountGraphemesInRange(MCStringRef self, MCRange p_cu_range)
 {
     MCAssert(!__MCStringIsIndirect(self));
