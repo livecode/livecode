@@ -15,7 +15,7 @@ Platforms: desktop,server,web,mobile
 Example:
 after mouseUp
   answer "after mouse up received"
-end resizeStack
+end mouseUp
 
 Parameters:
 messageName: 
