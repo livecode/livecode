@@ -189,6 +189,17 @@ public:
     }
 };
 
+class MCTextChunkIterator_Grapheme : public MCTextChunkIterator
+{
+public:
+    MCTextChunkIterator_Grapheme(MCStringRef p_text, MCChunkType p_chunk_type);
+    MCTextChunkIterator_Grapheme(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
+    ~MCTextChunkIterator_Grapheme();
+    
+    virtual bool Next();
+    virtual bool IsAmong(MCStringRef p_needle);
+};
+
 class MCTextChunkIterator_Codepoint : public MCTextChunkIterator
 {
 public:
