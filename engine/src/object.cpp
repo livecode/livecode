@@ -4915,7 +4915,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font, bool p_force)
 
 	MCFontRelease(t_current_font);
 
-	return t_changed;
+	return t_changed || p_force;
 }
 
 void MCObject::copyfont(MCFontRef& r_font)

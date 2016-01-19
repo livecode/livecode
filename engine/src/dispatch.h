@@ -265,6 +265,8 @@ public:
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
     
+    virtual bool recomputefonts(MCFontRef parent_font, bool force);
+    
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.

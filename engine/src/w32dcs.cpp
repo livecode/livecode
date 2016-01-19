@@ -1109,6 +1109,10 @@ void MCScreenDC::processdesktopchanged(bool p_notify)
 		SetWindowPos(backdrop_window, NULL, t_displays[0] . workarea . x, t_displays[0] . workarea . y, t_displays[0] . workarea . width, t_displays[0] . workarea . height, 0);
 	}
 
+    // Force a recompute of fonts as they may have changed
+    MCdispatcher->recomputefonts(NULL, true);
+    //MCRedrawDirtyScreen();
+    
 	if (p_notify && t_changed)
 		MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
 }

@@ -2663,3 +2663,20 @@ bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
     r_path = MCValueRetain(t_value);
     return true;
 }
+
+bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
+{
+    // Call the general recompute function first
+    MCObject::recomputefonts(NULL, p_force);
+    
+    // Recompute the fonts for all stacks
+    MCStack* t_stack = stacks;
+    do
+    {
+        t_stack->recomputefonts(m_font, p_force);
+        t_stack = t_stack->next();
+    }
+    while (t_stack != stacks);
+    
+    return true;
+}
