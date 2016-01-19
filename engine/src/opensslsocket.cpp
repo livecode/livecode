@@ -1837,7 +1837,25 @@ Boolean MCSocket::sslconnect()
 		SSL_set_fd(_ssl_conn, fd);
 	}
 
+    // MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
+    //   Otherwise, use the socket name as before.
+    char *t_hostname;
+    if (endhostname != NULL)
+        t_hostname = strdup(endhostname);
+    else
+        t_hostname = strdup(name);
+    if (strchr(t_hostname, ':') != NULL)
+        strchr(t_hostname, ':')[0] = '\0';
+    else if (strchr(t_hostname, '|') != NULL)
+        strchr(t_hostname, '|')[0] = '\0';
+
+    // Let the SSL lib know the host we are trying to connect to, ensuring any SNI servers
+    // send the correct certificate during the handshake
+    SSL_set_tlsext_host_name(_ssl_conn, t_hostname);
+
 	// Start the SSL connection
+    Boolean t_success;
+    t_success = True;
 
 	// MW-2005-02-17: Implement the post-connection check suggested by the SSL Book.
 	//	The implementation takes the hostname from the string used to open the
@@ -1847,57 +1865,47 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
-			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
-			//   Otherwise, use the socket name as before.
-			char *t_hostname;
-			if (endhostname != NULL)
-				t_hostname = strdup(endhostname);
-			else
-				t_hostname = strdup(name);
-			if (strchr(t_hostname, ':') != NULL)
-				strchr(t_hostname, ':')[0] = '\0';
-			else if (strchr(t_hostname, '|') != NULL)
-				strchr(t_hostname, '|')[0] = '\0';
-
 			rc = post_connection_check(_ssl_conn, t_hostname);
-
-			free(t_hostname);
-
 			if (rc != X509_V_OK)
 			{
 				const char *t_message = X509_verify_cert_error_string(rc);
 				sslerror = strdup(t_message);
 				errno = EPIPE;
-				return False;
+				t_success = False;
 			}
 		}
 
-		sslstate |= SSTATE_CONNECTED;
-		setselect(BIONB_TESTREAD | BIONB_TESTWRITE);
-		return True;
+        if (t_success)
+        {
+            sslstate |= SSTATE_CONNECTED;
+            setselect(BIONB_TESTREAD | BIONB_TESTWRITE);
+        }
 	}
+    else
+    {
+        errno = SSL_get_error(_ssl_conn, rc);
+        if ((errno != SSL_ERROR_WANT_READ) && (errno != SSL_ERROR_WANT_WRITE))
+        {
+            t_success = False;
+        }
+        else
+        {
+            sslstate |= SSTATE_RETRYCONNECT;
 
-	errno = SSL_get_error(_ssl_conn, rc);
-	if ((errno != SSL_ERROR_WANT_READ) && (errno != SSL_ERROR_WANT_WRITE))
-	{
-		return False;
-	}
-	else
-	{
-		sslstate |= SSTATE_RETRYCONNECT;
+            if (errno == SSL_ERROR_WANT_WRITE)
+                setselect(BIONB_TESTWRITE);
+            else if (errno == SSL_ERROR_WANT_READ)
+                setselect(BIONB_TESTWRITE);
 
-		if (errno == SSL_ERROR_WANT_WRITE)
-			setselect(BIONB_TESTWRITE);
-		else if (errno == SSL_ERROR_WANT_READ)
-			setselect(BIONB_TESTWRITE);
+    #ifdef _WINDOWS
 
-#ifdef _WINDOWS
+            setselect(BIONB_TESTREAD | BIONB_TESTWRITE);
+    #endif
+        }
+    }
 
-		setselect(BIONB_TESTREAD | BIONB_TESTWRITE);
-#endif
-
-		return True;
-	}
+    free(t_hostname);
+    return t_success;
 }
 
 
