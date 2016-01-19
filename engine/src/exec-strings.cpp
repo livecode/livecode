@@ -1266,7 +1266,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         MCRange t_range;
                         t_range = MCRangeMake(0, t_length);
                         // Find the grapheme length of 
-                        MCStringUnmapGraphemeIndices(*t_string, kMCBasicLocale, t_range, t_range);
+                        MCStringUnmapGraphemeIndices(*t_string, t_range, t_range);
                         
                         // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
                         if (width > (integer_t) t_range . length)
@@ -1509,10 +1509,10 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_range)
 {
     MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices(p_string, kMCBasicLocale, p_range, t_grapheme_range);
+    MCStringUnmapGraphemeIndices(p_string, p_range, t_grapheme_range);
     
     MCRange t_grapheme_range_r;
-    MCStringMapGraphemeIndices(p_string, kMCBasicLocale, t_grapheme_range, t_grapheme_range_r);
+    MCStringMapGraphemeIndices(p_string, t_grapheme_range, t_grapheme_range_r);
     
     if (t_grapheme_range_r . offset == p_range . offset &&
         t_grapheme_range_r . length == p_range . length)

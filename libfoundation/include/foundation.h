@@ -2150,10 +2150,10 @@ MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_r
 MC_DLLEXPORT bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
 
 // Maps from a grapheme (visual character) range to a code unit (StringRef) range
-MC_DLLEXPORT bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapGraphemeIndices(MCStringRef, MCRange p_grapheme_range, MCRange& r_string_range);
 
 // Maps from a code unit (StringRef) range to a grapheme (visual character) range
-MC_DLLEXPORT bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
+MC_DLLEXPORT bool MCStringUnmapGraphemeIndices(MCStringRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
 // Maps from a word range to a codeunit (StringRef) range
 MC_DLLEXPORT bool MCStringMapTrueWordIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);

@@ -65,7 +65,7 @@ uinteger_t MCChunkCountGraphemeChunkCallback(void *context)
         t_range = *t_state -> range;
     
     MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices((MCStringRef)t_state -> value, kMCLocaleBasic, t_range, t_grapheme_range);
+    MCStringUnmapGraphemeIndices((MCStringRef)t_state -> value, t_range, t_grapheme_range);
     return t_grapheme_range . length;
 }
 

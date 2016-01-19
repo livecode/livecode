@@ -1902,10 +1902,9 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_grapheme_range, MCRange &r_cu_range)
+bool MCStringMapGraphemeIndices(MCStringRef self, MCRange p_grapheme_range, MCRange &r_cu_range)
 {
 	__MCAssertIsString(self);
-	__MCAssertIsLocale(p_locale);
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
@@ -2136,10 +2135,9 @@ uindex_t __MCStringCountGraphemesInRange(MCStringRef self, MCRange p_cu_range)
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_cu_range, MCRange &r_char_range)
+bool MCStringUnmapGraphemeIndices(MCStringRef self, MCRange p_cu_range, MCRange &r_char_range)
 {    
 	__MCAssertIsString(self);
-	__MCAssertIsLocale(p_locale);
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
