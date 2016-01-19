@@ -5881,49 +5881,28 @@ static uindex_t __MCStringNativize(MCStringRef self)
     t_cu_range = MCRangeMake(0, (*t_norm) -> char_count);
     /* UNCHECKED */ MCStringUnmapIndices(*t_norm, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
     
-    // Create a character break iterator and go through the string
-    MCBreakIteratorRef t_breaker;
-    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_breaker);
-    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_breaker, *t_norm);
-    
+    t_cu_range = MCRangeMake(0, (*t_norm) -> char_count);
+    // Go through the graphemes of the string
     uindex_t t_current = 0, t_next;
     bool t_is_native = true;
     for (uindex_t i = 0; i < t_char_range . length; i++)
     {
         // If we've reached the end, set the next boundary manually
-        t_next = MCLocaleBreakIteratorAdvance(t_breaker);
-        if (t_next == 0)
+        t_next = MCStringGraphemeBreakIteratorAdvance(self, t_current);
+        if (t_next == kMCLocaleBreakIteratorDone)
             t_next = self -> char_count;
         
-        // All nativisable characters are 1 codeunit in length. We do, however,
-        // need a special case for CRLF sequences (Unicode defines them as being
-        // a single grapheme but we want them to produce 2 bytes).
-        //
-        // This should go away when we teach ICU about our own breaking rules.
+        // All nativisable characters are 1 codeunit in length.
         if (t_next != t_current + 1
             || !MCUnicodeCharMapToNative((*t_norm) -> chars[t_current], chars[i]))
         {
-            if (t_next == t_current + 2
-                && (*t_norm) -> chars[t_current] == '\r'
-                && (*t_norm) -> chars[t_current + 1] == '\n')
-            {
-                // Need to resize the output array :-(
-                /* UNCHECKED */ MCMemoryReallocate(chars, ++t_char_range . length + 1, chars);
-                chars[i] = '\r';
-                chars[++i] = '\n';
-            }
-            else
-            {
-                t_is_native = false;
-                chars[i] = '?';
-            }
+            t_is_native = false;
+            chars[i] = '?';
         }
         
         // Advance
         t_current = t_next;
     }
-
-    MCLocaleBreakIteratorRelease(t_breaker);
     
     MCMemoryDeleteArray(self -> chars);
     self -> native_chars = chars;

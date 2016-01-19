@@ -215,23 +215,15 @@ MCBlock* MCParagraph::AppendText(MCStringRef p_string)
 
 findex_t MCParagraph::NextChar(findex_t p_in)
 {
-    MCBreakIteratorRef t_iter;
-    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_iter);
-    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
     uindex_t t_index;
-    t_index = MCLocaleBreakIteratorAfter(t_iter, p_in);
-    MCLocaleBreakIteratorRelease(t_iter);
+    t_index = MCStringGraphemeBreakIteratorAdvance(m_text, p_in);
     return (t_index == kMCLocaleBreakIteratorDone) ? MCStringGetLength(m_text) : t_index;
 }
 
 findex_t MCParagraph::PrevChar(findex_t p_in)
 {
-    MCBreakIteratorRef t_iter;
-    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_iter);
-    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_iter, m_text);
     uindex_t t_index;
-    t_index = MCLocaleBreakIteratorBefore(t_iter, p_in);
-    MCLocaleBreakIteratorRelease(t_iter);
+    t_index = MCStringGraphemeBreakIteratorRetreat(m_text, p_in);
     return (t_index == kMCLocaleBreakIteratorDone) ? 0 : t_index;
 }
 

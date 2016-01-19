@@ -846,23 +846,9 @@ static unsigned char next_valid_char(const unsigned char *p_text, uindex_t &x_in
 // And return the (beginning of the) this new char.
 static unichar_t next_valid_unichar(MCStringRef p_string, uindex_t &x_index)
 {
-    if (x_index + 1 <= MCStringGetLength(p_string))
-    {        
-        MCRange t_char_range;
-        MCRange t_cu_range;
-        
-        t_char_range . length = 1;
-        t_cu_range . offset = x_index + 1;
-        t_cu_range . length = 1;
-        do
-        {
-            ++t_cu_range . length;
-            MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
-        }
-        while (t_cu_range . offset + t_cu_range . length < MCStringGetLength(p_string) && t_char_range . length != 2);
-        
-        x_index += t_cu_range . length - 1;
-    }
+    x_index = MCStringGraphemeBreakIteratorAdvance(p_string, x_index);
+    if (x_index == kMCLocaleBreakIteratorDone)
+        x_index = MCStringGetLength(p_string);
     
     return MCStringGetCharAtIndex(p_string, x_index);
 }
