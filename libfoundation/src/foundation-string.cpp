@@ -1938,7 +1938,7 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
 }
 
 MC_DLLEXPORT_DEF
-bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_grapheme_range, MCRange &r_cu_range)
 {
 	__MCAssertIsString(self);
 	__MCAssertIsLocale(p_locale);
@@ -1964,7 +1964,32 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange 
         return true;
     }
 
-    return MCStringMapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
+    // Find the beginning of the range
+    uindex_t t_start;
+    t_start = 0;
+    while (p_grapheme_range . offset-- && t_start != kMCLocaleBreakIteratorDone)
+        t_start = MCStringGraphemeBreakIteratorAdvance(self, t_start);
+    
+    // If there weren't enough graphemes, return 'empty' range
+    if (t_start == kMCLocaleBreakIteratorDone)
+    {
+        r_cu_range = MCRangeMake(MCStringGetLength(self), 0);
+        return true;
+    }
+    
+    // Advance to the end of the specified range
+    uindex_t t_end;
+    t_end = t_start;
+    while (p_grapheme_range . length-- && t_end != kMCLocaleBreakIteratorDone)
+        t_end = MCStringGraphemeBreakIteratorAdvance(self, t_end);
+        
+    
+    // If there weren't enough graphemesnst, return 'empty' range
+    if (t_end == kMCLocaleBreakIteratorDone)
+        t_end = MCStringGetLength(self);
+    
+    r_cu_range = MCRangeMake(t_start, t_end - t_start);
+    return true;
 }
 
 MC_DLLEXPORT_DEF
@@ -2085,8 +2110,77 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     return true;
 }
 
+uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from)
+{
+    codepoint_t t_left_codepoint, t_right_codepoint;
+    
+    uindex_t t_next;
+    t_next = p_from;
+    
+    for (;;)
+    {
+        if (t_next >= MCStringGetLength(self))
+            return kMCLocaleBreakIteratorDone;
+        
+        // Resolve the next two codepoints
+        if (MCStringIsValidSurrogatePair(self, t_next))
+        {
+            t_left_codepoint = MCStringSurrogatesToCodepoint(MCStringGetCharAtIndex(self, t_next),
+                                                             MCStringGetCharAtIndex(self, t_next + 1));
+            t_next += 2;
+        }
+        else
+        {
+            t_left_codepoint = MCStringGetCharAtIndex(self, t_next);
+            t_next++;
+        }
+        
+        if (MCStringIsValidSurrogatePair(self, t_next))
+        {
+            t_right_codepoint = MCStringSurrogatesToCodepoint(
+                                                              MCStringGetCharAtIndex(self, t_next),
+                                                              MCStringGetCharAtIndex(self, t_next + 1));
+        }
+        else
+        {
+            t_right_codepoint = MCStringGetCharAtIndex(self, t_next);
+        }
+        
+        if (MCUnicodeIsGraphemeClusterBoundary(t_left_codepoint, t_right_codepoint))
+            break;
+    }
+    
+    if (t_next >= MCStringGetLength(self))
+        return kMCLocaleBreakIteratorDone;
+    
+    // This was a grapheme boundary, so t_next is the offset of the next
+    // grapheme
+    return t_next;
+}
+
+uindex_t __MCStringCountGraphemesInRange(MCStringRef self, MCRange p_cu_range)
+{
+    MCAssert(!__MCStringIsIndirect(self));
+    
+    uindex_t t_grapheme_count;
+    t_grapheme_count = 0;
+    
+    uindex_t t_cu_offset;
+    t_cu_offset = p_cu_range . offset;
+    
+    while (t_cu_offset < p_cu_range . offset + p_cu_range . length)
+    {
+        t_cu_offset = MCStringGraphemeBreakIteratorAdvance(self, t_cu_offset);
+        t_grapheme_count++;
+        if (t_cu_offset == kMCLocaleBreakIteratorDone)
+            break;
+    }
+    
+    return t_grapheme_count;
+}
+
 MC_DLLEXPORT_DEF
-bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_in_range, MCRange &r_out_range)
+bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRange p_cu_range, MCRange &r_char_range)
 {    
 	__MCAssertIsString(self);
 	__MCAssertIsLocale(p_locale);
@@ -2107,12 +2201,18 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
     // Quick-n-dirty workaround
     if (__MCStringIsNative(self) || (__MCStringIsUncombined(self) && __MCStringIsSimple(self)))
     {
-        __MCStringClampRange(self, p_in_range);
-        r_out_range = p_in_range;
+        r_char_range = p_cu_range;
         return true;
     }
     
-    return MCStringUnmapIndices(self, kMCBreakIteratorTypeCharacter, p_locale, p_in_range, r_out_range);
+    MCRange t_char_range;
+    
+    // First determine the grapheme offset by counting
+    t_char_range . offset = __MCStringCountGraphemesInRange(self, MCRangeMake(0, p_cu_range . offset));
+    t_char_range . length = __MCStringCountGraphemesInRange(self, p_cu_range);
+    
+    r_char_range = t_char_range;
+    return true;
 }
 
 MC_DLLEXPORT_DEF
