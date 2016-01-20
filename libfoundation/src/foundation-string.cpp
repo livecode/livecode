@@ -45,7 +45,8 @@ static void __MCStringShrinkAt(MCStringRef string, uindex_t at, uindex_t count);
 static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 
 // This method forces a nativization of a string even if there is already a native char ptr.
-static uindex_t __MCStringNativize(MCStringRef string);
+static bool __MCStringNativize(MCStringRef string, uindex_t &r_char_count);
+static bool __MCStringNativize(MCStringRef string);
 
 // This method ensures there is a unichar ptr.
 static bool __MCStringUnnativize(MCStringRef self);
@@ -1540,8 +1541,14 @@ const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_ch
 {
 	__MCAssertIsString(self);
 
-    r_char_count = __MCStringNativize(self);
-	return self -> native_chars;
+	if (__MCStringNativize(self, r_char_count))
+	{
+		return self->native_chars;
+	}
+	else
+	{
+		return nil;
+	}
 }
 
 MC_DLLEXPORT_DEF
@@ -1664,7 +1671,7 @@ void MCStringNativize(MCStringRef self)
 {
 	__MCAssertIsString(self);
 
-    __MCStringNativize(self);
+	/* UNCHECKED */ __MCStringNativize(self);
 }
 
 MC_DLLEXPORT_DEF
@@ -1681,8 +1688,9 @@ bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy)
     
     if (!MCStringMutableCopy(p_string, t_string))
         return false;
-    
-    __MCStringNativize(t_string);
+
+	if (!__MCStringNativize(t_string))
+		return false;
     
     __MCStringMakeImmutable(t_string);
     t_string -> flags &= ~kMCStringFlagIsMutable;
@@ -5751,19 +5759,36 @@ static void __MCStringShrinkAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 	// TODO: Shrink the buffer if its too big.
 }
 
-static uindex_t __MCStringNativize(MCStringRef self)
+static bool
+__MCStringNativize(MCStringRef self)
+{
+	uindex_t t_char_count;
+	return __MCStringNativize(self, t_char_count);
+}
+
+static bool __MCStringNativize(MCStringRef self, uindex_t & r_char_count)
 {
     if (MCStringIsNative(self))
-        return self -> char_count;
+	{
+		r_char_count = self -> char_count;
+		return true;
+	}
     
-    if (__MCStringIsIndirect(self))
-        __MCStringResolveIndirect(self);
+	if (__MCStringIsIndirect(self) &&
+	    !__MCStringResolveIndirect(self))
+	{
+		return false;
+	}
     
     bool t_not_native;
     t_not_native = false;
     
-    char_t *chars;
-    /* UNCHECKED */ MCMemoryNewArray(self -> char_count + 1, chars);
+	MCAutoArray<char_t> chars;
+	if (!chars.New(self -> char_count + 1))
+	{
+		return false;
+	}
+    
     for(uindex_t i = 0; i < self -> char_count; i++)
         if (!MCUnicodeCharMapToNative(self -> chars[i], chars[i]))
         {
@@ -5773,29 +5798,43 @@ static uindex_t __MCStringNativize(MCStringRef self)
     
     if (!t_not_native)
     {
+		uindex_t t_ignored;
         MCMemoryDeleteArray(self -> chars);
-        self -> native_chars = chars;
+		chars.Take(self -> native_chars, t_ignored);
         __MCStringChanged(self, true, true, true);
         self -> flags &= ~kMCStringFlagIsNotNative;
         self -> native_chars[self -> char_count] = '\0';
-        return self -> char_count;
+		r_char_count = self -> char_count;
+		return true;
     }
     
     // The string needs to be normalised before conversion to native characters.
     // All the native character sets we support use pre-composed characters.
     MCAutoStringRef t_norm;
-    /* UNCHECKED */ MCStringNormalizedCopyNFC(self, &t_norm);
+	if (!MCStringNormalizedCopyNFC(self, &t_norm))
+	{
+		return false;
+	}
     
     // Nativisation is done on a char (grapheme) basis so we need to know the
     // number of graphemes in the string
     MCRange t_cu_range, t_char_range;
     t_cu_range = MCRangeMake(0, (*t_norm) -> char_count);
-    /* UNCHECKED */ MCStringUnmapIndices(*t_norm, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+	if (!MCStringUnmapIndices(*t_norm, kMCCharChunkTypeGrapheme,
+	                          t_cu_range, t_char_range))
+	{
+		return false;
+	}
     
     // Create a character break iterator and go through the string
     MCBreakIteratorRef t_breaker;
-    /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeCharacter, t_breaker);
-    /* UNCHECKED */ MCLocaleBreakIteratorSetText(t_breaker, *t_norm);
+	if (!MCLocaleBreakIteratorCreate(kMCLocaleBasic,
+	                                 kMCBreakIteratorTypeCharacter,
+	                                 t_breaker) ||
+	    !MCLocaleBreakIteratorSetText(t_breaker, *t_norm))
+	{
+		return false;
+	}
     
     uindex_t t_current = 0, t_next;
     bool t_is_native = true;
@@ -5819,7 +5858,10 @@ static uindex_t __MCStringNativize(MCStringRef self)
                 && (*t_norm) -> chars[t_current + 1] == '\n')
             {
                 // Need to resize the output array :-(
-                /* UNCHECKED */ MCMemoryReallocate(chars, ++t_char_range . length + 1, chars);
+				if (!chars.Resize(++t_char_range . length + 1))
+				{
+					return false;
+				}
                 chars[i] = '\r';
                 chars[++i] = '\n';
             }
@@ -5836,21 +5878,23 @@ static uindex_t __MCStringNativize(MCStringRef self)
 
     MCLocaleBreakIteratorRelease(t_breaker);
     
+    uindex_t t_ignored;
     MCMemoryDeleteArray(self -> chars);
-    self -> native_chars = chars;
+	chars.Take(self -> native_chars, t_ignored);
 	self -> native_chars[t_char_range.length] = '\0';
     
     __MCStringChanged(self, true, true, true);
     self -> flags &= ~kMCStringFlagIsNotNative;
     self -> char_count = t_char_range . length;
 
-    return t_char_range . length;
+	r_char_count = t_char_range . length;
+	return true;
 }
 
 static bool __MCStringUnnativize(MCStringRef self)
 {    
     if (!MCStringIsNative(self))
-        return;
+		return true;
 
 	if (__MCStringIsIndirect(self) &&
 	    !__MCStringResolveIndirect(self))
