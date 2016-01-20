@@ -27,3 +27,9 @@ on TestDoubleToUInt
    relayer it before layer 0.5
    TestAssert "round up positive reals in unsigned integer expressions", the layer of it is 1
 end TestDoubleToUInt
+
+on TestStrictUInt
+   create button
+   local tEmpty
+   TestAssert "empty variable does not convert to 0 in object ID", not exists(button id tEmpty)
+end TestStrictUInt

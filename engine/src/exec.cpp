@@ -965,7 +965,8 @@ static bool EvalExprAsStrictNumber(MCExecContext* self, MCExpression *p_expr, Ex
     
 	p_expr -> eval_ctxt(*self, t_value);
     
-    if (MCExecTypeIsValueRef(t_value . type) && MCValueIsEmpty(t_value . valueref_value))
+    if (t_value . type == kMCExecValueTypeNone
+        || (MCExecTypeIsValueRef(t_value . type) && MCValueIsEmpty(t_value . valueref_value)))
     {
         self -> LegacyThrow(p_error);
         
