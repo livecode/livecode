@@ -2492,6 +2492,10 @@ MC_DLLEXPORT unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (
 // a valid surrogate pair. Lone lead or trail code units are not valid pairs.
 MC_DLLEXPORT bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
 
+// Returns true if the codeunit at the given index in the string is the
+// beginning of a new grapheme cluster.
+MC_DLLEXPORT bool MCStringIsGraphemeClusterBoundary(MCStringRef, uindex_t);
+    
 //////////
 
 // Normalises a string into the requested form

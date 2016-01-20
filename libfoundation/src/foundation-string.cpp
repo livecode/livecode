@@ -2066,6 +2066,67 @@ bool MCStringUnmapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocale
     return true;
 }
 
+static bool __MCStringFetchCodepointBefore(MCStringRef self, uindex_t& x_index, codepoint_t& r_cp)
+{
+    __MCAssertIsString(self);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (x_index > self -> char_count)
+        return false;
+    
+    if (x_index == 0)
+        return false;
+    
+    if (__MCStringIsBasic(self) || __MCStringIsTrivial(self))
+    {
+        r_cp = self -> chars[--x_index];
+        return true;
+    }
+    
+    if (x_index > 1 && MCStringIsValidSurrogatePair(self, x_index - 2))
+    {
+        r_cp = MCStringSurrogatesToCodepoint(self -> chars[x_index - 2],
+                                             self -> chars[x_index - 1]);
+        x_index -= 2;
+        return true;
+    }
+    
+    r_cp = self -> chars[--x_index];
+    return true;
+}
+
+static bool __MCStringFetchCodepointAfter(MCStringRef self, uindex_t& x_index, codepoint_t& r_cp)
+{
+    __MCAssertIsString(self);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    MCAssert(!__MCStringIsNative(self));
+    
+    if (x_index >= self -> char_count)
+        return false;
+    
+    if (__MCStringIsBasic(self) || __MCStringIsTrivial(self))
+    {
+        r_cp = self -> chars[x_index++];
+        return true;
+    }
+    
+    if (MCStringIsValidSurrogatePair(self, x_index))
+    {
+        r_cp = MCStringSurrogatesToCodepoint(self -> chars[x_index],
+                                             self -> chars[x_index + 1]);
+        x_index += 2;
+        return true;
+    }
+    
+    r_cp = self -> chars[x_index++];
+    return true;
+}
+
 uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from)
 {
     __MCAssertIsString(self);
@@ -2080,39 +2141,22 @@ uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from)
         else
             return kMCLocaleBreakIteratorDone;
     }
-
+    
     codepoint_t t_left_codepoint, t_right_codepoint;
     
     uindex_t t_next;
     t_next = p_from;
     
+    uindex_t t_dummy;
     for (;;)
     {
-        if (t_next >= self -> char_count)
-            break;
-        
         // Resolve the next two codepoints
-        if (MCStringIsValidSurrogatePair(self, t_next))
-        {
-            t_left_codepoint = MCStringSurrogatesToCodepoint(self -> chars[t_next],
-                                                             self -> chars[t_next + 1]);
-            t_next += 2;
-        }
-        else
-        {
-            t_left_codepoint = self -> chars[t_next];
-            t_next++;
-        }
+        if (!__MCStringFetchCodepointAfter(self, t_next, t_left_codepoint))
+            return kMCLocaleBreakIteratorDone;
         
-        if (MCStringIsValidSurrogatePair(self, t_next))
-        {
-            t_right_codepoint = MCStringSurrogatesToCodepoint(self -> chars[t_next],
-                                                              self -> chars[t_next + 1]);
-        }
-        else
-        {
-            t_right_codepoint = self -> chars[t_next];
-        }
+        t_dummy = t_next;
+        if (!__MCStringFetchCodepointAfter(self, t_dummy, t_right_codepoint))
+            return kMCLocaleBreakIteratorDone;
         
         if (MCUnicodeIsGraphemeClusterBoundary(t_left_codepoint, t_right_codepoint))
             break;
@@ -2132,10 +2176,10 @@ uindex_t MCStringGraphemeBreakIteratorRetreat(MCStringRef self, uindex_t p_from)
     
     if (__MCStringIsIndirect(self))
         self = self -> string;
-    
+
     if (__MCStringCanBeNative(self) || __MCStringIsTrivial(self))
     {
-        if (0 < p_from && p_from <= self -> char_count)
+        if (p_from > 0)
             return p_from - 1;
         else
             return kMCLocaleBreakIteratorDone;
@@ -2146,39 +2190,17 @@ uindex_t MCStringGraphemeBreakIteratorRetreat(MCStringRef self, uindex_t p_from)
     uindex_t t_previous;
     t_previous = p_from;
     
+    uindex_t t_dummy;
     for (;;)
     {
-        // If we have 1 or 0 unichars left, we're done.
-        if (t_previous <= 1)
+        // Resolve the next two codepoints
+        if (!__MCStringFetchCodepointBefore(self, t_previous, t_right_codepoint))
             return kMCLocaleBreakIteratorDone;
         
-        // Resolve the previous two codepoints
-        if (MCStringIsValidSurrogatePair(self, t_previous - 2))
-        {
-            t_right_codepoint = MCStringSurrogatesToCodepoint(self -> chars[t_previous - 2],
-                                                              self -> chars[t_previous - 1]);
-            t_previous -= 2;
-        }
-        else
-        {
-            t_right_codepoint = MCStringGetCharAtIndex(self, t_previous - 1);
-            t_previous--;
-        }
-        
-        // If there's no 'left' codepoint, we're done
-        if (t_previous == 0)
-            break;
-        
-        if (t_previous > 1 && MCStringIsValidSurrogatePair(self, t_previous - 2))
-        {
-            t_left_codepoint = MCStringSurrogatesToCodepoint(self -> chars[t_previous - 2],
-                                                             self -> chars[t_previous - 1]);
-        }
-        else
-        {
-            t_left_codepoint = self -> chars[t_previous - 1];
-        }
-        
+        t_dummy = t_previous;
+        if (!__MCStringFetchCodepointBefore(self, t_dummy, t_left_codepoint))
+            return kMCLocaleBreakIteratorDone;
+
         if (MCUnicodeIsGraphemeClusterBoundary(t_left_codepoint, t_right_codepoint))
             break;
     }
@@ -6065,7 +6087,41 @@ bool MCStringIsValidSurrogatePair(MCStringRef self, uindex_t p_index)
     // All the checks passed
     return true;
 }
-	
+
+MC_DLLEXPORT_DEF
+bool MCStringIsGraphemeClusterBoundary(MCStringRef self, uindex_t p_index)
+{
+    __MCAssertIsString(self);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsTrivial(self) || __MCStringIsNative(self))
+        return true;
+    
+    if (p_index == 0 || p_index >= self -> char_count)
+        return true;
+    
+    // There is not a cluster boundary between the lead and trail of a surrogate
+    if (MCStringIsValidSurrogatePair(self, p_index - 1))
+        return false;
+        
+    
+    // Resolve the codepoints either side of the index
+    codepoint_t t_left_codepoint, t_right_codepoint;
+    
+    uindex_t t_dummy;
+    t_dummy = p_index;
+    if (!__MCStringFetchCodepointBefore(self, t_dummy, t_left_codepoint))
+        return true;
+    
+    t_dummy = p_index;
+    if (!__MCStringFetchCodepointAfter(self, t_dummy, t_right_codepoint))
+        return true;
+    
+    return MCUnicodeIsGraphemeClusterBoundary(t_left_codepoint, t_right_codepoint);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF MCStringRef kMCEmptyString;

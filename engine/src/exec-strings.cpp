@@ -1508,17 +1508,8 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 
 static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_range)
 {
-    MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices(p_string, p_range, t_grapheme_range);
-    
-    MCRange t_grapheme_range_r;
-    MCStringMapGraphemeIndices(p_string, t_grapheme_range, t_grapheme_range_r);
-    
-    if (t_grapheme_range_r . offset == p_range . offset &&
-        t_grapheme_range_r . length == p_range . length)
-        return true;
-    
-    return false;
+    return MCStringIsGraphemeClusterBoundary(p_string, p_range . offset)
+        && MCStringIsGraphemeClusterBoundary(p_string, p_range . offset + p_range . length);
 }
 
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
