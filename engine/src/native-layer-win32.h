@@ -27,13 +27,16 @@ public:
     
 	virtual bool GetNativeView(void *&r_view);
 	
-    MCNativeLayerWin32(MCWidgetRef, HWND p_view);
+    MCNativeLayerWin32(MCObject *p_object, HWND p_view);
     ~MCNativeLayerWin32();
     
 private:
     
     HWND m_hwnd;
     HBITMAP m_cached;
+
+	HWND m_viewport_hwnd;
+	MCRectangle m_intersect_rect;
     
     // Returns the HWND for the stack containing this widget
     HWND getStackWindow();
@@ -44,8 +47,11 @@ private:
 	
 	virtual bool doPaint(MCGContextRef p_context);
 	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
 	virtual void doSetVisible(bool p_visible);
 	
+	void updateViewportGeometry();
+
 	// Performs a relayering operation
 	virtual void doRelayer();
 };
