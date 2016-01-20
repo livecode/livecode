@@ -76,7 +76,7 @@
 					'VCCLCompilerTool':
 					{
 						'Optimization': '3',
-						'WholeProgramOptimization': 'false',
+						'WholeProgramOptimization': 'true',
 						'PreprocessorDefinitions': [ '_RELEASE', 'NDEBUG' ],
 						'RuntimeLibrary': '0',
 						'DebugInformationFormat': '3',
@@ -88,6 +88,7 @@
 						'OptimizeReferences': '2',
 						'GenerateDebugInformation': 'true',
 						'EnableCOMDATFolding': '2',
+						'LinkTimeCodeGeneration': '1',
 					},
 				},
 			},
