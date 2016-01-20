@@ -320,6 +320,10 @@ DEFINE_ERROR(ExitRepeatOutOfContext, "'exit repeat' must appear within a repeat"
 DEFINE_ERROR(NoReturnTypeSpecifiedForForeignHandler, "Foreign handlers must specify a return type")
 DEFINE_ERROR(NoTypeSpecifiedForForeignHandlerParameter, "Foreign handler parameters must be typed")
 
+DEFINE_ERROR(ConstantArrayKeyIsNotStringLiteral, "Array keys must be strings")
+DEFINE_ERROR(ListExpressionTooLong, "List expressions can have at most 254 elements")
+DEFINE_ERROR(ArrayExpressionTooLong, "Array expressions can have at most 127 keys")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }
 #define DEFINE_WARNING_I(Name, Message) \

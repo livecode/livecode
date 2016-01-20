@@ -1750,6 +1750,10 @@ enum Parse_errors
 	
 	// {PE-0568} launch: error in widget expression
 	PE_LAUNCH_BADWIDGETEXP,
+
+	// {PE-0568} save: error in format expression
+	PE_SAVE_BADFORMATEXP,
+	
 };
 
 extern const char *MCparsingerrors;

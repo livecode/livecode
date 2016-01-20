@@ -2,20 +2,20 @@ Name: save
 
 Type: command
 
-Syntax: save <stack> [as <filePath>]
+Syntax: save <stack> [as <filePath>] [with format <stackFormat> | with newest format]
 
 Summary: Saves a <stack file> on the user's system.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,windows,linux,ios,android,html5
 
 Platforms: desktop,web,mobile
 
 Security: disk
 
 Example:
-save stack "project1"
+save stack "project1" with newest format
 
 Example:
 save this stack as "Backup"
@@ -23,21 +23,35 @@ save this stack as "Backup"
 Example:
 save stack "project1" as "/Disk/Folder/File"
 
+Example:
+save stack "MyOldApp" with format 7.0
+
 Parameters:
 stack: Any open stack.
-filePath: The filePath specifies the name and location of the file you want to save to. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder. If the file does not exist, LiveCode creates it.
 
-The result: If the stack cannot be saved (for example, if you try to save it to a nonexistent drive or to a CD-ROM), the result <function> is set to "Can't open stack file".
+filePath: The <filePath> specifies the name and location of the file you want to save to. If you specify a name but not a location, LiveCode assumes the file is in the <defaultFolder>. If the file does not exist, LiveCode creates it.
+
+stackFormat: The <stack version|stack file format version> to use when saving.
+
+The result: If the stack cannot be saved (for example, if you try to save it to a nonexistent drive or to a CD-ROM), the <result> will contain an error message.  Otherwise, the <result> will be empty.
 
 Description:
 Use the <save> <command> to save changes to a <stack> or to save a copy of a <stack> into another <file>.
 
 The <save> <command> saves all <stacks> stored in the same <file> as the specified <stack>. That is, if you save a <main stack>, all <substacks> of that stack are also saved in the same <file>, and if you save a <substack>, its <main stack> and any other <substacks> are also saved.
 
-If the stack has not yet been saved and doesn't have a filename, you must use theform.
+If the stack has not yet been saved and doesn't have a filename, you must use the `as` form.
 
 You cannot save to a standalone application's file; <standalone application|standalones> are read-only.
 
-References: stackFileVersion (property), substacks (property), stack (object), as (keyword), file (keyword), substack (glossary), stack file (glossary), command (glossary), standalone application (glossary), main stack (glossary), stacks (function), create stack (command), function (control_st)
+The <save> command can save the <stack> in several different versions of the LiveCode stack file format.
+
+* If you use the `with newest format` form of the <save> command, the <stack> is saved using the newest <stack version>
+* If you use the `with format` form of the <save> command, the <stackFormat> should be the particular <stack version> you want the stack to be saved as.
+* If you do not specify a format to use, the current value of the <stackFileFormat> property is used.
+
+**Warning:** If you save in an older <stack version> that doesn't support all of the features used in the stack, then some of contents of the stack may be lost.  In general, you are recommended to use the `with newest format` form of the <save> command.
+
+References: substacks (property), stack (object), as (keyword), file (keyword), substack (glossary), stack file (glossary), command (glossary), standalone application (glossary), main stack (glossary), stacks (function), create stack (command), function (control_st), stack version (glossary), defaultFolder (property), stackFileFormat (property)
 
 Tags: file system

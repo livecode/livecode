@@ -1272,7 +1272,8 @@ public:
     MCExecContext(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
     {
         memset(this, 0, sizeof(MCExecContext));
-        m_object = object;
+        m_object . object = object;
+        m_object . part_id = 0;
         m_hlist = hlist;
         m_curhandler = handler;
         m_itemdel = MCValueRetain(kMCCommaString);
@@ -1651,10 +1652,21 @@ public:
     
     MCObject *GetObject(void) const
 	{
-        return m_object;
+        return m_object . object;
 	}
 
-	void SetObject(MCObject *p_object)
+    MCObjectPtr GetObjectPtr(void) const
+    {
+        return m_object;
+    }
+    
+    void SetObject(MCObject *p_object)
+    {
+        m_object . object = p_object;
+        m_object . part_id = 0;
+    }
+    
+	void SetObjectPtr(MCObjectPtr p_object)
 	{
         m_object = p_object;
     }
@@ -1778,7 +1790,7 @@ private:
 #endif
 	Exec_stat m_stat;
 
-    MCObject *m_object;
+    MCObjectPtr m_object;
 
     // MW-2009-01-30: [[ Inherited parentScripts ]]
     // We store a reference to the parentScript use which is the current context
@@ -3049,7 +3061,11 @@ void MCInterfaceExecUnhiliteObject(MCExecContext& ctxt, MCObjectPtr p_targets);
 void MCInterfaceExecHiliteObject(MCExecContext& ctxt, MCObjectPtr p_targets);
 
 void MCInterfaceExecSaveStack(MCExecContext& ctxt, MCStack *p_target);
+void MCInterfaceExecSaveStackWithVersion(MCExecContext & ctxt, MCStack *p_target, MCStringRef p_version);
+void MCInterfaceExecSaveStackWithNewestVersion(MCExecContext & ctxt, MCStack *p_target);
 void MCInterfaceExecSaveStackAs(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename);
+void MCInterfaceExecSaveStackAsWithVersion(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename, MCStringRef p_version);
+void MCInterfaceExecSaveStackAsWithNewestVersion(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename);
 
 void MCInterfaceExecMoveObjectBetween(MCExecContext& ctxt, MCObject *p_target, MCPoint p_from, MCPoint p_to, double p_duration, int p_units, bool p_wait, bool p_dispatch);
 void MCInterfaceExecMoveObjectAlong(MCExecContext& ctxt, MCObject *p_target, MCPoint *p_motion, uindex_t p_motion_count, bool p_is_relative, double p_duration, int p_units, bool p_wait, bool p_dispatch);

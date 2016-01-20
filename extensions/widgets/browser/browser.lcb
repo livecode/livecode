@@ -323,7 +323,7 @@ use com.livecode.widget
 use com.livecode.canvas
 use com.livecode.engine
 use com.livecode.extensions.libbrowser
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 --
 
 -- metadata
@@ -337,7 +337,7 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 property URL get getUrl set setUrl
 
 property htmlText get getHtmlText set setHtmlText
-metadata htmlText.editor is "com.livecode.pi.text"
+metadata htmlText.editor is "com.livecode.pi.nowraptext"
 
 property vScrollbar get getVScrollbar set setVScrollbar
 metadata vScrollbar.editor is "com.livecode.pi.boolean"

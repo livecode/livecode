@@ -155,9 +155,6 @@ void MCObject::stoppickling(MCPickleContext *p_context, MCDataRef& r_string)
 // AL-2014-02-14: [[ UnicodeFileFormat ]] Write an object to the given stream
 static IO_stat pickle_object_to_stream(IO_handle p_stream, uint32_t p_version, MCObject* p_object, uint4 p_part)
 {
-    uint32_t t_old_version = MCstackfileversion;
-    MCstackfileversion = p_version;
-    
     IO_stat t_stat;
     t_stat = IO_NORMAL;
     
@@ -173,22 +170,21 @@ static IO_stat pickle_object_to_stream(IO_handle p_stream, uint32_t p_version, M
 		MCLogicalFontTableBuild(p_object, p_part);
         
 		// Write out the font table to the stream.
-		MCLogicalFontTableSave(p_stream, MCstackfileversion);
+		MCLogicalFontTableSave(p_stream, p_version);
 	}
     
 	// Write the object
 	if (t_stat == IO_NORMAL)
-		t_stat = p_object -> save(p_stream, p_part, false);
+		t_stat = p_object -> save(p_stream, p_part, false, p_version);
     
 	// If the object is a card, pickle all the objects it references
 	// immediately after the main object.
 	if (t_stat == IO_NORMAL && p_object -> gettype() == CT_CARD)
-		t_stat = static_cast<MCCard *>(p_object) -> saveobjects(p_stream, p_part);
+		t_stat = static_cast<MCCard *>(p_object) -> saveobjects(p_stream, p_part, p_version);
     
 	if (t_stat == IO_NORMAL)
 		t_stat = IO_write_uint1(OT_END, p_stream);
     
-    MCstackfileversion = t_old_version;
     return t_stat;
 }
 

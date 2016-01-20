@@ -4433,6 +4433,7 @@ void MCRelayer::exec_ctxt(MCExecContext& ctxt)
             MCInterfaceExecRelayer(ctxt, relation, t_source, t_layer);
             break;
         case kMCRelayerFormRelativeToControl:
+        {
             MCObjectPtr t_target;
             if (!target -> getobj(ctxt, t_target, True))
             {
@@ -4440,6 +4441,7 @@ void MCRelayer::exec_ctxt(MCExecContext& ctxt)
                 return;
             }
             MCInterfaceExecRelayerRelativeToControl(ctxt, relation, t_source, t_target);
+        }
             break;
         case kMCRelayerFormRelativeToOwner:
             MCInterfaceExecRelayerRelativeToOwner(ctxt, relation, t_source);

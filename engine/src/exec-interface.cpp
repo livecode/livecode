@@ -2501,13 +2501,58 @@ void MCInterfaceExecSaveStack(MCExecContext& ctxt, MCStack *p_target)
 	MCInterfaceExecSaveStackAs(ctxt, p_target, kMCEmptyString);
 }
 
+void
+MCInterfaceExecSaveStackWithVersion(MCExecContext & ctxt,
+                                    MCStack *p_target,
+                                    MCStringRef p_version)
+{
+	MCInterfaceExecSaveStackAsWithVersion(ctxt, p_target, kMCEmptyString, p_version);
+}
+
+void
+MCInterfaceExecSaveStackWithNewestVersion(MCExecContext & ctxt,
+                                          MCStack *p_target)
+{
+	MCInterfaceExecSaveStackAsWithNewestVersion(ctxt, p_target, kMCEmptyString);
+}
+
 void MCInterfaceExecSaveStackAs(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename)
 {
 	ctxt . SetTheResultToEmpty();
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 	
-	p_target -> saveas(p_new_filename);
+	p_target -> saveas(p_new_filename, MCstackfileversion);
+}
+
+void
+MCInterfaceExecSaveStackAsWithVersion(MCExecContext & ctxt,
+                                      MCStack *p_target,
+                                      MCStringRef p_new_filename,
+                                      MCStringRef p_version)
+{
+	ctxt.SetTheResultToEmpty();
+	if (!ctxt.EnsureDiskAccessIsAllowed())
+		return;
+
+	MCInterfaceStackFileVersion t_version;
+	MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
+	if (ctxt.HasError())
+		return;
+
+	p_target->saveas(p_new_filename, t_version.version);
+}
+
+void
+MCInterfaceExecSaveStackAsWithNewestVersion(MCExecContext & ctxt,
+                                            MCStack * p_target,
+                                            MCStringRef p_new_filename)
+{
+	ctxt.SetTheResultToEmpty();
+	if (!ctxt.EnsureDiskAccessIsAllowed())
+		return;
+
+	p_target->saveas(p_new_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2804,7 +2849,7 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 		while (t_state)
 		{
 			if (t_state & 0x1)
-				MCtargetptr -> mup(t_which, true);
+				MCtargetptr . object -> mup(t_which, true);
 			t_state >>= 1;
 			t_which += 1;
 		}
@@ -2960,13 +3005,13 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode)
 {
 	// MW-2007-04-10: [[ Bug 4260 ]] We shouldn't attempt to attach a menu to a control that is descendent of itself
-	if (MCtargetptr -> getstack() == p_target)
+	if (MCtargetptr . object -> getstack() == p_target)
 	{
 		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
 		return;
 	}
 
-	if (MCtargetptr->attachmenu(p_target))
+	if (MCtargetptr . object -> attachmenu(p_target))
 	{
 		if (p_mode == WM_POPUP && p_at != nil)
 		{
@@ -2974,7 +3019,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 			MCmousey = p_at -> y;
 		}
 		MCRectangle t_rect;
-		t_rect = MCU_recttoroot(MCtargetptr->getstack(), MCtargetptr->getrect());
+		t_rect = MCU_recttoroot(MCtargetptr . object -> getstack(), MCtargetptr . object -> getrect());
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, t_rect, WP_DEFAULT, OP_NONE, p_mode);
 		if (!MCabortscript)
 			return;

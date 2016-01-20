@@ -1374,6 +1374,13 @@ struct MCObjectPtr
 {
 	MCObject *object;
 	uint32_t part_id;
+    
+    MCObjectPtr& operator = (const MCObjectPtr& p_obj_ptr)
+    {
+        object = p_obj_ptr . object;
+        part_id = p_obj_ptr . part_id;
+        return *this;
+    }
 };
 
 // NOTE: the indices in this structure are UTF-16 code unit indices if the value is a stringref,

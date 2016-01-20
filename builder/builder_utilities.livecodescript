@@ -304,7 +304,7 @@ function builderBuiltDocsFolder
 end builderBuiltDocsFolder
 
 function builderBuiltNotesFolder
-   return builderRepoFolder() & slash & "_build/notes"
+   return builderRepoFolder()
 end builderBuiltNotesFolder
 
 function builderCommercialFolder

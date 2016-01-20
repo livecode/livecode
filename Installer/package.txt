@@ -144,7 +144,7 @@ component Misc
 			textfile "private:License Agreement.txt"
 			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
-		file "ide:Release Notes.pdf"
+		file "repo:LiveCodeNotes-[[EscapedVersionTag]].pdf" as "Release Notes.pdf"
 
 component Plugins
 	into [[ToolsFolder]]/Plugins place
@@ -339,8 +339,6 @@ component Resources
 
 component Documentation
 	into [[ToolsFolder]]/Documentation place
-		file "ide:Documentation/glos.rsindex"
-		file "ide:Documentation/GlossaryQuickRef"
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "ide:Documentation/pdf/user_guide.pdf" as "LiveCode User Guide.pdf"
@@ -368,156 +366,6 @@ component Documentation
 		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.svg as fonts/glyphicons-halflings-regular.svg
 		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.ttf as fonts/glyphicons-halflings-regular.ttf
 		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.woff as fonts/glyphicons-halflings-regular.woff
-		file ide:Documentation/html_viewer/images/extensions-canvas-docs.png as images/extensions-canvas-docs.png
-		file ide:Documentation/html_viewer/images/extensions-clock.png as images/extensions-clock.png
-		file ide:Documentation/html_viewer/images/extensions-documentation.png as images/extensions-documentation.png
-		file ide:Documentation/html_viewer/images/extensions-guides.jpg as images/extensions-guides.jpg
-		file ide:Documentation/html_viewer/images/extensions-home.png as images/extensions-home.png
-		file ide:Documentation/html_viewer/images/extensions-id.png as images/extensions-id.png
-		file ide:Documentation/html_viewer/images/extensions-installed.png as images/extensions-installed.png
-		file ide:Documentation/html_viewer/images/extensions-manager.png as images/extensions-manager.png
-		file ide:Documentation/html_viewer/images/extensions-plugin-example.png as images/extensions-plugin-example.png
-		file ide:Documentation/html_viewer/images/extensions-plugin-overview.png as images/extensions-plugin-overview.png
-		file ide:Documentation/html_viewer/images/extensions-site-account.png as images/extensions-site-account.png
-		file ide:Documentation/html_viewer/images/extensions-site-login.png as images/extensions-site-login.png
-		file ide:Documentation/html_viewer/images/extensions-site-upload.png as images/extensions-site-upload.png
-		file ide:Documentation/html_viewer/images/extensions-widget-first.png as images/extensions-widget-first.png
-		file ide:Documentation/html_viewer/images/extensions-widgets.png as images/extensions-widgets.png
-		file ide:Documentation/html_viewer/images/image1.png as images/image1.png
-		file ide:Documentation/html_viewer/images/image10.png as images/image10.png
-		file ide:Documentation/html_viewer/images/image100.png as images/image100.png
-		file ide:Documentation/html_viewer/images/image101.png as images/image101.png
-		file ide:Documentation/html_viewer/images/image102.png as images/image102.png
-		file ide:Documentation/html_viewer/images/image103.png as images/image103.png
-		file ide:Documentation/html_viewer/images/image104.png as images/image104.png
-		file ide:Documentation/html_viewer/images/image105.png as images/image105.png
-		file ide:Documentation/html_viewer/images/image106.png as images/image106.png
-		file ide:Documentation/html_viewer/images/image107.png as images/image107.png
-		file ide:Documentation/html_viewer/images/image108.png as images/image108.png
-		file ide:Documentation/html_viewer/images/image109.png as images/image109.png
-		file ide:Documentation/html_viewer/images/image11.png as images/image11.png
-		file ide:Documentation/html_viewer/images/image110.png as images/image110.png
-		file ide:Documentation/html_viewer/images/image111.png as images/image111.png
-		file ide:Documentation/html_viewer/images/image112.png as images/image112.png
-		file ide:Documentation/html_viewer/images/image113.png as images/image113.png
-		file ide:Documentation/html_viewer/images/image114.png as images/image114.png
-		file ide:Documentation/html_viewer/images/image115.png as images/image115.png
-		file ide:Documentation/html_viewer/images/image116.png as images/image116.png
-		file ide:Documentation/html_viewer/images/image117.png as images/image117.png
-		file ide:Documentation/html_viewer/images/image118.png as images/image118.png
-		file ide:Documentation/html_viewer/images/image119.png as images/image119.png
-		file ide:Documentation/html_viewer/images/image12.png as images/image12.png
-		file ide:Documentation/html_viewer/images/image120.png as images/image120.png
-		file ide:Documentation/html_viewer/images/image121.png as images/image121.png
-		file ide:Documentation/html_viewer/images/image122.png as images/image122.png
-		file ide:Documentation/html_viewer/images/image123.png as images/image123.png
-		file ide:Documentation/html_viewer/images/image124.png as images/image124.png
-		file ide:Documentation/html_viewer/images/image125.png as images/image125.png
-		file ide:Documentation/html_viewer/images/image126.png as images/image126.png
-		file ide:Documentation/html_viewer/images/image127.png as images/image127.png
-		file ide:Documentation/html_viewer/images/image128.png as images/image128.png
-		file ide:Documentation/html_viewer/images/image129.png as images/image129.png
-		file ide:Documentation/html_viewer/images/image13.png as images/image13.png
-		file ide:Documentation/html_viewer/images/image130.png as images/image130.png
-		file ide:Documentation/html_viewer/images/image131.png as images/image131.png
-		file ide:Documentation/html_viewer/images/image132.png as images/image132.png
-		file ide:Documentation/html_viewer/images/image133.png as images/image133.png
-		file ide:Documentation/html_viewer/images/image134.png as images/image134.png
-		file ide:Documentation/html_viewer/images/image135.png as images/image135.png
-		file ide:Documentation/html_viewer/images/image14.png as images/image14.png
-		file ide:Documentation/html_viewer/images/image15.png as images/image15.png
-		file ide:Documentation/html_viewer/images/image16.png as images/image16.png
-		file ide:Documentation/html_viewer/images/image17.png as images/image17.png
-		file ide:Documentation/html_viewer/images/image18.png as images/image18.png
-		file ide:Documentation/html_viewer/images/image19.png as images/image19.png
-		file ide:Documentation/html_viewer/images/image2.png as images/image2.png
-		file ide:Documentation/html_viewer/images/image20.png as images/image20.png
-		file ide:Documentation/html_viewer/images/image21.png as images/image21.png
-		file ide:Documentation/html_viewer/images/image22.png as images/image22.png
-		file ide:Documentation/html_viewer/images/image23.png as images/image23.png
-		file ide:Documentation/html_viewer/images/image24.png as images/image24.png
-		file ide:Documentation/html_viewer/images/image25.png as images/image25.png
-		file ide:Documentation/html_viewer/images/image26.png as images/image26.png
-		file ide:Documentation/html_viewer/images/image27.png as images/image27.png
-		file ide:Documentation/html_viewer/images/image28.png as images/image28.png
-		file ide:Documentation/html_viewer/images/image29.png as images/image29.png
-		file ide:Documentation/html_viewer/images/image3.png as images/image3.png
-		file ide:Documentation/html_viewer/images/image30.png as images/image30.png
-		file ide:Documentation/html_viewer/images/image31.png as images/image31.png
-		file ide:Documentation/html_viewer/images/image32.png as images/image32.png
-		file ide:Documentation/html_viewer/images/image33.png as images/image33.png
-		file ide:Documentation/html_viewer/images/image34.png as images/image34.png
-		file ide:Documentation/html_viewer/images/image35.png as images/image35.png
-		file ide:Documentation/html_viewer/images/image36.png as images/image36.png
-		file ide:Documentation/html_viewer/images/image37.png as images/image37.png
-		file ide:Documentation/html_viewer/images/image38.png as images/image38.png
-		file ide:Documentation/html_viewer/images/image39.png as images/image39.png
-		file ide:Documentation/html_viewer/images/image4.png as images/image4.png
-		file ide:Documentation/html_viewer/images/image40.png as images/image40.png
-		file ide:Documentation/html_viewer/images/image41.png as images/image41.png
-		file ide:Documentation/html_viewer/images/image42.png as images/image42.png
-		file ide:Documentation/html_viewer/images/image43.png as images/image43.png
-		file ide:Documentation/html_viewer/images/image44.png as images/image44.png
-		file ide:Documentation/html_viewer/images/image45.png as images/image45.png
-		file ide:Documentation/html_viewer/images/image46.png as images/image46.png
-		file ide:Documentation/html_viewer/images/image47.png as images/image47.png
-		file ide:Documentation/html_viewer/images/image48.png as images/image48.png
-		file ide:Documentation/html_viewer/images/image49.png as images/image49.png
-		file ide:Documentation/html_viewer/images/image5.png as images/image5.png
-		file ide:Documentation/html_viewer/images/image50.png as images/image50.png
-		file ide:Documentation/html_viewer/images/image51.png as images/image51.png
-		file ide:Documentation/html_viewer/images/image52.png as images/image52.png
-		file ide:Documentation/html_viewer/images/image53.png as images/image53.png
-		file ide:Documentation/html_viewer/images/image54.png as images/image54.png
-		file ide:Documentation/html_viewer/images/image55.png as images/image55.png
-		file ide:Documentation/html_viewer/images/image56.png as images/image56.png
-		file ide:Documentation/html_viewer/images/image57.png as images/image57.png
-		file ide:Documentation/html_viewer/images/image58.png as images/image58.png
-		file ide:Documentation/html_viewer/images/image59.png as images/image59.png
-		file ide:Documentation/html_viewer/images/image6.png as images/image6.png
-		file ide:Documentation/html_viewer/images/image60.png as images/image60.png
-		file ide:Documentation/html_viewer/images/image61.png as images/image61.png
-		file ide:Documentation/html_viewer/images/image62.png as images/image62.png
-		file ide:Documentation/html_viewer/images/image63.png as images/image63.png
-		file ide:Documentation/html_viewer/images/image64.png as images/image64.png
-		file ide:Documentation/html_viewer/images/image65.png as images/image65.png
-		file ide:Documentation/html_viewer/images/image66.png as images/image66.png
-		file ide:Documentation/html_viewer/images/image67.png as images/image67.png
-		file ide:Documentation/html_viewer/images/image68.png as images/image68.png
-		file ide:Documentation/html_viewer/images/image69.png as images/image69.png
-		file ide:Documentation/html_viewer/images/image7.png as images/image7.png
-		file ide:Documentation/html_viewer/images/image70.png as images/image70.png
-		file ide:Documentation/html_viewer/images/image71.png as images/image71.png
-		file ide:Documentation/html_viewer/images/image72.png as images/image72.png
-		file ide:Documentation/html_viewer/images/image73.png as images/image73.png
-		file ide:Documentation/html_viewer/images/image74.png as images/image74.png
-		file ide:Documentation/html_viewer/images/image75.png as images/image75.png
-		file ide:Documentation/html_viewer/images/image76.png as images/image76.png
-		file ide:Documentation/html_viewer/images/image77.png as images/image77.png
-		file ide:Documentation/html_viewer/images/image78.png as images/image78.png
-		file ide:Documentation/html_viewer/images/image79.png as images/image79.png
-		file ide:Documentation/html_viewer/images/image8.png as images/image8.png
-		file ide:Documentation/html_viewer/images/image80.png as images/image80.png
-		file ide:Documentation/html_viewer/images/image81.png as images/image81.png
-		file ide:Documentation/html_viewer/images/image82.png as images/image82.png
-		file ide:Documentation/html_viewer/images/image83.png as images/image83.png
-		file ide:Documentation/html_viewer/images/image84.png as images/image84.png
-		file ide:Documentation/html_viewer/images/image85.png as images/image85.png
-		file ide:Documentation/html_viewer/images/image86.png as images/image86.png
-		file ide:Documentation/html_viewer/images/image87.png as images/image87.png
-		file ide:Documentation/html_viewer/images/image88.png as images/image88.png
-		file ide:Documentation/html_viewer/images/image89.png as images/image89.png
-		file ide:Documentation/html_viewer/images/image9.png as images/image9.png
-		file ide:Documentation/html_viewer/images/image90.png as images/image90.png
-		file ide:Documentation/html_viewer/images/image91.png as images/image91.png
-		file ide:Documentation/html_viewer/images/image92.png as images/image92.png
-		file ide:Documentation/html_viewer/images/image93.png as images/image93.png
-		file ide:Documentation/html_viewer/images/image94.png as images/image94.png
-		file ide:Documentation/html_viewer/images/image95.png as images/image95.png
-		file ide:Documentation/html_viewer/images/image96.png as images/image96.png
-		file ide:Documentation/html_viewer/images/image97.png as images/image97.png
-		file ide:Documentation/html_viewer/images/image98.png as images/image98.png
-		file ide:Documentation/html_viewer/images/image99.png as images/image99.png
 		file ide:Documentation/html_viewer/js/bootstrap.min.js as js/bootstrap.min.js
 		file ide:Documentation/html_viewer/js/highlight.pack.js as js/highlight.pack.js
 		file ide:Documentation/html_viewer/js/jquery-1.11.1.min.js as js/jquery-1.11.1.min.js
@@ -525,15 +373,14 @@ component Documentation
 		file ide:Documentation/html_viewer/js/jquery.session.js as js/jquery.session.js
 		file ide:Documentation/html_viewer/js/marked.js as js/marked.js
 		file ide:Documentation/html_viewer/js/remarkable.min.js as js/remarkable.min.js
+		file ide:Documentation/html_viewer/js/dictionary_functions.js as js/dictionary_functions.js
 		file ide:Documentation/html_viewer/resources/data/api/distributed_api.js as resources/data/api/distributed_api.js
 		file ide:Documentation/html_viewer/resources/data/guide/distributed_guide.js as resources/data/guide/distributed_guide.js
 		file ide:Documentation/html_viewer/resources/media/spinner.gif as resources/media/spinner.gif
-		stack ide:Documentation/html_viewer/dictionary.livecode
-		file ide:Documentation/html_viewer/guide.html
-		file ide:Documentation/html_viewer/viewer.html
-		// Temporary work-around
-		file ide:Documentation/html_viewer/resources/data/api/built_api.js as resources/data/api/built_api.js
-		file ide:Documentation/html_viewer/resources/data/guide/built_guide.js as resources/data/guide/built_guide.js
+
+		file ide:Documentation/html_viewer/guide.html.template
+		file ide:Documentation/html_viewer/api.html.template
+		
 		file ide:Documentation/html_viewer/resources/data/api/api.sqlite as resources/data/api/api.sqlite
 		
 	into [[ToolsFolder]]/Documentation place
@@ -542,41 +389,41 @@ component Documentation
 		
 component Extensions
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.browser
+		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.clock
+		rfolder macosx:packaged_extensions/com.livecode.widget.clock
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.colorswatch
+		rfolder macosx:packaged_extensions/com.livecode.widget.colorSwatch
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.gradientrampeditor
+		rfolder macosx:packaged_extensions/com.livecode.widget.gradientRampEditor
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.graph
+		rfolder macosx:packaged_extensions/com.livecode.widget.lineGraph
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.header
+		rfolder macosx:packaged_extensions/com.livecode.widget.headerBar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconpicker
+		rfolder macosx:packaged_extensions/com.livecode.widget.iconPicker
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.iconsvg
+		rfolder macosx:packaged_extensions/com.livecode.library.iconSVG
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.json
+		rfolder macosx:packaged_extensions/com.livecode.library.json
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.navbar
+		rfolder macosx:packaged_extensions/com.livecode.widget.navbar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.paletteactions
+		rfolder macosx:packaged_extensions/com.livecode.widget.paletteActions
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.pushbutton
+		rfolder macosx:packaged_extensions/com.livecode.widget.pushbutton
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.segmented
+		rfolder macosx:packaged_extensions/com.livecode.widget.segmented
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.selector
+		rfolder macosx:packaged_extensions/com.livecode.widget.selector
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.svgpath		
+		rfolder macosx:packaged_extensions/com.livecode.widget.svgpath
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.switchbutton
+		rfolder macosx:packaged_extensions/com.livecode.widget.switchbutton
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.treeview
+		rfolder macosx:packaged_extensions/com.livecode.widget.treeView
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.extensions.livecode.widget-utils
+		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place

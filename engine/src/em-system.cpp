@@ -168,8 +168,7 @@ MCEmscriptenSystem::GetCurrentTime()
 bool
 MCEmscriptenSystem::GetVersion(MCStringRef & r_string)
 {
-	MCEmscriptenNotImplemented();
-	return false;
+	return MCStringCopy(kMCEmptyString, r_string);
 }
 
 bool

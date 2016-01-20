@@ -113,6 +113,8 @@ The absolute minimum canvas element would look something like this:
 
     <canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault();"></canvas>
 
+By default, most web browsers will indicate when the canvas has focus by displaying a highlighted outline.  This helps users identify which part of the web page is capturing their key presses.  You can usually disable this outline by adding `outline: none;` to the canvas's CSS styles.
+
 ## The Module object
 
 The top-level JavaScript `Module` object contains the parameters that control how the engine runs.  At minimum, you need only specify the `Module.canvas`, which should be your canvas element.

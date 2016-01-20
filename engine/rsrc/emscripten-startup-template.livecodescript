@@ -96,7 +96,7 @@ on startup
          close file kExtensionListFile
          
          repeat for each line tModuleName in tModuleList
-            put tExtensionFolder & slash & tModuleName into tFolder
+            put kExtensionFolder & slash & tModuleName into tFolder
             
             load extension from file (tFolder & slash & "module.lcm") \
                   with resource path (tFolder & slash & "resources")
@@ -116,7 +116,7 @@ on startup
    
    -- Try to print something vaguely helpful to the the log
    if tError is not empty then
-      write "startup failed:" && tError to stderr
+      write "startup failed:" && tError & return to stderr
    end if
    
    return tError

@@ -116,9 +116,11 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
 			t_success = false;
 	}
 	
-	// Get the IDataObject from the dragboard
+	// Get the IDataObject from the dragboard. Because we need one for the
+	// COM drag-and-drop API, we call the method that forces one to be
+	// created if it does not yet exist.
 	MCRawClipboard* t_dragboard = MCdragboard->GetRawClipboard();
-	IDataObject* t_transfer_data = (static_cast<MCWin32RawClipboardItem*>(t_dragboard->GetItemAtIndex(0)))->GetIDataObject();
+	IDataObject* t_transfer_data = (static_cast<MCWin32RawClipboardItem*>(t_dragboard->GetItemAtIndex(0)))->GetDataObject();
 
 	IDragSourceHelper *t_source_helper;
 	t_source_helper = NULL;
