@@ -4577,14 +4577,13 @@ bool MCChunk::getsetcustomprop(MCExecContext &ctxt, MCNameRef p_prop_name, MCNam
         }
     }
     
-    if (t_success)
+    if (t_success && !p_is_get_operation)
     {
         // MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
         t_object -> signallisteners(P_CUSTOM);
-        return true;
     }
     
-    return false;
+    return t_success;
 }
 
 bool MCChunk::getcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue& r_value)
