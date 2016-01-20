@@ -1212,6 +1212,12 @@ void MCObject::geometrychanged(const MCRectangle &p_rect)
 		getNativeLayer()->OnGeometryChanged(p_rect);
 }
 
+void MCObject::viewportgeometrychanged(const MCRectangle &p_rect)
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnViewportGeometryChanged(p_rect);
+}
+
 void MCObject::OnOpen()
 {
 	if (getNativeLayer() != nil)

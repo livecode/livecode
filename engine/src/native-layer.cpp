@@ -82,7 +82,23 @@ bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_new_rect)
 {
 	if (!m_defer_geometry_changes)
+	{
 		doSetGeometry(p_new_rect);
+		m_rect = p_new_rect;
+	}
+	else
+		m_deferred_rect = p_new_rect;
+}
+
+void MCNativeLayer::OnViewportGeometryChanged(const MCRectangle &p_rect)
+{
+	if (!m_defer_geometry_changes)
+	{
+		doSetViewportGeometry(p_rect);
+		m_viewport_rect = p_rect;
+	}
+	else
+		m_deferred_viewport_rect = p_rect;
 }
 
 void MCNativeLayer::OnToolChanged(Tool p_new_tool)
@@ -114,13 +130,20 @@ void MCNativeLayer::UpdateVisibility()
 	if (ShouldShowLayer())
 	{
 		if (m_defer_geometry_changes)
-			doSetGeometry(m_object->getrect());
+		{
+			doSetViewportGeometry(m_deferred_viewport_rect);
+			doSetGeometry(m_deferred_rect);
+		}
 		m_defer_geometry_changes = false;
 	}
 	else
 	{
 		if (!GetCanRenderToContext())
+		{
 			m_defer_geometry_changes = true;
+			m_deferred_rect = m_rect;
+			m_deferred_viewport_rect = m_viewport_rect;
+		}
 	}
 	
 	doSetVisible(ShouldShowLayer());

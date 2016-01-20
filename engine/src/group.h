@@ -130,6 +130,12 @@ public:
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
 	virtual void toolchanged(Tool p_new_tool);
+
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
+	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
+
+	virtual MCRectangle getviewportgeometry();
 	
 	bool getNativeContainerLayer(MCNativeLayer *&r_layer);
 	

@@ -406,6 +406,9 @@ public:
 	
 	// IM-2015-12-11: [[ Native Widgets ]] Informs the object that its rect has changed
 	virtual void geometrychanged(const MCRectangle &p_rect);
+
+	// IM-2016-01-19: [[ NativeWidgets ]] Informs the object that its visible area has changed.
+	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
 	
 	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it has been opened.
 	virtual void OnOpen();

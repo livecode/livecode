@@ -280,6 +280,42 @@ void MCGroup::toolchanged(Tool p_new_tool)
 	}
 }
 
+MCRectangle MCGroup::getviewportgeometry()
+{
+	MCRectangle t_viewport;
+	t_viewport = getrect();
+
+	MCObject *t_parent;
+	t_parent = getparent();
+	if (t_parent != nil && t_parent->gettype() == CT_GROUP)
+		t_viewport = MCU_intersect_rect(t_viewport, ((MCGroup*)t_parent)->getviewportgeometry());
+
+	return t_viewport;
+}
+
+void MCGroup::geometrychanged(const MCRectangle &p_rect)
+{
+	MCControl::geometrychanged(p_rect);
+	viewportgeometrychanged(getviewportgeometry());
+}
+
+void MCGroup::viewportgeometrychanged(const MCRectangle &p_rect)
+{
+	MCRectangle t_viewport;
+	t_viewport = MCU_intersect_rect(p_rect, getrect());
+
+	if (controls != nil)
+	{
+		MCControl *t_control = controls;
+		do
+		{
+			t_control->viewportgeometrychanged(t_viewport);
+			t_control = t_control->next();
+		}
+		while (t_control != controls);
+	}
+}
+
 void MCGroup::open()
 {
 	MCControl::open();
