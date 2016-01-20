@@ -1027,20 +1027,18 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
 
 MCChunkType MCChunkTypeSimplify(MCStringRef p_string, MCChunkType p_type)
 {
-    MCStringCheck(p_string);
-    
     switch (p_type)
     {
-        case kMCCharChunkTypeGrapheme:
+        case kMCChunkTypeCharacter:
         {
-            if (MCStringIsTrivial(p_string))
+            if (MCStringIsTrivial(p_string) || MCStringCanBeNative(p_string))
                 return kMCChunkTypeCodeunit;
             
             break;
         }
-        case kMCCharChunkTypeCodepoint:
+        case kMCChunkTypeCodepoint:
         {
-            if (MCStringIsBasic(p_string))
+            if (MCStringIsBasic(p_string) || MCStringCanBeNative(p_string))
                 return kMCChunkTypeCodeunit;
             break;
         }
