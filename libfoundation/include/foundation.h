@@ -2505,10 +2505,6 @@ MC_DLLEXPORT bool MCStringNormalizedCopyNFKD(MCStringRef, MCStringRef&);
 MC_DLLEXPORT bool MCStringSetNumericValue(MCStringRef self, double p_value);
 MC_DLLEXPORT bool MCStringGetNumericValue(MCStringRef self, double &r_value);
 
-//////////
-    
-MC_DLLEXPORT void MCStringCheck(MCStringRef self);
-    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  DATA DEFINITIONS

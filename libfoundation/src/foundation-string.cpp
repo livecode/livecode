@@ -77,6 +77,9 @@ static bool __MCStringCopyChars(unichar_t *target, const unichar_t *source, uind
 
 static bool MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStringOptions p_options, MCProperListRef& r_list);
 
+// Check the string and set CanBeNative, Basic and Trivial flags accordingly
+static void __MCStringCheck(MCStringRef self);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // AL-2015-02-06: [[ Bug 14504 ]] Add wrappers for string flag and length checking,
@@ -99,12 +102,16 @@ static bool __MCStringIsTrivial(MCStringRef self)
 {
     MCAssert(!__MCStringIsIndirect(self));
     
+    __MCStringCheck(self);
+    
     return (self -> flags & kMCStringFlagIsTrivial) != 0;
 }
 
 static bool __MCStringIsBasic(MCStringRef self)
 {
     MCAssert(!__MCStringIsIndirect(self));
+    
+    __MCStringCheck(self);
     
     return (self -> flags & kMCStringFlagIsBasic) != 0;
 }
@@ -1755,8 +1762,6 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     
     MCAssert(self != nil);
     
-    MCStringCheck(self);
-    
     // Shortcut for strings containing only BMP characters
     if (__MCStringCanBeNative(self) || __MCStringIsBasic(self))
     {
@@ -1864,9 +1869,6 @@ bool MCStringMapIndices(MCStringRef self, MCBreakIteratorType p_type, MCLocaleRe
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    if (!__MCStringIsChecked(self))
-        MCStringCheck(self);
-    
     // Create the appropriate break iterator
     MCAutoCustomPointer<__MCBreakIterator,MCLocaleBreakIteratorRelease> t_iter;
     if (!MCLocaleBreakIteratorCreate(p_locale, p_type, &t_iter))
@@ -1909,8 +1911,6 @@ bool MCStringMapGraphemeIndices(MCStringRef self, MCRange p_grapheme_range, MCRa
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
-    
-    MCStringCheck(self);
     
     // Quick-n-dirty workaround
     if (__MCStringIsNative(self) || __MCStringIsTrivial(self))
@@ -2220,8 +2220,6 @@ bool MCStringUnmapGraphemeIndices(MCStringRef self, MCRange p_cu_range, MCRange 
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
-
-    MCStringCheck(self);
     
     __MCStringClampRange(self, p_cu_range);
     
@@ -6657,8 +6655,7 @@ bool MCStringGetNumericValue(MCStringRef self, double &r_value)
         return false;
 }
 
-MC_DLLEXPORT_DEF
-void MCStringCheck(MCStringRef self)
+static void __MCStringCheck(MCStringRef self)
 {
     __MCAssertIsString(self);
     

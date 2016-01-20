@@ -1347,9 +1347,7 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
         r_out_nesting = p_in_nesting;
         return;
     }
-    
-    MCStringCheck(p_string);
-    
+        
     if (MCStringIsTrivial(p_string))
     {
         MCAutoStringRefAsCString t_cstring;
