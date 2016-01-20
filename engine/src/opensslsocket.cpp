@@ -2169,6 +2169,27 @@ Boolean MCSocket::sslconnect()
 		SSL_set_fd(_ssl_conn, fd);
 	}
 
+    MCAutoStringRef t_hostname;
+    // MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
+    //   Otherwise, use the socket name as before.
+    if (!MCNameIsEmpty(endhostname))
+        /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
+    else
+        /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+
+    uindex_t t_pos;
+    if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+    else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+
+    MCAutoPointer<char> t_host;
+    /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
+
+    // Let the SSL lib know the host we are trying to connect to, ensuring any SNI servers
+    // send the correct certificate during the handshake
+    SSL_set_tlsext_host_name(_ssl_conn, *t_host);
+    
 	// Start the SSL connection
 
 	// MW-2005-02-17: Implement the post-connection check suggested by the SSL Book.
@@ -2179,20 +2200,6 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
-			MCAutoStringRef t_hostname;
-			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
-			//   Otherwise, use the socket name as before.
-            if (!MCNameIsEmpty(endhostname))
-                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
-            else
-                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
-            
-            uindex_t t_pos;
-            if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
-            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
-            else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
-            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
-        
 #if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
             // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL
             if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
@@ -2201,9 +2208,6 @@ Boolean MCSocket::sslconnect()
                 return False;
             }
 #else
-            MCAutoPointer<char> t_host;
-            /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
-
             rc = post_connection_check(_ssl_conn, *t_host);
             
             if (rc != X509_V_OK)
