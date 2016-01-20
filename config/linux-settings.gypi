@@ -10,7 +10,7 @@
 		
 		'c++_std': '<!(echo ${CXX_STD:-c++03})',
 
-		'supports_lto': '<!(if ${CC:-cc} -flto -c -o /dev/null /dev/null 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)',
+		'supports_lto': "<!(echo 'main(){}' | if ${CC:-cc} -flto -fuse-ld=gold -Wl,--sort-section=none -o /dev/null -x c++ - 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)",
 	},
 	
 	'defines':
