@@ -2794,7 +2794,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
     //  when drawing on android; HarfBuzz needs all the directions resolved to display in the correct order.
     MCAutoArray<uint8_t> t_levels;
     
-    MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
+    /* UNCHECKED */ MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
     
     MCRange t_block_range;
 
