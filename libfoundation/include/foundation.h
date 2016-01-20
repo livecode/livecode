@@ -2090,7 +2090,8 @@ MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
 // Returns true if the string only requires BMP characters to represent.
 MC_DLLEXPORT bool MCStringIsBasic(MCStringRef string);
 
-// Returns true if the string is basic and only comprises non-combining characters.
+// Returns true if the string's grapheme -> codeunit mapping is one-to-one.
+// Note that trivial entails basic, as any SMP codepoints are multi-codeunit.
 MC_DLLEXPORT bool MCStringIsTrivial(MCStringRef string);
 
 /////////
