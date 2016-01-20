@@ -1059,5 +1059,7 @@ MCChunkType MCChunkTypeFromCharChunkType(MCCharChunkType p_char_type)
             return kMCChunkTypeCodepoint;
         case kMCCharChunkTypeGrapheme:
             return kMCChunkTypeCharacter;
+        default:
+            MCUnreachableReturn(kMCChunkTypeCharacter);
     }
 }
