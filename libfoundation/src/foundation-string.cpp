@@ -104,7 +104,7 @@ static bool __MCStringIsTrivial(MCStringRef self)
     
     __MCStringCheck(self);
     
-    return (self -> flags & kMCStringFlagIsTrivial) != 0;
+    return (self -> flags & kMCStringFlagIsNotNative) == 0 || (self -> flags & kMCStringFlagIsTrivial) != 0;
 }
 
 static bool __MCStringIsBasic(MCStringRef self)
@@ -113,7 +113,7 @@ static bool __MCStringIsBasic(MCStringRef self)
     
     __MCStringCheck(self);
     
-    return (self -> flags & kMCStringFlagIsBasic) != 0;
+    return (self -> flags & kMCStringFlagIsNotNative) == 0 || (self -> flags & kMCStringFlagIsBasic) != 0;
 }
 
 static bool __MCStringCanBeNative(MCStringRef self)
@@ -1763,7 +1763,7 @@ bool MCStringMapCodepointIndices(MCStringRef self, MCRange p_in_range, MCRange &
     MCAssert(self != nil);
     
     // Shortcut for strings containing only BMP characters
-    if (__MCStringCanBeNative(self) || __MCStringIsBasic(self))
+    if (__MCStringIsBasic(self))
     {
         __MCStringClampRange(self, p_in_range);
         r_out_range = p_in_range;
@@ -2079,7 +2079,7 @@ static bool __MCStringFetchCodepointBefore(MCStringRef self, uindex_t& x_index, 
     if (x_index == 0)
         return false;
     
-    if (__MCStringIsBasic(self) || __MCStringIsTrivial(self))
+    if (__MCStringIsBasic(self))
     {
         r_cp = self -> chars[--x_index];
         return true;
@@ -2103,13 +2103,11 @@ static bool __MCStringFetchCodepointAfter(MCStringRef self, uindex_t& x_index, c
     
     if (__MCStringIsIndirect(self))
         self = self -> string;
-    
-    MCAssert(!__MCStringIsNative(self));
-    
+        
     if (x_index >= self -> char_count)
         return false;
     
-    if (__MCStringIsBasic(self) || __MCStringIsTrivial(self))
+    if (__MCStringIsBasic(self))
     {
         r_cp = self -> chars[x_index++];
         return true;
@@ -2134,7 +2132,7 @@ uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from)
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    if (__MCStringCanBeNative(self) || __MCStringIsTrivial(self))
+    if (__MCStringIsTrivial(self))
     {
         if (p_from + 1 < self -> char_count)
             return p_from + 1;
@@ -2177,7 +2175,7 @@ uindex_t MCStringGraphemeBreakIteratorRetreat(MCStringRef self, uindex_t p_from)
     if (__MCStringIsIndirect(self))
         self = self -> string;
 
-    if (__MCStringCanBeNative(self) || __MCStringIsTrivial(self))
+    if (__MCStringIsTrivial(self))
     {
         if (p_from > 0)
             return p_from - 1;
@@ -5988,39 +5986,47 @@ static void __MCStringUnnativize(MCStringRef self)
         self -> chars[t_char_count] = '\0';
     }
 
-    __MCStringChanged(self, true, true);
+    __MCStringChanged(self, true, true, true);
     self -> flags |= kMCStringFlagIsNotNative;
-    self -> flags |= kMCStringFlagCanBeNative;
 }
 
 static void __MCStringSetFlags(MCStringRef self, uindex_t basic, uindex_t trivial, uindex_t native)
 {
     MCAssert(!__MCStringIsIndirect(self));
     
-    // String changed to assume that it is no longer simple
+    if (native == kMCStringFlagSetTrue)
+    {
+        self -> flags |= kMCStringFlagCanBeNative;
+        self -> flags |= kMCStringFlagIsTrivial;
+        self -> flags |= kMCStringFlagIsBasic;
+        return;
+    }
+    else if (native == kMCStringFlagSetFalse)
+    {
+        self -> flags &= ~kMCStringFlagCanBeNative;
+    }
+    
+    if (trivial == kMCStringFlagSetTrue)
+    {
+        self -> flags |= kMCStringFlagIsTrivial;
+        self -> flags |= kMCStringFlagIsBasic;
+        return;
+    }
+    else if (trivial == kMCStringFlagSetFalse)
+    {
+        self -> flags &= ~kMCStringFlagIsTrivial;
+        self -> flags &= ~kMCStringFlagCanBeNative;
+    }
+
     if (basic == kMCStringFlagSetTrue)
+    {
         self -> flags |=  kMCStringFlagIsBasic;
+    }
     else if (basic == kMCStringFlagSetFalse)
     {
         self -> flags &= ~kMCStringFlagIsBasic;
         self -> flags &= ~kMCStringFlagIsTrivial;
-    }
-    
-    if (trivial == kMCStringFlagSetTrue)
-        self -> flags |= kMCStringFlagIsTrivial;
-    else if (trivial == kMCStringFlagSetFalse)
-        self -> flags &= ~kMCStringFlagIsTrivial;
-    
-    if (native == kMCStringFlagSetFalse)
-    {
         self -> flags &= ~kMCStringFlagCanBeNative;
-        self -> flags |= kMCStringFlagIsNotNative;
-    }
-    else if (native == kMCStringFlagSetTrue)
-    {
-        self -> flags |= kMCStringFlagCanBeNative;
-        self -> flags |= kMCStringFlagIsTrivial;
-        self -> flags &= ~kMCStringFlagIsBasic;
     }
 }
 
@@ -6096,7 +6102,7 @@ bool MCStringIsGraphemeClusterBoundary(MCStringRef self, uindex_t p_index)
     if (__MCStringIsIndirect(self))
         self = self -> string;
     
-    if (__MCStringIsTrivial(self) || __MCStringIsNative(self))
+    if (__MCStringIsTrivial(self))
         return true;
     
     if (p_index == 0 || p_index >= self -> char_count)

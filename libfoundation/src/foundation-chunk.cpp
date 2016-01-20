@@ -1031,14 +1031,14 @@ MCChunkType MCChunkTypeSimplify(MCStringRef p_string, MCChunkType p_type)
     {
         case kMCChunkTypeCharacter:
         {
-            if (MCStringIsTrivial(p_string) || MCStringCanBeNative(p_string))
+            if (MCStringIsTrivial(p_string))
                 return kMCChunkTypeCodeunit;
             
             break;
         }
         case kMCChunkTypeCodepoint:
         {
-            if (MCStringIsBasic(p_string) || MCStringCanBeNative(p_string))
+            if (MCStringIsBasic(p_string))
                 return kMCChunkTypeCodeunit;
             break;
         }
