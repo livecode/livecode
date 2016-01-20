@@ -823,6 +823,12 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* This version of MCAutoPointer should be used when you need to
+ * manage a value created with the "new" operator.  For example:
+ *
+ *     MCAutoPointer<int> number;
+ *     number = new int;
+ */
 template<typename T> class MCAutoPointer
 {
 public:
@@ -866,6 +872,52 @@ public:
 		m_ptr = nil;
 	}
 
+private:
+	T *m_ptr;
+};
+
+/* This version of MCAutoPointer should be used when you need to
+ * manage a value created with the "new[]" operator.  For example:
+ *
+ *     MCAutoPointer<int[]> numbers;
+ *     numbers = new int[25];
+ */
+template<typename T> class MCAutoPointer<T[]>
+{
+public:
+	MCAutoPointer(void) : m_ptr(nil) {}
+	~MCAutoPointer(void) { delete[] m_ptr; }
+
+	T* operator = (T* value)
+	{
+		delete[] m_ptr;
+		m_ptr = value;
+		return value;
+	}
+
+	T*& operator & (void)
+	{
+		MCAssert(m_ptr != nil);
+		return m_ptr;
+	}
+
+	T* operator -> (void)
+	{
+		MCAssert(m_ptr != nil);
+		return m_ptr;
+	}
+
+	T* operator * (void)
+	{
+		return m_ptr;
+	}
+
+	void Take(T* & r_ptr)
+	{
+		r_ptr = m_ptr;
+		m_ptr = nil;
+	}
+	
 private:
 	T *m_ptr;
 };

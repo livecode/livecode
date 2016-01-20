@@ -2298,7 +2298,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     MCStringRef &r_name = (MCStringRef&)r_name_val;
     
     const char *itypestring = gettypestring();
-    MCAutoPointer<char> tmptypestring;
+    MCAutoPointer<char[]> tmptypestring;
     if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
         tmptypestring = new char[strlen(itypestring) + 7];
