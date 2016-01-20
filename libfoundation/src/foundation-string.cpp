@@ -831,25 +831,6 @@ bool MCStringCreateUnicodeStringFromData(MCDataRef p_data, bool p_is_external_re
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool __MCStringFormatSupportedForUnicode(const char *p_format)
-{
-	while(*p_format != '\0')
-	{
-		if (*p_format == '%' &&
-			(p_format[1] != 's' && p_format[1] != 'd' && p_format[1] != '@'))
-			return false;
-		
-		if (*p_format == '\\' &&
-			(p_format[1] != 'n' && p_format[1] != '"'))
-			return false;
-		
-		p_format++;
-	}
-	
-	return true;
-}
-
-
 MC_DLLEXPORT_DEF
 bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
 {
@@ -5297,7 +5278,7 @@ bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCString
     if (__MCStringIsIndirect(p_elem_del))
         p_elem_del = p_elem_del -> string;
     
-	const void *t_echar, *t_kchar;
+	const void *t_echar;
     bool del_native;
     del_native = MCStringIsNative(p_elem_del);
 	t_echar = p_elem_del -> chars;
@@ -5837,7 +5818,6 @@ static bool __MCStringNativize(MCStringRef self, uindex_t & r_char_count)
 	}
     
     uindex_t t_current = 0, t_next;
-    bool t_is_native = true;
     for (uindex_t i = 0; i < t_char_range . length; i++)
     {
         // If we've reached the end, set the next boundary manually
@@ -5867,7 +5847,6 @@ static bool __MCStringNativize(MCStringRef self, uindex_t & r_char_count)
             }
             else
             {
-                t_is_native = false;
                 chars[i] = '?';
             }
         }
@@ -6724,7 +6703,6 @@ static bool __MCStringResolveIndirect(__MCString *self)
         }
         else
         {
-            unichar_t *t_uni_chars;
             if (!__MCStringCloneBuffer(t_string, t_chars, t_char_count))
                 return false;
             
