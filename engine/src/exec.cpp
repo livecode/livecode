@@ -3354,9 +3354,9 @@ void MCExecTypeConvertNumbers(MCExecContext& ctxt, MCExecValueType p_from_type, 
         double t_from = *(double*)p_from_value;
         
         if (p_to_type == kMCExecValueTypeInt)
-            *(integer_t*)p_to_value = (integer_t)t_from;
+            *(integer_t*)p_to_value = (integer_t)(t_from < 0.0 ? t_from - 0.5 : t_from + 0.5);
         else if (p_to_type == kMCExecValueTypeUInt)
-            *(uinteger_t*)p_to_value = (uinteger_t)t_from;
+            *(uinteger_t*)p_to_value = (uinteger_t)(t_from < 0.0 ? 0 : t_from + 0.5);
         else if (p_to_type == kMCExecValueTypeFloat)
             *(float*)p_to_value = (float)t_from;
         else
@@ -3390,14 +3390,14 @@ void MCExecTypeConvertNumbers(MCExecContext& ctxt, MCExecValueType p_from_type, 
     }
     else if (p_from_type == kMCExecValueTypeFloat)
     {
-        integer_t t_from = *(integer_t*)p_from_value;
+        float t_from = *(float*)p_from_value;
         
         if (p_to_type == kMCExecValueTypeDouble)
             *(double*)p_to_value = (double)t_from;
         else if (p_to_type == kMCExecValueTypeInt)
-            *(integer_t*)p_to_value = (integer_t)t_from;
+            *(integer_t*)p_to_value = (integer_t)(t_from < 0.0 ? t_from - 0.5 : t_from + 0.5);
         else if (p_to_type == kMCExecValueTypeUInt)
-            *(uinteger_t*)p_to_value = (uinteger_t)t_from;
+            *(uinteger_t*)p_to_value = (uinteger_t)(t_from < 0.0 ? 0 : t_from + 0.5);
         else
             ctxt . Throw();
     }
