@@ -17,7 +17,7 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 	],
-	
+
 	'target_conditions':
 	[
 		[
@@ -41,6 +41,26 @@
 					'-w',						# Disable warnings
 					'-fpermissive',				# Be more lax with old code
 					'-Wno-return-type',
+				],
+			},
+		],
+		[
+			'supports_lto != 0',
+			{
+				'ldflags':
+				[
+					'-fuse-ld=gold',
+				],
+
+				'arflags':
+				[
+					'--plugin', '<!(echo $(dirname <(ar))/../lib/LLVMgold.so)',
+				],
+			},
+			{
+				'ldflags':
+				[
+					'-fuse-ld=bfd',
 				],
 			},
 		],
@@ -68,6 +88,28 @@
 			[
 				'-O3',
 				'-g3',
+			],
+
+			'conditions':
+			[
+				[
+					'supports_lto != 0',
+					{
+						'cflags':
+						[
+							'-flto',
+							'-ffunction-sections',
+						],
+
+						'ldflags':
+						[
+							'-Wl,--icf=all',
+							'>@(_cflags)',
+							'>@(_cflags_cc)',
+							
+						],
+					},
+				],
 			],
 			
 			'defines':

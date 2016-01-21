@@ -254,8 +254,8 @@ filenames.
 
 Each file details a single bug fix or feature implementation.
 
-* Name the files "bugfix-<bug number>.md" or
-"feature-<description>.md"
+* Name the files "bugfix-<bug number>.md",
+  "bugfix-<bug number>-suffix.md", or "feature-<description>.md"
 
 * Put the title as the first line, e.g. "# <title>"
 
@@ -423,7 +423,7 @@ private function V1NotesGetBugId pFileInfo
    put pFileInfo["basename"] into tBasename
    
    -- Try strict mode first, and issue a warning if no match
-   get matchText(tBasename, "(?i)^bugfix-(\d*)$", tBugId)
+   get matchText(tBasename, "(?i)^bugfix-(\d*)($|-)", tBugId)
    if tBugId is not empty then
       return tBugId
    end if
