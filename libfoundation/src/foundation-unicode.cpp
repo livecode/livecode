@@ -2424,7 +2424,7 @@ static bool __MCUnicodeIsHangulClusterBoundary(int32_t p_left, int32_t p_right)
         case U_GCB_T:
             return p_right != U_GCB_T;
         default:
-            MCUnreachable();
+            MCUnreachableReturn(true);
     }
 }
 
