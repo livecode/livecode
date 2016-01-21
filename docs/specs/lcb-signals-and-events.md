@@ -65,7 +65,7 @@ The `emit` statement does not return a value [5].
 
 3. Although, initially, signal emission _could_ be implemented by iterating over registered signal handlers and calling them within the execution of the `emit` statement, this could easily lead to arbitrarily-deep signal emission chains going backwards and forwards between LCS and LCB contexts.  By allowing signal emission to be delayed, this is avoided (the current stack can be allowed to unwind before signal dispatch is performed).  Delaying signal handling also helps to reason about the safety of deleting a widget in response to receiving a signal from it.
 
-4. Emitting a signal twice from the same handler - even with the same parameters - all of the handlers for that signal with
+4. Emitting a signal twice from the same handler - even with the same parameters - will cause all of the handlers for that signal to be run twice.
 
 5. This is a consequence of asynchronous signal handling.
 
