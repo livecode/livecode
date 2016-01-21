@@ -863,14 +863,14 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
             MCAutoArray<uindex_t> t_breaks;
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
-            MCRange t_range;
-            t_range . length = p_restriction . length;
-            t_range . offset = p_restriction . offset;
-            
-            while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_range)
-                   && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            MCRange t_rel_range;
+            t_rel_range = MCRangeMake(0, 0);
+
+            while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_rel_range)
+                   && t_rel_range . offset + t_rel_range . length != kMCLocaleBreakIteratorDone)
             {
-                m_breaks . Push(t_range);
+                m_breaks . Push(MCRangeMake(t_rel_range . offset + p_restriction . offset,
+                                            t_rel_range . length + p_restriction . length));
             }
         }
         break;

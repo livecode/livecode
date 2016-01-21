@@ -2298,7 +2298,7 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
     MCStringRef &r_name = (MCStringRef&)r_name_val;
     
     const char *itypestring = gettypestring();
-    MCAutoPointer<char> tmptypestring;
+    MCAutoPointer<char[]> tmptypestring;
     if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
     {
         tmptypestring = new char[strlen(itypestring) + 7];
@@ -2794,7 +2794,7 @@ void MCObject::drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_str
     //  when drawing on android; HarfBuzz needs all the directions resolved to display in the correct order.
     MCAutoArray<uint8_t> t_levels;
     
-    MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
+    /* UNCHECKED */ MCBidiResolveTextDirection(p_string, MCBidiFirstStrongIsolate(p_string, 0), t_levels . PtrRef(), t_levels . SizeRef());
     
     MCRange t_block_range;
 

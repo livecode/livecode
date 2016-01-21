@@ -1664,56 +1664,27 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	int32_t t_initial_height;
 	t_initial_height = 0;
 
-	for(t_line = t_first_line, t_paragraph = t_first_paragraph; t_line <= t_last_line; t_line++, t_paragraph = t_paragraph -> next())
+	/* It may be necessary to go beyond the last requested line in order to
+	 * deal with comment nesting. */
+	for (t_line = t_first_line, t_paragraph = t_first_paragraph;
+	     t_line <= t_last_line ||
+		     (p_mutate && t_paragraph != t_sentinal_paragraph &&
+		      t_new_nesting != t_old_nesting);
+	     ++t_line, t_paragraph = t_paragraph -> next())
 	{
 		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
-		
-		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
-		//   works.
-        MCAutoStringRefAsNativeChars t_text;
-		uint4 t_nesting, t_min_nesting;
-        
-        // SN-2014-03-24: We need the native string rather than the CString - avoid any compression of combining chars
-        uindex_t t_size;
-        char_t* t_native_chars;
-        t_text . Lock(t_paragraph -> GetInternalStringRef(), t_native_chars, t_size);
-        
+
+		uint32_t t_nesting, t_min_nesting;
+
 		t_paragraph -> clearzeros();
-//		tokenize(t_native_chars, t_size, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-        tokenize_stringref(t_paragraph -> GetInternalStringRef(), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+		tokenize_stringref(t_paragraph -> GetInternalStringRef(),
+		                   t_new_nesting, t_nesting, t_min_nesting,
+		                   p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
-		if (p_mutate)
-			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
-        t_new_nesting = t_nesting;
+		t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
+		t_new_nesting = t_nesting;
 	}
-
-	if (p_mutate)
-		while(t_paragraph != t_sentinal_paragraph && t_new_nesting != t_old_nesting)
-		{
-			t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
-			
-			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
-			//   works.
-            MCAutoStringRefAsNativeChars t_text;
-			uint4 t_nesting, t_min_nesting;
-            
-            // SN-2014-03-24: Use the nativised string which comprises the combining chars
-            uindex_t t_length;
-            char_t *t_native_chars;
-            
-            /* UNCHECKED */ t_text . Lock(t_paragraph -> GetInternalStringRef(), t_native_chars, t_length);
-            
-			t_paragraph -> clearzeros();
-			tokenize(t_native_chars, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-
-			t_old_nesting += t_state -> GetCommentDelta(t_line);
-			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
-			t_new_nesting = t_nesting;
-
-			t_paragraph = t_paragraph -> next();
-            t_line++;
-		}
 
 	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all
 	//   let's be a little more selective - only relaying out and redrawing the

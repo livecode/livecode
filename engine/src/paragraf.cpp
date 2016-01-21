@@ -343,7 +343,7 @@ void MCParagraph::resolvetextdirections()
     MCAutoArray<uint8_t> t_levels;
    
     // SN-2014-04-03 [[ Bug 12078 ]] Text direction resolving relocated in foundation-bidi.h
-    MCBidiResolveTextDirection(m_text, t_base_level, t_levels . PtrRef(), t_levels . SizeRef());
+    /* UNCHECKED */ MCBidiResolveTextDirection(m_text, t_base_level, t_levels . PtrRef(), t_levels . SizeRef());
     
     // Using the calculated levels, do the appropriate block creation
     uindex_t i = 0;
@@ -1525,7 +1525,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_current_x = t_inner_rect . x + computelineinneroffset(t_inner_rect . width, lptr);
 
 			if (startindex != endindex || state & PS_FRONT || state & PS_BACK)
-				fillselect(dc, lptr, t_current_x, t_current_y, linespace, t_select_x, t_select_width);
+				fillselect(dc, lptr, t_current_x, t_current_y, ceilf(linespace), t_select_x, t_select_width);
 
 			uint32_t t_list_style;
 			t_list_style = getliststyle();
@@ -1585,17 +1585,17 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
                 else
                     /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)t_string, t_string_length, &t_stringref);
                 
-                dc -> drawtext(t_current_x - getlistlabelwidth(), t_current_y + ascent - 1, *t_stringref, parent->getfontref(), false);
+                dc -> drawtext(t_current_x - getlistlabelwidth(), ceilf(t_current_y + ascent - 1), *t_stringref, parent->getfontref(), false);
                 
 				if ((state & PS_FRONT) != 0 && this != parent -> getparagraphs())
 					parent -> setforeground(dc, DI_FORE, False, True);
 			}
 
-			lptr->draw(dc, t_current_x, t_current_y + ascent - 1, si, ei, m_text, pstyle);
+			lptr->draw(dc, t_current_x, ceilf(t_current_y + ascent - 1), si, ei, m_text, pstyle);
 			if (fstart != fend)
-				drawfound(dc, lptr, t_current_x, t_current_y, linespace, fstart, fend);
+				drawfound(dc, lptr, t_current_x, t_current_y, ceilf(linespace), fstart, fend);
 			if (compstart != compend)
-				drawcomposition(dc, lptr, t_current_x, t_current_y, linespace, compstart, compend, compconvstart, compconvend);
+				drawcomposition(dc, lptr, t_current_x, t_current_y, ceilf(linespace), compstart, compend, compconvstart, compconvend);
 		}
 
 		t_current_y += linespace;
@@ -3515,7 +3515,7 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
 	while (fi >= i + l && lptr->next() != lines)
 	{
 		if (fixedheight == 0)
-			drect.y += ceilf(lptr->GetHeight());
+			drect.y += floorf(lptr->GetHeight());
 		else
 			drect.y += fixedheight;
 		lptr = lptr->next();
@@ -3523,7 +3523,7 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
 		t_first_line = false;
 	};
 	if (fixedheight == 0)
-		drect.height = ceilf(lptr->GetHeight()) - 2;
+		drect.height = floorf(lptr->GetHeight()) - 2;
 	else
 		drect.height = fixedheight - 2;
     if (primary)
@@ -3687,7 +3687,7 @@ uint2 MCParagraph::getheight(uint2 fixedheight) const
 		do
 		{
 			if (fixedheight == 0)
-				height += lptr->GetHeight();
+				height += ceilf(lptr->GetHeight());
 			else
 				height += fixedheight;
 			lptr = lptr->next();
@@ -3766,7 +3766,7 @@ void MCParagraph::indextoloc(findex_t tindex, uint2 fixedheight, coord_t &x, coo
 			break;
 		}
 		if (fixedheight == 0)
-            y += lptr->GetHeight();
+            y += ceilf(lptr->GetHeight());
 		else
 			y += fixedheight;
 		lptr = lptr->next();
