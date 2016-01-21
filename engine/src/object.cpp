@@ -5116,7 +5116,14 @@ bool MCObject::SetNativeView(void *p_view)
 			if (opened)
 				m_native_layer->OnAttach();
 			
+			MCRectangle t_viewport;
+			if (getparent() != nil && getparent()->gettype() == CT_GROUP)
+				t_viewport = ((MCGroup*)getparent())->getviewportgeometry();
+			else
+				t_viewport = getrect();
+				
 			m_native_layer->OnGeometryChanged(getrect());
+			m_native_layer->OnViewportGeometryChanged(t_viewport);
 			m_native_layer->OnToolChanged(getstack()->gettool(this));
 			m_native_layer->OnVisibilityChanged(isvisible());
 		}
