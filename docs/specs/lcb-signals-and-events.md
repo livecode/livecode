@@ -55,6 +55,8 @@ The `emit` statement may return before all the signal handlers for the signal ha
 
 The signal handlers for a signal get run exactly once for each emission.  All of the handlers for an emission must complete before any of the handlers for a subsequent emission begin [4].
 
+The signal handlers for a signal may be run in any order.
+
 The `emit` statement does not return a value [5].
 
 **Notes**:
@@ -129,6 +131,8 @@ Evaluating `the event` outwith an event handler is an error.
 
 `the event` is immutable.
 
+The `the event target` expression evaluates to the event's target control [3].
+
 **Notes:**
 
 1. For example, when creating a mouse event, it is important to capture the position of the mouse at the time the event began to be dispatched into the event data.  If computationally-intensive event handlers are run, the user could move the mouse between event creation and event handling.
@@ -140,6 +144,10 @@ Evaluating `the event` outwith an event handler is an error.
    can easily be implemented as:
 
        the event["mouse position"]
+
+
+3. It might be useful to provide `the event target is me` (or equivalent syntax) to test whether an event is targeted at the handling control or one of its children.
+
 
 ### Event handlers
 
@@ -163,13 +171,15 @@ A control can use the pre-event handler to **capture** an event:
 
     capture event
 
-The `capture event` statement makes the capturing control becomes the "target" for the event; all its children are removed from the list of interested controls [2].
+The `capture event` statement makes the capturing control becomes the "target" for the event; all its children are removed from the list of interested controls [2,3].
 
 **Notes:**
 
 1. As per the `mouseEnter`/`mouseLeave`, implicit passing reflects the expectation that pre- and post-event handlers are usually be used to implement behaviour that complements rather than conflicts with that of other interested controls.
 
 2. This allows composed widgets to "hide" events from their children.
+
+3. Since `capture event` causes the capturing control to become the target, the capturing control can't do anything that requires knowledge of the "original" target in its on-event handler unless it saves `the event target` in the pre-event handler before `capture event`.  On the other hand, there's not much point in having separate pre-event and on-event handlers when capturing because they're guaranteed to be run immediately one after another.
 
 ### Dispatch phase
 
