@@ -541,7 +541,7 @@
 			'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
 			
 			# Group "Desktop - Mac"
-			'src/coretextfonts.cpp',
+			'src/coretextfonts.mm',
 			'src/osxflst.cpp',
 			
 			# Group "Desktop - Linux"
@@ -1150,7 +1150,6 @@
 					'sources!':
 					[
 						'src/cgimageutil.cpp',
-						'src/coretextfonts.cpp',
 						'src/syscfdate.cpp',
 						'src/tilecachecg.cpp',
 					],

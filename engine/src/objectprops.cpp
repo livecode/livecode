@@ -235,8 +235,13 @@ MCPropertyInfo MCObject::kProperties[] =
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomPropertiesElement)
     DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomProperties)
 
-    DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeys) 
+    DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeys)
     
+    DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME, InterfaceTheme, MCObject, Theme)
+    DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME, InterfaceTheme, MCObject, Theme)
+    
+    DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
+    DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -2645,7 +2650,7 @@ void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 
 MCPlatformControlType MCObject::getcontroltype()
 {
-    return kMCPlatformControlTypeGlobal;
+    return m_theme_type;
 }
 
 MCPlatformControlPart MCObject::getcontrolsubpart()
@@ -2673,8 +2678,10 @@ MCPlatformControlState MCObject::getcontrolstate()
     if (getstack() && getstack()->getcurcard() == getcard() && getstack()->state & CS_KFOCUSED)
         t_state |= kMCPlatformControlStateWindowActive;
     
-    // Remain in backwards-compatible mode for now
-    t_state |= kMCPlatformControlStateCompatibility;
+    // Remain in backwards-compatible mode if requested
+    intenum_t t_theme = gettheme();
+    if (t_theme == kMCInterfaceThemeLegacy)
+        t_state |= kMCPlatformControlStateCompatibility;
     
     return MCPlatformControlState(t_state);
 }
@@ -2762,6 +2769,16 @@ bool MCObject::getthemeselectorsforprop(Properties which, MCPlatformControlType&
     r_prop = t_prop;
     r_proptype = t_proptype;
     return true;
+}
+
+MCInterfaceTheme MCObject::gettheme() const
+{
+    if (m_theme != kMCInterfaceThemeEmpty)
+        return m_theme;
+    else if (parent != nil)
+        return parent->gettheme();
+    else
+        return kMCInterfaceThemeNative;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

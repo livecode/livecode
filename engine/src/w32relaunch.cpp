@@ -38,6 +38,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32dc.h"
 
+#include <shobjidl.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+
 #ifdef FEATURE_RELAUNCH_SUPPORT
 
 #define CWM_TASKBAR_NOTIFICATION (WM_USER + 1)

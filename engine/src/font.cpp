@@ -162,10 +162,10 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
 	return true;
 }
 
-bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCFontRef& r_font)
+bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCNameRef p_name, MCFontRef& r_font)
 {
     MCFontStruct* t_font_struct;
-    t_font_struct = MCdispatcher->loadfontwithhandle(p_handle);
+    t_font_struct = MCdispatcher->loadfontwithhandle(p_handle, p_name);
     if (t_font_struct == nil)
         return false;
     

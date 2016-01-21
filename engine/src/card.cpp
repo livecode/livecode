@@ -3736,11 +3736,11 @@ void MCCard::unlockshape(MCObjectShape& p_shape)
 
 // MW-2012-02-14: [[ FontRefs ]] Update the card's font and then (if necessary) recurse
 //   through all controls to do the same.
-bool MCCard::recomputefonts(MCFontRef p_parent_font)
+bool MCCard::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// First update the font referenced by the card object. If this doesn't change
 	// then none of the card's children will have either.
-	if (!MCObject::recomputefonts(p_parent_font))
+	if (!MCObject::recomputefonts(p_parent_font, p_force))
 		return false;
 
 	// Now iterate through all objects on the card, keeping track of whether any
@@ -3754,7 +3754,7 @@ bool MCCard::recomputefonts(MCFontRef p_parent_font)
 		t_objptr = objptrs;
 		do
 		{
-			if (t_objptr -> getref() -> recomputefonts(m_font))
+			if (t_objptr -> getref() -> recomputefonts(m_font, p_force))
 				t_changed = true;
 			t_objptr = t_objptr -> next();
 		}
@@ -3793,7 +3793,13 @@ void MCCard::scheduledelete(bool p_is_child)
 
 MCPlatformControlType MCCard::getcontroltype()
 {
-    return kMCPlatformControlTypeWindow;
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        return kMCPlatformControlTypeWindow;
 }
 
 MCPlatformControlPart MCCard::getcontrolsubpart()

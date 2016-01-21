@@ -92,7 +92,7 @@ public:
 	virtual void recompute();
 
 	// MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);

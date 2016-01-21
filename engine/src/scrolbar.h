@@ -155,5 +155,9 @@ public:
 	void SetEndValue(MCExecContext& ctxt, MCStringRef p_value);
 	void GetShowValue(MCExecContext& ctxt, bool& r_setting);
 	void SetShowValue(MCExecContext& ctxt, bool setting);
+    
+protected:
+    
+    virtual MCPlatformControlType getcontroltype();
 };
 #endif

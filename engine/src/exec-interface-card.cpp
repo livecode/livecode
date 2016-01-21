@@ -450,3 +450,9 @@ void MCCard::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_sty
     MCObject::SetTextStyle(ctxt, p_style);
     getstack() -> dirtyall();
 }
+
+void MCCard::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    MCObject::SetTheme(ctxt, p_theme);
+    getstack() -> dirtyall();
+}

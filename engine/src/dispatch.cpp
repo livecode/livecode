@@ -150,6 +150,8 @@ MCDispatch::MCDispatch()
 	m_drag_source = false;
 	m_drag_target = false;
 	m_drag_end_sent = false;
+    
+    m_showing_mnemonic_underline = false;
 
 	m_externals = nil;
 
@@ -1346,15 +1348,22 @@ void MCDispatch::wkunfocus(Window w)
 
 Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 {
-	if (menu != NULL)
+    // Trigger a redraw as mnemonic underlines will need to be drawn
+    if ((MCmodifierstate & MS_ALT) && !m_showing_mnemonic_underline)
+    {
+        m_showing_mnemonic_underline = true;
+        MCRedrawDirtyScreen();
+    }
+    
+    if (menu != NULL)
 		return menu->kdown(p_string, key);
-
+    
 	MCStack *target = findstackd(w);
 	if (target == NULL || !target->kdown(p_string, key))
 	{
 		if (MCmodifierstate & MS_MOD1)
 		{
-			MCButton *bptr = MCstacks->findmnemonic(key);
+            MCButton *bptr = MCstacks->findmnemonic(key);
 			if (bptr != NULL)
 			{
 				bptr->activate(True, key);
@@ -1370,11 +1379,18 @@ Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 
 void MCDispatch::wkup(Window w, MCStringRef p_string, KeySym key)
 {
-	if (menu != NULL)
+    // Trigger a redraw as mnemonic underlines will need to be cleared
+    if (!(MCmodifierstate & MS_ALT) && m_showing_mnemonic_underline)
+    {
+        m_showing_mnemonic_underline = false;
+        MCRedrawDirtyScreen();
+    }
+    
+    if (menu != NULL)
 		menu->kup(p_string, key);
 	else
 	{
-		MCStack *target = findstackd(w);
+        MCStack *target = findstackd(w);
 		if (target != NULL)
 			target->kup(p_string, key);
 	}
@@ -1688,12 +1704,12 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 	return fonts->getfont(fname, size, style, printer);
 }
 
-MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
+MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef p_name)
 {
 #if defined(_MACOSX) || defined (_MAC_SERVER)
     if (fonts == nil)
         fonts = new MCFontlist;
-    return fonts->getfontbyhandle(p_handle);
+    return fonts->getfontbyhandle(p_handle, p_name);
 #else
     return NULL;
 #endif
@@ -2645,5 +2661,22 @@ bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
         return false;
 
     r_path = MCValueRetain(t_value);
+    return true;
+}
+
+bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
+{
+    // Call the general recompute function first
+    MCObject::recomputefonts(NULL, p_force);
+    
+    // Recompute the fonts for all stacks
+    MCStack* t_stack = stacks;
+    do
+    {
+        t_stack->recomputefonts(m_font, p_force);
+        t_stack = t_stack->next();
+    }
+    while (t_stack != stacks);
+    
     return true;
 }

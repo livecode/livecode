@@ -1253,7 +1253,12 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 			MClook = MCcurtheme->getthemefamilyid();
 		}
 		else
-			delete newtheme;
+        {
+            // Fall back to the Win95 theme if the Windows theme failed to load
+            if (newtheme->getthemefamilyid() == LF_WIN95)
+                MClook = LF_WIN95;
+            delete newtheme;
+        }
     }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
