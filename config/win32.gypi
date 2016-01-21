@@ -122,8 +122,8 @@
 			'_CRT_SECURE_NO_DEPRECATE',
 			'_CRT_DISABLE_PERFCRIT_LOCKS',
 			'__LITTLE_ENDIAN__',
-			'WINVER=_WIN32_WINNT_WINXP',
-			'_WIN32_WINNT=_WIN32_WINNT_WINXP',
+			'WINVER=0x0501',		# Windows XP
+			'_WIN32_WINNT=0x0501',		# Windows XP
 		],
 		
 		'target_conditions':
