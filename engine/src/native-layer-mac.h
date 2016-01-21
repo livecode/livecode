@@ -50,6 +50,7 @@ private:
 	
 	virtual bool doPaint(MCGContextRef p_context);
 	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
 	virtual void doSetVisible(bool p_visible);
 	
 	// Performs a relayering operation

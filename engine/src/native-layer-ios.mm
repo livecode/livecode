@@ -97,6 +97,10 @@ bool MCNativeLayerIOS::doPaint(MCGContextRef p_context)
 	return false;
 }
 
+void MCNativeLayerIOS::doSetViewportGeometry(const MCRectangle& p_rect)
+{
+}
+
 void MCNativeLayerIOS::doSetGeometry(const MCRectangle& p_rect)
 {
     CGRect t_nsrect;
