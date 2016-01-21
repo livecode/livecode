@@ -50,6 +50,7 @@ class MCDispatch : public MCObject
 	bool m_drag_source;
 	bool m_drag_target;
 	bool m_drag_end_sent;
+    bool m_showing_mnemonic_underline;
 
 	MCExternalHandlerList *m_externals;
 
@@ -178,7 +179,7 @@ public:
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
 	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
-    MCFontStruct *loadfontwithhandle(MCSysFontHandle);
+    MCFontStruct *loadfontwithhandle(MCSysFontHandle, MCNameRef p_name);
 	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
@@ -263,6 +264,8 @@ public:
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
+    
+    virtual bool recomputefonts(MCFontRef parent_font, bool force);
     
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This

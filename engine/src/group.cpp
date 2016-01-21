@@ -3676,10 +3676,10 @@ MCObject *MCGroup::hittest(int32_t x, int32_t y)
 }
 
 // MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
-bool MCGroup::recomputefonts(MCFontRef p_parent_font)
+bool MCGroup::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// First update the font referenced by the group object.
-	if (!MCObject::recomputefonts(p_parent_font))
+	if (!MCObject::recomputefonts(p_parent_font, p_force))
 		return false;
 
 	// The group's font only has an effect in isolation if the group is
@@ -3696,7 +3696,7 @@ bool MCGroup::recomputefonts(MCFontRef p_parent_font)
 		t_control = controls;
 		do
 		{
-			if (t_control -> recomputefonts(m_font))
+			if (t_control -> recomputefonts(m_font, p_force))
 				t_changed = true;
 			t_control = t_control -> next();
 		}

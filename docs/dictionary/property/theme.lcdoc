@@ -1,0 +1,25 @@
+Name: theme
+
+Type: property
+
+Syntax: set the theme of tObject to tThemeName
+
+Summary: Specifies the theme to use when drawing the control.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the theme of this stack to "native"
+
+Value (string): The <theme> of an object or control is a name identifying the style to use when drawing it.
+
+Description:
+Use the <theme> property to control the general appearance of an object or control. It can be set on any object, including cards, stacks and controls. The currently supported values are "native" and "legacy". For an appearance that matches native apps for the platform an app is running on, use "native". The "legacy" setting preserves the appearance of older versions of LiveCode and is provided for backwards-compatibility.
+
+References: themeClass (property)
+
+Tags: ui

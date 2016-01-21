@@ -358,7 +358,7 @@ public:
 	void render(MCGContextRef p_context, const MCRectangle &p_dirty);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 	
 	//////////
 	// view interface
@@ -1252,6 +1252,7 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t p_theme);
     
 #ifdef MODE_DEVELOPMENT
     void GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id);

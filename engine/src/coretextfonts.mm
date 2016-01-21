@@ -30,6 +30,7 @@
 #import <CoreText/CoreText.h>
 #else
 #import <ApplicationServices/ApplicationServices.h>
+#import <AppKit/NSFont.h>
 #endif
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
@@ -75,6 +76,43 @@ void ios_clear_font_mapping(void)
 }
 #endif
 
+#ifndef TARGET_SUBPLATFORM_IPHONE
+static void* coretext_font_create_system(uint32_t p_size)
+{
+    return [[NSFont systemFontOfSize: p_size] retain];
+}
+
+static void* coretext_font_create_system_bold(uint32_t p_size)
+{
+    return [[NSFont boldSystemFontOfSize: p_size] retain];
+}
+
+static void* coretext_font_create_content(uint32_t p_size)
+{
+    return [[NSFont controlContentFontOfSize: p_size] retain];
+}
+
+static void* coretext_font_create_menu(uint32_t p_size)
+{
+    return [[NSFont menuFontOfSize: p_size] retain];
+}
+
+static void* coretext_font_create_message(uint32_t p_size)
+{
+    return [[NSFont messageFontOfSize: p_size] retain];
+}
+
+static void* coretext_font_create_tooltip(uint32_t p_size)
+{
+    return [[NSFont toolTipsFontOfSize: p_size] retain];
+}
+
+static void* coretext_font_create_user(uint32_t p_size)
+{
+    return [[NSFont userFontOfSize: p_size] retain];
+}
+#endif
+
 static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_t p_size)
 {
 	/*CFStringRef t_name;
@@ -94,6 +132,24 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
     bool t_success;
     t_success = true;
 
+#ifndef TARGET_SUBPLATFORM_IPHONE
+    // On OSX, use the special "system" and "user" fonts where requested. OSX
+    // doesn't actually let you get the display-optimised fonts by name (in
+    // particular, the optimised Helvetica Neue and San Fransisco fonts).
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - System", kMCStringOptionCompareCaseless))
+        return coretext_font_create_system(p_size);
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - User", kMCStringOptionCompareCaseless))
+        return coretext_font_create_user(p_size);
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Content", kMCStringOptionCompareCaseless))
+        return coretext_font_create_content(p_size);
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Menu", kMCStringOptionCompareCaseless))
+        return coretext_font_create_menu(p_size);
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Message", kMCStringOptionCompareCaseless))
+        return coretext_font_create_message(p_size);
+    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Tooltip", kMCStringOptionCompareCaseless))
+        return coretext_font_create_tooltip(p_size);
+#endif
+    
     // SN-2015-02-16: [[ iOS Font mapping ]] On iOS, try to fetch the mapped
     //  if one exists.
     //  Defaults to the given name if no one matches, or on MacOS

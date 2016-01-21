@@ -52,7 +52,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-uint2 MCButton::mnemonicoffset = 2;
+uint2 MCButton::mnemonicoffset = 1;
 MCRectangle MCButton::optionrect = {0, 0, 12, 8};
 uint4 MCButton::clicktime;
 uint2 MCButton::menubuttonheight = 4;
@@ -3408,11 +3408,13 @@ public:
 
 		newbutton->menubutton = parent->menubutton;
 		newbutton->menucontrol = MENUCONTROL_ITEM;
+        newbutton->m_theme_type = kMCPlatformControlTypeMenu;
 		if (MCNameGetCharAtIndex(newbutton -> getname(), 0) == '-')
 		{
 			newbutton->rect.height = 2;
 			newbutton->flags = DIVIDER_FLAGS;
 			newbutton->menucontrol = MENUCONTROL_SEPARATOR;
+            newbutton->m_theme_type = kMCPlatformControlTypeMenu;
 			if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
 			{
 				newbutton->rect.height = 1;
@@ -4835,8 +4837,18 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 MCPlatformControlType MCButton::getcontroltype()
 {
     MCPlatformControlType t_type;
-    t_type = kMCPlatformControlTypeButton;
-    if (getstyleint(flags) == F_MENU)
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        t_type = kMCPlatformControlTypeButton;
+    
+    if (getstyleint(flags) == F_CHECK)
+        t_type = kMCPlatformControlTypeCheckbox;
+    else if (getstyleint(flags) == F_RADIO)
+        t_type = kMCPlatformControlTypeRadioButton;
+    else if (getstyleint(flags) == F_MENU || menucontrol != MENUCONTROL_NONE)
     {
         t_type = kMCPlatformControlTypeMenu;
         switch (menumode)
@@ -4855,6 +4867,10 @@ MCPlatformControlType MCButton::getcontroltype()
                 
             case WM_PULLDOWN:
                 t_type = kMCPlatformControlTypePulldownMenu;
+                break;
+                
+            case WM_TOP_LEVEL:
+                t_type = kMCPlatformControlTypeTabPane;
                 break;
                 
             default:

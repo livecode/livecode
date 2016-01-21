@@ -158,6 +158,11 @@ MCObject::MCObject()
     // Object's do not begin in the parentScript table.
     m_is_parent_script = false;
     
+    // Objects inherit the theme by default
+    m_theme = kMCInterfaceThemeEmpty;
+    m_theme_type = kMCPlatformControlTypeGeneric;
+    
+	// IM-2016-01-21: Initialize native layer to nil
 	m_native_layer = nil;
 
     // Attach ourselves to an object pool.
@@ -258,8 +263,6 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     // table at the start.
     m_is_parent_script = false;
     
-	m_native_layer = nil;
-
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
@@ -1452,9 +1455,29 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
 				        && !(flags & F_DISABLED))
 				{
-                    //if (di == DI_BACK)
-                    //	c = dc->getwhite();
-                    //else
+                    if (di == DI_BACK)
+                    {
+                        // Use the themed colours and ignore inheritance. We do
+                        // this so that controls always have the appropriate
+                        // background colour (particularly fields).
+                        MCPlatformControlType t_control_type;
+                        MCPlatformControlPart t_control_part;
+                        MCPlatformControlState t_control_state;
+                        MCPlatformThemeProperty t_theme_prop;
+                        MCPlatformThemePropertyType t_theme_prop_type;
+                        if (o->getthemeselectorsforprop(P_BACK_COLOR, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
+                        {
+                            if (selected)
+                                t_control_state |= kMCPlatformControlStateSelected;
+                            
+                            if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
+                                return True;
+                        }
+                        
+                        // No themed colour available; fall back to white
+                        c = dc->getwhite();
+                    }
+                    else
 						parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
 					return True;
 				}
@@ -3908,6 +3931,30 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
 		t_flags |= OBJECT_EXTRA_FONTFLAGS;
 		t_size += 1;
 	}
+    
+    // Do we need to saving theming information?
+    MCAutoStringRef t_theme_string;
+    MCAutoStringRef t_theme_type_string;
+    if (m_theme != kMCInterfaceThemeEmpty || m_theme_type != kMCPlatformControlTypeGeneric)
+    {
+        t_flags |= OBJECT_EXTRA_THEME_INFO;
+        
+        // Calculate the size of the serialised data
+        MCExecContext ctxt;
+        MCExecValue t_value;
+        
+        MCExecFormatEnum(ctxt, kMCInterfaceThemeTypeInfo, m_theme, t_value);
+        if (t_value.type != kMCExecValueTypeStringRef)
+            return IO_ERROR;
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= 7000);
+        t_theme_string.Give(t_value.stringref_value);
+        
+        MCExecFormatEnum(ctxt, kMCInterfaceThemeControlTypeTypeInfo, m_theme_type, t_value);
+        if (t_value.type != kMCExecValueTypeStringRef)
+            return IO_ERROR;
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= 7000);
+        t_theme_type_string.Give(t_value.stringref_value);
+    }
 
 	// If the tag is of zero length, write nothing.
 	if (t_size == 0)
@@ -3950,6 +3997,14 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
 		// Write out the three persistent font flags.
 		t_stat = p_stream . WriteU8(m_font_flags & (FF_HAS_ALL_FATTR));
 	}
+    
+    if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_THEME_INFO))
+    {
+        // Write out the theme name and theming type
+        t_stat = p_stream.WriteStringRefNew(*t_theme_string, p_version >= 7000);
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream.WriteStringRefNew(*t_theme_type_string, p_version >= 7000);
+    }
 
 	return IO_NORMAL;
 }
@@ -4038,6 +4093,42 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 			m_font_flags = (t_font_flags & ~FF_HAS_ALL_FATTR) | (t_font_flags & FF_HAS_ALL_FATTR);
 	}
 
+    if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_THEME_INFO) != 0)
+    {
+        MCAutoStringRef t_theme_string;
+        MCAutoStringRef t_theme_type_string;
+        t_stat = p_stream.ReadStringRefNew(&t_theme_string, version >= 7000);
+        if (t_stat == IO_NORMAL)
+            t_stat = p_stream.ReadStringRefNew(&t_theme_type_string, version >= 7000);
+        
+        if (t_stat == IO_NORMAL)
+        {
+            // Parse the theme name and theme type
+            MCExecContext ctxt;
+            MCExecValue t_value;
+            intenum_t t_result;
+            t_value.type = kMCExecValueTypeStringRef;
+            
+            t_value.stringref_value = MCValueRetain(*t_theme_string);
+            MCExecParseEnum(ctxt, kMCInterfaceThemeTypeInfo, t_value, t_result);
+            if (ctxt.HasError())
+            {
+                t_result = kMCInterfaceThemeEmpty;
+                ctxt.IgnoreLastError();
+            }
+            m_theme = MCInterfaceTheme(t_result);
+            
+            t_value.stringref_value = MCValueRetain(*t_theme_type_string);
+            MCExecParseEnum(ctxt, kMCInterfaceThemeControlTypeTypeInfo, t_value, t_result);
+            if (ctxt.HasError())
+            {
+                t_result = kMCPlatformControlTypeGeneric;
+                ctxt.IgnoreLastError();
+            }
+            m_theme_type = MCPlatformControlType(t_result);
+        }
+    }
+    
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . Skip(t_length);
 
@@ -4738,7 +4829,7 @@ bool MCObject::mapfont(bool recursive)
     // This may be called even when the font has already been mapped
     if (m_font != nil)
     {
-        if (hasfontattrs())
+        if (!inheritfont())
             return true;
         if (parent == nil)
             return false;
@@ -4773,7 +4864,7 @@ bool MCObject::mapfont(bool recursive)
 	//   as this requires new font computation.
 	// If we have a font setting, then we create a new font. Otherwise we just
 	// copy the parent's font.
-	if (hasfontattrs() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
+	if (!inheritfont() || (gettype() == CT_STACK && static_cast<MCStack *>(this) -> getuseideallayout()))
 	{
         t_explicit_font = true;
         
@@ -4839,14 +4930,14 @@ void MCObject::unmapfont(void)
 
 // MW-2012-02-14: [[ FontRefs ]] New method which updates the object's concrete font
 //   when a text property, or inherited text property changes.
-bool MCObject::recomputefonts(MCFontRef p_parent_font)
+bool MCObject::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// MW-2012-02-19: [[ SplitTextAttrs ]] If the object has no font attrs, then just
 	//   inherit.
-	if (!hasfontattrs())
+	if (p_parent_font != nil && inheritfont())
 	{
 		if (p_parent_font == m_font)
-			return false;
+			return p_force;
 
 		MCFontRelease(m_font);
 		m_font = MCFontRetain(p_parent_font);
@@ -4855,7 +4946,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 	}
 
 	MCFontRef t_current_font;
-	t_current_font = MCFontRetain(m_font);
+    t_current_font = m_font ? MCFontRetain(m_font) : nil;
 	
 	unmapfont();
 	mapfont();
@@ -4865,7 +4956,7 @@ bool MCObject::recomputefonts(MCFontRef p_parent_font)
 
 	MCFontRelease(t_current_font);
 
-	return t_changed;
+	return t_changed || p_force;
 }
 
 void MCObject::copyfont(MCFontRef& r_font)
@@ -5050,6 +5141,14 @@ bool MCObject::hasfontattrs(void) const
 bool MCObject::needtosavefontflags(void) const
 {
 	return needtosavefontrecord() && (m_font_flags & FF_HAS_ALL_FATTR) != FF_HAS_ALL_FATTR;
+}
+
+bool MCObject::inheritfont() const
+{
+    return !hasfontattrs()
+        && (gettheme() == kMCInterfaceThemeLegacy)  /* Fonts depend on control type in non-legacy themes */
+        && (m_theme == kMCInterfaceThemeEmpty)      /* Can only inherit if theme is inherited too */
+        /*&& (m_theme_type == kMCPlatformControlTypeGeneric)*/;
 }
 
 // MW-2012-02-19: [[ SplitTextAttrs ]] This method returns true if a font record

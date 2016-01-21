@@ -2210,3 +2210,8 @@ void MCStack::SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_fi
 
 }
 
+void MCStack::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    MCObject::SetTheme(ctxt, p_theme);
+    MCRedrawDirtyScreen();
+}
