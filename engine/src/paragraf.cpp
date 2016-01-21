@@ -351,7 +351,7 @@ void MCParagraph::resolvetextdirections()
     MCAutoArray<uint8_t> t_levels;
    
     // SN-2014-04-03 [[ Bug 12078 ]] Text direction resolving relocated in foundation-bidi.h
-    MCBidiResolveTextDirection(m_text, t_base_level, t_levels . PtrRef(), t_levels . SizeRef());
+    /* UNCHECKED */ MCBidiResolveTextDirection(m_text, t_base_level, t_levels . PtrRef(), t_levels . SizeRef());
     
     // Using the calculated levels, do the appropriate block creation
     uindex_t i = 0;

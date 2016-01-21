@@ -3050,6 +3050,18 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	MCStack *odefaultstackptr = MCdefaultstackptr;
 	Boolean wasvisible = MCtemplatestack->isvisible();
 
+	/* Check that a specified parent stack has a usable name before
+	 * doing anything with side-effects. */
+	MCAutoValueRef t_object_name;
+	if (!p_with_group && p_object != nil)
+	{
+		if (!p_object->names(P_NAME, &t_object_name))
+		{
+			ctxt.Throw();
+			return;
+		}
+	}
+
 	if (p_force_invisible)
 		MCtemplatestack->setflag(!p_force_invisible, F_VISIBLE);
 
@@ -3067,9 +3079,7 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	}
 	else if (p_object != nil)
 	{
-		MCAutoValueRef t_name;
-		p_object->names(P_NAME, &t_name);
-		MCdefaultstackptr->setvariantprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
+		MCdefaultstackptr->setvariantprop(ctxt, 0, P_MAIN_STACK, False, *t_object_name);
 		if (ctxt . HasError())
 		{
 			delete MCdefaultstackptr;
