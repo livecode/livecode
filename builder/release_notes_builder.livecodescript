@@ -993,7 +993,7 @@ private command PreviousCreate
          next repeat
          
       else      
-         put OutputGetNotesUrl(tVersion) into tUrl
+         put OutputGetNotesUrl("pdf", tVersion) into tUrl
          MarkdownAppend "notes", merge("* [LiveCode [[tVersion]] Release Notes]([[tUrl]])")
       end if
       
