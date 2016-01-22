@@ -386,7 +386,10 @@ component Documentation
 	into [[ToolsFolder]]/Documentation place
 		rfolder "ide:Documentation/guides"
 		rfolder "repo:docs/guides"
-		
+
+	into [[ToolsFolder]]/Documentation/guides place
+		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
+
 component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser
