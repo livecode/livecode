@@ -263,6 +263,9 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     // table at the start.
     m_is_parent_script = false;
     
+	// IM-2016-01-21: Initialize native layer to nil
+	m_native_layer = nil;
+	
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
