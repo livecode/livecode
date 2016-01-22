@@ -30,8 +30,13 @@ Several important features are not yet supported:
 
 * some `ask` and `answer` message boxes
 * networking
+* JavaScript in LiveCode Builder extensions
 
-The HTML5 engine is unlikely ever to support externals (including revdb).
+Two important unsupported features are unlikely to be added in the near future:
+
+* operations that need to pause the script while something happens
+  (e.g. `wait 10`)
+* externals (including revdb)
 
 # How to deploy an app to HTML5
 
