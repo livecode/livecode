@@ -1053,7 +1053,7 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
       end repeat
       
       repeat for each word tArch in kArchs
-         filter tZipItems with "*" & tArch & "*"
+         filter tZipItems with "*" & tArch & "*" into tZipItemsFiltered
          put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
          
          repeat for each line tZipItem in tZipItemsFiltered
