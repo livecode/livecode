@@ -6,13 +6,10 @@
 
 import sys
 
-# TODO(mark): sys.path manipulation is some temporary testing stuff.
-try:
-  import gyp
-except ImportError, e:
-  import os.path
-  sys.path.append(os.path.join(os.path.dirname(sys.argv[0]), 'pylib'))
-  import gyp
+# [[ Gyp customisation ]] Make sure we don't pull in a system Gyp
+import os.path
+sys.path.insert(0, os.path.join(os.path.dirname(sys.argv[0]), 'pylib'))
+import gyp
 
 if __name__ == '__main__':
   sys.exit(gyp.script_main())
