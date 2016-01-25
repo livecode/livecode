@@ -6,51 +6,9 @@
     "^__Z20send_startup_messageb",
     "^__Z13platform_mainiPPcS0_$",
     "^__Z21X_main_loop_iterationv$",
+    "^__ZN10MCScreenDC4waitEdhh$",
 
     "^_MCEventQueueDispatch$",
     "^__ZL25MCEventQueueDispatchEventP7MCEvent$",
-    "^_MCEmscriptenAsyncYield$",
-
-    "MCWidgetExec",
-    "MCWidgetOn",
-
-    "AddRunloopAction",
-    "DoRunloopActions",
-
-    "(exec|eval)_ctxt",
-    "4wait",
-    "26message_with_valueref_args",
-    "addmessage",
-    "7message",
-    "6handle",
-    "13handlepending",
-    "10handleself",
-    "11exechandler",
-    "[0-9]+close",
-    "3del",
-    "help",
-    "[0-9]+(k|m)(focus|down|up)",
-    "mdrag",
-    "paste",
-    "doubledown",
-    "layerchanged",
-    "resizeparent",
-    "sync_mfocus",
-    "toolchanged",
-    "wdoubledown",
-    "wmdragenter",
-    "wmdragleave",
-    "wmfocus_stack",
-
-    "MCExecContext[0-9]+(TryTo)?[Ee]val",
-    "MCEngineEvalValue",
-    "MCEngine\\w*Wait",
-    "MCEngineExecDispatch",
-    "MCEngineExecDo",
-    "MCEngineExecSend",
-
-    "MC[SU]_\\w*url(?!(en|de)code)",
-
-    "__ZN9MCHandler4exec",
-    "MCKeywordsExec"
+    "^_MCEmscriptenAsyncYield$"
 ]
