@@ -1698,6 +1698,8 @@ LT factor_table[] =
         {"textsize", TT_PROPERTY, P_TEXT_SIZE},
         {"textstyle", TT_PROPERTY, P_TEXT_STYLE},
         {"the", TT_THE, F_UNDEFINED},
+        {"theme", TT_PROPERTY, P_THEME},
+        {"themeclass", TT_PROPERTY, P_THEME_CONTROL_TYPE},
         {"there", TT_UNOP, O_THERE},
         {"third", TT_CHUNK, CT_THIRD},
         {"thirdcolor", TT_PROPERTY, P_HILITE_COLOR},

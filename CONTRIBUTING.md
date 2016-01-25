@@ -2,7 +2,9 @@
 
 ![LiveCode Community Logo](http://livecode.com/wp-content/uploads/2015/02/livecode-logo.png)
 
-Copyright © 2003-2015 LiveCode Ltd., Edinburgh, UK
+Copyright © 2003-2016 LiveCode Ltd., Edinburgh, UK
+
+See also the [documentation contributions guide](docs/contributing_to_docs.md).
 
 ## Contributors' forums
 

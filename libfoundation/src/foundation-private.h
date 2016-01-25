@@ -158,11 +158,11 @@ enum
 	// If set then the string is not native
 	kMCStringFlagIsNotNative = 1 << 2,
     // If set, the string contains no non-BMP characters
-    kMCStringFlagIsSimple = 1 << 3,
+    kMCStringFlagIsBasic = 1 << 3,
     // If set, the string has been checked for simplicity
     kMCStringFlagIsChecked = 1 << 4,
-    // If set, the string has NO combining chars
-    kMCStringFlagIsUncombined = 1 << 5,
+    // If set, the string is basic and contains NO combining chars
+    kMCStringFlagIsTrivial = 1 << 5,
     // If set, the string has been converted to a number
     kMCStringFlagHasNumber = 1 << 6,
     // If set, indicates that the string can be losslessly nativized

@@ -706,7 +706,7 @@ private handler drawActions() returns nothing
 
       end if
 
-      push tActionRect onto back of mActionRects
+      push the bounding box of tIconPath onto back of mActionRects
    end repeat
 end handler
 

@@ -294,7 +294,7 @@ public:
 
 	// MW-2012-02-14: [[ FontRefs ]] Method called to recompute concrete fonts in the
 	//   field.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// virtual functions from MCControl
 	virtual IO_stat load(IO_handle stream, uint32_t version);

@@ -105,6 +105,13 @@ enum MCPropertyChangedMessageType
 	kMCPropertyChangedMessageTypeGradientEditEnded = 1 << 4
 };
 
+enum MCInterfaceTheme
+{
+    kMCInterfaceThemeEmpty = 0,         // Inherit the theme
+    kMCInterfaceThemeNative = 1,        // Native appearance
+    kMCInterfaceThemeLegacy = 2         // Backwards-compatibility theming
+};
+
 struct MCObjectShape
 {
 	// The type of shape.
@@ -163,6 +170,7 @@ struct MCObjectVisitor
 // MW-2012-02-19: [[ SplitTextAttrs ]] If this flag is set, then there is a font-flags
 //   byte in the extended data section.
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
+#define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
 class MCObjectHandle
 {
@@ -276,6 +284,12 @@ protected:
     
     // If this is true, then this object is in the parentScript resolution table.
     bool m_is_parent_script : 1;
+    
+    // Whether to use legacy theming (or native-like theming)
+    MCInterfaceTheme m_theme;
+    
+    // Override the type of the control for theming purposes
+    MCPlatformControlType m_theme_type;
 	
 	MCStringRef tooltip;
 	
@@ -402,7 +416,8 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// MW-2012-02-14: [[ FontRefs ]] Remap any fonts this object uses as font related property has changed.
-	virtual bool recomputefonts(MCFontRef parent_font);
+    // Set force to true to recompute even if it looks like nothing needs updated
+	virtual bool recomputefonts(MCFontRef parent_font, bool force = false);
 
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
@@ -877,7 +892,7 @@ public:
     
     // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
     //   a widget.
-    bool haswidgets(void);
+    virtual bool haswidgets(void);
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
@@ -1161,6 +1176,14 @@ public:
     void GetCustomProperties(MCExecContext& ctxt, MCValueRef &r_array);
     void SetCustomProperties(MCExecContext& ctxt, MCValueRef p_array);
     
+    void GetTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t  p_theme);
+    void GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    
+    void GetThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetThemeControlType(MCExecContext& ctxt, intenum_t  p_type);
+    void GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    
 	////////// ARRAY PROPS
     
     void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
@@ -1220,6 +1243,9 @@ protected:
     virtual MCPlatformControlState getcontrolstate();
     bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
     
+    // Returns the effective theme for this object
+    MCInterfaceTheme gettheme() const;
+    
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
@@ -1272,6 +1298,8 @@ private:
 	// MW-2012-02-19: [[ SplitTextAttrs ]] Returns true if the object needs to save
 	//   the font-flags.
 	bool needtosavefontflags(void) const;
+    // Returns false if hasfontattrs() or a theme or theming type is set
+    bool inheritfont() const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);

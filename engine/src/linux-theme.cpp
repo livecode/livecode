@@ -63,7 +63,7 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
         // Create a new window
         GtkWidget* t_window;
         t_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        s_widgets[kMCPlatformControlTypeGlobal] = t_window;
+        s_widgets[kMCPlatformControlTypeGeneric] = t_window;
         
         // Ensure it actually exists
         gtk_widget_realize(t_window);
@@ -89,8 +89,8 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
     
     switch (p_type)
     {
-        case kMCPlatformControlTypeGlobal:
-            t_the_widget = s_widgets[kMCPlatformControlTypeGlobal];
+        case kMCPlatformControlTypeGeneric:
+            t_the_widget = s_widgets[kMCPlatformControlTypeGeneric];
             t_suppress_add = true;
             break;
             
@@ -162,7 +162,7 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
             break;
             
         case kMCPlatformControlTypeWindow:
-            t_the_widget = s_widgets[kMCPlatformControlTypeGlobal];
+            t_the_widget = s_widgets[kMCPlatformControlTypeGeneric];
             g_object_ref(t_the_widget);
             t_suppress_add = true;
             break;

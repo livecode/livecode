@@ -121,6 +121,7 @@ private:
     uint32_t *m_markers;
     uindex_t m_marker_count;
     uint32_t m_last_marker;
+	double m_scale;
     
     MCRectangle m_rect;
     bool m_visible : 1;
@@ -251,6 +252,7 @@ MCQTKitPlayer::MCQTKitPlayer(void)
     m_last_current_time = do_QTMakeTime(INT64_MAX, 1);
     m_buffered_time = do_QTMakeTime(0, 1);
     m_mirrored = false;
+	m_scale = 1.0;
 }
 
 MCQTKitPlayer::~MCQTKitPlayer(void)
@@ -613,9 +615,16 @@ void MCQTKitPlayer::Synchronize(void)
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
 	
+	// PM-2015-11-26: [[ Bug 13277 ]] Scale m_rect before mapping
+	MCRectangle t_rect = m_rect;
+	t_rect.x *= m_scale;
+	t_rect.y *= m_scale;
+	t_rect.width *= m_scale;
+	t_rect.height *= m_scale;
+	
 	NSRect t_frame;
-	t_window -> MapMCRectangleToNSRect(m_rect, t_frame);
-    
+	t_window -> MapMCRectangleToNSRect(t_rect, t_frame);
+
     m_synchronizing = true;
     
 	[m_view setFrame: t_frame];
@@ -735,6 +744,10 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
 			Switch(*(bool *)p_value);
+			break;
+		case kMCPlatformPlayerPropertyScalefactor:
+			m_scale = *(double *)p_value;
+			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyRect:
 			m_rect = *(MCRectangle *)p_value;
@@ -949,6 +962,10 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 
         case kMCPlatformPlayerPropertyMirrored:
             *(bool *)r_value = m_mirrored;
+			break;
+			
+		case kMCPlatformPlayerPropertyScalefactor:
+            *(double *)r_value = m_scale;
 			break;
 	}
 }

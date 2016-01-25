@@ -3253,7 +3253,7 @@ void MCStack::unlockshape(MCObjectShape& p_shape)
 // MW-2012-02-14: [[ FontRefs ]] This method causes recursion throughout all the
 //   children (cards, controls and substacks) of the stack updating the font
 //   allocations.
-bool MCStack::recomputefonts(MCFontRef p_parent_font)
+bool MCStack::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// MW-2012-02-17: [[ FontRefs ]] If the stack has formatForPrinting set,
 	//   make sure all its children inherit from a font with printer metrics
@@ -3272,7 +3272,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 		/* UNCHECKED */ MCFontCreate(t_textfont, t_fontstyle, t_textsize, t_printer_parent_font);
 
 		bool t_changed;
-		t_changed = MCObject::recomputefonts(t_printer_parent_font);
+		t_changed = MCObject::recomputefonts(t_printer_parent_font, p_force);
 
 		MCFontRelease(t_printer_parent_font);
 	}
@@ -3280,14 +3280,14 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 	{
 		// A stack's font is determined by the object, so defer there first and
 		// only continue if something changes.
-		if (!MCObject::recomputefonts(p_parent_font))
+		if (!MCObject::recomputefonts(p_parent_font, p_force))
 			return false;
 	}
 
 	// MW-2012-12-14: [[ Bug ]] Only recompute the card if we are open.
 	// Now iterate through the current card, updating that.
 	if (opened != 0 && curcard != nil)
-		curcard -> recomputefonts(m_font);
+		curcard -> recomputefonts(m_font, p_force);
 	
 	// Now iterate through all the sub-stacks, updating them.
 	if (substacks != NULL)
@@ -3296,7 +3296,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 		do
 		{
 			if (sptr -> getopened() != 0)
-				sptr -> recomputefonts(m_font);
+				sptr -> recomputefonts(m_font, p_force);
 			sptr = sptr->next();
 		}
 		while (sptr != substacks);
@@ -3313,7 +3313,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 			do
 			{
 				if (t_stack -> getopened() != 0)
-					t_stack -> recomputefonts(m_font);
+					t_stack -> recomputefonts(m_font, p_force);
 				t_stack = t_stack -> next();
 			}
 			while(t_stack != MCdispatcher -> gethome());
@@ -3344,7 +3344,7 @@ bool MCStack::changeextendedstate(bool setting, uint32_t mask)
 
 void MCStack::purgefonts()
 {
-	recomputefonts(parent -> getfontref());
+	recomputefonts(parent -> getfontref(), true);
 	recompute();
 	
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
@@ -3441,7 +3441,13 @@ void MCStack::setasscriptonly(MCStringRef p_script)
 
 MCPlatformControlType MCStack::getcontroltype()
 {
-    return kMCPlatformControlTypeWindow;
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        return kMCPlatformControlTypeWindow;
 }
 
 MCPlatformControlPart MCStack::getcontrolsubpart()

@@ -15,7 +15,7 @@ Platforms: desktop,server,web,mobile
 Example:
 before mouseUp
   answer "before mouse up received"
-end resizeStack
+end mouseUp
 
 Parameters:
 messageName: 
