@@ -983,7 +983,7 @@ public:
 		return m_ptr;
 	}
 
-	uindex_t Size()
+	uindex_t Size() const
 	{
 		return m_size;
 	}
