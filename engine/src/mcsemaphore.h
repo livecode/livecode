@@ -64,6 +64,12 @@ class MCSemaphore
 		return IsLocked();
 	}
 
+	/* Automatic extraction of the wait depth */
+	operator int() const
+	{
+		return m_counter;
+	}
+
 	/* ---------- Locking ops */
 	void Lock()
 	{
