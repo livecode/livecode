@@ -454,15 +454,10 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
 	// scale rectangle from logical -> device coords
-	MCGRectangle t_rect;
-	t_rect = MCGRectangleScale(MCRectangleToMCGRectangle(r), MCAndroidGetSystemScale());
+	MCRectangle t_rect;
+	t_rect = logicaltoscreenrect(r);
 	
-	int16_t x, y, w, h;
-	x = (int16_t) roundf(t_rect . origin . x);
-	y = (int16_t) roundf(t_rect . origin . y);
-	w = (int16_t) roundf(t_rect . size . width);
-	h = (int16_t) roundf(t_rect . size . height);
-	
+	// don't scale size - we want the bitmap to be sized to logical coords.
 	int16_t t_size_width, t_size_height;
 	if (size != nil)
 	{
@@ -477,7 +472,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 	
 	jobject t_bitmap;
 	// get snapshot image as java Bitmap object
-	MCAndroidEngineRemoteCall("getSnapshotBitmapAtSize", "oiiiiii", &t_bitmap, x, y, w, h, t_size_width, t_size_height);
+	MCAndroidEngineRemoteCall("getSnapshotBitmapAtSize", "oiiiiii", &t_bitmap, t_rect.x, t_rect.y, t_rect.width, t_rect.height, t_size_width, t_size_height);
 	if (t_bitmap == nil)
 		return nil;
 	
