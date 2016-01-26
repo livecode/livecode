@@ -539,8 +539,18 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+constant kPreferredCols is 5
+constant kPreferredRows is 5
+
 public handler getPreferredSize() returns List
-	return [150 * mNumCols, 150 * mNumRows + mRowHeight]
+	variable tWidth
+	put kIconSize * kPreferredCols * (1 + kIconPaddingRatio) into tWidth
+	add 2 * kScrollbarWidth to tWidth
+	
+	variable tHeight
+	put kIconSize * kPreferredRows * (1 + kIconPaddingRatio) into tHeight
+	add topRowHeight() to tHeight
+	return [tWidth, tHeight]
 end handler
 
 public handler setFrameBorder(in pValue as Boolean)
