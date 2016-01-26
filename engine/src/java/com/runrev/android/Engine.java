@@ -1102,6 +1102,21 @@ public class Engine extends View implements EngineApi
     }
 
 ////////////////////////////////////////////////////////////////////////////////
+	
+	// Return a bitmap snapshot of the specified region of the root view
+	public Object getSnapshotBitmapAtSize(int x, int y, int width, int height, int sizeWidth, int sizeHeight)
+	{
+		Bitmap t_bitmap = Bitmap.createBitmap(sizeWidth, sizeHeight, Bitmap.Config.ARGB_8888);
+		Canvas t_canvas = new Canvas(t_bitmap);
+		t_canvas.scale((float)sizeWidth / (float)width, (float)sizeHeight / (float)height);
+		t_canvas.translate((float)-x, (float)-y);
+		
+		getActivity().getWindow().getDecorView().getRootView().draw(t_canvas);
+		
+		return t_bitmap;
+	}
+	
+////////////////////////////////////////////////////////////////////////////////
 
 	public String getSystemVersion()
 	{
