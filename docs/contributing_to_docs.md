@@ -140,11 +140,17 @@ website, without having to download any software or use the command line.
 For example, the accept command is at:
 https://github.com/livecode/livecode/blob/community-docs/docs/dictionary/command/accept.lcdoc
 
+![](images/livecode-repo-filesystem.png)
+
 **Click the pencil icon to the right of Raw|Blame|History buttons**
+
+![](images/editing-file.png)
 
 **Make your changes**
 
 **In the Propose file change section, enter the title and description of your pull request.**
+
+![](images/propose-file-change.png)
 
 The title should be along the lines of 
 
@@ -182,14 +188,30 @@ and description
 
 **Click the Propose File Change button.**
 
+>*Note:* Please ensure the pull request has the correct base branch and 
+comparison branch. The base fork should be `livecode/livecode`, with
+base branch `community-docs`, and the head fork should be 
+`<your user name>/livecode` with compare branch something like `patch-1`
+(unless you have renamed it).
+
+![](images/pull-request-target.png)
+
 **Click Create Pull Request** 
 
-It will confirm the title and description you entered before.
+It will confirm the title and description you entered before, and show 
+you the files that are changed in the pull request.
+
+Now is a good time to check the changes you are proposing.
+
+![](images/open-pull-request.png)
 
 **Click Create Pull Request again.**
 
 You should now be able to see your pull request here
-https://github.com/livecode/livecode/pulls
+https://github.com/livecode/livecode/pulls, or by clicking the 'Pull
+Requests' menu item at the top of the GitHub website.
+
+![](images/github-top-menu.png)
 
 **Sign the CLA if you haven't already**
 
@@ -253,6 +275,17 @@ check back in case there is something that the reviewer would like you to change
 
 When the pull request has been reviewed, it will be merged into the main repository and 
 should be in the LiveCode Dictionary in the next release!
+
+## Making further changes
+
+If you need to make further changes to your pull request, make sure you 
+are looking at the pull request you want to change (you can find your pull
+request either in the list of pull requests to the livecode repo at 
+https://github.com/livecode/livecode/pulls, or by clicking the 'Pull
+Requests' menu item at the top of the GitHub website which shows all 
+your outstanding pull requests), and click on the 'Files Changed' tab.
+
+You can then click on the pencil and make your changes as before. 
 
 ## Using Git GUI software
 
