@@ -490,10 +490,14 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 	
 	/* Dispatch browser message */
 	variable tMessage as String
-	if pFrame then
-		put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+	if tType is "navigate" and tState is "unhandled" then
+		put "browserUnhandledLoadRequest" into tMessage
 	else
-		put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+		if pFrame then
+			put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+		else
+			put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+		end if
 	end if
 	
 	variable tArgs as List
