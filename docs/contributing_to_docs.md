@@ -57,6 +57,10 @@ conforming to the aforementioned format reference, and also for
 parameters defined in the Syntax elements to correspond exactly to those
 described later on in the entry.
 
+Furthermore, where possible, individual lines within the document should
+not exceed 72 characters in length. This makes it easier to read, and 
+review on GitHub.
+
 ## Instructiveness
 
 One major objective we have with our documentation is to improve our
@@ -145,6 +149,12 @@ https://github.com/livecode/livecode/blob/community-docs/docs/dictionary/command
 **Click the pencil icon to the right of Raw|Blame|History buttons**
 
 ![](images/editing-file.png)
+
+Once you have clicked the pencil, you may get information that 
+submitting a change will create a new branch in your fork of the target 
+repo.
+
+![](images/new-fork.png)
 
 **Make your changes**
 
@@ -278,14 +288,26 @@ should be in the LiveCode Dictionary in the next release!
 
 ## Making further changes
 
-If you need to make further changes to your pull request, make sure you 
-are looking at the pull request you want to change (you can find your pull
-request either in the list of pull requests to the livecode repo at 
-https://github.com/livecode/livecode/pulls, or by clicking the 'Pull
-Requests' menu item at the top of the GitHub website which shows all 
-your outstanding pull requests), and click on the 'Files Changed' tab.
+If you need to make further changes to your pull request, first make 
+sure you are looking at the pull request you want to change (you can 
+find your pull request either in the list of pull requests to the 
+livecode repo at https://github.com/livecode/livecode/pulls, or by 
+clicking the 'Pull Requests' menu item at the top of the GitHub website 
+which shows all your outstanding pull requests).
 
-You can then click on the pencil and make your changes as before. 
+**Click on the 'Files Changed' tab**
+
+![](pull-request.png)
+
+**Click on the pencil again to make further changes**
+
+![](edit-file-again.png)
+
+**Commit your changes to the same branch**
+
+![](commit-new-changes.png)
+
+The pull request will be automatically updated.
 
 ## Using Git GUI software
 
