@@ -260,9 +260,9 @@ from the branch dropdown list.
 
 At the top of the page you should see something like
 
-Branch: patch-1   livecode/docs/notes/ +
+Branch: patch-1   livecode/docs/notes/            New File | Find File | History
 
-**Click on the +**
+**Click on New File**
 
 **Name the file**
 It should be called:
