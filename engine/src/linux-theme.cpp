@@ -32,6 +32,7 @@
 
 #include <gtk/gtk.h>
 
+#define GTK_MAGIC_FONT_SCALE_FACTOR 96/72
 
 // Cached styles for various widget types
 static GtkStyle* s_styles[kMCPlatformControlTypeMessageBox+1];
@@ -227,7 +228,8 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
                 break;
             }
             
-            r_int = pango_font_description_get_size(t_style->font_desc)/PANGO_SCALE;
+            r_int = (pango_font_description_get_size(t_style->font_desc) *
+                     GTK_MAGIC_FONT_SCALE_FACTOR / PANGO_SCALE);
             break;
         }
             
@@ -375,6 +377,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     {
         t_found = MCNameCreateWithCString(pango_font_description_get_family(t_pango), t_font_name);
         t_font_size = pango_font_description_get_size(t_pango)/PANGO_SCALE;
+        /* UNCHECKED */ MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size);
     }
     
     if (t_found)
