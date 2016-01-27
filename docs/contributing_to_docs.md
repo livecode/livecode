@@ -158,6 +158,15 @@ repo.
 
 **Make your changes**
 
+Please ensure that you have tabs enabled if you are indenting code 
+blocks.
+
+![](images/tabs.png)
+
+Also, try to ensure each line you modify is no more than 72 characters
+long, adding return characters as necessary (the dictionary only breaks
+paragraphs when there are two return characters in a row).
+
 **In the Propose file change section, enter the title and description of your pull request.**
 
 ![](images/propose-file-change.png)
