@@ -97,6 +97,12 @@ void MCBrowserBase::OnDocumentLoadFailed(bool p_in_frame, const char *p_url, con
 		m_event_handler->OnDocumentLoadFailed(this, p_in_frame, p_url, p_error);
 }
 
+void MCBrowserBase::OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url)
+{
+	if (m_event_handler)
+		m_event_handler->OnNavigationRequestUnhandled(this, p_in_frame, p_url);
+}
+
 void MCBrowserBase::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
 {
 	if (p_handler)
@@ -394,6 +400,12 @@ public:
 	{
 		if (m_callback)
 			m_callback(m_context, p_browser, kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+	}
+	
+	virtual void OnNavigationRequestUnhandled(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
+	{
+		if (m_callback)
+			m_callback(m_context, p_browser, kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateUnhandled, p_in_frame, p_url, nil);
 	}
 	
 private:
