@@ -1130,10 +1130,13 @@ public class Engine extends View implements EngineApi
 		
 		boolean t_portrait = t_viewport.height() > t_viewport.width();
 
+		int[] t_origin = new int[2];
+		getLocationOnScreen(t_origin);
+		
 		// We have new values and the keyboard isn't showing so update any sizes we don't already know
 		if (p_update && !m_keyboard_visible)
 		{
-			t_working_rect = new Rect(0, 0, p_new_width, p_new_height);
+			t_working_rect = new Rect(t_origin[0], t_origin[1], t_origin[0] + p_new_width, t_origin[1] + p_new_height);
 			
 			if (t_portrait && !m_know_portrait_size)
 			{
@@ -1167,6 +1170,7 @@ public class Engine extends View implements EngineApi
 			t_working_rect = new Rect(t_viewport);
 			if (m_know_statusbar_size)
 				t_working_rect.bottom -= m_statusbar_size;
+			t_working_rect.offsetTo(t_origin[0], t_origin[1]);
 		}
 		
 		return t_working_rect;
