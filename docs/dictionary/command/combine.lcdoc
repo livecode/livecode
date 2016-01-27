@@ -34,7 +34,7 @@ combine tArray using return and ":"
 Parameters:
 primaryDelimiter: A character or expression that resolves to a character.
 secondaryDelimiter: A character or expression that resolves to a character.
-arrayName (array): 
+arrayVariable: A variable containing an array.
 
 The result: If you specify a <secondaryDelimiter>, the key corresponding to each element is added to the element's content, separated from the content by the <secondaryDelimiter>. For example, if the <primaryDelimiter> is return and the <secondaryDelimiter> is tab, each line of the resulting variable contains an element's key, a tab character, and the element's content. If you don't specify a <secondaryDelimiter>, then the keys are lost in the transformation.Combining an array by row converts the array into a table with rows separated by the <rowDelimiter property>. Each row in the resulting string is the contents of the corresponding key in the array.Combining an array by column converts the array into a table with columns separated by the <columnDelimiter property>. Each column of the resulting string is the contents of the corresponding key in the array.
 
