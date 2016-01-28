@@ -105,7 +105,7 @@ __declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {};
 #define PAYLOAD_SECTION_NAME ".payload"
 #define PROJECT_SECTION_NAME ".project"
 
-extern MCCapsuleInfo MCpayload, MCcapsule;
+extern volatile MCCapsuleInfo MCpayload, MCcapsule;
 asm (".section .payload, \"aw\", \"nobits\"; .global MCpayload; MCpayload: .align 16; .space 16;");
 asm (".section .project, \"aw\", \"nobits\"; .global MCcapsule; MCcapsule: .align 16; .space 16;");
 
@@ -263,6 +263,11 @@ public:
 				}			
 			}			
 #else
+            // Force references to the payload and project sections to prevent
+            // extra-clever optimising linkers from discarding the sections.
+            (void)MCpayload.size;
+            (void)MCcapsule.size;
+            
 			// Search for the payload section - first see if there is a payload
 			// section of suitable size; then if in debug mode, try to load a stack
 			// via env var.
