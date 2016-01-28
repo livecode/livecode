@@ -263,6 +263,10 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     // table at the start.
     m_is_parent_script = false;
     
+    // Duplicate the theming state
+    m_theme = oref.m_theme;
+    m_theme_type = oref.m_theme_type;
+    
 	// IM-2016-01-21: Initialize native layer to nil
 	m_native_layer = nil;
 	
