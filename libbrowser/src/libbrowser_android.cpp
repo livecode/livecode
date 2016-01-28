@@ -976,6 +976,25 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoa
 	MCCStringFree(t_error);
 }
 
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doUnsupportedScheme(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doUnsupportedScheme(JNIEnv *env, jobject object, jstring url)
+{
+	char *t_url;
+	t_url = nil;
+	/* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
+	
+	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
+	{
+		MCBrowser *t_browser;
+		if (MCBrowserFindWithJavaView(env, object, t_browser))
+		{
+			((MCAndroidWebViewBrowser*)t_browser)->OnNavigationRequestUnhandled(false, t_url);
+		}
+	}
+	
+	MCCStringFree(t_url);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCAndroidWebViewBrowserFactory : public MCBrowserFactory
