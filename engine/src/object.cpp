@@ -1414,7 +1414,7 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
 				        && !(flags & F_DISABLED))
 				{
-                    if (di == DI_BACK)
+                    if (p_di == DI_BACK)
                     {
                         // Use the themed colours and ignore inheritance. We do
                         // this so that controls always have the appropriate
