@@ -8,6 +8,7 @@ SDK_MAJORVERSION=${SDK_NAME: -3}
 SDK_MAJORVERSION=${SDK_MAJORVERSION: 0:1}
 SDK_MINORVERSION=${SDK_NAME: -1}
 
+SDK_PLATFORM=${SDK_NAME: 0:${#SDK_NAME}-3}
 
 if [ -f "$LIVECODE_DEP_FILE" ]; then
 
@@ -79,7 +80,7 @@ do
 done
 
 # We still want to produce dylib for the simulator
-if [ "$EFFECTIVE_PLATFORM_NAME" = "-iphonesimulator" ]; then
+if [ "$SDK_PLATFORM" = "iphonesimulator" ]; then
 	BUILD_DYLIB=1
 else
 	BUILD_DYLIB=0
@@ -161,7 +162,7 @@ mkdir -p "$SRCROOT/binaries"
 
 SUFFIX=${SDK_NAME: -3}
 SUFFIX="-${SUFFIX//\./_}"
-if [ "$EFFECTIVE_PLATFORM_NAME" == "-iphonesimulator" ]; then
+if [ "$SDK_PLATFORM" == "iphonesimulator" ]; then
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries/$PRODUCT_NAME-Simulator$SUFFIX.dylib"
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries"
     dsymutil "$SRCROOT/binaries/$PRODUCT_NAME.dylib"

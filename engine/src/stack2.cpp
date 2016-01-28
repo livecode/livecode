@@ -3338,6 +3338,12 @@ MCRectangle MCStack::getvisiblerect(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool
+MCStack::haswidgets()
+{
+	return MCObject::haswidgets() || substackhaswidgets();
+}
+
 bool MCStack::substackhaswidgets(void)
 {
 	if (substacks != NULL)

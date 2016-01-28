@@ -919,7 +919,7 @@ public:
     
     // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
     //   a widget.
-    bool haswidgets(void);
+    virtual bool haswidgets(void);
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }

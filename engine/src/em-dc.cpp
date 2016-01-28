@@ -170,12 +170,19 @@ MCScreenDC::GetCurrentStack()
  * Event loop
  * ================================================================ */
 
-/* Returns true if quit is requested. */
+/* Returns true if quit is requested, or from any inner main loop. */
 Boolean
 MCScreenDC::wait(real64_t p_duration,
                  Boolean p_allow_dispatch,
                  Boolean p_accept_any_event)
 {
+	/* Don't permit inner main loops.  They cause amusing "-12" assertion
+	 * failures from Emterpreter. */
+	if (0 < int(MCwaitdepth))
+	{
+		return true;
+	}
+
 	p_duration = MCMax(p_duration, 0.0);
 
 	/* We allow p_duration to be infinite, but only if

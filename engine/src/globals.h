@@ -163,7 +163,7 @@ extern uint2 MCnsockets;
 extern MCStack **MCusing;
 extern uint2 MCnusing;
 extern uint2 MCiconicstacks;
-extern uint2 MCwaitdepth;
+extern MCSemaphore MCwaitdepth;
 extern uint4 MCrecursionlimit;
 
 

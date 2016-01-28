@@ -118,6 +118,9 @@ X_init(int argc,
 	/* ---------- Set up global variables */
 	X_clear_globals();
 
+	/* No blocking during initialization */
+	++MCwaitdepth;
+
 	MCswapbytes = MCEmscriptenIsLittleEndian();
 	MCtruemcstring = MCtruestring;
 	MCfalsemcstring = MCfalsestring;
@@ -132,12 +135,12 @@ X_init(int argc,
 
 	if (!MCFontInitialize())
 	{
-		return false;
+		goto error_cleanup;
 	}
 
 	if (!MCLogicalFontTableInitialize())
 	{
-		return false;
+		goto error_cleanup;
 	}
 
 	/* ---------- More globals */
@@ -145,20 +148,20 @@ X_init(int argc,
 	/* executable file name */
 	if (!MCsystem->PathFromNative(argv[0], MCcmd))
 	{
-		return false;
+		goto error_cleanup;
 	}
 
 	/* Locales */
 	if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
 	{
-		return false;
+		goto error_cleanup;
 	}
 
 	kMCSystemLocale = MCS_getsystemlocale();
 
 	if (nil == kMCSystemLocale)
 	{
-		return false;
+		goto error_cleanup;
 	}
 
 	/* ---------- argv[] global variables */
@@ -178,11 +181,21 @@ X_init(int argc,
 	 * available in the VFS before calling X_open(). */
 	if (!MCEmscriptenStandaloneUnpack())
 	{
-		return false;
+		goto error_cleanup;
 	}
 
 	/* ---------- Continue booting... */
-	return X_open(argc, argv, envp);
+	if (!X_open(argc, argv, envp))
+	{
+		goto error_cleanup;
+	}
+
+	--MCwaitdepth;
+	return true;
+
+ error_cleanup:
+	--MCwaitdepth;
+	return false;
 }
 
 /* ================================================================
