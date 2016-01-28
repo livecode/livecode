@@ -8,5 +8,5 @@ selected stop.
 ## selectedStopChanged message
 The gradient ramp widget posts a **selectedStopChanged** message when the 
 selected stop of the widget is changed either by script (via the 
-selectedStop property) or by user interaction, i.e. clicking on one 
+**selectedStop** property) or by user interaction, i.e. clicking on one 
 of the widget's gradient stops.
