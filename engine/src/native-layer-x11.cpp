@@ -250,9 +250,6 @@ void MCNativeLayerX11::doRelayer()
         }
         gdk_window_restack(gtk_widget_get_window(GTK_WIDGET(m_child_window)), t_before_window, FALSE);
     }
-    
-    // Make the widget visible, if appropriate
-    doSetVisible(ShouldShowWidget(t_widget));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
