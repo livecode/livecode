@@ -20,12 +20,12 @@ This widget is a header bar.
 
 Name: headerAction
 Type: message
-Syntax: on headerAction <pName>
+Syntax: on headerAction <pLabel>
 
 Summary: Sent when one of the <headerActions> icons is clicked.
 
 Parameters:
-pName: The name of the header action that was clicked.
+pName: The label of the header action that was clicked.
 
 Description:
 Use the <headerAction> message to perform an action when one of the action icons is
@@ -1113,7 +1113,7 @@ public handler OnMouseUp()
       put the number of elements in element 1 of mHeaderActions into tNumActions
       repeat with tActionCount from 1 up to tNumActions
          if tActionCount is tSelectedUp-2 then
-            post "headerAction" with [mHeaderActions[tActionCount]["name"]]
+            post "headerAction" with [mHeaderActions[tActionCount]["label"]]
          end if
       end repeat
 
