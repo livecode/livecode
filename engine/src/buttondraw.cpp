@@ -299,7 +299,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						}
 					}
 					else if (!(flags & F_SHOW_BORDER) && MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK
-					         && state & (CS_ARMED | CS_KFOCUSED) && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
+                             && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
 					         && flags & MENU_ITEM_FLAGS && flags & F_AUTO_ARM)
 					{
 						// FG-2014-07-30: [[ Bugfix 9405 ]]
@@ -307,10 +307,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						setforeground(dc, DI_BACK, False, False);
 						dc->fillrect(shadowrect);
 
-						MCWidgetInfo winfo;
-						winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
-						getwidgetthemeinfo(winfo);
-						MCcurtheme->drawwidget(dc, winfo, shadowrect);
+                        if (state & CS_ARMED)
+                        {
+                            MCWidgetInfo winfo;
+                            winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
+                            getwidgetthemeinfo(winfo);
+                            MCcurtheme->drawwidget(dc, winfo, shadowrect);
+                        }
 					}
 
 			}

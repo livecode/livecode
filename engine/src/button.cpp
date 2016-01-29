@@ -1074,7 +1074,7 @@ void MCButton::munfocus()
 {
 	if (entry != NULL)
 		entry->munfocus();
-	if (flags & F_AUTO_ARM && state & CS_ARMED)
+	if (flags & F_AUTO_ARM)
 	{
 		state &= ~CS_ARMED;
 		ishovering = False;
