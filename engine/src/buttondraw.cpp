@@ -186,8 +186,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			case F_RADIO:
 			case F_RECTANGLE:
 			case F_STANDARD:
-					if (MCcurtheme == NULL || !getstack() -> ismetal() || (isstdbtn && state & CS_HILITED) ||
-						!MCcurtheme -> drawmetalbackground(dc, dirty, trect, this))
+                    if ((isstdbtn && (state & CS_HILITED))
+                        || MCcurtheme == NULL
+                        || !((getstack()->ismetal() && MCcurtheme->drawmetalbackground(dc, dirty, trect, this))
+                              || (style == F_MENU && menumode == WM_TOP_LEVEL && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE))))
+
 				{
 					if (isstdbtn && noback)
 					{
