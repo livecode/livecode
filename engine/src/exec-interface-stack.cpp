@@ -1075,6 +1075,9 @@ void MCStack::SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack)
 			parent = stackptr;
 		}
 
+        // Any inherited properties have changed so force a redraw
+        dirtyall();
+        
 		// OK-2008-04-10 : Added parameters to mainstackChanged message to specify the new
 		// and old mainstack names.
 		message_with_valueref_args(MCM_main_stack_changed, t_old_stackptr -> getname(), stackptr -> getname());
