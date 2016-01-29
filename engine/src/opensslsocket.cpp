@@ -2191,8 +2191,6 @@ Boolean MCSocket::sslconnect()
     SSL_set_tlsext_host_name(_ssl_conn, *t_host);
     
 	// Start the SSL connection
-    Boolean t_success;
-    t_success = True;
 
 	// MW-2005-02-17: Implement the post-connection check suggested by the SSL Book.
 	//	The implementation takes the hostname from the string used to open the
