@@ -1,4 +1,3 @@
-/*
 Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
@@ -38,7 +37,7 @@ Parameters:
 pIndex: The new selected stop index, or 0 if no stop is selected.
 
 Example:
-    on selectedStopChanged pIndex        
+    on selectedStopChanged pIndex
         if pIndex is 0 then
             exit selectedStopChanged
         end if
@@ -105,7 +104,7 @@ private handler configureDimensions() returns nothing
    put 10 into mMarginBottom
 
    put (my width - (mMarginLeft + mMarginRight)) / 100 into mRulerSpacing
-   
+
    put true into mShowNumbers
    if my width < 50 then
       put false into mShowNumbers
@@ -126,7 +125,7 @@ private handler configureDimensions() returns nothing
       put 5 into mRulerTextIncrement
       put 10 into mRulerLineHeight
    end if
-   
+
    put 10 into mRulerTextSize
    put color [0.5, 0.5, 0.5] into mRulerColor
 
@@ -242,8 +241,8 @@ Example:
 
 
 Description:
-If any gradient stop is selected, its index is returned by the <selectedStop> 
-property. Otherwise the property returns 0. Setting the <selectedStop> property 
+If any gradient stop is selected, its index is returned by the <selectedStop>
+property. Otherwise the property returns 0. Setting the <selectedStop> property
 to 0 causes the currently selected gradient stop to be deselected.
 
 */
@@ -306,7 +305,6 @@ public handler OnMouseUp() returns nothing
       OnMouseDoubleUp()
    else
       put false into mIsDraggingStop
-      SetSelectedStop(xCoordToStopNumber(the x of the mouse position))
       gradientStopsChanged()
    end if
 end handler
@@ -381,13 +379,13 @@ end handler
 public handler OnPaint() returns nothing
    -- Draw the checker board that we place behind the gradient.
    paintCheckerboard()
-   
+
    -- Draw the gradient on top of the checkerboard.
    paintGradient()
 
    -- Draw the ruler above and below the gradient.
    paintRulerBottom()
-   
+
    -- Draw the ramp points on top of the ruler.
    paintRampEditors()
 end handler
@@ -399,7 +397,7 @@ private handler paintCheckerboard() returns nothing
    -- Fill the entire widget canvas with the checkerboard then clip to the gradient region.
    variable tY as Real
    variable tX as Real
-   
+
    begin layer on this canvas
       variable tStartAtZero as Boolean
       put true into tStartAtZero
@@ -485,6 +483,8 @@ end handler
 private handler paintRampEditors() returns nothing
    variable tY as Real
    variable tX as Real
+   variable tHasSelected as Boolean
+   put false into tHasSelected
    variable tStopIndex as Integer
    put 1 into tStopIndex
 
@@ -493,71 +493,94 @@ private handler paintRampEditors() returns nothing
       put xCoordFromGradientOffset((the offset of tStop) * 100) into tX
       put the bottom of mGradientRectangle into tY
 
-      move to point [tX, tY] on this canvas
-      line to point [tX, tY + mRulerLineHeight] on this canvas
-      set the paint of this canvas to solid paint with mGradientHandleBorderColor
-      set the stroke width of this canvas to 2
-      stroke this canvas
-
-      variable tPath as Path
-      put the empty path into tPath
-      move to point [tX, tY + mRulerLineHeight] on tPath
-      line to point [tX - 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize] on tPath
-      line to point [tX + 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize] on tPath
-      line to point [tX, tY + mRulerLineHeight] on tPath
-      set the paint of this canvas to solid paint with mGradientHandleBorderColor
-      set the stroke width of this canvas to 2
-      stroke tPath on this canvas
-
-      set the paint of this canvas to solid paint with color [1, 1, 1]
-      fill tPath on this canvas
-      put the empty path into tPath
-      put rectangle path of rectangle [tX - 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize, tX + 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 1.5 * mGradientHandleSize] into tPath
-      set the paint of this canvas to solid paint with mGradientHandleBorderColor
-      set the stroke width of this canvas to 2
-      stroke tPath on this canvas
-      set the paint of this canvas to solid paint with the color of tStop
-      fill tPath on this canvas
-
-      -- If this is the selected stop then draw an extra ramp point above the gradient and a line linking it.
-      --
-      if tStopIndex is mCurrentlySelectedStopIndex then
-         put the top of mGradientRectangle into tY
-
-         move to point [tX, tY] on this canvas
-         line to point [tX, tY - mRulerLineHeight] on this canvas
-         set the paint of this canvas to solid paint with mGradientHandleBorderColor
-         set the stroke width of this canvas to 2
-         stroke this canvas
-
-         put the empty path into tPath
-         move to point [tX, tY - mRulerLineHeight] on tPath
-         line to point [tX - 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] on tPath
-         line to point [tX + 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] on tPath
-         line to point [tX, tY - mRulerLineHeight] on tPath
-         set the paint of this canvas to solid paint with mGradientHandleBorderColor
-         set the stroke width of this canvas to 2
-         stroke tPath on this canvas
-         set the paint of this canvas to solid paint with color [1.0, 1.0, 1.0]
-         fill tPath on this canvas
-
-         put the empty path into tPath
-         put rectangle path of rectangle [tX - 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 1.5 * mGradientHandleSize, tX + 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] into tPath
-         set the paint of this canvas to solid paint with mGradientHandleBorderColor
-         set the stroke width of this canvas to 2
-         stroke tPath on this canvas
-         set the paint of this canvas to solid paint with the color of tStop
-         fill tPath on this canvas
-
-         move to point [tX, the top of mGradientRectangle] on this canvas
-         line to point [tX, the bottom of mGradientRectangle] on this canvas
-         set the stroke width of this canvas to 2
-         set the paint of this canvas to solid paint with mGradientHandleBorderColor
-         stroke this canvas
+      if tStopIndex = mCurrentlySelectedStopIndex then
+         variable tSelStop as GradientStop
+         put true into tHasSelected
+         put  tStop into tSelStop
+         add 1 to tStopIndex
+         next repeat
       end if
 
+      drawStop (tX, tY, tStop) -- BN
+
       add 1 to tStopIndex
+
    end repeat
+
+   if tHasSelected then
+      put xCoordFromGradientOffset((the offset of tSelStop) * 100) into tX
+      put the bottom of mGradientRectangle into tY
+
+      drawStop (tX, tY, tSelStop) -- BN
+
+      -- If this is the selected stop then draw an extra ramp point above the gradient and a line linking it.
+      put xCoordFromGradientOffset((the offset of tSelStop) * 100) into tX
+      put the bottom of mGradientRectangle into tY
+      --
+      -- if tStopIndex is mCurrentlySelectedStopIndex then
+      put the top of mGradientRectangle into tY
+
+      move to point [tX, tY] on this canvas
+      line to point [tX, tY - mRulerLineHeight] on this canvas
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+
+      set the stroke width of this canvas to 2
+      stroke this canvas
+      variable tPath as Path
+      put the empty path into tPath
+
+      move to point [tX, tY - mRulerLineHeight] on tPath
+      line to point [tX - 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] on tPath
+      line to point [tX + 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] on tPath
+      line to point [tX, tY - mRulerLineHeight] on tPath
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+      set the stroke width of this canvas to 2
+      stroke tPath on this canvas
+      set the paint of this canvas to solid paint with color [1.0, 1.0, 1.0]
+      fill tPath on this canvas
+      put the empty path into tPath
+      put rectangle path of rectangle [tX - 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 1.5 * mGradientHandleSize, tX + 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] into tPath
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+      set the stroke width of this canvas to 2
+      stroke tPath on this canvas
+      set the paint of this canvas to solid paint with the color of tSelStop
+      fill tPath on this canvas
+
+      move to point [tX, the top of mGradientRectangle] on this canvas
+      line to point [tX, the bottom of mGradientRectangle] on this canvas
+      set the stroke width of this canvas to 2
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+      stroke this canvas
+      end if
+
+end handler
+
+private handler DrawStop (in tX as Real, tY as Real, tStop as GradientStop) returns nothing
+   move to point [tX, tY] on this canvas
+   line to point [tX, tY + mRulerLineHeight] on this canvas
+   set the paint of this canvas to solid paint with mGradientHandleBorderColor
+   set the stroke width of this canvas to 2
+   stroke this canvas
+
+   variable tPath as Path
+   put the empty path into tPath
+   move to point [tX, tY + mRulerLineHeight] on tPath
+   line to point [tX - 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize] on tPath
+   line to point [tX + 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize] on tPath
+   line to point [tX, tY + mRulerLineHeight] on tPath
+   set the paint of this canvas to solid paint with mGradientHandleBorderColor
+   set the stroke width of this canvas to 2
+   stroke tPath on this canvas
+
+   set the paint of this canvas to solid paint with color [1, 1, 1]
+   fill tPath on this canvas
+   put the empty path into tPath
+   put rectangle path of rectangle [tX - 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize, tX + 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 1.5 * mGradientHandleSize] into tPath
+   set the paint of this canvas to solid paint with mGradientHandleBorderColor
+   set the stroke width of this canvas to 2
+   stroke tPath on this canvas
+   set the paint of this canvas to solid paint with the color of tStop
+   fill tPath on this canvas
 end handler
 
 private handler gradientStopsChanged() returns nothing
@@ -609,18 +632,32 @@ end handler
 private handler xCoordToStopNumber(in pX as Number) returns Integer
    variable tRampNumber as Integer
    put 1 into tRampNumber
+   variable tHits as List
+   put the empty list into tHits
 
    variable tStop as GradientStop
    repeat for each element tStop in mGradientRamp
       variable tStopX as Number
       put xCoordFromGradientOffset((the offset of tStop) * 100 ) into tStopX
       if pX >= (tStopX - mGradientHandleSize * 0.5) and pX <= (tStopX + mGradientHandleSize * 0.5) then
-         return tRampNumber
+         push tRampNumber onto tHits
       end if
       add 1 to tRampNumber
    end repeat
 
-   return 0
+   if the number of elements in tHits = 0 then
+      return 0
+   end if
+
+   variable tAHit as Number
+
+   repeat for each element tAHit in tHits
+      if tAHit = mCurrentlySelectedStopIndex then
+         return mCurrentlySelectedStopIndex
+      end if
+   end repeat
+
+   return element 1 of tHits
 end handler
 
 ----------------------------------------------------------------------------------------------------
