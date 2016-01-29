@@ -114,7 +114,7 @@ asm (".section .project, \"aw\", \"nobits\"; .global MCcapsule; MCcapsule: .alig
 #define PAYLOAD_SECTION_NAME "__PAYLOAD"
 #define PROJECT_SECTION_NAME "__PROJECT"
 
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"),__used__)) volatile MCCapsuleInfo MCcapsule = {};
 
 #endif
 
@@ -244,7 +244,11 @@ public:
 		if (t_payload_data == nil)
 		{
 #ifdef _MACOSX		
-			// On Mac OS X, the payload is in a separate file.
+            // Force a reference to the project section to prevent extra-clever
+            // optimising linkers from discarding the section.
+            (void)MCcapsule.size;
+            
+            // On Mac OS X, the payload is in a separate file.
 			// MM-2011-03-23: Refactored code to use method call.
 			MCAutoStringRef t_payload_file;
             uindex_t t_last_slash;
