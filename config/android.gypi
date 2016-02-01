@@ -27,7 +27,7 @@
 		'objcopy': '<!(echo ${OBJCOPY:-objcopy})',
 		'objdump': '<!(echo ${OBJDUMP:-objdump})',
 		'strip':   '<!(echo ${STRIP:-strip})',
-		'ar': '<!(echo ${AR:-ar})',
+		#'ar': '<!(echo ${AR:-ar})',
 	},
 	
 	'target_defaults':
@@ -41,8 +41,8 @@
 			'exe_suffix': '',
 			'debug_info_suffix': '.dbg',
 			
-			'supports_lto': '<!(if ${CC} -flto -fuse-ld=gold -c -o /dev/null /dev/null 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)',
-			
+			#'supports_lto': '<!(if ${CC} -flto -fuse-ld=gold -c -o /dev/null /dev/null 2>/dev/null >/dev/null; then echo 1; else echo 0; fi)',
+			'supports_lto': 0,
 			'silence_warnings': 0,
 		},
 	

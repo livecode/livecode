@@ -44,26 +44,7 @@
 				],
 			},
 		],
-		[
-			'supports_lto != 0',
-			{
-				'ldflags':
-				[
-					'-fuse-ld=gold',
-				],
-
-				'arflags':
-				[
-					'--plugin', '<!(echo $(dirname <(ar))/../lib/LLVMgold.so)',
-				],
-			},
-			{
-				'ldflags':
-				[
-					'-fuse-ld=bfd',
-				],
-			},
-		],
+		
 	],
 	
 	'configurations':
@@ -90,27 +71,7 @@
 				'-g3',
 			],
 
-			'conditions':
-			[
-				[
-					'supports_lto != 0',
-					{
-						'cflags':
-						[
-							'-flto',
-							'-ffunction-sections',
-						],
-
-						'ldflags':
-						[
-							'-Wl,--icf=all',
-							'>@(_cflags)',
-							'>@(_cflags_cc)',
-							
-						],
-					},
-				],
-			],
+			
 			
 			'defines':
 			[
