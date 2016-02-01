@@ -818,10 +818,19 @@ bool MCUIWebViewBrowser::Init(void)
 	
 	/* UNCHECKED */ MCCStringClone([request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding], t_url);
 	
-	if (!m_frame_request)
-		m_instance->OnNavigationBegin(false, t_url);
+	if ([NSURLConnection canHandleRequest: request])
+	{
+		if (!m_frame_request)
+			m_instance->OnNavigationBegin(false, t_url);
 
-	return YES;
+		return YES;
+	}
+	else
+	{
+		m_instance->OnNavigationRequestUnhandled(m_frame_request, t_url);
+		
+		return NO;
+	}
 }
 
 - (void)webViewDidStartLoad:(UIWebView *)webView
