@@ -69,21 +69,20 @@ void MCStringsCountChunksInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, M
         return;
     }
     
-    // When the string doesn't contain combining characters or surrogate pairs, we can shortcut.
-    if ((p_chunk_type == CT_CHARACTER || p_chunk_type == CT_CODEPOINT))
-        if (MCStringIsNative(p_string) || (MCStringIsUncombined(p_string) && MCStringIsSimple(p_string)))
-            p_chunk_type = CT_CODEUNIT;
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
     
-    if (p_chunk_type == CT_CODEUNIT)
+    // When the string doesn't contain combining characters or surrogate
+    // pairs, we can shortcut.
+    t_type = MCChunkTypeSimplify(p_string, t_type);
+        
+    if (t_type == kMCChunkTypeCodeunit)
     {
         // AL-2015-03-23: [[ Bug 15045 ]] Clamp range correctly
         r_count = MCU_min(MCStringGetLength(p_string) - p_range . offset, p_range . length);
         return;
     }
-    
-    MCChunkType t_type;
-    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
-    
+
     MCTextChunkIterator *tci;
     tci = MCStringsTextChunkIteratorCreateWithRange(ctxt, p_string, p_range, p_chunk_type);
     

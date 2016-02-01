@@ -16,7 +16,7 @@ on startup
 	TestLoadLibrary "_inputlib"
 
 	-- Run tests
-	local tTestFiles, tTestFile, tStackName, tCommand, tSetupResult
+	local tTestFiles, tTestFile, tStackName, tCommand, tSetupResult, tError
 
 	put TesterGetTestFileNames("/boot/standalone") into tTestFiles
 
@@ -45,7 +45,12 @@ on startup
 			end if
 
 			-- Run tests
-			dispatch tCommand to tStackName
+			try
+				dispatch tCommand to tStackName
+			catch tError
+				TestDiagnostic tError
+				TestAssert empty, false
+			end try
 
 			-- Send teardown command
 			dispatch "TestTearDown" to tStackName

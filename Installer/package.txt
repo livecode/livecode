@@ -77,13 +77,13 @@ installer LiveCode
 		include Mobile.Linux
 		include Runtime.Android
 		include Runtime.Emscripten
-		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]"
+		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Community then
-			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]"
+			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Indy then
-			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]"
+			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 		if TargetEdition is Business then
-			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]"
+			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
 	include Uninstaller
 	if BaseEdition is Commercial then
 		additional manifest "../Installer/commercial-package.txt"
@@ -386,7 +386,10 @@ component Documentation
 	into [[ToolsFolder]]/Documentation place
 		rfolder "ide:Documentation/guides"
 		rfolder "repo:docs/guides"
-		
+
+	into [[ToolsFolder]]/Documentation/guides place
+		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
+
 component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser

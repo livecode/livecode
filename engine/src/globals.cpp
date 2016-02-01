@@ -241,7 +241,7 @@ uint2 MCnsockets;
 MCStack **MCusing;
 uint2 MCnusing;
 uint2 MCiconicstacks;
-uint2 MCwaitdepth;
+MCSemaphore MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
 MCClipboard* MCclipboard;
@@ -634,7 +634,7 @@ void X_clear_globals(void)
 	MCusing = nil;
 	MCnusing = 0;
 	MCiconicstacks = 0;
-	MCwaitdepth = 0;
+	MCwaitdepth = MCSemaphore("wait-depth");
 	MCrecursionlimit = 400000;
 	MCclipboard = NULL;
 	MCselection = NULL;

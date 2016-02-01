@@ -91,7 +91,7 @@ platform_main(int argc, char *argv[], char *envp[])
 	/* ---------- Process the environment */
 	/* Count env variables */
 	int t_envc;
-	for (t_envc = 0; envp[t_envc] != nil; ++t_envc);
+	for (t_envc = 0; envp != nil && envp[t_envc] != nil; ++t_envc);
 
 	/* Import. Note that the envp array is null-terminated */
 	MCStringRef *t_envp;

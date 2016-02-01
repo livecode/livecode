@@ -410,6 +410,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListCreate(MCBrowserListRef &r_browser, uint32_t p_size)
 {
 	MCBrowserList *t_browser;
@@ -427,6 +428,7 @@ bool MCBrowserListCreate(MCBrowserListRef &r_browser, uint32_t p_size)
 	return true;
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 MCBrowserListRef MCBrowserListRetain(MCBrowserListRef p_list)
 {
 	if (p_list != nil)
@@ -435,12 +437,14 @@ MCBrowserListRef MCBrowserListRetain(MCBrowserListRef p_list)
 	return p_list;
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 void MCBrowserListRelease(MCBrowserListRef p_list)
 {
 	if (p_list != nil)
 		p_list->Release();
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetSize(MCBrowserListRef p_list, uint32_t &r_size)
 {
 	if (p_list == nil)
@@ -450,6 +454,7 @@ bool MCBrowserListGetSize(MCBrowserListRef p_list, uint32_t &r_size)
 	return true;
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetType(MCBrowserListRef p_list, uint32_t p_index, MCBrowserValueType &r_type)
 {
 	if (p_list == nil)
@@ -466,6 +471,7 @@ bool MCBrowserListSetValue(MCBrowserListRef p_list, uint32_t p_index, const MCBr
 	return p_list->SetValue(p_index, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListSetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool p_value)
 {
 	if (p_list == nil)
@@ -474,6 +480,7 @@ bool MCBrowserListSetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool p_v
 	return p_list->SetBoolean(p_index, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListSetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t p_value)
 {
 	if (p_list == nil)
@@ -482,6 +489,7 @@ bool MCBrowserListSetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t 
 	return p_list->SetInteger(p_index, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListSetDouble(MCBrowserListRef p_list, uint32_t p_index, double p_value)
 {
 	if (p_list == nil)
@@ -490,6 +498,7 @@ bool MCBrowserListSetDouble(MCBrowserListRef p_list, uint32_t p_index, double p_
 	return p_list->SetDouble(p_index, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListSetUTF8String(MCBrowserListRef p_list, uint32_t p_index, const char *p_value)
 {
 	if (p_list == nil)
@@ -498,6 +507,7 @@ bool MCBrowserListSetUTF8String(MCBrowserListRef p_list, uint32_t p_index, const
 	return p_list->SetUTF8String(p_index, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListSetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserListRef p_value)
 {
 	if (p_list == nil)
@@ -506,6 +516,7 @@ bool MCBrowserListSetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserLi
 	return p_list->SetList(p_index, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListSetDictionary(MCBrowserListRef p_list, uint32_t p_index, MCBrowserDictionaryRef p_value)
 {
 	if (p_list == nil)
@@ -522,6 +533,7 @@ bool MCBrowserListAppendValue(MCBrowserListRef p_list, const MCBrowserValue &p_v
 	return p_list->AppendValue(p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListAppendBoolean(MCBrowserListRef p_list, bool p_value)
 {
 	if (p_list == nil)
@@ -530,6 +542,7 @@ bool MCBrowserListAppendBoolean(MCBrowserListRef p_list, bool p_value)
 	return p_list->AppendBoolean(p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListAppendInteger(MCBrowserListRef p_list, int32_t p_value)
 {
 	if (p_list == nil)
@@ -538,6 +551,7 @@ bool MCBrowserListAppendInteger(MCBrowserListRef p_list, int32_t p_value)
 	return p_list->AppendInteger(p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListAppendDouble(MCBrowserListRef p_list, double p_value)
 {
 	if (p_list == nil)
@@ -546,6 +560,7 @@ bool MCBrowserListAppendDouble(MCBrowserListRef p_list, double p_value)
 	return p_list->AppendDouble(p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListAppendUTF8String(MCBrowserListRef p_list, const char *p_value)
 {
 	if (p_list == nil)
@@ -554,6 +569,7 @@ bool MCBrowserListAppendUTF8String(MCBrowserListRef p_list, const char *p_value)
 	return p_list->AppendUTF8String(p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListAppendList(MCBrowserListRef p_list, MCBrowserListRef p_value)
 {
 	if (p_list == nil)
@@ -562,6 +578,7 @@ bool MCBrowserListAppendList(MCBrowserListRef p_list, MCBrowserListRef p_value)
 	return p_list->AppendList(p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListAppendDictionary(MCBrowserListRef p_list, MCBrowserDictionaryRef p_value)
 {
 	if (p_list == nil)
@@ -578,6 +595,7 @@ bool MCBrowserListGetValue(MCBrowserListRef p_list, uint32_t p_index, MCBrowserV
 	return p_list->GetValue(p_index, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool &r_value)
 {
 	if (p_list == nil)
@@ -586,6 +604,7 @@ bool MCBrowserListGetBoolean(MCBrowserListRef p_list, uint32_t p_index, bool &r_
 	return p_list->GetBoolean(p_index, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t &r_value)
 {
 	if (p_list == nil)
@@ -594,6 +613,7 @@ bool MCBrowserListGetInteger(MCBrowserListRef p_list, uint32_t p_index, int32_t 
 	return p_list->GetInteger(p_index, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetDouble(MCBrowserListRef p_list, uint32_t p_index, double &r_value)
 {
 	if (p_list == nil)
@@ -602,6 +622,7 @@ bool MCBrowserListGetDouble(MCBrowserListRef p_list, uint32_t p_index, double &r
 	return p_list->GetDouble(p_index, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetUTF8String(MCBrowserListRef p_list, uint32_t p_index, char *&r_value)
 {
 	if (p_list == nil)
@@ -610,6 +631,7 @@ bool MCBrowserListGetUTF8String(MCBrowserListRef p_list, uint32_t p_index, char 
 	return p_list->GetUTF8String(p_index, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserListRef &r_value)
 {
 	if (p_list == nil)
@@ -618,6 +640,7 @@ bool MCBrowserListGetList(MCBrowserListRef p_list, uint32_t p_index, MCBrowserLi
 	return p_list->GetList(p_index, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListGetDictionary(MCBrowserListRef p_list, uint32_t p_index, MCBrowserDictionaryRef &r_value)
 {
 	if (p_list == nil)
@@ -851,6 +874,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryCreate(MCBrowserDictionaryRef &r_dict, uint32_t p_size)
 {
 	MCBrowserDictionary *t_dict;
@@ -868,6 +892,7 @@ bool MCBrowserDictionaryCreate(MCBrowserDictionaryRef &r_dict, uint32_t p_size)
 	return true;
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 MCBrowserDictionaryRef MCBrowserDictionaryRetain(MCBrowserDictionaryRef p_dictionary)
 {
 	if (p_dictionary != nil)
@@ -876,12 +901,14 @@ MCBrowserDictionaryRef MCBrowserDictionaryRetain(MCBrowserDictionaryRef p_dictio
 	return p_dictionary;
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 void MCBrowserDictionaryRelease(MCBrowserDictionaryRef p_dictionary)
 {
 	if (p_dictionary != nil)
 		p_dictionary->Release();
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetKeys(MCBrowserDictionaryRef p_dictionary, char **&r_keys, uint32_t &r_count)
 {
 	if (p_dictionary == nil)
@@ -891,6 +918,7 @@ bool MCBrowserDictionaryGetKeys(MCBrowserDictionaryRef p_dictionary, char **&r_k
 }
 
 /* WORKAROUND - Lack of Pointer dereferencing or C Array abstraction in LCB */
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetKeyCount(MCBrowserDictionaryRef p_dictionary, uint32_t &r_count)
 {
 	char **t_keys;
@@ -898,6 +926,7 @@ bool MCBrowserDictionaryGetKeyCount(MCBrowserDictionaryRef p_dictionary, uint32_
 }
 
 /* WORKAROUND - Lack of Pointer dereferencing or C Array abstraction in LCB */
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetKey(MCBrowserDictionaryRef p_dictionary, uint32_t p_index, char *&r_key)
 {
 	char **t_keys;
@@ -912,6 +941,7 @@ bool MCBrowserDictionaryGetKey(MCBrowserDictionaryRef p_dictionary, uint32_t p_i
 	return MCCStringClone(t_keys[p_index], r_key);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetType(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserValueType &r_type)
 {
 	if (p_dictionary == nil)
@@ -936,6 +966,7 @@ bool MCBrowserDictionaryGetValue(MCBrowserDictionaryRef p_dictionary, const char
 	return p_dictionary->GetValue(p_key, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionarySetBoolean(MCBrowserDictionaryRef p_dictionary, const char *p_key, bool p_value)
 {
 	if (p_dictionary == nil)
@@ -944,6 +975,7 @@ bool MCBrowserDictionarySetBoolean(MCBrowserDictionaryRef p_dictionary, const ch
 	return p_dictionary->SetBoolean(p_key, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionarySetInteger(MCBrowserDictionaryRef p_dictionary, const char *p_key, int32_t p_value)
 {
 	if (p_dictionary == nil)
@@ -952,6 +984,7 @@ bool MCBrowserDictionarySetInteger(MCBrowserDictionaryRef p_dictionary, const ch
 	return p_dictionary->SetInteger(p_key, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionarySetDouble(MCBrowserDictionaryRef p_dictionary, const char *p_key, double p_value)
 {
 	if (p_dictionary == nil)
@@ -960,6 +993,7 @@ bool MCBrowserDictionarySetDouble(MCBrowserDictionaryRef p_dictionary, const cha
 	return p_dictionary->SetDouble(p_key, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionarySetUTF8String(MCBrowserDictionaryRef p_dictionary, const char *p_key, const char *p_value)
 {
 	if (p_dictionary == nil)
@@ -968,6 +1002,7 @@ bool MCBrowserDictionarySetUTF8String(MCBrowserDictionaryRef p_dictionary, const
 	return p_dictionary->SetUTF8String(p_key, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionarySetList(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserListRef p_value)
 {
 	if (p_dictionary == nil)
@@ -976,6 +1011,7 @@ bool MCBrowserDictionarySetList(MCBrowserDictionaryRef p_dictionary, const char 
 	return p_dictionary->SetList(p_key, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionarySetDictionary(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserDictionaryRef p_value)
 {
 	if (p_dictionary == nil)
@@ -984,6 +1020,7 @@ bool MCBrowserDictionarySetDictionary(MCBrowserDictionaryRef p_dictionary, const
 	return p_dictionary->SetDictionary(p_key, p_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetBoolean(MCBrowserDictionaryRef p_dictionary, const char *p_key, bool &r_value)
 {
 	if (p_dictionary == nil)
@@ -992,6 +1029,7 @@ bool MCBrowserDictionaryGetBoolean(MCBrowserDictionaryRef p_dictionary, const ch
 	return p_dictionary->GetBoolean(p_key, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetInteger(MCBrowserDictionaryRef p_dictionary, const char *p_key, int32_t &r_value)
 {
 	if (p_dictionary == nil)
@@ -1000,6 +1038,7 @@ bool MCBrowserDictionaryGetInteger(MCBrowserDictionaryRef p_dictionary, const ch
 	return p_dictionary->GetInteger(p_key, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetDouble(MCBrowserDictionaryRef p_dictionary, const char *p_key, double &r_value)
 {
 	if (p_dictionary == nil)
@@ -1008,6 +1047,7 @@ bool MCBrowserDictionaryGetDouble(MCBrowserDictionaryRef p_dictionary, const cha
 	return p_dictionary->GetDouble(p_key, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetUTF8String(MCBrowserDictionaryRef p_dictionary, const char *p_key, char *&r_value)
 {
 	if (p_dictionary == nil)
@@ -1016,6 +1056,7 @@ bool MCBrowserDictionaryGetUTF8String(MCBrowserDictionaryRef p_dictionary, const
 	return p_dictionary->GetUTF8String(p_key, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetList(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserListRef &r_value)
 {
 	if (p_dictionary == nil)
@@ -1024,6 +1065,7 @@ bool MCBrowserDictionaryGetList(MCBrowserDictionaryRef p_dictionary, const char 
 	return p_dictionary->GetList(p_key, r_value);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryGetDictionary(MCBrowserDictionaryRef p_dictionary, const char *p_key, MCBrowserDictionaryRef &r_value)
 {
 	if (p_dictionary == nil)
