@@ -453,7 +453,54 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
-	return NULL;
+	// scale rectangle from logical -> device coords
+	MCRectangle t_rect;
+	t_rect = logicaltoscreenrect(r);
+	
+	// don't scale size - we want the bitmap to be sized to logical coords.
+	int16_t t_size_width, t_size_height;
+	if (size != nil)
+	{
+		t_size_width = size->x;
+		t_size_height = size->y;
+	}
+	else
+	{
+		t_size_width = r.width;
+		t_size_height = r.height;
+	}
+	
+	jobject t_bitmap;
+	// get snapshot image as java Bitmap object
+	MCAndroidEngineRemoteCall("getSnapshotBitmapAtSize", "oiiiiii", &t_bitmap, t_rect.x, t_rect.y, t_rect.width, t_rect.height, t_size_width, t_size_height);
+	if (t_bitmap == nil)
+		return nil;
+	
+	// read Bitmap info & data into MCImageBitmap struct
+	JNIEnv *env;
+	env = MCJavaGetThreadEnv();
+	AndroidBitmapInfo t_info;
+	AndroidBitmap_getInfo(env, t_bitmap, &t_info);
+	
+	MCImageBitmap t_imagebitmap;
+	t_imagebitmap.width = t_info.width;
+	t_imagebitmap.height = t_info.height;
+	t_imagebitmap.stride = t_info.stride;
+	
+	if (AndroidBitmap_lockPixels(env, t_bitmap, (void**)&t_imagebitmap.data) < 0)
+		return nil;
+	
+	MCImageBitmapCheckTransparency(&t_imagebitmap);
+	
+	MCImageBitmap *t_copy;
+	t_copy = nil;
+	
+	// return a copy of the image bitmap
+	MCImageCopyBitmap(&t_imagebitmap, t_copy);
+	
+	AndroidBitmap_unlockPixels(env, t_bitmap);
+	
+	return t_copy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
