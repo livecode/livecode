@@ -812,6 +812,7 @@ function revEngineCheck pEngine
          case "MacOSX"
          case "MacOSX PowerPC-32"
          case "MacOSX x86-32"
+         case "MacOSX x86-64"
             return there is a directory (tPath & "/Mac OS X/x86-32/Standalone.app")
          case "Windows"
             if there is a file (tPath & "/Windows/x86-32/Standalone") then
