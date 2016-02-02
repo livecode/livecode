@@ -459,8 +459,6 @@
 			'src/mbliphone.mm',
 			'src/mbliphonead.mm',
 			'src/mbliphoneactivityindicator.mm',
-			'src/mbliphoneapp.mm',
-			'src/mbliphoneappview.mm',
 			'src/mbliphonebrowser.mm',
 			'src/mbliphonebusyindicator.mm',
 			'src/mbliphonecalendar.mm',
@@ -473,7 +471,6 @@
 			#'src/mbliphoneembeddedtest.mm',
 			'src/mbliphoneextra.mm',
 			'src/mbliphonefs.mm',
-			'src/mbliphonegfx.mm',
 			'src/mbliphonehooks.cpp',
 			'src/mbliphoneidletimer.mm',
 			'src/mbliphoneinput.mm',
@@ -782,6 +779,15 @@
 			'src/em-view.cpp',
 		],
 		
+        # Sources which are for normal mobile standalones
+        'engine_mobile_standalone_source_files':
+        [
+            # Group "Mobile - iOS"
+            'src/mbliphoneapp.mm',
+            'src/mbliphoneappview.mm',
+			'src/mbliphonegfx.mm',
+        ],
+        
 		# Sources that need to be compiled separately for each mode
 		'engine_mode_dependent_files':
 		[
