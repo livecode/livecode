@@ -126,6 +126,7 @@
 			
 			'sources':
 			[
+                '<@(engine_mobile_standalone_source_files)',
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
@@ -778,6 +779,7 @@
 			
 						'sources':
 						[
+                            '<@(engine_mobile_standalone_source_files)',
 							'src/dummy.cpp',
 							'src/main.cpp',
 						],
