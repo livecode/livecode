@@ -1199,6 +1199,11 @@ void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 	MCFiberCall(s_main_fiber, invoke_block, block);
 }
 
+void MCIPhoneRunBlockOnScriptFiber(void (^block)(void))
+{
+	MCFiberCall(s_script_fiber, invoke_block, block);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2012-08-06: [[ Fibers ]] Updated entry point for didBecomeActive.
