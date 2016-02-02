@@ -819,7 +819,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneContactDelegate : NSObject
+@interface com_runrev_livecode_MCIPhoneContactDelegate : NSObject
 {
 	bool m_running, m_finished, m_success;
 	UINavigationController *m_navigation;
@@ -831,7 +831,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 @end
 
-@implementation MCIPhoneContactDelegate
+@implementation com_runrev_livecode_MCIPhoneContactDelegate
 
 - (id)init
 {
@@ -890,7 +890,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhonePickContactDelegate : MCIPhoneContactDelegate <ABPeoplePickerNavigationControllerDelegate>
+@interface com_runrev_livecode_MCIPhonePickContactDelegate : com_runrev_livecode_MCIPhoneContactDelegate <ABPeoplePickerNavigationControllerDelegate>
 {
     ABPeoplePickerNavigationController *m_pick_contact;
 }
@@ -900,7 +900,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 @end
 
-@implementation MCIPhonePickContactDelegate
+@implementation com_runrev_livecode_MCIPhonePickContactDelegate
 
 - (id)init
 {
@@ -1024,7 +1024,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneShowContactDelegate : MCIPhoneContactDelegate <ABPersonViewControllerDelegate>
+@interface com_runrev_livecode_MCIPhoneShowContactDelegate : com_runrev_livecode_MCIPhoneContactDelegate <ABPersonViewControllerDelegate>
 {
 	ABPersonViewController *m_view_contact;
 }
@@ -1034,7 +1034,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 @end
 
-@implementation MCIPhoneShowContactDelegate
+@implementation com_runrev_livecode_MCIPhoneShowContactDelegate
 
 - (id)init
 {
@@ -1161,7 +1161,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneCreateContactDelegate : MCIPhoneContactDelegate <ABNewPersonViewControllerDelegate>
+@interface com_runrev_livecode_MCIPhoneCreateContactDelegate : com_runrev_livecode_MCIPhoneContactDelegate <ABNewPersonViewControllerDelegate>
 {
 	ABNewPersonViewController *m_get_contact;
 }
@@ -1171,7 +1171,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 @end
 
-@implementation MCIPhoneCreateContactDelegate
+@implementation com_runrev_livecode_MCIPhoneCreateContactDelegate
 
 - (id)init
 {
@@ -1240,7 +1240,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneUpdateContactDelegate : MCIPhoneContactDelegate <ABUnknownPersonViewControllerDelegate>
+@interface com_runrev_livecode_MCIPhoneUpdateContactDelegate : com_runrev_livecode_MCIPhoneContactDelegate <ABUnknownPersonViewControllerDelegate>
 {
 	ABUnknownPersonViewController *m_update_contact;
 }
@@ -1250,7 +1250,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 @end
 
-@implementation MCIPhoneUpdateContactDelegate
+@implementation com_runrev_livecode_MCIPhoneUpdateContactDelegate
 
 - (id)init
 {
@@ -1379,8 +1379,8 @@ bool MCSystemPickContact(int32_t& r_result) // ABPeoplePickerNavigationControlle
 {
     bool t_success = true;
 	
-    MCIPhonePickContactDelegate *t_pick_contact = nil;
-	t_success = nil != (t_pick_contact = [[MCIPhonePickContactDelegate alloc] init]);
+    com_runrev_livecode_MCIPhonePickContactDelegate *t_pick_contact = nil;
+	t_success = nil != (t_pick_contact = [[com_runrev_livecode_MCIPhonePickContactDelegate alloc] init]);
 	
 	if (t_success)
 		t_success = [t_pick_contact showPickContact: r_result];
@@ -1395,8 +1395,8 @@ bool MCSystemShowContact(int32_t p_contact_id, int32_t& r_result) // ABPersonVie
 {
     bool t_success = true;
 	
-    MCIPhoneShowContactDelegate *t_view_contact = nil;
-	t_success = nil != (t_view_contact = [[MCIPhoneShowContactDelegate alloc] init]);
+    com_runrev_livecode_MCIPhoneShowContactDelegate *t_view_contact = nil;
+	t_success = nil != (t_view_contact = [[com_runrev_livecode_MCIPhoneShowContactDelegate alloc] init]);
 	
 	if (t_success)
 		t_success = [t_view_contact showViewContact:p_contact_id withResult: r_result];
@@ -1411,8 +1411,8 @@ bool MCSystemCreateContact(int32_t& r_result) // ABNewPersonViewController
 {
     bool t_success = true;
 	
-    MCIPhoneCreateContactDelegate *t_create_contact = nil;
-	t_success = nil != (t_create_contact = [[MCIPhoneCreateContactDelegate alloc] init]);
+    com_runrev_livecode_MCIPhoneCreateContactDelegate *t_create_contact = nil;
+	t_success = nil != (t_create_contact = [[com_runrev_livecode_MCIPhoneCreateContactDelegate alloc] init]);
 	
 	if (t_success)
 		t_success = [t_create_contact showCreateContact:r_result];
@@ -1431,9 +1431,9 @@ bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRe
 	ABRecordRef t_contact = nil;
 	t_success = MCCreatePerson(p_contact, t_contact);
 
-	MCIPhoneUpdateContactDelegate *t_update_contact = nil;
+	com_runrev_livecode_MCIPhoneUpdateContactDelegate *t_update_contact = nil;
 	if (t_success)
-		t_success = nil != (t_update_contact = [[MCIPhoneUpdateContactDelegate alloc] init]);
+		t_success = nil != (t_update_contact = [[com_runrev_livecode_MCIPhoneUpdateContactDelegate alloc] init]);
 	if (t_success)
 		t_success = [t_update_contact showUpdateContact:t_contact
 											  withTitle:p_title withMessage:p_message withAlternateName:p_alternate_name
