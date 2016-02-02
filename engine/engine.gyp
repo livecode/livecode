@@ -234,28 +234,10 @@
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 						
-						'target_conditions':
-						[
-								[
-										'supports_lto != 0',
-										{
-												'ldflags':
-												[
-														'-Wl,--sort-section=none',
-														'-Wl,--section-ordering-file,$(abs_srcdir)/engine/linux-section-order.txt',
-												],
-										},
-										{
-												'ldflags':
-												[
-														'-T', '$(abs_srcdir)/engine/linux.link',
-												],
-										},
-								],
-						],
-						
+												
 						'actions':
 						[
 							{
