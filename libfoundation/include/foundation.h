@@ -681,6 +681,7 @@ typedef wchar_t *BSTR;
 #endif
 
 #if defined(__MAC__) || defined(__IOS__)
+typedef const struct __CFNumber *CFNumberRef;
 typedef const struct __CFString *CFStringRef;
 typedef const struct __CFData *CFDataRef;
 #endif
@@ -1821,7 +1822,12 @@ MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offs
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
-
+    
+#if defined(__MAC__) || defined (__IOS__)
+// Convert the given array to a CFArrayRef if it is a sequence.
+MC_DLLEXPORT bool MCNumberConvertToCFNumberRef(MCArrayRef self, CFNumberRef& r_array);
+#endif
+    
 MC_DLLEXPORT extern MCNumberRef kMCZero;
 MC_DLLEXPORT extern MCNumberRef kMCOne;
 MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
@@ -2671,7 +2677,7 @@ MC_DLLEXPORT bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRe
 
 // Returns true if the given array is the empty array.
 MC_DLLEXPORT bool MCArrayIsEmpty(MCArrayRef self);
-
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  LIST DEFINITIONS

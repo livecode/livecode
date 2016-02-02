@@ -331,7 +331,7 @@ public:
 		return m_values;
 	}
     
-    T& operator [] (const int p_index)
+    T& operator [] (const uindex_t p_index)
     {
         MCAssert(m_values != nil);
         return m_values[p_index];

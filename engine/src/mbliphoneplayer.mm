@@ -58,7 +58,7 @@ extern MPMoviePlayerViewController *g_movie_player;
 
 class MCiOSPlayerControl;
 
-@interface MCiOSPlayerDelegate : NSObject
+@interface com_runrev_livecode_MCiOSPlayerDelegate : NSObject
 {
 	MCiOSPlayerControl *m_instance;
     UIControl *m_overlay;
@@ -171,7 +171,7 @@ protected:
 	
 private:
 	MPMoviePlayerController *m_controller;
-	MCiOSPlayerDelegate *m_delegate;
+	com_runrev_livecode_MCiOSPlayerDelegate *m_delegate;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1058,7 +1058,7 @@ UIView *MCiOSPlayerControl::CreateView(void)
     [t_view setHidden: YES];
     [t_view setFrame: CGRectMake(0, 0, 0, 0)];
 
-    m_delegate = [[MCiOSPlayerDelegate alloc] initWithInstance: this];
+    m_delegate = [[com_runrev_livecode_MCiOSPlayerDelegate alloc] initWithInstance: this];
     return t_view;
 }
 
@@ -1156,7 +1156,7 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCiOSPlayerDelegate
+@implementation com_runrev_livecode_MCiOSPlayerDelegate
 
 - (id)initWithInstance:(MCiOSPlayerControl*)instance
 {
