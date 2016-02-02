@@ -22,7 +22,7 @@ repeat with x = 1 to the number of lines of the pendingMessages
 
 The result: The message ID is the same as the one placed in the result function when it was scheduled with the <send> command.
 
-Returns (enum): The <pendingMessages> <function> <return|returns> a list of <message|messages>, one per line. Each line consists of four <items>, separated by commas:
+Returns: The <pendingMessages> <function> <return|returns> a list of <message|messages>, one per line. Each line consists of four <items>, separated by commas:
 1. the message ID
 2. the time the message is scheduled for (in seconds, Unix epoch time)
 3. the message name
