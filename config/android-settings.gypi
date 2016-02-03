@@ -17,7 +17,7 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 	],
-
+	
 	'target_conditions':
 	[
 		[
@@ -44,7 +44,6 @@
 				],
 			},
 		],
-		
 	],
 	
 	'configurations':
@@ -70,8 +69,6 @@
 				'-O3',
 				'-g3',
 			],
-
-			
 			
 			'defines':
 			[

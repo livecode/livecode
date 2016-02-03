@@ -133,10 +133,10 @@ SPACE_REPLACEMENT = '?'
 
 LINK_COMMANDS_LINUX = """\
 quiet_cmd_alink = AR($(TOOLSET)) $@
-cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $(ARFLAGS) $@ $(filter %.o,$^)
+cmd_alink = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 
 quiet_cmd_alink_thin = AR($(TOOLSET)) $@
-cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crs $(ARFLAGS) $@ $(filter %.o,$^)
+cmd_alink_thin = rm -f $@ && $(AR.$(TOOLSET)) crs $@ $(filter %.o,$^)
 
 # Commas need to be escaped in some circumstances
 COMMA := ,
@@ -1591,10 +1591,6 @@ $(obj).$(TOOLSET)/$(TARGET)/%%.o: $(obj)/%%%s FORCE_DO_CMD
       for link_dep in link_deps:
         assert ' ' not in link_dep, (
             "Spaces in alink input filenames not supported (%s)"  % link_dep)
-      arflags = config.get('arflags', [])
-      self.WriteLn('%s: ARFLAGS := %s' % (
-            QuoteSpaces(self.output_binary),
-            ' '.join(arflags)))
       if (self.flavor not in ('mac', 'openbsd', 'win') and not
           self.is_standalone_static_library):
         self.WriteDoCmd([self.output_binary], link_deps, 'alink_thin',

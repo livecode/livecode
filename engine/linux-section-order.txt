@@ -1,3 +1,0 @@
-.bss
-.payload
-.project
