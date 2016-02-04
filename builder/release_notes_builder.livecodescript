@@ -4,6 +4,11 @@ local sVersion
 local sOutputPath
 
 private command Initialize pVersion, pOutputPath
+   if pOutputPath is empty then
+      throw "Release notes output path must be specified"
+      exit Initialize
+   end if
+   
    start using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
    set the defaultfolder to builderRepoFolder()
    set the hideconsolewindows to true
