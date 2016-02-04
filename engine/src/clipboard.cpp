@@ -1255,7 +1255,12 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     
     // Get the data for this representation and decode it
     MCAutoDataRef t_encoded(t_rep->CopyData());
-    return MCStringDecode(*t_encoded, p_encoding, false, r_text);
+    
+    MCAutoStringRef t_string;
+    if (!MCStringDecode(*t_encoded, p_encoding, false, &t_string))
+        return false;
+    
+    return MCStringConvertLineEndingsToLiveCode(*t_string, r_text);
 }
 
 bool MCClipboard::CopyAsData(MCRawClipboardKnownType p_type, MCDataRef& r_data) const
