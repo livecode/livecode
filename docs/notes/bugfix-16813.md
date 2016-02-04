@@ -1,0 +1,1 @@
+# Browser: Avoid conflicts between CEF / LC message loops by running CEF loop on separate thread.
