@@ -1,0 +1,1 @@
+# Prevent group from clipping child object when child object moved around
