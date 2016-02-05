@@ -1643,8 +1643,13 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . type == kImportHtmlAttrSrc)
 				{
-					MCValueRelease(t_src);
-					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
+					// PM-2015-02-05: [[ Bug 16853 ]] Allow spaces between <atribute_name> and "=" sign
+					// Nil-check before passing it to strlen
+					if (p_tag . attrs[i] . value != nil)
+					{
+						MCValueRelease(t_src);
+						/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
+					}
 				}
 			
 			if (t_src != nil)
