@@ -527,6 +527,7 @@ struct MCCefErrorInfo
 {
 	CefString url;
 	CefString error_message;
+	CefLoadHandler::ErrorCode error_code;
 };
 
 class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler
@@ -546,13 +547,14 @@ private:
 	
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
-	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg)
+	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg, CefLoadHandler::ErrorCode p_error_code)
 	{
 		m_load_error_frames[p_id].url = p_url;
 		m_load_error_frames[p_id].error_message = p_error_msg;
+		m_load_error_frames[p_id].error_code = p_error_code;
 	}
 	
-	bool RemoveLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg)
+	bool FindLoadErrorFrame(int64_t p_id, MCCefErrorInfo &r_info, bool p_delete)
 	{
 		std::map<int64_t, MCCefErrorInfo>::iterator t_iter;
 		t_iter = m_load_error_frames.find(p_id);
@@ -560,9 +562,38 @@ private:
 		if (t_iter == m_load_error_frames.end())
 			return false;
 		
-		r_error_url = t_iter->second.url;
-		r_error_msg = t_iter->second.error_message;
-		m_load_error_frames.erase(t_iter);
+		r_info = t_iter->second;
+		
+		if (p_delete)
+			m_load_error_frames.erase(t_iter);
+		
+		return true;
+	}
+	
+	bool RemoveLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg, CefLoadHandler::ErrorCode &r_error_code)
+	{
+		MCCefErrorInfo t_info;
+		
+		if (!FindLoadErrorFrame(p_id, t_info, true))
+			return false;
+		
+		r_error_url = t_info.url;
+		r_error_msg = t_info.error_message;
+		r_error_code = t_info.error_code;
+		
+		return true;
+	}
+	
+	bool FetchLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg, CefLoadHandler::ErrorCode &r_error_code)
+	{
+		MCCefErrorInfo t_info;
+		
+		if (!FindLoadErrorFrame(p_id, t_info, false))
+			return false;
+		
+		r_error_url = t_info.url;
+		r_error_msg = t_info.error_message;
+		r_error_code = t_info.error_code;
 		
 		return true;
 	}
@@ -880,8 +911,14 @@ public:
 		// render process may have restarted so resend js handler list
 		m_owner->SyncJavaScriptHandlers();
 		
-		CefString t_url;
-		t_url = p_frame->GetURL();
+		CefString t_url, t_error;
+		CefLoadHandler::ErrorCode t_error_code;
+		
+		bool t_is_error;
+		t_is_error = FetchLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error, t_error_code);
+		
+		if (!t_is_error)
+			t_url = p_frame->GetURL();
 		
 		if (IgnoreUrl(t_url))
 			return;
@@ -893,10 +930,18 @@ public:
 		bool t_frame;
 		t_frame = !p_frame->IsMain();
 		
-		if (!t_frame)
-			m_owner->OnNavigationBegin(t_frame, t_url_str);
-
-		m_owner->OnDocumentLoadBegin(t_frame, t_url_str);
+		if (t_is_error)
+		{
+			if (t_error_code == ERR_UNKNOWN_URL_SCHEME)
+				m_owner->OnNavigationRequestUnhandled(t_frame, t_url_str);
+		}
+		else
+		{
+			if (!t_frame)
+				m_owner->OnNavigationBegin(t_frame, t_url_str);
+			
+			m_owner->OnDocumentLoadBegin(t_frame, t_url_str);
+		}
 		
 		if (t_url_str != nil)
 			MCCStringFree(t_url_str);
@@ -909,9 +954,10 @@ public:
 			return;
 		
 		CefString t_url, t_error;
+		CefLoadHandler::ErrorCode t_error_code;
 		
 		bool t_is_error;
-		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error);
+		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error, t_error_code);
 		
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
@@ -928,17 +974,20 @@ public:
 		
 		if (t_is_error)
 		{
-			char *t_err_str;
-			t_err_str = nil;
-			/* UNCHECKED */ MCCefStringToUtf8String(t_error, t_err_str);
-			
-			m_owner->OnDocumentLoadFailed(t_frame, t_url_str, t_err_str);
-			
-			if (!t_frame)
-				m_owner->OnNavigationFailed(t_frame, t_url_str, t_err_str);
-			
-			if (t_err_str != nil)
-				MCCStringFree(t_err_str);
+			if (t_error_code != ERR_UNKNOWN_URL_SCHEME)
+			{
+				char *t_err_str;
+				t_err_str = nil;
+				/* UNCHECKED */ MCCefStringToUtf8String(t_error, t_err_str);
+				
+				m_owner->OnDocumentLoadFailed(t_frame, t_url_str, t_err_str);
+				
+				if (!t_frame)
+					m_owner->OnNavigationFailed(t_frame, t_url_str, t_err_str);
+				
+				if (t_err_str != nil)
+					MCCStringFree(t_err_str);
+			}
 		}
 		else
 		{
@@ -957,7 +1006,7 @@ public:
 		// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
 		//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
 		if (p_error_code != ERR_ABORTED)
-			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
+			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text, p_error_code);
 	}
 	
 	// ContextMenuHandler interface

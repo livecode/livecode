@@ -20,6 +20,7 @@
 #include "libbrowser_internal.h"
 
 @class MCWebViewFrameLoadDelegate;
+@class MCWebViewPolicyDelegate;
 
 class MCWebViewBrowser : public MCBrowserBase
 {
@@ -76,6 +77,7 @@ private:
 	
 	WebView *m_view;
 	MCWebViewFrameLoadDelegate *m_delegate;
+	MCWebViewPolicyDelegate *m_policy_delegate;
 	
 	char *m_js_handlers;
 	NSArray *m_js_handler_list;

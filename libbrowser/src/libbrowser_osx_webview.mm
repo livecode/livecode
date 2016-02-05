@@ -359,6 +359,19 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 
 @end
 
+@interface MCWebViewPolicyDelegate : NSObject
+{
+	MCWebViewBrowser *m_instance;
+}
+
+- (id)initWithInstance:(MCWebViewBrowser *)instance;
+- (void)dealloc;
+
+- (void)webView:(WebView *)webView decidePolicyForMIMEType:(NSString *)type request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener;
+- (void)webView:(WebView *)webView decidePolicyForNavigationAction:(NSDictionary *)actionInformation request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener;
+
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void MCBrowserRunBlockOnMainFiber(void (^p_block)(void))
@@ -372,6 +385,7 @@ MCWebViewBrowser::MCWebViewBrowser(void)
 {
 	m_view = nil;
 	m_delegate = nil;
+	m_policy_delegate = nil;
 	
 	m_js_handlers = nil;
 	m_js_handler_list =nil;
@@ -383,11 +397,15 @@ MCWebViewBrowser::~MCWebViewBrowser(void)
 		if (m_view != nil)
 		{
 			[m_view setFrameLoadDelegate: nil];
+			[m_view setPolicyDelegate: nil];
 			[m_view release];
 		}
 		
 		if (m_delegate != nil)
 			[m_delegate release];
+		
+		if (m_policy_delegate != nil)
+			[m_policy_delegate release];
 		
 		if (m_js_handler_list != nil)
 			[m_js_handler_list release];
@@ -879,15 +897,21 @@ bool MCWebViewBrowser::Init(void)
 		
 		if (t_success)
 		{
-			[t_view setHidden: YES];
-			
 			m_delegate = [[MCWebViewFrameLoadDelegate alloc] initWithInstance: this];
 			t_success = m_delegate != nil;
 		}
 		
 		if (t_success)
 		{
+			m_policy_delegate = [[MCWebViewPolicyDelegate alloc] initWithInstance: this];
+			t_success = m_policy_delegate != nil;
+		}
+		
+		if (t_success)
+		{
+			[t_view setHidden: YES];
 			[t_view setFrameLoadDelegate: m_delegate];
+			[t_view setPolicyDelegate: m_policy_delegate];
 			m_view = t_view;
 		}
 		else if (t_view != nil)
@@ -1014,6 +1038,48 @@ bool MCWebViewBrowser::Init(void)
 - (void)setPendingRequest:(bool)p_new_value
 {
 	m_pending_request = p_new_value;
+}
+
+@end
+
+@implementation MCWebViewPolicyDelegate
+
+- (id)initWithInstance:(MCWebViewBrowser*)instance
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+	
+	m_instance = instance;
+	
+	return self;
+}
+
+- (void)dealloc
+{
+	[super dealloc];
+}
+
+- (void)webView:(WebView *)webView decidePolicyForMIMEType:(NSString *)type request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener
+{
+	if ([WebView canShowMIMEType:type])
+		[listener use];
+	else
+	{
+		[listener ignore];
+		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+	}
+}
+
+- (void)webView:(WebView *)webView decidePolicyForNavigationAction:(NSDictionary *)actionInformation request:(NSURLRequest *)request frame:(WebFrame *)frame decisionListener:(id<WebPolicyDecisionListener>)listener
+{
+	if ([NSURLConnection canHandleRequest:request])
+		[listener use];
+	else
+	{
+		[listener ignore];
+		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
+	}
 }
 
 @end

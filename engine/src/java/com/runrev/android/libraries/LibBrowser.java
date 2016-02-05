@@ -196,7 +196,10 @@ class LibBrowserWebView extends WebView
 			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl)
 			{
 				//doLoadingError(toAPKPath(failingUrl), description);
-				doLoadingError(failingUrl, description);
+				if (errorCode == ERROR_UNSUPPORTED_SCHEME)
+					doUnsupportedScheme(failingUrl);
+				else
+					doLoadingError(failingUrl, description);
 				wakeEngineThread();
 			}
 		});
@@ -598,4 +601,5 @@ class LibBrowserWebView extends WebView
 	public native void doStartedLoading(String url);
 	public native void doFinishedLoading(String url);
 	public native void doLoadingError(String url, String error);
+	public native void doUnsupportedScheme(String url);
 }
