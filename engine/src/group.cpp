@@ -2790,6 +2790,23 @@ void MCGroup::boundcontrols()
 	}
 }
 
+void MCGroup::drawselectedchildren(MCDC *dc)
+{
+    MCControl *t_control = controls;
+    if (t_control == nil)
+        return;
+    do
+    {
+        if (t_control -> getstate(CS_SELECTED))
+            t_control -> drawselected(dc);
+        
+        if (t_control -> gettype() == CT_GROUP)
+            static_cast<MCGroup *>(t_control) -> drawselectedchildren(dc);
+        
+        t_control = t_control -> next();
+    }
+    while (t_control != controls);
+}
 
 //-----------------------------------------------------------------------------
 //  Redraw Management
@@ -2927,9 +2944,6 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
 	}
 }
 

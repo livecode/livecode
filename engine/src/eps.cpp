@@ -565,8 +565,6 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 			drawborder(dc, trect, borderwidth);
 	if (getstate(CS_KFOCUSED))
 		drawfocus(dc, dirty);
-	if (state & CS_SELECTED)
-		drawselected(dc);
 }
 
 IO_stat MCEPS::load(IO_handle stream, uint32_t version)

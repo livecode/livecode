@@ -209,7 +209,8 @@ public:
 	void drawbackground(MCContext *p_context, const MCRectangle &p_dirty);
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
 	void drawselectionrect(MCContext *);
-	
+    void drawselectedchildren(MCDC *dc);
+    
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);
 	

@@ -2314,11 +2314,9 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-		if (m_edit_tool != NULL)
-			m_edit_tool->drawhandles(dc);
+        
+        if (m_edit_tool != NULL)
+            m_edit_tool->drawhandles(dc);
 	}
 
 	dc -> setquality(QUALITY_DEFAULT);

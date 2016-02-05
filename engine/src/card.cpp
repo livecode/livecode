@@ -3318,6 +3318,24 @@ void MCCard::drawselectionrect(MCContext *p_context)
     drawmarquee(p_context, selrect);
 }
 
+void MCCard::drawselectedchildren(MCDC *dc)
+{
+    MCObjptr *tptr = objptrs;
+    if (tptr == nil)
+        return;
+    do
+    {
+        if (tptr -> getref() -> getstate(CS_SELECTED))
+            tptr->getref()->drawselected(dc);
+        
+        if (tptr -> getrefasgroup() != nil)
+            tptr -> getrefasgroup() -> drawselectedchildren(dc);
+            
+        tptr = tptr->next();
+    }
+    while (tptr != objptrs);
+}
+
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 {
 	bool t_draw_cardborder;
@@ -3341,7 +3359,10 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		}
 		while (tptr != objptrs);
 	}
-
+    
+    // Draw the selection outline and handles on top of everything
+    drawselectedchildren(dc);
+    
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
 

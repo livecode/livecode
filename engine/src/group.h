@@ -131,6 +131,8 @@ public:
 
     virtual void scheduledelete(bool p_is_child);
     
+    void drawselectedchildren(MCDC *dc);
+    
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
 	// MCGroup functions
