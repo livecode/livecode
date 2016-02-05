@@ -198,6 +198,8 @@ public:
 	//   group.
     bool islocked(void) { return m_updates_locked; }
 
+    bool mfocus_control(int2 x, int2 y, bool p_check_selected);
+    
 	MCGroup *next()
 	{
 		return (MCGroup *)MCDLlist::next();

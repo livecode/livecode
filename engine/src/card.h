@@ -241,6 +241,8 @@ public:
 	//   the given layer. If nil is returned the control doesn't exist.
 	MCObject *getobjbylayer(uint32_t layer);
 
+    bool mfocus_control(int2 x, int2 y, bool p_check_selected);
+    
 	MCCard *next()
 	{
 		return (MCCard *)MCDLlist::next();

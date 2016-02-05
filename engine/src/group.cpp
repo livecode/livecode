@@ -531,6 +531,79 @@ void MCGroup::mdrag(void)
 	}
 }
 
+bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
+{
+    if (controls != nil)
+    {
+        MCControl *tptr = controls->prev();
+        do
+        {
+            // Check if any group's child is selected and focused
+            if (p_check_selected && tptr -> gettype() == CT_GROUP)
+            {
+                if (static_cast<MCGroup *>(tptr) -> mfocus_control(x, y, true))
+                {
+                    mfocused = tptr;
+                    return true;
+                }
+            }
+            
+            // Only check mfocus for objects with the appropriate selection state
+            if ((p_check_selected == tptr -> getstate(CS_SELECTED))
+                && tptr -> mfocus(x, y))
+            {
+                Boolean newfocused = tptr != mfocused;
+                
+                if (newfocused && mfocused != NULL)
+                {
+                    MCControl *oldfocused = mfocused;
+                    mfocused = tptr;
+                    oldfocused->munfocus();
+                }
+                else
+                    mfocused = tptr;
+                
+                // The widget event manager handles enter/leave itself
+                if (newfocused && mfocused != nil &&
+                    mfocused -> gettype() != CT_GROUP &&
+                    mfocused -> gettype() != CT_WIDGET)
+                {
+                        mfocused->enter();
+                        
+                        // MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
+                        //   ... and now lets make sure it doesn't crash!
+                        //   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
+                        if (mfocused != NULL)
+                            mfocused->mfocus(x, y);
+                }
+                return true;
+            }
+            
+            // Unset previously focused object.
+            if (!p_check_selected && tptr == mfocused)
+            {
+                // Use the group's munfocus method if the group has an mfocused control.
+                if (mfocused -> gettype() != CT_GROUP
+                    || static_cast<MCGroup *>(mfocused) -> getmfocused() != nil)
+                {
+                    MCControl *oldfocused = mfocused;
+                    mfocused = NULL;
+                    oldfocused->munfocus();
+                }
+                else
+                {
+                    static_cast<MCGroup *>(mfocused) -> clearmfocus();
+                    mfocused = nil;
+                }
+            }
+
+            tptr = tptr->prev();
+        }
+        while (tptr != controls->prev());
+    }
+    return false;
+}
+
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
@@ -571,40 +644,9 @@ Boolean MCGroup::mfocus(int2 x, int2 y)
 			// MW-2008-01-30: [[ Bug 5832 ]] Previously we would have been immediately
 			//   unfocusing the group if there were no controls, this resulted in much
 			//   sadness as empty groups wouldn't be resizable :o(
-			if (controls != NULL)
-			{
-				MCControl *tptr = controls->prev();
-				do
-				{
-					if (tptr->mfocus(x, y))
-					{
-						if (mfocused != NULL && tptr != mfocused)
-							mfocused->munfocus();
-						if (tptr != mfocused)
-						{
-							mfocused = tptr;
-							if (mfocused->gettype() != CT_GROUP)
-							{
-								mfocused->enter();
-
-								// MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
-								//   ... and now lets make sure it doesn't crash!
-								//   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
-								if (mfocused != NULL)
-									mfocused->mfocus(x, y);
-							}
-						}
-						return True;
-					}
-					else if (tptr == mfocused)
-					{
-						mfocused->munfocus();//changed
-						mfocused = NULL;
-					}
-					tptr = tptr->prev();
-				}
-				while (tptr != controls->prev());
-			}
+            if (mfocus_control(x, y, false))
+                return true;
+            
 			if (state & CS_SELECTED)
 				return True;
 		}
