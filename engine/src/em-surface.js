@@ -26,7 +26,7 @@ mergeInto(LibraryManager.library, {
         var canvas = Module['canvas'];
 
         // Create and get a 2D rendering context for the canvas
-        var context = canvas.getContext('2d', false);
+        var context = canvas.getContext('2d');
         if (!context) {
             context = Browser.createContext(canvas, false, true);
         }
