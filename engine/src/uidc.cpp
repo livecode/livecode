@@ -1426,7 +1426,9 @@ void MCUIDC::addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	{
 		// MW-2011-08-18: [[ Layers ]] Notify of position change.
 		if (optr -> gettype() >= CT_GROUP)
+        {
 			static_cast<MCControl *>(optr)->layer_setrect(newrect, false);
+        }
 		else
 			optr -> setrect(newrect);
 	}
@@ -1484,7 +1486,9 @@ void MCUIDC::stopmove(MCObject *optr, Boolean finish)
 
 						// MW-2011-08-18: [[ Layers ]] Notify of position change.
 						if (mptr->object -> gettype() >= CT_GROUP)
+                        {
 							static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
+                        }
 						else
 							mptr->object->setrect(newrect);
 					}
@@ -1532,7 +1536,9 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 		
 			// MW-2011-08-18: [[ Layers ]] Notify of position change.
 			if (mptr->object -> gettype() >= CT_GROUP)
+            {
 				static_cast<MCControl *>(mptr->object)->layer_setrect(newrect, false);
+            }
 			else
 				mptr->object->setrect(newrect);
 		}

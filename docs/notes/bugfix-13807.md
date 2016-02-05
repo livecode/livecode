@@ -1,0 +1,1 @@
+# Refresh group boundaries when moving object within group by move command
