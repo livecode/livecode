@@ -44,6 +44,8 @@ public:
 	virtual void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
 	virtual void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
 	
+	virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
+	
 	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 	
 	bool GetHWND(HWND &r_hwnd);
@@ -337,6 +339,11 @@ void MCCefWin32Browser::OnDocumentLoadFailed(bool p_in_frame, const char *p_url,
 	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
 }
 
+void MCCefWin32Browser::OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateUnhandled, p_in_frame, p_url, nil);
+}
+
 void MCCefWin32Browser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
 {
 	PostJavaScriptCall(p_handler, p_params);
@@ -545,6 +552,10 @@ LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_
 
 					case kMCBrowserRequestStateFailed:
 						t_event_handler->OnNavigationFailed(t_browser, t_event->frame, t_event->url, t_event->error);
+						break;
+
+					case kMCBrowserRequestStateUnhandled:
+						t_event_handler->OnNavigationRequestUnhandled(t_browser, t_event->frame, t_event->url);
 						break;
 					}
 					break;

@@ -51,7 +51,7 @@ public:
 	virtual void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
 	virtual void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
 	
-	void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
+	virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
 	
 	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 	
