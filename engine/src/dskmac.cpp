@@ -7479,7 +7479,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 	return True;
 #endif /* MCS_poll_dsk_mac */
-        Boolean handled = False;
         fd_set rmaskfd, wmaskfd, emaskfd;
         FD_ZERO(&rmaskfd);
         FD_ZERO(&wmaskfd);
@@ -7498,10 +7497,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 maxfd = MCshellfd;
         }
         
-        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-        if (handled)
-            p_delay = 0.0;
-        
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
         timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
@@ -7510,12 +7505,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
         
         if (n <= 0)
-            return handled;
+            return False;
         
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
             return True;
-        
-        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
         
         return True;
     }
