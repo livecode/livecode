@@ -2386,9 +2386,9 @@ bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef&
             if (parent != NULL)
             {
                 MCObject *t_parent_object;
-                if (parent -> gettype() == CT_CARD)
-                    t_parent_object = getcard(p_part_id);
-                else
+//                if (parent -> gettype() == CT_CARD)
+//                    t_parent_object = getcard(p_part_id);
+//                else
                     t_parent_object = parent;
                 
                 MCAutoValueRef t_parent;

@@ -1189,7 +1189,8 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	// Retarget this stack and the target to be relative to the target object
 	MCdefaultstackptr = t_this_stack;
 	MCtargetptr = t_object;
-
+    MCtargetptr . part_id = 0;
+    
 	// MW-2012-10-30: [[ Bug 10478 ]] Turn off lockMessages before dispatch.
 	Boolean t_old_lock;
 	t_old_lock = MClockmessages;
