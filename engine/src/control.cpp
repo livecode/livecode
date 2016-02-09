@@ -1444,6 +1444,8 @@ void MCControl::continuesize(int2 x, int2 y)
 	resizeparent();
 }
 
+#define SIZE_HANDLE_HIT_TOLERANCE 1
+
 uint2 MCControl::sizehandles()
 {
 	uint2 newstate = 0;
@@ -1455,7 +1457,7 @@ uint2 MCControl::sizehandles()
 		for (i = 7 ; i >= 0 ; i--)
         {
             // Be more forgiving about handle hit detection
-            MCU_reduce_rect(rects[i], -1);
+            MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
 			if (MCU_point_in_rect(rects[i], mx, my))
 			{
 				if (i < 3)
