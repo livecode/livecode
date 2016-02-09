@@ -1962,57 +1962,66 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 
 void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, uindex_t p_control_count)
 {
+    if (p_control_count == 0)
+        return;
+    
     // MW-2013-06-20: [[ Bug 10863 ]] Make sure all objects have this parent, after
     //   the first object has been resolved.
     MCObject *t_required_parent;
     t_required_parent = nil;
+
+    MCCard *t_card = nil;
+    MCControl *controls = nil;
+    MCObject *t_this_parent = nil;
+    MCControl *cptr = nil;
     
-	if (p_control_count != 0)
-	{
-		MCCard *t_card = nil;
-		MCControl *controls = nil;
-        MCObject *t_this_parent = nil;
-		for (uindex_t i = 0; i < p_control_count; ++i)
-		{
-            t_this_parent = (p_controls[i] . object) -> getparent();
-			if (t_this_parent == nil || t_this_parent -> gettype() != CT_CARD)
-			{
-				ctxt . LegacyThrow(EE_GROUP_NOTGROUPABLE);
-				return;
-			}
-			MCControl *cptr = (MCControl *)p_controls[i] . object;
-			// MW-2011-01-21: Make sure we don't try and group shared groups
-			if (cptr -> gettype() == CT_GROUP && static_cast<MCGroup *>(cptr) -> isshared())
-			{
-				ctxt . LegacyThrow(EE_GROUP_NOBG);
-				return;
-			}
-            
-            // MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
-			//   future comparisons.
-			if (t_required_parent == nil)
-				t_required_parent = t_this_parent;
-            
-            // MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
-			//   parent.
-            if (t_this_parent != t_required_parent)
-            {
-                ctxt . LegacyThrow(EE_GROUP_DIFFERENTPARENT);
-				return;
-            }
-            
-			t_card = cptr->getcard(p_controls[i] . part_id);
-			t_card -> removecontrol(cptr, False, True);
-			cptr -> getstack() -> removecontrol(cptr);
-			cptr -> appendto(controls);
-		}
-		MCGroup *gptr;
-		if (MCsavegroupptr == NULL)
-			gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
-		else
-			gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
-		gptr->makegroup(controls, t_card); 
-	}
+    uindex_t i;
+    for (i = 0; i < p_control_count; ++i)
+    {
+        t_this_parent = (p_controls[i] . object) -> getparent();
+        if (t_this_parent == nil || t_this_parent -> gettype() != CT_CARD)
+        {
+            ctxt . LegacyThrow(EE_GROUP_NOTGROUPABLE);
+            return;
+        }
+        
+        cptr = (MCControl *)p_controls[i] . object;
+        // MW-2011-01-21: Make sure we don't try and group shared groups
+        if (cptr -> gettype() == CT_GROUP && static_cast<MCGroup *>(cptr) -> isshared())
+        {
+            ctxt . LegacyThrow(EE_GROUP_NOBG);
+            return;
+        }
+        
+        // MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
+        //   future comparisons.
+        if (t_required_parent == nil)
+            t_required_parent = t_this_parent;
+        
+        // MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
+        //   parent.
+        if (t_this_parent != t_required_parent)
+        {
+            ctxt . LegacyThrow(EE_GROUP_DIFFERENTPARENT);
+            return;
+        }
+    }
+    
+    // If we made it this far, the controls are ok to group.
+    for (i = 0; i < p_control_count; ++i)
+    {
+        t_card = cptr->getcard(p_controls[i] . part_id);
+        t_card -> removecontrol(cptr, False, True);
+        cptr -> getstack() -> removecontrol(cptr);
+        cptr -> appendto(controls);
+    }
+    
+    MCGroup *gptr;
+    if (MCsavegroupptr == NULL)
+        gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
+    else
+        gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
+    gptr->makegroup(controls, t_card);
 }
 
 void MCInterfaceExecGroupSelection(MCExecContext& ctxt)
