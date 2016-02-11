@@ -48,6 +48,8 @@ public:
 	virtual void OnDocumentLoadBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url) = 0;
 	virtual void OnDocumentLoadComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url) = 0;
 	virtual void OnDocumentLoadFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error) = 0;
+
+	virtual void OnNavigationRequestUnhandled(MCBrowser *p_browser, bool p_in_frame, const char *p_url) = 0;
 };
 
 // Javascript call handler
@@ -270,6 +272,7 @@ enum MCBrowserRequestState
 	kMCBrowserRequestStateBegin,
 	kMCBrowserRequestStateComplete,
 	kMCBrowserRequestStateFailed,
+	kMCBrowserRequestStateUnhandled,
 };
 
 typedef void (*MCBrowserRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_in_frame, const char *p_url, const char *p_error);
