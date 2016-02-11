@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-fontlist.h"
 #include "em-util.h"
 
+#include "objdefs.h"
 #include "dllst.h"
 
 class MCFontnode : public MCDLlist
@@ -53,7 +54,7 @@ protected:
 
 
 // Forward declarations
-static MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name);
+static MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name, uint16_t p_style);
 static MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file);
 
 
@@ -69,7 +70,7 @@ MCFontnode::MCFontnode(MCNameRef p_name,
 	  m_requested_style(p_style)
 {
     // Load the font as requested
-    m_font_info.fid = emscripten_get_font_by_name(p_name);
+	m_font_info.fid = emscripten_get_font_by_name(p_name, p_style);
 
     // Calculate the metrics for this typeface and size
     SkPaint t_paint;
@@ -93,6 +94,8 @@ MCFontnode::MCFontnode(MCNameRef p_name,
 
 MCFontnode::~MCFontnode()
 {
+	SkTypeface *t_typeface = reinterpret_cast<SkTypeface *>(m_font_info.fid);
+	t_typeface->unref();
 }
 
 MCFontStruct *
@@ -253,10 +256,38 @@ MCFontlist::getfontstructinfo(MCNameRef & r_name,
 }
 
 
-MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name)
+MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name,
+                                            uint16_t p_style)
 {
-    // TODO
-    return emscripten_get_font_from_file(MCSTR("/boot/fonts/basefont.ttf"));
+	MCLog("%s: %@", __FUNCTION__, p_name);
+	/* Decode style */
+	bool t_italic = (0 != (p_style & FA_ITALIC));
+	bool t_bold = (0x05 < (p_style & FA_WEIGHT));
+	SkTypeface::Style t_style;
+	if (t_italic && t_bold)
+	{
+		t_style = SkTypeface::kBoldItalic;
+	}
+	else if (t_italic)
+	{
+		t_style = SkTypeface::kItalic;
+	}
+	else if (t_bold)
+	{
+		t_style = SkTypeface::kBold;
+	}
+	else
+	{
+		t_style = SkTypeface::kNormal;
+	}
+
+	MCAutoStringRefAsSysString t_sys_name;
+	/* UNCHECKED */ t_sys_name.Lock(MCNameGetString(p_name));
+
+	MCSysFontHandle t_handle =
+		MCSysFontHandle(SkTypeface::CreateFromName(*t_sys_name, t_style));
+	MCAssert(nil != t_handle);
+	return t_handle;
 }
 
 MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file)

@@ -4657,7 +4657,7 @@ bool MCCanvasFontGetDefault(MCCanvasFontRef &r_font)
 {
 	if (kMCCanvasFont12PtHelvetica == nil)
 	{
-		if (!MCCanvasFontCreate(MCSTR("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica))
+		if (!MCCanvasFontCreate(MCSTR(DEFAULT_TEXT_FONT), 0, 12, kMCCanvasFont12PtHelvetica))
 			return false;
 	}
 	
