@@ -644,12 +644,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	}
 
 	if (!p_isolated)
-	{
+    {
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
+    }
 }
 
 void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic)

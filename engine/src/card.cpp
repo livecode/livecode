@@ -504,6 +504,106 @@ void MCCard::mdrag(void)
 	}
 }
 
+bool MCCard::mfocus_control(int2 x, int2 y, bool p_check_selected)
+{
+    MCObjptr *tptr = objptrs->prev();
+    
+    bool t_freed;
+    do
+    {
+        MCObject *t_tptr_object;
+        t_tptr_object = tptr -> getref();
+        
+        t_freed = false;
+        
+        // Check if any group's child is selected and focused
+        if (p_check_selected && tptr -> getrefasgroup() != nil)
+        {
+            if (tptr -> getrefasgroup() -> mfocus_control(x, y, true))
+            {
+                mfocused = tptr;
+                return true;
+            }
+        }
+        
+        // Only check mfocus for objects with the appropriate selection state
+        if ((p_check_selected == tptr -> getref() -> getstate(CS_SELECTED))
+            && t_tptr_object->mfocus(x, y))
+        {
+            // MW-2010-10-28: If mfocus calls relayer, then the objptrs can get changed.
+            //   Reloop to find the correct one.
+            tptr = objptrs -> prev();
+            while(tptr -> getref() != t_tptr_object)
+                tptr = tptr -> prev();
+            
+            Boolean newfocused = tptr != mfocused;
+            if (newfocused && mfocused != NULL)
+            {
+                MCControl *oldfocused = mfocused->getref();
+                mfocused = tptr;
+                oldfocused->munfocus();
+            }
+            else
+                mfocused = tptr;
+            
+            // The widget event manager handles enter/leave itself
+            if (newfocused && mfocused != NULL &&
+                mfocused -> getref() -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
+                mfocused -> getref() -> gettype() != CT_WIDGET)
+#else
+                (MCdispatcher -> isdragtarget() ||
+                 mfocused -> getref() -> gettype() != CT_WIDGET))
+#endif
+            {
+                mfocused->getref()->enter();
+                
+                // MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
+                //   It is possible for mfocused to become NULL if its deleted in mouseEnter so
+                //   we check first.
+                if (mfocused != NULL)
+                    mfocused->getref()->mfocus(x, y);
+            }
+            
+            return true;
+        }
+        
+        // Unset previously focused object
+        if (!p_check_selected && tptr == mfocused)
+        {
+            // MW-2012-02-22: [[ Bug 10018 ]] Previously, if a group was hidden and it had
+            //   mouse focus, then it wouldn't unmfocus as there was an explicit check to
+            //   stop this (for groups) here.
+            // MW-2012-03-13: [[ Bug 10074 ]] Invoke the control's munfocus() method for groups
+            //   if the group has an mfocused control.
+            if (mfocused -> getref() -> gettype() != CT_GROUP
+                || mfocused -> getrefasgroup() -> getmfocused() != nil)
+            {
+                MCControl *oldfocused = mfocused->getref();
+                mfocused = NULL;
+                oldfocused->munfocus();
+            }
+            else
+            {
+                mfocused -> getrefasgroup() -> clearmfocus();
+                mfocused = nil;
+            }
+            
+            // If munfocus calls relayer, then the objptrs can get changed
+            // so we need to loop back to the start of the objptrs again
+            t_freed = true;
+            tptr = objptrs->prev();
+        }
+        else
+        {
+            tptr = tptr->prev();
+        }
+    }
+    while (t_freed || tptr != objptrs->prev());
+    
+    return false;
+}
+
 Boolean MCCard::mfocus(int2 x, int2 y)
 {
 	if (state & CS_MENU_ATTACHED)
@@ -556,84 +656,18 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				layer_selectedrectchanged(oldrect, selrect);
 			}
 			message_with_args(MCM_mouse_move, x, y);
-			return True;
+			return true;
 		}
 		if (mgrabbed)
 			mfocused->getref()->mfocus(x, y);
 		mgrabbed = False;
-		MCObjptr *tptr = objptrs->prev();
-		Boolean freed;
-		do
-		{
-			MCObject *t_tptr_object;
-			t_tptr_object = tptr -> getref();
-			
-			freed = False;
-			
-			if (t_tptr_object->mfocus(x, y))
-			{
-				// MW-2010-10-28: If mfocus calls relayer, then the objptrs can get changed.
-				//   Reloop to find the correct one.
-				MCObjptr *tptr = objptrs -> prev();
-				while(tptr -> getref() != t_tptr_object)
-					tptr = tptr -> prev();
-				
-				Boolean newfocused = tptr != mfocused;
-				if (newfocused && mfocused != NULL)
-				{
-					MCControl *oldfocused = mfocused->getref();
-					mfocused = tptr;
-					oldfocused->munfocus();
-				}
-				else
-					mfocused = tptr;
-
-                // The widget event manager handles enter/leave itself
-				if (newfocused && mfocused != NULL &&
-                    mfocused -> getref() -> gettype() != CT_GROUP &&
-#ifdef WIDGETS_HANDLE_DND
-                    mfocused -> getref() -> gettype() != CT_WIDGET)
-#else
-                    (MCdispatcher -> isdragtarget() ||
-                    mfocused -> getref() -> gettype() != CT_WIDGET))
-#endif
-				{
-					mfocused->getref()->enter();
-					
-					// MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
-					//   It is possible for mfocused to become NULL if its deleted in mouseEnter so
-					//   we check first.
-					if (mfocused != NULL)
-						mfocused->getref()->mfocus(x, y);
-				}
-
-				return True;
-			}
-			if (tptr == mfocused)
-			{
-				// MW-2012-02-22: [[ Bug 10018 ]] Previously, if a group was hidden and it had
-				//   mouse focus, then it wouldn't unmfocus as there was an explicit check to
-				//   stop this (for groups) here.
-				// MW-2012-03-13: [[ Bug 10074 ]] Invoke the control's munfocus() method for groups
-				//   if the group has an mfocused control.
-				if (mfocused -> getref() -> gettype() != CT_GROUP || static_cast<MCGroup *>(mfocused -> getref()) -> getmfocused() != nil)
-				{
-					MCControl *oldfocused = mfocused->getref();
-					mfocused = NULL;
-					oldfocused->munfocus();
-				}
-				else
-				{
-					static_cast<MCGroup *>(mfocused -> getref()) -> clearmfocus();
-					mfocused = nil;
-				}
-				freed = True;
-				tptr = objptrs->prev();
-			}
-			else
-				tptr = tptr->prev();
-		}
-		while (freed || tptr != objptrs->prev());
+        
+        if (mfocus_control(x, y, true))
+            return true;
+        
+        if (mfocus_control(x, y, false))
+            return true;
+        
 		MCtooltip->cleartip();
 		// MW-2007-07-09: [[ Bug 3726 ]] dragMove is not sent to a card during
 		//   a drag-drop operation.
@@ -3318,6 +3352,24 @@ void MCCard::drawselectionrect(MCContext *p_context)
     drawmarquee(p_context, selrect);
 }
 
+void MCCard::drawselectedchildren(MCDC *dc)
+{
+    MCObjptr *tptr = objptrs;
+    if (tptr == nil)
+        return;
+    do
+    {
+        if (tptr -> getref() -> getstate(CS_SELECTED))
+            tptr->getref()->drawselected(dc);
+        
+        if (tptr -> getrefasgroup() != nil)
+            tptr -> getrefasgroup() -> drawselectedchildren(dc);
+            
+        tptr = tptr->next();
+    }
+    while (tptr != objptrs);
+}
+
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 {
 	bool t_draw_cardborder;
@@ -3341,7 +3393,10 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		}
 		while (tptr != objptrs);
 	}
-
+    
+    // Draw the selection outline and handles on top of everything
+    drawselectedchildren(dc);
+    
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
 
