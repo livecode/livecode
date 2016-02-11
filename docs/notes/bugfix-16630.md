@@ -1,0 +1,1 @@
+# Add appropriate defaultScript metadata to widgets
