@@ -3290,8 +3290,6 @@ public:
                 maxfd = MCinputfd;
         }
 
-        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-
         if (g_notify_pipe[0] != -1)
         {
             FD_SET(g_notify_pipe[0], &rmaskfd);
@@ -3345,7 +3343,6 @@ public:
             return True;
         if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
             readinput = True;
-        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 
         // Check whether any of the GLib file descriptors were signalled
         for (uindex_t i = 0; i < t_glib_fds.Size(); i++)

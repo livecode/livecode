@@ -1199,6 +1199,58 @@ MCExecEnumTypeInfo _kMCInterfaceListStyleTypeInfo =
 	_kMCInterfaceListStyleElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeElementInfo[] =
+{
+    { "", kMCInterfaceThemeEmpty, false },
+    { "native", kMCInterfaceThemeNative, false },
+    { "legacy", kMCInterfaceThemeLegacy, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeTypeInfo =
+{
+    "Interface.Theme",
+    sizeof (_kMCInterfaceThemeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeElementInfo
+};
+
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeControlTypeElementInfo[] =
+{
+    { "", kMCPlatformControlTypeGeneric, false },
+    { "button", kMCPlatformControlTypeButton, false },
+    { "checkbox", kMCPlatformControlTypeCheckbox, false },
+    { "radiobutton", kMCPlatformControlTypeRadioButton, false },
+    { "tabbutton", kMCPlatformControlTypeTabButton, false },
+    { "tabpane", kMCPlatformControlTypeTabPane, false },
+    { "label", kMCPlatformControlTypeLabel, false },
+    { "inputfield", kMCPlatformControlTypeInputField, false },
+    { "list", kMCPlatformControlTypeList, false },
+    { "menu", kMCPlatformControlTypeMenu, false },
+    { "menuitem", kMCPlatformControlTypeMenuItem, false },
+    { "optionmenu", kMCPlatformControlTypeOptionMenu, false },
+    { "pulldownmenu", kMCPlatformControlTypePulldownMenu, false },
+    { "combobox", kMCPlatformControlTypeComboBox, false },
+    { "popupmenu", kMCPlatformControlTypePopupMenu, false },
+    { "progressbar", kMCPlatformControlTypeProgressBar, false },
+    { "scrollbar", kMCPlatformControlTypeScrollBar, false },
+    { "slider", kMCPlatformControlTypeSlider, false },
+    { "spinarrows", kMCPlatformControlTypeSpinArrows, false },
+    { "window", kMCPlatformControlTypeWindow, false },
+    { "messagebox", kMCPlatformControlTypeMessageBox, false },
+    { "richtext", kMCPlatformControlTypeRichText, false },
+    { "tooltip", kMCPlatformControlTypeTooltip, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
+{
+    "Interface.ControlType",
+    sizeof (_kMCInterfaceThemeControlTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeControlTypeElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1209,6 +1261,8 @@ MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInf
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1342,20 +1396,20 @@ void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 	ctxt . Throw();
 }
 
-void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
+void MCObject::GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name)
 {
 	MCAutoValueRef t_long_name;
-	if (names(P_LONG_NAME, &t_long_name))
+	if (getnameproperty(P_LONG_NAME, p_part_id, &t_long_name))
 		if (ctxt.ConvertToString(*t_long_name, r_long_name))
 			return;
 	
 	ctxt . Throw();
 }
 
-void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
+void MCObject::GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id)
 {
 	MCAutoValueRef t_long_id;
-	if (names(P_LONG_ID, &t_long_id))
+	if (getnameproperty(P_LONG_ID, p_part_id, &t_long_id))
 		if (ctxt.ConvertToString(*t_long_id, r_long_id))
 			return;
 	
@@ -3252,10 +3306,10 @@ void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
-void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
+void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
 	if (parent != nil)
-		parent -> GetLongName(ctxt, r_owner);
+        parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
@@ -4292,4 +4346,46 @@ void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, ui
 	}
     
     t_names . Take(r_names, r_count);
+}
+
+void MCObject::GetTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme;
+}
+
+void MCObject::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme = MCInterfaceTheme(p_theme);
+    
+    // Changing the theme probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = gettheme();
+}
+
+void MCObject::GetThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme_type;
+}
+
+void MCObject::SetThemeControlType(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme_type = MCPlatformControlType(p_theme);
+    
+    // Changing the theming type probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = getcontroltype();
 }

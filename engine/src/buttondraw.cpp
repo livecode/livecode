@@ -186,8 +186,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			case F_RADIO:
 			case F_RECTANGLE:
 			case F_STANDARD:
-					if (MCcurtheme == NULL || !getstack() -> ismetal() || (isstdbtn && state & CS_HILITED) ||
-						!MCcurtheme -> drawmetalbackground(dc, dirty, trect, this))
+                    if ((isstdbtn && (state & CS_HILITED))
+                        || MCcurtheme == NULL
+                        || !((getstack()->ismetal() && MCcurtheme->drawmetalbackground(dc, dirty, trect, this))
+                              || (style == F_MENU && menumode == WM_TOP_LEVEL && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE))))
+
 				{
 					if (isstdbtn && noback)
 					{
@@ -299,7 +302,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						}
 					}
 					else if (!(flags & F_SHOW_BORDER) && MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK
-					         && state & (CS_ARMED | CS_KFOCUSED) && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
+                             && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
 					         && flags & MENU_ITEM_FLAGS && flags & F_AUTO_ARM)
 					{
 						// FG-2014-07-30: [[ Bugfix 9405 ]]
@@ -307,10 +310,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						setforeground(dc, DI_BACK, False, False);
 						dc->fillrect(shadowrect);
 
-						MCWidgetInfo winfo;
-						winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
-						getwidgetthemeinfo(winfo);
-						MCcurtheme->drawwidget(dc, winfo, shadowrect);
+                        if (state & CS_ARMED)
+                        {
+                            MCWidgetInfo winfo;
+                            winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
+                            getwidgetthemeinfo(winfo);
+                            MCcurtheme->drawwidget(dc, winfo, shadowrect);
+                        }
 					}
 
 			}
@@ -638,12 +644,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	}
 
 	if (!p_isolated)
-	{
+    {
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
+    }
 }
 
 void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic)
@@ -676,19 +679,27 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 		fascent = MCFontGetAscent(m_font);
 		dc->drawline(sx, sy - (fascent >> 1), sx + twidth, sy - (fascent >> 1));
 	}
-	if (!IsMacLF() && mnemonic)
+	if (!IsMacLF() && mnemonic
+        && (gettheme() == kMCInterfaceThemeLegacy || (MCscreen->querymods() & MS_ALT)))
 	{
 		if (p_mnemonic > 0)
 		{
 			MCRange t_before = MCRangeMake(0, mnemonic - 1);
 			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
-
-            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before, getstack() -> getdevicetransform());
             int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter, getstack() -> getdevicetransform());
 
+#ifdef TARGET_PLATFORM_WINDOWS
+			// No idea why this fudge-factor is required on Windows...
+			// Without it, the mnemonic underlines are drawn too far
+			// to the left, mis-aligning them with the mnemonic letter.
+			mstart -= 1;
+#endif
+
 			sy += mnemonicoffset;
-			dc->drawline(mstart, sy, mstart + mwidth, sy);
+			dc->drawline(mstart, sy, mstart + mwidth - 1, sy);
 		}
 	}
 }

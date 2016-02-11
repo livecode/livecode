@@ -1,0 +1,42 @@
+Name: stack version
+
+Synonyms: stack format,stack file format,stack file version
+
+Type: glossary
+
+Description:
+
+When saving a <stack> using the <save> <command>, it is possible to save with a specific version of LiveCode's stack <file> format.  This is useful when saving a stack so that it can be saved in an older <version|version of LiveCode>, but it should be used with caution.
+
+**Warning:** Using a non-default <stack version> could result in data being lost when stacks are saved.  In particular, any features that are not present in the target version may be lost.  For example, using a <stack version> of "2.4" will cause any <blendLevel> or <ink> properties to be lost.
+
+These are the <stack version|stack file format versions> that can be used with the <save> command, and the versions of LiveCode that they are compatible with:
+
+* "8.0": (Default) LiveCode 8.0.0 and later
+* "7.0": LiveCode 7.0.0 up to LiveCode 8.0.0
+* "5.5": LiveCode 5.5.0 up to LiveCode 7.0
+* "2.7": LiveCode 2.6.1 up to LiveCode 5.5.0
+* "2.4": LiveCode older than 2.6.1
+
+When saving in the **7.0 format**, all <widget|widgets> will be lost.
+
+When saving in the **5.5 format**, all <Unicode> text will be lost unless it is stored in a container that has a Unicode variant.  For example, this means that Unicode text in <field|fields> and <button> labels will be saved, but any Unicode text in <script|scripts> or <custom properties> will be lost.
+
+When saving in the **2.7 format**, the following properties or property aspects will also be lost:
+
+* <textFont> property: separation lost
+* <textStyle> property: separation lost
+* <textSize> property: separation lost
+* <unicodeToolTip> property: lost
+* all paragraph level properties: lost
+* separation of Unicode attribute of chars: lost
+* character level metadata property: lost
+
+When saving in the **2.4 format**, the following properties will also be lost or altered:
+
+* <antialiased> property: lost
+* <ink> property: lost for <card|cards>, reverted to "GXcopy" for controls if not supported
+* <opaque> property: lost for cards
+* <blendLevel> property: lost
+
+References: stack file (glossary), stack (object), save (command), blendLevel (property), ink (property), Unicode (glossary), field (object), button (object), script (glossary), custom property (glossary), textFont (property), textStyle (property), textSize (property), unicodeToolTip (property), antialiased (property), opaque (property), card (object), widget (object), version (function)

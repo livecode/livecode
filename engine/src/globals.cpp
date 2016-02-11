@@ -241,7 +241,7 @@ uint2 MCnsockets;
 MCStack **MCusing;
 uint2 MCnusing;
 uint2 MCiconicstacks;
-uint2 MCwaitdepth;
+MCSemaphore MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
 MCClipboard* MCclipboard;
@@ -273,7 +273,7 @@ MCCard *MCdynamiccard;
 Boolean MCdynamicpath;
 MCObject *MCerrorptr;
 MCObject *MCerrorlockptr;
-MCObject *MCtargetptr;
+MCObjectPtr MCtargetptr;
 MCObject *MCmenuobjectptr;
 MCGroup *MCsavegroupptr;
 MCGroup *MCdefaultmenubar;
@@ -384,7 +384,7 @@ MCPlatformSoundRecorderRef MCrecorder;
 #endif
 
 // AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
-uint4 MCstackfileversion = 7000;
+uint4 MCstackfileversion = 8000;
 uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
@@ -634,7 +634,7 @@ void X_clear_globals(void)
 	MCusing = nil;
 	MCnusing = 0;
 	MCiconicstacks = 0;
-	MCwaitdepth = 0;
+	MCwaitdepth = MCSemaphore("wait-depth");
 	MCrecursionlimit = 400000;
 	MCclipboard = NULL;
 	MCselection = NULL;
@@ -663,7 +663,7 @@ void X_clear_globals(void)
 	MCdynamicpath = False;
 	MCerrorptr = nil;
 	MCerrorlockptr = nil;
-	MCtargetptr = nil;
+	memset(&MCtargetptr, 0, sizeof(MCObjectPtr));
 	MCmenuobjectptr = nil;
 	MCsavegroupptr = nil;
 	MCdefaultmenubar = nil;
@@ -764,7 +764,7 @@ void X_clear_globals(void)
 #endif
     
 	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
-	MCstackfileversion = 7000;
+	MCstackfileversion = 8000;
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
@@ -1253,7 +1253,12 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 			MClook = MCcurtheme->getthemefamilyid();
 		}
 		else
-			delete newtheme;
+        {
+            // Fall back to the Win95 theme if the Windows theme failed to load
+            if (newtheme->getthemefamilyid() == LF_WIN95)
+                MClook = LF_WIN95;
+            delete newtheme;
+        }
     }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();

@@ -50,6 +50,7 @@ class MCDispatch : public MCObject
 	bool m_drag_source;
 	bool m_drag_target;
 	bool m_drag_end_sent;
+    bool m_showing_mnemonic_underline;
 
 	MCExternalHandlerList *m_externals;
 
@@ -101,7 +102,7 @@ public:
 	bool loadexternal(MCStringRef p_external);
 
 	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
-	IO_stat savestack(MCStack *sptr, const MCStringRef);
+	IO_stat savestack(MCStack *sptr, const MCStringRef, uint32_t p_version = UINT32_MAX);
 	IO_stat startup(void);
 	
 	void wreshape(Window w);
@@ -178,7 +179,7 @@ public:
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
 	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
-    MCFontStruct *loadfontwithhandle(MCSysFontHandle);
+    MCFontStruct *loadfontwithhandle(MCSysFontHandle, MCNameRef p_name);
 	
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
@@ -264,13 +265,15 @@ public:
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
     
+    virtual bool recomputefonts(MCFontRef parent_font, bool force);
+    
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
 	IO_stat doreadfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
     //   is wrapped by savestack to handle logical font table.
-    IO_stat dosavestack(MCStack *sptr, const MCStringRef);
+	IO_stat dosavestack(MCStack *sptr, const MCStringRef, uint32_t p_version);
     // MW-2014-09-30: [[ ScriptOnlyStack ]] Save a stack if it is marked as script-only.
     IO_stat dosavescriptonlystack(MCStack *sptr, const MCStringRef);
 };

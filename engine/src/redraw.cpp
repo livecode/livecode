@@ -1028,6 +1028,7 @@ bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, c
 	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card foreground
 	t_card -> drawselectionrect(p_target);
 
+    t_card -> drawselectedchildren(p_target);
 	return true;
 }
 

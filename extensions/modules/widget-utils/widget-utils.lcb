@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 A library of utility handlers for functions commonly needed by widgets.
 */
 
-module com.livecode.widgetutils
+module com.livecode.library.widgetutils
 
 use com.livecode.canvas
 use com.livecode.engine

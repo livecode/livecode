@@ -153,7 +153,8 @@ dist-docs-commercial:
 
 dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) --stage notes
+	$(buildtool_command) --platform $(buildtool_platform) \
+	    --stage notes --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-server: dist-server-commercial
@@ -163,11 +164,11 @@ dist-server: dist-server-community
 
 dist-server-community:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server --edition community
+	    --stage server --edition community --warn-as-error
 
 dist-server-commercial:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server --edition commercial
+	    --stage server --edition commercial --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial

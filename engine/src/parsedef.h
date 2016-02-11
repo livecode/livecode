@@ -861,6 +861,7 @@ enum Preposition_type {
 	PT_MARKUP,
 	PT_BINARY,
 	PT_COOKIE,
+	PT_NEWEST,
 };
 
 enum Print_mode {
@@ -1718,6 +1719,9 @@ enum Properties {
     P_RAW_DRAGBOARD_DATA,
     P_FULL_CLIPBOARD_DATA,
     P_FULL_DRAGBOARD_DATA,
+    
+    P_THEME,
+    P_THEME_CONTROL_TYPE,
     
     __P_LAST,
 };

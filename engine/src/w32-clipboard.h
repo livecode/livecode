@@ -77,6 +77,10 @@ public:
     
 	// Returns the data object representing the clipboard data
 	IDataObject* GetIDataObject() const;
+    
+    // Returns m_object cast to MCWin32DataObject if the data is non-external.
+    // Will return NULL if m_object_is_external is true.
+    MCWin32DataObject* GetDataObject();
 
 private:
     
@@ -96,10 +100,6 @@ private:
 	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent);
 	MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_parent, IDataObject* p_external_data);
 	~MCWin32RawClipboardItem();
-
-	// Returns m_object cast to MCWin32DataObject if the data is non-external.
-	// Will return NULL if m_object_is_external is true.
-	MCWin32DataObject* GetDataObject();
 
 	// Ensures that the representations have been loaded if the data is from
 	// an external source. Does nothing if the data is local.

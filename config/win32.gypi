@@ -76,7 +76,7 @@
 					'VCCLCompilerTool':
 					{
 						'Optimization': '3',
-						'WholeProgramOptimization': 'false',
+						'WholeProgramOptimization': 'true',
 						'PreprocessorDefinitions': [ '_RELEASE', 'NDEBUG' ],
 						'RuntimeLibrary': '0',
 						'DebugInformationFormat': '3',
@@ -88,6 +88,7 @@
 						'OptimizeReferences': '2',
 						'GenerateDebugInformation': 'true',
 						'EnableCOMDATFolding': '2',
+						'LinkTimeCodeGeneration': '1',
 					},
 				},
 			},
@@ -122,6 +123,8 @@
 			'_CRT_SECURE_NO_DEPRECATE',
 			'_CRT_DISABLE_PERFCRIT_LOCKS',
 			'__LITTLE_ENDIAN__',
+			'WINVER=0x0501',		# Windows XP
+			'_WIN32_WINNT=0x0501',		# Windows XP
 		],
 		
 		'target_conditions':

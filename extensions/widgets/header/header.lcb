@@ -20,12 +20,12 @@ This widget is a header bar.
 
 Name: headerAction
 Type: message
-Syntax: on headerAction <pName>
+Syntax: on headerAction <pLabel>
 
 Summary: Sent when one of the <headerActions> icons is clicked.
 
 Parameters:
-pName: The name of the header action that was clicked.
+pName: The label of the header action that was clicked.
 
 Description:
 Use the <headerAction> message to perform an action when one of the action icons is
@@ -66,7 +66,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 
 -- metadata
 metadata title is "Header"
@@ -675,6 +675,7 @@ private handler drawActions() returns nothing
    variable tIconPath as Path
    variable tActionRect as Rectangle
 
+   variable tHitRect as Rectangle
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
 
@@ -689,12 +690,13 @@ private handler drawActions() returns nothing
             put fetchRect("actionIcon") into tActionRect
             put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
             fill tIconPath on this canvas
-
+            put the bounding box of tIconPath into tHitRect
          else if mActionStyle is "names" then
             put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
             put fetchRect("actionLabel") into tActionRect
             set the font of this canvas to fetchFont("label")
             fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
+            put tActionRect into tHitRect
          end if
 
       else if mWidgetTheme is kWidgetThemeAndroid then
@@ -703,10 +705,10 @@ private handler drawActions() returns nothing
          put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
          translate tIconPath by [my width - (mAndroidBuffer*2 + mAndroidIconDimension)*tX, 0]
          fill tIconPath on this canvas
-
+         put the bounding box of tIconPath into tHitRect
       end if
 
-      push tActionRect onto back of mActionRects
+      push tHitRect onto back of mActionRects
    end repeat
 end handler
 
@@ -1113,7 +1115,7 @@ public handler OnMouseUp()
       put the number of elements in element 1 of mHeaderActions into tNumActions
       repeat with tActionCount from 1 up to tNumActions
          if tActionCount is tSelectedUp-2 then
-            post "headerAction" with [mHeaderActions[tActionCount]["name"]]
+            post "headerAction" with [mHeaderActions[tActionCount]["label"]]
          end if
       end repeat
 

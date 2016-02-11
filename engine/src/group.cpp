@@ -531,6 +531,79 @@ void MCGroup::mdrag(void)
 	}
 }
 
+bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
+{
+    if (controls != nil)
+    {
+        MCControl *tptr = controls->prev();
+        do
+        {
+            // Check if any group's child is selected and focused
+            if (p_check_selected && tptr -> gettype() == CT_GROUP)
+            {
+                if (static_cast<MCGroup *>(tptr) -> mfocus_control(x, y, true))
+                {
+                    mfocused = tptr;
+                    return true;
+                }
+            }
+            
+            // Only check mfocus for objects with the appropriate selection state
+            if ((p_check_selected == tptr -> getstate(CS_SELECTED))
+                && tptr -> mfocus(x, y))
+            {
+                Boolean newfocused = tptr != mfocused;
+                
+                if (newfocused && mfocused != NULL)
+                {
+                    MCControl *oldfocused = mfocused;
+                    mfocused = tptr;
+                    oldfocused->munfocus();
+                }
+                else
+                    mfocused = tptr;
+                
+                // The widget event manager handles enter/leave itself
+                if (newfocused && mfocused != nil &&
+                    mfocused -> gettype() != CT_GROUP &&
+                    mfocused -> gettype() != CT_WIDGET)
+                {
+                        mfocused->enter();
+                        
+                        // MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
+                        //   ... and now lets make sure it doesn't crash!
+                        //   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
+                        if (mfocused != NULL)
+                            mfocused->mfocus(x, y);
+                }
+                return true;
+            }
+            
+            // Unset previously focused object.
+            if (!p_check_selected && tptr == mfocused)
+            {
+                // Use the group's munfocus method if the group has an mfocused control.
+                if (mfocused -> gettype() != CT_GROUP
+                    || static_cast<MCGroup *>(mfocused) -> getmfocused() != nil)
+                {
+                    MCControl *oldfocused = mfocused;
+                    mfocused = NULL;
+                    oldfocused->munfocus();
+                }
+                else
+                {
+                    static_cast<MCGroup *>(mfocused) -> clearmfocus();
+                    mfocused = nil;
+                }
+            }
+
+            tptr = tptr->prev();
+        }
+        while (tptr != controls->prev());
+    }
+    return false;
+}
+
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
 	if (!(flags & F_VISIBLE || MCshowinvisibles)
@@ -571,40 +644,9 @@ Boolean MCGroup::mfocus(int2 x, int2 y)
 			// MW-2008-01-30: [[ Bug 5832 ]] Previously we would have been immediately
 			//   unfocusing the group if there were no controls, this resulted in much
 			//   sadness as empty groups wouldn't be resizable :o(
-			if (controls != NULL)
-			{
-				MCControl *tptr = controls->prev();
-				do
-				{
-					if (tptr->mfocus(x, y))
-					{
-						if (mfocused != NULL && tptr != mfocused)
-							mfocused->munfocus();
-						if (tptr != mfocused)
-						{
-							mfocused = tptr;
-							if (mfocused->gettype() != CT_GROUP)
-							{
-								mfocused->enter();
-
-								// MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
-								//   ... and now lets make sure it doesn't crash!
-								//   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
-								if (mfocused != NULL)
-									mfocused->mfocus(x, y);
-							}
-						}
-						return True;
-					}
-					else if (tptr == mfocused)
-					{
-						mfocused->munfocus();//changed
-						mfocused = NULL;
-					}
-					tptr = tptr->prev();
-				}
-				while (tptr != controls->prev());
-			}
+            if (mfocus_control(x, y, false))
+                return true;
+            
 			if (state & CS_SELECTED)
 				return True;
 		}
@@ -2790,6 +2832,23 @@ void MCGroup::boundcontrols()
 	}
 }
 
+void MCGroup::drawselectedchildren(MCDC *dc)
+{
+    MCControl *t_control = controls;
+    if (t_control == nil)
+        return;
+    do
+    {
+        if (t_control -> getstate(CS_SELECTED))
+            t_control -> drawselected(dc);
+        
+        if (t_control -> gettype() == CT_GROUP)
+            static_cast<MCGroup *>(t_control) -> drawselectedchildren(dc);
+        
+        t_control = t_control -> next();
+    }
+    while (t_control != controls);
+}
 
 //-----------------------------------------------------------------------------
 //  Redraw Management
@@ -2927,9 +2986,6 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
 	}
 }
 
@@ -3120,7 +3176,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 
 #define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
 
-IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3134,7 +3190,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3170,7 +3226,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -3184,14 +3240,14 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_clips_to_rect)
         t_has_extensions = true;
 
-	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3233,16 +3289,16 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (vscrollbar != NULL)
 	{
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (hscrollbar != NULL)
 	{
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (controls != NULL)
@@ -3250,7 +3306,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCControl *cptr = controls;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = cptr->next();
 		}
@@ -3620,10 +3676,10 @@ MCObject *MCGroup::hittest(int32_t x, int32_t y)
 }
 
 // MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
-bool MCGroup::recomputefonts(MCFontRef p_parent_font)
+bool MCGroup::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// First update the font referenced by the group object.
-	if (!MCObject::recomputefonts(p_parent_font))
+	if (!MCObject::recomputefonts(p_parent_font, p_force))
 		return false;
 
 	// The group's font only has an effect in isolation if the group is
@@ -3640,7 +3696,7 @@ bool MCGroup::recomputefonts(MCFontRef p_parent_font)
 		t_control = controls;
 		do
 		{
-			if (t_control -> recomputefonts(m_font))
+			if (t_control -> recomputefonts(m_font, p_force))
 				t_changed = true;
 			t_control = t_control -> next();
 		}

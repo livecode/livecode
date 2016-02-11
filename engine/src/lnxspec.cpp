@@ -1693,7 +1693,6 @@ Boolean MCS_poll(real8 delay, int fd)
 	int4 n;
 	uint2 i;
 	Boolean wasalarm = alarmpending;
-	Boolean handled = False;
 	if (alarmpending)
 		MCS_alarm(0.0);
 	
@@ -1721,9 +1720,6 @@ Boolean MCS_poll(real8 delay, int fd)
 		if (MCinputfd > maxfd)
 			maxfd = MCinputfd;
 	}
-    handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-    if (handled)
-        delay = 0.0;
 
 	if (g_notify_pipe[0] != -1)
 	{
@@ -1740,12 +1736,11 @@ Boolean MCS_poll(real8 delay, int fd)
 	
 		n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 	if (n <= 0)
-		return handled;
+		return False;
 	if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
 		return True;
 	if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
 		readinput = True;
-    MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
     
 	if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
 	{

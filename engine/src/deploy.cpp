@@ -322,6 +322,36 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
 	MCValueAssign(modules, t_temp_array);
 	MCValueRelease(t_temp_array);
+    
+    MCAutoStringRef t_architectures_string;
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("architectures"), false, &t_architectures_string))
+        return false;
+    if (!MCStringIsEmpty(*t_architectures_string))
+    {
+        // Split the string up into items
+        MCAutoProperListRef t_architectures;
+        if (!MCStringSplitByDelimiter(*t_architectures_string, MCSTR(","), kMCStringOptionCompareExact, &t_architectures))
+            return false;
+        
+        // Process the architectures
+        MCValueRef t_architecture;
+        for (uindex_t i = 0; i < MCProperListGetLength(*t_architectures); i++)
+        {
+            // Fetch this item and make sure it is a string
+            t_architecture = MCProperListFetchElementAtIndex(*t_architectures, i);
+            if (t_architecture == nil || MCValueGetTypeCode(t_architecture) != kMCValueTypeCodeString)
+                return false;
+            
+            // Map it to an architecture ID
+            MCDeployArchitecture t_id;
+            if (!MCDeployMapArchitectureString((MCStringRef)t_architecture, t_id))
+                return false;
+            
+            // Append it to the list of desired architectures
+            if (!architectures.Push(t_id))
+                return false;
+        }
+    }
 	
     return true;
 }

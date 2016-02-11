@@ -30,8 +30,13 @@ Several important features are not yet supported:
 
 * some `ask` and `answer` message boxes
 * networking
+* JavaScript in LiveCode Builder extensions
 
-The HTML5 engine is unlikely ever to support externals (including revdb).
+Two important unsupported features are unlikely to be added in the near future:
+
+* operations that need to pause the script while something happens
+  (e.g. `wait 10`)
+* externals (including revdb)
 
 # How to deploy an app to HTML5
 
@@ -112,6 +117,8 @@ The engine renders into a HTML5 `<canvas>` element.  There are three important c
 The absolute minimum canvas element would look something like this:
 
     <canvas style="border: 0px none;" id="canvas" oncontextmenu="event.preventDefault();"></canvas>
+
+By default, most web browsers will indicate when the canvas has focus by displaying a highlighted outline.  This helps users identify which part of the web page is capturing their key presses.  You can usually disable this outline by adding `outline: none;` to the canvas's CSS styles.
 
 ## The Module object
 

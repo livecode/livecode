@@ -16,9 +16,9 @@ You will need a 64-bit Linux machine or VM with at least 4 GB of RAM
 Unsurprisingly, the Emscripten SDK must be installed in order to build
 an Emscripten engine.
 
-1. Download the portable Emscripten SDK from <https://kripken.github.io/emscripten/site>.  Put it in `/opt/emsdk_portable`, for example.
+1. Download the portable Emscripten SDK from <https://kripken.github.io/emscripten-site>.  Put it in `/opt/emsdk_portable`, for example.
 
-2. Check what SDKs are available by running:
+2. Check which SDKs are available by running:
 
        /opt/emsdk_portable/emsdk list
 
@@ -33,7 +33,7 @@ an Emscripten engine.
 
 Before building for Emscripten, source the Emscripten SDK script that sets up the environment correctly.  You need to source it with the `.` or `source` command rather than just running it.
 
-    source /opt/emsdk_protable/emsdk_env.sh
+    source /opt/emsdk_portable/emsdk_env.sh
 
 ## Configuring LiveCode
 
@@ -44,8 +44,6 @@ To configure LiveCode, run:
 This will generate make control files in the `build-emscripten` directory.  You can also run `config.sh` directly.
 
 ## Compiling LiveCode
-
-LiveCode currently requires some special setup steps to enable building on Emscripten.
 
 To compile LiveCode, run:
 

@@ -149,8 +149,9 @@ public constant kMCBrowserRequestTypeMap is ["navigate", "documentLoad"]
 public constant kMCBrowserRequestStateBegin is 0
 public constant kMCBrowserRequestStateComplete is 1
 public constant kMCBrowserRequestStateFailed is 2
+public constant kMCBrowserRequestStateUnhandled is 3
 
-public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed"]
+public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed", "unhandled"]
 
 --
 

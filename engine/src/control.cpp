@@ -253,11 +253,14 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	}
 	MCRectangle srect;
 	MCU_set_rect(srect, x, y, 1, 1);
+    
+    mx = x;
+    my = y;
+    
 	Boolean is = maskrect(srect) || (state & CS_SELECTED
 	                                 && MCU_point_in_rect(geteffectiverect(), x, y)
 	                                 && sizehandles() != 0);
-	mx = x;
-	my = y;
+    
 	if (is || state & CS_MFOCUSED)
 	{
 		if (focused == this || getstack() -> gettool(this) == T_POINTER)
@@ -889,9 +892,9 @@ void MCControl::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p
 	fprintf(stderr, "Control: ERROR tried to draw control id %d\n", obj_id);
 }
 
-IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
-	return MCObject::save(stream, p_part, p_force_ext);
+	return MCObject::save(stream, p_part, p_force_ext, p_version);
 }
 
 Boolean MCControl::kfocusset(MCControl *target)
@@ -1104,20 +1107,24 @@ void MCControl::drawselected(MCDC *dc)
 		return;
 
 	dc -> setopacity(255);
-	dc -> setfunction(GXcopy);
+    dc -> setquality(QUALITY_SMOOTH);
+    dc -> setfunction(GXcopy);
 
-	MCRectangle rects[8];
-	sizerects(rects);
-	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillStippled, nil, 0, 0);
-	else
-		dc->setfillstyle(FillSolid, nil, 0, 0);
-	dc->setforeground(MCselectioncolor);
-    dc->setquality(QUALITY_SMOOTH);
+    drawmarquee(dc, rect);
+    
+    MCRectangle rects[8];
+    sizerects(rects);
+    if (flags & F_LOCK_LOCATION)
+        dc->setfillstyle(FillStippled, nil, 0, 0);
+    else
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+    dc->setforeground(MCselectioncolor);
+
     for (uint2 i = 0; i < 8; i++)
         dc->fillarc(rects[i], 0, 360, false);
-	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillSolid, nil, 0, 0);
+    if (flags & F_LOCK_LOCATION)
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+
     dc->setquality(QUALITY_DEFAULT);
 }
 
@@ -1437,6 +1444,8 @@ void MCControl::continuesize(int2 x, int2 y)
 	resizeparent();
 }
 
+#define SIZE_HANDLE_HIT_TOLERANCE 1
+
 uint2 MCControl::sizehandles()
 {
 	uint2 newstate = 0;
@@ -1446,6 +1455,9 @@ uint2 MCControl::sizehandles()
 		sizerects(rects);
 		int2 i;
 		for (i = 7 ; i >= 0 ; i--)
+        {
+            // Be more forgiving about handle hit detection
+            MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
 			if (MCU_point_in_rect(rects[i], mx, my))
 			{
 				if (i < 3)
@@ -1472,6 +1484,7 @@ uint2 MCControl::sizehandles()
 					}
 				break;
 			}
+        }
 	}
 	return newstate;
 }

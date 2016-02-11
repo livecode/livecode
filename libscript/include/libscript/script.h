@@ -304,6 +304,9 @@ void MCScriptAddValueToModule(MCScriptModuleBuilderRef builder, MCValueRef value
 void MCScriptBeginListValueInModule(MCScriptModuleBuilderRef builder);
 void MCScriptContinueListValueInModule(MCScriptModuleBuilderRef builder, uindex_t index);
 void MCScriptEndListValueInModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
+void MCScriptBeginArrayValueInModule(MCScriptModuleBuilderRef builder);
+void MCScriptContinueArrayValueInModule(MCScriptModuleBuilderRef builder, uindex_t key_index, uindex_t value_index);
+void MCScriptEndArrayValueInModule(MCScriptModuleBuilderRef builder, uindex_t& r_index);
 
 void MCScriptAddDefinedTypeToModule(MCScriptModuleBuilderRef builder, uindex_t index, uindex_t& r_type);
 void MCScriptAddForeignTypeToModule(MCScriptModuleBuilderRef builder, MCStringRef p_binding, uindex_t& r_type);
@@ -359,6 +362,9 @@ void MCScriptEmitAssignInModule(MCScriptModuleBuilderRef builder, uindex_t dst_r
 void MCScriptEmitBeginAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitContinueAssignListInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitEndAssignListInModule(MCScriptModuleBuilderRef builder);
+void MCScriptEmitBeginAssignArrayInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
+void MCScriptEmitContinueAssignArrayInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
+void MCScriptEmitEndAssignArrayInModule(MCScriptModuleBuilderRef builder);
 void MCScriptEmitReturnInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 void MCScriptEmitReturnUndefinedInModule(MCScriptModuleBuilderRef builder);
 void MCScriptBeginInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t handler_index, uindex_t result_reg);

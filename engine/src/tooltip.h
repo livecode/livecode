@@ -47,5 +47,9 @@ public:
 	{
 		return tip;
 	}
+    
+protected:
+    
+    virtual MCPlatformControlType getcontroltype();
 };
 #endif

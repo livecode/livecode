@@ -69,21 +69,20 @@ void MCStringsCountChunksInRange(MCExecContext& ctxt, Chunk_term p_chunk_type, M
         return;
     }
     
-    // When the string doesn't contain combining characters or surrogate pairs, we can shortcut.
-    if ((p_chunk_type == CT_CHARACTER || p_chunk_type == CT_CODEPOINT))
-        if (MCStringIsNative(p_string) || (MCStringIsUncombined(p_string) && MCStringIsSimple(p_string)))
-            p_chunk_type = CT_CODEUNIT;
+    MCChunkType t_type;
+    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
     
-    if (p_chunk_type == CT_CODEUNIT)
+    // When the string doesn't contain combining characters or surrogate
+    // pairs, we can shortcut.
+    t_type = MCChunkTypeSimplify(p_string, t_type);
+        
+    if (t_type == kMCChunkTypeCodeunit)
     {
         // AL-2015-03-23: [[ Bug 15045 ]] Clamp range correctly
         r_count = MCU_min(MCStringGetLength(p_string) - p_range . offset, p_range . length);
         return;
     }
-    
-    MCChunkType t_type;
-    t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
-    
+
     MCTextChunkIterator *tci;
     tci = MCStringsTextChunkIteratorCreateWithRange(ctxt, p_string, p_range, p_chunk_type);
     
@@ -289,7 +288,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                     r_end += t_found_range . length;
                 // If we didn't, and this operation does not force additional delimiters, then include the previous delimiter in the mark.
                 // e.g. mark item 3 of a,b,c -> a,b(,c) so that delete item 3 of a,b,c -> a,b
-                else if (r_start > 0 && !r_add)
+                else if (r_start > p_range . offset && !r_add)
                     r_start -= t_found_range . length;
             }
         }
@@ -359,7 +358,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             {
 	            if (r_end >= 0 && (uindex_t) r_end < t_length)
                     r_end++;
-                else if (r_start > 0 && !r_add)
+                else if (r_start > p_range . offset && !r_add)
                     r_start--;
             }
         }
@@ -423,7 +422,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 //  and word chunk range goes to the end of the string. 
 	            if (r_end >= 0 && (uindex_t) r_end == t_length)
                 {
-                    while (r_start > 0 && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
+                    while (r_start > p_range . offset && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
                         r_start--;
                 }
                 return;

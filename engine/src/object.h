@@ -105,6 +105,13 @@ enum MCPropertyChangedMessageType
 	kMCPropertyChangedMessageTypeGradientEditEnded = 1 << 4
 };
 
+enum MCInterfaceTheme
+{
+    kMCInterfaceThemeEmpty = 0,         // Inherit the theme
+    kMCInterfaceThemeNative = 1,        // Native appearance
+    kMCInterfaceThemeLegacy = 2         // Backwards-compatibility theming
+};
+
 struct MCObjectShape
 {
 	// The type of shape.
@@ -163,6 +170,7 @@ struct MCObjectVisitor
 // MW-2012-02-19: [[ SplitTextAttrs ]] If this flag is set, then there is a font-flags
 //   byte in the extended data section.
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
+#define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
 class MCObjectHandle
 {
@@ -276,6 +284,12 @@ protected:
     
     // If this is true, then this object is in the parentScript resolution table.
     bool m_is_parent_script : 1;
+    
+    // Whether to use legacy theming (or native-like theming)
+    MCInterfaceTheme m_theme;
+    
+    // Override the type of the control for theming purposes
+    MCPlatformControlType m_theme_type;
 	
 	MCStringRef tooltip;
 	
@@ -335,8 +349,8 @@ public:
 	virtual bool visit_self(MCObjectVisitor *p_visitor);
 	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
 
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -402,7 +416,8 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// MW-2012-02-14: [[ FontRefs ]] Remap any fonts this object uses as font related property has changed.
-	virtual bool recomputefonts(MCFontRef parent_font);
+    // Set force to true to recompute even if it looks like nothing needs updated
+	virtual bool recomputefonts(MCFontRef parent_font, bool force = false);
 
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
@@ -687,6 +702,8 @@ public:
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
 	bool names(Properties which, MCValueRef& r_name);
+    bool getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val);
+    
 #ifdef LEGACY_EXEC
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
@@ -698,6 +715,7 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
+    void drawmarquee(MCContext *p_context, const MCRectangle &p_rect);
     
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
@@ -874,7 +892,7 @@ public:
     
     // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
     //   a widget.
-    bool haswidgets(void);
+    virtual bool haswidgets(void);
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
@@ -917,8 +935,8 @@ public:
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);
 	virtual void SetId(MCExecContext& ctxt, uint32_t id);
 	void GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id);
-	void GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name);
-	void GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id);
+	void GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name);
+	void GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id);
 	void GetName(MCExecContext& ctxt, MCStringRef& r_name);
 	virtual void SetName(MCExecContext& ctxt, MCStringRef name);
 	void GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name);
@@ -1080,7 +1098,7 @@ public:
 	void GetOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner);
-	void GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner);
 
 	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
@@ -1158,6 +1176,14 @@ public:
     void GetCustomProperties(MCExecContext& ctxt, MCValueRef &r_array);
     void SetCustomProperties(MCExecContext& ctxt, MCValueRef p_array);
     
+    void GetTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t  p_theme);
+    void GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    
+    void GetThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetThemeControlType(MCExecContext& ctxt, intenum_t  p_type);
+    void GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    
 	////////// ARRAY PROPS
     
     void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
@@ -1185,13 +1211,13 @@ public:
     void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
 
 protected:
-	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+    IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_remaining);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are the new propset pickle routines. If
 	//   sfv < 7000 then the legacy ones are used; otherwise new ones are.
 	IO_stat loadpropsets(IO_handle stream, uint32_t version);
-	IO_stat savepropsets(IO_handle stream);
+	IO_stat savepropsets(IO_handle stream, uint32_t p_version);
 	
 	// MW-2012-02-16: [[ LogFonts ]] Load the font attrs with the given index.
 	//   This method is protected as MCStack needs to call it to resolve its
@@ -1216,6 +1242,9 @@ protected:
     virtual MCPlatformControlPart getcontrolsubpart();
     virtual MCPlatformControlState getcontrolstate();
     bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
+    
+    // Returns the effective theme for this object
+    MCInterfaceTheme gettheme() const;
     
 private:
 #ifdef OLD_EXEC
@@ -1269,6 +1298,8 @@ private:
 	// MW-2012-02-19: [[ SplitTextAttrs ]] Returns true if the object needs to save
 	//   the font-flags.
 	bool needtosavefontflags(void) const;
+    // Returns false if hasfontattrs() or a theme or theming type is set
+    bool inheritfont() const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);

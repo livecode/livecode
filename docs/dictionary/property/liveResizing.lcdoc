@@ -10,7 +10,7 @@ Associations: stack
 
 Introduced: 2.1
 
-OS: mac
+OS:
 
 Platforms: desktop,server,web
 
@@ -23,6 +23,8 @@ set the liveResizing of me to true
 Value (bool): The <liveResizing> <property> of a <stack> is true or false. By <default>, the <liveResizing> of a newly created <stack> is set to false.
 
 Description:
+**Note:** The <liveResizing> property is deprecated, since it has no effect on any operating system currently supported by LiveCode.  Its value is always treated as true.
+
 Use the <liveResizing> property to create a smooth visual appearance while resizing.
 
 When the <liveResizing> <property> is true, the window contents (including the borders) are redrawn continuously as the user resizes, so at any time, the window is displayed as it will look if the user releases the mouse button at that moment.
@@ -31,8 +33,9 @@ If the <liveResizing> is false, the window does not change until the user releas
 
 If the <liveResizing> is true, <resizeStack> <message|messages> are sent continually while the window is being resized, allowing your stack to update its appearance during resizing. (If the user pauses during resizing, with the mouse down in the resize box but the pointer not moving, no <resizeStack> <message> is sent until the mouse moves again.)
 
-On Mac OS, Unix, and Windows systems, the <liveResizing> <property> has no effect.
-
 References: rectangle (property), resizable (property), default (keyword), resizeStack (message), stack (object), property (glossary), message (glossary), stack window (glossary)
 
 Tags: windowing
+
+Changes:
+Deprecated from version 8.0.0.

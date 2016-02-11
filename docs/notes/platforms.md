@@ -62,33 +62,43 @@ Currently, the supported versions of Xcode are:
 * Xcode 4.6 on MacOS X 10.7
 * Xcode 5.1 on MacOS X 10.8
 * Xcode 6.2 on MacOS X 10.9
-* Xcode 6.2, 6.4 and 7.1 on Mac OS X 10.10
-* Xcode 7.1 on MacOS X 10.11
+* Xcode 6.2, 6.4, 7.1 and 7.2 on Mac OS X 10.10
+* Xcode 7.1 and 7.2 on MacOS X 10.11
 
 It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on Yosemite, you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
 
 We currently support the following iOS Simulators:
+
 * 6.1
 * 7.1
 * 8.2
 * 8.4
-* 9.1
+* 9.2
 
 ## Android
-LiveCode allows you to save your stack as an Android application, and also to deploy it on an Android device or simulator from the IDE.
+
+LiveCode allows you to save your stack as an Android application, and
+also to deploy it on an Android device or simulator from the IDE.
+
 Android deployment is possible from Windows, Linux and Mac OSX.
 
-To enable the deployment to an Android device, you need to download the [Android SDK](https://developer.android.com/sdk/index.html#Other) and to install the following component, using the *Android SDK Manager*:
+To enable deployment to Android devices, you need to download the
+[Android SDK](https://developer.android.com/sdk/index.html#Other), and
+then use the 'Android SDK Manager' to install:
 
-* Android SDK Platform for Android 4.0.3 (API 15)
-* Android SDK Platform Tools
-* Android SDK Build Tools
+* the latest "Android SDK Tools"
+* the latest "Android SDK Platform Tools"
 
-You also need to have Java *JDK 1.6* installed on your machine (or *openjdk-6* on Linux).
+You also need to install the Java Development Kit (JDK).  On Linux,
+this usually packaged as "openjdk".  LiveCode requires JDK version 1.6
+or later.
 
-Once you have set the path of your Android SDK in the *LiveCode Preferences > Mobile Support*, you can deploy your stack to Android devices running Android >= 2.3.3.
+Once you have set the path of your Android SDK in the "Mobile Support"
+section of the LiveCode IDE's preferences, you can deploy your stack
+to Android devices.
 
-Android Watch is not officially supported at the moment.
+Some users have reported successful Android Watch deployment, but it
+is not yet officially supported.
 
 ## HTML5
 

@@ -358,7 +358,7 @@ public:
 	void render(MCGContextRef p_context, const MCRectangle &p_dirty);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 	
 	//////////
 	// view interface
@@ -566,6 +566,9 @@ public:
 	
     // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
     bool substackhaswidgets();
+
+    /* Return true iff the stack or one of its substacks has widgets. */
+    virtual bool haswidgets();
     
 	//////////
     
@@ -674,7 +677,7 @@ public:
 	MCStack *clone();
 	void compact();
 	Boolean checkid(uint4 cardid, uint4 controlid);
-	IO_stat saveas(const MCStringRef);
+	IO_stat saveas(const MCStringRef, uint32_t p_version = UINT32_MAX);
 	MCStack *findname(Chunk_term type, MCNameRef);
 	MCStack *findid(Chunk_term type, uint4 inid, Boolean alt);
 	void setmark();
@@ -749,9 +752,9 @@ public:
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	virtual IO_stat load_substacks(IO_handle stream, uint32_t version);
 	
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	Exec_stat resubstack(MCStringRef p_data);
 	MCCard *getcardid(uint4 inid);
@@ -1252,6 +1255,7 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t p_theme);
     
 #ifdef MODE_DEVELOPMENT
     void GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id);

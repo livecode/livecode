@@ -31,6 +31,6 @@ Stacks contain one or more cards, and may optionally contain backgrounds.
 
 The stack object has a number of properties and messages associated with it. To see a list of messages that can be sent to a stack as a result of user actions or internal LiveCode events, open the "LiveCode Language Dictionary" page of the main Documentation window, ensure that the stack column is visible and use sort and filter to bring the relevant entries to the top
 
-References: templateStack (keyword), mode (property), stackFileVersion (property), defaultStack (property), style (property), topLevel (command), go (command), modal (command), palette (command), modeless (command), revLoadedStacks (function), mouseStack (function), stack (object), object (object), property (glossary), dialog box (glossary), command (glossary), object type (glossary)
+References: templateStack (keyword), mode (property), stack version (glossary), defaultStack (property), style (property), topLevel (command), go (command), modal (command), palette (command), modeless (command), revLoadedStacks (function), mouseStack (function), stack (object), object (object), property (glossary), dialog box (glossary), command (glossary), object type (glossary)
 
 Tags: objects

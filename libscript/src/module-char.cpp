@@ -17,12 +17,11 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
-#include <foundation-locale.h>
 
 bool MCCharEvaluateChunk(MCStringRef p_target, MCRange p_grapheme_range, MCStringRef& r_output)
 {
     MCRange t_range;
-    MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, p_grapheme_range, t_range);
+    MCStringMapGraphemeIndices(p_target, p_grapheme_range, t_range);
     
     return MCStringCopySubstring(p_target, t_range, r_output);
 }
@@ -34,7 +33,7 @@ bool MCCharStoreChunk(MCStringRef &x_target, MCStringRef p_value, MCRange p_grap
         return false;
     
     MCRange t_range;
-    MCStringMapGraphemeIndices(x_target, kMCLocaleBasic, p_grapheme_range, t_range);
+    MCStringMapGraphemeIndices(x_target, p_grapheme_range, t_range);
     
     if (!MCStringReplace(*t_string, MCRangeMake(t_range . offset, t_range . length), p_value))
         return false;
@@ -59,7 +58,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needl
     // Error if there is more than one char in needle.
     MCRange t_range;
     // AL_2015-05-07: [[ Bug 15331 ]] Pass in correct code unit range as MCStringUnmapGraphemeIndices doesn't clamp.
-    MCStringUnmapGraphemeIndices(p_needle, kMCLocaleBasic, MCRangeMake(0, MCStringGetLength(p_needle)), t_range);
+    MCStringUnmapGraphemeIndices(p_needle, MCRangeMake(0, MCStringGetLength(p_needle)), t_range);
     if (t_range . length != 1)
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("needle must be a single char"), nil);
@@ -118,11 +117,11 @@ extern "C" MC_DLLEXPORT_DEF void MCCharEvalOffsetOfCharsInRange(bool p_is_last, 
 	MCRange t_range;
 	if (p_range . length == UINDEX_MAX)
 	{
-		MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(p_range . offset, 1), t_range);
+		MCStringMapGraphemeIndices(p_target, MCRangeMake(p_range . offset, 1), t_range);
 		t_range . length = UINDEX_MAX;
 	}
 	else
-		MCStringMapGraphemeIndices(p_target, kMCLocaleBasic, p_range, t_range);
+		MCStringMapGraphemeIndices(p_target, p_range, t_range);
         
 	bool t_found;
 	if (p_is_last)
@@ -141,7 +140,7 @@ extern "C" MC_DLLEXPORT_DEF void MCCharEvalOffsetOfCharsInRange(bool p_is_last, 
 	t_offset++;
 
     MCRange t_output_range;
-    MCStringUnmapGraphemeIndices(p_target, kMCLocaleBasic, MCRangeMake(t_offset, 1), t_output_range);
+    MCStringUnmapGraphemeIndices(p_target, MCRangeMake(t_offset, 1), t_output_range);
 
 	r_output = t_output_range . offset + p_range . offset;
 }

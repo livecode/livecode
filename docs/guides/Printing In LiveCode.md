@@ -378,9 +378,7 @@ contents of a different label
 
 Thus we have a stack that looks like the figure below.
 
-![](images/image93.png)
-
-Figure 61 – Print label stack example
+![Print label stack example](images/printing-label_stack_example.png)
 
 Now we will implement the printing commands. If this was a real
 application you would probably want to put these in a Print command in
@@ -396,9 +394,7 @@ Press enter to execute the commands.
 
 The resulting print out will look like the figure below.
 
-![](images/image94.png)
-
-Figure 62 – Printing 9 label-sized cards with default settings
+![Printing 9 label-sized cards with default settings](images/printing-label_sized_cards_default.png)
 
 If we modify the print commands to include an additional line to turn
 off the printRowsFirst:
@@ -409,10 +405,8 @@ off the printRowsFirst:
 
 The resulting print out will look like the figure below.
 
-![](images/image95.png)
-
-Figure 63 – Printing 9 label-sized cards with printRowsFirst set to
-false
+![Printing 9 label-sized cards with printRowsFirst set to
+false](images/printing-label_sized_cards_printRowsFirst_false.png)
 
 Use the **printGutters** property to specify the margin between each
 card. By default the printGutters are set to 36,36 or one half inch
@@ -430,10 +424,8 @@ using the printCardBorders property.
 
 The resulting print out will look like the figure below.
 
-![](images/image96.png)
-
-Figure 64 – Printing 9 label-sized cards with borders and a narrow
-gutter between each
+![Printing 9 label-sized cards with borders and a narrow
+gutter between each](images/printing-label_sized_cards_gutter.png)
 
 ## Printing Fields & Text
 
@@ -504,14 +496,12 @@ have any effect on printing cards into a layout. Use the
 printing.
 
 For example, lets say that we want to print the text field from the
-middle of the stack in figure 73 below. (You can load the stack shown in
+middle of the stack in the figure below. (You can load the stack shown in
 the picture by going to your LiveCode installation folder then opening
 Resources-\> Examples-\> SQLite Sampler.rev.) We want the output to
 scale to take up the entire width of the paper and half the height.
 
-![](images/image97.png)
-
-Figure 65 – Stack with text field to print into a layout
+![Stack with text field to print into a layout](images/printing-stack_with_text_field.png)
 
 	local tRect
 	put 0,0,item 3 of the printRectangle, \
@@ -520,11 +510,9 @@ Figure 65 – Stack with text field to print into a layout
 		to the bottomRight of field "theText" \
 		into tRect
 
-This results in the print out shown in figure 74 below.
+This results in the print out shown in the figure below.
 
-![](images/image98.png)
-
-Figure 66 – Result of layout printing command
+![Result of layout printing command](images/printing-stack_with_text_field_print.png)
 
 You can construct a complex layout taking components from multiple
 stacks by printing a sequence of rectangles onto the same page. For
@@ -533,12 +521,10 @@ footer, another that contains a logo, and a layout that contains text.
 Use the **open printing** command to start a print job, then print each
 element into the appropriate rectangle on the paper. The use then
 **close printing** command to send the print job to the printer. The
-example in figure 75 below shows two stacks with printable regions that
+example in the figure below shows two stacks with printable regions that
 we want to combine onto a single sheet of paper.
 
-![](images/image99.png)
-
-Figure 67 – Separate header and body stacks to print into a layout
+![Separate header and body stacks to print into a layout](images/printing-separate_header_body_stacks.png)
 
 To print these onto a single sheet:
 
@@ -562,9 +548,7 @@ To print these onto a single sheet:
 	close`printing
 
 
-![](images/image100.png)
-
-Figure 68 – Result of layout printing command with multiple stacks
+![Result of layout printing command with multiple stacks](images/printing-layout_multiple_stacks.png)
 
 ### Printing a complex layout
 
@@ -578,26 +562,22 @@ this stack invisibly then resize it to the **printRectangle**. This will
 trigger the geometry routines and scale the rectangular areas correctly.
 Then run your sequence of print commands to print into each rectangle.
 
-In figure 77 below, we have set the size of the stack to the
+In the figure below, we have set the size of the stack to the
 **printRectangle** then added 4 rectangle graphics. We have named each
 graphic and turned on the *Show Name* property for each so you can see
 the name.
 
-![](images/image101.png)
-
-Figure 69 – Stack template for printing a layout
+![Stack template for printing a layout](images/printing-stack_template.png)
 
 Next, we set Geometry properties for each of the rectangle graphics. The
 header graphic is set to scale relative to the right and bottom, with a
-minimum size limit of 100 pixels (see figure 75 below). The body graphic
+minimum size limit of 100 pixels (see the figure below). The body graphic
 is set to link the top edge to the header graphic, the right and bottom
-to the stack (see figure x below). The footer 1 graphic is set to scale
+to the stack (see the figure below). The footer 1 graphic is set to scale
 the right edge and position the bottom edge. And footer 2 is set to
 position both the right and bottom.
 
-![](images/image102.png)![](images/image103.png)
-
-Figure 70 – Example geometry properties for print layout stack
+![Example geometry properties for print layout stack](images/printing-example_geometry_property1.png)![Example geometry properties for print layout stack](images/printing-example_geometry_property2.png)
 
 To make the printing template stack take on the size of the paper, we
 can add the following handler to the stack script:

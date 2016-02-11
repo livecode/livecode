@@ -130,8 +130,8 @@ public:
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
     
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
     
@@ -139,6 +139,7 @@ public:
 	MCRectangle getactiverect(void);
     // End MCObjet functions
     
+
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
@@ -159,7 +160,7 @@ public:
     virtual void setdontuseqt(bool noqt); // platform player-specific
     
     virtual void gettracks(MCStringRef& r_tracks);
-    
+	
     virtual MCRectangle getpreferredrect();
 	virtual uint2 getloudness();
     virtual void updateloudness(int2 newloudness);
@@ -208,6 +209,7 @@ public:
 		scale = s;
     }
 
+	void scale_native_rect(void);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();

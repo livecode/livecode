@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
 	TestLoadExtension "com.livecode.library.iconSVG"
-	TestLoadExtension "com.livecode.widget-utils"
+	TestLoadExtension "com.livecode.library.widgetutils"
 	TestLoadExtension "com.livecode.widget.segmented"
 end TestSetup
 

@@ -1135,6 +1135,7 @@ Boolean MCPlayer::doubleup(uint2 which)
     return True;
 }
 
+
 void MCPlayer::setrect(const MCRectangle &nrect)
 {
 	rect = nrect;
@@ -1754,9 +1755,9 @@ MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 	return newplayer;
 }
 
-IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
@@ -1764,18 +1765,18 @@ IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	return defaultextendedload(p_stream, p_version, p_remaining);
 }
 
-IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	if (!disposable)
 	{
 		if ((stat = IO_write_uint1(OT_PLAYER, stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = MCControl::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(filename, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1786,10 +1787,10 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(userCallbackStr, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(userCallbackStr, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	}
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
@@ -2074,6 +2075,15 @@ void MCPlayer::showcontroller(Boolean show)
             drect . height -= t_height;
         
         layer_setrect(drect, true);
+	}
+}
+
+void MCPlayer::scale_native_rect(void)
+{
+	if (m_platform_player != nil)
+	{
+		double t_scale_factor = getstack() -> view_get_content_scale();
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyScalefactor, kMCPlatformPropertyTypeDouble, &t_scale_factor);
 	}
 }
 
@@ -3077,13 +3087,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			drawborder(dc, rect, borderwidth);
 	
 	if (!p_isolated)
-	{
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
-    
-	if (!p_isolated)
+    {
 		dc -> end();
+    }
 }
 
 

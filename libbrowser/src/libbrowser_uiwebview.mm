@@ -176,7 +176,7 @@ bool MCNSArrayToBrowserValue(NSArray *p_array, MCBrowserValue &r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCUIWebViewBrowserDelegate : NSObject <UIWebViewDelegate>
+@interface com_runrev_livecode_MCUIWebViewBrowserDelegate : NSObject <UIWebViewDelegate>
 {
 	MCUIWebViewBrowser *m_instance;
 	bool m_pending_request;
@@ -757,7 +757,7 @@ bool MCUIWebViewBrowser::Init(void)
 		{
 			[t_view setHidden: YES];
 			
-			m_delegate = [[MCUIWebViewBrowserDelegate alloc] initWithInstance: this];
+			m_delegate = [[com_runrev_livecode_MCUIWebViewBrowserDelegate alloc] initWithInstance: this];
 			t_success = m_delegate != nil;
 		}
 		
@@ -775,7 +775,7 @@ bool MCUIWebViewBrowser::Init(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCUIWebViewBrowserDelegate
+@implementation com_runrev_livecode_MCUIWebViewBrowserDelegate
 
 - (id)initWithInstance:(MCUIWebViewBrowser*)instance
 {
@@ -818,10 +818,19 @@ bool MCUIWebViewBrowser::Init(void)
 	
 	/* UNCHECKED */ MCCStringClone([request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding], t_url);
 	
-	if (!m_frame_request)
-		m_instance->OnNavigationBegin(false, t_url);
+	if ([NSURLConnection canHandleRequest: request])
+	{
+		if (!m_frame_request)
+			m_instance->OnNavigationBegin(false, t_url);
 
-	return YES;
+		return YES;
+	}
+	else
+	{
+		m_instance->OnNavigationRequestUnhandled(m_frame_request, t_url);
+		
+		return NO;
+	}
 }
 
 - (void)webViewDidStartLoad:(UIWebView *)webView
