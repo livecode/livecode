@@ -2014,78 +2014,78 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCEngineEvalIsReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNull;
 }
 
-void MCEngineEvalIsNotReallyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyNothing(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeNull;
 }
 
-void MCEngineEvalIsReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeBoolean;
 }
 
-void MCEngineEvalIsNotReallyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyABoolean(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeBoolean;
 }
 
-void MCEngineEvalIsReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
                 MCNumberIsInteger((MCNumberRef)value);
 }
 
-void MCEngineEvalIsNotReallyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyAnInteger(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
                  MCNumberIsInteger((MCNumberRef)value));
 }
 
-void MCEngineEvalIsReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
                 MCNumberIsReal((MCNumberRef)value);
 }
 
-void MCEngineEvalIsNotReallyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyAReal(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeNumber &&
                  MCNumberIsReal((MCNumberRef)value));
 }
 
-void MCEngineEvalIsReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeString ||
                 MCValueGetTypeCode(value) == kMCValueTypeCodeName;
 }
 
-void MCEngineEvalIsNotReallyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyAString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = !(MCValueGetTypeCode(value) == kMCValueTypeCodeString ||
                  MCValueGetTypeCode(value) == kMCValueTypeCodeName);
 }
 
-void MCEngineEvalIsReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeData;
 }
 
-void MCEngineEvalIsNotReallyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyABinaryString(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeData;
 }
 
-void MCEngineEvalIsReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) == kMCValueTypeCodeArray;
 }
 
-void MCEngineEvalIsNotReallyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
+void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, bool& r_result)
 {
     r_result = MCValueGetTypeCode(value) != kMCValueTypeCodeArray;
 }

@@ -1730,14 +1730,14 @@ enum Parse_errors
     // {PE-0561} load: missing 'from'
     PE_LOAD_NOFROM,
 
-    // {PE-0562} is really: missing 'an' or 'a'
-    PE_ISREALLY_NOAN,
+    // {PE-0562} is strictly: missing 'an' or 'a'
+    PE_ISSTRICTLY_NOAN,
     
-    // {PE-0563} is really: missing 'string'
-    PE_ISREALLY_NOSTRING,
+    // {PE-0563} is strictly: missing 'string'
+    PE_ISSTRICTLY_NOSTRING,
     
-    // {PE-0564} is really: missing type
-    PE_ISREALLY_NOTYPE,
+    // {PE-0564} is strictly: missing type
+    PE_ISSTRICTLY_NOTYPE,
     
     // {PE-0565} import: no array expression
     PE_IMPORT_NOARRAY,
