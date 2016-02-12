@@ -660,8 +660,8 @@ enum Is_type {
     IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA,
     IT_AMONG_THE_FULL_DRAGBOARD_DATA,
     IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA,
-    IT_REALLY,
-    IT_NOT_REALLY,
+    IT_STRICTLY,
+    IT_NOT_STRICTLY,
 };
 
 enum Is_validation {
@@ -1950,7 +1950,7 @@ enum Sugar_constants {
     // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
     SG_DATA,
     
-    SG_REALLY,
+    SG_STRICTLY,
     SG_REAL,
 };
 
