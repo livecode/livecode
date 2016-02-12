@@ -675,6 +675,7 @@ private handler drawActions() returns nothing
    variable tIconPath as Path
    variable tActionRect as Rectangle
 
+   variable tHitRect as Rectangle
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
 
@@ -689,12 +690,13 @@ private handler drawActions() returns nothing
             put fetchRect("actionIcon") into tActionRect
             put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
             fill tIconPath on this canvas
-
+            put the bounding box of tIconPath into tHitRect
          else if mActionStyle is "names" then
             put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
             put fetchRect("actionLabel") into tActionRect
             set the font of this canvas to fetchFont("label")
             fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
+            put tActionRect into tHitRect
          end if
 
       else if mWidgetTheme is kWidgetThemeAndroid then
@@ -703,10 +705,10 @@ private handler drawActions() returns nothing
          put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
          translate tIconPath by [my width - (mAndroidBuffer*2 + mAndroidIconDimension)*tX, 0]
          fill tIconPath on this canvas
-
+         put the bounding box of tIconPath into tHitRect
       end if
 
-      push the bounding box of tIconPath onto back of mActionRects
+      push tHitRect onto back of mActionRects
    end repeat
 end handler
 

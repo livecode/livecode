@@ -189,7 +189,6 @@ extern void MCS_setplayloudness(uint2 p_loudness);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern Boolean MCS_handle_sockets(void);
 extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
 extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);

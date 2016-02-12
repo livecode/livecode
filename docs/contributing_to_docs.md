@@ -57,6 +57,10 @@ conforming to the aforementioned format reference, and also for
 parameters defined in the Syntax elements to correspond exactly to those
 described later on in the entry.
 
+Furthermore, where possible, individual lines within the document should
+not exceed 72 characters in length. This makes it easier to read, and 
+review on GitHub.
+
 ## Instructiveness
 
 One major objective we have with our documentation is to improve our
@@ -140,11 +144,32 @@ website, without having to download any software or use the command line.
 For example, the accept command is at:
 https://github.com/livecode/livecode/blob/community-docs/docs/dictionary/command/accept.lcdoc
 
+![](images/livecode-repo-filesystem.png)
+
 **Click the pencil icon to the right of Raw|Blame|History buttons**
+
+![](images/editing-file.png)
+
+Once you have clicked the pencil, you may get information that 
+submitting a change will create a new branch in your fork of the target 
+repo.
+
+![](images/new-fork.png)
 
 **Make your changes**
 
+Please ensure that you have tabs enabled if you are indenting code 
+blocks.
+
+![](images/tabs.png)
+
+Also, try to ensure each line you modify is no more than 72 characters
+long, adding return characters as necessary (the dictionary only breaks
+paragraphs when there are two return characters in a row).
+
 **In the Propose file change section, enter the title and description of your pull request.**
+
+![](images/propose-file-change.png)
 
 The title should be along the lines of 
 
@@ -182,14 +207,30 @@ and description
 
 **Click the Propose File Change button.**
 
+>*Note:* Please ensure the pull request has the correct base branch and 
+comparison branch. The base fork should be `livecode/livecode`, with
+base branch `community-docs`, and the head fork should be 
+`<your user name>/livecode` with compare branch something like `patch-1`
+(unless you have renamed it).
+
+![](images/pull-request-target.png)
+
 **Click Create Pull Request** 
 
-It will confirm the title and description you entered before.
+It will confirm the title and description you entered before, and show 
+you the files that are changed in the pull request.
+
+Now is a good time to check the changes you are proposing.
+
+![](images/open-pull-request.png)
 
 **Click Create Pull Request again.**
 
 You should now be able to see your pull request here
-https://github.com/livecode/livecode/pulls
+https://github.com/livecode/livecode/pulls, or by clicking the 'Pull
+Requests' menu item at the top of the GitHub website.
+
+![](images/github-top-menu.png)
 
 **Sign the CLA if you haven't already**
 
@@ -219,9 +260,9 @@ from the branch dropdown list.
 
 At the top of the page you should see something like
 
-Branch: patch-1   livecode/docs/notes/ +
+Branch: patch-1   livecode/docs/notes/            New File | Find File | History
 
-**Click on the +**
+**Click on New File**
 
 **Name the file**
 It should be called:
@@ -253,6 +294,29 @@ check back in case there is something that the reviewer would like you to change
 
 When the pull request has been reviewed, it will be merged into the main repository and 
 should be in the LiveCode Dictionary in the next release!
+
+## Making further changes
+
+If you need to make further changes to your pull request, first make 
+sure you are looking at the pull request you want to change (you can 
+find your pull request either in the list of pull requests to the 
+livecode repo at https://github.com/livecode/livecode/pulls, or by 
+clicking the 'Pull Requests' menu item at the top of the GitHub website 
+which shows all your outstanding pull requests).
+
+**Click on the 'Files Changed' tab**
+
+![](pull-request.png)
+
+**Click on the pencil again to make further changes**
+
+![](edit-file-again.png)
+
+**Commit your changes to the same branch**
+
+![](commit-new-changes.png)
+
+The pull request will be automatically updated.
 
 ## Using Git GUI software
 

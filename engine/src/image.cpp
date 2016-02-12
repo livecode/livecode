@@ -1642,9 +1642,6 @@ void MCImage::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 
 		if (getstate(CS_MAGNIFY))
 			drawmagrect(dc);
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
 	}
 }
 

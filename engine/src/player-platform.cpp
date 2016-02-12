@@ -3087,13 +3087,9 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			drawborder(dc, rect, borderwidth);
 	
 	if (!p_isolated)
-	{
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
-    
-	if (!p_isolated)
+    {
 		dc -> end();
+    }
 }
 
 

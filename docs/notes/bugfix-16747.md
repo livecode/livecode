@@ -1,0 +1,1 @@
+# Changing card while DG is scrolling causes error

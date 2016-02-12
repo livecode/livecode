@@ -131,6 +131,8 @@ public:
 
     virtual void scheduledelete(bool p_is_child);
     
+    void drawselectedchildren(MCDC *dc);
+    
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
 	// MCGroup functions
@@ -196,6 +198,8 @@ public:
 	//   group.
     bool islocked(void) { return m_updates_locked; }
 
+    bool mfocus_control(int2 x, int2 y, bool p_check_selected);
+    
 	MCGroup *next()
 	{
 		return (MCGroup *)MCDLlist::next();

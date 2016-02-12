@@ -253,11 +253,14 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	}
 	MCRectangle srect;
 	MCU_set_rect(srect, x, y, 1, 1);
+    
+    mx = x;
+    my = y;
+    
 	Boolean is = maskrect(srect) || (state & CS_SELECTED
 	                                 && MCU_point_in_rect(geteffectiverect(), x, y)
 	                                 && sizehandles() != 0);
-	mx = x;
-	my = y;
+    
 	if (is || state & CS_MFOCUSED)
 	{
 		if (focused == this || getstack() -> gettool(this) == T_POINTER)
@@ -1441,6 +1444,8 @@ void MCControl::continuesize(int2 x, int2 y)
 	resizeparent();
 }
 
+#define SIZE_HANDLE_HIT_TOLERANCE 1
+
 uint2 MCControl::sizehandles()
 {
 	uint2 newstate = 0;
@@ -1450,6 +1455,9 @@ uint2 MCControl::sizehandles()
 		sizerects(rects);
 		int2 i;
 		for (i = 7 ; i >= 0 ; i--)
+        {
+            // Be more forgiving about handle hit detection
+            MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
 			if (MCU_point_in_rect(rects[i], mx, my))
 			{
 				if (i < 3)
@@ -1476,6 +1484,7 @@ uint2 MCControl::sizehandles()
 					}
 				break;
 			}
+        }
 	}
 	return newstate;
 }

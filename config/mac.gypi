@@ -185,7 +185,7 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386',
+				'ARCHS': 'i386 x86_64',
 				'GCC_OPTIMIZATION_LEVEL': '3',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
 				#'LLVM_LTO': 'YES',

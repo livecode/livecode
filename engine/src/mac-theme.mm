@@ -54,7 +54,14 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
     // Always return the same font regardless of control type in legacy mode
     if (p_state & kMCPlatformControlStateCompatibility)
     {
-        static NSFont* s_legacy_font = [[NSFont fontWithName:get_legacy_font_name() size:11] retain];
+        static NSFont* s_legacy_font = nil;
+        if (nil == s_legacy_font)
+            s_legacy_font = [[NSFont fontWithName:get_legacy_font_name() size:11] retain];
+        if (nil == s_legacy_font)
+            s_legacy_font = [[NSFont systemFontOfSize:11] retain];
+
+        MCAssert(nil != s_legacy_font);
+
         if (r_name)
             *r_name = nil;
         return s_legacy_font;

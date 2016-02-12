@@ -15,8 +15,9 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
     DEPS=$(cat "$LIVECODE_DEP_FILE")
 
     STATIC_FRAMEWORKS=$DEPS
-    STATIC_FRAMEWORKS="$(sed "/^weak-framework /d" <<< "$STATIC_FRAMEWORKS")"
-    STATIC_FRAMEWORKS="$(sed "/^framework /d" <<< "$STATIC_FRAMEWORKS")"
+    STATIC_FRAMEWORKS="$(sed "/^weak-framework/d" <<< "$STATIC_FRAMEWORKS")"
+    STATIC_FRAMEWORKS="$(sed "/^framework/d" <<< "$STATIC_FRAMEWORKS")"
+    STATIC_FRAMEWORKS="$(sed "/^library/d" <<< "$STATIC_FRAMEWORKS")"
     STATIC_FRAMEWORKS=${STATIC_FRAMEWORKS//static-framework /-framework }
 
     # Frameworks may not exist in older sdks so conditionally include
@@ -51,7 +52,7 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
 
 fi
 
-FRAMEWORK_SEARCH_PATHS="-F${FRAMEWORK_SEARCH_PATHS//  / -F}"
+FRAMEWORK_SEARCH_PATHS="-F${FRAMEWORK_SEARCH_PATHS// / -F}"
 
 # Support using the same script for old externals
 if [ "$SYMBOLS" != "_getXtable" ]; then
@@ -131,7 +132,7 @@ else
 
 		# Build the 'dylib' form of the external - this is used by simulator builds, and as
 		# a dependency check for device builds.
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$DYLIB_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
+    "$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$DYLIB_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
 		if [ $? != 0 ]; then
 			echo "error: linking step of external dylib build failed, probably due to missing framework or library references - check the contents of the $PRODUCT_NAME.ios file"
 			exit $?
