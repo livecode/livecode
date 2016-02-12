@@ -90,15 +90,13 @@ struct MCCapsuleInfo
 #pragma section(".project", read, discard)
 __declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(_LINUX)
-extern MCCapsuleInfo MCcapsule;
-asm (".section .project, \"aw\", \"nobits\"; .global MCcapsule; MCcapsule: .align 16; .space 16;");
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(_MACOSX)
 __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 __attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-extern MCCapsuleInfo MCcapsule;
-asm (".section .project, \"aw\", \"nobits\"; .global MCcapsule; MCcapsule: .align 16; .space 16;");
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
 MCCapsuleInfo MCcapsule = {0};
 #elif defined(__EMSCRIPTEN__)
