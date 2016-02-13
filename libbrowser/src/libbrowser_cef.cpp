@@ -296,7 +296,7 @@ bool MCCefInitialise(void)
 	
 	CefMainArgs t_args;
 	CefSettings t_settings;
-	t_settings.multi_threaded_message_loop = false;
+	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
 	t_settings.no_sandbox = true;
 	
@@ -369,7 +369,7 @@ bool MCCefBrowserInitialise(void)
 	if (t_success)
 		t_success = MCCefInitialise();
 	
-	if (t_success)
+	if (t_success && !MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
 		t_success = MCBrowserAddRunloopAction(MCCefBrowserRunloopAction, nil);
 	
 	s_cefbrowser_initialised = t_success;
@@ -397,7 +397,8 @@ void MCCefBrowserFinalise(void)
 	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
 	// MCCefFinalise();
 	
-	MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
+	if (!MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
+		MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
 	
 	s_cefbrowser_initialised = false;
 }
@@ -1040,7 +1041,18 @@ bool MCCefBrowserBase::Initialize()
 	// IM-2014-05-06: [[ Bug 12384 ]] Prevent callback messages for dummy URL
 	m_client->AddIgnoreUrl(t_url);
 	PlatformConfigureWindow(t_window_info);
-	CefBrowserHost::CreateBrowserSync(t_window_info, m_client.get(), t_url, t_settings, NULL);
+
+	if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
+	{
+		// need to use asnyc version when not on UI thread
+		if (!CefBrowserHost::CreateBrowser(t_window_info, m_client.get(), t_url, t_settings, NULL))
+			return false;
+
+		while (m_browser == nil)
+			MCBrowserRunloopWait();
+	}
+	else
+		CefBrowserHost::CreateBrowserSync(t_window_info, m_client.get(), t_url, t_settings, NULL);
 	
 	return m_browser != nil;
 }
@@ -1114,7 +1126,12 @@ MCBrowser *MCCefBrowserInstantiate(void *p_display, void *p_parent_window)
 void MCCefBrowserBase::OnCefBrowserCreated(CefRefPtr<CefBrowser> p_browser)
 {
 	if (m_browser == nil)
+	{
 		m_browser = p_browser;
+		// Make sure we break out of the wait loop if created asynchronously
+		if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
+			MCBrowserRunloopBreakWait();
+	}
 }
 
 void MCCefBrowserBase::OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser)

@@ -61,6 +61,11 @@ void MCBrowserBase::SetEventHandler(MCBrowserEventHandler *p_handler)
 	m_event_handler = p_handler;
 }
 
+MCBrowserEventHandler *MCBrowserBase::GetEventHandler(void)
+{
+	return m_event_handler;
+}
+
 void MCBrowserBase::OnNavigationBegin(bool p_in_frame, const char *p_url)
 {
 	if (m_event_handler)
@@ -112,6 +117,11 @@ void MCBrowserBase::SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler)
 		m_javascript_handler->Release();
 	
 	m_javascript_handler = p_handler;
+}
+
+MCBrowserJavaScriptHandler *MCBrowserBase::GetJavaScriptHandler(void)
+{
+	return m_javascript_handler;
 }
 
 void MCBrowserBase::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
