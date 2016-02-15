@@ -837,12 +837,12 @@ uint2 MCObject::gettransient() const
 
 void MCObject::setrect(const MCRectangle &p_rect)
 {
-	doSetRect(p_rect);
+	applyrect(p_rect);
 	
 	geometrychanged(getrect());
 }
 
-void MCObject::doSetRect(const MCRectangle &nrect)
+void MCObject::applyrect(const MCRectangle &nrect)
 {
 	rect = nrect;
 }

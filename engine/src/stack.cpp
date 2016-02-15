@@ -1233,7 +1233,7 @@ MCRectangle MCStack::getrectangle(bool p_effective) const
     return getwindowrect();
 }
 
-void MCStack::doSetRect(const MCRectangle &nrect)
+void MCStack::applyrect(const MCRectangle &nrect)
 {
 	// IM-2013-09-30: [[ FullscreenMode ]] allow setrect on mobile,
 	// which now has an effect on fullscreen scaled stacks

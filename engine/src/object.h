@@ -380,8 +380,8 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual uint2 gettransient() const;
-	virtual void doSetRect(const MCRectangle &nrect);
-	virtual void setrect(const MCRectangle &p_rect);
+	virtual void applyrect(const MCRectangle &nrect);
+	void setrect(const MCRectangle &p_rect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
