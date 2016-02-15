@@ -2241,7 +2241,7 @@ private command docsBuilderGenerateZip pEdition, pVersion
    put builderIDEDocsFolder() & slash & "html_viewer" into tInputs[3]
 
    -- Figure out a filename for the docs archive
-   put builderRepoFolder() & slash & \
+   put builderOutputFolder() & slash & \
       merge("LiveCode[[pEdition]]Docs-[[pVersion]].zip") into tZipPath
 
    -- Use the "zip" command to store the data
