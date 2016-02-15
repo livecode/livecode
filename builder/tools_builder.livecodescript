@@ -435,26 +435,13 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put url ("binfile:" & builderCommercialResourceFolder() & slash & pEdition & "/Installer.icns") into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/Installer.icns")
          end if
          
-         -- Get us an installer by dieting the source installer
-         if false then
-            put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tDietParams["input"]
-            put tTempFolder & slash & "macosx-installer-x86" into tDietParams["output"]
-            put true into tDietParams["keep_x86"]
-            put false into tDietParams["keep_ppc"]
-            builderLog "message", "Dieting input installer down to x86"
-            --_internal diet macosx tDietParams
-            dietAndStrip "x86", tDietParams["input"], tDietParams["output"]
-            if the result is not empty then
-               builderLog "error", "Dieting input installer to x86 failed -" && the result
-               throw "failure"
-            end if
-            
-            put tTempFolder & slash & "macosx-installer-x86" into tParams["engine_x86"]
-         end if
-         
-         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tParams["engine_x86"]
+         -- Deploy the installer
+         put abstractPinFile(builderInstallerEngine("macosx") & slash & "Contents/MacOS/Installer") into tParams["engine"]
          put tInstallerStackFile into tParams["stackfile"]
          put tOutputFileStub & ".app" & slash & "Contents/MacOS/Installer" into tParams["output"]
+         
+         -- We deploy as 32-bit only for now as the 64-bit slice isn't neccessary
+         put "i386" into tParams["architectures"]
          
          put url ("binfile:" & pPackageFile) into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/payload")
          
