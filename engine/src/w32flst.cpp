@@ -229,8 +229,11 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	font->size = size;
 	font->printer = printer;
     
-    font->m_ascent = tm.tmAscent;
-    font->m_descent = tm.tmDescent;
+    // We divide the internal leading evenly over ascent and descent. This is
+    // done because we need to account for it but the text layout code doesn't
+    // know about internal leading.
+    font->m_ascent = tm.tmAscent + (tm.tmInternalLeading+1)/2;
+    font->m_descent = tm.tmDescent + (tm.tmInternalLeading)/2;
     font->m_leading = tm.tmExternalLeading;
     font->m_xheight = tm.tmAveCharWidth;
 }
