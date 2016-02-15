@@ -26,7 +26,7 @@ command docsBuilderRun pEdition, pVersion
    set the itemdelimiter to "."
    if item 1 of pVersion > 7 then   
       start using stack (builderRepoFolder() & slash & "ide-support/revdocsparser.livecodescript")
-      docsBuilderGenerateDocsNew
+      docsBuilderGenerateDocsNew pEdition, pVersion
       exit docsBuilderRun
    end if
    
@@ -1908,7 +1908,7 @@ private function escape pString, pConvertLineEndings
    return (quote & pString & quote)
 end escape
 
-command docsBuilderGenerateDocsNew
+command docsBuilderGenerateDocsNew pEdition, pVersion
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
    builderLog "report", "Building guide into" && builderGuideFolder() & slash & "distributed_guide.js"
    pathEnsure (builderGuideFolder())
@@ -1921,6 +1921,8 @@ command docsBuilderGenerateDocsNew
    # suitable location - for the moment the dictionary will only display docs for preinstalled extensions.
    docsBuilderGenerateBuiltDocs
    
+   docsBuilderGenerateZip pEdition, pVersion
+
    builderLog "report", "Built docs"
 end docsBuilderGenerateDocsNew
 
@@ -2223,6 +2225,39 @@ on docsBuilderPopulateDatabase pLibrariesA
    revExecuteSQL tConnection,"COMMIT"
    revCloseDatabase tConnection
 end docsBuilderPopulateDatabase
+
+private command docsBuilderGenerateZip pEdition, pVersion
+   -- Ensure edition string is in titlecase
+   put toLower(pEdition) into pEdition
+   put toUpper(char 1 of pEdition) into char 1 of pEdition
+
+   local tInputs, tZipPath
+
+   -- Make a list of folders that need to make it into the archived docs
+   -- FIXME This has to be kept in sync with the installer manifest, probably
+   -- FIXME Need to consider commercial docs
+   put builderRepoFolder() & slash & "docs" & slash & "guides" into tInputs[1]
+   put builderIDEDocsFolder() & slash & "guides" into tInputs[2]
+   put builderIDEDocsFolder() & slash & "html_viewer" into tInputs[3]
+
+   -- Figure out a filename for the docs archive
+   put builderRepoFolder() & slash & \
+      merge("LiveCode[[pEdition]]Docs-[[pVersion]].zip") into tZipPath
+
+   -- Use the "zip" command to store the data
+   local tDocItem, tCmd, tCmdOutput
+   repeat for each element tDocItem in tInputs
+      builderLog "message", merge("Archiving [[tDocItem]]")
+      put merge("cd $(dirname '[[tDocItem]]') && zip -r '[[tZipPath]]' $(basename '[[tDocItem]]')") into tCmd
+      put shell(tCmd) into tCmdOutput
+      if the result is not 0 then
+         builderLog "error", "Archiving failed"
+         exit docsBuilderGenerateZip
+      end if
+   end repeat
+
+   builderLog "message", merge("Generated [[tZipPath]]")
+end docsBuilderGenerateZip
 
 --- LEGACY
 
