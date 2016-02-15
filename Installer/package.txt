@@ -356,35 +356,9 @@ component Documentation
 		file "ide:Documentation/rev/Supported Platforms Referen.rev"
 		file "ide:Documentation/rev/videos.rev"
 
-	into [[ToolsFolder]]/Documentation/html_viewer place
-		file ide:Documentation/html_viewer/css/bootstrap.min.css as css/bootstrap.min.css
-		file ide:Documentation/html_viewer/css/codestyle.css as css/codestyle.css
-		file ide:Documentation/html_viewer/css/lcdoc.css as css/lcdoc.css
-		file ide:Documentation/html_viewer/css/stackedit.css as css/stackedit.css
-		file ide:Documentation/html_viewer/css/userguide.css as css/userguide.css
-		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.eot as fonts/glyphicons-halflings-regular.eot
-		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.svg as fonts/glyphicons-halflings-regular.svg
-		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.ttf as fonts/glyphicons-halflings-regular.ttf
-		file ide:Documentation/html_viewer/fonts/glyphicons-halflings-regular.woff as fonts/glyphicons-halflings-regular.woff
-		file ide:Documentation/html_viewer/js/bootstrap.min.js as js/bootstrap.min.js
-		file ide:Documentation/html_viewer/js/highlight.pack.js as js/highlight.pack.js
-		file ide:Documentation/html_viewer/js/jquery-1.11.1.min.js as js/jquery-1.11.1.min.js
-		file ide:Documentation/html_viewer/js/jquery-cookie.js as js/jquery-cookie.js
-		file ide:Documentation/html_viewer/js/jquery.session.js as js/jquery.session.js
-		file ide:Documentation/html_viewer/js/marked.js as js/marked.js
-		file ide:Documentation/html_viewer/js/remarkable.min.js as js/remarkable.min.js
-		file ide:Documentation/html_viewer/js/dictionary_functions.js as js/dictionary_functions.js
-		file ide:Documentation/html_viewer/resources/data/api/distributed_api.js as resources/data/api/distributed_api.js
-		file ide:Documentation/html_viewer/resources/data/guide/distributed_guide.js as resources/data/guide/distributed_guide.js
-		file ide:Documentation/html_viewer/resources/media/spinner.gif as resources/media/spinner.gif
-
-		file ide:Documentation/html_viewer/guide.html.template
-		file ide:Documentation/html_viewer/api.html.template
-		
-		file ide:Documentation/html_viewer/resources/data/api/api.sqlite as resources/data/api/api.sqlite
-		
 	into [[ToolsFolder]]/Documentation place
 		rfolder "ide:Documentation/guides"
+		rfolder "ide:Documentation/html_viewer"
 		rfolder "repo:docs/guides"
 
 	into [[ToolsFolder]]/Documentation/guides place

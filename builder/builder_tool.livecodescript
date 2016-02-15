@@ -106,7 +106,7 @@ on startup
    end if
    
    if tEdition is "commercial" and tStage is not "server" then
-      __builerLog "error", "Commercial is only a valid edition for server packages"
+      __builderLog "error", "Commercial is only a valid edition for server packages"
    end if
    
    if tStage is "environment" then
