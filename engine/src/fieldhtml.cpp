@@ -1616,7 +1616,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 			{
 				// MW-2012-03-16: [[ Bug ]] LinkText without link style is encoded with a 'name' attr.
-				if (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref)
+				if (p_tag . attrs[i] . value != nil && (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref))
 				{
 					MCValueRelease(t_linktext);
 					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_linktext);
@@ -1755,7 +1755,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			MCStringRef t_metadata;
 			t_metadata = nil;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
-				if (p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
+				if (p_tag . attrs[i] . value != nil && p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
 				{
 					MCValueRelease(t_metadata);
 					MCStringCreateWithCString(p_tag . attrs[i] . value, t_metadata);
