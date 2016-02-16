@@ -440,7 +440,8 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	if (t_success && t_printer != NULL)
 	{
 		OSErr t_err;
-        t_err = PMSessionSetCurrentPrinter(t_session, PMPrinterGetName(t_printer));
+		// PM-2016-02-16: [[ Bug 16932 ]] Use the correct (non-deprecated) function
+        t_err = PMSessionSetCurrentPMPrinter(t_session, t_printer);
 
 		if (t_err != noErr)
 			t_success = false;
