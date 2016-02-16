@@ -3504,7 +3504,7 @@ MCRectangle MCParagraph::getsplitcursorrect(findex_t fi, uint2 fixedheight, bool
     
 	// MW-2012-01-08: [[ ParaStyles ]] Top of text starts after spacing above.
 	MCRectangle drect;
-	drect.y = 1 + t_space_above;
+	drect.y = t_space_above;
     
 	MCLine *lptr;
 	findex_t i, l;
