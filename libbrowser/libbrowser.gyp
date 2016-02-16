@@ -219,6 +219,7 @@
 								'destination': '<(PRODUCT_DIR)',
 								'files': [
 									'../prebuilt/lib/linux/<(target_arch)/CEF/icudtl.dat',
+									'../prebuilt/lib/linux/<(target_arch)/CEF/natives_blob.bin',
 								],
 							},
 							{
