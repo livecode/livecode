@@ -87,7 +87,6 @@ MCWidget::MCWidget(void)
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
-    m_native_layer = nil;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -96,7 +95,6 @@ MCWidget::MCWidget(const MCWidget& p_other) :
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
-    m_native_layer = nil;
 }
 
 MCWidget::~MCWidget(void)
@@ -104,7 +102,6 @@ MCWidget::~MCWidget(void)
     MCValueRelease(m_widget);
     MCValueRelease(m_kind);
     MCValueRelease(m_rep);
-    delete m_native_layer;
 }
 
 void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
@@ -158,22 +155,6 @@ const MCObjectPropertyTable *MCWidget::getpropertytable(void) const
 bool MCWidget::visit_self(MCObjectVisitor* p_visitor)
 {
     return p_visitor -> OnWidget(this);
-}
-
-void MCWidget::open(void)
-{
-	MCControl::open();
-	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 0 -> 1
-	if (opened == 1 && m_widget != nil)
-		MCwidgeteventmanager->event_open(this);
-}
-
-void MCWidget::close(void)
-{
-	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 1 -> 0
-	if (opened == 1 && m_widget != nil)
-		MCwidgeteventmanager->event_close(this);
-	MCControl::close();
 }
 
 void MCWidget::kfocus(void)
@@ -349,17 +330,6 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
     {
         MCControl::timer(p_message, p_parameters);
     }
-}
-
-void MCWidget::setrect(const MCRectangle& p_rectangle)
-{
-	MCRectangle t_old_rect;
-	t_old_rect = rect;
-	
-	rect = p_rectangle;
-	
-    if (m_widget != nil)
-        MCwidgeteventmanager->event_setrect(this, t_old_rect);
 }
 
 void MCWidget::recompute(void)
@@ -660,26 +630,50 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 
 void MCWidget::toolchanged(Tool p_new_tool)
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
+	MCControl::toolchanged(p_new_tool);
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
 }
 
 void MCWidget::layerchanged()
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_layerchanged(this);
+	MCControl::layerchanged();
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_layerchanged(this);
 }
 
 void MCWidget::visibilitychanged(bool p_visible)
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+	MCControl::visibilitychanged(p_visible);
+	
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+}
+
+void MCWidget::geometrychanged(const MCRectangle &p_rect)
+{
+	MCControl::geometrychanged(p_rect);
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_setrect(this, p_rect);
+}
+
+void MCWidget::OnOpen()
+{
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_open(this);
+	
+	MCControl::OnOpen();
+}
+
+void MCWidget::OnClose()
+{
+	MCControl::OnClose();
+	
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_close(this);
 }
 
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
@@ -899,44 +893,6 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
-}
-
-bool MCWidget::GetNativeView(void *&r_view)
-{
-	if (m_native_layer == nil)
-		return false;
-	
-	return m_native_layer->GetNativeView(r_view);
-}
-
-bool MCWidget::SetNativeView(void *p_view)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCNativeLayer *t_layer;
-	t_layer = nil;
-	
-	if (t_success && p_view != nil)
-	{
-		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
-		t_success = t_layer != nil;
-	}
-	
-	if (t_success)
-	{
-		if (m_native_layer != nil)
-			delete m_native_layer;
-		
-		m_native_layer = t_layer;
-		if (opened && m_native_layer != nil)
-		{
-			m_native_layer->OnOpen();
-			m_native_layer->OnAttach();
-		}
-	}
-	
-	return t_success;
 }
 
 MCWidgetRef MCWidget::getwidget(void) const

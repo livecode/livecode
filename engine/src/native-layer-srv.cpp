@@ -23,10 +23,19 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Stub method for server platforms
-MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
+// Stub methods for server platforms
+MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_native_view)
 {
 	return nil;
+}
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+{
+	return false;
+}
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

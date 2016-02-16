@@ -264,6 +264,58 @@ bool MCGroup::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, 
 	return t_continue;
 }
 
+void MCGroup::toolchanged(Tool p_new_tool)
+{
+	MCControl::toolchanged(p_new_tool);
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->toolchanged(p_new_tool);
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
+MCRectangle MCGroup::getviewportgeometry()
+{
+	MCRectangle t_viewport;
+	t_viewport = getrect();
+
+	MCObject *t_parent;
+	t_parent = getparent();
+	if (t_parent != nil && t_parent->gettype() == CT_GROUP)
+		t_viewport = MCU_intersect_rect(t_viewport, ((MCGroup*)t_parent)->getviewportgeometry());
+
+	return t_viewport;
+}
+
+void MCGroup::geometrychanged(const MCRectangle &p_rect)
+{
+	MCControl::geometrychanged(p_rect);
+	viewportgeometrychanged(getviewportgeometry());
+}
+
+void MCGroup::viewportgeometrychanged(const MCRectangle &p_rect)
+{
+	MCRectangle t_viewport;
+	t_viewport = MCU_intersect_rect(p_rect, getrect());
+
+	if (controls != nil)
+	{
+		MCControl *t_control = controls;
+		do
+		{
+			t_control->viewportgeometrychanged(t_viewport);
+			t_control = t_control->next();
+		}
+		while (t_control != controls);
+	}
+}
+
 void MCGroup::open()
 {
 	MCControl::open();
@@ -838,7 +890,7 @@ Boolean MCGroup::doubleup(uint2 which)
 	return False;
 }
 
-void MCGroup::setrect(const MCRectangle &nrect)
+void MCGroup::applyrect(const MCRectangle &nrect)
 {
 	bool t_size_changed;
 	t_size_changed = nrect . width != rect . width || nrect . height != rect . height;
@@ -2789,6 +2841,10 @@ bool MCGroup::computeminrect(Boolean scrolling)
 		else
 			t_all = true;
 		state = oldstate;
+		
+		// IM-2015-12-16: [[ NativeLayer ]] The group rect has changed, so send geometry change notification.
+		geometrychanged(getrect());
+		
 		return t_all;
 	}
 	else if ((flags & F_HSCROLLBAR || flags & F_VSCROLLBAR)
@@ -3751,6 +3807,25 @@ void MCGroup::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 		p_control -> layer_redrawall();
 }
 
+bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
+{
+	if (getNativeLayer() == nil)
+	{
+		void *t_view;
+		if (!MCNativeLayer::CreateNativeContainer(t_view))
+			return false;
+		if (!SetNativeView(t_view))
+		{
+			MCNativeLayer::ReleaseNativeView(t_view);
+			return false;
+		}
+	}
+	
+	r_layer = getNativeLayer();
+	
+	return true;
+}
+
 void MCGroup::scheduledelete(bool p_is_child)
 {
     MCControl::scheduledelete(p_is_child);
@@ -3765,23 +3840,4 @@ void MCGroup::scheduledelete(bool p_is_child)
 		}
 		while(t_control != controls);
 	}
-}
-
-// PM-2015-07-02: [[ Bug 13262 ]] Make sure we attach/detach the player when
-//  showing/hiding a group that has a player
-void MCGroup::SetVisibility(MCExecContext &ctxt, uinteger_t part, bool flag, bool visible)
-{
-    MCControl::SetVisibility(ctxt, part, flag, visible);
-#ifdef PLATFORM_PLAYER
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-    {
-        if (t_player -> getparent() == this)
-        {
-            if (flag && visible || !flag && !visible)
-                t_player -> attachplayer();
-            else
-                t_player -> detachplayer();
-        }
-    }
-#endif
 }

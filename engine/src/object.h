@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "platform.h"
 
+#include "native-layer.h"
+
 enum {
     MAC_SHADOW,
     MAC_THUMB_TOP,
@@ -335,6 +337,10 @@ protected:
 	static MCObjectPropertyTable kPropertyTable;
     static MCPropertyInfo kModeProperties[];
 	static MCObjectPropertyTable kModePropertyTable;
+
+	// The native layer associated with this object
+	MCNativeLayer* m_native_layer;
+	
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -374,7 +380,8 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual uint2 gettransient() const;
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
+	void setrect(const MCRectangle &p_rect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
@@ -410,6 +417,17 @@ public:
     
     // AL-2015-09-23: [[ Native Widgets ]] Informs the object that its visibility has changed
     virtual void visibilitychanged(bool p_visible);
+	
+	// IM-2015-12-11: [[ Native Widgets ]] Informs the object that its rect has changed
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
+	// IM-2016-01-19: [[ NativeWidgets ]] Informs the object that its visible area has changed.
+	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
+	
+	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it has been opened.
+	virtual void OnOpen();
+	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it will be closed.
+	virtual void OnClose();
     
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
@@ -472,6 +490,12 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	bool GetNativeView(void *&r_view);
+	bool SetNativeView(void *p_view);
+	
+	// Gets the current native layer (if any) associated with this object
+	MCNativeLayer* getNativeLayer() const;
+	
 	MCNameRef getdefaultpropsetname(void);
 
 #ifdef LEGACY_EXEC
@@ -635,7 +659,10 @@ public:
 	MCImage *resolveimageid(uint4 image_id);
 	MCImage *resolveimagename(MCStringRef name);
 	
-	Boolean isvisible();
+	// IM-2015-12-07: [[ ObjectVisibility ]]
+	// Returns the visibility of the object. If effective is true then only returns true if the parent (and its parent, etc.) is also visible.
+	bool isvisible(bool p_effective = true);
+	
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
 	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
@@ -915,7 +942,6 @@ public:
 	void SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_id);
 	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
 
-	void SetVisibility(MCExecContext& ctxt, uint32_t part, bool flag, bool visible);
 	void SetRectProp(MCExecContext& ctxt, bool effective, MCRectangle p_rect);
 	void GetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint &r_point);
 	void SetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint point);

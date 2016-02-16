@@ -110,7 +110,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
     
 #ifdef LEGACY_EXEC
@@ -411,7 +411,6 @@ public:
 	////////// PROPERTY SUPPORT METHODS
     
 	virtual void Redraw(void);
-    virtual void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
     
 	////////// PROPERTY ACCESSORS
     
@@ -472,7 +471,6 @@ public:
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
     virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
     virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);

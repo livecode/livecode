@@ -603,7 +603,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 			MCControl::timer(mptr, params);
 }
 
-void MCImage::setrect(const MCRectangle &nrect)
+void MCImage::applyrect(const MCRectangle &nrect)
 {
 	MCRectangle orect = rect;
 	rect = nrect;

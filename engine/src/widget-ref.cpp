@@ -210,9 +210,6 @@ bool MCWidgetBase::OnOpen(void)
     if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen")))
 		return false;
 
-	if (GetHost()->getNativeLayer())
-		GetHost()->getNativeLayer()->OnOpen();
-	
 	return OnAttach();
 }
 
@@ -221,9 +218,6 @@ bool MCWidgetBase::OnClose(void)
 	if (!OnDetach())
 		return false;
 	
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnClose();
-    
     bool t_success;
     t_success = true;
     
@@ -427,29 +421,16 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
 
 bool MCWidgetBase::OnGeometryChanged(void)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnGeometryChanged(GetHost()->getrect());
-    
     return Dispatch(MCNAME("OnGeometryChanged"));
 }
 
 bool MCWidgetBase::OnLayerChanged()
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnLayerChanged();
-    
     return Dispatch(MCNAME("OnLayerChanged"));
 }
 
 bool MCWidgetBase::OnVisibilityChanged(bool p_visible)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnVisibilityChanged(p_visible);
-    
-    
     MCAutoValueRefArray t_args;
     if (!t_args . New(1))
         return false;
@@ -469,10 +450,6 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
 
 bool MCWidgetBase::OnToolChanged(Tool p_tool)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnToolChanged(p_tool);
-    
     bool t_success;
     t_success = true;
     if (p_tool == T_BROWSE)

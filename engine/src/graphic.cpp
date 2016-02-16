@@ -426,7 +426,7 @@ Boolean MCGraphic::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCGraphic::setrect(const MCRectangle &nrect)
+void MCGraphic::applyrect(const MCRectangle &nrect)
 {
 	if (realpoints != NULL)
 	{

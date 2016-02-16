@@ -162,6 +162,9 @@ MCObject::MCObject()
     m_theme = kMCInterfaceThemeEmpty;
     m_theme_type = kMCPlatformControlTypeGeneric;
     
+	// IM-2016-01-21: Initialize native layer to nil
+	m_native_layer = nil;
+
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
@@ -264,6 +267,9 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
     m_theme = oref.m_theme;
     m_theme_type = oref.m_theme_type;
     
+	// IM-2016-01-21: Initialize native layer to nil
+	m_native_layer = nil;
+	
     // Attach ourselves to an object pool.
     MCDeletedObjectsOnObjectCreated(this);
 }
@@ -322,6 +328,8 @@ MCObject::~MCObject()
     // If this object is a parent-script make sure we flush it from the table.
 	if (m_is_parent_script)
 		MCParentScript::FlushObject(this);
+	
+	delete m_native_layer;
     
     // Detach ourselves from the object pool.
     MCDeletedObjectsOnObjectDestroyed(this);
@@ -376,6 +384,8 @@ void MCObject::open()
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
 		patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
+	
+	OnOpen();
 }
 
 void MCObject::close()
@@ -383,6 +393,8 @@ void MCObject::close()
 	if (opened == 0 || --opened != 0)
 		return;
 
+	OnClose();
+	
 	if (state & CS_MENU_ATTACHED)
 		closemenu(False, True);
 
@@ -823,7 +835,14 @@ uint2 MCObject::gettransient() const
 	return 0;
 }
 
-void MCObject::setrect(const MCRectangle &nrect)
+void MCObject::setrect(const MCRectangle &p_rect)
+{
+	applyrect(p_rect);
+	
+	geometrychanged(getrect());
+}
+
+void MCObject::applyrect(const MCRectangle &nrect)
 {
 	rect = nrect;
 }
@@ -1179,16 +1198,46 @@ void MCObject::recompute()
 {
 }
 
-void MCObject::toolchanged(Tool)
+void MCObject::toolchanged(Tool p_new_tool)
 {
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnToolChanged(p_new_tool);
 }
 
 void MCObject::layerchanged()
 {
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnLayerChanged();
 }
 
 void MCObject::visibilitychanged(bool p_visible)
 {
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnVisibilityChanged(p_visible);
+}
+
+void MCObject::geometrychanged(const MCRectangle &p_rect)
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnGeometryChanged(p_rect);
+}
+
+void MCObject::viewportgeometrychanged(const MCRectangle &p_rect)
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnViewportGeometryChanged(p_rect);
+}
+
+void MCObject::OnOpen()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnAttach();
+}
+
+void MCObject::OnClose()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnDetach();
 }
 
 const MCRectangle& MCObject::getrect(void) const
@@ -1315,16 +1364,15 @@ MCParentScript *MCObject::getparentscript(void) const
 	return parent_script != NULL ? parent_script -> GetParent() : NULL;
 }
 
-Boolean MCObject::isvisible()
+bool MCObject::isvisible(bool p_effective)
 {
-	MCObject *p = this;
-	while (p->parent != NULL && p->parent->gettype() == CT_GROUP)
-	{
-		if (!(p->flags & F_VISIBLE))
-			return False;
-		p = p->parent;
-	}
-	return (p->flags & F_VISIBLE) != 0;
+	if (!getflag(F_VISIBLE))
+		return false;
+	
+	if (p_effective && parent != nil && parent->gettype() == CT_GROUP)
+		return parent->isvisible(true);
+	
+	return true;
 }
 
 Boolean MCObject::resizeparent()
@@ -5132,6 +5180,65 @@ void MCObject::relayercontrol_remove(MCControl *p_control)
 void MCObject::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Gets the current native layer (if any) associated with this object
+MCNativeLayer* MCObject::getNativeLayer() const
+{
+	return m_native_layer;
+}
+
+bool MCObject::GetNativeView(void *&r_view)
+{
+	if (m_native_layer == nil)
+		return false;
+	
+	return m_native_layer->GetNativeView(r_view);
+}
+
+bool MCObject::SetNativeView(void *p_view)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCNativeLayer *t_layer;
+	t_layer = nil;
+	
+	if (t_success && p_view != nil)
+	{
+		t_layer = MCNativeLayer::CreateNativeLayer(this, p_view);
+		t_success = t_layer != nil;
+	}
+	
+	if (t_success)
+	{
+		if (m_native_layer != nil)
+			delete m_native_layer;
+		
+		m_native_layer = t_layer;
+		if (m_native_layer != nil)
+		{
+			if (opened)
+				m_native_layer->OnAttach();
+			
+			MCRectangle t_viewport;
+			if (getparent() != nil && getparent()->gettype() == CT_GROUP)
+				t_viewport = ((MCGroup*)getparent())->getviewportgeometry();
+			else
+				t_viewport = getrect();
+				
+			m_native_layer->OnGeometryChanged(getrect());
+			m_native_layer->OnViewportGeometryChanged(t_viewport);
+			m_native_layer->OnToolChanged(getstack()->gettool(this));
+			m_native_layer->OnVisibilityChanged(isvisible());
+		}
+	}
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCObject::scheduledelete(bool p_is_child)
 {

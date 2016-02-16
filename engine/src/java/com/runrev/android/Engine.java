@@ -115,7 +115,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
-    private FrameLayout m_view_layout;
+    private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
     
@@ -941,7 +941,70 @@ public class Engine extends View implements EngineApi
 
 ////////////////////////////////////////////////////////////////////////////////
 
+	// Native layer view functionality
+	
+	Object getNativeLayerContainer()
+	{
+		if (m_view_layout == null)
+		{
+			FrameLayout t_main_view;
+			t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
+			
+			m_view_layout = new RelativeLayout(getContext());
+			t_main_view.addView(m_view_layout, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+			t_main_view.bringChildToFront(m_view_layout);
+		}
+		
+		return m_view_layout;
+	}
+	
+	Object createNativeLayerContainer()
+	{
+		return new RelativeLayout(getContext());
+	}
+	
+	// insert the view into the container, layered below p_view_above if not null.
+	void addNativeViewToContainer(Object p_view, Object p_view_above, Object p_container)
+	{
+		ViewGroup t_container;
+		t_container = (ViewGroup)p_container;
+		
+		int t_index;
+		if (p_view_above != null)
+			t_index = t_container.indexOfChild((View)p_view_above);
+		else
+			t_index = t_container.getChildCount();
+		
+		t_container.addView((View)p_view, t_index, new RelativeLayout.LayoutParams(0, 0));
+	}
+	
+	void removeNativeViewFromContainer(Object p_view)
+	{
+		// Remove view from its parent
+		View t_view;
+		t_view = (View)p_view;
+		
+		ViewGroup t_parent;
+		t_parent = (ViewGroup)t_view.getParent();
+		if (t_parent != null)
+			t_parent.removeView(t_view);
+	}
+	
+	void setNativeViewRect(Object p_view, int left, int top, int width, int height)
+	{
+		RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(width, height);
+		t_layout.leftMargin = left;
+		t_layout.topMargin = top;
+		t_layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		t_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		
+		View t_view = (View)p_view;
+		
+		t_view.setLayoutParams(t_layout);
+	}
+	
     // native control functionality
+	
     void addNativeControl(Object p_control)
     {
         m_native_control_module.addControl(p_control);
@@ -950,53 +1013,6 @@ public class Engine extends View implements EngineApi
     void removeNativeControl(Object p_control)
     {
         m_native_control_module.removeControl(p_control);
-    }
-
-    void removeNativeView(Object p_view)
-    {
-        View t_view = (View)p_view;
-        
-        if (m_view_layout != null)
-            m_view_layout.removeView(t_view);
-    }
-    
-    void placeNativeViewBelow(Object p_view, Object p_superior)
-    {
-        // Remove from any existing parent
-        removeNativeView(p_view);
-        
-        // The main view
-        FrameLayout t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
-        
-        // Create the layout for native layers if not already done
-        if (m_view_layout == null)
-        {
-            m_view_layout = new FrameLayout((LiveCodeActivity)getContext());
-            t_main_view.addView(m_view_layout);
-            t_main_view.bringChildToFront(m_view_layout);
-        }
-        
-        View t_view = (View)p_view;
-        int t_index = m_view_layout.getChildCount();
-        
-        if (p_superior != null)
-        {
-            View t_superior = (View)p_superior;
-            t_index = m_view_layout.indexOfChild(t_superior);
-        }
-        
-        m_view_layout.addView(t_view, t_index, new RelativeLayout.LayoutParams(0, 0));
-    }
-    
-    void setNativeViewRect(Object p_view, int left, int top, int width, int height)
-    {
-        FrameLayout.LayoutParams t_layout = new FrameLayout.LayoutParams(width, height);
-        t_layout.leftMargin = left;
-        t_layout.topMargin = top;
-
-        View t_view = (View)p_view;
-        
-        t_view.setLayoutParams(t_layout);
     }
 
 	Object createNativeControl(String p_class_name)

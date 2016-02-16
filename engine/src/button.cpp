@@ -1673,7 +1673,7 @@ uint2 MCButton::gettransient() const
 }
 
 
-void MCButton::setrect(const MCRectangle &nrect)
+void MCButton::applyrect(const MCRectangle &nrect)
 {	
 	rect = nrect;
 	MCRectangle trect;

@@ -81,7 +81,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -129,6 +129,16 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	virtual void toolchanged(Tool p_new_tool);
+
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
+	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
+
+	virtual MCRectangle getviewportgeometry();
+	
+	bool getNativeContainerLayer(MCNativeLayer *&r_layer);
+	
     virtual void scheduledelete(bool p_is_child);
     
     void drawselectedchildren(MCDC *dc);
@@ -306,9 +316,7 @@ public:
     void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
     void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
 
-    void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
     void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool flag, bool visible);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
