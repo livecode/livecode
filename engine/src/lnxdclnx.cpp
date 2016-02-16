@@ -567,7 +567,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                 if (t_event->type == GDK_BUTTON_PRESS)
                 {
                     setmods(t_event->button.state, 0, t_event->button.button, False);
-                    // IM-2016-02-16: [[ Bug 16568 ]] Retake key focus on click.
+                    // IM-2016-02-16: [[ Bug 15806 ]] Retake key focus on click.
                     //   (Focus can be stolen by child windows)
                     gdk_window_focus(t_event->button.window, t_event->button.time);
                 }
