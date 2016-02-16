@@ -1,0 +1,51 @@
+Name: is not strictly
+
+Type: operator
+
+Syntax: <value> is not strictly [ nothing | a boolean | an integer | a real | a string | a binary string | an array ]
+
+Summary: Evaluates to true if the actual type of <value> is not the specified type.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+"Hello World!" is not strictly a string -- evaluates to false
+
+Example:
+1 + 200 is not strictly an integer -- evaluates to false
+
+Example:
+(100 is 100) is not strictly a boolean -- evaluates to false
+
+Example:
+the compress of "Hello World!" is not strictly a binary string -- evaluates to false
+
+Parameters:
+value: The expression to test the type of.
+
+Description:
+Use the <is not strictly> operator to determine what the true type of
+a value is not.  The true type of a value is the representation which
+the engine is currently holding for it, without performing any
+implicit type coercion. The true type of a value can be one of the
+following:
+
+- nothing: no value, typically seen as <empty>
+- boolean: either true or false, typically seen as the result of a comparison operator
+- integer: a number with no fractional part
+- real: a number with a fractional part
+- string: a piece of text (sequence of characters)
+- binary string: a sequence of bytes
+- array: an associative array
+
+The <is not strictly> operator differs from <is not a> in that it does
+not perform any type coercion. For example, `x not is an integer`
+would return false only when `x` is neither an integer nor a string
+which parses as an integer; whereas `x is not strictly an integer`
+only returns false if `x` is not currently an integer.
+
+References: is strictly (operator), is a (operator), is not a (operator)

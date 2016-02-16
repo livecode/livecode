@@ -62,7 +62,7 @@ Before running each test command, the test framework inserts a test library stac
 * `TestGetEngineRepositoryPath`: A function that returns the path to the main LiveCode engine repository.
 * `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
 * `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension. 
-
+* `TestLoadAllExtensions`: Attempt to load all available extensions. 
 Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
 ````
 on TestSetup

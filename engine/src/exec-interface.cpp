@@ -2010,6 +2010,7 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
     // If we made it this far, the controls are ok to group.
     for (i = 0; i < p_control_count; ++i)
     {
+        cptr = (MCControl *)p_controls[i] . object;
         t_card = cptr->getcard(p_controls[i] . part_id);
         t_card -> removecontrol(cptr, False, True);
         cptr -> getstack() -> removecontrol(cptr);

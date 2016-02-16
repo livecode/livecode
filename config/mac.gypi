@@ -188,9 +188,6 @@
 				'ARCHS': 'i386 x86_64',
 				'GCC_OPTIMIZATION_LEVEL': '3',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
-				#'LLVM_LTO': 'YES',
-				'DEAD_CODE_STRIPPING': 'YES',
-				'GCC_UNROLL_LOOPS': 'YES',
 			},
 		},
 		

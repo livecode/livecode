@@ -137,17 +137,18 @@ dist-docs: dist-docs-commercial
 endif
 
 dist-docs-community:
-	mkdir -p $(docs_build_dir)
-	cp -R $(docs_source_dir) $(docs_build_dir)/raw-community
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
+	  --edition community \
 	  --docs-dir $(docs_build_dir)/raw-community \
 	  --built-docs-dir $(docs_build_dir)/cooked-community
 	  
 dist-docs-commercial:
-	mkdir -p $(docs_build_dir)
-	cp -R $(docs_source_dir) $(docs_build_dir)/raw-commercial
-	rsync -a $(docs_private_source_dir)/ $(docs_build_dir)/raw-commercial/
-	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
+	$(buildtool_command) --platform $(buildtool_platform) \
+	  --stage docs --edition indy \
+	  --docs-dir $(docs_build_dir)/raw-commercial \
+	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+	$(buildtool_command) --platform $(buildtool_platform) \
+	  --stage docs --edition business \
 	  --docs-dir $(docs_build_dir)/raw-commercial \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
@@ -198,6 +199,7 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Server-*-Linux*.zip' \
 	                -o -name 'LiveCode*Server-*-Mac.zip' \
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
+	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
