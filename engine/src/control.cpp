@@ -1457,7 +1457,7 @@ uint2 MCControl::sizehandles()
 		for (i = 7 ; i >= 0 ; i--)
         {
             // Be more forgiving about handle hit detection
-            MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
+            rects[i] = MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
 			if (MCU_point_in_rect(rects[i], mx, my))
 			{
 				if (i < 3)
