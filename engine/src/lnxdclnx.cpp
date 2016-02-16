@@ -559,12 +559,18 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
             case GDK_SCROLL:
             case GDK_BUTTON_PRESS:
             {
+				MCLog("%s", t_event->type == GDK_SCROLL ? "GDK_SCROLL" : "GDK_BUTTON_PRESS");
                 // We're not dragging
                 dragclick = false;
                 
                 // Update the mouse button status
                 if (t_event->type == GDK_BUTTON_PRESS)
+                {
                     setmods(t_event->button.state, 0, t_event->button.button, False);
+                    // IM-2016-02-16: [[ Bug 16568 ]] Retake key focus on click.
+                    //   (Focus can be stolen by child windows)
+                    gdk_window_focus(t_event->button.window, t_event->button.time);
+                }
                 else
                     setmods(t_event->scroll.state, 0, 0, False);
                 
