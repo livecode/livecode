@@ -506,6 +506,9 @@ void MCCard::mdrag(void)
 
 bool MCCard::mfocus_control(int2 x, int2 y, bool p_check_selected)
 {
+    if (objptrs == nil)
+        return false;
+    
     MCObjptr *tptr = objptrs->prev();
     
     bool t_freed;
