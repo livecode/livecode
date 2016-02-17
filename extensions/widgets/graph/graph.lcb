@@ -146,18 +146,28 @@ private variable mLabelXShow as Boolean
 private variable mLabelYShow as Boolean
 private variable mVerticesShow as Boolean
 
-private variable mMax as Number
-private variable mMin as Number
+private variable mYMax as Number
+private variable mYMin as Number
+
+private variable mXMax as optional Number
+private variable mXMin as optional Number
+
 private variable mVPointCount as Integer
 private variable mHPointCount as Integer
 private variable mGridHWidth as Real
-private variable mGridVWidth as Real
+private variable mGridVHeight as Real
 private variable mLegendWidth as Real
-private variable mLabelXWidth as Real
-private variable mLabelYHeight as Real
 private variable mGridRect as Rectangle
 private variable mColors as List
-private variable mPadding as Real
+
+private variable mMaxYLabelWidth as Real
+private variable mYLabelTopOverhang as Real
+private variable mYLabelBottomOverhang as Real
+
+private variable mMaxXLabelHeight as Real
+private variable mXLabelLeftOverhang as Real
+private variable mXLabelRightOverhang as Real
+private variable mXLabelRows as Number
 
 // Stores the numerical increment of the steps in the Y axis
 private variable mYIncrement as Real
@@ -167,7 +177,11 @@ private variable mBackgroundGridPath as Path
 private variable mBackgroundAxisPath as Path
 --
 
-----------
+private variable mWidth as Real
+private variable mHeight as Real
+private variable mRecalculateAll as Boolean
+private variable mRecalculateGrid as Boolean
+
 -- this handler is called when the widget is created
 public handler OnCreate() returns nothing
 	put [["mon","tue","web","thu","fri","sat","sun"],[1000,720,889,800,1000,964,1000],[300,340,400,360,301,400,nothing],[0,123,80,10,234,200,0]] into mData
@@ -178,25 +192,37 @@ public handler OnCreate() returns nothing
 	put true into mLabelXShow
 	put true into mLabelYShow
 	put true into mVerticesShow
-	initialiseConstants()
+	
+   put my height into mHeight
+   put my width into mWidth
+
+	put true into mRecalculateAll
+	put true into mRecalculateGrid
 end handler
 ----------
 
 ----------
 -- this handler is called whenever LiveCode needs to redraw the widget
 public handler OnPaint() returns nothing
-	if mLabelYShow is true then
-		variable tLeft as Real
-		put drawYLabels() into tLeft
-		updateGridRect(rectangle [tLeft+mPadding,the top of mGridRect,the right of mGridRect,the bottom of mGridRect])
+	-- Set the font prior to doing text measurements
+   set the font of this canvas to my font
+   set the paint of this canvas to getPaint("axis","stroke")
+	
+	if mRecalculateAll then
+		calculateAll()
+	else if mRecalculateGrid then
+		calculateGrid()
 	end if
 
-	if mLabelXShow is true then
-		variable tBottom as Real
-		//put drawXLabels() into tBottom
+   if mLabelYShow then
+		drawYLabels()
 	end if
 
-	if mLegendShow is true then
+	if mLabelXShow then
+		drawXLabels()
+	end if
+
+	if mLegendShow then
 		drawLegend()
 	end if
 
@@ -258,8 +284,7 @@ public handler setData(in pData as String) returns nothing
 	end repeat
 
 	put tNewData into mData
-	initialiseConstants()
-	//log "redrawing"
+	put true into mRecalculateAll
 	redraw all
 end handler
 ----------
@@ -300,13 +325,11 @@ end handler
 -- this handler sets whether the x gird lines are visible
 public handler setXLinesVisibility(in pShowXGridLines as Boolean) returns nothing
 	put pShowXGridLines into mGridHShow
-	updateConstants()
 	redraw all
 end handler
 
 public handler setYLinesVisibility(in pShowYGridLines as Boolean) returns nothing
 	put pShowYGridLines into mGridVShow
-	updateConstants()
 	redraw all
 end handler
 ----------
@@ -416,170 +439,327 @@ public handler getPaint(pLocation, pType) returns Paint
 
 	return solid paint with stringToColor("255,100,200")
 end handler
-----------
 
-----------
--- this handler returns a font name as a string
-private handler getFontName() returns String
-	return the name of the font of this canvas
+-- Call calculateAll if the data changes
+private handler calculateAll()
+	-- Currently the widget makes the assumption that the horizontal points are
+	-- evenly spaced.
+	put the number of elements in (element 1 of mData) -1 into mHPointCount
+
+	-- Use the same number of points for the y-axis
+	put mHPointCount into mVPointCount
+	
+	calculateMinMaxes()
+	
+	-- Set the y axis point increment
+	put (mYMax - mYMin) / mVPointCount into mYIncrement
+	
+	-- Calculate geomentry of any elements that affect the grid space
+	calculateGrid()
+	
+	put false into mRecalculateAll
 end handler
-----------
 
-----------
--- this handler returns a font size
-private handler getFontSize() returns Number
-	return 11
-end handler
-----------
-
-----------
--- this handler initialises the constants
-private handler initialiseConstants() returns nothing
-
+private handler calculateMinMaxes() returns nothing
+	variable tYMax as optional Number
+	variable tYMin as optional Number
+	
+	variable tXMax as optional Number	
+	variable tXMin as optional Number
+	
+	variable tLineNumber as Integer
+	
 	variable tMax as Number
 	variable tMin as Number
-	variable tCount as Integer
-	put 0 into mMax
-	put 1000 into mMin
-	repeat with tCount from 2 up to the number of elements in mData
-		put listMax(element tCount of mData) into tMax
-		if tMax > mMax then
-			put tMax into mMax
-		end if
-
-		put listMax(element tCount of mData) into tMin
-		if tMin < mMin then
-			put tMin into mMin
-		end if
+	repeat with tLineNumber from 2 up to the number of elements in mData
+		put listMax(mData[tLineNumber], false) into tMax
+		if tYMax is nothing then
+			put tMax into tYMax
+		else
+			put the maximum of tMax and tYMax into tYMax
+		end if 
+		put listMin(mData[tLineNumber], false) into tMin
+		if tYMin is nothing then
+			put tMin into tYMin
+		else
+			put the minimum of tMin and tYMin into tYMin
+		end if 
 	end repeat
-	put the number of elements in (element 1 of mData) -1 into mHPointCount
-	put 5 into mVPointCount
 
-	put mMax / mVPointCount into mYIncrement
-
-	updateConstants()
-end handler
-----------
-
-----------
--- this handler updates the constants
-private handler updateConstants() returns nothing
-	put my height * 0.02 into mPadding
-	if mPadding < 6 then
-		put 6 into mPadding
+	-- No data
+	if tYMax is nothing or tYMin is nothing then
+		put 0 into tYMax
+		put 0 into tYMin
 	end if
-
-	updateGridRect(rectangle [0,mPadding,my width-mPadding,my height-mPadding])
+	
+	put tYMax into mYMax
+	put tYMin into mYMin
+	
+	put listMin(mData[1], true) into mXMin
+	put listMax(mData[1], true) into mXMax
 end handler
-----------
 
-----------
+private handler LabelRect(in pLabel as any) returns Rectangle
+	variable tString as String
+	if pLabel is a string then
+      put pLabel into tString
+   else
+      put pLabel formatted as string into tString
+   end if
+		
+	variable tThisRect as Rectangle
+	measure tString on this canvas into tThisRect
+
+   return tThisRect
+end handler
+
+private handler calculateXOverhangs() returns nothing
+   variable tLeftOverhang as Real
+   put 0 into tLeftOverhang
+
+   variable tRightOverhang as Real
+   put 0 into tRightOverhang
+	
+   if mLabelXShow then
+      put the width of LabelRect(the head of mData[1]) / 2 into tLeftOverhang
+		put the width of LabelRect(the tail of mData[1]) / 2 into tRightOverhang
+	end if
+      
+	put tLeftOverhang into mXLabelLeftOverhang
+   put tRightOverhang into mXLabelRightOverhang
+end handler
+
+private handler calculateYLabelGeometry() returns nothing
+   variable tMaxWidth as Real
+   put 0 into tMaxWidth
+	
+	variable tTopOverhang as Real
+   put 0 into tTopOverhang	
+	
+	variable tBottomOverhang as Real
+   put 0 into tBottomOverhang
+	
+   if mLabelYShow then
+      variable tNumber as Real
+      variable tString as String
+      variable tTextBounds as Rectangle
+
+      variable tCount as Integer
+      repeat with tCount from 1 up to mVPointCount + 1
+         put mYMin + mYIncrement * (tCount - 1) into tNumber
+         put LabelRect(tNumber) into tTextBounds
+         if the width of tTextBounds > tMaxWidth then
+            put the width of tTextBounds into tMaxWidth
+         end if
+			
+			if tCount is 1 then
+				put the height of tTextBounds / 2 into tBottomOverhang
+			else if tCount is mVPointCount + 1 then
+				put the height of tTextBounds / 2 into tTopOverhang
+			end if
+      end repeat
+   end if
+   put tMaxWidth into mMaxYLabelWidth
+	put tBottomOverhang into mYLabelBottomOverhang
+	put tTopOverhang into mYLabelTopOverhang
+end handler
+
+private handler calculateGridWidth()
+	variable tPadding as Real
+	put gridPadding() into tPadding
+	
+	variable tYLabelNeed as Real
+	if mLabelYShow then
+		put mMaxYLabelWidth + tPadding into tYLabelNeed
+	end if
+	
+	variable tLabelSpaceLeft as Real
+	put the maximum of mXLabelLeftOverhang and tYLabelNeed into tLabelSpaceLeft
+	
+	-- There will be padding either side in addition to the specified padding
+	variable tGridWidth as Real
+	put mWidth - tLabelSpaceLeft - 2 * tPadding into tGridWidth
+	put tGridWidth / mHPointCount into mGridHWidth
+end handler
+
+private handler calculateXLabelGeometry() returns nothing
+   variable tMaxHeight as Real
+   put 0 into tMaxHeight
+	
+   variable tXLabelRows as Number
+   put 0 into tXLabelRows
+
+   if mLabelXShow then
+		put 1 into tXLabelRows
+		
+      variable tXLabels as List
+      put mData[1] into tXLabels
+
+      variable tString as String
+      variable tThisRect as Rectangle
+      variable tOverhang as Number
+      variable tLastOverhang as Number
+      variable tLabel
+
+      variable tCount as Number
+      put 0 into tCount
+      // Try arranging in one row
+      repeat for each element tLabel in tXLabels
+         add 1 to tCount
+			put LabelRect(tLabel) into tThisRect
+			put the width of tThisRect / 2 into tOverhang
+         if tCount is 1 then
+            put the height of tThisRect into tMaxHeight
+         else
+            -- If two consecutive labels don't fit,
+            -- we'll put them onto two lines.
+            if tOverhang + tLastOverhang > mGridHWidth then
+               put 2 into tXLabelRows
+            end if
+            put the maximum of the height of tThisRect and tMaxHeight into tMaxHeight
+         end if
+         put tOverhang into tLastOverhang
+      end repeat
+   end if
+
+   put tMaxHeight into mMaxXLabelHeight
+   put tXLabelRows into mXLabelRows
+end handler
+
+private handler calculateGridRect() returns nothing
+   variable tPadding as Real
+	put gridPadding() into tPadding
+
+   variable tNeededTop as Real
+   put mYLabelTopOverhang into tNeededTop
+
+   variable tNeededRight as Real
+   put mXLabelRightOverhang into tNeededRight
+
+   updateGridRect(rectangle [gridLeft(), tPadding + tNeededTop, mWidth - tPadding - tNeededRight, gridBottom()])
+end handler
+
+constant kMinPadding is 5
+constant kPaddingRatio is 0.02
+private handler gridPadding() returns Real
+   variable tPadding as Real
+   put the maximum of mHeight * kPaddingRatio and kMinPadding into tPadding
+   return tPadding
+end handler
+
+private handler gridLeft() returns Real
+   variable tNeededLeft as Real
+   put the maximum of mMaxYLabelWidth and mXLabelLeftOverhang into tNeededLeft
+   return tNeededLeft + gridPadding()
+end handler
+
+private handler gridBottom() returns Real
+	variable tNeededBottom as Real
+	variable tPadding as Real
+	put gridPadding() into tPadding
+	
+	variable tXLabelsSpace as Real
+	put mXLabelRows * (mMaxXLabelHeight + tPadding) into tXLabelsSpace
+
+	put the maximum of tXLabelsSpace and mYLabelBottomOverhang into tNeededBottom
+	return mHeight - (tNeededBottom + tPadding)
+end handler
+
 -- this handler updates the grid rectangle
 private handler updateGridRect(in tRect as Rectangle) returns nothing
 	put tRect into mGridRect
-	put the height of mGridRect / mVPointCount into mGridVWidth
+	put the height of mGridRect / mVPointCount into mGridVHeight
 	put the width of mGridRect / mHPointCount into mGridHWidth
 end handler
-----------
 
-----------
+-- Call if the width changes, or if show/hide of either axis' labels changes
+private handler calculateGrid()
+	-- First calculate the size of any x-axis label overhangs
+	calculateXOverhangs()
+	
+	-- Next calculate the geometry (especially max width) of the y-axis labels
+	calculateYLabelGeometry()
+	
+	-- Now we know how much horizontal space the grid has, we can work
+	-- out the spacing of the vertical grid lines
+	calculateGridWidth()
+	
+	-- Now we can work out how to fit the x-axis labels correctly, so they don't overlap
+	calculateXLabelGeometry()
+	
+	-- Now we know how much vertical space the grid has, we can work
+	-- out the rest of the grid geometry.
+	calculateGridRect()
+	
+	put false into mRecalculateGrid
+end handler
+
 -- this handler is called when the geometry of the widget is changed
-public handler onGeometryChanged() returns nothing
-	updateConstants()
+public handler OnGeometryChanged()
+	if my height is not mHeight or my width is not mWidth then
+		put my height into mHeight
+   	put my width into mWidth
+		put true into mRecalculateGrid
+	end if
 end handler
 ----------
 
 ----------
 -- the following handlers draw the x and y labels on the graph
-private handler drawXLabels() returns Real
-	save state of this canvas
-	translate this canvas by [100,100]
-	rotate this canvas by 90
+private handler drawXLabels() returns nothing
+   variable tXLabels as List
+   put mData[1] into tXLabels
 
-	fill text "hello" at point [0,0] on this canvas
+   variable tString as String
+   variable tThisRect as Rectangle
+   variable tLabel
 
-	/*save state of this canvas
+   variable tCount as Number
+   put 0 into tCount
 
+   variable tLeft as Real
+   variable tRight as Real
+   variable tBottom as Real
+   variable tTop as Real
 
-	variable tNumber as Real
-	variable tString as String
-	variable tTextBounds as Rectangle
-	variable tMaxWidth as Real
-	put 0 into tMaxWidth
+   repeat for each element tLabel in tXLabels
+      add 1 to tCount
+      if tLabel is a string then
+         put tLabel into tString
+      else
+         put tLabel formatted as string into tString
+      end if
 
-	// Work out the max width first
-
-	variable tLabels as List
-	put element 1 of mData into tLabels
-
-	variable tLabel as String
-	repeat for each element tLabel in tLabels
-		measure tLabel on this canvas
-		put the result into tTextBounds
-		if the width of tTextBounds > tMaxWidth then
-			put the width of tTextBounds into tMaxWidth
-		end if
-	end repeat
-
-	// Draw the text
-	variable tCount as Integer
-	variable tPos as Real
-	variable tRect as Rectangle
-	put 1 into tCount
-	repeat for each element tLabel in tLabels
-
-		put 0 - (((mHPointCount)-tCount) * mGridHWidth) into tPos
-		put rectangle [0-tMaxWidth,tPos+20,0,tPos-20] into tRect
-		fill text tLabel at left of tRect on this canvas
-		log "-------"
-		log (0-tMaxWidth) formatted as string
-		log (tPos+20) formatted as string
-		log "0"
-		log (tPos-20) formatted as string
-		add 1 to tCount
-	end repeat
-	*/
-
-	restore state of this canvas
-
-	return 0
+      if tCount is 1 then
+         put gridLeft() - mGridHWidth / 2 into tLeft
+         put gridLeft() + mGridHWidth / 2 into tRight
+      else
+         put tRight into tLeft
+         add mGridHWidth to tRight
+      end if
+      
+		put mHeight into tBottom
+      put mHeight - ((tCount mod mXLabelRows) + 1) * (mMaxXLabelHeight + gridPadding()) into tTop
+      
+      put rectangle [tLeft, tTop, tRight, tBottom] into tThisRect
+      fill text tLabel at center of tThisRect on this canvas
+   end repeat
 end handler
 
-private handler drawYLabels() returns Real
-	set the font of this canvas to font getFontName() at size 10
-	set the paint of this canvas to getPaint("axis","stroke")
-
-	variable tNumber as Real
-	variable tString as String
-	variable tTextBounds as Rectangle
-	variable tMaxWidth as Real
-	put 0 into tMaxWidth
-
-	// Work out the max width first
-	variable tCount as Integer
-	repeat with tCount from 0 up to mVPointCount
-		put mYIncrement * tCount into tNumber
-		put tNumber formatted as string into tString
-
-		measure tString on this canvas
-		put the result into tTextBounds
-		if the width of tTextBounds > tMaxWidth then
-			put the width of tTextBounds into tMaxWidth
-		end if
-	end repeat
-
+private handler drawYLabels() returns nothing
+   variable tNumber as Number
+   variable tCount as Number
+   variable tString as String
 	// Draw the text
-	repeat with tCount from 0 up to mVPointCount
-		put mYIncrement * tCount into tNumber
-		put tNumber formatted as string into tString
-		//fill text tString at point [0,the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth)] on this canvas
+	repeat with tCount from 1 up to mVPointCount + 1
+		put mYIncrement * (tCount - 1) + mYMin into tNumber
+		put the rounded of tNumber formatted as string into tString
 		variable tY as Real
-		put the top of mGridRect + (((mVPointCount)-tCount) * mGridVWidth) into tY
-		fill text tString at right of rectangle [0,tY-20,tMaxWidth,tY+20] on this canvas
+		put the bottom of mGridRect - (tCount - 1) * mGridVHeight into tY
+		fill text tString at right of rectangle [0,tY-20,gridLeft() - gridPadding(),tY+20] on this canvas
 	end repeat
-
-	return tMaxWidth
 end handler
+
 ----------
 
 ----------
@@ -593,11 +773,6 @@ end handler
 private handler drawGraph() returns nothing
 	put gridPath() into mBackgroundGridPath
 	put axisPath() into mBackgroundAxisPath
-
-	variable tWidth as Real
-	variable tHeight as Real
-	put the width of mGridRect into tWidth
-	put the height of mGridRect into tHeight
 
 	// Draw grid lines
 	set the paint of this canvas to getPaint("grid","stroke")
@@ -616,31 +791,39 @@ private handler drawGraph() returns nothing
 	variable tPathVertices as Path
 	variable tPoint as Point
 
-	variable tCount as Integer
-	repeat with tCount from 2 up to the number of elements in mData
+	variable tGraphLine as Integer
+	repeat with tGraphLine from 2 up to the number of elements in mData
 		put the empty path into tPath
 		put the empty path into tPathVertices
-		put element tCount of mData into tDataPoints
-		if the number of elements in mColors >= tCount-1 then
-			put element tCount-1 of mColors into tColour
+		put element tGraphLine of mData into tDataPoints
+		if the number of elements in mColors >= tGraphLine - 1 then
+			put element tGraphLine - 1 of mColors into tColour
 		else
 			put stringToColor("0,0,0") into tColour
 		end if
 		set the paint of this canvas to solid paint with tColour
-		repeat with tCount2 from 1 up to the number of elements in tDataPoints
-			if element tCount2 of tDataPoints is not nothing then
-				if tCount2 is 1 then
-					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint
+		
+		variable tPointIndex as Integer
+		repeat with tPointIndex from 1 up to the number of elements in tDataPoints
+			if tDataPoints[tPointIndex] is not nothing then
+				variable tPointX as Real
+				variable tPointY as Real
+				put the left of mGridRect + ((tPointIndex - 1) * mGridHWidth) into tPointX
+				
+				variable tHeightRatio as Real
+				put (tDataPoints[tPointIndex] - mYMin) / (mYMax - mYMin) into tHeightRatio
+				put the bottom of mGridRect - the height of mGridRect * tHeightRatio into tPointY
+				put point [tPointX, tPointY] into tPoint
+				
+				if tPointIndex is 1 then
 					move to tPoint on tPath
 				else
-					put point [the left of mGridRect + ((tCount2-1) * mGridHWidth),the top of mGridRect + (tHeight - (tHeight * (element tCount2 of tDataPoints / mMax)))] into tPoint
 					line to tPoint on tPath
 				end if
 
 				// Draw vertices
 				if mVerticesShow is true then
 					add circle path centered at tPoint with radius 3 to tPathVertices
-					//add rectangle path of rectangle [element 1 of tPoint - 3,element 2 of tPoint - 3,element 1 of tPoint + 3,element 2 of tPoint + 3] to tPathVertices
 				end if
 			end if
 		end repeat
@@ -671,17 +854,17 @@ private handler gridPath() returns Path
 
 	// Create the path for the horizontal grid
 	if mGridHShow is true then
-		repeat with tCount from 1 up to mVPointCount
-			move to point [the left of mGridRect,the top of mGridRect + (mGridVWidth * tCount-1)] on tPath
-			line to point [the right of mGridRect,the top of mGridRect + (mGridVWidth * tCount-1)] on tPath
+		repeat with tCount from 1 up to mVPointCount + 1
+			move to point [the left of mGridRect,the top of mGridRect + mGridVHeight * (tCount - 1)] on tPath
+			line to point [the right of mGridRect,the top of mGridRect + mGridVHeight * (tCount - 1)] on tPath
 		end repeat
 	end if
 
 	// Create the path for the vertical grid
 	if mGridVShow is true then
-		repeat with tCount from 1 up to mHPointCount
-			move to point [the left of mGridRect + (mGridHWidth * tCount-1),the top of mGridRect] on tPath
-			line to point [the left of mGridRect + (mGridHWidth * tCount-1),the bottom of mGridRect] on tPath
+		repeat with tCount from 1 up to mHPointCount + 1
+			move to point [the left of mGridRect + mGridHWidth * (tCount - 1),the top of mGridRect] on tPath
+			line to point [the left of mGridRect + mGridHWidth * (tCount - 1),the bottom of mGridRect] on tPath
 		end repeat
 	end if
 
@@ -703,40 +886,36 @@ private handler axisPath() returns Path
 	return tPath
 end handler
 ----------
-
 // UTILITY FUNCTIONS
 
--- the following handlers return the maximum/minimum number from a list
-private handler listMax(in tList as List) returns Number
-	variable tMax as Number
-	put 0 into tMax
+private handler listLimit(in tList as List, in pStrict as Boolean, in pIsMax as Boolean) returns optional Number
+	variable tMinMax as optional Number
 
-	variable tElement as optional any
+	variable tElement
 	repeat for each element tElement in tList
 		if tElement is a number then
-			if tElement > tMax then
-				put tElement into tMax
+			if tMinMax is nothing then
+				put tElement into tMinMax
+			else if pIsMax then
+				put the maximum of tElement and tMinMax into tMinMax
+			else
+				put the minimum of tElement and tMinMax into tMinMax
 			end if
+		else if pStrict then
+			return nothing
 		end if
 	end repeat
 
-	return tMax
+	return tMinMax
 end handler
 
-private handler listMin(in tList as List) returns Number
-	variable tMin as optional Number
-	put nothing into tMin
+-- the following handlers return the maximum/minimum number from a list
+private handler listMax(in tList as List, in pStrict as Boolean) returns optional Number
+	return listLimit(tList, pStrict, true)
+end handler
 
-	variable tElement as optional any
-	repeat for each element tElement in tList
-		if tElement is a number then
-			if tElement < tMin then
-				put tElement into tMin
-			end if
-		end if
-	end repeat
-
-	return tMin
+private handler listMin(in tList as List, in pStrict as Boolean) returns optional Number
+	return listLimit(tList, pStrict, false)
 end handler
 ----------
 
