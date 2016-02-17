@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#define IMAGE_BLOCK_LEADING  2
 static MCRectangle
 MCBlockMakeRectangle(double x, double y,
                      double width, double height)
@@ -1953,8 +1954,9 @@ coord_t MCBlock::GetDescent() const
 
 coord_t MCBlock::GetLeading() const
 {
+	// PM-2016-02-15: [[ Bug 16754 ]] Use same value for leading as in pre-LC 8 when an image is present 
     if (flags & F_HAS_IMAGE && atts->image != NULL)
-        return GetAscent()+GetDescent();
+        return IMAGE_BLOCK_LEADING;
     else
         return MCFontGetLeading(m_font);
 }
