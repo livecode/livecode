@@ -5226,7 +5226,11 @@ bool MCObject::SetNativeView(void *p_view)
 			if (getparent() != nil && getparent()->gettype() == CT_GROUP)
 				t_viewport = ((MCGroup*)getparent())->getviewportgeometry();
 			else
-				t_viewport = getrect();
+			{
+				// IM-2016-02-17: [[ Bug 16944 ]] If layer is not in a group, then viewport
+				//    should be unbounded.
+				t_viewport = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
+			}
 				
 			m_native_layer->OnGeometryChanged(getrect());
 			m_native_layer->OnViewportGeometryChanged(t_viewport);
