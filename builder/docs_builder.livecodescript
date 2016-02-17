@@ -2148,7 +2148,8 @@ command docsBuilderGenerateDistributedAPI
    put builderDocsFolder() into tDictionaryFolder
    set the itemdelimiter to comma
    if there is not a folder tDictionaryFolder then
-      answer "No dictionary data found at" && tDictionaryFolder
+      builderLog "error", "No dictionary data found at" && tDictionaryFolder
+      exit docsBuilderGenerateDistributedAPI
    end if
    put "LiveCode Script," & tDictionaryFolder & ",dictionary" into tList
    
@@ -2158,6 +2159,11 @@ command docsBuilderGenerateDistributedAPI
       put docsBuilderParseDictionary(item 1 of tLine, "LiveCode", item 2 of tLine, false) into tLibrariesA[tCount]
       add 1 to tCount
    end repeat
+   
+   if tLibrariesA[tCount] is empty then
+   	  builderLog "error", "Couldn't parse dictionary data from" && tDictionaryFolder
+      exit docsBuilderGenerateDistributedAPI
+   end if
    
    local tModuleList, tModularA, tModularCount, tBlocksA, tParsedA
    put 1 into tModularCount
