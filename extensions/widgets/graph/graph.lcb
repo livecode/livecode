@@ -84,7 +84,9 @@ Description:
 The <graphColors> are the colors of each line in the graph widget.
 */
 property graphColors get getColors set setColors
-metadata graphColors.editor is "com.livecode.pi.colorList"
+metadata graphColors.editor is "com.livecode.pi.editorList"
+metadata graphColors.subeditor is "com.livecode.pi.color"
+metadata graphColors.delimiter is "\n"
 metadata graphColors.default is "255,0,155,255\n155,100,255,255\n100,255,100,255"
 metadata graphColors.label is "Line Colors"
 
