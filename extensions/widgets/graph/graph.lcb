@@ -225,11 +225,9 @@ public handler OnCreate() returns nothing
    put my height into mHeight
    put my width into mWidth
 
-	put true into mRecalculateAll
-	put true into mRecalculateGrid
-	
 	put [] into mHilitedCoordinates
 	put "0,0,0,255" into mHilitedCoordinatesColor
+	put true into mRecalculateAll
 end handler
 
 ----------
@@ -370,6 +368,8 @@ public handler SetHilitedCoordinates(in pCoordinates as String) returns nothing
 			throw "Invalid coordinates:" && pCoordinates
 			return
 		end if
+
+        calculateMinMaxes()
 
 		-- If x-coords are non-numeric, the hilited one must be in the list of points
 		if mXMin is nothing and not tCoordList[1] is in mData[1] then
