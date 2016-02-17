@@ -109,7 +109,8 @@ typedef enum MCError
 	kMCErrorNoObjectProperty = 34,
 	kMCErrorNoObjectPropertyValue = 35,
 	kMCErrorInvalidInterfaceQuery = 36,
-	kMCErrorNotSupported = 37,
+    kMCErrorNotSupported = 37,
+    kMCErrorUnlicensed = 42,
 } MCError;
 
 typedef uint32_t MCValueOptions;
@@ -149,6 +150,8 @@ enum
     kMCOptionAsCFData = 25,
     kMCOptionAsCFArray = 26,
     kMCOptionAsCFDictionary = 27,
+    
+    kMCOptionAsNothing = 28,
     
 	kMCOptionNumberFormatDefault = 0 << 26,
 	kMCOptionNumberFormatDecimal = 1 << 26,
@@ -291,6 +294,9 @@ typedef struct MCExternalInterface
     
     // SN-2015-01-26: [[ Bug 14057 ]] Added new function in the API v6, to allow the users to choose their return type (for the delimiters)
     MCError (*context_query)(MCExternalContextVar op, MCValueOptions p_options, void *result);
+    
+    // MW-2016-02-17: [[ LicenseCheck ]] Method to check the engine's license
+    MCExternalError (*license_check_edition)(unsigned int options, unsigned int min_edition);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -2664,7 +2670,19 @@ LCError LCInterfaceDismissModalViewController(UIViewController *p_controller, bo
 }
 	
 #endif
+    
+/////////
 
+LCError LCLicenseCheckEdition(unsigned int p_min_version)
+{
+    // If the external requires license calls, then abort if the engine is too
+    // old.
+    if (s_interface -> version < 7)
+        return kLCErrorUnlicensed;
+    
+    return s_interface -> license_check_edition(0, p_min_version);
+}
+    
 END_EXTERN_C
 
 ////////////////////////////////////////////////////////////////////////////////
