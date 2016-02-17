@@ -271,7 +271,7 @@ void MCFiberCall(MCFiberRef p_target, MCFiberCallback p_callback, void *p_contex
 
 bool MCFiberIsCurrentThread(MCFiberRef self)
 {
-	return pthread_self() == self -> thread;
+	return pthread_equal(pthread_self(), self -> thread);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
