@@ -334,8 +334,8 @@ public handler getColors() returns String
 			put element tCount of mColors into tColor
 			push colorToString(tColor, false) onto back of tColorStringList
 		else
-			push "0,0,0,0" onto back of tColorStringList
-			push stringToColor("0,0,0,0") onto back of mColors
+			push "0,0,0,255" onto back of tColorStringList
+			push stringToColor("0,0,0,255") onto back of mColors
 		end if
 	end repeat
 	combine tColorStringList with newline into tColors
