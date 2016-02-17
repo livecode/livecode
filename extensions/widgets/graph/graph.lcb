@@ -143,6 +143,26 @@ property hilitedCoordinates get GetHilitedCoordinates set SetHilitedCoordinates
 metadata hilitedCoordinates.default is ""
 metadata hilitedCoordinates.label is "Hilited Coordinates"
 
+/*
+Summary: Controls the color of the hilited coordinates
+
+Syntax: 
+set the hilitedCoordinatesColor of <widget> to <pColor> 
+get the hilitedCoordinatesColor of <widget>
+
+Parameters:
+pColor: Any string which is a valid color, including RGBA values.
+
+Description: 
+Use the <hilitedCoordinatesColor> to control the color of the lines and point associated
+with the current <hilitedCoordinates>
+*/
+property hilitedCoordinatesColor get mHilitedCoordinatesColor set SetHilitedCoordinatesColor
+metadata hilitedCoordinatesColor.default is "0,0,0,255"
+metadata hilitedCoordinatesColor.label is "Hilited Coordinates Color"
+metadata hilitedCoordinatesColor.editor is "com.livecode.pi.colorWithAlpha"
+metadata hilitedCoordinatesColor.section is "Colors"
+
 -- private instance variables
 private variable mData as List
 
@@ -189,6 +209,7 @@ private variable mHeight as Real
 private variable mRecalculateAll as Boolean
 private variable mRecalculateGrid as Boolean
 private variable mHilitedCoordinates as List
+private variable mHilitedCoordinatesColor as String
 
 -- this handler is called when the widget is created
 public handler OnCreate() returns nothing
@@ -208,8 +229,8 @@ public handler OnCreate() returns nothing
 	put true into mRecalculateGrid
 	
 	put [] into mHilitedCoordinates
+	put "0,0,0,255" into mHilitedCoordinatesColor
 end handler
-----------
 
 ----------
 -- this handler is called whenever LiveCode needs to redraw the widget
@@ -362,6 +383,13 @@ public handler SetHilitedCoordinates(in pCoordinates as String) returns nothing
 		put true into mRecalculateAll
 		redraw all
 	end if
+end handler
+
+public handler SetHilitedCoordinatesColor(in pColor as String)
+	if pColor is not mHilitedCoordinatesColor then
+		put pColor into mHilitedCoordinatesColor
+		redraw all
+	end if 
 end handler
 
 ----------
@@ -915,7 +943,15 @@ private handler drawHilited() returns nothing
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
 	set the dashes of this canvas to [4,4]
-	set the paint of this canvas to solid paint with stringToColor("0,0,0")
+	
+	variable tColor as String
+	if mHilitedCoordinatesColor is "" then
+		put "0,0,0" into tColor
+	else
+		put mHilitedCoordinatesColor into tColor
+	end if 
+	
+	set the paint of this canvas to solid paint with stringToColor(tColor)
 	
 	variable tPointX as Real
 	variable tPointY as Real
