@@ -233,8 +233,6 @@ end handler
 ----------
 -- this handler sets the graphData property
 public handler setData(in pData as String) returns nothing
-	//log "trying to set data"
-	//log pData
 	variable tData as List
 	variable tNewData as List
 	put the empty list into tNewData
@@ -263,7 +261,6 @@ public handler setData(in pData as String) returns nothing
 		split tGraphLineData by "," into tSplitGraphLineData
 		repeat with tCount from 1 up to tMax
 			if the number of elements in tSplitGraphLineData >= tCount then
-				//log element tCount of tSplitGraphLineData
 				if tCount is 1 then
 					push element tCount of tSplitGraphLineData onto element 1 of tNewData
 				else
@@ -276,9 +273,7 @@ public handler setData(in pData as String) returns nothing
 					end if
 				end if
 			else
-				//log "undefined"
 				push nothing onto element tCount of tNewData
-				//log "undefined pushed"
 			end if
 		end repeat
 	end repeat
@@ -310,19 +305,7 @@ public handler setColors(in tColors as String) returns nothing
 end handler
 ----------
 
-----------
--- the following handlers set whether the horizontal and vertical grid lines are shown
-public handler setShowHGrid(in pState as Boolean) returns nothing
-	//put pState into mShowHGrid
-end handler
-
-public handler setShowVGrid(in pState as Boolean) returns nothing
-	//put pState into mShowVGrid
-end handler
-----------
-
-----------
--- this handler sets whether the x gird lines are visible
+-- this handler sets whether the x grid lines are visible
 public handler setXLinesVisibility(in pShowXGridLines as Boolean) returns nothing
 	put pShowXGridLines into mGridHShow
 	redraw all
@@ -338,7 +321,6 @@ end handler
 -- this handler gets the graphColors property, returning the graphColors as a list of colors
 public handler getColors() returns String
 	// Work out how many colors there should be
-	log "Trying to return colors"
 	variable tMax as Integer
 	put the number of elements in mData - 1 into tMax
 
@@ -348,7 +330,6 @@ public handler getColors() returns String
 	variable tCount as Integer
 	put the empty list into tColorStringList
 	repeat with tCount from 1 up to tMax
-		log tCount
 		if the number of elements in mColors >= tCount then
 			put element tCount of mColors into tColor
 			push colorToString(tColor, false) onto back of tColorStringList
@@ -376,29 +357,22 @@ public handler getData() returns String
 	put the empty list into tLineData
 	put the number of elements in element 1 of mData into tMax
 
-	//log "outputting data"
-
 	repeat with tCount from 1 up to the number of elements in mData
 		put element tCount of mData into tLineData
 		repeat with tCount2 from 1 up to tMax
 			if tCount is 1 then
 				push the empty list onto back of tData
 				push element tCount2 of tLineData onto element tCount2 of tData
-				//log (the number of elements in tData) formatted as string
 			else
 				if the number of elements in tLineData >= tCount2 then
 					if element tCount2 of tLineData is not nothing then
-						//log (element tCount2 of tLineData) formatted as string
 						variable tString as String
 						put stripZeros((element tCount2 of tLineData) formatted as string) into tString
-						//log tString
 						push tString onto back of element tCount2 of tData
 					else
-						//log "empty element"
 						push "" onto back of element tCount2 of tData
 					end if
 				else
-					//log "blank element"
 					push "" onto back of element tCount2 of tData
 				end if
 			end if
@@ -419,7 +393,6 @@ public handler getData() returns String
 	// Combine the list for final output
 	variable tReturnString as String
 	combine tFinalList with newline into tReturnString
-	//log tReturnString
 	return tReturnString
 end handler
 ----------
