@@ -89,6 +89,7 @@ metadata graphColors.subeditor is "com.livecode.pi.color"
 metadata graphColors.delimiter is "\n"
 metadata graphColors.default is "255,0,155,255\n155,100,255,255\n100,255,100,255"
 metadata graphColors.label is "Line Colors"
+metadata graphColors.section is "Colors"
 
 /*
 Summary: Controls whether the horizontal lines on the graph are shown.
@@ -140,7 +141,7 @@ coordinates using dotted lines from both the axes.
 */
 property hilitedCoordinates get GetHilitedCoordinates set SetHilitedCoordinates
 metadata hilitedCoordinates.default is ""
-metadata hilitedCoordinates.label is "HIlited Coordinates"
+metadata hilitedCoordinates.label is "Hilited Coordinates"
 
 -- private instance variables
 private variable mData as List
