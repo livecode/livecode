@@ -820,8 +820,10 @@ void MCReferenceExternalVariable::SetValueRef(MCValueRef p_value)
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalV1::MCExternalV1(void)
+	: m_info(nil),
+	  m_licensed(false),
+	  m_was_licensed(false)
 {
-	m_info = nil;
 }
 
 MCExternalV1::~MCExternalV1(void)
