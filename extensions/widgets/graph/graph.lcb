@@ -50,7 +50,7 @@ pData(string): A line delimited list of the data for each point on the x-axis.
 
 Example:
     local tVar
-    put "mon,1000,300,0\ntue,720,340,123\nweb,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0" into tVar
+    put "mon,1000,300,0\ntue,720,340,123\nwed,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0" into tVar
     replace "\n" with return in tVar
     set the graphData of widget "My Graph" to tVar
 
@@ -61,7 +61,7 @@ and whose subsequent items give the values corresponding to that label for each 
 */
 property graphData get getData set setData
 metadata graphData.editor is "com.livecode.pi.text"
-metadata graphData.default is "mon,1000,300,0\ntue,720,340,123\nweb,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0"
+metadata graphData.default is "mon,1000,300,0\ntue,720,340,123\nwed,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0"
 metadata graphData.label is "Data (CSV)"
 
 /*
@@ -213,7 +213,7 @@ private variable mHilitedCoordinatesColor as String
 
 -- this handler is called when the widget is created
 public handler OnCreate() returns nothing
-	put [["mon","tue","web","thu","fri","sat","sun"],[1000,720,889,800,1000,964,1000],[300,340,400,360,301,400,nothing],[0,123,80,10,234,200,0]] into mData
+	put [["mon","tue","wed","thu","fri","sat","sun"],[1000,720,889,800,1000,964,1000],[300,340,400,360,301,400,nothing],[0,123,80,10,234,200,0]] into mData
 	put [stringToColor("255,0,155"),stringToColor("155,100,255"),stringToColor("100,255,100")] into mColors
 	put true into mGridHShow
 	put true into mGridVShow
