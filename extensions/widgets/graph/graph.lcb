@@ -17,85 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /*
 This widget displays information as a configurable line graph.
-
-Name: graphData
-
-Type: property
-
-Syntax:
-set the graphData of <widget> to <pData>
-get the graphData of <widget>
-
-Summary: The data displayed by the graph.
-
-Parameters:
-pData(string): A line delimited list of the data for each point on the x-axis.
-
-Example:
-    local tVar
-    put "mon,1000,300,0\ntue,720,340,123\nweb,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0" into tVar
-    replace "\n" with return in tVar
-    set the graphData of widget "My Graph" to tVar
-
-Description:
-The <graphData> is the data to be displayed by the graph widget.
-Each line of <pData> consists of a comma delimited list whose first element is the label for that point on the x-axis,
-and whose subsequent items give the values corresponding to that label for each line to be displayed on the graph.
-
-Name: graphColors
-
-Type: property
-
-Syntax:
-set the graphColors of <widget> to <pColors>
-get the graphColors of <widget>
-
-Summary: The colors of the lines on the graph.
-
-Parameters:
-pColors(string): A line-delimited list of the colors for each line on the graph
-
-Example:
-local tVar
-put "255,0,155,255\n155,100,255,255\n100,255,100,255" into tVar
-replace "\n" with return in tVar
-set the graphColors of widget "My Graph" to tVar
-
-Description:
-The <graphColors> are the colors of each line in the graph widget.
-
-Name: graphXLines
-
-Type: property
-
-Summary: Controls whether the horizontal lines on the graph are shown.
-
-Syntax:
-set the graphXLines of <widget> to <pLines>
-get the graphXLines of <widget>
-
-Parameters:
-pLines(boolean): True or false.
-
-Description:
-Controls whether the horizontal lines on the graph are shown.
-
-Name: graphYLines
-
-Type: property
-
-Summary: Controls whether the vertical lines on the graph are shown.
-
-Syntax:
-set the graphYLines of <widget> to <pLines>
-get the graphYLines of <widget>
-
-Parameters:
-pLines(boolean): True or false.
-
-Description:
-Controls whether the vertical lines on the graph are shown.
-
 */
 
 widget com.livecode.widget.lineGraph
@@ -117,24 +38,107 @@ metadata svgicon is "M50.6,27.2h-2.2v-3.3l0.8-0.5l-0.2-0.3h2.9v-1h-3.5v-5h3.5v-1
 --
 
 -- property declarations
+/*
+Syntax:
+set the graphData of <widget> to <pData>
+get the graphData of <widget>
+
+Summary: The data displayed by the graph.
+
+Parameters:
+pData(string): A line delimited list of the data for each point on the x-axis.
+
+Example:
+    local tVar
+    put "mon,1000,300,0\ntue,720,340,123\nweb,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0" into tVar
+    replace "\n" with return in tVar
+    set the graphData of widget "My Graph" to tVar
+
+Description:
+The <graphData> is the data to be displayed by the graph widget.
+Each line of <pData> consists of a comma delimited list whose first element is the label for that point on the x-axis,
+and whose subsequent items give the values corresponding to that label for each line to be displayed on the graph.
+*/
 property graphData get getData set setData
 metadata graphData.editor is "com.livecode.pi.text"
 metadata graphData.default is "mon,1000,300,0\ntue,720,340,123\nweb,889,400,80\nthu,800,360,10\nfri,1000,301,234\nsat,964,400,200\nsun,1000,500,0"
 metadata graphData.label is "Data (CSV)"
 
+/*
+Syntax:
+set the graphColors of <widget> to <pColors>
+get the graphColors of <widget>
+
+Summary: The colors of the lines on the graph.
+
+Parameters:
+pColors(string): A line-delimited list of the colors for each line on the graph
+
+Example:
+local tVar
+put "255,0,155,255\n155,100,255,255\n100,255,100,255" into tVar
+replace "\n" with return in tVar
+set the graphColors of widget "My Graph" to tVar
+
+Description:
+The <graphColors> are the colors of each line in the graph widget.
+*/
 property graphColors get getColors set setColors
 metadata graphColors.editor is "com.livecode.pi.colorList"
 metadata graphColors.default is "255,0,155,255\n155,100,255,255\n100,255,100,255"
 metadata graphColors.label is "Line Colors"
 
+/*
+Summary: Controls whether the horizontal lines on the graph are shown.
+
+Syntax:
+set the graphXLines of <widget> to <pLines>
+get the graphXLines of <widget>
+
+Parameters:
+pLines(boolean): True or false.
+
+Description:
+Controls whether the horizontal lines on the graph are shown.
+*/
 property graphXLines get mGridHShow set setXLinesVisibility
 metadata graphXLines.default is "true"
 metadata graphXLines.label is "Horizontal Grid Lines"
 
+/*
+Summary: Controls whether the vertical lines on the graph are shown.
+
+Syntax:
+set the graphYLines of <widget> to <pLines>
+get the graphYLines of <widget>
+
+Parameters:
+pLines(boolean): True or false.
+
+Description:
+Controls whether the vertical lines on the graph are shown.
+*/
 property graphYLines get mGridVShow set setYLinesVisibility
 metadata graphYLines.default is "true"
 metadata graphYLines.label is "Vertical Grid Lines"
---
+
+/*
+Summary: Controls which point on the graph is highlighted.
+
+Syntax:
+set the hilitedCoordinates of <widget> to { <pPoint> | empty }
+get the hilitedCoordinates of <widget>
+
+Parameters:
+pPoint(point): A string consisting of two comma-dellimited numeric values
+
+Description:
+If the <hilitedCoordinates> of a graph widget is not empty, then the widget will highlight the
+coordinates using dotted lines from both the axes.
+*/
+property hilitedCoordinates get GetHilitedCoordinates set SetHilitedCoordinates
+metadata hilitedCoordinates.default is ""
+metadata hilitedCoordinates.label is "HIlited Coordinates"
 
 -- private instance variables
 private variable mData as List
@@ -181,6 +185,7 @@ private variable mWidth as Real
 private variable mHeight as Real
 private variable mRecalculateAll as Boolean
 private variable mRecalculateGrid as Boolean
+private variable mHilitedCoordinates as List
 
 -- this handler is called when the widget is created
 public handler OnCreate() returns nothing
@@ -198,6 +203,8 @@ public handler OnCreate() returns nothing
 
 	put true into mRecalculateAll
 	put true into mRecalculateGrid
+	
+	put [] into mHilitedCoordinates
 end handler
 ----------
 
@@ -227,6 +234,8 @@ public handler OnPaint() returns nothing
 	end if
 
 	drawGraph()
+	
+	drawHilited()
 end handler
 ----------
 
@@ -279,6 +288,7 @@ public handler setData(in pData as String) returns nothing
 	end repeat
 
 	put tNewData into mData
+	put [] into mHilitedCoordinates
 	put true into mRecalculateAll
 	redraw all
 end handler
@@ -315,7 +325,41 @@ public handler setYLinesVisibility(in pShowYGridLines as Boolean) returns nothin
 	put pShowYGridLines into mGridVShow
 	redraw all
 end handler
-----------
+
+public handler GetHilitedCoordinates() returns String
+	if mHilitedCoordinates is [] then
+		return ""
+	end if
+
+	variable tCoordList
+	put mHilitedCoordinates into tCoordList
+	combine tCoordList with "," into tCoordList
+	return tCoordList
+end handler
+
+public handler SetHilitedCoordinates(in pCoordinates as String) returns nothing
+	variable tCoordList
+	put [] into tCoordList
+	if pCoordinates is not "" then
+		split pCoordinates by "," into tCoordList
+		if the number of elements in tCoordList is not 2 then
+			throw "Invalid coordinates:" && pCoordinates
+			return
+		end if
+
+		-- If x-coords are non-numeric, the hilited one must be in the list of points
+		if mXMin is nothing and not tCoordList[1] is in mData[1] then
+			throw "Invalid value for x-coordinate- can't interpolate non-numeric values:" && pCoordinates
+			return
+		end if
+	end if
+	
+	if tCoordList is not mHilitedCoordinates then
+		put tCoordList into mHilitedCoordinates
+		put true into mRecalculateAll
+		redraw all
+	end if
+end handler
 
 ----------
 -- this handler gets the graphColors property, returning the graphColors as a list of colors
@@ -470,6 +514,25 @@ private handler calculateMinMaxes() returns nothing
 	
 	put listMin(mData[1], true) into mXMin
 	put listMax(mData[1], true) into mXMax
+	
+	if mHilitedCoordinates is not [] then
+		variable tNumber as Number
+		if mXMin is not nothing then
+			put mHilitedCoordinates[1] parsed as number into tNumber
+			if tNumber < mXMin then
+				put tNumber into mXMin
+			else if tNumber > mXMax then
+				put tNumber into mXMax
+			end if 
+		end if
+		
+		put mHilitedCoordinates[2] parsed as number into tNumber
+		if tNumber < mYMin then
+			put tNumber into mYMin
+		else if tNumber > mYMax then
+			put tNumber into mYMax
+		end if 
+	end if
 end handler
 
 private handler LabelRect(in pLabel as any) returns Rectangle
@@ -810,7 +873,57 @@ private handler drawGraph() returns nothing
 	set the paint of this canvas to getPaint("axis","stroke")
 	stroke mBackgroundAxisPath on this canvas
 end handler
-----------
+
+private handler drawHilited() returns nothing
+	if mHilitedCoordinates is [] then
+		return
+	end if
+
+	variable tX as Real
+	variable tY as Real
+	
+	variable tHilitedY as optional Number
+	put mHilitedCoordinates[2] parsed as number into tHilitedY
+	-- At the moment, the Y hilite must be a number (as the data points are assumed to be)
+	if tHilitedY is nothing then
+		return
+	end if
+	
+	variable tHilitedX as optional Number
+	put mHilitedCoordinates[1] parsed as number into tHilitedX
+	
+	-- If there is a non-numeric x axis element then we need it to be one of the named x-axis 
+	-- values. Otherwise we can interpolate the hliited x-coord.
+	if mXMin is nothing or tHilitedX is nothing then 
+		if not mHilitedCoordinates[1] is in mData[1] then
+			return
+		else
+			variable tXIndex as Integer
+			put the first index of mHilitedCoordinates[1] in mData[1] into tXIndex
+			put (tXIndex - 1) * mGridHWidth into tX
+		end if
+	else
+		put the width of mGridRect  * (tHilitedX - mXMin) / (mXMax - mXMin) into tX
+	end if
+		
+	put the height of mGridRect * (tHilitedY - mYMin) / (mYMax - mYMin) into tY
+	
+	// Draw the graph lines
+	set the antialias of this canvas to false
+	set the stroke width of this canvas to 1
+	set the dashes of this canvas to [4,4]
+	set the paint of this canvas to solid paint with stringToColor("0,0,0")
+	
+	variable tPointX as Real
+	variable tPointY as Real
+	put the left of mGridRect + tX into tPointX
+	put the bottom of mGridRect - tY into tPointY
+	
+	stroke line path from point [the left of mGridRect, tPointY] to point [tPointX, tPointY] on this canvas
+	stroke line path from point [tPointX, tPointY] to point [tPointX, the bottom of mGridRect] on this canvas
+	set the antialias of this canvas to true
+	fill circle path centered at point [tPointX, tPointY] with radius 3 on this canvas
+end handler
 
 ----------
 -- this handler returns the graph rectangle
@@ -866,13 +979,19 @@ private handler listLimit(in tList as List, in pStrict as Boolean, in pIsMax as 
 
 	variable tElement
 	repeat for each element tElement in tList
+		variable tNumber as optional Number
 		if tElement is a number then
+			put tElement into tNumber
+		else if tElement is a string then
+			put tElement parsed as number into tNumber
+		end if
+		if tNumber is not nothing then
 			if tMinMax is nothing then
-				put tElement into tMinMax
+				put tNumber into tMinMax
 			else if pIsMax then
-				put the maximum of tElement and tMinMax into tMinMax
+				put the maximum of tNumber and tMinMax into tMinMax
 			else
-				put the minimum of tElement and tMinMax into tMinMax
+				put the minimum of tNumber and tMinMax into tMinMax
 			end if
 		else if pStrict then
 			return nothing
