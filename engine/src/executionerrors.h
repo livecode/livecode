@@ -2695,6 +2695,9 @@ enum Exec_errors
 
 	// {EE-0882} save: error in file format expression
 	EE_SAVE_BADNOFORMATEXP,
+    
+    // {EE-0883} external: unlicensed
+    EE_EXTERNAL_UNLICENSED,
 };
 
 extern const char *MCexecutionerrors;
