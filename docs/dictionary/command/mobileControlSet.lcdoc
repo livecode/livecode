@@ -208,7 +208,7 @@ property (enum): The property to be set. Global properties (All native mobile co
 - "hIndicator" (iOS only): Determines whether the horizontal indicator should be displayed when scrolling (maps to the UIScrollView showsHorizontalScrollIndicator property). This is a boolean value.
 - "vIndicator" (iOS only): Determines whether the vertical indicator should be displayed when scrolling (maps to the UIScrollView showsVerticalScrollIndicator property). This is a boolean value.
 - "lockDirection" (iOS only): Determines whether scrolling is locked to the initial direction a drag occurs in (maps to the UIScrollView directionalLockEnabled property). This is a boolean value.
-- "enabled" (iOS only): Determines whether the control is enabled or not. This is a boolean value.
+- "enabled": Determines whether the control is enabled or not. This is a boolean value.
 - "multiline" (Android only): A boolean value which determines whether the control can contain multiple lines of text, wraps text to fit horizontally, and scrolls vertically. If false, the field contains a single line of text which can scroll horizontally.
 value: The value to set the property to.
 

@@ -1,4 +1,4 @@
-﻿script "InstallerUtilities"
+script "InstallerUtilities"
 # This is the back-end installer, updater and uninstaller code. 
 # This code doesn't know anything about the product it is installing, and should be capable
 # of being re-used for products other than LiveCode. It reads a "manifest" file, which contains
