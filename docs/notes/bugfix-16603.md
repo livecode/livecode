@@ -1,0 +1,1 @@
+# Take screenPixelScale into account on Windows when sizing browser widget view

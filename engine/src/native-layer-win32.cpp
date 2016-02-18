@@ -222,7 +222,13 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 void MCNativeLayerWin32::updateViewportGeometry()
 {
 	m_intersect_rect = MCU_intersect_rect(m_viewport_rect, m_rect);
-	MoveWindow(m_viewport_hwnd, m_intersect_rect.x, m_intersect_rect.y, m_intersect_rect.width, m_intersect_rect.height, ShouldShowLayer());
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_rect;
+	t_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+
+	// Move the window. Only trigger a repaint if not in edit mode
+	MoveWindow(m_viewport_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
 }
 
 void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
@@ -236,11 +242,16 @@ void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
 	m_rect = p_rect;
 	updateViewportGeometry();
 
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
 	MCRectangle t_rect;
-	t_rect = m_rect;
+	t_rect = MCRectangleGetTransformedBounds(m_rect, m_object->getstack()->getdevicetransform());
 
-	t_rect.x -= m_intersect_rect.x;
-	t_rect.y -= m_intersect_rect.y;
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_intersect_rect;
+	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+
+	t_rect.x -= t_intersect_rect.x;
+	t_rect.y -= t_intersect_rect.y;
 
     // Move the window. Only trigger a repaint if not in edit mode
 	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
