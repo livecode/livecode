@@ -136,17 +136,17 @@ static void *coretext_font_create_with_name_and_size(MCStringRef p_name, uint32_
     // On OSX, use the special "system" and "user" fonts where requested. OSX
     // doesn't actually let you get the display-optimised fonts by name (in
     // particular, the optimised Helvetica Neue and San Fransisco fonts).
-    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - System", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualTo(p_name, MCNameGetString(MCN_font_system), kMCStringOptionCompareCaseless))
         return coretext_font_create_system(p_size);
-    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - User", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualTo(p_name, MCNameGetString(MCN_font_usertext), kMCStringOptionCompareCaseless))
         return coretext_font_create_user(p_size);
-    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Content", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualTo(p_name, MCNameGetString(MCN_font_content), kMCStringOptionCompareCaseless))
         return coretext_font_create_content(p_size);
-    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Menu", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualTo(p_name, MCNameGetString(MCN_font_menutext), kMCStringOptionCompareCaseless))
         return coretext_font_create_menu(p_size);
-    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Message", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualTo(p_name, MCNameGetString(MCN_font_message), kMCStringOptionCompareCaseless))
         return coretext_font_create_message(p_size);
-    if (MCStringIsEqualToCString(p_name, "Aqua UI Font - Tooltip", kMCStringOptionCompareCaseless))
+    if (MCStringIsEqualTo(p_name, MCNameGetString(MCN_font_tooltip), kMCStringOptionCompareCaseless))
         return coretext_font_create_tooltip(p_size);
 #endif
     
