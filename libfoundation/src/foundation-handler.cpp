@@ -258,7 +258,7 @@ bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 void __MCHandlerDestroy(__MCHandler *self)
 {
     if (self -> function_ptr != nil)
-        ffi_closure_free(self -> function_ptr);
+        ffi_closure_free(self -> closure);
 }
 
 hash_t __MCHandlerHash(__MCHandler *self)
