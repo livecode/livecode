@@ -52,6 +52,9 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
 
 fi
 
+# Workaround trailing whitespace issue
+FRAMEWORK_SEARCH_PATHS="$(echo -e "${FRAMEWORK_SEARCH_PATHS}" | sed -e 's/[[:space:]]*$//')"
+
 FRAMEWORK_SEARCH_PATHS="-F${FRAMEWORK_SEARCH_PATHS// / -F}"
 
 # Support using the same script for old externals
