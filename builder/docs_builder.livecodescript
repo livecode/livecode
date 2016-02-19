@@ -2235,6 +2235,7 @@ private command docsBuilderGenerateZip pEdition, pVersion
    -- Ensure edition string is in titlecase
    put toLower(pEdition) into pEdition
    put toUpper(char 1 of pEdition) into char 1 of pEdition
+   put replaceText(pVersion, "[-,\.]", "_") into pVersion
 
    local tInputs, tZipPath
 
