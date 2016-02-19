@@ -2159,13 +2159,12 @@ command docsBuilderGenerateDistributedAPI
    put 1 into tCount
    repeat for each line tLine in tList
       put docsBuilderParseDictionary(item 1 of tLine, "LiveCode", item 2 of tLine, false) into tLibrariesA[tCount]
+      if tLibrariesA[tCount] is empty then
+         builderLog "error", "Couldn't parse dictionary data from" && item 2 of tLine
+         exit docsBuilderGenerateDistributedAPI
+      end if
       add 1 to tCount
    end repeat
-   
-   if tLibrariesA[tCount] is empty then
-   	  builderLog "error", "Couldn't parse dictionary data from" && tDictionaryFolder
-      exit docsBuilderGenerateDistributedAPI
-   end if
    
    local tModuleList, tModularA, tModularCount, tBlocksA, tParsedA
    put 1 into tModularCount
