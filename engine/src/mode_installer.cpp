@@ -1277,6 +1277,18 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
     }
         break;
 
+    case kMCCapsuleSectionTypeLicense:
+    {
+        // Just read the edition byte and ignore it in installer mode.
+        char t_edition_byte;
+        if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+        {
+            MCresult -> sets("failed to read license");
+            return false;
+        }
+    }
+        break;
+            
 	default:
 		MCresult -> sets("unrecognized section encountered");
 		return false;
