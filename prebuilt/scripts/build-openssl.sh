@@ -104,11 +104,16 @@ function buildOpenSSL {
 				sed -i "" -e "s!static volatile sig_atomic_t intr_signal;!static volatile intr_signal;!" "crypto/ui/ui_openssl.c"
 			fi
 			
+			# iOS SDKs don't work with makedepend
+			if [ "${PLATFORM}" == "ios" ] ; then
+				sed -i "" -e "s/MAKEDEPPROG=makedepend/MAKEDEPPROG=$\(CC\) -M/" Makefile
+			fi
+
 			# Ensure that variables get exported as functions
 			echo "#define OPENSSL_EXPORT_VAR_AS_FUNCTION 1" >> crypto/opensslconf.h
 
 			echo "Building OpenSSL for ${NAME}"
-			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
+			make clean >> "${OPENSSL_ARCH_LOG}" 2>&1 && make depend >> "${OPENSSL_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${OPENSSL_ARCH_LOG}" 2>&1 && make install_sw >> "${OPENSSL_ARCH_LOG}" 2>&1
 			RESULT=$?
 			cd ..
 			

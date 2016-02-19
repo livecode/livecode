@@ -2081,7 +2081,8 @@ void MCStack::setwindowname()
 
 void MCStack::reopenwindow()
 {
-	if (state & CS_FOREIGN_WINDOW)
+	// PM-2016-02-09: [[ Bug 16889 ]] Exit if window is NULL
+	if (state & CS_FOREIGN_WINDOW || window == NULL)
 		return;
 
 	stop_externals();
