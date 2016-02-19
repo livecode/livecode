@@ -1786,7 +1786,7 @@ void MCAndroidObjectCallWithArgs(jobject p_object, const char *p_method, const c
     if (t_success)
         MCAndroidJavaMethodCall(nil, p_object, p_method, p_return_value, t_params, p_on_engine_thread);
 
-    MCJavaMethodParamsFree(t_env, t_params);
+    MCJavaMethodParamsFree(t_env, t_params, !p_on_engine_thread);
 }
 
 void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, const char *p_signature, void *p_return_value, bool p_on_engine_thread, va_list p_args)
@@ -1803,7 +1803,7 @@ void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, cons
     if (t_success)
         MCAndroidJavaMethodCall(p_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
 
-    MCJavaMethodParamsFree(t_env, t_params);
+    MCJavaMethodParamsFree(t_env, t_params, !p_on_engine_thread);
 }
 
 void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...)
