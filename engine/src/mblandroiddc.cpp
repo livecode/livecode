@@ -2961,24 +2961,3 @@ void MCJavaDetachCurrentThread()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// No theming for mobile platforms yet
-bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
-{
-    return MCFontCreate(MCNAME("Arial"), 0, 12, r_font);
-}

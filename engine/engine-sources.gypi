@@ -554,6 +554,7 @@
 			# Group "Theming"
 			'src/linux-theme.cpp',
 			'src/mac-theme.mm',
+			'src/mblandroid-theme.cpp',
 			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
 				
