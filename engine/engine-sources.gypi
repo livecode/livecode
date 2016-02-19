@@ -554,6 +554,7 @@
 			# Group "Theming"
 			'src/linux-theme.cpp',
 			'src/mac-theme.mm',
+			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
 				
 			# Group "Syntax"

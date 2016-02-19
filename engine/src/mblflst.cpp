@@ -80,6 +80,29 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 #endif
 }
 
+#ifdef TARGET_SUBPLATFORM_IPHONE
+extern bool coretext_get_font_name(void*, MCNameRef&);
+extern uint32_t coretext_get_font_size(void*);
+
+MCFontnode::MCFontnode(MCSysFontHandle p_handle, MCNameRef p_name)
+{
+    if (p_name == nil)
+        coretext_get_font_name(p_handle, &reqname);
+    else
+        reqname = MCValueRetain(p_name);
+    
+    reqsize = coretext_get_font_size(p_handle);
+    reqstyle = FA_DEFAULT_STYLE | FA_SYSTEM_FONT;
+    
+    font = new MCFontStruct;
+    font->size = reqsize;
+    
+    font->fid = p_handle;
+    
+    iphone_font_get_metrics(font->fid, font->m_ascent, font->m_descent, font->m_leading, font->m_xheight);
+}
+#endif
+
 MCFontnode::~MCFontnode(void)
 {
 #if defined(TARGET_SUBPLATFORM_IPHONE)
@@ -132,6 +155,27 @@ MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boo
 	tmp->appendto(fonts);
 	return tmp->getfont(fname, size, style);
 }
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+MCFontStruct *MCFontlist::getfontbyhandle(MCSysFontHandle p_fid, MCNameRef p_name)
+{
+    MCFontnode *tmp = fonts;
+    if (tmp != NULL)
+        do
+        {
+            MCFontStruct *font = tmp->getfontstruct();
+            if (font->fid == p_fid)
+                return font;
+            tmp = tmp->next();
+        }
+    while (tmp != fonts);
+    
+    // Font has not yet been added to the list
+    tmp = new MCFontnode(p_fid, p_name);
+    tmp->appendto(fonts);
+    return tmp->getfontstruct();
+}
+#endif
 
 extern bool MCSystemListFontFamilies(MCListRef& r_names);
 bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
