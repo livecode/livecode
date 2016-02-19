@@ -1081,7 +1081,7 @@ void MCU_initialize_names(void)
 #endif
     
     /* UNCHECKED */ MCNameCreateWithCString("(Default)", MCN_font_default);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - User text)", MCN_font_usertext);
+    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Styled text)", MCN_font_usertext);
     /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Menu text)", MCN_font_menutext);
     /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Content)", MCN_font_content);
     /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Messages)", MCN_font_message);
