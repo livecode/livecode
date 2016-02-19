@@ -296,7 +296,7 @@ typedef struct MCExternalInterface
     MCError (*context_query)(MCExternalContextVar op, MCValueOptions p_options, void *result);
     
     // MW-2016-02-17: [[ LicenseCheck ]] Method to check the engine's license
-    MCExternalError (*license_check_edition)(unsigned int options, unsigned int min_edition);
+    MCError (*license_check_edition)(unsigned int options, unsigned int min_edition);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -2680,7 +2680,7 @@ LCError LCLicenseCheckEdition(unsigned int p_min_version)
     if (s_interface -> version < 7)
         return kLCErrorUnlicensed;
     
-    return s_interface -> license_check_edition(0, p_min_version);
+    return (LCError)s_interface -> license_check_edition(0, p_min_version);
 }
     
 END_EXTERN_C
