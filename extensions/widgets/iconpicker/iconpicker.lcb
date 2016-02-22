@@ -335,10 +335,7 @@ private handler ensureViewTopPosition()
 end handler
 
 private handler updateFirstDataItem()
-	put the floor of ((mViewTopPosition - topRowHeight()) / mRowHeight) * (mNumRows) into mFirstDataItem
-	if mFirstDataItem < 1 then
-		put 1 into mFirstDataItem
-	end if	
+	put (the floor of (mViewTopPosition / mRowHeight)) * mNumCols + 1 into mFirstDataItem
 end handler
 
 private handler topRowHeight() returns Number
