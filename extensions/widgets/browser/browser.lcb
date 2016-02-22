@@ -351,6 +351,7 @@ property URL get getUrl set setUrl
 
 property htmlText get getHtmlText set setHtmlText
 metadata htmlText.editor is "com.livecode.pi.nowraptext"
+metadata htmlText.user_visible is "false" -- bug 16927
 
 property vScrollbar get getVScrollbar set setVScrollbar
 metadata vScrollbar.editor is "com.livecode.pi.boolean"
