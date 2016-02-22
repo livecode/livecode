@@ -300,7 +300,7 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
 
 static uint32_t s_selected_index;
 
-bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_checkmark, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
+bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_hilite, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
 {
     MCLog("indexes: (%p) {length = %d, element[0] = %d}", p_indexes, p_indexes ? p_indexes->length : 0, p_indexes && p_indexes->length > 0 ? p_indexes->elements[0] : 0); 
     // multi-pick list not supported
@@ -336,7 +336,7 @@ bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_
         MCLog("selected index: %d", t_selected_index);
         s_in_popup_dialog = true;
         s_dialog_result = kMCDialogResultUnknown;
-        MCAndroidEngineRemoteCall("showListPicker", "vlsbibbb", nil, t_joptionlist, t_title, t_has_selection, t_selected_index, p_use_checkmark, p_use_cancel, p_use_done);
+        MCAndroidEngineRemoteCall("showListPicker", "vlsbibbb", nil, t_joptionlist, t_title, t_has_selection, t_selected_index, p_use_hilite, p_use_cancel, p_use_done);
     
         while (s_in_popup_dialog)
             MCscreen->wait(60.0, True, True);
