@@ -4876,7 +4876,7 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	{
 		p_properties.antialias = true;
 		p_properties.blend_mode = kMCGBlendModeSourceOver;
-		p_properties.fill_rule = kMCGFillRuleEvenOdd;
+		p_properties.fill_rule = kMCGFillRuleNonZero;
 		p_properties.opacity = 1.0;
 		p_properties.paint = nil;
 		p_properties.stippled = false;
