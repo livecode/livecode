@@ -1246,11 +1246,72 @@ command actionUninstall pPath, pRecord, pPreInstall
       end if
    end if
    
+   -- Remove any docs cache for this version
+   uninstallRemoveDocsCache 
+   
    -- Notify the master that uninstalling is done (but only if this is not a pre-install uninstall)
    if not pPreInstall then
       reportFinished true
    end if
 end actionUninstall
+
+private command uninstallSetWindowsShellCommand
+   set the hideConsoleWindows to true
+   if $COMSPEC is not empty then
+      set the shellCommand to $COMSPEC
+   else
+      --just in case $COMSPEC is not set
+      set the shellCommand to "cmd.exe"
+   end if
+end uninstallSetWindowsShellCommand
+
+private function uninstallWindowsFromUnixPath pUnixPath
+   replace "/" with "\" in pUnixPath
+   return pUnixPath
+end uninstallWindowsFromUnixPath
+
+private command uninstallDeleteFolder pSrcFolder
+   if the platform is "Win32" then
+      uninstallSetWindowsShellCommand
+      get shell ("rmdir /s /q" && uninstallWindowsFromUnixPath(quote&pSrcFolder&quote))
+   else
+      get shell ("rm -rf" && quote&pSrcFolder&quote)
+   end if
+   return the result
+end uninstallDeleteFolder
+
+private command uninstallRemoveDocsCache
+   local tDocsCache
+   switch the platform
+      case "Linux"
+         put "~/.runrev/documentationcache" into tDocsCache
+         break
+      case "MacOS"
+         put specialFolderPath("cusr") & "/Library/Application Support/RunRev/Documentation Cache" into tDocsCache
+         break
+      case "Win32"
+         put specialFolderPath(0x001c) & "/RunRev/Documentation Cache" into tDocsCache
+         break
+   end switch
+   
+   local tEdition
+   put tolower(getInstallerType()) into tEdition
+   
+   # The docs cache is per-version and edition
+   local tVersion
+   put the version into tVersion
+   put replaceText(tVersion, "[-,\.]", "_") into tVersion
+   put slash & tVersion & "_" & tEdition  after tDocsCache
+   
+   log "Uninstall: removing docs cache at" && tDocsCache
+   
+   if there is a folder tDocsCache then
+      uninstallDeleteFolder tDocsCache
+      if the result is not empty then
+         log "Uninstall: failed to remove docs cache"
+      end if
+   end if
+end uninstallRemoveDocsCache
 
 private function uninstallCanRemoveFolder pPath
    local tOldFolder, tCanRemove
