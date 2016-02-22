@@ -1727,8 +1727,10 @@ public:
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                off_t t_len = t_buf.st_size;
-                if (t_len != 0)
+				// The length of a file could be > 32-bit, so we have to check that
+				// the file size fits into a 32-bit integer as that is what mmap expects
+				off_t t_len = t_buf.st_size;
+                if (t_len != 0 && t_len < UINT32_MAX)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                 t_fd, 0);
