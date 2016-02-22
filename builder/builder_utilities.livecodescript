@@ -79,6 +79,9 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
          break
+      case "Guide"
+         dispatch "guideBuilderRun" to stack builderGuideBuilderStack() with pEdition, tVersion, pType, builderRepoFolder()
+         break
       case "Disk"
          repeat for each line tPlatform in pPlatforms
             dispatch "toolsBuilderRunDisk" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
@@ -349,6 +352,10 @@ end builderEngineBuilderStack
 function builderDocsBuilderStack
    return builderSystemFolder() & slash & "docs_builder.livecodescript"
 end builderDocsBuilderStack
+
+function builderGuideBuilderStack
+   return builderSystemFolder() & slash & "user_guide_builder.livecodescript"
+end builderGuideBuilderStack
 
 function builderNotesBuilderStack
    return builderSystemFolder() & slash & "release_notes_builder.livecodescript"

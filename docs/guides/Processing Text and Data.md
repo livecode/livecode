@@ -597,8 +597,8 @@ character – there isn’t a 1 to 1 mapping between code point and glyph.
 |----------------|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Roman**      | Small script      | The Roman encoding has relatively few distinct characters. Each character has a single way of being written. It is written from left to right, top to bottom. Every character has a unique glyph. Characters do not join when written. For example: The quick brown fox.     |
 | **Chinese**    | Large script      | The Chinese encoding has a large number of distinct characters. Each character has a single way of being written.                                                                                                                                                            |
-| **Greek**      | Contextual script | Every character except sigma has a unique glyph. Sigma changes depending on whether it is at the end of a word or not. Characters do not join when written. The text runs left to right, top to bottom. For example: ![](images/text-contextual_greek.png)                            |
-| **Arabic**     | Contextual script | The glyph chosen is dependent on its position in a word. All characters have initial, medial and terminal glyphs. This results in a calligraphic (joined up) style of display. The text runs right to left, top to bottom display. For example: ![](images/text-contextual_arabic.png) |
+| **Greek**      | Contextual script | Every character except sigma has a unique glyph. Sigma changes depending on whether it is at the end of a word or not. Characters do not join when written. The text runs left to right, top to bottom. For example: δῖος Ἀχιλλεύς					                            |
+| **Arabic**     | Contextual script | The glyph chosen is dependent on its position in a word. All characters have initial, medial and terminal glyphs. This results in a calligraphic (joined up) style of display. The text runs right to left, top to bottom display. For example: العربية |
 | **Devanagari** | Complex script    | In this script there is no direct mapping from character to glyph. Sequences of glyphs combine depending on their context. The text runs from left to right, top to bottom.                                                                                                  |
 
 Figure 52 – Common scripts
@@ -751,7 +751,17 @@ the code much shorter but it is also an order of magnitude faster.
 | Single Line – execute single line and short scripts | Global,4 |                                                      
 | Multiple Lines – execute multiple line scripts | Line,3 |                                                            
 | Global Properties – view and edit global properties | Lines,1 |                                                        
-| Global Variables – view and edit global variables | Multiple,2<br>Properties,2<br>Single,2<br>Variables,2<br>and,3<br>edit,2<br>execute,2<br>scripts,2<br>short,1<br>view,2<br>–,4 |
+| Global Variables – view and edit global variables | Multiple,2 |
+|													| Properties,2 |
+|													| Single,2 |
+|													| Variables,2 |
+|													| and,3 |
+|													| edit,2 |
+|													| execute,2 |
+|													| scripts,2 |
+|													| short,1 |
+|													| view,2 |
+|													| -,4 |
 
 Figure 53 – Results of running word count script
 
