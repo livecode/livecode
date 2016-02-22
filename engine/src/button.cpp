@@ -1698,15 +1698,8 @@ void MCButton::applyrect(const MCRectangle &nrect)
 		else
 		{
 			trect = MCU_reduce_rect(nrect, borderwidth);
-			int2 tcombosize = 0;
-			if (tcombosize <= 0 )
-			{
-				trect.width -= trect.height;
-				if (tcombosize < 0)
-					trect.width += tcombosize;
-			}
-			else
-				rect.width -= tcombosize + 2;
+			trect.width -= trect.height;
+
 			if (IsMacEmulatedLF())
 				trect.width -= 5;
 		}

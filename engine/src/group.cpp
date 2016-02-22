@@ -948,8 +948,12 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 	
 	if (!getstate(CS_SENDING_RESIZE) && t_size_changed)
 	{
+		/* We intentionally don't check the result of sending the
+		 * "resizeControl" message, because there's nothing that can
+		 * sanely be done with it.  Attempting to handle an error (for
+		 * example) causes an engine hang. */
 		setstate(True, CS_SENDING_RESIZE);
-		conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
+		/* UNCHECKED */ conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
 		setstate(False, CS_SENDING_RESIZE);
 	}
 }

@@ -61,6 +61,7 @@ MCNativeLayerX11::MCNativeLayerX11(MCObject *p_object, x11::Window p_view) :
   m_widget_xid(p_view)
 {
 	m_object = p_object;
+	m_intersect_rect = MCRectangleMake(0,0,0,0);
 }
 
 MCNativeLayerX11::~MCNativeLayerX11()
