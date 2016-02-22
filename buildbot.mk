@@ -164,7 +164,7 @@ distmac-bundle-commercial:
 # Upload the release notes if we are on Linux
 dist-upload-files.txt sha1sum.txt:
 	set -e; \
-	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.dmg' \
+	find . -maxdepth 1 -name 'LiveCode*-*-Mac.dmg' \
 	                -o -name 'LiveCode*Installer-*-Windows.exe' \
 	                -o -name 'LiveCode*Installer-*-Linux.*' \
 	                -o -name 'LiveCode*Server-*-Linux*.zip' \
