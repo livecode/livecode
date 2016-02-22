@@ -569,10 +569,11 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 #ifdef /* MCHandlePick */ LEGACY_EXEC
     MCExecPoint ep(nil, nil, nil);
 
-	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_more_optional, t_success;
+	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_use_hilite, t_more_optional, t_success;
 	t_success = true;
 	t_more_optional = true;
 	t_use_checkmark = false;
+	t_use_hilite = true;
 	t_use_done = false;
 	t_use_cancel = false;
 	t_use_picker = false;
@@ -677,8 +678,10 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 		}
 	}
 
+	// PM-2016-02-19: [[ Bug 16945 ]] Make sure the use of checkmark is taken into account
+	t_use_hilite = !t_use_checkmark;
 	// call MCSystemPick to process the pick wheel
-	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
+	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_hilite, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
 
 	
 	if (t_success)
