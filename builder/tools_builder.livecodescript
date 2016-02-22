@@ -62,6 +62,19 @@ command toolsBuilderRunDisk pPlatform, pEdition, pVersion
    toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputFile
 end toolsBuilderRunDisk
 
+command toolsBuilderRunBundle pPlatform, pEdition, pVersion
+   if pPlatform is not "macosx" then
+      exit toolsBuilderRunBundle
+   end if
+   
+   if the platform is not "macos" then
+      builderLog "error", "Cannot generate MacOSX app bundle on this platform"
+      exit toolsBuilderRunBundle
+   end if
+   
+   toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
+end toolsBuilderRunBundle
+
 ////////////////////////////////////////////////////////////////////////////////
 
 private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFolders, pIdeFolder, pDocsFolder
@@ -436,37 +449,82 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    end switch
 end toolsBuilderMakeInstaller
 
-command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
-   -- Compute the output file
+private function escapeArg pArg
+   replace space with "\ " in pArg
+   replace "(" with "\(" in pArg
+   replace ")" with "\)" in pArg
+   return pArg
+end escapeArg
+
+private function findSigningIdentity
+   get shell("/usr/bin/security -q find-identity -v")
+   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   return it
+end findSigningIdentity
+
+command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
+   -- Compute the name of the installer bundle
    local tOutputFileStub, tOutputFileFolder
    put builderOutputFolder() into tOutputFileFolder
    put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
-   builderEnsureFolderForFile tOutputFileStub
    
-   get shell("/usr/bin/security -q find-identity -v")
-   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
-   if it is not empty then
-      builderLog "message", "Signing macosx installer'" && tOutputFileStub & ".app" & "'"
-      wait 1 second
-      get shell("/usr/bin/codesign -s" && word 2 of it && "'" & tOutputFileStub & ".app'")
-      if it is not empty then
-         builderLog "error", "Could not macosx sign installer:" && it
+   -- Remove any stale app bundles
+   local tAppBundle
+   put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
+   if there is a folder tAppBundle then
+      builderLog "message", "Removing old macosx app bundle" && "'" & tAppBundle & "'"
+      get shell ("rm -r" && escapeArg(tAppBundle))
+      if the result is not zero then
+         builderLog "error", "Failed to remove old macosx app bundle:" && it
          throw "failure"
       end if
-      builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
-   else
-      builderLog "warning", "No valid identity found for signing OSX installer"
    end if
    
-   local tDmgFile, tDmgName, tDmgAppFolder
-   put tOutputFileStub & ".dmg" into tDmgFile
-   if pEdition is "Community" then
-      put "LiveCode Community" && getReadableVersion(pVersion) && "Installer" into tDmgName
-      put (tOutputFileFolder & slash & "Install LiveCode Community" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
-   else
-      put "LiveCode" && getReadableVersion(pVersion) && "Installer" into tDmgName
-      put (tOutputFileFolder & slash & "Install LiveCode" && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+   -- Run the installer to generate the raw app bundle
+   builderLog "message", "Installing macosx IDE to" && "'" & tAppBundle & "'"
+   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install noui -log /dev/stderr -location" && escapeArg(tAppBundle))
+   if the result is not zero then
+      builderLog "error", "Failed to run macosx installer:" && it
+      throw "failure"
    end if
+   
+   -- Remove the list of installed files from the app bundle (it isn't needed)
+   delete file tAppBundle & "/.setup.txt"
+   
+   -- Remove the copy of the installer from the app bundle
+   get shell("rm -r" && escapeArg(tAppBundle & "/LiveCode Setup.app"))
+   if the result is not zero then
+      builderLog "error", "Failed to clean macosx app bundle:" & it
+      throw "failure"
+   end if
+   
+   -- Find the signing identity and sign the app bundle
+   get findSigningIdentity()
+   if it is not empty then
+      builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
+      wait 1 second
+      get shell("/usr/bin/codesign --sign" && word 2 of it && "--deep --verbose=2" && escapeArg(tAppBundle))
+      if the result is not zero then
+         builderLog "error", "Could not sign macosx app bundle:" && it
+         throw "failure"
+      end if
+      builderLog "report", "Successfully signed macosx app bundle" && "'" & tAppBundle & "'"
+   else
+      builderLog "warning", "No valid identity found for signing OSX app bundle"
+   end if
+end toolsBuilderMakeAppBundle
+
+command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
+   -- Get the name of the app bundle that is being built
+   local tOutputFileFolder
+   local tAppBundle
+   put builderOutputFolder() into tOutputFileFolder
+   put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
+   
+   -- DMG output filename
+   local tDmgFile
+   put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) & ".dmg" into tDmgFile
+   
    builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
    if there is a file tDmgFile then
       delete file tDmgFile
@@ -476,15 +534,13 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
       end if
    end if
    
+   -- The following is sometimes needed to work around bugs in hdiutil
    --local tTrashFile
    --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
    --put empty into URL ("file:" & tTrashFile)
    
    -- Do the DMG build
-   rename (tOutputFileStub & ".app") to tDmgAppFolder
-   -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
-   --  memory if the installer end up being over a gigabyte large.
-   get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && quote & tDmgFile & quote)
+   get shell("hdiutil create -fs HFS+ -volname" && escapeArg(getBundleFilenameStub(pVersion, pPlatform, pEdition)) && "-srcfolder" && escapeArg(tAppBundle) && escapeArg(tDmgFile))
    rename tDmgAppFolder to (tOutputFileStub & ".app")
    if "created:" is not in it then
       builderLog "error", "Dmg creation failed -" && the last line of it
@@ -527,6 +583,10 @@ function getReadableVersion pVersion
    
    return tNumber & tTag
 end getReadableVersion
+
+function getBundleFilenameStub pVersion, pPlatform, pEdition
+   return "LiveCode" && the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition && getReadableVersion(pVersion)
+end getBundleFilenameStub
 
 function getInstallerFilenameStub pVersion, pPlatform, pEdition
    set the itemDelimiter to "-"

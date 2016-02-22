@@ -36,7 +36,7 @@ on startup
          put true into tPlatforms[it]
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--stage" then
-         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,server,notes,docs,disk" then
+         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,bundle,server,notes,docs,disk" then
             __builderLog "error", "Unknown stage '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tStage

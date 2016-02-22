@@ -154,6 +154,11 @@ dist-tools-community:
 dist-tools-commercial:
 	$(buildtool_command) --platform linux --platform mac --platform win --stage tools --edition commercial
 
+distmac-bundle-community:
+	$(buildtool_command) --platform mac --stage bundle --edition community
+distmac-bundle-commercial:
+	$(buildtool_command) --platform mac --stage bundle --edition commercial
+
 # Make a list of installers to be uploaded to the distribution server, and release notes
 # If a checksum file is needed, generate it with sha1sum
 # Upload the release notes if we are on Linux
@@ -211,7 +216,7 @@ distmac-extract:
 	tar -xvf mac-installer.tar.xz
 
 # Final installer creation for Mac
-distmac-disk-%:
+distmac-disk-%: distmac-bundle-%
 	$(buildtool_command) --platform mac --stage disk --edition $*
 
 distmac-upload: dist-upload
