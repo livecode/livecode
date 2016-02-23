@@ -27,14 +27,14 @@ We hope to broaden the range of supported browsers in the future.
 The HTML5 engine in this release of LiveCode has a limited range of features.  You can:
 
 * deploy single-stack applications with embedded resources
-* fetch data from the server using the `get URL` syntax
-* use any of the engine's built-in controls and graphics capabilities.
+* use most of the engine's built-in controls and graphics capabilities.
 * read and write temporary files in a special virtual filesystem (which is erased when the user navigates away from the page)
 * use LiveCode Builder widgets and extensions
 
 Several important features are not yet supported:
 
 * some `ask` and `answer` message boxes
+* multimedia (the "player" control)
 * networking
 * JavaScript in LiveCode Builder extensions
 
