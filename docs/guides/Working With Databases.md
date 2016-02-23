@@ -1,4 +1,6 @@
-# Introduction
+# Working With Databases
+
+## Introduction
 
 With the LiveCode Database library, your application can communicate
 with external SQL databases. You can get data from single-user and multi-user

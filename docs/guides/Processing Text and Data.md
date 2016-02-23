@@ -1,4 +1,6 @@
-# Introduction
+# Processing Text and Data
+
+## Introduction
 
 LiveCode has first-class text and data processing capabilities.
 LiveCode’s unique chunk expressions – the ability to refer to text using

@@ -1,5 +1,7 @@
 # Transferring Information with Files, the Internet and Sockets
 
+## Introduction
+
 Reading and writing data to files or transferring data over the Internet
 are important functions in most applications. LiveCode provides a rich
 feature set for performing these operations.
