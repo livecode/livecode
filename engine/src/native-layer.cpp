@@ -112,7 +112,11 @@ void MCNativeLayer::OnToolChanged(Tool p_new_tool)
 	bool t_showing;
 	t_showing = ShouldShowLayer();
 	
-	m_show_for_tool = p_new_tool == T_BROWSE || p_new_tool == T_HELP;
+	// IM-2016-02-23: [[ Bug 16980 ]] Determine visiblilty based on what the stack considers to be the tool for this object.
+	Tool t_tool;
+	t_tool = m_object->getstack()->gettool(m_object);
+
+	m_show_for_tool = t_tool == T_BROWSE || t_tool == T_HELP;
 
 	if (t_showing != (ShouldShowLayer()))
 		UpdateVisibility();
