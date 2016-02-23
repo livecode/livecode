@@ -1104,11 +1104,11 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void showListPicker(List p_items, String p_title, boolean p_item_selected, int p_selection_index, boolean p_use_checkmark, boolean p_use_cancel, boolean p_use_done)
+    public void showListPicker(List p_items, String p_title, boolean p_item_selected, int p_selection_index, boolean p_use_hilite, boolean p_use_cancel, boolean p_use_done)
     {
         String[] t_items;
         t_items = (String[])p_items.toArray(new String[p_items.size()]);
-        m_dialog_module.showListPicker(t_items, p_title, p_item_selected, p_selection_index, p_use_checkmark, p_use_cancel, p_use_done);
+        m_dialog_module.showListPicker(t_items, p_title, p_item_selected, p_selection_index, p_use_hilite, p_use_cancel, p_use_done);
     }
     public void onListPickerDone(int p_index, boolean p_done)
     {
