@@ -65,7 +65,7 @@ void MCTextEvalFontNames(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r
         // Prepend the special UI font names
         if (MCStringFormat(r_names, "%@\n%@\n%@\n%@\n%@\n%@\n%@\n%@",
                            MCN_font_default, MCN_font_usertext, MCN_font_menutext,
-                           MCN_font_content, MCN_font_message, MCN_font_message,
+                           MCN_font_content, MCN_font_message, MCN_font_tooltip,
                            MCN_font_system, *t_names))
         {
             return;
