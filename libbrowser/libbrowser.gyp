@@ -62,10 +62,17 @@
 			
 			'conditions':
 			[
+				[
+					'OS != "mac" and OS != "win" and OS != "linux"',
+					{
+						'type': 'none',
+					},
+				],
+
 				## Exclusions
 				# Only use CEF on desktop platforms
 				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
+					'(OS != "mac" and OS != "win" and OS != "linux") or (OS == "linux" and target_arch != "x86" and target_arch != "x86_64")',
 					{
 						'sources!':
 						[
@@ -167,10 +174,26 @@
 						},
 					},
 				],
+                
+                [
+                    'OS == "linux" and target_arch != "x86" and target_arch != "x86_64"',
+                    {
+                        'sources!':
+                        [
+                            'src/libbrowser_cef_lnx.cpp',
+                            'src/libbrowser_cefshared_lnx.cpp',
+                        ],
+                        
+                        'sources':
+                        [
+                            'src/libbrowser_no_factories.cpp',
+                        ],
+                    },
+                ],
 				
 				[
 					# Only the CEF platforms need libbrowser-cefprocess
-					'OS == "mac" or OS == "win" or OS == "linux"',
+					'(OS == "mac" or OS == "win" or OS == "linux") or (OS == "linux" and target_arch != "x86" and target_arch != "x86_64")',
 					{
 						'dependencies':
 						[
@@ -211,7 +234,7 @@
 				],
 
 				[
-					'OS == "linux"',
+					'OS == "linux" and (target_arch == "x86" or target_arch == "x86_64")',
 					{
 						'copies':
 						[
@@ -303,6 +326,11 @@
 				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 			],
 
+            'defines':
+            [
+                'BUILDING_CEFPROCESS=1',
+            ],
+
 			'include_dirs':
 			[
 				'include',
@@ -321,6 +349,13 @@
 			
 			'conditions':
 			[
+				[
+					'(OS != "mac" and OS != "win" and OS != "linux") or (OS == "linux" and target_arch != "x86" and target_arch != "x86_64")',
+					{
+						'type': 'none',
+					},
+				],
+
 				## Exclusions
 				[
 					'OS != "mac"',
@@ -355,7 +390,7 @@
 				],
 				
 				[
-					'OS == "win" or OS == "linux"',
+					'OS == "win" or (OS == "linux" and (target_arch == "x86" or target_arch == "x86_64"))',
 					{
 						# Distributing the OSX version is done separately
 						'all_dependent_settings':

@@ -18,6 +18,11 @@ X11 libX11.so.6
 	XGetKeyboardControl: (pointer, pointer) -> ()
 	XChangeKeyboardControl: (pointer, integer, pointer) -> ()
 	XUngrabPointer: (pointer, integer) -> ()
+	XMapWindow: (pointer, integer) -> ()
+	XUnmapWindow: (pointer, integer) -> ()
+	XDestroyWindow: (pointer, integer) -> ()
+	XMoveResizeWindow: (pointer, integer, integer, integer, integer, integer) -> ()
+	XGetWindowAttributes: (pointer, integer, pointer) -> (integer)
 
 Xinerama libXinerama.so.1
 	XineramaIsActive: (pointer) -> (integer)
