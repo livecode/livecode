@@ -1,3 +1,7 @@
+---
+group: intermediate
+---
+
 # Transferring Information with Files, the Internet and Sockets
 
 ## Introduction

@@ -1,3 +1,7 @@
+---
+group: intermediate
+---
+
 # Printing In LiveCode
 
 ## Introduction

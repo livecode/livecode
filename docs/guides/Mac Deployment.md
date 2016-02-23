@@ -1,3 +1,7 @@
+---
+group: deployment
+---
+
 # Mac Deployment
 
 ## Introduction

@@ -1,3 +1,7 @@
+---
+group: reference
+---
+
 # LiveCode Builder Language Reference
 
 ## Introduction

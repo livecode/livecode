@@ -1,3 +1,7 @@
+---
+group: reference
+---
+
 # LiveCode Documentation Format Reference
 
 ## Introduction

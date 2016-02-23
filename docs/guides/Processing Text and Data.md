@@ -1,3 +1,7 @@
+---
+group: intermediate
+---
+
 # Processing Text and Data
 
 ## Introduction
