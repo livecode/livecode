@@ -154,7 +154,8 @@ static com_runrev_livecode_MCIPhoneImagePickerDialog *s_image_picker = nil;
     // AL-2013-10-04 [[ Bug 11255 ]] Uninitialised variable can cause crash in iPhonePickPhoto
     id t_popover = nil;
     uint32_t t_orientations;
-    t_orientations = [[MCIPhoneGetApplication() sharedApplication] allowedOrientations];
+	// PM-2016-02-23: [[ Bug 16972 ]] Fix crash when accessing photo lib
+    t_orientations = [MCIPhoneGetApplication() allowedOrientations];
     bool t_allowed_landscape = false;
     bool t_allowed_portrait_upside_down = false;
     
