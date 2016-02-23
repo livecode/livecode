@@ -366,7 +366,10 @@ public handler OnPaint()
 	else
 		set the paint of this canvas to solid paint with mHiliteColor
 	end if
-	
+
+	-- FIXME Make this configurable via a property
+	set the fill rule of this canvas to "non-zero"
+
 	fill tPath on this canvas
 end handler
 
