@@ -89,7 +89,7 @@ MCFontnode::MCFontnode(MCSysFontHandle p_handle, MCNameRef p_name)
     if (p_name == nil)
         coretext_get_font_name(p_handle, &reqname);
     else
-        reqname = MCValueRetain(p_name);
+        reqname = p_name;
     
     reqsize = coretext_get_font_size(p_handle);
     reqstyle = FA_DEFAULT_STYLE | FA_SYSTEM_FONT;
