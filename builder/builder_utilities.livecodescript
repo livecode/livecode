@@ -280,13 +280,13 @@ function builderIDEDocsFolder
 end builderIDEDocsFolder
 
 # Location for api js file in > LC8
-function builderAPIFolder
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api"
+function builderAPIFolder pEdition
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/api"
 end builderAPIFolder
 
 # Location for guide js file in > LC8
-function builderGuideFolder
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/guide"
+function builderGuideFolder pEdition
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/guide"
 end builderGuideFolder
 
 function builderDocsFolder

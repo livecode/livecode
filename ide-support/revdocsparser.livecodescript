@@ -2294,6 +2294,10 @@ end revDocsFormatLibraryDataAsJSON
 
 constant kAPIDatabaseFile = "api.sqlite"
 
+function revDocsAPIDatabasePath pFolder
+   return pFolder & slash & kAPIDatabaseFile
+end revDocsAPIDatabasePath
+
 on revDocsOpenAPIDatabase pFolder
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
