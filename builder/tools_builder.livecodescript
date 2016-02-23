@@ -540,7 +540,7 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    --put empty into URL ("file:" & tTrashFile)
    
    -- Do the DMG build
-   get shell("hdiutil create -fs HFS+ -volname" && escapeArg(getBundleFilenameStub(pVersion, pPlatform, pEdition)) && "-srcfolder" && escapeArg(tAppBundle) && escapeArg(tDmgFile))
+   get shell("hdiutil create -fs HFS+ -format UDBZ -volname" && escapeArg(getBundleFilenameStub(pVersion, pPlatform, pEdition)) && "-srcfolder" && escapeArg(tAppBundle) && escapeArg(tDmgFile))
    rename tDmgAppFolder to (tOutputFileStub & ".app")
    if "created:" is not in it then
       builderLog "error", "Dmg creation failed -" && the last line of it
