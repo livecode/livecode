@@ -1081,12 +1081,12 @@ void MCU_initialize_names(void)
 #endif
     
     /* UNCHECKED */ MCNameCreateWithCString("(Default)", MCN_font_default);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Styled text)", MCN_font_usertext);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Menu text)", MCN_font_menutext);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Content)", MCN_font_content);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Messages)", MCN_font_message);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - Tooltips)", MCN_font_tooltip);
-    /* UNCHECKED */ MCNameCreateWithCString("(System UI Font - System)", MCN_font_system);
+    /* UNCHECKED */ MCNameCreateWithCString("(Styled Text)", MCN_font_usertext);
+    /* UNCHECKED */ MCNameCreateWithCString("(Menu)", MCN_font_menutext);
+    /* UNCHECKED */ MCNameCreateWithCString("(Text)", MCN_font_content);
+    /* UNCHECKED */ MCNameCreateWithCString("(Message)", MCN_font_message);
+    /* UNCHECKED */ MCNameCreateWithCString("(Tooltip)", MCN_font_tooltip);
+    /* UNCHECKED */ MCNameCreateWithCString("(System)", MCN_font_system);
 }
 
 void MCU_finalize_names(void)
