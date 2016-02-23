@@ -659,12 +659,10 @@ table{border-spacing:1em 2px;}
   </head>
   <body>
     <div id="content"/>
+    <script charset="UTF-8" src="@GUIDE_JSON@"></script>
     <script>
-    	var prefix = '@prefix@';
-		var ide_markdown = '@ide-guides@';
-		var repo_markdown = '@repo-guides@';
-
 		function regenerate() {
+			var prefix = '@PREFIX@';
 			// Override the markdown parser's heading generation in order to
 			// generate table of contents.
 			var renderer = new marked.Renderer();
@@ -765,13 +763,14 @@ table{border-spacing:1em 2px;}
 			{
 				return '<code class="inline">' + code + '</code>';
 			}
-		
-			var content_html = marked(prefix, { renderer: renderer });
-			guide_source = 'ide';
-			content_html += marked(ide_markdown, { renderer: renderer });
-			guide_source = 'repo';
-			content_html += marked(repo_markdown, { renderer: renderer });
 			
+			var content_html = marked(prefix, { renderer: renderer });
+
+			$.each(tUserGuideData.guides, function( index, value ) {
+				guide_source = value.location;
+				content_html += marked(value.data, { renderer: renderer });
+			});
+		
 			document.getElementById('content').innerHTML = content_html;
 
 			var toc = document.getElementById('table_of_contents');

@@ -30,9 +30,6 @@ command guideBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       Initialize pVersion, pOutputDir
       
       BaseCreate
-      
-      AddIDEGuides
-      AddRepoGuides
             
       OutputGuide
       
@@ -61,22 +58,10 @@ private function OutputGetGuideTitle
 end OutputGetGuideTitle
 
 private command OutputGuide
-   OutputGuideMarkdown
+   OutputGuideJson
    OutputGuideHtml
    OutputGuidePdf
 end OutputGuide
-
-private command OutputGuideMarkdown
-   local tPath
-   put OutputGetGuideFilename("md") into tPath
-   builderLog "report", merge("Writing [[tPath]]")
-   
-   local tMarkdown
-   put sMarkdownText["guide"] into tMarkdown
-   put return & sMarkdownText["ide-guides"] after tMarkdown
-   put return & sMarkdownText["repo-guides"] after tMarkdown
-   FileSetUTF8Contents tPath, tMarkdown
-end OutputGuideMarkdown
 
 private function OutputEscape pMarkdown, pEscapeHtml
    -- Try to do the minimum possible escaping to be able to insert the
@@ -92,6 +77,23 @@ private function OutputEscape pMarkdown, pEscapeHtml
    return pMarkdown
 end OutputEscape
 
+private command OutputGuideJson
+   local tGuideJsonPath
+   put builderGuideFolder() & slash & "distributed_guide.js" into tGuideJsonPath
+   
+   local tGuideJson
+   put FileGetUTF8Contents(tGuideJsonPath) into tGuideJson
+   
+   local tJS
+   put "var tUserGuideData =" & return & "{" & return & tab & quote & "guides" & quote & ":[" into tJS
+   put tGuideJson after tJS
+   put return & tab & "]" & return & "}" after tJS
+   
+   local tGuideJSPath
+   put OutputGetGuideFilename("js") into tGuideJSPath
+   FileSetUTF8Contents tGuideJSPath, tJS
+end OutputGuideJson
+
 private command OutputGuideHtml
    local tHtmlTemplatePath
    put builderSystemFolder() & "/user-guide-template.html" into tHtmlTemplatePath
@@ -99,9 +101,8 @@ private command OutputGuideHtml
    local tHtml
    put FileGetUTF8Contents(tHtmlTemplatePath) into tHtml
    
-   replace "@prefix@" with OutputEscape(sMarkdownText["guide"], false) in tHtml
-   replace "@ide-guides@" with OutputEscape(sMarkdownText["ide-guides"], true) in tHtml
-   replace "@repo-guides@" with OutputEscape(sMarkdownText["repo-guides"], true) in tHtml
+   replace "@PREFIX@" with OutputEscape(sMarkdownText["guide"], false) in tHtml
+   replace "@GUIDE_JSON@" with OutputGetGuideFilename("js") in tHtml
    
    local tOutpath
    put OutputGetGuideFilename("html") into tOutpath
@@ -163,40 +164,6 @@ private command BaseCreate
    BaseCreateContents
 
 end BaseCreate
-
-----------------------------------------------------------------
--- Guide Contents
-----------------------------------------------------------------
-
-private command AddGuide pWhich, pFolder, pFilename
-   local tGuidePath
-   put pFolder & slash & pFilename into tGuidePath
-
-   local tGuideContents
-   put FileGetUTF8Contents(tGuidePath) into tGuideContents
-
-   MarkdownAppend pWhich, tGuideContents
-end AddGuide
-
-private command AddGuides pWhich
-   local tFolder
-   put FileGetPath(pWhich) into tFolder
-   
-   local tGuides
-   put FolderListFiles(tFolder, "md") into tGuides
-   
-   repeat for each line tGuide in tGuides
-      AddGuide pWhich, tFolder, tGuide
-   end repeat
-end AddGuides
-
-private command AddRepoGuides
-   AddGuides "repo-guides"
-end AddRepoGuides
-
-private command AddIDEGuides
-   AddGuides "ide-guides"
-end AddIDEGuides
 
 ----------------------------------------------------------------
 -- File helpers
