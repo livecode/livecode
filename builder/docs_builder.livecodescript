@@ -1910,11 +1910,11 @@ end escape
 
 command docsBuilderGenerateDocsNew pEdition, pVersion
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
-   builderLog "report", "Building guide into" && builderGuideFolder() & slash & "distributed_guide.js"
-   pathEnsure (builderGuideFolder())
+   builderLog "report", "Building guide into" && builderGuideFolder(pEdition) & slash & "distributed_guide.js"
+   pathEnsure (builderGuideFolder(pEdition))
    docsBuilderGenerateDistributedGuide pEdition
-   builderLog "report", "Building api into" && builderAPIFolder() & slash & "distributed_api.js"
-   pathEnsure (builderAPIFolder())
+   builderLog "report", "Building api into" && builderAPIFolder(pEdition) & slash & "distributed_api.js"
+   pathEnsure (builderAPIFolder(pEdition))
    docsBuilderGenerateDistributedAPI pEdition
    
    docsBuilderGenerateZip pEdition, pVersion
@@ -2007,7 +2007,7 @@ command docsBuilderGenerateDistributedGuide pEdition
       end repeat
    end repeat
    delete the last char of tGuideData
-   put textEncode(tGuideData, "utf-8") into url ("binfile:" & builderGuideFolder() & slash & "distributed_guide.js")
+   put textEncode(tGuideData, "utf-8") into url ("binfile:" & builderGuideFolder(pEdition) & slash & "distributed_guide.js")
    
    set the defaultFolder to tDefaultFolder
 end docsBuilderGenerateDistributedGuide
@@ -2131,21 +2131,21 @@ command docsBuilderGenerateDistributedAPI pEdition
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
    
-   docsBuilderPopulateDatabase tLibrariesA
+   docsBuilderPopulateDatabase pEdition, tLibrariesA
    
-   put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder() & slash & "distributed_api.js")
+   put textEncode(tJSON, "utf-8") into url ("binfile:" & builderAPIFolder(pEdition) & slash & "distributed_api.js")
 end docsBuilderGenerateDistributedAPI
 
-on docsBuilderPopulateDatabase pLibrariesA
+on docsBuilderPopulateDatabase pEdition, pLibrariesA
    -- Ensure any existing api database is not updated
    local tExistingAPI
-   put revDocsAPIDatabasePath(builderAPIFolder()) into tExistingAPI
+   put revDocsAPIDatabasePath(builderAPIFolder(pEdition)) into tExistingAPI
    if there is a file tExistingAPI then
       delete file tExistingAPI
    end if
    
    local tConnection
-   revDocsOpenAPIDatabase builderAPIFolder()
+   revDocsOpenAPIDatabase builderAPIFolder(pEdition)
    
    put the result into tConnection
    if tConnection is not a number then

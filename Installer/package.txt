@@ -357,9 +357,21 @@ component Documentation
 		file "ide:Documentation/rev/videos.rev"
 
 	into [[ToolsFolder]]/Documentation place
-		rfolder "ide:Documentation/guides"
-		rfolder "ide:Documentation/html_viewer"
 		rfolder "repo:docs/guides"
+		rfolder "ide:Documentation/guides"
+		file "ide:Documentation/html_viewer/api.html.template"
+		file "ide:Documentation/html_viewer/guide.html.template"
+		rfolder "ide:Documentation/html_viewer/css"
+		rfolder "ide:Documentation/html_viewer/fonts"
+		rfolder "ide:Documentation/html_viewer/js"
+
+	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
+		if TargetEdition is Community then
+			rfolder "ide:Documentation/html_viewer/resources/data/community"
+		if TargetEdition is Indy then
+			rfolder "ide:Documentation/html_viewer/resources/data/indy"
+		if TargetEdition is Business then
+			rfolder "ide:Documentation/html_viewer/resources/data/business"
 
 	into [[ToolsFolder]]/Documentation/guides place
 		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
