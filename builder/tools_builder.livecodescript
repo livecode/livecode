@@ -539,8 +539,14 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
    --put empty into URL ("file:" & tTrashFile)
    
+   -- Create an "Applications" symlink to place in the DMG
+   -- This is a common helper shortcut added to OSX DMGs
+   local tApplicationsAlias
+   put tOutputFileFolder & slash & "Applications" into tApplicationsAlias
+   create alias tApplicationsAlias to "/Applications"
+
    -- Do the DMG build
-   get shell("hdiutil create -fs HFS+ -format UDBZ -volname" && escapeArg(getBundleFilenameStub(pVersion, pPlatform, pEdition)) && "-srcfolder" && escapeArg(tAppBundle) && escapeArg(tDmgFile))
+   get shell("hdiutil create -fs HFS+ -format UDBZ -volname" && escapeArg(getBundleFilenameStub(pVersion, pPlatform, pEdition)) && "-srcfolder" && escapeArg(tAppBundle) && escapeArg(tDmgFile) && "-srcfolder" && escapeArg(tApplicationsAlias))
    rename tDmgAppFolder to (tOutputFileStub & ".app")
    if "created:" is not in it then
       builderLog "error", "Dmg creation failed -" && the last line of it
