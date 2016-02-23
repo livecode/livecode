@@ -145,7 +145,8 @@ component Misc
 			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
 		file "repo:LiveCodeNotes-[[EscapedVersionTag]].pdf" as "Release Notes.pdf"
-
+		file "repo:LiveCodeUserGuide-[[EscapedVersionTag]].pdf" as "User Guide.pdf"
+		
 component Plugins
 	into [[ToolsFolder]]/Plugins place
 		stack ide:Plugins/Go_RevNet.rev
