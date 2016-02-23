@@ -101,7 +101,9 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
             {
                 // Scale compared to the "normal" windows scale
 				uint32_t t_x_dpi, t_y_dpi;
+#ifndef _SERVER
 				if (!MCWin32GetScreenDPI(t_x_dpi, t_y_dpi))
+#endif
 					t_x_dpi = t_y_dpi = NORMAL_DENSITY;
 				
 				// Get the size from the LOGFONT structure
