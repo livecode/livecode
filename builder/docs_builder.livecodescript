@@ -1979,37 +1979,31 @@ private command docsBuilderGetDictionaryFolders pEdition, @xFolders
 end docsBuilderGetDictionaryFolders
 
 command docsBuilderGenerateDistributedGuide pEdition
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
+   local tGuideFoldersA
+   docsBuilderGetGuideFolders pEdition, tGuideFoldersA
    
-   local tGuideFolders
-   docsBuilderGetGuideFolders pEdition, tGuideFolders
+   local tGuideFoldersWithLocationA
+   repeat for each element tElement in tGuideFoldersA
+      local tGuideWithLocation
+      put tElement into tGuideWIthLocation["folder"]
+      # All these guides will be in the ide guide folder when installed
+      put "ide" into tGuideWithLocation["location"]
+      addToList tGuideWithLocation, tGuideFoldersWithLocationA
+   end repeat
    
-   local tGuideFolder, tGuideData, tGuideName
-   repeat for each element tGuideFolder in tGuideFolders
-      set the defaultfolder to tGuideFolder
-      
-      set the itemdelimiter to "."
-      repeat for each line tFile in the files
-         if tFile begins with "."  then next repeat
-         docsBuilderProgressUpdate "", "Building guide" && tGuideFolder & slash & tFile
-         put item 1 to -2 of tFile into tGuideName
-         get url ("binfile:" & tGuideFolder & slash & tFile)
-         if it is not empty then
-            get textDecode(it, "utf-8")
-            replace "[toc]" with empty in it
-            put tab & "{" & CR after tGuideData
-            put tab & escape("name") & ":" & escape(revDocsModifyForURL(tGuideName)) & comma & return after tGuideData 
-            put tab & escape("display name") & ":" & escape(tGuideName) & comma & return after tGuideData 
-            put tab & escape("location") & ":" & escape("ide") & comma & return after tGuideData
-            put tab & escape("data") & ":" & escape(it, true) & return & tab & "}," after tGuideData
-         end if
-      end repeat
+   local tOrderedGuidesA, tOrderFolder
+   put builderIDEDocsFolder() & slash & "guides" into tOrderFolder
+   put revDocsOrderedGuideData(tGuideFoldersWithLocationA, tOrderFolder) into tOrderedGuidesA
+   
+   local tGuideData
+   repeat for each element tGuideA in tOrderedGuidesA
+      docsBuilderProgressUpdate "", "Building guide" && tGuideA["file"]
+      put tab & "{" after tGuideData
+      put return & revDocsFormatGuideDataAsJSON(tGuideA) after tGuideData
+      put return & tab & "}," after tGuideData
    end repeat
    delete the last char of tGuideData
    put textEncode(tGuideData, "utf-8") into url ("binfile:" & builderGuideFolder(pEdition) & slash & "distributed_guide.js")
-   
-   set the defaultFolder to tDefaultFolder
 end docsBuilderGenerateDistributedGuide
 
 /*
