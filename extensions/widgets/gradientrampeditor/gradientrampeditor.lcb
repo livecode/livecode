@@ -516,6 +516,7 @@ private handler paintRampEditors() returns nothing
       drawStop (tX, tY, tSelStop) -- BN
 
       -- If this is the selected stop then draw an extra ramp point above the gradient and a line linking it.
+      put the top of mGradientRectangle into tY
       move to point [tX, tY] on this canvas
       line to point [tX, tY - mRulerLineHeight] on this canvas
       set the paint of this canvas to solid paint with mGradientHandleBorderColor
