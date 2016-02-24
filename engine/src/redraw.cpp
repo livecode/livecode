@@ -1079,12 +1079,19 @@ void MCCard::render(void)
 	// IM-2013-12-20: [[ ShowAll ]] Use MCStack::getvisiblerect() to get the visible area
 	MCRectangle t_visible_rect;
 	t_visible_rect = getstack()->getvisiblerect();
-	
-	if (getstate(CS_SIZE))
+    
+    MCRectangle t_foreground_region;
+    t_foreground_region = selrect;
+    
+    // Recursively update the redraw region for selected children
+    bool t_child_selected;
+    t_child_selected = updatechildselectedrect(t_foreground_region);
+    
+	if (getstate(CS_SIZE) || t_child_selected)
 	{
 		MCTileCacheLayer t_fg_layer;
 		t_fg_layer . id = m_fg_layer_id;
-		t_fg_layer . region = MCRectangle32GetTransformedBounds(selrect, t_transform);
+		t_fg_layer . region = MCRectangle32GetTransformedBounds(t_foreground_region, t_transform);
 		t_fg_layer . clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
 		t_fg_layer . is_opaque = false;
 		t_fg_layer . opacity = 255;
@@ -1097,8 +1104,9 @@ void MCCard::render(void)
 	else
 		m_fg_layer_id = 0;
 	
-	MCObjptr *t_objptrs;
-	t_objptrs = getobjptrs();
+    MCObjptr *t_objptrs;
+    t_objptrs = getobjptrs();
+    
 	if (t_objptrs != nil)
 	{
 		MCObjptr *t_objptr;

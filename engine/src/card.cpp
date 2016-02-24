@@ -3373,6 +3373,38 @@ void MCCard::drawselectedchildren(MCDC *dc)
     while (tptr != objptrs);
 }
 
+bool MCCard::updatechildselectedrect(MCRectangle& x_rect)
+{
+    bool t_updated;
+    t_updated = false;
+    
+    MCObjptr *t_objptr = objptrs;
+    if (t_objptr == nil)
+        return t_updated;
+    do
+    {
+        MCControl *t_control;
+        t_control = t_objptr -> getref();
+        
+        if (t_control -> getstate(CS_SELECTED))
+        {
+            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
+            t_updated = true;
+        }
+        
+        if (t_control -> gettype() == CT_GROUP)
+        {
+            MCGroup *t_group = static_cast<MCGroup *>(t_control);
+            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
+        }
+        
+        t_objptr = t_objptr->next();
+    }
+    while (t_objptr != objptrs);
+    
+    return t_updated;
+}
+
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 {
 	bool t_draw_cardborder;
