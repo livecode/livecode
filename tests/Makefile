@@ -131,7 +131,8 @@ lcs-check: $(LCS_ENGINE)
 	@rm -f $(LCS_LOG)
 	@cmd="$(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run"; \
 	echo "$$cmd" $(_PRINT_RULE); \
-	$$cmd
+	$$cmd; \
+	cat _test_suite.log
 
 ################################################################
 # LCB-only tests
