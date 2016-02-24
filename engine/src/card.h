@@ -210,6 +210,7 @@ public:
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
 	void drawselectionrect(MCContext *);
     void drawselectedchildren(MCDC *dc);
+    bool updatechildselectedrect(MCRectangle& x_rect);
     
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);

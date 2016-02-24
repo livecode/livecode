@@ -2910,6 +2910,35 @@ void MCGroup::drawselectedchildren(MCDC *dc)
     while (t_control != controls);
 }
 
+bool MCGroup::updatechildselectedrect(MCRectangle& x_rect)
+{
+    bool t_updated;
+    t_updated = false;
+    
+    MCControl *t_control = controls;
+    if (t_control == nil)
+        return t_updated;
+    do
+    {
+        if (t_control -> getstate(CS_SELECTED))
+        {
+            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
+            t_updated = true;
+        }
+        
+        if (t_control -> gettype() == CT_GROUP)
+        {
+            MCGroup *t_group = static_cast<MCGroup *>(t_control);
+            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
+        }
+        
+        t_control = t_control -> next();
+    }
+    while (t_control != controls);
+    
+    return t_updated;
+}
+
 //-----------------------------------------------------------------------------
 //  Redraw Management
 
