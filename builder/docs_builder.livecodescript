@@ -1941,6 +1941,12 @@ private command addToList pElement, @xArray
    put pElement into xArray[tCount + 1]
 end addToList
 
+private command addFolderToListIfExists pFolder, @xArray
+   if there is a folder pFolder then
+      addToList pFolder, xArray
+   end if
+end addFolderToListIfExists
+
 private function RepoIndyDocsFolder
    return builderPrivateRepoFolder() & slash & "docs" & slash & "indy"
 end RepoIndyDocsFolder
@@ -1954,11 +1960,11 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
    addToList builderIDEDocsFolder() & slash & "guides", xFolders
    
    if pEdition is not "community" then
-      addToList RepoIndyDocsFolder() & slash & "guides", xFolders
+      addFolderToListIfExists RepoIndyDocsFolder() & slash & "guides", xFolders
    end if
    
    if pEdition is "business" then
-      addToList RepoBusinessDocsFolder() & slash & "guides", xFolders
+      addFolderToListIfExists RepoBusinessDocsFolder() & slash & "guides", xFolders
    end if
 end docsBuilderGetGuideFolders
 
@@ -1970,11 +1976,7 @@ private command docsBuilderGetDictionaryFolders pEdition, @xFolders
    end if
    
    if pEdition is "business" then
-      local tBusinessDocs
-      put RepoBusinessDocsFolder() into tBusinessDocs
-      if there is a folder tBusinessDocs then
-         addToList tBusinessDocs, xFolders
-      end if
+      addFolderToListIfExists RepoBusinessDocsFolder(), xFolders
    end if
 end docsBuilderGetDictionaryFolders
 
