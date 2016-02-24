@@ -1,10 +1,16 @@
-# Introduction
+---
+group: reference
+---
+
+# LiveCode Builder Style Guide
+
+## Introduction
 
 This document describes best practices to be followed when working with
 LiveCode Builder source code.  Please follow it *especially* when writing code
 to be included with the main LiveCode product package.
 
-# Copyright headers
+## Copyright headers
 
 Please include a license header at the top of the `.lcb` file.
 
@@ -12,9 +18,9 @@ For the main LiveCode repository, or for any community extensions, the license
 is the [GNU General Public License v3](http://www.gnu.org/licenses) *without*
 the "any later version" clause.
 
-# Naming
+## Naming
 
-## Module name
+### Module name
 
 The module name uses reverse DNS notation.  For example, a module created by
 the Example Organisation would use module names beginning with `org.example`.
@@ -42,7 +48,7 @@ For the main LiveCode repository, please use module names beginning with
 
 Always write module names in lower case.
 
-## Naming variables and parameters
+### Naming variables and parameters
 
 Give variables and parameters `xCamelCaseNames` with a leading lowercase
 character indicating their scope and availability.
@@ -70,7 +76,7 @@ For `Boolean` variables, please try to use "yes or no" names.  For example:
     variable tIsVisible as Boolean
     variable tHasContents as Boolean
 
-## Naming handlers
+### Naming handlers
 
 Give handlers `TitleCase` names.
 
@@ -80,7 +86,7 @@ In general, please use verbs to name your handlers.  For example,
         -- ...
     end handler
 
-# Documenting the source code
+## Documenting the source code
 
 You should add in-line documentation to `syntax` and `handler` definitions in
 LiveCode Builder source code.  It is particularly important to add in-line
@@ -93,7 +99,7 @@ In-line documentation for a handler or syntax definition is extracted from a
 Please refer to the [Extending LiveCode](Extending LiveCode.md) guide for full
 details of the syntax of in-line documentation comments, including examples.
 
-# Named constants
+## Named constants
 
 Often, it is useful to use constant values in your code.  Please declare named
 constants rather than placing the values in-line.  For example, you may
@@ -110,9 +116,9 @@ want to create three tabs labelled "Things", "Stuff", and "Misc":
 
 In particular, please avoid any "magic numbers" in your code.
 
-# Whitespace
+## Whitespace
 
-## Indentation
+### Indentation
 
 Please indent with tab characters.  Please use one tab character per level of
 indentation.
@@ -140,7 +146,7 @@ For example:
 If it's necessary to mix spaces and tabs for indentation, please use 4 spaces
 per tab.
 
-## Handler declarations, definitions and calls
+### Handler declarations, definitions and calls
 
 In handler type declarations and definitions, don't insert whitespace between
 the handler name and the parameter list.  For example:

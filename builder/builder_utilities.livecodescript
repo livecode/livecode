@@ -79,6 +79,9 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
       case "Docs"
          dispatch "docsBuilderRun" to stack builderDocsBuilderStack() with pEdition, tVersion
          break
+      case "Guide"
+         dispatch "guideBuilderRun" to stack builderGuideBuilderStack() with pEdition, tVersion, pType, builderRepoFolder()
+         break
       case "Disk"
          repeat for each line tPlatform in pPlatforms
             dispatch "toolsBuilderRunDisk" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
@@ -280,13 +283,13 @@ function builderIDEDocsFolder
 end builderIDEDocsFolder
 
 # Location for api js file in > LC8
-function builderAPIFolder
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/api"
+function builderAPIFolder pEdition
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/api"
 end builderAPIFolder
 
 # Location for guide js file in > LC8
-function builderGuideFolder
-   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/guide"
+function builderGuideFolder pEdition
+   return builderIDEDocsFolder() & slash & "html_viewer/resources/data/" & pEdition & "/guide"
 end builderGuideFolder
 
 function builderDocsFolder
@@ -349,6 +352,10 @@ end builderEngineBuilderStack
 function builderDocsBuilderStack
    return builderSystemFolder() & slash & "docs_builder.livecodescript"
 end builderDocsBuilderStack
+
+function builderGuideBuilderStack
+   return builderSystemFolder() & slash & "user_guide_builder.livecodescript"
+end builderGuideBuilderStack
 
 function builderNotesBuilderStack
    return builderSystemFolder() & slash & "release_notes_builder.livecodescript"

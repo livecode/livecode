@@ -1,4 +1,10 @@
-# Introduction
+---
+group: intermediate
+---
+
+# Printing In LiveCode
+
+## Introduction
 
 Printing is a vital aspect of many applications. LiveCode provides a
 comprehensive set of printing capabilities. Whether you want a simple

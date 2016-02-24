@@ -1,10 +1,16 @@
-# Introduction
+---
+group: reference
+---
+
+# LiveCode Documentation Format Reference
+
+## Introduction
 
 LiveCode uses a custom documentation format for the dictionary and for extension APIs. The 
 format has very few special characters and is intended to maximise readability and 
 modifiability. 
 
-# Format
+## Format
 
 Documentation for a LiveCode API or documentation entry consists of a series of elements and their values, in the following form:
 
@@ -12,18 +18,18 @@ Documentation for a LiveCode API or documentation entry consists of a series of 
 
 There are several standard types of *content*; which one may be used depends on the *elementName*.
 
-## Element names
+### Element names
 
 Elements are optional unless otherwise specified.
 
-### Name (required)
+#### Name (required)
 The name of the API entry. The name must be a single word.
 >*Note:* For inline docs, the name element is automatically generated
 
-### Synonyms
+#### Synonyms
 A comma-delimited list of synonyms for this API entry.
 
-### Type (required)
+#### Type (required)
 The type of this API entry. One of the following:
 (API-level)
 	* command
@@ -47,7 +53,7 @@ The glossary-level entries have part of their content generated from the API-lev
 
 >*Note:* For inline docs, the type element is automatically generated
 
-### Syntax (required for API-level entries)
+#### Syntax (required for API-level entries)
 A description of how to use or call this facet of the API. May just be the name itself, for keywords etc.
 An entry may have a number of Syntax elements, if there are variations within the same entry.
 
@@ -79,18 +85,18 @@ gives an example of the repetition notation, namely it allows something like
 
 >*Note:* For inline docs, the Syntax elements are automatically generated
 
-### Summary (required)
+#### Summary (required)
 A summary of the API entry being documented. The summary should be a single line. Anything more in-depth should be included in the description.
 
-### Associated
+#### Associated
 A comma-delimited list of names of other API or docs entries. Each one must be of type **object**, **glossary**, **library**, or **widget**. It is used to generate the docs for the entries to which it is associated.
 
 In particular, every API entry in a library should have that library name in its Associated list.
 
-### Introduced
+#### Introduced
 The LiveCode version in which the API entry was first available.
 
-### OS
+#### OS
 A comma-delimited list specifying which operating systems the API entry is available for. One or more of the following:
 
 * mac
@@ -100,7 +106,7 @@ A comma-delimited list specifying which operating systems the API entry is avail
 * android
 * RPi
 
-### Platforms
+#### Platforms
 A comma-delimited list specifying which platforms the API entry is available for. One or more of the following:
 
 * desktop
@@ -108,12 +114,12 @@ A comma-delimited list specifying which platforms the API entry is available for
 * web
 * mobile
 
-### Example
+#### Example
 Example elements should show how API entries are used in context. Each example with be displayed in the documentation viewer as a multiline code block. Where possible, an example should be entirely self contained, so that it is runnable as a block of code without any additions.
 
 An API entry can have any number of Example elements. 
 
-### Parameters
+#### Parameters
 The parameters element itself does not do anything, but can be helpful for readability as a precursor to the parameter elements themselves.
 Parameter elements are specified in the following way:
 *paramName* (*paramType*) : *paramDescription*
@@ -159,7 +165,7 @@ The key type and value type are optional. If one of the values is a sub-array, a
 ```
 The indentation is not necessary, but is helpful for readability.
 
-### Value and return parameters
+#### Value and return parameters
 For simple return parameters, i.e. the direct return value of a function, use the Returns element.
 When a value is both an input and output value, for example the value of a property, use the Value element.
 The Returns and Value elements are mutually exclusive.
@@ -168,19 +174,19 @@ Some functions and commands in LiveCode change the value of 'the result' and the
 
 All of these elements can have a type specified in brackets before the colon, as for parameter elements. The same comments about formatting apply to return parameters.
 
-### Description (required)
+#### Description (required)
 A full description of the API entry. The description may have markdown elements which will be rendered in the documentation viewer.
 
-### References
+#### References
 A comma-delimited list of other API or docs entries that are referenced. The references element is essential for linking around the documentation viewer.
 
 The references list should be in the form:
 >*entryName* (*entryType*), *entryName* (*entryType*), *entryName* (*entryType*), ...
 
-### Tags
+#### Tags
 A comma-delimited list of tags for this entry. The documentation viewer can filter entries by tag.
 
-## Other documentation syntax
+### Other documentation syntax
 The Description element is the only one that allows standard markdown. There is only (essentially) one other syntactic form allowed in API documentation, which is enclosing text in angle brackets <>. There are three purposes of the angle brackets syntax:
 
 * Specifying occurrences of the name of the current API entry.
@@ -202,7 +208,7 @@ If the target name is shared by two references, then the link should be disambig
 It is possible to do both of the above at the same time:
 > This sentence contains links to &lt;other(function)|other's&gt; and &lt;other(command)|other's&gt; dictionary entries.
 
-## Separate docs files
+### Separate docs files
 To specify the documentation for a library in one separate file, it must have the following structure:
 
 Library: *libraryName*
@@ -225,14 +231,14 @@ Summary: *entrySummary*
 Name: *anotherEntryName*
 etc.
 
-## Inline documentation
+### Inline documentation
 Documentation for LiveCode script and LiveCode extensions can be done in-line. In this case, the Name, Type, Syntax and Associated elements are auto-generated. 
 
 The code-block enclosed in /* */ immediately preceding the handler or syntax definition is used for the other elements of the documentation for that entry. In LiveCode extensions, the types of parameters are also pulled from the associated handler.
 
-## Separate docs files examples
+### Separate docs files examples
 
-### Dictionary example
+#### Dictionary example
 Here is the dictionary document for the *textEncode* function:
 
 ```
@@ -287,7 +293,7 @@ It is not, in general, possible to reliably auto-detect text encodings so please
 References: textDecode (function)
 ```
 
-### Library example
+#### Library example
 
 ```
 Module: com.livecode.sort
@@ -330,11 +336,11 @@ Type: statement
 
 Syntax: sort <Target> in ascending [text] order
 ```
-## Inline examples
+### Inline examples
 
 In general, writing inline docs has fewer requirements since several of the elements are auto-generated.
 
-### LiveCode Builder syntax example
+#### LiveCode Builder syntax example
 
 ```
 /*  
@@ -378,7 +384,7 @@ end syntax
 end module
 ```
 
-### LiveCode Builder handler example
+#### LiveCode Builder handler example
 ```
 /*
 Summary: Logs the result of a test to the <xResults> list
@@ -406,7 +412,7 @@ public handler testLog(in pModule as String, in pTest as String, in pResult as B
     push tStringResult && ":" && pModule & "_" & pTest onto xResults
 end handler
 ```
-### LiveCode script handler example
+#### LiveCode script handler example
 ```
 /*
 Summary: Extracts the inline docs from a .lcb file

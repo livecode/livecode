@@ -1,4 +1,10 @@
-# Introduction
+---
+group: deployment
+---
+
+# HTML5 Deployment
+
+## Introduction
 
 **Note: This is an experimental release of HTML5 deployment support and is not recommended for production use.**
 
@@ -38,9 +44,9 @@ Two important unsupported features are unlikely to be added in the near future:
   (e.g. `wait 10`)
 * externals (including revdb)
 
-# How to deploy an app to HTML5
+## How to deploy an app to HTML5
 
-## Step by step
+### Step by step
 
 Deploying an app to an HTML5 standalone is straightforward:
 
@@ -58,7 +64,7 @@ Deploying an app to an HTML5 standalone is straightforward:
 
 Your application will be packaged up and placed in the selected output folder.
 
-## Contents of the HTML5 standalone
+### Contents of the HTML5 standalone
 
 The HTML5 standalone contains four files:
 
@@ -68,7 +74,7 @@ The HTML5 standalone contains four files:
 
 * A test HTML page.  This can be opened in a browser and will correctly prepare, download and start your HTML5 app in a convenient test environment.
 
-## Testing your HTML5 app with a local web server
+### Testing your HTML5 app with a local web server
 
 Some browsers, such as Google Chrome, do not permit pages to download resources from `file://` URLs.  You won't be able to test your application in these browsers unless you run a local HTTP server.
 
@@ -78,11 +84,11 @@ A quick and easy way to run a simple local HTTP server is to use Python.  Open a
 
 This will let you access your standalone by opening your web browser and visiting <http://localhost:8080>.
 
-# Reporting bugs
+## Reporting bugs
 
 Please report bugs to the [LiveCode Quality Centre](http://quality.livecode.com/).  Make sure to select "HTML5 Standalone" when you're creating your bug report!
 
-# Advanced: HTML5 standalone filesystem
+## Advanced: HTML5 standalone filesystem
 
 JavaScript applications running in a browser don't have access to the host system's filesystem.  Instead, the filesystem-related features of LiveCode, such as `open file`, use a virtual filesystem (VFS) that exists only in memory.  This filesystem is initialised before the engine starts, and is reset and its content discarded when the engine stops (when the user closes the browser view or navigates to a different page).
 
@@ -100,11 +106,11 @@ There are several special files & directories in the `/boot/` directory:
 
 In general, if you wish to add new files or directories to the `standalone.zip` archive, it is best to add them outside the `/boot/` directory tree.
 
-# Advanced: Embedding an HTML5 standalone in a web page
+## Advanced: Embedding an HTML5 standalone in a web page
 
 The default HTML5 page provided by the HTML5 standalone builder is designed for testing and debugging purposes.  However, you may want to embed the standalone engine in a more visually appealing page.  To do this, you require three elements: 1) a canvas, 2) a JavaScript `Module` object, and 3) an HTML `<script>` element that downloads the engine.
 
-## The canvas
+### The canvas
 
 The engine renders into a HTML5 `<canvas>` element.  There are three important considerations when creating the canvas:
 
@@ -120,7 +126,7 @@ The absolute minimum canvas element would look something like this:
 
 By default, most web browsers will indicate when the canvas has focus by displaying a highlighted outline.  This helps users identify which part of the web page is capturing their key presses.  You can usually disable this outline by adding `outline: none;` to the canvas's CSS styles.
 
-## The Module object
+### The Module object
 
 The top-level JavaScript `Module` object contains the parameters that control how the engine runs.  At minimum, you need only specify the `Module.canvas`, which should be your canvas element.
 
@@ -132,7 +138,7 @@ The absolute minimum `Module` object declaration would look something like:
     };
     </script>
 
-## Engine download
+### Engine download
 
 The engine is quite a large JavaScript file, so it's downloaded asynchronously in order to let the rest of the page finish loading and start being displayed.
 
@@ -142,7 +148,7 @@ Quite straightforwardly:
 
 Make sure to replace `<version>` as appropriate.
 
-## Bringing it all together
+### Bringing it all together
 
 Here's the complete skeleton web page for an HTML5 standalone:
 
@@ -157,7 +163,7 @@ Here's the complete skeleton web page for an HTML5 standalone:
       </body>
     </html>
 
-# Advanced: Speeding up engine download
+## Advanced: Speeding up engine download
 
 Currently, the engine files are almost 30 MB, which is a lot to download before the engine can start.  It is possible to speed up the download by enabling deflate compression in the web server configuration.
 
@@ -166,7 +172,7 @@ Enabling deflate compression reduces the total download size to around 6.3 MB.  
 * For the Apache web server, configure `mod_deflate` to serve [pre-compressed content](https://httpd.apache.org/docs/2.4/mod/mod_deflate.html#precompressed)
 * For the NGINX web server, add [`gzip_static on;`](https://www.nginx.com/resources/admin-guide/compression-and-decompression/#send) to your configuration.
 
-# Advanced: Customizing the Module object
+## Advanced: Customizing the Module object
 
 There are a number of LiveCode-specific `Module` attributes that you can modify to affect how the engine behaves:
 
