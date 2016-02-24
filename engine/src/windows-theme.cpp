@@ -80,6 +80,11 @@ bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlP
     return false;
 }
 
+extern bool MCWin32GetScreenDPI(uint32_t&, uint32_t&);
+
+// Density used by default for the Win32 UI
+#define NORMAL_DENSITY  96
+
 bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
 {
     bool t_found;
@@ -94,8 +99,15 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
             LOGFONTW lf;
             if (!(p_state & kMCPlatformControlStateCompatibility) && logfont_for_control(p_type, lf))
             {
-                // Get the size from the LOGFONT structure
-                r_int = -lf.lfHeight;
+                // Scale compared to the "normal" windows scale
+				uint32_t t_x_dpi, t_y_dpi;
+#ifndef _SERVER
+				if (!MCWin32GetScreenDPI(t_x_dpi, t_y_dpi))
+#endif
+					t_x_dpi = t_y_dpi = NORMAL_DENSITY;
+				
+				// Get the size from the LOGFONT structure
+                r_int = MCGFloat(-lf.lfHeight) / (MCGFloat(MCMax(t_x_dpi, t_y_dpi)) / NORMAL_DENSITY);
             }
             else
             {
@@ -253,13 +265,17 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
             LOGFONTW lf;
             if (!(p_state & kMCPlatformControlStateCompatibility) && logfont_for_control(p_type, lf))
             {
-                // Get the font name and size from the LOGFONT structure and
+                // Get the size of the font we should be using
+				int t_fontsize;
+				MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
+				
+				// Get the font name and size from the LOGFONT structure and
                 // create a font from it.
                 MCAutoStringRef t_font_name_string;
                 MCNewAutoNameRef t_font_name;
                 if (MCStringCreateWithWString(lf.lfFaceName, &t_font_name_string)
                     && MCNameCreate(*t_font_name_string, &t_font_name))
-                    return MCFontCreate(*t_font_name, 0, -lf.lfHeight, r_font);
+                    return MCFontCreate(*t_font_name, 0, t_fontsize, r_font);
             }
             else
             {
