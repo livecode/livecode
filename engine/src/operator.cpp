@@ -1199,7 +1199,10 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 					MCperror->add(PE_IS_NOVALIDTYPE, sp);
 					return PS_ERROR;
 				}
-				if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || (te->type != TT_CLASS && (te->type != TT_FUNCTION || te->which != F_KEYS)))
+				if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
+                    || te -> which == CT_ELEMENT
+                    || (te->type != TT_CLASS
+                        && (te->type != TT_FUNCTION || te->which != F_KEYS)))
 				{
 					MCperror->add(PE_IS_BADAMONGTYPE, sp);
 					return PS_ERROR;
