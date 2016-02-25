@@ -366,7 +366,6 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		}
 		break;
 			
-    
     case kMCCapsuleSectionTypeLicense:
     {
         char t_edition_byte;
@@ -391,7 +390,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             MClicenseparameters . license_class = kMCLicenseClassNone;
     }
     break;
-            
+			
 	default:
 		MCresult -> sets("unrecognized section encountered");
 		return false;

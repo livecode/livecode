@@ -1291,7 +1291,12 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             return MCExternalConvertStringToValueType(MCECptr -> GetColumnDelimiter(), p_option, result);
         case kMCExternalContextQueryRowDelimiter:
             return MCExternalConvertStringToValueType(MCECptr -> GetRowDelimiter(), p_option, result);
-            break;
+			break;
+			
+		case kMCExternalContextQueryHasLicenseCheck:
+			*(bool *)result = true;
+			break;
+			
         default:
             return kMCExternalErrorInvalidContextQuery;
     }

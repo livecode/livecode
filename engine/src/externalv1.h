@@ -235,6 +235,10 @@ enum MCExternalContextQueryTag
     kMCExternalContextQueryUnicodeLineDelimiter,
     kMCExternalContextQueryUnicodeColumnDelimiter,
     kMCExternalContextQueryUnicodeRowDelimiter,
+	
+	// If fetching this accessor works, and it returns true then
+	// the license check API is present.
+	kMCExternalContextQueryHasLicenseCheck,
 };
 
 enum MCExternalVariableQueryTag

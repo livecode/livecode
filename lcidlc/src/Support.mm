@@ -225,6 +225,8 @@ typedef enum MCExternalContextVar
     kMCExternalContextVarUnicodeLineDelimiter = 16,
     kMCExternalContextVarUnicodeColumnDelimiter = 17,
     kMCExternalContextVarUnicodeRowDelimiter = 18,
+	
+	kMCExternalContextVarHasLicenseCheck = 19,
 } MCExternalContextVar;
 
 typedef enum MCExternalVariableQuery
@@ -2678,7 +2680,15 @@ LCError LCLicenseCheckEdition(unsigned int p_min_version)
     // If the external requires license calls, then abort if the engine is too
     // old.
     if (s_interface -> version < 7)
-        return kLCErrorUnlicensed;
+	{
+		bool t_has_license_check;
+		
+		// If the interface version is < 7, then use the HasLicenseCheck
+		// context var to see if the function ptr is there.
+		if (s_interface -> context_query(0, kMCExternalContextVarHasLicenseCheck, &t_has_license_check) != kMCErrorNone ||
+			!t_has_license_check)
+			return kLCErrorUnlicensed;
+	}
     
     return (LCError)s_interface -> license_check_edition(0, p_min_version);
 }

@@ -1288,7 +1288,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         }
     }
         break;
-            
+			
 	default:
 		MCresult -> sets("unrecognized section encountered");
 		return false;
