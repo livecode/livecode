@@ -406,7 +406,7 @@ static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameter
 {
 	bool t_success;
 	t_success = true;
-
+	
     // First emit the prologue.
 	if (t_success)
 		t_success = MCDeployWriteDefinePrologueSection(p_params, p_capsule);
@@ -414,7 +414,7 @@ static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameter
     // Next emit the license info.
     if (t_success)
         t_success = MCDeployWriteDefineLicenseSection(p_params, p_capsule);
-    
+
 	return t_success;
 }
 

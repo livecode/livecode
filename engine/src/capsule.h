@@ -101,7 +101,7 @@ enum MCCapsuleSectionType
     // AL-2015-02-10: [[ Standalone Inclusions ]] Library consists of the mappings from universal names
     //  of resources to their platform-specific paths relative to the executable.
     kMCCapsuleSectionTypeLibrary,
-    
+	
     // MW-2016-02-17: [[ LicenseChecks ]] License consists of the array-encoded
     //   'revLicenseInfo' array in use at the point the standalone was built.
     kMCCapsuleSectionTypeLicense,
