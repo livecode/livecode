@@ -517,21 +517,49 @@ end toolsBuilderMakeAppBundle
 command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    -- Get the name of the app bundle that is being built
    local tOutputFileFolder
+   local tDmgFolder
    local tAppBundle
    put builderOutputFolder() into tOutputFileFolder
+   put builderOutputFolder() & slash & "DMG" into tDmgFolder
    put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
    
    -- DMG output filename
    local tDmgFile
-   put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) & ".dmg" into tDmgFile
+   local tTempDmg
+   put tOutputFileFolder & slash & getDmgFilenameStub(pVersion, pPlatform, pEdition) & ".dmg" into tDmgFile
+   put tOutputFileFolder & slash & getDmgFilenameStub(pVersion, pPlatform, pEdition) & "-rw.dmg" into tTempDmg
+   
+   -- Remove any stale DMG folder
+   if there is a folder tDmgFolder then
+      builderLog "message", "Removing old DMG directory"
+      get shell ("rm -r" && escapeArg(tDmgFolder))
+      if the result is not zero then
+         builderLog "error","Failed to remove old DMG directory:" && it
+         throw "failure"
+      end if
+   end if
+   
+   -- Create a new DMG folder
+   create folder tDmgFolder
+   
+   -- Copy the app bundle into the DMG contents folder
+   builderLog "message", "Copying app bundle into DMG directory"
+   get shell ("cp -R" && escapeArg(tAppBundle) && escapeArg(tDmgFolder & slash))
+   if the result is not zero then
+      builderLog "error", "Failed to copy app bundle into DMG directory:" && it
+      throw "failure"
+   end if
    
    builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
    if there is a file tDmgFile then
       delete file tDmgFile
-      if there is a file tDmgFile then
-         builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
-         throw "failure"
-      end if
+   end if
+   if there is a file tTempDmg then
+      delete file tTempDmg
+   end if
+   if there is a file tDmgFile or there is a file tTempDmg then
+      builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
+      throw "failure"
    end if
    
    -- The following is sometimes needed to work around bugs in hdiutil
@@ -539,17 +567,46 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
    --put empty into URL ("file:" & tTrashFile)
    
-   -- Create an "Applications" symlink to place in the DMG
-   -- This is a common helper shortcut added to OSX DMGs
-   local tApplicationsAlias
-   put tOutputFileFolder & slash & "Applications" into tApplicationsAlias
-   create alias tApplicationsAlias to "/Applications"
-
-   -- Do the DMG build
-   get shell("hdiutil create -fs HFS+ -format UDBZ -volname" && escapeArg(getBundleFilenameStub(pVersion, pPlatform, pEdition)) && "-srcfolder" && escapeArg(tAppBundle) && escapeArg(tDmgFile) && "-srcfolder" && escapeArg(tApplicationsAlias))
-   rename tDmgAppFolder to (tOutputFileStub & ".app")
+   -- Attempt to detach any DMGs with the name we're about to create
+   -- We ignore failures here as it may not be mounted and an already-mounted
+   -- disk will cause a very visible error during the next step.
+   local tVolumeName
+   put getBundleFilenameStub(pVersion, pPlatform, pEdition) into tVolumeName
+   get shell ("hdiutil detach" && escapeArg(tVolumeName))
+   
+   -- Generate an initial read-write DMG and mount it
+   builderLog "message", "Generating initial DMG"
+   get shell ("hdiutil create -fs HFS+ -format UDRW -attach -volname" && escapeArg(tVolumeName) && "-srcfolder" && escapeArg(tDmgFolder) && escapeArg(tTempDmg))
    if "created:" is not in it then
-      builderLog "error", "Dmg creation failed -" && the last line of it
+      builderLog "error", "Failed to create initial DMG:" && it
+      throw "failure"
+   end if
+   
+   -- Generate the multi-resolution TIFF for the DMG background image
+   local tBackgroundImage
+   put tOutputFileFolder & slash & "bg-" & pEdition & ".tiff" into tBackgroundImage
+   builderLog "message", "Generating DMG background image"
+   get shell ("tiffutil -cathidpicheck" && escapeArg(builderCommunityResourceFolder() & "/dmg/bg-" & pEdition & ".png") \
+         && escapeArg(builderCommunityResourceFolder() & "/dmg/bg-" & pEdition & "@2x.png") \
+         && "-out" && escapeArg(tBackgroundImage))
+   if the result is not zero then
+      builderLog "error","Failed to generate DMG background image:" && it
+      throw "failure"
+   end if
+   
+   -- Run the DMG prettifier script (this unmounts the DMG at the end)
+   builderLog "message", "Setting DMG background and styling"
+   get shell (builderRepoFolder() & "/tools/make-dmg-pretty.sh" && escapeArg(tVolumeName) && escapeArg(tBackgroundImage))
+   if it is not empty or the result is not zero then
+      builderLog "error", "Failed to apply DMG styling:" && it
+      throw "failure"
+   end if 
+   
+   -- Convert the DMG into a read-only, compressed DMG
+   builderLog "message", "Compressing DMG"
+   get shell ("hdiutil convert" && escapeArg(tTempDmg) && "-format UDBZ -o" && escapeArg(tDmgFile))
+   if the result is not zero or not line -1 of it begins with "created:" then
+      builderLog "error", "Failed to compress DMG:" && it
       throw "failure"
    end if
    
@@ -608,12 +665,25 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
    else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
       put "Linux" into pPlatform
    end if
-   if pEdition is "Community" then
-      return "LiveCodeCommunityInstaller-" & pVersion & "-" & pPlatform
-   else
-      return "LiveCodeInstaller-" & pVersion & "-" & pPlatform
-   end if
+   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "Installer-" & pVersion & "-" & pPlatform
 end getInstallerFilenameStub
+
+function getDmgFilenameStub pVersion, pPlatform, pEdition
+      set the itemDelimiter to "-"
+   if item 2 of pVersion is "gm" then
+      delete item -2 to -1 of pVersion
+   end if
+   replace "-" with "_" in pVersion
+   replace "." with "_" in pVersion
+   if pPlatform is "macosx" then
+      put "Mac" into pPlatform
+   else if pPlatform is "windows" then
+      put "Windows" into pPlatform
+   else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
+      put "Linux" into pPlatform
+   end if
+   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "-" & pVersion & "-" & pPlatform
+end getDmgFilenameStub
 
 function loadTextFile pFile
    get url ("binfile:" & pFile)
