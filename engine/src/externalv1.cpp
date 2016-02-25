@@ -280,8 +280,10 @@ static MCExternalError string_to_real(MCStringRef p_string, MCExternalValueOptio
 		return kMCExternalErrorNotANumber;
 	
 	// Now see if it has to be interpreted as an integer (0x or 0 prefix).
-	if (*s == '0' &&
-		(l >= 2 && (s[1] == 'X' || s[1] == 'x')) ||
+	// MDW-2016-02-24 : [[ fix_compiler_warnings]] t_error was not getting checked
+	//								also added many parentheses to placate compiler warnings
+	if ((*s == '0') &&
+		(l >= 2 && ((s[1] == 'X') || (s[1] == 'x'))) ||
 		options_get_convert_octals(p_options))
 	{
 		MCExternalError t_error;
@@ -514,6 +516,9 @@ MCExternalError MCExternalVariable::Append(MCExternalValueOptions p_options, MCE
 	MCExternalError t_error;
 	MCAutoStringRef t_string;
 	t_error = p_value -> GetString(p_options, &t_string);
+	// MDW-2016-02-24 : [[ fix_compiler_warnings]] t_error was not getting checked
+	if (t_error != kMCExternalErrorNone)
+		return t_error;
 	return AppendString(p_options, *t_string);
 }
 
@@ -1355,7 +1360,7 @@ MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_
 	if (!MCStringCreateWithBytes((byte_t*)p_commands, strlen(p_commands), kMCStringEncodingUTF8, false, &t_expr))
 		return kMCExternalErrorOutOfMemory;
 	
-	Exec_stat t_stat;
+	// MDW-2016-02-24 : [[ fix_compiler_warnings]] t_stat not used
     MCECptr -> doscript(*MCECptr, *t_expr, 0, 0);
 	if (MCECptr -> HasError())
 	{	
@@ -1481,7 +1486,10 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
 	if (p_value == nil)
 		return kMCExternalErrorNoValue;
     
+	// MDW-2016-02-24 : [[ fix_compiler_warnings]] t_error only used with Core Foundation
+#ifdef __HAS_CORE_FOUNDATION__
     MCExternalError t_error;
+#endif
 
 	switch(p_options & 0xff)
 	{
@@ -1524,7 +1532,7 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         MCAutoStringRef t_stringref;
         
-        char* t_string = *(char**)p_value;
+	// MDW-2016-02-24 : [[ fix_compiler_warnings]] t_string not used
         
         if (!MCStringCreateWithBytes(*(byte_t**)p_value, strlen(*(char**)p_value), kMCStringEncodingUTF8, false, &t_stringref))
             return kMCExternalErrorOutOfMemory;
@@ -2571,7 +2579,18 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 			case ES_ERROR:
 				*r_status = kMCExternalDispatchStatusError;
 				break;
-			}
+			// MDW-2016-02-24 : [[ fix_compiler_warnings]] for reference and to eliminate warnings
+			// these values are ignored
+			case ES_NEXT_REPEAT:
+			case ES_EXIT_REPEAT:
+			case ES_EXIT_HANDLER:
+			case ES_EXIT_SWITCH:
+			case ES_EXIT_ALL:
+			case ES_RETURN_HANDLER:
+			case ES_PASS_ALL:
+			case ES_NOT_FOUND:
+				break;
+ 			}
 	}
 
 	MCNameDelete(t_message_as_name);
