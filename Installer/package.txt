@@ -367,7 +367,8 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/js"
 
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
-		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]"
+		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
 
 	into [[ToolsFolder]]/Documentation/guides place
 		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
