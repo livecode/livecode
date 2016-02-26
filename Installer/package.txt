@@ -145,7 +145,6 @@ component Misc
 			textfile "private:about.txt"
 		textfile "ide:Open Source Licenses.txt"
 		file "repo:LiveCodeNotes-[[EscapedVersionTag]].pdf" as "Release Notes.pdf"
-		file "repo:LiveCodeUserGuide-[[EscapedVersionTag]].pdf" as "User Guide.pdf"
 		
 component Plugins
 	into [[ToolsFolder]]/Plugins place
@@ -341,8 +340,6 @@ component Resources
 component Documentation
 	into [[ToolsFolder]]/Documentation place
 		file "ide:Documentation/SearchEngineStandardUrls.txt"
-	into [[ToolsFolder]]/Documentation/pdf place
-		file "ide:Documentation/pdf/user_guide.pdf" as "LiveCode User Guide.pdf"
 	into [[ToolsFolder]]/Documentation/rev place
 		file "ide:Documentation/rev/Color Names Reference.rev"
 		file "ide:Documentation/rev/Database Types Reference.rev"
@@ -371,6 +368,9 @@ component Documentation
 
 	into [[ToolsFolder]]/Documentation/guides place
 		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
+	
+	into [[ToolsFolder]]/Documentation/pdf place
+		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
