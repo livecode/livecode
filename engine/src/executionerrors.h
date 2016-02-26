@@ -2472,6 +2472,9 @@ enum Exec_errors
     // SN-2014-12-15: [[ Bug 14211 ]] put ... into the next line of ... should return an error
     // {EE-0810} Chunk: bad extents provided
     EE_CHUNK_BADEXTENTS,
+	
+	// {EE-0811} external: unlicensed
+	EE_EXTERNAL_UNLICENSED,
 };
 
 extern const char *MCexecutionerrors;

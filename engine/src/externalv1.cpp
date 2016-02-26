@@ -53,6 +53,9 @@ typedef void (*MCExternalThreadOptionalCallback)(void *state);
 typedef void (*MCExternalThreadRequiredCallback)(void *state, int flags);
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] Update the interface version.
+// MW-2016-02-25: [[ LicenseCheck ]] We cannot bump the interface version without
+//   breaking existing built externals. Instead, we keep the version at 5 for 6.7
+//   and add a HasLicenseCheck tag to the Query call.
 #define kMCExternalInterfaceVersion 5
 
 enum
@@ -162,6 +165,8 @@ enum MCExternalError
 	kMCExternalErrorNoObjectPropertyValue = 35,
 	
 	kMCExternalErrorInvalidInterfaceQuery = 36,
+	
+	kMCExternalErrorUnlicensed = 42,
 };
 
 enum MCExternalContextQueryTag
@@ -185,6 +190,17 @@ enum MCExternalContextQueryTag
 	
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to fetch 'the wholeMatches'.
 	kMCExternalContextQueryWholeMatches,
+	
+	// SN-2014-07-01: [[ ExternalsApiV6 ]] These return a UTF16CString.
+	// These are unimplemented in 6.7.
+	kMCExternalContextQueryUnicodeItemDelimiter,
+	kMCExternalContextQueryUnicodeLineDelimiter,
+	kMCExternalContextQueryUnicodeColumnDelimiter,
+	kMCExternalContextQueryUnicodeRowDelimiter,
+	
+	// If fetching this accessor works, and it returns true then
+	// the license check API is present.
+	kMCExternalContextQueryHasLicenseCheck,
 };
 
 enum MCExternalVariableQueryTag
@@ -245,6 +261,14 @@ enum MCExternalDispatchStatus
 	kMCExternalDispatchStatusAbort,
 };
 
+enum MCExternalLicenseType
+{
+	kMCExternalLicenseTypeNone = 0,
+	kMCExternalLicenseTypeCommunity = 1000,
+	kMCExternalLicenseTypeIndy = 2000,
+	kMCExternalLicenseTypeBusiness = 3000,
+};
+
 enum MCExternalHandlerType
 {
 	kMCExternalHandlerTypeNone,
@@ -277,7 +301,7 @@ struct MCExternalInterface
 
 	//////////
 
-	MCExternalError (*context_query)(MCExternalContextQueryTag op, void *result);
+	MCExternalError (*context_query_legacy)(MCExternalContextQueryTag op, void *result);
 
 	//////////
 
@@ -338,6 +362,14 @@ struct MCExternalInterface
 	//   in the current context.
 	// MW-2013-06-21: [[ ExternalsApiV5 ]] Added binds parameters for future extension.
 	MCExternalError (*context_execute)(const char *p_expression, unsigned int options, MCExternalVariableRef *binds, unsigned int bind_count); // V5
+	
+	// SN-2015-01-26: [[ Bug 14057 ]] Update context query, to allow the user to set the return type
+	MCExternalError (*context_query)(MCExternalContextQueryTag op, MCExternalValueOptions p_options, void *r_result); // V6
+	
+	// MW-2016-02-17: [[ LicenseCheck ]] Method to check the licensing of the engine. This is
+	//   present either if interface version is V7, or the HasLicenseCheck query call returns
+	//   true.
+	MCExternalError (*license_check_edition)(unsigned int options, unsigned int min_edition); // V7
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -360,20 +392,39 @@ public:
 	virtual Handler_type GetHandlerType(uint32_t index) const;
 	virtual bool ListHandlers(MCExternalListHandlersCallback callback, void *state);
 	virtual Exec_stat Handle(MCObject *p_context, Handler_type p_type, uint32_t p_index, MCParameter *p_parameters);
-
+	
+	void SetWasLicensed(bool p_value);
+	
 private:
 	virtual bool Prepare(void);
 	virtual bool Initialize(void);
 	virtual void Finalize(void);
 
 	MCExternalInfo *m_info;
+	
+	// This is true if startup succeeded (returned true) and license_fail was
+	// not called.
+	bool m_licensed : 1;
+
+	// This is set to true if the last external handler call on this external
+	// did not call license_fail.
+	bool m_was_licensed : 1;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// This static variable is set to the currently executing external during
+// any calls to its exported functions (startup, shutdown etc.). It is used by
+// the license fail API to mark the external's was_licensed member as false.
+static MCExternalV1 *s_current_external = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalV1::MCExternalV1(void)
 {
 	m_info = nil;
+	m_licensed = false;
+	m_was_licensed = false;
 }
 
 MCExternalV1::~MCExternalV1(void)
@@ -387,8 +438,15 @@ bool MCExternalV1::Prepare(void)
 	MCExternalDescribeProc t_describe;
 	t_describe = (MCExternalDescribeProc)MCS_resolvemodulesymbol(m_module, "MCExternalDescribe");
 	
+	// Update the current external var.
+	s_current_external = this;
+	
 	// Query the info record - if this returns nil something odd is going on!
 	m_info = t_describe();
+	
+	// Unset the current external var.
+	s_current_external = nil;
+	
 	if (m_info == nil)
 		return false;
 
@@ -402,11 +460,28 @@ bool MCExternalV1::Initialize(void)
 	t_initialize = (MCExternalInitializeProc)MCS_resolvemodulesymbol(m_module, "MCExternalInitialize");
 	if (t_initialize == nil)
 		return true;
-
+	
+	// Make sure the 'was_licensed' instance var is true. A call to LicenseFail
+	// during startup will set it to false.
+	m_was_licensed = true;
+	
+	// Update the current external var.
+	s_current_external = this;
+	
 	// See if initialization succeeds.
-	if (!t_initialize(&g_external_interface))
+	bool t_success;
+	t_success = t_initialize(&g_external_interface);
+	
+	// Unset the current external var.
+	s_current_external = nil;
+	
+	if (!t_success)
 		return false;
-
+	
+	// If license fail was invoked during startup, we mark the whole external
+	// as unlicensed which means all calls to it will throw an error.
+	m_licensed = m_was_licensed;
+	
 	return true;
 }
 
@@ -417,8 +492,14 @@ void MCExternalV1::Finalize(void)
 	t_finalize = (MCExternalFinalizeProc)MCS_resolvemodulesymbol(m_module, "MCExternalFinalize");
 	if (t_finalize == nil)
 		return;
-
+	
+	// Update the current external var.
+	s_current_external = this;
+	
 	t_finalize();
+	
+	// Unset the current external var.
+	s_current_external = nil;
 }
 
 const char *MCExternalV1::GetName(void) const
@@ -454,7 +535,14 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 	t_handler = &m_info -> handlers[p_index];
 	if (t_handler -> type != t_type)
 		return ES_NOT_HANDLED;
-
+	
+	// If the external is not licensed (as a whole) then we throw the unlicensed error.
+	if (!m_licensed)
+	{
+		MCeerror -> add(EE_EXTERNAL_UNLICENSED, 0, 0, m_info -> name);
+		return ES_ERROR;
+	}
+	
 		Exec_stat t_stat;
 		t_stat = ES_NORMAL;
 
@@ -508,10 +596,25 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 			MCVariableValue t_result;
 			t_result . set_temporary();
 			t_result . assign_empty();
-
+			
+			// Update the current external var.
+			s_current_external = this;
+			
 			// Invoke the external handler. If 'false' is returned, treat the result as a
 			// string value containing an error hint.
-			if ((t_handler -> handler)(t_parameter_vars, t_parameter_count, &t_result))
+			bool t_success;
+			t_success = (t_handler -> handler)(t_parameter_vars, t_parameter_count, &t_result);
+			
+			// Unset the current external var.
+			s_current_external = nil;
+
+			// If a license check failed during the call, then we always throw an error.
+			if (!m_was_licensed)
+			{
+				MCeerror -> add(EE_EXTERNAL_UNLICENSED, 0, 0, m_info -> name);
+				t_stat = ES_ERROR;
+			}
+			else if (t_success)
 				MCresult -> getvalue() . exchange(t_result);
 			else
 			{
@@ -529,6 +632,11 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 
 		return t_stat;
 	}
+
+void MCExternalV1::SetWasLicensed(bool p_value)
+{
+	m_was_licensed = p_value;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1032,6 +1140,9 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 				return kMCExternalErrorOutOfMemory;
 			*(MCObjectHandle **)result = t_handle;
 		}
+		break;
+	case kMCExternalContextQueryHasLicenseCheck:
+		*(bool *)result = true;
 		break;
 	default:
 		return kMCExternalErrorInvalidContextQuery;
@@ -2046,6 +2157,44 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 	return kMCExternalErrorNone;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned int p_min_edition)
+{
+	unsigned int t_current_edition;
+	switch(MClicenseparameters . license_class)
+	{
+		case kMCLicenseClassNone:
+			t_current_edition = kMCExternalLicenseTypeNone;
+			break;
+			
+		case kMCLicenseClassCommunity:
+			t_current_edition = kMCExternalLicenseTypeCommunity;
+			break;
+			
+		case kMCLicenseClassCommercial:
+			t_current_edition = kMCExternalLicenseTypeIndy;
+			break;
+			
+		case kMCLicenseClassProfessional:
+			t_current_edition = kMCExternalLicenseTypeBusiness;
+			break;
+			
+		default:
+			abort();
+			break;
+	}
+	
+	if (t_current_edition < p_min_edition)
+	{
+		s_current_external -> SetWasLicensed(false);
+		return kMCExternalErrorUnlicensed;
+	}
+	
+	return kMCExternalErrorNone;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalInterface g_external_interface =
@@ -2092,6 +2241,12 @@ MCExternalInterface g_external_interface =
 	//   for the outside world.
 	MCExternalContextEvaluate,
 	MCExternalContextExecute,
+	
+	// This is the new 'ContextQuery' call in 7+, it is unimplemented in 6.7.
+	nil,
+
+	// MW-2016-02-17: [[ LicenseCheck ]] Declare the check call.
+	MCExternalLicenseCheckEdition,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
