@@ -423,6 +423,8 @@ static MCExternalV1 *s_current_external = nil;
 MCExternalV1::MCExternalV1(void)
 {
 	m_info = nil;
+	m_licensed = false;
+	m_was_licensed = false;
 }
 
 MCExternalV1::~MCExternalV1(void)
