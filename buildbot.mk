@@ -130,11 +130,13 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-dist-docs: dist-docs-community
-
 ifeq ($(BUILD_EDITION),commercial)
-dist-docs: dist-docs-commercial
+  dist-docs: dist-docs-commercial
+else
+  dist-docs: dist-docs-community
 endif
+
+dist-docs: dist-guide
 
 dist-docs-community:
 	mkdir -p $(docs_build_dir)
@@ -155,6 +157,11 @@ dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
 	    --stage notes --warn-as-error
+	    
+dist-guide:
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+	    --stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-server: dist-server-commercial
