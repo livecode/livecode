@@ -498,6 +498,20 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
       throw "failure"
    end if
    
+   -- Copy a shell script and AppleScript into the app bundle to catch attempts 
+   -- from old auto-updaters to launch the installer
+   builderLog "message", "Adding installer shim to app bundle"
+   get shell ("install -m755" && escapeArg(builderCommunityResourceFolder() & "/dmg/fake-installer.sh") && escapeArg(tAppBundle & "/Contents/MacOS/installer"))
+   if the result is not zero then
+      builderLog "error", "Failed to copy installer stub shell script:" && it
+      throw "failure"
+   end if
+   get shell ("osacompile" && "-o" && escapeArg(tAppBundle & "/Contents/MacOS/installer.scpt") && escapeArg(builderCommunityResourceFolder() & "/dmg/open-dmg.applescript"))
+   if the result is not zero then
+      builderLog "error", "Failed to compile installer stub AppleScript:" && it
+      throw "failure"
+   end if
+   
    -- Find the signing identity and sign the app bundle
    get findSigningIdentity()
    if it is not empty then
