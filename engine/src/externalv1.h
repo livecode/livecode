@@ -204,6 +204,8 @@ enum MCExternalError
     kMCExternalErrorNotASequence = 40,
     kMCExternalErrorCannotEncodeMap = 41,
 #endif
+	
+	kMCExternalErrorUnlicensed = 42,
 };
 
 enum MCExternalContextQueryTag
@@ -233,7 +235,11 @@ enum MCExternalContextQueryTag
     kMCExternalContextQueryUnicodeItemDelimiter,
     kMCExternalContextQueryUnicodeLineDelimiter,
     kMCExternalContextQueryUnicodeColumnDelimiter,
-    kMCExternalContextQueryUnicodeRowDelimiter,
+	kMCExternalContextQueryUnicodeRowDelimiter,
+	
+	// If fetching this accessor works, and it returns true then
+	// the license check API is present.
+	kMCExternalContextQueryHasLicenseCheck,
 };
 
 enum MCExternalVariableQueryTag
@@ -292,6 +298,14 @@ enum MCExternalDispatchStatus
     kMCExternalDispatchStatusError,
     kMCExternalDispatchStatusExit,
     kMCExternalDispatchStatusAbort,
+};
+
+enum MCExternalLicenseType
+{
+	kMCExternalLicenseTypeNone = 0,
+	kMCExternalLicenseTypeCommunity = 1000,
+	kMCExternalLicenseTypeIndy = 2000,
+	kMCExternalLicenseTypeBusiness = 3000,
 };
 
 enum MCExternalHandlerType
@@ -395,6 +409,9 @@ struct MCExternalInterface
     
     // SN-2015-01-26: [[ Bug 14057 ]] Update context query, to allow the user to set the return type
     MCExternalError (*context_query)(MCExternalContextQueryTag op, MCExternalValueOptions p_options, void *r_result); // V6
+	
+	// MW-2016-02-17: [[ LicenseCheck ]] Method to check the licensing of the engine
+	MCExternalError (*license_check_edition)(unsigned int options, unsigned int min_edition); // V7
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -519,13 +536,23 @@ public:
     virtual Handler_type GetHandlerType(uint32_t index) const;
     virtual bool ListHandlers(MCExternalListHandlersCallback callback, void *state);
     virtual Exec_stat Handle(MCObject *p_context, Handler_type p_type, uint32_t p_index, MCParameter *p_parameters);
-    
+	
+	void SetWasLicensed(bool p_value);
+	
 private:
     virtual bool Prepare(void);
     virtual bool Initialize(void);
     virtual void Finalize(void);
     
-    MCExternalInfo *m_info;
+	MCExternalInfo *m_info;
+	
+	// This is true if startup succeeded (returned true) and license_fail was
+	// not called.
+	bool m_licensed : 1;
+	
+	// This is set to true if the last external handler call on this external
+	// did not call license_fail.
+	bool m_was_licensed : 1;
 };
 
 #endif

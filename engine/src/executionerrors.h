@@ -2433,204 +2433,207 @@ enum Exec_errors
 	// IM-2013-09-22: [[ FullscreenMode ]]
 	// {EE-0800} fullscreenmode: not a valid mode
     EE_STACK_BADFULLSCREENMODE,
-
-    // {EE-0801} Import: no image selected, or image not open
-    EE_IMPORT_NOSELECTED,
-
-    // {EE-802} Resolve image: error in source expression
-    EE_RESOLVE_IMG_BADEXP,
-
-    // {EE-803} Internal BSDiff: error in old file expression
-    EE_INTERNAL_BSDIFF_BADOLD,
-
-    // {EE-804} Internal BSDiff: error in new file expression
-    EE_INTERNAL_BSDIFF_BADNEW,
-
-    // {EE-805} Internal BSDiff: error in patch filename expression
-    EE_INTERNAL_BSDIFF_BADPATCH,
-
-    // {EE-806} Internal Bootstrap: error in stack file
-    EE_INTERNAL_BOOTSTRAP_BADSTACK,
-
-    // {EE-807} IDE script configure: error in settings expression
-    EE_IDE_BADARRAY,
-
-    // {EE-808} IDE script replace: error in text expression
-    EE_IDE_BADTEXT,
-
-    // {EE-809} IDE script classify: error in script expression
-    EE_IDE_BADSCRIPT,
-
-    // {EE-810} IDE filter control: error in pattern expression
-    EE_IDE_BADPATTERN,
-
-    // {EE-811} Engine PutInto: error in variable expression
-    EE_ENGINE_PUT_BADVARIABLE,
-
-    // {EE-812} Engine DeleteVariableChunk: error in expression
-    EE_ENGINE_DELETE_BADVARCHUNK,
-
-    // {EE-813} IDE Extract: error in segment expression
-    EE_IDE_EXTRACT_BADSEGMENT,
-
-    // {EE-814} IDE Extract: error in section name expression
-    EE_IDE_EXTRACT_BADSECTION,
-
-    // {EE-815} IDE Extract: error in filename expression
-    EE_IDE_EXTRACT_BADFILENAME,
-    
-    // {EE-816} MCInternalPayloadPatch: error in output filename expression
-    EE_OUTPUT_BADFILENAME,
-    
-    // {EE-817} MCInternalListTasksWithModule: error in module expression
-    EE_INTERNAL_TASKS_BADMODULE,
-    
-    // {EE-818} MCInternalCanDeleteFile: error in filename expression
-    EE_INTERNAL_DELETE_BADFILENAME,
-    
-    // {EE-819} MCInternalCanDeleteKey: error in key expression
-    EE_INTERNAL_DELETE_BADKEY,
-
-    // {EE-820} MCHandler: error in expression
-    EE_HANDLER_BADEXP,
-    
-    // {EE-0821} textDecode: bad data expression
-    EE_TEXTDECODE_BADDATA,
-    
-    // {EE-0822} textDecode: bad text encoding expression
-    EE_TEXTDECODE_BADENCODING,
-    
-    // {EE-0823} textDecode: could not decode data
-    EE_TEXTDECODE_FAILED,
-    
-    // {EE-0824} textEncode: bad text expression
-    EE_TEXTENCODE_BADTEXT,
-    
-    // {EE-0825} textEncode: bad text encoding expression
-    EE_TEXTENCODE_BADENCODING,
-    
-    // {EE-0826} textEncode: could not encode text
-    EE_TEXTENCODE_FAILED,
-    
-    // {EE-0827} normalizeText: bad normal form
-    EE_NORMALIZETEXT_BADFORM,
-    
-    // {EE-0828} normalizeText: bad text expression
-    EE_NORMALIZETEXT_BADTEXT,
-    
-    // {EE-0829} codepointProperty: bad codepoint
-    EE_CODEPOINTPROPERTY_BADCODEPOINT,
-
-    // {EE-0830} codepointProperty: bad property name
-    EE_CODEPOINTPROPERTY_BADPROPERTY,
 	
 	// IM-2013-12-04: [[ PixelScale ]]
-	// {EE-0831} pixelScale: not a valid scale value
+	// {EE-0801} pixelScale: not a valid scale value
 	EE_PROPERTY_BADPIXELSCALE,
 	
 	// IM-2014-01-07: [[ StackScale ]]
-	// {EE-0832} scaleFactor: not a valid scale value
+	// {EE-0802} scaleFactor: not a valid scale value
 	EE_STACK_BADSCALEFACTOR,
-
+	
 	// IM-2014-01-30: [[ HiDPI ]]
-	// {EE-0833} pixelScale: the pixelScale property cannot be set on this platform
+	// {EE-0803} pixelScale: the pixelScale property cannot be set on this platform
 	EE_PROPERTY_PIXELSCALENOTSUPPORTED,
-
+	
 	// IM-2014-01-30: [[ HiDPI ]]
-	// {EE-0834} usePixelScaling: the usePixelScaling property cannot be set on this platform
+	// {EE-0804} usePixelScaling: the usePixelScaling property cannot be set on this platform
 	EE_PROPERTY_USEPIXELSCALENOTSUPPORTED,
-    
+	
 	// MM-2014-02-12: [[ SecureSocket ]]
-	// {EE-0835} secure: error in socket expression
+	// {EE-0805} secure: error in socket expression
 	EE_SECURE_BADNAME,
-    
-    // PM-2014-04-15: [[Bug 12105]]
-    // {EE-0836} paramCount: could not find handler
-    EE_PARAMCOUNT_NOHANDLER,
-
-    // SN-2014-05-06: [[ Bug 12360 ]]
-    // {EE-0837} open: bad text encoding
-    EE_OPEN_BADENCODING,
-    
-    // {EE-0838} open: unsupported encoding
-    EE_OPEN_UNSUPPORTED_ENCODING,
-    
-    // MW-2015-05-28: [[ Bug 12463 ]]
-    // {EE-0839} send: too many pending messages
-    EE_SEND_TOOMANYPENDING,
+	
+	// PM-2014-04-15: [[Bug 12105]]
+	// {EE-0806} paramCount: could not find handler
+	EE_PARAMCOUNT_NOHANDLER,
+	
+	// MW-2015-05-28: [[ Bug 12463 ]]
+	// {EE-0807} send: too many pending messages
+	EE_SEND_TOOMANYPENDING,
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] New variant secure socket <socket> with verification for host <host>
-	// {EE-0840} secure: error in host name expression
+	// {EE-0808} secure: error in host name expression
 	EE_SECURE_BADHOST,
 	
-    // MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
-	// {EE-0841} open: error in host name expression
+	// MM-2014-06-13: [[ Bug 12567 ]] New variant open socket <socket> with verification for host <host>
+	// {EE-0809} open: error in host name expression
 	EE_OPEN_BADHOST,
-    
-	// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
-    // {EE-0842} bidiDirection: error in source expression
-	EE_BIDIDIRECTION_BADSOURCE,
-    
-    // MW-2014-10-23: Improve the error message you get from 'start using <name>'
-    // {EE-0843} start: script of specified stack won't compile
-    EE_START_WONTCOMPILE,
-    
-    // SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
-    // {EE-0844} hostnameToAddress: callbacks are not allowed on server
-    EE_HOSTNAME_BADMESSAGE,
+	
+	// SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
+	// {EE-0810} Chunk: bad extents provided
+	EE_CHUNK_BADEXTENTS,
+	
+	// {EE-0811} external: unlicensed
+	EE_EXTERNAL_UNLICENSED,
 
-    // SN-2014-12-15: [[ Bug 14211 ]] Add an error when using a parsed bad extents (such as 'next')
-    // {EE-0845} Chunk: bad extents provided
-    EE_CHUNK_BADEXTENTS,
+    // {EE-0812} Import: no image selected, or image not open
+    EE_IMPORT_NOSELECTED,
+
+    // {EE-0813} Resolve image: error in source expression
+    EE_RESOLVE_IMG_BADEXP,
+
+    // {EE-0814} Internal BSDiff: error in old file expression
+    EE_INTERNAL_BSDIFF_BADOLD,
+
+    // {EE-0815} Internal BSDiff: error in new file expression
+    EE_INTERNAL_BSDIFF_BADNEW,
+
+    // {EE-0816} Internal BSDiff: error in patch filename expression
+    EE_INTERNAL_BSDIFF_BADPATCH,
+
+    // {EE-0817} Internal Bootstrap: error in stack file
+    EE_INTERNAL_BOOTSTRAP_BADSTACK,
+
+    // {EE-0818} IDE script configure: error in settings expression
+    EE_IDE_BADARRAY,
+
+    // {EE-0819} IDE script replace: error in text expression
+    EE_IDE_BADTEXT,
+
+    // {EE-0820} IDE script classify: error in script expression
+    EE_IDE_BADSCRIPT,
+
+    // {EE-0821} IDE filter control: error in pattern expression
+    EE_IDE_BADPATTERN,
+
+    // {EE-0822} Engine PutInto: error in variable expression
+    EE_ENGINE_PUT_BADVARIABLE,
+
+    // {EE-0823} Engine DeleteVariableChunk: error in expression
+    EE_ENGINE_DELETE_BADVARCHUNK,
+
+    // {EE-0824} IDE Extract: error in segment expression
+    EE_IDE_EXTRACT_BADSEGMENT,
+
+    // {EE-0825} IDE Extract: error in section name expression
+    EE_IDE_EXTRACT_BADSECTION,
+
+    // {EE-0826} IDE Extract: error in filename expression
+    EE_IDE_EXTRACT_BADFILENAME,
     
-    // {EE-0846} Error evaluating expression
+    // {EE-0827} MCInternalPayloadPatch: error in output filename expression
+    EE_OUTPUT_BADFILENAME,
+    
+    // {EE-0828} MCInternalListTasksWithModule: error in module expression
+    EE_INTERNAL_TASKS_BADMODULE,
+    
+    // {EE-0829} MCInternalCanDeleteFile: error in filename expression
+    EE_INTERNAL_DELETE_BADFILENAME,
+    
+    // {EE-0830} MCInternalCanDeleteKey: error in key expression
+    EE_INTERNAL_DELETE_BADKEY,
+
+    // {EE-0831} MCHandler: error in expression
+    EE_HANDLER_BADEXP,
+    
+    // {EE-0832} textDecode: bad data expression
+    EE_TEXTDECODE_BADDATA,
+    
+    // {EE-0833} textDecode: bad text encoding expression
+    EE_TEXTDECODE_BADENCODING,
+    
+    // {EE-0834} textDecode: could not decode data
+    EE_TEXTDECODE_FAILED,
+    
+    // {EE-0835} textEncode: bad text expression
+    EE_TEXTENCODE_BADTEXT,
+    
+    // {EE-0836} textEncode: bad text encoding expression
+    EE_TEXTENCODE_BADENCODING,
+    
+    // {EE-0837} textEncode: could not encode text
+    EE_TEXTENCODE_FAILED,
+    
+    // {EE-0838} normalizeText: bad normal form
+    EE_NORMALIZETEXT_BADFORM,
+    
+    // {EE-0839} normalizeText: bad text expression
+    EE_NORMALIZETEXT_BADTEXT,
+    
+    // {EE-0840} codepointProperty: bad codepoint
+    EE_CODEPOINTPROPERTY_BADCODEPOINT,
+
+    // {EE-0841} codepointProperty: bad property name
+    EE_CODEPOINTPROPERTY_BADPROPERTY,
+	
+	// SN-2014-05-06: [[ Bug 12360 ]]
+	// {EE-0842} open: bad text encoding
+	EE_OPEN_BADENCODING,
+	
+	// {EE-0843} open: unsupported encoding
+	EE_OPEN_UNSUPPORTED_ENCODING,
+	
+	// AL-2014-10-17: [[ BiDi ]] Returns the result of applying the bi-directional algorithm to text
+	// {EE-0844} bidiDirection: error in source expression
+	EE_BIDIDIRECTION_BADSOURCE,
+	
+	// MW-2014-10-23: Improve the error message you get from 'start using <name>'
+	// {EE-0845} start: script of specified stack won't compile
+	EE_START_WONTCOMPILE,
+	
+	// SN-2014-12-16: [[ Bug 14181 ]] hostnameToAddress should have no message on server
+	// {EE-0846} hostnameToAddress: callbacks are not allowed on server
+	EE_HOSTNAME_BADMESSAGE,
+
+    // {EE-0847} Error evaluating expression
     EE_EXPR_EVALERROR,
     
-    // {EE-0847} Property: value is not a character
+    // {EE-0848} Property: value is not a character
     EE_PROPERTY_NAC,
     
-    // {EE-0848} Property: value is not a string
+    // {EE-0849} Property: value is not a string
     EE_PROPERTY_NAS,
     
-    // {EE-0849} Property: value is not a color
+    // {EE-0850} Property: value is not a color
     EE_PROPERTY_NOTACOLOR,
     
-    // {EE-0850} Property: value is not a rectangle
+    // {EE-0851} Property: value is not a rectangle
     EE_PROPERTY_NOTARECT,
     
-    // {EE-0851} Property: value is not a point
+    // {EE-0852} Property: value is not a point
     EE_PROPERTY_NOTAPOINT,
     
-    // {EE-0852} Property: value is not a pair of integers
+    // {EE-0853} Property: value is not a pair of integers
     EE_PROPERTY_NOTAINTPAIR,
     
-    // {EE-0853} Property: value is not a quadruple of integers
+    // {EE-0854} Property: value is not a quadruple of integers
     EE_PROPERTY_NOTAINTQUAD,
     
-    // {EE-0854} Property: invalid enumeration value
+    // {EE-0855} Property: invalid enumeration value
     EE_PROPERTY_BADENUMVALUE,
     
-    // {EE-0855} Backdrop: invalid value
+    // {EE-0856} Backdrop: invalid value
     EE_BACKDROP_INVALIDVALUE,
     
-    // {EE-0856} Property: value is not an array
+    // {EE-0857} Property: value is not an array
     EE_PROPERTY_NOTANARRAY,
     
-    // {EE-0857} MCInternalPayloadPatch: error in patch item expression
+    // {EE-0858} MCInternalPayloadPatch: error in patch item expression
     EE_INTERNAL_PATCH_BADITEM,
     
-    // {EE-0858} MCInternalPayloadPatch: error in base item expression
+    // {EE-0859} MCInternalPayloadPatch: error in base item expression
     EE_INTERNAL_BASE_BADITEM,
 
 	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0859} floor: bad parameter
+	// {EE-0860} floor: bad parameter
 	EE_FLOOR_BADSOURCE,
 
 	// MDW-2014-09-28: [[ feature_floor ]]
-	// {EE-0860} ceil: bad parameter
+	// {EE-0861} ceil: bad parameter
     EE_CEIL_BADSOURCE,
 
-    // {EE-861} commandArguments: bad parameter
+    // {EE-0862} commandArguments: bad parameter
     EE_COMMANDARGUMENTS_BADPARAM,
 };
 

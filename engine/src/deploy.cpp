@@ -330,16 +330,51 @@ static bool MCDeployWriteDefinePrologueSection(const MCDeployParameters& p_param
 	return MCDeployCapsuleDefine(p_capsule, kMCCapsuleSectionTypePrologue, &t_prologue, sizeof(t_prologue));
 }
 
+static bool MCDeployWriteDefineLicenseSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
+{
+	// The edition byte encoding is development/standalone engine pair
+	// specific.
+	unsigned char t_edition;
+	switch(MClicenseparameters . license_class)
+	{
+		case kMCLicenseClassNone:
+			t_edition = 0;
+			break;
+			
+		case kMCLicenseClassCommunity:
+			t_edition = 1;
+			break;
+			
+		case kMCLicenseClassCommercial:
+			t_edition = 2;
+			break;
+			
+		case kMCLicenseClassProfessional:
+			t_edition = 3;
+			break;
+	}
+	
+	return MCDeployCapsuleDefine(p_capsule,
+								 kMCCapsuleSectionTypeLicense,
+								 &t_edition,
+								 sizeof(t_edition));
+}
+
 // This method generates the standalone specific capsule elements. This is
 // just a Standalone Prologue section at the moment.
 static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
 {
 	bool t_success;
 	t_success = true;
-
+	
+	// First emit the prologue.
 	if (t_success)
 		t_success = MCDeployWriteDefinePrologueSection(p_params, p_capsule);
-
+	
+	// Next emit the license info.
+	if (t_success)
+		t_success = MCDeployWriteDefineLicenseSection(p_params, p_capsule);
+	
 	return t_success;
 }
 
