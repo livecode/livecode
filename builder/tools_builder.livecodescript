@@ -491,7 +491,17 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    -- Remove the list of installed files from the app bundle (it isn't needed)
    delete file tAppBundle & "/.setup.txt"
    
-   -- Remove the copy of the installer from the app bundle
+   -- Copy just the executable out of the installer to use as the auto-updater
+   -- (on OSX, the payload is separate and is un-neccessary)
+   builderLog "message", "Adding auto-updater to app bundle"
+   get shell ("cp" && escapeArg(tAppBundle & "/LiveCode Setup.app/Contents/MacOS/Installer") && escapeArg(tAppBundle & "/Contents/MacOS/autoupdater"))
+   if the result is not zero then
+      builderLog "error", "Failed to add auto-updater:" && it
+      throw "failure"
+   end if
+   
+   -- Remove the rest of the installer from the app bundle
+   builderLog "message", "Removing installer from app bundle"
    get shell("rm -r" && escapeArg(tAppBundle & "/LiveCode Setup.app"))
    if the result is not zero then
       builderLog "error", "Failed to clean macosx app bundle:" & it
