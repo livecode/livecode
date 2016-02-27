@@ -282,9 +282,9 @@ static MCExternalError string_to_real(MCStringRef p_string, MCExternalValueOptio
 	// Now see if it has to be interpreted as an integer (0x or 0 prefix).
 	// MDW-2016-02-24 : [[ fix_compiler_warnings]] t_error was not getting checked
 	//								also added many parentheses to placate compiler warnings
-	if ((*s == '0') &&
-		(l >= 2 && ((s[1] == 'X') || (s[1] == 'x'))) ||
-		options_get_convert_octals(p_options))
+	if (*s == '0' &&
+		((l >= 2 && ((s[1] == 'X') || (s[1] == 'x'))) ||
+		options_get_convert_octals(p_options)))
 	{
 		MCExternalError t_error;
         MCAutoStringRef t_substring;
