@@ -865,7 +865,7 @@ IO_stat MCDispatch::startup(void)
 		MCExecValue t_value;
 		t_value . int_value = (integer_t)t_info . banner_timeout;
 		t_value . type = kMCExecValueTypeInt;
-		t_banner_stack -> setcustomprop(ctxt, kMCEmptyName, MCNAME("uTimeout"), t_value);
+		t_banner_stack -> setcustomprop(ctxt, kMCEmptyName, MCNAME("uTimeout"), nil, t_value);
 		
 		t_banner_stack -> open();
 		double t_end_time;
