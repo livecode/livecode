@@ -132,11 +132,13 @@ UPLOAD_MAX_RETRIES = 50
 
 ifeq ($(BUILD_EDITION),commercial)
   dist-docs: dist-docs-commercial
+  dist-docs: dist-guide-commercial
 else
   dist-docs: dist-docs-community
+  dist-docs: dist-guide-community
 endif
 
-dist-docs: dist-guide
+
 
 dist-docs-community:
 	mkdir -p $(docs_build_dir)
@@ -158,9 +160,20 @@ dist-notes:
 	$(buildtool_command) --platform $(buildtool_platform) \
 	    --stage notes --warn-as-error
 	    
-dist-guide:
+dist-guide-community:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
+		--edition community \
+	    --stage guide --warn-as-error
+	    
+dist-guide-commercial:
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+		--edition indy \
+	    --stage guide --warn-as-error
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+		--edition business \
 	    --stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
