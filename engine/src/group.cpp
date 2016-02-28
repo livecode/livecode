@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "objectstream.h"
 #include "widget.h"
+#include "dispatch.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -618,7 +619,12 @@ bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
                 // The widget event manager handles enter/leave itself
                 if (newfocused && mfocused != nil &&
                     mfocused -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
                     mfocused -> gettype() != CT_WIDGET)
+#else
+                    (MCdispatcher -> isdragtarget() ||
+                     mfocused -> gettype() != CT_WIDGET))
+#endif
                 {
                         mfocused->enter();
                         
