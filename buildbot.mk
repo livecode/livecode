@@ -133,12 +133,10 @@ UPLOAD_MAX_RETRIES = 50
 ifeq ($(BUILD_EDITION),commercial)
   dist-docs: dist-docs-commercial
   dist-docs: dist-guide-commercial
-else
-  dist-docs: dist-docs-community
-  dist-docs: dist-guide-community
 endif
 
-
+dist-docs: dist-docs-community
+dist-docs: dist-guide-community
 
 dist-docs-community:
 	mkdir -p $(docs_build_dir)
