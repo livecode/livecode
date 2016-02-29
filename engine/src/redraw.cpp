@@ -272,7 +272,7 @@ void MCControl::layer_redrawall(void)
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -294,7 +294,7 @@ void MCControl::layer_redrawrect(const MCRectangle& p_dirty_rect)
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -323,7 +323,7 @@ void MCControl::layer_transientchangedandredrawall(int32_t p_old_transient)
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -348,7 +348,7 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 	
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 	
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -379,7 +379,7 @@ void MCControl::layer_rectchanged(const MCRectangle& p_old_rect, bool p_redraw_a
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 	
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -414,7 +414,7 @@ void MCControl::layer_effectiverectchangedandredrawall(const MCRectangle& p_old_
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 	
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -436,7 +436,7 @@ void MCControl::layer_visibilitychanged(const MCRectangle& p_old_effective_rect)
 	if (!opened)
 		return;
 
-	if (!parent -> isvisible() && !MCshowinvisibles)
+	if (!parent -> isvisible() && !showinvisible())
 		return;
 
 	// If the control is currently visible, then its old rect must have been
@@ -480,7 +480,7 @@ void MCControl::layer_scrolled(void)
 		
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If the layer isn't scrolling, we must redraw the whole thing. Otherwise
 	// we just need to invalidate a portion of the card.
@@ -621,7 +621,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 {
 	// Compute the 'new' effectiverect based on visibility.
 	MCRectangle t_new_effective_rect;
-	if (getflag(F_VISIBLE) || MCshowinvisibles)
+	if (getflag(F_VISIBLE) || showinvisible())
 		t_new_effective_rect = geteffectiverect();
 	else
 		MCU_set_rect(t_new_effective_rect, 0, 0, 0, 0);
@@ -1132,7 +1132,7 @@ void MCCard::render(void)
 
 			// Now compute the layer's region/clip.
 			MCRectangle t_layer_region, t_layer_clip;
-			if (!t_control -> getflag(F_VISIBLE) && !MCshowinvisibles)
+			if (!t_control -> getflag(F_VISIBLE) && !showinvisible())
 			{
 				// Invisible layers just have empty region/clip.
 				t_layer_region = MCU_make_rect(0, 0, 0, 0);

@@ -856,7 +856,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_FTP_PROXY:
 	case P_HTTP_HEADERS:
 	case P_HTTP_PROXY:
-	case P_SHOW_INVISIBLES:
 	case P_SOCKET_TIMEOUT:
 	case P_RANDOM_SEED:
 	case P_ADDRESS:
@@ -1039,6 +1038,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_UNDERLINE_LINKS:
 	case P_SELECT_GROUPED_CONTROLS:
 	case P_ICON:
+	case P_SHOW_INVISIBLES:
 		if (sp.next(type) != PS_NORMAL)
 			break;
 		if (which < P_FIRST_ARRAY_PROP)

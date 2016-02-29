@@ -95,6 +95,16 @@ extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCStackObjectVisibility
+{
+	kMCStackObjectVisibilityDefault,
+	
+	kMCStackObjectVisibilityShow,
+	kMCStackObjectVisibilityHide,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated the API so you can now lock multiple areas of the surface.
 //  The context and raster for the locked area must now be stored locally rather than directly in the surface.
 class MCStackSurface
@@ -294,6 +304,9 @@ protected:
     virtual MCPlatformControlPart getcontrolsubpart();
 
     MCStackAttachment *m_attachments;
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Determines whether or not to show hidden objects.
+	MCStackObjectVisibility m_hidden_object_visibility;
     
 public:
 	Boolean menuwindow;
@@ -359,6 +372,10 @@ public:
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
 	virtual bool recomputefonts(MCFontRef parent_font, bool force);
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Return true if invisible objects on this stack should be drawn.
+	MCStackObjectVisibility gethiddenobjectvisibility();
+	void sethiddenobjectvisibility(MCStackObjectVisibility p_visibility);
 	
 	//////////
 	// view interface
@@ -1226,6 +1243,10 @@ public:
     // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
     void GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename);
     void SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename);
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
+	void GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles);
+	void SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);

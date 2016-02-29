@@ -2218,3 +2218,34 @@ void MCStack::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
     MCObject::SetTheme(ctxt, p_theme);
     MCRedrawDirtyScreen();
 }
+
+void MCStack::GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles)
+{
+	MCStackObjectVisibility t_visibility;
+	t_visibility = gethiddenobjectvisibility();
+	
+	switch (gethiddenobjectvisibility())
+	{
+		case kMCStackObjectVisibilityDefault:
+			r_show_invisibles = nil;
+			break;
+			
+		case kMCStackObjectVisibilityShow:
+			*r_show_invisibles = true;
+			break;
+			
+		case kMCStackObjectVisibilityHide:
+			*r_show_invisibles = false;
+			break;
+	}
+}
+
+void MCStack::SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles)
+{
+	if (p_show_invisibles == nil)
+		sethiddenobjectvisibility(kMCStackObjectVisibilityDefault);
+	else if (*p_show_invisibles)
+		sethiddenobjectvisibility(kMCStackObjectVisibilityShow);
+	else
+		sethiddenobjectvisibility(kMCStackObjectVisibilityHide);
+}

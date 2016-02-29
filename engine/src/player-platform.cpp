@@ -997,7 +997,7 @@ Boolean MCPlayer::kup(MCStringRef p_string, KeySym key)
 
 Boolean MCPlayer::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
         || flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE)
 		return False;
     

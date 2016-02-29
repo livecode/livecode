@@ -85,7 +85,7 @@ static void getcells(uint2 &xcells, uint2 &ycells)
 
 Boolean MCColors::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	if (state & CS_MOVE || state & CS_SIZE)
 		return MCControl::mfocus(x, y);

@@ -585,7 +585,7 @@ Boolean MCButton::kfocusnext(Boolean top)
 {
 	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
 		 && !(flags & F_AUTO_ARM) && entry == NULL)
-	        || !(flags & F_VISIBLE || MCshowinvisibles)
+	        || !(flags & F_VISIBLE || showinvisible())
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
 	return True;
@@ -595,7 +595,7 @@ Boolean MCButton::kfocusprev(Boolean bottom)
 {
 	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
 		 && !(flags & F_AUTO_ARM) && entry == NULL)
-	        || !(flags & F_VISIBLE || MCshowinvisibles)
+	        || !(flags & F_VISIBLE || showinvisible())
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
 	return True;
@@ -950,7 +950,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 		handled; */
 		return True;
 	}
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 		|| (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	Tool tool = getstack()->gettool(this);
@@ -2761,7 +2761,7 @@ Boolean MCButton::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCButton::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle trect = rect;
 	if (getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL)

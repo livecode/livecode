@@ -663,6 +663,10 @@ public:
 	// Returns the visibility of the object. If effective is true then only returns true if the parent (and its parent, etc.) is also visible.
 	bool isvisible(bool p_effective = true);
 	
+	// IM-2016-02-26: [[ Bug 16244 ]]
+	// Returns whether to show this object when its 'visible' property is false
+	bool showinvisible();
+	
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
 	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
