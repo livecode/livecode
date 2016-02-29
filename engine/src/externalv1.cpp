@@ -888,7 +888,11 @@ bool MCExternalV1::Initialize(void)
 	
 	if (!t_success)
 		return false;
-
+    
+    // If license fail was invoked during startup, we mark the whole external
+    // as unlicensed which means all calls to it will throw an error.
+    m_licensed = m_was_licensed;
+    
 	return true;
 }
 
