@@ -68,7 +68,13 @@ The stack is open but has been collapsed (Mac OS), iconified (Unix), or minimize
 13: drawer
 The stack is open as a drawer beside another window. A stack has this <mode> if it was opened with the <drawer> <command>.
 
-If two stacks with different modes are open, the stack whose <mode> <property> is lower takes precedence when determining which <stack> is the <topStack>. This means, for example, that menu items (such as Object menu<img src="202656"/>Stack Properties<important/>) that act on the current s may not be able to operate correctly with a stack whose cantModify is set to true (and whose <mode> is therefore 2) as long as another, modifiable <a/>s (<mode> equal to 1) is open.
+If two stacks with different modes are open, the stack whose <mode> 
+<property> is lower takes precedence when determining which <stack> is 
+the <topStack>. This means, for example, that menu items (such as 
+Object menu > Stack Properties that act on the current <stack> may not 
+be able to operate correctly with a stack whose <cantModify> is set to 
+true (and whose <mode> is therefore 2) as long as another, modifiable 
+stack (<mode> equal to 1) is open.
 
 References: style (property), menuMode (property), cantModify (property), destroyStack (property), integer (keyword), button (keyword), palette (command), topLevel (command), popup (command), modal (command), pulldown (command), sheet (command), drawer (command), modeless (command), stack (object), property (glossary), modal dialog box (glossary), command (glossary), popup menu (glossary), OS X (glossary), platform (function), topStack (function)
 
