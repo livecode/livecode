@@ -381,7 +381,7 @@ private handler updateParameters() returns nothing
 
 	
 	put the number of elements in mDataList into mDataCount
-	put mRowHeight * the ceiling of (mDataCount / mNumRows) into mDataHeight
+	put mRowHeight * the ceiling of (mDataCount / mNumCols) into mDataHeight
 	
 	put mDataHeight - mViewHeight into mDataTravel
 	if mDataTravel < 0 then
