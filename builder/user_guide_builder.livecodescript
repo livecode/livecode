@@ -29,7 +29,7 @@ command guideBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
    builderLog "report", "Building user guide for version" && pVersion
    
    try
-      Initialize pVersion, pOutputDir
+      Initialize pEdition, pVersion, pOutputDir
       
       BaseCreate
             
