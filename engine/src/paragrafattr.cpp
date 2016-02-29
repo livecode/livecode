@@ -194,8 +194,9 @@ void MCParagraph::fetchattrs(MCArrayRef src)
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("padding"), false, t_uint_value))
         SetPadding(ctxt, &t_uint_value);
 
-    if (ctxt . CopyElementAsInteger(src, MCNAME("listIndex"), false, t_integer_value))
-        SetListIndent(ctxt, &t_integer_value);
+	// PM-2016-02-26: [[ Bug 17019 ]] Make sure listIndex is set correctly
+    if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listIndex"), false, t_uint_value))
+        SetListIndex(ctxt, &t_uint_value);
 }
 
 IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
