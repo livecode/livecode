@@ -1393,6 +1393,10 @@ bool MCObject::showinvisible()
 			
 		case kMCStackObjectVisibilityHide:
 			return false;
+
+		default:
+			MCUnreachable();
+			return false;
 	}
 }
 
