@@ -514,7 +514,7 @@ bool MCCard::mfocus_control(int2 x, int2 y, bool p_check_selected)
     bool t_freed;
     do
     {
-        MCObject *t_tptr_object;
+        MCControl *t_tptr_object;
         t_tptr_object = tptr -> getref();
         
         t_freed = false;
@@ -529,9 +529,20 @@ bool MCCard::mfocus_control(int2 x, int2 y, bool p_check_selected)
             }
         }
         
-        // Only check mfocus for objects with the appropriate selection state
-        if ((p_check_selected == tptr -> getref() -> getstate(CS_SELECTED))
-            && t_tptr_object->mfocus(x, y))
+        bool t_focused;
+        if (p_check_selected)
+        {
+            // On the first pass (checking selected objects), just check
+            // if the object is selected and the mouse is inside a resize handle.
+            t_focused = t_tptr_object -> getstate(CS_SELECTED)
+                        && t_tptr_object -> sizehandles(x, y) != 0;
+        }
+        else
+        {
+            t_focused = t_tptr_object->mfocus(x, y);
+        }
+        
+        if (t_focused)
         {
             // MW-2010-10-28: If mfocus calls relayer, then the objptrs can get changed.
             //   Reloop to find the correct one.

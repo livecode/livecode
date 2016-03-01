@@ -1,0 +1,1 @@
+# Check selected object handles for focus first, rather than objects themselves

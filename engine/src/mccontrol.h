@@ -170,7 +170,7 @@ public:
 	void drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 	               Arrow_direction dir, Boolean border, Boolean hilite);
 	void continuesize(int2 x, int2 y);
-	uint2 sizehandles();
+	uint2 sizehandles(int2 px, int2 py);
 	void start(Boolean canclone);
 	void end(bool p_send_mouse_up, bool p_release);
 	void create(int2 x, int2 y);

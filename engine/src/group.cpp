@@ -600,9 +600,20 @@ bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
                 }
             }
             
-            // Only check mfocus for objects with the appropriate selection state
-            if ((p_check_selected == tptr -> getstate(CS_SELECTED))
-                && tptr -> mfocus(x, y))
+            bool t_focused;
+            if (p_check_selected)
+            {
+                // On the first pass (checking selected objects), just check
+                // if the object is selected and the mouse is inside a resize handle.
+                t_focused = tptr -> getstate(CS_SELECTED)
+                && tptr -> sizehandles(x, y) != 0;
+            }
+            else
+            {
+                t_focused = tptr->mfocus(x, y);
+            }
+            
+            if (t_focused)
             {
                 Boolean newfocused = tptr != mfocused;
                 
