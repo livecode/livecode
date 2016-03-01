@@ -373,9 +373,12 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
 	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 	
-	// IM-2016-02-26: [[ Bug 16244 ]] Return true if invisible objects on this stack should be drawn.
+	// IM-2016-02-26: [[ Bug 16244 ]] Return visibility of hidden objects - show, hide, or inherited from MCshowinvisibles.
 	MCStackObjectVisibility gethiddenobjectvisibility();
 	void sethiddenobjectvisibility(MCStackObjectVisibility p_visibility);
+
+	// IM-2016-03-01: [[ Bug 16244 ]] Return true if invisible objects on this stack should be drawn.
+	bool geteffectiveshowinvisibleobjects();
 	
 	//////////
 	// view interface
@@ -1247,6 +1250,7 @@ public:
 	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
 	void GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles);
 	void SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles);
+	void GetEffectiveShowInvisibleObjects(MCExecContext &ctxt, bool &r_show_invisibles);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);

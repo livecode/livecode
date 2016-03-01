@@ -2249,3 +2249,8 @@ void MCStack::SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibl
 	else
 		sethiddenobjectvisibility(kMCStackObjectVisibilityHide);
 }
+
+void MCStack::GetEffectiveShowInvisibleObjects(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = geteffectiveshowinvisibleobjects();
+}

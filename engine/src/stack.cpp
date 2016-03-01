@@ -203,7 +203,8 @@ MCPropertyInfo MCStack::kProperties[] =
     DEFINE_RW_OBJ_PROPERTY(P_DOCUMENT_FILENAME, String, MCStack, DocumentFilename)
 	
 	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
-	DEFINE_RW_OBJ_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, Bool, MCStack, ShowInvisibleObjects)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -3530,5 +3531,24 @@ void MCStack::sethiddenobjectvisibility(MCStackObjectVisibility p_visibility)
 	{
 		// Visibility of objects has changed so redraw the stack.
 		view_dirty_all();
+	}
+}
+
+bool MCStack::geteffectiveshowinvisibleobjects()
+{
+	switch (gethiddenobjectvisibility())
+	{
+		case kMCStackObjectVisibilityDefault:
+			return MCshowinvisibles;
+			
+		case kMCStackObjectVisibilityShow:
+			return true;
+			
+		case kMCStackObjectVisibilityHide:
+			return false;
+
+		default:
+			MCUnreachable();
+			return false;
 	}
 }

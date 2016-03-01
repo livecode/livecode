@@ -1383,21 +1383,7 @@ bool MCObject::showinvisible()
 	if (t_stack == nil)
 		return false;
 	
-	switch (t_stack->gethiddenobjectvisibility())
-	{
-		case kMCStackObjectVisibilityDefault:
-			return MCshowinvisibles;
-			
-		case kMCStackObjectVisibilityShow:
-			return true;
-			
-		case kMCStackObjectVisibilityHide:
-			return false;
-
-		default:
-			MCUnreachable();
-			return false;
-	}
+	return t_stack->geteffectiveshowinvisibleobjects();
 }
 
 Boolean MCObject::resizeparent()
