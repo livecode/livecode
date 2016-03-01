@@ -357,6 +357,8 @@ component Documentation
 	into [[ToolsFolder]]/Documentation place
 		rfolder "repo:docs/guides"
 		rfolder "ide:Documentation/guides"
+	
+	into [[ToolsFolder]]/Documentation/html_viewer place
 		file "ide:Documentation/html_viewer/api.html.template"
 		file "ide:Documentation/html_viewer/guide.html.template"
 		rfolder "ide:Documentation/html_viewer/css"
