@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "lnxflst.h"
 #include "packed.h"
+#include "platform.h"
 
 #include <pango/pangoft2.h>
 #include <glib.h>
@@ -167,18 +168,37 @@ MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_
 	t_font -> next = m_fonts;
 	m_fonts = t_font;
 
-    uindex_t t_offset;
+    // If the font name identifies one of the special fonts, resolve it
     MCAutoStringRef t_family_name;
-    MCStringRef t_family_string = MCNameGetString(p_family);
-    if (MCStringFirstIndexOfChar(t_family_string, ',', 0, kMCStringOptionCompareExact, t_offset))
+    if (MCNameIsEqualTo(p_family, MCN_font_usertext))
+        MCPlatformGetControlThemePropString(kMCPlatformControlTypeInputField, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
+    else if (MCNameIsEqualTo(p_family, MCN_font_menutext))
+        MCPlatformGetControlThemePropString(kMCPlatformControlTypeMenu, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
+    else if (MCNameIsEqualTo(p_family, MCN_font_content))
+        MCPlatformGetControlThemePropString(kMCPlatformControlTypeInputField, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
+    else if (MCNameIsEqualTo(p_family, MCN_font_message))
+        MCPlatformGetControlThemePropString(kMCPlatformControlTypeButton, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
+    else if (MCNameIsEqualTo(p_family, MCN_font_tooltip))
+        MCPlatformGetControlThemePropString(kMCPlatformControlTypeLabel, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
+    else if (MCNameIsEqualTo(p_family, MCN_font_system))
+        MCPlatformGetControlThemePropString(kMCPlatformControlTypeGeneric, kMCPlatformControlPartNone, kMCPlatformControlStateNormal, kMCPlatformThemePropertyTextFont, &t_family_name);
+    else
+    {
+        uindex_t t_offset;
+        MCStringRef t_family_string = MCNameGetString(p_family);
+        if (MCStringFirstIndexOfChar(t_family_string, ',', 0, kMCStringOptionCompareExact, t_offset))
         {
             MCStringCopySubstring(t_family_string, MCRangeMake(0, t_offset), &t_family_name);
-            t_family_string = *t_family_name;
         }
+        else
+        {
+            t_family_name = t_family_string;
+        }
+    }
 
 	t_font -> description = pango_font_description_new();
     MCAutoStringRefAsSysString t_font_family;
-    /* UNCHECKED */ t_font_family.Lock(t_family_string);
+    /* UNCHECKED */ t_font_family.Lock(*t_family_name);
     pango_font_description_set_family(t_font -> description, *t_font_family);
 	pango_font_description_set_absolute_size(t_font -> description, p_size * PANGO_SCALE);
 	if ((p_style & (FA_ITALIC | FA_OBLIQUE)) != 0)

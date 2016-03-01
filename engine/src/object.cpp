@@ -4894,8 +4894,22 @@ bool MCObject::mapfont(bool recursive)
 		    (gettype() == CT_STACK && ((MCStack *)this) -> getuseideallayout()))
 			t_font_style |= kMCFontStylePrinterMetrics;
 
-		// Create our font.
-		/* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
+        // If the font is explicitly requesting the default font for this
+        // control type, use the themed font
+        if (MCNameIsEqualTo(t_textfont, MCN_font_default))
+        {
+            // Don't inherit the parent's themed font
+            if (recursive)
+                return false;
+            
+            // Get the appropriate themed font
+            MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, m_font);
+        }
+        else
+        {
+            // Explicit non-default font
+            /* UNCHECKED */ MCFontCreate(t_textfont, t_font_style, t_textsize, m_font);
+        }
 	}
 	else if (parent != nil && t_explicit_font)
 	{
