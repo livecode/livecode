@@ -655,8 +655,8 @@ void MCSystemGetCanSendMail(bool& r_result)
 void MCSystemMailResult(MCStringRef& r_result)
 {
 	// PM-2016-02-29: [[ Bug 17031 ]] Make sure we return 'the result'
-	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
-		r_result = MCValueRetain((MCStringRef)MCresult -> getvalueref());
-	else
-		r_result = MCValueRetain(kMCEmptyString);
+	// The result can be one of "cancel", "saved", "sent", "failed"
+	assert(MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString);
+	
+	r_result = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 }
