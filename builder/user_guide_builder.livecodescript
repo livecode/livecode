@@ -2,8 +2,9 @@
 local sMarkdownText
 local sVersion
 local sOutputPath
+local sEdition
 
-private command Initialize pVersion, pOutputPath
+private command Initialize pEdition, pVersion, pOutputPath
    if pOutputPath is empty then
       throw "Guide output path must be specified"
       exit Initialize
@@ -16,6 +17,7 @@ private command Initialize pVersion, pOutputPath
    put empty into sMarkdownText
    put pVersion into sVersion
    put pOutputPath into sOutputPath
+   put pEdition into sEdition
 end Initialize
 
 private command Finalize
@@ -27,7 +29,7 @@ command guideBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
    builderLog "report", "Building user guide for version" && pVersion
    
    try
-      Initialize pVersion, pOutputDir
+      Initialize pEdition, pVersion, pOutputDir
       
       BaseCreate
             
@@ -49,7 +51,7 @@ private function OutputGetGuideFilename tSuffix, pVersion
    end if
    
    local tBasename
-   put "LiveCodeUserGuide-" & replaceText(pVersion, "[-,\.]", "_") into tBasename
+   put merge("LiveCode[[sEdition]]UserGuide-") & replaceText(pVersion, "[-,\.]", "_") into tBasename
    return sOutputPath & slash & tBasename & "." & tSuffix
 end OutputGetGuideFilename
 
@@ -79,7 +81,7 @@ end OutputEscape
 
 private command OutputGuideJson
    local tGuideJsonPath
-   put builderGuideFolder() & slash & "distributed_guide.js" into tGuideJsonPath
+   put builderGuideFolder(sEdition) & slash & "distributed_guide.js" into tGuideJsonPath
    
    local tGuideJson
    put FileGetUTF8Contents(tGuideJsonPath) into tGuideJson

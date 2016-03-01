@@ -761,7 +761,7 @@ void MCField::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
         // is obeyed... except that text may protrude by up to TEXT_Y_OFFSET
         // pixels into the margin.
         //
-        r_height = textheight + rect.height - getfheight();
+        r_height = textheight + rect.height - getfheight()
 		          + topmargin + bottommargin - 2*TEXT_Y_OFFSET;
 	}
 	else

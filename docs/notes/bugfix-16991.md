@@ -1,0 +1,1 @@
+# Fix selection rectangle and handle drawing when acceleratedRendering is true

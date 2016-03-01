@@ -1288,15 +1288,13 @@ void MCButton::drawcombo(MCDC *dc, MCRectangle &srect)
 
 void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 {
-	int32_t fascent;
-	fascent = MCFontGetAscent(m_font);
-
 	MCPoint p[10];  //polygon for each tab
 	MCPoint box[6]; //polygon for outline the entire tab box
 	int2 topx = 0;
 	uint2 topwidth = 0;
-	uint2 theight = fascent + 10;
-	uint2 theightfortabpane = theight;
+    uint2 theight = ceilf(MCFontGetAscent(m_font) + MCFontGetDescent(m_font));
+    uint2 t_tab_button_height = theight + 4;      // Magic number for padding
+    uint2 t_pane_y_offset = t_tab_button_height;
 	int2 taboverlap,tabrightmargin,tableftmargin,tabstartoffset;
 	taboverlap = tabrightmargin = tableftmargin = 0;
 	tabstartoffset = 2;
@@ -1307,11 +1305,19 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 		tabrightmargin = MCcurtheme->getmetric(WTHEME_METRIC_TABRIGHTMARGIN);
 		tableftmargin = MCcurtheme->getmetric(WTHEME_METRIC_TABLEFTMARGIN);
 		tabstartoffset = MCcurtheme->getmetric(WTHEME_METRIC_TABSTARTOFFSET);
-		if (MCcurtheme->getthemepropbool(WTHEME_PROP_TABPANEATTEXTBASELINE))
-			theightfortabpane = 20 >> 1;//to-do query tab size
+        
+        // If the theme uses a fixed tab button height, force the height to it
+        uint2 t_fixed_height = MCcurtheme->getmetric(WTHEME_METRIC_TABBUTTON_HEIGHT);
+        if (t_fixed_height != 0)
+            t_tab_button_height = t_fixed_height;
+        
+        // If the theme uses tab buttons that overlap the pane, adjust the
+        // offset at which the pane is drawn.
+        if (MCcurtheme->getthemepropbool(WTHEME_PROP_TABBUTTONSOVERLAPPANE))
+            t_pane_y_offset = t_tab_button_height / 2;
 	}
 	int2 curx = srect.x + tabstartoffset;
-	int2 cury = srect.y + fascent + 4;
+    int2 cury = srect.y + (t_tab_button_height - theight + 1)/2 + ceilf(MCFontGetAscent(m_font) + MCFontGetLeading(m_font));
 	int2 yoffset = 0;
 	uint2 i;
 	uint2 curtab = MAXUINT2;
@@ -1320,7 +1326,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 	t_mousetab = getmousetab(curx);
 	if (state & CS_MFOCUSED && tabselectonmouseup())
 		curtab = t_mousetab == starttab ? starttab : MAXUINT2;
-	if ( IsMacLF())
+	if (IsMacEmulatedLF())
 		theight -= 2;
 	MCWidgetInfo tabwinfo;
 	tabwinfo.type = WTHEME_TYPE_TAB;
@@ -1365,7 +1371,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			{
 				// MW-2010-04-26: [[ Bug ]] This rect was being computed with an extra pixel width
 				//   and height - 'compute_rect' treats corners as *inclusive*.
-				MCRectangle tabpanelrect = MCU_compute_rect(srect.x, srect.y + theightfortabpane,
+				MCRectangle tabpanelrect = MCU_compute_rect(srect.x, srect.y + t_pane_y_offset,
 				                           srect.x + srect.width - 1, srect.y + srect.height - 1);
 				MCWidgetInfo tabpanelwinfo;
 				tabpanelwinfo.type = WTHEME_TYPE_TABPANE;
@@ -1406,7 +1412,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
             if (i == (t_ntabs - 1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
             
-			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
+			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + t_tab_button_height);
 			if (MCcurtheme->getthemeid() != LF_NATIVEGTK || (srect.x + srect.width > curx + twidth + 5 &&
 			        srect.y + srect.height > (srect.y + theight * 2)))
 				MCcurtheme->drawwidget(dc, tabwinfo, tabrect);
@@ -1613,16 +1619,16 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false, kMCDrawTextNoBreak);
+                dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false, kMCDrawTextNoBreak);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
 		}
 		else
 			if (reversetext)
-				setforeground(dc, DI_BACK, False, True);
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT_SEL, False, True);
 			else
-				setforeground(dc, DI_FORE, False);
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
         // AL-2014-09-24: [[ Bug 13528 ]] Don't draw character indicating button is disabled
         dc -> drawtext_substring(textx, cury + yoffset, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)

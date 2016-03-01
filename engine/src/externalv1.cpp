@@ -836,16 +836,16 @@ bool MCExternalV1::Prepare(void)
 	// external is only created if it does!
 	MCExternalDescribeProc t_describe;
 	t_describe = (MCExternalDescribeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalDescribe"));
-    
-    // Update the current external var.
-    s_current_external = this;
-    
+	
+	// Update the current external var.
+	s_current_external = this;
+	
 	// Query the info record - if this returns nil something odd is going on!
 	m_info = t_describe();
-    
-    // Unset the current external var.
-    s_current_external = nil;
-    
+	
+	// Unset the current external var.
+	s_current_external = nil;
+	
 	if (m_info == nil)
 		return false;
 
@@ -859,22 +859,22 @@ bool MCExternalV1::Initialize(void)
 	t_initialize = (MCExternalInitializeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalInitialize"));
 	if (t_initialize == nil)
 		return true;
-
-    // Make sure the 'was_licensed' instance var is true. A call to LicenseFail
-    // during startup will set it to false.
-    m_was_licensed = true;
-    
-    // Update the current external var.
-    s_current_external = this;
-    
+	
+	// Make sure the 'was_licensed' instance var is true. A call to LicenseFail
+	// during startup will set it to false.
+	m_was_licensed = true;
+	
+	// Update the current external var.
+	s_current_external = this;
+	
 	// See if initialization succeeds.
-    bool t_success;
-    t_success = t_initialize(&g_external_interface);
-    
-    // Unset the current external var.
-    s_current_external = nil;
-    
-    if (!t_success)
+	bool t_success;
+	t_success = t_initialize(&g_external_interface);
+	
+	// Unset the current external var.
+	s_current_external = nil;
+	
+	if (!t_success)
 		return false;
 
     // If license fail was invoked during startup, we mark the whole external
@@ -891,14 +891,14 @@ void MCExternalV1::Finalize(void)
 	t_finalize = (MCExternalFinalizeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalFinalize"));
 	if (t_finalize == nil)
 		return;
-    
-    // Update the current external var.
-    s_current_external = this;
-    
-    t_finalize();
-    
-    // Unset the current external var.
-    s_current_external = nil;
+	
+	// Update the current external var.
+	s_current_external = this;
+	
+	t_finalize();
+	
+	// Unset the current external var.
+	s_current_external = nil;
 }
 
 const char *MCExternalV1::GetName(void) const
@@ -934,140 +934,140 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 	t_handler = &m_info -> handlers[p_index];
 	if (t_handler -> type != t_type)
 		return ES_NOT_HANDLED;
+	
+	// If the external is not licensed (as a whole) then we throw the unlicensed error.
+	if (!m_licensed)
+	{
+		MCAutoStringRef t_name;
+		if (!MCStringCreateWithCString(m_info -> name, &t_name))
+			return ES_ERROR;
+		MCeerror -> add(EE_EXTERNAL_UNLICENSED, 0, 0, *t_name);
+		return ES_ERROR;
+	}
+	
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
 
-    // If the external is not licensed (as a whole) then we throw the unlicensed error.
-    if (!m_licensed)
-    {
-        MCAutoStringRef t_name;
-        if (!MCStringCreateWithCString(m_info -> name, &t_name))
-            return ES_ERROR;
-        MCeerror -> add(EE_EXTERNAL_UNLICENSED, 0, 0, *t_name);
-        return ES_ERROR;
-    }
-    
-    Exec_stat t_stat;
-    t_stat = ES_NORMAL;
+	// Count the number of parameters.
+	uint32_t t_parameter_count;
+	t_parameter_count = 0;
+	for(MCParameter *t_param = p_parameters; t_param != nil; t_param = t_param -> getnext())
+		t_parameter_count += 1;
+		
+	// Allocate an array of values.
+	MCExternalVariableRef *t_parameter_vars;
+	t_parameter_vars = NULL;
+	if (t_parameter_count != 0)
+	{
+		t_parameter_vars = new MCExternalVariableRef[t_parameter_count];
+		if (t_parameter_vars == nil)
+			return ES_ERROR;
+	}
+	
+	// Now iterate through the parameters, fetching the parameter values as we go.
+	for(uint32_t i = 0; p_parameters != nil && t_stat == ES_NORMAL; i++, p_parameters = p_parameters -> getnext())
+	{
+		MCVariable* t_var;
+		t_var = p_parameters -> eval_argument_var();
+		if (t_var != nil)
+		{
+			// We are a variable parameter so use the value directly (i.e. pass by
+			// reference).
+			
+			// MW-2014-01-22: [[ CompatV1 ]] Create a reference to the MCVariable.
+			t_parameter_vars[i] = new MCReferenceExternalVariable(t_var);
+		}
+		else
+		{
+			// AL-2014-08-28: [[ ArrayElementRefParams ]] Evaluate container if necessary
+			MCAutoValueRef t_value;
+			MCContainer *t_container;
+			t_container = p_parameters -> eval_argument_container();
+			
+			if (t_container != nil)
+			{
+				MCNameRef *t_path;
+				uindex_t t_length;
+				t_container -> getpath(t_path, t_length);
+				
+				MCExecContext ctxt(p_context, nil, nil);
+				
+				if (t_length == 0)
+					t_parameter_vars[i] = new MCReferenceExternalVariable(t_container -> getvar());
+				else
+					t_container -> eval(ctxt, &t_value);
+			}
+			else
+				t_value = p_parameters -> getvalueref_argument();
+			
+			// MW-2014-01-22: [[ CompatV1 ]] Create a temporary value var.
+			if (*t_value != nil)
+				t_parameter_vars[i] = new MCTransientExternalVariable(*t_value);
+		}
+	}
 
-    // Count the number of parameters.
-    uint32_t t_parameter_count;
-    t_parameter_count = 0;
-    for(MCParameter *t_param = p_parameters; t_param != nil; t_param = t_param -> getnext())
-        t_parameter_count += 1;
-        
-    // Allocate an array of values.
-    MCExternalVariableRef *t_parameter_vars;
-    t_parameter_vars = NULL;
-    if (t_parameter_count != 0)
-    {
-        t_parameter_vars = new MCExternalVariableRef[t_parameter_count];
-        if (t_parameter_vars == nil)
-            return ES_ERROR;
-    }
-    
-    // Now iterate through the parameters, fetching the parameter values as we go.
-    for(uint32_t i = 0; p_parameters != nil && t_stat == ES_NORMAL; i++, p_parameters = p_parameters -> getnext())
-    {
-        MCVariable* t_var;
-        t_var = p_parameters -> eval_argument_var();
-        if (t_var != nil)
-        {
-            // We are a variable parameter so use the value directly (i.e. pass by
-            // reference).
-            
-            // MW-2014-01-22: [[ CompatV1 ]] Create a reference to the MCVariable.
-            t_parameter_vars[i] = new MCReferenceExternalVariable(t_var);
-        }
-        else
-        {
-            // AL-2014-08-28: [[ ArrayElementRefParams ]] Evaluate container if necessary
-            MCAutoValueRef t_value;
-            MCContainer *t_container;
-            t_container = p_parameters -> eval_argument_container();
-            
-            if (t_container != nil)
-            {
-                MCNameRef *t_path;
-                uindex_t t_length;
-                t_container -> getpath(t_path, t_length);
-                
-                MCExecContext ctxt(p_context, nil, nil);
-                
-                if (t_length == 0)
-                    t_parameter_vars[i] = new MCReferenceExternalVariable(t_container -> getvar());
-                else
-                    t_container -> eval(ctxt, &t_value);
-            }
-            else
-                t_value = p_parameters -> getvalueref_argument();
-            
-            // MW-2014-01-22: [[ CompatV1 ]] Create a temporary value var.
-            if (*t_value != nil)
-                t_parameter_vars[i] = new MCTransientExternalVariable(*t_value);
-        }
-    }
+	// We have our list of parameters (hopefully), so now call - passing a temporary
+	// result.
+	if (t_stat == ES_NORMAL)
+	{
+		// MW-2014-01-22: [[ CompatV1 ]] Initialize a temporary var to empty.
+		MCTransientExternalVariable t_result(kMCEmptyString);
+		
+		// MW-2014-01-22: [[ CompatV1 ]] Make a reference var to hold it (should it be needed).
+		//   We then store the previous global value of the it extvar, and set this one.
+		//   As external calls are recursive, this should be fine :)
+		MCReferenceExternalVariable t_it(MCECptr -> GetHandler() -> getit() -> evalvar(*MCECptr));
+		MCReferenceExternalVariable *t_old_it;
+		t_old_it = s_external_v1_current_it;
+		s_external_v1_current_it = &t_it;
+		
+		// Update the current external var.
+		s_current_external = this;
+		
+		// Invoke the external handler. If 'false' is returned, treat the result as a
+		// string value containing an error hint.
+		bool t_success;
+		t_success = (t_handler -> handler)(t_parameter_vars, t_parameter_count, &t_result);
+		
+		// Unset the current external var.
+		s_current_external = nil;
+		
+		// If a license check failed during the call, then we always throw an error.
+		if (!m_was_licensed)
+		{
+			MCAutoStringRef t_name;
+			if (!MCStringCreateWithCString(m_info -> name, &t_name))
+				return ES_ERROR;
+			MCeerror -> add(EE_EXTERNAL_UNLICENSED, 0, 0, *t_name);
+			t_stat = ES_ERROR;
+		}
+		else if (t_success)
+		{
+			MCresult -> setvalueref(t_result . GetValueRef());
+		}
+		else
+		{
+			MCeerror -> add(EE_EXTERNAL_EXCEPTION, 0, 0, t_result . GetValueRef());
+			t_stat = ES_ERROR;
+		}
+		
+		// Restore the old it.
+		s_external_v1_current_it = t_old_it;
+	}
 
-    // We have our list of parameters (hopefully), so now call - passing a temporary
-    // result.
-    if (t_stat == ES_NORMAL)
-    {
-        // MW-2014-01-22: [[ CompatV1 ]] Initialize a temporary var to empty.
-        MCTransientExternalVariable t_result(kMCEmptyString);
-        
-        // MW-2014-01-22: [[ CompatV1 ]] Make a reference var to hold it (should it be needed).
-        //   We then store the previous global value of the it extvar, and set this one.
-        //   As external calls are recursive, this should be fine :)
-        MCReferenceExternalVariable t_it(MCECptr -> GetHandler() -> getit() -> evalvar(*MCECptr));
-        MCReferenceExternalVariable *t_old_it;
-        t_old_it = s_external_v1_current_it;
-        s_external_v1_current_it = &t_it;
-        
-        // Update the current external var.
-        s_current_external = this;
-        
-        // Invoke the external handler. If 'false' is returned, treat the result as a
-        // string value containing an error hint.
-        bool t_success;
-        t_success = (t_handler -> handler)(t_parameter_vars, t_parameter_count, &t_result);
-        
-        // Unset the current external var.
-        s_current_external = nil;
-        
-        // If a license check failed during the call, then we always throw an error.
-        if (!m_was_licensed)
-        {
-            MCAutoStringRef t_name;
-            if (!MCStringCreateWithCString(m_info -> name, &t_name))
-                return ES_ERROR;
-            MCeerror -> add(EE_EXTERNAL_UNLICENSED, 0, 0, *t_name);
-            t_stat = ES_ERROR;
-        }
-        else if (t_success)
-        {
-            MCresult -> setvalueref(t_result . GetValueRef());
-        }
-        else
-        {
-            MCeerror -> add(EE_EXTERNAL_EXCEPTION, 0, 0, t_result . GetValueRef());
-            t_stat = ES_ERROR;
-        }
-        
-        // Restore the old it.
-        s_external_v1_current_it = t_old_it;
-    }
+	// Finally, loop through and free the parameters as necessary.
+	for(uint32_t i = 0; i < t_parameter_count; i++)
+		delete t_parameter_vars[i];
 
-    // Finally, loop through and free the parameters as necessary.
-    for(uint32_t i = 0; i < t_parameter_count; i++)
-        delete t_parameter_vars[i];
+	// SN-2015-03-25: [[ CID 15424 ]] Delete an array: use delete []
+	delete[] t_parameter_vars;
 
-    // SN-2015-03-25: [[ CID 15424 ]] Delete an array: use delete []
-    delete[] t_parameter_vars;
-
-    return t_stat;
+	return t_stat;
 }
 
 void MCExternalV1::SetWasLicensed(bool p_value)
 {
-    m_was_licensed = p_value;
+	m_was_licensed = p_value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1291,7 +1291,12 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             return MCExternalConvertStringToValueType(MCECptr -> GetColumnDelimiter(), p_option, result);
         case kMCExternalContextQueryRowDelimiter:
             return MCExternalConvertStringToValueType(MCECptr -> GetRowDelimiter(), p_option, result);
-            break;
+			break;
+			
+		case kMCExternalContextQueryHasLicenseCheck:
+			*(bool *)result = true;
+			break;
+			
         default:
             return kMCExternalErrorInvalidContextQuery;
     }
@@ -2873,41 +2878,42 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 	return kMCExternalErrorNone;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned int p_min_edition)
 {
-    unsigned int t_current_edition;
-    switch(MClicenseparameters . license_class)
-    {
-        case kMCLicenseClassNone:
-            t_current_edition = kMCExternalLicenseTypeNone;
-            break;
-            
-        case kMCLicenseClassCommunity:
-            t_current_edition = kMCExternalLicenseTypeCommunity;
-            break;
-            
-        case kMCLicenseClassCommercial:
-            t_current_edition = kMCExternalLicenseTypeIndy;
-            break;
-            
-        case kMCLicenseClassProfessional:
-            t_current_edition = kMCExternalLicenseTypeBusiness;
-            break;
-            
-        default:
-            MCUnreachableReturn(kMCExternalErrorUnlicensed);
-            break;
-    }
-    
-    if (t_current_edition < p_min_edition)
-    {
-        s_current_external -> SetWasLicensed(false);
-        return kMCExternalErrorUnlicensed;
-    }
-    
-    return kMCExternalErrorNone;
+	unsigned int t_current_edition;
+	switch(MClicenseparameters . license_class)
+	{
+		case kMCLicenseClassNone:
+			t_current_edition = kMCExternalLicenseTypeNone;
+			break;
+			
+		case kMCLicenseClassCommunity:
+			t_current_edition = kMCExternalLicenseTypeCommunity;
+			break;
+			
+		case kMCLicenseClassCommercial:
+			t_current_edition = kMCExternalLicenseTypeIndy;
+			break;
+			
+		case kMCLicenseClassProfessional:
+			t_current_edition = kMCExternalLicenseTypeBusiness;
+			break;
+			
+		default:
+			MCUnreachableReturn(kMCExternalErrorUnlicensed);
+			break;
+	}
+	
+	if (t_current_edition < p_min_edition)
+	{
+		s_current_external -> SetWasLicensed(false);
+		return kMCExternalErrorUnlicensed;
+	}
+	
+	return kMCExternalErrorNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2957,12 +2963,11 @@ MCExternalInterface g_external_interface =
 	//   for the outside world.
 	MCExternalContextEvaluate,
 	MCExternalContextExecute,
-    
-    // SN-2015-01-26: [[ Bug 14057 ]] Update the ContextQuery for the new delimiters
+	
     MCExternalContextQuery,
-    
-    // MW-2016-02-17: [[ LicenseCheck ]] Declare the check call.
-    MCExternalLicenseCheckEdition,
+
+	// MW-2016-02-17: [[ LicenseCheck ]] Declare the check call.
+	MCExternalLicenseCheckEdition,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

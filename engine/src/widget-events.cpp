@@ -40,6 +40,7 @@
 #include "chunk.h"
 #include "graphicscontext.h"
 #include "dispatch.h"
+#include "tooltip.h"
 
 #include "globals.h"
 #include "context.h"
@@ -337,6 +338,10 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
             MCValueAssignOptional(m_mouse_focus, t_focused_widget);
             
             mouseEnter(m_mouse_focus);
+            
+            // If we are in browse mode, then trigger the tooltip.
+            if (p_widget -> getstack() -> gettool(p_widget) == T_BROWSE)
+                MCtooltip -> settip(p_widget -> gettooltip());
         }
         
         if (t_pos_changed)

@@ -1706,7 +1706,7 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 
 MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef p_name)
 {
-#if defined(_MACOSX) || defined (_MAC_SERVER)
+#if defined(_MACOSX) || defined (_MAC_SERVER) || defined (TARGET_SUBPLATFORM_IPHONE)
     if (fonts == nil)
         fonts = new MCFontlist;
     return fonts->getfontbyhandle(p_handle, p_name);

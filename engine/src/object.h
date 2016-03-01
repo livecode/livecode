@@ -931,6 +931,10 @@ public:
     // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
     void sync_mfocus(void);
     
+    // This accessor is used by the widget event manager to trigger tooltip
+    // display for widgets.
+    MCStringRef gettooltip(void) {return tooltip;}
+    
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);

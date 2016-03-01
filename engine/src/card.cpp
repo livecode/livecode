@@ -2843,14 +2843,15 @@ Boolean MCCard::removecontrol(MCControl *cptr, Boolean needredraw, Boolean cf)
 			// Remove the control from the card and close it.
 			optr->remove(objptrs);
 			delete optr;
+            
+            // MW-2011-08-19: [[ Layers ]] Notify the stack that a layer has been removed.
+            layer_removed(cptr, t_previous_optr, t_next_optr);
+            
 			if (opened)
 			{
 				cptr->close();
 				cptr->setparent(t_stack);
 			}
-
-			// MW-2011-08-19: [[ Layers ]] Notify the stack that a layer has been removed.
-			layer_removed(cptr, t_previous_optr, t_next_optr);
 
 			return True;
 		}
@@ -3371,6 +3372,38 @@ void MCCard::drawselectedchildren(MCDC *dc)
         tptr = tptr->next();
     }
     while (tptr != objptrs);
+}
+
+bool MCCard::updatechildselectedrect(MCRectangle& x_rect)
+{
+    bool t_updated;
+    t_updated = false;
+    
+    MCObjptr *t_objptr = objptrs;
+    if (t_objptr == nil)
+        return t_updated;
+    do
+    {
+        MCControl *t_control;
+        t_control = t_objptr -> getref();
+        
+        if (t_control -> getstate(CS_SELECTED))
+        {
+            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
+            t_updated = true;
+        }
+        
+        if (t_control -> gettype() == CT_GROUP)
+        {
+            MCGroup *t_group = static_cast<MCGroup *>(t_control);
+            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
+        }
+        
+        t_objptr = t_objptr->next();
+    }
+    while (t_objptr != objptrs);
+    
+    return t_updated;
 }
 
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)

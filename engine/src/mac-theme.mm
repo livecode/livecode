@@ -73,7 +73,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_user_font = [[NSFont userFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCNAME("Aqua UI Font - User");
+                *r_name = MCValueRetain(MCN_font_usertext);
             return s_user_font;
         }
             
@@ -85,7 +85,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_menu_font = [[NSFont menuFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCNAME("Aqua UI Font - Menu");
+                *r_name = MCValueRetain(MCN_font_menutext);
             return s_menu_font;
         }
             
@@ -94,7 +94,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_content_font = [[NSFont controlContentFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCNAME("Aqua UI Font - Content");
+                *r_name = MCValueRetain(MCN_font_content);
             return s_content_font;
         }
             
@@ -109,7 +109,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_message_font = [[NSFont messageFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCNAME("Aqua UI Font - Message");
+                *r_name = MCValueRetain(MCN_font_message);
             return s_message_font;
         }
             
@@ -117,7 +117,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_tooltip_font = [[NSFont toolTipsFontOfSize:-1.0] retain];
             if (r_name)
-                *r_name = MCNAME("Aqua UI Font - Tooltip");
+                *r_name = MCValueRetain(MCN_font_tooltip);
             return s_tooltip_font;
         }
             
@@ -125,7 +125,7 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
         {
             static NSFont* s_system_font = [[NSFont systemFontOfSize:[NSFont systemFontSize]] retain];
             if (r_name)
-                *r_name = MCNAME("Aqua UI Font - System");
+                *r_name = MCValueRetain(MCN_font_system);
             return s_system_font;
         }
     }
@@ -195,6 +195,20 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                             t_color = [NSColor selectedTextColor];
                         else
                             t_color = [NSColor textColor];
+                        break;
+                    }
+                        
+                    case kMCPlatformControlTypeTabPane:
+                    case kMCPlatformControlTypeTabButton:
+                    {
+                        // These really should update like the other menu types
+                        // do when the window isn't active but we don't have
+                        // access to the active-tab-but-inactive-window button
+                        // appearance used for "real" tabbed controls.
+                        if (p_state & kMCPlatformControlStateSelected)
+                            t_color = [NSColor selectedMenuItemTextColor];
+                        else
+                            t_color = [NSColor controlTextColor];
                         break;
                     }
                         

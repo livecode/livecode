@@ -336,6 +336,22 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
     return t_found;
 }
 
+// Utility function needed by the Linux font code. Gets the family name of the
+// font for the given control type.
+bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState, MCPlatformThemeProperty p_prop, MCStringRef& r_string)
+{
+    if (p_prop != kMCPlatformThemePropertyTextFont)
+        return false;
+    
+    GtkStyle* t_style;
+    t_style = getStyleForControlType(p_type, p_part);
+    if (t_style == NULL)
+        return false;
+    
+    const PangoFontDescription* t_pango = t_style->font_desc;
+    return MCStringCreateWithCString(pango_font_description_get_family(t_pango), r_string);
+}
+
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
     GtkStyle* t_style;

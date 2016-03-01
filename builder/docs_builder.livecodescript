@@ -1941,6 +1941,19 @@ private command addToList pElement, @xArray
    put pElement into xArray[tCount + 1]
 end addToList
 
+private command addFolderToListIfExists pFolder, pThrowIfNot, @xArray
+   if there is a folder pFolder then
+      addToList pFolder, xArray
+      exit addFolderToListIfExists
+   end if
+   
+   if pThrowIfNot then
+      builderLog "error", "Expected docs folder" && pFolder && "doesn't exist"
+   else 
+      builderLog "message", "Folder" && pFolder && "doesn't exist"
+   end if
+end addFolderToListIfExists
+
 private function RepoIndyDocsFolder
    return builderPrivateRepoFolder() & slash & "docs" & slash & "indy"
 end RepoIndyDocsFolder
@@ -1950,31 +1963,38 @@ private function RepoBusinessDocsFolder
 end RepoBusinessDocsFolder
 
 private command docsBuilderGetGuideFolders pEdition, @xFolders
-   addToList builderRepoFolder() & slash & "docs" & slash & "guides", xFolders
-   addToList builderIDEDocsFolder() & slash & "guides", xFolders
+   local tRepoGuides
+   put builderRepoFolder() & slash & "docs" & slash & "guides" into tRepoGuides
+   addFolderToListIfExists tRepoGuides, true, xFolders
+   
+   local tIDEGuides
+   put builderIDEDocsFolder() & slash & "guides" into tIDEGuides
+   addFolderToListIfExists tIDEGuides, true, xFolders
    
    if pEdition is not "community" then
-      addToList RepoIndyDocsFolder() & slash & "guides", xFolders
+      local tIndyGuides
+      put RepoIndyDocsFolder() & slash & "guides" into tIndyGuides
+      addFolderToListIfExists tIndyGuides, false, xFolders
    end if
    
    if pEdition is "business" then
-      addToList RepoBusinessDocsFolder() & slash & "guides", xFolders
+      local tBusinessGuides
+      put RepoBusinessDocsFolder() & slash & "guides" into tBusinessGuides
+      addFolderToListIfExists tBusinessGuides, false, xFolders
    end if
 end docsBuilderGetGuideFolders
 
 private command docsBuilderGetDictionaryFolders pEdition, @xFolders
-   addToList builderRepoFolder() & slash & "docs", xFolders
+   local tCommunityDocs
+   put builderRepoFolder() & slash & "docs" into tCommunityDocs
+   addFolderToListIfExists tCommunityDocs, true, xFolders
    
    if pEdition is not "community" then
-      addToList RepoIndyDocsFolder(), xFolders
+      addFolderToListIfExists RepoIndyDocsFolder(), true, xFolders
    end if
    
    if pEdition is "business" then
-      local tBusinessDocs
-      put RepoBusinessDocsFolder() into tBusinessDocs
-      if there is a folder tBusinessDocs then
-         addToList tBusinessDocs, xFolders
-      end if
+      addFolderToListIfExists RepoBusinessDocsFolder(), false, xFolders
    end if
 end docsBuilderGetDictionaryFolders
 
@@ -2019,12 +2039,7 @@ function docsBuilderParseDictionaryToLibraryArray pRootDirs
       union tGlossaryA with revDocsCollectGlossarySynonyms(tRootDir)
    end repeat
    
-   repeat for each element tRootDir in pRootDirs
-      if there is not a folder tRootDir then
-         builderLog "error", "No dictionary data found at" && tRootDir
-         return empty
-      end if
-      
+   repeat for each element tRootDir in pRootDirs      
       local tDictionaryRoot, tGlossaryRoot
       put tRootDir & slash & "dictionary" into tDictionaryRoot
       put tRootDir & slash & "glossary" into tGlossaryRoot

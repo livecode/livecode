@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "objectstream.h"
 #include "widget.h"
+#include "dispatch.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -618,7 +619,12 @@ bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
                 // The widget event manager handles enter/leave itself
                 if (newfocused && mfocused != nil &&
                     mfocused -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
                     mfocused -> gettype() != CT_WIDGET)
+#else
+                    (MCdispatcher -> isdragtarget() ||
+                     mfocused -> gettype() != CT_WIDGET))
+#endif
                 {
                         mfocused->enter();
                         
@@ -2908,6 +2914,35 @@ void MCGroup::drawselectedchildren(MCDC *dc)
         t_control = t_control -> next();
     }
     while (t_control != controls);
+}
+
+bool MCGroup::updatechildselectedrect(MCRectangle& x_rect)
+{
+    bool t_updated;
+    t_updated = false;
+    
+    MCControl *t_control = controls;
+    if (t_control == nil)
+        return t_updated;
+    do
+    {
+        if (t_control -> getstate(CS_SELECTED))
+        {
+            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
+            t_updated = true;
+        }
+        
+        if (t_control -> gettype() == CT_GROUP)
+        {
+            MCGroup *t_group = static_cast<MCGroup *>(t_control);
+            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
+        }
+        
+        t_control = t_control -> next();
+    }
+    while (t_control != controls);
+    
+    return t_updated;
 }
 
 //-----------------------------------------------------------------------------
