@@ -24,7 +24,9 @@ private variable mToggleHilite as Boolean
 private variable mMaintainAspectRatio as Boolean
 private variable mFlipVertically     as Boolean // some SVG Paths need to be flipped (all font awesome SVG paths do, Illustrator SVG does not)
 private variable mAngle     as Real
+private variable mFillRule as String
 variable mPathName as String
+
 
 /*
 Syntax:
@@ -188,25 +190,46 @@ Use the iconAngle property to rotate the icon <pAngle> degrees clockwise.
 */
 
 property iconAngle       get mAngle       set setAngle
+
+/*
+Syntax:
+set the fillRule of <widget> to <pRule>
+get the fillRule of <widget>
+
+Parameters:
+pRule: The fill rule to be used, either non-zero or even-odd.
+
+Summary: The fill rule to be used for the canvas.
+
+Description:
+Use the fillRule property to set the fill rule to be used for the widget.
+*/
+
+property fillRule       get mFillRule      set setFillRule
+metadata fillRule.editor is "com.livecode.pi.enum"
+metadata fillRule.options is "non-zero,even odd"
+metadata fillRule.default is "non-zero"
+metadata fillRule.label is "Fill Rule"
 --
 
 ----------
 -- called when widget is created
 public handler OnCreate()
 	put "up" into mState
-	
+
 	put color [0,0,0] into mColor
 	put stringToColor("255,0,100") into mHiliteColor
 	put 0 into mAngle
-	
+
 	put false into mHilited
 	put false into mToggleHilite
 	put true into mMaintainAspectRatio
 	put false into mFlipVertically
+	put "non-zero" into mFillRule
 
 	variable tArray as Array
 	put the empty array into tArray
-	setPathPreset("Star")	
+	setPathPreset("Star")
 end handler
 ----------
 
@@ -214,7 +237,7 @@ end handler
 -- this handler is called when the widget is saved
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-	
+
 	put mPath into rProperties["svg path"]
 	put colorToString(mColor, true) into rProperties["color"]
 	put colorToString(mHiliteColor, true) into rProperties["hilite color"]
@@ -223,6 +246,7 @@ public handler OnSave(out rProperties as Array)
 	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
 	put mFlipVertically into rProperties["flip vertically"]
 	put mAngle into rProperties["angle"]
+	put mFillRule into rProperties["fillRule"]
 end handler
 ----------
 
@@ -237,12 +261,17 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
 	put pProperties["flip vertically"] into mFlipVertically
 	put pProperties["angle"] into mAngle
+
+   // Older SVG widgets do not have this property
+	if "fillRule" is among the keys of pProperties then
+		put pProperties["fillRule"] into mFillRule
+	end if
 end handler
 ----------
 
 ----------
 -- the following handlers deal with mouse events
-public handler OnMouseUp()		
+public handler OnMouseUp()
   if the current mouse position is within my bounds then
   	if mToggleHilite then
 	  	put not mHilited into mHilited
@@ -255,7 +284,7 @@ end handler
 
 public handler OnClick()
 	if the click count is 2 then
-		post "mouseDoubleUp" with [intToString(the click button)]	
+		post "mouseDoubleUp" with [intToString(the click button)]
 	end if
 end handler
 
@@ -268,8 +297,16 @@ end handler
 public handler OnMouseDown()
 	put "down" into mState
 	redraw all
-	
+
 	post "mouseDown" to my script object with [intToString(the click button)]
+end handler
+
+public handler OnMouseEnter()
+	post "mouseEnter"
+end handler
+
+public handler OnMouseLeave()
+	post "mouseLeave"
 end handler
 ----------
 
@@ -334,41 +371,43 @@ public handler setAngle(in pAngle as Number) returns nothing
 	redraw all
 end handler
 
-
+public handler setFillRule(in pRule as String) returns nothing
+	put pRule into mFillRule
+	redraw all
+end handler
 ----------
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	variable tPath as Path
 	put path mPath into tPath
-	
-	variable tBounds	
+
+	variable tBounds
 	if mFlipVertically then
 		scale tPath by [1,-1]
 		translate tPath by [0, the height of the bounding box of tPath]
 	end if
-	
+
 	if mAngle > 0 then
 		rotate tPath by mAngle
 	end if
-		
+
 	// scale to fit within widget and maintain aspect ratio
 	if mMaintainAspectRatio then
-		constrainPathToRect(my bounds, tPath)		
+		constrainPathToRect(my bounds, tPath)
 	else
 		scale tPath by [my width / the width of the bounding box of tPath, \
 			my height / the height of the bounding box of tPath]
 			put the bounding box of tPath into tBounds
 			translate tPath by [the left of tBounds * -1, the top of tBounds * -1]
 	end if
-		
+
 	if mState is "up" and mHilited is false then
 		set the paint of this canvas to solid paint with mColor
 	else
 		set the paint of this canvas to solid paint with mHiliteColor
 	end if
 
-	-- FIXME Make this configurable via a property
-	set the fill rule of this canvas to "non-zero"
+	set the fill rule of this canvas to mFillRule
 
 	fill tPath on this canvas
 end handler
