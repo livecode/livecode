@@ -607,10 +607,16 @@ bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
                 // if the object is selected and the mouse is inside a resize handle.
                 t_focused = tptr -> getstate(CS_SELECTED)
                 && tptr -> sizehandles(x, y) != 0;
+                
+                // Make sure we still call mfocus as it updates the control's stored
+                // mouse coordinates
+                if (t_focused)
+                    tptr -> mfocus(x, y);
+                
             }
             else
             {
-                t_focused = tptr->mfocus(x, y);
+                t_focused = tptr -> mfocus(x, y);
             }
             
             if (t_focused)

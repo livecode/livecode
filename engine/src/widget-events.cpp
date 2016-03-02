@@ -281,6 +281,16 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
 
     if (t_focused_widget == nil)
     {
+        // We can still be focused if the mouse is within the resize handles
+        if (p_widget -> getstate(CS_SELECTED)
+            && p_widget -> sizehandles(p_x, p_y) != 0)
+        {
+            t_focused_widget = p_widget -> getwidget();
+        }
+    }
+    
+    if (t_focused_widget == nil)
+    {
         if (m_mouse_focus != nil &&
             MCWidgetGetHost(m_mouse_focus) != p_widget)
             return False;

@@ -536,6 +536,11 @@ bool MCCard::mfocus_control(int2 x, int2 y, bool p_check_selected)
             // if the object is selected and the mouse is inside a resize handle.
             t_focused = t_tptr_object -> getstate(CS_SELECTED)
                         && t_tptr_object -> sizehandles(x, y) != 0;
+            
+            // Make sure we still call mfocus as it updates the control's stored
+            // mouse coordinates
+            if (t_focused)
+                t_tptr_object -> mfocus(x, y);
         }
         else
         {
