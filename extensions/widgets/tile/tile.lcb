@@ -25,7 +25,7 @@ metadata colorStep.default is "0"
 property tileLabel get mTileLabel set setTileLabel
 property iconName get mIconName set setIconName
 property hoverIconName get mHoverIconName set setHoverIconName
-property hovering get mHover set setHover
+property hoverState get mHover set setHover
 property fgColor get mForegroundColor set setForegroundColor
 property fgHoverColor get mForegroundHoverColor set setForegroundHoverColor
 property bgColor get mBackgroundColor set setBackgroundColor
