@@ -656,7 +656,7 @@ void MCSystemMailResult(MCStringRef& r_result)
 {
 	// PM-2016-02-29: [[ Bug 17031 ]] Make sure we return 'the result'
 	// The result can be one of "cancel", "saved", "sent", "failed"
-	assert(MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString);
+	MCAssert(MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString);
 	
 	r_result = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 }
