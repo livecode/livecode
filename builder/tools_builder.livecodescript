@@ -473,9 +473,9 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
 end toolsBuilderMakeInstaller
 
 private function escapeArg pArg
-   replace space with "\ " in pArg
-   replace "(" with "\(" in pArg
-   replace ")" with "\)" in pArg
+   replace "'" with "\'" in pArg
+   put "'" before pArg
+   put "'" after pArg
    return pArg
 end escapeArg
 
