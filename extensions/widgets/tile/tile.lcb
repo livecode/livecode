@@ -1,4 +1,4 @@
-widget community.livecode.widget.tile
+widget com.livecode.widget.tile
 
 use com.livecode.canvas
 use com.livecode.widget
@@ -7,7 +7,7 @@ use com.livecode.library.iconSVG
 use com.livecode.library.widgetutils
 
 metadata title is "Tile"
-metadata author is "Elanor Buchanan"
+metadata author is "LiveCode"
 metadata version is "1.0.0"
 metadata preferredSize is "200,200"
 metadata userVisible is "false"
