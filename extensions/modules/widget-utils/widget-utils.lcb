@@ -275,7 +275,7 @@ Currently, this will return either "iOS" or "Android".
 public handler getNativeThemeName() returns String
 	variable tOS as String
 	put the operating system into tOS
-	if tOS is in ["ios,mac"] then
+	if tOS is in ["ios","mac"] then
 		return "iOS"
 	else
 		return "Android"
