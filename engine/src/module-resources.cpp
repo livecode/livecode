@@ -16,6 +16,11 @@
 
 #include "prefix.h"
 
+#include "stack.h"
+#include "widget.h"
+#include "widget-ref.h"
+#include "osspec.h"
+
 #include "module-resources.h"
 #include "libscript/script.h"
 
@@ -36,4 +41,27 @@ bool MCResourceResolvePath(MCStringRef p_name, MCStringRef &r_path)
 		return false;
 	
 	return MCPathAppend(*t_path, p_name, r_path);
+}
+
+bool MCResourceResolveStackRelativePath(MCStringRef p_name, MCStringRef& r_path)
+{
+	if (MCPathIsAbsolute(p_name))
+    {
+        r_path = MCValueRetain(p_name);
+        return true;
+    }
+    
+    MCStack *t_stack;
+    t_stack = nil;
+    if (MCcurrentwidget != nil)
+        t_stack = MCWidgetGetHost(MCcurrentwidget) -> getstack();
+    
+    if (t_stack != nil &&
+        t_stack -> resolve_relative_path(p_name, r_path))
+        return true;
+    
+    if (MCS_resolvepath(p_name, r_path))
+        return true;
+        
+    return false;
 }

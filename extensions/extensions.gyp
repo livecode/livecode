@@ -46,6 +46,7 @@
 				'widgets/treeview/treeview.lcb',
 				'widgets/colorswatch/colorswatch.lcb',
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
+                'widgets/svgview/svgview.lcb',
 			],
 
 			'all_dependent_settings':

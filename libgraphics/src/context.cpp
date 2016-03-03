@@ -1538,6 +1538,20 @@ void MCGContextSetFillPattern(MCGContextRef self, MCGImageRef p_image, MCGAffine
 		self -> is_valid = MCGPatternCreate(p_image, p_transform, p_filter, self -> state -> fill_pattern);
 }
 
+void MCGContextSetFillGradientRef(MCGContextRef self,
+                                  MCGGradientRef p_gradient)
+{
+    if (!MCGContextIsValid(self))
+        return;
+    
+	MCGPatternRelease(self -> state -> stroke_pattern);
+	self -> state -> stroke_pattern = NULL;
+	MCGGradientRelease(self -> state -> stroke_gradient);
+	self -> state -> fill_gradient = NULL;
+    
+    self -> state -> fill_gradient = MCGGradientRetain(p_gradient);
+}
+
 void MCGContextSetFillGradient(MCGContextRef self, MCGGradientFunction p_function, const MCGFloat* p_stops, const MCGColor* p_colors, uindex_t p_ramp_length, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter)
 {
 	if (!MCGContextIsValid(self))
@@ -1549,7 +1563,7 @@ void MCGContextSetFillGradient(MCGContextRef self, MCGGradientFunction p_functio
 	self -> state -> fill_gradient = NULL;	
 	
 	if (p_stops != NULL && p_colors != NULL)
-		self -> is_valid = MCGGradientCreate(p_function, p_stops, p_colors, p_ramp_length, p_mirror, p_wrap, p_repeats, p_transform, p_filter, self -> state -> fill_gradient);	
+		self -> is_valid = MCGGradientCreateGeneralized(p_function, p_stops, p_colors, p_ramp_length, p_mirror, p_wrap, p_repeats, p_transform, p_filter, self -> state -> fill_gradient);
 }
 
 void MCGContextSetFillPaintStyle(MCGContextRef self, MCGPaintStyle p_paint_style)
@@ -1606,6 +1620,20 @@ void MCGContextSetStrokePattern(MCGContextRef self, MCGImageRef p_image, MCGAffi
 		self -> is_valid = MCGPatternCreate(p_image, p_transform, p_filter, self -> state -> stroke_pattern);	
 }
 
+void MCGContextSetStrokeGradientRef(MCGContextRef self,
+                                    MCGGradientRef p_gradient)
+{
+    if (!MCGContextIsValid(self))
+        return;
+    
+	MCGPatternRelease(self -> state -> stroke_pattern);
+	self -> state -> stroke_pattern = NULL;
+	MCGGradientRelease(self -> state -> stroke_gradient);
+	self -> state -> stroke_gradient = NULL;
+
+    self -> state -> stroke_gradient = MCGGradientRetain(p_gradient);
+}
+
 void MCGContextSetStrokeGradient(MCGContextRef self, MCGGradientFunction p_function, const MCGFloat* p_stops, const MCGColor* p_colors, uindex_t p_ramp_length, bool p_mirror, bool p_wrap, uint32_t p_repeats, MCGAffineTransform p_transform, MCGImageFilter p_filter)
 {
 	if (!MCGContextIsValid(self))
@@ -1617,7 +1645,7 @@ void MCGContextSetStrokeGradient(MCGContextRef self, MCGGradientFunction p_funct
 	self -> state -> stroke_gradient = NULL;	
 	
 	if (p_stops != NULL && p_colors != NULL)
-		self -> is_valid = MCGGradientCreate(p_function, p_stops, p_colors, p_ramp_length, p_mirror, p_wrap, p_repeats, p_transform, p_filter, self -> state -> stroke_gradient);	
+		self -> is_valid = MCGGradientCreateGeneralized(p_function, p_stops, p_colors, p_ramp_length, p_mirror, p_wrap, p_repeats, p_transform, p_filter, self -> state -> stroke_gradient);
 }
 
 void MCGContextSetStrokeWidth(MCGContextRef self, MCGFloat p_width)

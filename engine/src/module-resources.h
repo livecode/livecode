@@ -19,6 +19,7 @@
 
 #include "foundation.h"
 
-bool MCResourceResolvePath(MCStringRef p_resource_name, MCStringRef &r_resource_path);
+bool MCResourceResolveStackRelativePath(MCStringRef p_resource_name, MCStringRef& r_resource_path);
+bool MCResourceResolvePath(MCStringRef p_resource_name, MCStringRef& r_resource_path);
 
 #endif//__MODULE_RESOURCES_H__
