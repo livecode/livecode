@@ -206,7 +206,7 @@ Boolean MCScrollbar::kdown(MCStringRef p_string, KeySym key)
 Boolean MCScrollbar::mfocus(int2 x, int2 y)
 {
 	// MW-2007-09-18: [[ Bug 1650 ]] Disabled state linked to thumb size
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (issbdisabled() && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_SCROLL)
@@ -1161,7 +1161,7 @@ void MCScrollbar::update(real8 newpos, MCNameRef mess)
 		signallisteners(P_THUMB_POS);
 	
 	if ((thumbpos != oldpos || mode == SM_LINEDEC || mode == SM_LINEINC)
-	        && opened && (flags & F_VISIBLE || MCshowinvisibles))
+	        && opened && (flags & F_VISIBLE || showinvisible()))
 	{
 		if (thumbpos != oldpos)
 		{

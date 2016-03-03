@@ -217,7 +217,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	// SMR 594 do menu stuff before visibility check
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_GRAB)
@@ -947,7 +947,7 @@ Boolean MCControl::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCControl::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle drect = MCU_intersect_rect(srect, rect);
 	return drect.width != 0 && drect.height != 0;
@@ -1051,7 +1051,7 @@ inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
     // SN-2014-11-14: [[ Bug 14028 ]] Use the current control visibility state
-	if (!opened || !(getflag(F_VISIBLE) || MCshowinvisibles))
+	if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
 		return;
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] A control needs to be (partially)
@@ -2014,7 +2014,7 @@ void MCControl::setbitmapeffects(MCBitmapEffectsRef p_effects)
 
 MCObject *MCControl::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles) ||
+	if (!(flags & F_VISIBLE || showinvisible()) ||
 	    (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	

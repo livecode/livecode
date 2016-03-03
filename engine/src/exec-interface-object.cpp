@@ -114,6 +114,7 @@ static PropList stackprops[] =
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},
+		{"showInvisibles", P_SHOW_INVISIBLES},
         {"startUpIconic", P_START_UP_ICONIC},
         {"style", P_STYLE},
         {"stackFiles", P_STACK_FILES},

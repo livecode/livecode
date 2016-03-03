@@ -201,6 +201,10 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
     DEFINE_RW_OBJ_PROPERTY(P_DOCUMENT_FILENAME, String, MCStack, DocumentFilename)
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, Bool, MCStack, ShowInvisibleObjects)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -298,6 +302,9 @@ MCStack::MCStack()
     // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
     m_document_filename = MCValueRetain(kMCEmptyString);
 
+	// IM-2016-02-29: [[ Bug 16244 ]] by default, visibility is determined by global 'showInvisibles' property.
+	m_hidden_object_visibility = kMCStackObjectVisibilityDefault;
+	
 	m_view_need_redraw = false;
 	m_view_need_resize = false;
 
@@ -500,6 +507,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	// IM-2016-02-29: [[ Bug 16244 ]] by default, visibility is determined by global 'showInvisibles' property.
+	m_hidden_object_visibility = kMCStackObjectVisibilityDefault;
 
 	m_view_need_redraw = sref.m_view_need_redraw;
 	m_view_need_resize = sref.m_view_need_resize;
@@ -3504,4 +3514,41 @@ void MCStack::notifyattachments(MCStackAttachmentEvent p_event)
 {
     for(MCStackAttachment *t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
         t_attachment -> callback(t_attachment -> context, this, p_event);
+}
+
+MCStackObjectVisibility MCStack::gethiddenobjectvisibility()
+{
+	return m_hidden_object_visibility;
+}
+
+void MCStack::sethiddenobjectvisibility(MCStackObjectVisibility p_visibility)
+{
+	bool t_visible = showinvisible();
+	
+	m_hidden_object_visibility = p_visibility;
+	
+	if (t_visible != showinvisible())
+	{
+		// Visibility of objects has changed so redraw the stack.
+		view_dirty_all();
+	}
+}
+
+bool MCStack::geteffectiveshowinvisibleobjects()
+{
+	switch (gethiddenobjectvisibility())
+	{
+		case kMCStackObjectVisibilityDefault:
+			return MCshowinvisibles;
+			
+		case kMCStackObjectVisibilityShow:
+			return true;
+			
+		case kMCStackObjectVisibilityHide:
+			return false;
+
+		default:
+			MCUnreachable();
+			return false;
+	}
 }

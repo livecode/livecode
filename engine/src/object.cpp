@@ -428,7 +428,7 @@ void MCObject::kfocus()
 Boolean MCObject::kfocusnext(Boolean top)
 {
 	if (!(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED
-	        || !(flags & F_VISIBLE || MCshowinvisibles) || flags & F_DISABLED)
+	        || !(flags & F_VISIBLE || showinvisible()) || flags & F_DISABLED)
 		return False;
 	return True;
 }
@@ -436,7 +436,7 @@ Boolean MCObject::kfocusnext(Boolean top)
 Boolean MCObject::kfocusprev(Boolean bottom)
 {
 	if (!(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED
-	        || !(flags & F_VISIBLE || MCshowinvisibles) || flags & F_DISABLED)
+	        || !(flags & F_VISIBLE || showinvisible()) || flags & F_DISABLED)
 		return False;
 	return True;
 }
@@ -1373,6 +1373,17 @@ bool MCObject::isvisible(bool p_effective)
 		return parent->isvisible(true);
 	
 	return true;
+}
+
+bool MCObject::showinvisible()
+{
+	MCStack *t_stack;
+	t_stack = getstack();
+	
+	if (t_stack == nil)
+		return false;
+	
+	return t_stack->geteffectiveshowinvisibleobjects();
 }
 
 Boolean MCObject::resizeparent()

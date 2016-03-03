@@ -389,7 +389,7 @@ void MCGroup::kfocus()
 Boolean MCGroup::kfocusnext(Boolean top)
 {
 	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
-	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
+	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || showinvisible()))
 		return False;
 	if (newkfocused != NULL)
 	{
@@ -446,7 +446,7 @@ Boolean MCGroup::kfocusnext(Boolean top)
 Boolean MCGroup::kfocusprev(Boolean bottom)
 {
 	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
-	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
+	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCControl *startptr = NULL;
 	// MW-2005-07-18: [[Bug 2923]] Crash when tabbing backwards
@@ -681,12 +681,12 @@ bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
 
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 	{
 		mfocused = NULL;
 		mgrabbed = False;
@@ -1820,7 +1820,7 @@ Boolean MCGroup::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCGroup::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	if (MCControl::maskrect(srect))
 	{
@@ -3750,7 +3750,7 @@ bool MCGroup::resolveparentscript(void)
 
 MCObject *MCGroup::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	

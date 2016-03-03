@@ -253,7 +253,7 @@ Boolean MCWidget::mup(uint2 p_which, bool p_release)
 
 Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 {
-	if (!(getflag(F_VISIBLE) || MCshowinvisibles) ||
+	if (!(getflag(F_VISIBLE) || showinvisible()) ||
 		(getflag(F_DISABLED) && (getstack() -> gettool(this) == T_BROWSE)))
 		return False;
 	
@@ -876,7 +876,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 {
-	if (!(getflag(F_VISIBLE) || MCshowinvisibles))
+	if (!(getflag(F_VISIBLE) || showinvisible()))
 		return False;
 
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);

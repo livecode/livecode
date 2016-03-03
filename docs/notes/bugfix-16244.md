@@ -1,0 +1,1 @@
+# IDE: fix hidden objects shown in IDE stacks when "Show Invisible Objects" enabled.
