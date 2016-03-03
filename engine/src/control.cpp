@@ -259,7 +259,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
     
 	Boolean is = maskrect(srect) || (state & CS_SELECTED
 	                                 && MCU_point_in_rect(geteffectiverect(), x, y)
-	                                 && sizehandles() != 0);
+	                                 && sizehandles(x, y) != 0);
     
 	if (is || state & CS_MFOCUSED)
 	{
@@ -1446,7 +1446,7 @@ void MCControl::continuesize(int2 x, int2 y)
 
 #define SIZE_HANDLE_HIT_TOLERANCE 1
 
-uint2 MCControl::sizehandles()
+uint2 MCControl::sizehandles(int2 px, int2 py)
 {
 	uint2 newstate = 0;
 	if (!(flags & F_LOCK_LOCATION))
@@ -1458,29 +1458,29 @@ uint2 MCControl::sizehandles()
         {
             // Be more forgiving about handle hit detection
             rects[i] = MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
-			if (MCU_point_in_rect(rects[i], mx, my))
+			if (MCU_point_in_rect(rects[i], px, py))
 			{
 				if (i < 3)
 				{
 					newstate |= CS_SIZET;
-					yoffset = my - rect.y;
+					yoffset = py - rect.y;
 				}
 				else
 					if (i > 4)
 					{
 						newstate |= CS_SIZEB;
-						yoffset = rect.y + rect.height - my;
+						yoffset = rect.y + rect.height - py;
 					}
 				if (i == 0 || i == 3 || i == 5)
 				{
 					newstate |= CS_SIZEL;
-					xoffset = mx - rect.x;
+					xoffset = px - rect.x;
 				}
 				else
 					if (i == 2 || i == 4 || i == 7)
 					{
 						newstate |= CS_SIZER;
-						xoffset = rect.x + rect.width - mx;
+						xoffset = rect.x + rect.width - px;
 					}
 				break;
 			}
@@ -1497,7 +1497,7 @@ void MCControl::start(Boolean canclone)
 	getstack()->kfocusset(NULL);
 	kunfocus();
 	
-	state |= sizehandles();
+	state |= sizehandles(mx, my);
 	if (!(state & CS_SELECTED))
 	{
 		if (MCmodifierstate & MS_SHIFT)
@@ -1507,7 +1507,7 @@ void MCControl::start(Boolean canclone)
 	}
 	else
 	{
-		if (MCmodifierstate & MS_SHIFT && sizehandles() == 0)
+		if (MCmodifierstate & MS_SHIFT && sizehandles(mx, my) == 0)
 		{
 			MCselected->remove(this);
 			return;
