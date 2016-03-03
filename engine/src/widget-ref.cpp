@@ -307,7 +307,7 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
 	}
 	
 	if (t_success && !t_view_rendered)
-		t_success = Dispatch(MCNAME("OnPaint"));
+		t_success = DispatchRestricted(MCNAME("OnPaint"));
     
     if (m_children != nil)
     {
