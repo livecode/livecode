@@ -55,6 +55,8 @@ private variable mIconRects as List
 
 private variable mSelectedElement as optional String
 
+private variable mShowNames as Boolean
+
 property preferredSize		get getPreferredSize
 metadata preferredSize.user_visible is "false"
 
@@ -78,6 +80,8 @@ public handler OnCreate()
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
+
+	put currently popped up into mShowNames
 
     updateParameters()
 	initialiseScrollbar()
@@ -163,12 +167,18 @@ private handler drawTitleBar()
 	end if
 end handler
 
+constant kMaxIconNameChars is 12
+constant kNameHeight is 20
 private handler drawIcon(in pIcon as Integer)
 	variable tIconName as String
 	put element pIcon + mFirstDataItem - 1 of mDataList into tIconName
 	
-	variable tPath as Path
+	if mSelectedElement is not nothing and tIconName is mSelectedElement then
+		set the paint of this canvas to getPaint("icon", "selected")
+		fill rectangle path of indexToSectorRect(pIcon) on this canvas
+	end if
 	
+	variable tPath as Path
 	if tIconName is not among the keys of mPaths then
 		put path iconSVGPathFromName(tIconName) into tPath
 	else
@@ -177,13 +187,24 @@ private handler drawIcon(in pIcon as Integer)
 		
 	constrainPathToRect(mIconRects[pIcon], tPath)
 	
-	if mSelectedElement is not nothing and tIconName is mSelectedElement then
-		set the paint of this canvas to getPaint("icon", "selected")
-		fill rectangle path of indexToSectorRect(pIcon) on this canvas
-	end if
-	
 	set the paint of this canvas to solid paint with color kIconColor
 	fill tPath on this canvas
+	
+	if mShowNames then
+		variable tTextRect as Rectangle
+		put mIconRects[pIcon] into tTextRect
+		set the height of tTextRect to kNameHeight
+		set the top of tTextRect to the top of tTextRect - kNameHeight
+		
+		variable tLabel as String
+		put tIconName into tLabel
+	
+		if the number of chars in tIconName > kMaxIconNameChars then
+			put char 1 to kMaxIconNameChars - 1 of tIconName & "\u{2026}" into tLabel
+		end if
+		
+		fill text tLabel at center of tTextRect on this canvas
+	end if
 end handler
 
 public handler OnMouseDown() returns nothing
@@ -408,14 +429,21 @@ private handler updateIconRects(in pTopOffset as Real)
 	variable tTop as Real
 	variable tBottom as Real
 	
+	variable tIconTopOffset as Integer
+	put pTopOffset into tIconTopOffset
+	
+	if mShowNames then
+		add kNameHeight to tIconTopOffset
+	end if
+	
 	variable tRow as Integer
 	variable tCol as Integer
 	repeat with tRow from 1 up to mNumRows
 		repeat with tCol from 1 up to mNumCols
 			put (tCol - 1) * mViewWidth / mNumCols + kIconSize * kIconPaddingRatio into tLeft
 			put tCol * mViewWidth / mNumCols - kIconSize * kIconPaddingRatio into tRight
-	
-			put (tRow - 1) * mViewHeight / mNumRows + kIconSize * kIconPaddingRatio + pTopOffset into tTop
+						
+			put (tRow - 1) * mViewHeight / mNumRows + kIconSize * kIconPaddingRatio + tIconTopOffset into tTop
 			put tRow * mViewHeight / mNumRows - kIconSize * kIconPaddingRatio + pTopOffset into tBottom
 
 			push rectangle [tLeft, tTop, tRight, tBottom] onto tRects
