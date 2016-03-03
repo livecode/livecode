@@ -253,4 +253,33 @@ public handler stringToColor(in pString as String) returns Color
 	return color tColor
 end handler
 
+/*
+Summary: Get the canonical name of the current "native" mobile theme
+
+Example:
+	variable tNativeTheme as String
+	put getNativeThemeName() into tNativeTheme
+
+	if tNativeTheme is "android" then
+		-- Draw Android themed UI
+	else
+		-- Draw iOS themed UI
+	end if
+
+Description:
+Returns the name of the current theme that should be used when the theme is
+"native".
+
+Currently, this will return either "iOS" or "Android".
+*/
+public handler getNativeThemeName() returns String
+	variable tOS as String
+	put the operating system into tOS
+	if tOS is in ["ios,mac"] then
+		return "iOS"
+	else
+		return "Android"
+	end if
+end handler
+
 end module
