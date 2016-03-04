@@ -133,34 +133,16 @@ public handler OnMouseUp()
    post "mouseUp"
 end handler
 
-public handler OnMouseDown()
-
-end handler
-
-public handler OnMouseMove()
-	updateHover()
-end handler
-
 public handler OnMouseEnter()
-   updateHover()
+   put true into mHover
    post "mouseEnter"
+   redraw all
 end handler
 
 public handler OnMouseLeave()
-	updateHover()
+   put false into mHover
    post "mouseLeave"
-end handler
-
-private handler updateHover()
-	variable tPoint as Point
-	put the mouse position into tPoint
-
-	if tPoint is within my bounds then
-	    put true into mHover
-    else
-      put false into mHover
-    end if
-    redraw all
+   redraw all
 end handler
 
 public handler setIconName(in pName as String) returns nothing
