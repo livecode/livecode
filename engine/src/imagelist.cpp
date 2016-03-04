@@ -134,6 +134,22 @@ bool MCPatternIsOpaque(MCPatternRef p_pattern)
 	return false;
 }
 
+MCGAffineTransform MCPatternGetTransform(MCPatternRef p_pattern)
+{
+    if (p_pattern == nil)
+        return MCGAffineTransformMakeIdentity();
+    
+    return p_pattern->transform;
+}
+
+MCImageRep *MCPatternGetSource(MCPatternRef p_pattern)
+{
+    if (p_pattern == nil)
+        return nil;
+    
+    return p_pattern->source;
+}
+
 bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r_height)
 {
 	if (p_pattern == nil)
