@@ -297,6 +297,12 @@ public class Engine extends View implements EngineApi
 		return getContext() . getApplicationInfo() . sourceDir;
 	}
 
+	// IM-2016-03-04: [[ Bug 16917 ]] Return location of native libraries installed with this app
+	public String getLibraryPath()
+	{
+		return getContext() . getApplicationInfo() . nativeLibraryDir;
+	}
+	
 	public void finishActivity()
 	{
         // MM-2012-03-19: [[ Bug 10104 ]] Stop tracking any sensors on shutdown - not doing so prevents a restart for some reason.
