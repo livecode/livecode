@@ -450,6 +450,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
         case P_REV_AVAILABLE_VARIABLES:
     
         case P_KIND:
+        case P_THEME_CONTROL_TYPE:
 			return MCControl::getprop(ctxt, p_part_id, p_which, p_index, p_effective, r_value);
             
         default:
@@ -553,6 +554,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
         case P_DISABLED:
             
         case P_KIND:
+        case P_THEME_CONTROL_TYPE:
 			return MCControl::setprop(ctxt, p_part_id, p_which, p_index, p_effective, p_value);
             
         default:
