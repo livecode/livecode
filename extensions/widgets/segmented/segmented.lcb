@@ -428,15 +428,15 @@ public handler OnLoad(in pProperties as Array)
 	end if
 	
 	if "color" is among the keys of pProperties then
-		set property "backColor" of my script object to pProperties["selectedColor"]
+		set property "backColor" of my script object to pProperties["color"]
 	end if
 	
 	if "selectedLabelColor" is among the keys of pProperties then
 		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
 	end if
 	
-	if "LabelColor" is among the keys of pProperties then
-		set property "foreColor" of my script object to pProperties["selectedColor"]
+	if "labelColor" is among the keys of pProperties then
+		set property "foreColor" of my script object to pProperties["labelColor"]
 	end if
 
     put the number of elements in mSegmentNames into mNumSegments
