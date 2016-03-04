@@ -287,8 +287,8 @@ void MCiOSScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)
     if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
     {
         // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
-        MCGPoint t_offset;
-        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat)p_scroll - m_content_rect . x, (MCGFloat) t_y));
+		MCGPoint t_offset;
+        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat)p_scroll, (MCGFloat) t_y));
         [t_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
     }
     
@@ -302,7 +302,7 @@ void MCiOSScrollerControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
     
     // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
     if (t_view)
-        r_scroll = m_content_rect.x + MCNativeControlUserXLocFromDeviceXLoc([t_view contentOffset].x);
+        r_scroll = MCNativeControlUserXLocFromDeviceXLoc([t_view contentOffset].x);
     else
         r_scroll = 0;
 }
@@ -315,8 +315,9 @@ void MCiOSScrollerControl::SetVScroll(MCExecContext& ctxt, integer_t p_scroll)
     if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
     {
         // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+		// PM-2016-03-04: [[ Bug 17038 ]] Pass the correct offset, relative to m_content_rect
         MCGPoint t_offset;
-        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) t_x, (MCGFloat) p_scroll - m_content_rect . y));
+        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) t_x, (MCGFloat) p_scroll));
         [t_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
     }
     
@@ -329,8 +330,9 @@ void MCiOSScrollerControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
 	t_view = (UIScrollView*)GetView();
     
     // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
+	// PM-2016-03-04: [[ Bug 17038 ]] Get the correct offset, relative to m_content_rect
     if (t_view)
-        r_scroll = m_content_rect.y + MCNativeControlUserYLocFromDeviceYLoc([t_view contentOffset].y);
+        r_scroll = MCNativeControlUserYLocFromDeviceYLoc([t_view contentOffset].y);
     else
         r_scroll = 0;
 }
