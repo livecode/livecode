@@ -274,13 +274,26 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyPaint(uinteger_t p_type, MCCanvasP
     MCColor t_color;
     MCPatternRef t_pattern = nil;
     int2 x, y;
-    if (t_host -> getforecolor((uint2)p_type, False, False, t_color, t_pattern, x, y, CONTEXT_TYPE_SCREEN, t_host, False))
+    if (t_host -> getforecolor((uint2)p_type,
+                               False,
+                               False,
+                               t_color,
+                               t_pattern,
+                               x, y,
+                               CONTEXT_TYPE_SCREEN,
+                               t_host,
+                               False))
     {
         MCAutoValueRefBase<MCCanvasColorRef> t_canvas_color;
-        if (!MCCanvasColorCreateWithRGBA(t_color . red / 65535.0f, t_color . blue / 65535.0f, t_color . green / 65535.0f, 1.0f, &t_canvas_color))
+        if (!MCCanvasColorCreateWithRGBA(t_color . red / 65535.0f,
+                                         t_color . green / 65535.0f,
+                                         t_color . blue / 65535.0f,
+                                         1.0f,
+                                         &t_canvas_color))
             return;
         
-        MCCanvasSolidPaintMakeWithColor(*t_canvas_color, (MCCanvasSolidPaintRef&)r_paint);
+        MCCanvasSolidPaintMakeWithColor(*t_canvas_color,
+                                        (MCCanvasSolidPaintRef&)r_paint);
         return;
     }
     
