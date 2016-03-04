@@ -118,6 +118,12 @@ enum
 
 - (NSWindow*)pseudoModalFor
 {
+    // MERG-2016-03-04: ensure pseudo modals remain above any calling modals
+    // If we need to check whether we're pseudo-modal, it means we're in a
+    // situation where that window needs to be forced to the front
+    if (m_pseudo_modal_for != nil)
+        [m_pseudo_modal_for orderFrontRegardless];
+    
     return m_pseudo_modal_for;
 }
 
