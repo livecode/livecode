@@ -1571,8 +1571,8 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 						MCPatternRef t_pattern;
 						int2 x, y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, parent);
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), parent);
 						if (hc.pixel == fc.pixel)
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
