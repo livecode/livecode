@@ -483,7 +483,7 @@ public handler OnPaint()
 	-- draw the lines to separate the segments
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
-	set the paint of this canvas to fetchPaint("borderColor")
+	set the paint of this canvas to my border paint
 	
 	variable tLine
 	repeat for each element tLine in mLines
@@ -495,17 +495,13 @@ public handler OnPaint()
 	
 	-- draw the perimeter of the control
 	if mShowFrameBorder then
-		set the paint of this canvas to fetchPaint("borderColor")
+		set the paint of this canvas to my border paint
 		set the stroke width of this canvas to 1
 		stroke mPerimeter on this canvas
 	end if
 	--
 	
 	put false into mGeometryIsChanged
-end handler
-
-private handler fetchPaint(in pWhich as String) returns Paint
-	return solid paint with fetchColor(pWhich, my script object)
 end handler
 
 public handler OnGeometryChanged()
@@ -609,9 +605,9 @@ private handler drawSegments() returns nothing
 		put tX is in mSelectedSegments into tIsIn
 		
 		if tIsIn then
-			set the paint of this canvas to fetchPaint("hiliteColor")
+			set the paint of this canvas to my highlight paint
 		else
-			set the paint of this canvas to fetchPaint("backColor")
+			set the paint of this canvas to my background paint
 		end if	
 		
 		variable tSegmentRect as List
@@ -640,7 +636,7 @@ private handler drawSegments() returns nothing
 				set the paint of this canvas to solid paint with mSelectedLabelColor
 			end if
 		else
-			set the paint of this canvas to fetchPaint("foreColor")
+			set the paint of this canvas to my foreground paint
 		end if	
 			
 		variable tIconPath as Path
