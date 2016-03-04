@@ -377,7 +377,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_SCRIPT:
 		case P_PARENT_SCRIPT:
 		case P_NUMBER:
-            /*		case P_FORE_PIXEL:
+            		case P_FORE_PIXEL:
              case P_BACK_PIXEL:
              case P_HILITE_PIXEL:
              case P_BORDER_PIXEL:
@@ -405,7 +405,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
              case P_SHADOW_PATTERN:
              case P_FOCUS_PATTERN:
              case P_PATTERNS:
-             case P_TEXT_HEIGHT:
+             /*case P_TEXT_HEIGHT:
              case P_TEXT_ALIGN:*/
         case P_TEXT_FONT:
         case P_TEXT_SIZE:
@@ -484,7 +484,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_SCRIPT:
 		case P_PARENT_SCRIPT:
 		case P_NUMBER:
-            /*		case P_FORE_PIXEL:
+            		case P_FORE_PIXEL:
              case P_BACK_PIXEL:
              case P_HILITE_PIXEL:
              case P_BORDER_PIXEL:
@@ -512,7 +512,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
              case P_SHADOW_PATTERN:
              case P_FOCUS_PATTERN:
              case P_PATTERNS:
-             case P_TEXT_HEIGHT:
+             /*case P_TEXT_HEIGHT:
              case P_TEXT_ALIGN:*/
              case P_TEXT_FONT:
              case P_TEXT_SIZE:

@@ -1413,7 +1413,8 @@ Boolean MCObject::resizeparent()
 
 Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
                                MCColor &c, MCPatternRef &r_pattern,
-                               int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected)
+                               int2 &x, int2 &y, MCContextType dc_type,
+                               MCObject *o, bool selected)
 {
     uint2 di;
     switch (p_di)
@@ -1440,69 +1441,65 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
     }
     
     uint2 i;
-	if (dc->getdepth() > 1)
-	{
-		Boolean hasindex = getcindex(di, i);
-        // MM-2013-08-28: [[ RefactorGraphics ]] We now pack alpha values into pixels meaning checking against MAXUNIT4 means white will always be ignored. Not sure why this check was here previously.
-		if (hasindex) // && colors[i].pixel != MAXUINT4)
-		{
-			c = colors[i];
-			return True;
-		}
-		else
-			if (getpindex(di, i))
-			{
-				r_pattern = patterns[i].pattern;
+    Boolean hasindex = getcindex(di, i);
+    // MM-2013-08-28: [[ RefactorGraphics ]] We now pack alpha values into pixels meaning checking against MAXUNIT4 means white will always be ignored. Not sure why this check was here previously.
+    if (hasindex) // && colors[i].pixel != MAXUINT4)
+    {
+        c = colors[i];
+        return True;
+    }
+    else if (getpindex(di, i))
+    {
+        r_pattern = patterns[i].pattern;
 
-				if (gettype() == CT_STACK)
-					x = y = 0;
-				else
-				{
-					x = rect.x;
-					y = rect.y;
-				}
-				return False;
-			}
-			else
-			{
-				if (di == DI_FORE && flags & F_DISABLED)
-				{
-					c = dc->getgray();
-					return True;
-				}
-				if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
-				        && !(flags & F_DISABLED))
-				{
-                    if (p_di == DI_BACK)
-                    {
-                        // Use the themed colours and ignore inheritance. We do
-                        // this so that controls always have the appropriate
-                        // background colour (particularly fields).
-                        MCPlatformControlType t_control_type;
-                        MCPlatformControlPart t_control_part;
-                        MCPlatformControlState t_control_state;
-                        MCPlatformThemeProperty t_theme_prop;
-                        MCPlatformThemePropertyType t_theme_prop_type;
-                        if (o->getthemeselectorsforprop(P_BACK_COLOR, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
-                        {
-                            if (selected)
-                                t_control_state |= kMCPlatformControlStateSelected;
-                            
-                            if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
-                                return True;
-                        }
-                        
-                        // No themed colour available; fall back to white
-                        c = dc->getwhite();
-                    }
-                    else
-						parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
-					return True;
-				}
-				if (parent && parent != MCdispatcher)
-					return parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc, o, selected);
-			}
-	}
+        if (gettype() == CT_STACK)
+            x = y = 0;
+        else
+        {
+            x = rect.x;
+            y = rect.y;
+        }
+        return False;
+    }
+    else
+    {
+        if (di == DI_FORE && flags & F_DISABLED)
+        {
+            c = MCscreen->getgray();
+            return True;
+        }
+        if (MClook != LF_MOTIF && hilite && flags & F_OPAQUE
+                && !(flags & F_DISABLED))
+        {
+            if (p_di == DI_BACK)
+            {
+                // Use the themed colours and ignore inheritance. We do
+                // this so that controls always have the appropriate
+                // background colour (particularly fields).
+                MCPlatformControlType t_control_type;
+                MCPlatformControlPart t_control_part;
+                MCPlatformControlState t_control_state;
+                MCPlatformThemeProperty t_theme_prop;
+                MCPlatformThemePropertyType t_theme_prop_type;
+                if (o->getthemeselectorsforprop(P_BACK_COLOR, t_control_type, t_control_part, t_control_state, t_theme_prop, t_theme_prop_type))
+                {
+                    if (selected)
+                        t_control_state |= kMCPlatformControlStateSelected;
+                    
+                    if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_theme_prop, c))
+                        return True;
+                }
+                
+                // No themed colour available; fall back to white
+                c = MCscreen->getwhite();
+            }
+            else
+                parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc_type, o, selected);
+            return True;
+        }
+        if (parent && parent != MCdispatcher)
+            return parent->getforecolor(p_di, rev, hilite, c, r_pattern, x, y, dc_type, o, selected);
+    }
 
     // Try to get the colour from the system theme rather than these hard-coded values
     MCPlatformControlType t_control_type;
@@ -1573,13 +1570,13 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 	case DI_BOTTOM:
 	case DI_FORE:
 		if (rev)
-			c = dc->getwhite();
+			c = MCscreen->getwhite();
 		else
-			c = dc->getblack();
+			c = MCscreen->getblack();
 		break;
 	case DI_BACK:
 #ifdef _MACOSX
-		if (IsMacLFAM() && dc -> gettype() != CONTEXT_TYPE_PRINTER)
+		if (IsMacLFAM() && dc_type != CONTEXT_TYPE_PRINTER)
 		{
 			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern);
 			x = 0;
@@ -1589,7 +1586,7 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 				return False;
 		}
 #endif
-		c = dc->getbg();
+		c = MCscreen->getbg();
 		break;
 	case DI_HILITE:
 		c = o->gettype() == CT_BUTTON ? MCaccentcolor : MChilitecolor;
@@ -1604,7 +1601,7 @@ Boolean MCObject::getforecolor(uint2 p_di, Boolean rev, Boolean hilite,
 		}
 		break;
 	default:
-		c = dc->getblack();
+		c = MCscreen->getblack();
 		break;
 	}
 	return True;
@@ -1636,13 +1633,13 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bo
 	MCColor color;
 	MCPatternRef t_pattern = nil;
 	int2 x, y;
-	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this, selected))
+	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc -> gettype(), this, selected))
 	{
 		MCColor fcolor;
 		if (dc->getdepth() == 1 && di != DI_BACK
 		        && getforecolor((state & CS_HILITED && flags & F_OPAQUE)
 		                        ? DI_HILITE : DI_BACK, False, False, fcolor,
-		                        t_pattern, x, y, dc, this)
+		                        t_pattern, x, y, dc -> gettype(), this)
 		        && color.pixel == fcolor.pixel)
 			color.pixel ^= 1;
 		dc->setforeground(color);

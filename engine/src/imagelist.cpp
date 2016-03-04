@@ -134,6 +134,22 @@ bool MCPatternIsOpaque(MCPatternRef p_pattern)
 	return false;
 }
 
+MCGAffineTransform MCPatternGetTransform(MCPatternRef p_pattern)
+{
+    if (p_pattern == nil)
+        return MCGAffineTransformMakeIdentity();
+    
+    return p_pattern->transform;
+}
+
+MCImageRep *MCPatternGetSource(MCPatternRef p_pattern)
+{
+    if (p_pattern == nil)
+        return nil;
+    
+    return p_pattern->source;
+}
+
 bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r_height)
 {
 	if (p_pattern == nil)
@@ -146,8 +162,8 @@ bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r
 	
 	if (p_pattern->image != nil)
 	{
-		t_src_width = MCGImageGetWidth(p_pattern->image);
-		t_src_height = MCGImageGetHeight(p_pattern->image);
+		t_src_width = (uindex_t)MCGImageGetWidth(p_pattern->image);
+		t_src_height = (uindex_t)MCGImageGetHeight(p_pattern->image);
 	}
 	else
 	{
@@ -159,8 +175,8 @@ bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r
 	MCGRectangle t_rect;
 	t_rect = MCGRectangleApplyAffineTransform(MCGRectangleMake(0, 0, t_src_width, t_src_height), t_transform);
 
-	r_width = ceilf(t_rect.size.width);
-	r_height = ceilf(t_rect.size.height);
+	r_width = (uint32_t)ceilf(t_rect.size.width);
+	r_height = (uint32_t)ceilf(t_rect.size.height);
 	
 	return true;
 }
@@ -168,7 +184,7 @@ bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r
 bool MCPatternGetFilter(MCPatternRef p_pattern, MCGImageFilter &r_filter)
 {
 	if (p_pattern == nil)
-		return nil;
+		return false;
 
 	r_filter = p_pattern->filter;
 
@@ -209,7 +225,7 @@ bool MCPatternLockForContextTransform(MCPatternRef p_pattern, const MCGAffineTra
 		
 		if (t_success)
 		{
-			t_transform = MCGAffineTransformMakeScale(1.0 / t_frame.x_scale, 1.0 / t_frame.y_scale);
+			t_transform = MCGAffineTransformMakeScale(1.0f / t_frame.x_scale, 1.0f / t_frame.y_scale);
 			
 			if (!MCGAffineTransformIsRectangular(p_pattern->transform))
 			{

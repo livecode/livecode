@@ -3329,12 +3329,12 @@ void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 	t_hilite = MClook == LF_WIN95 && (wm == WM_COMBO || wm == WM_OPTION);
 	
 	bool t_opaque;
-	t_opaque = getforecolor(DI_BACK, False, t_hilite, color, t_pattern, x, y, p_context, this) || MCPatternIsOpaque(t_pattern);
+	t_opaque = getforecolor(DI_BACK, False, t_hilite, color, t_pattern, x, y, p_context -> gettype(), this) || MCPatternIsOpaque(t_pattern);
 	
 	// If the card background is a pattern with transparency, then draw the stack background first
 	if (!t_opaque)
 	{
-		t_opaque = parent->getforecolor(DI_BACK, False, t_hilite, color, t_stack_pattern, t_stack_x, t_stack_y, p_context, parent) || MCPatternIsOpaque(t_stack_pattern);
+		t_opaque = parent->getforecolor(DI_BACK, False, t_hilite, color, t_stack_pattern, t_stack_x, t_stack_y, p_context -> gettype(), parent) || MCPatternIsOpaque(t_stack_pattern);
 		
 		// And if the stack background is a pattern with transparency, then fill with black first
 		if (!t_opaque)
