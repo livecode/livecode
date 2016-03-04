@@ -111,6 +111,8 @@ enum
 
 - (void)becomePseudoModalFor: (NSWindow*)window
 {
+    // MERG-2016-03-04: ensure pseudo modals open above any calling modals
+    [window setLevel: kCGPopUpMenuWindowLevel];
     m_pseudo_modal_for = window;
 }
 
