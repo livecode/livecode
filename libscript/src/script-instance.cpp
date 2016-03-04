@@ -1050,7 +1050,18 @@ static bool MCScriptLoadSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_
 #if defined(_WIN32)
         r_handle = GetModuleHandle(NULL);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-        r_handle = dlopen("librevandroid.so", 0);
+		// IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
+		//    given, so first resolve the path to the library.
+		extern bool MCAndroidResolveLibraryPath(MCStringRef p_library, MCStringRef &r_path);
+		MCAutoStringRef t_path;
+		if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"), &t_path))
+			return false;
+		
+		MCAutoStringRefAsCString t_cstring;
+		if (!t_cstring.Lock(*t_path))
+			return false;
+		
+        r_handle = dlopen(*t_cstring, 0);
 #else
         r_handle = dlopen(NULL, 0);
 #endif
