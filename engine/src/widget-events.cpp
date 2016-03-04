@@ -343,7 +343,8 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
         // The mouse has moved into a widget within this control.
         if (t_focused_changed)
         {
-            mouseLeave(m_mouse_focus);
+            if (m_mouse_focus != nil)
+                mouseLeave(m_mouse_focus);
         
             MCValueAssignOptional(m_mouse_focus, t_focused_widget);
             
@@ -360,9 +361,12 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     else if (t_focused_widget == nil)
     {
         // The mouse has moved out of this widget.
-        mouseLeave(m_mouse_focus);
+        if (t_focused_changed)
+        {
+            mouseLeave(m_mouse_focus);
         
-        MCValueAssignOptional(m_mouse_focus, t_focused_widget);
+            MCValueAssignOptional(m_mouse_focus, t_focused_widget);
+        }
     }
     
     // If we are the focused widget, then we handled it.
