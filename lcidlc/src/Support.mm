@@ -2681,8 +2681,10 @@ LCError LCLicenseCheckEdition(unsigned int p_min_version)
     // old.
     if (s_interface -> version < 7)
 	{
+        // Make sure we use the legacy context query API as older engines
+        // don't have the new one.
 		bool t_has_license_check;
-		if (s_interface -> context_query(kMCExternalContextVarHasLicenseCheck, 0, &t_has_license_check) != kMCErrorNone ||
+		if (s_interface -> context_query_legacy(kMCExternalContextVarHasLicenseCheck, 0, &t_has_license_check) != kMCErrorNone ||
 			t_has_license_check == false)
 			return kLCErrorUnlicensed;
 	}
