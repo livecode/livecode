@@ -106,7 +106,9 @@ void MCPlatformHandleApplicationSuspend(void)
 void MCPlatformHandleApplicationResume(void)
 {
 	MCappisactive = True;
-	MCdefaultstackptr -> getcard() -> message(MCM_resume);
+    
+    if (MCdefaultstackptr != nil)
+        MCdefaultstackptr -> getcard() -> message(MCM_resume);
 }
 
 void MCPlatformHandleApplicationRun(bool& r_continue)
