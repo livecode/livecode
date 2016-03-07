@@ -37,7 +37,7 @@
 				'widgets/paletteactions/paletteactions.lcb',
 				#’widgets/pinkcircle/pinkcircle.lcb',
 				#'widgets/progressbar/progressbar.lcb',
-				'widgets/pushbutton/pushbutton.lcb',
+				#'widgets/pushbutton/pushbutton.lcb',
 				#'widgets/radiobutton/radiobutton.lcb',
 				'widgets/segmented/segmented.lcb',
 				#'widgets/selector/selector.lcb',
