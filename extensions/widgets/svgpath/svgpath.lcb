@@ -69,8 +69,8 @@ get the hiliteColor of <widget>
 Summary: Determines the color of the icon when highlighted.
 
 Description:
-Use the iconHiliteColor property to set the color of the SVG path, when the
-icon is highlighted.
+Use the <hiliteColor> property to set the color of the SVG path, when the icon
+is highlighted.
 */
 metadata hiliteColor.editor is "com.livecode.pi.color"
 metadata hiliteColor.default is "empty"
@@ -271,14 +271,14 @@ end handler
 -- the following handlers deal with mouse events
 public handler OnMouseUp()
 	if the click count is 2 then
-		post "mouseDoubleUp" with [intToString(the click button)]
+		post "mouseDoubleUp" with [the click button formatted as string]
 	else
-		post "mouseUp" with [intToString(the click button)]
+		post "mouseUp" with [the click button formatted as string]
 	end if
 end handler
 
 public handler OnMouseDown()
-	post "mouseDown" with [intToString(the click button)]
+	post "mouseDown" with [the click button formatted as string]
 end handler
 
 public handler OnMouseEnter()

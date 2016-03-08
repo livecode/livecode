@@ -9,7 +9,7 @@
 * All properties are now fully integrated into the IDE Property Inspector.
 
 * The **iconColor** and **iconHiliteColor** properties have been removed.  Set
-  the standard LiveCode **foregroundColor** and **hilitoColor** properties
+  the standard LiveCode **foregroundColor** and **hiliteColor** properties
   instead.
 
 * The **isHilited** property has been removed.  Use the standard LiveCode
