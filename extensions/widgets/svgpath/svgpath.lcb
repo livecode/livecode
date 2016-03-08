@@ -174,21 +174,22 @@ metadata Flipped.default is "false"
 metadata Flipped.label is "Flip"
 
 /**
+Name: angle
 Syntax:
-set the rotateAngle of <widget> to <pAngle>
-get the rotateAngle of <widget>
+set the angle of <widget> to <pAngle>
+get the angle of <widget>
 
 Summary: The angle of rotation of the SVG path, in degrees clockwise.
 
 Description:
-The <rotateAngle> property controls the angle of rotation of for the SVG path
+The <angle> property controls the angle of rotation of for the SVG path
 around the centre of the path's bounding box.  The rotation is in clockwise
 degrees.
 */
-property rotateAngle get mAngle set setAngle
-metadata rotateAngle.editor is "com.livecode.pi.number"
-metadata rotateAngle.default is "0"
-metadata rotateAngle.label is "Rotation"
+property Angle get mAngle set setAngle
+metadata Angle.editor is "com.livecode.pi.number"
+metadata Angle.default is "0"
+metadata Angle.label is "Rotation"
 
 /**
 Syntax:

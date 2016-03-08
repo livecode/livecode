@@ -20,7 +20,7 @@
 
 * The **flipVertically** property has been renamed to **flipped**.
 
-* The **iconAngle** property has been renamed to **rotateAngle**.
+* The **iconAngle** property has been renamed to **angle**.
 
 * The **toggleHilite** property has been removed, since the SVG path widget no
   longer handles any mouse events.
