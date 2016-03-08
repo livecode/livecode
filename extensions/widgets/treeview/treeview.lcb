@@ -91,18 +91,6 @@ The arrayData is the data currently being displayed by the tree view widget.
 property arrayData 					get getArrayData 				set setArrayData
 
 /**
-Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
-Syntax: get the alternateRowBackgrounds of <widget>
-
-Summary: Whether the alternate rows of the widget have different backgrounds or not.
-
-Description:
-Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
-**/
-
-property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
-
-/**
 Syntax: set the selectedElement of <widget> to <pPath>
 Syntax: get the selectedElement of <widget>
 
@@ -121,21 +109,15 @@ of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsu
 
 property selectedElement			get getSelectedElement			set setSelectedElement
 
-/**
-Syntax: set the showFrameBorder of <widget> to {true|false}
-Syntax: get the showFrameBorder of <widget>
+metadata foregroundColor.default is "50,50,50"
+metadata foregroundColor.label is "Text Color"
 
-Summary: Whether the widget has a border or not.
-
-Description:
-Use the showFrameBorder property to show the bounds of the widget object.
-**/
-
-property showFrameBorder			get mFrameBorder				set setFrameBorder
+metadata backgroundColor.default is "255,255,255"
+metadata backgroundColor.label is "Row Background Color"
 
 /**
-Syntax: set the selectedRowColor of <widget> to <pColor>
-Syntax: get the selectedRowColor of <widget>
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
 
 Summary: The color used to highlight a selected row.
 
@@ -143,42 +125,14 @@ Parameters:
 pColor: The color to use to highlight a row when it is selected.
 
 Description:
-Use the <selectedRowColor> property to get or set the color the tree view widget uses to highlight the selected row.
+Use the <hiliteColor> property to get or set the color the tree view widget uses to highlight the selected row.
 **/
 
-property selectedRowColor			get mSelectedRowColor			set setSelectedRowColor
-metadata selectedRowColor.editor is "com.livecode.pi.color"
-metadata selectedRowColor.default is "10,105,216"
+metadata hiliteColor.default is "10,105,216"
+metadata hiliteColor.label is "Selected Row Color"
 
-/**
-Syntax: set the readOnly of <widget> to {true|false}
-Syntax: get the readOnly of <widget>
-
-Summary: Whether the options to modify elements of the underlying array are present or not.
-
-Description:
-The <readOnly> property controls whether the widget presents the option to add elements to arrays or not.
-If false, the first row of the widget is always "Add new element", and when rows are hovered over, icons
-appear at the right to enable the removal of that element, or the addition of a new subelement.
-
-**/
-
-property readOnly					get mReadOnly					set setReadOnly
-
-/**
-Syntax: set the arrayStyle of <widget> to {true|false}
-Syntax: get the arrayStyle of <widget>
-
-Summary: Whether the tree view should display its contents in array style or as a standard tree view.
-
-Description:
-The <arrayStyle> property controls whether the keys of the <arrayData> of the widget are displayed with
-square brackets around them or not.
-
-References: arrayData (property)
-**/
-
-property arrayStyle                 get mArrayStyle                 set setArrayStyle
+metadata borderColor.default is "183,183,183"
+metadata hiliteColor.label is "Border Color"
 
 /**
 Syntax: set the sortOrder of <widget> to <pOrder>
@@ -227,6 +181,61 @@ metadata sortType.editor is "com.livecode.pi.enum"
 metadata sortType.options is "text,numeric"
 
 /**
+Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
+Syntax: get the alternateRowBackgrounds of <widget>
+
+Summary: Whether the alternate rows of the widget have different backgrounds or not.
+
+Description:
+Use the alternateRowBackgrounds property if you want to more clearly distinguish the rows displayed by the widget.
+**/
+
+property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
+
+/**
+Syntax: set the showBorder of <widget> to {true|false}
+Syntax: get the showBorder of <widget>
+
+Summary: Whether the widget has a border or not.
+
+Description:
+Use the <showBorder> property to show or hide the bounds of the widget 
+object.
+**/
+
+property showBorder			get mFrameBorder				set setFrameBorder
+
+/**
+Syntax: set the readOnly of <widget> to {true|false}
+Syntax: get the readOnly of <widget>
+
+Summary: Whether the options to modify elements of the underlying array are present or not.
+
+Description:
+The <readOnly> property controls whether the widget presents the option to add elements to arrays or not.
+If false, the first row of the widget is always "Add new element", and when rows are hovered over, icons
+appear at the right to enable the removal of that element, or the addition of a new subelement.
+
+**/
+
+property readOnly					get mReadOnly					set setReadOnly
+
+/**
+Syntax: set the arrayStyle of <widget> to {true|false}
+Syntax: get the arrayStyle of <widget>
+
+Summary: Whether the tree view should display its contents in array style or as a standard tree view.
+
+Description:
+The <arrayStyle> property controls whether the keys of the <arrayData> of the widget are displayed with
+square brackets around them or not.
+
+References: arrayData (property)
+**/
+
+property arrayStyle                 get mArrayStyle                 set setArrayStyle
+
+/**
 Syntax: set the showSeparator of <widget> to {true|false}
 Syntax: get the showSeparator of <widget>
 
@@ -260,6 +269,8 @@ metadata separatorRatio.step is "0.05"
 metadata separatorRatio.min is "0"
 metadata separatorRatio.max is "1"
 
+metadata themeClass.default is "list"
+
 // The unmodified array data
 private variable mData as Array
 // A flat list representing the array items to be displayed
@@ -287,7 +298,6 @@ private variable mUpdateDataList as Boolean
 private variable mRecalculateFit as Boolean
 
 private variable mAlternateRowBackgrounds as Boolean
-private variable mSelectedRowColor as String
 
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
@@ -348,8 +358,6 @@ public handler OnCreate() returns nothing
 	put true into mAlternateRowBackgrounds
 	put 15 into mIndentPixels
 	
-	put "10,105,216" into mSelectedRowColor
-	
 	put my height into mViewHeight
 	put my width into mViewWidth	
 	
@@ -381,7 +389,6 @@ end handler
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	put mData into rProperties["array"]
-	put mSelectedRowColor into rProperties["selected row color"]
 	put mReadOnly into rProperties["read only"]
 	put mArrayStyle into rProperties["array style"]
 	put mSortAscending into rProperties["sort ascending"]
@@ -393,7 +400,6 @@ public handler OnSave(out rProperties as Array)
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["selected row color"] into mSelectedRowColor
 	put pProperties["read only"] into mReadOnly
 
    if "array style" is among the keys of pProperties then
@@ -420,7 +426,7 @@ public handler OnLoad(in pProperties as Array)
 end handler
 
 public handler OnPaint() returns nothing
-
+	set the font of this canvas to my font
 	if mUpdateDataList then
 		updateDataList()
 	end if
@@ -467,19 +473,18 @@ public handler OnPaint() returns nothing
 	end if	
     
     // Paint the scrollbar
-	paintScrollbar(this canvas, getPaint("scrollbar", "fill"))
+	paintScrollbar(this canvas)
 	
 	// Draw the frame
 	if mFrameBorder is true then
 		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mViewHeight-0.5] into tPath
-		set the paint of this canvas to getPaint("frame","stroke")
-		stroke tPath on this canvas
+		paintBorder(tPath)
 	end if
 end handler
 
 // Utility for painting the separator
 private handler paintSeparator()
-	set the paint of this canvas to getPaint("separator","fill")
+	set the paint of this canvas to my border paint
 	fill rectangle path of separatorRectangle() on this canvas
 end handler
 
@@ -488,36 +493,27 @@ private handler paintFirstRow(in pTop as Real)
 	// Apply any style to this data item
 	variable tStyle as String
     put "" into tStyle
-	if mHoverRow is 1 then
-		put "_hover" after tStyle
-	end if	
+    
+    variable tHover as Boolean
+	put mHoverRow is 1 into tHover
 		
 	variable tPath as Path	
 	put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
-	set the paint of this canvas to getPaint("row","fill" & tStyle)
-	fill tPath on this canvas
+	paintRow(tPath, tHover, false, false)
 		
 	variable tLeft as Real
 	put kItemPadding into tLeft
-		
-	set the paint of this canvas to getPaint("text","top row" & tStyle)
 	
 	// Draw the plus icon
 	put mAddItemPath into tPath
 	translate tPath by [kItemPadding + mIconWidth / 2, pTop + mRowHeight / 2]
-	fill tPath on this canvas
-
+	paintIcon(tPath, false, false)
+	
 	// Draw text
-	fill text "Add new element" at left of rectangle [mIconWidth + 2 * kItemPadding, pTop, mViewWidth - 3 * kItemPadding - 2 * mIconWidth, pTop + mRowHeight] on this canvas
+	variable tTextRect as Rectangle
+	put rectangle [mIconWidth + 2 * kItemPadding, pTop, mViewWidth - 3 * kItemPadding - 2 * mIconWidth, pTop + mRowHeight] into tTextRect
+	paintText("Add new element", "left", tTextRect, false, false)
 end handler
-
-private handler drawTextClipped(in pText as String, in pRect as Rectangle, in pPaint as Paint)
-		save state of this canvas
-		set the paint of this canvas to pPaint		
-		clip to pRect on this canvas
-		fill text pText at left of pRect on this canvas
-		restore state of this canvas
-end handler 
 
 private handler keyRight() returns Real
 	if mShowSeparator then
@@ -542,31 +538,24 @@ private handler valueRight() returns Real
 	return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
 end handler
 
+constant kFoldArrowColor is [0,0,0]
 // Utility for painting a row with top pTop
 private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as Integer)
 	// Apply any style to this data item
-	variable tStyle as String
-	put "" into tStyle
-	if pDataItem["selected"] is true then 
-		put "_selected" after tStyle
+	variable tHover as Boolean
+	put pRow is mHoverRow into tHover
+	
+	variable tAlternate as Boolean
+	if mAlternateRowBackgrounds and pRow mod 2 is 0 then
+		put true into tAlternate
+	else
+		put false into tAlternate
 	end if
-		
-	if pRow is mHoverRow then
-		put "_hover" after tStyle
-	end if	
 		
 	variable tPath as Path	
-	// Draw the alternating row backgrounds if applicable
-	if mAlternateRowBackgrounds is true or pDataItem["selected"] is true then
-		put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
-		if pRow mod 2 is 1 or pDataItem["selected"] is true then
-			set the paint of this canvas to getPaint("row","fill" & tStyle)
-		else
-			set the paint of this canvas to getPaint("row","fill_alternate" & tStyle)
-		end if	
-		fill tPath on this canvas
-	end if
-		
+	put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
+	paintRow(tPath, tHover, pDataItem["selected"], tAlternate)
+	
 	variable tLeft as Real
 	put kItemPadding + (pDataItem["indent"] * mIndentPixels) into tLeft
 		
@@ -579,7 +568,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		end if
 		save state of this canvas
 		translate tPath by [tLeft + mIconWidth / 2, pTop + mRowHeight / 2]
-		set the paint of this canvas to getPaint("text","fill" & tStyle)
+		set the paint of this canvas to solid paint with color kFoldArrowColor
 		if mShowSeparator then
 			clip to rectangle [tLeft, pTop, mSeparatorRatio * availableSeparatorSpace(), pTop + mRowHeight] on this canvas
 		end if	
@@ -601,27 +590,18 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	end if
 	put valueLeft(the right of tDisplayRect) into tLeft
 	
-	drawTextClipped(tKeyDisplay, tDisplayRect, getPaint("text","disabled" & tStyle))
-
-    variable tIconStyle
-    put "fill" into tIconStyle
-    if pDataItem["selected"] then
-        put "_selected" after tIconStyle
-    end if
-
-    // Variable to store the icon style in
-    variable tThisIconStyle as String
-
+	paintText(pDataItem["display_key"], "left", tDisplayRect, true, pDataItem["selected"])
+	
 	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array)
 	if pDataItem["leaf"] then
-		drawTextClipped(pDataItem["display_value"], rectangle [tLeft, pTop, mViewWidth - 3 * kItemPadding - 2 * mIconWidth, pTop + mRowHeight], getPaint("text","fill" & tStyle))
+		put rectangle [tLeft, pTop, valueRight(), pTop + mRowHeight] into tDisplayRect
+		paintText(pDataItem["display_value"], "left", tDisplayRect, true, pDataItem["selected"])
 
         if mReadOnly and pDataItem["value_too_large"] then
             put mInspectItemPath into tPath
             translate tPath by [mViewWidth - scrollbarWidth() - kItemPadding - mIconWidth / 2, pTop + mRowHeight / 2]
-            set the paint of this canvas to getPaint("icon", tThisIconStyle)
-            fill tPath on this canvas
-        end if
+				paintIcon(tPath, tHover, pDataItem["selected"])
+		end if
 	end if
 
 	// Draw the action icons
@@ -629,25 +609,15 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		variable tRight as Real
 		put mViewWidth - scrollbarWidth() - kItemPadding into tRight
 
-		put tIconStyle into tThisIconStyle
 		put mDeleteItemPath into tPath
 		translate tPath by [tRight - mIconWidth / 2, pTop + mRowHeight / 2]
-		if pRow is mHoverRow and mHoverIcon is "delete" then
-            put "_hover" after tThisIconStyle
-		end if
-		set the paint of this canvas to getPaint("icon", tThisIconStyle)
-		fill tPath on this canvas
+		paintIcon(tPath, tHover and mHoverIcon is "delete", pDataItem["selected"])
 		
 		subtract kItemPadding + mIconWidth from tRight
 		
-		put tIconStyle into tThisIconStyle
 		put mAddItemPath into tPath
 		translate tPath by [tRight - mIconWidth / 2, pTop + mRowHeight / 2]
-		if pRow is mHoverRow and mHoverIcon is "add" then
-            put "_hover" after tThisIconStyle
-		end if
-		set the paint of this canvas to getPaint("icon", tThisIconStyle)
-		fill tPath on this canvas
+		paintIcon(tPath, tHover and mHoverIcon is "add", pDataItem["selected"])
 	end if
 end handler
 
@@ -1047,90 +1017,78 @@ end handler
 --
 --------------------------------------------------------------------------------
 
-private handler getPaint(pLocation, pType) returns Paint
-	if pLocation is "background" then
-		if pType is "fill" then
-			return solid paint with stringToColor("178,178,178")
-		end if
-	else if pLocation is "icon" then
-		if pType is "fill" then
-			return solid paint with stringToColor("152,152,152")
-		else if pType is "fill_hover" then
-			return solid paint with stringToColor(mSelectedRowColor)
-		else if pType is "fill_selected" then
-			return solid paint with stringToColor("255,255,255")
-		else if pType is "fill_selected_hover" then
-			return solid paint with stringToColor("0,0,0,150")	
-		end if
-	else if pLocation is "row" then
-		if pType is "fill" then
-			return solid paint with stringToColor("255,255,255")
-		else if pType is "fill_hover" then
-			return solid paint with stringToColor("235,235,235")
-		else if pType is "fill_selected" then
-			return solid paint with stringToColor(mSelectedRowColor)
-		else if pType is "fill_selected_hover" then
-			return solid paint with stringToColor(mSelectedRowColor & ",150")
-		else if pType is "fill_alternate" then
-			return solid paint with stringToColor("245,245,245")
-		else if pType is "fill_alternate_hover" then
-			return solid paint with stringToColor("230,230,230")
-		else if pType is "fill_alternate_selected" then
-			return solid paint with stringToColor(mSelectedRowColor)
-		else if pType is "fill_alternate_selected_hover" then
-			return solid paint with stringToColor(mSelectedRowColor & ",150")
-		end if
-	else if pLocation is "text" then
-		if pType is "disabled" then
-			return solid paint with stringToColor("0,0,0,150")
-		else if pType is "top row" then
-			return solid paint with stringToColor("152,152,152")
-		else if pType is "top row_hover" then
-			return solid paint with stringToColor("0,0,0,150")
-		else if pType is "disabled_hover" then
-			return solid paint with stringToColor("0,0,0,150")
-		else if pType is "disabled_selected" then
-			return solid paint with stringToColor("255,255,255,150")
-		else if pType is "disabled_selected_hover" then
-			return solid paint with stringToColor("255,255,255,150")
-		else if pType is "fill" then
-			return solid paint with stringToColor("0,0,0")
-		else if pType is "fill_hover" then
-			return solid paint with stringToColor("0,0,0")
-		else if pType is "fill_selected" then
-			return solid paint with stringToColor("255,255,255")
-		else if pType is "fill_selected_hover" then
-			return solid paint with stringToColor("255,255,255")
-		else if pType is "fill_alternate" then
-			return solid paint with stringToColor("0,0,0")
-		else if pType is "fill_alternate_hover" then
-			return solid paint with stringToColor("0,0,0")
-		else if pType is "fill_alternate_selected" then
-			return solid paint with stringToColor("255,255,255")
-		else if pType is "fill_alternate_selected_hover" then
-			return solid paint with stringToColor("255,255,255")
-		end if
-	else if pLocation is "scrollbar" then
-		if pType is "fill" then
-			return solid paint with stringToColor("0,0,0,50")
-		end if
-	else if pLocation is "frame" then
-		if pType is "stroke" then
-			return solid paint with stringToColor("188,188,188")
-		end if
-	else if pLocation is "separator" then
-		if pType is "fill" then
-			return solid paint with stringToColor("188,188,188")
-		end if
+constant kOverlayOpacity is 0.125
+private handler paintIcon(in pPath as Path, in pHover as Boolean, in pSelected as Boolean)
+	if pSelected is pHover then
+		set the paint of this canvas to my foreground paint	
+	else if pSelected then
+		set the paint of this canvas to my background paint
+	else if pHover then
+		set the paint of this canvas to my highlight paint
 	end if
 	
-	return solid paint with stringToColor("255,100,200")
+	fill pPath on this canvas
 end handler
 
-private handler getFontName() returns String
-	return "Helvetica Neue"
+private handler paintBackground(in pPath as Path)
+	set the paint of this canvas to my background paint
+	fill pPath on this canvas
+end handler
+
+private handler paintBorder(in pPath as Path)
+	set the paint of this canvas to my border paint
+	stroke pPath on this canvas
+end handler
+
+private handler paintRow(in pPath as Path, in pHover as Boolean, in pSelected as Boolean, in pAlternate as Boolean)
+	save state of this canvas
+	if pSelected then
+		set the paint of this canvas to my highlight paint
+	else
+		set the paint of this canvas to my background paint
+	end if
+	fill pPath on this canvas
 	
-	return the name of the font of this canvas
+	if pHover and pSelected then
+		set the opacity of this canvas to kOverlayOpacity			
+		set the paint of this canvas to my background paint
+		fill pPath on this canvas
+	else
+		if pHover then
+			set the paint of this canvas to my foreground paint
+			set the opacity of this canvas to kOverlayOpacity
+			fill pPath on this canvas
+		end if
+		
+		if pAlternate then
+			set the paint of this canvas to my foreground paint
+			set the opacity of this canvas to 2 * kOverlayOpacity
+			fill pPath on this canvas
+		end if
+	end if
+	restore state of this canvas
+end handler
+
+private handler paintText(in pText as String, in pAlignment as String, in pRect as Rectangle, in pClip as Boolean, in pSelected as Boolean)
+	save state of this canvas
+	if pClip then
+		clip to pRect on this canvas
+	end if
+
+	if pSelected then
+		set the paint of this canvas to my background paint
+	else
+		set the paint of this canvas to my foreground paint
+	end if
+	if pAlignment is "left" then
+		fill text pText at left of pRect on this canvas
+	else if pAlignment is "center" then
+		fill text pText at center of pRect on this canvas
+	else if pAlignment is "right" then
+		fill text pText at right of pRect on this canvas
+	end if
+	
+	restore state of this canvas
 end handler
 
 private handler stringToColor(in pString as String) returns Color
@@ -1684,11 +1642,6 @@ private handler getSelectedElement() returns String
 	return tElement
 end handler
 
-private handler setSelectedRowColor(in pColor as String)
-	put pColor into mSelectedRowColor
-	redraw all
-end handler
-
 private handler setReadOnly(in pReadOnly as Boolean)
     if pReadOnly is not mReadOnly then
         put pReadOnly into mReadOnly
@@ -1889,10 +1842,10 @@ public handler initialiseScrollbar()
 end handler
 
 // Will be the scrollbar's OnPaint handler
-public handler paintScrollbar(in pCanvas as Canvas, in pPaint as Paint)
+public handler paintScrollbar(in pCanvas as Canvas)
 	// Draw scrollbar if there is any need
 	if mScrollbarHeight > 0 then
-		set the paint of pCanvas to pPaint
+		set the paint of pCanvas to my foreground paint
 		fill mScrollbarPath on pCanvas	
 	end if
 end handler
