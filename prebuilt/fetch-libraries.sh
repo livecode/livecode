@@ -40,6 +40,12 @@ function fetchLibrary {
 	local SUBPLATFORM=$4
 
 	eval "local VERSION=\${${LIB}_VERSION}"
+	
+	# check if a platform-specific version has been specified
+	eval "local PLATFORM_VERSION=\${${LIB}_${PLATFORM}_VERSION}"
+	if [ ! -z $PLATFORM_VERSION ] ; then
+		VERSION=${PLATFORM_VERSION}
+	fi
 
 	local NAME="${LIB}-${VERSION}-${PLATFORM}-${ARCH}"
 

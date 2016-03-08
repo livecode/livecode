@@ -2,8 +2,18 @@
 
 script_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-OpenSSL_VERSION=$(cat ${script_dir}/../versions/openssl)
-ICU_VERSION=$(cat ${script_dir}/../versions/icu)
-ICU_VERSION_MAJOR=$(cat ${script_dir}/../versions/icu_major)
-Curl_VERSION=$(cat ${script_dir}/../versions/curl)
-CEF_VERSION=$(cat ${script_dir}/../versions/cef)
+LIBS=( OpenSSL ICU Curl CEF )
+
+for LIB in ${LIBS[@]} ; do
+	VERSION=$(cat ${script_dir}/../versions/${LIB,,})
+	eval "${LIB}_VERSION=$VERSION"
+
+	# Look for platform-specific version file
+	for PLATFORM in ${PLATFORMS[@]} ; do
+		if [ -f "${script_dir}/../versions/${LIB,,}_${PLATFORM,,}" ] ; then
+			VERSION=$(cat ${script_dir}/../versions/${LIB,,}_${PLATFORM,,})
+			eval "${LIB}_${PLATFORM}_VERSION=$VERSION"
+		fi
+	done
+done
+

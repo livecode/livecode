@@ -2072,6 +2072,8 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          filter lines of tCEFFiles not matching "*-cefprocess"
          // icudtl.dat needs to be placed alongside the executable
          filter lines of tCEFFiles not matching "icudtl.dat"
+         // as does the natives blob
+         filter lines of tCEFFiles not matching "natives_blob.bin"
 
          // Copy files to CEF resource folder.
          repeat for each line tCEFFile in tCEFFiles
@@ -2088,6 +2090,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
 
          // Copy files to standalone folder
          put "icudtl.dat" & return into tCEFFiles
+         put "natives_blob.bin" & return after tCEFFiles
          if pCopyRevBrowserResources then
             put "revbrowser-cefprocess" & return after tCEFFiles
          end if

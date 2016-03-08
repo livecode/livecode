@@ -9,6 +9,9 @@ ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNI
 
 ICU_VERSION_ALT=$(echo "${ICU_VERSION}" | sed 's/\./_/g')
 
+# Get major version
+ICU_VERSION_MAJOR=$(echo $ICU_VERSION | awk -F \. {'print $1'})
+
 # Grab the source for the library
 ICU_TGZ="icu-${ICU_VERSION}.tar.gz"
 ICU_SRC="icu-${ICU_VERSION}"
