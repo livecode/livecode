@@ -85,7 +85,7 @@ metadata showBorder.default is "true"
 Syntax: set the segmentCount of <widget> to <pCount>
 Syntax: get the segmentCount of <widget>
 
-Summary: Manipulates the numbe of segments of the segmented control
+Summary: Manipulates the number of segments of the segmented control
 
 Description:
 Use the <segmentCount> property to control the number of segments.
@@ -176,7 +176,6 @@ metadata segmentIcons.subeditor		is "com.livecode.pi.svgicon"
 metadata segmentIcons.delimiter		is ","
 metadata segmentIcons.default		is "align left,align center,align right"
 metadata segmentIcons.section		is "Icons"
-metadata segmentIcons.label			is "Segment Icons"
 
 /**
 Syntax: set the selectedIcons of <widget> to <pSelectedIcons>
@@ -204,7 +203,6 @@ metadata selectedIcons.subeditor	is "com.livecode.pi.svgicon"
 metadata selectedIcons.delimiter	is ","
 metadata selectedIcons.default		is "align left,align center,align right"
 metadata selectedIcons.section		is "Icons"
-metadata selectedIcons.label		is "Selected Icons"
 
 
 /**
@@ -382,21 +380,9 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["segmentMinWidth"]	into mSegmentMinWidth
 	put pProperties["selectedSegment"]	into mSelectedSegments
 	put pProperties["showFrameBorder"]	into mShowFrameBorder
-	
-	if "selectedColor" is among the keys of pProperties then
-		set property "hiliteColor" of my script object to pProperties["selectedColor"]
-	end if
-	
-	if "color" is among the keys of pProperties then
-		set property "backColor" of my script object to pProperties["color"]
-	end if
-	
+
 	if "selectedLabelColor" is among the keys of pProperties then
 		put stringToColor(pProperties["selectedLabelColor"]) into mSelectedLabelColor
-	end if
-	
-	if "labelColor" is among the keys of pProperties then
-		set property "foreColor" of my script object to pProperties["labelColor"]
 	end if
 
     put the number of elements in mSegmentNames into mNumSegments
