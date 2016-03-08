@@ -317,9 +317,6 @@ private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
 
-constant kMaxKeyDisplayChars is 50
-constant kMaxValueDisplayChars is 200
-
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
 --------------------------------------------------------------------------------
@@ -520,6 +517,29 @@ private handler drawTextClipped(in pText as String, in pRect as Rectangle, in pP
 		clip to pRect on this canvas
 		fill text pText at left of pRect on this canvas
 		restore state of this canvas
+end handler 
+
+private handler keyRight() returns Real
+	if mShowSeparator then
+		return mSeparatorRatio * availableSeparatorSpace()
+	else
+		return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
+	end if
+end handler
+
+private handler keyLeft(in pDataItem as Array) returns Real
+	variable tLeft as Real
+	put kItemPadding + (pDataItem["indent"] * mIndentPixels) into tLeft
+	add mIconWidth + kItemPadding to tLeft
+	return tLeft
+end handler
+
+private handler valueLeft(in pKeyLeft as Real) returns Real
+	return pKeyLeft + 2 * kItemPadding
+end handler
+
+private handler valueRight() returns Real
+	return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
 end handler
 
 // Utility for painting a row with top pTop
@@ -568,34 +588,18 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	end if
 	
 	add mIconWidth + kItemPadding to tLeft
-		
+
 	// Draw the key
-    // AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of key string
-    variable tKeyLength as Number
-    variable tKeyDisplay as String
-    put the number of chars in pDataItem["key"] into tKeyLength
-    if tKeyLength <= kMaxKeyDisplayChars then
-        put pDataItem["key"] into tKeyDisplay
-    else
-        put (char 1 to kMaxKeyDisplayChars of pDataItem["key"]) & "..." into tKeyDisplay
-    end if
-
-    if mArrayStyle then
-        put "[" & tKeyDisplay & "]" into tKeyDisplay
-    end if
-
 	variable tDisplayRect as Rectangle
-	if mShowSeparator then
-		put rectangle [tLeft, pTop, mSeparatorRatio * availableSeparatorSpace(), pTop + mRowHeight] into tDisplayRect
-		put mSeparatorRatio * availableSeparatorSpace() + 2*kItemPadding into tLeft
-	else
-		put rectangle [tLeft, pTop, mViewWidth - 3 * kItemPadding - 2 * mIconWidth, pTop + mRowHeight] into tDisplayRect
+	put rectangle [tLeft, pTop, keyRight(), pTop + mRowHeight] into tDisplayRect
+	if not mShowSeparator then
 		variable tTextBounds as Rectangle
-		measure tKeyDisplay on this canvas
+		measure pDataItem["display_key"] on this canvas
 		put the result into tTextBounds
-		put tTextBounds into pDataItem["keyRect"]
-		add the width of tTextBounds + kItemPadding to tLeft
+		set the width of tDisplayRect to the width of tTextBounds
+		put tDisplayRect into pDataItem["keyRect"]
 	end if
+	put valueLeft(the right of tDisplayRect) into tLeft
 	
 	drawTextClipped(tKeyDisplay, tDisplayRect, getPaint("text","disabled" & tStyle))
 
@@ -612,11 +616,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	if pDataItem["leaf"] then
 		drawTextClipped(pDataItem["display_value"], rectangle [tLeft, pTop, mViewWidth - 3 * kItemPadding - 2 * mIconWidth, pTop + mRowHeight], getPaint("text","fill" & tStyle))
 
-        if mReadOnly and pDataItem["need_inspect"] then
-            put tIconStyle into tThisIconStyle
-            if pRow is mHoverRow and mHoverIcon is "inspect" then
-                put "_hover" after tThisIconStyle
-            end if
+        if mReadOnly and pDataItem["value_too_large"] then
             put mInspectItemPath into tPath
             translate tPath by [mViewWidth - scrollbarWidth() - kItemPadding - mIconWidth / 2, pTop + mRowHeight / 2]
             set the paint of this canvas to getPaint("icon", tThisIconStyle)
@@ -889,7 +889,7 @@ private handler xPosToIconString(in pXPos as Number, in pRow as Number) returns 
 	variable tElement as Array
 	put element pRow of mDataList into tElement
 
-	if tElement["leaf"] and tElement["need_inspect"] then
+	if tElement["leaf"] and tElement["value_too_large"] then
 		return "inspect"
 	end if
 	
@@ -967,20 +967,50 @@ end handler
 -- If mRecalculateFit is true, all values are recalculated - this should only happen when the
 -- separator is moved.
 private handler updateSeparator() returns nothing
-	variable tSpace as Real
+	variable tElement as Number
+	variable tValueSpace as Real
 	if mShowSeparator then
-		put mViewWidth * (1 - mSeparatorRatio) -  4 * kItemPadding - 2 * mIconWidth into tSpace
-	else
-		put mViewWidth into tSpace
+		put valueRight() - valueLeft(keyRight()) into tValueSpace
 	end if
 	
-	variable tElement as Number
+	variable tWidth as Real	
+	put 0 into tWidth
+	
+	variable tKeySpace as Real
+	variable tTrimmed as Boolean
 	repeat with tElement from 2 up to mDataCount
+		variable tKeyLeft as Real
+		put keyLeft(mDataList[tElement]) into tKeyLeft
+		put keyRight() - tKeyLeft into tKeySpace
+
+		if mRecalculateFit or "key_too_large" is not among the keys of mDataList[tElement] then
+			variable tKeyDisplay as String
+			put mDataList[tElement]["key"] into tKeyDisplay
+			if mArrayStyle then
+				 put "[" & tKeyDisplay & "]" into tKeyDisplay
+			end if
+			put displayWidth(tKeyDisplay, tKeySpace, mDataList[tElement]["display_key"], tTrimmed) into tWidth
+			put tTrimmed into mDataList[tElement]["key_too_large"]
+		else
+			put mDataList[tElement]["key_too_large"] into tTrimmed
+		end if
+		
+		if not mShowSeparator then
+			if tTrimmed then
+				put true into mDataList[tElement]["value_too_large"]
+				put "" into mDataList[tElement]["display_value"]
+				put 0 into tValueSpace
+			else
+				put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
+			end if
+		end if
+
 		// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
 		if mDataList[tElement]["leaf"] then
 			// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
-			if mRecalculateFit or "need_inspect" is not among the keys of mDataList[tElement] then
-   			put cannotFit(mDataList[tElement]["string_value"], tSpace, mDataList[tElement]["display_value"]) into mDataList[tElement]["need_inspect"]
+			if mRecalculateFit or "value_too_large" is not among the keys of mDataList[tElement] then
+					put displayWidth(mDataList[tElement]["string_value"], tValueSpace, mDataList[tElement]["display_value"], tTrimmed) into tWidth
+					put tTrimmed into mDataList[tElement]["value_too_large"]
 			end if	
 		end if
 	end repeat
@@ -1670,7 +1700,7 @@ end handler
 private handler setArrayStyle(in pArrayStyle as Boolean)
     if pArrayStyle is not mArrayStyle then
         put pArrayStyle into mArrayStyle
-        put true into mRecalculate
+        put true into mRecalculateFit
         redraw all
     end if
 end handler
@@ -1765,22 +1795,27 @@ private handler ensureEllipsis() returns nothing
 	end if
 end handler
 
--- Returns true if the string to be rendered cannot fit in pSpace, and sets rText to
--- the portion of the string that can fit.
+-- Returns the display width of the string after fitting it in the space allowed, sets rText to 
+-- the portion of the string that can fit, and sets rTrimmed if the string was trimmed.
 -- There should always be space for an ellipsis.
-private handler cannotFit(in pText as String, in pSpace as Real, out rText as String) returns Boolean		
+private handler displayWidth(in pText as String, in pSpace as Real, out rText as String, out rTrimmed as Boolean) returns Real		
 	ensureEllipsis()
 	
 	variable tCount as Number
 	variable tCurrentString as String
-    variable tChar as String
+   variable tChar as String
+   variable tWidth as Real
+   put 0 into tWidth
 	put "" into tCurrentString
 	put 0 into tCount
 	repeat for each char tChar in pText
 		// Just return where we are so far if we encounter a new line character
 		if tChar is newline then
-			put tCurrentString & "\u{2026}" into rText
-			return true
+			put tCurrentString & "\u{2026}" into rText			
+			measure rText on this canvas
+			put the width of the result into tWidth
+			put true into rTrimmed
+			return tWidth
 		end if
 		
 		// Otherwise measure and see if what we have so far fits in the space
@@ -1788,21 +1823,24 @@ private handler cannotFit(in pText as String, in pSpace as Real, out rText as St
 		measure tCurrentString on this canvas
 		
 		// If it doesn't, return where we got to before.
-		if the width of the result + mEllipsisLength > pSpace then
-				// If we can't fit anything, just return the ellipsis.
-				if tCount is 0 then
-					put "\u{2026}" into rText
-				else		
-            	put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
-				end if
-				return true
+		put the width of the result + mEllipsisLength into tWidth
+		if tWidth > pSpace then
+			// If we can't fit anything, just return the ellipsis.
+			if tCount is 0 then
+				put "\u{2026}" into rText
+			else		
+         	put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
+			end if
+			put true into rTrimmed
+			return tWidth
 		end if
 		
 		add 1 to tCount
 	end repeat
 	
 	put pText into rText
-	return false
+	put false into rTrimmed
+	return tWidth
 end handler
 
 private handler setShowSeparator(in pShow as Boolean)
