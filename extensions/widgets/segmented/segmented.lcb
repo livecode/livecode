@@ -15,49 +15,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/** 
-A segmented control. A segmented control is a horizontal control that is made up of 
-multiple segments, where each segment functions as a discrete button.
-
-Name: segmentSelected
-Type: message
-Syntax: on segmentSelected <pSegment>
-
-Summary: Sent when a segment is selected
-
-Parameters:
-pSegment: The name of the newly selected segment
-
-Description:
-Handle the <segmentSelected> message in order to respond to a user clicking on a segment
-to select it.
-
->*Note:* if the <selectedSegment> property is set by manually (by script or through the 
-property inspector), the <segmentSelected> message will not be set, because some segments
-will be selected and others deselected simultaneously. It is usually better to handle the 
-<selectionChanged> message.
-
-References: selectedSegment (property), selectionChanged (message), segmentUnselected (message)
-
-Name: segmentUnselected
-Type: message
-Syntax: on segmentUnselected <pSegment>
-
-Summary: Sent when a segment is unselected
-
-Parameters:
-pSegment: The name of the newly unselected segment
-
-Description:
-Handle the <segmentUnselected> message in order to respond to a user clicking on a segment
-to unselect it.
-
->*Note:* if the <selectedSegment> property is set by manually (by script or through the 
-property inspector), the <segmentUnselected> message will not be set, because some segments
-will be selected and others deselected simultaneously. It is usually better to handle the 
-<selectionChanged> message.
-
-References: selectedSegment (property), selectionChanged (message), segmentSelected (message)
+/**
+A segmented control. A segmented control is a horizontal control that is made
+up of multiple segments, where each segment functions as a discrete button.
 
 Name: selectionChanged
 Type: message
@@ -69,8 +29,8 @@ Parameters:
 pList: A comma delimited list of the selected segment names
 
 Description:
-Handle the <selectionChanged> message in order to respond to a change in the selection
-of the segmented control.
+Handle the <selectionChanged> message in order to respond to a change in the
+selection of the segmented control.
 **/
 
 -- declaring extension as widget, followed by identifier

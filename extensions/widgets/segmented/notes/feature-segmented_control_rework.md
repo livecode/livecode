@@ -23,3 +23,7 @@ generic native theme colors.
 
 ## Style property removed
 The `style` property has been removed.
+
+## Messages
+The `segmentSelected` and `segmentUnselected` properties have been 
+removed. Use the `selectionChanged` message instead.
