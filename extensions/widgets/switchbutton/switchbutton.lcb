@@ -118,7 +118,7 @@ Use the <backColor> property to control the off-position fill color of the
 switch button.
 */
 metadata backgroundColor.editor is "com.livecode.pi.color"
-metadata backgroundColor.default is "empty"
+metadata backgroundColor.default is "244,244,244"
 metadata backgroundcolor.section is "Colors"
 metadata backgroundColor.label is "Background Color"
 
@@ -133,7 +133,7 @@ Use the <hiliteColor> property to control the on-position fill color of the
 switch button.
 */
 metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.default is "empty"
+metadata hiliteColor.default is "10,95,244"
 metadata hilitecolor.section is "Colors"
 metadata hiliteColor.label is "Highlight Color"
 
@@ -148,7 +148,7 @@ Use the <borderColor> property to control the on-position fill color of the
 switch button.
 */
 metadata borderColor.editor is "com.livecode.pi.color"
-metadata borderColor.default is "empty"
+metadata borderColor.default is "109,109,109"
 metadata bordercolor.section is "Colors"
 metadata borderColor.label is "Border Color"
 
