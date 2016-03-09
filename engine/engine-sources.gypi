@@ -548,8 +548,10 @@
 			'src/lnxelevate.cpp',
 			'src/lnxflst.cpp',
 			
-			# Group "Desktop - Windows"
-			'src/w32date.cpp',
+            # Group "Desktop - Windows"
+            'src/w32date.cpp',
+            'src/w32flst.h',
+            'src/w32flst.cpp',
 							
 			# Group "Theming"
 			'src/linux-theme.cpp',
@@ -703,7 +705,6 @@
 			'src/w32dc.h',
 			'src/w32defs.h',
 			'src/w32dnd.h',
-			'src/w32flst.h',
 			'src/w32prefix.h',
 			'src/w32printer.h',
 			'src/w32text.h',
@@ -837,7 +838,6 @@
 		[
 			'src/srvcgi.h',
 			'src/srvdebug.h',
-			'src/srvflst.h',
 			'src/srvmain.h',
 			'src/srvmultipart.h',
 			'src/srvscript.h',
@@ -845,7 +845,6 @@
 			'src/mode_server.cpp',
 			'src/srvcgi.cpp',
 			'src/srvdebug.cpp',
-			'src/srvflst.cpp',
 			'src/srvmain.cpp',
 			'src/srvmultipart.cpp',
 			'src/srvoutput.cpp',
