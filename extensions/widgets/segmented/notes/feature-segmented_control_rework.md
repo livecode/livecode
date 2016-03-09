@@ -39,4 +39,4 @@ The `segmentSelected` and `segmentUnselected` signals have been
 removed. Use the `hiliteChanged` message instead. The `hiliteChanged`
 message no longer has a parameter. Use the `hilitedItems` or 
 `hilitedItemNames` properties as required to obtain the new highlight 
-state
+state.
