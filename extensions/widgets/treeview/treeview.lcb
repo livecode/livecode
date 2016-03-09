@@ -71,7 +71,7 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "1.0.0"
+metadata version is "2.0.0"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 
@@ -109,9 +109,43 @@ of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsu
 
 property selectedElement			get getSelectedElement			set setSelectedElement
 
+/**
+Name: foreColor
+
+Type: property
+
+Syntax: set the foreColor of <widget> to <pColor>
+Syntax: get the foreColor of <widget>
+
+Summary: The color used for the text of the tree view.
+
+Parameters:
+pColor: Any color name, or RGB value.
+
+Description:
+Use the <foreColor> property to get or set the color the tree view widget uses for its text.
+**/
+
 metadata foregroundColor.default is "50,50,50"
 metadata foregroundColor.label is "Text Color"
 
+/**
+Name: backColor
+
+Type: property
+
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: The color used for the background of the rows of the tree view.
+
+Parameters:
+pColor: Any color name, or RGB value.
+
+Description:
+Use the <backColor> property to get or set the color the tree view widget uses for the
+background of its rows.
+**/
 metadata backgroundColor.default is "255,255,255"
 metadata backgroundColor.label is "Row Background Color"
 
@@ -122,15 +156,35 @@ Syntax: get the hiliteColor of <widget>
 Summary: The color used to highlight a selected row.
 
 Parameters:
-pColor: The color to use to highlight a row when it is selected.
+pColor: Any color name, or RGB value.
 
 Description:
-Use the <hiliteColor> property to get or set the color the tree view widget uses to highlight the selected row.
+Use the <hiliteColor> property to get or set the color the tree view widget uses to highlight 
+the selected row.
 **/
 
 metadata hiliteColor.default is "10,105,216"
 metadata hiliteColor.label is "Selected Row Color"
 
+/**
+Name: borderColor
+
+Type: property
+
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: The color used for the border and the separator of the tree view.
+
+Parameters:
+pColor: Any color name, or RGB value.
+
+Description:
+Use the <borderColor> property to get or set the color the tree view widget uses for its
+border, and the separator (if the <showSeparator> property is true).
+
+References: showSeparator (property)
+**/
 metadata borderColor.default is "183,183,183"
 metadata borderColor.label is "Border Color"
 
