@@ -334,6 +334,9 @@ metadata hilitedTextColor.default is "255,255,255"
 metadata hilitedTextColor.section is "Colors"
 metadata hilitedTextColor.label is "Highlighted Segment Label Color"
 
+metadata themeClass.default is "list"
+metadata themeClass.user_visible is "false"
+
 -- private instance variables
 private variable mMultiSelect		as Boolean
 
