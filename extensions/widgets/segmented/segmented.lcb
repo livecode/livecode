@@ -483,7 +483,6 @@ end handler
 
 private handler addToSelection(in pWhich as Number)
 	push pWhich onto mSelectedSegments
-	post "segmentSelected" with [mSegmentNames[pWhich]]
 	selectionChanged(true)
 end handler
 
@@ -492,7 +491,6 @@ private handler removeFromSelection(in pWhich as Number)
 	put the index of pWhich in mSelectedSegments into tIndex
 	if tIndex is not 0 then
 		delete element tIndex of mSelectedSegments
-		post "segmentUnselected" with [mSegmentNames[pWhich]]
 	end if
 	selectionChanged(true)
 end handler
@@ -511,7 +509,7 @@ private handler selectionChanged(in pSort as Boolean)
 	variable tNames as String
 	combine tSelectedNames with "," into tNames
 	
-	post "selectionChanged" with [tNames]
+	post "hiliteChanged"
 	redraw all
 end handler
 
