@@ -806,6 +806,14 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_has_error = true;
 	}
 	
+	if (t_is_trial &&
+		m_platform == PLATFORM_EMSCRIPTEN)
+	{
+		ctxt . SetTheResultToCString("trial of html5 is not possible");
+		t_soft_error = true;
+		t_has_error = true;
+	}
+	
 	uint32_t t_platform;
 	switch(m_platform)
 	{
