@@ -20,19 +20,17 @@ This widget is a switch button, consisting of two mutually exclusive choices or 
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged <pHilited>
+Syntax: on hiliteChanged
 Summary: Sent when the switch is changed to either the on or off position
 
-Parameters:
-pHilited (boolean): `true` if the switch is in the on position; `false` otherwise
-
 Example:
-on hiliteChanged pHilited
-	set the visible of group 1 to pHilited
+on hiliteChanged
+	set the visible of group 1 to the highlight of me
 end switchChanged
 
 Description:
-Handle the hiliteChanged message in the widget's object script to respond to the user switching the button on or off.
+Handle the hiliteChanged message in the widget's object script to respond to
+the user switching the button on or off.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -56,8 +54,6 @@ metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.
 --
 
 /**
-Name: theme
-
 Syntax: set the theme of <widget> to <pWidgetTheme>
 Syntax: get the theme of <widget>
 
@@ -75,15 +71,13 @@ button.  The currently-supported values are "native", "iOS" and "Android".
 Set the <theme> property to preview the way the switch button will appear when
 used on an Android or iOS device.
 */
-property Theme get mTheme set setWidgetTheme
-metadata Theme.editor is "com.livecode.pi.enum"
-metadata Theme.options is "native,iOS,Android"
-metadata Theme.default is "native"
-metadata Theme.label is "Theme"
+property "theme" get mTheme set setWidgetTheme
+metadata theme.editor is "com.livecode.pi.enum"
+metadata theme.options is "native,iOS,Android"
+metadata theme.default is "native"
+metadata theme.label is "Theme"
 
 /**
-Name: highlight
-
 Syntax: set the highlight of <widget> to {true | false}
 Syntax: get the highlight of <widget>
 
@@ -94,9 +88,9 @@ Value (boolean): `true` if the switch is in the on position; `false` otherwise.
 Description:
 Use this property to determine whether the switch button displays as on.
 */
-property Highlight get mSwitchIsOn set setSwitch
-metadata Highlight.default is "false"
-metadata Highlight.label is "Hilited"
+property "highlight" get mSwitchIsOn set setSwitch
+metadata highlight.default is "false"
+metadata highlight.label is "Hilited"
 
 /**
 Syntax: set the showBorder of <widget> to {true|false}
@@ -122,7 +116,7 @@ Use the <backColor> property to control the off-position fill color of the
 switch button.
 */
 metadata backgroundColor.editor is "com.livecode.pi.color"
-metadata backgroundColor.default is "empty"
+metadata backgroundColor.default is "244,244,244"
 metadata backgroundcolor.section is "Colors"
 metadata backgroundColor.label is "Background Color"
 
@@ -137,7 +131,7 @@ Use the <hiliteColor> property to control the on-position fill color of the
 switch button.
 */
 metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.default is "empty"
+metadata hiliteColor.default is "10,95,244"
 metadata hilitecolor.section is "Colors"
 metadata hiliteColor.label is "Highlight Color"
 
@@ -152,7 +146,7 @@ Use the <borderColor> property to control the on-position fill color of the
 switch button.
 */
 metadata borderColor.editor is "com.livecode.pi.color"
-metadata borderColor.default is "empty"
+metadata borderColor.default is "109,109,109"
 metadata bordercolor.section is "Colors"
 metadata borderColor.label is "Border Color"
 
@@ -506,7 +500,7 @@ public handler OnMouseUp() returns nothing
 		end if
 	end if
 
-	post "hiliteChanged" with [mSwitchIsOn]
+	post "hiliteChanged"
 	put false into mIsPressed
 end handler
 
@@ -518,7 +512,7 @@ public handler OnMouseRelease() returns nothing
 	if mMouseHasMoved then
 		setSwitch(mSwitchIsInOnPosition)
 		put false into mMouseHasMoved
-		post "hiliteChanged" with [mSwitchIsOn]
+		post "hiliteChanged"
 		put false into mIsPressed
 	end if
 end handler
