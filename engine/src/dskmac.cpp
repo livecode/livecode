@@ -7827,6 +7827,17 @@ delete last char of it; return it"
             MCListAppend(*t_list, MCresult->getvalueref()) &&
             MCListCopy(*t_list, r_list);
     }
+    
+    virtual void ShowMessageDialog(MCStringRef p_title,
+                                   MCStringRef p_message)
+    {
+#ifndef _SERVER
+        extern void MCMacPlatformShowMessageDialog(MCStringRef p_title,
+                                                   MCStringRef p_message);
+        MCMacPlatformShowMessageDialog(p_title,
+                                       p_message);
+#endif
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

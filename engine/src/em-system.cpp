@@ -1137,3 +1137,10 @@ MCEmscriptenSystem::GetDNSservers(MCListRef & r_list)
 	/* DNS servers aren't available */
 	return false;
 }
+
+void
+MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
+                                      MCStringRef p_message)
+{
+    /* Do nothing - for now */
+}

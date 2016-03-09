@@ -193,7 +193,7 @@ static void dopopupanswerdialog_postwait(void *p_context)
     }
 }
 
-int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
+int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking)
 {
 	// MW-2010-12-18: You cannot nest alertviews on iOS, so we return an immediate cancel if we are in one
 	if (s_in_modal)
@@ -211,7 +211,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	
 	s_in_modal = true;
 	while(s_in_modal)
-		MCscreen -> wait(1.0, True, True);
+		MCscreen -> wait(1.0, !p_blocking, True);
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_postwait, &ctxt);
     

@@ -165,6 +165,9 @@ public:
 	virtual bool AlternateLanguages(MCListRef & r_list);
 
 	virtual bool GetDNSservers(MCListRef & r_list);
+    
+    virtual void ShowMessageDialog(MCStringRef title,
+                                   MCStringRef message);
 };
 
 MCSystemInterface * MCDesktopCreateEmscriptenSystem(void);

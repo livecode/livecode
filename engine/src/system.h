@@ -578,6 +578,8 @@ struct MCSystemInterface
     virtual bool AlternateLanguages(MCListRef& r_list) = 0;
     
     virtual bool GetDNSservers(MCListRef& r_list) = 0;
+    
+    virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message) = 0;
 };
 
 extern MCSystemInterface *MCsystem;
