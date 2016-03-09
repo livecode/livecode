@@ -50,8 +50,8 @@ on TestColors
 	TestAssert "set segment label color", the foreColor of it is tColor
 	
 	put randomColor() into tColor
-	set the textHiliteColor of it to tColor
-	TestAssert "set segment selected color", the textHiliteColor of it is tColor
+	set the hilitedTextColor of it to tColor
+	TestAssert "set segment selected color", the hilitedTextColor of it is tColor
 end TestColors
 
 on TestEmptyColors
@@ -76,14 +76,14 @@ on TestEmptyColors
 	TestAssert "set segment label color", the foreColor of it is empty
 	
 	put randomColor() into tColor
-	set the textHiliteColor of it to tColor
-	set the textHiliteColor of it to empty
-	TestAssert "set segment selected color", the textHiliteColor of it is empty
+	set the hilitedTextColor of it to tColor
+	set the hilitedTextColor of it to empty
+	TestAssert "set segment selected color", the hilitedTextColor of it is empty
 end TestEmptyColors
 
 on TestDisplayText
 	create stack
 	create widget as "com.livecode.widget.segmented"
-	set the segmentDisplay of it to "icon"
+	set the itemStyle of it to "icon"
 	TestAssert "no runtime error when setting segment display to icon", true
 end TestDisplayText
