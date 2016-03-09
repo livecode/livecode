@@ -473,6 +473,7 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
 
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientInvalidRampErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
@@ -2614,7 +2615,11 @@ void MCCanvasGradientEvaluateType(integer_t p_type, integer_t& r_type)
 MC_DLLEXPORT_DEF
 void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient)
 {
-	MCCanvasGradientRef t_gradient;
+	if (MCProperListGetLength(p_ramp) == 0)
+	{
+		MCCanvasThrowError(kMCCanvasGradientInvalidRampErrorTypeInfo);
+		return;
+	}
 	
 	if (!MCCanvasGradientCheckStopOrder(p_ramp))
 	{
@@ -6318,6 +6323,13 @@ bool MCCanvasErrorsInitialize()
 	
 	kMCCanvasImageRepLockErrorTypeInfo = nil;
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepLockError"), MCNAME("canvas"), MCSTR("Unable to lock image pixels."), kMCCanvasImageRepLockErrorTypeInfo))
+		return false;
+	
+	kMCCanvasGradientInvalidRampErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.GradientInvalidRampError"),
+									MCNAME("canvas"),
+									MCSTR("Gradient ramps must have at least one stop."),
+									kMCCanvasGradientInvalidRampErrorTypeInfo))
 		return false;
 	
 	kMCCanvasGradientStopRangeErrorTypeInfo = nil;
