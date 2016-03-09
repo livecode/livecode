@@ -98,6 +98,7 @@ Drag-Text-Add	25
 #define IDC_SIZENSA          MAKEINTRESOURCEA(32645)
 #define IDC_SIZEALLA         MAKEINTRESOURCEA(32646)
 #define IDC_NOA              MAKEINTRESOURCEA(32648)
+#define IDC_HELPA            MAKEINTRESOURCEA(32651)
 
 static LPCSTR kMCStandardWindowsCursors[] =
 {
@@ -116,7 +117,7 @@ static LPCSTR kMCStandardWindowsCursors[] =
 	IDC_ARROWA, /* PI_DROPPER */
 	IDC_CROSSA, /* PI_PLUS */
 	IDC_WAITA, /* PI_WATCH */
-	/* PI_HELP */
+	IDC_HELPA, /* PI_HELP */
 	IDC_WAITA, /* PI_BUSY1 */
 	IDC_WAITA, /* PI_BUSY2 */
 	IDC_WAITA, /* PI_BUSY3 */
