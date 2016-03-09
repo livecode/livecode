@@ -51,7 +51,9 @@ enum
 {
 	kMCLicenseClassNone,
 	kMCLicenseClassCommunity,
+	kMCLicenseClassEvaluation,
 	kMCLicenseClassCommercial,
+	kMCLicenseClassProfessionalEvaluation,
 	kMCLicenseClassProfessional,
 };
 
