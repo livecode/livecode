@@ -108,6 +108,18 @@ IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_strea
 void MCStackSecurityProcessCapsule(void *p_start, void *p_finish)
 {
 }
+
+///////////
+
+bool MCStackSecurityPreDeploy(uint32_t p_platform, MCDeployParameters& p_params)
+{
+	return true;
+}
+
+void MCStackSecurityExecutionTimeout(void)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /* ================================================================
