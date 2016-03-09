@@ -57,7 +57,7 @@ Use the <foreColor> property to set the color of the SVG path, when the icon
 isn't highlighted.
 */
 metadata foregroundColor.editor is "com.livecode.pi.color"
-metadata foregroundColor.default is "empty"
+metadata foregroundColor.default is ""
 metadata foregroundColor.section is "Colors"
 metadata foregroundColor.label is "Normal Color"
 
@@ -73,7 +73,7 @@ Use the <hiliteColor> property to set the color of the SVG path, when the icon
 is highlighted.
 */
 metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.default is "empty"
+metadata hiliteColor.default is ""
 metadata hiliteColor.section is "Colors"
 metadata hiliteColor.label is "Highlight Color"
 
