@@ -143,7 +143,7 @@ property itemLabels		get getSegmentLabels	set setSegmentLabels
 metadata itemLabels.editor			is "com.livecode.pi.editorList"
 metadata itemLabels.subeditor		is "com.livecode.pi.string"
 metadata itemLabels.delimiter		is ","
-metadata itemLabels.default			is "Title,Title,Title"
+metadata itemLabels.default			is "Label 1,Label 2,Label 3"
 metadata itemLabels.label			is "Segment Labels"
 
 /**
@@ -215,7 +215,7 @@ property itemMinWidths	get getSegmentMinWidth	set setSegmentMinWidth
 metadata itemMinWidths.editor		is "com.livecode.pi.editorList"
 metadata itemMinWidths.subeditor	is "com.livecode.pi.number"
 metadata itemMinWidths.delimiter	is ","
-metadata itemMinWidths.default 	is "30,30,30"
+metadata itemMinWidths.default 	is "50,50,50"
 metadata itemMinWidths.label	 	is "Minimum Segment Widths"
 
 /**
@@ -411,12 +411,12 @@ public handler OnCreate()
 	put false into mMultiSelect
 	
 	put ["segment1","segment2","segment3"] into mSegmentNames
-	put ["Title","Title","Title"] into mSegmentLabels
+	put ["Label 1","Label 2","Label 3"] into mSegmentLabels
 	put ["align left","align center","align right"] into mSegmentIcons
 	put ["align left","align center","align right"] into mSelectedIcons
 	
 	put "text" into mSegmentDisplay
-	put [30,30,30] into mSegmentMinWidth
+	put [] into mSegmentMinWidth
 	put [] into mSelectedSegments
 	
 	put true into mShowFrameBorder
@@ -667,14 +667,14 @@ private handler updatePerimeter() returns nothing
 end handler
 
 constant kDefaultSegmentIcon is "circle"
-constant kDefaultSegmentLabel is "Title"
-
+constant kDefaultSegmentLabel is "Label"
+constant kDefaultSegmentMinWidth is 50
 private handler updateProperties() returns nothing
 	variable tX as Integer
 	
 	if (the number of elements in mSegmentLabels) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentLabels))
-			push kDefaultSegmentLabel onto back of mSegmentLabels
+			push (kDefaultSegmentLabel && tX formatted as string) onto back of mSegmentLabels
 		end repeat
 	else if (the number of elements in mSegmentLabels) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSegmentLabels)-mNumSegments
@@ -724,7 +724,7 @@ private handler updateProperties() returns nothing
 	
 	if (the number of elements in mSegmentMinWidth) < mNumSegments then
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentMinWidth))
-			push 30 onto back of mSegmentMinWidth
+			push kDefaultSegmentMinWidth onto back of mSegmentMinWidth
 		end repeat
 	else if (the number of elements in mSegmentMinWidth) > mNumSegments then
 		repeat with tX from 1 up to (the number of elements in mSegmentMinWidth)-mNumSegments
