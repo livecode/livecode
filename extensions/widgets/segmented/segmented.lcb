@@ -562,7 +562,7 @@ private handler drawSegments() returns nothing
 	variable tIsIn as Boolean
 	variable tLeft as Real
 	put 0 into tLeft
-	set the font of this canvas to fetchFont()
+	set the font of this canvas to my font
 	
 	repeat with tX from 1 up to mNumSegments
 		put fetchWidth(tX) into tWidth
@@ -733,13 +733,6 @@ private handler updateProperties() returns nothing
 		end repeat
 	end if
 	
-end handler
-
-private handler fetchFont() returns Font
-	variable tFont as Font
-	put the font of this canvas into tFont
-	set the size of tFont to kTextSize
-	return tFont
 end handler
 
 private handler fetchWidth(in pSegment as Integer) returns Real
