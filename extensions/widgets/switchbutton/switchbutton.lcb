@@ -56,8 +56,6 @@ metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.
 --
 
 /**
-Name: theme
-
 Syntax: set the theme of <widget> to <pWidgetTheme>
 Syntax: get the theme of <widget>
 
@@ -75,15 +73,13 @@ button.  The currently-supported values are "native", "iOS" and "Android".
 Set the <theme> property to preview the way the switch button will appear when
 used on an Android or iOS device.
 */
-property Theme get mTheme set setWidgetTheme
-metadata Theme.editor is "com.livecode.pi.enum"
-metadata Theme.options is "native,iOS,Android"
-metadata Theme.default is "native"
-metadata Theme.label is "Theme"
+property "theme" get mTheme set setWidgetTheme
+metadata theme.editor is "com.livecode.pi.enum"
+metadata theme.options is "native,iOS,Android"
+metadata theme.default is "native"
+metadata theme.label is "Theme"
 
 /**
-Name: highlight
-
 Syntax: set the highlight of <widget> to {true | false}
 Syntax: get the highlight of <widget>
 
@@ -94,9 +90,9 @@ Value (boolean): `true` if the switch is in the on position; `false` otherwise.
 Description:
 Use this property to determine whether the switch button displays as on.
 */
-property Highlight get mSwitchIsOn set setSwitch
-metadata Highlight.default is "false"
-metadata Highlight.label is "Hilited"
+property "highlight" get mSwitchIsOn set setSwitch
+metadata highlight.default is "false"
+metadata highlight.label is "Hilited"
 
 /**
 Syntax: set the showBorder of <widget> to {true|false}
