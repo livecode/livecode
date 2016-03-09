@@ -684,17 +684,16 @@ private handler updateProperties() returns nothing
 	end if
 	
 	if (the number of elements in mSegmentNames) < mNumSegments then
+		variable tNumber as Number
+		put the number of elements in mSegmentNames into tNumber 
 		repeat with tX from 1 up to (mNumSegments-(the number of elements in mSegmentNames))
 			variable tName as String
-			put (the number of elements in mSegmentNames + 1) formatted as string into tName
-			variable tDotIndex as Number
-			put the index of "." in tName into tDotIndex
-			if tDotIndex is not 0 then
-				put "segment" & (char 1 to tDotIndex - 1 of tName) into tName
-			else
-				put "segment" before tName
-			end if
-			
+			add 1 to tNumber
+			put "segment" & tNumber formatted as string into tName
+			repeat while tName is in mSegmentNames
+				add 1 to tNumber
+				put "segment" & tNumber formatted as string into tName
+			end repeat
 			push tName onto back of mSegmentNames
 		end repeat
 	else if (the number of elements in mSegmentNames) > mNumSegments then
@@ -909,9 +908,22 @@ private handler setMultiSelect(in pCanMultiSelect as Boolean)
 end handler
 
 private handler setSegmentNames(in pNames as String)
-	split pNames by "," into mSegmentNames
-	put true into mGeometryIsChanged
-	redraw all
+	variable tNames as List
+	split pNames by "," into tNames
+	
+	variable tIndex as Number
+	repeat with tIndex from 1 up to the number of elements in tNames
+		if the index of tNames[tIndex] after tIndex in tNames is not 0 then
+			throw "duplicate name" && tNames[tIndex]
+			return
+		end if
+	end repeat
+	
+	if tNames is not mSegmentNames then
+		put tNames into mSegmentNames
+		put true into mGeometryIsChanged
+		redraw all
+	end if
 end handler
 
 private handler setSegmentLabels(in pLabels as String)
