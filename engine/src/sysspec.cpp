@@ -956,11 +956,20 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (t_state -> details)
 	{
         MCAutoStringRef t_details;
+		
+		// The current expectation is that urlEncode maps to and from the native
+		// encoding. This causes a problem on Mac where filenames are stored in
+		// NFD form - i.e. u-umlaut is u then umlaut. As the decomposed form has
+		// no representation when urlEncoded via the native encoding, it does no
+		// harm to first normalize to NFC - i.e. decomposed strings won't work now
+		// but at least these means some strings will work.
+		MCAutoStringRef t_normalized;
+		/* UNCHECKED */ MCStringNormalizedCopyNFC(p_entry -> name, &t_normalized);
         
         // SN-2015-01-22: [[ Bug 14412 ]] the detailed files should return
         //   URL-encoded filenames
         MCAutoStringRef t_url_encoded;
-        MCU_urlencode(p_entry -> name, false, &t_url_encoded);
+        MCU_urlencode(*t_normalized, false, &t_url_encoded);
         
 #ifdef _WIN32
 		/* UNCHECKED */ MCStringFormat(&t_details,
