@@ -268,7 +268,7 @@ Description:
 Use the <foreColor> property to control the text color of the segments.
 **/
 metadata foregroundColor.editor		is "com.livecode.pi.color"
-metadata foregroundColor.default is "empty"
+metadata foregroundColor.default is "0,0,0"
 metadata foregroundColor.section is "Colors"
 metadata foregroundColor.label is "Segment Label Color"
 
@@ -284,7 +284,7 @@ Use the <backColor> property to control the background color of the
 segments.
 **/
 metadata backgroundColor.editor		is "com.livecode.pi.color"
-metadata backgroundColor.default is "empty"
+metadata backgroundColor.default is "244,244,244"
 metadata backgroundColor.section is "Colors"
 metadata backgroundColor.label is "Segment Color"
 
@@ -299,7 +299,7 @@ Use the <hiliteColor> property to control the background color
 of the selected segment.
 **/
 metadata hiliteColor.editor		is "com.livecode.pi.color"
-metadata hiliteColor.default is "empty"
+metadata hiliteColor.default is "10,95,244"
 metadata hiliteColor.section is "Colors"
 metadata hiliteColor.label is "Selected Segment Color"
 
@@ -314,7 +314,7 @@ Use the <borderColor> property to control the text color of the segments.
 **/
 
 metadata borderColor.editor		is "com.livecode.pi.color"
-metadata borderColor.default is "empty"
+metadata borderColor.default is "109,109,109"
 metadata borderColor.section is "Colors"
 metadata borderColor.label is "Border Color"
 
