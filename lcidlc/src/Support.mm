@@ -544,16 +544,12 @@ static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
 	
 	for(unsigned int t_index = 0; t_index < [src count] && t_error == kLCErrorNone; t_index++)
     {
-        // SN-2015-02-17: [[ ExternalsApiV6 ]] Fix issues on index string creation:
-        //   - needs a dynamically allocated t_key,
-        //   - needs to pass the pointer to this key to variable_lookup_key
-        //   - sprintf format should be "%u", not "%ud"
+        // We need to pass a pointer to the buffer variable to the lookup call so
+        // we use an array big enough to store an integer as a string and then
+        // assign that to a ptr var.
         char t_key[12];
         char *t_key_ptr;
         t_key_ptr = t_key;
-        
-        if (t_key == nil)
-            t_error = kLCErrorOutOfMemory;
         
 		if (t_error == kLCErrorNone)
 			sprintf(t_key, "%u", t_index + 1);
@@ -2684,7 +2680,7 @@ LCError LCLicenseCheckEdition(unsigned int p_min_version)
         // Make sure we use the legacy context query API as older engines
         // don't have the new one.
 		bool t_has_license_check;
-		if (s_interface -> context_query_legacy(kMCExternalContextVarHasLicenseCheck, 0, &t_has_license_check) != kMCErrorNone ||
+		if (s_interface -> context_query_legacy(kMCExternalContextVarHasLicenseCheck, &t_has_license_check) != kMCErrorNone ||
 			t_has_license_check == false)
 			return kLCErrorUnlicensed;
 	}
