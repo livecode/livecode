@@ -19,23 +19,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 A segmented control. A segmented control is a horizontal control that is made
 up of multiple segments, where each segment functions as a discrete button.
 
-Name: selectionChanged
+Name: hiliteChanged
 Type: message
-Syntax: on selectionChanged <pList>
+Syntax: on hiliteChanged
 
-Summary: Sent when the selection of the segmented control widget changes
-
-Parameters:
-pList: A comma delimited list of the selected segment names
+Summary: Sent when the hilite of the segmented control widget changes
 
 Description:
-Handle the <selectionChanged> message in order to respond to a change in the
-selection of the segmented control.
+Handle the <hiliteChanged> message in order to respond to a change in the hilited items
+of the segmented control.
 **/
 
--- declaring extension as widget, followed by identifier
 widget com.livecode.widget.segmented
---
 
 -- dependency declarations
 use com.livecode.canvas
@@ -53,23 +48,21 @@ metadata svgicon is "M72.6,0H7.7C3.4,0,0,3.4,0,7.7v14c0,4.2,3.4,7.7,7.7,7.7h64.9
 -- property declarations
 
 /**
-Syntax: set the multipleHilites of <widget> to <pCanMultiSelect>
+Syntax: set the multipleHilites of <widget> to { true | false }
 Syntax: get the multipleHilites of <widget>
 
 Summary: Whether the control can have multiple segments selected
 
-Parameters:
-pCanMultiSelect(boolean):
-
 Description:
-The multiSelect property of the control.
+Use the <multipleHilites> property to restrict the segmented control to a single highlighted
+segment, or to allow multiple segments to be highlighted.
 **/
 property multipleHilites		get mMultiSelect		set setMultiSelect		
 metadata multipleHilites.default		is "false"
 metadata multipleHilites.label			is "Multiple Hilites"
 
 /**
-Syntax: set the showBorder of <widget> to {true|false}
+Syntax: set the showBorder of <widget> to { true | false }
 Syntax: get the showBorder of <widget>
 
 Summary: Whether the widget has a border or not.
@@ -82,23 +75,23 @@ property showBorder	get mShowFrameBorder	set setShowFrameBorder
 metadata showBorder.default is "true"
 
 /**
-Syntax: set the segmentCount of <widget> to <pCount>
-Syntax: get the segmentCount of <widget>
+Syntax: set the itemCount of <widget> to <pCount>
+Syntax: get the itemCount of <widget>
 
 Summary: Manipulates the number of segments of the segmented control
 
 Description:
-Use the <segmentCount> property to control the number of segments.
+Use the <itemCount> property to control the number of segments.
 **/
-property segmentCount 	get mNumSegments		set setSegmentCount
-metadata segmentCount.editor		is "com.livecode.pi.number"
-metadata segmentCount.step is "1"
-metadata segmentCount.min is "0"
-metadata segmentCount.label is "Number of Segments"
+property itemCount 	get mNumSegments		set setSegmentCount
+metadata itemCount.editor		is "com.livecode.pi.integer"
+metadata itemCount.step is "1"
+metadata itemCount.min is "0"
+metadata itemCount.label is "Number of Segments"
 
 /**
-Syntax: set the segmentDisplay of <widget> to <pSegmentDisplay>
-Syntax: get the segmentDisplay of <widget>
+Syntax: set the itemStyle of <widget> to <pSegmentDisplay>
+Syntax: get the itemStyle of <widget>
 
 Summary: Sets the segment display style.
 
@@ -108,17 +101,17 @@ pSegmentDisplay(enum): The style of the segment display.
 -"label": Show the chosen labels
 
 Description:
-Sets the segment display style of the control to either icon or label.
+Use the <itemStyle> property to display either icons or labels in the segments.
 **/
-property segmentDisplay		get mSegmentDisplay		set setSegmentDisplay
-metadata segmentDisplay.editor		is "com.livecode.pi.enum"
-metadata segmentDisplay.options		is "text,icon"
-metadata segmentDisplay.default		is "text"
-metadata segmentDisplay.label		is "Display Style"
+property itemStyle		get mSegmentDisplay		set setSegmentDisplay
+metadata itemStyle.editor		is "com.livecode.pi.enum"
+metadata itemStyle.options		is "text,icon"
+metadata itemStyle.default		is "text"
+metadata itemStyle.label		is "Display Style"
 
 /**
-Syntax: set the segmentNames of <widget> to <pNames>
-Syntax: get the segmentNames of <widget>
+Syntax: set the itemNames of <widget> to <pNames>
+Syntax: get the itemNames of <widget>
 Summary: Sets the names of the segments.
 
 Parameters:
@@ -127,16 +120,16 @@ pNames(string): A comma-delimited list of names for the segments.
 Description:
 Sets the names of each segment in the control.
 **/
-property segmentNames		get getSegmentNames		set setSegmentNames
-metadata segmentNames.editor		is "com.livecode.pi.editorList"
-metadata segmentNames.subeditor		is "com.livecode.pi.string"
-metadata segmentNames.delimiter		is ","
-metadata segmentNames.default		is "segment1,segment2,segment3"
-metadata segmentNames.label			is "Segment Names"
+property itemNames		get getSegmentNames		set setSegmentNames
+metadata itemNames.editor		is "com.livecode.pi.editorList"
+metadata itemNames.subeditor		is "com.livecode.pi.string"
+metadata itemNames.delimiter		is ","
+metadata itemNames.default		is "segment1,segment2,segment3"
+metadata itemNames.label			is "Segment Names"
 
 /**
-Syntax: set the segmentLabels of <widget> to <pLabels>
-Syntax: get the segmentLabels of <widget>
+Syntax: set the itemLabels of <widget> to <pLabels>
+Syntax: get the itemLabels of <widget>
 
 Summary: Sets the labels of the segments.
 
@@ -146,16 +139,16 @@ pLabels: A comma-delimited list of labels for the segments.
 Description:
 Sets the labels of each segment in the control.
 **/
-property segmentLabels		get getSegmentLabels	set setSegmentLabels
-metadata segmentLabels.editor			is "com.livecode.pi.editorList"
-metadata segmentLabels.subeditor		is "com.livecode.pi.string"
-metadata segmentLabels.delimiter		is ","
-metadata segmentLabels.default			is "Title,Title,Title"
-metadata segmentLabels.label			is "Segment Labels"
+property itemLabels		get getSegmentLabels	set setSegmentLabels
+metadata itemLabels.editor			is "com.livecode.pi.editorList"
+metadata itemLabels.subeditor		is "com.livecode.pi.string"
+metadata itemLabels.delimiter		is ","
+metadata itemLabels.default			is "Title,Title,Title"
+metadata itemLabels.label			is "Segment Labels"
 
 /**
-Syntax: set the segmentIcons of <widget> to <pIcons>
-Syntax: get the segmentIcons of <widget>
+Syntax: set the itemIcons of <widget> to <pIcons>
+Syntax: get the itemIcons of <widget>
 
 Summary: Sets the icons of the segments.
 
@@ -163,51 +156,51 @@ Parameters:
 pIcons: A comma-delimited list of icon names which display as the icons for the segments.
 
 Description:
-Use the <segmentIcons> property to get or set the icons of the segmented control.
+Use the <itemIcons> property to get or set the icons of the segmented control.
 The name of an icon must be one of the names returned by the iconNames() function 
 of the com.livecode.library.iconSVG library.
 
-References: selectedIcons (property)
+References: itemHilitedIcons (property)
 **/
-property segmentIcons		get getSegmentIcons		set setSegmentIcons	
-metadata segmentIcons.label 		is "Segment Icons"
-metadata segmentIcons.editor		is "com.livecode.pi.editorlist"
-metadata segmentIcons.subeditor		is "com.livecode.pi.svgicon"
-metadata segmentIcons.delimiter		is ","
-metadata segmentIcons.default		is "align left,align center,align right"
-metadata segmentIcons.section		is "Icons"
+property itemIcons		get getSegmentIcons		set setSegmentIcons	
+metadata itemIcons.label 		is "Segment Icons"
+metadata itemIcons.editor		is "com.livecode.pi.editorlist"
+metadata itemIcons.subeditor		is "com.livecode.pi.svgicon"
+metadata itemIcons.delimiter		is ","
+metadata itemIcons.default		is "align left,align center,align right"
+metadata itemIcons.section		is "Icons"
 
 /**
-Syntax: set the selectedIcons of <widget> to <pSelectedIcons>
-Syntax: get the selectedIcons of <widget>
+Syntax: set the hilitedItemIcons of <widget> to <pIcons>
+Syntax: get the hilitedItemIcons of <widget>
 
 Summary: Sets the selected icons of the segments.
 
 Parameters:
-pSelectedIcons: A comma-delimited list of icon names which display as the icons for 
-each segment when it is selected.
+pIcons: A comma-delimited list of icon names which display as the icons for 
+each segment when it is highlighted.
 
 Description:
-Use the <selectedIcons> property to get or set the icons of the segments when they are
-selected.
+Use the <hilitedItemIcons> property to get or set the icons of the segments when they are
+highlighted.
 The name of an icon must be one of the names returned by the iconNames() function 
 of the com.livecode.library.iconSVG library.
 
-References: segmentIcons (property)
+References: itemIcons (property)
 **/
 
-property selectedIcons		get getSelectedIcons		set setSelectedIcons
-metadata selectedIcons.label 		is "Selected Segment Icons"
-metadata selectedIcons.editor		is "com.livecode.pi.editorlist"
-metadata selectedIcons.subeditor	is "com.livecode.pi.svgicon"
-metadata selectedIcons.delimiter	is ","
-metadata selectedIcons.default		is "align left,align center,align right"
-metadata selectedIcons.section		is "Icons"
+property hilitedItemIcons		get getSelectedIcons		set setSelectedIcons
+metadata hilitedItemIcons.label 		is "Highlighted Segment Icons"
+metadata hilitedItemIcons.editor		is "com.livecode.pi.editorlist"
+metadata hilitedItemIcons.subeditor	is "com.livecode.pi.svgicon"
+metadata hilitedItemIcons.delimiter	is ","
+metadata hilitedItemIcons.default		is "align left,align center,align right"
+metadata hilitedItemIcons.section		is "Icons"
 
 
 /**
-Syntax: set the segmentMinWidth of <widget> to <pMinWidths>
-Syntax: get the segmentMinWidth of <widget>
+Syntax: set the itemMinWidths of <widget> to <pMinWidths>
+Syntax: get the itemMinWidths of <widget>
 
 Summary: Sets the minimum widths of the segments.
 
@@ -218,29 +211,52 @@ Description:
 Sets the minimum width of each segment in the control.
 **/
 
-property segmentMinWidth	get getSegmentMinWidth	set setSegmentMinWidth
-metadata segmentMinWidth.editor		is "com.livecode.pi.editorList"
-metadata segmentMinWidth.subeditor	is "com.livecode.pi.number"
-metadata segmentMinWidth.delimiter	is ","
-metadata segmentMinWidth.default 	is "30,30,30"
-metadata segmentMinWidth.label	 	is "Minimum Segment Widths"
+property itemMinWidths	get getSegmentMinWidth	set setSegmentMinWidth
+metadata itemMinWidths.editor		is "com.livecode.pi.editorList"
+metadata itemMinWidths.subeditor	is "com.livecode.pi.number"
+metadata itemMinWidths.delimiter	is ","
+metadata itemMinWidths.default 	is "30,30,30"
+metadata itemMinWidths.label	 	is "Minimum Segment Widths"
 
 /**
-Syntax: set the selectedSegment of <widget> to <pSelectedSegments>
-Syntax: get the selectedSegment of <widget>
+Syntax: set the hilitedItems of <widget> to <pIndices>
+Syntax: get the hilitedItems of <widget>
 
-Summary: Sets the selected segment.
+Summary: The currently highlighted segment indices.
 
 Parameters:
-pSelectedSegments: A comma-delimited list of the numbers of the selected segment.
+pIndices: A comma-delimited list of the indices of the highlighted segments.
 
 Description:
-Sets the selected segments of the control.
+The highlighted segments of the control, as a comma-delimited list of indices. For a 
+comma-delimited list of highlighted segment names, use the <hilitedItemNames> property.
+
+References: hilitedItemNames (property)
 **/
-property selectedSegment	get getSelectedSegment	set setSelectedSegment	
-metadata selectedSegment.editor		is "com.livecode.pi.string"
-metadata selectedSegment.default	is ""
-metadata selectedSegment.label 		is "Selected Segments"
+property hilitedItems	get getSelectedSegmentIndices	set setSelectedSegmentIndices
+metadata hilitedItems.editor		is "com.livecode.pi.string"
+metadata hilitedItems.default	is ""
+metadata hilitedItems.label 		is "Highlighted Segment Indices"
+
+/**
+Syntax: set the hilitedItemNames of <widget> to <pIndices>
+Syntax: get the hilitedItemNames of <widget>
+
+Summary: The currently highlighted segment names.
+
+Parameters:
+pIndices: A comma-delimited list of the names of the highlighted segments.
+
+Description:
+The highlighted segments of the control, as a comma-delimited list of indices. For a 
+comma-delimited list of highlighted segment indices, use the <hilitedItems> property.
+
+References: hilitedItems (property)
+**/
+property hilitedItemNames	get getSelectedSegmentNames	set setSelectedSegmentNames
+metadata hilitedItemNames.editor		is "com.livecode.pi.string"
+metadata hilitedItemNames.default	is ""
+metadata hilitedItemNames.label 		is "Highlighted Segment Names"
 
 /**
 Syntax: set the foreColor of <widget> to <pColor>
@@ -303,23 +319,22 @@ metadata borderColor.section is "Colors"
 metadata borderColor.label is "Border Color"
 
 /**
-Syntax: set the textHiliteColor of <widget> to <pColor>
-Syntax: get the textHiliteColor of <widget>
+Syntax: set the hilitedTextColor of <widget> to <pColor>
+Syntax: get the hilitedTextColor of <widget>
 
-Summary: Manipulates the text color of the selected segments
+Summary: Manipulates the text color of the highlighted segments
 
 Description:
-Use the <textHiliteColor> property to control the selected text color
+Use the <hilitedTextColor> property to control the highlighted text color
 of the segments.
 **/
-property textHiliteColor 	get getSelectedLabelColor		set setSelectedLabelColor
-metadata textHiliteColor.editor		is "com.livecode.pi.color"
-metadata textHiliteColor.default is "empty"
-metadata textHiliteColor.section is "Colors"
-metadata textHiliteColor.label is "Selected Segment Label Color"
+property hilitedTextColor 	get getSelectedLabelColor		set setSelectedLabelColor
+metadata hilitedTextColor.editor		is "com.livecode.pi.color"
+metadata hilitedTextColor.default is "255,255,255"
+metadata hilitedTextColor.section is "Colors"
+metadata hilitedTextColor.label is "Highlighted Segment Label Color"
 
 -- private instance variables
---properties
 private variable mMultiSelect		as Boolean
 
 private variable mSegmentNames		as List
@@ -333,7 +348,6 @@ private variable mSelectedSegments	as List
 
 private variable mShowFrameBorder	as Boolean
 
---variables
 private variable mGeometryIsChanged	as Boolean
 private variable mNumSegments		as Integer
 
@@ -837,7 +851,15 @@ private handler getSelectedIcons() returns String
 	
 end handler
 
-private handler getSelectedSegment() returns String
+private handler getSelectedSegmentIndices() returns String
+	return getSelectedSegments(false)
+end handler
+
+private handler getSelectedSegmentNames() returns String
+	return getSelectedSegments(true)
+end handler
+
+private handler getSelectedSegments(in pNames as Boolean) returns String
 	
 	variable tSelected
 	variable tSelectedString as String
@@ -846,7 +868,11 @@ private handler getSelectedSegment() returns String
 	put the empty list into tStringList
 	
 	repeat for each element tSelected in mSelectedSegments
-		put tSelected formatted as string into tSelectedString
+		if pNames then
+			put element tSelected of mSegmentNames into tSelectedString
+		else
+			put tSelected formatted as string into tSelectedString
+		end if
 		push tSelectedString onto back of tStringList
 	end repeat
 	
@@ -933,9 +959,17 @@ private handler setSegmentMinWidth(in pMinWidths as String)
 	redraw all
 end handler
 
-private handler setSelectedSegment(in pSelectedSegment as String) 	
+private handler setSelectedSegmentIndices(in pSelectedSegments as String)
+	setSelectedSegments(false, pSelectedSegments)
+end handler 
+
+private handler setSelectedSegmentNames(in pSelectedSegments as String)
+	setSelectedSegments(true, pSelectedSegments)
+end handler 
+
+private handler setSelectedSegments(in pNames as Boolean, in pSelectedSegment as String) 	
 	variable tStringList as List
-	if pSelectedSegment is "0" then
+	if not pNames and pSelectedSegment is "0" then
 		put [] into tStringList
 	else
 		split pSelectedSegment by "," into tStringList
@@ -946,7 +980,16 @@ private handler setSelectedSegment(in pSelectedSegment as String)
 	variable tNewSelection as List
 	put [] into tNewSelection
 	repeat for each element tSelectedString in tStringList
-		put tSelectedString parsed as number into tSelected
+		if pNames then
+			-- If we're selecting by name, check if the names all exist.
+			put the index of tSelectedString in mSegmentNames into tSelected
+			if tSelected is 0 then
+				throw "segment" && tSelectedString && "does not exist"
+				return
+			end if 
+		else
+			put tSelectedString parsed as number into tSelected
+		end if
 		push tSelected onto back of tNewSelection
 	end repeat
 	setSelection(tNewSelection)
