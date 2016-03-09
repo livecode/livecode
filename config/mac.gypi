@@ -28,6 +28,7 @@
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
+		'CLANG_LINK_OBJC_RUNTIME': 'NO',
 	},
 	
 	'target_defaults':
@@ -174,7 +175,8 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386',
+				'ARCHS': 'i386 x86_64',
+				'ONLY_ACTIVE_ARCH': 'YES',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 			},
 		},
@@ -183,7 +185,7 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386',
+				'ARCHS': 'i386 x86_64',
 				'GCC_OPTIMIZATION_LEVEL': '3',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
 			},
@@ -193,7 +195,7 @@
 		{
 			'xcode_settings':
 			{
-				'ARCHS': 'i386',
+				'ARCHS': 'i386 x86_64',
 				'GCC_OPTIMIZATION_LEVEL': '0',
 				'GCC_ENABLE_FIX_AND_CONTINUE': 'NO',
 			},

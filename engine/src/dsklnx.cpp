@@ -1729,8 +1729,10 @@ public:
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                off_t t_len = t_buf.st_size;
-                if (t_len != 0)
+				// The length of a file could be > 32-bit, so we have to check that
+				// the file size fits into a 32-bit integer as that is what mmap expects
+				off_t t_len = t_buf.st_size;
+                if (t_len != 0 && t_len < UINT32_MAX)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                 t_fd, 0);
@@ -2339,6 +2341,7 @@ public:
             {
                 MCU_realloc((char **)&MCprocesses, MCnprocesses,
                             MCnprocesses + 1, sizeof(Streamnode));
+                MCprocesses[MCnprocesses].pid = 0;
                 MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
                 MCprocesses[MCnprocesses].mode = OM_NEITHER;
                 MCprocesses[MCnprocesses].ohandle = NULL;
@@ -3289,8 +3292,6 @@ public:
                 maxfd = MCinputfd;
         }
 
-        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-
         if (g_notify_pipe[0] != -1)
         {
             FD_SET(g_notify_pipe[0], &rmaskfd);
@@ -3344,7 +3345,6 @@ public:
             return True;
         if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
             readinput = True;
-        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 
         // Check whether any of the GLib file descriptors were signalled
         for (uindex_t i = 0; i < t_glib_fds.Size(); i++)

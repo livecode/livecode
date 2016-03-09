@@ -170,12 +170,19 @@ MCScreenDC::GetCurrentStack()
  * Event loop
  * ================================================================ */
 
-/* Returns true if quit is requested. */
+/* Returns true if quit is requested, or from any inner main loop. */
 Boolean
 MCScreenDC::wait(real64_t p_duration,
                  Boolean p_allow_dispatch,
                  Boolean p_accept_any_event)
 {
+	/* Don't permit inner main loops.  They cause amusing "-12" assertion
+	 * failures from Emterpreter. */
+	if (0 < int(MCwaitdepth))
+	{
+		return true;
+	}
+
 	p_duration = MCMax(p_duration, 0.0);
 
 	/* We allow p_duration to be infinite, but only if
@@ -280,6 +287,8 @@ MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, u
     
     switch (p_button_count)
     {
+		case 0:
+			// If no buttons specified, assume that an "OK" button is fine
         case 1:
             // Only one button - treat it as an "OK" button
             t_result = MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());

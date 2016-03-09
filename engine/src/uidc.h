@@ -663,6 +663,11 @@ public:
 	{
 		return gray_pixel;
 	}
+    
+    const MCColor& getbg(void) const
+    {
+        return background_pixel;
+    }
 };
 
 #endif

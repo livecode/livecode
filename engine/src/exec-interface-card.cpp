@@ -277,9 +277,9 @@ void MCCard::GetDefaultButton(MCExecContext& ctxt, MCStringRef& r_button)
 		return;
 	else
 		if (defbutton != nil)
-			defbutton -> GetLongId(ctxt, r_button);
+			defbutton -> GetLongId(ctxt, 0, r_button);
 		else
-			odefbutton -> GetLongId(ctxt, r_button);
+			odefbutton -> GetLongId(ctxt, 0, r_button);
 }
 
 void MCCard::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)
@@ -448,5 +448,11 @@ void MCCard::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
 void MCCard::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style)
 {
     MCObject::SetTextStyle(ctxt, p_style);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    MCObject::SetTheme(ctxt, p_theme);
     getstack() -> dirtyall();
 }

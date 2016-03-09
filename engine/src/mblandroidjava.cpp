@@ -1833,7 +1833,7 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
     }
     else
     {
-        MCJavaMethodParamsFree(env, t_params);
+        MCJavaMethodParamsFree(env, t_params, p_global_refs);
     }
     
     return t_success;

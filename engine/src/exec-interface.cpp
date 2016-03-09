@@ -1962,57 +1962,67 @@ void MCInterfaceExecRevert(MCExecContext& ctxt)
 
 void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, uindex_t p_control_count)
 {
+    if (p_control_count == 0)
+        return;
+    
     // MW-2013-06-20: [[ Bug 10863 ]] Make sure all objects have this parent, after
     //   the first object has been resolved.
     MCObject *t_required_parent;
     t_required_parent = nil;
+
+    MCCard *t_card = nil;
+    MCControl *controls = nil;
+    MCObject *t_this_parent = nil;
+    MCControl *cptr = nil;
     
-	if (p_control_count != 0)
-	{
-		MCCard *t_card = nil;
-		MCControl *controls = nil;
-        MCObject *t_this_parent = nil;
-		for (uindex_t i = 0; i < p_control_count; ++i)
-		{
-            t_this_parent = (p_controls[i] . object) -> getparent();
-			if (t_this_parent == nil || t_this_parent -> gettype() != CT_CARD)
-			{
-				ctxt . LegacyThrow(EE_GROUP_NOTGROUPABLE);
-				return;
-			}
-			MCControl *cptr = (MCControl *)p_controls[i] . object;
-			// MW-2011-01-21: Make sure we don't try and group shared groups
-			if (cptr -> gettype() == CT_GROUP && static_cast<MCGroup *>(cptr) -> isshared())
-			{
-				ctxt . LegacyThrow(EE_GROUP_NOBG);
-				return;
-			}
-            
-            // MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
-			//   future comparisons.
-			if (t_required_parent == nil)
-				t_required_parent = t_this_parent;
-            
-            // MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
-			//   parent.
-            if (t_this_parent != t_required_parent)
-            {
-                ctxt . LegacyThrow(EE_GROUP_DIFFERENTPARENT);
-				return;
-            }
-            
-			t_card = cptr->getcard(p_controls[i] . part_id);
-			t_card -> removecontrol(cptr, False, True);
-			cptr -> getstack() -> removecontrol(cptr);
-			cptr -> appendto(controls);
-		}
-		MCGroup *gptr;
-		if (MCsavegroupptr == NULL)
-			gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
-		else
-			gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
-		gptr->makegroup(controls, t_card); 
-	}
+    uindex_t i;
+    for (i = 0; i < p_control_count; ++i)
+    {
+        t_this_parent = (p_controls[i] . object) -> getparent();
+        if (t_this_parent == nil || t_this_parent -> gettype() != CT_CARD)
+        {
+            ctxt . LegacyThrow(EE_GROUP_NOTGROUPABLE);
+            return;
+        }
+        
+        cptr = (MCControl *)p_controls[i] . object;
+        // MW-2011-01-21: Make sure we don't try and group shared groups
+        if (cptr -> gettype() == CT_GROUP && static_cast<MCGroup *>(cptr) -> isshared())
+        {
+            ctxt . LegacyThrow(EE_GROUP_NOBG);
+            return;
+        }
+        
+        // MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
+        //   future comparisons.
+        if (t_required_parent == nil)
+            t_required_parent = t_this_parent;
+        
+        // MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
+        //   parent.
+        if (t_this_parent != t_required_parent)
+        {
+            ctxt . LegacyThrow(EE_GROUP_DIFFERENTPARENT);
+            return;
+        }
+    }
+    
+    // If we made it this far, the controls are ok to group.
+    for (i = 0; i < p_control_count; ++i)
+    {
+        cptr = (MCControl *)p_controls[i] . object;
+        t_card = cptr->getcard(p_controls[i] . part_id);
+        t_card -> removecontrol(cptr, False, True);
+        cptr -> getstack() -> removecontrol(cptr);
+        cptr -> appendto(controls);
+    }
+    
+    MCGroup *gptr;
+    if (MCsavegroupptr == NULL)
+        gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
+    else
+        gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
+    gptr->makegroup(controls, t_card);
 }
 
 void MCInterfaceExecGroupSelection(MCExecContext& ctxt)
@@ -2501,13 +2511,58 @@ void MCInterfaceExecSaveStack(MCExecContext& ctxt, MCStack *p_target)
 	MCInterfaceExecSaveStackAs(ctxt, p_target, kMCEmptyString);
 }
 
+void
+MCInterfaceExecSaveStackWithVersion(MCExecContext & ctxt,
+                                    MCStack *p_target,
+                                    MCStringRef p_version)
+{
+	MCInterfaceExecSaveStackAsWithVersion(ctxt, p_target, kMCEmptyString, p_version);
+}
+
+void
+MCInterfaceExecSaveStackWithNewestVersion(MCExecContext & ctxt,
+                                          MCStack *p_target)
+{
+	MCInterfaceExecSaveStackAsWithNewestVersion(ctxt, p_target, kMCEmptyString);
+}
+
 void MCInterfaceExecSaveStackAs(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_new_filename)
 {
 	ctxt . SetTheResultToEmpty();
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 	
-	p_target -> saveas(p_new_filename);
+	p_target -> saveas(p_new_filename, MCstackfileversion);
+}
+
+void
+MCInterfaceExecSaveStackAsWithVersion(MCExecContext & ctxt,
+                                      MCStack *p_target,
+                                      MCStringRef p_new_filename,
+                                      MCStringRef p_version)
+{
+	ctxt.SetTheResultToEmpty();
+	if (!ctxt.EnsureDiskAccessIsAllowed())
+		return;
+
+	MCInterfaceStackFileVersion t_version;
+	MCInterfaceStackFileVersionParse(ctxt, p_version, t_version);
+	if (ctxt.HasError())
+		return;
+
+	p_target->saveas(p_new_filename, t_version.version);
+}
+
+void
+MCInterfaceExecSaveStackAsWithNewestVersion(MCExecContext & ctxt,
+                                            MCStack * p_target,
+                                            MCStringRef p_new_filename)
+{
+	ctxt.SetTheResultToEmpty();
+	if (!ctxt.EnsureDiskAccessIsAllowed())
+		return;
+
+	p_target->saveas(p_new_filename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2804,7 +2859,7 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 		while (t_state)
 		{
 			if (t_state & 0x1)
-				MCtargetptr -> mup(t_which, true);
+				MCtargetptr . object -> mup(t_which, true);
 			t_state >>= 1;
 			t_which += 1;
 		}
@@ -2960,13 +3015,13 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode)
 {
 	// MW-2007-04-10: [[ Bug 4260 ]] We shouldn't attempt to attach a menu to a control that is descendent of itself
-	if (MCtargetptr -> getstack() == p_target)
+	if (MCtargetptr . object -> getstack() == p_target)
 	{
 		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
 		return;
 	}
 
-	if (MCtargetptr->attachmenu(p_target))
+	if (MCtargetptr . object -> attachmenu(p_target))
 	{
 		if (p_mode == WM_POPUP && p_at != nil)
 		{
@@ -2974,7 +3029,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 			MCmousey = p_at -> y;
 		}
 		MCRectangle t_rect;
-		t_rect = MCU_recttoroot(MCtargetptr->getstack(), MCtargetptr->getrect());
+		t_rect = MCU_recttoroot(MCtargetptr . object -> getstack(), MCtargetptr . object -> getrect());
 		MCInterfaceExecSubwindow(ctxt, p_target, nil, t_rect, WP_DEFAULT, OP_NONE, p_mode);
 		if (!MCabortscript)
 			return;
@@ -3005,6 +3060,18 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	MCStack *odefaultstackptr = MCdefaultstackptr;
 	Boolean wasvisible = MCtemplatestack->isvisible();
 
+	/* Check that a specified parent stack has a usable name before
+	 * doing anything with side-effects. */
+	MCAutoValueRef t_object_name;
+	if (!p_with_group && p_object != nil)
+	{
+		if (!p_object->names(P_NAME, &t_object_name))
+		{
+			ctxt.Throw();
+			return;
+		}
+	}
+
 	if (p_force_invisible)
 		MCtemplatestack->setflag(!p_force_invisible, F_VISIBLE);
 
@@ -3022,9 +3089,7 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 	}
 	else if (p_object != nil)
 	{
-		MCAutoValueRef t_name;
-		p_object->names(P_NAME, &t_name);
-		MCdefaultstackptr->setvariantprop(ctxt, 0, P_MAIN_STACK, False, *t_name);
+		MCdefaultstackptr->setvariantprop(ctxt, 0, P_MAIN_STACK, False, *t_object_name);
 		if (ctxt . HasError())
 		{
 			delete MCdefaultstackptr;

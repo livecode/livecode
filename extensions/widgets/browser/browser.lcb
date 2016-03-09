@@ -160,6 +160,39 @@ The <javascriptHandlers> is a list of LiveCode handlers that are made available 
 >*Warning:* Setting the <javascriptHandlers> property gives JavaScript running within the Web browser permission to execute parts of your application through the handlers you choose to expose. If using this feature, make sure that you have complete control over the webpages which you load into the browser widget, and consider using https to ensure that third-parties cannot inject malicious code into them.
 
 
+Name: browserType
+Type: property
+
+Syntax:
+set the browserType of <widget> to <pBrowserType>
+get the browserType of <widget>
+
+Summary: Specifies the underlying browser implementation to use with this browser widget.
+
+Parameters:
+pBrowserType(string): A string identifying a particular browser implementation.
+
+Example:
+	// Specify that we want this browser widget to use the CEF (Chromium Embedded Framework) browser implementation.
+	set the browserType of widget "myBrowser" to "CEF"
+
+Description:
+The <browserType> specifies which available browser implementation to use for a browser widget. The default implementation for each platform will be used when <browserType> is empty.
+*Supported browser implementations*
+
+* Windows
+  * "CEF" - (Default) Based on the Chromium Embedded Framework
+* Mac OS X:
+  * "WebView" - (Default) Based on the WebView component of the OSX WebKit framework.
+  * "CEF" - Based on the Chromium Embedded Framework
+* Linux:
+  * "CEF" - (Default) Based on the Chromium Embedded Framework
+* iOS:
+  * "UIWebView" - (Default) Based on the UIWebView component of the iOS UIKit framework.
+* Android:
+  * "WebView" - (Default) Based on the WebView component of the Android standard libraries.
+
+
 Name: browserDocumentLoadBegin
 Type: message
 Syntax: browserDocumentLoadBegin pUrl
@@ -278,6 +311,19 @@ pError(string): An error message describing the reason for the failure.
 
 Description:
 The browserNavigateFailed message is sent to the widget's script object when the browser has failed to navigate to a new page. The <pUrl> parameter contains the URL of the new page, and the <pError> parameter gives the reason for the failure.
+
+
+Name: browserUnhandledLoadRequest
+Type: message
+Syntax: browserUnhandledLoadRequest pUrl
+
+Summary: Sent when the browser is unable to handle a load request.
+
+Parameters:
+pUrl(string): The URL of the request.
+
+Description:
+The browserUnhandledLoadRequest message is sent to the widget's script object when the browser is unable to load a URL, typically due to an unrecognised URL scheme. The <pUrl> parameter contains the URL of the unhandled request.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -290,7 +336,7 @@ use com.livecode.widget
 use com.livecode.canvas
 use com.livecode.engine
 use com.livecode.extensions.libbrowser
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 --
 
 -- metadata
@@ -302,9 +348,10 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 
 -- property declarations
 property URL get getUrl set setUrl
-metadata URL.editor is "com.livecode.pi.text"
 
 property htmlText get getHtmlText set setHtmlText
+metadata htmlText.editor is "com.livecode.pi.nowraptext"
+metadata htmlText.user_visible is "false" -- bug 16927
 
 property vScrollbar get getVScrollbar set setVScrollbar
 metadata vScrollbar.editor is "com.livecode.pi.boolean"
@@ -318,12 +365,15 @@ metadata userAgent.editor is "com.livecode.pi.text"
 property javascriptHandlers get getJavaScriptHandlers set setJavaScriptHandlers
 metadata javascriptHandlers.editor is "com.livecode.pi.text"
 
+property browserType get mBrowserType set setBrowserType
+
 --------------------------------------------------------------------------------
 
 foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 
+variable mOpened as Boolean
 variable mBrowser as optional MCBrowserRef
 variable mBrowserType as String
 variable mProperties as Array
@@ -339,11 +389,22 @@ constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEn
 --------------------------------------------------------------------------------
 
 public handler OnLoad(in pProperties as Array)
+	if "browserType" is among the keys of pProperties then
+		put pProperties["browserType"] into mBrowserType
+		delete pProperties["browserType"]
+	else
+		put the empty string into mBrowserType
+	end if
+
 	put pProperties into mProperties
 end handler
 
 public handler OnSave(out rProperties as Array)
 	put mProperties into rProperties
+
+	if mBrowserType is not the empty string then
+		put mBrowserType into rProperties["browserType"]
+	end if
 end handler
 
 ----------
@@ -354,11 +415,12 @@ public handler OnCreate()
 
 	put the empty string into mBrowserType
 	put the empty array into mProperties
+	put false into mOpened
 end handler
 
 --
 
-public handler OnOpen()
+private handler InitBrowserView()
 	variable tParent as Pointer
 	
 	// put my native window into tParent
@@ -387,21 +449,33 @@ public handler OnOpen()
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 
-	// Keep a reference to this widget's script object so we can post to it from
-	//   the callbacks (which don't have a target widget when called).
-	put my script object into mScriptObject
-	
 	applyProperties(mProperties)
 end handler
 
---
-
-public handler OnClose()
+private handler FinalizeBrowserView()
 	//set my native layer to nothing
 	MCWidgetSetMyNativeLayer(nothing)
 	
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser
+end handler
+
+--
+
+public handler OnOpen()
+	// Keep a reference to this widget's script object so we can post to it from
+	//   the callbacks (which don't have a target widget when called).
+	put my script object into mScriptObject
+
+	put true into mOpened
+
+	InitBrowserView()
+end handler
+
+public handler OnClose()
+	FinalizeBrowserView()
+
+	put false into mOpened
 end handler
 
 ----------
@@ -430,10 +504,14 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 	
 	/* Dispatch browser message */
 	variable tMessage as String
-	if pFrame then
-		put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+	if tType is "navigate" and tState is "unhandled" then
+		put "browserUnhandledLoadRequest" into tMessage
 	else
-		put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+		if pFrame then
+			put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+		else
+			put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+		end if
 	end if
 	
 	variable tArgs as List
@@ -461,6 +539,20 @@ private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowse
 end handler
 
 ----------
+
+private handler setBrowserType(in pBrowserType as String)
+	if pBrowserType is not mBrowserType then
+		if mOpened then
+			FinalizeBrowserView()
+		end if
+
+		put pBrowserType into mBrowserType
+
+		if mOpened then
+			InitBrowserView()
+		end if
+	end if
+end handler
 
 private handler getProperty(in pProperty as String) returns any
 	if mBrowser is nothing then

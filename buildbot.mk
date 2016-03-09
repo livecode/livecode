@@ -130,30 +130,49 @@ UPLOAD_SERVER ?= meg.on-rev.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 
-dist-docs: dist-docs-community
-
 ifeq ($(BUILD_EDITION),commercial)
-dist-docs: dist-docs-commercial
+  dist-docs: dist-docs-commercial
+  dist-docs: dist-guide-commercial
 endif
+
+dist-docs: dist-docs-community
+dist-docs: dist-guide-community
 
 dist-docs-community:
 	mkdir -p $(docs_build_dir)
-	cp -R $(docs_source_dir) $(docs_build_dir)/raw-community
 	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
-	  --docs-dir $(docs_build_dir)/raw-community \
+	  --edition community \
 	  --built-docs-dir $(docs_build_dir)/cooked-community
 	  
 dist-docs-commercial:
 	mkdir -p $(docs_build_dir)
-	cp -R $(docs_source_dir) $(docs_build_dir)/raw-commercial
-	rsync -a $(docs_private_source_dir)/ $(docs_build_dir)/raw-commercial/
-	$(buildtool_command) --platform $(buildtool_platform) --stage docs \
-	  --docs-dir $(docs_build_dir)/raw-commercial \
+	$(buildtool_command) --platform $(buildtool_platform) \
+	  --stage docs --edition indy \
+	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+	$(buildtool_command) --platform $(buildtool_platform) \
+	  --stage docs --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
 dist-notes:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
-	$(buildtool_command) --platform $(buildtool_platform) --stage notes
+	$(buildtool_command) --platform $(buildtool_platform) \
+	    --stage notes --warn-as-error
+	    
+dist-guide-community:
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+		--edition community \
+	    --stage guide --warn-as-error
+	    
+dist-guide-commercial:
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+		--edition indy \
+	    --stage guide --warn-as-error
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+		--edition business \
+	    --stage guide --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-server: dist-server-commercial
@@ -163,11 +182,11 @@ dist-server: dist-server-community
 
 dist-server-community:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server --edition community
+	    --stage server --edition community --warn-as-error
 
 dist-server-commercial:
 	$(buildtool_command) --platform mac --platform win --platform linux \
-	    --stage server --edition commercial
+	    --stage server --edition commercial --warn-as-error
 
 ifeq ($(BUILD_EDITION),commercial)
 dist-tools: dist-tools-commercial
@@ -197,10 +216,11 @@ dist-upload-files.txt sha1sum.txt:
 	                -o -name 'LiveCode*Server-*-Linux*.zip' \
 	                -o -name 'LiveCode*Server-*-Mac.zip' \
 	                -o -name 'LiveCode*Server-*-Windows.zip' \
+	                -o -name 'LiveCode*Docs-*.zip' \
 	                -o -name '*-bin.tar.xz' \
 	  > dist-upload-files.txt; \
 	if test "${UPLOAD_RELEASE_NOTES}" = "yes"; then \
-		find "_build/notes" -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
+		find . -maxdepth 1 -name 'LiveCodeNotes*.pdf' >> dist-upload-files.txt; \
 	fi; \
 	if test "$(UPLOAD_ENABLE_CHECKSUM)" = "yes"; then \
 	  $(SHA1SUM) < dist-upload-files.txt > sha1sum.txt; \

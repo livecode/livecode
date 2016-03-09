@@ -231,7 +231,7 @@ const char *MCGraphic::gettypestring()
 
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE)))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
@@ -426,7 +426,7 @@ Boolean MCGraphic::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCGraphic::setrect(const MCRectangle &nrect)
+void MCGraphic::applyrect(const MCRectangle &nrect)
 {
 	if (realpoints != NULL)
 	{
@@ -1501,7 +1501,7 @@ MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 
 Boolean MCGraphic::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle drect = MCU_intersect_rect(srect, rect);
 	if (drect.width == 0 || drect.height == 0)
@@ -2314,11 +2314,9 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-		if (m_edit_tool != NULL)
-			m_edit_tool->drawhandles(dc);
+        
+        if (m_edit_tool != NULL)
+            m_edit_tool->drawhandles(dc);
 	}
 
 	dc -> setquality(QUALITY_DEFAULT);
@@ -2478,7 +2476,7 @@ void MCGraphic::setfillrule(uint2 p_rule)
 //  SAVING AND LOADING
 //
 
-IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// Extended data area for a graphic consists of:
 	//   tag graphic_extensions
@@ -2553,7 +2551,7 @@ IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	}
 
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
@@ -2632,7 +2630,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 	return t_stat;
 }
 
-IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	uint2 i;
 	IO_stat stat;
@@ -2655,7 +2653,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined, default false
 	uint4 t_old_flags;
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		t_old_flags = flags;
 		flags &= ~F_G_ANTI_ALIASED;
@@ -2665,11 +2663,11 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	bool t_has_extensions;
 	t_has_extensions = m_stroke_gradient != NULL || m_fill_gradient != NULL || m_stroke_miter_limit != 10.0 ||
 		leftmargin != defaultmargin || topmargin != defaultmargin || rightmargin != defaultmargin || bottommargin != defaultmargin;
-	if ((stat = MCControl::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+	if ((stat = MCControl::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 //---- 2.7+:
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 		flags = t_old_flags;
 //----
 
@@ -2735,7 +2733,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//   legacy unicode output.
     if (flags & F_G_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -2747,7 +2745,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		}
 	}
 
-	return savepropsets(stream);
+    return savepropsets(stream, p_version);
 }
 
 IO_stat MCGraphic::load(IO_handle stream, uint32_t version)

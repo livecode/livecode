@@ -114,6 +114,7 @@ static PropList stackprops[] =
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},
+		{"showInvisibles", P_SHOW_INVISIBLES},
         {"startUpIconic", P_START_UP_ICONIC},
         {"style", P_STYLE},
         {"stackFiles", P_STACK_FILES},
@@ -1199,6 +1200,58 @@ MCExecEnumTypeInfo _kMCInterfaceListStyleTypeInfo =
 	_kMCInterfaceListStyleElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeElementInfo[] =
+{
+    { "", kMCInterfaceThemeEmpty, false },
+    { "native", kMCInterfaceThemeNative, false },
+    { "legacy", kMCInterfaceThemeLegacy, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeTypeInfo =
+{
+    "Interface.Theme",
+    sizeof (_kMCInterfaceThemeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeElementInfo
+};
+
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeControlTypeElementInfo[] =
+{
+    { "", kMCPlatformControlTypeGeneric, false },
+    { "button", kMCPlatformControlTypeButton, false },
+    { "checkbox", kMCPlatformControlTypeCheckbox, false },
+    { "radiobutton", kMCPlatformControlTypeRadioButton, false },
+    { "tabbutton", kMCPlatformControlTypeTabButton, false },
+    { "tabpane", kMCPlatformControlTypeTabPane, false },
+    { "label", kMCPlatformControlTypeLabel, false },
+    { "inputfield", kMCPlatformControlTypeInputField, false },
+    { "list", kMCPlatformControlTypeList, false },
+    { "menu", kMCPlatformControlTypeMenu, false },
+    { "menuitem", kMCPlatformControlTypeMenuItem, false },
+    { "optionmenu", kMCPlatformControlTypeOptionMenu, false },
+    { "pulldownmenu", kMCPlatformControlTypePulldownMenu, false },
+    { "combobox", kMCPlatformControlTypeComboBox, false },
+    { "popupmenu", kMCPlatformControlTypePopupMenu, false },
+    { "progressbar", kMCPlatformControlTypeProgressBar, false },
+    { "scrollbar", kMCPlatformControlTypeScrollBar, false },
+    { "slider", kMCPlatformControlTypeSlider, false },
+    { "spinarrows", kMCPlatformControlTypeSpinArrows, false },
+    { "window", kMCPlatformControlTypeWindow, false },
+    { "messagebox", kMCPlatformControlTypeMessageBox, false },
+    { "richtext", kMCPlatformControlTypeRichText, false },
+    { "tooltip", kMCPlatformControlTypeTooltip, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
+{
+    "Interface.ControlType",
+    sizeof (_kMCInterfaceThemeControlTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeControlTypeElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1209,6 +1262,8 @@ MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInf
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1342,20 +1397,20 @@ void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 	ctxt . Throw();
 }
 
-void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
+void MCObject::GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name)
 {
 	MCAutoValueRef t_long_name;
-	if (names(P_LONG_NAME, &t_long_name))
+	if (getnameproperty(P_LONG_NAME, p_part_id, &t_long_name))
 		if (ctxt.ConvertToString(*t_long_name, r_long_name))
 			return;
 	
 	ctxt . Throw();
 }
 
-void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
+void MCObject::GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id)
 {
 	MCAutoValueRef t_long_id;
-	if (names(P_LONG_ID, &t_long_id))
+	if (getnameproperty(P_LONG_ID, p_part_id, &t_long_id))
 		if (ctxt.ConvertToString(*t_long_id, r_long_id))
 			return;
 	
@@ -2299,7 +2354,14 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
-		if (t_new_offset > t_old_offset)
+		// PM-2015-12-02: [[ Bug 16524 ]] Make sure empty lines reset color props
+		if (t_new_offset == t_old_offset)
+		{
+			uint2 i;
+			if (getcindex(index, i))
+				destroycindex(index, i);
+		}
+		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
 			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
@@ -3090,16 +3152,10 @@ void MCObject::Set3D(MCExecContext& ctxt, bool setting)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, bool visible)
+void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
 	bool dirty;
 	dirty = changeflag(setting, F_VISIBLE);
-
-	if (!visible)
-	{
-		flags ^= F_VISIBLE;
-		dirty = !dirty;
-	}
 
 	// MW-2011-10-17: [[ Bug 9813 ]] Record the current effective rect of the object.
 	MCRectangle t_old_effective_rect;
@@ -3127,42 +3183,27 @@ void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, b
 
 void MCObject::GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = getflag(F_VISIBLE);
-}
-
-void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
-{
-	SetVisibility(ctxt, part, setting, true);
+	r_setting = isvisible(false);
 }
 
 void MCObject::GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-    bool t_vis;
-    t_vis = getflag(F_VISIBLE);
-    
-    // if visible and effective and parent is a
-    // group then keep searching parent properties
-    if (t_vis && parent != NULL && parent->gettype() == CT_GROUP)
-        parent->GetEffectiveVisible(ctxt, part, t_vis);
-    
-    r_setting = t_vis;
+	r_setting = isvisible(true);
 }
 
 void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = (flags & F_VISIBLE) == False;
+	r_setting = !isvisible(false);
 }
 
 void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
-	SetVisibility(ctxt, part, setting, false);
+	SetVisible(ctxt, part, !setting);
 }
 
 void MCObject::GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	bool t_setting;
-    GetEffectiveVisible(ctxt, part, t_setting);
-    r_setting = !t_setting;
+    r_setting = !isvisible(true);
 }
 
 void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
@@ -3245,10 +3286,10 @@ void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
-void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
+void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
 	if (parent != nil)
-		parent -> GetLongName(ctxt, r_owner);
+        parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
@@ -4285,4 +4326,46 @@ void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, ui
 	}
     
     t_names . Take(r_names, r_count);
+}
+
+void MCObject::GetTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme;
+}
+
+void MCObject::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme = MCInterfaceTheme(p_theme);
+    
+    // Changing the theme probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = gettheme();
+}
+
+void MCObject::GetThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme_type;
+}
+
+void MCObject::SetThemeControlType(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme_type = MCPlatformControlType(p_theme);
+    
+    // Changing the theming type probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = getcontroltype();
 }

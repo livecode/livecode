@@ -406,7 +406,7 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
     virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -428,13 +428,13 @@ public:
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
 	
 	// MW-2012-03-28: [[ Bug 10130 ]] No-op for images as there is no font.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual Boolean maskrect(const MCRectangle &srect);
@@ -627,7 +627,6 @@ public:
 
 	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef &r_data);
 	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef p_data);
-    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 	
 	////////// PROPERTY ACCESSORS
 
@@ -682,7 +681,6 @@ public:
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
     virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
 };
 
 extern bool MCU_israwimageformat(Export_format p_format);

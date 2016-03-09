@@ -1684,8 +1684,8 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 
 				// MM-2014-04-16: [[ Bug 11964 ]] Prototype for MCFontMeasureText now takes transform param. Pass through identity.
 				CGContextFillRect(m_context,
-					CGRectMake(x, y - f -> ascent,
-                               MCFontMeasureText(p_mark -> text . font, *t_text, MCGAffineTransformMakeIdentity()), f -> ascent + f -> descent));
+					CGRectMake(x, y - f -> m_ascent - f -> m_leading,
+                               MCFontMeasureText(p_mark -> text . font, *t_text, MCGAffineTransformMakeIdentity()), f -> m_ascent + f -> m_descent + f -> m_leading));
 				CGContextRestoreGState(m_context);
 			}
 			

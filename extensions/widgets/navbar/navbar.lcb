@@ -44,7 +44,7 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
@@ -346,6 +346,8 @@ private variable mHiliteColor as Color
 private variable mOpacity as String
 private variable mShowDivide as Boolean
 
+private variable mActionPaths as Array
+
 --
 
 constant kIconPaddingRatio is 0.1225
@@ -446,6 +448,8 @@ public handler OnCreate() returns nothing
 
 	put "Opaque" into mOpacity
 	put true into mShowDivide
+	
+	put the empty array into mActionPaths
 end handler
 
 public handler OnPaint() returns nothing
@@ -474,6 +478,19 @@ private handler drawIos() returns nothing
 	set the paint of this canvas to getPaint("background",mOpacity)
 	fill getPath("background") on this canvas
 
+	if mNavItemCount is not 0 then
+		drawIosContent()
+	end if
+
+	-- Draw the top line
+	if mShowDivide then
+		set the paint of this canvas to getPaint("background","stroke")
+		set the stroke width of this canvas to 0
+		stroke getPath("line") on this canvas
+	end if
+end handler
+
+private handler drawIosContent() returns nothing
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
 		-- Draw the text of the nav bar
@@ -491,13 +508,6 @@ private handler drawIos() returns nothing
 
 		end if
 	end repeat
-
-	-- Draw the top line
-	if mShowDivide then
-		set the paint of this canvas to getPaint("background","stroke")
-		set the stroke width of this canvas to 0
-		stroke getPath("line") on this canvas
-	end if
 end handler
 
 private handler drawAndroid() returns nothing
@@ -516,6 +526,12 @@ private handler drawAndroid() returns nothing
 		stroke tBackground on this canvas
 	end if
 
+	if mNavItemCount is not 0 then
+		drawAndroidContent()
+	end if
+end handler
+
+private handler drawAndroidContent() returns nothing
 	-- icons
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
@@ -535,6 +551,15 @@ private handler drawNavBarEditMode() returns nothing
 	set the stroke width of this canvas to 0
 	stroke getPath("bounding box") on this canvas
 
+	if mNavItemCount is 0 then
+		set the paint of this canvas to getPaint("add", "fill")
+		fill mActionPaths["add_icon_path"] on this canvas
+	else
+		drawEditModeContent()
+	end if
+end handler
+
+private handler drawEditModeContent() returns nothing
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
 			-- Draw the text of the nav bar
@@ -544,13 +569,13 @@ private handler drawNavBarEditMode() returns nothing
 			-- Draw the selectedIcon
 			drawIcon(mNavData[tX]["selected_icon_path"], true)
 			-- Draw the 'add item' item
-			drawActionItems()
+			drawActionItems(tX)
 			-- Draw the rects round the editable elements
 			--drawEditableRects(this canvas)
 			-- Draw the line between items
 			drawEditModeDivide(tX)
 	end repeat
-
+	
 	if "item" is among the keys of mDragData then
 		drawDragData()
 	end if
@@ -625,31 +650,20 @@ private handler drawEditModeLabel(in pLabel as String, in pRect as Rectangle)
 	fill text pLabel at left of pRect on this canvas
 end handler
 
-private handler drawActionItems()
-	variable tLineHeight as Real
-	put mHeight / mNavItemCount into tLineHeight
+constant kStandardActions is ["add","delete","reorder"]
+private handler drawActionItems(in pRow as Integer)
+	drawActionItemsList(kStandardActions, pRow)
+end handler
 
-	variable tX as Integer
-	variable tRect as Rectangle
+private handler drawActionItemsList(in pActions as List, in pRow as Integer)
 	variable tIconPath as Path
-
-	repeat with tX from 1 up to mNavItemCount
-		-- Draw the add item
-		set the paint of this canvas to getPaint("text", "fill")
-		put mNavData[tX]["add_icon_path"] into tIconPath
-		fill tIconPath on this canvas
-
-		-- Draw the delete item
-		set the paint of this canvas to getPaint("background", "deleteitem")
-		put mNavData[tX]["delete_icon_path"] into tIconPath
-		fill tIconPath on this canvas
-
-		-- Draw the reorder item
-		set the paint of this canvas to getPaint("text", "fill")
-		put mNavData[tX]["reorder_icon_path"] into tIconPath
+	variable tElement as String
+	repeat for each element tElement in pActions
+		-- Draw the item
+		set the paint of this canvas to getPaint(tElement, "fill")
+		put mNavData[pRow][tElement & "_icon_path"] into tIconPath
 		fill tIconPath on this canvas
 	end repeat
-
 end handler
 
 public handler OnMouseUp() returns nothing
@@ -696,10 +710,20 @@ private handler updateParameters()
 	put my width into mWidth
 	put my height into mHeight
 	put the number of elements in mNavData into mNavItemCount
-	put mWidth / mNavItemCount into mBoxWidth
-	if mEditMode then
-		calculateEditModeIconRects()
+
+	if mNavItemCount is 0 then
+		put mWidth into mBoxWidth
 	else
+		put mWidth / mNavItemCount into mBoxWidth
+	end if
+	
+	if mEditMode then
+		if mNavItemCount is 0 then
+			calculateAddItemRect()
+		else
+			calculateEditModeIconRects()
+		end if
+	else if mNavItemCount is not 0 then
 		if mWidgetTheme is "iOS" then
 			calculateIosIconRects()
 		else if mWidgetTheme contains "Android" then
@@ -765,29 +789,74 @@ private handler calculateEditModeIconRects() returns nothing
 		setEditableRect("icon", tX, mNavData[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 		setEditableRect("selectedIcon", tX, mNavData[tX]["selected_icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 
-		variable tActionFraction
-		put 1/4 into tActionFraction
-
-		put mAddIcon into tIconPath
-		add tLineHeight + kEditModePaddingUnit to tLeft
-		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mNavData[tX]["add_icon_path"]
-		setActionRect("add_icon", tX, tIconRect, addItem, true)
-
-		put mReorderIcon into tIconPath
-		add tLineHeight * tActionFraction + kEditModePaddingUnit to tLeft
-		put rectangle [tLeft, tLineTop + tLineHeight * (1 - tActionFraction) / 2, tLeft + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mNavData[tX]["reorder_icon_path"]
-		setActionRect("reorder_icon", tX, tIconRect, reorderItem, false)
-
-		put mDeleteIcon into tIconPath
-		put rectangle [kEditModePaddingUnit, tLineTop + tLineHeight * (1 - tActionFraction) / 2, kEditModePaddingUnit + tLineHeight * tActionFraction, tLineBottom - tLineHeight * (1 - tActionFraction) / 2] into tIconRect
-		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mNavData[tX]["delete_icon_path"]
-		setActionRect("delete_icon", tX, tIconRect, deleteItem, true)
+		calculateEditModeActionPathsForRow(tX)
 	end repeat
+end handler
+
+private handler calculateAddItemRect()
+	calculateEditModeActionIconPaths(["add"])
+	setActionRect("add_icon", 1, the bounding box of mActionPaths["add_icon_path"], addItem, true)
+end handler 
+
+private handler calculateEditModeActionPathsForRow(in pRow as Integer)
+	calculateEditModeActionIconPaths(kStandardActions)
+	
+	variable tIconPath as Path
+	put mActionPaths["add_icon_path"] into tIconPath
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight] 
+	put tIconPath into mNavData[pRow]["add_icon_path"]
+	setActionRect("add_icon", pRow, the bounding box of tIconPath, addItem, true)
+
+	put mActionPaths["delete_icon_path"] into tIconPath
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight] 
+	put tIconPath into mNavData[pRow]["delete_icon_path"]
+	setActionRect("delete_icon", pRow, the bounding box of tIconPath, deleteItem, true)
+
+	put mActionPaths["reorder_icon_path"] into tIconPath
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight] 
+	put tIconPath into mNavData[pRow]["reorder_icon_path"]
+	setActionRect("reorder_icon", pRow, the bounding box of tIconPath, reorderItem, false)
+	
+end handler
+
+private handler calculateEditModeActionIconPaths(in pActions as List)
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+		
+	variable tActionFraction as Real
+	put 1/4 into tActionFraction
+
+	variable tLeft as Real
+	variable tTop as Real
+	variable tRight as Real
+	variable tBottom as Real
+	put my width - 2 * (kEditModeLineHeight * tActionFraction + kEditModePaddingUnit) into tLeft
+	put kEditModeLineHeight * (1 - tActionFraction) / 2 into tTop
+	put tLeft + kEditModeLineHeight * tActionFraction into tRight
+	put kEditModeLineHeight - kEditModeLineHeight * (1 - tActionFraction) / 2 into tBottom
+	
+	if "add" is in pActions then
+		put rectangle [tLeft, tTop, tRight, tBottom] into tIconRect
+		put mAddIcon into tIconPath
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mActionPaths["add_icon_path"]
+	end if
+
+	if "reorder" is in pActions then
+		add kEditModeLineHeight * tActionFraction + kEditModePaddingUnit to tLeft
+		put tLeft + kEditModeLineHeight * tActionFraction into tRight
+		put rectangle [tLeft, tTop, tRight, tBottom] into tIconRect
+		put mReorderIcon into tIconPath
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mActionPaths["reorder_icon_path"]
+	end if
+
+	if "delete" is in pActions then
+		put rectangle [kEditModePaddingUnit, tTop, kEditModePaddingUnit + kEditModeLineHeight * tActionFraction, tBottom] into tIconRect
+		put mDeleteIcon into tIconPath
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mActionPaths["delete_icon_path"]
+	end if
 end handler
 
 private handler calculateDragRow(in pY as Real) returns nothing
@@ -862,7 +931,11 @@ private handler calculateIosIconRects() returns nothing
 				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
 			else if mItemStyle is "icons" then
 				variable tIconSpacing
-				put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                if mNavItemCount is 1 then
+                    put 0 into tIconSpacing
+                else
+                    put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
+                end if
 				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
 			end if
 
@@ -1044,10 +1117,6 @@ public handler getPaint(pLocation, pType) returns Paint
 				return solid paint with color [0, 0, 0, 0.2]
 			else if pType is "editmode-stroke" then
 				return solid paint with color [193/255, 193/255, 193/255]
-			else if pType is "additem" then
-				return solid paint with color [0, 122/255 ,1]
-			else if pType is "deleteitem" then
-				return solid paint with color [240/255, 0 ,0]
 			else if pType is "editmode-fill" then
 				return solid paint with color [1, 1, 1]
 			end if
@@ -1062,6 +1131,14 @@ public handler getPaint(pLocation, pType) returns Paint
 				return solid paint with color [0, 0, 0]
 			end if
 		end if
+	end if
+	
+	if pLocation is "add" then
+		return solid paint with color [146/255, 146/255, 146/255]
+	else if pLocation is "reorder" then
+		return solid paint with color [146/255, 146/255, 146/255]
+	else if pLocation is "delete" then
+		return solid paint with color [240/255, 0, 0]
 	end if
 
 	return solid paint with color [1, 100/255, 200/255]
@@ -1282,25 +1359,25 @@ private handler defaultNavArray() returns Array
 end handler
 
 private handler navDataDifferent(in pLeft as List, in pRight as List) returns Boolean
+    if the number of elements in pLeft is not the number of elements in pRight then
+        return true
+    end if
+
 	variable tIndex as Number
 	repeat with tIndex from 1 up to the number of elements in pLeft
-			if tIndex > the number of elements in pRight then
-				return true
-			end if
+        if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
+            return true
+        end if
 
-			if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
-				return true
-			end if
+        if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+            return true
+        end if
 
-			if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
-				return true
-			end if
-
-			if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
-				if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
-					return true
-				end if
-			end if
+        if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
+            if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
+                return true
+            end if
+        end if
 	end repeat
 	return false
 end handler
@@ -1385,7 +1462,11 @@ private handler setNavLabels(in pLabels as String)
 end handler
 
 private handler addItem(in pItem as Number)
-	splice [defaultNavArray()] after element pItem of mNavData
+	if mNavData is [] then
+		push defaultNavArray() onto mNavData
+	else
+		splice [defaultNavArray()] after element pItem of mNavData
+	end if
 	put true into mRecalculate
 	post "navDataChanged"
 	redraw all
@@ -1393,9 +1474,6 @@ end handler
 
 private handler deleteItem(in pItem as Number)
 	delete element pItem of mNavData
-	if mNavData is the empty list then
-		put [defaultNavArray()] into mNavData
-	end if
 	put true into mRecalculate
 	post "navDataChanged"
 	redraw all
@@ -1439,11 +1517,11 @@ private handler dragDrop() returns nothing
 end handler
 
 private handler getDesiredHeight() returns Number
-	if mEditMode then
+	if mEditMode and mNavItemCount is not 0 then
 		return kEditModeLineHeight * mNavItemCount
-	else
-		return kEditModeLineHeight
 	end if
+
+    return kEditModeLineHeight
 end handler
 
 constant kOpaqueBackground is "Opaque"

@@ -40,15 +40,20 @@ public:
 	
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
+
+	MCBrowserEventHandler *GetEventHandler(void);
+	MCBrowserJavaScriptHandler *GetJavaScriptHandler(void);
 	
-	void OnNavigationBegin(bool p_in_frame, const char *p_url);
-	void OnNavigationComplete(bool p_in_frame, const char *p_url);
-	void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
-	void OnDocumentLoadBegin(bool p_in_frame, const char *p_url);
-	void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
-	void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
+	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
+	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
+	virtual void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
+	virtual void OnDocumentLoadBegin(bool p_in_frame, const char *p_url);
+	virtual void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
+	virtual void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
 	
-	void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
+	virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
+	
+	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 	
 	static bool BrowserListAdd(MCBrowser *p_browser);
 	static void BrowserListRemove(MCBrowser *p_browser);
@@ -144,6 +149,11 @@ template <class T>
 inline void MCBrowserMemoryDeleteArray(T*p_array)
 {
 	MCBrowserMemoryDeallocate(p_array);
+}
+template <class T>
+inline void MCBrowserMemoryClear(T &p_struct)
+{
+	MCBrowserMemoryClear(&p_struct, sizeof(T));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

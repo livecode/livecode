@@ -8,10 +8,17 @@ SDK_MAJORVERSION=${SDK_NAME: -3}
 SDK_MAJORVERSION=${SDK_MAJORVERSION: 0:1}
 SDK_MINORVERSION=${SDK_NAME: -1}
 
+SDK_PLATFORM=${SDK_NAME: 0:${#SDK_NAME}-3}
 
 if [ -f "$LIVECODE_DEP_FILE" ]; then
 
     DEPS=$(cat "$LIVECODE_DEP_FILE")
+
+    STATIC_FRAMEWORKS=$DEPS
+    STATIC_FRAMEWORKS="$(sed "/^weak-framework/d" <<< "$STATIC_FRAMEWORKS")"
+    STATIC_FRAMEWORKS="$(sed "/^framework/d" <<< "$STATIC_FRAMEWORKS")"
+    STATIC_FRAMEWORKS="$(sed "/^library/d" <<< "$STATIC_FRAMEWORKS")"
+    STATIC_FRAMEWORKS=${STATIC_FRAMEWORKS//static-framework /-framework }
 
     # Frameworks may not exist in older sdks so conditionally include
     for MAJORVERSION in 3 4 5 6 7 8 9; do
@@ -25,6 +32,8 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
             fi
         done
     done
+
+    DEPS="$(sed "/static-framework /d" <<< "$DEPS")"
 
     echo -e "$DEPS" > "$LIVECODE_DEP_FILE.tmp"
 
@@ -42,6 +51,11 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
     DEPS="$DEPS -framework Foundation -framework UIKit"
 
 fi
+
+# Workaround trailing whitespace issue
+FRAMEWORK_SEARCH_PATHS="$(echo -e "${FRAMEWORK_SEARCH_PATHS}" | sed -e 's/[[:space:]]*$//')"
+
+FRAMEWORK_SEARCH_PATHS="-F${FRAMEWORK_SEARCH_PATHS// / -F}"
 
 # Support using the same script for old externals
 if [ "$SYMBOLS" != "_getXtable" ]; then
@@ -70,7 +84,7 @@ do
 done
 
 # We still want to produce dylib for the simulator
-if [ "$EFFECTIVE_PLATFORM_NAME" = "-iphonesimulator" ]; then
+if [ "$SDK_PLATFORM" = "iphonesimulator" ]; then
 	BUILD_DYLIB=1
 else
 	BUILD_DYLIB=0
@@ -93,14 +107,14 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
     ARCHS="-arch ${ARCHS// / -arch }"
 
 	if [ $BUILD_DYLIB -eq 1 ]; then
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
+		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
 	fi
 
 	if [ $? -ne 0 ]; then
 		exit $?
 	fi
 
-	"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+	"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
 else
 	# Only executed if the binaries have a FAT header, and we need an architecture-specific
 	# linking
@@ -121,14 +135,14 @@ else
 
 		# Build the 'dylib' form of the external - this is used by simulator builds, and as
 		# a dependency check for device builds.
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" -o "$DYLIB_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
+    "$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib -arch $ARCH -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$DYLIB_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
 		if [ $? != 0 ]; then
 			echo "error: linking step of external dylib build failed, probably due to missing framework or library references - check the contents of the $PRODUCT_NAME.ios file"
 			exit $?
 		fi
 
 		# Build the 'object file' form of the external - this is used by device builds.
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x -arch $ARCH  -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" -o "$LCEXT_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x -arch $ARCH  -miphoneos-version-min=${MIN_VERSION} -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$LCEXT_FILE" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
 		if [ $? != 0 ]; then
 			echo "error: linking step of external object build failed"
 			exit $?
@@ -145,14 +159,14 @@ else
 	rm -r ${DYLIB_FILE_LIST}
 	rm -r ${LCEXT_FILE_LIST}
 fi
-		
+
 # Now copy the products into the 'binaries' folder - the dylibs are used for simulator/testing on device
 # through XCode; the lcext file is for standalone (device) builds from the IDE.
 mkdir -p "$SRCROOT/binaries"
 
 SUFFIX=${SDK_NAME: -3}
 SUFFIX="-${SUFFIX//\./_}"
-if [ "$EFFECTIVE_PLATFORM_NAME" == "-iphonesimulator" ]; then
+if [ "$SDK_PLATFORM" == "iphonesimulator" ]; then
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries/$PRODUCT_NAME-Simulator$SUFFIX.dylib"
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries"
     dsymutil "$SRCROOT/binaries/$PRODUCT_NAME.dylib"

@@ -1266,7 +1266,8 @@ function revDocsParseDocTextToLibraryArray pFile, pText, pLibraryName, pAuthor
    local tLibraryA
    put revDocsParseDocText(pText, pFile) into tLibraryA
    if pLibraryName is not empty then
-      put pLibraryName into tLibraryA["name"]
+      put pLibraryName into tLibraryA["display name"]
+      put revDocsModifyForUrl(pLibraryName) into tLIbraryA["name"]
    end if
    put pAuthor into tLibraryA["author"]
    return tLibraryA
@@ -1344,7 +1345,8 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
+            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1374,7 +1376,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["name"] into tAssociationsDefault["content"]
+   put tParsedA["display name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1895,8 +1897,8 @@ end __tabs
 function revDocsFormatLibraryArrayAsJSON pLibraryA
    local tJSON
    put "{" after tJSON
-   put return & __tabs(2) & keyValue("display name",pLibraryA["name"]) & comma after tJSON
-   put return & __tabs(2) & keyValue("name",revDocsModifyForURL(pLibraryA["name"])) & comma after tJSON
+   put return & __tabs(2) & keyValue("display name",pLibraryA["display name"]) & comma after tJSON
+   put return & __tabs(2) & keyValue("name",pLibraryA["name"]) & comma after tJSON
    put return & __tabs(2) & keyValue("author",pLibraryA["author"]) & comma after tJSON
    put return & __tabs(2) & escape("doc") & ":[" after tJSON
    
@@ -2283,3 +2285,371 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    return tJSON
    
 end revDocsFormatLibraryDataAsJSON
+
+##################################################
+#
+#        Docs API database
+#
+##################################################
+
+constant kAPIDatabaseFile = "api.sqlite"
+
+function revDocsAPIDatabasePath pFolder
+   return pFolder & slash & kAPIDatabaseFile
+end revDocsAPIDatabasePath
+
+on revDocsOpenAPIDatabase pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+   
+   local tConnection
+   put revOpenDatabase("sqlite",kAPIDatabaseFile,,,,,,) into tConnection
+   
+   if tConnection is not a number then
+      return "unable to create sqlite API database" & return & the result
+   end if
+   
+   return tConnection
+end revDocsOpenAPIDatabase
+
+on revDocsUpdateDatabase pConnection, pLibraryA
+   if pConnection is empty then
+      return "no database connection"
+   end if
+   
+   local tSQL, tResult
+   
+   # Create the libraries table. This might already exist, so do it unchecked.
+   put "CREATE TABLE libraries(library_id integer primary key, library_name text, author text, type text)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   local tName
+   put pLibraryA["name"] into tName
+   if tName is empty then
+      put revDocsModifyForURL(pLibraryA["display name"]) into tName
+   end if 
+   
+   local tAuthor
+   put pLibraryA["author"] into tAuthor
+   
+   local tType
+   put pLibraryA["type"] into tType
+   
+   # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+   put "UPDATE libraries SET author = :1, type = :2 WHERE library_name = :3" into tSQL
+   revExecuteSQL pConnection, tSQL, "tAuthor", "tType", "tName" 
+   put the result into tResult
+   if tResult is not a number or tResult is 0 then
+      put "INSERT into libraries VALUES(NULL, :1, :2, :3)" into tSQL
+      revExecuteSQL pConnection, tSQL, "tName", "tAuthor", "tType"
+      put the result into tResult
+   end if
+   
+   if tResult is not a number then
+      return "unable to open table 'libraries'" & return & tResult
+   end if
+   
+   # Create the library data table. This might already exist, so do it unchecked.
+   put "CREATE TABLE dictionary_data(library_id integer, entry_name text, entry_type text, entry_data blob)" into tSQL
+   revExecuteSQL pConnection, tSQL
+   
+   revDocsUpdateLibrary pConnection, tName, pLibraryA["doc"]
+   if the result is not empty then
+      return "unable to update data for library" && tName & return & the result
+   end if
+   
+   return empty
+end revDocsUpdateDatabase
+
+on revDocsUpdateLibrary pConnection, pName, pDocDataA
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, "pName") into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   local tDocA, tDocName
+   repeat for each element tDocA in pDocDataA
+      put tDocA["name"] into tDocName
+      if tDocName is empty then
+         put revDocsModifyForURL(tDocA["display name"]) into tDocName
+      end if 
+      
+      local tType
+      put tDocA["type"] into tType
+      
+      local tEncodedData, tResult
+      put arrayEncode(tDocA) into tEncodedData
+      # Try an UPDATE first. If this fails, the entry might not exist already, so try an INSERT.
+      put "UPDATE dictionary_data SET entry_data = :1 WHERE entry_name = :2 AND entry_type = :3 AND library_id = :4" into tSQL
+      revExecuteSQL pConnection, tSQL, "*btEncodedData", "tDocName", "tType", "tLibraryID"
+      put the result into tResult
+      if tResult is not a number or tResult is 0 then
+         put "INSERT into dictionary_data VALUES(:1, :2, :3, :4)" into tSQL
+         revExecuteSQL pConnection, tSQL, "tLibraryID", "tDocName", "tType", "*btEncodedData"
+         put the result into tResult
+      end if
+      
+      if tResult is not a number then
+         return "unable to insert data for" && pName & ":" & tDocName & return & the result
+      end if
+   end repeat
+   return empty
+end revDocsUpdateLibrary
+
+on revDocsRemoveLibrary pConnection, pName
+   # Find the library id
+   local tSQL, tLibraryID
+   put "SELECT library_id FROM libraries WHERE library_name = :1" into tSQL
+   put revDataFromQuery(comma, return, pConnection, tSQL, pName) into tLibraryID
+   
+   if the result is not a number then
+      return "error finding library id for" && pName & return & the result
+   end if
+   
+   # Delete all entries associated with this library
+   put "DELETE * FROM dictionary_data WHERE library_id = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, "tLibraryID"
+   if the result is not a number then
+      return "unable to delete data for" && pName & return & the result
+   end if
+   
+   # Delete the library entry from the libraries table
+   put "DELETE * FROM libraries WHERE library_name = :1" into tSQL
+   revExecuteSQL pConnection, tSQL, pName 
+   if the result is not a number then
+      return "unable to remove library" && pName && "from libraries table" & return & the result
+   end if	
+   
+   return empty
+end revDocsRemoveLibrary
+
+
+/*
+Guide files can have a YAML-like metadata block at the start. The block 
+is delimited by lines of exactly three hyphens "---", and every line in 
+between *must* be blank or contain a "key: value" pair.  For example:
+---
+group: deployment
+---
+*/
+private command revDocsSplitMetadata pText, @rMarkdown, @rMetadata
+   -- Check for a metadata block
+   if the first line of pText is not "---" then
+      put empty into rMetadata
+      put pText into rMarkdown
+      exit revDocsSplitMetadata
+   end if
+   
+   -- Search for a terminal "---" line
+   local tMetadataEnd
+   put lineOffset("---", pText, 1) into tMetadataEnd
+   if tMetadataEnd is 1 then
+      throw "Unterminated metadata header"
+   end if
+   
+   put revDocsParseYaml(line 2 to tMetadataEnd of pText) into rMetadata
+   put line (tMetadataEnd + 2) to -1 of pText into rMarkdown
+end revDocsSplitMetadata
+
+/*
+Parse yaml into a structured array.
+At the moment, we only deal with key value pairs, where the value is
+either a string or a list.
+*/
+private function revDocsParseYaml pYaml
+   local tYaml
+   
+   local tNumLines
+   put the number of lines in pYaml into tNumLines
+   set the itemdelimiter to colon
+   
+   local tCurLine, tLine
+   repeat while tCurLine <= tNumLines
+      put line tCurLine of pYaml into tLine
+      put word 1 to -1 of tLine into tLine
+      if item 1 of tLine is empty or char 1 of tLine is "#" then
+         add 1 to tCurLine
+         next repeat
+      end if
+      
+      local tKey, tValue
+      put item 1 of tLine into tKey
+      if item 2 of tLine is empty then
+         # parse a list
+         local tList, tNextKey
+         put lineOffset(":", pYaml, tCurLine) + tCurLine into tNextKey
+         if tNextKey is tCurLine then
+            put tNumLines + 1 into tNextKey
+         end if
+         put line tCurLine + 1 to tNextKey - 1 of pYaml into tList
+         put revDocsParseYamlList(tList) into tValue
+         put tNextKey into tCurLine
+      else
+         # simple key-value pair
+         put word 1 to -1 of (item 2 to -1 of tLine) into tValue
+         add 1 to tCurLine
+      end if
+      put tValue into tYaml[tKey]
+   end repeat
+   return tYaml
+end revDocsParseYaml
+
+private command addToList pElement, @xArray
+   local tCount
+   put the number of elements in xArray into tCount
+   put pElement into xArray[tCount + 1]
+end addToList
+
+private function revDocsParseYamlList pYaml
+   local tListA
+   repeat for each line tLine in pYaml
+      set the itemdelimiter to "-"
+      put word 1 to -1 of tLine into tLine
+      if the number of items of tLine is 0 or char 1 of tLine is "#" then
+         next repeat
+      end if
+      
+      addToList word 1 to -1 of item 2 of tLine, tListA
+   end repeat
+   return tListA
+end revDocsParseYamlList
+
+function revDocsGuideNameFromFile pFile
+   set the itemdelimiter to "."
+   return item 1 to -2 of pFile
+end revDocsGuideNameFromFile
+
+function revDocsGuideData pFolder, pLocation, pFile
+   local tGuideContent, tGuideFile
+   put pFolder & slash & pFile into tGuideFile
+   put url ("binfile:" & tGuideFile) into tGuideContent
+   put textDecode(tGuideContent, "utf-8") into tGuideContent
+   
+   local tGuideDataA
+   if tGuideContent is not empty then
+      revDocsSplitMetadata tGuideContent, tGuideDataA["data"], tGuideDataA["metadata"]
+      
+      replace "[toc]" with empty in tGuideDataA["data"]
+      
+      local tGuideName
+      put revDocsGuideNameFromFile(pFile) into tGuideName
+      
+      put tGuideName into tGuideDataA["display name"]
+      put revDocsModifyForURL(tGuideName) into tGuideDataA["name"]
+      put pLocation into tGuideDataA["location"]
+      
+      put tGuideFile into tGuideDataA["file"]
+   end if
+   return tGuideDataA
+end revDocsGuideData
+
+function revDocsListGuides pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+
+   local tGuides
+   put the files into tGuides
+   filter tGuides with "*.md"
+   
+   set the defaultFolder to tDefaultFolder
+   
+   return tGuides
+end revDocsListGuides
+
+function revDocsGuideDataFromFolder pFolder, pLocation
+   local tGuides
+   put revDocsListGuides(pFolder) into tGuides
+
+   local tGuideDataA, tKey
+   repeat for each line tGuideFile in tGuides
+      put pFolder & slash & tGuideFile into tKey
+      put revDocsGuideData(pFolder, pLocation, tGuideFile) into tGuideDataA[tKey]
+   end repeat
+
+   return tGuideDataA
+end revDocsGuideDataFromFolder
+
+constant kNoGuideGroup = "no group"
+private function groupOrder pOrderA, pGuideDataA, pKey
+   local tGroup
+   put pGuideDataA[pKey]["metadata"]["group"] into tGroup
+   if tGroup is among the keys of pOrderA then
+      return pOrderA[tGroup]
+   else 
+      return pOrderA[kNoGuideGroup]
+   end if
+end groupOrder
+
+function revDocsUtf8FileContents pFile
+   local tContents
+   put url ("binfile:" & pFile) into tContents
+   return textDecode(tContents, "utf-8")
+end revDocsUtf8FileContents
+
+constant kGuideOrderFile = "guide-order.yml"
+private function groupOrderYaml pOrderFileLocation
+   return revDocsUtf8FileContents(pOrderFileLocation & slash & kGuideOrderFile)
+end groupOrderYaml
+
+function revDocsGroupOrder pOrderFileLocation
+   local tOrderYaml
+   put groupOrderYaml(pOrderFileLocation) into tOrderYaml
+   
+   local tParsedA
+   put revDocsParseYaml(line 2 to -2 of tOrderYaml) into tParsedA
+   
+   local tOrderA
+   put tParsedA["group-order"] into tOrderA
+   addToList kNoGuideGroup, tOrderA
+   
+   local tOrderLookupA
+   repeat for each key tNumber in tOrderA
+      local tGroup
+      put tOrderA[tNumber] into tGroup
+      put tNumber into tOrderLookupA[tGroup]
+   end repeat
+   
+   return tOrderLookupA
+end revDocsGroupOrder
+
+function revDocsOrderedGuideData pGuideFoldersA, pOrderFileLocation
+   local tGuideDataA
+   repeat for each element tGuideWithLocation in pGuideFoldersA
+      local tLocation, tFolder
+      put tGuideWithLocation["location"] into tLocation
+      put tGuideWithLocation["folder"] into tFolder
+      union tGuideDataA with revDocsGuideDataFromFolder(tFolder, tLocation)
+   end repeat
+   
+   local tGuides
+   put the keys of tGuideDataA into tGuides
+   
+   # First sort by name
+   sort tGuides by tGuideDataA[each]["display name"]
+   
+   # Then sort by group order
+   local tGroupOrder
+   put revDocsGroupOrder(pOrderFileLocation) into tGroupOrder
+   sort tGuides by groupOrder(tGroupOrder, tGuideDataA, each)
+   
+   local tOrderedGuideDataA
+   repeat for each line tGuideFile in tGuides
+      addToList tGuideDataA[tGuideFile], tOrderedGuideDataA
+   end repeat
+   return tOrderedGuideDataA
+end revDocsOrderedGuideData
+
+function revDocsFormatGuideDataAsJSON pGuideDataA
+   local tGuideName, tGuideData
+   put tab & escape("name") & ":" & escape(revDocsModifyForURL(pGuideDataA["name"])) & comma & return after tGuideData 
+   put tab & escape("display name") & ":" & escape(pGuideDataA["display name"]) & comma & return after tGuideData 
+   put tab & escape("location") & ":" & escape(pGuideDataA["location"]) & comma & return after tGuideData
+   put tab & escape("data") & ":" & escape(pGuideDataA["data"], true)  after tGuideData
+   return tGuideData
+end revDocsFormatGuideDataAsJSON

@@ -297,12 +297,15 @@ void MCStack::sethints()
 	{
 	case kMCLicenseClassProfessional:
 		t_edition_name = "business";
+		break;
 	case kMCLicenseClassCommercial:
 		t_edition_name = "indy";
+		break;
 	case kMCLicenseClassNone:
 	case kMCLicenseClassCommunity:
 	default:
 		t_edition_name = "community";
+		break;
 	}
     
     /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);

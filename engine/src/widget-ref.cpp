@@ -291,9 +291,6 @@ bool MCWidgetBase::OnOpen(void)
     if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen")))
 		return false;
 
-	if (GetHost()->getNativeLayer())
-		GetHost()->getNativeLayer()->OnOpen();
-	
 	return OnAttach();
 }
 
@@ -302,9 +299,6 @@ bool MCWidgetBase::OnClose(void)
 	if (!OnDetach())
 		return false;
 	
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnClose();
-    
     bool t_success;
     t_success = true;
     
@@ -394,7 +388,7 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
 	}
 	
 	if (t_success && !t_view_rendered)
-		t_success = Dispatch(MCNAME("OnPaint"));
+		t_success = DispatchRestricted(MCNAME("OnPaint"));
     
     if (m_children != nil)
     {
@@ -508,29 +502,16 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
 
 bool MCWidgetBase::OnGeometryChanged(void)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnGeometryChanged(GetHost()->getrect());
-    
     return Dispatch(MCNAME("OnGeometryChanged"));
 }
 
 bool MCWidgetBase::OnLayerChanged()
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnLayerChanged();
-    
     return Dispatch(MCNAME("OnLayerChanged"));
 }
 
 bool MCWidgetBase::OnVisibilityChanged(bool p_visible)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnVisibilityChanged(p_visible);
-    
-    
     MCAutoValueRefArray t_args;
     if (!t_args . New(1))
         return false;
@@ -550,10 +531,6 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
 
 bool MCWidgetBase::OnToolChanged(Tool p_tool)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnToolChanged(p_tool);
-    
     bool t_success;
     t_success = true;
     if (p_tool == T_BROWSE)
@@ -862,13 +839,14 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
 	
-    MCObject *t_old_target;
+    MCObjectPtr t_old_target;
     if (GetHost() != nil)
     {
         t_old_target = MCtargetptr;
         
-        MCtargetptr = GetHost();
-        t_this_stack = MCtargetptr->getstack();
+        MCtargetptr . object = GetHost();
+        MCtargetptr . part_id = 0;
+        t_this_stack = MCtargetptr . object -> getstack();
         MCdefaultstackptr = t_this_stack;
     }
     else

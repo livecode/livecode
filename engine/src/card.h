@@ -101,7 +101,7 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// MW-2012-06-08: [[ Relayer ]] Move a control to before target.
 	virtual void relayercontrol(MCControl *p_source, MCControl *p_target);
@@ -117,10 +117,10 @@ public:
 	// MCCard functions
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
-	IO_stat saveobjects(IO_handle stream, uint4 p_part);
+	IO_stat saveobjects(IO_handle stream, uint4 p_part, uint32_t p_version);
 	IO_stat loadobjects(IO_handle stream, uint32_t version);
 
 	void kfocusset(MCControl *target);
@@ -209,7 +209,9 @@ public:
 	void drawbackground(MCContext *p_context, const MCRectangle &p_dirty);
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
 	void drawselectionrect(MCContext *);
-	
+    void drawselectedchildren(MCDC *dc);
+    bool updatechildselectedrect(MCRectangle& x_rect);
+    
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);
 	Exec_stat closebackgrounds(MCCard *p_other);
 	
@@ -240,6 +242,8 @@ public:
 	//   the given layer. If nil is returned the control doesn't exist.
 	MCObject *getobjbylayer(uint32_t layer);
 
+    bool mfocus_control(int2 x, int2 y, bool p_check_selected);
+    
 	MCCard *next()
 	{
 		return (MCCard *)MCDLlist::next();
@@ -335,7 +339,7 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
-	
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t p_theme);
 };
 
 #endif

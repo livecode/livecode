@@ -67,7 +67,8 @@ widget com.livecode.widget.treeView
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
+use com.livecode.foreign
 
 metadata author is "LiveCode"
 metadata version is "1.0.0"
@@ -1200,6 +1201,16 @@ private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns In
 	end if
 end handler
 
+// Taken from the MCStringEncoding enum
+constant kUTF8Encoding is 4
+
+foreign handler MCStringDecode(in BinaryData as Data, in Encoding as LCUInt, in ExternalRep as CBool, out Value as String) returns CBool binds to "<builtin>"
+
+// Temporary wrapper to allow conversion of data to string until it is implemented in the LCB stdlib
+private handler ConvertToString(in pData as Data, out rString as optional String) returns Boolean
+    return MCStringDecode(pData, kUTF8Encoding, false, rString)
+end handler
+
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
 //  parameters, mDataList should always be the result of calling this on mData
 private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in pPath as List) returns List
@@ -1254,7 +1265,12 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 				format pArray[tKey] as string into tString
 			else if pArray[tKey] is a number then
 				format pArray[tKey] as string into tString
-			else
+			else if pArray[tKey] is a data then
+                if not ConvertToString(pArray[tKey], tString) then
+                    put "Can't display value" into tString
+                end if
+            else
+
 				put "Can't display value" into tString
 			end if	
 			put tString into tElement["string_value"]

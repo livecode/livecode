@@ -2299,7 +2299,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
 							{
                                 // we're still ok if the current source grapheme falls within the appropriate range.
                                 // If not, there may be other options within this pair of brackets
-								if (t_source_cp >= t_lower_limit || t_source_cp <= t_pattern_cp)
+								if (t_source_cp >= t_lower_limit && t_source_cp <= t_pattern_cp)
 									ok = true;
 							}
 						}
@@ -2347,8 +2347,6 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                 // try and match the rest of the source string recursively.
                 while (t_source_filter -> HasData())
                 {
-                    t_source_cp = t_source_filter -> GetNextCodepoint();
-                    
                     uindex_t t_sindex, t_pindex;
                     // if this is a candidate for a match, recurse.
                     if (t_source_cp == t_pattern_cp)
@@ -2380,6 +2378,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                     
                     // if we don't find a match, eat the source codepoint and continue.
                     t_source_filter -> AdvanceCursor();
+                    t_source_cp = t_source_filter -> GetNextCodepoint();
                 }
             }
                 return false;
@@ -2408,3 +2407,97 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Implement rules GB 6 - 8 based on Hangul syllable type
+static bool __MCUnicodeIsHangulClusterBoundary(int32_t p_left, int32_t p_right)
+{
+    switch (p_left)
+    {
+        case U_GCB_L:
+            return p_right == U_GCB_T;
+        case U_GCB_LV:
+        case U_GCB_V:
+            return p_right != U_GCB_V && p_right != U_GCB_T;
+        case U_GCB_LVT:
+        case U_GCB_T:
+            return p_right != U_GCB_T;
+        default:
+            MCUnreachableReturn(true);
+    }
+}
+
+static bool __MCUnicodeIsControl(int32_t p_gcb)
+{
+    return p_gcb == U_GCB_CR || p_gcb == U_GCB_LF || p_gcb == U_GCB_CONTROL;
+}
+
+static bool __MCUnicodeIsHangulSyllable(int32_t p_gcb)
+{
+    switch (p_gcb)
+    {
+        case U_GCB_L:
+        case U_GCB_LV:
+        case U_GCB_LVT:
+        case U_GCB_T:
+        case U_GCB_V:
+            return true;
+        default:
+            break;
+    }
+    
+    return false;
+}
+
+bool MCUnicodeIsGraphemeClusterBoundary(codepoint_t p_left, codepoint_t p_right)
+{
+    int32_t t_left_gcb;
+    t_left_gcb = MCUnicodeGetIntegerProperty(p_left, kMCUnicodePropertyGraphemeClusterBreak);
+    
+    int32_t t_right_gcb;
+    t_right_gcb = MCUnicodeGetIntegerProperty(p_right, kMCUnicodePropertyGraphemeClusterBreak);
+    
+    // We treat CR LF as 2 graphemes, contrary to GB 3
+    /*
+    if (t_left_gcb == U_GCB_CR && t_right_gcb == U_GCB_LF)
+        return false;
+    */
+    
+    // GB 4: Break after controls
+    if (__MCUnicodeIsControl(t_left_gcb))
+        return true;
+    
+    // GB 5: Break before controls
+    if (__MCUnicodeIsControl(t_right_gcb))
+        return true;
+    
+    // GB 6 - 8: Do not break Hangul syllable sequences.
+    if (__MCUnicodeIsHangulSyllable(t_left_gcb) && __MCUnicodeIsHangulSyllable(t_right_gcb))
+    {
+        if (!__MCUnicodeIsHangulClusterBoundary(t_left_gcb, t_right_gcb))
+            return false;
+    }
+    
+    // GB 8a: Do not break between regional indicator symbols.
+    if (t_left_gcb == U_GCB_REGIONAL_INDICATOR && t_right_gcb == U_GCB_REGIONAL_INDICATOR)
+        return false;
+    
+    // GB 9: Do not break before extending characters.
+    if (t_right_gcb == U_GCB_EXTEND)
+        return false;
+
+    // GB 9a: Do not break before SpacingMarks
+    if (t_right_gcb == U_GCB_SPACING_MARK)
+        return false;
+
+    // GB 9b: Do not break after Prepend characters
+    if (t_left_gcb == U_GCB_PREPEND)
+        return false;
+    
+    // GB 10: Otherwise, break everywhere.
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

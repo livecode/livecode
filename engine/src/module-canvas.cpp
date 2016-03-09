@@ -4657,7 +4657,7 @@ bool MCCanvasFontGetDefault(MCCanvasFontRef &r_font)
 {
 	if (kMCCanvasFont12PtHelvetica == nil)
 	{
-		if (!MCCanvasFontCreate(MCSTR("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica))
+		if (!MCCanvasFontCreate(MCSTR(DEFAULT_TEXT_FONT), 0, 12, kMCCanvasFont12PtHelvetica))
 			return false;
 	}
 	
@@ -4876,7 +4876,7 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	{
 		p_properties.antialias = true;
 		p_properties.blend_mode = kMCGBlendModeSourceOver;
-		p_properties.fill_rule = kMCGFillRuleEvenOdd;
+		p_properties.fill_rule = kMCGFillRuleNonZero;
 		p_properties.opacity = 1.0;
 		p_properties.paint = nil;
 		p_properties.stippled = false;
@@ -5309,6 +5309,20 @@ void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas)
 {
 	MCCanvasGetProps(p_canvas).dash_phase = p_phase;
 	MCCanvasGet(p_canvas)->dashes_changed = true;
+}
+
+//////////
+
+MC_DLLEXPORT_DEF
+void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	MCGRectangle t_bounds;
+	t_bounds = MCGContextGetClipBounds(t_canvas->context);
+	
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_bounds, r_bounds);
 }
 
 //////////

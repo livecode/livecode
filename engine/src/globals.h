@@ -163,7 +163,7 @@ extern uint2 MCnsockets;
 extern MCStack **MCusing;
 extern uint2 MCnusing;
 extern uint2 MCiconicstacks;
-extern uint2 MCwaitdepth;
+extern MCSemaphore MCwaitdepth;
 extern uint4 MCrecursionlimit;
 
 
@@ -181,7 +181,7 @@ extern MCStack *MCstaticdefaultstackptr;
 extern MCStack *MCmousestackptr;
 extern MCStack *MCclickstackptr;
 extern MCStack *MCfocusedstackptr;
-extern MCObject *MCtargetptr;
+extern MCObjectPtr MCtargetptr;
 extern MCObject *MCmenuobjectptr;
 extern MCCard *MCdynamiccard;
 extern Boolean MCdynamicpath;

@@ -623,6 +623,14 @@ MCNameRef MCM_protected_data_unavailable;
 MCNameRef MCM_remote_control_received;
 #endif
 
+MCNameRef MCN_font_default;
+MCNameRef MCN_font_usertext;
+MCNameRef MCN_font_menutext;
+MCNameRef MCN_font_content;
+MCNameRef MCN_font_message;
+MCNameRef MCN_font_tooltip;
+MCNameRef MCN_font_system;
+
 void MCU_initialize_names(void)
 {
 	/* UNCHECKED */ MCNameCreateWithCString("msg", MCN_msg);
@@ -1071,6 +1079,14 @@ void MCU_initialize_names(void)
 	// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
 	/* UNCHECKED */ MCNameCreateWithCString("remoteControlReceived", MCM_remote_control_received);
 #endif
+    
+    /* UNCHECKED */ MCNameCreateWithCString("(Default)", MCN_font_default);
+    /* UNCHECKED */ MCNameCreateWithCString("(Styled Text)", MCN_font_usertext);
+    /* UNCHECKED */ MCNameCreateWithCString("(Menu)", MCN_font_menutext);
+    /* UNCHECKED */ MCNameCreateWithCString("(Text)", MCN_font_content);
+    /* UNCHECKED */ MCNameCreateWithCString("(Message)", MCN_font_message);
+    /* UNCHECKED */ MCNameCreateWithCString("(Tooltip)", MCN_font_tooltip);
+    /* UNCHECKED */ MCNameCreateWithCString("(System)", MCN_font_system);
 }
 
 void MCU_finalize_names(void)
@@ -1507,4 +1523,12 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_player_stopped);
 	MCNameDelete(MCM_reachability_changed);
 #endif
+    
+    MCNameDelete(MCN_font_default);
+    MCNameDelete(MCN_font_usertext);
+    MCNameDelete(MCN_font_menutext);
+    MCNameDelete(MCN_font_content);
+    MCNameDelete(MCN_font_message);
+    MCNameDelete(MCN_font_tooltip);
+    MCNameDelete(MCN_font_system);
 }

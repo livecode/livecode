@@ -40,6 +40,7 @@
 #include "chunk.h"
 #include "graphicscontext.h"
 #include "objptr.h"
+#include "group.h"
 
 #include "globals.h"
 #include "context.h"
@@ -54,10 +55,10 @@
 
 #include "graphics_util.h"
 
-MCNativeLayerIOS::MCNativeLayerIOS(MCWidgetRef p_widget, UIView *p_native_view) :
+MCNativeLayerIOS::MCNativeLayerIOS(MCObject *p_object, UIView *p_native_view) :
   m_view([p_native_view retain])
 {
-	m_widget = p_widget;
+	m_object = p_object;
 }
 
 MCNativeLayerIOS::~MCNativeLayerIOS()
@@ -71,12 +72,10 @@ MCNativeLayerIOS::~MCNativeLayerIOS()
 
 void MCNativeLayerIOS::doAttach()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     // Act as if there was a re-layer to put the widget in the right place
     doRelayer();
     
-	doSetVisible(ShouldShowWidget(t_widget));
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerIOS::doDetach()
@@ -98,6 +97,10 @@ bool MCNativeLayerIOS::doPaint(MCGContextRef p_context)
 	return false;
 }
 
+void MCNativeLayerIOS::doSetViewportGeometry(const MCRectangle& p_rect)
+{
+}
+
 void MCNativeLayerIOS::doSetGeometry(const MCRectangle& p_rect)
 {
     CGRect t_nsrect;
@@ -117,48 +120,60 @@ void MCNativeLayerIOS::doSetVisible(bool p_visible)
         [m_view setHidden:p_visible ? NO : YES];
     });
 	if (p_visible)
-		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+		doSetGeometry(m_object->getrect());
 }
 
 void MCNativeLayerIOS::doRelayer()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     // Find which native layer this should be inserted below
-    MCWidget* t_before;
-    MCNativeLayerIOS *t_before_layer = nil;
-    t_before = findNextLayerAbove(t_widget);
-    if (t_before != nil)
-    {
-        t_before_layer = reinterpret_cast<MCNativeLayerIOS*>(t_before->getNativeLayer());
-    }
-    
-    UIView *t_view;
-    t_view = getMainView();
-    
+    MCObject* t_before;
+    t_before = findNextLayerAbove(m_object);
+	
+	UIView *t_parent_view;
+	t_parent_view = nil;
+	
+	if (!getParentView(t_parent_view))
+		return;
+	
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
+    if (isAttached() && m_object->getstack()->getcard() == m_object->getstack()->getcurcard())
     {
         MCIPhoneRunBlockOnMainFiber(^{
             [m_view removeFromSuperview];
-            if (t_before_layer != nil)
-            {
-                // There is another native layer above this one
-                [t_view insertSubview:m_view belowSubview:t_before_layer->m_view];
-            }
+			if (t_before != nil)
+			{
+				// There is another native layer above this one
+				UIView *t_before_view;
+				/* UNCHECKED */ t_before->GetNativeView((void*&)t_before_view);
+				[t_parent_view insertSubview:m_view belowSubview:t_before_view];
+			}
             else
             {
                 // This is the top-most native layer
-                [t_view addSubview:m_view];
+                [t_parent_view addSubview:m_view];
             }
-            [t_view setNeedsDisplay];
+            [t_parent_view setNeedsDisplay];
         });
     }
 }
 
-UIView* MCNativeLayerIOS::getMainView()
+bool MCNativeLayerIOS::getParentView(UIView *&r_view)
 {
-    return MCIPhoneGetView();
+	if (m_object->getparent()->gettype() == CT_GROUP)
+	{
+		MCNativeLayer *t_container;
+		t_container = nil;
+		
+		if (!((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
+			return false;
+		
+		return t_container->GetNativeView((void*&)r_view);
+	}
+	else
+	{
+		r_view = MCIPhoneGetView();
+		return true;
+	}
 }
 
 bool MCNativeLayerIOS::GetNativeView(void *&r_view)
@@ -172,9 +187,55 @@ bool MCNativeLayerIOS::GetNativeView(void *&r_view)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
+MCNativeLayer *MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_native_view)
 {
-	return new MCNativeLayerIOS(p_widget, (UIView*)p_native_view);
+	return new MCNativeLayerIOS(p_object, (UIView*)p_native_view);
+}
+
+//////////
+
+// IM-2015-12-16: [[ NativeLayer ]] Keep the coordinate system of group contents the same as
+//                the top-level window view by keeping its bounds the same as its frame.
+//                This allows us to place contents in terms of window coords without having to
+//                adjust for the location of the group container.
+@interface com_runrev_livecode_MCContainerView: UIView
+
+- (void)setFrame:(CGRect)frame;
+
+@end
+
+@compatibility_alias MCContainerView com_runrev_livecode_MCContainerView;
+
+@implementation com_runrev_livecode_MCContainerView
+
+- (void)setFrame:(CGRect)frame
+{
+	[super setFrame:frame];
+	[self setBounds:frame];
+}
+
+@end
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+{
+	UIView *t_view;
+	t_view = [[[MCContainerView alloc] init] autorelease];
+	
+	if (t_view == nil)
+		return false;
+	
+	[t_view setAutoresizesSubviews:NO];
+	
+	r_view = t_view;
+	
+	return true;
+}
+
+//////////
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+	MCIPhoneRunBlockOnMainFiber(^{[(UIView*)p_view release];});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

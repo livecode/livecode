@@ -38,6 +38,7 @@
 #include "redraw.h"
 #include "font.h"
 #include "chunk.h"
+#include "group.h"
 #include "graphicscontext.h"
 
 #include "graphics_util.h"
@@ -48,11 +49,12 @@
 #include "native-layer-win32.h"
 
 
-MCNativeLayerWin32::MCNativeLayerWin32(MCWidgetRef p_widget, HWND p_view) :
-  m_hwnd(p_view),
-  m_cached(NULL)
+MCNativeLayerWin32::MCNativeLayerWin32(MCObject *p_object, HWND p_view) :
+	m_hwnd(p_view),
+	m_cached(NULL),
+	m_viewport_hwnd(nil)
 {
-	m_widget = p_widget;
+	m_object = p_object;
 }
 
 MCNativeLayerWin32::~MCNativeLayerWin32()
@@ -63,33 +65,47 @@ MCNativeLayerWin32::~MCNativeLayerWin32()
 		DeleteObject(m_cached);
 }
 
+// IM-2016-01-19: [[ NativeLayer ]] Windows (prior to Windows 8) doesn't do transparent child windows
+//    so instead we place each child window in its own container, sized to expose only the area that
+//    should be visible when the native layer is clipped by the bounds of any groups it is in.
 void MCNativeLayerWin32::doAttach()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-	// Set the parent to the stack
-	SetParent(m_hwnd, getStackWindow());
+	HWND t_parent;
+	t_parent = getStackWindow();
 
-	// Restore the visibility state of the widget (in case it changed due to a
+	if (m_viewport_hwnd == nil)
+		/* UNCHECKED */ CreateNativeContainer((void*&)m_viewport_hwnd);
+
+	// Set the parent to the stack
+	SetParent(m_viewport_hwnd, t_parent);
+
+	SetParent(m_hwnd, m_viewport_hwnd);
+
+	// Restore the state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
-	doSetGeometry(t_widget->getrect());
-	doSetVisible(ShouldShowWidget(t_widget));
+	m_rect = m_object->getrect();
+	if (m_object->getparent()->gettype() == CT_GROUP)
+		m_viewport_rect = ((MCGroup*)m_object->getparent())->getviewportgeometry();
+	else
+		m_viewport_rect = m_rect;
+
+	doSetViewportGeometry(m_viewport_rect);
+	doSetGeometry(m_rect);
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerWin32::doDetach()
 {
     // Change the window to an invisible child of the desktop
-	ShowWindow(m_hwnd, SW_HIDE);
+	doSetVisible(false);
 	SetParent(m_hwnd, NULL);
+	SetParent(m_viewport_hwnd, NULL);
 }
 
 bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 {
-	MCWidget *t_widget;
-	t_widget = MCWidgetGetHost(m_widget);
-
 	MCRectangle t_rect;
-	t_rect = t_widget->getrect();
+	t_rect = m_object->getrect();
 
 	bool t_success;
 	t_success = true;
@@ -203,12 +219,42 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 	return t_success;
 }
 
+void MCNativeLayerWin32::updateViewportGeometry()
+{
+	m_intersect_rect = MCU_intersect_rect(m_viewport_rect, m_rect);
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_rect;
+	t_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+
+	// Move the window. Only trigger a repaint if not in edit mode
+	MoveWindow(m_viewport_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
+}
+
+void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
+{
+	m_viewport_rect = p_rect;
+	updateViewportGeometry();
+}
+
 void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
 {
-	MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
+	m_rect = p_rect;
+	updateViewportGeometry();
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_rect;
+	t_rect = MCRectangleGetTransformedBounds(m_rect, m_object->getstack()->getdevicetransform());
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_intersect_rect;
+	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+
+	t_rect.x -= t_intersect_rect.x;
+	t_rect.y -= t_intersect_rect.y;
+
     // Move the window. Only trigger a repaint if not in edit mode
-	MoveWindow(m_hwnd, p_rect.x, p_rect.y, p_rect.width, p_rect.height, t_widget->isInRunMode());
+	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
 
 	// We need to delete the bitmap that we've been caching
 	DeleteObject(m_cached);
@@ -218,18 +264,17 @@ void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
 void MCNativeLayerWin32::doSetVisible(bool p_visible)
 {
 	ShowWindow(m_hwnd, p_visible ? SW_SHOWNOACTIVATE : SW_HIDE);
+	ShowWindow(m_viewport_hwnd, p_visible ? SW_SHOWNOACTIVATE : SW_HIDE);
 }
 
 void MCNativeLayerWin32::doRelayer()
 {
-	MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     // Find which native layer this should be inserted after
-	MCWidget* t_before;
-	t_before = findNextLayerBelow(t_widget);
+	MCObject *t_before;
+	t_before = findNextLayerBelow(m_object);
 
 	// Insert the widget in the correct place (but only if the card is current)
-	if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
+	if (isAttached() && m_object->getstack()->getcard() == m_object->getstack()->getcurcard())
 	{
 		HWND t_insert_after;
 		if (t_before != NULL)
@@ -250,8 +295,7 @@ void MCNativeLayerWin32::doRelayer()
 
 HWND MCNativeLayerWin32::getStackWindow()
 {
-	MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    return (HWND)t_widget->getstack()->getrealwindow();
+    return (HWND)m_object->getstack()->getrealwindow();
 }
 
 bool MCNativeLayerWin32::GetNativeView(void *&r_view)
@@ -262,9 +306,62 @@ bool MCNativeLayerWin32::GetNativeView(void *&r_view)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
-	return new MCNativeLayerWin32(p_widget, (HWND)p_view);
+	return new MCNativeLayerWin32(p_object, (HWND)p_view);
+}
+
+extern HINSTANCE MChInst;
+bool getcontainerclass(ATOM &r_class)
+{
+	static ATOM s_container_class = nil;
+
+	if (s_container_class == nil)
+	{
+		WNDCLASSEX t_class;
+		MCMemoryClear(t_class);
+
+		t_class.cbSize = sizeof(WNDCLASSEX);
+		t_class.lpfnWndProc = DefWindowProc;
+		t_class.hInstance = MChInst;
+		t_class.lpszClassName = "LCCONTAINER";
+
+		s_container_class = RegisterClassEx(&t_class);
+
+		DWORD t_err;
+		t_err = GetLastError();
+
+		if (s_container_class == nil)
+			return false;
+	}
+
+	r_class = s_container_class;
+
+	return true;
+}
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_container)
+{
+	ATOM t_class;
+	if (!getcontainerclass(t_class))
+		return false;
+
+	HWND t_container;
+	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, nil);
+
+	DWORD t_err;
+	t_err = GetLastError();
+
+	if (t_container == nil)
+		return false;
+
+	r_container = t_container;
+	return true;
+}
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+	DestroyWindow((HWND)p_view);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

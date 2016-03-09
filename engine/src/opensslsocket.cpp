@@ -98,8 +98,15 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release, bool 
 #include "mcssl.h"
 
 #if defined(TARGET_SUBPLATFORM_ANDROID)
-#include <pthread.h>
 #include "mblandroidjava.h"
+#endif
+
+#if defined(_MAC_DESKTOP) || defined(_LINUX_DESKTOP) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
+#define USE_AUX_THREAD
+#endif
+
+#if defined(USE_AUX_THREAD)
+#include <pthread.h>
 
 static pthread_t s_socket_poll_thread = NULL;
 static pthread_mutex_t s_socket_list_mutex;
@@ -134,71 +141,9 @@ extern HANDLE g_socket_wakeup;
 
 Boolean MCSocket::sslinited = False;
 
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CFDataRef address, const void *pData, void *pInfo)
-{
-	uint2 i;
-	int fd = CFSocketGetNative(cfsockref);
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if ( fd == MCsockets[i]->fd && !MCsockets[i]->shared)
-			break;
-	}
-	if (i < MCnsockets)
-	{
-		fd_set rmaskfd, wmaskfd, emaskfd;
-		FD_ZERO(&rmaskfd);
-		FD_ZERO(&wmaskfd);
-		FD_ZERO(&emaskfd);
-		FD_SET(fd, &rmaskfd);
-		struct timeval t_time = {0,0};
-		select(fd, &rmaskfd, &wmaskfd, &emaskfd, &t_time);
-		switch (type)
-		{
-		case kCFSocketReadCallBack:
-			if (FD_ISSET(fd, &rmaskfd))
-			{
-				MCsockets[i]->readsome();
-				MCsockets[i]->setselect();
-			}
-			break;
-		case kCFSocketWriteCallBack:
-			MCsockets[i]->writesome();
-			MCsockets[i]->setselect();
-			break;
-		case kCFSocketConnectCallBack:
-			MCsockets[i]->writesome();
-			MCsockets[i]->readsome();
-			break;
-		}
-#ifdef _MACOSX
-        MCPlatformBreakWait();
-#else
-        extern void MCIPhoneBreakWait(void);
-        MCIPhoneBreakWait();
-#endif
-
-	}
-	MCS_poll(0.0,0);//quick poll of other sockets
-}
-#endif
-
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-Boolean MCS_handle_sockets()
-{
-    return MCS_poll(0.0,0);
-}
-#else
-Boolean MCS_handle_sockets()
-{
-    return True;
-}
-#endif
-
-
 static void MCSocketsLockSocketList(void)
 {
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(USE_AUX_THREAD)
     if (s_socket_poll_thread != NULL)
         pthread_mutex_lock(&s_socket_list_mutex);
 #endif
@@ -206,17 +151,18 @@ static void MCSocketsLockSocketList(void)
 
 static void MCSocketsUnlockSocketList(void)
 {
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(USE_AUX_THREAD)
     if (s_socket_poll_thread != NULL)
         pthread_mutex_unlock(&s_socket_list_mutex);
 #endif
 }
 
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(USE_AUX_THREAD)
 // MM-2015-07-07: [[ MobileSockets ]] Since on Android we can't hook into system
 //  calls to monitor sockets, we instead have an auxiliary thread that polls the
 //  sockets checking for any activity. If any sockets are pending, a notification
 //  is pushed onto the main thread which will complete the read/write.
+// MM-2016-01-27: [[ AuxThread ]] Updated to use the auxiliary thread on all platforms other than Windows.
 
 struct MCSocketsHandleFileDescriptorsCallbackContext
 {
@@ -234,7 +180,9 @@ static void MCSocketsHandleFileDescriptorsCallback(void *p_context)
 
 static void *MCSocketsPoll(void *p_arg)
 {
+#if defined(TARGET_SUBPLATFORM_ANDROID)
     MCJavaAttachCurrentThread();
+#endif
     
     fd_set rmaskfd, wmaskfd, emaskfd;
     int4 maxfd;
@@ -278,7 +226,10 @@ static void *MCSocketsPoll(void *p_arg)
         }
     }
     
+#if defined(TARGET_SUBPLATFORM_ANDROID)
     MCJavaDetachCurrentThread();
+#endif
+
     return NULL;
 }
 #endif
@@ -288,7 +239,7 @@ static bool MCSocketsPollInterrupt(void)
     bool t_success;
     t_success = true;
     
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(USE_AUX_THREAD)
     if (t_success)
     {
         if (s_socket_poll_thread == NULL)
@@ -313,7 +264,7 @@ static bool MCSocketsPollInterrupt(void)
 
 bool MCSocketsInitialize(void)
 {
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(USE_AUX_THREAD)
     s_socket_poll_thread = NULL;
     s_socket_poll_run = false;
 #endif
@@ -322,7 +273,7 @@ bool MCSocketsInitialize(void)
 
 void MCSocketsFinalize(void)
 {
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(USE_AUX_THREAD)
     if (s_socket_poll_thread != NULL)
     {
         s_socket_poll_run = false;
@@ -1888,32 +1839,11 @@ void MCSocket::setselect(uint2 sflags)
 		WSAEventSelect(fd, g_socket_wakeup, event);
 	}
 #endif
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-	if (sflags & BIONB_TESTWRITE)
-		CFSocketEnableCallBacks(cfsockref,kCFSocketWriteCallBack);
-	if (sflags & BIONB_TESTREAD)
-		CFSocketEnableCallBacks(cfsockref,kCFSocketReadCallBack);
-#endif
 }
 
 Boolean MCSocket::init(MCSocketHandle newfd)
 {
 	fd = newfd;
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-
-	cfsockref = NULL;
-	rlref = NULL;
-	cfsockref = CFSocketCreateWithNative (kCFAllocatorDefault,fd, kCFSocketReadCallBack|kCFSocketWriteCallBack,
-	                                      (CFSocketCallBack)&socketCallback, NULL);
-	if (cfsockref)
-	{
-		rlref = CFSocketCreateRunLoopSource(kCFAllocatorDefault, cfsockref, 0);
-        // MM-2015-06-04: [[ MobileSockets ]] Make sure we post the callbacks to the main thread (since we run a twin thread set up on iOS)
-		CFRunLoopAddSource((CFRunLoopRef) CFRunLoopGetMain(), rlref, kCFRunLoopCommonModes);
-		CFOptionFlags socketOptions = 0 ;
-		CFSocketSetSocketFlags( cfsockref, socketOptions );
-	}
-#endif
 	return True;
 }
 
@@ -1924,15 +1854,6 @@ void MCSocket::close()
 	{
 		if (secure)
 			sslclose();
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-
-		if (rlref != NULL)
-		{
-			CFRunLoopRemoveSource (CFRunLoopGetCurrent(), rlref, kCFRunLoopDefaultMode);
-			CFRelease (rlref);
-			rlref = NULL;
-		}
-#endif
 #if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
 		closesocket(fd);
 #else
@@ -1941,16 +1862,6 @@ void MCSocket::close()
 #endif
 
 		fd = 0;
-#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
-
-		if (cfsockref != NULL)
-		{
-			CFSocketInvalidate (cfsockref);
-			CFRelease (cfsockref);
-			cfsockref = NULL;
-		}
-#endif
-
 	}
 }
 
@@ -2175,6 +2086,27 @@ Boolean MCSocket::sslconnect()
 		SSL_set_fd(_ssl_conn, fd);
 	}
 
+    MCAutoStringRef t_hostname;
+    // MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
+    //   Otherwise, use the socket name as before.
+    if (!MCNameIsEmpty(endhostname))
+        /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
+    else
+        /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
+
+    uindex_t t_pos;
+    if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+    else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
+        /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
+
+    MCAutoPointer<char> t_host;
+    /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
+
+    // Let the SSL lib know the host we are trying to connect to, ensuring any SNI servers
+    // send the correct certificate during the handshake
+    SSL_set_tlsext_host_name(_ssl_conn, *t_host);
+    
 	// Start the SSL connection
 
 	// MW-2005-02-17: Implement the post-connection check suggested by the SSL Book.
@@ -2185,20 +2117,6 @@ Boolean MCSocket::sslconnect()
 	{
 		if (sslverify)
 		{
-			MCAutoStringRef t_hostname;
-			// MM-2014-06-13: [[ Bug 12567 ]] If an end host has been specified, verify against that.
-			//   Otherwise, use the socket name as before.
-            if (!MCNameIsEmpty(endhostname))
-                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(endhostname), &t_hostname);
-            else
-                /* UNCHECKED */ MCStringMutableCopy(MCNameGetString(name), &t_hostname);
-            
-            uindex_t t_pos;
-            if (MCStringFirstIndexOfChar(*t_hostname, ':', 0, kMCCompareExact, t_pos))
-            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
-            else if (MCStringFirstIndexOfChar(*t_hostname, '|', 0, kMCCompareExact, t_pos))
-            /* UNCHECKED */ MCStringRemove(*t_hostname, MCRangeMake(t_pos, MCStringGetLength(*t_hostname) - t_pos));
-        
 #if defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)
             // MM-2015-06-04: [[ MobileSockets ]] On the mobile platforms we verify the certificate ourselves rather than using OpenSSL
             if (!MCSSLVerifyCertificate(_ssl_conn, *t_hostname, sslerror))
@@ -2207,9 +2125,6 @@ Boolean MCSocket::sslconnect()
                 return False;
             }
 #else
-            MCAutoPointer<char> t_host;
-            /* UNCHECKED */ MCStringConvertToCString(*t_hostname, &t_host);
-
             rc = post_connection_check(_ssl_conn, *t_host);
             
             if (rc != X509_V_OK)

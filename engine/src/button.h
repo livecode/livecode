@@ -190,7 +190,7 @@ public:
 #endif
 
 	virtual uint2 gettransient() const;
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
     virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -204,8 +204,8 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// virtual functions from MCControl
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 

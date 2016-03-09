@@ -55,6 +55,8 @@ private variable mIconRects as List
 
 private variable mSelectedElement as optional String
 
+private variable mShowNames as Boolean
+
 property preferredSize		get getPreferredSize
 metadata preferredSize.user_visible is "false"
 
@@ -63,16 +65,13 @@ property selectedIcon get mSelectedElement set setSelectedElement
 property showFrameBorder	get mFrameBorder	set setFrameBorder
 
 constant kIconColor is [0,0,0]
-constant kIconPadding is 10
 
-constant kNumRows is 5
-constant kNumCols is 5
+constant kIconSize is 65
+constant kIconPaddingRatio is 0.25
+constant kMinCols is 3
+constant kMinRows is 3
 
 public handler OnCreate()
-
-    put kNumRows into mNumRows
-    put kNumCols into mNumCols
-
 	put iconList() into mDataList
 	put the empty array into mPaths
 	put 1 into mFirstDataItem
@@ -81,6 +80,8 @@ public handler OnCreate()
 	put 0 into mHoverRow
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
+
+	put currently popped up into mShowNames
 
     updateParameters()
 	initialiseScrollbar()
@@ -119,7 +120,7 @@ private handler drawFrame()
 	variable tPath as Path
 	// Draw the frame
 	if mFrameBorder is true then
-		put rectangle path of rectangle [0.5,0.5,mViewWidth-0.5,mRowHeight + mViewHeight-0.5] into tPath
+		put rectangle path of rectangle [0.5,0.5,my width-0.5,my height-0.5] into tPath
 		set the paint of this canvas to getPaint("frame","stroke")
 		stroke tPath on this canvas
 	end if
@@ -128,8 +129,10 @@ end handler
 private handler drawTitleBar()
     variable tPath as Path
 
+	variable tTopRowHeight as Number
+	put topRowHeight() into tTopRowHeight
 	// Draw the title line
-	put line path from point [0.5,mRowHeight] to point [mViewWidth-0.5, mRowHeight] into tPath
+	put line path from point [0.5,tTopRowHeight] to point [my width-0.5, tTopRowHeight] into tPath
 	set the paint of this canvas to getPaint("frame","stroke")
 	stroke tPath on this canvas
 	
@@ -142,14 +145,17 @@ private handler drawTitleBar()
     set the bold of tFont to true
 	set the font of this canvas to tFont
 
+	variable tLeft as Number
+	put kIconSize * kIconPaddingRatio into tLeft
+
 	if mSelectedElement is nothing then
-		put rectangle [0,0,mViewWidth,mRowHeight] into tTextRect
-		fill text "No icon selected" at center of tTextRect on this canvas
+		put rectangle [tLeft + mColWidth,0,mViewWidth,tTopRowHeight] into tTextRect
+		fill text "No icon selected" at left of tTextRect on this canvas
 	else
-		put rectangle [mViewWidth / mNumCols,0,mViewWidth,mRowHeight] into tTextRect
-		fill text mSelectedElement at center of tTextRect on this canvas
+		put rectangle [tLeft + mColWidth,0,mViewWidth,tTopRowHeight] into tTextRect
+		fill text mSelectedElement at left of tTextRect on this canvas
 		variable tIconRect as Rectangle
-		put rectangle [0, 0, mViewWidth / mNumCols, mRowHeight] into tIconRect
+		put rectangle [tLeft, kIconSize * kIconPaddingRatio, tLeft + kIconSize, tTopRowHeight - (kIconSize * kIconPaddingRatio)] into tIconRect
 		if mSelectedElement is not among the keys of mPaths then
 			put path iconSVGPathFromName(mSelectedElement) into tPath
 		else
@@ -161,12 +167,18 @@ private handler drawTitleBar()
 	end if
 end handler
 
+constant kMaxIconNameChars is 12
+constant kNameHeight is 20
 private handler drawIcon(in pIcon as Integer)
 	variable tIconName as String
 	put element pIcon + mFirstDataItem - 1 of mDataList into tIconName
 	
-	variable tPath as Path
+	if mSelectedElement is not nothing and tIconName is mSelectedElement then
+		set the paint of this canvas to getPaint("icon", "selected")
+		fill rectangle path of indexToSectorRect(pIcon) on this canvas
+	end if
 	
+	variable tPath as Path
 	if tIconName is not among the keys of mPaths then
 		put path iconSVGPathFromName(tIconName) into tPath
 	else
@@ -175,13 +187,24 @@ private handler drawIcon(in pIcon as Integer)
 		
 	constrainPathToRect(mIconRects[pIcon], tPath)
 	
-	if mSelectedElement is not nothing and tIconName is mSelectedElement then
-		set the paint of this canvas to getPaint("icon", "selected")
-		fill rectangle path of indexToSectorRect(pIcon) on this canvas
-	end if
-	
 	set the paint of this canvas to solid paint with color kIconColor
 	fill tPath on this canvas
+	
+	if mShowNames then
+		variable tTextRect as Rectangle
+		put mIconRects[pIcon] into tTextRect
+		set the height of tTextRect to kNameHeight
+		set the top of tTextRect to the top of tTextRect - kNameHeight
+		
+		variable tLabel as String
+		put tIconName into tLabel
+	
+		if the number of chars in tIconName > kMaxIconNameChars then
+			put char 1 to kMaxIconNameChars - 1 of tIconName & "\u{2026}" into tLabel
+		end if
+		
+		fill text tLabel at center of tTextRect on this canvas
+	end if
 end handler
 
 public handler OnMouseDown() returns nothing
@@ -199,7 +222,7 @@ public handler OnMouseMove() returns nothing
 	
 		ensureViewTopPosition()
 		updateFirstDataItem()
-		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, topRowHeight())
 		redraw all
 	end if
 end handler
@@ -262,7 +285,7 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 		end if
 		
 		updateFirstDataItem()
-		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, topRowHeight())
 		
 		redraw all
     end if
@@ -278,20 +301,20 @@ private handler indexToSectorRect(in pIndex as Integer) returns Rectangle
 
 	variable tRow as Integer
 	variable tCol as Integer
-	put the floor of ((pIndex - 1) / mNumRows) + 1 into tRow
+	put the floor of ((pIndex - 1) / mNumCols) + 1 into tRow
 	put pIndex wrap mNumCols into tCol
 
 	put (tCol - 1) * mViewWidth / mNumCols into tLeft
 	put tCol * mViewWidth / mNumCols into tRight
-	put (tRow - 1) * mViewHeight / mNumRows + mRowHeight into tTop
-	put tRow * mViewHeight / mNumRows + mRowHeight into tBottom
+	put (tRow - 1) * mViewHeight / mNumRows + topRowHeight() into tTop
+	put tRow * mViewHeight / mNumRows + topRowHeight() into tBottom
 
 	return rectangle [tLeft, tTop, tRight, tBottom]
 end handler
 
 private handler mousePosToIconNumber(in pMouse as Point) returns Integer
 	variable tRow as Integer
-	put the floor of ((the y of pMouse - mRowHeight) / mRowHeight) + 1 into tRow
+	put the floor of ((the y of pMouse - topRowHeight()) / mRowHeight) + 1 into tRow
 
 	variable tCol as Integer
 	put the floor of (the x of pMouse / mColWidth) + 1 into tCol
@@ -309,7 +332,7 @@ end handler
 
 public handler OnGeometryChanged()
 	// Only resizing necessitates a recalculation
-	if my height is not mViewHeight + mRowHeight or my width is not mViewWidth then
+	if my height is not mViewHeight + topRowHeight() or my width is not mViewWidth + kScrollbarWidth then
       variable tFirstDataItem as Number
       put mFirstDataItem into tFirstDataItem
       updateParameters()
@@ -333,28 +356,50 @@ private handler ensureViewTopPosition()
 end handler
 
 private handler updateFirstDataItem()
-	put the floor of (mViewTopPosition / mRowHeight) * mNumCols + 1 into mFirstDataItem
-	if mFirstDataItem < 1 then
-		put 1 into mFirstDataItem
-	end if	
+	put (the floor of (mViewTopPosition / mRowHeight)) * mNumCols + 1 into mFirstDataItem
+end handler
+
+private handler topRowHeight() returns Number
+	return kIconSize * (1 + kIconPaddingRatio * 2)
+end handler
+
+private handler minContentHeight() returns Number
+	return kIconSize * (kMinRows + (kMinRows + 1) * kIconPaddingRatio)
+end handler
+
+private handler minContentWidth() returns Number
+	return kIconSize * (kMinCols + (kMinCols + 1) * kIconPaddingRatio)
 end handler
 
 private handler updateParameters() returns nothing
-    put my height into mViewHeight
+	variable tHeight as Number
+    put my height into tHeight
 
-    if mViewHeight < 250 then
-        put 250 into mViewHeight
+	variable tMinHeight
+	put minContentHeight() + topRowHeight() into tMinHeight
+    if tHeight < tMinHeight then
+        put tMinHeight into tHeight
     end if
 
-    put my width into mViewWidth
+	variable tWidth as Number
+    put my width into tWidth
+	
+	variable tMinWidth
+	put minContentWidth() + 2 * kScrollbarWidth into tMinWidth
 
-    if mViewWidth < 200 then
-        put 200 into mViewWidth
+    if tWidth < tMinWidth then
+        put tMinWidth into tWidth
     end if
 
-	put mViewHeight / (mNumRows + 1) into mRowHeight
-	subtract mRowHeight from mViewHeight
+	put (tHeight - topRowHeight()) into mViewHeight
+	put the floor of (mViewHeight / (kIconSize * (1 + kIconPaddingRatio))) into mNumRows
+	
+	put tWidth - kScrollbarWidth into mViewWidth
+	put the floor of (mViewWidth / (kIconSize * (1 + kIconPaddingRatio))) into mNumCols
+	
+	put mViewHeight / mNumRows into mRowHeight
 	put mViewWidth / mNumCols into mColWidth
+
 	
 	put the number of elements in mDataList into mDataCount
 	put mRowHeight * the ceiling of (mDataCount / mNumCols) into mDataHeight
@@ -364,13 +409,13 @@ private handler updateParameters() returns nothing
 		put 0 into mDataTravel
 	end if	
 	
-	updateIconRects(mRowHeight)
+	updateIconRects(topRowHeight())
 
 	ensureViewTopPosition()
 	updateFirstDataItem()
 	
 	// Calculate scrollbar dimensions
-	updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
+	updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, topRowHeight())
 	
 	put false into mRecalculate
 end handler
@@ -384,15 +429,22 @@ private handler updateIconRects(in pTopOffset as Real)
 	variable tTop as Real
 	variable tBottom as Real
 	
+	variable tIconTopOffset as Integer
+	put pTopOffset into tIconTopOffset
+	
+	if mShowNames then
+		add kNameHeight to tIconTopOffset
+	end if
+	
 	variable tRow as Integer
 	variable tCol as Integer
 	repeat with tRow from 1 up to mNumRows
 		repeat with tCol from 1 up to mNumCols
-			put (tCol - 1) * mViewWidth / mNumCols + kIconPadding into tLeft
-			put tCol * mViewWidth / mNumCols - kIconPadding into tRight
-	
-			put (tRow - 1) * mViewHeight / mNumRows + kIconPadding + pTopOffset into tTop
-			put tRow * mViewHeight / mNumRows - kIconPadding + pTopOffset into tBottom
+			put (tCol - 1) * mViewWidth / mNumCols + kIconSize * kIconPaddingRatio into tLeft
+			put tCol * mViewWidth / mNumCols - kIconSize * kIconPaddingRatio into tRight
+						
+			put (tRow - 1) * mViewHeight / mNumRows + kIconSize * kIconPaddingRatio + tIconTopOffset into tTop
+			put tRow * mViewHeight / mNumRows - kIconSize * kIconPaddingRatio + pTopOffset into tBottom
 
 			push rectangle [tLeft, tTop, tRight, tBottom] onto tRects
 		end repeat
@@ -512,8 +564,18 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+constant kPreferredCols is 5
+constant kPreferredRows is 5
+
 public handler getPreferredSize() returns List
-	return [150 * mNumCols, 150 * mNumRows + mRowHeight]
+	variable tWidth
+	put kIconSize * kPreferredCols * (1 + kIconPaddingRatio) into tWidth
+	add 2 * kScrollbarWidth to tWidth
+	
+	variable tHeight
+	put kIconSize * kPreferredRows * (1 + kIconPaddingRatio) into tHeight
+	add topRowHeight() to tHeight
+	return [tWidth, tHeight]
 end handler
 
 public handler setFrameBorder(in pValue as Boolean)
@@ -540,7 +602,7 @@ end handler
 private handler scrollToIndex(in pIndex as Number)
    put the floor of ((pIndex - 1) / mNumCols) * mRowHeight into mViewTopPosition
    updateFirstDataItem()
-   updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, mRowHeight)
+   updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition, topRowHeight())
    put true into mRecalculate
    redraw all
 end handler
@@ -632,7 +694,7 @@ private handler updateScrollbar(in pViewWidth as Real, in pViewHeight as Real, i
 		put scrollbarYFromView(pViewHeight, pDataHeight, pTopPosition) into tScrollbarY
 
 		variable tRect as Rectangle
-		put rectangle [pViewWidth - 10, pViewOffset, pViewWidth - 10 + kScrollbarWidth, pViewOffset + mScrollbarHeight] into tRect
+		put rectangle [pViewWidth - kScrollbarWidth, pViewOffset, pViewWidth, pViewOffset + mScrollbarHeight] into tRect
 		put rounded rectangle path of tRect with radius 3 into mScrollbarPath
 	
 		put 0 into mScrollbarY

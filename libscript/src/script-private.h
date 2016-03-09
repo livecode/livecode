@@ -33,6 +33,7 @@ extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptNotAStringValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
@@ -576,6 +577,13 @@ enum MCScriptBytecodeOp
     // build a list. (This will be replaced by an invoke when variadic bindings are
     // implemented).
     kMCScriptBytecodeOpAssignList,
+
+	// Array creation assignment.
+	//   assign-array <dst>, <key_1>, <value_1>, ..., <key_n>, <value_n>
+	// Dst is a register.  The remaining arguments are registers and
+	// are used, pair-wise, to build an array. (This will be replaced by an invoke
+	// when variadic bindings are implemented).
+	kMCScriptBytecodeOpAssignArray,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);

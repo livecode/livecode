@@ -1,10 +1,12 @@
-# Push Button Widget Added
+---
+version: 8.0.0-dp-6
+---
+# New push button widget
 
-Push button widget.
+The **widgetTheme** of the push button can be:
 
-This theme of this widget can either be:
 - iOS
 - Android(Raised)
 - Android(Flat)
 
-The default theme is iOS.
+The default theme is "iOS".

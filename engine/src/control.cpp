@@ -217,7 +217,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	// SMR 594 do menu stuff before visibility check
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_GRAB)
@@ -253,11 +253,14 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	}
 	MCRectangle srect;
 	MCU_set_rect(srect, x, y, 1, 1);
+    
+    mx = x;
+    my = y;
+    
 	Boolean is = maskrect(srect) || (state & CS_SELECTED
 	                                 && MCU_point_in_rect(geteffectiverect(), x, y)
-	                                 && sizehandles() != 0);
-	mx = x;
-	my = y;
+	                                 && sizehandles(x, y) != 0);
+    
 	if (is || state & CS_MFOCUSED)
 	{
 		if (focused == this || getstack() -> gettool(this) == T_POINTER)
@@ -889,9 +892,9 @@ void MCControl::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p
 	fprintf(stderr, "Control: ERROR tried to draw control id %d\n", obj_id);
 }
 
-IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
-	return MCObject::save(stream, p_part, p_force_ext);
+	return MCObject::save(stream, p_part, p_force_ext, p_version);
 }
 
 Boolean MCControl::kfocusset(MCControl *target)
@@ -944,7 +947,7 @@ Boolean MCControl::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCControl::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle drect = MCU_intersect_rect(srect, rect);
 	return drect.width != 0 && drect.height != 0;
@@ -1048,7 +1051,7 @@ inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
     // SN-2014-11-14: [[ Bug 14028 ]] Use the current control visibility state
-	if (!opened || !(getflag(F_VISIBLE) || MCshowinvisibles))
+	if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
 		return;
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] A control needs to be (partially)
@@ -1104,20 +1107,24 @@ void MCControl::drawselected(MCDC *dc)
 		return;
 
 	dc -> setopacity(255);
-	dc -> setfunction(GXcopy);
+    dc -> setquality(QUALITY_SMOOTH);
+    dc -> setfunction(GXcopy);
 
-	MCRectangle rects[8];
-	sizerects(rects);
-	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillStippled, nil, 0, 0);
-	else
-		dc->setfillstyle(FillSolid, nil, 0, 0);
-	dc->setforeground(MCselectioncolor);
-    dc->setquality(QUALITY_SMOOTH);
+    drawmarquee(dc, rect);
+    
+    MCRectangle rects[8];
+    sizerects(rects);
+    if (flags & F_LOCK_LOCATION)
+        dc->setfillstyle(FillStippled, nil, 0, 0);
+    else
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+    dc->setforeground(MCselectioncolor);
+
     for (uint2 i = 0; i < 8; i++)
         dc->fillarc(rects[i], 0, 360, false);
-	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillSolid, nil, 0, 0);
+    if (flags & F_LOCK_LOCATION)
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+
     dc->setquality(QUALITY_DEFAULT);
 }
 
@@ -1437,7 +1444,9 @@ void MCControl::continuesize(int2 x, int2 y)
 	resizeparent();
 }
 
-uint2 MCControl::sizehandles()
+#define SIZE_HANDLE_HIT_TOLERANCE 1
+
+uint2 MCControl::sizehandles(int2 px, int2 py)
 {
 	uint2 newstate = 0;
 	if (!(flags & F_LOCK_LOCATION))
@@ -1446,32 +1455,36 @@ uint2 MCControl::sizehandles()
 		sizerects(rects);
 		int2 i;
 		for (i = 7 ; i >= 0 ; i--)
-			if (MCU_point_in_rect(rects[i], mx, my))
+        {
+            // Be more forgiving about handle hit detection
+            rects[i] = MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
+			if (MCU_point_in_rect(rects[i], px, py))
 			{
 				if (i < 3)
 				{
 					newstate |= CS_SIZET;
-					yoffset = my - rect.y;
+					yoffset = py - rect.y;
 				}
 				else
 					if (i > 4)
 					{
 						newstate |= CS_SIZEB;
-						yoffset = rect.y + rect.height - my;
+						yoffset = rect.y + rect.height - py;
 					}
 				if (i == 0 || i == 3 || i == 5)
 				{
 					newstate |= CS_SIZEL;
-					xoffset = mx - rect.x;
+					xoffset = px - rect.x;
 				}
 				else
 					if (i == 2 || i == 4 || i == 7)
 					{
 						newstate |= CS_SIZER;
-						xoffset = rect.x + rect.width - mx;
+						xoffset = rect.x + rect.width - px;
 					}
 				break;
 			}
+        }
 	}
 	return newstate;
 }
@@ -1484,7 +1497,7 @@ void MCControl::start(Boolean canclone)
 	getstack()->kfocusset(NULL);
 	kunfocus();
 	
-	state |= sizehandles();
+	state |= sizehandles(mx, my);
 	if (!(state & CS_SELECTED))
 	{
 		if (MCmodifierstate & MS_SHIFT)
@@ -1494,7 +1507,7 @@ void MCControl::start(Boolean canclone)
 	}
 	else
 	{
-		if (MCmodifierstate & MS_SHIFT && sizehandles() == 0)
+		if (MCmodifierstate & MS_SHIFT && sizehandles(mx, my) == 0)
 		{
 			MCselected->remove(this);
 			return;
@@ -2001,7 +2014,7 @@ void MCControl::setbitmapeffects(MCBitmapEffectsRef p_effects)
 
 MCObject *MCControl::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles) ||
+	if (!(flags & F_VISIBLE || showinvisible()) ||
 	    (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	

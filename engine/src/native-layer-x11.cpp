@@ -54,13 +54,14 @@
 #include <gtk/gtk.h>
 
 
-MCNativeLayerX11::MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view) :
+MCNativeLayerX11::MCNativeLayerX11(MCObject *p_object, x11::Window p_view) :
   m_child_window(NULL),
   m_input_shape(NULL),
   m_socket(NULL),
   m_widget_xid(p_view)
 {
-	m_widget = p_widget;
+	m_object = p_object;
+	m_intersect_rect = MCRectangleMake(0,0,0,0);
 }
 
 MCNativeLayerX11::~MCNativeLayerX11()
@@ -87,9 +88,7 @@ void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 
 void MCNativeLayerX11::updateInputShape()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (!t_widget->isInRunMode())
+    if (m_show_for_tool)
         // In edit mode. Mask out all input events
         gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_input_shape, 0, 0);
     else
@@ -99,8 +98,6 @@ void MCNativeLayerX11::updateInputShape()
 
 void MCNativeLayerX11::doAttach()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     if (m_socket == NULL)
     {
         // Create a new GTK socket to deal with the XEMBED protocol
@@ -109,7 +106,7 @@ void MCNativeLayerX11::doAttach()
         
         // Create a new GTK window to hold the socket
         MCRectangle t_rect;
-        t_rect = t_widget->getrect();
+        t_rect = m_object->getrect();
         m_child_window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_POPUP));
         gtk_widget_set_parent_window(GTK_WIDGET(m_child_window), getStackGdkWindow());
         gtk_widget_realize(GTK_WIDGET(m_child_window));
@@ -139,8 +136,9 @@ void MCNativeLayerX11::doAttach()
     
     // Act as if there were a re-layer to put the widget in the right place
     doRelayer();
-    
-    doSetVisible(ShouldShowWidget(t_widget));
+    doSetViewportGeometry(m_viewport_rect);
+    doSetGeometry(m_rect);
+    doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerX11::doDetach()
@@ -160,33 +158,59 @@ bool MCNativeLayerX11::doPaint(MCGContextRef p_context)
     return false;
 }
 
+void MCNativeLayerX11::updateContainerGeometry()
+{
+	m_intersect_rect = MCU_intersect_rect(m_viewport_rect, m_rect);
+
+    // Clear any minimum size parameters for the GTK widgets
+    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), -1, -1);
+
+    // Resize by adjusting the widget's containing GtkWindow
+    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_intersect_rect.x, m_intersect_rect.y, m_intersect_rect.width, m_intersect_rect.height);
+
+    // We need to set the requested minimum size in order to get in-process GTK
+    // widgets to re-size automatically. Unfortunately, that is the only widget
+    // category that this works for... others need to do it themselves.
+    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), m_intersect_rect.width, m_intersect_rect.height);
+}
+
+void MCNativeLayerX11::doSetViewportGeometry(const MCRectangle &p_rect)
+{
+	m_viewport_rect = p_rect;
+	updateContainerGeometry();
+}
+
+// IM-2016-01-21: [[ NativeLayer ]] Place the socket window relative to its
+//    container, so only the visible area (clipped by any containing groups)
+//    is displayed.
 void MCNativeLayerX11::doSetGeometry(const MCRectangle& p_rect)
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
+	m_rect = p_rect;
+	updateContainerGeometry();
+	
+	MCRectangle t_rect;
+	t_rect = m_rect;
+	t_rect.x -= m_intersect_rect.x;
+	t_rect.y -= m_intersect_rect.y;
+	
     // Move the overlay window first, to ensure events don't get stolen
 
     // Clear any minimum size parameters for the GTK widgets
     gtk_widget_set_size_request(GTK_WIDGET(m_socket), -1, -1);
-    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), -1, -1);
-    
-    // Resize by adjusting the widget's containing GtkWindow
-    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_child_window)), p_rect.x, p_rect.y, p_rect.width, p_rect.height);
     
     // Resize the socket
-    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_socket)), 0, 0, p_rect.width, p_rect.height);
+    gdk_window_move_resize(gtk_widget_get_window(GTK_WIDGET(m_socket)), t_rect.x, t_rect.y, t_rect.width, t_rect.height);
     
     // We need to set the requested minimum size in order to get in-process GTK
     // widgets to re-size automatically. Unfortunately, that is the only widget
     // category that this works for... others need to do it themselves.
-    gtk_widget_set_size_request(GTK_WIDGET(m_child_window), p_rect.width, p_rect.height);
-    gtk_widget_set_size_request(GTK_WIDGET(m_socket), p_rect.width, p_rect.height);
+    gtk_widget_set_size_request(GTK_WIDGET(m_socket), t_rect.width, t_rect.height);
     
     // Update the contained window too
     GdkWindow* t_remote;
     t_remote = gtk_socket_get_plug_window(m_socket);
     if (t_remote != NULL)
-        gdk_window_move_resize(t_remote, 0, 0, p_rect.width, p_rect.height);
+        gdk_window_move_resize(t_remote, t_rect.x, t_rect.y, t_rect.width, t_rect.height);
 }
 
 void MCNativeLayerX11::doSetVisible(bool p_visible)
@@ -197,22 +221,20 @@ void MCNativeLayerX11::doSetVisible(bool p_visible)
         gtk_widget_hide(GTK_WIDGET(m_child_window));
 
 	if (p_visible)
-		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+		doSetGeometry(m_object->getrect());
 }
 
 void MCNativeLayerX11::doRelayer()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     // Ensure that the input mask for the widget is up to date
     updateInputShape();
     
     // Find which native layer this should be inserted below
-    MCWidget* t_before;
-    t_before = findNextLayerAbove(t_widget);
+    MCObject *t_before;
+    t_before = findNextLayerAbove(m_object);
     
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
+    if (isAttached() && m_object->getstack()->getcard() == m_object->getstack()->getcurcard())
     {
         // If t_before_window == NULL, this will put the widget on the bottom layer
         MCNativeLayerX11 *t_before_layer;
@@ -229,9 +251,6 @@ void MCNativeLayerX11::doRelayer()
         }
         gdk_window_restack(gtk_widget_get_window(GTK_WIDGET(m_child_window)), t_before_window, FALSE);
     }
-    
-    // Make the widget visible, if appropriate
-    doSetVisible(ShouldShowWidget(t_widget));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,13 +270,23 @@ x11::Window MCNativeLayerX11::getStackX11Window()
 
 GdkWindow* MCNativeLayerX11::getStackGdkWindow()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    return t_widget->getstack()->getwindow();
+    return m_object->getstack()->getwindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_native_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_native_view)
 {
-    return new MCNativeLayerX11(p_widget, (x11::Window)p_native_view);
+    return new MCNativeLayerX11(p_object, (x11::Window)p_native_view);
 }
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+{
+	return false;
+}
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////

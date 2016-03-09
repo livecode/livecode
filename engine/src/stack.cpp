@@ -201,6 +201,10 @@ MCPropertyInfo MCStack::kProperties[] =
     
     // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
     DEFINE_RW_OBJ_PROPERTY(P_DOCUMENT_FILENAME, String, MCStack, DocumentFilename)
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, Bool, MCStack, ShowInvisibleObjects)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -298,6 +302,9 @@ MCStack::MCStack()
     // MERG-2015-10-11: [[ DocumentFilename ]] The filename the stack represnts
     m_document_filename = MCValueRetain(kMCEmptyString);
 
+	// IM-2016-02-29: [[ Bug 16244 ]] by default, visibility is determined by global 'showInvisibles' property.
+	m_hidden_object_visibility = kMCStackObjectVisibilityDefault;
+	
 	m_view_need_redraw = false;
 	m_view_need_resize = false;
 
@@ -500,6 +507,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     
 	// IM-2014-05-27: [[ Bug 12321 ]] No fonts to purge yet
 	m_purge_fonts = false;
+
+	// IM-2016-02-29: [[ Bug 16244 ]] by default, visibility is determined by global 'showInvisibles' property.
+	m_hidden_object_visibility = kMCStackObjectVisibilityDefault;
 
 	m_view_need_redraw = sref.m_view_need_redraw;
 	m_view_need_resize = sref.m_view_need_resize;
@@ -1233,7 +1243,7 @@ MCRectangle MCStack::getrectangle(bool p_effective) const
     return getwindowrect();
 }
 
-void MCStack::setrect(const MCRectangle &nrect)
+void MCStack::applyrect(const MCRectangle &nrect)
 {
 	// IM-2013-09-30: [[ FullscreenMode ]] allow setrect on mobile,
 	// which now has an effect on fullscreen scaled stacks
@@ -3253,7 +3263,7 @@ void MCStack::unlockshape(MCObjectShape& p_shape)
 // MW-2012-02-14: [[ FontRefs ]] This method causes recursion throughout all the
 //   children (cards, controls and substacks) of the stack updating the font
 //   allocations.
-bool MCStack::recomputefonts(MCFontRef p_parent_font)
+bool MCStack::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// MW-2012-02-17: [[ FontRefs ]] If the stack has formatForPrinting set,
 	//   make sure all its children inherit from a font with printer metrics
@@ -3272,7 +3282,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 		/* UNCHECKED */ MCFontCreate(t_textfont, t_fontstyle, t_textsize, t_printer_parent_font);
 
 		bool t_changed;
-		t_changed = MCObject::recomputefonts(t_printer_parent_font);
+		t_changed = MCObject::recomputefonts(t_printer_parent_font, p_force);
 
 		MCFontRelease(t_printer_parent_font);
 	}
@@ -3280,14 +3290,14 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 	{
 		// A stack's font is determined by the object, so defer there first and
 		// only continue if something changes.
-		if (!MCObject::recomputefonts(p_parent_font))
+		if (!MCObject::recomputefonts(p_parent_font, p_force))
 			return false;
 	}
 
 	// MW-2012-12-14: [[ Bug ]] Only recompute the card if we are open.
 	// Now iterate through the current card, updating that.
 	if (opened != 0 && curcard != nil)
-		curcard -> recomputefonts(m_font);
+		curcard -> recomputefonts(m_font, p_force);
 	
 	// Now iterate through all the sub-stacks, updating them.
 	if (substacks != NULL)
@@ -3296,7 +3306,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 		do
 		{
 			if (sptr -> getopened() != 0)
-				sptr -> recomputefonts(m_font);
+				sptr -> recomputefonts(m_font, p_force);
 			sptr = sptr->next();
 		}
 		while (sptr != substacks);
@@ -3313,7 +3323,7 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 			do
 			{
 				if (t_stack -> getopened() != 0)
-					t_stack -> recomputefonts(m_font);
+					t_stack -> recomputefonts(m_font, p_force);
 				t_stack = t_stack -> next();
 			}
 			while(t_stack != MCdispatcher -> gethome());
@@ -3344,7 +3354,7 @@ bool MCStack::changeextendedstate(bool setting, uint32_t mask)
 
 void MCStack::purgefonts()
 {
-	recomputefonts(parent -> getfontref());
+	recomputefonts(parent -> getfontref(), true);
 	recompute();
 	
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
@@ -3441,7 +3451,13 @@ void MCStack::setasscriptonly(MCStringRef p_script)
 
 MCPlatformControlType MCStack::getcontroltype()
 {
-    return kMCPlatformControlTypeWindow;
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        return kMCPlatformControlTypeWindow;
 }
 
 MCPlatformControlPart MCStack::getcontrolsubpart()
@@ -3498,4 +3514,41 @@ void MCStack::notifyattachments(MCStackAttachmentEvent p_event)
 {
     for(MCStackAttachment *t_attachment = m_attachments; t_attachment != nil; t_attachment = t_attachment -> next)
         t_attachment -> callback(t_attachment -> context, this, p_event);
+}
+
+MCStackObjectVisibility MCStack::gethiddenobjectvisibility()
+{
+	return m_hidden_object_visibility;
+}
+
+void MCStack::sethiddenobjectvisibility(MCStackObjectVisibility p_visibility)
+{
+	bool t_visible = showinvisible();
+	
+	m_hidden_object_visibility = p_visibility;
+	
+	if (t_visible != showinvisible())
+	{
+		// Visibility of objects has changed so redraw the stack.
+		view_dirty_all();
+	}
+}
+
+bool MCStack::geteffectiveshowinvisibleobjects()
+{
+	switch (gethiddenobjectvisibility())
+	{
+		case kMCStackObjectVisibilityDefault:
+			return MCshowinvisibles;
+			
+		case kMCStackObjectVisibilityShow:
+			return true;
+			
+		case kMCStackObjectVisibilityHide:
+			return false;
+
+		default:
+			MCUnreachable();
+			return false;
+	}
 }

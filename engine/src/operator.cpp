@@ -1103,7 +1103,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 	initpoint(sp);
 	if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL)
 		form = IT_NOT;
-    if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REALLY) == PS_NORMAL)
+    if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRICTLY) == PS_NORMAL)
     {
         if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_NOTHING) == PS_NORMAL)
             valid = IV_UNDEFINED;
@@ -1111,7 +1111,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
         {
             if (sp.skip_token(SP_VALIDATION, TT_UNDEFINED, TT_UNDEFINED) != PS_NORMAL)
             {
-                MCperror -> add(PE_ISREALLY_NOAN, sp);
+	            MCperror -> add(PE_ISSTRICTLY_NOAN, sp);
                 return PS_ERROR;
             }
             
@@ -1119,7 +1119,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
             {
                 if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
                 {
-                    MCperror -> add(PE_ISREALLY_NOSTRING, sp);
+                    MCperror -> add(PE_ISSTRICTLY_NOSTRING, sp);
                     return PS_ERROR;
                 }
                 
@@ -1139,15 +1139,15 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
                 valid = IV_REAL;
             else
             {
-                MCperror -> add(PE_ISREALLY_NOTYPE, sp);
+                MCperror -> add(PE_ISSTRICTLY_NOTYPE, sp);
                 return PS_ERROR;
             }
         }
             
         if (form != IT_NOT)
-            form = IT_REALLY;
+            form = IT_STRICTLY;
         else
-            form = IT_NOT_REALLY;
+            form = IT_NOT_STRICTLY;
         
         return PS_BREAK;
     }
@@ -1199,7 +1199,10 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 					MCperror->add(PE_IS_NOVALIDTYPE, sp);
 					return PS_ERROR;
 				}
-				if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || (te->type != TT_CLASS && (te->type != TT_FUNCTION || te->which != F_KEYS)))
+				if (sp.lookup(SP_FACTOR, te) != PS_NORMAL
+                    || te -> which == CT_ELEMENT
+                    || (te->type != TT_CLASS
+                        && (te->type != TT_FUNCTION || te->which != F_KEYS)))
 				{
 					MCperror->add(PE_IS_BADAMONGTYPE, sp);
 					return PS_ERROR;
@@ -1842,8 +1845,8 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     bool t_result;
     
-    // Implementation of 'is [ not ] really'
-    if (form == IT_REALLY || form == IT_NOT_REALLY)
+    // Implementation of 'is [ not ] strictly'
+    if (form == IT_STRICTLY || form == IT_NOT_STRICTLY)
     {
         MCAutoValueRef t_value;
         
@@ -1854,46 +1857,46 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         switch(valid)
         {
             case IV_UNDEFINED:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyNothing(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyNothing(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyNothing(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyNothing(ctxt, *t_value, t_result);
                 break;
             case IV_LOGICAL:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyABoolean(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyABoolean(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyABoolean(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyABoolean(ctxt, *t_value, t_result);
                 break;
             case IV_INTEGER:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyAnInteger(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyAnInteger(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyAnInteger(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyAnInteger(ctxt, *t_value, t_result);
                 break;
             case IV_REAL:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyAReal(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyAReal(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyAReal(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyAReal(ctxt, *t_value, t_result);
                 break;
             case IV_STRING:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyAString(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyAString(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyAString(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyAString(ctxt, *t_value, t_result);
                 break;
             case IV_BINARY_STRING:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyABinaryString(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyABinaryString(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyABinaryString(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyABinaryString(ctxt, *t_value, t_result);
                 break;
             case IV_ARRAY:
-                if (form == IT_REALLY)
-                    MCEngineEvalIsReallyAnArray(ctxt, *t_value, t_result);
+                if (form == IT_STRICTLY)
+                    MCEngineEvalIsStrictlyAnArray(ctxt, *t_value, t_result);
                 else
-                    MCEngineEvalIsNotReallyAnArray(ctxt, *t_value, t_result);
+                    MCEngineEvalIsNotStrictlyAnArray(ctxt, *t_value, t_result);
                 break;
         }
         

@@ -528,7 +528,10 @@
 
     'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
         "property" @(-> Position) Identifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
-        
+
+    'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
+        "property" @(-> Position) StringyIdentifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
+
 'nonterm' OptionalSetClause(-> OPTIONALID)
 
     'rule' OptionalSetClause(-> id(Setter)):
@@ -994,6 +997,9 @@
     'rule' TermExpression(-> list(Position, List)):
         "[" @(-> Position) OptionalExpressionList(-> List) "]"
 
+    'rule' TermExpression(-> array(Position, Pairs)):
+        "{" @(-> Position) OptionalExpressionArray(-> Pairs) "}"
+
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
@@ -1057,6 +1063,29 @@
 
     'rule' ExpressionListAsExpression(-> list(Position, List)):
         ExpressionList(-> List) @(-> Position)
+
+----------
+
+'nonterm' OptionalExpressionArray(-> EXPRESSIONLIST)
+
+    'rule' OptionalExpressionArray(-> Pairs):
+        ExpressionArray(-> Pairs)
+
+    'rule' OptionalExpressionArray(-> nil):
+        -- empty
+
+'nonterm' ExpressionArray(-> EXPRESSIONLIST)
+
+    'rule' ExpressionArray(-> expressionlist(Head, Tail)):
+        ExpressionArrayEntry(-> Head) "," ExpressionArray(-> Tail)
+
+    'rule' ExpressionArray(-> expressionlist(Head, nil)):
+        ExpressionArrayEntry(-> Head)
+
+'nonterm' ExpressionArrayEntry(-> EXPRESSION)
+
+    'rule' ExpressionArrayEntry(-> pair(Position, Key, Value)):
+        Expression(-> Key) ":" @(-> Position) Expression(-> Value)
 
 --------------------------------------------------------------------------------
 -- Syntax Syntax

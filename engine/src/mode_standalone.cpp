@@ -366,7 +366,31 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		}
 		break;
 			
-			
+	case kMCCapsuleSectionTypeLicense:
+	{
+		char t_edition_byte;
+		if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+		{
+			MCresult -> sets("failed to read license");
+			return false;
+		}
+		
+		bool t_success;
+		t_success = true;
+		
+		// The edition encoding is engine version / IDE engine version
+		// specific - for now its just a byte with value 0-3.
+		if (t_edition_byte == 1)
+			MClicenseparameters . license_class = kMCLicenseClassCommunity;
+		else if (t_edition_byte == 2)
+			MClicenseparameters . license_class = kMCLicenseClassCommercial;
+		else if (t_edition_byte == 3)
+			MClicenseparameters . license_class = kMCLicenseClassProfessional;
+		else
+			MClicenseparameters . license_class = kMCLicenseClassNone;
+	}
+	break;
+		
 	default:
 		MCresult -> sets("unrecognized section encountered");
 		return false;

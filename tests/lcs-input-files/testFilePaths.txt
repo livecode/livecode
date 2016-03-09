@@ -1,0 +1,5 @@
+ascii,test
+nativeAsUnicode,testá
+nativeNotUnicode,test€
+simpleUnicode,testα
+unicode,test룗

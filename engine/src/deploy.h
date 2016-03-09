@@ -104,6 +104,9 @@ struct MCDeployParameters
     
     // The list of modules to include.
     MCArrayRef modules;
+    
+    // List of architectures to retain when building universal binaries
+    MCAutoArray<MCDeployArchitecture> architectures;
 	
 	
 	MCDeployParameters()

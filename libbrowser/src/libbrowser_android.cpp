@@ -29,7 +29,7 @@ bool MCAndroidWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
-	{ "androidwebview", nil, MCAndroidWebViewBrowserFactoryCreate },
+	{ "WebView", nil, MCAndroidWebViewBrowserFactoryCreate },
 	{ nil, nil, nil },
 };
 
@@ -878,18 +878,27 @@ bool MCBrowserFindWithJavaView(JNIEnv *env, jobject p_view, MCBrowser *&r_browse
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doCallJSHandler(JNIEnv *env, jobject object, jstring handler, jobject args) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doCallJSHandler(JNIEnv *env, jobject object, jstring handler, jobject args)
 {
-	char *t_handler = nil;
-	/* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, handler, t_handler);
+	bool t_success;
+	t_success = true;
 	
-	MCBrowserListRef t_args = nil;
-	/* UNCHECKED */ MCBrowserJavaJSONArrayToMCBrowserList(env, args, t_args);
+	char *t_handler;
+	t_handler = nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, handler, t_handler);
+	
+	MCBrowserListRef t_args;
+	t_args = nil;
+	if (t_success)
+		t_success = MCBrowserJavaJSONArrayToMCBrowserList(env, args, t_args);
 	
 	MCBrowser *t_browser;
-	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	if (t_success && MCBrowserFindWithJavaView(env, object, t_browser))
 		((MCAndroidWebViewBrowser*)t_browser)->OnJavaScriptCall(t_handler, t_args);
 	
-	MCCStringFree(t_handler);
-	MCBrowserListRelease(t_args);
+	if (t_handler != nil)
+		MCCStringFree(t_handler);
+	if (t_args != nil)
+		MCBrowserListRelease(t_args);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSExecutionResult(JNIEnv *env, jobject object, jstring tag, jstring result) __attribute__((visibility("default")));
@@ -897,28 +906,41 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doJSE
 {
 	MCLog("doJSExecutionResult", nil);
 	
-    char *t_tag = nil;
-    /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, tag, t_tag);
+	bool t_success;
+	t_success = true;
 	
-	char *t_result = nil;
-	/* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, result, t_result);
+	char *t_tag;
+	t_tag = nil;
+    if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, tag, t_tag);
+	
+	char *t_result;
+	t_result = nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, result, t_result);
 	
 	MCBrowser *t_browser;
-	if (MCBrowserFindWithJavaView(env, object, t_browser))
+	if (t_success && MCBrowserFindWithJavaView(env, object, t_browser))
 		((MCAndroidWebViewBrowser*)t_browser)->SetJavaScriptResult(t_tag, t_result);
-    
-    MCCStringFree(t_tag);
-    MCCStringFree(t_result);
+	
+	if (t_tag != nil)
+		MCCStringFree(t_tag);
+	if (t_result != nil)
+		MCCStringFree(t_result);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doStartedLoading(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doStartedLoading(JNIEnv *env, jobject object, jstring url)
 {
-    char *t_url;
-    t_url = nil;
-    /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
+	bool t_success;
+	t_success = true;
+	
+	char *t_url;
+	t_url= nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, url, t_url);
     
-	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
+	if (t_success && !MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
 	{
 		MCBrowser *t_browser;
 		if (MCBrowserFindWithJavaView(env, object, t_browser))
@@ -928,17 +950,22 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doSta
 		}
 	}
 
-	MCCStringFree(t_url);
+	if (t_url != nil)
+		MCCStringFree(t_url);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFinishedLoading(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFinishedLoading(JNIEnv *env, jobject object, jstring url)
 {
-    char *t_url;
-    t_url = nil;
-    /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
+	bool t_success;
+	t_success = true;
+	
+	char *t_url;
+	t_url= nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, url, t_url);
     
-	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
+	if (t_success && !MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
 	{
 		MCBrowser *t_browser;
 		if (MCBrowserFindWithJavaView(env, object, t_browser))
@@ -948,21 +975,27 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doFin
 		}
 	}
 
-	MCCStringFree(t_url);
+	if (t_url != nil)
+		MCCStringFree(t_url);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoadingError(JNIEnv *env, jobject object, jstring url, jstring error) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoadingError(JNIEnv *env, jobject object, jstring url, jstring error)
 {
-    char *t_url;
-    t_url = nil;
-    /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, url, t_url);
+	bool t_success;
+	t_success = true;
+	
+	char *t_url;
+	t_url = nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, url, t_url);
     
     char *t_error;
     t_error = nil;
-    /* UNCHECKED */ MCBrowserJavaStringToUtf8String(env, error, t_error);
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, error, t_error);
     
-	if (!MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
+	if (t_success && !MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
 	{
 		MCBrowser *t_browser;
 		if (MCBrowserFindWithJavaView(env, object, t_browser))
@@ -972,8 +1005,34 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doLoa
 		}
 	}
 
-	MCCStringFree(t_url);
-	MCCStringFree(t_error);
+	if (t_url != nil)
+		MCCStringFree(t_url);
+	if (t_error != nil)
+		MCCStringFree(t_error);
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doUnsupportedScheme(JNIEnv *env, jobject object, jstring url) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doUnsupportedScheme(JNIEnv *env, jobject object, jstring url)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_url;
+	t_url = nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, url, t_url);
+	
+	if (t_success && !MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
+	{
+		MCBrowser *t_browser;
+		if (MCBrowserFindWithJavaView(env, object, t_browser))
+		{
+			((MCAndroidWebViewBrowser*)t_browser)->OnNavigationRequestUnhandled(false, t_url);
+		}
+	}
+	
+	if (t_url != nil)
+		MCCStringFree(t_url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

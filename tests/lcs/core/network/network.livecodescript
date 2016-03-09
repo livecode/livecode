@@ -16,9 +16,13 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+on TestSetup
+   if the platform is "HTML5" then
+      return "SKIP DNS and socket APIs unavailable on HTML5"
+   end if
+end TestSetup
 
 on TestNetwork2
-
 TestAssert "test", the dnsservers is not empty
 
 repeat for each line tServer in the dnsservers

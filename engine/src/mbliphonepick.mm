@@ -37,7 +37,7 @@ UIViewController *MCIPhoneGetViewController(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
-@interface MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
+@interface com_runrev_livecode_MCIPhonePickWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate, UITableViewDataSource>
 {
 	bool iSiPad;
 	bool m_running;
@@ -65,7 +65,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-@implementation MCIPhonePickWheelDelegate
+@implementation com_runrev_livecode_MCIPhonePickWheelDelegate
 
 - (id)init
 {
@@ -800,7 +800,7 @@ return 1;
 }
 @end
 
-static MCIPhonePickWheelDelegate *s_pick_wheel_delegate = nil;
+static com_runrev_livecode_MCIPhonePickWheelDelegate *s_pick_wheel_delegate = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -816,7 +816,7 @@ struct picker_t
 	NSArray *initial_index_array;
 	NSString *return_index;
 	MCRectangle button_rect;
-	MCIPhonePickWheelDelegate *picker;
+	com_runrev_livecode_MCIPhonePickWheelDelegate *picker;
 	bool cancelled;
 };
 
@@ -826,7 +826,7 @@ static void do_pickn_prewait(void *p_context)
 	ctxt = (picker_t *)p_context;
 	
 	// call the picker with the label and options list
-	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
+	ctxt -> picker = [[com_runrev_livecode_MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: ctxt -> use_checkmark];
 
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
@@ -919,7 +919,7 @@ static void pick_option_prewait(void *p_context)
 	picker_t *ctxt;
 	ctxt = (picker_t *)p_context;
 	
-	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
+	ctxt -> picker = [[com_runrev_livecode_MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: !ctxt->use_hilited];
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt->option_list_array andInitial: ctxt->initial_index_array andCancel: ctxt->use_cancel andDone: ctxt->use_done andPicker: ctxt->use_picker andButtonRect: ctxt->button_rect];

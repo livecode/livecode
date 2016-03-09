@@ -21,7 +21,7 @@ functionName (string): A string up to 65,535 characters in length.
 parametersList: The parametersList consists of one or more parameter names, separated by commas.
 statementList: The statementList consists of one or more LiveCode statements.
 
-The result: >*Note:* As the <result> is a global property, if you do not explicitly <return(control_st)> a value, then <the result> will no change, but reflect the last engine command, engine function or command or function handler that did return a value.
+The result: >*Note:* As the <result> is a global property, if you do not explicitly <return(control_st)> a value, then <the result> will not change, but reflect the last engine command, engine function or command or function handler that did return a value.
 
 Description:
 Use the <function> <control structure> to implement a custom function.

@@ -57,7 +57,8 @@ typedef void (*MCExternalThreadRequiredCallback)(void *state, int flags);
 
 // MW-2013-06-14: [[ ExternalsApiV5 ]] Update the interface version.
 // MW-2014-06-26: [[ ExternalsApiV6 ]] Update the interface version for unicode changes.
-#define kMCExternalInterfaceVersion 6
+// MW-2016-02-17: [[ ExternalsApiV7 ]] Update the interface version for license check.
+#define kMCExternalInterfaceVersion 7
 
 enum
 {
@@ -200,10 +201,10 @@ enum MCExternalError
     
     // SN-2014-07-01" [[ ExternalsApiV6 ]] Errors which might get triggered when converting from an MC* type to a CF* type
     // Following the definitions in Support.mm
-#ifdef __HAS_CORE_FOUNDATION__
     kMCExternalErrorNotASequence = 40,
     kMCExternalErrorCannotEncodeMap = 41,
-#endif
+	
+	kMCExternalErrorUnlicensed = 42,
 };
 
 enum MCExternalContextQueryTag
@@ -233,7 +234,11 @@ enum MCExternalContextQueryTag
     kMCExternalContextQueryUnicodeItemDelimiter,
     kMCExternalContextQueryUnicodeLineDelimiter,
     kMCExternalContextQueryUnicodeColumnDelimiter,
-    kMCExternalContextQueryUnicodeRowDelimiter,
+	kMCExternalContextQueryUnicodeRowDelimiter,
+	
+	// If fetching this accessor works, and it returns true then
+	// the license check API is present.
+	kMCExternalContextQueryHasLicenseCheck,
 };
 
 enum MCExternalVariableQueryTag
@@ -292,6 +297,14 @@ enum MCExternalDispatchStatus
     kMCExternalDispatchStatusError,
     kMCExternalDispatchStatusExit,
     kMCExternalDispatchStatusAbort,
+};
+
+enum MCExternalLicenseType
+{
+	kMCExternalLicenseTypeNone = 0,
+	kMCExternalLicenseTypeCommunity = 1000,
+	kMCExternalLicenseTypeIndy = 2000,
+	kMCExternalLicenseTypeBusiness = 3000,
 };
 
 enum MCExternalHandlerType
@@ -395,6 +408,9 @@ struct MCExternalInterface
     
     // SN-2015-01-26: [[ Bug 14057 ]] Update context query, to allow the user to set the return type
     MCExternalError (*context_query)(MCExternalContextQueryTag op, MCExternalValueOptions p_options, void *r_result); // V6
+	
+	// MW-2016-02-17: [[ LicenseCheck ]] Method to check the licensing of the engine
+	MCExternalError (*license_check_edition)(unsigned int options, unsigned int min_edition); // V7
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -519,13 +535,23 @@ public:
     virtual Handler_type GetHandlerType(uint32_t index) const;
     virtual bool ListHandlers(MCExternalListHandlersCallback callback, void *state);
     virtual Exec_stat Handle(MCObject *p_context, Handler_type p_type, uint32_t p_index, MCParameter *p_parameters);
-    
+	
+	void SetWasLicensed(bool p_value);
+	
 private:
     virtual bool Prepare(void);
     virtual bool Initialize(void);
     virtual void Finalize(void);
-    
-    MCExternalInfo *m_info;
+	
+	MCExternalInfo *m_info;
+	
+	// This is true if startup succeeded (returned true) and license_fail was
+	// not called.
+	bool m_licensed : 1;
+	
+	// This is set to true if the last external handler call on this external
+	// did not call license_fail.
+	bool m_was_licensed : 1;
 };
 
 #endif

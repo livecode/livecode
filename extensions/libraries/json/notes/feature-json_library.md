@@ -18,10 +18,11 @@ encoded value.
 To use the library from a LiveCode Builder widget or library, simply add it to the list of use 
 clauses:
 
-`use com.livecode.library.json`
+    use com.livecode.library.json
 
 When using the `JsonExport` handler in LCB, an error is thrown if the value passed 
 is not of one of the following types:
+
 - String
 - Number
 - List
@@ -32,18 +33,16 @@ is not of one of the following types:
 ## Examples
 
 From LiveCode Script:
-`
-   local tData, tJSON
-   put "a,b,c,d" into tData
-   split tData by comma
-   put JsonExport(tData) into tJSON -- contains {"1": "a","2": "b","3": "c","4": "d"}
-`
+
+    local tData, tJSON
+    put "a,b,c,d" into tData
+    split tData by comma
+    put JsonExport(tData) into tJSON -- contains {"1": "a","2": "b","3": "c","4": "d"}
 
 From LiveCode Builder:
-`
+
 	variable tJSON as String
 	put "[1,1,2,3,5,8]" into tJSON
 	
 	variable tData as List
 	put JsonImport(tJSON) into tData -- contains [1,1,2,3,5,8]
-`

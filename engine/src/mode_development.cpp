@@ -2271,13 +2271,15 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
 #ifdef FEATURE_PROPERTY_LISTENER
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
-#endif			
+#else
     r_count = 0;
+#endif
 }
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
-#endif			
+#else
     r_time = 0;
+#endif
 }

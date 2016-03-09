@@ -541,7 +541,7 @@
 			'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
 			
 			# Group "Desktop - Mac"
-			'src/coretextfonts.cpp',
+			'src/coretextfonts.mm',
 			'src/osxflst.cpp',
 			
 			# Group "Desktop - Linux"
@@ -554,6 +554,8 @@
 			# Group "Theming"
 			'src/linux-theme.cpp',
 			'src/mac-theme.mm',
+			'src/mblandroid-theme.cpp',
+			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
 				
 			# Group "Syntax"
@@ -694,7 +696,6 @@
 			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
-			'src/osxtextlayout.cpp',
 			'src/osxtheme.mm',
 			
 			# Group "Desktop - Windows"
@@ -1151,7 +1152,6 @@
 					'sources!':
 					[
 						'src/cgimageutil.cpp',
-						'src/coretextfonts.cpp',
 						'src/syscfdate.cpp',
 						'src/tilecachecg.cpp',
 					],

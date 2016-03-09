@@ -1,0 +1,1 @@
+# Make sure PDF version of guide is installed by default

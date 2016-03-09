@@ -111,7 +111,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
 #ifdef LEGACY_EXEC
@@ -130,8 +130,8 @@ public:
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
     
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
     
@@ -139,6 +139,7 @@ public:
 	MCRectangle getactiverect(void);
     // End MCObjet functions
     
+
     ////////////////////////////////////////////////////////////////////////////////
     // virtual MCPlayerInterface functions
     //
@@ -159,7 +160,7 @@ public:
     virtual void setdontuseqt(bool noqt); // platform player-specific
     
     virtual void gettracks(MCStringRef& r_tracks);
-    
+	
     virtual MCRectangle getpreferredrect();
 	virtual uint2 getloudness();
     virtual void updateloudness(int2 newloudness);
@@ -208,6 +209,7 @@ public:
 		scale = s;
     }
 
+	void scale_native_rect(void);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();
@@ -270,7 +272,6 @@ public:
 	////////// PROPERTY SUPPORT METHODS
     
 	virtual void Redraw(void);
-    virtual void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
     
 	////////// PROPERTY ACCESSORS
     
@@ -332,7 +333,6 @@ public:
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
     virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
     virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks);

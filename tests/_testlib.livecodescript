@@ -16,9 +16,20 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+on revLoadLibrary
+	insert the script of me into back
+end revLoadLibrary
+
 ----------------------------------------------------------------
 -- Helper functions
 ----------------------------------------------------------------
+
+private function _TestValidateCount pCount
+   if pCount is not an integer or pCount <= 0 then
+      throw "Bad test count '" & pCount & "': must be positive integer"
+   end if
+   return pCount
+end _TestValidateCount
 
 private function _TestValidateDescription pDescription
    if the number of lines in pDescription > 1 then
@@ -96,9 +107,37 @@ private command _TestWriteOutput pMessage
    write textEncode(pMessage, "UTF8") to stdout
 end _TestWriteOutput
 
+private function _TestGetBuiltExtensionsFolder
+   local tPath, tRepoPath
+   put specialfolderpath("engine") into tPath
+   put TestGetEngineRepositoryPath() into tRepoPath
+   
+   # Find the built extensions folder
+   set the itemdelimiter to slash
+   repeat while tPath is not tRepoPath and tPath is not empty
+      if there is a folder (tPath & slash & "packaged_extensions") then
+         return (tPath & slash & "packaged_extensions")
+      end if
+      delete item -1 of tPath
+   end repeat	
+end _TestGetBuiltExtensionsFolder
+
+private command _TestLoadExtension pFolder, pPath
+   if there is a folder (pFolder & slash & "resources") then
+      do "load extension from file pPath with resource path (pFolder & slash & " & quote & "resources" & quote & ")"
+   else
+      do "load extension from file pPath"
+   end if
+   return the result
+end _TestLoadExtension
+
 ----------------------------------------------------------------
 -- Unit test library functions
 ----------------------------------------------------------------
+
+on TestPlan pCount
+   _TestWriteOutput "1.." & _TestValidateCount(pCount) & return
+end TestPlan
 
 on TestDiagnostic pMessage
    local tLine
@@ -137,36 +176,20 @@ end TestGetIDERepositoryPath
 on TestLoadExtension pName	
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
-   put "com.livecode.extensions.livecode." & toLower(item -1 of pName) into tExtensionUnzipFolder
-
-   local tPath, tRepoPath
-   put specialfolderpath("engine") into tPath
-   put TestGetEngineRepositoryPath() into tRepoPath
+   put pName into tExtensionUnzipFolder
    
    local tError
    put "extension" && pName && "not found" into tError
    
-   # Find the built extensions folder
    local tExtensionsFolder
-   set the itemdelimiter to slash
-   repeat while tPath is not tRepoPath and tPath is not empty
-      if there is a folder (tPath & slash & "packaged_extensions") then
-         put (tPath & slash & "packaged_extensions") into tExtensionsFolder
-         exit repeat
-      end if
-      delete item -1 of tPath
-   end repeat
+   put _TestGetBuiltExtensionsFolder() into tExtensionsFolder
    
-   TestDiagnostic tExtensionsFolder
-
    local tExtensionFolder
    if tExtensionsFolder is not empty then
       if there is a folder (tExtensionsFolder & slash & tExtensionUnzipFolder) then
         put (tExtensionsFolder & slash & tExtensionUnzipFolder) into tExtensionFolder
       end if
    end if
-   
-    TestDiagnostic tExtensionFolder
    
    local tExtensionFile
    if tExtensionFolder is not empty then
@@ -176,14 +199,9 @@ on TestLoadExtension pName
    end if
    
    if tExtensionFile is not empty then
-      if there is a folder (tExtensionFolder & slash & "resources") then
-         do "load extension from file tExtensionFile with resource path (tExtensionFolder & slash & " & quote & "resources" & quote
-      else
-         do "load extension from file tExtensionFile"
-      end if
-      
-      put the result into tError
+      _TestLoadExtension tExtensionFolder, tExtensionFile
    end if
+   put the result into tError
    
    if tError is not empty then
       write tError & return to stderr
@@ -191,3 +209,61 @@ on TestLoadExtension pName
    end if
    
 end TestLoadExtension
+
+on TestLoadAllExtensions
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   
+   local tExtFolder
+   put _TestGetBuiltExtensionsFolder() into tExtFolder
+   set the defaultFolder to tExtFolder
+   
+   local tExtensions
+   put the folders into tExtensions
+   
+   local tFiles, tAllExtensionsA
+   local tHasCompiled, tSource
+
+   # Collect all the valid (and compiled) extension files
+   repeat for each line tFolder in tExtensions
+      if tFolder begins with "." then
+         next repeat
+      end if
+      put false into tHasCompiled
+      put empty into tSource
+      put tExtFolder & slash before tFolder
+      set the defaultFolder to tFolder
+      put the files into tFiles
+      repeat for each line tFile in tFiles
+         if tFile ends with ".lcb" then
+            put tFile into tSource
+         else if tFile is "module.lcm" then
+            put true into tHasCompiled
+         end if
+         if tHasCompiled and tSource is not empty then
+            put tFolder into tAllExtensionsA[tFolder & slash & tSource]
+            exit repeat
+         end if
+      end repeat
+   end repeat
+   
+
+   set the defaultFolder to tDefaultFolder
+   
+   # Use the lc-compile --deps option to sort by dependency
+   local tLCCompile, tLCBFiles
+   put the keys of tAllExtensionsA into tLCBFiles
+   replace return with " " in tLCBFiles
+   set the itemdelimiter to slash
+   put item 1 to -2 of tExtFolder & slash & "lc-compile" into tLCCompile
+   put shell(tLCCompile && "--deps order --" && tLCBFiles) into tLCBFiles
+   if the result is not 0 then
+      write the result & return to stderr
+      quit 1
+   end if
+   
+   # Load the extensions in order
+   repeat for each line tExtFile in tLCBFiles
+      _TestLoadExtension tAllExtensionsA[tExtFile], tExtFile
+   end repeat
+end TestLoadAllExtensions

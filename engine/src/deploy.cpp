@@ -322,6 +322,36 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
 	MCValueAssign(modules, t_temp_array);
 	MCValueRelease(t_temp_array);
+    
+    MCAutoStringRef t_architectures_string;
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("architectures"), false, &t_architectures_string))
+        return false;
+    if (!MCStringIsEmpty(*t_architectures_string))
+    {
+        // Split the string up into items
+        MCAutoProperListRef t_architectures;
+        if (!MCStringSplitByDelimiter(*t_architectures_string, MCSTR(","), kMCStringOptionCompareExact, &t_architectures))
+            return false;
+        
+        // Process the architectures
+        MCValueRef t_architecture;
+        for (uindex_t i = 0; i < MCProperListGetLength(*t_architectures); i++)
+        {
+            // Fetch this item and make sure it is a string
+            t_architecture = MCProperListFetchElementAtIndex(*t_architectures, i);
+            if (t_architecture == nil || MCValueGetTypeCode(t_architecture) != kMCValueTypeCodeString)
+                return false;
+            
+            // Map it to an architecture ID
+            MCDeployArchitecture t_id;
+            if (!MCDeployMapArchitectureString((MCStringRef)t_architecture, t_id))
+                return false;
+            
+            // Append it to the list of desired architectures
+            if (!architectures.Push(t_id))
+                return false;
+        }
+    }
 	
     return true;
 }
@@ -335,16 +365,51 @@ static bool MCDeployWriteDefinePrologueSection(const MCDeployParameters& p_param
 	return MCDeployCapsuleDefine(p_capsule, kMCCapsuleSectionTypePrologue, &t_prologue, sizeof(t_prologue));
 }
 
+static bool MCDeployWriteDefineLicenseSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
+{
+	// The edition byte encoding is development/standalone engine pair
+	// specific.
+	unsigned char t_edition;
+	switch(MClicenseparameters . license_class)
+	{
+		case kMCLicenseClassNone:
+			t_edition = 0;
+			break;
+			
+		case kMCLicenseClassCommunity:
+			t_edition = 1;
+			break;
+			
+		case kMCLicenseClassCommercial:
+			t_edition = 2;
+			break;
+			
+		case kMCLicenseClassProfessional:
+			t_edition = 3;
+			break;
+	}
+	
+	return MCDeployCapsuleDefine(p_capsule,
+								 kMCCapsuleSectionTypeLicense,
+								 &t_edition,
+								 sizeof(t_edition));
+}
+
 // This method generates the standalone specific capsule elements. This is
 // just a Standalone Prologue section at the moment.
 static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
 {
 	bool t_success;
 	t_success = true;
-
+	
+	// First emit the prologue.
 	if (t_success)
 		t_success = MCDeployWriteDefinePrologueSection(p_params, p_capsule);
-
+	
+	// Next emit the license info.
+	if (t_success)
+		t_success = MCDeployWriteDefineLicenseSection(p_params, p_capsule);
+	
 	return t_success;
 }
 

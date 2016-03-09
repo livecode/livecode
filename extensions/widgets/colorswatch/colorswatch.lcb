@@ -25,7 +25,7 @@ widget com.livecode.widget.colorSwatch
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 
 --
 
@@ -35,6 +35,7 @@ metadata version is "0.0.1"
 metadata title is "Color Swatch"
 metadata preferredSize is "24,24"
 metadata svgicon is "M86.6,0H7.9C3.5,0,0,3.5,0,7.9v78.8c0,4.3,3.5,7.9,7.9,7.9h78.8c4.3,0,7.9-3.5,7.9-7.9V7.9C94.5,3.5,91,0,86.6,0z M23.3,81l-11-16.4h21.9L23.3,81z M81.5,81.5H47.2l0.1-34.1H13.1L13,13h68.5V81.5z"
+metadata userVisible is "false"
 --
 
 -- property declarations
@@ -51,11 +52,11 @@ pColor: The color of the swatch in RGB or RGBA format, or empty.
 
 Example: set the swatchColor of widget "Color Swatch" to empty
 
-Example: 
+Example:
     on copySwatchColorToGraphic pSwatchName, pGraphicName
         local tColorWithAlpha
         put the swatchColor of widget pSwatchName into tColorWithAlpha
-        
+
         local tColor, tBlendLevel
         put item 1 to 3 of tColorWithAlpha into tColor
         put (255 - item 4 of tColorWithAlpha) / 2.55 into tBlendLevel
@@ -134,16 +135,16 @@ public handler OnPaint() returns nothing
 			put my width - (mPadding * 2) into tSpace
 			put the rounded of (tSpace / 8) into tCudeCount
 			put tSpace / tCudeCount into tCudeSize
-			
+
 			variable tTop as Number
 			variable tLeft as Number
 			variable tX as Integer
 			variable tCount as Integer
 			put mPadding into tTop
 			put 1 into tCount
-			
-			set the paint of this canvas to solid paint with stringToColor("220,220,220")   
-			
+
+			set the paint of this canvas to solid paint with stringToColor("220,220,220")
+
 			repeat while tTop < my height - mPadding
 				put mPadding into tLeft
 				put 1 into tX
@@ -159,20 +160,20 @@ public handler OnPaint() returns nothing
 					add tCudeSize to tLeft
 				end repeat
 				add tCudeSize to tTop
-				
-				if tCount is 1 then 
+
+				if tCount is 1 then
 					put 0 into tCount
 				else
 					put 1 into tCount
 				end if
 			end repeat
 			fill this canvas
-			
+
 			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
 			set the paint of this canvas to getPaint("stroke")
 			set the stroke width of this canvas to 0
 			stroke tPath on this canvas
-			
+
 			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
 			set the paint of this canvas to solid paint with mColor
 			fill tPath on this canvas
