@@ -1731,7 +1731,8 @@
         CheckIdentifiers(Signature)
 
     'rule' CheckIdentifiers(DEFINITION'property(_, _, Id, _, _)):
-        CheckIdIsSuitableForDefinition(Id)
+        -- Do nothing; properties don't create a lexical binding in the module
+        -- environment so they can be called anything
 
     'rule' CheckIdentifiers(DEFINITION'event(_, _, Id, Signature)):
         CheckIdIsSuitableForDefinition(Id)

@@ -528,7 +528,10 @@
 
     'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
         "property" @(-> Position) Identifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
-        
+
+    'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
+        "property" @(-> Position) StringyIdentifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
+
 'nonterm' OptionalSetClause(-> OPTIONALID)
 
     'rule' OptionalSetClause(-> id(Setter)):
