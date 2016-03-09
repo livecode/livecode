@@ -132,7 +132,7 @@ metadata hiliteColor.default is "10,105,216"
 metadata hiliteColor.label is "Selected Row Color"
 
 metadata borderColor.default is "183,183,183"
-metadata hiliteColor.label is "Border Color"
+metadata borderColor.label is "Border Color"
 
 /**
 Syntax: set the sortOrder of <widget> to <pOrder>
