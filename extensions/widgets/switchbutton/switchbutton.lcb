@@ -20,19 +20,17 @@ This widget is a switch button, consisting of two mutually exclusive choices or 
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged <pHilited>
+Syntax: on hiliteChanged
 Summary: Sent when the switch is changed to either the on or off position
 
-Parameters:
-pHilited (boolean): `true` if the switch is in the on position; `false` otherwise
-
 Example:
-on hiliteChanged pHilited
-	set the visible of group 1 to pHilited
+on hiliteChanged
+	set the visible of group 1 to the highlight of me
 end switchChanged
 
 Description:
-Handle the hiliteChanged message in the widget's object script to respond to the user switching the button on or off.
+Handle the hiliteChanged message in the widget's object script to respond to
+the user switching the button on or off.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -502,7 +500,7 @@ public handler OnMouseUp() returns nothing
 		end if
 	end if
 
-	post "hiliteChanged" with [mSwitchIsOn]
+	post "hiliteChanged"
 	put false into mIsPressed
 end handler
 
@@ -514,7 +512,7 @@ public handler OnMouseRelease() returns nothing
 	if mMouseHasMoved then
 		setSwitch(mSwitchIsInOnPosition)
 		put false into mMouseHasMoved
-		post "hiliteChanged" with [mSwitchIsOn]
+		post "hiliteChanged"
 		put false into mIsPressed
 	end if
 end handler
