@@ -1597,7 +1597,7 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
       add 1 to tCount
    end repeat
    
-   put char 1 to offset(" with precedence", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
+   put char 1 to offset(" with ", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
    put "syntax" into xDataA[tEntryName]["kind"]
    put pComment into xDataA[tEntryName]["comments"]
