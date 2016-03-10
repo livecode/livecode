@@ -776,12 +776,17 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
 	
+	// Preserve the host ptr we get across the dispatch so that
+	// we definitely return things to the way they were.
+	MCWidget *t_host;
+	t_host = GetHost();
+	
     MCObjectPtr t_old_target;
-    if (GetHost() != nil)
+    if (t_host)
     {
         t_old_target = MCtargetptr;
         
-        MCtargetptr . object = GetHost();
+        MCtargetptr . object = t_host;
         MCtargetptr . part_id = 0;
         t_this_stack = MCtargetptr . object -> getstack();
         MCdefaultstackptr = t_this_stack;
@@ -793,7 +798,7 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
     bool t_success;
 	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
 	
-	if (GetHost() != nil)
+	if (t_host != nil)
 	{
 		MCtargetptr = t_old_target;
 		if (MCdefaultstackptr == t_this_stack)
@@ -804,8 +809,11 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	
     if (!t_success)
 	{
-		if (GetHost() != nil)
-			GetHost() -> SendError();
+		// Refetch the host pointer *just in case* something has happened
+		// to it.
+		t_host = GetHost();
+		if (t_host != nil)
+			t_host -> SendError();
 	}
 	
 	return t_success;
@@ -820,9 +828,11 @@ bool MCWidgetBase::DispatchRestricted(MCNameRef p_event, MCValueRef *x_args, uin
 	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
 	
     MCEngineScriptObjectAllowAccess();
-    
-    if (GetHost() != nil)
-		GetHost() -> SendError();
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+    if (t_host != nil)
+		t_host -> SendError();
 	else
 	{
 		MCAutoErrorRef t_error;
