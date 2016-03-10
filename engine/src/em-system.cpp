@@ -1137,3 +1137,15 @@ MCEmscriptenSystem::GetDNSservers(MCListRef & r_list)
 	/* DNS servers aren't available */
 	return false;
 }
+
+// These functions is implemented in javascript
+extern "C" int32_t MCEmscriptenDialogShowAlert(const unichar_t* p_message, size_t p_message_length);
+
+void
+MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
+                                      MCStringRef p_message)
+{
+	MCAutoStringRefAsUTF16String t_message_u16;
+	t_message_u16.Lock(p_message);
+	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
+}

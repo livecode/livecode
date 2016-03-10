@@ -1972,7 +1972,7 @@ void MCUIDC::enactraisewindows(void)
 }
 //
 
-int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
+int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking)
 {
 	return 0;
 }

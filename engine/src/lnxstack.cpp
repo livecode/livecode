@@ -295,9 +295,11 @@ void MCStack::sethints()
 	const char *t_edition_name;
 	switch (MClicenseparameters.license_class)
 	{
+	case kMCLicenseClassProfessionalEvaluation:
 	case kMCLicenseClassProfessional:
 		t_edition_name = "business";
-		break;
+			break;
+	case kMCLicenseClassEvaluation:
 	case kMCLicenseClassCommercial:
 		t_edition_name = "indy";
 		break;

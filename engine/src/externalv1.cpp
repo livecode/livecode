@@ -2904,11 +2904,13 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
 		case kMCLicenseClassCommunity:
 			t_current_edition = kMCExternalLicenseTypeCommunity;
 			break;
-			
+		
+		case kMCLicenseClassEvaluation:
 		case kMCLicenseClassCommercial:
 			t_current_edition = kMCExternalLicenseTypeIndy;
 			break;
 			
+		case kMCLicenseClassProfessionalEvaluation:
 		case kMCLicenseClassProfessional:
 			t_current_edition = kMCExternalLicenseTypeBusiness;
 			break;

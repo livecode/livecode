@@ -1992,11 +1992,13 @@ void MCEngineGetEditionType(MCExecContext& ctxt, MCStringRef& r_edition)
         case kMCLicenseClassCommunity:
             t_success = MCStringCreateWithCString("community", r_edition);
             break;
-            
+			
+		case kMCLicenseClassEvaluation:
         case kMCLicenseClassCommercial:
             t_success = MCStringCreateWithCString("commercial", r_edition);
             break;
-            
+			
+		case kMCLicenseClassProfessionalEvaluation:
         case kMCLicenseClassProfessional:
             t_success = MCStringCreateWithCString("professional", r_edition);
             break;

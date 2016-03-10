@@ -81,6 +81,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "mode.h"
 #include "license.h"
+#include "stacksecurity.h"
 
 #include "debug.h"
 
@@ -353,6 +354,19 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
         }
     }
 	
+	// If the 'banner_class' string is present, then set the class override.
+	MCAutoStringRef t_banner_class;
+	if (!ctxt . CopyOptElementAsString(p_array, MCNAME("banner_class"), false, &t_banner_class))
+		return false;
+	if (MCStringIsEqualToCString(*t_banner_class,
+								 "commercial",
+								 kMCStringOptionCompareCaseless))
+		banner_class = kMCLicenseClassEvaluation;
+	else if (MCStringIsEqualToCString(*t_banner_class,
+									  "professional",
+									  kMCStringOptionCompareCaseless))
+		banner_class = kMCLicenseClassProfessionalEvaluation;
+	
     return true;
 }
 
@@ -361,6 +375,10 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 static bool MCDeployWriteDefinePrologueSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
 {
 	MCCapsulePrologueSection t_prologue;
+	t_prologue . banner_timeout = p_params . banner_timeout;
+	t_prologue . program_timeout = p_params . timeout;
+	
+	MCDeployByteSwapRecord(true, "ll", &t_prologue, sizeof(t_prologue));
 	
 	return MCDeployCapsuleDefine(p_capsule, kMCCapsuleSectionTypePrologue, &t_prologue, sizeof(t_prologue));
 }
@@ -379,11 +397,13 @@ static bool MCDeployWriteDefineLicenseSection(const MCDeployParameters& p_params
 		case kMCLicenseClassCommunity:
 			t_edition = 1;
 			break;
-			
+		
+		case kMCLicenseClassEvaluation:
 		case kMCLicenseClassCommercial:
 			t_edition = 2;
 			break;
 			
+		case kMCLicenseClassProfessionalEvaluation:
 		case kMCLicenseClassProfessional:
 			t_edition = 3;
 			break;
@@ -393,6 +413,11 @@ static bool MCDeployWriteDefineLicenseSection(const MCDeployParameters& p_params
 								 kMCCapsuleSectionTypeLicense,
 								 &t_edition,
 								 sizeof(t_edition));
+}
+
+static bool MCDeployWriteDefineBannerSecion(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
+{
+	return MCDeployCapsuleDefine(p_capsule, kMCCapsuleSectionTypeBanner, MCDataGetBytePtr(p_params . banner_stackfile), MCDataGetLength(p_params . banner_stackfile));
 }
 
 // This method generates the standalone specific capsule elements. This is
@@ -405,10 +430,15 @@ static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameter
 	// First emit the prologue.
 	if (t_success)
 		t_success = MCDeployWriteDefinePrologueSection(p_params, p_capsule);
-	
-	// Next emit the license info.
-	if (t_success)
+
+    // Next emit the license info.
+    if (t_success)
 		t_success = MCDeployWriteDefineLicenseSection(p_params, p_capsule);
+	
+	// Next emit the banner.
+	if (t_success &&
+		!MCDataIsEmpty(p_params . banner_stackfile))
+		t_success = MCDeployWriteDefineBannerSecion(p_params, p_capsule);
 	
 	return t_success;
 }
@@ -710,11 +740,48 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	}
 #endif
 
-	// Now, if we are not licensed for a target, then its an error.
+	// If the banner_class field is set and we are not a trial license, we
+	// override the license class with that specified.
+	uint32_t t_license_class;
+	t_license_class = kMCLicenseClassNone;
+	if (MClicenseparameters . license_class == kMCLicenseClassCommercial)
+	{
+		// If we have a commercial license, then we only allow a commercial
+		// evaluation.
+		if (t_params . banner_class == kMCLicenseClassEvaluation)
+			t_license_class = kMCLicenseClassEvaluation;
+	}
+	else if (MClicenseparameters . license_class == kMCLicenseClassProfessional)
+	{
+		// If we are a professional license, then we allow any kind of
+		// trial.
+		t_license_class = t_params . banner_class;
+	}
+	
+	if (t_license_class == kMCLicenseClassNone)
+		t_license_class = MClicenseparameters . license_class;
+	
+	// Now check to see if we should build a trial - this if the license class is a
+	// trail, or the banner_class override is specified and the chosen option is
+	// compatible with the license class.
+	bool t_is_trial;
+    t_is_trial = false;
+	if (t_license_class == kMCLicenseClassEvaluation ||
+		t_license_class == kMCLicenseClassProfessionalEvaluation)
+		t_is_trial = true;
+	
+	// Now, if we are not licensed for a target, then its an error. If we are in trial
+	// mode, however, all platforms are licensed (apart from embedded) they just will
+	// timeout.
 	bool t_is_licensed;
 	t_is_licensed = false;
+	
     if (MCnoui && MClicenseparameters . license_class == kMCLicenseClassCommunity)
         t_is_licensed = true;
+	else if (t_is_trial &&
+			 m_platform != PLATFORM_IOS_EMBEDDED &&
+			 m_platform != PLATFORM_ANDROID_EMBEDDED)
+		t_is_licensed = true;
 	else if (m_platform == PLATFORM_WINDOWS)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToWindows) != 0;
 	else if (m_platform == PLATFORM_MACOSX)
@@ -738,7 +805,67 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_soft_error = true;
 		t_has_error = true;
 	}
-
+	
+	if (t_is_trial &&
+		m_platform == PLATFORM_EMSCRIPTEN)
+	{
+		ctxt . SetTheResultToCString("trial of html5 is not possible");
+		t_soft_error = true;
+		t_has_error = true;
+	}
+	
+	uint32_t t_platform;
+	switch(m_platform)
+	{
+		case PLATFORM_MACOSX:
+			t_platform = kMCLicenseDeployToMacOSX;
+			break;
+		case PLATFORM_WINDOWS:
+			t_platform = kMCLicenseDeployToWindows;
+			break;
+		case PLATFORM_LINUX:
+			t_platform = kMCLicenseDeployToLinux;
+			break;
+		case PLATFORM_IOS:
+			t_platform = kMCLicenseDeployToIOS;
+			break;
+		case PLATFORM_ANDROID:
+			t_platform = kMCLicenseDeployToAndroid;
+			break;
+		case PLATFORM_IOS_EMBEDDED:
+			t_platform = kMCLicenseDeployToIOSEmbedded;
+			break;
+		case PLATFORM_ANDROID_EMBEDDED:
+			t_platform = kMCLicenseDeployToAndroidEmbedded;
+			break;
+		case PLATFORM_EMSCRIPTEN:
+			t_platform = kMCLicenseDeployToHTML5;
+			break;
+	}
+	
+	if (!t_has_error)
+	{
+		// If this is a trial then set the timeout.
+		if (t_is_trial)
+		{
+			if (m_platform != PLATFORM_IOS &&
+				m_platform != PLATFORM_ANDROID &&
+				m_platform != PLATFORM_EMSCRIPTEN)
+				t_params . timeout = 5 * 60;
+			else
+				t_params . timeout = 1 * 60;
+			
+			t_params . banner_timeout = 10;
+		}
+		
+		// Pass the deploy parameters through any stack security related steps.
+		if (!MCStackSecurityPreDeploy(t_platform, t_params))
+		{
+			t_soft_error = true;
+			t_has_error = true;
+		}
+	}
+	
 	if (!t_has_error)
 	{
 		if (m_platform == PLATFORM_WINDOWS)

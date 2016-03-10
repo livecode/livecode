@@ -2074,6 +2074,16 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 	sptr->remove(m_transient_stacks);
 }
 
+void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
+{
+	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	{
+		MCStackSecurityExecutionTimeout();
+	}
+	else
+		MCObject::timer(p_message, p_parameters);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCDispatch::loadexternal(MCStringRef p_external)

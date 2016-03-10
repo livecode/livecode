@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "globals.h"
+#include "uidc.h"
 
 #include "mblandroid.h"
 #include "variable.h"
@@ -189,6 +190,15 @@ bool MCAndroidSystem::AlternateLanguages(MCListRef& r_list)
 bool MCAndroidSystem::GetDNSservers(MCListRef& r_list)
 {
     return false;
+}
+
+void MCAndroidSystem::ShowMessageDialog(MCStringRef p_title,
+                                        MCStringRef p_message)
+{
+    if (MCscreen == nil)
+        return;
+    
+    MCscreen -> popupanswerdialog(nil, 0, 0, p_title, p_message, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
