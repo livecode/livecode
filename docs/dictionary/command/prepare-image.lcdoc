@@ -2,7 +2,7 @@ Name: prepare image
 
 Type: command
 
-Syntax: prepare image <name> 
+Syntax: prepare image <imageName> 
 
 Syntax: prepare image file <filename> 
 
@@ -21,13 +21,23 @@ Example:
 prepare image file "/Disk/Folder/logo.jpg"
 
 Parameters:
-name: The name specifies what image is forced to be decompressed into the image cache.
-filename: The location and name of the image file you want to load and decompress into the image data cache. Since the image data cache is keyed on the absolute filename, any images which reference that file are able to use the data from the cache. This assumes that the cache has not been flushed.
+imageName: The name specifies what image is forced to be decompressed 
+into the image cache.
+
+filename: The location and name of the image file you want to load and 
+decompress into the image data cache. Since the image data cache is 
+keyed on the absolute filename, any images which reference that file are 
+able to use the data from the cache. This assumes that the cache has not 
+been flushed.
 
 Description:
-Use the <prepare image> <command> to speed up <execute|execution> when showing image data.
+Use the <prepare image> <command> to speed up <execute|execution> when 
+showing image data.
 
-Use the <prepare image> <command> to preload an image at some time before it is needed. Then access the image and display it as needed on your stack. Since the image is already cached into memory, it displays instantly.
+Use the <prepare image> <command> to preload an image at some time 
+before it is needed. Then access the image and display it as needed on 
+your stack. Since the image is already cached into memory, it displays 
+instantly.
 
 References: prepare (command), command (glossary), execute (glossary)
 
