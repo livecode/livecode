@@ -57,7 +57,7 @@ Use the <foreColor> property to set the color of the SVG path, when the icon
 isn't highlighted.
 */
 metadata foregroundColor.editor is "com.livecode.pi.color"
-metadata foregroundColor.default is "empty"
+metadata foregroundColor.default is ""
 metadata foregroundColor.section is "Colors"
 metadata foregroundColor.label is "Normal Color"
 
@@ -73,7 +73,7 @@ Use the <hiliteColor> property to set the color of the SVG path, when the icon
 is highlighted.
 */
 metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.default is "empty"
+metadata hiliteColor.default is ""
 metadata hiliteColor.section is "Colors"
 metadata hiliteColor.label is "Highlight Color"
 
@@ -126,8 +126,6 @@ metadata iconPath.editor is "com.livecode.pi.text"
 metadata iconPath.label is "Path Data"
 
 /**
-Name: highlight
-
 Syntax:
 set the highlight of <widget> to {true|false}
 get the highlight of <widget>
@@ -138,9 +136,9 @@ Description:
 Use the `highlight` property to test or control whether the SVG path is
 displayed as highlighted or not.
 */
-property Highlight get mHilited set setIsHilited
-metadata Highlight.default is "false"
-metadata Highlight.label is "Hilited"
+property "highlight" get mHilited set setIsHilited
+metadata highlight.default is "false"
+metadata highlight.label is "Hilited"
 
 /**
 Syntax:
@@ -159,7 +157,6 @@ metadata maintainAspectRatio.default is "true"
 metadata maintainAspectRatio.label is "Fix Aspect Ratio"
 
 /**
-Name: flipped
 Syntax:
 set the flipped of <widget> to {true|false}
 get the flipped of <widget>
@@ -169,12 +166,11 @@ Summary: `true` if the SVG path is flipped top-to-bottom; `false` otherwise
 Description:
 When <flipped> is set to `true`, the SVG path is drawn upside down.
 */
-property Flipped get mFlipVertically set setFlipVertically
-metadata Flipped.default is "false"
-metadata Flipped.label is "Flip"
+property "flipped" get mFlipVertically set setFlipVertically
+metadata flipped.default is "false"
+metadata flipped.label is "Flip"
 
 /**
-Name: angle
 Syntax:
 set the angle of <widget> to <pAngle>
 get the angle of <widget>
@@ -186,10 +182,10 @@ The <angle> property controls the angle of rotation of for the SVG path
 around the centre of the path's bounding box.  The rotation is in clockwise
 degrees.
 */
-property Angle get mAngle set setAngle
-metadata Angle.editor is "com.livecode.pi.number"
-metadata Angle.default is "0"
-metadata Angle.label is "Rotation"
+property "angle" get mAngle set setAngle
+metadata angle.editor is "com.livecode.pi.number"
+metadata angle.default is "0"
+metadata angle.label is "Rotation"
 
 /**
 Syntax:
