@@ -491,7 +491,7 @@ bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expir
 	
 	MCAutoStringRef t_encoded;
 	if (t_success && !MCStringIsEmpty(p_value))
-		MCU_urlencode(p_value, false, &t_encoded);
+		t_success = MCU_urlencode(p_value, false, &t_encoded);
 	
 	if (t_success)
 	{
