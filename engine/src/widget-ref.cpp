@@ -756,15 +756,13 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 	MCcurrentwidget = AsWidget();
 
 	bool t_success;
-	MCValueRef t_retval;
-	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
+	MCAutoValueRef t_retval;
+	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
 	
 	if (t_success)
 	{
 		if (r_result != NULL)
-			*r_result = t_retval;
-		else
-			MCValueRelease(t_retval);
+			*r_result = t_retval . Take();
 	}
 	
 	MCcurrentwidget = t_old_widget_object;
