@@ -1345,8 +1345,7 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
-            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1434,6 +1433,7 @@ function revDocsParseDocText pText, pFilename
    local tCount
    put 1 into tCount
    add 1 to tEntryCount
+   
    repeat for each item tItem in "name,description,author,type,example"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
