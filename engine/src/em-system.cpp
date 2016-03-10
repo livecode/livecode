@@ -1142,5 +1142,7 @@ void
 MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
                                       MCStringRef p_message)
 {
-    /* Do nothing - for now */
+	MCAutoStringRefAsUTF16String t_message_u16;
+	t_message_u16.Lock(p_message);
+	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
 }
