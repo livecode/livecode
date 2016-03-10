@@ -66,7 +66,6 @@
 							
 							# Externals
 							'revbrowser/revbrowser.gyp:external-revbrowser',
-							'revbrowser/revbrowser.gyp:revbrowser-cefprocess',
 							'revdb/revdb.gyp:dbodbc',
 							'revdb/revdb.gyp:dbpostgresql',
 							'revmobile/revmobile.gyp:external-revandroid',
