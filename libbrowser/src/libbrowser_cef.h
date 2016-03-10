@@ -164,6 +164,7 @@ public:
 	//////////
 	
 	bool Initialize();
+	void Finalize();
 };
 
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
