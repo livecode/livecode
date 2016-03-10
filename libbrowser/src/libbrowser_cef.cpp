@@ -394,9 +394,6 @@ void MCCefBrowserFinalise(void)
 	if (!s_cefbrowser_initialised)
 		return;
 	
-	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
-	// MCCefFinalise();
-	
 	if (!MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
 		MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
 	
@@ -1741,11 +1738,19 @@ MCCefBrowserFactory::MCCefBrowserFactory()
 
 MCCefBrowserFactory::~MCCefBrowserFactory()
 {
+	// IM-2016-03-10: [[ Bug 17029 ]] Shutdown CEF library when factory deleted
+	Finalize();
 }
 
 bool MCCefBrowserFactory::Initialize()
 {
 	return MCCefBrowserInitialise();
+}
+
+void MCCefBrowserFactory::Finalize()
+{
+	MCCefBrowserFinalise();
+	MCCefFinalise();
 }
 
 bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser)

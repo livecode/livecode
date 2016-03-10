@@ -186,8 +186,6 @@ bool MCBrowserBase::BrowserListIterate(MCBrowserIterateCallback p_callback, void
 
 // Init functions
 
-static MCBrowserFactoryRef s_browser_factory = nil;
-
 MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserLibraryInitialize()
 {
@@ -197,8 +195,18 @@ bool MCBrowserLibraryInitialize()
 MC_BROWSER_DLLEXPORT_DEF
 void MCBrowserLibraryFinalize()
 {
-	if (s_browser_factory)
-		delete s_browser_factory;
+	// IM-2016-03-10: [[ Bug 17029 ]] Delete any instantiated browser factories.
+	if (s_factory_list != nil)
+	{
+		for (uint32_t i = 0; s_factory_list[i].factory_id != nil; i++)
+		{
+			if (s_factory_list[i].instance != nil)
+			{
+				delete s_factory_list[i].instance;
+				s_factory_list[i].instance = nil;
+			}
+		}
+	}
 }
 
 //////////
