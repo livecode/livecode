@@ -498,6 +498,10 @@ bool MCWin32RawClipboard::PullUpdates()
 	// Create a new item to wrap this data object
 	m_external_data = true;
 	m_item = new MCWin32RawClipboardItem(this, t_contents);
+
+	if (t_contents != NULL)
+		t_contents->Release();
+
 	return (m_item != NULL);
 }
 
@@ -549,7 +553,8 @@ MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_cl
   m_object(p_object),
   m_reps()
 {
-	;
+	if (m_object != nil)
+		m_object->AddRef();
 }
 
 MCWin32RawClipboardItem::~MCWin32RawClipboardItem()
