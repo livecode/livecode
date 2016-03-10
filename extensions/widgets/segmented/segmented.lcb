@@ -98,7 +98,7 @@ Summary: Sets the segment display style.
 
 Parameters:
 pSegmentDisplay(enum): The style of the segment display.
--"icon": Show the chosen icons
+-"icons": Show the chosen icons
 -"label": Show the chosen labels
 
 Description:
@@ -106,7 +106,7 @@ Use the <itemStyle> property to display either icons or labels in the segments.
 **/
 property itemStyle		get mSegmentDisplay		set setSegmentDisplay
 metadata itemStyle.editor		is "com.livecode.pi.enum"
-metadata itemStyle.options		is "text,icon"
+metadata itemStyle.options		is "text,icons"
 metadata itemStyle.default		is "text"
 metadata itemStyle.label		is "Display Style"
 
@@ -604,7 +604,7 @@ private handler drawSegments() returns nothing
 		variable tIconPath as Path
 		variable tLabelRect as Rectangle
 
-		if mSegmentDisplay is "icon" then
+		if mSegmentDisplay is "icons" then
             -- Compute the minimum margin required to provide the correct
             -- padding ratio.
             variable tIconMargin as Number
@@ -742,8 +742,8 @@ end handler
 
 private handler calculateWidths() returns nothing
 	variable tCount as Number
-	// Retain existing behavior if display is "icon"
-	if mSegmentDisplay is "icon" then
+	// Retain existing behavior if display is "icons"
+	if mSegmentDisplay is "icons" then
 		variable tWidth as Real
 		put my width / mNumSegments into tWidth
 
