@@ -1138,6 +1138,9 @@ MCEmscriptenSystem::GetDNSservers(MCListRef & r_list)
 	return false;
 }
 
+// These functions is implemented in javascript
+extern "C" int32_t MCEmscriptenDialogShowAlert(const unichar_t* p_message, size_t p_message_length);
+
 void
 MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
                                       MCStringRef p_message)
