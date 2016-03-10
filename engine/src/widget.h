@@ -60,6 +60,12 @@ bool MCWidgetQueryProperty(MCWidgetRef widget, MCNameRef property, MCTypeInfoRef
 bool MCWidgetSetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef value);
 bool MCWidgetGetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef& r_value);
 
+bool MCWidgetHasPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter);
+bool MCWidgetQueryPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter, MCTypeInfoRef& r_type_info);
+
+bool MCWidgetSetPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value);
+bool MCWidgetGetPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value);
+
 bool MCWidgetOnLoad(MCWidgetRef widget, MCValueRef rep);
 bool MCWidgetOnSave(MCWidgetRef widget, MCValueRef& r_rep);
 bool MCWidgetOnOpen(MCWidgetRef widget);
@@ -163,8 +169,8 @@ public:
 	
     virtual bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
 	virtual bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
-    virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
-	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
+    virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue& r_value);
+	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue p_value);
     
     virtual void toolchanged(Tool p_new_tool);
     virtual void visibilitychanged(bool p_visible);

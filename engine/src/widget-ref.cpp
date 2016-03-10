@@ -179,6 +179,87 @@ bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
     return t_success;
 }
 
+static bool chunk_property_handler(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_get_operation, MCNameRef& r_handler)
+{
+    const char *t_handler_prefix;
+    if (p_is_get_operation)
+        t_handler_prefix = "Get";
+    else
+        t_handler_prefix = "Set";
+    
+    MCAutoStringRef t_handler_string;
+    if (!MCStringFormat(&t_handler_string, "%s%@Of%@", t_handler_prefix, p_property, p_chunk_name))
+        return false;
+    
+    return MCNameCreate(*t_handler_string, r_handler);
+}
+
+bool MCWidgetBase::HasPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_getter)
+{
+    MCTypeInfoRef t_typeinfo;
+    return QueryPropertyOfChunk(p_property, p_chunk_name, p_is_getter, t_typeinfo);
+}
+
+bool MCWidgetBase::QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_getter, MCTypeInfoRef& r_type_info)
+{
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, p_is_getter, &t_handler))
+        return false;
+    
+    MCTypeInfoRef t_handler_typeinfo;
+    if (!MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
+        return false;
+
+    if (p_is_getter)
+    {
+        if (MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo) != 1)
+            return false;
+        
+        r_type_info = MCHandlerTypeInfoGetReturnType(t_handler_typeinfo);
+    }
+    else
+    {
+        // Chunk property setter needs two parameters,
+        if (MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo) != 2)
+            return false;
+        
+        r_type_info = MCHandlerTypeInfoGetParameterType(t_handler_typeinfo, 1);
+    }
+
+    return true;
+}
+
+bool MCWidgetBase::SetPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(2))
+        return false;
+    
+    t_args[0] = MCValueRetain(p_path);
+    t_args[1] = MCValueRetain(p_value);
+    
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, false, &t_handler))
+        return false;
+    
+    return DispatchRestricted(*t_handler, t_args . Ptr(), t_args . Count());
+}
+
+bool MCWidgetBase::GetPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(1))
+        return false;
+    
+    t_args[0] = MCValueRetain(p_path);
+    
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, true, &t_handler))
+        return false;
+    
+    return DispatchRestricted(*t_handler, t_args . Ptr(), t_args . Count(), &r_value);
+}
+
 bool MCWidgetBase::OnLoad(MCValueRef p_rep)
 {
     MCAutoValueRefArray t_args;
@@ -1137,6 +1218,30 @@ bool MCWidgetSetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef p_va
 bool MCWidgetGetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef& r_value)
 {
     return MCWidgetAsBase(self) -> GetProperty(p_property, r_value);
+}
+
+bool MCWidgetHasPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter)
+{
+    return MCWidgetAsBase(self) -> HasPropertyOfChunk(p_property, p_chunk_name, p_getter);
+}
+
+bool MCWidgetQueryPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter, MCTypeInfoRef& r_type_info)
+{
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, p_getter, &t_handler))
+        return false;
+    
+    return MCWidgetAsBase(self) -> QueryPropertyOfChunk(p_property, p_chunk_name, p_getter, r_type_info);
+}
+
+bool MCWidgetSetPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value)
+{
+    return MCWidgetAsBase(self) -> SetPropertyOfChunk(p_property, p_chunk_name, p_path, p_value);
+}
+
+bool MCWidgetGetPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value)
+{
+    return MCWidgetAsBase(self) -> GetPropertyOfChunk(p_property, p_chunk_name, p_path, r_value);
 }
 
 bool MCWidgetOnLoad(MCWidgetRef self, MCValueRef p_rep)

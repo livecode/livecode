@@ -2666,7 +2666,7 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 			/* UNCHECKED */ MCNameCreate(*t_name, &t_propset_name);
 			/* UNCHECKED */ MCNameCreate(*t_key, &t_propset_key);
 		}
-		if (!t_object -> setcustomprop(t_ctxt, *t_propset_name, *t_propset_key, t_value))
+		if (!t_object -> setcustomprop(t_ctxt, *t_propset_name, *t_propset_key, nil, t_value))
 			t_stat = t_ctxt . GetExecStat();
 	}
 	else
@@ -2736,7 +2736,7 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 			/* UNCHECKED */ MCNameCreate(*t_name, &t_propset_name);
 			/* UNCHECKED */ MCNameCreate(*t_key, &t_propset_key);
 		}
-		if (!t_object -> getcustomprop(t_ctxt, *t_propset_name, *t_propset_key, t_value))
+		if (!t_object -> getcustomprop(t_ctxt, *t_propset_name, *t_propset_key, nil, t_value))
 			t_stat = t_ctxt . GetExecStat();
 	}
 	else

@@ -43,6 +43,12 @@ public:
     bool SetProperty(MCNameRef property, MCValueRef value);
     bool GetProperty(MCNameRef property, MCValueRef& r_value);
 
+    bool HasPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_getter);
+    
+    bool QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_getter, MCTypeInfoRef& r_type_info);
+    bool SetPropertyOfChunk(MCNameRef property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef value);
+    bool GetPropertyOfChunk(MCNameRef property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value);
+
     bool OnLoad(MCValueRef rep);
     bool OnSave(MCValueRef& r_rep);
     
