@@ -831,11 +831,18 @@ IO_stat MCDispatch::startup(void)
 		
 		MCDataRef t_decompressed;
 		MCDataRef t_compressed;
-		/* UNCHECKED */ MCDataCreateWithBytes((const byte_t*)t_info.banner_stackfile.getstring(),
-											  t_info.banner_stackfile.getlength(),
-											  t_compressed);
-		/* UNCHECKED */ MCFiltersDecompress(t_compressed,
-											t_decompressed);
+		t_compressed = nil;
+		t_decompressed = nil;
+		if (!MCDataCreateWithBytes((const byte_t*)t_info.banner_stackfile.getstring(),
+								   t_info.banner_stackfile.getlength(),
+								   t_compressed) ||
+			!MCFiltersDecompress(t_compressed,
+								 t_decompressed))
+		{
+			MCValueRelease(t_compressed);
+			MCresult -> sets("error decoding banner stack");
+			return IO_ERROR;
+		}
 		MCValueRelease(t_compressed);
 		
 		IO_handle t_stream;
