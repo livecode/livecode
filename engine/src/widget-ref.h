@@ -129,12 +129,17 @@ private:
         kDispatchOrderTopDownAfter,
         kDispatchOrderBottomUp,
         kDispatchOrderTopDown,
-    };
-    
-    // Dispatch an event to the widget.
+	};
+	
+	// Inner method for dispatching an event.
+	bool DoDispatch(MCNameRef event, MCValueRef *x_args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
+	
+    // Dispatch an event to the widget allowing script access.
+	// Any errors are sent to the host (if any).
     bool Dispatch(MCNameRef event, MCValueRef *x_args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
     
-    // Dispatch an event to the widget but don't allow script access.
+	// Dispatch an event to the widget but don't allow script access.
+	// Any errors are sent to the host (if any).
     bool DispatchRestricted(MCNameRef event, MCValueRef *args = nil, uindex_t arg_count = 0, MCValueRef *r_result = nil);
     
     // Dispatch an event to the widget, don't allow script access and swallow

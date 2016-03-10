@@ -255,13 +255,13 @@ protected:
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
+	uint4 scriptdepth;
 	uint2 fontheight;
 	uint2 dflags;
 	uint2 ncolors;
 	uint2 npatterns;
 	uint2 altid;
 	uint1 hashandlers;
-	uint1 scriptdepth;
 	uint1 borderwidth;
 	int1 shadowoffset;
 	uint1 ink;
@@ -625,10 +625,22 @@ public:
 	{
 		return parent;
 	}
-	uint1 getscriptdepth() const
+	
+	uint4 getscriptdepth() const
 	{
 		return scriptdepth;
 	}
+	
+	void lockforexecution(void)
+	{
+		scriptdepth += 1;
+	}
+	
+	void unlockforexecution(void)
+	{
+		scriptdepth -= 1;
+	}
+	
 	void setparent(MCObject *newparent)
 	{
 		parent = newparent;

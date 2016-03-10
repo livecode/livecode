@@ -156,10 +156,18 @@ bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
     MCWidgetRef t_old_widget;
     t_old_widget = MCcurrentwidget;
     MCcurrentwidget = AsWidget();
-    
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
     bool t_success;
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
-    
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
     MCcurrentwidget = t_old_widget;
     
     return t_success;
@@ -170,10 +178,18 @@ bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
     MCWidgetRef t_old_widget;
     t_old_widget = MCcurrentwidget;
     MCcurrentwidget = AsWidget();
-    
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
     bool t_success;
     t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
-    
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
     MCcurrentwidget = t_old_widget;
     
     return t_success;
@@ -830,89 +846,126 @@ MCGRectangle MCWidgetBase::MapRectFromGlobal(MCGRectangle rect)
 
 //////////
 
-bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
 	MCWidgetRef t_old_widget_object;
 	t_old_widget_object = MCcurrentwidget;
 	MCcurrentwidget = AsWidget();
+
+	// Make sure the host object's 'scriptdepth' is incremented and
+	// decremented appropriately. This prevents script from deleting
+	// a widget which has its LCB code on the stack (just as it would if
+	// it had its LCS code on the stack).
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
 	
+	bool t_success;
+	MCAutoValueRef t_retval;
+	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
+	if (t_success)
+	{
+		if (r_result != NULL)
+			*r_result = t_retval . Take();
+	}
+	
+	MCcurrentwidget = t_old_widget_object;
+	
+	return t_success;
+	
+}
+
+bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+{
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
 	
+	// Preserve the host ptr we get across the dispatch so that
+	// we definitely return things to the way they were.
+	MCWidget *t_host;
+	t_host = GetHost();
+	
     MCObjectPtr t_old_target;
-    if (GetHost() != nil)
+    if (t_host)
     {
         t_old_target = MCtargetptr;
         
-        MCtargetptr . object = GetHost();
+        MCtargetptr . object = t_host;
         MCtargetptr . part_id = 0;
         t_this_stack = MCtargetptr . object -> getstack();
         MCdefaultstackptr = t_this_stack;
     }
     else
         MCEngineScriptObjectPreventAccess();
-        
 	
     // Invoke event handler.
     bool t_success;
-    MCValueRef t_retval;
-    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
-    
-    if (t_success)
-    {
-        if (r_result != NULL)
-            *r_result = t_retval;
-        else
-            MCValueRelease(t_retval);
-    }
-    else if (GetHost() != nil)
-        GetHost() -> SendError();
-    
-    if (GetHost() != nil)
-    {
-        MCtargetptr = t_old_target;
-        if (MCdefaultstackptr == t_this_stack)
-            MCdefaultstackptr = t_old_default_stack;
-    }
-    else
-        MCEngineScriptObjectAllowAccess();
-    
-	MCcurrentwidget = t_old_widget_object;
+	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
+	
+	if (t_host != nil)
+	{
+		MCtargetptr = t_old_target;
+		if (MCdefaultstackptr == t_this_stack)
+			MCdefaultstackptr = t_old_default_stack;
+	}
+	else
+		MCEngineScriptObjectAllowAccess();
+	
+    if (!t_success)
+	{
+		// Refetch the host pointer *just in case* something has happened
+		// to it.
+		t_host = GetHost();
+		if (t_host != nil)
+			t_host -> SendError();
+	}
 	
 	return t_success;
 }
 
 bool MCWidgetBase::DispatchRestricted(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-	MCWidgetRef t_old_widget_object;
-	t_old_widget_object = MCcurrentwidget;
-	MCcurrentwidget = AsWidget();
-	
     MCEngineScriptObjectPreventAccess();
     
-    // Invoke event handler.
-    bool t_success;
-    MCValueRef t_retval;
-    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
-    
+	// Invoke event handler.
+	bool t_success;
+	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
+	
     MCEngineScriptObjectAllowAccess();
-    
-    if (t_success)
-    {
-        if (r_result != NULL)
-            *r_result = t_retval;
-        else
-            MCValueRelease(t_retval);
-    }
-    
-	MCcurrentwidget = t_old_widget_object;
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+    if (t_host != nil)
+		t_host -> SendError();
+	else
+	{
+		MCAutoErrorRef t_error;
+		MCErrorCatch(&t_error);
+	}
 	
 	return t_success;
 }
 
 void MCWidgetBase::DispatchRestrictedNoThrow(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-    DispatchRestricted(p_event, x_args, p_arg_count, r_result);
+	MCEngineScriptObjectPreventAccess();
+	
+	// Invoke event handler.
+	bool t_success;
+	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
+	
+	MCEngineScriptObjectAllowAccess();
+	
+	if (!t_success)
+	{
+		MCAutoErrorRef t_error;
+		MCErrorCatch(&t_error);
+	}
 }
 
 bool MCWidgetBase::DispatchRecursive(DispatchOrder p_order, MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
