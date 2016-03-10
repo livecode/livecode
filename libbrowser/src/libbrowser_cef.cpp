@@ -530,7 +530,7 @@ struct MCCefErrorInfo
 	CefLoadHandler::ErrorCode error_code;
 };
 
-class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler
+class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
 {
 private:
 	int m_browser_id;
@@ -617,6 +617,7 @@ public:
 //	virtual CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
+	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
 	
 	void AddIgnoreUrl(const CefString &p_url)
 	{
@@ -775,6 +776,15 @@ public:
 		return !m_owner->GetAllowNewWindow();
 	}
 	
+	// CefDragHandler interface
+
+	// Called on UI thread
+	virtual bool OnDragEnter(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefDragData> p_drag_data, CefDragHandler::DragOperationsMask p_mask)
+	{
+		// cancel the drag event
+		return true;
+	}
+
 	// CefRequestHandler interface
 	
 	// Called on UI thread
