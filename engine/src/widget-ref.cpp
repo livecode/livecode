@@ -156,10 +156,18 @@ bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
     MCWidgetRef t_old_widget;
     t_old_widget = MCcurrentwidget;
     MCcurrentwidget = AsWidget();
-    
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
     bool t_success;
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
-    
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
     MCcurrentwidget = t_old_widget;
     
     return t_success;
@@ -170,10 +178,18 @@ bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
     MCWidgetRef t_old_widget;
     t_old_widget = MCcurrentwidget;
     MCcurrentwidget = AsWidget();
-    
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
     bool t_success;
     t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
-    
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
     MCcurrentwidget = t_old_widget;
     
     return t_success;
@@ -755,9 +771,21 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 	t_old_widget_object = MCcurrentwidget;
 	MCcurrentwidget = AsWidget();
 
+	// Make sure the host object's 'scriptdepth' is incremented and
+	// decremented appropriately. This prevents script from deleting
+	// a widget which has its LCB code on the stack (just as it would if
+	// it had its LCS code on the stack).
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
 	bool t_success;
 	MCAutoValueRef t_retval;
 	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
 	
 	if (t_success)
 	{
