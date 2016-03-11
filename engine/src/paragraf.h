@@ -308,12 +308,9 @@ public:
 	// paragraph after which a word-break can occur.
 	findex_t findwordbreakafter(MCBlock *p_block, findex_t p_index);
 
-	// Make sure there are no empty blocks in the paragraph:
-	//   - called by MCField::deleteselection
-	//   - called by MCField::fdel
-	//   - called by MCField::freturn
-	//   - called by methods in MCParagraph
-	Boolean clearzeros();
+	// Remove all empty blocks in the paragraph starting at
+	// the specified block (inclusive).
+	Boolean clearzeros(MCBlock *start_from = nil);
 	
 	// Return the list of blocks:
 	//   - called by MCField::getparagraphmacstyles
@@ -371,10 +368,15 @@ public:
     void replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist);
 
 	// Delete the text from si to ei in the paragraph.
-	// Called by:
-	//   MCField::deletecomposition
-	//   MCField::settextindex
-	void deletestring(findex_t si, findex_t ei);
+	// The 'styling_mode' determines what block is left at si.
+	// If it is 'frombefore' then no block is left so any text inserted at si will
+	// take styles from the preceeding block.
+	// If it is 'fromafter' then a zero length block with the same style as the first
+	// char in the deleted string is left so any text inserted at si will take
+	// styles from the first char in the deleted string.
+	// If it is 'none' then a zero length block with no styles is left so any text
+	// inserted at si will have no style.
+	void deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_preserve_first_style = kMCFieldStylingFromBefore);
 
 	// Delete the current selection in the paragraph.
 	// Called by:

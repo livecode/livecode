@@ -874,12 +874,15 @@ bool MCParagraph::recomputefonts(MCFontRef p_parent_font)
 //clear blocks with zero length
 
 // **** mutate blocks
-Boolean MCParagraph::clearzeros()
+Boolean MCParagraph::clearzeros(MCBlock *p_start_from)
 {
+	if (p_start_from == nil)
+		p_start_from = blocks;
+
 	Boolean reflow = False;
 	if (blocks != NULL && blocks->next() != blocks)
 	{
-		MCBlock *bptr = blocks;
+		MCBlock *bptr = p_start_from;
 		do
 		{
 			findex_t i, l;
@@ -2350,7 +2353,7 @@ void MCParagraph::split(findex_t p_position)
 	needs_layout = true;
 }
 
-void MCParagraph::deletestring(findex_t si, findex_t ei)
+void MCParagraph::deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_styling_mode)
 {
 	MCBlock *sbptr = indextoblock(si, False);
 	MCBlock *ebptr = indextoblock(ei, False);
@@ -2366,6 +2369,52 @@ void MCParagraph::deletestring(findex_t si, findex_t ei)
 		if (focusedindex > si)
 			focusedindex = si;
 	startindex = endindex = originalindex = focusedindex;
+	
+	// If the styling mode is 'from after' then we must ensure that at si
+	// the style is the same as the first char in the deleted string. To
+	// acheive this we insert a zero length block with the same style as
+	// the char after si. If si is within a block (not at the start) then
+	// we don't need to do anything.
+	if (p_styling_mode == kMCFieldStylingFromAfter)
+	{
+		if (si == sbptr -> GetOffset())
+		{
+			sbptr -> split(si);
+			if (ebptr == sbptr)
+				ebptr = sbptr -> next();
+			sbptr = sbptr -> next();
+		}
+	}
+	
+	// If the styling mode is 'none' then we must ensure that at si
+	// there is a block with no style. This involves splitting sbptr at
+	// si (if it is not at the start) and then inserting a plain MCBlock.
+	if (p_styling_mode == kMCFieldStylingNone)
+	{
+		if (si != sbptr -> GetOffset())
+		{
+			sbptr -> split(si);
+			if (ebptr == sbptr)
+				ebptr = sbptr -> next();
+			sbptr = sbptr -> next();
+		}
+		MCBlock *t_empty_block;
+		t_empty_block = new MCBlock;
+		t_empty_block -> setparent(this);
+		t_empty_block -> SetRange(si, 0);
+		if (sbptr == blocks)
+			t_empty_block -> insertto(blocks);
+		else
+			sbptr -> prev() -> append(t_empty_block);
+		if (opened)
+			t_empty_block -> open(getparent() -> getfontref());
+	}
+	
+	// We want to make sure we clear all zero blocks *apart* from one
+	// inserted to enforce the styling mode - the place we want to
+	// remove them from is always sbptr at this point.
+	MCBlock *t_clear_zeros_from;
+	t_clear_zeros_from = sbptr;
 	
 	if (sbptr == ebptr)
 	{
@@ -2389,6 +2438,9 @@ void MCParagraph::deletestring(findex_t si, findex_t ei)
 			sbptr->MoveRange(0, -ld);
 			sbptr = sbptr->next();
 		}
+		else
+			t_clear_zeros_from = ebptr;
+		
 		sbptr->GetRange(i, l);
 		while (sbptr != ebptr)
 		{
@@ -2428,7 +2480,10 @@ void MCParagraph::deletestring(findex_t si, findex_t ei)
 	uindex_t t_length = gettextlength();
 	/* UNCHECKED */ MCStringRemove(m_text, MCRangeMake(si, ei-si));
 
-	clearzeros();
+	// Eliminate any zero length blocks *after* one we might have ensured
+	// is present for styling purposes.
+	clearzeros(t_clear_zeros_from);
+	
 	state |= PS_LINES_NOT_SYNCHED;
 	
 	// MP-2013-09-02: [[ FasterField ]] Deleting a string requires layout.

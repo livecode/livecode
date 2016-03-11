@@ -1754,6 +1754,9 @@ enum Parse_errors
 	// {PE-0568} save: error in format expression
 	PE_SAVE_BADFORMATEXP,
 	
+	// {PE-0569} replace: missing 'styles'
+	PE_REPLACE_NOSTYLES,
+	
 };
 
 extern const char *MCparsingerrors;

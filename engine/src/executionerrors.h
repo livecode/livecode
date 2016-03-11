@@ -2698,6 +2698,9 @@ enum Exec_errors
 
 	// {EE-0883} save: error in file format expression
 	EE_SAVE_BADNOFORMATEXP,
+	
+	// {EE-0884} replace: not a field chunk
+	EE_REPLACE_BADFIELDCHUNK,
 };
 
 extern const char *MCexecutionerrors;

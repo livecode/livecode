@@ -34,12 +34,8 @@ Use the <replace> <command> to replace all instances of one <string> with anothe
 
 The <replace> <command> is faster than the <replaceText> <function>, but does not support <regular expression|regular expressions>: you can replace only an exact <string> of text.
 
->*Important:*  You can use the <replace> <command> on a <field(keyword)>, but doing so removes any formatting (fonts, styles, colors, and sizes) in the field. To work around this limitation, use the <field(object)|field's> <htmlText> property as the source for replacement instead of using the <field(keyword)> itself as the source:
+>*Important:*  You can use the <replace> <command> on a <field(keyword)>, but doing so removes any formatting (fonts, styles, colors, and sizes) in the field. To preserve existing styling in fields use the <replace in field> command.
 
-  get the htmlText of field "Stuff"
-  replace "old" with "new" in it
-  set the htmlText of field "Stuff" to it
-
-References: HTMLText (property), field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st)
+References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st), replace in field (command)
 
 Tags: text processing
