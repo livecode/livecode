@@ -761,7 +761,7 @@ public handler OnPaint() returns nothing
 	put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
 
 	variable tNameString as String
-	put property "name" of my script object into tNameString
+	put my name into tNameString
 	
 	set the font of this canvas to font "Arial" at size 14
 
