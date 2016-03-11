@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015 - 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,48 +15,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This widget is a header bar.
-
-Name: headerAction
-Type: message
-Syntax: on headerAction <pLabel>
-
-Summary: Sent when one of the <headerActions> icons is clicked.
-
-Parameters:
-pName: The label of the header action that was clicked.
-
-Description:
-Use the <headerAction> message to perform an action when one of the action icons is
-clicked by the user.
-
-References: headerActions (property)
-
-Name: leftAction
-Type: message
-Syntax: on leftAction
-
-Summary: Sent when the <leftLabel> of the header bar is clicked.
-
-Description:
-Use the leftAction message to perform an action when the label at the left hand side
-of the header bar is clicked.
-
-References: leftLabel (property)
-
-Name: searchAction
-Type: message
-Syntax: on searchAction
-
-Summary: Sent when the search icon of the header bar is clicked.
-
-Description:
-Use the searchAction message to perform an action when the search icon is clicked. Whether
-the search icon is visible or not is controlled by the <showSearchIcon> property.
-
-References: showSearchIcon (property)
-*/
+**/
 
 -- declaring the extension as a widget, followed by identifier
 widget com.livecode.widget.headerBar
@@ -69,94 +30,93 @@ use com.livecode.library.iconSVG
 use com.livecode.library.widgetutils
 
 -- metadata
-metadata title is "Header"
+metadata title is "Header Bar"
 metadata author is "LiveCode"
 metadata version is "1.0.1"
 metadata preferredSize is "320,64"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M13.2,20.6l-1.8,1.8l-7.5-7.5l0.1-0.1l-0.1-0.1l7.5-7.5l1.8,1.8l-5.8,5.8L13.2,20.6z M31.2,10.9h-3.8v10.3h-2.6V10.9H21V8.7h10.2V10.9z M34.7,21.2h-2.5v-9.3h2.5V21.2z M34.7,10.8h-2.5V8.6h2.5V10.8z M41.3,13.7h-1.5v4.9c0,0.4,0,0.6,0.1,0.7c0.1,0.1,0.4,0.1,0.9,0.1c0.1,0,0.2,0,0.2,0s0.2,0,0.2,0v1.8l-1.1,0c-1.1,0-1.9-0.2-2.3-0.6c-0.3-0.3-0.4-0.7-0.4-1.3v-5.7h-1.3V12h1.3V9.4h2.4V12h1.5V13.7z M45.4,21.2h-2.4V8.7h2.4V21.2z M56.2,17.3h-6.8c0,0.9,0.4,1.6,1,2c0.4,0.2,0.8,0.3,1.3,0.3c0.6,0,1-0.1,1.3-0.4c0.2-0.2,0.4-0.4,0.5-0.6h2.5c-0.1,0.6-0.4,1.1-0.9,1.7c-0.8,0.9-2,1.4-3.5,1.4c-1.2,0-2.3-0.4-3.3-1.1c-0.9-0.8-1.4-2-1.4-3.7c0-1.6,0.4-2.8,1.3-3.7c0.9-0.9,2-1.3,3.3-1.3c0.8,0,1.5,0.1,2.2,0.4c0.6,0.3,1.2,0.7,1.6,1.4c0.4,0.6,0.6,1.2,0.7,1.9c0,0,0,0.1,0,0.1h-2.5c-0.1-0.6-0.3-1-0.6-1.4c-0.4-0.3-0.9-0.5-1.4-0.5c-0.6,0-1.1,0.2-1.4,0.5c-0.3,0.4-0.6,0.8-0.6,1.4h3.1h1.1h2.5C56.2,16.1,56.2,16.6,56.2,17.3z M76.1,16.2h-4.6v4.6h-3v-4.6h-4.6v-3h4.6V8.7h3v4.6h4.6V16.2z"
 
-/*
-Syntax: set the widgetTheme of <widget> to <pWidgetTheme>
-Syntax: get the widgetTheme of <widget>
-
-Summary: The theme of the widget
-
-Parameters:
-pWidgetTheme(enum): The theme of the widget
--"iOS"
--"Android"
-
-Description:
-Use the <widgetTheme> property to set the theme of the widget.
-*/
-property widgetTheme get mWidgetTheme set setWidgetTheme
-metadata widgetTheme.editor is "com.livecode.pi.enum"
-metadata widgetTheme.options is "iOS,Android"
-metadata widgetTheme.default is "iOS"
-metadata widgetTheme.label is "Widget Theme"
-
-/*
-Summary: Sets the title of the header bar
-
-Syntax: set the headerTitle of <widget> to <pTitle>
-Syntax: get the headerTitle of <widget>
-
-Parameters:
-pTitle (string): The text of the title of the header bar.
-
-Description:
-Sets the title of the header bar to any string.
-*/
-property headerTitle get mHeaderTitle set setHeaderTitle
-metadata headerTitle.default is "Title"
-metadata headerTitle.label is "Title"
-
-/*
+/**
 Summary: Sets the actions of the header bar
 
-Syntax: set the headerActions of <widget> to <pActions>
-Syntax: get the headerActions of <widget>
+Syntax: set the itemArray of <widget> to <pArray>
+Syntax: get the itemArray of <widget>
 
 Parameters:
-pActions (list): The list of actions.
+pArray (array): An array containing all the action data
 
 Description:
-Sets the actions of the header bar from pActions, where pActions is a line delimited list of the actions, where each line is a comma delimited list
-of the different components of the action: name, label, icon
+Sets the actions of the header bar from pActions, where pActions is a line delimited list of 
+the actions, where each line is a comma delimited list of the different components of the 
+
+   { key (integer): The index of the navigation item
+     value (array): The array containing the data for the item at this index
+      { key : "name"
+        value (string): The name of this item
+        key : "label"
+        value (string): The label of this item
+        key : "icon_name"
+        value (string) : The name of the icon to display when the item is not highlighted
+        key : "hilited_icon_name"
+        value (string) : The name of the icon to display when the item is highlighted
+      }
+   }
+**/
+
+property itemArray get getHeaderActions set setHeaderActions
+metadata itemArray.editor is "com.livecode.pi.navbar"
+metadata itemArray.label is "Header Actions"
+
+/*
+Summary: Sets the header actions display style.
+
+Syntax: set the itemStyle of <widget> to <pActionStyle>
+Syntax: get the itemStyle of <widget>
+
+Parameters:
+pActionStyle (enum): The style of the header actions display.
+-"icons": Show the icons
+-"text": Show the labels
+
+Description:
+Sets the header actions display style of the control.
 */
-property headerActions get getHeaderActions set setHeaderActions
-metadata headerActions.editor is "com.livecode.pi.navbar"
-metadata headerActions.label is "Header Actions"
+property itemStyle get mActionStyle set setActionStyle
+metadata itemStyle.editor is "com.livecode.pi.enum"
+metadata itemStyle.options is "icons,text"
+metadata itemStyle.default is "icons"
+metadata itemStyle.label is "Action Display Style"
 
 /*
 Summary: Sets the action names of the header bar
 
-Syntax: set the actionNames of <widget> to <pNames>
-Syntax: get the actionNames of <widget>
+Syntax: set the itemNames of <widget> to <pNames>
+Syntax: get the itemNames of <widget>
 
 Parameters:
-pNames (list): The list of names.
+pNames (string): A comma-delimited list of the action names
 
 Description:
 Sets the names of the header bar actions, where <pNames> is a comma delimited list of the names.
 */
-property actionNames get getActionNames set setActionNames
-metadata actionNames.user_visible is "false"
+property itemNames get getActionNames set setActionNames
+metadata itemNames.label is "Action Names"
 
 /*
 Summary: Sets the action labels of the header bar
 
-Syntax: set the actionLabels of <widget> to <pLabels>
-Syntax: get the actionLabels of <widget>
+Syntax: set the itemLabels of <widget> to <pLabels>
+Syntax: get the itemLabels of <widget>
 
 Parameters:
-pLabels (list): The list of labels.
+pLabels (string): A comma-delimited list of the action labels
 
 Description:
-Sets the labels of the header bar actions, where <pLabels> is a comma delimited list of the labels.
+Sets the labels of the header bar actions, where <pLabels> is a comma delimited list of 
+the labels.
 */
-property actionLabels get getActionLabels set setActionLabels
-metadata actionLabels.user_visible is "false"
+property itemLabels get getActionLabels set setActionLabels
+metadata itemLabels.user_visible is "false"
 
 /*
 Summary: Sets the action icons of the header bar
@@ -165,474 +125,344 @@ Syntax: set the actionIcons of <widget> to <pIcons>
 Syntax: get the actionIcons of <widget>
 
 Parameters:
-pIcons (list): The list of icons.
+pIcons (string): A comma-delimited list of icons.
 
 Description:
-Sets the icons of the header bar actions, where <pIcons> is a comma delimited list of the icon names.
+Sets the icons of the header bar actions, where <pIcons> is a comma delimited list of the 
+icon names.
 */
-property actionIcons get getActionIcons set setActionIcons
-metadata actionIcons.user_visible is "false"
+property itemIcons get getActionIcons set setActionIcons
+metadata itemIcons.user_visible is "false"
 
 /*
-Syntax: set the <backgroundOpacity> of <widget> to {true | false}
-Syntax: get the <backgroundOpacity> of <widget>
+Summary: Sets the highlighted action icons of the header bar
 
-Summary: Whether the background of the header bar is drawn opaque or not
-
-Description:
-Use the <backgroundOpacity> property to determine whether objects underneath the header bar are visible or not.
-*/
-property backgroundOpacity get mIsOpaque set setBackgroundOpacity
-metadata backgroundOpacity.default is "true"
-metadata backgroundOpacity.label is "Opaque Background"
-
-/*
-Summary: Sets the subtitle of the header bar
-
-Syntax: set the headerSubtitle of <widget> to <pSubtitle>
-Syntax: get the headerSubtitle of <widget>
+Syntax: set the hilitedItemIcons of <widget> to <pIcons>
+Syntax: get the hilitedItemIcons of <widget>
 
 Parameters:
-pSubtitle (string): The text of the subtitle of the header bar.
+pIcons (string): A comma-delimited list of icons.
 
 Description:
-Sets the subtitle of the header bar to any string, iOS only.
+Sets the highlighted icons of the header bar actions, where <pIcons> is a 
+comma-delimited list of the icon names.
 */
-property headerSubtitle get mHeaderSubtitle set setHeaderSubtitle
-metadata headerSubtitle.default is "Subtitle"
-metadata headerSubtitle.label is "Subtitle"
+property hilitedItemIcons get getActionHilitedIcons set setActionHilitedIcons
+metadata hilitedItemIcons.user_visible is "false"
 
-/*
-Summary: Sets the label at the left hand side of the header
+/**
+Syntax: set the theme of <widget> to <pWidgetTheme>
+Syntax: get the theme of <widget>
 
-Syntax: set the leftLabel of <widget> to <pLabel>
-Syntax: get the leftLabel of <widget>
+Summary: Specifies the theme to use when drawing the switch button.
 
 Parameters:
-pLabel (string): the label at the left hand side of the header
+pWidgetTheme (string): The <theme> of the header bar is a name identifying the style to 
+use when drawing it. 
 
 Description:
-Sets the label at the left hand side of the header, iOS only.
-*/
-property leftLabel get mLeftLabel set setLeftLabel
-metadata leftLabel.default is "Back"
-metadata leftLabel.label is "Left Label"
+Use the <theme> property to control the general appearance of the header bar.  The 
+currently-supported values are "native", "iOS" and "Android".
 
-/*
-Summary: Sets the header actions display style.
+>*Note*: The value of the <theme> property is not saved by the header bar. Set the 
+<theme> property to preview the way the header bar will appear when used on an 
+Android or iOS device.
+**/
+property "theme" get mWidgetTheme set setWidgetTheme
+metadata theme.user_visible is "false"
+metadata theme.options is "native,iOS,Android"
+metadata theme.default is "native"
 
-Syntax: set the actionStyle of <widget> to <pActionStyle>
-Syntax: get the actionStyle of <widget>
+/**
+Summary: The label of the header bar
+
+Syntax: set the label of <widget> to <pTitle>
+Syntax: get the label of <widget>
 
 Parameters:
-pActionStyle (enum): The style of the header actions display.
--"icons": Show the icons
--"names": Show the names
+pTitle (string): The text of the title of the header bar.
 
 Description:
-Sets the header actions display style of the control, iOS only.
+Use to display a title at the top of the header bar.
 */
-property actionStyle get mActionStyle set setActionStyle
-metadata actionStyle.editor is "com.livecode.pi.enum"
-metadata actionStyle.options is "icons,names"
-metadata actionStyle.default is "icons"
-metadata actionStyle.label is "Action Display Style"
+property "label" get mHeaderTitle set setHeaderTitle
+metadata label.default is "Title"
+metadata label.label is "Title"
 
 /*
-Summary: Controls whether the back icon is displayed.
-
-Syntax: set the showBackIcon of <widget> to <pShow>
-Syntax: get the showBackIcon of <widget>
-
-Parameters:
-pShow (boolean): True or false
-
-Description:
-Sets whether the back icon is showing or not, iOS only.
-*/
-property showBackIcon get mShowBackIcon set setShowBackIcon
-metadata showBackIcon.editor is "com.livecode.pi.boolean"
-metadata showBackIcon.default is "true"
-metadata showBackIcon.label is "Show Back Icon"
-
-/*
-Summary: Sets whether there is a search icon in the header bar.
-
-Syntax: set the showSearchIcon of <widget> to <pShow>
-Syntax: get the showSearchIcon of <widget>
-
-Parameters:
-pShow (boolean): True or false
-
-Description:
-Controls whether the search icon is displayed in the header bar, iOS only.
-*/
-property showSearchIcon get mShowSearchIcon set setShowSearchIcon
-metadata showSearchIcon.editor is "com.livecode.pi.boolean"
-metadata showSearchIcon.default is "false"
-metadata showSearchIcon.label is "Show Search Icon"
-
-/*
-Summary: Sets the color of the actions and the back button.
-
-Syntax: set the actionColor of <widget> to <pColor>
-Syntax: get the actionColor of <widget>
-
-Parameters:
-pColor (color): The color of the actions and back button
-
-Description:
-Sets the color of the actions and the back button, iOS only.
-*/
-property actionColor get getIosActionColor set setIosActionColor
-metadata actionColor.editor is "com.livecode.pi.color"
-metadata actionColor.default is "0,121,255"
-metadata actionColor.label is "iOS Action Color"
-
-/*
-Syntax: set the <showDivide> of <widget> to {true | false}
-Syntax: get the <showDivide> of <widget>
-
-Summary: Whether the dividing line at the top of the header bar is drawn or not
-
-Description:
-Use the <showDivide> property to determine whether the dividing line at the top of the header bar is drawn or not, iOS only.
-*/
-property showDivide get mShowDivide set setShowDivide
-metadata showDivide.default is "true"
-metadata showDivide.label is "Show Divide"
-
-/*
-Syntax: set the colorScheme of <widget> to <pColorScheme>
-Syntax: get the colorScheme of <widget>
-
-Summary: The color scheme of the widget (Android only)
-
-Parameters:
-pColorScheme(enum): The color scheme of the widget
--"Light"
--"Dark"
--"Red"
--"Pink"
--"Purple"
--"Deep Purple"
--"Indigo"
--"Blue"
--"Light Blue"
--"Cyan"
--"Teal"
--"Green"
--"Light Green"
--"Lime"
--"Yellow"
--"Amber"
--"Orange"
--"Deep Orange"
--"Brown"
--"Grey"
--"Blue Grey"
-
-Description:
-Use the <colorScheme> property to set the color scheme of the widget, Android only.
-*/
-property colorScheme get mColorScheme set setColorScheme
-metadata colorScheme.editor is "com.livecode.pi.enum"
-metadata colorScheme.options is "Light,Dark,Red,Pink,Purple,Deep Purple,Indigo,Blue,Light Blue,Cyan,Teal,Green,Light Green,Lime,Yellow,Amber,Orange,Deep Orange,Brown,Grey,Blue Grey"
-metadata colorScheme.default is "Teal"
-metadata colorScheme.label is "Color Scheme"
-
-/*
-Syntax: set the leftAction of <widget> to <pIconName>
-Syntax: get the leftAction of <widget>
-
-Summary: The action on the left of the header
-
-Parameters:
-pIconName(enum): The name of the icon of the left action of the header
-- a list of predefined values
-
-Description:
-Use the <leftAction> property to set the icon of the widget's left action to one of the predefined values.
-The complete list of preset values is available by executing
-
-``` put iconNames()```
-
-Android only.
-*/
-property leftAction get mLeftAction set setLeftAction
-metadata leftAction.editor is "com.livecode.pi.enum"
-metadata leftAction.options is "execute: get iconNames()"
-metadata leftAction.default is "reorder"
-metadata leftAction.label is "Left Action"
-
-/*
-Syntax: set the titleVisibility of <widget> to {true | false}
-Syntax: get the titleVisibility of <widget>
+Syntax: set the showLabel of <widget> to {true | false}
+Syntax: get the showLabel of <widget>
 
 Summary: Whether the title is visible or not
 
 Description:
-Use this property to determine whether the title is visible (true) or not (false), Android only.
+Use this property to determine whether the title is visible (true) or not (false).
 */
-property titleVisibility get mTitleIsVisible set setTitleVisibility
-metadata titleVisibility.default is "true"
-metadata titleVisibility.label is "Title Visibile"
+property "showLabel" get mShowTitle set setTitleVisibility
+metadata showLabel.default is "true"
+metadata showLabel.label is "Show Title"
 
 /*
-Syntax: set the distinctTitle of <widget> to {true | false}
-Syntax: get the distinctTitle of <widget>
+Summary: Whether to display the first action on the left
 
-Summary: Whether the title is distinct or not
+Syntax: set the firstItemLeft of <widget> to { true | false }
+Syntax: get the firstItemLeft of <widget>
 
 Description:
-Use this property to determine whether the title distinct (true) or not (false), Android only.
-
-The title can only be set to distinct if the header is opaque and the color scheme is not "Dark" or "Light".
-The title can have a distinct color from the icons if increased visual hierarchy is needed. Distinct title colors work best on backgrounds with enough contrast for both white and balck glyphs.
+If the <firstItemLeft> property is true, then the first action in the <itemArray> is displayed on 
+the left hand side of the header bar.
 */
-property distinctTitle get mTitleIsDistinct set setDistinctTitle
-metadata distinctTitle.default is "false"
-metadata distinctTitle.label is "Distinct Title"
+property firstItemLeft get mFirstActionLeft set setFirstActionLeft
+metadata firstItemLeft.default is "true"
+metadata firstItemLeft.label is "First Action On Left"
+
+/*
+Syntax: set the <opaque> of <widget> to {true | false}
+Syntax: get the <opaque> of <widget>
+
+Summary: Whether the background of the header bar is drawn opaque or not
+
+Description:
+Use the <opaque> property to determine whether objects underneath the header bar are 
+visible or not.
+*/
+property "opaque" get mIsOpaque set setBackgroundOpacity
+metadata opaque.default is "true"
+metadata opaque.label is "Opaque Background"
+
+/*
+Syntax: set the <showBorder> of <widget> to {true | false}
+Syntax: get the <showBorder> of <widget>
+
+Summary: Whether the dividing line at the bottom of the header bar is drawn or not
+
+Description:
+Use the <showBorder> property to determine whether the dividing line at the bottom of the 
+header bar is drawn or not.
+*/
+property showBorder get mShowDivide set setShowDivide
+metadata showBorder.default is "false"
+metadata showBorder.label is "Show Bottom Border"
+
+/**
+Syntax: set the foreColor of <widget> to <pColor>
+Syntax: get the foreColor of <widget>
+
+Summary: Manipulates the text color of the header bar
+
+Description:
+Use the <foreColor> property to control the text color of the header bar.
+**/
+metadata foregroundColor.editor		is "com.livecode.pi.color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.label is "Text Color"
+metadata foregroundColor.default is "0,0,0"
+
+/**
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: Manipulates the background color of the header bar
+
+Description:
+Use the <backColor> property to control the background color of the 
+header bar.
+**/
+metadata backgroundColor.editor		is "com.livecode.pi.color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.label is "Background Color"
+metadata backgroundColor.default is "244,244,244"
+
+/**
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
+
+Summary: Manipulates the color of the icons on the header bar.
+
+Description:
+Use the <hiliteColor> property to control the color of the icons of the header bar.
+**/
+metadata hiliteColor.editor		is "com.livecode.pi.color"
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.label is "Highlight Color"
+metadata hiliteColor.default is "10,95,244"
+
+/**
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: Manipulates the border color of the header bar.
+
+Description:
+Use the <borderColor> property to control the color of the header bar border.
+**/
+
+metadata borderColor.editor		is "com.livecode.pi.color"
+metadata borderColor.section is "Colors"
+metadata borderColor.label is "Border Color"
+metadata borderColor.default is "109,109,109"
+
+metadata textSize.default is "16"
+metadata textAlign.user_visible	is "false"
+
+property mouseAction get getMouseActionName
+metadata mouseAction.user_visible is "false"
 
 -- private instance variables
--- iOS and Android properties
+private variable mTheme as String
 private variable mWidgetTheme as String
-private variable mHeaderTitle as String
 private variable mHeaderActions as List
 private variable mIsOpaque as Boolean
 
--- iOS only properties
-private variable mHeaderSubtitle as String
 private variable mActionStyle as String
-private variable mShowBackIcon as Boolean
-private variable mLeftLabel as String
-private variable mIosActionColor as Color
-private variable mShowSearchIcon as Boolean
+private variable mFirstActionLeft as Boolean
+
 private variable mShowDivide as Boolean
-private variable mShowLeftLabel as Boolean
-private variable mShowSubtitle as Boolean
 
--- Android only properties
-private variable mColorScheme as String
-private variable mLeftAction as String
-private variable mTitleIsVisible as Boolean
-private variable mTitleIsDistinct as Boolean
+private variable mHeaderTitle as String
+private variable mShowTitle as Boolean
 
-private variable mTitleRatio as Real
-private variable mTitleVAdjust as Real
-private variable mIconTop as Real
-private variable mIconBottom as Real
-private variable mIconWidth as Real
-private variable mLabelTop as Real
-private variable mLabelBottom as Real
-private variable mSubtitleCenter as Real
 private variable mSelectedAction as Integer
-private variable mRight as Real
-private variable mLetterCount as Integer
-private variable mActionRects as List
-private variable mIosSelectedActionColor as Color
+private variable mMouseAction as Integer
 
-private variable mAndroidTitleColor as Color
-private variable mAndroidIconColor as Color
-private variable mAndroidColors as Array
-private variable mAndroidFontSize as Real
-private variable mAndroidBuffer as Real
-private variable mAndroidIconDimension as Real
-private variable mAndroidTitleHMargin as Real
-private variable mAndroidTitleVMargin as Real
+private variable mTitleRect as Rectangle
 
--- constants (some defined as varibales)
-private variable kIosBackgroundColor as List
-private variable kBlackColor as List
-
-constant kIosMargin is 8
-constant kIosActionRatio is 0.265625
-constant kIosSubtitleRatio is 0.171875
+private variable mRecalculate as Boolean
+private variable mWidth as Real
+private variable mHeight as Real
 
 constant kWidgetThemeIos is "iOS"
 constant kWidgetThemeAndroid is "Android"
 
-constant kLightColor is "Light"
-constant kDarkColor is "Dark"
-constant kRedColor is "Red"
-constant kPinkColor is "Pink"
-constant kPurpleColor is "Purple"
-constant kDeepPurpleColor is "Deep Purple"
-constant kIndigoColor is "Indigo"
-constant kBlueColor is "Blue"
-constant kLightBlueColor is "Light Blue"
-constant kCyanColor is "Cyan"
-constant kTealColor is "Teal"
-constant kGreenColor is "Green"
-constant kLightGreenColor is "Light Green"
-constant kLimeColor is "Lime"
-constant kYellowColor is "Yellow"
-constant kAmberColor is "Amber"
-constant kOrangeColor is "Orange"
-constant kDeepOrangeColor is "Deep Orange"
-constant kBrownColor is "Brown"
-constant kGreyColor is "Grey"
-constant kBlueGreyColor is "Blue Grey"
-
-constant kAndroidDefaultHeight is 56
-constant kAndroidDefaultWidth is 320
-constant kAndroidDefaultFontSize is 20
-constant kAndroidIconDimension is 24
-constant kAndroidHMargin is 72
-constant kAndroidBuffer is 16
+constant kGeometry is { \
+	"margin-px":    { "iOS": 12,    "android": 16 }, \
+	"left-margin-px":		{"iOS": 4,	"android": 16 },	\
+	"default-height":		{ "iOS": 44,    "android": 56 }, \
+	"default-width":		{ "iOS": 304,	"android": 320}, \
+	"status-bar-offset":		{ "iOS": 20,	"android": 0}, \
+	"drop-shadow-size":		{ "iOS": 0,	"android": 5}, \
+	"title-left-offset":		{"iOS": 0, 		"android": 72 } \
+}
 
 public handler OnSave(out rProperties as Array)
    put the empty array into rProperties
-
-   put mWidgetTheme into rProperties["widgetTheme"]
+   
    put mHeaderTitle into rProperties["headerTitle"]
    put getHeaderActions() into rProperties["headerActions"]
    put mIsOpaque into rProperties["backgroundOpacity"]
 
-   put mHeaderSubtitle into rProperties["headerSubtitle"]
    put mActionStyle into rProperties["actionStyle"]
-   put mShowBackIcon into rProperties["showBackIcon"]
-   put mLeftLabel into rProperties["leftLabel"]
-   put getIosActionColor() into rProperties["actionColor"]
-   put mShowSearchIcon into rProperties["showSearchIcon"]
    put mShowDivide into rProperties["showDivide"]
-
-   put mColorScheme into rProperties["colorScheme"]
-   put mLeftAction into rProperties["leftAction"]
-   put mTitleIsVisible into rProperties["titleVisibility"]
-   put mTitleIsDistinct into rProperties["distinctTitle"]
+   put mFirstActionLeft into rProperties["firstActionLeft"]
+   put mShowTitle into rProperties["titleVisibility"]
 
 end handler
 
 public handler OnLoad(in pProperties as Array)
-   put pProperties["widgetTheme"] into mWidgetTheme
    put pProperties["headerTitle"] into mHeaderTitle
    setHeaderActions(pProperties["headerActions"])
    put pProperties["backgroundOpacity"] into mIsOpaque
 
-   put pProperties["headerSubtitle"] into mHeaderSubtitle
    put pProperties["actionStyle"] into mActionStyle
-   put pProperties["showBackIcon"] into mShowBackIcon
-   put pProperties["leftLabel"] into mLeftLabel
-   setIosActionColor(pProperties["actionColor"])
-   put pProperties["showSearchIcon"] into mShowSearchIcon
    put pProperties["showDivide"] into mShowDivide
 
-   put pProperties["colorScheme"] into mColorScheme
-   put pProperties["leftAction"] into mLeftAction
-   put pProperties["titleVisibility"] into mTitleIsVisible
-   put pProperties["distinctTitle"] into mTitleIsDistinct
+   put pProperties["titleVisibility"] into mShowTitle
+   
+   if "firstActionLeft" is among the keys of pProperties then
+      put pProperties["firstActionLeft"] into mFirstActionLeft
+   end if 
 end handler
 
 public handler OnCreate()
+	put 0 into mHeight
+	put 0 into mWidth
+	
+	put "native" into mTheme
+	put getNativeThemeName() into mWidgetTheme
 
-   put kWidgetThemeIos into mWidgetTheme
-
-   -- creating a list of actions
    variable tHeaderActions as List
    put the empty list into tHeaderActions
 
    variable tArray as Array
    put the empty array into tArray
 
+   put "back" into tArray["name"]
+   put "Back" into tArray["label"]
+   put "angle left" into tArray["icon_name"]
+   put "" into tArray["hilited_icon_name"]
+   push tArray onto tHeaderActions
+
    put "add" into tArray["name"]
    put "Add" into tArray["label"]
    put "plus" into tArray["icon_name"]
-   put "" into tArray["selected_icon_name"]
-   put "" into tArray["icon"]
+   put "" into tArray["hilited_icon_name"]
    push tArray onto tHeaderActions
-
+   
    put tHeaderActions into mHeaderActions
 
    -- properties
-   put "Yesterday" into mHeaderTitle
+   put "Title" into mHeaderTitle
    put true into mIsOpaque
 
-   put "" into mHeaderSubtitle
    put "icons" into mActionStyle
-   put true into mShowBackIcon
-   put "Back" into mLeftLabel
-   put color [0, 121/255, 1] into mIosActionColor
-   put true into mShowSearchIcon
+   put true into mFirstActionLeft
    put true into mShowDivide
 
-   put "Purple" into mColorScheme
-   put "reorder" into mLeftAction
-   put true into mTitleIsVisible
-   put false into mTitleIsDistinct
+   put true into mShowTitle
 
-   -- variables
-   updateVariables()
-   fetchAndroidColors()
    put 0 into mSelectedAction
-   put color [1,1,1] into mAndroidTitleColor
-   put color [1,1,1] into mAndroidIconColor
-
-   -- constants (defined as variables)
-   put [247/255,247/255,247/255] into kIosBackgroundColor
-   put [0,0,0] into kBlackColor
+   
+   put true into mRecalculate
 end handler
 
 public handler OnPaint()
-
-   updateVariables()
-
+	set the font of this canvas to my font
+	
+   if mRecalculate then
+      updateVariables()
+   end if
+   
    if mWidgetTheme is kWidgetThemeIos then
-      drawIosHeader()
+      drawIosBackground()
+		drawIosTitle()
    else if mWidgetTheme is kWidgetThemeAndroid then
-      drawAndroidHeader()
+      drawAndroidBackground()
+		drawAndroidTitle()
    end if
-
-end handler
-
-private handler drawIosHeader() returns nothing
-
-   -- draw the background rectangle
-   if mIsOpaque then
-      set the paint of this canvas to fetchPaint("background")
-      fill fetchPath("background") on this canvas
-   end if
-
+	
+   drawActions()
+      
    -- draw the bottom line
    if mShowDivide then
       set the paint of this canvas to fetchPaint("line")
       fill fetchPath("line") on this canvas
    end if
+end handler
 
-   -- filling in the text of the title
-   set the font of this canvas to fetchFont("title")
-   set the paint of this canvas to fetchPaint("title")
-   fill text mHeaderTitle at center of fetchRect("title") on this canvas
+public handler OnGeometryChanged() returns nothing
+   if my height is not mHeight or my width is not mWidth then
+      put true into mRecalculate
+      redraw all
+   end if 
+end handler
 
-   -- fill in the text of the subtitle
-   if mShowSubtitle is true then
-      set the font of this canvas to fetchFont("subtitle")
-      set the paint of this canvas to fetchPaint("title")
-      fill text mHeaderSubtitle at center of fetchRect("subtitle") on this canvas
-   end if
-
-   -- drawing the back button
-   set the paint of this canvas to fetchPaint("backButton")
-   if mShowBackIcon is true then
-      fill fetchPath("backIcon") on this canvas
-   end if
-   if mShowLeftLabel is true then
-      set the font of this canvas to fetchFont("label")
-      fill text mLeftLabel at left of fetchRect("leftLabel") on this canvas
-   end if
-
-   -- draw the actions
-   drawActions()
-
-   -- draw the search icon
-   if mShowSearchIcon is true then
-      set the paint of this canvas to fetchPaint("searchIcon")
-      fill fetchPath("searchIcon") on this canvas
+private handler drawIosBackground() returns nothing
+   -- draw the background rectangle
+   if mIsOpaque then
+      set the paint of this canvas to fetchPaint("background")
+      fill fetchPath("background") on this canvas
    end if
 end handler
 
-private handler drawAndroidHeader() returns nothing
+private handler drawIosTitle() returns nothing
+   -- draw the title
+   if mShowTitle then
+      set the paint of this canvas to fetchPaint("title")
+      fill text mHeaderTitle at center of mTitleRect on this canvas
+   end if
+end handler
 
+private handler drawAndroidBackground() returns nothing
    -- draw the background with drop shadow
    if mIsOpaque then
       variable tShadow as Effect
@@ -643,26 +473,27 @@ private handler drawAndroidHeader() returns nothing
       fill fetchPath("background") on this canvas
       end layer on this canvas
    end if
+end handler
 
-   -- draw the left action
-   set the paint of this canvas to fetchPaint("actionIcon")
-   fill fetchIconPath(mLeftAction, fetchRect("actionIcon")) on this canvas
-
+private handler drawAndroidTitle() returns nothing
    -- draw the title
-   if mTitleIsVisible then
-      set the font of this canvas to fetchFont("title")
+   if mShowTitle then
+		log mHeaderTitle
+		log mTitleRect
       set the paint of this canvas to fetchPaint("title")
-      fill text mHeaderTitle at left of fetchRect("title") on this canvas
+      fill text mHeaderTitle at left of mTitleRect on this canvas
+		log mTitleRect
    end if
+end handler
 
-   -- draw the right actions
-   set the paint of this canvas to fetchPaint("actionIcon")
-   variable tX as Integer
-   variable tActionsCount as Integer
-   put the number of elements in mHeaderActions into tActionsCount
-   repeat with tX from 1 up to tActionsCount
-      drawActions()
-   end repeat
+private handler getItemsToShow(in pIndex as Integer, out rIcon as Boolean, out rLabel as Boolean)
+   if pIndex is 1 and mFirstActionLeft then
+      put true into rIcon
+      put mWidgetTheme is kWidgetThemeIos into rLabel
+   else
+      put mActionStyle is "icons" into rIcon
+      put mActionStyle is "text" into rLabel
+   end if
 end handler
 
 private handler drawActions() returns nothing
@@ -672,44 +503,63 @@ private handler drawActions() returns nothing
 
    variable tX as Integer
    variable tActionsCount as Integer
-   variable tIconPath as Path
-   variable tActionRect as Rectangle
 
-   variable tHitRect as Rectangle
    put the number of elements in mHeaderActions into tActionsCount
    repeat with tX from 1 up to tActionsCount
+		variable tDrawIcon as Boolean
+		variable tDrawLabel as Boolean
+      getItemsToShow(tX, tDrawIcon, tDrawLabel)
 
-      if mWidgetTheme is kWidgetThemeIos then
-         if tX+2 is mSelectedAction then
-            set the paint of this canvas to fetchPaint("actionIcon")
-         else
-            set the paint of this canvas to fetchPaint("selectedIcon")
-         end if
-
-         if mActionStyle is "icons" then
-            put fetchRect("actionIcon") into tActionRect
-            put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
-            fill tIconPath on this canvas
-            put the bounding box of tIconPath into tHitRect
-         else if mActionStyle is "names" then
-            put the number of chars in mHeaderActions[tX]["label"] into mLetterCount
-            put fetchRect("actionLabel") into tActionRect
-            set the font of this canvas to fetchFont("label")
-            fill text mHeaderActions[tX]["label"] at right of tActionRect on this canvas
-            put tActionRect into tHitRect
-         end if
-
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         set the paint of this canvas to fetchPaint("actionIcon")
-         put fetchRect("actionIcon") into tActionRect
-         put fetchIconPath(mHeaderActions[tX]["icon_name"], tActionRect) into tIconPath
-         translate tIconPath by [my width - (mAndroidBuffer*2 + mAndroidIconDimension)*tX, 0]
-         fill tIconPath on this canvas
-         put the bounding box of tIconPath into tHitRect
+      if tDrawIcon then
+         drawIcon(tX)
+		end if
+		
+      if tDrawLabel then
+         drawLabel(tX)
       end if
-
-      push tHitRect onto back of mActionRects
    end repeat
+end handler
+
+constant kHighlightOpacity is 0.1
+private handler drawIcon(in pIndex as Integer)
+   save state of this canvas
+   variable tActionRect as Rectangle
+   variable tIconPath as Path
+   set the paint of this canvas to fetchPaint("icon")
+   put mHeaderActions[pIndex]["icon_rect"] into tActionRect
+   
+   variable tIconName as String
+   if pIndex is not mSelectedAction or \
+      mHeaderActions[pIndex]["hilited_icon_name"] is empty then
+      put mHeaderActions[pIndex]["icon_name"] into tIconName
+   else
+      put mHeaderActions[pIndex]["hilited_icon_name"] into tIconName
+   end if
+   
+   put fetchIconPath(tIconName, tActionRect) into tIconPath
+   fill tIconPath on this canvas
+   
+   if pIndex is mSelectedAction then
+      set the opacity of this canvas to kHighlightOpacity
+      set the paint of this canvas to fetchPaint("pushedIcon")
+      fill tIconPath on this canvas
+   end if
+   restore state of this canvas
+end handler
+
+private handler drawLabel(in pIndex as Integer)
+   save state of this canvas
+   variable tActionRect as Rectangle
+   set the paint of this canvas to fetchPaint("icon")
+   put mHeaderActions[pIndex]["label_rect"] into tActionRect
+   fill text mHeaderActions[pIndex]["label"] at center of tActionRect on this canvas
+   
+   if pIndex is mSelectedAction then
+      set the opacity of this canvas to kHighlightOpacity
+      set the paint of this canvas to fetchPaint("pushedIcon")
+      fill text mHeaderActions[pIndex]["label"] at center of tActionRect on this canvas
+   end if
+   restore state of this canvas
 end handler
 
 private handler drawDropShadow() returns Effect
@@ -719,7 +569,7 @@ private handler drawDropShadow() returns Effect
    put color [153/255, 153/255, 153/255, 1] into tProps["color"]
    put "source over" into tProps["blend mode"]
    put 0.75 into tProps["spread"]
-   put 5 into tProps["size"]
+   put kGeometry["drop-shadow-size"][mWidgetTheme] into tProps["size"]
    put 1 into tProps["distance"]
    put 90 into tProps["angle"]
 
@@ -736,107 +586,15 @@ private handler fetchIconPath(in pIconName as String, in pIconRect as Rectangle)
 end handler
 
 private handler fetchPath(in pObject as String) returns Path
-   variable tIconPath as Path
-   variable tIconRect as Rectangle
-
-   variable tH as Real
-   variable tW as Real
-   put my width into tW
-   put my height into tH
-
    if pObject is "background" then
       if mWidgetTheme is kWidgetThemeIos then
-         return rectangle path of rectangle [0, 0, tW, tH-1]
+         return rectangle path of rectangle [0, 0, mWidth, mHeight - 1]
       else if mWidgetTheme is kWidgetThemeAndroid then
-         return rectangle path of rectangle [0, 0, tW, tH-5]
+         return rectangle path of rectangle [0, 0, mWidth, mHeight - kGeometry["drop-shadow-size"][mWidgetTheme]]
       end if
 
    else if pObject is "line" then
-      return rectangle path of rectangle [0, tH-1, tW, tH]
-
-   else if pObject is "backIcon" then
-      return fetchIconPath("angle left", fetchRect("backIcon"))
-
-   else if pObject is "searchIcon" then
-      return fetchIconPath("search", fetchRect("searchIcon"))
-
-   end if
-end handler
-
-private handler fetchRect(in pObject as String) returns Rectangle
-   variable tRect as Rectangle
-   variable tLeft as Real
-   variable tTop as Real
-   variable tRight as Real
-   variable tBottom as Real
-   variable tH as Real
-   variable tW as Real
-   variable tSize as Real
-
-   put my width into tW
-   put my height into tH
-   put tH*kIosActionRatio/2 into tSize
-
-   if pObject is "title" then
-      if mWidgetTheme is kWidgetThemeIos then
-         if mShowSubtitle is false then
-            return rectangle [0, mLabelTop-mTitleVAdjust, my width, mLabelBottom-mTitleVAdjust]
-         else
-            put mSubtitleCenter-tH*mTitleRatio-kIosMargin/2 into tTop
-            put mSubtitleCenter-kIosMargin/2 into tBottom
-            return rectangle [0, tTop, my width, tBottom]
-         end if
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         put (my height)- 5 - mAndroidFontSize - mAndroidTitleVMargin into tTop
-         put (my height)- 5 - mAndroidTitleVMargin into tBottom
-         return rectangle [mAndroidTitleHMargin, tTop, my width, tBottom]
-      end if
-
-   else if pObject is "subtitle" then
-      put kIosMargin/2 + mSubtitleCenter into tTop
-      put kIosMargin/2 + mSubtitleCenter + tH*kIosSubtitleRatio into tBottom
-      return rectangle [0, tTop, my width, tBottom]
-
-   else if pObject is "backIcon" then
-      return rectangle [kIosMargin, mLabelTop, kIosMargin + mIconWidth, mLabelBottom]
-
-   else if pObject is "leftLabel" then
-      if mShowBackIcon is true then
-         put 3*kIosMargin/2 + mIconWidth into tLeft
-      else
-         put kIosMargin into tLeft
-      end if
-      return rectangle [tLeft, mLabelTop, my width, mLabelBottom]
-
-   else if pObject is "actionIcon" then
-      if mWidgetTheme is kWidgetThemeIos then
-         put rectangle [mRight-5*mIconWidth/4, mLabelTop-mIconWidth/4, mRight+mIconWidth/4, mLabelBottom+mIconWidth/4] into tRect
-         put (mRight - 5*mIconWidth/4 - 2*kIosMargin) into mRight
-         return tRect
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         put (my height - 5)/2 - mAndroidIconDimension/2 into tTop
-         put (my height - 5)/2 + mAndroidIconDimension/2 into tBottom
-         return rectangle [mAndroidBuffer, tTop, mAndroidBuffer + mAndroidIconDimension, tBottom]
-      end if
-
-   else if pObject is "actionLabel" then
-      put rectangle [mRight - mLetterCount*tSize, mLabelTop, mRight, mLabelBottom] into tRect
-      put (mRight - mLetterCount*tSize - kIosMargin) into mRight
-      return tRect
-
-   else if pObject is "searchIcon" then
-      if mHeaderActions is empty then
-         put tW - kIosMargin into tRight
-      else
-         if mActionStyle is "icons" then
-            put mRight into tRight
-         else
-            put mRight - kIosMargin into tRight
-         end if
-      end if
-      put tRight - mIconWidth into tLeft
-      return rectangle [tLeft-mIconWidth/4, mLabelTop-mIconWidth/4, tRight+mIconWidth/4, mLabelBottom+mIconWidth/4]
-
+      return rectangle path of rectangle [0, mHeight - 1, mWidth, mHeight]
    end if
 end handler
 
@@ -844,138 +602,45 @@ private handler fetchPaint(in pObject as String) returns Paint
    variable tPaint as Paint
 
    if pObject is "background" then
-      if mWidgetTheme is kWidgetThemeIos then
-         put solid paint with color kIosBackgroundColor into tPaint
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         put solid paint with stringToColor(mAndroidColors[mColorScheme]) into tPaint
-      end if
+      put my background paint into tPaint
 
    else if pObject is "line" then
       put solid paint with color [0, 0, 0, 0.2] into tPaint
 
    else if pObject is "title" then
-      if mWidgetTheme is kWidgetThemeIos then
-         put solid paint with color kBlackColor into tPaint
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         put solid paint with mAndroidTitleColor into tPaint
-      end if
+      put my foreground paint into tPaint
 
    else if pObject is "backButton" then
       if mSelectedAction is 1 then
-         put solid paint with mIosSelectedActionColor into tPaint
+         put my highlight paint into tPaint
       else
-         put solid paint with mIosActionColor into tPaint
+         put my foreground paint into tPaint
       end if
 
-   else if pObject is "searchIcon" then
-      if mSelectedAction is 2 then
-         put solid paint with mIosSelectedActionColor into tPaint
-      else
-         put solid paint with mIosActionColor into tPaint
-      end if
+   else if pObject is "pushedIcon" then
+      put my foreground paint into tPaint
 
-   else if pObject is "actionIcon" then
-      if mWidgetTheme is kWidgetThemeIos then
-         put solid paint with mIosSelectedActionColor into tPaint
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         put solid paint with mAndroidIconColor into tPaint
-      end if
-
-   else if pObject is "selectedIcon" then
-      put solid paint with mIosActionColor into tPaint
+   else if pObject is "icon" then
+      put my highlight paint into tPaint
 
    end if
    return tPaint
 end handler
 
-private handler fetchFont(in pType as String) returns Font
-   variable tSize as Number
-   variable tFont as String
-
-   if pType is "title" then
-      if mWidgetTheme is kWidgetThemeIos then
-         put (my height)*mTitleRatio into tSize
-         put "Helvetica Neue Medium" into tFont
-      else if mWidgetTheme is kWidgetThemeAndroid then
-         put mAndroidFontSize into tSize
-         put "Roboto Medium" into tFont
-      end if
-
-   else if pType is "subtitle" then
-      put (my height)*kIosSubtitleRatio into tSize
-      put "Helvetica Neue Regular" into tFont
-
-   else if pType is "label" then
-      put (my height)*kIosActionRatio into tSize
-      put "Helvetica Neue Regular" into tFont
-
-   end if
-   return font tFont at size tSize
-end handler
-
-private handler fetchSelectedItem() returns Integer
-   variable tSelected as Integer
-   variable tBackRect as Rectangle
-   variable tSearchRect as Rectangle
-
-   put fetchBackRect() into tBackRect
-   put fetchSearchRect() into tSearchRect
-
-   variable tClick as Point
-   put the click position into tClick
-
-   if tClick is within tBackRect then
-      put 1 into tSelected
-   else if tClick is within tSearchRect then
-      put 2 into tSelected
-   else
-      put locToAction(tClick) into tSelected
-   end if
-
-   return tSelected
-end handler
-
-private handler fetchBackRect() returns Rectangle
-   variable tBackRect as Rectangle
-
-   if mShowLeftLabel is true then
-      variable tLetterCount as Integer
-      variable tSize as Real
-      variable tWidth as Real
-      put the number of chars in mLeftLabel into tLetterCount
-      put (my height)*kIosActionRatio/2 into tSize
-      put tLetterCount*tSize into tWidth
-   end if
-
-   if mShowBackIcon is true and mShowLeftLabel is false then
-      put fetchRect("backRect") into tBackRect
-   else if mShowBackIcon is false and mShowLeftLabel is true then
-      put fetchRect("leftLabel") into tBackRect
-   else if mShowBackIcon is true and mShowLeftLabel is true then
-      put rectangle [kIosMargin, mLabelTop, kIosMargin + mIconWidth + tWidth, mLabelBottom] into tBackRect
-   else
-      put rectangle [0,0,0,0] into tBackRect
-   end if
-
-   return tBackRect
-end handler
-
-private handler fetchSearchRect() returns Rectangle
-   variable tSearchRect as Rectangle
-   if mShowSearchIcon is true then
-      put fetchRect("searchIcon") into tSearchRect
-   else
-      put rectangle [0,0,0,0] into tSearchRect
-   end if
-   return tSearchRect
-end handler
-
 private handler locToAction(in pLoc as Point) returns Integer
    variable tX as Integer
-   repeat with tX from 1 up to the number of elements in mActionRects
-      if pLoc is within (element tX of mActionRects) then
-         return (tX + 2)
+	variable tRect as Rectangle
+   repeat with tX from 1 up to the number of elements in mHeaderActions
+      variable tIcon as Boolean
+		variable tLabel as Boolean
+      getItemsToShow(tX, tIcon, tLabel)
+      if tIcon and pLoc is within mHeaderActions[tX]["icon_rect"] then
+         return tX
       end if
+
+      if tLabel and pLoc is within mHeaderActions[tX]["label_rect"] then
+         return tX
+      end if         
    end repeat
    return 0
 end handler
@@ -987,115 +652,108 @@ private handler defaultActionsArray() returns Array
    put "action" into tArray["name"]
    put "Action" into tArray["label"]
    put "circle"into tArray["icon_name"]
+   put "" into tArray["hilited_icon_name"]
    return tArray
 end handler
---
 
--- this handler checks whether the android theme is dark or light based on the color scheme
-private handler checkIfThemeIsDark() returns nothing
-   variable tDarkColorSchemes as List
-   put [kDarkColor,kRedColor,kPinkColor,kPurpleColor,kDeepPurpleColor,kIndigoColor,kBlueColor,kTealColor,kDeepOrangeColor,kBrownColor,kBlueGreyColor] into tDarkColorSchemes
-
-   if mIsOpaque then
-      if mColorScheme is in tDarkColorSchemes then
-         put color [1,1,1] into mAndroidTitleColor
-         if mTitleIsDistinct then
-            put color [0,0,0,0.3] into mAndroidIconColor
-         else
-            put color [1,1,1] into mAndroidIconColor
-         end if
-      else
-         put color [0,0,0] into mAndroidTitleColor
-         if mTitleIsDistinct then
-            put color [1,1,1,0.38] into mAndroidIconColor
-         else
-            put color [0,0,0,0.87] into mAndroidIconColor
-         end if
-      end if
-   else
-      put color [0,0,0] into mAndroidTitleColor
-      put color [0,0,0,0.87] into mAndroidIconColor
-   end if
-
-end handler
---
-
-private handler fetchAndroidColors() returns nothing
-	put the empty array into mAndroidColors
-   put "250,250,250" into mAndroidColors[kLightColor]
-   put "39,39,39" into mAndroidColors[kDarkColor]
-	put "238,43,41" into mAndroidColors[kRedColor]
-	put "224,0,81" into mAndroidColors[kPinkColor]
-	put "137,0,161" into mAndroidColors[kPurpleColor]
-	put "83,33,168" into mAndroidColors[kDeepPurpleColor]
-	put "48,58,165" into mAndroidColors[kIndigoColor]
-	put "30,128,240" into mAndroidColors[kBlueColor]
-	put "20,150,241" into mAndroidColors[kLightBlueColor]
-	put "22,175,202" into mAndroidColors[kCyanColor]
-	put "17,133,117" into mAndroidColors[kTealColor]
-	put "63,164,63" into mAndroidColors[kGreenColor]
-	put "122,186,58" into mAndroidColors[kLightGreenColor]
-	put "194,215,45" into mAndroidColors[kLimeColor]
-	put "254,233,46" into mAndroidColors[kYellowColor]
-	put "253,182,13" into mAndroidColors[kAmberColor]
-	put "253,133,9" into mAndroidColors[kOrangeColor]
-	put "251,63,28" into mAndroidColors[kDeepOrangeColor]
-	put "101,67,56" into mAndroidColors[kBrownColor]
-	put "140,140,140" into mAndroidColors[kGreyColor]
-	put "78,106,120" into mAndroidColors[kBlueGreyColor]
+private handler contentHeight() returns Real
+	variable tContentHeight
+	put mHeight into tContentHeight
+	subtract kGeometry["status-bar-offset"][mWidgetTheme] from tContentHeight
+	subtract kGeometry["drop-shadow-size"][mWidgetTheme] from tContentHeight
+	return tContentHeight
 end handler
 
 private handler updateVariables() returns nothing
-   if mHeaderSubtitle is empty then
-      put false into mShowSubtitle
-   else
-      put true into mShowSubtitle
-   end if
+   put my height into mHeight
+   put my width into mWidth
+	
+	variable tMargin as Real
+	variable tDefaultHeight as Real
+	variable tDefaultWidth as Real
+	variable tLeftMargin as Real
+	put kGeometry["default-height"][mWidgetTheme] into tDefaultHeight
+	put kGeometry["default-width"][mWidgetTheme] into tDefaultWidth
+	put kGeometry["margin-px"][mWidgetTheme] into tMargin
+	put kGeometry["left-margin-px"][mWidgetTheme] into tLeftMargin
+	
+	variable tContentHeight as Real
+	put contentHeight() into tContentHeight
+	
+	variable tHMargin as Real
+	variable tVMargin as Real
+	-- Calculate the margins by scaling the default according to the current dimensions
+	put mWidth*(tMargin / tDefaultWidth) into tHMargin
+	put tContentHeight*(tMargin / tDefaultHeight) into tVMargin
+	
+	-- Scale the icon size so that it doesn't get too big for the smaller dimension
+	variable tIconSize as Real
+	put tDefaultHeight - 2 * tMargin into tIconSize
+	variable tScale as Real
+	put the minimum of (tContentHeight / tDefaultHeight) and (mWidth / tDefaultWidth) into tScale
+	multiply tIconSize by tScale
+	
+	variable tContentTop as Real
+	variable tContentBottom as Real
+   put kGeometry["status-bar-offset"][mWidgetTheme] + tVMargin into tContentTop
+	put tContentTop + tContentHeight - 2 * tVMargin into tContentBottom
+	
+	variable tTextBounds as Rectangle
+	variable tNumActions as Integer
+	put the number of elements in mHeaderActions into tNumActions
+	
+	variable tFirstRightAction as Integer
+	put 1 into tFirstRightAction
+	if mFirstActionLeft and tNumActions > 0 then
+		put rectangle [tLeftMargin, tContentTop, tLeftMargin + tIconSize, tContentBottom] into mHeaderActions[1]["icon_rect"]
+		put 2 into tFirstRightAction
+		
+		if mWidgetTheme is kWidgetThemeIos then
+			-- If the theme is iOS, always show the icon and label on the left.
+			variable tTextLeft as Real
+			-- The left of the left action text is the right of the icon + the left margin
+			put 2* tLeftMargin + tIconSize into tTextLeft
+			measure mHeaderActions[1]["label"] on this canvas
+			put the result into tTextBounds
+			put rectangle [tTextLeft, tContentTop, tTextLeft + the width of tTextBounds, tContentBottom] into mHeaderActions[1]["label_rect"]
+		else
+			-- on android there is not a left action label
+			put rectangle [0,0,0,0] into mHeaderActions[1]["label_rect"]
+		end if
+	end if
+	
+	variable tRight as Number
+	put mWidth into tRight
+	subtract tHMargin from tRight
+	
+	variable tX as Integer
+	repeat with tX from tFirstRightAction up to tNumActions
+		variable tActionSize
+		if mActionStyle is "icons" then
+			put tIconSize into tActionSize
+			put rectangle [tRight - tActionSize, tContentTop, tRight, tContentBottom] into mHeaderActions[tX]["icon_rect"]
+		else
+			measure mHeaderActions[tX]["label"] on this canvas
+			put the result into tTextBounds
+			put the width of tTextBounds into tActionSize
+			put rectangle [tRight - tActionSize, tContentTop, tRight, tContentBottom] into mHeaderActions[tX]["label_rect"]
+		end if
 
-   if mShowSubtitle is false then
-      put 17/64 into mTitleRatio
-   else
-      put 15/64 into mTitleRatio
-   end if
-
-   if mLeftLabel is empty then
-      put false into mShowLeftLabel
-   else
-      put true into mShowLeftLabel
-   end if
-
-   put color [the red of mIosActionColor, the green of mIosActionColor, the blue of mIosActionColor, 0.5] into mIosSelectedActionColor
-
-   variable tH
-   put my height into tH
-
-   put 2*tH/64 into mTitleVAdjust
-   put tH*(30.5/64) into mIconTop
-   put tH*(51.5/64) into mIconBottom
-   put tH*(13/64) into mIconWidth
-   put tH*(9/64) into mLabelTop
-   put tH*(73/64) into mLabelBottom
-   put tH*(43/64) into mSubtitleCenter
-
-   put (my width - kIosMargin*2) into mRight
-   put 0 into mLetterCount
-
-   put the empty list into mActionRects
-   put (tH-5)*(kAndroidDefaultFontSize/kAndroidDefaultHeight) into mAndroidFontSize
-
-   put (tH-5)*(kAndroidBuffer/kAndroidDefaultHeight) into mAndroidBuffer
-   put (tH-5)*(kAndroidIconDimension/kAndroidDefaultHeight) into mAndroidIconDimension
-   put (tH-5)*(kAndroidHMargin/kAndroidDefaultHeight) into mAndroidTitleHMargin
-   put (tH-5)*(20/kAndroidDefaultHeight) into mAndroidTitleVMargin
-
+		subtract tActionSize from tRight
+		subtract tHMargin from tRight
+	end repeat
+	
+	variable tTitleLeft as Real
+	put kGeometry["title-left-offset"][mWidgetTheme] into tTitleLeft
+	put rectangle [tTitleLeft, tContentTop, mWidth, tContentBottom] into mTitleRect
+	
+	put false into mRecalculate
 end handler
 
 public handler OnMouseDown()
    -- the icons change color when they are pressed down
-   variable tSelectedDown as Integer
-   put fetchSelectedItem() into tSelectedDown
-   if tSelectedDown > 0 then
-      put tSelectedDown into mSelectedAction
+   if mMouseAction > 0 then
+      put mMouseAction into mSelectedAction
       redraw all
    end if
 end handler
@@ -1105,25 +763,12 @@ public handler OnMouseUp()
    put 0 into mSelectedAction
    redraw all
 
-   -- the relevant commands are dispatched to the script object
-   variable tSelectedUp as Integer
-   put fetchSelectedItem() into tSelectedUp
+   post "mouseUp"
+end handler 
 
-   if tSelectedUp > 2 then
-      variable tActionCount as Integer
-      variable tNumActions as Integer
-      put the number of elements in element 1 of mHeaderActions into tNumActions
-      repeat with tActionCount from 1 up to tNumActions
-         if tActionCount is tSelectedUp-2 then
-            post "headerAction" with [mHeaderActions[tActionCount]["label"]]
-         end if
-      end repeat
-
-   else if tSelectedUp = 1 then
-      post "leftAction"
-   else if tSelectedUp = 2 then
-      post "searchAction"
-   end if
+public handler OnMouseMove()
+   -- track the mouseAction
+   put locToAction(the mouse position) into mMouseAction
 end handler
 
 --------------------------------------------------------------------------------
@@ -1149,10 +794,16 @@ private handler getActionIcons() returns String
    return getDataElement("icon_name", mHeaderActions)
 end handler
 
--- these handlers convert the color properties for output in the PI
+private handler getActionHilitedIcons() returns String
+   return getDataElement("hilited_icon_name", mHeaderActions)
+end handler
 
-private handler getIosActionColor() returns String
-   return colorToString(mIosActionColor, false)
+private handler getMouseActionName() returns String
+   if mMouseAction is not 0 then
+      return mHeaderActions[mMouseAction]["name"]
+   end if 
+   
+   return ""
 end handler
 
 --------------------------------------------------------------------------------
@@ -1161,41 +812,53 @@ end handler
 --
 --------------------------------------------------------------------------------
 
--- iOS and Android properties
+constant kKnownThemes is ["iOS", "Android"]
 private handler setWidgetTheme(in pTheme as String) returns nothing
-   if pTheme is mWidgetTheme then
-      return
-   end if
 
-   variable tThemeList as List
-   put [kWidgetThemeIos, kWidgetThemeAndroid] into tThemeList
+	if pTheme is mTheme then
+		return
+	end if
 
-   if not(pTheme is in tThemeList) then
-      throw "invalid widget theme"
-   end if
+	put pTheme into mTheme
 
-   put pTheme into mWidgetTheme
-   redraw all
+	if mTheme is "native" then
+		put getNativeThemeName() into mWidgetTheme
+	else
+		put mTheme into mWidgetTheme
+	end if
+
+	if not (mWidgetTheme is in kKnownThemes) then
+		throw "invalid theme name '" & mWidgetTheme & "'"
+		log "invalid"
+	end if
+	log mWidgetTheme
+	put true into mRecalculate
+	redraw all
 end handler
+
 
 private handler setHeaderTitle(in pTitle as String) returns nothing
    put pTitle into mHeaderTitle
+	put true into mRecalculate
    redraw all
 end handler
 
 -- this handler sets the actions, converting from a string to the correct format
 private handler setHeaderActions(in pActions as Array) returns nothing
    setData(pActions, the keys of defaultActionsArray(), mHeaderActions)
+	put true into mRecalculate
    redraw all
 end handler
 
 private handler setActionNames(in pNames as String) returns nothing
-   setPrimaryDataElement("name", pNames, defaultActionsArray(), mHeaderActions)
+   setPrimaryDataElement("name", pNames, true, defaultActionsArray(), mHeaderActions)
+	put true into mRecalculate
    redraw all
 end handler
 
 private handler setActionLabels(in pLabels as String) returns nothing
    setDataElement("label", pLabels, defaultActionsArray(), mHeaderActions)
+	put true into mRecalculate
    redraw all
 end handler
 
@@ -1204,8 +867,8 @@ private handler setActionIcons(in pIcons as String) returns nothing
    redraw all
 end handler
 
-private handler setActionSelectedIcons(in pSelectedIcons as String) returns nothing
-   setDataElement("selected_icon_name", pSelectedIcons, defaultActionsArray(), mHeaderActions)
+private handler setActionHilitedIcons(in pSelectedIcons as String) returns nothing
+   setDataElement("hilited_icon_name", pSelectedIcons, defaultActionsArray(), mHeaderActions)
    redraw all
 end handler
 
@@ -1215,43 +878,22 @@ private handler setBackgroundOpacity(in pOpaque as Boolean) returns nothing
 	end if
 
 	put pOpaque into mIsOpaque
-
-   if mWidgetTheme is kWidgetThemeAndroid then
-      put false into mTitleIsDistinct
-      checkIfThemeIsDark()
-   end if
-
 	redraw all
-end handler
-
--- iOS properties
-private handler setHeaderSubtitle(in pSubtitle as String) returns nothing
-   put pSubtitle into mHeaderSubtitle
-   redraw all
 end handler
 
 private handler setActionStyle(in pActionStyle as String) returns nothing
    put pActionStyle into mActionStyle
+	put true into mRecalculate
    redraw all
 end handler
 
-private handler setShowBackIcon(in pShow as Boolean) returns nothing
-   put pShow into mShowBackIcon
-   redraw all
-end handler
-
-private handler setLeftLabel(in pLabel as String) returns nothing
-   put pLabel into mLeftLabel
-   redraw all
-end handler
-
-private handler setIosActionColor(in pColor as String) returns nothing
-   put stringToColor(pColor) into mIosActionColor
-   redraw all
-end handler
-
-private handler setShowSearchIcon(in pShow as Boolean) returns nothing
-   put pShow into mShowSearchIcon
+private handler setFirstActionLeft(in pToLeft as Boolean) returns nothing
+   if pToLeft is mFirstActionLeft then
+      return 
+   end if 
+   
+   put pToLeft into mFirstActionLeft
+	put true into mRecalculate
    redraw all
 end handler
 
@@ -1264,67 +906,12 @@ private handler setShowDivide(in pShowDivide as Boolean) returns nothing
 	redraw all
 end handler
 
--- Android properties
-private handler setColorScheme(in pColorScheme as String) returns nothing
-
-	if pColorScheme is mColorScheme then
-		return
-	end if
-
-	if pColorScheme is not among the keys of mAndroidColors then
-		throw "invalid color scheme"
-	end if
-
-   if pColorScheme is "Dark" or pColorScheme is "Light" then
-      put false into mTitleIsDistinct
-   end if
-
-	put pColorScheme into mColorScheme
-   checkIfThemeIsDark()
-	redraw all
-end handler
-
-private handler setLeftAction(in pIconName as String) returns nothing
-   if pIconName is mLeftAction then
-      return
-   end if
-
-   variable tIconNames as String
-   variable tIconList as List
-
-   put iconNames() into tIconNames
-   split tIconNames by newline into tIconList
-
-   if not(pIconName is in tIconList) then
-      throw "invalid icon name"
-   end if
-
-   put pIconName into mLeftAction
-   redraw all
-end handler
-
 private handler setTitleVisibility(in pIsVisible as Boolean) returns nothing
-   if pIsVisible is mTitleIsVisible then
+   if pIsVisible is mShowTitle then
       return
    end if
 
-   put pIsVisible into mTitleIsVisible
-   redraw all
-end handler
-
-private handler setDistinctTitle(in pIsDistinct as Boolean) returns nothing
-   if pIsDistinct is mTitleIsDistinct then
-      return
-   end if
-
-   variable tThemeList
-   put [kDarkColor, kLightColor] into tThemeList
-   if not(mIsOpaque) or (mColorScheme is in tThemeList) then
-      put false into pIsDistinct
-   end if
-
-   put pIsDistinct into mTitleIsDistinct
-   checkIfThemeIsDark()
+   put pIsVisible into mShowTitle
    redraw all
 end handler
 
@@ -1352,21 +939,15 @@ private handler listToArray(in pList as List) returns Array
 	return tArray
 end handler
 
+constant kDefaultItemLabel is "New Item"
 private handler setData(in pArray as Array, in pKeys as List, out rList as List)
-	-- Excessive hoop-jumping to work around the fact that keys of numerically keyed LCS array
-	-- comes into LCB as strings, and therefore must be parsed as number to sort, then formatted back
-	-- to be used as keys again. Because parse/format of integer doesn't currently roundtrip, we need to
-	-- create a lookup from the original strings.
 	variable tKey
 	variable tOrder as List
 	put the empty list into tOrder
-	variable tLookup as Array
-	put the empty array into tLookup
 	variable tNumericKey as Number
 	repeat for each key tKey in pArray
 		put tKey parsed as number into tNumericKey
 		push tNumericKey onto tOrder
-		put tKey into tLookup[tNumericKey formatted as string]
 	end repeat
 	sort tOrder in ascending numeric order
 
@@ -1378,14 +959,18 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 	variable tOriginalKey as String
 	repeat for each element tOrderKey in tOrder
 		put the empty array into tElement
+      put tOrderKey formatted as string into tOriginalKey
 		repeat for each element tKey in pKeys
-			put tLookup[tOrderKey formatted as string] into tOriginalKey
 			put pArray[tOriginalKey][tKey] into tElement[tKey]
 		end repeat
 		if tElement["label"] is "" then
-			put "New Item" into tElement["label"]
+			put kDefaultItemLabel into tElement["label"]
 		end if
-
+      -- If the selected icon is the same as the icon, just put empty into the selected icon name
+		-- that way, when the icon is changed, the selected icon will change too.
+		if tElement["hilited_icon_name"] is tElement["icon_name"] then
+			put "" into tElement["hilited_icon_name"]
+		end if
 		push tElement onto tList
 	end repeat
 
@@ -1432,18 +1017,33 @@ private handler setDataElement(in pElementName as String, in pElements as String
 		put tElements[tCount] into xList[tCount][pElementName]
 	end repeat
 
+   put true into mRecalculate
 	redraw all
 end handler
 
--- Only the primary data element ("name") can *reduce* the number of elements in the data list.
-private handler setPrimaryDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
-	variable tElements
+-- Only the primary data element ("name" for both actions and nav) can *reduce*
+-- the number of elements in the data list.
+private handler setPrimaryDataElement(in pElementName as String, \
+		in pElements as String, in pUnique as Boolean, \
+		in pDefaultArray as Array, inout xList as List)
+	variable tElements as List
+	variable tElement as String
+	variable tCount as Number
+
 	split pElements by "," into tElements
 
-	variable tCount
-	put 0 into tCount
+	-- Enforce uniqueness, if requested
+	if pUnique then
+		put 0 into tCount
+		repeat with tCount from 1 up to the number of elements in tElements
+			if the index of tElements[tCount] after tCount in tElements is not 0 then
+				throw "duplicate" && pElementName && tElements[tCount]
+				return
+			end if
+		end repeat
+	end if
 
-	variable tElement
+	put 0 into tCount
 	repeat for each element tElement in tElements
 		add 1 to tCount
 		if tCount > the number of elements in xList then
@@ -1453,12 +1053,13 @@ private handler setPrimaryDataElement(in pElementName as String, in pElements as
 		put tElement into xList[tCount][pElementName]
 	end repeat
 
-	-- If we there are more items than there are primary elements, pop them off.
+	// If we there are more items than there are primary elements, pop them off.
 	add 1 to tCount
 	repeat with tCount from tCount up to the number of elements in xList
 		pop xList
 	end repeat
 
+	put true into mRecalculate
 	redraw all
 end handler
 
