@@ -286,40 +286,51 @@ void MCStack::sethints()
     // window creation time. As a result, we have to do it manually.
     x11::XClassHint chints;
 
-	const char * t_res_name = getname_cstring();
-	chints.res_name = (char *) t_res_name;
-
-    // Build the class name
-    MCAutoStringRef t_class_name;
-    MCAutoStringRefAsCString t_class_name_cstr;
-	const char *t_edition_name;
-	switch (MClicenseparameters.license_class)
+	// Use the name of the home stack as the application name for standalones
+	// and the LiveCode name and version for the IDE
+    MCAutoStringRef t_app_name;
+    MCAutoStringRefAsCString t_app_name_cstr;
+	int t_env = MCModeGetEnvironmentType();
+	if (t_env == kMCModeEnvironmentTypeEditor
+		|| t_env == kMCModeEnvironmentTypeInstaller
+		|| t_env == kMCModeEnvironmentTypeServer)
 	{
-	case kMCLicenseClassProfessionalEvaluation:
-	case kMCLicenseClassProfessional:
-		t_edition_name = "business";
+		const char *t_edition_name;
+		switch (MClicenseparameters.license_class)
+		{
+		case kMCLicenseClassProfessionalEvaluation:
+		case kMCLicenseClassProfessional:
+			t_edition_name = "business";
+				break;
+		case kMCLicenseClassEvaluation:
+		case kMCLicenseClassCommercial:
+			t_edition_name = "indy";
 			break;
-	case kMCLicenseClassEvaluation:
-	case kMCLicenseClassCommercial:
-		t_edition_name = "indy";
-		break;
-	case kMCLicenseClassNone:
-	case kMCLicenseClassCommunity:
-	default:
-		t_edition_name = "community";
-		break;
-	}
-    
-    /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
-    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
-    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
-    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
-    /* UNCHECKED */ t_class_name_cstr.Lock(*t_class_name);
-    
-	chints.res_class = (char*)*t_class_name_cstr;
-    x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
+		case kMCLicenseClassNone:
+		case kMCLicenseClassCommunity:
+		default:
+			t_edition_name = "community";
+			break;
+		}
 
-	delete t_res_name;
+	    /* UNCHECKED */ MCStringCreateMutable(0, &t_app_name);
+		if (t_env == kMCModeEnvironmentTypeEditor)
+	    	/* UNCHECKED */ MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+		else
+			/* UNCHECKED */ MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
+	    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_app_name, '.', '_', kMCStringOptionCompareExact);
+	    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_app_name, '-', '_', kMCStringOptionCompareExact);
+	}
+	else
+	{
+		t_app_name = MCNameGetString(MCdispatcher->gethome()->getname());
+	}
+
+    /* UNCHECKED */ t_app_name_cstr.Lock(*t_app_name);
+
+	chints.res_name = (char*)*t_app_name_cstr;
+	chints.res_class = (char*)*t_app_name_cstr;
+    x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
 
     // TODO: is this just another way of ensuring on-top-ness?
 	//if (mode >= WM_PALETTE)
