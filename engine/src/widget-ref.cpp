@@ -938,14 +938,17 @@ bool MCWidgetBase::DispatchRestricted(MCNameRef p_event, MCValueRef *x_args, uin
 	
     MCEngineScriptObjectAllowAccess();
 	
-	MCWidget *t_host;
-	t_host = GetHost();
-    if (t_host != nil)
-		t_host -> SendError();
-	else
+	if (!t_success)
 	{
-		MCAutoErrorRef t_error;
-		MCErrorCatch(&t_error);
+		MCWidget *t_host;
+		t_host = GetHost();
+		if (t_host != nil)
+			t_host -> SendError();
+		else
+		{
+			MCAutoErrorRef t_error;
+			MCErrorCatch(&t_error);
+		}
 	}
 	
 	return t_success;
