@@ -198,6 +198,14 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecPost(MCStringRef p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyName(MCStringRef& r_name)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	r_name = MCValueRetain(MCNameGetString(MCWidgetGetHost(MCcurrentwidget) -> getname()));
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyBounds(MCCanvasRectangleRef& r_rect)
 {
     if (!MCWidgetEnsureCurrentWidget())
