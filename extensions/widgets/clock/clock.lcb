@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,34 +15,13 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This widget consists of an analogue clock. The clock has day and night style displays which
 are used depending on the time. The period interpreted as day by the clock is controlled by
 a pair of constants kStartDay and kEndDay, currently set at 6 and 20 respectively. Thus the
 clock will display in night style between the hours of 8pm and 6am. The only settable property
 implemented by this clock widget is the timeZone, an integer which adjusts the time displayed
 relative to universal time (UTC).
-
-Name: timeZone
-Type: property
-Syntax: set the timeZone of <widget> to <pTimeZone>
-Syntax: get the timeZone of <widget>
-
-Summary: The time zone of the clock widget.
-
-pTimeZone (integer): An integer representing the timeZone in which to calculate the time.
-
-Example:
-// Make the clocks display the correct time in Japan and Panama respectively
-set the timeZone of widget "Japan Clock" to 9
-set the timeZone of widget "Panama Clock" to -5
-
-Description:
-The <timeZone> property determines what time is displayed on the clock. If the <timeZone> is 0, the clock will display
-the universal time (UTC).
-
-*>Note:* The timeZone is restricted to being an integer.
-
 */
 
 -- declaring extension as widget, followed by identifier
@@ -53,6 +32,7 @@ widget com.livecode.widget.clock
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.math
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
@@ -68,6 +48,19 @@ metadata timeZone.default is "0"
 -- property declarations
 property isDay 			get mIsDay
 metadata isDay.user_visible is "false"
+
+/**
+Syntax: set the timeZone of <widget> to <pOffset>
+Syntax: get the timeZone of <widget>
+
+Summary: The time zone offset from UTC, in seconds, or the empty string
+
+Description:
+The <timeZone> is used to allow the clock widget to display a time other than
+the local time.  If the <timeZone> is empty, then the clock displays the local
+time.  Otherwise, the <timeZone> should be the number of seconds different from
+UTC that the clock should display.
+*/
 property timeZone		get mTimeZone		set setTimeZone
 metadata timeZone.editor is "com.livecode.pi.timezone"
 metadata timeZone.label is "Timezone"
@@ -75,8 +68,10 @@ metadata timeZone.label is "Timezone"
 
 -- private instance variables
 private variable mIsDay			as Boolean
-private variable mTimeZone		as Number
+private variable mTimeZone		as optional Number
 private variable mCurrentTime 	as List
+private variable mRadius as Number
+private variable mCentre as List
 private variable mFontSize 		as Real
 --
 
@@ -100,7 +95,7 @@ end handler
 
 -- called when widget is created
 public handler OnCreate()
-	put 0 into mTimeZone
+	put nothing into mTimeZone
 	put false into mIsDay
 	put [0,0,0] into mCurrentTime
 	put 12 into mFontSize
@@ -113,6 +108,7 @@ end handler
 
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
+	updateGeometry()
 
 	-- draw the face of the clock
     set the paint of this canvas to getPaint("clock face")
@@ -123,6 +119,8 @@ public handler OnPaint()
     set the paint of this canvas to getPaint("outer nub")
     fill getPath("outer nub") on this canvas
     --
+
+	 translate this canvas by mCentre
 
     -- draw the numbers
     set the paint of this canvas to getPaint("numbers")
@@ -139,7 +137,7 @@ public handler OnPaint()
    		else
    			put char 1 to 2 of tX_string into tLabel
    		end if
-   		fill text tLabel at getPoint(tLabel) on this canvas
+   		fill text tLabel at center of getTextRect(tX) on this canvas
    	end repeat
     --
 
@@ -152,7 +150,6 @@ public handler OnPaint()
     variable tMinuteHand as Path
     put getPath("minute hand") into tMinuteHand
 
-    translate this canvas by [(my width)/2, (my height)/2]
     rotate this canvas by 6*(element 2 of mCurrentTime)
     stroke tMinuteHand on this canvas
     restore state of this canvas
@@ -167,7 +164,6 @@ public handler OnPaint()
     variable tHourHand as Path
     put getPath("hour hand") into tHourHand
 
-    translate this canvas by [(my width)/2, (my height)/2]
     rotate this canvas by 30*((element 1 of mCurrentTime) + (element 2 of mCurrentTime/60)) --mikey added fractional hour
     stroke tHourHand on this canvas
     restore state of this canvas
@@ -182,7 +178,6 @@ public handler OnPaint()
     variable tSecondHand as Path
     put getPath("second hand") into tSecondHand
 
-    translate this canvas by [(my width)/2, (my height)/2]
     rotate this canvas by 6*(element 3 of mCurrentTime)
   	stroke tSecondHand on this canvas
     restore state of this canvas
@@ -209,27 +204,35 @@ handler getTimeComponents() returns List
     -- N.b. we use the local date and translate the timezone because
     -- the clock widget doesn't yet know how to account for timezones
     -- with differing daylight savings time transitions.
-	variable tHour as Number
-    put element 1 of tDate into tHour
 
 	-- Estimate the correction needed to get to GMT.  This won't
 	-- work properly for timezones with a GMT offset that isn't a
 	-- whole number of hours (e.g. North Korea).
-	variable tGmtOffset as Number
-	put the last element of tDate into tGmtOffset
-	divide tGmtOffset by 3600
-	round tGmtOffset
+	if mTimeZone is not nothing then
+		variable tGmtOffset as Number
+		variable tTimeAsSeconds as Number
+		put tDate[1] * 3600 + tDate[2] * 60 + tDate[3] into tTimeAsSeconds
 
-	put (tHour - tGmtOffset + mTimeZone) mod 24 into tHour
+		subtract tDate[-1] from tTimeAsSeconds
+		add mTimeZone to tTimeAsSeconds
+
+		put tTimeAsSeconds mod 86400 into tTimeAsSeconds
+
+		put the trunc of (tTimeAsSeconds / 3600) into tDate[1]
+		put tTimeAsSeconds mod 3600 into tTimeAsSeconds
+
+		put the trunc of (tTimeAsSeconds / 60) into tDate[2]
+		put tTimeAsSeconds mod 60 into tTimeAsSeconds
+
+		put tTimeAsSeconds into tDate[3]
+	end if
 
     -- Compute whether it is 'day' or 'night'
-	if tHour > kStartDay and tHour < kEndDay then
+	if tDate[1] > kStartDay and tdate[1] < kEndDay then
 		put true into mIsDay
 	else
 		put false into mIsDay
 	end if
-
-    put tHour into element 1 of tDate
 
 	return tDate
 end handler
@@ -268,53 +271,44 @@ private handler getPaint(in pObject as String) returns Paint
 	end if
 end handler
 
+private handler updateGeometry() returns nothing
+	put (the minimum of my width and my height) / 2 into mRadius
+	put [my width / 2, my height / 2] into mCentre
+	put mRadius / 5 into mFontSize
+end handler
+
 private handler getPath(in pString as String) returns Path
 
 	if pString is "clock face" then
-		put (my width)/10 into mFontSize
-		return circle path centered at point [(my width)/2, (my height)/2] with radius (my width/2)
+		return circle path centered at point mCentre with radius mRadius
 
 	else if pString is "second hand" or pString is "minute hand" then
-		return line path from point [0, 0] to point [0, -0.7*(my width)/2]
+		return line path from point [0, 0] to point [0, -0.7*mRadius]
 
 	else if pString is "hour hand" then
-		return line path from point [0,0] to point [0, -0.45*(my width/2)]
+		return line path from point [0,0] to point [0, -0.45*mRadius]
 
 	else if pString is "outer nub" then
-		return circle path centered at point [(my width)/2, (my height)/2] with radius (0.06*my width/2)
+		return circle path centered at point mCentre with radius (0.06*mRadius)
 
 	else if pString is "inner nub" then
-		return circle path centered at point [(my width)/2, (my height)/2] with radius (0.02*my width/2)
+		return circle path centered at point mCentre with radius (0.02*mRadius)
 
 	end if
 end handler
 
-private handler getPoint(in pString as String) returns Point
-	if pString is "1" then
-		return point [(my width)/2+0.35*(my width)/2, (my height)/2-0.65*(my width)/2]
-	else if pString is "2" then
-		return point [(my width)/2+0.65*(my width)/2, (my height)/2-0.35*(my width)/2]
-	else if pString is "3" then
-		return point [(my width)/2+0.75*(my width)/2, (my height)/2+mFontSize/2]
-	else if pString is "4" then
-		return point [(my width)/2+0.65*(my width)/2, (my height)/2+0.35*(my width)/2 + 3*mFontSize/4]
-	else if pString is "5" then
-		return point [(my width)/2+0.35*(my width)/2, (my height)/2+0.65*(my width)/2 + 3*mFontSize/4]
-	else if pString is "6" then
-		return point [(my width)/2-mFontSize/4, (my height)/2+0.75*(my width)/2 + 3*mFontSize/4]
-	else if pString is "7" then
-		return point [(my width)/2-0.35*(my width)/2 - mFontSize/2, (my height)/2+0.65*(my width)/2 + 3*mFontSize/4]
-	else if pString is "8" then
-		return point [(my width)/2-0.65*(my width)/2 - mFontSize/2, (my height)/2+0.35*(my width)/2 + 3*mFontSize/4]
-	else if pString is "9" then
-		return point [(my width)/2-0.75*(my width)/2 - mFontSize/2, (my height)/2+mFontSize/2]
-	else if pString is "10" then
-		return point [(my width)/2-0.65*(my width)/2 - 3*mFontSize/4, (my height)/2-0.35*(my width)/2]
-	else if pString is "11" then
-		return point [(my width)/2-0.35*(my width)/2 - 3*mFontSize/4, (my height)/2-0.65*(my width)/2]
-	else if pString is "12" then
-		return point [(my width)/2-mFontSize/2, (my height)/2-0.75*(my width)/2]
-	end if
+private handler getTextRect(in pNumber as Number) returns Rectangle
+	variable tAngle as Number
+	variable tX as Number
+	variable tY as Number
+
+	put pNumber mod 12 into tAngle
+	multiply tAngle by (pi/6)
+
+	put -cos(tAngle) * (mRadius - mFontSize) into tY
+	put sin(tAngle) * (mRadius - mFontSize) into tX
+
+	return rectangle [tX, tY, tX, tY]
 end handler
 
 private handler getStrokeWidth(in pHand as String) returns Real
@@ -327,7 +321,11 @@ private handler getStrokeWidth(in pHand as String) returns Real
 	end if
 end handler
 
-public handler setTimeZone(in pTimeZone as Number) returns nothing
+public handler setTimeZone(in pTimeZone as optional Number) returns nothing
+	if pTimeZone is not the trunc of pTimeZone then
+		throw "The timeZone offset must be an integer"
+	end if
+
 	put pTimeZone into mTimeZone
 	put getTimeComponents() into mCurrentTime
 	redraw all
