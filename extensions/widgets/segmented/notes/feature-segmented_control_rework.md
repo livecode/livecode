@@ -1,8 +1,7 @@
-# General rework
+# Properties
 The segmented control widget has been reworked to make it more fully
 integrated into the IDE and behave more like a classic control.
 
-## Standard property names
 The segmented control now uses standard property names for its 
 properties (where they exist). 
 
@@ -11,19 +10,33 @@ properties (where they exist).
 - `segmentColor` is now called `backColor`
 - `segmentLabelColor` is now called `foreColor`
 - `selectedSegmentColor` is now called `hiliteColor`
-- `segmentSelectedLabelColor` is now called `textHiliteColor`
+- `segmentSelectedLabelColor` is now called `hilitedTextColor`
 
-Segmented controls saved with the old property names will load 
-correctly, but any scripts will need to be updated to use the new
-property names.
+Moreover all the existing properties previously named 
+`segment<property>` have been renamed to use the word item. This is
+in order to unify related property names of several different widgets.
+- `segmentCount` is now `itemCount`
+- `segmentDisplay` is now `itemStyle`
+- `segmentNames` is now `itemNames`
+- `segmentLabels` is now `itemLabels`
+- `segmentIcons` is now `itemIcons`
+- `segmentSelectedIcons` is now `hilitedItemIcons`
+- `segmentMinWidth` is now `itemMinWidths`
+- `selectedSegments` is now `hilitedItems`
 
-## Inherited colors
-When no colors are set on the segmented control, it will use a set of 
-generic native theme colors.
+A new property `hilitedItemNames` has been added, which returns the 
+names of the currently highlighted segments, as opposed to 
+`hililtedItems` which returns their indices.
 
-## Style property removed
 The `style` property has been removed.
 
-## Messages
-The `segmentSelected` and `segmentUnselected` properties have been 
-removed. Use the `selectionChanged` message instead.
+# Appearance and Theming
+When no colors are set on the segmented control, it will use a set of 
+native theme colors associated with a list field.
+
+# Signals
+The `segmentSelected` and `segmentUnselected` signals have been 
+removed. Use the `hiliteChanged` message instead. The `hiliteChanged`
+message no longer has a parameter. Use the `hilitedItems` or 
+`hilitedItemNames` properties as required to obtain the new highlight 
+state.
