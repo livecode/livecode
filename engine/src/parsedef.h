@@ -1952,6 +1952,10 @@ enum Sugar_constants {
     
     SG_STRICTLY,
     SG_REAL,
+	
+	SG_REPLACING,
+	SG_PRESERVING,
+	SG_STYLES,
 };
 
 enum Statements {

@@ -3149,6 +3149,7 @@ void MCInterfaceExecExportObjectToArray(MCExecContext& ctxt, MCObject *p_contain
 void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked);
 void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
 void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
+void MCInterfaceExecReplaceInField(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCObjectChunkPtr& p_container, bool p_preserve_styles);
 
 void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool);
 

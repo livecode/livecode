@@ -4260,6 +4260,79 @@ void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, in
 	ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 
+void MCInterfaceExecReplaceInField(MCExecContext& ctxt,
+								   MCStringRef p_pattern,
+								   MCStringRef p_replacement,
+								   MCObjectChunkPtr& p_container,
+								   bool p_preserve_styles)
+{
+	// Both these conditions are guaranteed by the caller.
+	MCAssert(p_container . object -> gettype() == CT_FIELD);
+	MCAssert(p_container . mark . text == nil ||
+			 MCValueGetTypeCode(p_container . mark . text) == kMCValueTypeCodeString);
+	
+	MCField *t_field;
+	t_field = static_cast<MCField *>(p_container . object);
+	
+	// If this was a whole field ref (e.g. field 1) then the text field will
+	// be nil. Thus we must fetch it here.
+	// Note: If present, the text will the entire text of the container, and
+	// the range to act on should be taken as [start,finish).
+	MCAutoStringRef t_text;
+	if (p_container . mark . text != nil)
+		t_text = (MCStringRef)p_container . mark . text;
+	else
+	{
+		t_field -> getstringprop(ctxt,
+								 p_container . part_id,
+								 P_TEXT,
+								 false,
+								 &t_text);
+		if (ctxt . HasError())
+			return;
+	}
+	
+	MCStringOptions t_options;
+	t_options = ctxt.GetStringComparisonType();
+	
+	// The indicies in the field will drift away from the original mark as
+	// we replace text - this is the delta we need to apply.
+	findex_t t_delta;
+	t_delta = 0;
+	
+	// Start with the specified range in the marked text.
+	MCRange t_range;
+	t_range = MCRangeMake(p_container . mark . start,
+						  p_container . mark . finish);
+	for(;;)
+	{
+		// Find the next occurrance of pattern in text - we are done if not
+		// found.
+		MCRange t_found_range;
+		if (!MCStringFind(*t_text,
+						  t_range,
+						  p_pattern,
+						  t_options,
+						  &t_found_range))
+			break;
+		
+		// The range in the field we must replace is t_found_range + start.
+		t_field -> settextindex(p_container . part_id,
+								(findex_t)t_found_range . offset + t_delta,
+								(findex_t)(t_found_range . offset + t_found_range . length) + t_delta,
+								p_replacement,
+								False,
+								p_preserve_styles ? kMCFieldStylingFromAfter : kMCFieldStylingNone);
+		
+		// Update the field index delta.
+		t_delta += MCStringGetLength(p_replacement) - t_found_range . length;
+		
+		// Update the range we want to consider in the source text.
+		t_range = MCRangeMakeMinMax(t_found_range . offset + t_found_range . length,
+									p_container . mark . finish);
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceExecFind(MCExecContext& ctxt, int p_mode, MCStringRef p_needle, MCChunk *p_target)

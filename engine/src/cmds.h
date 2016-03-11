@@ -844,14 +844,24 @@ public:
 
 class MCReplace : public MCStatement
 {
+	enum Mode
+	{
+		kIgnoreStyles,
+		kReplaceStyles,
+		kPreserveStyles,
+	};
+	
 	MCExpression *pattern;
 	MCExpression *replacement;
 	MCChunk *container;
+	Mode mode;
+	
 public:
 	MCReplace()
 	{
 		pattern = replacement = NULL;
 		container = NULL;
+		mode = kIgnoreStyles;
 	}
 	virtual ~MCReplace();
 	virtual Parse_stat parse(MCScriptPoint &);

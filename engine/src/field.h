@@ -175,6 +175,21 @@ struct MCInterfaceFieldRange;
 // SN-2014-11-04: [[ Bug 13934 ]] Add forward declaration for the friends function of MCField
 struct MCFieldLayoutSettings;
 
+// Specifies how styling should be applied to replaced text.
+enum MCFieldStylingMode
+{
+	// The new text will have no style.
+	kMCFieldStylingNone,
+	
+	// The new text will take the style from the character before the start
+	// of the insertion range.
+	kMCFieldStylingFromBefore,
+	
+	// The new text will take the style from the character after the start
+	// of the insertion range.
+	kMCFieldStylingFromAfter,
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCField : public MCControl
@@ -425,7 +440,11 @@ public:
     void setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start, findex_t p_end, bool p_preserv_zero_length_styles = false);
     // SN-2014-01-17: [[ Unicodification ]] Suppressed old string version of settext and settextindex
     Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
-	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing);
+	
+	// If 'preserve_first_style' is true, then the style of s will be the same as the style
+	// immediately following si.
+	Exec_stat settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef s, Boolean undoing, MCFieldStylingMode styling_mode = kMCFieldStylingFromBefore);
+	
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
     
 #ifdef LEGACY_EXEC
