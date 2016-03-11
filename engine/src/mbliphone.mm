@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "globals.h"
+#include "uidc.h"
 
 #include "variable.h"
 
@@ -1184,6 +1185,15 @@ bool MCIPhoneSystem::AlternateLanguages(MCListRef &r_list)
 bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 {
     return False;
+}
+
+void MCIPhoneSystem::ShowMessageDialog(MCStringRef p_title,
+                                       MCStringRef p_message)
+{
+    if (MCscreen == nil)
+        return;
+    
+    MCscreen -> popupanswerdialog(nil, 0, 0, p_title, p_message, true);
 }
 
 //////////////////

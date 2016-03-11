@@ -83,7 +83,6 @@ extern Boolean MCproportionalthumbs;
 extern Boolean MCdontuseNS;
 extern Boolean MCdontuseQT;
 extern Boolean MCdontuseQTeffects;
-extern Boolean MCfreescripts;
 extern uint4 MCeventtime;
 extern uint2 MCbuttonstate;
 extern uint2 MCmodifierstate;

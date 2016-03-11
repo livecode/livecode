@@ -1984,6 +1984,19 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCMacPlatformShowMessageDialog(MCStringRef p_title,
+                                    MCStringRef p_message)
+{
+    NSAlert *t_alert = [[NSAlert alloc] init];
+    [t_alert addButtonWithTitle:@"OK"];
+    [t_alert setMessageText: [NSString stringWithMCStringRef: p_title]];
+    [t_alert setInformativeText: [NSString stringWithMCStringRef: p_message]];
+    [t_alert setAlertStyle:NSInformationalAlertStyle];
+    [t_alert runModal];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void display_reconfiguration_callback(CGDirectDisplayID display, CGDisplayChangeSummaryFlags flags, void *userInfo)
 {
 	// COCOA-TODO: Make this is a little more discerning (only need to reset if

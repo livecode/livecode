@@ -524,7 +524,7 @@ void MCStack::mode_load(void)
 		MClockmessages++;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
-        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
+        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
 		MClockmessages--;
 
 		bool t_treat_as_ide;
@@ -964,7 +964,9 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 				static struct { const char *tag; uint32_t value; } s_class_map[] =
 				{
 					{ "community", kMCLicenseClassCommunity },
+					{ "evaluation", kMCLicenseClassEvaluation },
 					{ "commercial", kMCLicenseClassCommercial },
+					{ "professional evaluation", kMCLicenseClassProfessionalEvaluation },
 					{ "professional", kMCLicenseClassProfessional },
 					{ NULL, kMCLicenseClassNone }
 				};
@@ -1106,8 +1108,10 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 			{
 				"",
 				"Community",
+				"Evaluation"
 				"Commercial",
 				"Professional",
+				"Professional Evaluation",
 			};
 
 			static const char *s_deploy_targets[] =
@@ -1969,7 +1973,9 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
             static struct { const char *tag; uint32_t value; } s_class_map[] =
             {
                 { "community", kMCLicenseClassCommunity },
+                { "evaluation", kMCLicenseClassEvaluation },
                 { "commercial", kMCLicenseClassCommercial },
+                { "professional evaluation", kMCLicenseClassProfessionalEvaluation },
                 { "professional", kMCLicenseClassProfessional },
                 { "", kMCLicenseClassNone }
             };
@@ -2191,7 +2197,9 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     {
         "",
         "Community",
+        "Evaluation",
         "Commercial",
+        "Professional Evaluation",
         "Professional",
     };
     

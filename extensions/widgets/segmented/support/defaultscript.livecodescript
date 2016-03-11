@@ -1,6 +1,5 @@
 ﻿script "com.livecode.widget.segmented.__DefaultScript"
--- Sent when the set of selected segments changes
--- pList is the new list of selected segments
-on selectionChanged pList
+-- Sent when the set of highlighted segments changes
+on hiliteChanged
    
-end selectionChanged
+end hiliteChanged

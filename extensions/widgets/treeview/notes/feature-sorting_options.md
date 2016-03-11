@@ -1,7 +1,7 @@
 ---
 version: 8.0.0-dp-5
 ---
-# Sorting Options
+# Properties
 
 The tree view widget now has the ability to sort the keys of its **arrayData** in different ways.
 Two properties have been added to achieve this:

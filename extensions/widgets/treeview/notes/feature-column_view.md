@@ -1,7 +1,7 @@
 ---
-version: 8.0.0-dp-6
+version: 8.0.0-dp-4
 ---
-# Column View
+# Properties
 
 Two new properties have been added in order to allow the key-value pairs of the tree view
 to be displayed in separate columns: **showSeparator** and **separatorRatio**.

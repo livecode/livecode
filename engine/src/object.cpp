@@ -415,7 +415,7 @@ void MCObject::close()
 	if (this == MCdragsource)
 		MCdragsource = nil;
 	
-	if (MCfreescripts && scriptdepth == 0 && hlist != NULL && !hlist->hasvars())
+	if (scriptdepth == 0 && hlist != NULL && !hlist->hasvars())
 	{
 		delete hlist;
 		hlist = NULL;
@@ -920,9 +920,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 	
-	scriptdepth++;
-	if (scriptdepth == 255)
-        MCfreescripts = False; // prevent recursion wrap
+	lockforexecution();
     MCExecContext ctxt(this, hlist, hptr);
 	if (MCtracestackptr != NULL && MCtracereturn)
 	{
@@ -957,7 +955,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
             MCeerror -> add(EE_SCRIPT_FILEINDEX, 0, 0, *t_error);
 		}
 	}
-	scriptdepth--;
+	unlockforexecution();
 
 	return stat;
 }
@@ -975,13 +973,9 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 	if (MCmessagemessages)
 		sendmessage(hptr -> gettype(), hptr -> getname(), True);
 
-	scriptdepth++;
-	if (scriptdepth == 255)
-		MCfreescripts = False; // prevent recursion wrap
+	lockforexecution();
 	MCObject *t_parentscript_object = parentscript->GetParent()->GetObject();
-	t_parentscript_object->scriptdepth++;
-	if (t_parentscript_object->scriptdepth == 255)
-		MCfreescripts = False; // prevent recursion wrap
+	t_parentscript_object->lockforexecution();
 
     MCExecContext ctxt(this, t_parentscript_object -> hlist, hptr);
 	ctxt.SetParentScript(parentscript);
@@ -1006,8 +1000,8 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
         parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
-	scriptdepth--;
-	t_parentscript_object->scriptdepth--;
+	unlockforexecution();
+	t_parentscript_object->unlockforexecution();
 
 	return stat;
 }

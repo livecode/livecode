@@ -372,6 +372,15 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 
 @end
 
+@interface MCWebUIDelegate : NSObject
+{
+}
+
+- (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo;
+- (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point;
+
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void MCBrowserRunBlockOnMainFiber(void (^p_block)(void))
@@ -386,6 +395,7 @@ MCWebViewBrowser::MCWebViewBrowser(void)
 	m_view = nil;
 	m_delegate = nil;
 	m_policy_delegate = nil;
+	m_ui_delegate = nil;
 	
 	m_js_handlers = nil;
 	m_js_handler_list =nil;
@@ -398,6 +408,7 @@ MCWebViewBrowser::~MCWebViewBrowser(void)
 		{
 			[m_view setFrameLoadDelegate: nil];
 			[m_view setPolicyDelegate: nil];
+			[m_view setUIDelegate: nil];
 			[m_view release];
 		}
 		
@@ -406,6 +417,9 @@ MCWebViewBrowser::~MCWebViewBrowser(void)
 		
 		if (m_policy_delegate != nil)
 			[m_policy_delegate release];
+		
+		if (m_ui_delegate != nil)
+			[m_ui_delegate release];
 		
 		if (m_js_handler_list != nil)
 			[m_js_handler_list release];
@@ -909,9 +923,16 @@ bool MCWebViewBrowser::Init(void)
 		
 		if (t_success)
 		{
+			m_ui_delegate = [[MCWebUIDelegate alloc] init];
+			t_success = m_ui_delegate != nil;
+		}
+		
+		if (t_success)
+		{
 			[t_view setHidden: YES];
 			[t_view setFrameLoadDelegate: m_delegate];
 			[t_view setPolicyDelegate: m_policy_delegate];
+			[t_view setUIDelegate: m_ui_delegate];
 			m_view = t_view;
 		}
 		else if (t_view != nil)
@@ -1080,6 +1101,20 @@ bool MCWebViewBrowser::Init(void)
 		[listener ignore];
 		m_instance->OnNavigationRequestUnhandled(![webView.mainFrame isEqual: frame], [request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding]);
 	}
+}
+
+@end
+
+@implementation MCWebUIDelegate
+
+- (NSUInteger)webView:(WebView *)webView dragDestinationActionMaskForDraggingInfo:(id<NSDraggingInfo>)draggingInfo
+{
+	return WebDragDestinationActionNone;
+}
+
+- (NSUInteger)webView:(WebView *)webView dragSourceActionMaskForPoint:(NSPoint)point
+{
+	return WebDragSourceActionNone;
 }
 
 @end

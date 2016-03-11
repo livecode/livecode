@@ -394,9 +394,6 @@ void MCCefBrowserFinalise(void)
 	if (!s_cefbrowser_initialised)
 		return;
 	
-	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
-	// MCCefFinalise();
-	
 	if (!MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
 		MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
 	
@@ -530,7 +527,7 @@ struct MCCefErrorInfo
 	CefLoadHandler::ErrorCode error_code;
 };
 
-class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler
+class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
 {
 private:
 	int m_browser_id;
@@ -617,6 +614,7 @@ public:
 //	virtual CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
+	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
 	
 	void AddIgnoreUrl(const CefString &p_url)
 	{
@@ -775,6 +773,15 @@ public:
 		return !m_owner->GetAllowNewWindow();
 	}
 	
+	// CefDragHandler interface
+
+	// Called on UI thread
+	virtual bool OnDragEnter(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefDragData> p_drag_data, CefDragHandler::DragOperationsMask p_mask)
+	{
+		// cancel the drag event
+		return true;
+	}
+
 	// CefRequestHandler interface
 	
 	// Called on UI thread
@@ -1741,11 +1748,19 @@ MCCefBrowserFactory::MCCefBrowserFactory()
 
 MCCefBrowserFactory::~MCCefBrowserFactory()
 {
+	// IM-2016-03-10: [[ Bug 17029 ]] Shutdown CEF library when factory deleted
+	Finalize();
 }
 
 bool MCCefBrowserFactory::Initialize()
 {
 	return MCCefBrowserInitialise();
+}
+
+void MCCefBrowserFactory::Finalize()
+{
+	MCCefBrowserFinalise();
+	MCCefFinalise();
 }
 
 bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser)

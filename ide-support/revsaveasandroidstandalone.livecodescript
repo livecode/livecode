@@ -1276,7 +1276,7 @@ function mapFilePath pPath
    end if
    
    put the last item of pPath into tComponent
-   put revLicenseType() into tSuffix
+   put the editionType into tSuffix
    put toUpper(char 1 of tSuffix) into char 1 of tSuffix
    switch tComponent
       case "notify_icon.png"

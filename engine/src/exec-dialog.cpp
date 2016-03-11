@@ -397,7 +397,7 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	}
 
 	int32_t t_result;
-	t_result = MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt);
+	t_result = MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt, false);
 	if (t_result == -1)
 		ctxt.SetTheResultToValue(MCN_cancel);
 	else if (p_button_count == 0)

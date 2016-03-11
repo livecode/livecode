@@ -255,13 +255,13 @@ protected:
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
+	uint4 scriptdepth;
 	uint2 fontheight;
 	uint2 dflags;
 	uint2 ncolors;
 	uint2 npatterns;
 	uint2 altid;
 	uint1 hashandlers;
-	uint1 scriptdepth;
 	uint1 borderwidth;
 	int1 shadowoffset;
 	uint1 ink;
@@ -451,8 +451,8 @@ public:
     
     virtual bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
 	virtual bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
-	virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
-	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
+	virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue& r_value);
+	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue p_value);
     
 	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
 	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
@@ -625,10 +625,22 @@ public:
 	{
 		return parent;
 	}
-	uint1 getscriptdepth() const
+	
+	uint4 getscriptdepth() const
 	{
 		return scriptdepth;
 	}
+	
+	void lockforexecution(void)
+	{
+		scriptdepth += 1;
+	}
+	
+	void unlockforexecution(void)
+	{
+		scriptdepth -= 1;
+	}
+	
 	void setparent(MCObject *newparent)
 	{
 		parent = newparent;

@@ -1,0 +1,1 @@
+# Fix Windows Application with browser widget not fully shutting down.

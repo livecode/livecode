@@ -1345,8 +1345,7 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
-            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1434,6 +1433,7 @@ function revDocsParseDocText pText, pFilename
    local tCount
    put 1 into tCount
    add 1 to tEntryCount
+   
    repeat for each item tItem in "name,description,author,type,example"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
@@ -1597,7 +1597,7 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
       add 1 to tCount
    end repeat
    
-   put char 1 to offset(" with precedence", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
+   put char 1 to offset(" with ", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
    put "syntax" into xDataA[tEntryName]["kind"]
    put pComment into xDataA[tEntryName]["comments"]

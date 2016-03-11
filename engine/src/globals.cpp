@@ -158,7 +158,6 @@ Boolean MChidepalettes = False;
 Boolean MCdontuseNS;
 Boolean MCdontuseQT;
 Boolean MCdontuseQTeffects;
-Boolean MCfreescripts = True;
 uint4 MCeventtime;
 uint2 MCbuttonstate;
 uint2 MCmodifierstate;
@@ -554,7 +553,6 @@ void X_clear_globals(void)
 	MCdontuseNS = False;
 	MCdontuseQT = False;
 	MCdontuseQTeffects = False;
-	MCfreescripts = True;
 	MCeventtime = 0;
 	MCbuttonstate = 0;
 	MCmodifierstate = 0;

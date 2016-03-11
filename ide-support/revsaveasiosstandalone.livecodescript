@@ -1,4 +1,4 @@
-script "revSaveAsIOSStandalone"
+﻿script "revSaveAsIOSStandalone"
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -1628,7 +1628,7 @@ function mapFilePath pPath
    else
       put "/Release" after tBuild
    end if
-   put revLicenseType() into tSuffix
+   put the editionType into tSuffix
    
    local tPath
    switch the last item of pPath

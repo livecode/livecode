@@ -461,7 +461,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
     // Forward to the custom property handler
-    return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, r_value);
+    return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, r_value);
 }
 
 bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value)
@@ -565,17 +565,46 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
     // Forward to the custom property handler
-    return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, p_value);
+    return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, p_value);
 }
 
-bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
+static bool is_custom_prop(MCWidgetRef self, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, bool p_is_get_operation)
+{
+    if (self == nil)
+        return true;
+    
+    if (!MCNameIsEmpty(p_set_name))
+        return true;
+    
+    if (p_path == nil)
+        return !MCWidgetHasProperty(self, p_prop_name);
+    
+    return !MCWidgetHasPropertyOfChunk(self, p_prop_name, MCNAME("Element"), p_is_get_operation);
+}
+
+bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, MCExecValue& r_value)
 {
     // Treat as a normal custom property if not a widget property
-    if (m_widget == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetHasProperty(m_widget, p_prop_name))
-        return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
+    if (is_custom_prop(m_widget, p_set_name, p_prop_name, p_path, true))
+        return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, p_path, r_value);
+    
+    bool t_success;
+    t_success = true;
     
     MCValueRef t_value;
-    if (!MCWidgetGetProperty(m_widget, p_prop_name, t_value))
+    if (t_success)
+    {
+        if (p_path != nil)
+        {
+            t_success = MCWidgetGetPropertyOfChunk(m_widget, p_prop_name, MCNAME("Element"), p_path, t_value);
+        }
+        else
+        {
+            t_success = MCWidgetGetProperty(m_widget, p_prop_name, t_value);
+        }
+    }
+    
+    if (!t_success)
     {
         CatchError(ctxt);
         return false;
@@ -594,11 +623,11 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     return true;
 }
 
-bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
+bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, MCExecValue p_value)
 {
     // Treat as a normal custom property if not a widget property
-    if (m_widget == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetHasProperty(m_widget, p_prop_name))
-        return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_value);
+    if (is_custom_prop(m_widget, p_set_name, p_prop_name, p_path, false))
+        return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_path, p_value);
     
     MCAutoValueRef t_value;
     if (MCExecTypeIsValueRef(p_value . type))
@@ -611,8 +640,16 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     }
     
     MCTypeInfoRef t_get_type, t_set_type;
-    if (!MCWidgetQueryProperty(m_widget, p_prop_name, t_get_type, t_set_type))
-        return false;
+    if (p_path != nil)
+    {
+        if (!MCWidgetQueryPropertyOfChunk(m_widget, p_prop_name, MCNAME("Element"), false, t_set_type))
+            return false;
+    }
+    else
+    {
+        if (!MCWidgetQueryProperty(m_widget, p_prop_name, t_get_type, t_set_type))
+            return false;
+    }
     
     if (t_set_type != nil &&
         !MCExtensionConvertFromScriptType(ctxt, t_set_type, InOut(t_value)))
@@ -621,10 +658,21 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         return false;
     }
     
-    if (!MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
+    if (p_path != nil)
     {
-        CatchError(ctxt);
-        return false;
+        if (!MCWidgetSetPropertyOfChunk(m_widget, p_prop_name, MCNAME("Element"), p_path, In(t_value)))
+        {
+            CatchError(ctxt);
+            return false;
+        }
+    }
+    else
+    {
+        if (!MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
+        {
+            CatchError(ctxt);
+            return false;
+        }
     }
     
     return true;

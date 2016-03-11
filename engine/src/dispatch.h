@@ -67,9 +67,6 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
-#ifdef MODE_TEST
-	virtual void timer(MCNameRef mptr, MCParameter *params);
-#endif
     
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
@@ -77,7 +74,9 @@ public:
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective. bool recursive = false);
     virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 #endif
-
+	
+	virtual void timer(MCNameRef mptr, MCParameter *params);
+	
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *params, MCObject *pass_from);
@@ -241,6 +240,9 @@ public:
 		return stacks;
 	}
 
+	// This method is only present in commercial development engines.
+	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
+	
 	////////// PROPERTY ACCESSORS
 
     bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
