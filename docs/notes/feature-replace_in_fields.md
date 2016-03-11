@@ -3,7 +3,7 @@
 There is a new form of the 'replace' command which works directly
 with fields:
 
-  replace <pattern> with <text> in <field chunk> (replacing | preserving) styles
+    replace <pattern> with <text> in <field chunk> (replacing | preserving) styles
 
 The replacing form of the command replaces each occurrence of 'pattern' in
 the specified field chunk with 'text', removing all styling from the found
