@@ -132,9 +132,7 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
         
         if (p_rep != nil)
             m_rep = MCValueRetain(p_rep);
-        
-        SendError();
-    }
+	}
 }
 
 Chunk_term MCWidget::gettype(void) const
@@ -909,7 +907,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
         }
     }
     else
-    {
+	{
         setforeground(dc, DI_BACK, False);
         dc->setbackground(MCscreen->getwhite());
         dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
