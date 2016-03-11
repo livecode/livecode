@@ -472,6 +472,7 @@ end syntax
 // ---------- External properties of widgets ---------- //
 
 public foreign handler MCWidgetGetMyScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyName(out rName as String) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyWidth(out rWidth as Real) returns nothing binds to "<builtin>"
@@ -493,7 +494,19 @@ begin
     MCWidgetGetMyScriptObject(output)
 end syntax
 
-/* 
+/*
+Summary:	Returns the name of the widget's script object
+
+Returns:	The name of the widget's script object
+*/
+
+syntax MyName is expression
+	"my" "name"
+begin
+	MCWidgetGetMyName(output)
+end syntax
+
+/*
 Summary:	Returns the rectangle of the widget in the parent
 
 Returns:	The rectangle of the widget in the parent
