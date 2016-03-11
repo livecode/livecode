@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-This widget is a header bar.
+This widget is a header bar. 
 **/
 
 -- declaring the extension as a widget, followed by identifier
@@ -67,7 +67,7 @@ property itemArray get getHeaderActions set setHeaderActions
 metadata itemArray.editor is "com.livecode.pi.navbar"
 metadata itemArray.label is "Header Actions"
 
-/*
+/**
 Summary: Sets the header actions display style.
 
 Syntax: set the itemStyle of <widget> to <pActionStyle>
@@ -80,14 +80,14 @@ pActionStyle (enum): The style of the header actions display.
 
 Description:
 Sets the header actions display style of the control.
-*/
+**/
 property itemStyle get mActionStyle set setActionStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
 metadata itemStyle.options is "icons,text"
 metadata itemStyle.default is "icons"
 metadata itemStyle.label is "Action Display Style"
 
-/*
+/**
 Summary: Sets the action names of the header bar
 
 Syntax: set the itemNames of <widget> to <pNames>
@@ -98,11 +98,11 @@ pNames (string): A comma-delimited list of the action names
 
 Description:
 Sets the names of the header bar actions, where <pNames> is a comma delimited list of the names.
-*/
+**/
 property itemNames get getActionNames set setActionNames
 metadata itemNames.label is "Action Names"
 
-/*
+/**
 Summary: Sets the action labels of the header bar
 
 Syntax: set the itemLabels of <widget> to <pLabels>
@@ -114,39 +114,65 @@ pLabels (string): A comma-delimited list of the action labels
 Description:
 Sets the labels of the header bar actions, where <pLabels> is a comma delimited list of 
 the labels.
-*/
+**/
 property itemLabels get getActionLabels set setActionLabels
 metadata itemLabels.user_visible is "false"
 
-/*
-Summary: Sets the action icons of the header bar
+/**
+Syntax: set the itemIcons of <widget> to <pIcons>
+Syntax: get the itemIcons of <widget>
 
-Syntax: set the actionIcons of <widget> to <pIcons>
-Syntax: get the actionIcons of <widget>
+Summary: The icons for the header bar actions when not highlighted
 
 Parameters:
-pIcons (string): A comma-delimited list of icons.
+pIcons(string): A comma delimited list of icon names.
 
 Description:
-Sets the icons of the header bar actions, where <pIcons> is a comma delimited list of the 
-icon names.
-*/
+The icons of the header bar actions.  Adding an item to the
+<itemIcons> causes a new header action to be created with the default label
+and name.
+
+Each icon name must be one of the predefined graphics provided by the "IconSVG"
+library.  You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+
+**Note:** Removing an item from the <itemIcons> does not cause the
+corresponding item to be removed from the header actions, but merely resets
+it to the default icon.
+
+References: hilitedItemIcons (property)
+**/
 property itemIcons get getActionIcons set setActionIcons
 metadata itemIcons.user_visible is "false"
 
-/*
-Summary: Sets the highlighted action icons of the header bar
-
+/**
 Syntax: set the hilitedItemIcons of <widget> to <pIcons>
 Syntax: get the hilitedItemIcons of <widget>
 
+Summary: The icons for the header bar actions when they are highlighted.
+
 Parameters:
-pIcons (string): A comma-delimited list of icons.
+pIcons(string): A comma delimited list icon names.
 
 Description:
-Sets the highlighted icons of the header bar actions, where <pIcons> is a 
-comma-delimited list of the icon names.
-*/
+The icons for the header bar actions to be shown when the items are
+highlighted. An action is highlighted when the mouse button is pushed while the 
+mouse pointer is over it.  Adding an item to the <hilitedItemIcons> causes a new 
+header action to be created with the default label and name.
+
+The name of an icon must be one of the names returned by the iconNames() 
+function of the com.livecode.library.iconSVG library.
+
+Each icon name must be one of the predefined graphics provided by the "IconSVG"
+library.  You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+
+**Note:** Removing an item from the <hilitedItemIcons> does not cause the
+corresponding item to be removed from the header actions, but merely resets
+it to the default icon.
+
+References: itemIcons (property)
+**/
 property hilitedItemIcons get getActionHilitedIcons set setActionHilitedIcons
 metadata hilitedItemIcons.user_visible is "false"
 
@@ -154,7 +180,7 @@ metadata hilitedItemIcons.user_visible is "false"
 Syntax: set the theme of <widget> to <pWidgetTheme>
 Syntax: get the theme of <widget>
 
-Summary: Specifies the theme to use when drawing the switch button.
+Summary: Specifies the theme to use when drawing the header bar.
 
 Parameters:
 pWidgetTheme (string): The <theme> of the header bar is a name identifying the style to 
@@ -184,12 +210,12 @@ pTitle (string): The text of the title of the header bar.
 
 Description:
 Use to display a title at the top of the header bar.
-*/
+**/
 property "label" get mHeaderTitle set setHeaderTitle
 metadata label.default is "Title"
 metadata label.label is "Title"
 
-/*
+/**
 Syntax: set the showLabel of <widget> to {true | false}
 Syntax: get the showLabel of <widget>
 
@@ -197,12 +223,12 @@ Summary: Whether the title is visible or not
 
 Description:
 Use this property to determine whether the title is visible (true) or not (false).
-*/
+**/
 property "showLabel" get mShowTitle set setTitleVisibility
 metadata showLabel.default is "true"
 metadata showLabel.label is "Show Title"
 
-/*
+/**
 Summary: Whether to display the first action on the left
 
 Syntax: set the firstItemLeft of <widget> to { true | false }
@@ -211,12 +237,12 @@ Syntax: get the firstItemLeft of <widget>
 Description:
 If the <firstItemLeft> property is true, then the first action in the <itemArray> is displayed on 
 the left hand side of the header bar.
-*/
+**/
 property firstItemLeft get mFirstActionLeft set setFirstActionLeft
 metadata firstItemLeft.default is "true"
 metadata firstItemLeft.label is "First Action On Left"
 
-/*
+/**
 Syntax: set the <opaque> of <widget> to {true | false}
 Syntax: get the <opaque> of <widget>
 
@@ -225,12 +251,12 @@ Summary: Whether the background of the header bar is drawn opaque or not
 Description:
 Use the <opaque> property to determine whether objects underneath the header bar are 
 visible or not.
-*/
+**/
 property "opaque" get mIsOpaque set setBackgroundOpacity
 metadata opaque.default is "true"
 metadata opaque.label is "Opaque Background"
 
-/*
+/**
 Syntax: set the <showBorder> of <widget> to {true | false}
 Syntax: get the <showBorder> of <widget>
 
@@ -239,7 +265,7 @@ Summary: Whether the dividing line at the bottom of the header bar is drawn or n
 Description:
 Use the <showBorder> property to determine whether the dividing line at the bottom of the 
 header bar is drawn or not.
-*/
+**/
 property showBorder get mShowDivide set setShowDivide
 metadata showBorder.default is "false"
 metadata showBorder.label is "Show Bottom Border"
@@ -305,6 +331,18 @@ metadata borderColor.default is "109,109,109"
 metadata textSize.default is "16"
 metadata textAlign.user_visible	is "false"
 
+/**
+Syntax: get the mouseAction of <widget>
+
+Summary: The header action that the mouse pointer is currently over.
+
+Value (string):  The name of the header action that the mouse pointer is currently
+over.
+
+Description:
+Use the <mouseAction> property to retrieve the name of the header action that 
+was just clicked in the widget's mouseUp handler.
+**/
 property mouseAction get getMouseActionName
 metadata mouseAction.user_visible is "false"
 
@@ -478,11 +516,8 @@ end handler
 private handler drawAndroidTitle() returns nothing
    -- draw the title
    if mShowTitle then
-		log mHeaderTitle
-		log mTitleRect
       set the paint of this canvas to fetchPaint("title")
       fill text mHeaderTitle at left of mTitleRect on this canvas
-		log mTitleRect
    end if
 end handler
 
@@ -829,9 +864,7 @@ private handler setWidgetTheme(in pTheme as String) returns nothing
 
 	if not (mWidgetTheme is in kKnownThemes) then
 		throw "invalid theme name '" & mWidgetTheme & "'"
-		log "invalid"
 	end if
-	log mWidgetTheme
 	put true into mRecalculate
 	redraw all
 end handler
