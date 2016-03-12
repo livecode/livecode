@@ -2326,13 +2326,17 @@ command docsBuilderEnsureMergExt pEdition
 end docsBuilderEnsureMergExt
 
 command docsBuilderDownloadMergExt pEdition
-   local tSource, tArchive
+   local tSource, tArchive, tCommand
    put docsBuilderMergExtZipPath(pEdition) into tSource
    put docsBuilderMergExtUnzipPath(pEdition) into tArchive
    builderLog "message", "downloading mergext from" && tSource && "to" && tArchive
-   put url(tSource) into url("binfile:" & tArchive)
    
-   if there is not a file tArchive then
+   -- Shell out to curl because LiveCode server has some issues with
+   -- making HTTPS on Linux (see bug 16940)
+   put merge("curl -o '[[tArchive]]' '[[tSource]]'") into tCommand
+   get shell(tCommand)
+      
+   if the result is not empty or there is not a file tArchive then
       builderLog "error", "failed to download from" && tSource
       exit docsBuilderDownloadMergExt
    end if
