@@ -17,9 +17,6 @@
 			[
 				'../libcore/libcore.gyp:libCore',
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/libcef.gyp:libcef',
-				'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
-				'../thirdparty/libcef/libcef.gyp:libcef_stubs',
 			],
 			
 			'include_dirs':
@@ -37,14 +34,11 @@
 				'src/revbrowser.rc.h',
 				'src/signal_restore_posix.h',
 				'src/w32browser.h',
-				'src/WebAuthenticationPanel.h',
 				
 				'src/cefbrowser.cpp',
 				'src/cefbrowser_lnx.cpp',
-				'src/cefbrowser_osx.mm',
 				'src/cefbrowser_w32.cpp',
 				'src/cefshared_lnx.cpp',
-				'src/cefshared_osx.cpp',
 				'src/cefshared_w32.cpp',
 				'src/lnxbrowser.cpp',
 				'src/osxbrowser.mm',
@@ -52,7 +46,6 @@
 				'src/signal_restore_posix.cpp',
 				'src/w32browser.cpp',
 				'src/revbrowser.rc',
-				'src/WebAuthenticationPanel.m',
 			],
 			
 			'conditions':
@@ -64,14 +57,38 @@
 						'type': 'none',
 					},
 				],
+				# CEF only supported on Windows & Linux
 				[
-					'OS == "mac"',
+					'OS == "win" or OS == "linux"',
 					{
 						'dependencies':
 						[
-							'revbrowser-cefprocess-helpers',
+							'../prebuilt/libcef.gyp:libcef',
+							'../thirdparty/libcef/libcef.gyp:libcef_library_wrapper',
+							'../thirdparty/libcef/libcef.gyp:libcef_stubs',
+
+							'revbrowser-cefprocess',
 						],
-						
+					},
+					# else
+					{
+						'sources!':
+						[
+							'src/cefbrowser.h',
+							'src/cefbrowser_msg.h',
+							'src/cefshared.h',
+
+							'src/cefbrowser.cpp',
+							'src/cefbrowser_lnx.cpp',
+							'src/cefbrowser_w32.cpp',
+							'src/cefshared_lnx.cpp',
+							'src/cefshared_w32.cpp',
+						],
+					},
+				],
+				[
+					'OS == "mac"',
+					{
 						'libraries':
 						[
 							'$(SDKROOT)/System/Library/Frameworks/Carbon.framework',
@@ -79,27 +96,11 @@
 							'$(SDKROOT)/System/Library/Frameworks/WebKit.framework',
 						],
 						
-						# Copy the CEF processes and framework into the expected place
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/Frameworks',
-								'files':
-								[
-									'<(PRODUCT_DIR)/revbrowser-cefprocess.app',
-									'<(PRODUCT_DIR)/revbrowser-cefprocess EH.app',
-									'<(PRODUCT_DIR)/revbrowser-cefprocess NP.app',
-									'$(SOLUTION_DIR)/prebuilt/lib/mac/Chromium Embedded Framework.framework',
-								],
-							},
-						],
-						
 						'all_dependent_settings':
 						{
 							'variables':
 							{
 								'dist_files': [ '<(PRODUCT_DIR)/<(_product_name).bundle' ],
-								'dist_aux_files': [ '<(PRODUCT_DIR)/Frameworks' ],
 							},
 						},
 					},
@@ -155,10 +156,6 @@
 				},	
 			},
 			
-			'mac_bundle_resources':
-			[
-				'src/com_runrev_livecode_WebAuthenticationPanel.nib',
-			],
 			
 			'xcode_settings':
 			{
@@ -170,14 +167,13 @@
 		{
 			'target_name': 'revbrowser-cefprocess',
 			'type': 'executable',
-			'mac_bundle': 1,
 			'product_name': 'revbrowser-cefprocess',
 			
-			# OSX, Windows and Linux only
+			# Windows and Linux only
 			'conditions':
 			[
 				[
-					'OS != "mac" and OS != "win" and OS != "linux"',
+					'OS != "win" and OS != "linux"',
 					{
 						'type': 'none',
 					},
@@ -209,64 +205,10 @@
 			[
 				'src/cefprocess.cpp',
 				'src/cefprocess_lnx.cpp',
-				'src/cefprocess_osx.mm',
 				'src/cefprocess_w32.cpp',
 				'src/cefshared_lnx.cpp',
-				'src/cefshared_osx.cpp',
 				'src/cefshared_w32.cpp',
 			],
-			
-			'xcode_settings':
-			{
-				'INFOPLIST_FILE': 'revbrowser-cefprocess-Info.plist',
-			},
 		},
-	],
-	
-	'conditions':
-	[
-		# CEF on OSX needs some helper applications
-		[
-			'OS == "mac"',
-			{
-				'targets':
-				[
-					{
-						'target_name': 'revbrowser-cefprocess-helpers',
-						'type': 'none',
-						
-						'dependencies':
-						[
-							'revbrowser-cefprocess',
-						],
-						
-						'actions':
-						[
-							# Create the EH and NP variants of the CEF process
-							{
-								'action_name': 'create_cefprocess_variants',
-								'inputs':
-								[
-									'<(PRODUCT_DIR)/revbrowser-cefprocess.app',
-									'tools/make_more_helpers.sh',
-								],
-								'outputs':
-								[
-									'<(PRODUCT_DIR)/revbrowser-cefprocess EH.app',
-									'<(PRODUCT_DIR)/revbrowser-cefprocess NP.app',
-								],
-								
-								'action':
-								[
-									'tools/make_more_helpers.sh',
-									'<(PRODUCT_DIR)',
-									'revbrowser-cefprocess',
-								],
-							},
-						],
-					},
-				],
-			},
-		],
 	],
 }

@@ -18,7 +18,6 @@
 
 #include "libbrowser_internal.h"
 
-extern bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 extern bool MCWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
 
@@ -26,7 +25,6 @@ extern bool MCWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
 	{ "WebView", nil, MCWebViewBrowserFactoryCreate },
-    { "CEF", nil, MCCefBrowserFactoryCreate },
     { nil, nil, nil },
 };
 
