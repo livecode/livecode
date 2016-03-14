@@ -708,6 +708,12 @@ public handler OnMouseMove() returns nothing
 		if mDragData is not nothing then
 			calculateDragRow(the y of the mouse position)
 			redraw all
+			return
+		end if
+
+		if mEditMode then
+			updateEditModeTooltip(the mouse position)
+			return
 		end if
 end handler
 
@@ -737,6 +743,20 @@ private handler updateParameters()
 	put false into mRecalculate
 end handler
 
+private handler updateEditModeTooltip(in pPosition as Point) returns nothing
+    variable tElement as Array
+	repeat for each element tElement in mEditData
+		if pPosition is within tElement["rect"] then
+			if "tooltip" is among the keys of tElement then
+				set property "tooltip" of my script object to tElement["tooltip"]
+				return
+			end if
+		end if
+	end repeat
+
+	set property "tooltip" of my script object to ""
+end handler
+
 private handler calculateEditModeIconRects() returns nothing
 	// calculate the drawing rects
 	variable tX as Integer
@@ -761,7 +781,7 @@ private handler calculateEditModeIconRects() returns nothing
 
 		put rectangle [tLabelLeft, tLineTop + kEditModePaddingUnit, tLabelRight, tLineBottom - kEditModePaddingUnit] into mNavData[tX]["label_rect"]
 		-- Allow label to be edited inline
-		setEditableTextRect("label", tX, mNavData[tX]["label_rect"])
+		setEditableTextRect("label", tX, mNavData[tX]["label_rect"], "Label")
 
 		if mNavData[tX]["icon_name"] is not empty then
 			put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
@@ -790,8 +810,10 @@ private handler calculateEditModeIconRects() returns nothing
 		put tIconPath into mNavData[tX]["hilited_icon_path"]
 		put tIconRect into mNavData[tX]["hilited_icon_rect"]
 
-		setEditableRect("icon", tX, mNavData[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
-		setEditableRect("selectedIcon", tX, mNavData[tX]["hilited_icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
+		setEditableRect("icon", tX, mNavData[tX]["icon_rect"], \
+				"Icon", "com.livecode.widget.iconPicker", iconSelected)
+		setEditableRect("selectedIcon", tX, mNavData[tX]["hilited_icon_rect"], \
+				"Highlighted Icon", "com.livecode.widget.iconPicker", iconSelected)
 
 		calculateEditModeActionPathsForRow(tX)
 	end repeat
@@ -799,7 +821,9 @@ end handler
 
 private handler calculateAddItemRect()
 	calculateEditModeActionIconPaths(["add"])
-	setActionRect("add_icon", 1, the bounding box of mActionPaths["add_icon_path"], addItem, true)
+	setActionRect("add_icon", 1, \
+			the bounding box of mActionPaths["add_icon_path"], "Add Item", \
+			addItem, true)
 end handler
 
 private handler calculateEditModeActionPathsForRow(in pRow as Integer)
@@ -809,17 +833,20 @@ private handler calculateEditModeActionPathsForRow(in pRow as Integer)
 	put mActionPaths["add_icon_path"] into tIconPath
 	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
 	put tIconPath into mNavData[pRow]["add_icon_path"]
-	setActionRect("add_icon", pRow, the bounding box of tIconPath, addItem, true)
+	setActionRect("add_icon", pRow, the bounding box of tIconPath, \
+			"Add Item", addItem, true)
 
 	put mActionPaths["delete_icon_path"] into tIconPath
 	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
 	put tIconPath into mNavData[pRow]["delete_icon_path"]
-	setActionRect("delete_icon", pRow, the bounding box of tIconPath, deleteItem, true)
+	setActionRect("delete_icon", pRow, the bounding box of tIconPath, \
+			"Delete Item", deleteItem, true)
 
 	put mActionPaths["reorder_icon_path"] into tIconPath
 	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
 	put tIconPath into mNavData[pRow]["reorder_icon_path"]
-	setActionRect("reorder_icon", pRow, the bounding box of tIconPath, reorderItem, false)
+	setActionRect("reorder_icon", pRow, the bounding box of tIconPath, \
+			"Reposition Item", reorderItem, false)
 
 end handler
 
@@ -1516,13 +1543,16 @@ public handler initialiseEditData()
 	put the empty array into mEditData
 end handler
 
-public handler setEditableRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle, in pPopup as String, in pCallback as PopupCallback)
+public handler setEditableRect(in pComponent as String, in pNumber as Number, \
+		in pRect as Rectangle, in pTooltip as String, in pPopup as String, \
+		in pCallback as PopupCallback)
 	variable tComponentID as String
 	put pComponent && pNumber formatted as string into tComponentID
 
 	put the empty array into mEditData[tComponentID]
 
 	put pRect into mEditData[tComponentID]["rect"]
+	put pTooltip into mEditData[tComponentID]["tooltip"]
 	put pPopup into mEditData[tComponentID]["popup"]
 	put pCallback into mEditData[tComponentID]["callback"]
 	put pComponent into mEditData[tComponentID]["type"]
@@ -1530,25 +1560,30 @@ public handler setEditableRect(in pComponent as String, in pNumber as Number, in
 	put true into mEditData[tComponentID]["mouseup"]
 end handler
 
-public handler setEditableTextRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle)
+public handler setEditableTextRect(in pComponent as String, \
+		in pNumber as Number, in pRect as Rectangle, in pTooltip as String)
 	variable tComponentID as String
 	put pComponent && pNumber formatted as string into tComponentID
 
 	put the empty array into mEditData[tComponentID]
 
 	put pRect into mEditData[tComponentID]["rect"]
+	put pTooltip into mEditData[tComponentID]["tooltip"]
 	put pComponent into mEditData[tComponentID]["type"]
 	put pNumber into mEditData[tComponentID]["number"]
 	put true into mEditData[tComponentID]["mouseup"]
-end handler
+	end handler
 
-public handler setActionRect(in pComponent as String, in pNumber as Number, in pRect as Rectangle, in pAction as ActionCallback, in pMouseUp as Boolean)
+public handler setActionRect(in pComponent as String, in pNumber as Number, \
+		in pRect as Rectangle, in pTooltip as String, \
+		in pAction as ActionCallback, in pMouseUp as Boolean)
 	variable tComponentID as String
 	put pComponent && pNumber formatted as string into tComponentID
 
 	put the empty array into mEditData[tComponentID]
 
 	put pRect into mEditData[tComponentID]["rect"]
+	put pTooltip into mEditData[tComponentID]["tooltip"]
 	put pComponent into mEditData[tComponentID]["type"]
 	put pNumber into mEditData[tComponentID]["number"]
 	put pAction into mEditData[tComponentID]["action"]
