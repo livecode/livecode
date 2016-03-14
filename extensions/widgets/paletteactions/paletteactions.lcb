@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -217,6 +217,10 @@ public handler OnMouseMove()
 	updateHover()
 end handler
 
+public handler OnMouseLeave()
+	clearHover()
+end handler
+
 public handler OnGeometryChanged()
 	recalculateRects()
 end handler
@@ -228,10 +232,8 @@ private handler updateHover()
 	variable tTab as Boolean
 	variable tIndex as Integer
 	if positionToRect(tPoint, tTab, tIndex) is false then
-		put 0 into tIndex
-        put false into tTab
-        // AL-2015-04-24: [[ Bug 15286 ]] Empty tooltip of palette actions if nothing is being hovered over.
-        set property "tooltip" of my script object to ""
+		clearHover()
+		return
     end if
 
     if tIndex is not mHoverIndex or tTab is not mHoverTab then
@@ -247,6 +249,13 @@ private handler updateHover()
         put tTab into mHoverTab
         redraw all
     end if
+end handler
+
+private handler clearHover()
+	put 0 into mHoverIndex
+	put false into mHoverTab
+	set property "tooltip" of my script object to ""
+	redraw all
 end handler
 
 private handler positionToRect(in pPoint as Point, out rTab as Boolean, out rIndex as Integer) returns Boolean
