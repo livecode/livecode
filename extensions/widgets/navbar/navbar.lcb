@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,24 +15,24 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This widget is a navigation bar.
 
-Name: navigate
+Name: hiliteChanged
 Type: message
-Syntax: on navigate <pLabel>
+Syntax: on hiliteChanged
 Summary: Sent when a navigation item is selected
 
-Parameters:
-pLabel(string): The label of the selected navigation item
-
 Example:
-on navigate pLabel
-	go card pLabel
-end navigate
+on hiliteChanged
+	go card the hilitedItemName of me
+end hiliteChanged
 
 Description:
-Handle the navigate message in the widget's object script to respond to a selection made by the user.
+Handle the <hiliteChanged> message in the widget's object script to respond to
+a selection made by the user.
+
+References: hilitedItem (property), hilitedItemName (property)
 */
 
 -- declaring extension as widget, followed by identifier
@@ -49,66 +49,152 @@ use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata author is "LiveCode"
-metadata version is "1.0.3"
+metadata version is "2.0.0"
 metadata title is "Navigation Bar"
 metadata preferredSize is "320,49"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
 
 --
 
-/*
-Syntax: set the navData of <widget> to <pNavArray>
-Syntax: get the navData of <widget>
+/**
+Syntax: set the itemArray of <widget> to <pNavArray>
+Syntax: get the itemArray of <widget>
 
-Summary:  The <navData> is all the collective data of the icons and labels of the navbar
+Summary:  The <itemArray> is all the collective data of the icons and labels of the navbar
 
 Parameters:
 pNavArray(array): An array containing all the navigation data:
+
+Description:
+The <itemArray> is a numerically keyed array, each element of which contains
+an array describing the label and icons of the navigation item at that index.
+
+The structure of the <itemArray> is:
+
+```
 { key (integer): The index of the navigation item
 	value (array): The array containing the data for the item at this index
 	{ key : "label"
 		value (string): The label of this item
+		key : "name"
+		value (string): The name of this item
 		key : "icon_name"
-		value (string) : The name of the icon to display when the item is not selected
-		key : "selected_icon_name"
-		value (string) : The name of the icon to display when the item is not selected
+		value (string) : The name of the icon to display when the item is not highlighted
+		key : "hilited_icon_name"
+		value (string) : The name of the icon to display when the item is highlighted
 	}
 }
+```
 
-Description:
-The <navData> is a numerically keyed array, each element of which contains and array describing the label and icons of the
-navigation item at that index. Any individual keys ("label", "icon_name", "selected_icon_name") missing when setting the <navData>
-will be added, and set to their defaults - "circle" for the icons, and "New Item" for the label.
+Any individual keys ("label", "icon_name", "hilited_icon_name") missing when
+setting the <itemArray> will be added, and set to their defaults - "circle" for
+the icons, and "New Item" for the label.
 
->*Note:* Setting the <navData> to a non-numerically keyed array will cause an error to be thrown
-
+**Note:** Setting the <navData> to a non-numerically keyed array will cause an
+error to be thrown
 */
-property navData get getNavData set setNavData
-metadata navData.editor is "com.livecode.pi.navbar"
-metadata navData.label is "Navigation Data"
+property itemArray get getNavData set setNavData
+metadata itemArray.editor is "com.livecode.pi.navbar"
+metadata itemArray.label is "Navigation Data"
 
-/*
-Syntax: set the widgetTheme of <widget> to <pWidgetTheme>
-Syntax: get the widgetTheme of <widget>
-
-Summary: The theme of the widget
+/**
+Syntax: set the itemNames of <widget> to <pNames>
+Syntax: get the itemNames of <widget>
+Summary: The names of the navigation items
 
 Parameters:
-pWidgetTheme(enum): The theme of the widget
--"iOS"
--"Android(Dark)"
--"Android(Light)"
+pNames(string): A comma delimited list of the navigation item names.
 
 Description:
-Use the <widgetTheme> property to set the theme of the widget.
-*/
-property widgetTheme get mWidgetTheme set setWidgetTheme
-metadata widgetTheme.editor is "com.livecode.pi.enum"
-metadata widgetTheme.options is "iOS,Android(Dark),Android(Light)"
-metadata widgetTheme.default is "iOS"
-metadata widgetTheme.label is "Widget Theme"
+The names of the navigation items of the widget.
 
-/*
+Adding an item to the <itemNames> of the navbar causes a new navigation item to
+be created with the default icon and label. Removing an item from the
+<itemNames> causes the corresponding item to be removed from the navigation
+items.
+*/
+property itemNames		get getNavNames			set setNavNames
+metadata itemNames.editor is "com.livecode.pi.editorList"
+metadata itemNames.subeditor is "com.livecode.pi.string"
+metadata itemNames.delimiter is ","
+metadata itemNames.label is "Navigation Names"
+
+/**
+Syntax: set the itemIcons of <widget> to <pIcons>
+Syntax: get the itemIcons of <widget>
+Summary: The icons for the navigation items when not highlighted
+
+Parameters:
+pIcons(string): A comma delimited list of icon names.
+
+Description:
+The icons of the navigation items of the widget.  Adding an item to the
+<itemIcons> causes a new navigation item to be created with the default label
+and name.
+
+Each icon name must be one of the predefined graphics provided by the "IconSVG"
+library.  You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+
+**Note:** Removing an item from the <itemIcons> does not cause the
+corresponding item to be removed from the navigation items, but merely resets
+it to the default icon.
+
+References: hilitedItemIcons (property)
+
+*/
+property itemIcons		get getNavIcons			set setNavIcons
+metadata itemIcons.user_visible is "false"
+
+/**
+Syntax: set the hilitedItemIcons of <widget> to <pIcons>
+Syntax: get the hilitedItemIcons of <widget>
+Summary: The icons for the navigation items when hilited
+
+Parameters:
+pIcons(string): A comma delimited list icon names.
+
+Description:
+The icons for the navigation items of the widget to be shown when the items are
+highlighted.  Adding an item to the <hilitedItemIcons> causes a new navigation
+item to be created with the default label and name.
+
+The name of an icon must be one of the names returned by the iconNames() function of the com.livecode.library.iconSVG library.
+
+Each icon name must be one of the predefined graphics provided by the "IconSVG"
+library.  You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+
+**Note:** Removing an item from the <hilitedItemIcons> does not cause the
+corresponding item to be removed from the navigation items, but merely resets
+it to the default icon.
+
+References: itemIcons (property)
+*/
+property hilitedItemIcons		get getNavSelectedIcons			set setNavSelectedIcons
+metadata hilitedItemIcons.user_visible is "false"
+
+/**
+Syntax: set the itemLabels of <widget> to <pLabels>
+Syntax: get the itemLabels of <widget>
+Summary: The labels displayed for the navigation items
+
+Parameters:
+pLabels(string): A comma delimited list of labels.
+
+Description:
+The display labels for navigation items of the widget. Adding an item to the
+<itemLabels> causes a new navigation item to be created with the default icon
+and name.
+
+**Note:** Removing an item from the <itemLabels> does not cause the
+corresponding item to be removed from the navigation items, but merely resets
+it to the default label.
+*/
+property itemLabels		get getNavLabels		set setNavLabels
+metadata itemLabels.user_visible is "false"
+
+/**
 Syntax: set the itemStyle of <widget> to <pItemStyle>
 Syntax: get the itemStyle of <widget>
 
@@ -117,55 +203,123 @@ Summary: The display style of the widget
 Parameters:
 pItemStyle(enum): The display style
 -"icons": display icons only
--"names": display names only
--"icons and names": display icons and names
+-"text": display names only
+-"both": display icons and names
 
 Description:
 Use the <itemStyle> property to control which elements of the navigation items are displayed.
 */
 property itemStyle	get mItemStyle	set setItemStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
-metadata itemStyle.options is "icons,names,icons and names"
-metadata itemStyle.default is "icons and names"
+metadata itemStyle.options is "icons,text,both"
+metadata itemStyle.default is "both"
 metadata itemStyle.label is "Display Style"
 
-/*
-Syntax: set the navHiliteColor of <widget> to <pColor>
-Syntax: get the navHiliteColor of <widget>
+/**
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
 
-Summary: The hilite color of the widget
-
-Parameters:
-pColor (color): The color of the navBar hilite
+Summary: Controls the color of navbar icons and text when selected.
 
 Description:
-The color of the icon and text displayed when the navigation icon is selected.
+Use the <hiliteColor> property to control the color used to draw icons and text
+of the currently-selected navbar item.
 */
-property navHiliteColor	get getHiliteColor set setHiliteColor
-metadata navHiliteColor.editor is "com.livecode.pi.color"
-metadata navHiliteColor.label is "Selected Item Color"
-metadata navHiliteColor.default is "0,121,255"
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.label is "Selected Item Color"
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.default is "10,95,244"
 
-/*
-Syntax: set the selectedItem of <widget> to <pSelectedItem>
-Syntax: get the selectedItem of <widget>
+/**
+Name: foreColor
 
-Summary: Manipulates the value of the selected navigation item
+Syntax: set the foreColor of <widget> to <pColor>
+Syntax: get the foreColor of <widget>
 
-Parameters:
-pSelectedItem(integer): The number of a nav item.
+Summary: Controls the color of navbar icons and text when not selected.
 
 Description:
-Selects a navigation item.
+Use the <foreColor> property to control the color used to draw icons and text
+of the navbar items that are not selected.
 */
-property selectedItem	get mSelectedItem 	set setNavSelectedItem
-metadata selectedItem.editor is "com.livecode.pi.integer"
-metadata selectedItem.default is "1"
-metadata selectedItem.label is "Selected Item Index"
-metadata selectedItem.step is "1"
-metadata selectedItem.min is "1"
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.label is "Item Color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.default is "128,128,128"
 
-/*
+/**
+Name: backColor
+
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: Controls the background color of the navbar.
+
+Description:
+Use the <backColor> property to control the way the background of the navbar
+is painted.
+*/
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.label is "Background Color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.default is "244,244,244"
+
+/**
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: Controls the border color of the navbar.
+
+Description:
+Use the <borderColor> property to control the color used to draw the top border
+of the navbar.
+*/
+metadata borderColor.editor is "com.livecode.pi.color"
+metadata borderColor.label is "Border Color"
+metadata borderColor.section is "Colors"
+metadata borderColor.default is "166,166,166"
+
+/**
+Syntax: set the hilitedItem of <widget> to <pItemNumber>
+Syntax: get the hilitedItem of <widget>
+
+Summary: The index of the highlighted navigation item
+
+Parameters:
+pItemNumber(integer): The number of a navigation item.
+
+Description:
+The <hilitedItem> is the item number of the currently-highlighted navigation
+item, starting from 1.
+
+References: hilitedItemName (property)
+*/
+property hilitedItem	get mSelectedItem 	set setNavSelectedItem
+metadata hilitedItem.editor is "com.livecode.pi.integer"
+metadata hilitedItem.default is "1"
+metadata hilitedItem.label is "Selected Item Index"
+metadata hilitedItem.step is "1"
+metadata hilitedItem.min is "1"
+
+/**
+Syntax: set the hilitedItemName of <widget> to <pName>
+Syntax: get the hilitedItemName of <widget>
+
+Summary: The name of the highlighted navigation item
+
+Parameters:
+pName(string): The name of a navigation item.
+
+Description:
+The <hilitedItemName> is the name of the currently-highlighted navigation
+item.
+
+References: hilitedItem (property)
+*/
+property hilitedItemName	get getNavSelectedItemName	set setNavSelectedItemName
+metadata hilitedItemName.label is "Selected Item Name"
+
+/**
 Syntax: set the editMode of <widget> to (true | false)
 Syntax: get the editMode of <widget>
 
@@ -178,83 +332,7 @@ be changed by clicking on the outlined regions, and new items to be added with t
 property editMode get mEditMode set setEditMode
 metadata editMode.user_visible is "false"
 
-/*
-Name: navNames
-Type: property
-Syntax: set the navNames of <widget> to <pNavNames>
-Syntax: get the navNames of <widget>
-Summary: Sets the list of names of navigation items
-
-Parameters:
-pNavNames(string): A comma delimited list of the navigation item names.
-
-Description:
-Sets the names of the navigation items of the widget. Adding an item to the navNames of a navbar widget causes a
-new navigation item to be created with the default icon and label. Removing an item from the navNames causes the
-corresponding item to be removed from the navigation items.
-*/
-property navNames		get getNavNames			set setNavNames
-metadata navNames.user_visible is "false"
-
-/*
-Syntax: set the navIcons of <widget> to <pNavIcons>
-Syntax: get the navIcons of <widget>
-Summary: Sets the list of icons of navigation items
-
-Parameters:
-pNavIcons(string): A comma delimited list of the navigation item icons.
-
-Description:
-Sets the icons of the navigation items of the widget. Adding an item to the navIcons of a navbar widget causes a
-new navigation item to be created with the default label and name.
-
-The name of an icon must be one of the names returned by the iconNames() function of the com.livecode.library.iconSVG library.
-
->*Note:* Removing an item from the navIcons does not cause the corresponding item to be removed from the navigation items,
-but merely resets it to the default icon.
-*/
-property navIcons		get getNavIcons			set setNavIcons
-metadata navIcons.user_visible is "false"
-
-/*
-Syntax: set the navSelectedIcons of <widget> to <pNavSelectedIcons>
-Syntax: get the navSelectedIcons of <widget>
-Summary: Sets the list of icons of navigation items
-
-Parameters:
-pNavSelectedIcons(string): A comma delimited list of the navigation item selected icons.
-
-Description:
-Sets the selected icons of the navigation items of the widget. Adding an item to the <navSelectedIcons> of a navbar widget causes a
-new navigation item to be created with the default label and name.
-
-The name of an icon must be one of the names returned by the iconNames() function of the com.livecode.library.iconSVG library.
-
->*Note:* Removing an item from the navSelectedIcons does not cause the corresponding item to be removed from the navigation items,
-but merely resets it to the default icon.
-*/
-property navSelectedIcons		get getNavSelectedIcons			set setNavSelectedIcons
-metadata navSelectedIcons.user_visible is "false"
-
-/*
-Syntax: set the navLabels of <widget> to <pNavLabels>
-Syntax: get the navLabels of <widget>
-Summary: Sets the list of labels of navigation items
-
-Parameters:
-pNavLabels(string): A comma delimited list of the navigation item labels.
-
-Description:
-Sets the labels of the navigation items of the widget. Adding an item to the navLabels of a navbar widget causes a
-new navigation item to be created with the default icon and name.
-
->*Note:* Removing an item from the navLabels does not cause the corresponding item to be removed from the navigation items,
-but merely resets it to the default label.
-*/
-property navLabels		get getNavLabels		set setNavLabels
-metadata navLabels.user_visible is "false"
-
-/*
+/**
 Syntax: get the desiredHeight of <widget>
 
 Summary: The height that the widget ought to be displayed at
@@ -269,59 +347,27 @@ Returns the height that the widget ought to be displayed at
 property desiredHeight	get getDesiredHeight
 metadata desiredHeight.user_visible is "false"
 
-/*
-Syntax: set the <backgroundOpacity> of <widget> to <pOpacity>
-Syntax: get the <backgroundOpacity> of <widget>
-
-Summary: The opacity of the background of the navbar
-
-Parameters:
-pOpacity(enum): The opacity of the background
--"Opaque"
--"Translucent"
--"Transparent"
-
-Description:
-Use the <backgroundOpacity> property to determine whether objects underneath the navbar are visible or not.
-*/
-
-property backgroundOpacity get mOpacity set setOpacity
-metadata backgroundOpacity.editor is "com.livecode.pi.enum"
-metadata backgroundOpacity.options is "Opaque,Translucent,Transparent"
-metadata backgroundOpacity.default is "Opaque"
-metadata backgroundOpacity.label is "Background Opacity"
-
-/*
-Syntax: set the <showDivide> of <widget> to {true | false}
-Syntax: get the <showDivide> of <widget>
+/**
+Syntax: set the <showBorder> of <widget> to {true | false}
+Syntax: get the <showBorder> of <widget>
 
 Summary: Whether the dividing line at the top of the navbar is drawn or not
 
 Description:
-Use the <showDivide> property to determine whether the dividing line at the top of the navbar is drawn or not.
-
+Use the <showBorder> property to determine whether the dividing line at the top
+of the navbar is drawn or not.
 */
-property showDivide get mShowDivide set setShowDivide
-metadata showDivide.default is "true"
-metadata showDivide.label is "Show Divide"
+property showBorder get mShowDivide set setShowDivide
+metadata showBorder.default is "true"
+metadata showBorder.label is "Show Border"
 
-/*
-Syntax: set the editMode of <widget> to (true | false)
-Syntax: get the editMode of <widget>
 
-Summary: Whether the widget is in edit mode or not
-
-Description:
-This is currently an experimental feature of the navigation bar, and allows the icons to
-be changed by clicking on the outlined regions, and new items to be added with the add button.
-*/
+metadata textSize.default is "10"
 
 --
 
 -- private instance variables
 private variable mNavData as List
-
-private variable mWidgetTheme as String
 
 private variable mSelectedItem as Integer
 private variable mItemStyle as String
@@ -339,11 +385,10 @@ private variable mAddIcon as Path
 private variable mDeleteIcon as Path
 private variable mReorderIcon as Path
 
-private variable mDragData as Array
+private variable mDragData as optional Array
 
 private variable mHiliteColor as Color
 
-private variable mOpacity as String
 private variable mShowDivide as Boolean
 
 private variable mActionPaths as Array
@@ -367,21 +412,14 @@ public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 
 	put getNavData() into rProperties["items"]
-	put mWidgetTheme into rProperties["theme"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
-	put colorToString(mHiliteColor, false) into rProperties["hiliteColor"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
 	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
-	put pProperties["itemStyle"] into mItemStyle
-	put stringToColor(pProperties["hiliteColor"]) into mHiliteColor
-
-	if "theme" is among the keys of pProperties then
-    	put pProperties["theme"] into mWidgetTheme
-	end if
+	setItemStyle(pProperties["itemStyle"])
 end handler
 
 public handler OnCreate() returns nothing
@@ -396,42 +434,41 @@ public handler OnCreate() returns nothing
 	put "contacts" into tArray["name"]
 	put "Contacts" into tArray["label"]
 	put "user" into tArray["icon_name"]
-	put "" into tArray["selected_icon_name"]
+	put "" into tArray["hilited_icon_name"]
 	put "" into tArray["icon"]
-	put "" into tArray["selected_icon"]
+	put "" into tArray["hilited_icon"]
 	push tArray onto tNavItems
 
 	put "favourites" into tArray["name"]
 	put "Favourites" into tArray["label"]
 	put "star empty" into tArray["icon_name"]
-	put "" into tArray["selected_icon_name"]
+	put "" into tArray["hilited_icon_name"]
 	put "" into tArray["icon"]
-	put "" into tArray["selected_icon"]
+	put "" into tArray["hilited_icon"]
 	push tArray onto tNavItems
 
 	put "music" into tArray["name"]
 	put "Music" into tArray["label"]
 	put "music" into tArray["icon_name"]
-	put "" into tArray["selected_icon_name"]
+	put "" into tArray["hilited_icon_name"]
 	put "" into tArray["icon"]
-	put "" into tArray["selected_icon"]
+	put "" into tArray["hilited_icon"]
 	push tArray onto tNavItems
 
 	put "search" into tArray["name"]
 	put "Search" into tArray["label"]
 	put "search" into tArray["icon_name"]
-	put "" into tArray["selected_icon_name"]
+	put "" into tArray["hilited_icon_name"]
 	put "" into tArray["icon"]
-	put "" into tArray["selected_icon"]
+	put "" into tArray["hilited_icon"]
 	push tArray onto tNavItems
 	put the number of elements in tNavItems into mNavItemCount
 
 	put tNavItems into mNavData
 
-	put "iOS" into mWidgetTheme
 	put 1 into mSelectedItem
-	put the empty array into mDragData
-	put "icons and names" into mItemStyle
+	put nothing into mDragData
+	put "both" into mItemStyle
 
 	put 0 into mBoxWidth
 
@@ -446,9 +483,8 @@ public handler OnCreate() returns nothing
 
 	put color [0, 121/255,1] into mHiliteColor
 
-	put "Opaque" into mOpacity
 	put true into mShowDivide
-	
+
 	put the empty array into mActionPaths
 end handler
 
@@ -465,43 +501,39 @@ public handler OnPaint() returns nothing
 	end if
 end handler
 
-private handler drawNavBar() returns nothing
-	if mWidgetTheme is "iOS" then
-		drawIos()
-	else if mWidgetTheme contains "Android" then
-		drawAndroid()
-	end if
-end handler
+----------------------------------------------------------------
+-- Drawing in normal mode
+----------------------------------------------------------------
 
-private handler drawIos() returns nothing
+private handler drawNavBar() returns nothing
 	-- background
-	set the paint of this canvas to getPaint("background",mOpacity)
+	set the paint of this canvas to my background paint
 	fill getPath("background") on this canvas
 
 	if mNavItemCount is not 0 then
-		drawIosContent()
+		drawNavBarContent()
 	end if
 
 	-- Draw the top line
 	if mShowDivide then
-		set the paint of this canvas to getPaint("background","stroke")
+		set the paint of this canvas to my border paint
 		set the stroke width of this canvas to 0
 		stroke getPath("line") on this canvas
 	end if
 end handler
 
-private handler drawIosContent() returns nothing
+private handler drawNavBarContent() returns nothing
 	variable tX as Integer
 	repeat with tX from 1 up to mNavItemCount
 		-- Draw the text of the nav bar
-		if mItemStyle contains "names" then
+		if mItemStyle is in ["text","both"] then
 			drawLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"], tX is mSelectedItem)
 		end if
 
-		if mItemStyle contains "icons" then
+		if mItemStyle is in ["icons","both"] then
 			-- Draw the icon
 			if tX is mSelectedItem then
-				drawIcon(mNavData[tX]["selected_icon_path"], true)
+				drawIcon(mNavData[tX]["hilited_icon_path"], true)
 			else
 				drawIcon(mNavData[tX]["icon_path"], false)
 			end if
@@ -510,35 +542,9 @@ private handler drawIosContent() returns nothing
 	end repeat
 end handler
 
-private handler drawAndroid() returns nothing
-	-- background
-	variable tBackground as Path
-	put rectangle path of my bounds into tBackground
-	if mOpacity is "Opaque" or mOpacity is "Translucent" then
-		set the paint of this canvas to getPaint("background", mOpacity)
-		fill tBackground on this canvas
-	end if
-
-	-- border
-	if mOpacity is "Opaque" and mWidgetTheme is "Android(Light)" then
-		set the paint of this canvas to solid paint with color [236/255, 236/255, 235/255]
-		set the stroke width of this canvas to 2
-		stroke tBackground on this canvas
-	end if
-
-	if mNavItemCount is not 0 then
-		drawAndroidContent()
-	end if
-end handler
-
-private handler drawAndroidContent() returns nothing
-	-- icons
-	variable tX as Integer
-	repeat with tX from 1 up to mNavItemCount
-		-- Draw the icon (same whether selected or not)
-		drawAndroidIcon(mNavData[tX]["icon_path"])
-	end repeat
-end handler
+----------------------------------------------------------------
+-- Drawing in edit mode
+----------------------------------------------------------------
 
 private handler drawNavBarEditMode() returns nothing
 	// Make sure the subsequent drawing operations are opaque
@@ -567,7 +573,7 @@ private handler drawEditModeContent() returns nothing
 			-- Draw the icon
 			drawIcon(mNavData[tX]["icon_path"], false)
 			-- Draw the selectedIcon
-			drawIcon(mNavData[tX]["selected_icon_path"], true)
+			drawIcon(mNavData[tX]["hilited_icon_path"], true)
 			-- Draw the 'add item' item
 			drawActionItems(tX)
 			-- Draw the rects round the editable elements
@@ -575,13 +581,17 @@ private handler drawEditModeContent() returns nothing
 			-- Draw the line between items
 			drawEditModeDivide(tX)
 	end repeat
-	
-	if "item" is among the keys of mDragData then
+
+	if mDragData is not nothing then
 		drawDragData()
 	end if
 end handler
 
 private handler drawDragData()
+	if mDragData is nothing then
+		return
+	end if
+
 	variable tTargetPath as Path
 	if "target" is among the keys of mDragData then
 		if mDragData["target"] is 0 then
@@ -591,20 +601,23 @@ private handler drawDragData()
 		else
 			put line path from point [0, mDragData["target"] * kEditModeLineHeight] to point [mWidth, mDragData["target"] * kEditModeLineHeight] into tTargetPath
 		end if
-	end if
-	set the paint of this canvas to getPaint("text", "selected-fill")
-	set the stroke width of this canvas to 3
-	stroke tTargetPath on this canvas
 
-	set the opacity of this canvas to 0.4
-	set the paint of this canvas to getPaint("background","drag-fill")
-	fill rectangle path of mDragData["rect"] on this canvas
-	-- Draw the text of the nav bar
-	drawEditModeLabel(mDragData["label"], mDragData["label_rect"])
-	-- Draw the icon
-	drawIcon(mDragData["icon_path"], false)
-	-- Draw the selectedIcon
-	drawIcon(mDragData["selected_icon_path"], true)
+		set the paint of this canvas to getPaint("text", "selected-fill")
+		set the stroke width of this canvas to 3
+		stroke tTargetPath on this canvas
+	end if
+
+	if "rect" is among the keys of mDragData then
+		set the opacity of this canvas to 0.4
+		set the paint of this canvas to getPaint("background","drag-fill")
+		fill rectangle path of mDragData["rect"] on this canvas
+		-- Draw the text of the nav bar
+		drawEditModeLabel(mDragData["label"], mDragData["label_rect"])
+		-- Draw the icon
+		drawIcon(mDragData["icon_path"], false)
+		-- Draw the selectedIcon
+		drawIcon(mDragData["hilited_icon_path"], true)
+	end if
 end handler
 
 private handler drawEditModeDivide(in pNumber as Number) returns nothing
@@ -613,31 +626,26 @@ private handler drawEditModeDivide(in pNumber as Number) returns nothing
 	end if
 	variable tPath as Path
 	put line path from point [1, kEditModeLineHeight * pNumber] to point [mWidth - 1, kEditModeLineHeight * pNumber + 1] into tPath
-	set the paint of this canvas to getPaint("background", "stroke")
+	set the paint of this canvas to my border paint
 	set the stroke width of this canvas to 0
 	stroke tPath on this canvas
 end handler
 
 private handler drawIcon(in pIconPath as Path, in pSelected as Boolean)
 	if pSelected then
-		set the paint of this canvas to getPaint("text","selected-fill")
+		set the paint of this canvas to my highlight paint
 	else
-		set the paint of this canvas to getPaint("text","fill")
+		set the paint of this canvas to my foreground paint
 	end if
 
 	fill pIconPath on this canvas
 end handler
 
-private handler drawAndroidIcon(in pIconPath as Path)
-	set the paint of this canvas to getPaint("icon", mOpacity)
-	fill pIconPath on this canvas
-end handler
-
 private handler drawLabel(in pLabel as String, in pRect as Rectangle, in pSelected as Boolean)
 	if pSelected then
-		set the paint of this canvas to getPaint("text","selected-fill")
+		set the paint of this canvas to my highlight paint
 	else
-		set the paint of this canvas to getPaint("text","fill")
+		set the paint of this canvas to my foreground paint
 	end if
 
 	set the font of this canvas to getFont("label")
@@ -691,13 +699,13 @@ public handler OnMouseDown() returns nothing
 
 			variable tItemLabel as String
 			put mNavData[mSelectedItem]["label"] into tItemLabel
-			post "navigate" with [tItemLabel]
+			post "hiliteChanged"
 		end if
 	end if
 end handler
 
 public handler OnMouseMove() returns nothing
-		if "item" is among the keys of mDragData then
+		if mDragData is not nothing then
 			calculateDragRow(the y of the mouse position)
 			redraw all
 		end if
@@ -716,7 +724,7 @@ private handler updateParameters()
 	else
 		put mWidth / mNavItemCount into mBoxWidth
 	end if
-	
+
 	if mEditMode then
 		if mNavItemCount is 0 then
 			calculateAddItemRect()
@@ -724,11 +732,7 @@ private handler updateParameters()
 			calculateEditModeIconRects()
 		end if
 	else if mNavItemCount is not 0 then
-		if mWidgetTheme is "iOS" then
-			calculateIosIconRects()
-		else if mWidgetTheme contains "Android" then
-			calculateAndroidIconRects()
-		end if
+		calculateIconRects()
 	end if
 	put false into mRecalculate
 end handler
@@ -772,22 +776,22 @@ private handler calculateEditModeIconRects() returns nothing
 		put tIconPath into mNavData[tX]["icon_path"]
 		put tIconRect into mNavData[tX]["icon_rect"]
 
-		if mNavData[tX]["selected_icon_name"] is not empty then
-			put iconSVGPathFromName(mNavData[tX]["selected_icon_name"]) into mNavData[tX]["selected_icon"]
+		if mNavData[tX]["hilited_icon_name"] is not empty then
+			put iconSVGPathFromName(mNavData[tX]["hilited_icon_name"]) into mNavData[tX]["hilited_icon"]
 		end if
 
-		if mNavData[tX]["selected_icon"] is not "" then
-			put path mNavData[tX]["selected_icon"] into tIconPath
+		if mNavData[tX]["hilited_icon"] is not "" then
+			put path mNavData[tX]["hilited_icon"] into tIconPath
 		end if
 
 		add tLineHeight to tLeft
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
 		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mNavData[tX]["selected_icon_path"]
-		put tIconRect into mNavData[tX]["selected_icon_rect"]
+		put tIconPath into mNavData[tX]["hilited_icon_path"]
+		put tIconRect into mNavData[tX]["hilited_icon_rect"]
 
 		setEditableRect("icon", tX, mNavData[tX]["icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
-		setEditableRect("selectedIcon", tX, mNavData[tX]["selected_icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
+		setEditableRect("selectedIcon", tX, mNavData[tX]["hilited_icon_rect"], "com.livecode.widget.iconPicker", iconSelected)
 
 		calculateEditModeActionPathsForRow(tX)
 	end repeat
@@ -796,33 +800,33 @@ end handler
 private handler calculateAddItemRect()
 	calculateEditModeActionIconPaths(["add"])
 	setActionRect("add_icon", 1, the bounding box of mActionPaths["add_icon_path"], addItem, true)
-end handler 
+end handler
 
 private handler calculateEditModeActionPathsForRow(in pRow as Integer)
 	calculateEditModeActionIconPaths(kStandardActions)
-	
+
 	variable tIconPath as Path
 	put mActionPaths["add_icon_path"] into tIconPath
-	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight] 
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
 	put tIconPath into mNavData[pRow]["add_icon_path"]
 	setActionRect("add_icon", pRow, the bounding box of tIconPath, addItem, true)
 
 	put mActionPaths["delete_icon_path"] into tIconPath
-	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight] 
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
 	put tIconPath into mNavData[pRow]["delete_icon_path"]
 	setActionRect("delete_icon", pRow, the bounding box of tIconPath, deleteItem, true)
 
 	put mActionPaths["reorder_icon_path"] into tIconPath
-	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight] 
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
 	put tIconPath into mNavData[pRow]["reorder_icon_path"]
 	setActionRect("reorder_icon", pRow, the bounding box of tIconPath, reorderItem, false)
-	
+
 end handler
 
 private handler calculateEditModeActionIconPaths(in pActions as List)
 	variable tIconPath as Path
 	variable tIconRect as Rectangle
-		
+
 	variable tActionFraction as Real
 	put 1/4 into tActionFraction
 
@@ -834,7 +838,7 @@ private handler calculateEditModeActionIconPaths(in pActions as List)
 	put kEditModeLineHeight * (1 - tActionFraction) / 2 into tTop
 	put tLeft + kEditModeLineHeight * tActionFraction into tRight
 	put kEditModeLineHeight - kEditModeLineHeight * (1 - tActionFraction) / 2 into tBottom
-	
+
 	if "add" is in pActions then
 		put rectangle [tLeft, tTop, tRight, tBottom] into tIconRect
 		put mAddIcon into tIconPath
@@ -895,110 +899,103 @@ private handler calculateDragRow(in pY as Real) returns nothing
 		constrainPathToRect(tIconRect, tIconPath)
 		put tIconPath into mDragData["icon_path"]
 
-		if mNavData[mDragData["item"]]["selected_icon"] is not "" then
+		if mNavData[mDragData["item"]]["hilited_icon"] is not "" then
 			put path mNavData[mDragData["item"]]["icon"] into tIconPath
 		end if
 
 		add tLineHeight to tLeft
 		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
 		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mDragData["selected_icon_path"]
+		put tIconPath into mDragData["hilited_icon_path"]
 end handler
 
-private handler calculateIosIconRects() returns nothing
-	// calculate the drawing rects
-	variable tX as Integer
-	variable tIconPath as Path
+private handler calculateIconRects() returns nothing
+	variable tNumItems as Number
+	variable tIdx as Number
+	variable tXOffset as Number
+	variable tYOffset as Number
+	variable tIconName as String
+	variable tIconPadding as Number
+	variable tIconRectInfo as List
+	variable tLabelRectInfo as List
 	variable tIconRect as Rectangle
-
-	repeat with tX from 1 up to mNavItemCount
-		if mItemStyle is "names" then
-			-- If we only show the names then center the label rect vertically
-			put rectangle [((2 * tX - 1) * mBoxWidth - mHeight) / 2, 0, ((2 * tX - 1) * mBoxWidth + mHeight) / 2, mHeight] into mNavData[tX]["label_rect"]
-		else if mItemStyle is "icons and names" then
-			-- If we show icons and names then offset the label so its rect is below the icon
-			put rectangle [(tX - 1) * mBoxWidth, mHeight * (1 - (kLabelPaddingRatio + kLabelHeightRatio)), tX * mBoxWidth, mHeight * (1 - kLabelPaddingRatio)] into mNavData[tX]["label_rect"]
-		end if
-
-		if mItemStyle contains "icons" then
-			-- Ensure the icon name has been resolved into a path
-			if mNavData[tX]["icon_name"] is not "" then
-				put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
-			end if
-			put path mNavData[tX]["icon"] into tIconPath
-
-			if mItemStyle is "icons and names" then
-				put rectangle [((2 * tX - 1) * mBoxWidth - mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * kIconPaddingRatio, ((2 * tX - 1) * mBoxWidth + mHeight * (1 - kIconPaddingRatio)) / 2, mHeight * (1 - (kIconPaddingRatio + kLabelHeightRatio + kLabelPaddingRatio))] into tIconRect
-			else if mItemStyle is "icons" then
-				variable tIconSpacing
-                if mNavItemCount is 1 then
-                    put 0 into tIconSpacing
-                else
-                    put (mWidth - 2 * mHeight) / (mNavItemCount - 1) into tIconSpacing
-                end if
-				put rectangle [(1- kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, kIconOnlyPaddingRatio * mHeight, (1+ kIconOnlyPaddingRatio) * mHeight + (tX - 1) * tIconSpacing, (1 - kIconOnlyPaddingRatio) * mHeight] into tIconRect
-			end if
-
-			constrainPathToRect(tIconRect, tIconPath)
-			put tIconPath into mNavData[tX]["icon_path"]
-			put tIconRect into mNavData[tX]["icon_rect"]
-
-			-- Ensure the selected icon name has been resolved into a path
-			if mNavData[tX]["selected_icon_name"] is not empty then
-				put iconSVGPathFromName(mNavData[tX]["selected_icon_name"]) into mNavData[tX]["selected_icon"]
-			end if
-
-			-- If there is no selected icon then just use the non-selected icon
-			if mNavData[tX]["selected_icon"] is not "" then
-				put path mNavData[tX]["selected_icon"] into tIconPath
-			end if
-
-			constrainPathToRect(tIconRect, tIconPath)
-			put tIconPath into mNavData[tX]["selected_icon_path"]
-			put tIconRect into mNavData[tX]["selected_icon_rect"]
-		end if
-	end repeat
-end handler
-
-private handler calculateAndroidIconRects() returns nothing
-
-	variable tX as Integer
+	variable tLabelRect as Rectangle
+	variable tIconType as String
 	variable tIconPath as Path
-	variable tIconRect as Rectangle
 
-	repeat with tX from 1 up to mNavItemCount
-		-- on Android, navbar always displays icons only
+	put the number of elements in mNavData into tNumItems
 
-		-- Ensure the icon name has been resolved into a path
-		if mNavData[tX]["icon_name"] is not "" then
-			put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
+	repeat with tIdx from 1 up to tNumItems
+
+		-- Compute vertical centreline for text and icon
+		put mBoxWidth * (tIdx - 0.5) into tXOffset
+
+		-- Compute label rect
+		if mItemStyle is "text" then
+			-- Each label's effective rect is the whole of the item's box
+			put [tXOffset - mBoxWidth / 2, 0, \
+					tXOffset + mBoxWidth / 2, my height] into tLabelRectInfo
+
+		else
+			-- Each label is located below the corresponding icon
+			put [tXOffset - mBoxWidth / 2, \
+					my height * (1 - kLabelPaddingRatio - kLabelHeightRatio), \
+					tXOffset + mBoxWidth / 2, \
+					my height * (1 - kLabelPaddingRatio)] into tLabelRectInfo
 		end if
 
-		put path mNavData[tX]["icon"] into tIconPath
+		put rectangle tLabelRectInfo into tLabelRect
+		put tLabelRect into mNavData[tIdx]["label_rect"]
 
-		-- calculate the drawing rect
-		variable tCenter
-		put tX*(mWidth/(mNavItemCount + 1)) into tCenter
-		put rectangle [tCenter - mHeight/4, mHeight/4, tCenter + mHeight/4, 3*mHeight/4] into tIconRect
-
-		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mNavData[tX]["icon_path"]
-		put tIconRect into mNavData[tX]["icon_rect"]
-
-		-- Ensure the selected icon name has been resolved into a path
-		if mNavData[tX]["selected_icon_name"] is not empty then
-			put iconSVGPathFromName(mNavData[tX]["selected_icon_name"]) into mNavData[tX]["selected_icon"]
+		if mItemStyle is "text" then
+			-- Don't need to process icons
+			next repeat
 		end if
 
-		-- If there is no selected icon then just use the non-selected icon
-		if mNavData[tX]["selected_icon"] is not "" then
-			put path mNavData[tX]["selected_icon"] into tIconPath
+		-- Compute icon rect
+
+		if mItemStyle is "icons" then
+			-- Position icons along horizontal centreline
+			put my height * kIconOnlyPaddingRatio into tIconPadding
+			put [tXOffset - (mBoxWidth/2), \
+					tIconPadding, \
+					tXOffset + (mBoxWidth/2), \
+					my height - tIconPadding] into tIconRectInfo
+		else
+			-- Position icons above text
+			put my height * kIconPaddingRatio into tIconPadding
+			put [tXOffset - (mBoxWidth/2), \
+					tIconPadding, \
+					tXOffset + (mBoxWidth/2), \
+					the top of tLabelRect - tIconPadding] into tIconRectInfo
 		end if
 
-		constrainPathToRect(tIconRect, tIconPath)
-		put tIconPath into mNavData[tX]["selected_icon_path"]
-		put tIconRect into mNavData[tX]["selected_icon_rect"]
+		put rectangle tIconRectInfo into tIconRect
 
+		-- Fit icons into the icon rect.  Repeat twice, once for the "normal"
+		-- icon and once for the "hilited" icon.  Note that we carry the "normal"
+		-- path round to become the "hilited" icon if there's no "hilited" icon
+		-- specified.
+		put the empty path into tIconPath
+		repeat for each element tIconType in ["icon","hilited_icon"]
+			-- Update icon path
+			if mNavData[tIdx][tIconType & "_name"] is not empty then
+				put iconSVGPathFromName(mNavData[tIdx][tIconType & "_name"]) \
+					into mNavData[tIdx][tIconType]
+			else
+				put "" into mNavData[tIdx][tIconType]
+			end if
+
+			-- Fit the icon path to the icon rect
+			if mNavData[tIdx][tIconType] is not empty then
+				-- Fit icon path to Rectangle
+				put path mNavData[tIdx][tIconType] into tIconPath
+				constrainPathToRect(tIconRect, tIconPath)
+			end if
+
+			put tIconPath into mNavData[tIdx][tIconType & "_path"]
+			put tIconRect into mNavData[tIdx][tIconType & "_rect"]
+		end repeat
 	end repeat
 end handler
 
@@ -1010,8 +1007,8 @@ end handler
 public handler iconSelected(in pSelectedIcon as optional any, in pType as String, in pNumber as Number)
 	if pSelectedIcon is not nothing then
 		if pType is "selectedIcon" then
-			put pSelectedIcon into mNavData[pNumber]["selected_icon_name"]
-			put "" into mNavData[pNumber]["selected_icon"]
+			put pSelectedIcon into mNavData[pNumber]["hilited_icon_name"]
+			put "" into mNavData[pNumber]["hilited_icon"]
 		else
 			put pSelectedIcon into mNavData[pNumber]["icon_name"]
 			put "" into mNavData[pNumber]["icon"]
@@ -1019,11 +1016,11 @@ public handler iconSelected(in pSelectedIcon as optional any, in pType as String
 
 		-- If the selected icon is the same as the icon, just put empty into the selected icon name
 		-- that way, when the icon is changed, the selected icon will change too.
-		if mNavData[pNumber]["selected_icon_name"] is mNavData[pNumber]["icon_name"] then
-			put "" into mNavData[pNumber]["selected_icon_name"]
-			put "" into mNavData[pNumber]["selected_icon"]
+		if mNavData[pNumber]["hilited_icon_name"] is mNavData[pNumber]["icon_name"] then
+			put "" into mNavData[pNumber]["hilited_icon_name"]
+			put "" into mNavData[pNumber]["hilited_icon"]
 		end if
-		post "navDataChanged"
+		post "dataChanged"
 		put true into mRecalculate
 		redraw all
 	end if
@@ -1075,64 +1072,28 @@ public handler getPath(in pObject as String) returns Path
 end handler
 
 public handler getPaint(pLocation, pType) returns Paint
-	if mWidgetTheme is "Android(Dark)" then
-		if pLocation is "background" then
-			if pType is "Opaque" then
-				return solid paint with color [0, 0, 0]
-			else if pType is "Translucent" then
-				return solid paint with color [0, 0, 0, 0.5]
-			end if
-		else if pLocation is "icon" then
-			return solid paint with color [1, 1, 1, 0.9]
+	if pLocation is "background" then
+		if pType is "drag-fill" then
+			return solid paint with color [200/255, 200/255, 200/255]
+		else if pType is "stroke" then
+			return solid paint with color [0, 0, 0, 0.2]
+		else if pType is "editmode-stroke" then
+			return solid paint with color [193/255, 193/255, 193/255]
+		else if pType is "editmode-fill" then
+			return solid paint with color [1, 1, 1]
 		end if
-
-	else if mWidgetTheme is "Android(Light)" then
-		if pLocation is "background" then
-			if pType is "Opaque" then
-				return solid paint with color [1, 1, 1]
-			else if pType is "Translucent" then
-				return solid paint with color [0, 0, 0, 0.149]
-			end if
-		else if pLocation is "icon" then
-			if pType is "Opaque" then
-				return solid paint with color [147/255, 147/255, 147/255]
-			else if pType is "Translucent" then
-				return solid paint with color [147/255, 147/255, 147/255, 0.81]
-			else if pType is "Transparent" then
-				return solid paint with color [147/255, 147/255, 147/255, 0.97]
-			end if
-		end if
-
-	else
-		if pLocation is "background" then
-			if pType is "Opaque" then
-				return solid paint with color [246/255, 246/255, 247/255]
-			else if pType is "Translucent" then
-				return solid paint with color [246/255, 246/255, 247/255, 0.5]
-			else if pType is "Transparent" then
-				return solid paint with color [246/255, 246/255, 247/255, 0]
-			else if pType is "drag-fill" then
-				return solid paint with color [200/255, 200/255, 200/255]
-			else if pType is "stroke" then
-				return solid paint with color [0, 0, 0, 0.2]
-			else if pType is "editmode-stroke" then
-				return solid paint with color [193/255, 193/255, 193/255]
-			else if pType is "editmode-fill" then
-				return solid paint with color [1, 1, 1]
-			end if
-		else if pLocation is "text" then
-			if pType is "fill" then
-				return solid paint with color [146/255, 146/255, 146/255]
-			else if pType is "selected-fill" then
-				return solid paint with mHiliteColor
-			else if pType is "additem" or pType is "deleteitem" then
-				return solid paint with color [1, 1, 1]
-			else if pType is "editmode-fill" then
-				return solid paint with color [0, 0, 0]
-			end if
+	else if pLocation is "text" then
+		if pType is "fill" then
+			return solid paint with color [146/255, 146/255, 146/255]
+		else if pType is "selected-fill" then
+			return solid paint with mHiliteColor
+		else if pType is "additem" or pType is "deleteitem" then
+			return solid paint with color [1, 1, 1]
+		else if pType is "editmode-fill" then
+			return solid paint with color [0, 0, 0]
 		end if
 	end if
-	
+
 	if pLocation is "add" then
 		return solid paint with color [146/255, 146/255, 146/255]
 	else if pLocation is "reorder" then
@@ -1145,27 +1106,48 @@ public handler getPaint(pLocation, pType) returns Paint
 end handler
 
 private handler getFont(in pType as String) returns Font
-	variable tFont as Font
-	put the font of this canvas into tFont
-
-	if pType is "label" then
-		set the size of tFont to 10
-	else if pType is "editmode-label" then
-		set the size of tFont to 12
-	end if
-
-	return tFont
+	return my font
 end handler
 
 public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
-	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavData then
+	if pSelectedItem is not mSelectedItem and \
+			pSelectedItem > 0 and \
+			pSelectedItem <= the number of elements in mNavData then
 		put pSelectedItem into mSelectedItem
-		post "navigate" with [mNavData[mSelectedItem]["label"]]
+		post "hiliteChanged"
 		redraw all
 	end if
 end handler
 
+public handler setNavSelectedItemName(in pName as String) returns nothing
+	variable tCount as Number
+	variable tItem as Array
+
+	-- Find the item index corresponding to pName and set it as the
+	-- currently-highlighted item.
+	put 0 into tCount
+	repeat for each element tItem in mNavData
+		add 1 to tCount
+		if mNavData["name"] is pName then
+			setNavSelectedItem(tCount)
+			exit repeat
+		end if
+	end repeat
+end handler
+
+public handler getNavSelectedItemName() returns String
+	return mNavData[mSelectedItem]["name"]
+end handler
+
 public handler setItemStyle(in pItemStyle as String) returns nothing
+	-- Cope with old-style item style property values
+	if pItemStyle is "icons and names" then
+		put "both" into pItemStyle
+	end if
+	if pItemStyle is "names" then
+		put "text" into pItemStyle
+	end if
+
 	put pItemStyle into mItemStyle
 	put true into mRecalculate
 	redraw all
@@ -1242,8 +1224,8 @@ private handler setData(in pArray as Array, in pKeys as List, out rList as List)
 		end if
 		-- If the selected icon is the same as the icon, just put empty into the selected icon name
 		-- that way, when the icon is changed, the selected icon will change too.
-		if tElement["selected_icon_name"] is tElement["icon_name"] then
-			put "" into tElement["selected_icon_name"]
+		if tElement["hilited_icon_name"] is tElement["icon_name"] then
+			put "" into tElement["hilited_icon_name"]
 		end if
 		push tElement onto tList
 	end repeat
@@ -1294,15 +1276,29 @@ private handler setDataElement(in pElementName as String, in pElements as String
 	redraw all
 end handler
 
-// Only the primary data element ("name" for both actions and nav) can *reduce* the number of elements in the data list.
-private handler setPrimaryDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
-	variable tElements
+-- Only the primary data element ("name" for both actions and nav) can *reduce*
+-- the number of elements in the data list.
+private handler setPrimaryDataElement(in pElementName as String, \
+		in pElements as String, in pUnique as Boolean, \
+		in pDefaultArray as Array, inout xList as List)
+	variable tElements as List
+	variable tElement as String
+	variable tCount as Number
+
 	split pElements by "," into tElements
 
-	variable tCount
-	put 0 into tCount
+	-- Enforce uniqueness, if requested
+	if pUnique then
+		put 0 into tCount
+		repeat with tCount from 1 up to the number of elements in tElements
+			if the index of tElements[tCount] after tCount in tElements is not 0 then
+				throw "duplicate" && pElementName && tElements[tCount]
+				return
+			end if
+		end repeat
+	end if
 
-	variable tElement
+	put 0 into tCount
 	repeat for each element tElement in tElements
 		add 1 to tCount
 		if tCount > the number of elements in xList then
@@ -1319,7 +1315,7 @@ private handler setPrimaryDataElement(in pElementName as String, in pElements as
 	end repeat
 
 	put true into mRecalculate
-    post "navDataChanged"
+    post "dataChanged"
 	redraw all
 end handler
 
@@ -1336,11 +1332,11 @@ private handler defaultNavElement(in pKey as String) returns String
 		return kDefaultNavLabel
 	else if pKey is "icon_name" then
 		return kDefaultNavIconName
-	else if pKey is "selected_icon_name" then
+	else if pKey is "hilited_icon_name" then
 		return ""
 	else if pKey is "icon" then
 		return ""
-	else if pKey is "selected_icon" then
+	else if pKey is "hilited_icon" then
 		return ""
 	end if
 	return ""
@@ -1352,9 +1348,9 @@ private handler defaultNavArray() returns Array
 	put kDefaultNavName into tArray["name"]
 	put kDefaultNavLabel into tArray["label"]
 	put kDefaultNavIconName into tArray["icon_name"]
-	put "" into tArray["selected_icon_name"]
+	put "" into tArray["hilited_icon_name"]
 	put "" into tArray["icon"]
-	put "" into tArray["selected_icon"]
+	put "" into tArray["hilited_icon"]
 	return tArray
 end handler
 
@@ -1373,8 +1369,8 @@ private handler navDataDifferent(in pLeft as List, in pRight as List) returns Bo
             return true
         end if
 
-        if pLeft[tIndex]["selected_icon_name"] is not pRight[tIndex]["selected_icon_name"] then
-            if not (pLeft[tIndex]["selected_icon_name"] is "" and pRight[tIndex]["selected_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["selected_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["selected_icon_name"] is "") then
+        if pLeft[tIndex]["hilited_icon_name"] is not pRight[tIndex]["hilited_icon_name"] then
+            if not (pLeft[tIndex]["hilited_icon_name"] is "" and pRight[tIndex]["hilited_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["hilited_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["hilited_icon_name"] is "") then
                 return true
             end if
         end if
@@ -1392,33 +1388,9 @@ private handler setNavData(in pNavData as Array)
 	if navDataDifferent(tNavData, mNavData) then
 		put tNavData into mNavData
 		put true into mRecalculate
-		post "navDataChanged"
+		post "dataChanged"
 		redraw all
 	end if
-end handler
-
-constant kNavbarThemeIos is "iOS"
-constant kNavbarThemeAndroidDark is "Android(Dark)"
-constant kNavbarThemeAndroidLight is "Android(Light)"
-
-private handler setWidgetTheme(in pWidgetTheme as String)
-
-	variable tThemeList as List
-	variable tInList as Boolean
-
-	put [kNavbarThemeIos, kNavbarThemeAndroidDark, kNavbarThemeAndroidLight] into tThemeList
-	put pWidgetTheme is in tThemeList into tInList
-
-	if tInList is false then
-		throw "invalid widget theme"
-	end if
-
-	if pWidgetTheme is mWidgetTheme then
-		return
-	end if
-
-	put pWidgetTheme into mWidgetTheme
-	redraw all
 end handler
 
 private handler getNavNames() returns String
@@ -1426,9 +1398,7 @@ private handler getNavNames() returns String
 end handler
 
 private handler setNavNames(in pNames as String)
-	setPrimaryDataElement("name", pNames, defaultNavArray(), mNavData)
-	put true into mRecalculate
-	redraw all
+	setPrimaryDataElement("name", pNames, true, defaultNavArray(), mNavData)
 end handler
 
 private handler getNavIcons() returns String
@@ -1437,18 +1407,14 @@ end handler
 
 private handler setNavIcons(in pIcons as String)
 	setDataElement("icon_name", pIcons, defaultNavArray(), mNavData)
-	put true into mRecalculate
-	redraw all
 end handler
 
 private handler getNavSelectedIcons() returns String
-	return getDataElement("selected_icon_name", mNavData)
+	return getDataElement("hilited_icon_name", mNavData)
 end handler
 
 private handler setNavSelectedIcons(in pIcons as String)
-	setDataElement("selected_icon_name", pIcons, defaultNavArray(), mNavData)
-	put true into mRecalculate
-	redraw all
+	setDataElement("hilited_icon_name", pIcons, defaultNavArray(), mNavData)
 end handler
 
 private handler getNavLabels() returns String
@@ -1457,8 +1423,6 @@ end handler
 
 private handler setNavLabels(in pLabels as String)
 	setDataElement("label", pLabels, defaultNavArray(), mNavData)
-	put true into mRecalculate
-	redraw all
 end handler
 
 private handler addItem(in pItem as Number)
@@ -1468,14 +1432,14 @@ private handler addItem(in pItem as Number)
 		splice [defaultNavArray()] after element pItem of mNavData
 	end if
 	put true into mRecalculate
-	post "navDataChanged"
+	post "dataChanged"
 	redraw all
 end handler
 
 private handler deleteItem(in pItem as Number)
 	delete element pItem of mNavData
 	put true into mRecalculate
-	post "navDataChanged"
+	post "dataChanged"
 	redraw all
 end handler
 
@@ -1493,11 +1457,12 @@ private handler moveItem(in pFrom as Number, in pTo as Number) returns nothing
 	else
 		splice [tItem] after element (pTo - 1) of mNavData
 	end if
-	post "navDataChanged"
+	post "dataChanged"
 	put true into mRecalculate
 end handler
 
 private handler reorderItem(in pItem as Number)
+	put {} into mDragData
 	put the y of the mouse position - ((pItem - 1) * kEditModeLineHeight) into mDragData["offset"]
 	put pItem into mDragData["item"]
 	put mNavData[pItem]["label"] into mDragData["label"]
@@ -1505,13 +1470,17 @@ private handler reorderItem(in pItem as Number)
 end handler
 
 private handler dragDrop() returns nothing
+	if mDragData is nothing then
+		return
+	end if
+
 	if "target" is among the keys of mDragData then
 		if mDragData["item"] > mDragData["target"] then
 			moveItem(mDragData["item"], mDragData["target"] + 1)
 		else if mDragData["target"] > mDragData["item"] then
 			moveItem(mDragData["item"], mDragData["target"])
 		end if
-		put the empty array into mDragData
+		put nothing into mDragData
 		redraw all
 	end if
 end handler
@@ -1522,30 +1491,6 @@ private handler getDesiredHeight() returns Number
 	end if
 
     return kEditModeLineHeight
-end handler
-
-constant kOpaqueBackground is "Opaque"
-constant kTranslucentBackground is "Translucent"
-constant kTransparentBackground is "Transparent"
-
-private handler setOpacity(in pOpacity as String) returns nothing
-
-	variable tOpacityList as List
-	variable tInList as Boolean
-
-	put [kOpaqueBackground, kTranslucentBackground, kTransparentBackground] into tOpacityList
-	put pOpacity is in tOpacityList into tInList
-
-	if tInList is false then
-		throw "invalid background opacity"
-	end if
-
-	if pOpacity is mOpacity then
-		return
-	end if
-
-	put pOpacity into mOpacity
-	redraw all
 end handler
 
 private handler setShowDivide(in pShowDivide as Boolean) returns nothing
@@ -1643,8 +1588,8 @@ private handler doPopup(in pClickPos as Point, in pArray as Array)
 	-- Popup the icon picker with the currently selected icon as the initial selection
 	variable tProperties as Array
 	put the empty array into tProperties
-	if pArray["type"] is "selectedIcon" and mNavData[pArray["number"]]["selected_icon_name"] is not "" then
-		put mNavData[pArray["number"]]["selected_icon_name"] into tProperties["selectedIcon"]
+	if pArray["type"] is "selectedIcon" and mNavData[pArray["number"]]["hilited_icon_name"] is not "" then
+		put mNavData[pArray["number"]]["hilited_icon_name"] into tProperties["selectedIcon"]
 	else
 		put mNavData[pArray["number"]]["icon_name"] into tProperties["selectedIcon"]
 	end if
