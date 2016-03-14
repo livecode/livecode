@@ -120,6 +120,7 @@ public handler OnPaint()
     fill getPath("outer nub") on this canvas
     --
 
+	 save state of this canvas
 	 translate this canvas by mCentre
 
     -- draw the numbers
@@ -182,6 +183,8 @@ public handler OnPaint()
   	stroke tSecondHand on this canvas
     restore state of this canvas
     --
+
+	 restore state of this canvas
 
     -- draw the inner circle nub in the middle to cover the ends of the second hand
     set the paint of this canvas to getPaint("inner nub")
