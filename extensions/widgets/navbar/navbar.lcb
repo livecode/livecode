@@ -361,6 +361,19 @@ property showBorder get mShowDivide set setShowDivide
 metadata showBorder.default is "true"
 metadata showBorder.label is "Show Border"
 
+/**
+Syntax: set the <opaque> of <widget> to {true | false}
+Syntax: get the <opaque> of <widget>
+
+Summary: Whether the background of the navbar is opaque
+
+Description:
+If the <opaque> property is `false`, the background of the navbar will be
+transparent.
+*/
+property "opaque" get mShowBackground set setShowBackground
+metadata opaque.default is "true"
+metadata opaque.label is "Opaque Background"
 
 metadata textSize.default is "10"
 
@@ -390,6 +403,7 @@ private variable mDragData as optional Array
 private variable mHiliteColor as Color
 
 private variable mShowDivide as Boolean
+private variable mShowBackground as Boolean
 
 private variable mActionPaths as Array
 
@@ -414,12 +428,19 @@ public handler OnSave(out rProperties as Array)
 	put getNavData() into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
+	put mShowBackground into rProperties["opaque"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
 	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
 	setItemStyle(pProperties["itemStyle"])
+
+	if "opaque" is among the keys of pProperties then
+		put pProperties["opaque"] into mShowBackground
+	else
+		put true into mShowBackground
+	end if
 end handler
 
 public handler OnCreate() returns nothing
@@ -484,6 +505,7 @@ public handler OnCreate() returns nothing
 	put color [0, 121/255,1] into mHiliteColor
 
 	put true into mShowDivide
+	put true into mShowBackground
 
 	put the empty array into mActionPaths
 end handler
@@ -507,8 +529,10 @@ end handler
 
 private handler drawNavBar() returns nothing
 	-- background
-	set the paint of this canvas to my background paint
-	fill getPath("background") on this canvas
+	if mShowBackground then
+		set the paint of this canvas to my background paint
+		fill getPath("background") on this canvas
+	end if
 
 	if mNavItemCount is not 0 then
 		drawNavBarContent()
@@ -1528,6 +1552,16 @@ private handler setShowDivide(in pShowDivide as Boolean) returns nothing
 	put pShowDivide into mShowDivide
 	redraw all
 end handler
+
+private handler setShowBackground(in pShowBackground as Boolean) returns nothing
+	if pShowBackground is mShowBackground then
+		return
+	end if
+
+	put pShowBackground into mShowBackground
+	redraw all
+end handler
+
 --------------------------------------------------------------------------------
 --
 --		Editable rect things

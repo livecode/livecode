@@ -14,7 +14,8 @@
 
 * The **widgetTheme** property has been removed.
 
-* The **backgroundOpacity** property has been removed.
+* The **backgroundOpacity** property has been removed, and has been replaced by
+  the **opaque** property which can be set to `true` or `false`.
 
 * The **showDivide** property has been renamed to **showBorder**.
 
