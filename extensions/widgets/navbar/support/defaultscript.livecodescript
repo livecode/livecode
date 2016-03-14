@@ -1,6 +1,8 @@
 ﻿script "com.livecode.widget.navbar.__DefaultScript"
 -- Sent when a navigation item is clicked
--- pLabel is the label of the navigation item that was clicked
-on navigate pLabel
-   
-end navigate
+--
+-- Use the "hilitedItem" property to get the current item number and the
+-- "hilitedItemName" property to get its item name
+on hiliteChanged
+   put the hilitedItem of me && the hilitedItemName of me
+end hiliteChanged
