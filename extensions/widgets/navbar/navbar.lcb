@@ -428,6 +428,7 @@ public handler OnSave(out rProperties as Array)
 	put getNavData() into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
+	put mShowDivide into rProperties["showBorder"]
 	put mShowBackground into rProperties["opaque"]
 end handler
 
@@ -435,6 +436,12 @@ public handler OnLoad(in pProperties as Array)
 	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
 	setItemStyle(pProperties["itemStyle"])
+
+	if "showBorder" is among the keys of pProperties then
+		put pProperties["showBorder"] into mShowDivide
+	else
+		put true into mShowDivide
+	end if
 
 	if "opaque" is among the keys of pProperties then
 		put pProperties["opaque"] into mShowBackground
