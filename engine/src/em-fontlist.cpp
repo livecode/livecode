@@ -16,11 +16,13 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <SkPaint.h>
 #include <SkTypeface.h>
 
 #include "em-fontlist.h"
 #include "em-util.h"
 
+#include "objdefs.h"
 #include "dllst.h"
 
 class MCFontnode : public MCDLlist
@@ -52,7 +54,7 @@ protected:
 
 
 // Forward declarations
-static MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name);
+static MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name, uint16_t p_style);
 static MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file);
 
 
@@ -68,18 +70,32 @@ MCFontnode::MCFontnode(MCNameRef p_name,
 	  m_requested_style(p_style)
 {
     // Load the font as requested
-    m_font_info.fid = emscripten_get_font_by_name(p_name);
+	m_font_info.fid = emscripten_get_font_by_name(p_name, p_style);
 
-    /* FIXME Dummy values */
-	m_font_info.size = p_size;
-	m_font_info.ascent = p_size - 1;
-	m_font_info.descent = p_size * 2 / 14 + 1;
+    // Calculate the metrics for this typeface and size
+    SkPaint t_paint;
+    t_paint.setTypeface((SkTypeface*)m_font_info.fid);
+    t_paint.setTextSize(p_size);
+        
+    SkPaint::FontMetrics t_metrics;
+        
+    t_paint.getFontMetrics(&t_metrics);
+        
+    // SkPaint::FontMetrics gives the ascent value as a negative offset from the baseline, where we expect the (positive) distance.
+    m_font_info.m_ascent = -t_metrics.fAscent;
+    m_font_info.m_descent = t_metrics.fDescent;
+    m_font_info.m_leading = t_metrics.fLeading;
+    m_font_info.m_xheight = t_metrics.fXHeight;
+
+    m_font_info.size = p_size;
 
     //MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
 }
 
 MCFontnode::~MCFontnode()
 {
+	SkTypeface *t_typeface = reinterpret_cast<SkTypeface *>(m_font_info.fid);
+	t_typeface->unref();
 }
 
 MCFontStruct *
@@ -240,10 +256,38 @@ MCFontlist::getfontstructinfo(MCNameRef & r_name,
 }
 
 
-MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name)
+MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name,
+                                            uint16_t p_style)
 {
-    // TODO
-    return emscripten_get_font_from_file(MCSTR("/boot/fonts/basefont.ttf"));
+	MCLog("%s: %@", __FUNCTION__, p_name);
+	/* Decode style */
+	bool t_italic = (0 != (p_style & FA_ITALIC));
+	bool t_bold = (0x05 < (p_style & FA_WEIGHT));
+	SkTypeface::Style t_style;
+	if (t_italic && t_bold)
+	{
+		t_style = SkTypeface::kBoldItalic;
+	}
+	else if (t_italic)
+	{
+		t_style = SkTypeface::kItalic;
+	}
+	else if (t_bold)
+	{
+		t_style = SkTypeface::kBold;
+	}
+	else
+	{
+		t_style = SkTypeface::kNormal;
+	}
+
+	MCAutoStringRefAsSysString t_sys_name;
+	/* UNCHECKED */ t_sys_name.Lock(MCNameGetString(p_name));
+
+	MCSysFontHandle t_handle =
+		MCSysFontHandle(SkTypeface::CreateFromName(*t_sys_name, t_style));
+	MCAssert(nil != t_handle);
+	return t_handle;
 }
 
 MCSysFontHandle emscripten_get_font_from_file(MCStringRef p_file)

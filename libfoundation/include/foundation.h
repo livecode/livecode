@@ -681,6 +681,7 @@ typedef wchar_t *BSTR;
 #endif
 
 #if defined(__MAC__) || defined(__IOS__)
+typedef const struct __CFNumber *CFNumberRef;
 typedef const struct __CFString *CFStringRef;
 typedef const struct __CFData *CFDataRef;
 #endif
@@ -1821,7 +1822,12 @@ MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offs
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
-
+    
+#if defined(__MAC__) || defined (__IOS__)
+// Convert the given array to a CFArrayRef if it is a sequence.
+MC_DLLEXPORT bool MCNumberConvertToCFNumberRef(MCArrayRef self, CFNumberRef& r_array);
+#endif
+    
 MC_DLLEXPORT extern MCNumberRef kMCZero;
 MC_DLLEXPORT extern MCNumberRef kMCOne;
 MC_DLLEXPORT extern MCNumberRef kMCMinusOne;
@@ -2088,10 +2094,11 @@ MC_DLLEXPORT bool MCStringCantBeEqualToNative(MCStringRef string, MCStringOption
 MC_DLLEXPORT bool MCStringIsNative(MCStringRef string);
 
 // Returns true if the string only requires BMP characters to represent.
-MC_DLLEXPORT bool MCStringIsSimple(MCStringRef string);
+MC_DLLEXPORT bool MCStringIsBasic(MCStringRef string);
 
-// Returns true if the string only comprises non-combining characters.
-MC_DLLEXPORT bool MCStringIsUncombined(MCStringRef string);
+// Returns true if the string's grapheme -> codeunit mapping is one-to-one.
+// Note that trivial entails basic, as any SMP codepoints are multi-codeunit.
+MC_DLLEXPORT bool MCStringIsTrivial(MCStringRef string);
 
 /////////
 
@@ -2150,10 +2157,10 @@ MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_r
 MC_DLLEXPORT bool MCStringUnmapCodepointIndices(MCStringRef, MCRange p_string_range, MCRange &r_codepoint_range);
 
 // Maps from a grapheme (visual character) range to a code unit (StringRef) range
-MC_DLLEXPORT bool MCStringMapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_grapheme_range, MCRange& r_string_range);
+MC_DLLEXPORT bool MCStringMapGraphemeIndices(MCStringRef, MCRange p_grapheme_range, MCRange& r_string_range);
 
 // Maps from a code unit (StringRef) range to a grapheme (visual character) range
-MC_DLLEXPORT bool MCStringUnmapGraphemeIndices(MCStringRef, MCLocaleRef, MCRange p_string_range, MCRange& r_grapheme_range);
+MC_DLLEXPORT bool MCStringUnmapGraphemeIndices(MCStringRef, MCRange p_string_range, MCRange& r_grapheme_range);
 
 // Maps from a word range to a codeunit (StringRef) range
 MC_DLLEXPORT bool MCStringMapTrueWordIndices(MCStringRef, MCLocaleRef, MCRange p_word_range, MCRange& r_string_range);
@@ -2176,6 +2183,10 @@ MC_DLLEXPORT bool MCStringUnmapParagraphIndices(MCStringRef, MCLocaleRef, MCRang
 // Returns true if the codepoint is alphabetic or numeric.
 MC_DLLEXPORT bool MCStringCodepointIsWordPart(codepoint_t p_codepoint);
 
+// Returns the index of the beginning of the next grapheme after p_from.
+uindex_t MCStringGraphemeBreakIteratorAdvance(MCStringRef self, uindex_t p_from);
+// Returns the index of the beginning of the previous grapheme before p_from.
+uindex_t MCStringGraphemeBreakIteratorRetreat(MCStringRef self, uindex_t p_from);
 // Flexible grapheme/codepoint/codeunit mapping used for "char" chunk expressions
 enum MCCharChunkType
 {
@@ -2487,6 +2498,10 @@ MC_DLLEXPORT unsigned int MCStringCodepointToSurrogates(codepoint_t, unichar_t (
 // a valid surrogate pair. Lone lead or trail code units are not valid pairs.
 MC_DLLEXPORT bool MCStringIsValidSurrogatePair(MCStringRef, uindex_t);
 
+// Returns true if the codeunit at the given index in the string is the
+// beginning of a new grapheme cluster.
+MC_DLLEXPORT bool MCStringIsGraphemeClusterBoundary(MCStringRef, uindex_t);
+    
 //////////
 
 // Normalises a string into the requested form
@@ -2662,7 +2677,7 @@ MC_DLLEXPORT bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRe
 
 // Returns true if the given array is the empty array.
 MC_DLLEXPORT bool MCArrayIsEmpty(MCArrayRef self);
-
+    
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  LIST DEFINITIONS

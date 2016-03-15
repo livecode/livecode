@@ -69,6 +69,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libgnomevfs/gnome-vfs-mime.h>
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 
+#include <gtk/gtk.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1729,8 +1730,10 @@ public:
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                off_t t_len = t_buf.st_size;
-                if (t_len != 0)
+				// The length of a file could be > 32-bit, so we have to check that
+				// the file size fits into a 32-bit integer as that is what mmap expects
+				off_t t_len = t_buf.st_size;
+                if (t_len != 0 && t_len < UINT32_MAX)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                 t_fd, 0);
@@ -2339,6 +2342,7 @@ public:
             {
                 MCU_realloc((char **)&MCprocesses, MCnprocesses,
                             MCnprocesses + 1, sizeof(Streamnode));
+                MCprocesses[MCnprocesses].pid = 0;
                 MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
                 MCprocesses[MCnprocesses].mode = OM_NEITHER;
                 MCprocesses[MCnprocesses].ohandle = NULL;
@@ -3289,8 +3293,6 @@ public:
                 maxfd = MCinputfd;
         }
 
-        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-
         if (g_notify_pipe[0] != -1)
         {
             FD_SET(g_notify_pipe[0], &rmaskfd);
@@ -3344,7 +3346,6 @@ public:
             return True;
         if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
             readinput = True;
-        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 
         // Check whether any of the GLib file descriptors were signalled
         for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
@@ -3554,6 +3555,44 @@ public:
         return MCListCreateMutable('\n', &t_list) &&
             MCListAppend(*t_list, MCresult->getvalueref()) &&
             MCListCopy(*t_list, r_list);
+    }
+    
+    virtual void ShowMessageDialog(MCStringRef p_title,
+                                   MCStringRef p_message)
+    {
+        MCAutoStringRefAsUTF8String t_title_utf8;
+        if (!t_title_utf8 . Lock(p_title))
+            return;
+        
+        MCAutoStringRefAsUTF8String t_message_utf8;
+        if (!t_message_utf8 . Lock(p_message))
+            return;
+        
+        typedef GtkMessageDialog *(*gtk_message_dialog_newPTR)(GtkWindow *parent,
+                                                               GtkDialogFlags flags,
+                                                               GtkMessageType type,
+                                                               GtkButtonsType buttons,
+                                                               const gchar *message_format,
+                                                               ...);
+        extern gtk_message_dialog_newPTR gtk_message_dialog_new_ptr;
+        
+        GtkMessageDialog *t_dialog;
+        t_dialog = gtk_message_dialog_new_ptr(NULL,
+                                              GTK_DIALOG_MODAL,
+                                              GTK_MESSAGE_INFO,
+                                              GTK_BUTTONS_CLOSE,
+                                              "%s",
+                                              *t_title_utf8);
+        
+        typedef void (*gtk_message_dialog_format_secondary_textPTR)(GtkMessageDialog *message_dialog,
+                                                                    const gchar *message_format,
+                                                                    ...);
+        extern gtk_message_dialog_format_secondary_textPTR gtk_message_dialog_format_secondary_text_ptr;
+        gtk_message_dialog_format_secondary_text_ptr(t_dialog,
+                                                     "%s",
+                                                     *t_message_utf8);
+        gtk_dialog_run(GTK_DIALOG(t_dialog));
+        gtk_widget_destroy(GTK_WIDGET(t_dialog));
     }
 };
 

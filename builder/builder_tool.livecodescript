@@ -8,6 +8,7 @@ on startup
    
    __loadExternal "revzip"
    __loadExternal "revxml"
+   __loadExternal "revdb"
    
    put false into sWarnAsError
    
@@ -41,7 +42,7 @@ on startup
          end if
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--stage" then
-         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,server,notes,docs,disk" then
+         if tArgs[tArgIndex + 1] is not among the items of "environment,tools,server,notes,docs,disk,guide" then
             __builderLog "error", "Unknown stage '" & tArgs[tArgIndex + 1] & "'"
          end if
          put tArgs[tArgIndex + 1] into tStage
@@ -105,7 +106,7 @@ on startup
    end if
    
    if tEdition is "commercial" and tStage is not "server" then
-      __builerLog "error", "Commercial is only a valid edition for server packages"
+      __builderLog "error", "Commercial is only a valid edition for server packages"
    end if
    
    if tStage is "environment" then
@@ -163,14 +164,18 @@ end __loadExternal
 
 command __builderLog pType, pMessage
    local tLine
+
+   -- Promote builder warnings to errors, if requested
+   if pType is "warning" and sWarnAsError then
+      put "error" into pType
+   end if
    
    put toUpper(char 1 of pType) into char 1 of pType
    
    repeat for each line tLine in pMessage
       write ("[" && the internet date && "]" && ":" && pType && ":" && tLine & return) to stderr
    end repeat
-   if pType is "warning" and sWarnAsError or \
-         pType is "error" then
+   if pType is "error" then
       quit 1
    end if
 end __builderLog

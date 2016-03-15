@@ -1,4 +1,4 @@
-script "CoreButtonProps"
+﻿script "CoreButtonProps"
 /*
 Copyright (C) 2015 LiveCode Ltd.
 
@@ -23,23 +23,13 @@ on TestUnhighlight
 
 	unhilite button 1
 	TestAssert "no hilite on button 1", not the hilite of button 1
-	hilite button 1
-	TestAssert "still dehilited", the hilite of button 1
-
-	unhilite button 1
-	TestAssert "no hilite on button 1", not the hilite of button 1
-	highlight button 2
-	TestAssert "test", the hilite of button 2
+	hilite button 2
+	TestAssert "still dehilited", not the hilite of button 1
 
 	dehilite button 2
 	TestAssert "no hilite on button 2", not the hilite of button 2
 	hilite button 1
-	TestAssert "still dehilited", the hilite of button 1
-
-	dehilite button 1
-	TestAssert "no hilite on button 1", not the hilite of button 1
-	highlight button 1
-	TestAssert "still dehilited", the hilite of button 1
+	TestAssert "still dehilited", not the hilite of button 2
 end TestUnhighlight
 
 on TestHighlightedButtonID
@@ -48,23 +38,23 @@ on TestHighlightedButtonID
 	create button in group 1
 
 	TestAssert "empty hilite on button creation", the hilitedbuttonid of group 1 is 0
-	set the highlitedbuttonid of group 1 to the short id of button 2
-	TestAssertBroken "button 1 of group 1 is unhilited", not the hilite of button 1, "bug 16281"
+	set the hilitedbuttonid of group 1 to the short id of button 2
+	TestAssert "button 1 of group 1 is unhilited", not the hilite of button 1
 	hilite button 1
-	TestAssertBroken "hilitedbuttonid is button 1 of group 1", the hilitedbuttonid of group 1 is the short id of button 1, "bug 16281"
-	TestAssertBroken "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1, "bug 16281"
+	TestAssert "hilitedbuttonid is button 1 of group 1", the hilitedbuttonid of group 1 is the short id of button 1
+	TestAssertBroken "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1, "bug 16551"
 
 	unhilite button 1
-	TestAssertBroken "button 1 of group 1 is unhilited", not the hilite of button 1, "bug 16281"
-	highlight button 2
-	TestAssertBroken "hilitedbuttonid is button 2 of group 1", the hilitedbuttonid of group 1 is the short id of button 2, "bug 16281"
-	TestAssertBroken "hilitedbuttonname is button 2 of group 1", the hilitedbuttonname of group 1 is the short name of button 2, "bug 16281"
+	TestAssert "button 1 of group 1 is unhilited", not the hilite of button 1
+	hilite button 2
+	TestAssert "hilitedbuttonid is button 2 of group 1", the hilitedbuttonid of group 1 is the short id of button 2
+	TestAssertBroken "hilitedbuttonname is button 2 of group 1", the hilitedbuttonname of group 1 is the short name of button 2, "bug 16551"
 
 	dehilite button 2
-	TestAssertBroken "button 2 of group 1 is unhilited", not the hilite of button 2, "bug 16281"
-	set the highlitedbuttonid of group 1 to the short id of button 1
-	TestAssertBroken "hilitedbuttonid is button 1 of group 1", the hilitedbuttonid of group 1 is the short id of button 1, "bug 16281"
-	TestAssertBroken "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1, "bug 16281"
+	TestAssert "button 2 of group 1 is unhilited", not the hilite of button 2
+	set the hilitedbuttonid of group 1 to the short id of button 1
+	TestAssert "hilitedbuttonid is button 1 of group 1", the hilitedbuttonid of group 1 is the short id of button 1
+	TestAssertBroken "hilitedbuttonname is button 1 of group 1", the hilitedbuttonname of group 1 is the short name of button 1, "bug 16551"
 end TestHighlightedButtonID
 
 on TestHighlightBorder
@@ -83,13 +73,15 @@ end TestHighlightBorder
 
 on TestHighlightFill
 	create button
-	TestAssert "hilitefill is false on button creation", the hilitefill of button 1 is false
 
-	set the hilitefill of button 1 to true
-	TestAssert "button hilitefill set to true", the hilitefill of button 1
+	-- Consistent with LiveCode 6.7
+	TestAssert "hilitefill is true on button creation", the hilitefill of button 1
 
 	set the hilitefill of button 1 to false
 	TestAssert "button hilitefill set to false", the hilitefill of button 1 is false
+
+	set the hilitefill of button 1 to true
+	TestAssert "button hilitefill set to true", the hilitefill of button 1
 end TestHighlightFill
 
 on TestHighlightedIcon
@@ -104,29 +96,29 @@ end TestHighlightedIcon
 
 on TestSharedHighlight
 	create button
-	TestAssert "sharedhilite is false on button creation", the sharedhilite of button 1 is false
+	TestAssert "sharedhilite is true on button creation", the sharedhilite of button 1 is true
+
+	set the sharedhilite of button 1 to false
+	TestAssert "sharedhilite set to false", the sharedhilite of button 1 is false
 
 	set the sharedhilite of button 1 to true
 	TestAssert "sharedhilite set to true", the sharedhilite of button 1
-	
-	set the sharedhilite of button 1 to false
-	TestAssert "sharedhilite set to false", the sharedhilite of button 1 is false
 end TestSharedHighlight
 
 on TestShowHighlight
 	create button
-	TestAssert "showhilite is true on button creation", the showhilite of button 1 is true
-
-	set the showhilite of button 1 to false
-	TestAssert "showhilite set to false", the showhilite of button 1 is false
+	TestAssert "showhilite is false on button creation", the showhilite of button 1 is false
 
 	set the showhilite of button 1 to true
 	TestAssert "showhilite set to true", the showhilite of button 1
+
+	set the showhilite of button 1 to false
+	TestAssert "showhilite set to false", the showhilite of button 1 is false
 end TestShowHighlight
 
 on TestHighlightColorDefault
 	create button
-	TestAssert "default button hilitecolor", the button of field 1 is empty
+	TestAssert "default button hilitecolor", the hilitecolor of button 1 is empty
 end TestHighlightColorDefault
 
 on TestHighlightColors
@@ -147,13 +139,13 @@ end TestHighlightColors
 
 on TestLinkHighlightColors
 	set the linkhilitecolor to "blue"
-	TestAssertBroken "linkhilitecolor set to blue", the linkhilitecolor is "blue", "bug 16280"
+	TestAssert "linkhilitecolor set to blue", the linkhilitecolor is "blue"
 
 	set the linkhilitecolor to "255,255,0"
-	TestAssertBroken "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0", "bug 16280"
+	TestAssert "linkhilitecolor set to RGB value", the linkhilitecolor is "255,255,0"
 
 	set the linkhilitecolor to "#336633"
-	TestAssertBroken "linkhilitecolor set to hex value", the linkhilitecolor is "#336633", "bug 16280"
+	TestAssert "linkhilitecolor set to hex value", the linkhilitecolor is "#336633"
 end TestLinkHighlightColors
 
 on TestHighlighted
@@ -169,7 +161,7 @@ end TestHighlighted
 
 on TestButtonAutoHighlightDefault
 	create button
-	TestAssert "button autohilite is false on button creation", the autohilite of button 1 is false
+	TestAssert "button autohilite is true on button creation", the autohilite of button 1 is true
 end TestButtonAutoHighlightDefault
 
 on TestButtonAutoHighlight

@@ -1053,7 +1053,7 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
       end repeat
       
       repeat for each word tArch in kArchs
-         filter tZipItems with "*" & tArch & "*"
+         filter tZipItems with "*" & tArch & "*" into tZipItemsFiltered
          put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
          
          repeat for each line tZipItem in tZipItemsFiltered
@@ -1276,7 +1276,7 @@ function mapFilePath pPath
    end if
    
    put the last item of pPath into tComponent
-   put revLicenseType() into tSuffix
+   put the editionType into tSuffix
    put toUpper(char 1 of tSuffix) into char 1 of tSuffix
    switch tComponent
       case "notify_icon.png"

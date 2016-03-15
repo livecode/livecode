@@ -856,7 +856,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_FTP_PROXY:
 	case P_HTTP_HEADERS:
 	case P_HTTP_PROXY:
-	case P_SHOW_INVISIBLES:
 	case P_SOCKET_TIMEOUT:
 	case P_RANDOM_SEED:
 	case P_ADDRESS:
@@ -1039,6 +1038,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_UNDERLINE_LINKS:
 	case P_SELECT_GROUPED_CONTROLS:
 	case P_ICON:
+	case P_SHOW_INVISIBLES:
 		if (sp.next(type) != PS_NORMAL)
 			break;
 		if (which < P_FIRST_ARRAY_PROP)
@@ -5540,22 +5540,8 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 	
 	if (t_prop == P_CUSTOM)
 	{
-		MCObject *t_object;
-		uint4 t_parid;
-		if (t_success)
-            t_success = target -> getobjforprop(ctxt, t_object, t_parid);
-		
-		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
-		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
-		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
-		//   MCChunk::setprop.
-		if (t_success)
-		{
-			if (*t_index_name == nil)
-				t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, r_value);
-			else
-				t_success = t_object -> getcustomprop(ctxt, *t_prop_name, *t_index_name, r_value);
-		}
+        if (t_success)
+            t_success = target -> getcustomprop(ctxt, *t_prop_name, *t_index_name, r_value);
 	}
 	else
 	{
@@ -5646,24 +5632,7 @@ void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
     
 	if (t_prop == P_CUSTOM)
 	{
-		MCObject *t_object;
-		uint4 t_parid;
-		t_success = target -> getobjforprop(ctxt, t_object, t_parid);
-		
-		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
-		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
-		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
-		//   MCChunk::setprop.
-		if (t_success)
-		{
-			if (*t_index_name == nil)
-				t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, p_value);
-			else
-				t_success = t_object -> setcustomprop(ctxt, *t_prop_name, *t_index_name, p_value);
-			// MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
-			if (t_success)
-				t_object -> signallisteners(t_prop);
-		}
+        t_success = target -> setcustomprop(ctxt, *t_prop_name, *t_index_name, p_value);
 	}
 	else
 	{   

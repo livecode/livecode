@@ -65,7 +65,7 @@ uinteger_t MCChunkCountGraphemeChunkCallback(void *context)
         t_range = *t_state -> range;
     
     MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices((MCStringRef)t_state -> value, kMCLocaleBasic, t_range, t_grapheme_range);
+    MCStringUnmapGraphemeIndices((MCStringRef)t_state -> value, t_range, t_grapheme_range);
     return t_grapheme_range . length;
 }
 
@@ -478,6 +478,55 @@ MCTextChunkIterator::~MCTextChunkIterator()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCTextChunkIterator_Grapheme::MCTextChunkIterator_Grapheme(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
+{
+    ;
+}
+
+MCTextChunkIterator_Grapheme::MCTextChunkIterator_Grapheme(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction) : MCTextChunkIterator(p_text, p_chunk_type, p_restriction)
+{
+    ;
+}
+
+MCTextChunkIterator_Grapheme::~MCTextChunkIterator_Grapheme()
+{
+    ;
+}
+
+bool MCTextChunkIterator_Grapheme::Next()
+{
+    m_range . offset = m_range . offset + m_range . length;
+    
+    if (m_range . offset >= m_length)
+        return false;
+    
+    uindex_t t_next;
+    t_next = MCStringGraphemeBreakIteratorAdvance(m_text, m_range . offset);
+    
+    if (t_next == kMCLocaleBreakIteratorDone)
+    {
+        m_exhausted = true;
+        t_next = m_length;
+    }
+    
+    m_range . length = t_next - m_range . offset;
+    return true;
+}
+
+bool MCTextChunkIterator_Grapheme::IsAmong(MCStringRef p_needle)
+{
+    if (MCStringIsEmpty(p_needle))
+        return false;
+    
+    while (Next())
+        if (MCStringSubstringIsEqualTo(m_text, m_range, p_needle, m_options))
+            return true;
+    
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCTextChunkIterator_Codepoint::MCTextChunkIterator_Codepoint(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
 {
     ;
@@ -740,12 +789,11 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
     
     switch (p_chunk_type)
     {
-        case kMCChunkTypeCharacter:
         case kMCChunkTypeSentence:
         {
             MCRange t_range;
             uindex_t t_end;
-            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, p_chunk_type == kMCChunkTypeSentence ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeSentence, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, m_text);
             t_range . length = 0;
             t_range . offset = 0;
@@ -788,14 +836,13 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
     
     switch (p_chunk_type)
     {
-        case kMCChunkTypeCharacter:
         case kMCChunkTypeSentence:
         {
             MCAutoStringRef t_substring;
             MCStringCopySubstring(m_text, p_restriction, &t_substring);
             MCRange t_range;
             uindex_t t_end;
-            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, p_chunk_type == kMCChunkTypeSentence ? kMCBreakIteratorTypeSentence : kMCBreakIteratorTypeCharacter, break_iterator);
+            /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeSentence, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
             // PM-2015-05-26: [[ Bug 15422 ]] Start with zero length to make sure the first trueWord is counted
             t_range . length = 0;
@@ -816,14 +863,14 @@ MCTextChunkIterator_ICU::MCTextChunkIterator_ICU(MCStringRef p_text, MCChunkType
             MCAutoArray<uindex_t> t_breaks;
             /* UNCHECKED */ MCLocaleBreakIteratorCreate(kMCLocaleBasic, kMCBreakIteratorTypeWord, break_iterator);
             /* UNCHECKED */ MCLocaleBreakIteratorSetText(break_iterator, *t_substring);
-            MCRange t_range;
-            t_range . length = p_restriction . length;
-            t_range . offset = p_restriction . offset;
-            
-            while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_range)
-                   && t_range . offset + t_range . length != kMCLocaleBreakIteratorDone)
+            MCRange t_rel_range;
+            t_rel_range = MCRangeMake(0, 0);
+
+            while (MCLocaleWordBreakIteratorAdvance(*t_substring, break_iterator, t_rel_range)
+                   && t_rel_range . offset + t_rel_range . length != kMCLocaleBreakIteratorDone)
             {
-                m_breaks . Push(t_range);
+                m_breaks . Push(MCRangeMake(t_rel_range . offset + p_restriction . offset,
+                                            t_rel_range . length + p_restriction . length));
             }
         }
         break;
@@ -906,14 +953,12 @@ bool MCTextChunkIterator_Word::Next()
 
 MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCStringRef p_item_delimiter, MCStringOptions p_options)
 {
-    if (p_chunk_type == kMCChunkTypeCharacter && (MCStringIsNative(p_text) || (MCStringIsSimple(p_text) && MCStringIsUncombined(p_text))))
-        p_chunk_type = kMCChunkTypeCodeunit;
+    p_chunk_type = MCChunkTypeSimplify(p_text, p_chunk_type);
     
     MCTextChunkIterator *t_iterator = nil;
     
     switch (p_chunk_type)
     {
-        case kMCChunkTypeCharacter:
         case kMCChunkTypeSentence:
         case kMCChunkTypeTrueWord:
             if (p_range != nil)
@@ -951,6 +996,12 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
             else
                 t_iterator = new MCTextChunkIterator_Word(p_text, p_chunk_type, p_line_delimiter);
             break;
+        case kMCChunkTypeCharacter:
+            if (p_range != nil)
+                t_iterator = new MCTextChunkIterator_Grapheme(p_text, p_chunk_type, *p_range);
+            else
+                t_iterator = new MCTextChunkIterator_Grapheme(p_text, p_chunk_type);
+            break;
         case kMCChunkTypeCodepoint:
             if (p_range != nil)
                 t_iterator = new MCTextChunkIterator_Codepoint(p_text, p_chunk_type, *p_range);
@@ -973,3 +1024,42 @@ MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCChunkType MCChunkTypeSimplify(MCStringRef p_string, MCChunkType p_type)
+{
+    switch (p_type)
+    {
+        case kMCChunkTypeCharacter:
+        {
+            if (MCStringIsTrivial(p_string))
+                return kMCChunkTypeCodeunit;
+            
+            break;
+        }
+        case kMCChunkTypeCodepoint:
+        {
+            if (MCStringIsBasic(p_string))
+                return kMCChunkTypeCodeunit;
+            break;
+        }
+        default:
+            break;
+    }
+    
+    return p_type;
+}
+
+MCChunkType MCChunkTypeFromCharChunkType(MCCharChunkType p_char_type)
+{
+    switch (p_char_type)
+    {
+        case kMCCharChunkTypeCodeunit:
+            return kMCChunkTypeCodeunit;
+        case kMCCharChunkTypeCodepoint:
+            return kMCChunkTypeCodepoint;
+        case kMCCharChunkTypeGrapheme:
+            return kMCChunkTypeCharacter;
+        default:
+            MCUnreachableReturn(kMCChunkTypeCharacter);
+    }
+}

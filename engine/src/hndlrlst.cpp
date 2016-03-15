@@ -729,7 +729,7 @@ static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandle
 		if (p_first && p_object != nil)
         {
             t_format = "%s%s %@ %d %d %@";
-            p_object -> GetLongId(ctxt, &t_long_id);
+            p_object -> GetLongId(ctxt, 0, &t_long_id);
         }
         else
             t_format = "%s%s %@ %d %d";

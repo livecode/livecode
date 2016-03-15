@@ -212,17 +212,16 @@
 						
 						'sources':
 						[
-							'engine/linux.link',
+							'engine/standalone-armv6-hf.link',
 						],
 						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
-							
-							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/standalone-armv6-hf.link',
 						],
-						
+
 						'actions':
 						[
 							{
@@ -334,6 +333,7 @@
 									'rsrc/mobile-disable-ats-template.plist',
 									'rsrc/template-entitlements.xcent',
 									'rsrc/template-store-entitlements.xcent',
+									'rsrc/template-beta-report-entitlement.xcent',
 									'rsrc/template-remote-notification-entitlements.xcent',
 									'rsrc/template-remote-notification-store-entitlements.xcent',
 									'rsrc/template-ResourceRules.plist',
@@ -765,6 +765,38 @@
 						'actions':
 						[
 							{
+								'action_name': 'genwhitelist',
+								'message': 'Generating the Emterpreter whitelist',
+
+								'inputs':
+								[
+									'../util/emscripten-genwhitelist.py',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'src/em-whitelist.json',
+									'src/em-blacklist.json',
+								],
+
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
+									'<(PRODUCT_DIR)/standalone-community-blacklist.json',
+								],
+
+								'action':
+								[
+									'../util/emscripten-genwhitelist.py',
+									'--input',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
+									'<(PRODUCT_DIR)/standalone-community-blacklist.json',
+									'--include',
+									'src/em-whitelist.json',
+									'--exclude',
+									'src/em-blacklist.json',
+								],
+							},
+							{
 								'action_name': 'javascriptify',
 								'message': 'Javascript-ifying the Emscripten engine',
 
@@ -773,7 +805,7 @@
 									'../util/emscripten-javascriptify.py',
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'rsrc/emscripten-html-template.html',
-									'src/em-whitelist.json',
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
 									'src/em-preamble.js',
 									'src/em-preamble-overlay.js',
 									'src/em-util.js',
@@ -802,7 +834,7 @@
 									'--shell-file',
 									'rsrc/emscripten-html-template.html',
 									'--whitelist',
-									'src/em-whitelist.json',
+									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
 									'--pre-js',
 									'src/em-preamble.js',
 									'src/em-preamble-overlay.js',

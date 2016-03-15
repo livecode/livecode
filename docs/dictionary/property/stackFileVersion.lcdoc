@@ -6,74 +6,29 @@ Syntax: set the stackFileVersion to <version>
 
 Syntax: the stackFileVersion
 
-Summary: Reports the version of the stack file format to use.
+Summary: The version of the stack file format to use when saving stacks
 
 Introduced: 2.7
 
-OS: mac,windows,linux,ios,android
+OS: mac,windows,linux,ios,android,html5
 
 Platforms: desktop,server,web,mobile
 
-Example:
-command legacySave pStack
-  local
-tOldStackFileVersion
-  put the stackFileVersion into
-tOldStackFileVersion
-  set the stackFileVersion to 2.4
-  save
-stack pStack
-  set the stackFileVersion to
-OldStackFileVersion
-end legacySave
-
 Value:
-The <stackFileVersion> currently has two possible values:
-  - "2.4" - This stack file version is used by LiveCode 2.6.1 and arlier
-  - "2.7" - This stack file version is used by versions of LiveCode after 2.6.1 and before 5.5.0.
-  - "5.5" - This stack file version is used by versions of LiveCode after 5.5.0 and before .0.
-  - "7.0" - This stack file version is used by versions of LiveCode 7.0. and after.
+The name of a <stack version>.
 
 Description:
-Use the <stackFileVersion> to obtain or change which version of the stack file format LiveCode will use when saving stacks.
+**Note**: The <stackFileVersion> is deprecated.  Instead, please specify the <stack version> directly, as an optional parameter of the <save> <command>.
 
-The <stackFileVersion> is useful when stacks need to be saved in legacy formats for backwards compatibility but it should be used with caution.
+Use the <stackFileVersion> to obtain or change the default stack file format version LiveCode uses when saving stacks.
 
-Setting the <stackFileVersion> to something less than the current version could result in data being lost when stacks are saved, in particular any features that are not present in the target version. For example setting the <stackFileVersion> to 2.4 will cause any blendLevel or ink properties to be lost.
+Setting the <stackFileVersion> to something less than the newest <stack version> could result in data being lost when stacks are saved.  For example, setting the <stackFileVersion> to 7.0 will cause any widgets in the stack to be lost, along with their scripts and properties.
 
 Remember to set the <stackFileVersion> back to its previous value after changing it, otherwise LiveCode may save your stacks in unexpected formats.
 
-There is no need to use the <stackFileVersion> to save a stack compatible with version 2.6.1 and earlier in the IDE. Instead, open the stack in the current version of LiveCode and select "Save As" from the "File" menu, then choose "Legacy LiveCode Stack" from the drop down box for the file type. If you do not wish to do this every time, there is a setting in the "Files  Memory" section of the preferences that causes LiveCode to preserve the stack file version of legacy stacks.
+There is no need to use the <stackFileVersion> when saving a stack using the IDE.  Instead, open the stack in the current version of LiveCode and select "Save As" from the "File" menu, then choose "Legacy LiveCode Stack" from the drop down box for the file type.  If you do not wish to do this every time, there is a setting in the "Files  Memory" section of the preferences that causes LiveCode to preserve the stack file version of legacy stacks.
 
-The following properties are not supported in the 2.4 stack file format and will be lost or altered when saving in 2.4 format:
+References: save (command), stack version (glossary)
 
-antialiased property - lost
-ink property - lost for cards, reverted to GXcopy for controls if not supported
-opaque property - lost for cards
-blendLevel property - lost
-
-The following properties are not supported in the 2.7 stack file format and will be lost or altered when saving in 2.7 format:
-
-textFont property - separation lost
-textStyle property - separation lost
-textSize property - separation lost
-textFont property - separation lost
-unicodeToolTip property - lost
-all paragraph level properties - lost
-separation of Unicode attribute of chars - lost
-character level metadata property - lost
-
-The following properties are not supported in the 2.7 stack file format and will be lost or altered when saving in 2.7 format:
-
-textFont property - separation lost
-textStyle property - separation lost
-textSize property - separation lost
-textFont property - separation lost
-unicodeToolTip property - lost
-all paragraph level properties - lost
-separation of Unicode attribute of chars - lost
-character level metadata property - lost
-
-When saving in the 5.5 format all Unicode text that does not have a Unicode variant in 5.5 will be lost, so field text and button labels etc will be saved but any Unicode text in scripts or custom properties will be lost.
-
-References: save (command)
+Changes:
+Deprecated from version 8.0.0.

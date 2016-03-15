@@ -95,6 +95,16 @@ extern bool MCStackFullscreenModeFromString(const char *p_string, MCStackFullscr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCStackObjectVisibility
+{
+	kMCStackObjectVisibilityDefault,
+	
+	kMCStackObjectVisibilityShow,
+	kMCStackObjectVisibilityHide,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MM-2014-07-31: [[ ThreadedRendering ]] Updated the API so you can now lock multiple areas of the surface.
 //  The context and raster for the locked area must now be stored locally rather than directly in the surface.
 class MCStackSurface
@@ -294,6 +304,9 @@ protected:
     virtual MCPlatformControlPart getcontrolsubpart();
 
     MCStackAttachment *m_attachments;
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Determines whether or not to show hidden objects.
+	MCStackObjectVisibility m_hidden_object_visibility;
     
 public:
 	Boolean menuwindow;
@@ -328,7 +341,7 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -358,7 +371,14 @@ public:
 	void render(MCGContextRef p_context, const MCRectangle &p_dirty);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Return visibility of hidden objects - show, hide, or inherited from MCshowinvisibles.
+	MCStackObjectVisibility gethiddenobjectvisibility();
+	void sethiddenobjectvisibility(MCStackObjectVisibility p_visibility);
+
+	// IM-2016-03-01: [[ Bug 16244 ]] Return true if invisible objects on this stack should be drawn.
+	bool geteffectiveshowinvisibleobjects();
 	
 	//////////
 	// view interface
@@ -566,6 +586,9 @@ public:
 	
     // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
     bool substackhaswidgets();
+
+    /* Return true iff the stack or one of its substacks has widgets. */
+    virtual bool haswidgets();
     
 	//////////
     
@@ -674,7 +697,7 @@ public:
 	MCStack *clone();
 	void compact();
 	Boolean checkid(uint4 cardid, uint4 controlid);
-	IO_stat saveas(const MCStringRef);
+	IO_stat saveas(const MCStringRef, uint32_t p_version = UINT32_MAX);
 	MCStack *findname(Chunk_term type, MCNameRef);
 	MCStack *findid(Chunk_term type, uint4 inid, Boolean alt);
 	void setmark();
@@ -749,9 +772,9 @@ public:
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 	virtual IO_stat load_substacks(IO_handle stream, uint32_t version);
 	
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	Exec_stat resubstack(MCStringRef p_data);
 	MCCard *getcardid(uint4 inid);
@@ -1223,6 +1246,11 @@ public:
     // MERG-2015-10-11: [[ DocumentFilename ]] Add stack documentFilename property
     void GetDocumentFilename(MCExecContext &ctxt, MCStringRef& r_document_filename);
     void SetDocumentFilename(MCExecContext &ctxt, MCStringRef p_document_filename);
+	
+	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
+	void GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles);
+	void SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles);
+	void GetEffectiveShowInvisibleObjects(MCExecContext &ctxt, bool &r_show_invisibles);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
@@ -1252,6 +1280,7 @@ public:
     virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
     virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t p_theme);
     
 #ifdef MODE_DEVELOPMENT
     void GetReferringStack(MCExecContext& ctxt, MCStringRef& r_id);

@@ -660,8 +660,8 @@ enum Is_type {
     IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA,
     IT_AMONG_THE_FULL_DRAGBOARD_DATA,
     IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA,
-    IT_REALLY,
-    IT_NOT_REALLY,
+    IT_STRICTLY,
+    IT_NOT_STRICTLY,
 };
 
 enum Is_validation {
@@ -861,6 +861,7 @@ enum Preposition_type {
 	PT_MARKUP,
 	PT_BINARY,
 	PT_COOKIE,
+	PT_NEWEST,
 };
 
 enum Print_mode {
@@ -1719,6 +1720,9 @@ enum Properties {
     P_FULL_CLIPBOARD_DATA,
     P_FULL_DRAGBOARD_DATA,
     
+    P_THEME,
+    P_THEME_CONTROL_TYPE,
+    
     __P_LAST,
 };
 
@@ -1946,8 +1950,12 @@ enum Sugar_constants {
     // AL-2015-06-11: [[ Load Extension From Var ]] Add 'data' syntactic sugar
     SG_DATA,
     
-    SG_REALLY,
+    SG_STRICTLY,
     SG_REAL,
+	
+	SG_REPLACING,
+	SG_PRESERVING,
+	SG_STYLES,
 };
 
 enum Statements {

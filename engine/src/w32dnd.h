@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __W32DND__
 #define __W32DND__
 
+#include <shobjidl.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Class:

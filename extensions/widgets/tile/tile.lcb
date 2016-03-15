@@ -1,0 +1,185 @@
+widget com.livecode.widget.tile
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.iconSVG
+use com.livecode.library.widgetutils
+
+metadata title is "Tile"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata preferredSize is "200,200"
+metadata userVisible is "false"
+
+metadata sourceColor.editor is "com.livecode.pi.color"
+metadata sourceColor.default is "blue"
+
+metadata tileLabel.editor is "com.livecode.pi.string"
+metadata tileLabel.default is "Label"
+
+metadata colorStep.editor is "com.livecode.pi.string"
+metadata colorStep.default is "0"
+
+// Properties
+property tileLabel get mTileLabel set setTileLabel
+property iconName get mIconName set setIconName
+property hoverIconName get mHoverIconName set setHoverIconName
+property hoverState get mHover set setHover
+property fgColor get mForegroundColor set setForegroundColor
+property fgHoverColor get mForegroundHoverColor set setForegroundHoverColor
+property bgColor get mBackgroundColor set setBackgroundColor
+property bgHoverColor get mBackgroundHoverColor set setBackgroundHoverColor
+
+//Local variables
+private variable mTileLabel as String
+private variable mIconName as String
+private variable mIconPath as String
+private variable mHoverIconName as String
+private variable mHoverIconPath as String
+private variable mHover as Boolean
+private variable mForegroundColor as Color
+private variable mForegroundHoverColor as Color
+private variable mBackgroundColor as Color
+private variable mBackgroundHoverColor as Color
+
+public handler onCreate()
+    put "Label" into mTileLabel
+    put false into mHover
+    put "star" into mIconName
+    put "sun" into mHoverIconName
+    put iconSVGPathFromName(mIconName) into mIconPath
+    put iconSVGPathFromName(mHoverIconName) into mHoverIconPath
+
+    put color [1,1,1] into mForegroundColor
+    put color [0,0,0] into mForegroundHoverColor
+    put color [0,0,1] into mBackgroundColor
+    put color [1,1,1] into mBackgroundHoverColor
+end handler
+
+public handler OnPaint()
+  variable tHeight as Real
+  variable tWidth as Real
+  put my width into tWidth
+  put my height into tHeight
+
+  // Tile
+  variable tSquarePath as Path
+  variable tBounds as Rectangle
+  put rectangle path of rectangle [0, 0, tWidth, tHeight] into tSquarePath
+
+  if mHover is true then
+     set the paint of this canvas to solid paint with mBackgroundHoverColor
+  else
+     set the paint of this canvas to solid paint with mBackgroundColor
+  end if
+  fill tSquarePath on this canvas
+
+  //Label
+  if mHover is true then
+     set the paint of this canvas to solid paint with mForegroundHoverColor
+  else
+     set the paint of this canvas to solid paint with mForegroundColor
+  end if
+  fill text mTileLabel at center of rectangle [0, (tHeight*0.7)-5, tWidth, tHeight-5] on this canvas
+
+  variable tTextBounds as Rectangle
+  variable tTextHeight
+  variable tTextTop
+  variable tTextGap
+
+  measure mTileLabel on this canvas
+  put the result into tTextBounds
+  put the height of tTextBounds into tTextHeight
+  put ((tHeight*0.3) - (tTextHeight))/2 into tTextGap
+  put (tHeight*0.7) + (tTextGap) into tTextTop
+
+  //Icon
+  variable tIconPath as Path
+
+  if mHover is true then
+     set the paint of this canvas to solid paint with mForegroundHoverColor
+     put path mHoverIconPath into tIconPath
+  else
+     set the paint of this canvas to solid paint with mForegroundColor
+     put path mIconPath into tIconPath
+  end if
+
+  variable tIconBounds as Rectangle
+  variable tIconSpace
+  put the minimum of (tHeight*0.4) and (tWidth*0.4) into tIconSpace
+  put rectangle [0, 0, tIconSpace, tIconSpace] into tIconBounds
+  constrainPathToRect(tIconBounds, tIconPath)
+
+  variable tIconWidth
+  variable tIconHeight
+  variable tIconX
+  variable tIconY
+  put the bounding box of tIconPath into tBounds
+  put the width of tBounds into tIconWidth
+  put the height of tBounds into tIconHeight
+  put the left of tBounds into tIconX
+  put the top of tBounds into tIconY
+  translate tIconPath by [(tWidth - tIconWidth)/2 - tIconx, ((tTextTop)-tIconHeight)/2 - tIconY]
+  fill tIconPath on this canvas
+end handler
+
+public handler setTileLabel(in pLabel as String) returns nothing
+    put pLabel into mTileLabel
+    redraw all
+end handler
+
+public handler OnMouseUp()
+   post "mouseUp"
+end handler
+
+public handler OnMouseEnter()
+   put true into mHover
+   post "mouseEnter"
+   redraw all
+end handler
+
+public handler OnMouseLeave()
+   put false into mHover
+   post "mouseLeave"
+   redraw all
+end handler
+
+public handler setIconName(in pName as String) returns nothing
+   put iconSVGPathFromName(pName) into mIconPath
+   put pName into mIconName
+   redraw all
+end handler
+
+public handler setHoverIconName(in pName as String) returns nothing
+   put iconSVGPathFromName(pName) into mHoverIconPath
+   put pName into mHoverIconName
+   redraw all
+end handler
+
+public handler setForegroundColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mForegroundColor
+	redraw all
+end handler
+
+public handler setForegroundHoverColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mForegroundHoverColor
+	redraw all
+end handler
+
+public handler setBackgroundColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mBackgroundColor
+	redraw all
+end handler
+
+public handler setBackgroundHoverColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mBackgroundHoverColor
+	redraw all
+end handler
+
+public handler setHover(in pValue as Boolean) returns nothing
+   put pValue into mHover
+	redraw all
+end handler
+
+end widget

@@ -606,3 +606,11 @@ extern MCNameRef MCM_protected_data_unavailable;
 extern MCNameRef MCM_remote_control_received;
 #endif
 
+// Names for the "special" fonts that resolve to the platform's default font
+extern MCNameRef MCN_font_default;          // Default font for this control type
+extern MCNameRef MCN_font_usertext;         // User-styleable text (e.g. RichText)
+extern MCNameRef MCN_font_menutext;         // Menu items
+extern MCNameRef MCN_font_content;          // Control contents
+extern MCNameRef MCN_font_message;          // Message boxes and status messages
+extern MCNameRef MCN_font_tooltip;          // Tooltip text
+extern MCNameRef MCN_font_system;           // Anything else not covered above

@@ -60,6 +60,12 @@ bool MCWidgetQueryProperty(MCWidgetRef widget, MCNameRef property, MCTypeInfoRef
 bool MCWidgetSetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef value);
 bool MCWidgetGetProperty(MCWidgetRef widget, MCNameRef property, MCValueRef& r_value);
 
+bool MCWidgetHasPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter);
+bool MCWidgetQueryPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter, MCTypeInfoRef& r_type_info);
+
+bool MCWidgetSetPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value);
+bool MCWidgetGetPropertyOfChunk(MCWidgetRef widget, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value);
+
 bool MCWidgetOnLoad(MCWidgetRef widget, MCValueRef rep);
 bool MCWidgetOnSave(MCWidgetRef widget, MCValueRef& r_rep);
 bool MCWidgetOnOpen(MCWidgetRef widget);
@@ -130,9 +136,6 @@ public:
     
 	virtual bool visit_self(MCObjectVisitor *p_visitor);
 	
-	virtual void open(void);
-	virtual void close(void);
-
 	virtual void kfocus(void);
 	virtual void kunfocus(void);
 	virtual Boolean kdown(MCStringRef p_key_string, KeySym p_key);
@@ -152,12 +155,11 @@ public:
     
 	virtual void timer(MCNameRef p_message, MCParameter *p_parameters);
 
-	virtual void setrect(const MCRectangle& p_rectangle);
 	virtual void recompute(void);
     
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
 	virtual IO_stat load(IO_handle stream, uint32_t p_version);
 
 	virtual MCControl *clone(Boolean p_attach, Object_pos p_position, bool invisible);
@@ -167,15 +169,15 @@ public:
 	
     virtual bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
 	virtual bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
-    virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
-	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
+    virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue& r_value);
+	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue p_value);
     
     virtual void toolchanged(Tool p_new_tool);
     virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
-	
-	bool GetNativeView(void *&r_view);
-	bool SetNativeView(void *p_view);
+	virtual void geometrychanged(const MCRectangle &p_rect);
+	virtual void OnOpen();
+	virtual void OnClose();
 	
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
@@ -192,12 +194,6 @@ public:
     
     bool isInRunMode();
     
-    // Gets the current native layer (if any) associated with this widget
-    MCNativeLayer* getNativeLayer() const
-    {
-        return m_native_layer;
-    }
-    
 protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
@@ -212,9 +208,6 @@ private:
     
     // The LCB Widget object.
     MCWidgetRef m_widget;
-    
-    // The native layer associated with this widget
-    MCNativeLayer* m_native_layer;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

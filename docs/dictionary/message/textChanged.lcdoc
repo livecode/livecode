@@ -6,6 +6,8 @@ Syntax: textChanged
 
 Summary: Sent when the content of a field has changed.
 
+Associations: field
+
 Introduced: 5.5
 
 OS: mac,windows,linux,ios,android

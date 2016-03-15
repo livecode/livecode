@@ -1,0 +1,1 @@
+# Remove duplicate word in installer copy

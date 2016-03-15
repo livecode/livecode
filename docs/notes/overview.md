@@ -1,20 +1,56 @@
 # Overview
-LiveCode 8.0 is the most exciting release in the history of the technology. It provides a simple way to extend the functionality or control set of LiveCode.
 
-Our focus in LiveCode 8.0 is extensibility. You can now build and share widgets (custom controls) and libraries that are treated by LiveCode as engine level elements.
+LiveCode 8.0 brings important new capabilities to all LiveCode developers:
 
-LiveCode 8.0 can be thought of as a version 7.0 with a new module allowing extensions to be plugged into the engine. As a result, 8.0 should be as functional and stable as LiveCode 7.0.
+* Use new custom controls and libraries in your applications, including a new browser widget.
 
-## I don't want to build extensions. What's in it for me?
-Many love LiveCode because of the productivity benefits and don’t have time to build extensions. If that is the case just kick back and start using LiveCode 8 and keep an eye on the extensions portal. You can start using new controls and libraries as they are built by other community members.
+* Extend LiveCode with the new LiveCode Builder language
 
-## LiveCode Script vs LiveCode Builder
-To make it possible to create extensions and plug them into the LiveCode engine we've created a new flavour of our language called ***LiveCode Builder***. LiveCode Builder looks a lot like LiveCode Script so should feel familiar for any seasoned LiveCode developer. There is lots of new syntax which exposes parts of the LiveCode engine that were only previously available to those who were skilled c/c++ developers.
+* Deploy to HTML5 and run your application in a web browser
 
-LiveCode Builder is a new language and is therefore highly experimental and should be considered an early prototype. It will take some getting used to but we know you'll love it once you see how powerful it is. The best way to get started is to read the "Extending LiveCode" guide which can be found in the dictionary under the "Guide" tab.
+* Many other improvements!
 
-## Warning
-It is important to stress that **no aspect of this release should be considered final**. **Every piece of syntax in LiveCode Builder is subject to change**.
+## Simplify design with widgets
 
-## IDE
-A number of palettes have been replaced and new ones added in order to support extensions. The tools palette, message box and property inspector have been rewritten. An extension manager stack has been added to keep track of installed extensions, and a plugin added to help users create their own extensions. For full details see the "Extending LiveCode" guide which can be found in the dictionary under the "Guide" tab.
+With LiveCode 8.0, your apps are set free from using the small range of user interface controls that were previously available in LiveCode.  The LiveCode engine now lets you load custom controls, called widgets, and use them in your apps just like any other control.
+
+LiveCode comes with a selection of widgets that simplify creating many commonly-needed sets of controls in mobile apps, and if they aren't enough, you can download and install widgets created by members of the LiveCode development community and third-party vendors.
+
+One of the most exciting new widgets introduced in LiveCode 8.0 is the browser widget.  It replaces the revBrowser external with a much more powerful and flexible browser control that's easier to use and more reliable.
+
+The LiveCode IDE has also been extended and revised in order to support widgets and other extensions.  Widgets are now available in the "Tools" palette, and installed extensions can be viewed in the "Extension Manager".  The dictionary has been extended to include extension documentation.
+
+## Extend Livecode with LiveCode Builder
+
+In LiveCode 8.0, the well-known LiveCode scripting language is joined by a brand new programming language called LiveCode Builder.  LiveCode Builder looks a lot like LiveCode script, and should be easy to learn for any experienced LiveCode developer.
+
+Using LiveCode Builder, it is now possible to extend LiveCode with new controls and libraries without any need to program in C or C++.  The IDE has a new "Extension Builder" tool that helps developers test, debug and package their extensions.
+
+For more information, please refer to the "Extending LiveCode" guide and the "LiveCode Builder" section of the dictionary.
+
+**Note:** LiveCode Builder is a new and experimental language.  There is no stability guarantee for the language or its standard libraries.  Be aware that the language syntax or features may change incompatibly in future versions of LiveCode!
+
+## Deploy to the browser with HTML5
+
+The LiveCode 8.0 engine now runs on a new platform: the web browser.  The LiveCode engine now runs as a JavaScript library in an HTML page, allowing users to run your application without having to install anything.
+
+For more information, please refer to the "HTML5 Deployment" guide.
+
+**Note:** The HTML5 platform is very different to the other platforms that LiveCode supports, and many engine features are either unsupported or work differently.
+
+## More!
+
+LiveCode 8.0 includes many other enhancements, including:
+
+* more powerful and complete clipboard access, sponsored by [FMProMigrator](https://www.fmpromigrator.com)
+
+* 64-bit Mac standalone deployment and SSL support for PostgreSQL
+  connections, sponsored by the community Feature Exchange
+
+* optimised Unicode text processing
+
+* Unicode printing on Linux
+
+* a new JSON library extension
+
+* greatly improved native theming on desktop platforms

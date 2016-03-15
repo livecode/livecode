@@ -179,6 +179,9 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
 	case WTHEME_METRIC_OPTIONBUTTONARROWSIZE:
 		return 21;
 		break;
+    case WTHEME_METRIC_TABBUTTON_HEIGHT:
+        return 21;
+        break;
 	}
 	return 0;
 }
@@ -194,7 +197,7 @@ Boolean MCNativeTheme::getthemepropbool(Widget_ThemeProps themeprop)
 		return true;
 	else if (themeprop == WTHEME_PROP_TABSELECTONMOUSEUP)
 		return true;
-	else if (themeprop == WTHEME_PROP_TABPANEATTEXTBASELINE)
+	else if (themeprop == WTHEME_PROP_TABBUTTONSOVERLAPPANE)
 		return true;
 	return False;
 }

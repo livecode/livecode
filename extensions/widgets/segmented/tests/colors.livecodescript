@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestSetup
 	TestLoadExtension "com.livecode.library.iconSVG"
-	TestLoadExtension "com.livecode.widget-utils"
+	TestLoadExtension "com.livecode.library.widgetutils"
 	TestLoadExtension "com.livecode.widget.segmented"
 end TestSetup
 
@@ -38,20 +38,20 @@ on TestColors
 	local tColor
 	
 	put randomColor() into tColor	
-	set the segmentColor of it to tColor
-	TestAssert "set segment color", the segmentColor of it is tColor
+	set the backColor of it to tColor
+	TestAssert "set segment color", the backColor of it is tColor
 	
 	put randomColor() into tColor
-	set the segmentSelectedColor of it to tColor
-	TestAssert "set segment selected color", the segmentSelectedColor of it is tColor
+	set the hiliteColor of it to tColor
+	TestAssert "set segment selected color", the hiliteColor of it is tColor
 	
 	put randomColor() into tColor
-	set the segmentLabelColor of it to tColor
-	TestAssert "set segment label color", the segmentLabelColor of it is tColor
+	set the foreColor of it to tColor
+	TestAssert "set segment label color", the foreColor of it is tColor
 	
 	put randomColor() into tColor
-	set the segmentSelectedLabelColor of it to tColor
-	TestAssert "set segment selected color", the segmentSelectedLabelColor of it is tColor
+	set the hilitedTextColor of it to tColor
+	TestAssert "set segment selected color", the hilitedTextColor of it is tColor
 end TestColors
 
 on TestEmptyColors
@@ -61,29 +61,29 @@ on TestEmptyColors
 	local tColor
 	
 	put randomColor() into tColor	
-	set the segmentColor of it to tColor
-	set the segmentColor of it to empty
-	TestAssert "set segment color empty", the segmentColor of it is empty
+	set the backColor of it to tColor
+	set the backColor of it to empty
+	TestAssert "set segment color empty", the backColor of it is empty
 	
 	put randomColor() into tColor
-	set the segmentSelectedColor of it to tColor
-	set the segmentSelectedColor of it to empty
-	TestAssert "set segment selected color empty", the segmentSelectedColor of it is empty
+	set the hiliteColor of it to tColor
+	set the hiliteColor of it to empty
+	TestAssert "set segment selected color empty", the hiliteColor of it is empty
 	
 	put randomColor() into tColor
-	set the segmentLabelColor of it to tColor
-	set the segmentLabelColor of it to empty
-	TestAssert "set segment label color", the segmentLabelColor of it is empty
+	set the foreColor of it to tColor
+	set the foreColor of it to empty
+	TestAssert "set segment label color", the foreColor of it is empty
 	
 	put randomColor() into tColor
-	set the segmentSelectedLabelColor of it to tColor
-	set the segmentSelectedLabelColor of it to empty
-	TestAssert "set segment selected color", the segmentSelectedLabelColor of it is empty
+	set the hilitedTextColor of it to tColor
+	set the hilitedTextColor of it to empty
+	TestAssert "set segment selected color", the hilitedTextColor of it is empty
 end TestEmptyColors
 
 on TestDisplayText
 	create stack
 	create widget as "com.livecode.widget.segmented"
-	set the segmentDisplay of it to "text"
-	TestAssert "no runtime error when setting segment display to text", true
+	set the itemStyle of it to "icon"
+	TestAssert "no runtime error when setting segment display to icon", true
 end TestDisplayText

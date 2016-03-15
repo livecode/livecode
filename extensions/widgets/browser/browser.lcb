@@ -278,6 +278,19 @@ pError(string): An error message describing the reason for the failure.
 
 Description:
 The browserNavigateFailed message is sent to the widget's script object when the browser has failed to navigate to a new page. The <pUrl> parameter contains the URL of the new page, and the <pError> parameter gives the reason for the failure.
+
+
+Name: browserUnhandledLoadRequest
+Type: message
+Syntax: browserUnhandledLoadRequest pUrl
+
+Summary: Sent when the browser is unable to handle a load request.
+
+Parameters:
+pUrl(string): The URL of the request.
+
+Description:
+The browserUnhandledLoadRequest message is sent to the widget's script object when the browser is unable to load a URL, typically due to an unrecognised URL scheme. The <pUrl> parameter contains the URL of the unhandled request.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -290,7 +303,7 @@ use com.livecode.widget
 use com.livecode.canvas
 use com.livecode.engine
 use com.livecode.extensions.libbrowser
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 --
 
 -- metadata
@@ -302,9 +315,10 @@ metadata svgicon is "M21.7,12c0,5.4-4.4,9.7-9.7,9.7S2.3,17.4,2.3,12S6.6,2.3,12,2
 
 -- property declarations
 property URL get getUrl set setUrl
-metadata URL.editor is "com.livecode.pi.text"
 
 property htmlText get getHtmlText set setHtmlText
+metadata htmlText.editor is "com.livecode.pi.nowraptext"
+metadata htmlText.user_visible is "false" -- bug 16927
 
 property vScrollbar get getVScrollbar set setVScrollbar
 metadata vScrollbar.editor is "com.livecode.pi.boolean"
@@ -324,8 +338,8 @@ foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Poin
 
 --------------------------------------------------------------------------------
 
+variable mOpened as Boolean
 variable mBrowser as optional MCBrowserRef
-variable mBrowserType as String
 variable mProperties as Array
 
 --
@@ -352,21 +366,21 @@ end handler
 public handler OnCreate()
 	libbrowserInit()
 
-	put the empty string into mBrowserType
 	put the empty array into mProperties
+	put false into mOpened
 end handler
 
 --
 
-public handler OnOpen()
+private handler InitBrowserView()
 	variable tParent as Pointer
 	
 	// put my native window into tParent
 	MCWidgetGetMyStackNativeView(tParent)
 		
 	variable tFactory as MCBrowserFactoryRef
-	if not MCBrowserFactoryGet(mBrowserType, tFactory) then
-		throw "error getting browser factory for type: " & mBrowserType
+	if not MCBrowserFactoryGet(the empty string, tFactory) then
+		throw "error getting browser factory"
 	end if
 	
 	variable tDisplay as Pointer
@@ -387,21 +401,33 @@ public handler OnOpen()
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 
-	// Keep a reference to this widget's script object so we can post to it from
-	//   the callbacks (which don't have a target widget when called).
-	put my script object into mScriptObject
-	
 	applyProperties(mProperties)
 end handler
 
---
-
-public handler OnClose()
+private handler FinalizeBrowserView()
 	//set my native layer to nothing
 	MCWidgetSetMyNativeLayer(nothing)
 	
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser
+end handler
+
+--
+
+public handler OnOpen()
+	// Keep a reference to this widget's script object so we can post to it from
+	//   the callbacks (which don't have a target widget when called).
+	put my script object into mScriptObject
+
+	put true into mOpened
+
+	InitBrowserView()
+end handler
+
+public handler OnClose()
+	FinalizeBrowserView()
+
+	put false into mOpened
 end handler
 
 ----------
@@ -430,10 +456,14 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 	
 	/* Dispatch browser message */
 	variable tMessage as String
-	if pFrame then
-		put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+	if tType is "navigate" and tState is "unhandled" then
+		put "browserUnhandledLoadRequest" into tMessage
 	else
-		put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+		if pFrame then
+			put "browserFrame" & Capitalize(tType) & Capitalize(tState) into tMessage
+		else
+			put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
+		end if
 	end if
 	
 	variable tArgs as List
@@ -669,7 +699,7 @@ public handler OnPaint() returns nothing
 	put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
 
 	variable tNameString as String
-	put property "name" of my script object into tNameString
+	put my name into tNameString
 	
 	set the font of this canvas to font "Arial" at size 14
 

@@ -58,7 +58,7 @@ local sUserScriptLibraries
 -- MW-2013-11-06: [[ LinuxX64 ]] Add Linux x64 to the list of supported platforms.
 -- MM-2014-03-21: [[ PPC Support Dropped ]] Remove Mac PPC and Mac Universal from supported platforms.
 -- FG-2014-08-19: [[ RPi ]] Add Linux ARMv6-HF to the list of supported platforms
-constant kPlatforms = "Windows,MacOSX x86-32,Linux,Linux x64,Linux armv6-hf,Emscripten"
+constant kPlatforms = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf,Emscripten"
 
 -- list of info fields for the windows engine
 constant kVersionFlds = "Comments,CompanyName,FileDescription,FileVersion,InternalName,LegalCopyright,LegalTrademarks,OriginalFilename,PrivateBuild,ProductName,ProductVersion,SpecialBuild"
@@ -581,6 +581,7 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX"
             case "MacOSX PowerPC-32"
             case "MacOSX x86-32"
+            case "MacOSX x86-64"
                // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
                //  allow to create broken applications, so that the executable file in it bears the edition.
                local tEdition
@@ -619,7 +620,7 @@ private command revCreateStandalone pStack, pFolder
          if tPlatform contains "MacOSX" and the platform is not "macos" or \
                tPlatform contains "Linux" and the platform is not "linux" or \
                tPlatform is "Windows" and the platform is not "win32" then
-            put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
+         put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
          else
             put revEnvironmentBinariesPath() into tBinariesPath
          end if
@@ -671,6 +672,14 @@ private command revCreateStandalone pStack, pFolder
    -- loop over the platforms to build
    put 1 into tCount
    repeat for each line tPlatform in sPlatformList
+      -- Architectures
+      local tArchitectures
+      if tPlatform contains "MacOSX" then
+         if sStandaloneSettingsA["MacOSX x86-32"] then put "i386," after tArchitectures
+         if sStandaloneSettingsA["MacOSX x86-64"] then put "x86-64," after tArchitectures
+         delete char -1 of tArchitectures
+      end if
+      
       # OK-2007-08-09: Copy the script libraries to the stack on a per-platform basis, overwriting the old group each time.
       revCopyScriptLibraries tStackSourceFile[tPlatform], tPlatform
       
@@ -688,7 +697,7 @@ private command revCreateStandalone pStack, pFolder
       put "com.livecode.widget.browser" is among the lines of sStandaloneSettingsA["extensions"] into tLibBrowser
       revCopyCEFResources tPlatform, tStandalonePath[tPlatform], tRevBrowser, tLibBrowser
       
-      revBuildStandaloneDeploy tPlatform, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
+      revBuildStandaloneDeploy tPlatform, tArchitectures, tStackSourceFile[tPlatform], tEngineSourceFile[tPlatform], tStandalonePath[tPlatform]
       
       add 1 to tCount
    end repeat
@@ -827,7 +836,7 @@ end restoreStackToMessagePath
 
 
 private command revOutputDirectories pFolder
-   local tPlatform,tDirectory,tPlatforms,tCount
+   local tPlatform,tDirectory,tPlatforms,tCount,tOSXCount
    revStandaloneProgress "Checking directories..."
    if there is a folder (pFolder & sStandaloneSettingsA["name"]) then
       put 1 into tCount
@@ -838,14 +847,25 @@ private command revOutputDirectories pFolder
    put 0 into tPlatforms
    repeat for each item tPlatform in kPlatforms
       if sStandaloneSettingsA[tPlatform] = true then
-         add 1 to tPlatforms
+         if tPlatform contains "MacOSX" then
+            add 1 to tOSXCount
+         else
+            add 1 to tPlatforms
+         end if
       end if
    end repeat
+   if tOSXCount > 0 then add 1 to tPlatforms
    repeat for each item tPlatform in kPlatforms
       if sStandaloneSettingsA[tPlatform] = true then
          if not revDownloadEngine(tPlatform) then
             revStandaloneAddWarning "Could not build for " & tPlatform & " because required files are missing."
             next repeat
+         end if
+         
+         # Skip this platform if we've already done OSX building
+         if tPlatform contains "MacOSX" then
+            if tOSXCount is 0 then next repeat
+            put 0 into tOSXCount -- Reset the count to zero to force other OSX platforms to be ignored
          end if
          
          # OK-2010-02-17: Bug 8608 - Deploying stack with trailing whitespace in name fails on Windows
@@ -1975,37 +1995,6 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
    put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
    put item 1 to -2 of pStandalonePath into tCurrentLocation
    switch
-      case pPlatform contains "MacOSX"
-         local tCEFFramework
-         put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
-         
-         revSBEnsureFolder tCEFFramework
-         if the result is not empty then
-            revStandaloneAddWarning "MacOS, external failed to create folder:" && quote & tCEFFramework & quote
-         end if
-         revSBCopyFolderToDestination tCefResources & "/Chromium Embedded Framework.framework", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-         if the result is not empty then
-            revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/Resources" & quote
-         end if
-         
-         local tHelpers
-         if pCopyRevBrowserResources then
-            put "revbrowser-cefprocess.app" & return after tHelpers
-            put "revbrowser-cefprocess EH.app" & return after tHelpers
-            put "revbrowser-cefprocess NP.app" & return after tHelpers
-         end if
-         if pCopyLibBrowserResources then
-            put "libbrowser-cefprocess.app" & return after tHelpers
-            put "libbrowser-cefprocess EH.app" & return after tHelpers
-            put "libbrowser-cefprocess NP.app" & return after tHelpers
-         end if
-         repeat for each line tHelper in tHelpers
-            revSBCopyFolderToDestination tCefResources & slash & tHelper, tCEFFramework, "revStandaloneProgressCallback", the long id of me
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & slash & tHelper & quote
-            end if
-         end repeat
-         break
       case pPlatform = "Windows"
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          
@@ -2277,7 +2266,7 @@ end log
 # the cRevStandaloneSettings into sStandaloneSettings
 #####################################################################
 
-private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath, pStandalonePath
+private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePath, pEnginePath, pStandalonePath
    -- Make sure things like 'platform' are standard
    local tPlatformDetailsA
    put revStandalonePlatformDetails(pPlatform) into tPlatformDetailsA
@@ -2323,8 +2312,10 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end if
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
+   -- PM-2015-12-07: [[ Bug 15706 ]] Put double quotes around the stack name to avoid confusing the 
+   -- parser when the stack name is 'copy of ...'
    repeat for each line tLine in sUserScriptLibraries
-      put return & "if there is a stack" && tLine && "then library" && tLine after sStandaloneSettingsA["startup_script"]
+      put return & "if there is a stack" && quote & tLine & quote && "then library" && quote & tLine & quote after sStandaloneSettingsA["startup_script"]
    end repeat
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add OSX App icons to deploy parameters
@@ -2363,20 +2354,17 @@ private command revBuildStandaloneDeploy pPlatform, pStackFilePath, pEnginePath,
    end repeat
    
    if tPlatformDetailsA["platform"] is "MacOSX" then
-      -- MW-2013-06-13: [[ CloneAndRun ]] If installed do things in the usual way, otherwise pass
-      --    through in 'engine' (so it builds using archs present there).
-      if revEnvironmentIsInstalled() then
-         -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only pass a single Intel engine path.
-         put pEnginePath into tDeployInfo["engine_x86"]
-      else
-         put pEnginePath into tDeployInfo["engine"]
-      end if
+      put pEnginePath into tDeployInfo["engine"]
       -- Disabled for now - will enable when its been properly tested
       //if line 1 of pEnginePath is not empty and line 2 of pEnginePath is not empty then
       //put pStandalonePath & ".dat" into tDeployInfo["spill"]
       //end if
    else
       put pEnginePath into tDeployInfo["engine"]
+   end if
+   
+   if pArchitectures is not empty then
+      put pArchitectures into tDeployInfo["architectures"]
    end if
    
    -- Set windows-specific info
@@ -2566,7 +2554,8 @@ function revRedirectMacOSResourcesIsExecutable pFile
    read from file pFile for 1 int4
    if the result is not "eof" then
       if it is 0xCAFEBABE or it is 0xBEBAFECA or \
-            it is 0xFEEDFACE or it is 0xCEFAEDFE then
+            it is 0xFEEDFACE or it is 0xCEFAEDFE or \
+            it is 0xFEEDFACF or it is 0xCFFAEDFE then
          put true into tIsExecutable
       end if
    end if

@@ -31,7 +31,7 @@ class MCFontnode : public MCDLlist
 public:
     
 	MCFontnode(MCNameRef fname, uint2 &size, uint2 style);
-    MCFontnode(MCSysFontHandle);
+    MCFontnode(MCSysFontHandle, MCNameRef name);
 	~MCFontnode();
     
 	MCFontStruct *getfont(MCNameRef fname, uint2 size, uint2 style);
@@ -104,6 +104,6 @@ public:
 	bool getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles);
 	bool getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font);
 
-    MCFontStruct *getfontbyhandle(MCSysFontHandle);
+    MCFontStruct *getfontbyhandle(MCSysFontHandle, MCNameRef name);
 };
 #endif

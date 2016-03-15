@@ -64,6 +64,11 @@ LiveCode uses the [gyp (Generate Your Projects)](https://chromium.googlesource.c
 
 ### Quick start
 
+**Note**: You can only compile LiveCode from a clone of the
+[LiveCode git repository](https://github.com/livecode/livecode) on
+GitHub.  See also the GitHub documentation on
+[cloning a repository](https://help.github.com/articles/cloning-a-repository/).
+
 On Linux or Mac, you can quickly build LiveCode by installing basic development tools, and then running `make all`.
 
 ### Detailed instructions

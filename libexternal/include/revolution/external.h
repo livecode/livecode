@@ -1,6 +1,8 @@
 #ifndef __REVOLUTION_EXTERNAL__
 #define __REVOLUTION_EXTERNAL__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -492,9 +494,9 @@ extern void RemoveRunloopAction(MCRunloopActionRef p_action, int *r_success);
 extern void RunloopWait(int *r_success);
 
 // IM-2014-07-09: [[ Bug 12225 ]] Convert stack coords to logical window coords
-extern void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
+extern void StackToWindowRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success);
 // IM-2014-07-09: [[ Bug 12225 ]] Convert logical window coords to stack coords
-extern void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
+extern void WindowToStackRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success);
 
 // AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
 // SN-2015-02-24: [[ Broken Win Compilation ]] LoadModule is a Win32 API function...

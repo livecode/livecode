@@ -313,6 +313,9 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 
 		case kMCDeployErrorEmscriptenBadStack:
 			return "could not prepare startup stack";
+		
+		case kMCDeployErrorTrialBannerError:
+			return "could not create trial banner";
 
 		case kMCDeployErrorNoCertificate:
 			return "could not load certificate";

@@ -731,16 +731,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 			done = True;
 		else if (!done && eventtime > curtime)
 			t_sleep = MCMin(eventtime - curtime, exittime - curtime);
-		
-        // MM-2015-08-11: [[ Bug 15700 ]] Poll the sockets. Code pulled over from OS X wait.
-        extern Boolean MCS_handle_sockets();
-        if (MCS_handle_sockets())
-        {
-            if (anyevent)
-                done = True;
-            t_sleep = 0.0;
-        }
-        
+
 		// Switch to the main fiber and wait for at most t_sleep seconds. This
 		// returns 'true' if the wait was broken rather than timed out.
 		if (MCIPhoneWait(t_sleep) && anyevent)
@@ -1197,6 +1188,11 @@ static void invoke_block(void *p_context)
 void MCIPhoneRunBlockOnMainFiber(void (^block)(void))
 {
 	MCFiberCall(s_main_fiber, invoke_block, block);
+}
+
+void MCIPhoneRunBlockOnScriptFiber(void (^block)(void))
+{
+	MCFiberCall(s_script_fiber, invoke_block, block);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1733,24 +1729,3 @@ MCGFloat MCScreenDC::logicaltoscreenscale(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// No theming for mobile platforms yet
-bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
-{
-    return MCFontCreate(MCNAME("Helvetica"), 0, 13, r_font);
-}

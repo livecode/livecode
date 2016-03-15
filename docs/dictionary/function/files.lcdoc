@@ -28,17 +28,17 @@ put the files & the folders into diskContents[the defaultFolder]
 Returns:
 The <files> <function> returns a list of file names, one per <line>. 
 The detailed files form returns a list of files, one file per line. Each line contains the following attributes, separated by commas:
-* The file's name, URL-encoded
-* The file's size in bytes (on Mac OS and OS X systems, the size of the file's data fork)
-* The resource fork size in bytes (Mac OS and OS X systems only)
-* The file's creation date in seconds (Mac OS, OS X, and Windows systems only)
-* The file's modification date in seconds
-* The file's last-accessed date in seconds (Unix, OS X and Windows systems only)
-* The file's last-backup date in seconds (Mac OS and OS X systems only)
-* The file's owner (Unix and OS X systems only)
-* The file's group owner (Unix and OS X systems only)
-* The file's access permissions
-* The file's creator and file type (Mac OS and OS X only)
+1. The file's name, URL-encoded
+2. The file's size in bytes (on Mac OS and OS X systems, the size of the file's data fork)
+3. The resource fork size in bytes (Mac OS and OS X systems only)
+4. The file's creation date in seconds (Mac OS, OS X, and Windows systems only)
+5. The file's modification date in seconds
+6. The file's last-accessed date in seconds (Unix, OS X and Windows systems only)
+7. The file's last-backup date in seconds (Mac OS and OS X systems only)
+8. The file's owner (Unix and OS X systems only)
+9. The file's group owner (Unix and OS X systems only)
+10. The file's access permissions
+11. The file's creator and file type (Mac OS and OS X only)
 Any attribute that is not supported on the current system is reported as empty.
 
 Description:

@@ -101,6 +101,14 @@ enum MCCapsuleSectionType
     // AL-2015-02-10: [[ Standalone Inclusions ]] Library consists of the mappings from universal names
     //  of resources to their platform-specific paths relative to the executable.
     kMCCapsuleSectionTypeLibrary,
+    
+    // MW-2016-02-17: [[ LicenseChecks ]] License consists of the array-encoded
+    //   'revLicenseInfo' array in use at the point the standalone was built.
+    kMCCapsuleSectionTypeLicense,
+	
+	// MW-2016-02-17: [[ Trial ]] If a banner is present, it is serialized as a
+	//   stackfile in this section.
+	kMCCapsuleSectionTypeBanner,
 };
 
 // Each section begins with a header that defines its type and length. This is
@@ -129,6 +137,8 @@ struct MCCapsuleEpilogueSection
 // The Prologue section is defined by the following structure:
 struct MCCapsulePrologueSection
 {
+	uint32_t banner_timeout;
+	uint32_t program_timeout;
 };
 
 IO_stat MCCapsulePrologueSectionRead(IO_handle p_stream, MCCapsulePrologueSection& r_prologue);

@@ -472,6 +472,7 @@ end syntax
 // ---------- External properties of widgets ---------- //
 
 public foreign handler MCWidgetGetMyScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyName(out rName as String) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyWidth(out rWidth as Real) returns nothing binds to "<builtin>"
@@ -479,8 +480,9 @@ public foreign handler MCWidgetGetMyHeight(out rHeight as Real) returns nothing 
 public foreign handler MCWidgetGetMyFont(out rFont as Font) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyEnabled(out rEnabled as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyDisabled(out rDisabled as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyPaint(in pPaintType as CUInt, out rPaint as Paint) returns nothing binds to "<builtin>"
 
-/* 
+/*
 Summary:	Returns the widget script object.
 
 Returns:	The widget script object.
@@ -492,7 +494,19 @@ begin
     MCWidgetGetMyScriptObject(output)
 end syntax
 
-/* 
+/*
+Summary:	Returns the name of the widget's script object
+
+Returns:	The name of the widget's script object
+*/
+
+syntax MyName is expression
+	"my" "name"
+begin
+	MCWidgetGetMyName(output)
+end syntax
+
+/*
 Summary:	Returns the rectangle of the widget in the parent
 
 Returns:	The rectangle of the widget in the parent
@@ -577,6 +591,29 @@ begin
     MCWidgetGetMyDisabled(output)
 end syntax
 
+/*
+Summary:    Returns a particular paint of the widget.
+
+Returns:    The current setting of the specified paint of the widget.
+
+Description:
+Use 'my ... paint' to fetch the paint to use for the given theme
+property of the widget. The returned paint will either be a solid
+color, or a pattern depending on the effective color and pattern
+properties of the widget's object.
+*/
+syntax MyPaint is expression
+    "my" ( "foreground" <mPaintType=0> | \
+            "background" <mPaintType=1> | \
+            "highlight" <mPaintType=2> | \
+            "border" <mPaintType=3> | \
+            "top" <mPaintType=4> | \
+            "bottom" <mPaintType=5> | \
+            "shadow" <mPaintType=6> | \
+            "focus" <mPaintType=7> ) "paint"
+begin
+    MCWidgetGetMyPaint(mPaintType, output)
+end syntax
 
 // ---------- Synchronous and asynchronous ("current") event information ---------- //
 

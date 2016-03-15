@@ -315,15 +315,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	
 	g_mainthread_errno = _errno();
 	int r = X_close();
-
+    
+    MCValueRelease(MCcmdline);
+    
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();
 
 	if (t_tsf_mgr != nil)
 		t_tsf_mgr -> Release();
-
-	MCValueRelease(MCcmdline);
 
 	return r;
 }

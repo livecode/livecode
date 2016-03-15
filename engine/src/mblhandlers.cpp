@@ -5617,9 +5617,10 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 #endif /* MCHandlePick */
     MCExecContext ctxt(nil, nil, nil);
     
-	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_success, t_has_buttons;
+	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_use_hilite, t_success, t_has_buttons;
 	t_success = true;
 	t_use_checkmark = false;
+	t_use_hilite = true;
 	t_use_done = false;
 	t_use_cancel = false;
 	t_use_picker = false;
@@ -5703,10 +5704,13 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
     }
     
     ctxt.SetTheResultToEmpty();
-        
+    
+    // PM-2016-02-19: [[ Bug 16945 ]] Make sure the use of checkmark is taken into account
+	t_use_hilite = !t_use_checkmark;
+
 	// call the Exec method to process the pick wheel
     // The function sets the result itself.
-	MCPickExecPickOptionByIndex(ctxt, kMCChunkTypeLine, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
+	MCPickExecPickOptionByIndex(ctxt, kMCChunkTypeLine, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(), t_use_hilite, t_use_picker, t_use_cancel, t_use_done, MCtargetptr . object -> getrect());
     
     // Free memory
     for (uindex_t i = 0; i < t_option_lists . Size(); i++)
@@ -5904,13 +5908,13 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     {
         // MM-2012-03-15: [[ Bug ]] Make sure we handle no type being passed.
         if (t_type == nil)
-            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
         else if (MCCStringEqualCaseless("time", t_type))
-            MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
         else if (MCCStringEqualCaseless("datetime", t_type))
-            MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
         else
-            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr->getrect());
+            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
     }
     
     MCCStringFree(t_type);
@@ -6071,7 +6075,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
     ctxt.SetTheResultToEmpty();
     
 	if (t_success)
-		MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+		MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -6230,7 +6234,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
     ctxt.SetTheResultToEmpty();
        
 	if (t_success)
-		MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+		MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr . object -> getrect());
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;

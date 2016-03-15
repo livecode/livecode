@@ -961,6 +961,7 @@ enum MCPlatformPlayerProperty
 	
 	kMCPlatformPlayerPropertyLoop,
     kMCPlatformPlayerPropertyMirrored,
+	kMCPlatformPlayerPropertyScalefactor,
     	
 	kMCPlatformPlayerPropertyQTVRNode,
 	kMCPlatformPlayerPropertyQTVRPan,
@@ -1191,7 +1192,7 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 enum MCPlatformControlType
 {
-    kMCPlatformControlTypeGlobal = 0,   // Global theming (i.e the theme inherited by all controls)
+    kMCPlatformControlTypeGeneric = 0,  // Global theming (i.e the theme inherited by all controls)
     kMCPlatformControlTypeButton,       // Buttons not covered more specifically
     kMCPlatformControlTypeCheckbox,     // On-off tick box
     kMCPlatformControlTypeRadioButton,  // One-of-many selection button
@@ -1207,9 +1208,11 @@ enum MCPlatformControlType
     kMCPlatformControlTypeComboBox,     // Input field/option menu combination
     kMCPlatformControlTypePopupMenu,    // Menu as appears when right-clicking
     kMCPlatformControlTypeProgressBar,  // Visual indicator of progress
+    kMCPlatformControlTypeRichText,     // Text editing with user formatting control
     kMCPlatformControlTypeScrollBar,    // For scrolling, apparently
     kMCPlatformControlTypeSlider,       // Selects a value between two extremes
     kMCPlatformControlTypeSpinArrows,   // Up-down arrows for value adjustment
+    kMCPlatformControlTypeTooltip,      // Tooltip popups
     kMCPlatformControlTypeWindow,       // Windows can have theming props too
     kMCPlatformControlTypeMessageBox    // Pop-up alert dialogue
 };
@@ -1229,7 +1232,7 @@ enum
     
     kMCPlatformControlStateCompatibility    = (1<<31),   // Use backwards-compatible theming
     
-    kMCPlatformControlStateNormal           = kMCPlatformControlStateCompatibility
+    kMCPlatformControlStateNormal           = 0
 };
 
 enum MCPlatformControlPart
@@ -1265,6 +1268,7 @@ bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlP
 bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&);
 bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&);
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&);
+bool MCPlatformGetControlThemePropString(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCStringRef&);
 
 ////////////////////////////////////////////////////////////////////////////////
 

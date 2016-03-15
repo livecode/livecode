@@ -700,7 +700,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 	}
 }
 
-@interface MCPurchaseObserver : NSObject <SKPaymentTransactionObserver>
+@interface com_runrev_livecode_MCPurchaseObserver : NSObject <SKPaymentTransactionObserver>
 {
 }
 
@@ -711,7 +711,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 @end
 
-@implementation MCPurchaseObserver
+@implementation com_runrev_livecode_MCPurchaseObserver
 
 - (void)paymentQueue:(SKPaymentQueue *)queue removedTransactions:(NSArray *)transactions
 {
@@ -789,14 +789,14 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 @end
 
-MCPurchaseObserver *s_purchase_observer = nil;
+com_runrev_livecode_MCPurchaseObserver *s_purchase_observer = nil;
 
 bool MCStoreEnablePurchaseUpdates()
 {
 	if (s_purchase_observer != nil)
 		return true;
 	
-	s_purchase_observer = [[MCPurchaseObserver alloc] init];
+	s_purchase_observer = [[com_runrev_livecode_MCPurchaseObserver alloc] init];
 	if (s_purchase_observer == nil)
 		return false;
 	
@@ -822,7 +822,7 @@ bool MCStoreDisablePurchaseUpdates()
 bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error);
 bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
-@interface MCProductsRequest : SKProductsRequest
+@interface com_runrev_livecode_MCProductsRequest : SKProductsRequest
 {
     NSString *m_product_id;
 }
@@ -832,7 +832,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @end
 
-@implementation MCProductsRequest
+@implementation com_runrev_livecode_MCProductsRequest
 
 - (id)initWithProductId:(NSString *)p_productId
 {
@@ -860,7 +860,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @end
 
-@interface MCProductsRequestDelegate : NSObject <SKProductsRequestDelegate>
+@interface com_runrev_livecode_MCProductsRequestDelegate : NSObject <SKProductsRequestDelegate>
 {
 }
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response;
@@ -870,7 +870,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @end
 
-@implementation MCProductsRequestDelegate
+@implementation com_runrev_livecode_MCProductsRequestDelegate
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
 {
     if (response.invalidProductIdentifiers != nil)
@@ -901,7 +901,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 {
     MCAutoStringRef t_product, t_error;
     
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(MCProductsRequest*)request getProductId], &t_product);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(com_runrev_livecode_MCProductsRequest*)request getProductId], &t_product);
     /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error description], &t_error);
 
     MCStorePostProductRequestError(*t_product, *t_error);
@@ -918,9 +918,9 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     NSString *t_product_id = nil;
     
     t_product_id = [NSString stringWithMCStringRef: p_product_id];
-    t_request = [[MCProductsRequest alloc] initWithProductId: t_product_id];
+    t_request = [[com_runrev_livecode_MCProductsRequest alloc] initWithProductId: t_product_id];
     
-    [t_request setDelegate: [[MCProductsRequestDelegate alloc] init]];
+    [t_request setDelegate: [[com_runrev_livecode_MCProductsRequestDelegate alloc] init]];
     
     [t_request start];
     

@@ -20,7 +20,7 @@ the screenDepth
 Example:
 if the screenDepth &gt; 8 then show image "Photograph"
 
-Returns: The <screenDepth> <function> <return|returns> 1, 2, 4, 8, 16, 24, or 32.
+Returns: The <screenDepth> <function> <return|returns> 0, 1, 2, 4, 8, 16, 24, or 32.
 
 Description:
 Use the <screenDepth> <function> to determine the color capacity of the screen. For example, you might display different <image|images> depending on the number of colors available.
@@ -34,4 +34,6 @@ is equal to
 
 The value returned by the <screenDepth> <function> is updated only when you start up the <application>. If you change the screen settings after starting up the <application>, you must quit and restart to update the <screenDepth>.
 
-References: colorWorld (property), dontDither (property), function (control_st), unlock colorMap (command), screenType (function), bit depth (glossary), return (glossary), application (glossary), image (object)
+When the <environment> is "command line", the <screenDepth> is 0.
+
+References: colorWorld (property), dontDither (property), function (control_st), unlock colorMap (command), environment (function), screenType (function), bit depth (glossary), return (glossary), application (glossary), image (object)

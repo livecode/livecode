@@ -45,7 +45,7 @@ void MCFontFinalize(void);
 
 bool MCFontCreate(MCNameRef name, MCFontStyle style, int32_t size, MCFontRef& r_font);
 bool MCFontCreateWithFontStruct(MCNameRef name, MCFontStyle style, int32_t size, MCFontStruct*, MCFontRef& r_font);
-bool MCFontCreateWithHandle(MCSysFontHandle, MCFontRef& r_font);
+bool MCFontCreateWithHandle(MCSysFontHandle, MCNameRef name, MCFontRef& r_font);
 MCFontRef MCFontRetain(MCFontRef font);
 void MCFontRelease(MCFontRef font);
 

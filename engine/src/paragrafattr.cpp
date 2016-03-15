@@ -338,14 +338,14 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	return checkloadstat(t_stat);
 }
 
-IO_stat MCParagraph::saveattrs(IO_handle stream)
+IO_stat MCParagraph::saveattrs(IO_handle stream, uint32_t p_version)
 {
 	IO_stat t_stat;
 	t_stat = IO_NORMAL;
 
 	// First we work out the size of the attrs.
 	uint32_t t_attr_size;
-	t_attr_size = measureattrs();
+	t_attr_size = measureattrs(p_version);
 	
 	// Write out the size as either a 2 byte or 4 byte size.
 	if (t_stat == IO_NORMAL)
@@ -399,7 +399,7 @@ IO_stat MCParagraph::saveattrs(IO_handle stream)
 	// MW-2012-11-13: [[ ParaMetadata ]] Write out the metadata, if any.
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-        t_stat = IO_write_stringref_new(attrs -> metadata, stream, MCstackfileversion >= 7000);
+        t_stat = IO_write_stringref_new(attrs -> metadata, stream, p_version >= 7000);
 
 	// MW-2012-11-13: [[ ParaListIndex ]] Write out the list index, if any.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
@@ -424,7 +424,7 @@ bool MCParagraph::hasextraflag(void)
     return (attrs -> flags > UINT16_MAX);
 }
 
-uint32_t MCParagraph::measureattrs(void)
+uint32_t MCParagraph::measureattrs(uint32_t p_version)
 {
 	// If there are no attrs, then the size is 0.
 	if (attrs == nil)
@@ -475,9 +475,9 @@ uint32_t MCParagraph::measureattrs(void)
 		t_size += 2;
 	
 	// MW-2012-11-13: [[ ParaMetadata ]] If the paragraph has metadata then add that on.
-    extern uint32_t measure_stringref(MCStringRef string);
+	extern uint32_t measure_stringref(MCStringRef string, uint32_t p_version);
 	if ((attrs -> flags & PA_HAS_METADATA) != 0)
-        t_size += measure_stringref(attrs -> metadata);
+		t_size += measure_stringref(attrs -> metadata, p_version);
 
 	// MW-2012-11-13: [[ ParaListIndex ]] If the paragraph has a list index, then add that on.
 	if ((attrs -> flags & PA_HAS_LIST_INDEX) != 0)

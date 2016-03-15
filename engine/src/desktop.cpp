@@ -1362,7 +1362,10 @@ void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef p_player)
     t_player = find_player(p_player);
     if (t_player == nil)
         return;
-    
+		
+	// PM-2016-01-18: [[ Bug 16737 ]] Make sure controller is updated and playstopped msg is sent immediately
+    MCPlatformBreakWait();
+	
     t_player -> layer_redrawall();
     t_player -> moviefinished();
 }

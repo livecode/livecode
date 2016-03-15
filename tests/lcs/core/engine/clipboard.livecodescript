@@ -17,9 +17,16 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
--- Clipboard access requires system interaction so, generally, cannot be run in no-UI mode
-### ui : true
-### platforms: MacOS, Linux, Win32
+-- Clipboard access requires system interaction so, generally, cannot
+-- be run in no-UI mode
+on TestSetup
+   if the environment is "command line" then
+      return "SKIP Clipboard requires GUI mode"
+   end if
+   if the platform is not among the items of "MacOS,Windows,Linux" then
+      return "SKIP Clipboard not available on" && the platform
+   end if
+end TestSetup
 
 -- Utility function that returns the smallest possible valid PNG image
 local sTinyPNG

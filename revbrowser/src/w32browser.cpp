@@ -1342,12 +1342,12 @@ bool CWebBrowser::GetImage(void*& r_data, int& r_length)
 	return t_success;
 }
 
-int CWebBrowser::GetWindowId(void)
+uintptr_t CWebBrowser::GetWindowId(void)
 {
-	return (int)hostwindow;
+	return uintptr_t(hostwindow);
 }
 
-void CWebBrowser::SetWindowId(int p_new_id)
+void CWebBrowser::SetWindowId(uintptr_t p_new_id)
 {
 	HWND t_new_window;
 	t_new_window = (HWND)p_new_id;

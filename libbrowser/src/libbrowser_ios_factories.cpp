@@ -22,7 +22,7 @@ extern bool MCUIWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
-	{ "uiwebview", nil, MCUIWebViewBrowserFactoryCreate },
+	{ "UIWebView", nil, MCUIWebViewBrowserFactoryCreate },
 	{ nil, nil, nil },
 };
 

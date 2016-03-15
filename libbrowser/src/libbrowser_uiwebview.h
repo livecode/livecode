@@ -19,7 +19,7 @@
 
 #include "libbrowser_internal.h"
 
-@class MCUIWebViewBrowserDelegate;
+@class com_runrev_livecode_MCUIWebViewBrowserDelegate;
 
 class MCUIWebViewBrowser : public MCBrowserBase
 {
@@ -73,7 +73,7 @@ private:
 	bool SyncJavaScriptHandlers(NSArray *p_handlers);
 	
 	UIWebView *m_view;
-	MCUIWebViewBrowserDelegate *m_delegate;
+	com_runrev_livecode_MCUIWebViewBrowserDelegate *m_delegate;
 	
 	char *m_js_handlers;
 	NSArray *m_js_handler_list;

@@ -23,7 +23,7 @@ TestAssert "test", "red" is a color
 TestAssert "test", not ("red" is not a color)
 
 # Bug 157 (!) - all integers are colors
-TestSkip "test", not (257 is a color), "157"
+TestSkip "test", /* not (257 is a color) */ "bug 157"
 
 TestAssert "test", "0,0,0" is a color
 

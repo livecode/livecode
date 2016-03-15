@@ -347,6 +347,8 @@ void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement 
 void MCKeywordsExecuteRepeatStatements(MCExecContext& ctxt, MCStatement *statements, uint2 line, uint2 pos, bool& r_done)
 {
     Exec_stat stat = MCKeywordsExecuteStatements(ctxt, statements, EE_REPEAT_BADSTATEMENT);
+
+    r_done = false;
     if ((stat == ES_NORMAL && MCexitall) || (stat != ES_NEXT_REPEAT && stat != ES_NORMAL))
     {
         r_done = true;

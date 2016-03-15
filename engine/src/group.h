@@ -55,7 +55,6 @@ class MCGroup : public MCControl
 	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCGroup();
-	MCGroup(const MCGroup &gref);
 	MCGroup(const MCGroup &gref, bool p_copy_ids);
 	// virtual functions from MCObject
 	virtual ~MCGroup();
@@ -82,7 +81,7 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -93,13 +92,13 @@ public:
 	virtual void recompute();
 
 	// MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual Boolean kfocusset(MCControl *target);
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
@@ -130,7 +129,20 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	virtual void toolchanged(Tool p_new_tool);
+
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
+	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
+
+	virtual MCRectangle getviewportgeometry();
+	
+	bool getNativeContainerLayer(MCNativeLayer *&r_layer);
+	
     virtual void scheduledelete(bool p_is_child);
+    
+    void drawselectedchildren(MCDC *dc);
+    bool updatechildselectedrect(MCRectangle& x_rect);
     
 	MCControl *findchildwithid(Chunk_term type, uint4 p_id);
 
@@ -197,6 +209,8 @@ public:
 	//   group.
     bool islocked(void) { return m_updates_locked; }
 
+    bool mfocus_control(int2 x, int2 y, bool p_check_selected);
+    
 	MCGroup *next()
 	{
 		return (MCGroup *)MCDLlist::next();
@@ -303,9 +317,7 @@ public:
     void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
     void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
 
-    void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
     void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool flag, bool visible);
     
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);

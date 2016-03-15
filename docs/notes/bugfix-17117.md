@@ -1,0 +1,1 @@
+# Clip content correctly when control selected

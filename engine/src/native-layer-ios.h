@@ -28,7 +28,7 @@ public:
     
 	virtual bool GetCanRenderToContext();
 
-    MCNativeLayerIOS(MCWidgetRef, UIView *p_native_view);
+    MCNativeLayerIOS(MCObject *p_object, UIView *p_native_view);
     ~MCNativeLayerIOS();
     
 	virtual bool GetNativeView(void *&r_view);
@@ -38,8 +38,8 @@ private:
     UIView* m_view;
     //NSBitmapImageRep *m_cached;
     
-    // Returns the main view
-    UIView* getMainView();
+    // Returns the UIView of the parent of this control
+	bool getParentView(UIView *&r_view);
     
     // Performs the attach/detach operations
     virtual void doAttach();
@@ -47,6 +47,7 @@ private:
     
 	virtual bool doPaint(MCGContextRef p_context);
 	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
 	virtual void doSetVisible(bool p_visible);
 	
     // Performs a relayering operation

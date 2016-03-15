@@ -2360,7 +2360,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		else
 		{
 			MCField *fptr = (MCField *)optr;
-			if (optr->gettype() != CT_FIELD || !of->nochunks()
+			if (optr->gettype() != CT_FIELD || !of->notextchunks()
 			        || fptr->sort(ep, parid, chunktype, direction,
 			                      format, by) != ES_NORMAL)
 			{
@@ -2431,7 +2431,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 	}
 	else
 	{
-		if (t_object . object->gettype() != CT_FIELD || !of->nochunks())
+		if (t_object . object->gettype() != CT_FIELD || !of->notextchunks())
 		{
             ctxt . LegacyThrow(EE_SORT_CANTSORT);
 			return;

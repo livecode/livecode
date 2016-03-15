@@ -1,1 +1,0 @@
-# LCB-Canvas: polyline path

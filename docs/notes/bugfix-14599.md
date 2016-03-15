@@ -1,1 +1,0 @@
-# LCB: Text sort is inconsistent with string comparison

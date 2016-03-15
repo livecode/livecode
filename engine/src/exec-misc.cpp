@@ -325,8 +325,8 @@ void MCMiscExecClearTouches(MCExecContext& ctxt)
     MCEventQueueClearTouches();
 
     // PM-2015-03-16: [[ Bug 14333 ]] Make sure the object that triggered a mouse down msg is not focused, as this stops later mouse downs from working
-    if (MCtargetptr != nil)
-        MCtargetptr -> munfocus();
+    if (MCtargetptr . object != nil)
+        MCtargetptr . object -> munfocus();
 }
 
 void MCMiscGetSystemIdentifier(MCExecContext& ctxt, MCStringRef& r_identifier)
@@ -372,7 +372,7 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
 {
-    MCS_downloadurl(MCtargetptr, p_url, p_filename);
+    MCS_downloadurl(MCtargetptr . object, p_url, p_filename);
 }
 
 void MCMiscExecLibUrlSetSSLVerification(MCExecContext& ctxt, bool p_enabled)

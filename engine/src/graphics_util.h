@@ -343,8 +343,9 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	
 	MCGFont t_font;
 	t_font . size = t_android_font -> size;
-	t_font . ascent = p_font -> ascent;
-	t_font . descent = p_font -> descent;
+	t_font . m_ascent = p_font -> m_ascent;
+	t_font . m_descent = p_font -> m_descent;
+    t_font . m_leading = p_font -> m_leading;
 	t_font . fid = t_android_font -> typeface;
 	t_font . ideal = false;
 	return t_font;
@@ -364,8 +365,9 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	}
 	
 	t_font . size = p_font -> size;
-	t_font . ascent = p_font -> ascent;
-	t_font . descent = p_font -> descent;
+	t_font . m_ascent = p_font -> m_ascent;
+	t_font . m_descent = p_font -> m_descent;
+    t_font . m_leading = p_font -> m_leading;
 	t_font . fid = static_cast<MCNewFontStruct *>(p_font) -> description;
 	t_font . ideal = false;
 	return t_font;
@@ -383,8 +385,9 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	}
 
 	t_font . size = p_font -> size;
-	t_font . ascent = p_font -> ascent;
-	t_font . descent = p_font -> descent;
+	t_font . m_ascent = p_font -> m_ascent;
+	t_font . m_descent = p_font -> m_descent;
+    t_font . m_leading = p_font -> m_leading;
 	t_font . fid = p_font -> fid;
 	t_font . ideal = p_font -> printer == True;
 	return t_font;
@@ -396,8 +399,9 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 {
 	MCGFont t_font;
 	t_font . size = p_font -> size;
-	t_font . ascent = p_font -> ascent;
-	t_font . descent = p_font -> descent;
+	t_font . m_ascent = p_font -> m_ascent;
+	t_font . m_descent = p_font -> m_descent;
+    t_font . m_leading = p_font -> m_leading;
 	t_font . fid = p_font -> fid;
 	t_font . ideal = false;
 	return t_font;
@@ -412,8 +416,9 @@ MCFontStructToMCGFont(MCFontStruct *p_font)
 	MCMemoryClear(&t_font, sizeof(t_font));
 
 	t_font . size = p_font -> size;
-	t_font . ascent = p_font -> ascent;
-	t_font . descent = p_font -> descent;
+	t_font . m_ascent = p_font -> m_ascent;
+	t_font . m_descent = p_font -> m_descent;
+    t_font . m_leading = p_font -> m_leading;
     t_font . fid = p_font -> fid;
 	t_font . ideal = false;
 

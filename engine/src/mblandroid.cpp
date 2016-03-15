@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "globals.h"
+#include "uidc.h"
 
 #include "mblandroid.h"
 #include "variable.h"
@@ -34,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCSystemLaunchUrl(MCStringRef p_url);
+extern bool MCAndroidResolveLibraryPath(MCStringRef p_library, MCStringRef &r_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,9 +87,13 @@ void MCAndroidSystem::Debug(MCStringRef p_string)
 
 MCSysModuleHandle MCAndroidSystem::LoadModule(MCStringRef p_path)
 {
+	MCAutoStringRef t_resolved_path;
+	/* UNCHECKED */ MCAndroidResolveLibraryPath(p_path, &t_resolved_path);
+	
+	MCAutoStringRefAsUTF8String t_utf8_path;
+	/* UNCHECKED */ t_utf8_path . Lock(*t_resolved_path);
+	
 	void *t_result;
-    MCAutoStringRefAsUTF8String t_utf8_path;
-    /* UNCHECKED */ t_utf8_path . Lock(p_path);
 	t_result = dlopen(*t_utf8_path, RTLD_LAZY);
 	MCLog("LoadModule(%s) - %p\n", *t_utf8_path, t_result);
 	return (MCSysModuleHandle)t_result;
@@ -184,6 +190,15 @@ bool MCAndroidSystem::AlternateLanguages(MCListRef& r_list)
 bool MCAndroidSystem::GetDNSservers(MCListRef& r_list)
 {
     return false;
+}
+
+void MCAndroidSystem::ShowMessageDialog(MCStringRef p_title,
+                                        MCStringRef p_message)
+{
+    if (MCscreen == nil)
+        return;
+    
+    MCscreen -> popupanswerdialog(nil, 0, 0, p_title, p_message, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -733,6 +733,13 @@ on revDefaultStandaloneSettings pStack
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Only create standalone setting for Intel (for OS X) by default.
    if tStandaloneSettingsA["MacOSX x86-32"] is empty then put true into tStandaloneSettingsA["MacOSX x86-32"]
    
+   -- Auto-remove stack passwords from community stacks
+   if revLicenseType() is "community" then
+      if tStandaloneSettingsA["password"] is not empty then
+         delete variable tStandaloneSettingsA["password"]
+      end if
+   end if
+   
    set the customproperties["cRevStandaloneSettings"] of stack pStack to tStandaloneSettingsA
 end revDefaultStandaloneSettings
 
@@ -805,6 +812,7 @@ function revEngineCheck pEngine
          case "MacOSX"
          case "MacOSX PowerPC-32"
          case "MacOSX x86-32"
+         case "MacOSX x86-64"
             return there is a directory (tPath & "/Mac OS X/x86-32/Standalone.app")
          case "Windows"
             if there is a file (tPath & "/Windows/x86-32/Standalone") then

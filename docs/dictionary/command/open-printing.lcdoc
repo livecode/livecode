@@ -50,6 +50,8 @@ The following handler prints cards that have been collected in a global variable
     close printing -- send group of cards to printer
   end printSomeCards
 
+>*Note:* On Linux, the printing commands use revpdfprinter to generate a PDF to send to the system printing system. If building a standalone, make sure you have selected 'revpdfprinter' in the inclusion options.
+
 References: printTitle (property), printRowsFirst (property), card (keyword), cancel printing (command), print (command), close printing (command), revBrowserPrint (command), answer printer (command), answer page setup (command), card (object), print job (glossary), command (glossary)
 
 Tags: printing

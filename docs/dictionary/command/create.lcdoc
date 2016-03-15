@@ -2,7 +2,7 @@ Name: create
 
 Type: command
 
-Syntax: create [invisible] <type> [<name>] [in <group>]
+Syntax: create [invisible] <objectType> [<objectName>] [in <group>]
 
 Summary: Creates a new object on the current card.
 
@@ -21,41 +21,66 @@ Example:
 create invisible field in group 1
 
 Parameters:
-type (string): A string, one of the following: field, button, image, scrollbar, graphic, player, or EPS.
-name: The name to call the newly created object. If you don't specify a name, the object is created with a default name.
-group: A reference to a group on the current card or a expression that evaluates to a reference.any group that's on the current card. If you specify a group, the new object is a member of the group, and exists on each card that has the group. If you don't specify a group, the object is created on the current card and appears only on that card.
+objectType (enum): 
+- "field"
+- "button"
+- "image"
+- "scrollbar"
+- "graphic"
+- "player"
+objectName: The name to call the newly created object. If you don't 
+specify a name, the object is created with a default name.
+group: A reference or and expression that evaluates to a reference to a 
+group on the current card. If you specify a group, the new object is a 
+member of the group, and exists on each card that has the group. If you 
+don't specify a group, the object is created on the current card and 
+appears only on that card.
 
-It: The <create> command places the ID property of the newly created object in the it variable.
+It: The <create> command places the ID property of the newly created 
+object in the it variable.
 
 Description:
 Use the create command to make a new control or grouped control.
 
-The new object takes its properties from the corresponding template; for example, newly created buttons match the properties of the templateButton.
+The new object takes its properties from the corresponding template; for 
+example, newly created buttons match the properties of the 
+<templateButton>.
 
-If you use theform, the object is created with its visible property set to false, so it cannot be seen. Use this form to create a hidden object, change its appearance or position, then make it visible.
+If you use the invisible form, the object is created with its visible 
+property set to false, so it cannot be seen. Use this form to create a 
+hidden object, change its appearance or position, then make it visible.
 
-When the new control is created, the Pointer tool is automatically chosen. If you use the create command in a handler, you can use the following statement after the create command to resume using the Browse tool:
+When the new control is created, the Pointer tool is automatically 
+chosen. If you use the create command in a handler, you can use the 
+following statement after the create command to resume using the Browse 
+tool:
 
-send "choose browse tool" to me in 1 tick
+	send "choose browse tool" to me in 1 tick
 
->*Note:*  In the development environment, after an object is created, LiveCode automatically resets the corresponding template to its default values. This means that if you change an objecttemplate and then create several objects of that type, only the first object will reflect your settings. To prevent LiveCode from automatically setting the template back to its defaults, set the lockMessages property to true before creating the objects:
+>*Note:*  In the development environment, after an object is created, 
+LiveCode automatically resets the corresponding template to its default 
+values. This means that if you change an object template and then create 
+several objects of that type, only the first object will reflect your 
+settings. To prevent LiveCode from automatically setting the template 
+back to its defaults, set the <lockMessages> property to true before 
+creating the objects:
 
-LiveCode resets the template only when in the development environment, not in standalone applications.
+	set the borderWidth of the templateButton to 8
+	lock messages
+	repeat for 5 times
+	create button
+	end repeat
+	unlock messages
 
-set the borderWidth of the templateButton to 8
-lock messages
-repeat for 5 times
-create button
-end repeat
-unlock messages
+LiveCode resets the template only when in the development environment, 
+not in standalone applications.
 
-LiveCode resets the template only when in the development environment, not in standalone applications.
+>*Tip:*  To create a control in a specific stack, first set the 
+<defaultStack> to the stack where you want to create the new control:
 
->*Tip:*  To create a control in a specific stack, first set the defaultStack to the stack where you want to create the new control:
+	set the defaultStack to "My Stack"
+	create button "My Button"
 
-set the defaultStack to "My Stack"
-create button "My Button"
-
-References: create stack (command), create card (command)
+References: create stack (command), create card (command), templateButton (keyword), lockMessages (property), defaultStack (property)
 
 Tags: objects

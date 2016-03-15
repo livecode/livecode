@@ -77,7 +77,7 @@ clean:
 # LCB test compilation rules
 ################################################################
 
-LCM_SOURCES = $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
+LCM_SOURCES ?= $(patsubst ./%,%,$(shell find . -name '*.lcb' | sort))
 LCM_LIB_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep '_[^/]*.lcb$$'; done)
 LCM_TEST_SOURCES = $(shell for f in $(LCM_SOURCES); do echo $$f | grep -v '_[^/]*.lcb$$'; done)
 

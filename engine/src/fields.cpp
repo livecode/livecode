@@ -643,7 +643,7 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, findex_t& si, findex_t& 
 	return t_start_pg;
 }
 
-Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef p_text, Boolean undoing)
+Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef p_text, Boolean undoing, MCFieldStylingMode p_styling_mode)
 {
 	state &= ~CS_CHANGED;
 	if (!undoing)
@@ -718,8 +718,10 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
         // First delete the portion of the first paragraph in the range.
         int4 tei;
         tei = MCMin(ei, pgptr -> gettextlength());
-        
-		pgptr->deletestring(si, tei);
+		
+		// Pass through the first style preservation flag. This will leave us with
+		// a zero length block at si (which finsertnew will extend).
+		pgptr->deletestring(si, tei, p_styling_mode);
         ei -= (tei - si);
         
 		if (ei > pgptr -> gettextlength())

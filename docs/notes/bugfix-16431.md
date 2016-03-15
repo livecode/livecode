@@ -1,0 +1,1 @@
+# Convert line endings when fetching legacy clipboard text

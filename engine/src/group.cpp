@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "objectstream.h"
 #include "widget.h"
+#include "dispatch.h"
 
 #include "mctheme.h"
 #include "globals.h"
@@ -115,38 +116,50 @@ MCObjectPropertyTable MCGroup::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGroup::MCGroup()
+MCGroup::MCGroup() :
+  MCControl(),
+  controls(NULL),
+  kfocused(NULL),
+  oldkfocused(NULL),
+  newkfocused(NULL),
+  mfocused(NULL),
+  vscrollbar(NULL),
+  hscrollbar(NULL),
+  scrollx(0),
+  scrolly(0),
+  scrollbarwidth(MCscrollbarwidth),
+  label(MCValueRetain(kMCEmptyString)),
+  minrect(MCU_make_rect(0, 0, 0, 0)),
+  number(MAXUINT2),
+  mgrabbed(False),
+  m_updates_locked(false),
+  m_clips_to_rect(false)
 {
 	flags |= F_TRAVERSAL_ON | F_RADIO_BEHAVIOR | F_GROUP_ONLY;
 	flags &= ~(F_SHOW_BORDER | F_OPAQUE);
-	label = MCValueRetain(kMCEmptyString);
-	controls = NULL;
-	kfocused = mfocused = NULL;
-	newkfocused = oldkfocused = NULL;
-	number = MAXUINT2;
-	leftmargin = rightmargin = topmargin = bottommargin = defaultmargin;
-	vscrollbar = hscrollbar = NULL;
-	scrollx = scrolly = 0;
-	scrollbarwidth = MCscrollbarwidth;
-	minrect.x = minrect.y = minrect.width = minrect.height = 0;
-	
-	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
-	//   when created.
-    m_updates_locked = false;
-    
-    // MW-2014-06-20: [[ ClipsToRect ]] Initialize to false.
-    m_clips_to_rect = false;
+    leftmargin = rightmargin = topmargin = bottommargin = defaultmargin;
 }
 
-MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
+MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) :
+  MCControl(gref),
+  controls(NULL),
+  kfocused(NULL),
+  oldkfocused(NULL),
+  newkfocused(NULL),
+  mfocused(NULL),
+  vscrollbar(NULL),
+  hscrollbar(NULL),
+  scrollx(gref.scrollx),
+  scrolly(gref.scrolly),
+  scrollbarwidth(gref.scrollbarwidth),
+  label(MCValueRetain(gref.label)),
+  minrect(gref.minrect),
+  number(MAXUINT2),
+  mgrabbed(False),
+  m_updates_locked(false),
+  m_clips_to_rect(gref.m_clips_to_rect)
 {
-	MCGroup(gref, false);
-}
-
-MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
-{
-	label = MCValueRetain(gref.label);
-	controls = NULL;
+    // Copy the controls
 	if (gref.controls != NULL)
 	{
 		MCControl *optr = gref.controls;
@@ -173,9 +186,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		}
 		while (optr != gref.controls);
 	}
-	minrect = gref.minrect;
-	kfocused = mfocused = NULL;
-	number = MAXUINT2;
+
+    // Copy the vertical scrollbar
 	if (gref.vscrollbar != NULL)
 	{
 		vscrollbar = new MCScrollbar(*gref.vscrollbar);
@@ -184,8 +196,8 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		vscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
 		vscrollbar->setembedded();
 	}
-	else
-		vscrollbar = NULL;
+
+    // Copy the horizontal scrollbar
 	if (gref.hscrollbar != NULL)
 	{
 		hscrollbar = new MCScrollbar(*gref.hscrollbar);
@@ -194,18 +206,6 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 		hscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
 		hscrollbar->setembedded();
 	}
-	else
-		hscrollbar = NULL;
-	scrollx = gref.scrollx;
-	scrolly = gref.scrolly;
-	scrollbarwidth = gref.scrollbarwidth;
-	
-    // MW-2014-06-20: [[ ClipsToRect ]] Copy other group's value.
-    m_clips_to_rect = gref.m_clips_to_rect;
-    
-	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
-	//   when cloned.
-    m_updates_locked = false;
 }
 
 MCGroup::~MCGroup()
@@ -263,6 +263,58 @@ bool MCGroup::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, 
 	}
 
 	return t_continue;
+}
+
+void MCGroup::toolchanged(Tool p_new_tool)
+{
+	MCControl::toolchanged(p_new_tool);
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->toolchanged(p_new_tool);
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
+MCRectangle MCGroup::getviewportgeometry()
+{
+	MCRectangle t_viewport;
+	t_viewport = getrect();
+
+	MCObject *t_parent;
+	t_parent = getparent();
+	if (t_parent != nil && t_parent->gettype() == CT_GROUP)
+		t_viewport = MCU_intersect_rect(t_viewport, ((MCGroup*)t_parent)->getviewportgeometry());
+
+	return t_viewport;
+}
+
+void MCGroup::geometrychanged(const MCRectangle &p_rect)
+{
+	MCControl::geometrychanged(p_rect);
+	viewportgeometrychanged(getviewportgeometry());
+}
+
+void MCGroup::viewportgeometrychanged(const MCRectangle &p_rect)
+{
+	MCRectangle t_viewport;
+	t_viewport = MCU_intersect_rect(p_rect, getrect());
+
+	if (controls != nil)
+	{
+		MCControl *t_control = controls;
+		do
+		{
+			t_control->viewportgeometrychanged(t_viewport);
+			t_control = t_control->next();
+		}
+		while (t_control != controls);
+	}
 }
 
 void MCGroup::open()
@@ -337,7 +389,7 @@ void MCGroup::kfocus()
 Boolean MCGroup::kfocusnext(Boolean top)
 {
 	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
-	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
+	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || showinvisible()))
 		return False;
 	if (newkfocused != NULL)
 	{
@@ -394,7 +446,7 @@ Boolean MCGroup::kfocusnext(Boolean top)
 Boolean MCGroup::kfocusprev(Boolean bottom)
 {
 	if ((state & CS_KFOCUSED && flags & F_TAB_GROUP_BEHAVIOR)
-	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || MCshowinvisibles))
+	        || !(flags & F_TRAVERSAL_ON) || !(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCControl *startptr = NULL;
 	// MW-2005-07-18: [[Bug 2923]] Crash when tabbing backwards
@@ -532,14 +584,109 @@ void MCGroup::mdrag(void)
 	}
 }
 
+bool MCGroup::mfocus_control(int2 x, int2 y, bool p_check_selected)
+{
+    if (controls != nil)
+    {
+        MCControl *tptr = controls->prev();
+        do
+        {
+            // Check if any group's child is selected and focused
+            if (p_check_selected && tptr -> gettype() == CT_GROUP)
+            {
+                if (static_cast<MCGroup *>(tptr) -> mfocus_control(x, y, true))
+                {
+                    mfocused = tptr;
+                    return true;
+                }
+            }
+            
+            bool t_focused;
+            if (p_check_selected)
+            {
+                // On the first pass (checking selected objects), just check
+                // if the object is selected and the mouse is inside a resize handle.
+                t_focused = tptr -> getstate(CS_SELECTED)
+                && tptr -> sizehandles(x, y) != 0;
+                
+                // Make sure we still call mfocus as it updates the control's stored
+                // mouse coordinates
+                if (t_focused)
+                    tptr -> mfocus(x, y);
+                
+            }
+            else
+            {
+                t_focused = tptr -> mfocus(x, y);
+            }
+            
+            if (t_focused)
+            {
+                Boolean newfocused = tptr != mfocused;
+                
+                if (newfocused && mfocused != NULL)
+                {
+                    MCControl *oldfocused = mfocused;
+                    mfocused = tptr;
+                    oldfocused->munfocus();
+                }
+                else
+                    mfocused = tptr;
+                
+                // The widget event manager handles enter/leave itself
+                if (newfocused && mfocused != nil &&
+                    mfocused -> gettype() != CT_GROUP &&
+#ifdef WIDGETS_HANDLE_DND
+                    mfocused -> gettype() != CT_WIDGET)
+#else
+                    (MCdispatcher -> isdragtarget() ||
+                     mfocused -> gettype() != CT_WIDGET))
+#endif
+                {
+                        mfocused->enter();
+                        
+                        // MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
+                        //   ... and now lets make sure it doesn't crash!
+                        //   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
+                        if (mfocused != NULL)
+                            mfocused->mfocus(x, y);
+                }
+                return true;
+            }
+            
+            // Unset previously focused object.
+            if (!p_check_selected && tptr == mfocused)
+            {
+                // Use the group's munfocus method if the group has an mfocused control.
+                if (mfocused -> gettype() != CT_GROUP
+                    || static_cast<MCGroup *>(mfocused) -> getmfocused() != nil)
+                {
+                    MCControl *oldfocused = mfocused;
+                    mfocused = NULL;
+                    oldfocused->munfocus();
+                }
+                else
+                {
+                    static_cast<MCGroup *>(mfocused) -> clearmfocus();
+                    mfocused = nil;
+                }
+            }
+
+            tptr = tptr->prev();
+        }
+        while (tptr != controls->prev());
+    }
+    return false;
+}
+
 Boolean MCGroup::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 	{
 		mfocused = NULL;
 		mgrabbed = False;
@@ -572,40 +719,9 @@ Boolean MCGroup::mfocus(int2 x, int2 y)
 			// MW-2008-01-30: [[ Bug 5832 ]] Previously we would have been immediately
 			//   unfocusing the group if there were no controls, this resulted in much
 			//   sadness as empty groups wouldn't be resizable :o(
-			if (controls != NULL)
-			{
-				MCControl *tptr = controls->prev();
-				do
-				{
-					if (tptr->mfocus(x, y))
-					{
-						if (mfocused != NULL && tptr != mfocused)
-							mfocused->munfocus();
-						if (tptr != mfocused)
-						{
-							mfocused = tptr;
-							if (mfocused->gettype() != CT_GROUP)
-							{
-								mfocused->enter();
-
-								// MW-2007-10-31: mouseMove sent before mouseEnter - make sure we send an mouseMove
-								//   ... and now lets make sure it doesn't crash!
-								//   Here mfocused can be NULL if a control was deleted in mfocused -> enter()
-								if (mfocused != NULL)
-									mfocused->mfocus(x, y);
-							}
-						}
-						return True;
-					}
-					else if (tptr == mfocused)
-					{
-						mfocused->munfocus();//changed
-						mfocused = NULL;
-					}
-					tptr = tptr->prev();
-				}
-				while (tptr != controls->prev());
-			}
+            if (mfocus_control(x, y, false))
+                return true;
+            
 			if (state & CS_SELECTED)
 				return True;
 		}
@@ -797,7 +913,7 @@ Boolean MCGroup::doubleup(uint2 which)
 	return False;
 }
 
-void MCGroup::setrect(const MCRectangle &nrect)
+void MCGroup::applyrect(const MCRectangle &nrect)
 {
 	bool t_size_changed;
 	t_size_changed = nrect . width != rect . width || nrect . height != rect . height;
@@ -855,8 +971,12 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	
 	if (!getstate(CS_SENDING_RESIZE) && t_size_changed)
 	{
+		/* We intentionally don't check the result of sending the
+		 * "resizeControl" message, because there's nothing that can
+		 * sanely be done with it.  Attempting to handle an error (for
+		 * example) causes an engine hang. */
 		setstate(True, CS_SENDING_RESIZE);
-		conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
+		/* UNCHECKED */ conditionalmessage(HH_RESIZE_CONTROL, MCM_resize_control);
 		setstate(False, CS_SENDING_RESIZE);
 	}
 }
@@ -1700,7 +1820,7 @@ Boolean MCGroup::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCGroup::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	if (MCControl::maskrect(srect))
 	{
@@ -2748,6 +2868,10 @@ bool MCGroup::computeminrect(Boolean scrolling)
 		else
 			t_all = true;
 		state = oldstate;
+		
+		// IM-2015-12-16: [[ NativeLayer ]] The group rect has changed, so send geometry change notification.
+		geometrychanged(getrect());
+		
 		return t_all;
 	}
 	else if ((flags & F_HSCROLLBAR || flags & F_VSCROLLBAR)
@@ -2791,6 +2915,52 @@ void MCGroup::boundcontrols()
 	}
 }
 
+void MCGroup::drawselectedchildren(MCDC *dc)
+{
+    MCControl *t_control = controls;
+    if (t_control == nil)
+        return;
+    do
+    {
+        if (t_control -> getstate(CS_SELECTED))
+            t_control -> drawselected(dc);
+        
+        if (t_control -> gettype() == CT_GROUP)
+            static_cast<MCGroup *>(t_control) -> drawselectedchildren(dc);
+        
+        t_control = t_control -> next();
+    }
+    while (t_control != controls);
+}
+
+bool MCGroup::updatechildselectedrect(MCRectangle& x_rect)
+{
+    bool t_updated;
+    t_updated = false;
+    
+    MCControl *t_control = controls;
+    if (t_control == nil)
+        return t_updated;
+    do
+    {
+        if (t_control -> getstate(CS_SELECTED))
+        {
+            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
+            t_updated = true;
+        }
+        
+        if (t_control -> gettype() == CT_GROUP)
+        {
+            MCGroup *t_group = static_cast<MCGroup *>(t_control);
+            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
+        }
+        
+        t_control = t_control -> next();
+    }
+    while (t_control != controls);
+    
+    return t_updated;
+}
 
 //-----------------------------------------------------------------------------
 //  Redraw Management
@@ -2928,9 +3098,6 @@ void MCGroup::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
 	}
 }
 
@@ -3121,7 +3288,7 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 
 #define GROUP_EXTRA_CLIPSTORECT (1 << 0UL)
 
-IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -3135,7 +3302,7 @@ IO_stat MCGroup::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
 }
@@ -3171,7 +3338,7 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -3185,14 +3352,14 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_clips_to_rect)
         t_has_extensions = true;
 
-	if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+    if ((stat = MCObject::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3234,16 +3401,16 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(minrect.height, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (vscrollbar != NULL)
 	{
-		if ((stat = vscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = vscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (hscrollbar != NULL)
 	{
-		if ((stat = hscrollbar->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = hscrollbar->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	}
 	if (controls != NULL)
@@ -3251,7 +3418,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCControl *cptr = controls;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = cptr->next();
 		}
@@ -3583,7 +3750,7 @@ bool MCGroup::resolveparentscript(void)
 
 MCObject *MCGroup::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	
@@ -3621,10 +3788,10 @@ MCObject *MCGroup::hittest(int32_t x, int32_t y)
 }
 
 // MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
-bool MCGroup::recomputefonts(MCFontRef p_parent_font)
+bool MCGroup::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	// First update the font referenced by the group object.
-	if (!MCObject::recomputefonts(p_parent_font))
+	if (!MCObject::recomputefonts(p_parent_font, p_force))
 		return false;
 
 	// The group's font only has an effect in isolation if the group is
@@ -3641,7 +3808,7 @@ bool MCGroup::recomputefonts(MCFontRef p_parent_font)
 		t_control = controls;
 		do
 		{
-			if (t_control -> recomputefonts(m_font))
+			if (t_control -> recomputefonts(m_font, p_force))
 				t_changed = true;
 			t_control = t_control -> next();
 		}
@@ -3696,6 +3863,25 @@ void MCGroup::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 		p_control -> layer_redrawall();
 }
 
+bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
+{
+	if (getNativeLayer() == nil)
+	{
+		void *t_view;
+		if (!MCNativeLayer::CreateNativeContainer(t_view))
+			return false;
+		if (!SetNativeView(t_view))
+		{
+			MCNativeLayer::ReleaseNativeView(t_view);
+			return false;
+		}
+	}
+	
+	r_layer = getNativeLayer();
+	
+	return true;
+}
+
 void MCGroup::scheduledelete(bool p_is_child)
 {
     MCControl::scheduledelete(p_is_child);
@@ -3710,23 +3896,4 @@ void MCGroup::scheduledelete(bool p_is_child)
 		}
 		while(t_control != controls);
 	}
-}
-
-// PM-2015-07-02: [[ Bug 13262 ]] Make sure we attach/detach the player when
-//  showing/hiding a group that has a player
-void MCGroup::SetVisibility(MCExecContext &ctxt, uinteger_t part, bool flag, bool visible)
-{
-    MCControl::SetVisibility(ctxt, part, flag, visible);
-#ifdef PLATFORM_PLAYER
-    for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-    {
-        if (t_player -> getparent() == this)
-        {
-            if (flag && visible || !flag && !visible)
-                t_player -> attachplayer();
-            else
-                t_player -> detachplayer();
-        }
-    }
-#endif
 }

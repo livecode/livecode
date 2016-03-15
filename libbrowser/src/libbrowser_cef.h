@@ -164,6 +164,7 @@ public:
 	//////////
 	
 	bool Initialize();
+	void Finalize();
 };
 
 bool MCCefBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
@@ -196,6 +197,14 @@ bool MCCefDictionaryToBrowserDictionary(CefRefPtr<CefDictionaryValue> p_dict, MC
 const char *MCCefPlatformGetCefLibraryPath(void);
 const char *MCCefPlatformGetResourcesDirPath(void);
 const char *MCCefPlatformGetLocalePath(void);
+
+//////////
+
+#if defined (_WIN32)
+#define MC_CEF_USE_MULTITHREADED_MESSAGELOOP 1
+#else
+#define MC_CEF_USE_MULTITHREADED_MESSAGELOOP 0
+#endif
 
 // AL-2015-02-17: [[ SB Inclusions ]] Work around problems linking to MCU_ functions from CEF
 

@@ -1,384 +1,1299 @@
 ﻿script "ReleaseNotesBuilder"
-/*
+local sMarkdownText
+local sVersion
+local sOutputPath
 
-This stack implements the command "compileReleaseNotes <release number>"
-which creates a pdf file of the release notes from various markdown files.
-
-The notes directory should contain 
-- "platforms.md" and "setup.md"
-- optional files "issues.md" containing any known issues, "proposed_changes.md" and "user_guide_changes.md"
-- an optional file "overview.md", if this release has any specific focus or direction
-- the feature and bugfix files used to generate the notes.
-
-Each file details a single bug fix or feature implementation, according to the following specifications:
-
-The file should be named "bugfix-<bug number>.md"  or  "feature-<feature number>.md".
-It should have a title as the first line, prefixed by a hash symbol.
-# <title>
-
-For images, use the syntax
-![<alt id>](<image number>.<extension>)
-The image must be named bugfix-<bug number>-<image number>.<extension>
-
-Otherwise the file should be LiveCode flavoured Markdown.
-
-Single line files will be added to the table of sepcific bug fixes along with a link to their entry 
-on Bugzilla. Multiline files will have their own subsection in the release notes.
+private command Initialize pVersion, pOutputPath
+   if pOutputPath is empty then
+      throw "Release notes output path must be specified"
+      exit Initialize
+   end if
    
-   */
-   
-   global gExperimental, gPageBreak, gAnchor
-   
-   function releaseNotesCSS
-   local tFile
-   put builderSystemFolder() & slash & "release_notes_css_prefix.txt" into tFile
-   return getFileContentsUTF8(tFile)
-end releaseNotesCSS
-
-command releaseNotesBuilderInitialize
    start using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
-   
-   put 1 into gAnchor     
-   put "<p style=" & quote & "color:red; font-weight:bold" & quote & ">Important: This feature is currently experimental. " into gExperimental
-   put gExperimental & "This means that it may not be complete, or may fail in some circumstances that you would expect it to work. " into gExperimental
-   put gExperimental & "Please do not be afraid to try it out as we need feedback to develop it further.</p>" & CR into gExperimental
-   put CR & "<div style=" & quote & "page-break-after: always;" & quote & "><span style=" & quote & "display: none;" & quote & ">&nbsp;</span></div>" & CR into gPageBreak
-   
    set the defaultfolder to builderRepoFolder()
-   set hideconsolewindows to true   
-end releaseNotesBuilderInitialize
+   set the hideconsolewindows to true
+   
+   put empty into sMarkdownText
+   put pVersion into sVersion
+   put pOutputPath into sOutputPath
+end Initialize
 
-command releaseNotesBuilderFinalize
+private command Finalize
    stop using stack (builderSystemFolder() & slash & "markdown_compiler.livecodescript")
-end releaseNotesBuilderFinalize
+end Finalize
 
-command releaseNotesBuilderRun pEdition, pVersion, pReleaseType
+command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
+   local tError
    builderLog "report", "Building release notes for version" && pVersion
    
-   releaseNotesBuilderInitialize
-   
-   local tTags
-   put shell("git tag") into tTags
-   
-   sortTags tTags
-   
-   local tContents
-   local tBody
-   
-   builderLog "message", "Creating base release notes"
-   
-   local tOverview
-   put notesFileToHTML("overview.md", pVersion, tContents) into tOverview
-   if tOverview is empty then
-      put tBody & newSection("Overview", 1, tContents) into tBody
-      put "This document describes all the changes that have been made for LiveCode " & pVersion & ", including bug fixes and new syntax." into tOverview
-   end if
-   put tBody & tOverview & CR into tBody
-   
-   local tIssues
-   put notesFileToHTML("issues.md", pVersion, tContents) into tIssues
-   if tIssues is empty then
-      put tBody & newSection("Known Issues", 1, tContents) into tBody
-      put "There are no known issues with this release." into tIssues
-   end if
-   put tBody & tIssues & CR into tBody
-   
-   put tBody & notesFileToHTML("platforms.md", pVersion, tContents) into tBody
-   
-   put tBody & gPageBreak into tBody
-   
-   put tBody & notesFileToHTML("setup.md", pVersion, tContents) into tBody
-   put tBody & notesFileToHTML("proposed_changes.md", pVersion, tContents) into tBody
-   
-   put tBody & gPageBreak into tBody
-   
-   put tBody & newSection("Engine changes", 1, tContents) into tBody
-   
-   builderLog "message", "Adding entries for bugfixes and features"
-   local tUpdateFeatures
-   local tUpdateBugs
-   put tBody & notesFolderToHTML(false, notesPath(), pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
-   
-   put tBody & newSection("IDE changes", 1, tContents) into tBody
-   
-   builderLog "message", "Adding entries for ide bugfixes and features"
-   put tBody & notesFolderToHTML(true, notesPath(), pVersion, tTags, tContents, tUpdateFeatures, tUpdateBugs) into tBody
-   put tBody & gPageBreak into tBody
-   
-   put tBody & newSection("LiveCode Builder changes", 1, tContents) into tBody
-   
-   builderLog "message", "Adding entries for lcb bugfixes and features"
-   put tBody & notesFolderLCBToHTML(pVersion, tTags, tContents) into tBody
-   put tBody & gPageBreak into tBody
-   
-   put tBody & newSection("LiveCode Extension changes", 1, tContents) into tBody
-   
-   builderLog "message", "Adding entries for extension bugfixes and features"
-   put tBody & notesFolderExtensionsToHTML(pVersion, tTags, tContents) into tBody
-   put tBody & gPageBreak into tBody
-   
-   builderLog "message", "Adding entries for dictionary and user guide changes"
-   local tChangeList
-   local tChangeStatusList
-   getDictionaryChanges pVersion, tTags, tChangeStatusList, tChangeList
-   
-   if tChangeStatusList is not empty then
-      put tBody & newSection("Dictionary additions", 1, tContents) into tBody
-      put tBody & "<ul>" & CR & tChangeStatusList & "</ul>" into tBody
-   end if
-   
-   local tUserGuideChanges
-   put notesFileToHTML("user_guide_changes.md", pVersion, tContents) into tUserGuideChanges
-   if tUserGuideChanges is not empty then
-      put tBody & tUserGuideChanges into tBody
-   end if
-   
-   if tChangeList is not empty then
-      put tBody & newSection("Dictionary changes", 1, tContents) into tBody
-      put tBody & "<ul>" & CR & tChangeList & "</ul>" into tBody
-   end if
-   
-   put tBody & gPageBreak into tBody
-   
-   builderLog "message", "Adding links to previous notes"
-   put tBody & newSection("Previous Release Notes", 1, tContents) into tBody
-   put tBody & getPastNotes(tTags) into tBody
-   
-   local tNotesFileURL
-   local tNotesFile, tHtmlNotesFile
-   builderEnsureFolder  builderRepoFolder() & slash & targetPath()
-   put builderRepoFolder() & slash & targetPath() & slash & "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tNotesFile
-   put tNotesFile & ".html" into tHtmlNotesFile
-   put "file:" & tHtmlNotesFile into tNotesFileURL
-   
-   local tNotesPrefix
-   local tNotesSuffix
-   local tTitle
-   put "LiveCode " & pVersion & " Release Notes" into tTitle
-   put "<html><head>" & CR into tNotesPrefix
-   put "<meta charset=" & quote & "UTF-8" & quote & ">" & CR after tNotesPrefix
-   put releaseNotesCSS() & CR after tNotesPrefix
-   put "</head>" & CR after tNotesPrefix
-   put "<body><h1 style = " & quote & "text-align : center" & quote & ">" & tTitle & "</h1>" & CR after tNotesPrefix
-   put "<h2>Table of contents</h2>" & CR after tNotesPrefix
-   put "</body></html>" into tNotesSuffix   
-
-   open file tHtmlNotesFile for "UTF-8" text write
-   write tNotesPrefix & tContents & gPageBreak & tBody & tNotesSuffix to file tHtmlNotesFile
-   close file tHtmlNotesFile
-   
-   builderLog "message", "Converting release notes to PDF"
-   HTMLToPDF tNotesFile, tTitle
-   
-   builderLog "message", "Copying PDF release notes into IDE"
-   put URL ("binfile:" & tNotesFile & ".pdf") into URL ("binfile:" & builderIDEFolder() & "/Release Notes.pdf")
-   
-   builderLog "message", "Generating updater text"
-   local tUpdateText
-   filter tUpdateFeatures without ""
-   filter tUpdateBugs without ""
-   exportUpdateText pVersion, tUpdateFeatures, tUpdateBugs, pReleaseType
-   put the result into tUpdateText
-   
-   releaseNotesBuilderFinalize 
-   builderLog "report", "Building release notes for version" && pVersion && "complete"
-   
-   return tUpdateText
+   try
+      Initialize pVersion, pOutputDir
+      
+      BaseCreate
+      V1NotesCreate "engine", "Engine changes"
+      V1NotesCreate "ide", "IDE changes"
+      V2NotesCreate "lcb", "LiveCode Builder changes"
+      ExtensionsCreate
+      DictionaryCreate
+      PreviousCreate
+      
+      OutputNotes
+      OutputUpdates
+      
+      Finalize
+      
+      return FileGetUTF8Contents(OutputGetUpdatesFilename("html"))
+   catch tError
+      builderLog "error", tError
+   end try
 end releaseNotesBuilderRun
 
-command HTMLToPDF pName, pTitle
-   local tShell
-   local tOptions
+private function NotesGetExperimentalText
+   return "<div class=" & quote & "experimental" & quote & ">" & \
+         "Important: This feature is currently experimental.  This means it may not be complete, or may fail in some circumstances that you would expect it to work.  Please do not be afraid to try it out as we need feedback to develop it further." & \
+         "</div>"
+end NotesGetExperimentalText
+
+----------------------------------------------------------------
+-- Output
+----------------------------------------------------------------
+
+private function OutputGetNotesFilename tSuffix, pVersion
+   if pVersion is empty then
+      put sVersion into pVersion
+   end if
+   
+   local tBasename
+   put "LiveCodeNotes-" & replaceText(pVersion, "[-,\.]", "_") into tBasename
+   return sOutputPath & slash & tBasename & "." & tSuffix
+end OutputGetNotesFilename
+
+private function OutputGetUpdatesFilename tSuffix, pVersion
+   if pVersion is empty then
+      put sVersion into pVersion
+   end if
+   
+   local tBasename
+   put "LiveCodeUpdates-" & replaceText(pVersion, "[-,\.]", "_") into tBasename
+   return sOutputPath & slash & tBasename & "." & tSuffix
+end OutputGetUpdatesFilename
+
+private function OutputGetNotesUrl tSuffix, pVersion
+   put replaceText(pVersion, "[-,\.]", "_") into pVersion
+   
+   return "https://downloads.livecode.com/livecode/" & pVersion & \
+         "/LiveCodeNotes-" & pVersion & "." & tSuffix
+end OutputGetNotesUrl
+
+private function OutputGetNotesTitle
+   return merge("LiveCode [[sVersion]] Release Notes")
+end OutputGetNotesTitle
+
+private command OutputNotes
+   OutputNotesMarkdown
+   OutputNotesHtml
+   OutputNotesPdf
+end OutputNotes
+
+private command OutputNotesMarkdown
+   local tPath
+   put OutputGetNotesFilename("md") into tPath
+   builderLog "report", merge("Writing [[tPath]]")
+   FileSetUTF8Contents tPath, sMarkdownText["notes"]
+end OutputNotesMarkdown
+
+private command OutputNotesHtml
+   -- Try to do the minimum possible escaping to be able to insert the
+   -- markdown into a JavaScript string
+   local tEscaped
+   put sMarkdownText["notes"] into tEscaped
+   replace "\" with "\\" in tEscaped
+   replace "'" with "\'" in tEscaped
+   replace return with "\n" in tEscaped
+   
+   local tHtmlTemplatePath
+   put builderSystemFolder() & "/release-notes-template.html" into tHtmlTemplatePath
+   
+   local tHtml
+   put FileGetUTF8Contents(tHtmlTemplatePath) into tHtml
+   replace "@MARKDOWN@" with tEscaped in tHtml
+   
+   local tOutpath
+   put OutputGetNotesFilename("html") into tOutpath
+   
+   builderLog "report", merge("Writing [[tOutpath]]")
+   FileSetUTF8Contents tOutpath, tHtml
+end OutputNotesHtml
+
+private command OutputNotesPdf
    local tCommand
-
-   put " --header-right " & quote & pTitle & " " & the date & quote into tOptions
-   put tOptions & " --header-font-size 8 --header-spacing 5 --footer-center [page] --footer-font-size 8 --footer-spacing 5 " into tOptions
-   put tOptions & "--margin-top 30 --margin-bottom 20 --margin-left 20 --margin-right 20 --enable-internal-links " into tOptions
-   put "--encoding UTF-8 " after tOptions
-
-   if $WKHTMLTOPDF is empty then
-      put builderRepoFolder() & slash & "builder" & slash & "wkhtmltopdf" into tCommand
-   else
+   
+   -- Use wkhtmltopdf to convert the HTML representation
+   if $WKHTMLTOPDF is not empty then
       put $WKHTMLTOPDF into tCommand
-   end if
-
-   put quote & tCommand & quote & tOptions  & pName & ".html " & pName & ".pdf" into tShell
-
-   get shell(tShell)
-
-   if the result is not 0 then
-      builderLog "error", "Failed to run wkhtmltopdf"
-      throw "wkhtmltopdf failed"
-   end if
-end HTMLToPDF
-
-function getPastNotes pTags
-   local tNumTags
-   filter pTags without "*rc*"
-   filter pTags without "*dp*"
-   put number of lines in pTags into tNumTags
-   local tTable
-   put "<table>" & CR into tTable
-   local i
-   put 1 into i
-   local tLink
-   repeat while i < 21 and i < tNumTags + 1
-      local tVersion
-      put line -i of pTags into tVersion
-      put tTable & "<tr>" & CR & "<td>" & tVersion & " Release Notes</td>" & CR into tTable
-      put replaceText(tVersion, "\.", "_") into tVersion
-      put "http://downloads.livecode.com/livecode/" & tVersion & "/LiveCodeNotes-" & tVersion & ".pdf" into tLink
-      put tTable & "<td><a href=" & quote & tLink & quote & ">" & tLink & "</a></td>" & CR into tTable
-      put tTable & "</tr>" & CR into tTable
-      add 1 to i
-   end repeat
-   put tTable & "</table>" into tTable
-   return tTable
-end getPastNotes
-
-function newSection pSection, pLevel, @xContents
-   local tSection 
-   put "<h" & pLevel + 1 & " " & getAnchor(pSection) & ">" & pSection & "</h" & pLevel + 1 & ">" & CR into tSection
-   appendLink pLevel, pSection, xContents
-   return tSection
-end newSection
-
-function notesFileToHTML pFileName, pVersion, @xContents
-   local tFile
-   local tFileText
-   local tBody
-   put empty into tBody
-
-   put notesPath() & slash & pFileName into tFile
-   put getFileContentsUTF8(tFile) into tFileText
-
-   if tFileText is not empty then
-      replace "<version>" with pVersion in tFileText
-      put markdownToHTML(tFileText, 1, 0, xContents, true) into tBody
-   end if
-   return tBody
-end notesFileToHTML
-
-function makeBugTable pBugs, pBold
-   local tBugs
-   local tNoID
-   local tBugTable
-   local tBugUrl
-   local tBold
-   put "<table>" into tBugTable
-   repeat for each line tLine in pBugs
-      if item 1 of tLine is not a number then
-         put tNoID & CR & "<tr><td></td>" & CR into tNoID
-         if pBold then
-            put tNoID & "<td><strong>" & item 2 of tLine & "</strong></td></tr>" into tNoID
-         else
-            put tNoID & "<td>" & item 2 of tLine & "</td></tr>" into tNoID
-         end if
-      else
-         put "http://quality.livecode.com/show_bug.cgi?id=" & item 1 of tLine into tBugUrl
-         if pBold then
-            put tBugs & CR & "<tr><td><strong>" & item 1 of tLine & "</strong></td>" & CR into tBugs
-            put tBugs & "<td><a href=" & quote & tBugUrl & quote & "><strong>" & item 2 of tLine & "</strong></a></td></tr>" into tBugs
-         else 
-            put tBugs & CR & "<tr><td>" & item 1 of tLine & "</td>" & CR into tBugs
-            put tBugs & "<td><a href=" & quote & tBugUrl & quote & ">" & item 2 of tLine & "</a></td></tr>" into tBugs
-         end if
-      end if
-   end repeat
-   put tBugTable & tNoID & tBugs & CR & "</table>" into tBugTable
-   return tBugTable
-end makeBugTable
-
-function getTerms pFileList
-   local tTermList, tLine, tTerm
-   repeat for each line tLine in pFileList
-      get matchText(getFileContentsUTF8(tLine), "<term>(.*)</term>", tTerm)
-
-      put tTermList & tTerm & CR into tTermList
-   end repeat
-   filter tTermList without empty
-   return tTermList
-end getTerms
-
-command getDictionaryChanges pVersion, pTags, @rStatusList, @rOtherList
-   put empty into rStatusList
-   put empty into rOtherList
-   
-   local tFrom, tExtension
-   if pVersion begins with "8.0" then
-      put "f9fb4130b570fd7df3b8e1526bbfe6074e798098" into tFrom #initial commit of dictionary
-      put "lcdoc" into tExtension
-      set the wholematches to false
    else
-      put "xml" into tExtension
-      if pVersion begins with "6.1" or pVersion is empty then
-         put "81c1b70f3c86c0a85a184c8773001570ba2c7559" into tFrom #initial commit of dictionary
-      else
-         local tIndex
-         put the number of lines in pTags into tIndex
-         repeat while tIndex > 1 and line tIndex of pTags begins with char 1 to 3 of pVersion
-            subtract 1 from tIndex
-         end repeat
-         put line tIndex of pTags into tFrom
-      end if
+      put builderRepoFolder() & "/builder/wkhtmltopdf" into tCommand
    end if
-   local tModifiedEntries
-   put shell("git diff --name-only " & tFrom & "...HEAD -- " & dictPath()) into tModifiedEntries
    
-   repeat for each line tLine in tModifiedEntries
-      local tFile, tError
-      if not (tLine ends with tExtension) then next repeat
+   local tTitle, tDate, tHtmlPath, tPdfPath
+   put OutputGetNotesTitle() into tTitle
+   put the date into tDate
+   put OutputGetNotesFilename("html") into tHtmlPath
+   put OutputGetNotesFilename("pdf") into tPdfPath
+   
+   local tArgs
+   put empty into tArgs
+   put merge("--header-right '[[tTitle]] [[tDate]]' ") after tArgs
+   put "--header-font-size 8 --header-spacing 5 " after tArgs
+   put "--footer-center [page] --footer-font-size 8 --footer-spacing 5 " after tArgs
+   put "--margin-top 30 --margin-bottom 20 --margin-left 20 --margin-right 20 " after tArgs
+   put "--enable-internal-links --encoding UTF-8 " after tArgs
+   
+   local tExitCode
+   builderLog "report", merge("Generating [[tPdfPath]] with [[tCommand]]")
+   get shell(tCommand && tArgs && tHtmlPath && tPdfPath)
+   put the result into tExitCode
+   
+   if tExitCode is not 0 then
+      throw merge("Failed to run [[tCommand]]: exit code [[tExitCode]]")
+   end if
+end OutputNotesPdf
 
+private command OutputUpdates  
+   OutputUpdatesMarkdown
+   OutputUpdatesHtml
+end OutputUpdates
+
+private command OutputUpdatesMarkdown
+   local tPath
+   put OutputGetUpdatesFilename("md") into tPath
+   builderLog "report", merge("Writing [[tPath]]")
+   FileSetUTF8Contents tPath, sMarkdownText["updates"] 
+end OutputUpdatesMarkdown
+
+private command OutputUpdatesHtml
+   local tHtml, tToc
+   put markdownToHtml(sMarkdownText["updates"], 3, 0, tToc, true) into tHtml
+   
+   local tPath
+   put OutputGetUpdatesFilename("html") into tPath
+   builderLog "report", merge("Writing [[tPath]]")
+   FileSetUTF8Contents tPath, tHtml
+end OutputUpdatesHtml
+
+----------------------------------------------------------------
+-- Base file sections
+----------------------------------------------------------------
+
+private command BaseCreate
+   builderLog "report", "Creating base release notes"
+   
+   BaseCreateTitle
+   BaseCreateContents
+   BaseCreateOverview
+   BaseCreateIssues
+   
+   MarkdownAppend "notes", BaseReadFile("platforms")
+   MarkdownAppend "notes", BaseReadFile("setup")
+   MarkdownAppend "notes", BaseReadFile("proposed_changes")
+   
+   BaseCreateUpdates
+end BaseCreate
+
+private command BaseCreateTitle
+   MarkdownAppend "notes", "<h1 class=" & quote & "title" & quote & ">" & OutputGetNotesTitle() & "</h1>" & return
+end BaseCreateTitle
+
+private command BaseCreateContents
+   MarkdownAppend "notes", "[TOC]"
+end BaseCreateContents
+
+private command BaseCreateOverview
+   local tOverview
+   
+   put BaseReadFile("overview") into tOverview
+   
+   if tOverview is empty then
+      put "# Overview" & return & return after tOverview
+      put merge("This document describes all the changes that have been made for LiveCode [[sVersion]], including bug fixes and new syntax.") after tOverview
+   end if
+   
+   MarkdownAppend "notes", tOverview
+end BaseCreateOverview
+
+private command BaseCreateIssues
+   local tIssues
+   put BaseReadFile("issues") into tIssues
+   
+   if tIssues is empty then
+      put "# Known Issues" & return & return after tIssues
+      put "There are no known issues with this release." after tIssues
+   end if
+   
+   MarkdownAppend "notes", tIssues
+end BaseCreateIssues
+
+private function BaseReadFile pBasename
+   local tPath
+   put FileGetPath() & slash & pBasename & ".md" into tPath
+   if there is a file tPath then
+      return FileGetUTF8Contents(tPath)
+   else
+      return empty
+   end if
+end BaseReadFile
+
+private command BaseCreateUpdates
+   MarkdownAppend "updates", merge("LiveCode [[sVersion]] is now available.") & return
+   MarkdownAppend "updates", "Changes in this release include:" & return
+end BaseCreateUpdates
+
+----------------------------------------------------------------
+-- Old-style release notes
+----------------------------------------------------------------
+
+/*
+The IDE and the engine use "old-style" release notes.  These are
+markdown fragments that have "feature" or "bugfix" in their
+filenames.
+
+Each file details a single bug fix or feature implementation.
+
+* Name the files "bugfix-<bug number>.md",
+  "bugfix-<bug number>-suffix.md", or "feature-<description>.md"
+
+* Put the title as the first line, e.g. "# <title>"
+
+Single-line files are added to the table of bugfixes.  Multi-line
+files get their own section in the release notes.
+*/
+private command V1NotesCreate pType, pTitle
+   builderLog "report", merge("Creating [[pType]] release notes")
+   
+   MarkdownAppend "notes", merge("# [[pTitle]]")
+   MarkdownAppend "updates", merge("# [[pTitle]]")
+   
+   -- First, gather all files, their contents, and their metadata
+   local tScannedNotes
+   put V1NotesScan(pType) into tScannedNotes
+   
+   -- Next generate markdown
+   V1NotesGenerate pType, tScannedNotes
+end V1NotesCreate
+
+/*
+Build up a datastructure containing all the (raw) data gathered
+from the target directory.  The return value is a nested array:
+
+{
+"<version>": {
+"<filename>": {
+"basename": "<filename without suffix or path>",
+"markdown": "<file content>",
+"metadata": { <metadata key-value pairs> }
+}
+}
+}
+*/
+private function V1NotesScan pType
+   local tTags, tNumTags
+   
+   put GitGetRelevantTags(pType) into tTags
+   put the number of lines in tTags into tNumTags
+   
+   local tResult
+   put empty into tResult
+   
+   local tVersion, tBaseVersion, tPrevVersion, tTagOffset
+   local tAllFiles, tVersionFiles, tFile
+   put line 1 of tTags into tBaseVersion
+   put tBaseVersion into tVersion
+   
+   -- Get a list of all files to be considered
+   put GitGetChangedFiles(pType, tBaseVersion, line -1 of tTags) into tAllFiles
+   
+   put 2 into tTagOffset
+   repeat while tTagOffset <= tNumTags
+      put tVersion into tPrevVersion
+      put line tTagOffset of tTags into tVersion
+      
+      -- Figure out which files should be considered for this version
+      put empty into tVersionFiles
+      repeat for each line tFile in GitGetChangedFiles(pType, tPrevVersion, tVersion)
+         if tFile is among the lines of tAllFiles then
+            put tFile & return after tVersionFiles
+         end if
+      end repeat
+      
+      V1NotesScanVersion pType, tVersion, tVersionFiles, tResult
+      
+      add 1 to tTagOffset
+   end repeat
+   
+   return tResult
+end V1NotesScan
+
+private command V1NotesScanVersion pType, pVersion, pFiles, @xScan
+   
+   local tFile, tOldFile, tContents, tError, tFileInfo, tVersion, tBasename
+   repeat for each line tFile in pFiles
+      
+      -- If this file was already processed once before, delete its
+      -- record (we'll generate a new one)
+      repeat for each key tVersion in xScan
+         if tFile is among the keys of xScan[tVersion] then
+            delete variable xScan[tVersion][tFile]
+         end if
+      end repeat
+      
       try
-         put getFileContentsUTF8(item 1 of tLine) into tFile
+         put FileGetUTF8Contents(tFile) into tContents
       catch tError
+         builderLog "report", tERror
          next repeat
       end try
       
-      if tExtension is "xml" then
-         local tVersion
-         local tTree
-         put revCreateXMLTree(tFile, false, true, false) into tTree
-         local tName
-         local tType
-         local tEntry
-         put revXMLNodeContents(tTree, "doc/name") into tName
-         put revXMLNodeContents(tTree, "doc/type") into tType
-         put "<strong>" & tName & "</strong> (<em>" & tType & "</em>)" into tEntry
-         put revXMLAttribute(tTree, "doc/history/introduced", "version") into tVersion
-      else
-         put word 2 to -1 of line lineOffset("Name:", tFile) of tFile into tName
-         put word 2 to -1 of line lineOffset("Type:", tFile) of tFile into tType
-         put word 2 to -1 of line lineOffset("Introduced:", tFile) of tFile into tVersion
-         put "<strong>" & tName & "</strong> (<em>" & tType & "</em>)" into tEntry
+      -- Extract metadata & markdown sections
+      MarkdownSplitMetadata tContents, tFileInfo["markdown"], tFileInfo["metadata"]
+      
+      -- Allow automatically-generated information to be overwritten by metadata
+      put tFileInfo["metadata"]["version"] into tVersion
+      if tVersion is empty then
+         put pVersion into tVersion
       end if
-      if (pVersion begins with tVersion) then
-         #it was added in this version
-         put rStatusList & "<li>" & tEntry into rStatusList
-         put rStatusList & " has been added to the dictionary." & CR into rStatusList
-      else
-         put rOtherList & "<li>The entry for " & tEntry & " has been updated." & CR into rOtherList
-      end if     
+      put tFileInfo["metadata"]["basename"] into tBasename
+      if tBasename is empty then
+         put FileGetBasename(tFile) into tBasename
+      end if
+      
+      put tBasename into tFileInfo["basename"]
+      put tFileInfo into xScan[tVersion][tFile]
    end repeat
-end getDictionaryChanges
+end V1NotesScanVersion
 
-function fetchNameOnlyDiff pFromTag, pToTag, pPath
-   return shell("git diff --name-only " & pFromTag & "..." & pToTag & " --  " & pPath)
-end fetchNameOnlyDiff
+private command V1NotesGenerate pType, pScanData
+   local tBugInfo
+   
+   -- Process versions in reverse order
+   local tTags, tTagCount
+   put the keys of pScanData into tTags
+   GitSortTags tTags
+   
+   put the number of lines in tTags into tTagCount
+   
+   local tTag
+   repeat tTagCount times
+      put line tTagCount of tTags into tTag
+      v1NotesGenerateVersion pType, tTag, pScanData[tTag], tBugInfo
+      subtract 1 from tTagCount
+   end repeat
+   
+   BugGenerate tBugInfo
+end V1NotesGenerate
 
-function relevantTags pVersion, pTags
-   local tEnd
-   local tStart
-   repeat for each line tLine in pTags
-      if tLine begins with char 1 to 3 of pVersion then
+private command V1NotesGenerateVersion pType, pVersion, pScanData, @xBugInfo
+   local tFile, tFeatures, tBugfixes, tNote
+   
+   set the itemdelimiter to slash
+   
+   -- Split note files into features vs bugfixes
+   local tFileInfo
+   repeat for each key tFile in pScanData
+      put pScanData[tFile] into tFileInfo
+      
+      if tFileInfo["basename"] contains "feature" then
+         put tFileInfo["basename"] & slash & tFile & return after tFeatures
+      else if tFileInfo["basename"] contains "bugfix" then
+         put tFileInfo["basename"] & slash & tFile & return after tBugfixes
+      end if
+   end repeat
+   
+   -- Process features first
+   sort lines of tFeatures by item 1 of each
+   repeat for each line tNote in tFeatures
+      put item 2 to -1 of tNote into tFile
+      V1NotesGenerateFeature pType, pVersion, pScanData[tFile]
+   end repeat
+   
+   -- Now process bugfixes
+   sort lines of tBugfixes by item 1 of each
+   repeat for each line tNote in tBugfixes
+      put item 2 to -1 of tNote into tFile
+      V1NotesGenerateBugfix pType, pVersion, pScanData[tFile], xBugInfo
+   end repeat
+end V1NotesGenerateVersion
+
+private function V1NotesGetBugId pFileInfo
+   local tBasename, tBugId
+   put pFileInfo["basename"] into tBasename
+   
+   -- Try strict mode first, and issue a warning if no match
+   get matchText(tBasename, "(?i)^bugfix-(\d*)($|-)", tBugId)
+   if tBugId is not empty then
+      return tBugId
+   end if
+   
+   -- Now try again, more tolerantly
+   builderLog "warning", merge("Probably misnamed bug fix note '[[tBasename]]'")
+   
+   get matchText(pFileInfo["basename"], "(?i)bugfix-(\d*)", tBugId)
+   if tBugId is empty then
+      throw "Could not determine bug ID for '[[tBasename]]'"
+   end if
+   return tBugId
+end V1NotesGetBugId
+
+private command V1NotesGenerateBugfix pType, pVersion, pFileInfo, @xBugInfo
+   local tBugId, tHeader, tBody
+   
+   put V1NotesGetBugId(pFileInfo) into tBugId
+   
+   V1NotesSplitHeader pType, pFileInfo, tHeader, tBody
+   
+   if tHeader is empty then
+      exit V1NotesGenerateBugfix
+   end if
+   
+   BugAddInfo xBugInfo, pVersion, tBugId, tHeader
+   
+   -- If the body is non-empty, generate a paragraph in the
+   -- release notes for this bugfix
+   if tBody is not empty then
+      V1NotesGenerateBlock pVersion, tHeader, tBody
+   end if
+end V1NotesGenerateBugfix
+
+private command V1NotesGenerateFeature pType, pVersion, pFileInfo
+   local tBasename, tHeader, tBody
+   put pFileInfo["basename"] into tBasename
+   
+   V1NotesSplitHeader pType, pFileInfo, tHeader, tBody
+   
+   if tHeader is empty then
+      exit V1NotesGenerateFeature
+   end if
+   
+   if tBody is empty then
+      builderLog "warning", merge("Empty [[pType]] feature note '[[tBaseName]]'")
+      exit V1NotesGenerateFeature
+   end if
+   
+   V1NotesGenerateBlock pVersion, tHeader, tBody
+end V1NotesGenerateFeature
+
+private command V1NotesSplitHeader pType, pFileInfo, @rHeader, @rBody
+   local tBody, tBasename
+   put pFileInfo["markdown"] into tBody
+   put pFileInfo["basename"] into tBasename
+   
+   -- Delete leading empty lines
+   repeat while word 1 to -1 of (line 1 of tBody) is empty
+      if tBody is empty then
+         builderLog "warning", merge("Empty [[pType]] bugfix note '[[tBasename]]'")
+         put empty into rHeader
+         put empty into rBody
+         exit V1NotesSplitHeader
+      end if
+      
+      delete line 1 of tBody
+   end repeat
+   
+   if word 1 of tBody is "#" then
+      put word 2 to -1 of (line 1 of tBody) into rHeader
+      put word 1 to -1 of (line 2 to -1 of tBody) into rBody
+   end if
+   
+   if rHeader is empty then
+      builderLog "warning", merge("Bad [[pType]] bugfix header in [[tBasename]]")
+      exit V1NotesSplitHeader
+   end if
+end V1NotesSplitHeader
+
+private command V1NotesGenerateBlock pVersion, pHeader, pBody
+   if pVersion is "HEAD" then
+      put sVersion into pVersion
+   end if
+   
+   -- Handle "experimental" annotation
+   local tAnnotation, tExperimental
+   if the last word of pHeader is "(experimental)" then
+      put word 1 to -2 of pHeader into pHeader
+      put " - experimental" into tAnnotation
+      put true into tExperimental
+   else
+      put false into tExperimental
+   end if
+   
+   MarkdownAppend "notes", merge("## [[pHeader]] ([[pVersion]][[tAnnotation]])")
+   MarkdownAppend "notes", pBody & return
+   
+   if tExperimental then
+      MarkdownAppend "notes", NotesGetExperimentalText()
+   end if
+   
+   -- Include only brand new notes in the updater notes
+   if pVersion is sVersion then
+      MarkdownAppend "updates", merge("## [[pHeader]]")
+      MarkdownAppend "updates", pBody & return
+      
+      if tExperimental then
+         MarkdownAppend "updates", NotesGetExperimentalText()
+      end if
+   end if
+end V1NotesGenerateBlock
+
+----------------------------------------------------------------
+-- New-style notes
+----------------------------------------------------------------
+
+private command V2NotesCreate pType, pTitle
+   builderLog "report", merge("Creating [[pType]] release notes")
+   
+   MarkdownAppend "notes", merge("# [[pTitle]]")
+   MarkdownAppend "updates", merge("# [[pTitle]]")
+   
+   local tScannedNotes
+   put V2NotesScan(pType) into tScannedNotes
+   
+   local tCollated, tBugInfo
+   V2NotesCollate pType, tScannedNotes, tCollated, tBugInfo
+   
+   V2NotesGenerate pType, tCollated, 1
+   
+   BugGenerate tBugInfo
+end V2NotesCreate
+
+-- There isn't actually any difference between the information
+-- that needs to be scanned for V2 notes and the information that
+-- needs to be scanned for V1 notes.
+private function V2NotesScan pType
+   return V1NotesScan(pType)
+end V2NotesScan
+
+/*
+Create a tree of section information from the results of scanning
+the release notes:
+
+{
+"__count": <number of child sections>,
+"__markdown": "<text>",
+"__name": "<title of section>",
+1: {
+"__count": ...,
+"__markdown" ...,
+"__name", ...,
+...
+},
+2: {
+...
+},
+}
+*/
+private command V2NotesCollate pType, pScanInfo, @rCollated, @rBugInfo
+   local tTags, tFile, tTagCount, tVersion
+   
+   -- Collate notes in descending order of version, so newest appear at the top
+   put the keys of pScanInfo into tTags
+   GitSortTags tTags
+   put the number of elements in pScanInfo into tTagCount
+   
+   repeat tTagCount times
+      put line tTagCount of tTags into tVersion
+      repeat for each key tFile in pScanInfo[tVersion]
+         V2NotesCollateFile pType, tVersion, pScanInfo[tVersion][tFile], rCollated, rBugInfo
+      end repeat
+      subtract 1 from tTagCount
+   end repeat
+end V2NotesCollate
+
+private command V2NotesCollateFile pType, pVersion, pFileInfo, @xCollated, @xBugInfo
+   local tLine, tSectionPath, tBasename
+   
+   put pFileInfo["basename"] into tBasename
+   
+   local tBugId, tBugDesc, tBugPath
+   local tLevel, tName, tOldLevel, tHaveContent
+   put 0 into tLevel
+   put 0 into tOldLevel
+   put false into tHaveContent
+   
+   repeat for each line tLine in pFileInfo["markdown"]
+      -- First check if this is a bug info line
+      V2NotesExtractBugInfo tLine, tBugId, tBugDesc
+      if tBugId is not empty then
+         BugAddInfo xBugInfo, pVersion, tBugId, tBugDesc
+         next repeat
+         
+      end if
+      
+      -- Second, check if it's a section control line
+      put tLevel into tOldLevel
+      V2NotesExtractSectionInfo tLine, tLevel, tName
+      
+      if tLevel is not empty then
+         if tName is empty then
+            builderLog "warning", merge("Invalid section name in [[pType]] note [[tBasename]]")
+            next repeat
+         end if
+         
+         -- If changing to a section that's the same level or
+         -- higher than the current section but without any
+         -- intervening content, generate a warning
+         if (not tHaveContent) and tLevel <= tOldLevel then
+            builderLog "warning", merge("Section without content in [[pType]] note '[[tBasename]]'")
+         end if
+         
+         V2NotesUpdateSectionPath tLevel, tName, xCollated, tSectionPath
+         put false into tHaveContent
+         next repeat
+      end if
+      
+      -- Otherwise, just add it to the current section of the
+      -- collated notes
+      put tLine & return after xCollated[tSectionPath]["__markdown"]
+      put pVersion into xCollated[tSectionPath]["__version"]
+      
+      if word 1 to -1 of tLine is not empty then
+         put true into tHaveContent
+      end if
+   end repeat
+end V2NotesCollateFile
+
+private command V2NotesUpdateSectionPath pLevel, pName, @xCollated, @xSectionPath
+   if pLevel is 0 then
+      exit V2NotesUpdateSectionPath
+   end if
+   
+   if not xSectionPath is an array then
+      put 1 into xSectionPath[1]
+      delete variable xSectionPath[1]
+   end if
+   
+   -- Truncate the path to the level before the current one
+   repeat while the number of elements in xSectionPath >= pLevel
+      delete variable xSectionPath[the number of elements in xSectionPath]
+   end repeat
+   
+   -- Find out how many subsections there already are at this level.
+   -- It's necessary to do a few contortions to cope with the case that
+   -- the truncated path is empty.
+   local tPath, tCount
+   put xSectionPath into tPath
+   put "__count" into tPath[pLevel]
+   put xCollated[tPath] into tCount
+   
+   -- Check to see if there is already a subsection with the specified name
+   local tId
+   repeat with tId = 1 to tCount
+      put tId into tPath[pLevel]
+      if xCollated[tPath]["__name"] is pName then
+         put tId into xSectionPath[pLevel]
+         exit V2NotesUpdateSectionPath
+      end if
+   end repeat
+   
+   -- No existing section matches, so add a new one.  Do the "cope with
+   -- empty array" dance again.
+   put "__count" into tPath[pLevel]
+   add 1 to xCollated[tPath]
+   put xCollated[tPath] into tId
+   
+   -- Initialise the new section record
+   put tId into xSectionPath[pLevel]
+   put pName into xCollated[xSectionPath]["__name"]
+   put 0 into xCollated[xSectionPath]["__count"]
+end V2NotesUpdateSectionPath
+
+private command V2NotesExtractBugInfo pLine, @rId, @rDesc
+   get matchText(pLine, "^\s*#\s+\[(\w*)\]\s+(.*)$", rId, rDesc)
+end V2NotesExtractBugInfo
+
+private command V2NotesExtractSectionInfo pLine, @rLevel, @rName
+   local tPrefix
+   get matchText(pLine, "^\s*(#*)\s+(.*)$", tPrefix, rName)
+   
+   if tPrefix is not empty then
+      put the number of chars in tPrefix into rLevel
+   else
+      put empty into rLevel
+   end if
+end V2NotesExtractSectionInfo
+
+-- Append collated section data from <pCollatedSection> as a new top-level
+-- section in <xCollated> with <pName>.  If there is already a section
+-- named <pName> in <xCollated>, generate an error.
+private command V2NotesAppendSection pName, pCollatedSection, @xCollated
+   local tId
+   repeat with tId = 1 to xCollated["__count"]
+      if xCollated[tId]["__name"] is pName then
+         throw merge("Notes data already contains a section '[[pName]]'")
+      end if
+   end repeat
+   
+   add 1 to xCollated["__count"]
+   put xCollated["__count"] into tId
+   
+   put pCollatedSection into xCollated[tId]
+   put pName into xCollated[tId]["__name"]
+end V2NotesAppendSection
+
+private command V2NotesGenerate pType, pCollated, pLevel
+   MarkdownAppend "notes", V2NotesGenerateContent(pType, pCollated, pLevel)
+   MarkdownAppend "updates", V2NotesGenerateContent(pType, pCollated, pLevel, true)
+end V2NotesGenerate
+
+-- If <pOnlyCurrent> is true, then only generate content that's brand new in
+-- the release that notes are being generated for
+private function V2NotesGenerateContent pType, pCollated, pLevel, pOnlyCurrent
+   -- Compute the content from this node + all child nodes
+   local tContent
+   
+   if not (pOnlyCurrent is true and (pCollated["__version"] is not sVersion)) then
+      if (word 1 to -1 of pCollated["__markdown"]) is not empty then
+         put pCollated["__markdown"] into tContent
+         if the last char of tContent is not return then
+            put return after tContent
+         end if
+      end if
+   end if
+   
+   -- Recurse into all child nodes
+   local tSectionContent, tHeader
+   
+   repeat with tId = 1 to pCollated["__count"]
+      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1, pOnlyCurrent) into tSectionContent
+      
+      -- Only generate a subsection header if the subsection (and all
+      -- the subsections it contains) doesn't contain any notes
+      if tSectionContent is not empty then
+         put "#" into tHeader
+         repeat pLevel times
+            put "#" after tHeader
+         end repeat
+         put " " & pCollated[tId]["__name"] & return after tHeader
+         
+         put return & tHeader after tContent
+         put tSectionContent after tContent
+      end if
+   end repeat
+   
+   return tContent
+end V2NotesGenerateContent
+
+----------------------------------------------------------------
+-- Extension release notes
+----------------------------------------------------------------
+
+constant kExtensionTypes = "widgets,libraries,modules"
+constant kExtensionStrings = "widget,library,module"
+
+private command ExtensionsCreate
+   BuilderLog "report", "Creating extension release notes"
+   MarkdownAppend "notes", "# LiveCode extension changes"
+   MarkdownAppend "updates", "# LiveCode extension changes"
+   
+   local tType, tTypePath, tFolder
+   local tCollated, tBugInfo
+   repeat for each item tType in kExtensionTypes
+      put FileGetPath("extensions") & slash & tType into tTypePath
+      
+      repeat for each line tFolder in FileGetSubFolders(tTypePath)
+         ExtensionsCreatePath tFolder, tCollated, tBugInfo
+      end repeat
+      
+   end repeat
+   
+   V2NotesGenerate "extensions", tCollated, 1
+   BugGenerate tBugInfo
+end ExtensionsCreate
+
+private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
+   set the itemdelimiter to slash
+   builderLog "report", "Creating release notes for" && item -1 of pExtPath
+   
+   -- Scan and collate all information for this particular extension
+   local tNotesPath
+   put pExtPath & "/notes" into tNotesPath
+   if there is not a folder tNotesPath then
+      exit ExtensionsCreatePath
+   end if
+   
+   local tScan, tExtCollated
+   put V2NotesScan(tNotesPath) into tScan
+   V2NotesCollate pExtPath, tScan, tExtCollated, xBugInfo
+   
+   -- Add the collated info in the top-level collation structure
+   try
+      local tName
+      put ExtensionsGetSectionName(pExtPath) into tName
+   catch tError
+      builderLog "warning", tError
+      exit ExtensionsCreatePath
+   end try
+      
+   V2NotesAppendSection tName, tExtCollated, xCollated
+end ExtensionsCreatePath
+
+private function ExtensionsGetSectionName pExtPath
+   local tName, tType, tTypeOffset, tPrettyType
+   
+   set the itemdelimiter to slash
+   put item -2 of pExtPath into tType
+   set the itemdelimiter to comma
+   
+   put itemoffset(tType, kExtensionTypes) into tTypeOffset
+   put item tTypeOffset of kExtensionStrings into tPrettyType
+   
+   put ExtensionsGetName(pExtPath) into tName
+   if word -1 of tName is not tPrettyType then
+      put space & tPrettyType after tName
+   end if
+   
+   return tName
+end ExtensionsGetSectionName
+
+private function ExtensionsGetName pExtPath
+   -- Horrible-ish hack for extracting the "real" name of the LiveCode
+   -- module.  See also tools/build-extensions.sh.
+   local tShortName
+   set the itemdelimiter to slash
+   put item -1 of pExtPath into tShortName
+
+   local tLcbSource, tLine, tModuleName
+   put FileGetUTF8Contents(merge("[[pExtPath]]/[[tShortName]].lcb")) into tLcbSource
+   repeat for each line tLine in tLcbSource
+      get matchText(tLine, "(?i)^\s*(?:module|widget|library)\s+([\w.]*)", tModuleName)
+      if tModuleName is not empty then
+         exit repeat
+      end if
+   end repeat
+
+   -- Try to figure out the path for the compiled manifest file
+   local tManifestFile
+   put FileGetPath("built-extensions") into tManifestFile
+   put slash & tModuleName after tManifestFile
+   put slash & "manifest.xml" after tManifestFile
+   
+   local tManifest, tXmlId
+   put FileGetContents(tManifestFile) into tManifest
+   put revXMLCreateTree(tManifest, true, true, false) into tXmlId
+   
+   if tXmlId begins with "xmlerr" then
+      throw "Invalid extension manifest XML in [[tManifestFile]]"
+   end if
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tXmlId, "/package/title"), "UTF-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return empty
+   end if
+   return tTargetName
+end ExtensionsGetName
+
+----------------------------------------------------------------
+-- Dictionary change generation
+----------------------------------------------------------------
+
+-- N.b. we currently only look at lcdoc dictionary entries
+constant kDictionaryCommitBase = "f9fb4130b570fd7df3b8e1526bbfe6074e798098"
+
+private command DictionaryCreate
+   builderLog "report", "Creating dictionary release notes"
+   
+   local tAdded, tModified
+   DictionaryScan tAdded, tModified
+   
+   sort lines of tAdded ascending text
+   sort lines of tModified ascending text
+   
+   MarkdownAppend "notes", "# Dictionary additions"
+   MarkdownAppend "notes", tAdded
+   --MarkdownAppend "notes", "# Dictionary changes"
+   --MarkdownAppend "notes", tModified
+end DictionaryCreate
+
+private command DictionaryScan @xAdded, @xModified
+   -- Get list of changed files
+   local tTags, tPermittedFiles, tChangedFiles
+   
+   put GitGetRelevantTags("dictionary") into tTags
+   
+   put GitGetChangedFiles("dictionary", kDictionaryCommitBase, \
+         the last line of tTags) into tPermittedFiles
+   put GitGetChangedFiles("dictionary", the first line of tTags, \
+         the last line of tTags) into tChangedFiles
+   
+   -- Check whether each entry was added or just modified
+   local tFile
+   repeat for each line tFile in tChangedFiles
+      if tFile is among the lines of tPermittedFiles then
+         DictionaryScanFile tFile, xAdded, xModified
+      end if
+   end repeat
+end DictionaryScan
+
+private command DictionaryScanFile pFile, @xAdded, @xModified
+   local tContents
+   put FileGetUTF8Contents(pFile) into tContents
+   
+   -- Extract basic metadata from the dictionary entry
+   local tName, tType, tVersion
+   put word 2 to -1 of line lineOffset("Name:", tContents) of tContents into tName
+   put word 2 to -1 of line lineOffset("Type:", tContents) of tContents into tType
+   put word 2 to -1 of line lineOffset("Introduced:", tContents) of tContents into tVersion
+   
+   local tEntry
+   put merge("**[[tName]]** (*[[tType]]*)") into tEntry
+   
+   -- Check if the "Introduced" version matches the current version
+   local tSourceVer, tTargetVer, tOffset, tMatch, tA, tB
+   get matchText(tVersion, "^([0-9.]*)", tSourceVer)
+   get matchText(sVersion, "^([0-9.]*)", tTargetVer)
+   set the itemdelimiter to "."
+   put true into tMatch
+   repeat with tOffset = 1 to the number of items in tTargetVer
+      put item tOffset of tSourceVer into tA
+      put item tOffset of tTargetVer into tB
+      if tA is empty then
+         if (tB + 0) is not 0 then
+            put false into tMatch
+            exit repeat
+         end if
+      end if
+      if (tA - tB) is not 0 then
+         put false into tMatch
+         exit repeat
+      end if
+   end repeat
+   
+   if tMatch then
+      -- Dictionary entry was introduced in this version
+      put merge("* [[tEntry]] has been added to the dictionary.") & return after xAdded
+   else
+      put merge("* The entry for [[tEntry]] has been updated.") & return after xModified
+   end if
+end DictionaryScanFile
+
+----------------------------------------------------------------
+-- List of release notes from previous releases
+----------------------------------------------------------------
+
+private command PreviousCreate
+   builderLog "report", "Listing previous release notes"
+   MarkdownAppend "notes", "# Previous release notes"
+   
+   local tTags, tTagCount
+   put GitGetTags() into tTags
+   put the number of lines in tTags into tTagCount
+      
+   local tVersion, tUrl
+   repeat tTagCount times
+      put line tTagCount of tTags into tVersion
+      
+      -- Match only "general availability" releases
+      if not matchText(tVersion, "^[0-9.]*$") then
+         
+         -- Skip the current version!
+      else if tVersion is sVersion then
+         next repeat
+         
+      else      
+         put OutputGetNotesUrl("pdf", tVersion) into tUrl
+         MarkdownAppend "notes", merge("* [LiveCode [[tVersion]] Release Notes]([[tUrl]])")
+      end if
+      
+      subtract 1 from tTagCount
+   end repeat
+   
+end PreviousCreate
+
+----------------------------------------------------------------
+-- Bug table helpers
+----------------------------------------------------------------
+
+private command BugAddInfo @xBugInfo, pVersion, pID, pDescription
+   put pId & comma & pDescription & return after xBugInfo[pVersion]
+end BugAddInfo
+
+private function BugUrl pId
+   return merge("http://quality.livecode.com/show_bug.cgi?id=[[pId]]")
+end BugUrl
+
+private command BugGenerate pBugInfo
+   V2BugGenerate pBugInfo
+end BugGenerate
+
+private command V1BugGenerate pBugInfo
+   
+   local tTags, tTagCount
+   put the keys of pBugInfo into tTags
+   GitSortTags tTags
+   
+   local tVersion, tBugs, tCurrent, tLine, tId, tDesc, tUrl
+   local tPrettyVersion
+   
+   put the number of lines in tTags into tTagCount
+   repeat tTagCount times
+      put line tTagCount of tTags into tVersion
+      
+      -- Bugs fixed in the current build are shown in bold
+      put (tVersion is sVersion or tVersion is "HEAD") into tCurrent
+      
+      put pBugInfo[tVersion] into tBugs
+      sort lines of tBugs by item 1 of each
+      
+      -- Generate heading for table
+      put tVersion into tPrettyVersion
+      if tPrettyVersion is "HEAD" then 
+         put sVersion into tPrettyVersion
+      end if
+      MarkdownAppend "notes", merge("## Specific bug fixes ([[tPrettyVersion]])")
+      
+      -- Generate the table itself
+      -- Use HTML to allow using HTML classes to distinguish between
+      if tCurrent then
+         MarkdownAppend "notes", "<table class=" & quote & "currentbugs" & quote & ">"
+      else
+         MarkdownAppend "notes", "<table class=" & quote & "bugs" & quote & ">"
+      end if
+      repeat for each line tLine in tBugs
+         put item 1 of tLine into tId
+         put item 2 to -1 of tLine into tDesc
+         put BugUrl(tId) into tUrl
+         
+         MarkdownAppend "notes", "<tr><td><a href=" & quote & tUrl & quote & ">" & tId & "</a>" & \
+               "</td><td>" & tDesc & "</td></tr>"
+      end repeat
+      
+      MarkDownAppend "notes", "</table>"
+      
+      subtract 1 from tTagCount
+   end repeat
+end V1BugGenerate
+
+private command V2BugGenerate pBugInfo
+   local tTags, tTagCount
+   put the keys of pBugInfo into tTags
+   GitSortTags tTags
+   put the number of lines of tTags into tTagCount
+   
+   MarkdownAppend "notes", "## Specific bug fixes"
+   
+   local tVersion, tBugs, tPrettyVersion, tBugList
+   local tLine, tId, tDesc, tUrl
+   repeat tTagCount times
+      put line tTagCount of tTags into tVersion
+      
+      put pBugInfo[tVersion] into tBugs
+      sort lines of tBugs by item 1 of each
+      
+      put empty into tBugList
+      
+      -- Generate version info
+      if tVersion is "HEAD" then
+         put sVersion into tPrettyVersion
+      else
+         put tVersion into tPrettyVersion
+      end if
+      put merge("Bugs fixed in [[tPrettyVersion]]:") into tBugList
+      
+      -- Generate list of bug numbers with links
+      repeat for each line tLine in tBugs
+         put item 1 of tLine into tId
+         put HtmlEscape(item 2 to -1 of tLine) into tDesc
+         put BugUrl(tId) into tUrl
+         
+         put " <a href=" & quote & tUrl & quote && "title=" & quote & tDesc & quote & ">" & \
+               tId & "</a>" & comma after tBugList
+      end repeat
+      put "." into char -1 of tBugList
+      
+      -- This version's bugs should be bold
+      if tPrettyVersion is sVersion then
+         put "**" before tBugList
+         put "**" after tBugList
+      end if
+      
+      MarkdownAppend "notes", "*" && tBugList
+      
+      -- Only this version's bugs should appear in the updater
+      if tPrettyVersion is sVersion then
+         MarkdownAppend "updates", "## Bugs fixed"
+         put empty into tBugList
+         repeat for each line tLine in tBugs
+            put space & item 1 of tLine & comma after tBugList
+         end repeat
+         put "." into char -1 of tBugList
+         MarkdownAppend "updates", tBugList & return
+      end if
+      
+      subtract 1 from tTagCount
+   end repeat
+   
+   MarkdownAppend "notes", empty
+end V2BugGenerate
+
+----------------------------------------------------------------
+-- Markdown helpers
+----------------------------------------------------------------
+
+private command MarkdownAppend pKey, pText
+   put pText & return after sMarkdownText[pKey]
+end MarkdownAppend
+
+/*
+Markdown files can have a YAML-like metadata block at the start.
+The format is very inflexible.  The block is delimited by lines
+of exactly three hyphens "---", and every line in between *must*
+be blank or contain a "key: value" pair.  For example:
+
+---
+# Comment
+version: 8.0.0-dp-9
+---
+
+*/
+private command MarkdownSplitMetadata pText, @rMarkdown, @rMetadata
+   -- Check for a metadata block
+   if the first line of pText is not "---" then
+      put empty into rMetadata
+      put pText into rMarkdown
+      exit MarkdownSplitMetadata
+   end if
+   
+   -- Search for a terminal "---" line
+   local tMetadataEnd
+   put lineOffset("---", pText, 1) into tMetadataEnd
+   if tMetadataEnd is 1 then
+      throw "Unterminated metadata header"
+   end if
+   
+   local tLine
+   set the itemdelimiter to colon
+   repeat for each line tLine in (line 2 to tMetadataEnd of pText)
+      put word 1 to -1 of tLine into tLine
+      if item 1 of tLine is empty or char 1 of tLine is "#" then
+         next repeat
+      else
+         put word 1 to -1 of (item 2 to -1 of tLine) into rMetadata[item 1 of tLine]
+      end if
+   end repeat
+   
+   put line (tMetadataEnd + 2) to -1 of pText into rMarkdown
+end MarkdownSplitMetadata
+
+----------------------------------------------------------------
+-- HTML helper functions
+----------------------------------------------------------------
+
+private function HtmlEscape pText
+   replace "&" with "&amp;" in pText
+   replace "<" with "&lt;" in pText
+   replace ">" with "&gt;" in pText
+   replace quote with "&quot;" in pText
+   return ptext
+end HtmlEscape
+
+----------------------------------------------------------------
+-- Git helper functions
+----------------------------------------------------------------
+
+private function GitRunInPath pPath, pCommand
+   local tOutput, tExitCode
+   put shell(merge("cd '[[pPath]]' && git [[pCommand]]")) into tOutput
+   put the result into tExitCode
+   if tExitCode is not 0 then
+      throw merge("Failed to run 'git [[pCommand]]'") & return & tOutput
+   end if
+   return tOutput
+end GitRunInPath
+
+private function GitGetRepoPath pType
+   switch pType
+      case empty
+      case "engine"
+      case "lcb"
+      case "dictionary"
+         return builderRepoFolder()
+      case "ide"
+         return builderRepoFolder() & "/ide"
+      default
+         break
+   end switch
+   
+   local tRepoPath
+   put GitRunInPath(FileGetPath(pType), "rev-parse --show-toplevel") into tRepoPath
+   
+   return line 1 of tRepoPath
+end GitGetRepoPath
+
+private function GitGetTags pType
+   local tTags, tExitCode
+   
+   put GitRunInPath(FileGetPath(pType), "tag") into tTags
+   
+   GitSortTags tTags
+   
+   return tTags
+end GitGetTags
+
+private command GitSortTags @xTags
+   local tSorted
+   local tGM, tRC, tDP
+   local tVersion, tPrevVersion
+   
+   set the itemdelimiter to "-"
+   
+   repeat for each line tLine in xTags
+      if tLine is "HEAD" then
+         next repeat
+      end if
+      
+      put item 1 of tLine into tVersion
+      if tVersion is not tPrevVersion then
+         sort tDP ascending numeric by item 3 of each
+         sort tRC ascending numeric by item 3 of each
+         put tDP & tRC & tGM after tSorted
+         put empty into tRC
+         put empty into tDP
+         put empty into tGM
+      end if
+      put tVersion into tPrevVersion
+      if item 2 of tLine is empty then
+         put tLine & return into tGM
+      else if item 2 of tLine is "dp" then
+         put tLine & return after tDP
+      else if item 2 of tLine is "rc" then
+         put tLine & return after tRC
+      end if
+   end repeat
+   sort tDP ascending numeric by item 3 of each
+   sort tRC ascending numeric by item 3 of each
+   put tDP & tRC & tGM after tSorted
+   
+   if "HEAD" is among the lines of xTags then
+      put "HEAD" & return after tSorted
+   end if
+   delete the last char of tSorted
+   put tSorted into xTags
+end GitSortTags
+
+private function GitGetRelevantTags pType
+   local tTags, tStart, tEnd
+   put GitGetTags(pType) into tTags
+   
+   set the itemdelimiter to "."
+   
+   repeat for each line tLine in tTags
+      if tLine begins with item 1 to 2 of sVersion then
          exit repeat
       end if
       add 1 to tStart
    end repeat
-   put line tStart to -1 of pTags into pTags
+   put line tStart to -1 of tTags into tTags
    
-   repeat for each line tLine in pTags
-      if not (tLine begins with char 1 to 3 of pVersion) then
+   repeat for each line tLine in tTags
+      if not (tLine begins with item 1 to 2 of sVersion) then
          if not (tEnd is 0) then
             exit repeat
          end if
@@ -386,497 +1301,134 @@ function relevantTags pVersion, pTags
       add 1 to tEnd
    end repeat
    
-   put line 1 to tEnd of pTags into pTags
-   if (pVersion is not line -1 of pTags) then
-      put pTags & CR & "HEAD" into pTags
+   put line 1 to tEnd of tTags into tTags
+   if (sVersion is not line -1 of tTags) then
+      put return & "HEAD" after tTags
    end if
-   return pTags
-end relevantTags
-
-function notesFolderToHTML pIsIDE, pFolder, pVersion, pTags, @xContents, @rUpdateFeatures, @rUpdateBugs
-   local tBody
-   local tNumTags
-   put relevantTags(pVersion, pTags) into pTags
-   put the number of lines in pTags into tNumTags
    
-   local tList
-   local tFirstVersion
-   local tCurVersion
-   put line 1 of pTags into tFirstVersion
-   put line -1 of pTags into tCurVersion
-   if pIsIDE then
-      put fetchIDENameOnlyDiff(tFirstVersion, tCurVersion) into tList
+   return tTags
+end GitGetRelevantTags
+
+private function GitGetChangedFiles pType, pFirstVersion, pLastVersion
+   local tPath, tFiles
+   
+   put FileGetPath(pType) into tPath
+   put GitRunInPath(tPath, merge("diff --name-only [[pFirstVersion]]...[[pLastVersion]] -- .")) into tFiles
+   
+   local tFile, tRepoPath, tResult
+   put empty into tResult
+   put GitGetRepoPath(pType) into tRepoPath
+   repeat for each line tFile in tFiles
+      put tRepoPath & slash & tFile & return after tResult
+   end repeat
+   
+   return tResult
+end GitGetChangedFiles
+
+----------------------------------------------------------------
+-- File helpers
+----------------------------------------------------------------
+
+private function FileGetBasename pPath
+   set the itemdelimiter to slash
+   put item -1 of pPath into pPath
+   set the itemdelimiter to "."
+   if 1 < the number of items in pPath then
+      put item 1 to -2 of pPath into pPath
+   end if
+   return pPath
+end FileGetBasename
+
+private function FileGetPath pType
+   switch pType
+      case empty
+      case "engine"
+         return builderRepoFolder() & "/docs/notes"
+      case "ide"
+         return builderRepoFolder() & "/ide/notes"
+      case "lcb"
+         return builderRepoFolder() & "/docs/lcb/notes"
+      case "output"
+         return sOutputPath
+      case "extensions"
+         return builderRepoFolder() & "/extensions"
+      case "built-extensions"
+         builderFetchEngine
+         return the result & "/packaged_extensions"
+      case "dictionary"
+         return builderRepoFolder() & "/docs/dictionary"
+      default
+         return pType
+   end switch
+end FileGetPath
+
+private function FileGetUTF8Contents pPath
+   return FileGetContents(pPath, "UTF-8")
+end FileGetUTF8Contents
+
+private function FileGetContents pPath, pEncoding
+   local tContents, tResult
+   
+   if pEncoding is empty then
+      open file pPath for binary read
    else
-      put fetchNameOnlyDiff(tFirstVersion, tCurVersion, pFolder) into tList
-   end if
-   local tDiff
-   local tId
-   local tFileText
-   local tTitle
-   local tNumLines
-   local tOneLiners
-   local tBugNumber
-   local tBugTable
-   local tBugTableContents
-   local tExperimental
-   local tParsedFile
-   local tIndex
-   local tBoldBugs
-   put tNumTags into tIndex
-   repeat while tIndex > 1 and tList is not empty
-      put line tIndex of pTags into tCurVersion
-      if tCurVersion is "HEAD" or tCurVersion is pVersion then
-         put true into tBoldBugs
-         put pVersion into tCurVersion
-      else
-         put false into tBoldBugs
-      end if
-      
-      if pIsIDE then
-         put fetchIDENameOnlyDiff(line tIndex - 1 of pTags, line tIndex of pTags) into tDiff
-      else
-         put fetchNameOnlyDiff(line tIndex - 1 of pTags, line tIndex of pTags, pFolder) into tDiff
-      end if
-      
-      local tBugList
-      local tFeatureList
-      put tDiff into tBugList
-      put tDiff into tFeatureList
-      filter tBugList with "*bugfix*.md"
-      filter tFeatureList with "*feature*.md"
-      set the itemdelimiter to "-"
-      sort lines in tBugList descending numeric by item 2 of each 
-      sort lines in tFeatureList by item 2 of each
-      put tFeatureList & CR & tBugList into tDiff
-      
-      repeat for each line tLine in tDiff
-         if tLine is among the lines of tList then
-            local tFile
-            if pIsIDE then
-               put "ide/" & tLine into tFile
-            else
-               put tLine into tFile
-            end if
-            
-            # Delete any empty trailing lines
-            put word 1 to -1 of getFileContentsUTF8(tFile) into tFileText
-            put the number of lines of tFileText into tNumLines
-            
-            if tLine contains "bugfix" then
-               local tOffset
-               get matchText(tLine, "-(.*)\.", tId)
-               put offset("#", tFileText) into tOffset
-               put char tOffset+1 to -1 of line 1 of tFileText into tTitle
-               put tOneLiners & tId & "," & tTitle & CR into tOneLiners
-               put tId & " - " & tTitle & CR after rUpdateBugs
-            end if
-            if tNumLines > 1 then
-               if tLine contains "feature" then put char 2 to -1 of line 1 of tFileText & CR after rUpdateFeatures
-               put markdownToHTML(tFileText, 2, 1, xContents, true) into tParsedFile
-               if tParsedFile is not empty then
-                  set the itemdelimiter to "."
-                  replace "<img src=" & quote with "<img src=" & quote & builderRepoFolder() & slash & item 1 to -2 of tLine & "-" in tParsedFile
-                  if line 1 of tParsedFile contains "experimental" then
-                     replace "experimental" with pVersion & " - experimental" in line 1 of tParsedFile
-                     put tParsedFile & gExperimental into tParsedFile
-                  else 
-                     put " (" & tCurVersion & ")" after char -6 of line 1 of tParsedFile
-                  end if
-                  put tBody & tParsedFile  into tBody
-               end if
-            end if
-            filter tList without tLine
-         end if
-      end repeat
-      if tOneLiners is not empty then
-         appendBugs tCurVersion, tOneLiners, tBoldBugs, tBugTable, tBugTableContents
-         put empty into tOneLiners
-      end if
-      subtract 1 from tIndex
-   end repeat
-   put xContents & tBugTableContents into xContents
-   put tBody & tBugTable into tBody
-   return tBody
-end notesFolderToHTML
-
-command appendBugs pVersion, pBugs, pBold, @xTable,@xContents
-   put xTable & newSection("Specific bug fixes (" & pVersion & ")" , 2, xContents) into xTable
-   if pBold then
-      put xTable & "<i>(bug fixes specific to the current build are highlighted in bold, reverted bug fixes are stricken through)</i>" & CR into xTable
-   end if
-   put xTable & makeBugTable(pBugs, pBold) into xTable
-end appendBugs
-
-function notesFolderLCBToHTML pVersion, pTags, @xContents
-   local tBody
-   local tNumTags
-   put relevantTags(pVersion, pTags) into pTags
-   put the number of lines in pTags into tNumTags
-   
-   local tList
-   local tFirstVersion, tCurVersion
-   put line 1 of pTags into tFirstVersion
-   put line -1 of pTags into tCurVersion
-   put fetchNameOnlyDiff(tFirstVersion, tCurVersion, notesPathLCB()) into tList
-   
-   local tDataA
-   repeat for each line tFile in tList
-      addLCBReleaseNoteData tFile, "", tDataA
-   end repeat
-   
-   local tConglomeratedMarkdown
-   put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
-   return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
-end notesFolderLCBToHTML
-
-function notesFolderExtensionsToHTML pVersion, pTags, @xContents
-   local tBody
-   local tNumTags
-   put relevantTags(pVersion, pTags) into pTags
-   put the number of lines in pTags into tNumTags
-   
-   local tFirstVersion, tCurVersion
-   put line 1 of pTags into tFirstVersion
-   put line -1 of pTags into tCurVersion
-   
-   local tDataA
-   addExtensionReleaseNoteData tFirstVersion, tCurVersion, tDataA
-   
-   local tConglomeratedMarkdown
-   put noteDataLCBToMD(tDataA) into tConglomeratedMarkdown
-   return markdownToHTML(tConglomeratedMarkdown, 2, 1, xContents, true)
-end notesFolderExtensionsToHTML
-
-function noteSubsectionDataToMD pLevel, pDataA
-   local tHashes
-   repeat pLevel
-      put "#" after tHashes
-   end repeat
-   
-   local tMD, tSubsections
-   put the keys of pDataA into tSubsections
-   sort tSubsections by pDataA[each]["order"]
-   repeat for each line tSection in tSubsections
-      put tHashes && tSection & return after tMD
-      if pDataA[tSection]["data"] is not empty then
-         put pDataA[tSection]["data"] & return after tMD
-      end if
-      if pDataA[tSection]["subsection"] is not empty then
-         put noteSubsectionDataToMD(pLevel + 1, pDataA[tSection]["subsection"]) & return after tMD
-      end if
-   end repeat
-   return tMD
-end noteSubsectionDataToMD
-
-function noteDataLCBToMD pDataA
-   local tMD
-   repeat for each key tSection in pDataA
-      put "#" && tSection & return after tMD
-      if pDataA[tSection]["subsection"] is not empty then
-         put noteSubsectionDataToMD(2, pDataA[tSection]["subsection"]) & return after tMD
-      end if
-      if pDataA[tSection]["bugs"] is not empty then
-         put "##" && "Bugs fixed" & return after tMD
-         put pDataA[tSection]["bugs"] & return after tMD
-      end if
-   end repeat
-   return tMD
-end noteDataLCBToMD
-
-function numberOfHashes pWord
-   local tCount
-   put 0 into tCount
-   repeat while char tCount + 1 of pWord is "#"
-      add 1 to tCount
-   end repeat
-   return tCount
-end numberOfHashes
-
-function lineIsBugInfo pLine
-   return matchText(pLine, "^ *# *\[[0-9]*\]")
-end lineIsBugInfo
-
-on addDataToSection pLevel, @xData, @xSectionA
-   repeat while xData is not empty
-      get line 1 of xData
-      if word 1 of it is empty then 
-         delete line 1 of xData
-         next repeat
-      end if
-      local tCount
-      put numberOfHashes(word 1 of it) into tCount
-      if tCount is 0 then
-         if xSectionA["data"] is empty then
-            put it into xSectionA["data"]
-         else
-            put return & it after xSectionA["data"]
-         end if
-         delete line 1 of xData
-      else if pLevel >= tCount then
-         exit addDataToSection
-      else
-         local tSection
-         put word 2 to -1 of it into tSection
-         delete line 1 of xData
-         
-         local tSectionOrder
-         if tSection is not among the keys of xSectionA["subsection"] then
-            put the number of elements of xSectionA["subsection"] + 1 into tSectionOrder
-            put tSectionOrder into xSectionA["subsection"][tSection]["order"]
-         end if
-         addDataToSection pLevel + 1, xData, xSectionA["subsection"][tSection]
-      end if
-   end repeat
-end addDataToSection
-
-function fetchExtensionName pFolder
-   local tManifestContents, tId
-   put url ("file:" & pFolder & slash & "manifest.xml") into tManifestContents
-   put revXMLCreateTree(tManifestContents,true,true,false) into tId
-   
-   if tId begins with "xmlerr" then
-      return empty
+      open file pPath for pEncoding text read
    end if
    
-   local tTargetName
-   put textDecode(revXMLNodeContents(tId, "/package/title"), "utf-8") into tTargetName
-   if tTargetName begins with "xmlerr" then
-      return empty
-   end if
-   return tTargetName
-end fetchExtensionName
-
-on generateExtensionsDiff pFirstVersion, pCurrentVersion, pType, @xDataA
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   set the defaultFolder to builderRepoFolder() & slash & "extensions" & slash & pType
-   
-   local tExtensions
-   put the folders into tExtensions
-   filter tExtensions without ".."
-   
-   set the defaultFolder to tDefaultFolder
-   
-   local tExtensionFileList, tExtensionName
-   repeat for each line tExtension in tExtensions
-      put fetchNameOnlyDiff(pFirstVersion, pCurrentVersion, "extensions" & slash & pType & slash & tExtension & slash & "notes") into tExtensionFileList
-      if tExtensionFileList is not empty then
-         put fetchExtensionName(builderRepoFolder() & slash & "extensions" & slash & pType & slash & tExtension) into tExtensionName
-         if tExtensionName is empty then
-            put tExtension into tExtensionName
-         end if
-         put tExtensionFileList into xDataA[pType][tExtensionName]
-      end if
-   end repeat
-end generateExtensionsDiff
-
-constant kExtensionsSections = "libraries,modules,widgets"
-
-on addExtensionReleaseNoteData pFirstVersion, pCurVersion, @xDataA
-   local tReleaseNoteDataA
-   repeat for each item tSection in kExtensionsSections
-      generateExtensionsDiff pFirstVersion, pCurVersion, tSection, tReleaseNoteDataA
-   end repeat
-   
-   local tExtensionDataA
-   repeat for each key tType in tReleaseNoteDataA
-      repeat for each key tName in tReleaseNoteDataA[tType]
-         put empty into tExtensionDataA
-         local tSectionName
-         if tType is "widgets" then
-            put tName && "Widget" into tSectionName
-            else
-            # Modules/libraries names don't need modifying
-            put tName into tSectionName
-         end if
-         repeat for each line tFile in tReleaseNoteDataA[tType][tName]
-            addLCBReleaseNoteData tFile, tSectionName, xDataA 
-         end repeat
-      end repeat
-   end repeat
-   
-end addExtensionReleaseNoteData
-
-on addLCBReleaseNoteData pFile, pSectionName, @xDataA
-   local tNoteData
-   put getFileContentsUTF8(pFile) into tNoteData
-   
-   local tCount, tSection, tBugList
-   
-   repeat while tNoteData is not empty
-      get line 1 of tNoteData
-      if word 1 of it is empty then 
-         delete line 1 of tNoteData
-         next repeat
-      end if
-      put numberOfHashes(word 1 of it) into tCount
-      # tCount should always be 1
-      if tCount is 1 then
-         # If this is not a bug number, then it is a section
-         if lineIsBugInfo(it) then
-            if tBugList is empty then
-               put word 2 to -1 of it into tBugList
-            else
-               put return & word 2 to -1 of it after tBugList
-            end if
-            delete line 1 of tNoteData
-         else
-            if tSection is not empty and pSectionName is empty then
-               put tBugList into xDataA[tSection]["bugs"]
-               put empty into tBugList
-            end if
-            put word 2 to -1 of it into tSection
-            delete line 1 of tNoteData
-            if pSectionName is not empty then
-               local tSectionOrder
-               if tSection is not among the keys of xDataA[pSectionName]["subsection"] then
-                  put the number of elements of xDataA[pSectionName]["subsection"] + 1 into tSectionOrder
-                  put tSectionOrder into xDataA[pSectionName]["subsection"][tSection]["order"]
-               end if
-               addDataToSection 1, tNoteData, xDataA[pSectionName]["subsection"][tSection]
-            else
-               addDataToSection 1, tNoteData, xDataA[tSection]
-            end if
-         end if
-      else
-         // throw error?
-         delete line 1 of tNoteData
-      end if
-   end repeat
-   
-   if pSectionName is not empty then
-      put tBugList into xDataA[pSectionName]["bugs"]
-   end if
-end addLCBReleaseNoteData
-
-function dictPath
-   # path to the dictionary folder in git
-   return "docs" & slash & "dictionary"
-end dictPath
-
-function notesPath
-   # return the path to the folder of release notes gubbins
-   return "docs" & slash & "notes"
-end notesPath
-
-function targetPath
-   return "_build" & slash & "notes"
-end targetPath
-
-function notesPathLCB
-   return "docs" & slash & "lcb" & slash & "notes"
-end notesPathLCB
-
-function notesPathIDE
-   return "ide" & slash & "notes"
-end notesPathIDE
-
-command exportUpdateText pVersion, pFeatures, pBugs, pReleaseType
-   local tHtmlText
-   put "<p>LiveCode " & pVersion & " is now available.<br>" & CR into tHtmlText
-   set the casesensitive to false
-   if pReleaseType is not "stable" then
-      put "<strong>Warning: this is not a stable release. Please ensure you back up your stacks before testing them.</strong><br>" & CR after tHtmlText
-      put "If you do not wish to be notified of test releases, uncheck the appropriate boxes in the Updates section of your LiveCode Preferences.<br><br>" & CR after tHtmlText
-   end if
-   put "This " & pReleaseType & " release contains the following changes:</p>" & CR & "<ul>" & CR after tHtmlText
-   repeat for each line tLine in pFeatures
-      put "<li>" & tLine & "</li>" & CR after tHtmlText
-   end repeat
-   local tNumBugs
-   put the number of lines in pBugs into tNumBugs
-   put "<li>" & tNumBugs & " bug fixes:" & CR & "<ul>" & CR after tHtmlText
-   repeat with i = 1 to tNumBugs
-      put "<li>" & line i of pBugs & "</li>" & CR after tHtmlText
-   end repeat
-   put "</ul>" & CR & "</li>" & CR & "</ul>" & CR after tHtmlText
-   
-   put "<p><strong>AUTO UPDATER</strong></p>" & CR after tHtmlText
-   put "<p>The auto updater pops up whenever a new release of LiveCode is available. There are 4 types of release: <br>" & CR after tHtmlText
-   put "<strong>Stable:</strong> The release has been through a full testing cycle and is deemed stable.<br>" & CR after tHtmlText
-   put "<strong>Maintenance:</strong> The release is the previous stable release with fixes ready for testing.<br>" & CR after tHtmlText
-   put "<strong>Beta:</strong> The release contains new features which are complete and ready for testing.<br>" & CR after tHtmlText
-   put "<strong>Development:</strong> The release contains untested new features.<br>" & CR after tHtmlText
-   
-   return tHtmlText
-end exportUpdateText
-
-command sortTags @rTags
-   local tSortedTags
-   set the itemdelimiter to "-"
-   local tGM, tRCs, tDPs
-   local tVersion, tPrevVersion
-   repeat for each line tLine in rTags
-      put item 1 of tLine into tVersion
-      if tVersion is not tPrevVersion then 
-         sort tDPs ascending numeric by item 3 of each
-         sort tRCs ascending numeric by item 3 of each
-         put tDPs & tRCs & tGM after tSortedTags
-         put empty into tRCs
-         put empty into tDPs
-         put empty into tGM
-      end if
-      put tVersion into tPrevVersion
-      if item 2 of tLine is empty then
-         put tLine & CR into tGM
-      else if item 2 of tLine is "dp" then
-         put tLine & CR after tDPs
-      else if item 2 of tLine is "rc" then
-         put tLine & CR after tRCs
-      end if
-   end repeat
-   sort tDPs ascending numeric by item 3 of each
-   sort tRCs ascending numeric by item 3 of each
-   put tDPs & tRCs & tGM after tSortedTags
-   delete the last char of tSortedTags
-   put tSortedTags into rTags
-end sortTags
-
-function fetchIDENameOnlyDiff pFromTag, pToTag
-   local tFirstCommit, tLastCommit
-   fetchIDECommits pFromTag, pToTag, tFirstCommit, tLastCommit
-   
-   local tDefaultFolder
-   put the defaultFolder into tDefaultFolder
-   set the defaultFolder to tDefaultFolder & slash & "ide"
-   
-   local tDiff
-   put shell("git diff --name-only" && tFirstCommit & "..." & tLastCommit && "--" && "notes") into tDiff
-   set the defaultFolder to tDefaultFolder
-   return tDiff
-end fetchIDENameOnlyDiff
-
-function fetchIDEDiff pFromTag, pToTag
-   return shell("git diff" && pFromTag & "..." & pToTag & " --  ide")
-end fetchIDEDiff
-
-on fetchIDECommits pFirstVersion, pLastVersion, @rFirst, @rLast
-   local tDiff
-   put fetchIDEDiff(pFirstVersion, pLastVersion) into tDiff
-   
-   local tString
-   put "Subproject commit (.*)" into tString
-
-   get matchText(tDiff, "\-" & tString, rFirst)
-   get matchText(tDiff, "\+" & tString, rLast)
-end fetchIDECommits
-
-private function getFileContentsUTF8 pFile
-   local tData, tResult
-
-   open file pFile for "UTF-8" text read
    put the result into tResult
    if tResult is not empty then
-      throw the result
+      throw merge("Failed to open [[pPath]]: [[tResult]]")
    end if
-
-   read from file pFile until end
-   if the result is not empty and the result is not "EOF" then
-      throw the result
+   
+   read from file pPath until end
+   put the result into tResult
+   if tResult is not empty and tResult is not "eof" then
+      throw merge("Failed to read [[pPath]]: [[tResult]]")
    end if
-   put it into tData
+   put it into tContents
+   
+   close file pPath -- unchecked
+   
+   return tContents
+end FileGetContents
 
-   close file pFile -- unchecked
+private command FileSetUTF8Contents pPath, pContents
+   local tResult
+   
+   open file pPath for "UTF-8" text write
+   put the result into tResult
+   if tResult is not empty then
+      throw merge("Failed to open [[pPath]]: [[tResult]]")
+   end if
+   
+   write pContents to file pPath
+   put the result into tResult
+   if tResult is not empty then
+      throw merge("Failed to write [[pPath]]: [[tResult]]")
+   end if
+   
+   close file pPath -- unchecked
+end FileSetUTF8Contents
 
-   return tData
-end getFileContentsUTF8
+private function FileGetSubFolders pPath
+   local tOldCwd, tFolder, tResult
+   put the defaultfolder into tOldCwd
+   set the defaultfolder to pPath
+   if the result is not empty then
+      throw merge("Failed to change to [[pPath]]: [[the result]]")
+   end if
+   
+   repeat for each line tFolder in the folders
+      if tFolder is ".." then
+         next repeat
+      end if
+      put the defaultfolder & slash & tFolder & return after tResult
+   end repeat
+   
+   set the defaultfolder to tOldCwd
+   if the result is not empty then
+      throw merge("Failed to change to [[pPath]]: [[the result]]")
+   end if
+   
+   return tResult
+end FileGetSubFolders

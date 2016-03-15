@@ -53,6 +53,11 @@
 	<true/>
 	<key>LSGetAppDiedEvents</key>
 	<true/>
+	<key>LSArchitecturePriority</key>
+	<array>
+		<string>i386</string>
+		<string>x86_64</string>
+	</array>
 	<key>NSAppleScriptEnabled</key>
 	<string>YES</string>
 	<key>NSHumanReadableCopyright</key>

@@ -554,6 +554,10 @@ bool MCClipboard::AddPrivateData(MCDataRef p_private_data)
         MCValueRelease(m_private_data);
     m_private_data = MCValueRetain(p_private_data);
     
+    // Ensure that an item is always on the clipboard, even if it is empty
+    if (m_clipboard->GetItemCount() == 0)
+        m_clipboard->AddItem(m_clipboard->CreateNewItem());
+    
     return true;
 }
 
@@ -1251,7 +1255,12 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
     
     // Get the data for this representation and decode it
     MCAutoDataRef t_encoded(t_rep->CopyData());
-    return MCStringDecode(*t_encoded, p_encoding, false, r_text);
+    
+    MCAutoStringRef t_string;
+    if (!MCStringDecode(*t_encoded, p_encoding, false, &t_string))
+        return false;
+    
+    return MCStringConvertLineEndingsToLiveCode(*t_string, r_text);
 }
 
 bool MCClipboard::CopyAsData(MCRawClipboardKnownType p_type, MCDataRef& r_data) const

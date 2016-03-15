@@ -41,7 +41,7 @@ UIViewController *MCIPhoneGetViewController(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2013-09-23: [[ iOS7 Support ]] Added missing delegates implemented in order to appease llvm 5.0.
-@interface MCIPhonePickDateWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate>
+@interface com_runrev_livecode_MCIPhonePickDateWheelDelegate : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, UIActionSheetDelegate, UITableViewDelegate, UIPopoverControllerDelegate>
 {
 	bool iSiPad;
 	bool m_running;
@@ -58,7 +58,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-@implementation MCIPhonePickDateWheelDelegate
+@implementation com_runrev_livecode_MCIPhonePickDateWheelDelegate
 
 - (id)init
 {
@@ -541,7 +541,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-static MCIPhonePickDateWheelDelegate *s_pick_date_wheel_delegate = nil;
+static com_runrev_livecode_MCIPhonePickDateWheelDelegate *s_pick_date_wheel_delegate = nil;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -556,7 +556,7 @@ struct datepicker_t
 	bool use_cancel;
 	bool use_done;
 	MCRectangle button_rect;
-	MCIPhonePickDateWheelDelegate *picker;
+	com_runrev_livecode_MCIPhonePickDateWheelDelegate *picker;
 	bool cancelled;
 };
 
@@ -565,7 +565,7 @@ static void pickdate_prewait(void *p_context)
 	datepicker_t *ctxt;
 	ctxt = (datepicker_t *)p_context;
 	
-	ctxt -> picker = [[MCIPhonePickDateWheelDelegate alloc] init];
+	ctxt -> picker = [[com_runrev_livecode_MCIPhonePickDateWheelDelegate alloc] init];
 	
 	// MW-2012-09-21: [[ Bug 10402 ]] Make sure we pass the 'step' parameter through.
 	[ctxt -> picker startDatePicker: ctxt -> style andCurrent: ctxt -> current andStart: ctxt -> min andEnd: ctxt -> max andStep: ctxt -> step andCancel: ctxt -> use_cancel andDone: ctxt -> use_done andButtonRect: ctxt -> button_rect];

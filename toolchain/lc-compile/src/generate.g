@@ -1615,6 +1615,7 @@
     'rule' GenerateExpression(Result, Context, Expr -> Output):
         EmitCreateRegister(-> Output)
         GenerateExpressionInRegister(Result, Context, Expr, Output)
+        GenerateInvoke_FreeArgument(Expr)
 
 'action' GenerateExpressionInRegister(INT, INT, EXPRESSION, INT)
 
@@ -1651,15 +1652,19 @@
     'rule' GenerateExpressionInRegister(Result, Context, logicalor(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
         GenerateExpressionInRegister(Result, Context, Left, Output)
+        GenerateInvoke_FreeArgument(Left)
         EmitJumpIfTrue(Output, ShortLabel)
         GenerateExpressionInRegister(Result, Context, Right, Output)
+        GenerateInvoke_FreeArgument(Right)
         EmitResolveLabel(ShortLabel)
 
     'rule' GenerateExpressionInRegister(Result, Context, logicaland(_, Left, Right), Output):
         EmitDeferLabel(-> ShortLabel)
         GenerateExpressionInRegister(Result, Context, Left, Output)
+        GenerateInvoke_FreeArgument(Left)
         EmitJumpIfFalse(Output, ShortLabel)
         GenerateExpressionInRegister(Result, Context, Right, Output)
+        GenerateInvoke_FreeArgument(Right)
         EmitResolveLabel(ShortLabel)
 
     'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _), Output):
@@ -1678,6 +1683,19 @@
             EmitDestroyRegisterList(ListRegs)
         |)
     
+    'rule' GenerateExpressionInRegister(Result, Context, Array:array(Position, Pairs), Output):
+        (|
+            IsExpressionSimpleConstant(Array)
+            EmitConstant(Array -> Index)
+            EmitAssignConstant(Output, Index)
+        ||
+            GenerateExpressionArray(Result, Context, Pairs -> ListRegs)
+            EmitBeginAssignArray(Output)
+            GenerateAssignArray(ListRegs)
+            EmitEndAssignArray()
+            EmitDestroyRegisterList(ListRegs)
+        |)
+
     'rule' GenerateExpressionInRegister(Result, Context, call(Position, Handler, Arguments), Output):
         GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output)
     
@@ -1691,7 +1709,6 @@
         EmitEndInvoke()
         EmitDestroyRegister(IgnoredReg)
         GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
-        GenerateInvoke_FreeArguments(Arguments)
         
     'rule' GenerateExpressionInRegister(_, _, Expr, _):
         print(Expr)
@@ -1707,6 +1724,15 @@
 
     'rule' GenerateAssignList(nil):
         -- finished
+
+'action' GenerateAssignArray(INTLIST)
+
+    'rule' GenerateAssignArray(intlist(Head, Tail)):
+        EmitContinueAssignArray(Head)
+        GenerateAssignArray(Tail)
+
+    'rule' GenerateAssignArray(nil):
+        -- finish
 
 'action' EmitAssignUndefined(INT)
 
@@ -1779,6 +1805,12 @@
         EmitListConstant(Indicies)
         EmitEndListConstant(-> Index)
 
+    'rule' EmitConstant(array(_, Pairs) -> Index):
+        EmitArrayConstantElements(Pairs -> Indices)
+        EmitBeginArrayConstant()
+        EmitArrayConstant(Indices)
+        EmitEndArrayConstant(-> Index)
+
     'rule' EmitConstant(invoke(_, invokelist(Info, nil), expressionlist(Operand, nil)) -> Index)
         Info'Name -> SyntaxName
         (|
@@ -1809,6 +1841,16 @@
     'rule' EmitListConstantElements(nil -> nil):
         -- nothing
 
+'action' EmitArrayConstantElements(EXPRESSIONLIST -> INTLIST)
+
+    'rule' EmitArrayConstantElements(expressionlist(pair(_, Key, Value), Tail) -> intlist(KeyIndex, intlist(ValueIndex, TailIndices)))
+        EmitConstant(Key -> KeyIndex)
+        EmitConstant(Value -> ValueIndex)
+        EmitArrayConstantElements(Tail -> TailIndices)
+
+    'rule' EmitArrayConstantElements(nil -> nil):
+        -- nothing
+
 'action' EmitListConstant(INTLIST)
 
     'rule' EmitListConstant(intlist(Head, Tail)):
@@ -1816,6 +1858,15 @@
         EmitListConstant(Tail)
         
     'rule' EmitListConstant(nil):
+        -- nothing
+
+'action' EmitArrayConstant(INTLIST)
+
+    'rule' EmitArrayConstant(intlist(Key, intlist(Value, Tail))):
+        EmitContinueArrayConstant(Key, Value)
+        EmitArrayConstant(Tail)
+
+    'rule' EmitArrayConstant(nil):
         -- nothing
 
 'condition' IsVariableInRegister(SYMBOLKIND)
@@ -1869,6 +1920,16 @@
         GenerateExpressionList(Result, Context, Tail -> TailRegs)
         
     'rule' GenerateExpressionList(_, _, nil -> nil)
+        -- nothing
+
+'action' GenerateExpressionArray(INT, INT, EXPRESSIONLIST -> INTLIST)
+
+    'rule' GenerateExpressionArray(Result, Context, expressionlist(pair(_, Key, Value), Tail) -> intlist(KeyReg, intlist(ValueReg, TailRegs))):
+        GenerateExpression(Result, Context, Key -> KeyReg)
+        GenerateExpression(Result, Context, Value -> ValueReg)
+        GenerateExpressionArray(Result, Context, Tail -> TailRegs)
+
+    'rule' GenerateExpressionArray(_, _, nil -> nil)
         -- nothing
 
 --------------------------------------------------------------------------------

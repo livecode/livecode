@@ -509,8 +509,7 @@ void MCMutableImageRep::startdraw()
 		selrect.x = mx - rect.x;
 		selrect.y = my - rect.y;
 		selrect.width = selrect.height = 1;
-		brect.width = brect.height = 1;
-		selrect = MCU_bound_rect(selrect, rect.x, rect.y, rect.width, rect.height);
+		brect = selrect = MCU_bound_rect(selrect, rect.x, rect.y, rect.width, rect.height);
 		state |= CS_DRAW | CS_OWN_SELECTION;
 
 		MCactiveimage = m_owner;

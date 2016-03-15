@@ -541,19 +541,23 @@
 			'<(SHARED_INTERMEDIATE_DIR)/src/quicktimestubs.mac.cpp',
 			
 			# Group "Desktop - Mac"
-			'src/coretextfonts.cpp',
+			'src/coretextfonts.mm',
 			'src/osxflst.cpp',
 			
 			# Group "Desktop - Linux"
 			'src/lnxelevate.cpp',
 			'src/lnxflst.cpp',
 			
-			# Group "Desktop - Windows"
-			'src/w32date.cpp',
+            # Group "Desktop - Windows"
+            'src/w32date.cpp',
+            'src/w32flst.h',
+            'src/w32flst.cpp',
 							
 			# Group "Theming"
 			'src/linux-theme.cpp',
 			'src/mac-theme.mm',
+			'src/mblandroid-theme.cpp',
+			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
 				
 			# Group "Syntax"
@@ -694,7 +698,6 @@
 			'src/osxmisc.mm',
 			'src/osxprinter.cpp',
 			'src/osxstack.cpp',
-			'src/osxtextlayout.cpp',
 			'src/osxtheme.mm',
 			
 			# Group "Desktop - Windows"
@@ -702,7 +705,6 @@
 			'src/w32dc.h',
 			'src/w32defs.h',
 			'src/w32dnd.h',
-			'src/w32flst.h',
 			'src/w32prefix.h',
 			'src/w32printer.h',
 			'src/w32text.h',
@@ -836,7 +838,6 @@
 		[
 			'src/srvcgi.h',
 			'src/srvdebug.h',
-			'src/srvflst.h',
 			'src/srvmain.h',
 			'src/srvmultipart.h',
 			'src/srvscript.h',
@@ -844,7 +845,6 @@
 			'src/mode_server.cpp',
 			'src/srvcgi.cpp',
 			'src/srvdebug.cpp',
-			'src/srvflst.cpp',
 			'src/srvmain.cpp',
 			'src/srvmultipart.cpp',
 			'src/srvoutput.cpp',
@@ -1151,7 +1151,6 @@
 					'sources!':
 					[
 						'src/cgimageutil.cpp',
-						'src/coretextfonts.cpp',
 						'src/syscfdate.cpp',
 						'src/tilecachecg.cpp',
 					],

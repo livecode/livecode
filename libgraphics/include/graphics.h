@@ -500,19 +500,21 @@ struct MCGFont
 	void		*fid;
 	uint16_t	size;
 	uint16_t	fixed_advance;
-	int32_t		ascent;
-	int32_t		descent;
+	MCGFloat	m_ascent;
+	MCGFloat	m_descent;
+    MCGFloat    m_leading;
 	bool		ideal : 1;
 };
 
-inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, int32_t ascent, int32_t descent, bool ideal)
+inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCGFloat ascent, MCGFloat descent, MCGFloat leading, bool ideal)
 {
     MCGFont t_font;
     t_font . fid = fid;
 	t_font . size = size;
 	t_font . fixed_advance = fixed_advance;
-	t_font . ascent = ascent;
-	t_font . descent = descent;
+	t_font . m_ascent = ascent;
+	t_font . m_descent = descent;
+    t_font . m_leading = leading;
 	t_font . ideal = ideal;
     
     return t_font;

@@ -73,6 +73,7 @@ void MCBrowserMemoryClear(void *p_mem, size_t p_size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_BROWSER_DLLEXPORT_DEF
 void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc)
 {
 	if (p_alloc != nil)
@@ -81,6 +82,7 @@ void MCBrowserLibrarySetAllocator(MCBrowserAllocator p_alloc)
 		s_mem_allocate = MCBrowserMallocWrapper; // default allocator (malloc-based)
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 void MCBrowserLibrarySetDeallocator(MCBrowserDeallocator p_dealloc)
 {
 	if (p_dealloc != nil)
@@ -89,6 +91,7 @@ void MCBrowserLibrarySetDeallocator(MCBrowserDeallocator p_dealloc)
 		s_mem_deallocate = free; // default deallocator
 }
 
+MC_BROWSER_DLLEXPORT_DEF
 void MCBrowserLibrarySetReallocator(MCBrowserReallocator p_realloc)
 {
 	if (p_realloc != nil)

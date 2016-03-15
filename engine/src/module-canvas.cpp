@@ -473,6 +473,7 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
 
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientInvalidRampErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
@@ -2614,7 +2615,11 @@ void MCCanvasGradientEvaluateType(integer_t p_type, integer_t& r_type)
 MC_DLLEXPORT_DEF
 void MCCanvasGradientMakeWithRamp(integer_t p_type, MCProperListRef p_ramp, MCCanvasGradientRef &r_gradient)
 {
-	MCCanvasGradientRef t_gradient;
+	if (MCProperListGetLength(p_ramp) == 0)
+	{
+		MCCanvasThrowError(kMCCanvasGradientInvalidRampErrorTypeInfo);
+		return;
+	}
 	
 	if (!MCCanvasGradientCheckStopOrder(p_ramp))
 	{
@@ -4657,7 +4662,7 @@ bool MCCanvasFontGetDefault(MCCanvasFontRef &r_font)
 {
 	if (kMCCanvasFont12PtHelvetica == nil)
 	{
-		if (!MCCanvasFontCreate(MCSTR("Helvetica"), 0, 12, kMCCanvasFont12PtHelvetica))
+		if (!MCCanvasFontCreate(MCSTR(DEFAULT_TEXT_FONT), 0, 12, kMCCanvasFont12PtHelvetica))
 			return false;
 	}
 	
@@ -4876,7 +4881,7 @@ bool MCCanvasPropertiesInit(MCCanvasProperties &p_properties)
 	{
 		p_properties.antialias = true;
 		p_properties.blend_mode = kMCGBlendModeSourceOver;
-		p_properties.fill_rule = kMCGFillRuleEvenOdd;
+		p_properties.fill_rule = kMCGFillRuleNonZero;
 		p_properties.opacity = 1.0;
 		p_properties.paint = nil;
 		p_properties.stippled = false;
@@ -5309,6 +5314,20 @@ void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas)
 {
 	MCCanvasGetProps(p_canvas).dash_phase = p_phase;
 	MCCanvasGet(p_canvas)->dashes_changed = true;
+}
+
+//////////
+
+MC_DLLEXPORT_DEF
+void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+	
+	MCGRectangle t_bounds;
+	t_bounds = MCGContextGetClipBounds(t_canvas->context);
+	
+	/* UNCHECKED */ MCCanvasRectangleCreateWithMCGRectangle(t_bounds, r_bounds);
 }
 
 //////////
@@ -6304,6 +6323,13 @@ bool MCCanvasErrorsInitialize()
 	
 	kMCCanvasImageRepLockErrorTypeInfo = nil;
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepLockError"), MCNAME("canvas"), MCSTR("Unable to lock image pixels."), kMCCanvasImageRepLockErrorTypeInfo))
+		return false;
+	
+	kMCCanvasGradientInvalidRampErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.GradientInvalidRampError"),
+									MCNAME("canvas"),
+									MCSTR("Gradient ramps must have at least one stop."),
+									kMCCanvasGradientInvalidRampErrorTypeInfo))
 		return false;
 	
 	kMCCanvasGradientStopRangeErrorTypeInfo = nil;

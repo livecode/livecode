@@ -136,6 +136,8 @@ bool OSXSpeechNarrator::ListVoices(NarratorGender p_gender, NarratorListVoicesCa
             if ((t_gender != -1) && (myInfo.gender != t_gender)) continue;
             char cvoice[256];
             strncpy(cvoice, (const char*)&myInfo.name[1], myInfo.name[0]);
+			// PM-2016-02-15: [[ Bug 16929 ]] Make sure the copied strings are null-terminated
+			cvoice[myInfo.name[0]]='\0';
 			p_callback(p_context, p_gender, cvoice);
 		}
 	}
@@ -292,6 +294,8 @@ void OSXSpeechNarrator::FindAndSelect()
                 VoiceDescription myInfo;
                 if (GetVoiceDescription(&tVoice, &myInfo, sizeof(myInfo)) == noErr) {
                     strncpy(cvoice, (const char*)&myInfo.name[1], myInfo.name[0]);
+					// PM-2016-02-15: [[ Bug 16929 ]] Make sure the copied strings are null-terminated
+					cvoice[myInfo.name[0]]='\0';
                     if (strcmp(cvoice,speechvoice) == 0)
                     {
                         FoundVoice = &tVoice;

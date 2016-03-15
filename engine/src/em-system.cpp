@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "em-filehandle.h"
 #include "em-util.h"
 
+#include "filedefs.h"
+#include "mcstring.h"
 #include "osspec.h"
 
 #include <fcntl.h>
@@ -31,6 +33,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 /* ================================================================
  * System abstraction layer
  * ================================================================ */
+
+/* Directories understood by MCEmscriptenSystem::GetStandardFolder() */
+#define kMCEmscriptenStandardFolderEngine "/boot"
+#define kMCEmscriptenStandardFolderResources "/boot/standalone"
+#define kMCEmscriptenStandardFolderFonts "/boot/fonts"
+#define kMCEmscriptenStandardFolderTemporary "/tmp"
+#define kMCEmscriptenStandardFolderHome "/livecode"
 
 /* ----------------------------------------------------------------
  * Utility functions
@@ -88,6 +97,9 @@ MCEmscriptenSystem::~MCEmscriptenSystem()
 bool
 MCEmscriptenSystem::Initialize()
 {
+	IO_stdout = OpenFd(1, kMCOpenFileModeWrite);
+	IO_stderr = OpenFd(2, kMCOpenFileModeWrite);
+
 	return true;
 }
 
@@ -156,21 +168,18 @@ MCEmscriptenSystem::GetCurrentTime()
 bool
 MCEmscriptenSystem::GetVersion(MCStringRef & r_string)
 {
-	MCEmscriptenNotImplemented();
-	return false;
+	return MCStringCopy(kMCEmptyString, r_string);
 }
 
 bool
 MCEmscriptenSystem::GetMachine(MCStringRef & r_string)
 {
-	MCEmscriptenNotImplemented();
-	return false;
+	return MCStringCopy(kMCEmptyString, r_string);
 }
 
 MCNameRef
 MCEmscriptenSystem::GetProcessor()
 {
-	MCEmscriptenNotImplemented();
 	return kMCEmptyName;
 }
 
@@ -572,12 +581,63 @@ MCEmscriptenSystem::ListFolderEntries(MCStringRef p_folder,
 	return t_success;
 }
 
+/* Resolve the path of a standard system directory, by name.
+ *
+ * Normally, sets r_folder to the native filesystem path of the
+ * standard system directory named by p_type, and returns true.
+ *
+ * If p_type is not recognised, or its corresponding filesystem path
+ * does not exist on the current system, sets r_folder to the empty
+ * string and returns true.
+ *
+ * If an unexpected error occurs, returns false.
+ */
 Boolean
 MCEmscriptenSystem::GetStandardFolder(MCNameRef p_type,
                                       MCStringRef & r_folder)
 {
-	/* FIXME Implement GetStandardFolder() */
-	return false;
+	const char *t_path_chars;
+	MCAutoStringRef t_path;
+
+	/* Decode the requested standard folder name */
+	if (MCNameIsEqualTo(p_type, MCN_engine))
+	{
+		t_path_chars = kMCEmscriptenStandardFolderEngine;
+	}
+	else if (MCNameIsEqualTo(p_type, MCN_resources))
+	{
+		t_path_chars = kMCEmscriptenStandardFolderResources;
+	}
+	else if (MCNameIsEqualTo(p_type, MCN_temporary))
+	{
+		t_path_chars = kMCEmscriptenStandardFolderTemporary;
+	}
+	else if (MCNameIsEqualTo(p_type, MCN_fonts))
+	{
+		t_path_chars = kMCEmscriptenStandardFolderFonts;
+	}
+	else if (MCNameIsEqualTo(p_type, MCN_home))
+	{
+		t_path_chars = kMCEmscriptenStandardFolderHome;
+	}
+	else
+	{
+		/* We don't know anything about the requested folder */
+		return MCStringCopy(kMCEmptyString, r_folder);
+	}
+
+	if (!MCStringCreateWithCString(t_path_chars, &t_path))
+	{
+		return false;
+	}
+
+	/* Check that the directory actually exists */
+	if (!FolderExists(*t_path))
+	{
+		return MCStringCopy(kMCEmptyString, r_folder);
+	}
+
+	return MCStringCopy(*t_path, r_folder);
 }
 
 real64_t
@@ -815,15 +875,16 @@ MCEmscriptenSystem::ResolvePath(MCStringRef p_path,
 		{
 			if (t_have_rel_part)
 			{
-				if (!MCStringFormat(&t_user_expand, "%@/%@",
-				                    MCSTR("/livecode"), *t_rel_part))
+				if (!MCStringFormat(&t_user_expand, "%s/%@",
+				                    kMCEmscriptenStandardFolderHome,
+				                    *t_rel_part))
 				{
 					return false;
 				}
 			}
 			else
 			{
-				t_user_expand = MCSTR("/livecode");
+				t_user_expand = MCSTR(kMCEmscriptenStandardFolderHome);
 			}
 		}
 		else
@@ -1075,4 +1136,16 @@ MCEmscriptenSystem::GetDNSservers(MCListRef & r_list)
 {
 	/* DNS servers aren't available */
 	return false;
+}
+
+// These functions is implemented in javascript
+extern "C" int32_t MCEmscriptenDialogShowAlert(const unichar_t* p_message, size_t p_message_length);
+
+void
+MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
+                                      MCStringRef p_message)
+{
+	MCAutoStringRefAsUTF16String t_message_u16;
+	t_message_u16.Lock(p_message);
+	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
 }

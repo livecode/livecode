@@ -194,7 +194,6 @@ public:
 	////////// PROPERTY SUPPORT METHODS
     
 	virtual void Redraw(void) = 0;
-    virtual void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible) = 0;
     
 	////////// PROPERTY ACCESSORS
     
@@ -256,7 +255,6 @@ public:
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting) = 0;
     virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width) = 0;
     virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting) = 0;
-    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting) = 0;
     virtual void SetTraversalOn(MCExecContext& ctxt, bool setting) = 0;
     
     virtual void GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_tracks) = 0;

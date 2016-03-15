@@ -10,7 +10,7 @@ Summary: <return|Returns> the version number of the operating system.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,windows,linux,ios,android,html5
 
 Platforms: desktop,server,web,mobile
 
@@ -18,7 +18,7 @@ Example:
 the systemVersion
 
 Example:
-if the systemVersion is "8.6.0" then set the OSVersion to "8.6"
+if the systemVersion begins with "10.11." then set the OSVersion to "10.11"
 
 Returns: The <systemVersion> <function> <return|returns> a <string>.
 
@@ -27,29 +27,22 @@ Use the <systemVersion> <function> to determine whether the current version of t
 
 The exact format of the <systemVersion> varies, depending on the operating system.
 
-On Mac OS and OS X systems, the <systemVersion> returns three integers separated by decimal points. For example, on Mac OS 8.6, the <systemVersion> <return|returns> "8.6.0".
+On Mac OS X systems, the <systemVersion> returns three integers separated by decimal points. For example, on Mac OS X "El Capitan", the <systemVersion> <return|returns> "10.11.0".
 
 On Windows systems, the <systemVersion> returns the internal Windows version designation. The internal designations for several Windows versions are as follows:
 
-* Windows 95 - Windows 4.0
-* Windows 98 - Windows 4.10 (may return other numbers)
-* Windows Me - Windows 4.90 (may return other numbers)
-* Windows NT 4 - NT 4.0  
-* Windows 2000 - NT 5.0
-* Windows XP - NT 5.1
-* Windows Vista - NT 6.0
-* Windows 7 - NT 6.1
+* Windows XP: "NT 5.1"
+* Windows Vista: "NT 6.0"
+* Windows 7: "NT 6.1"
+* Windows 8: "NT 6.2"
+* Windows 8.1: "NT 6.3"
+* Windows 10: "NT 10.0"
 
-Because certain sub-versions of Windows 98 and Windows Me return slightly different values for the <systemVersion>, you can check for these versions by testing whether the number is in a range, as in the following example:
+On iOS the <systemVersion> will return the iOS version number. For example, if the device has iOS 4.3 installed, this property returns "4.3"; if the device has iOS 3.1.3 installed, this property will return "3.1.3".
 
-get word 2 of the systemVersion
-if it &gt;= 4.1 and it &lt; 4.9 then answer "Windows 98!"
+On Android the <systemVersion> will return the Android OS version number. For example, if the device has Android 2.2 installed, this property returns "2.2"; if the device has
+Android 2.3.1 installed, this property will return "2.3.1".
 
-On iOS the <systemVersion> will return the iOS version number. For example, if the device has iOS 4.3 installed, this property returns 4.3; if the device has iOS 3.1.3 installed, this property will return 3.1.3.
-
-On Android the <systemVersion> will return the Android OS version number. For example, if the device has Android 2.2 installed, this property returns 2.2; if the device has
-Android 2.3.1 installed, this property will return 2.3.1.
-
->*Note:* When running a Mac OS application in the Classic box on an OS X system, the <systemVersion> function returns the version number of the Classic system folder.
+On HTML5 the <systemVersion> is empty.
 
 References: string (keyword), function (control_st), environment (function), buildNumber (function), libURLVersion (function), QTVersion (function), return (glossary)

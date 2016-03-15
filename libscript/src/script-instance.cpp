@@ -279,6 +279,11 @@ bool MCScriptThrowNotABooleanError(MCValueRef p_value)
     return MCErrorCreateAndThrow(kMCScriptNotABooleanValueErrorTypeInfo, "value", p_value, nil);
 }
 
+bool MCScriptThrowNotAStringError(MCValueRef p_value)
+{
+	return MCErrorCreateAndThrow(kMCScriptNotAStringValueErrorTypeInfo, "value", p_value, nil);
+}
+
 bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_provided)
 {
     // TODO: Encode provided / expected.
@@ -1045,7 +1050,18 @@ static bool MCScriptLoadSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_
 #if defined(_WIN32)
         r_handle = GetModuleHandle(NULL);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-        r_handle = dlopen("librevandroid.so", 0);
+		// IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
+		//    given, so first resolve the path to the library.
+		extern bool MCAndroidResolveLibraryPath(MCStringRef p_library, MCStringRef &r_path);
+		MCAutoStringRef t_path;
+		if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"), &t_path))
+			return false;
+		
+		MCAutoStringRefAsCString t_cstring;
+		if (!t_cstring.Lock(*t_path))
+			return false;
+		
+        r_handle = dlopen(*t_cstring, 0);
 #else
         r_handle = dlopen(NULL, 0);
 #endif
@@ -1413,6 +1429,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 t_argument = nil;
                 
                 // Nothing to free.
+                t_arg_new[t_arg_index] = false;
             }
         }
         
@@ -2360,6 +2377,58 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     MCMemoryDeleteArray(t_values);
             }
             break;
+			case kMCScriptBytecodeOpAssignArray:
+			{
+				int t_dst;
+				t_dst = t_arguments[0];
+
+				MCAutoArrayRef t_array;
+				if (!MCArrayCreateMutable(&t_array))
+				{
+					t_success = false;
+				}
+
+				for (int t_arg_ofs = 1; t_success && t_arg_ofs + 1 < t_arity; t_arg_ofs += 2)
+				{
+					MCValueRef t_raw_key, t_value;
+					MCNewAutoNameRef t_key;
+					if (t_success)
+					{
+						t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[t_arg_ofs], t_raw_key);
+					}
+					if (t_success)
+					{
+						t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[t_arg_ofs + 1], t_value);
+					}
+					if (t_success)
+					{
+						// FIXME allow construction of arrays from
+						// string-bridging foreign values.
+						if (MCValueGetTypeCode(t_raw_key) != kMCValueTypeCodeString)
+						{
+							t_success = MCScriptThrowNotAStringError(t_raw_key);
+						}
+					}
+					if (t_success)
+					{
+						t_success = MCNameCreate(reinterpret_cast<MCStringRef>(t_raw_key), &t_key);
+					}
+					if (t_success)
+					{
+						t_success = MCArrayStoreValue(*t_array, false, *t_key, t_value);
+					}
+				}
+
+				if (t_success)
+				{
+					t_success = t_array.MakeImmutable();
+				}
+				if (t_success)
+				{
+					t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, *t_array);
+				}
+			}
+			break;
         }
         
         // If we failed, then make sure the frame address is up to date.

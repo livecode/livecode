@@ -170,12 +170,19 @@ MCScreenDC::GetCurrentStack()
  * Event loop
  * ================================================================ */
 
-/* Returns true if quit is requested. */
+/* Returns true if quit is requested, or from any inner main loop. */
 Boolean
 MCScreenDC::wait(real64_t p_duration,
                  Boolean p_allow_dispatch,
                  Boolean p_accept_any_event)
 {
+	/* Don't permit inner main loops.  They cause amusing "-12" assertion
+	 * failures from Emterpreter. */
+	if (0 < int(MCwaitdepth))
+	{
+		return true;
+	}
+
 	p_duration = MCMax(p_duration, 0.0);
 
 	/* We allow p_duration to be infinite, but only if
@@ -268,7 +275,7 @@ extern "C" int32_t MCEmscriptenDialogShowConfirm(const unichar_t* p_message, siz
 extern "C" int32_t MCEmscriptenDialogShowPrompt(const unichar_t* p_message, size_t p_message_length, const unichar_t* p_default, size_t p_default_length, unichar_t** r_result, size_t* r_result_length);
 
 int32_t
-MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
+MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking)
 {
     // Default to returning an unsuccessful result
     int32_t t_result = -1;
@@ -280,6 +287,8 @@ MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, u
     
     switch (p_button_count)
     {
+		case 0:
+			// If no buttons specified, assume that an "OK" button is fine
         case 1:
             // Only one button - treat it as an "OK" button
             t_result = MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());

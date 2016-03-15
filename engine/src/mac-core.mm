@@ -111,11 +111,19 @@ enum
 
 - (void)becomePseudoModalFor: (NSWindow*)window
 {
+    // MERG-2016-03-04: ensure pseudo modals open above any calling modals
+    [window setLevel: kCGPopUpMenuWindowLevel];
     m_pseudo_modal_for = window;
 }
 
 - (NSWindow*)pseudoModalFor
 {
+    // MERG-2016-03-04: ensure pseudo modals remain above any calling modals
+    // If we need to check whether we're pseudo-modal, it means we're in a
+    // situation where that window needs to be forced to the front
+    if (m_pseudo_modal_for != nil)
+        [m_pseudo_modal_for orderFrontRegardless];
+    
     return m_pseudo_modal_for;
 }
 
@@ -1972,6 +1980,19 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect r, MCRectangle& r_rect)
 	}
 	
 	r_rect = MCRectangleMake(r . origin . x, s_primary_screen_height - (r . origin . y + r . size . height), r . size . width, r . size . height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCMacPlatformShowMessageDialog(MCStringRef p_title,
+                                    MCStringRef p_message)
+{
+    NSAlert *t_alert = [[NSAlert alloc] init];
+    [t_alert addButtonWithTitle:@"OK"];
+    [t_alert setMessageText: [NSString stringWithMCStringRef: p_title]];
+    [t_alert setInformativeText: [NSString stringWithMCStringRef: p_message]];
+    [t_alert setAlertStyle:NSInformationalAlertStyle];
+    [t_alert runModal];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

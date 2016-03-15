@@ -21,10 +21,8 @@ Example:
 if the processor is "ARM" then ...
 
 Returns (enum): The processor function returns one of the following strings:
-- Motorola PowerPC : Mac OS system with a PowerPC processor.
-- Motorola MC68000 : Mac OS system with a 68000:family chip (older Macs).
-- unknown : Unix systems.
-- x86 : Windows systems and Mac OS X systems with an Intel processor.
+- x86 : Windows systems (any architecture) and Mac OS X and Linux systems with a 32 bit processor.
+- x86_64 : Mac and Linux systems running a 64 bit processor
 - i386 : iOS Simulator.
 - ARM : iOS and Android Devices and the Android simulator
 

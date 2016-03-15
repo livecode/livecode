@@ -44,6 +44,8 @@
 #include "globals.h"
 #include "context.h"
 
+#include "group.h"
+
 #include <jni.h>
 
 #include "mblandroidutil.h"
@@ -53,101 +55,68 @@
 
 #include "native-layer-android.h"
 
-class MCNativeLayerAndroid::AndroidView
-{
-public:
-    
-    // Constructor. The Java object being wrapped must be supplied.
-    AndroidView(jobject p_java_object);
-    
-    ~AndroidView();
-    
-    void setRect(const MCRectangle& p_rect);
-    void placeViewBelow(AndroidView* p_other_view);
-    void removeFromMainView();
-	
-	jobject getView();
-    
-private:
-    
-    // The Java object that is the view
-    jobject m_java_object;
-    
-    // Whether the object is currently in the view or not
-    bool m_in_view;
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayerAndroid::AndroidView::AndroidView(jobject p_java_object) :
-  m_java_object(MCJavaGetThreadEnv()->NewGlobalRef(p_java_object)),
-  m_in_view(false)
+void MCAndroidViewSetRect(jobject p_view, const MCGRectangle &p_rect)
 {
-    ;
+	int16_t x, y, w, h;
+	x = (int16_t) roundf(p_rect . origin . x);
+	y = (int16_t) roundf(p_rect . origin . y);
+	w = (int16_t) roundf(p_rect . size . width);
+	h = (int16_t) roundf(p_rect . size . height);
+
+	MCAndroidEngineRemoteCall("setNativeViewRect", "voiiii", nil, p_view, x, y, w, h);
 }
 
-MCNativeLayerAndroid::AndroidView::~AndroidView()
+void MCAndroidViewSetRect(jobject p_view, const MCRectangle& p_rect)
 {
-    MCJavaGetThreadEnv()->DeleteGlobalRef(m_java_object);
-}
-
-jobject MCNativeLayerAndroid::AndroidView::getView()
-{
-	return m_java_object;
-}
-
-void MCNativeLayerAndroid::AndroidView::setRect(const MCRectangle& p_rect)
-{
-    int16_t i1, i2, i3, i4;
-    
     // MM-2013-11-26: [[ Bug 11485 ]] The rect of the control is passed in user space. Convert to device space when setting on view.
-    // AL-2014-06-16: [[ Bug 12588 ]] Actually use the passed in rect parameter
-    MCGRectangle t_rect;
-    t_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect));
-    i1 = (int16_t) roundf(t_rect . origin . x);
-    i2 = (int16_t) roundf(t_rect . origin . y);
-    i3 = (int16_t) roundf(t_rect . size . width);
-    i4 = (int16_t) roundf(t_rect . size . height);
-    
-    MCAndroidEngineRemoteCall("setNativeViewRect", "voiiii", nil, m_java_object, i1, i2, i3, i4);
+	MCAndroidViewSetRect(p_view, MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect)));
 }
 
-void MCNativeLayerAndroid::AndroidView::placeViewBelow(AndroidView* p_other_view)
+void MCAndroidViewSetRect(jobject p_view, const MCRectangle &p_rect, const MCRectangle &p_parent_rect)
 {
-    MCAndroidEngineRemoteCall("placeNativeViewBelow", "voo", nil, m_java_object, p_other_view ? p_other_view->m_java_object : NULL);
-    m_in_view = true;
-    MCAndroidObjectRemoteCall(m_java_object, "setVisibility", "vi", nil, 0);
+	MCGRectangle t_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_rect));
+	MCGRectangle t_parent_rect = MCNativeControlUserRectToDeviceRect(MCRectangleToMCGRectangle(p_parent_rect));
+	
+	t_rect.origin.x -= t_parent_rect.origin.x;
+	t_rect.origin.y -= t_parent_rect.origin.y;
+
+	MCAndroidViewSetRect(p_view, t_rect);
 }
 
-void MCNativeLayerAndroid::AndroidView::removeFromMainView()
+void MCAndroidViewAddToContainer(jobject p_view, jobject p_view_above, jobject p_container)
 {
-    if (m_in_view)
-        MCAndroidEngineRemoteCall("removeNativeView", "vo", nil, m_java_object);
-    m_in_view = false;
+    MCAndroidEngineRemoteCall("addNativeViewToContainer", "vooo", nil, p_view, p_view_above, p_container);
+    MCAndroidObjectRemoteCall(p_view, "setVisibility", "vi", nil, 0);
+}
+
+void MCAndroidViewRemoveFromContainer(jobject p_view)
+{
+	MCAndroidEngineRemoteCall("removeNativeViewFromContainer", "vo", nil, p_view);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayerAndroid::MCNativeLayerAndroid(MCWidgetRef p_widget, jobject p_view) :
+MCNativeLayerAndroid::MCNativeLayerAndroid(MCObject *p_object, jobject p_view) :
   m_view(NULL)
 {
-	m_widget = p_widget;
-	m_view = new AndroidView(p_view);
+	m_object = p_object;
+	m_view = MCJavaGetThreadEnv()->NewGlobalRef(p_view);
 }
 
 MCNativeLayerAndroid::~MCNativeLayerAndroid()
 {
-    delete m_view;
+	if (m_view != nil)
+		MCJavaGetThreadEnv()->DeleteGlobalRef(m_view);
 }
 
 void MCNativeLayerAndroid::doAttach()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
     if (m_view == nil)
         return;
 	
-	OnVisibilityChanged(ShouldShowWidget(t_widget));
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerAndroid::doDetach()
@@ -156,7 +125,7 @@ void MCNativeLayerAndroid::doDetach()
         return;
     
     // Remove the view from the stack's content view
-    m_view->removeFromMainView();
+    MCAndroidViewRemoveFromContainer(m_view);
 }
 
 // Rendering view to context not supported on Android.
@@ -170,12 +139,22 @@ bool MCNativeLayerAndroid::doPaint(MCGContextRef p_context)
 	return false;
 }
 
+void MCNativeLayerAndroid::doSetViewportGeometry(const MCRectangle& p_rect)
+{
+}
+
 void MCNativeLayerAndroid::doSetGeometry(const MCRectangle &p_rect)
 {
     if (m_view == NULL)
         return;
-    
-    m_view->setRect(p_rect);
+	
+	if (m_object->getparent()->gettype() == CT_GROUP)
+	{
+		// Set rectangle relative to parent object
+		MCAndroidViewSetRect(m_view, p_rect, m_object->getparent()->getrect());
+	}
+	else
+		MCAndroidViewSetRect(m_view, p_rect);
 }
 
 void MCNativeLayerAndroid::doSetVisible(bool p_visible)
@@ -186,36 +165,63 @@ void MCNativeLayerAndroid::doSetVisible(bool p_visible)
     if (p_visible)
 	{
         addToMainView();
-		doSetGeometry(MCWidgetGetHost(m_widget)->getrect());
+		doSetGeometry(m_object->getrect());
 	}
     else
-        m_view->removeFromMainView();
+		MCAndroidViewRemoveFromContainer(m_view);
 }
 
 void MCNativeLayerAndroid::doRelayer()
 {
-    MCWidget* t_widget = MCWidgetGetHost(m_widget);
-    
-    if (m_view == NULL)
-        return;
-    
     // Find which native layer this should be inserted below
-    MCWidget* t_before;
-    t_before = findNextLayerAbove(t_widget);
-    
+    MCObject *t_before;
+    t_before = findNextLayerAbove(m_object);
+	
+	jobject t_parent_view;
+	t_parent_view = nil;
+	
+	if (!getParentView(t_parent_view))
+		return;
+	
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && t_widget->getstack()->getcard() == t_widget->getstack()->getcurcard())
+    if (isAttached() && m_object->getstack()->getcard() == m_object->getstack()->getcurcard())
     {
+		MCAndroidViewRemoveFromContainer(m_view);
+		
+		jobject t_before_view;
+		t_before_view = nil;
+		
         if (t_before != NULL)
-        {
-            MCNativeLayerAndroid* t_android_layer;
-            t_android_layer = reinterpret_cast<MCNativeLayerAndroid*>(t_before->getNativeLayer());
-            m_view->placeViewBelow(t_android_layer->m_view);
-        }
-        else
-            m_view->placeViewBelow(NULL);
-        m_view->setRect(t_widget->getrect());
+			/* UNCHECKED */t_before->GetNativeView((void*&)t_before_view);
+		
+		MCAndroidViewAddToContainer(m_view, t_before_view, t_parent_view);
+		doSetGeometry(m_object->getrect());
     }
+}
+
+bool MCNativeLayerAndroid::getParentView(jobject &r_view)
+{
+	if (m_object->getparent()->gettype() == CT_GROUP)
+	{
+		MCNativeLayer *t_container;
+		t_container = nil;
+		
+		if (!((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
+			return false;
+		
+		return t_container->GetNativeView((void*&)r_view);
+	}
+	else
+	{
+		jobject t_view;
+		t_view = nil;
+		MCAndroidEngineRemoteCall("getNativeLayerContainer", "o", &t_view);
+		if (t_view == nil)
+			return false;
+		
+		r_view = t_view;
+		return true;
+	}
 }
 
 void MCNativeLayerAndroid::addToMainView()
@@ -228,14 +234,36 @@ bool MCNativeLayerAndroid::GetNativeView(void *&r_view)
 	if (m_view == nil)
 		return false;
 	
-	r_view = m_view->getView();
+	r_view = m_view;
 	
 	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCWidgetRef p_widget, void *p_view)
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
-    return new MCNativeLayerAndroid(p_widget, (jobject)p_view);
+    return new MCNativeLayerAndroid(p_object, (jobject)p_view);
 }
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+{
+	jobject t_view;
+	t_view = nil;
+	
+	MCAndroidEngineRemoteCall("createNativeLayerContainer", "o", &t_view);
+	
+	if (t_view == nil)
+		return false;
+	
+	r_view = MCJavaGetThreadEnv()->NewGlobalRef(t_view);
+	return true;
+}
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+	if (p_view != nil)
+		MCJavaGetThreadEnv()->DeleteGlobalRef((jobject)p_view);
+}
+
+////////////////////////////////////////////////////////////////////////////////

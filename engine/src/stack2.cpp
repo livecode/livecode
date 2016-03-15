@@ -706,7 +706,7 @@ Boolean MCStack::checkid(uint4 cardid, uint4 controlid)
 	return False;
 }
 
-IO_stat MCStack::saveas(const MCStringRef p_fname)
+IO_stat MCStack::saveas(const MCStringRef p_fname, uint32_t p_version)
 {
 	Exec_stat stat = curcard->message(MCM_save_stack_request);
 	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
@@ -714,7 +714,7 @@ IO_stat MCStack::saveas(const MCStringRef p_fname)
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)sptr->parent;
-		return MCdispatcher->savestack(sptr, p_fname);
+		return MCdispatcher->savestack(sptr, p_fname, p_version);
 	}
 	return IO_NORMAL;
 }
@@ -2081,7 +2081,8 @@ void MCStack::setwindowname()
 
 void MCStack::reopenwindow()
 {
-	if (state & CS_FOREIGN_WINDOW)
+	// PM-2016-02-09: [[ Bug 16889 ]] Exit if window is NULL
+	if (state & CS_FOREIGN_WINDOW || window == NULL)
 		return;
 
 	stop_externals();
@@ -3337,6 +3338,12 @@ MCRectangle MCStack::getvisiblerect(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool
+MCStack::haswidgets()
+{
+	return MCObject::haswidgets() || substackhaswidgets();
+}
 
 bool MCStack::substackhaswidgets(void)
 {

@@ -113,7 +113,7 @@ __attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
 #define PAYLOAD_SECTION_NAME "__PAYLOAD"
 #define PROJECT_SECTION_NAME "__PROJECT"
 
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"),__used__)) volatile MCCapsuleInfo MCcapsule = {};
 
 #endif
 
@@ -243,7 +243,11 @@ public:
 		if (t_payload_data == nil)
 		{
 #ifdef _MACOSX		
-			// On Mac OS X, the payload is in a separate file.
+            // Force a reference to the project section to prevent extra-clever
+            // optimising linkers from discarding the section.
+            (void)MCcapsule.size;
+            
+            // On Mac OS X, the payload is in a separate file.
 			// MM-2011-03-23: Refactored code to use method call.
 			MCAutoStringRef t_payload_file;
             uindex_t t_last_slash;
@@ -262,6 +266,11 @@ public:
 				}			
 			}			
 #else
+            // Force references to the payload and project sections to prevent
+            // extra-clever optimising linkers from discarding the sections.
+            (void)MCpayload.size;
+            (void)MCcapsule.size;
+            
 			// Search for the payload section - first see if there is a payload
 			// section of suitable size; then if in debug mode, try to load a stack
 			// via env var.
@@ -609,7 +618,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr -> gethandle();
+			t_context . target = MCtargetptr . object -> gethandle();
 			t_context . name = *t_item;
             t_context . var = ctxt . GetIt() -> evalvar(ctxt);
 			t_context . stream = nil;
@@ -1267,7 +1276,19 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         }
     }
         break;
-
+			
+	case kMCCapsuleSectionTypeLicense:
+	{
+		// Just read the edition byte and ignore it in installer mode.
+		char t_edition_byte;
+		if (IO_read(&t_edition_byte, 1, p_stream) != IO_NORMAL)
+		{
+			MCresult -> sets("failed to read license");
+			return false;
+		}
+	}
+		break;
+			
 	default:
 		MCresult -> sets("unrecognized section encountered");
 		return false;

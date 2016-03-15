@@ -28,4 +28,26 @@ public handler TestLiteralNul()
 	test "literal nuls" when the number of chars in tString is 5
 end handler
 
+public handler TestLiteralList()
+	test "empty list constant" when the number of elements in [] is 0
+
+	test "non-empty list constant" when the number of elements in [1] is 1
+
+	variable tValue
+	put "bar" into tValue
+	test "non-empty list expression" when the number of elements in [tValue] is 1
+end handler
+
+public handler TestLiteralArray()
+	test "empty array constant" when the number of elements in {} is 0
+
+	test "non-empty array constant" when the number of elements in {"foo": 1} is 1
+
+	variable tKey
+	put "foo" into tKey
+	variable tValue
+	put {} into tValue
+	test "non-empty array expression" when the number of elements in {tKey: tValue} is 1
+end handler
+
 end module

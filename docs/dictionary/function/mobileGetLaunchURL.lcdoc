@@ -36,4 +36,4 @@ The <mobileGetLaunchURL> function returns the URL that was used to launch the ap
 
 When one of the URLs is clicked on in either the browser or from within another application installed on the device, your application is woken up and sent a <urlWakeUp> message.
 
-References: urlWakeUp (message)
+References: urlWakeUp (message), mobileGetLaunchData (function), launchDataChanged (message)

@@ -61,7 +61,12 @@ void bootstrap_main(int argc, char *argv[])
     
     for(i = 0; i < argc; i++)
     {
-        if (strcmp(argv[i], "--inputg") == 0 && i + 1 < argc)
+        if (0 == strcmp(argv[i], "-v") || 0 == strcmp(argv[i], "--verbose"))
+        {
+            ++s_verbose_level;
+            continue;
+        }
+        else if (strcmp(argv[i], "--inputg") == 0 && i + 1 < argc)
            SetTemplateFile(argv[++i]);
         else if (strcmp(argv[i], "--outputg") == 0 && i + 1 < argc)
             SetOutputGrammarFile(argv[++i]);

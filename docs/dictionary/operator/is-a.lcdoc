@@ -51,9 +51,9 @@ A <value> is a(n):
 
         * date if it is in one of the formats produced by the date or <time> functions
 
-        * integer if it consists of digits (with an optional leading minus sign)
+        * integer if it consists of digits (with an optional leading minus sign), or an hexadecimal number (such as 0x0F9B)
 
-        * number if it consists of digits, optional leading minus sign, optional decimal point, and optional "E" or       "e" (scientific notation)
+        * number if it consists of digits, optional leading minus sign, optional decimal point, and optional "E" or       "e" (scientific notation), or an optional leading minus sign and infinity or inf
 
         * point if it consists of two numbers separated by a comma
 

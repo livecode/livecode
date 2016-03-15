@@ -125,6 +125,12 @@ MCDateExecGetDate(bool t_is_local,
 		return;
 	}
 
+    // tm_mon is number of months since January
+    t_timeinfo . tm_mon++;
+    
+    // tm_year is number of years since 1900
+    t_timeinfo . tm_year += 1900;
+    
 	MCAutoNumberRef t_year, t_month, t_day, t_hour, t_minute, t_second,
 		t_gmtoff;
 	if (!(MCNumberCreateWithInteger (t_timeinfo.tm_year, &t_year) &&

@@ -37,6 +37,17 @@ public:
 	MCCefWin32Browser(HWND p_parent_window);
 	virtual ~MCCefWin32Browser(void);
 
+	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
+	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
+	virtual void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
+	virtual void OnDocumentLoadBegin(bool p_in_frame, const char *p_url);
+	virtual void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
+	virtual void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
+	
+	virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
+	
+	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
+	
 	bool GetHWND(HWND &r_hwnd);
 
 	virtual void PlatformConfigureWindow(CefWindowInfo &r_info);
@@ -54,7 +65,14 @@ public:
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password);
 
 private:
+	bool CreateMessageWindow();
+	bool DestroyMessageWindow();
+
+	bool PostBrowserEvent(MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_frame, const char *p_url, const char *p_error);
+	bool PostJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
+
 	HWND m_parent_window;
+	HWND m_message_window;
 };
 
 // IM-2014-03-25: [[ revBrowserCEF ]] Return path containing the revbrowser dll
@@ -196,10 +214,13 @@ bool MCCefWin32Browser::PlatformGetNativeLayer(void *&r_layer)
 MCCefWin32Browser::MCCefWin32Browser(HWND p_parent_window) : MCCefBrowserBase()
 {
 	m_parent_window = p_parent_window;
+
+	CreateMessageWindow();
 }
 
 MCCefWin32Browser::~MCCefWin32Browser(void)
 {
+	DestroyMessageWindow();
 }
 
 bool MCCefWin32Browser::GetHWND(HWND &r_hwnd)
@@ -284,6 +305,306 @@ bool MCCefWin32Browser::PlatformGetWindowID(int32_t &r_id)
 	r_id = (int32_t) m_parent_window;
 
 	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCCefWin32Browser::OnNavigationBegin(bool p_in_frame, const char *p_url)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
+}
+
+void MCCefWin32Browser::OnNavigationComplete(bool p_in_frame, const char *p_url)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
+}
+
+void MCCefWin32Browser::OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+}
+
+void MCCefWin32Browser::OnDocumentLoadBegin(bool p_in_frame, const char *p_url)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
+}
+
+void MCCefWin32Browser::OnDocumentLoadComplete(bool p_in_frame, const char *p_url)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
+}
+
+void MCCefWin32Browser::OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+}
+
+void MCCefWin32Browser::OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url)
+{
+	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateUnhandled, p_in_frame, p_url, nil);
+}
+
+void MCCefWin32Browser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
+{
+	PostJavaScriptCall(p_handler, p_params);
+}
+	
+////////////////////////////////////////////////////////////////////////////////
+
+HINSTANCE MCWin32BrowserGetHINSTANCE();
+
+#define MCCEFWIN32_MSGWNDCLASS "MCCEFWIN32MSGWINDOW"
+#define MCCEFWIN32_MESSAGE_BROWSER_REQUEST (WM_USER + 0)
+#define MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL (WM_USER + 1)
+
+LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_wparam, LPARAM p_lparam);
+bool MCCefWin32Browser::CreateMessageWindow()
+{
+	HINSTANCE t_hinstance;
+	t_hinstance = MCWin32BrowserGetHINSTANCE();
+
+	WNDCLASSEX t_wnd_class;
+	MCBrowserMemoryClear(t_wnd_class);
+	t_wnd_class.cbSize = sizeof(WNDCLASSEX);
+	t_wnd_class.lpfnWndProc = MCCefWin32MessageWndProc;
+	t_wnd_class.hInstance = t_hinstance;
+	t_wnd_class.lpszClassName = MCCEFWIN32_MSGWNDCLASS;
+	RegisterClassEx(&t_wnd_class);
+
+	m_message_window = CreateWindow(MCCEFWIN32_MSGWNDCLASS, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, t_hinstance, 0);
+
+	if (m_message_window == nil)
+		return false;
+
+	SetWindowLongPtr(m_message_window, GWLP_USERDATA, (LONG_PTR)this);
+
+	return m_message_window != nil;
+}
+
+bool MCCefWin32Browser::DestroyMessageWindow()
+{
+	if (m_message_window == nil)
+		return true;
+
+	if (!DestroyWindow(m_message_window))
+		return false;
+
+	m_message_window = nil;
+	return true;
+}
+
+struct MCCefBrowserRequestEvent
+{
+	MCBrowserRequestType type;
+	MCBrowserRequestState state;
+	bool frame;
+	char *url;
+	char *error;
+};
+
+struct MCCefBrowserJavaScriptCallEvent
+{
+	char *handler;
+	MCBrowserListRef params;
+};
+
+void MCCefBrowserRequestEventDestroy(MCCefBrowserRequestEvent *p_event)
+{
+	if (p_event != nil)
+	{
+		if (p_event->url != nil)
+			MCCStringFree(p_event->url);
+		if (p_event->error != nil)
+			MCCStringFree(p_event->error);
+
+		MCBrowserMemoryDelete(p_event);
+	}
+}
+
+bool MCCefBrowserRequestEventCreate(MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_frame, const char *p_url, const char *p_error, MCCefBrowserRequestEvent *&r_event)
+{
+	bool t_success;
+	t_success = true;
+
+	MCCefBrowserRequestEvent *t_event;
+	t_event = nil;
+
+	t_success = MCBrowserMemoryNew(t_event);
+
+	if (t_success && p_url != nil)
+		t_success = MCCStringClone(p_url, t_event->url);
+
+	if (t_success && p_error != nil)
+		t_success = MCCStringClone(p_error, t_event->error);
+
+	if (t_success)
+	{
+		t_event->type = p_type;
+		t_event->state = p_state;
+		t_event->frame = p_frame;
+
+		r_event = t_event;
+	}
+	else
+		MCCefBrowserRequestEventDestroy(t_event);
+
+	return t_success;
+}
+
+void MCCefBrowserJavaScriptCallEventDestroy(MCCefBrowserJavaScriptCallEvent *p_event)
+{
+	if (p_event != nil)
+	{
+		if (p_event->handler != nil)
+			MCCStringFree(p_event->handler);
+		if (p_event->params != nil)
+			MCBrowserListRelease(p_event->params);
+
+		MCBrowserMemoryDelete(p_event);
+	}
+}
+
+bool MCCefBrowserJavaScriptCallEventCreate(const char *p_handler, MCBrowserListRef p_params, MCCefBrowserJavaScriptCallEvent *&r_event)
+{
+	bool t_success;
+	t_success = true;
+
+	MCCefBrowserJavaScriptCallEvent *t_event;
+	t_event = nil;
+
+	t_success = MCBrowserMemoryNew(t_event);
+
+	if (t_success)
+		t_success = MCCStringClone(p_handler, t_event->handler);
+
+	if (t_success)
+	{
+		t_event->params = MCBrowserListRetain(p_params);
+		r_event = t_event;
+	}
+	else
+		MCCefBrowserJavaScriptCallEventDestroy(t_event);
+
+	return t_success;
+}
+
+bool MCCefWin32Browser::PostBrowserEvent(MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_frame, const char *p_url, const char *p_error)
+{
+	MCCefBrowserRequestEvent *t_event;
+	t_event = nil;
+	if (!MCCefBrowserRequestEventCreate(p_type, p_state, p_frame, p_url, p_error, t_event))
+		return false;
+
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_REQUEST, (WPARAM)t_event, nil))
+	{
+		MCCefBrowserRequestEventDestroy(t_event);
+		return false;
+	}
+
+	return true;
+}
+
+bool MCCefWin32Browser::PostJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
+{
+	MCCefBrowserJavaScriptCallEvent *t_event;
+	t_event = nil;
+	if (!MCCefBrowserJavaScriptCallEventCreate(p_handler, p_params, t_event))
+		return false;
+
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL, (WPARAM)t_event, nil))
+	{
+		MCCefBrowserJavaScriptCallEventDestroy(t_event);
+		return false;
+	}
+
+	return true;
+}
+
+LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_wparam, LPARAM p_lparam)
+{
+	MCCefWin32Browser *t_browser;
+	t_browser = reinterpret_cast<MCCefWin32Browser*>(GetWindowLongPtr(p_hwnd, GWLP_USERDATA));
+
+	switch (p_message)
+	{
+	case MCCEFWIN32_MESSAGE_BROWSER_REQUEST:
+		{
+			MCCefBrowserRequestEvent *t_event;
+			t_event = reinterpret_cast<MCCefBrowserRequestEvent*>(p_wparam);
+
+			MCBrowserEventHandler *t_event_handler;
+			t_event_handler = t_browser->GetEventHandler();
+
+			if (t_event_handler != nil)
+			{
+				switch (t_event->type)
+				{
+				case kMCBrowserRequestTypeNavigate:
+					switch (t_event->state)
+					{
+					case kMCBrowserRequestStateBegin:
+						t_event_handler->OnNavigationBegin(t_browser, t_event->frame, t_event->url);
+						break;
+
+					case kMCBrowserRequestStateComplete:
+						t_event_handler->OnNavigationComplete(t_browser, t_event->frame, t_event->url);
+						break;
+
+					case kMCBrowserRequestStateFailed:
+						t_event_handler->OnNavigationFailed(t_browser, t_event->frame, t_event->url, t_event->error);
+						break;
+
+					case kMCBrowserRequestStateUnhandled:
+						t_event_handler->OnNavigationRequestUnhandled(t_browser, t_event->frame, t_event->url);
+						break;
+					}
+					break;
+
+				case kMCBrowserRequestTypeDocumentLoad:
+					switch (t_event->state)
+					{
+					case kMCBrowserRequestStateBegin:
+						t_event_handler->OnDocumentLoadBegin(t_browser, t_event->frame, t_event->url);
+						break;
+
+					case kMCBrowserRequestStateComplete:
+						t_event_handler->OnDocumentLoadComplete(t_browser, t_event->frame, t_event->url);
+						break;
+
+					case kMCBrowserRequestStateFailed:
+						t_event_handler->OnDocumentLoadFailed(t_browser, t_event->frame, t_event->url, t_event->error);
+						break;
+					}
+					break;
+				}
+			}
+
+			MCCefBrowserRequestEventDestroy(t_event);
+		}
+		break;
+
+	case MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL:
+		{
+			MCCefBrowserJavaScriptCallEvent *t_event;
+			t_event = reinterpret_cast<MCCefBrowserJavaScriptCallEvent*>(p_wparam);
+
+			MCBrowserJavaScriptHandler *t_handler;
+			t_handler = t_browser->GetJavaScriptHandler();
+
+			if (t_handler != nil)
+			{
+				t_handler->OnJavaScriptCall(t_browser, t_event->handler, t_event->params);
+			}
+
+			MCCefBrowserJavaScriptCallEventDestroy(t_event);
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return DefWindowProc(p_hwnd, p_message, p_wparam, p_lparam);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

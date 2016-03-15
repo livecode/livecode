@@ -52,7 +52,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-uint2 MCButton::mnemonicoffset = 2;
+uint2 MCButton::mnemonicoffset = 1;
 MCRectangle MCButton::optionrect = {0, 0, 12, 8};
 uint4 MCButton::clicktime;
 uint2 MCButton::menubuttonheight = 4;
@@ -585,7 +585,7 @@ Boolean MCButton::kfocusnext(Boolean top)
 {
 	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
 		 && !(flags & F_AUTO_ARM) && entry == NULL)
-	        || !(flags & F_VISIBLE || MCshowinvisibles)
+	        || !(flags & F_VISIBLE || showinvisible())
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
 	return True;
@@ -595,7 +595,7 @@ Boolean MCButton::kfocusprev(Boolean bottom)
 {
 	if (((IsMacLF() && !(state & CS_SHOW_DEFAULT))
 		 && !(flags & F_AUTO_ARM) && entry == NULL)
-	        || !(flags & F_VISIBLE || MCshowinvisibles)
+	        || !(flags & F_VISIBLE || showinvisible())
 	        || !(flags & F_TRAVERSAL_ON) || state & CS_KFOCUSED || flags & F_DISABLED)
 		return False;
 	return True;
@@ -950,7 +950,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 		handled; */
 		return True;
 	}
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 		|| (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	Tool tool = getstack()->gettool(this);
@@ -1074,7 +1074,7 @@ void MCButton::munfocus()
 {
 	if (entry != NULL)
 		entry->munfocus();
-	if (flags & F_AUTO_ARM && state & CS_ARMED)
+	if (flags & F_AUTO_ARM)
 	{
 		state &= ~CS_ARMED;
 		ishovering = False;
@@ -1381,10 +1381,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                     // that we need to check is the rect of the stack containing
                     // the menu).
                     MCRectangle t_rect = t_menu->getstack()->getrect();
-                    t_outside = (t_rect.x < MCmousex
-                                 || MCmousex >= (t_rect.x + t_rect.width)
-                                 || t_rect.y < MCmousey
-                                 || MCmousey >= (t_rect.y + t_rect.height));
+                    t_outside = !MCU_point_in_rect(rect, mx, my);
                     
                     // Move to the parent menu, if it exists
                     if (t_menu->getstack()->getparent()    // Stack's parent
@@ -1676,7 +1673,7 @@ uint2 MCButton::gettransient() const
 }
 
 
-void MCButton::setrect(const MCRectangle &nrect)
+void MCButton::applyrect(const MCRectangle &nrect)
 {	
 	rect = nrect;
 	MCRectangle trect;
@@ -1701,15 +1698,8 @@ void MCButton::setrect(const MCRectangle &nrect)
 		else
 		{
 			trect = MCU_reduce_rect(nrect, borderwidth);
-			int2 tcombosize = 0;
-			if (tcombosize <= 0 )
-			{
-				trect.width -= trect.height;
-				if (tcombosize < 0)
-					trect.width += tcombosize;
-			}
-			else
-				rect.width -= tcombosize + 2;
+			trect.width -= trect.height;
+
 			if (IsMacEmulatedLF())
 				trect.width -= 5;
 		}
@@ -2771,7 +2761,7 @@ Boolean MCButton::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCButton::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle trect = rect;
 	if (getstyleint(flags) == F_MENU && menumode == WM_TOP_LEVEL)
@@ -3411,11 +3401,13 @@ public:
 
 		newbutton->menubutton = parent->menubutton;
 		newbutton->menucontrol = MENUCONTROL_ITEM;
+        newbutton->m_theme_type = kMCPlatformControlTypeMenu;
 		if (MCNameGetCharAtIndex(newbutton -> getname(), 0) == '-')
 		{
 			newbutton->rect.height = 2;
 			newbutton->flags = DIVIDER_FLAGS;
 			newbutton->menucontrol = MENUCONTROL_SEPARATOR;
+            newbutton->m_theme_type = kMCPlatformControlTypeMenu;
 			if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN)
 			{
 				newbutton->rect.height = 1;
@@ -4409,7 +4401,7 @@ void MCButton::trytochangetonative(void)
 
 #define BUTTON_EXTRA_ICONGRAVITY (1 << 0)
 
-IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// Extended data area for a button consists of:
 	//   uint4 hover_icon;
@@ -4442,7 +4434,7 @@ IO_stat MCButton::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
         t_stat = p_stream . WriteU32(m_icon_gravity);
     
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
@@ -4497,7 +4489,7 @@ IO_stat MCButton::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	return t_stat;
 }
 
-IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -4522,7 +4514,8 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     if (m_icon_gravity != kMCGravityNone)
         t_has_extension = true;
     
-	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext,
+	                           p_version)) != IO_NORMAL)
 		return stat;
 
 	if (flags & F_HAS_ICONS)
@@ -4538,7 +4531,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
     //  we need to rely on the F_LABEL flag
     if (flags & F_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -4564,13 +4557,13 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 	}
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(menuname, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(menuname, stream, p_version >= 7000)) != IO_NORMAL)
 		return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_MENU_STRING)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -4599,7 +4592,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 	{
 		if ((stat = IO_write_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
 			return stat;
@@ -4617,7 +4610,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint1(mnemonic, stream)) != IO_NORMAL)
 		return stat;
 
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 
 	MCCdata *tptr = bdata;
@@ -4625,7 +4618,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	{
 		do
 		{
-			if ((stat = tptr->save(stream, OT_BDATA, p_part)) != IO_NORMAL)
+			if ((stat = tptr->save(stream, OT_BDATA, p_part, p_version)) != IO_NORMAL)
 				return stat;
 			tptr = (MCCdata *)tptr->next();
 		}
@@ -4837,8 +4830,18 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 MCPlatformControlType MCButton::getcontroltype()
 {
     MCPlatformControlType t_type;
-    t_type = kMCPlatformControlTypeButton;
-    if (getstyleint(flags) == F_MENU)
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        t_type = kMCPlatformControlTypeButton;
+    
+    if (getstyleint(flags) == F_CHECK)
+        t_type = kMCPlatformControlTypeCheckbox;
+    else if (getstyleint(flags) == F_RADIO)
+        t_type = kMCPlatformControlTypeRadioButton;
+    else if (getstyleint(flags) == F_MENU || menucontrol != MENUCONTROL_NONE)
     {
         t_type = kMCPlatformControlTypeMenu;
         switch (menumode)
@@ -4857,6 +4860,10 @@ MCPlatformControlType MCButton::getcontroltype()
                 
             case WM_PULLDOWN:
                 t_type = kMCPlatformControlTypePulldownMenu;
+                break;
+                
+            case WM_TOP_LEVEL:
+                t_type = kMCPlatformControlTypeTabPane;
                 break;
                 
             default:

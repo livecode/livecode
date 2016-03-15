@@ -569,8 +569,10 @@ public:
 	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
-
-	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+    
+    // Show an answer dialog using the native APIs. If 'blocking' is true
+    // then messages will not be dispatched until the dialog is closed.
+	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
 	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	//
@@ -663,6 +665,11 @@ public:
 	{
 		return gray_pixel;
 	}
+    
+    const MCColor& getbg(void) const
+    {
+        return background_pixel;
+    }
 };
 
 #endif

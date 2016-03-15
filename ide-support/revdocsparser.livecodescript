@@ -1345,8 +1345,7 @@ function revDocsParseDocText pText, pFilename
          case empty
             exit repeat
          case "Library"
-            put tElementsA[tStartNum]["content"] into tParsedA["display name"]
-            put revDocsModifyForURL(tParsedA["display name"]) into tParsedA["name"]
+            put tElementsA[tStartNum]["content"] into tParsedA["name"]
             add 1 to tStartNum
             break
          case "Description"
@@ -1434,6 +1433,7 @@ function revDocsParseDocText pText, pFilename
    local tCount
    put 1 into tCount
    add 1 to tEntryCount
+   
    repeat for each item tItem in "name,description,author,type,example"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
@@ -1597,7 +1597,7 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
       add 1 to tCount
    end repeat
    
-   put char 1 to offset(" with precedence", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
+   put char 1 to offset(" with ", word 4 to -1 of tNameLine) -1 of word 4 to -1 of tNameLine into xDataA[tEntryName]["type"]
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
    put "syntax" into xDataA[tEntryName]["kind"]
    put pComment into xDataA[tEntryName]["comments"]
@@ -2294,6 +2294,10 @@ end revDocsFormatLibraryDataAsJSON
 
 constant kAPIDatabaseFile = "api.sqlite"
 
+function revDocsAPIDatabasePath pFolder
+   return pFolder & slash & kAPIDatabaseFile
+end revDocsAPIDatabasePath
+
 on revDocsOpenAPIDatabase pFolder
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
@@ -2423,3 +2427,229 @@ on revDocsRemoveLibrary pConnection, pName
    
    return empty
 end revDocsRemoveLibrary
+
+
+/*
+Guide files can have a YAML-like metadata block at the start. The block 
+is delimited by lines of exactly three hyphens "---", and every line in 
+between *must* be blank or contain a "key: value" pair.  For example:
+---
+group: deployment
+---
+*/
+private command revDocsSplitMetadata pText, @rMarkdown, @rMetadata
+   -- Check for a metadata block
+   if the first line of pText is not "---" then
+      put empty into rMetadata
+      put pText into rMarkdown
+      exit revDocsSplitMetadata
+   end if
+   
+   -- Search for a terminal "---" line
+   local tMetadataEnd
+   put lineOffset("---", pText, 1) into tMetadataEnd
+   if tMetadataEnd is 1 then
+      throw "Unterminated metadata header"
+   end if
+   
+   put revDocsParseYaml(line 2 to tMetadataEnd of pText) into rMetadata
+   put line (tMetadataEnd + 2) to -1 of pText into rMarkdown
+end revDocsSplitMetadata
+
+/*
+Parse yaml into a structured array.
+At the moment, we only deal with key value pairs, where the value is
+either a string or a list.
+*/
+private function revDocsParseYaml pYaml
+   local tYaml
+   
+   local tNumLines
+   put the number of lines in pYaml into tNumLines
+   set the itemdelimiter to colon
+   
+   local tCurLine, tLine
+   repeat while tCurLine <= tNumLines
+      put line tCurLine of pYaml into tLine
+      put word 1 to -1 of tLine into tLine
+      if item 1 of tLine is empty or char 1 of tLine is "#" then
+         add 1 to tCurLine
+         next repeat
+      end if
+      
+      local tKey, tValue
+      put item 1 of tLine into tKey
+      if item 2 of tLine is empty then
+         # parse a list
+         local tList, tNextKey
+         put lineOffset(":", pYaml, tCurLine) + tCurLine into tNextKey
+         if tNextKey is tCurLine then
+            put tNumLines + 1 into tNextKey
+         end if
+         put line tCurLine + 1 to tNextKey - 1 of pYaml into tList
+         put revDocsParseYamlList(tList) into tValue
+         put tNextKey into tCurLine
+      else
+         # simple key-value pair
+         put word 1 to -1 of (item 2 to -1 of tLine) into tValue
+         add 1 to tCurLine
+      end if
+      put tValue into tYaml[tKey]
+   end repeat
+   return tYaml
+end revDocsParseYaml
+
+private command addToList pElement, @xArray
+   local tCount
+   put the number of elements in xArray into tCount
+   put pElement into xArray[tCount + 1]
+end addToList
+
+private function revDocsParseYamlList pYaml
+   local tListA
+   repeat for each line tLine in pYaml
+      set the itemdelimiter to "-"
+      put word 1 to -1 of tLine into tLine
+      if the number of items of tLine is 0 or char 1 of tLine is "#" then
+         next repeat
+      end if
+      
+      addToList word 1 to -1 of item 2 of tLine, tListA
+   end repeat
+   return tListA
+end revDocsParseYamlList
+
+function revDocsGuideNameFromFile pFile
+   set the itemdelimiter to "."
+   return item 1 to -2 of pFile
+end revDocsGuideNameFromFile
+
+function revDocsGuideData pFolder, pLocation, pFile
+   local tGuideContent, tGuideFile
+   put pFolder & slash & pFile into tGuideFile
+   put url ("binfile:" & tGuideFile) into tGuideContent
+   put textDecode(tGuideContent, "utf-8") into tGuideContent
+   
+   local tGuideDataA
+   if tGuideContent is not empty then
+      revDocsSplitMetadata tGuideContent, tGuideDataA["data"], tGuideDataA["metadata"]
+      
+      replace "[toc]" with empty in tGuideDataA["data"]
+      
+      local tGuideName
+      put revDocsGuideNameFromFile(pFile) into tGuideName
+      
+      put tGuideName into tGuideDataA["display name"]
+      put revDocsModifyForURL(tGuideName) into tGuideDataA["name"]
+      put pLocation into tGuideDataA["location"]
+      
+      put tGuideFile into tGuideDataA["file"]
+   end if
+   return tGuideDataA
+end revDocsGuideData
+
+function revDocsListGuides pFolder
+   local tDefaultFolder
+   put the defaultFolder into tDefaultFolder
+   set the defaultFolder to pFolder
+
+   local tGuides
+   put the files into tGuides
+   filter tGuides with "*.md"
+   
+   set the defaultFolder to tDefaultFolder
+   
+   return tGuides
+end revDocsListGuides
+
+function revDocsGuideDataFromFolder pFolder, pLocation
+   local tGuides
+   put revDocsListGuides(pFolder) into tGuides
+
+   local tGuideDataA, tKey
+   repeat for each line tGuideFile in tGuides
+      put pFolder & slash & tGuideFile into tKey
+      put revDocsGuideData(pFolder, pLocation, tGuideFile) into tGuideDataA[tKey]
+   end repeat
+
+   return tGuideDataA
+end revDocsGuideDataFromFolder
+
+constant kNoGuideGroup = "no group"
+private function groupOrder pOrderA, pGuideDataA, pKey
+   local tGroup
+   put pGuideDataA[pKey]["metadata"]["group"] into tGroup
+   if tGroup is among the keys of pOrderA then
+      return pOrderA[tGroup]
+   else 
+      return pOrderA[kNoGuideGroup]
+   end if
+end groupOrder
+
+function revDocsUtf8FileContents pFile
+   local tContents
+   put url ("binfile:" & pFile) into tContents
+   return textDecode(tContents, "utf-8")
+end revDocsUtf8FileContents
+
+constant kGuideOrderFile = "guide-order.yml"
+private function groupOrderYaml pOrderFileLocation
+   return revDocsUtf8FileContents(pOrderFileLocation & slash & kGuideOrderFile)
+end groupOrderYaml
+
+function revDocsGroupOrder pOrderFileLocation
+   local tOrderYaml
+   put groupOrderYaml(pOrderFileLocation) into tOrderYaml
+   
+   local tParsedA
+   put revDocsParseYaml(line 2 to -2 of tOrderYaml) into tParsedA
+   
+   local tOrderA
+   put tParsedA["group-order"] into tOrderA
+   addToList kNoGuideGroup, tOrderA
+   
+   local tOrderLookupA
+   repeat for each key tNumber in tOrderA
+      local tGroup
+      put tOrderA[tNumber] into tGroup
+      put tNumber into tOrderLookupA[tGroup]
+   end repeat
+   
+   return tOrderLookupA
+end revDocsGroupOrder
+
+function revDocsOrderedGuideData pGuideFoldersA, pOrderFileLocation
+   local tGuideDataA
+   repeat for each element tGuideWithLocation in pGuideFoldersA
+      local tLocation, tFolder
+      put tGuideWithLocation["location"] into tLocation
+      put tGuideWithLocation["folder"] into tFolder
+      union tGuideDataA with revDocsGuideDataFromFolder(tFolder, tLocation)
+   end repeat
+   
+   local tGuides
+   put the keys of tGuideDataA into tGuides
+   
+   # First sort by name
+   sort tGuides by tGuideDataA[each]["display name"]
+   
+   # Then sort by group order
+   local tGroupOrder
+   put revDocsGroupOrder(pOrderFileLocation) into tGroupOrder
+   sort tGuides by groupOrder(tGroupOrder, tGuideDataA, each)
+   
+   local tOrderedGuideDataA
+   repeat for each line tGuideFile in tGuides
+      addToList tGuideDataA[tGuideFile], tOrderedGuideDataA
+   end repeat
+   return tOrderedGuideDataA
+end revDocsOrderedGuideData
+
+function revDocsFormatGuideDataAsJSON pGuideDataA
+   local tGuideName, tGuideData
+   put tab & escape("name") & ":" & escape(revDocsModifyForURL(pGuideDataA["name"])) & comma & return after tGuideData 
+   put tab & escape("display name") & ":" & escape(pGuideDataA["display name"]) & comma & return after tGuideData 
+   put tab & escape("location") & ":" & escape(pGuideDataA["location"]) & comma & return after tGuideData
+   put tab & escape("data") & ":" & escape(pGuideDataA["data"], true)  after tGuideData
+   return tGuideData
+end revDocsFormatGuideDataAsJSON

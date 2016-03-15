@@ -8,6 +8,7 @@ extensions-check: lcs-check
 .DEFAULT: extensions-check
 
 top_srcdir ?= ..
+LCM_SOURCES ?=
 
 # Things have now been setup enough that the engine's test Makefile
 # can perform the tests without any further configuration.

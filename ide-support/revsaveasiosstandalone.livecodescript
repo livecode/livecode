@@ -1,4 +1,4 @@
-script "revSaveAsIOSStandalone"
+﻿script "revSaveAsIOSStandalone"
 -- Each stackfile has:
 --   moveSubstacks
 --   renameGeneric
@@ -1628,7 +1628,7 @@ function mapFilePath pPath
    else
       put "/Release" after tBuild
    end if
-   put revLicenseType() into tSuffix
+   put the editionType into tSuffix
    
    local tPath
    switch the last item of pPath
@@ -1702,6 +1702,15 @@ end mapFilePath
 
 ################################################################################
 
+// SN-2015-11-10: [[ Bug 16389 ]] Escape all the single quotes in pString
+// The only way to escape them is to stop the single-quote string,
+// added a single quote in a double-quoted string, and resuming the
+// single quote string.
+private function escapeSingleQuote pString
+   replace "'" with "'" & quote & "'" & quote & "'" in pString
+   return pString
+end escapeSingleQuote
+
 private command symlinkRedirect pSource, pTarget
    if there is a file pTarget then
       // We don't want to erase files that have possibly be already copied ith the same name
@@ -1710,7 +1719,11 @@ private command symlinkRedirect pSource, pTarget
    end if
    if there is a file pSource then
       // Hardlink, since iOS simulator 9.0 does not seem able to handle symlinks
-      get shell(merge("ln '[[pSource]]' '[[pTarget]]' || cp '[[pSource]]' '[[pTarget]]'"))
+      local tEscapedSource, tEscapedTarget
+      put escapeSingleQuote(pSource) into tEscapedSource
+      put escapeSingleQuote(pTarget) into tEscapedTarget
+      
+      get shell(merge("ln '[[tEscapedSource]]' '[[tEscapedTarget]]' || cp '[[tEscapedSource]]' '[[tEscapedTarget]]'"))
       
       if the result is not empty then
          // Both 'ln' and 'cp' failedn

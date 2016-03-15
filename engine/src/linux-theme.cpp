@@ -32,6 +32,7 @@
 
 #include <gtk/gtk.h>
 
+#define GTK_MAGIC_FONT_SCALE_FACTOR 96/72
 
 // Cached styles for various widget types
 static GtkStyle* s_styles[kMCPlatformControlTypeMessageBox+1];
@@ -63,7 +64,7 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
         // Create a new window
         GtkWidget* t_window;
         t_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        s_widgets[kMCPlatformControlTypeGlobal] = t_window;
+        s_widgets[kMCPlatformControlTypeGeneric] = t_window;
         
         // Ensure it actually exists
         gtk_widget_realize(t_window);
@@ -89,8 +90,8 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
     
     switch (p_type)
     {
-        case kMCPlatformControlTypeGlobal:
-            t_the_widget = s_widgets[kMCPlatformControlTypeGlobal];
+        case kMCPlatformControlTypeGeneric:
+            t_the_widget = s_widgets[kMCPlatformControlTypeGeneric];
             t_suppress_add = true;
             break;
             
@@ -162,7 +163,7 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
             break;
             
         case kMCPlatformControlTypeWindow:
-            t_the_widget = s_widgets[kMCPlatformControlTypeGlobal];
+            t_the_widget = s_widgets[kMCPlatformControlTypeGeneric];
             g_object_ref(t_the_widget);
             t_suppress_add = true;
             break;
@@ -227,7 +228,8 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
                 break;
             }
             
-            r_int = pango_font_description_get_size(t_style->font_desc)/PANGO_SCALE;
+            r_int = (pango_font_description_get_size(t_style->font_desc) *
+                     GTK_MAGIC_FONT_SCALE_FACTOR / PANGO_SCALE);
             break;
         }
             
@@ -334,6 +336,22 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
     return t_found;
 }
 
+// Utility function needed by the Linux font code. Gets the family name of the
+// font for the given control type.
+bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState, MCPlatformThemeProperty p_prop, MCStringRef& r_string)
+{
+    if (p_prop != kMCPlatformThemePropertyTextFont)
+        return false;
+    
+    GtkStyle* t_style;
+    t_style = getStyleForControlType(p_type, p_part);
+    if (t_style == NULL)
+        return false;
+    
+    const PangoFontDescription* t_pango = t_style->font_desc;
+    return MCStringCreateWithCString(pango_font_description_get_family(t_pango), r_string);
+}
+
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
     GtkStyle* t_style;
@@ -375,6 +393,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     {
         t_found = MCNameCreateWithCString(pango_font_description_get_family(t_pango), t_font_name);
         t_font_size = pango_font_description_get_size(t_pango)/PANGO_SCALE;
+        /* UNCHECKED */ MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size);
     }
     
     if (t_found)

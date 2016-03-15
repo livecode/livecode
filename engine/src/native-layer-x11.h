@@ -35,7 +35,7 @@ public:
     
     virtual bool GetNativeView(void *&r_view);
     
-    MCNativeLayerX11(MCWidgetRef p_widget, x11::Window p_view);
+    MCNativeLayerX11(MCObject *p_object, x11::Window p_view);
     ~MCNativeLayerX11();
     
 private:
@@ -44,6 +44,7 @@ private:
     GdkRegion* m_input_shape;
     GtkSocket* m_socket;
     x11::Window m_widget_xid;
+	MCRectangle m_intersect_rect;
     
     // Returns the handle for the stack containing this widget
     x11::Window getStackX11Window();
@@ -58,6 +59,7 @@ private:
 	
 	virtual bool doPaint(MCGContextRef p_context);
 	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
 	virtual void doSetVisible(bool p_visible);
     
     // Performs a relayering operation
@@ -65,6 +67,8 @@ private:
     
     // Updates the input mask for the widget (used to implement edit mode)
     void updateInputShape();
+    
+	void updateContainerGeometry();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_X11__

@@ -127,6 +127,7 @@ private:
     uint32_t m_selection_start, m_selection_finish;
     uint32_t m_selection_duration;
     uint32_t m_buffered_time;
+	double m_scale;
     CMTimeScale m_time_scale;
     
     bool m_play_selection_only : 1;
@@ -286,6 +287,8 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_selection_start = 0;
     m_selection_finish = 0;
     m_buffered_time = 0;
+	
+	m_scale = 1.0;
     
     m_time_observer_token = nil;
     m_endtime_observer_token = nil;
@@ -834,9 +837,16 @@ void MCAVFoundationPlayer::Synchronize(void)
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
     
+	// PM-2015-11-26: [[ Bug 13277 ]] Scale m_rect before mapping
+	MCRectangle t_rect = m_rect;
+	t_rect.x *= m_scale;
+	t_rect.y *= m_scale;
+	t_rect.width *= m_scale;
+	t_rect.height *= m_scale;
+	
 	NSRect t_frame;
-	t_window -> MapMCRectangleToNSRect(m_rect, t_frame);
-    
+	t_window -> MapMCRectangleToNSRect(t_rect, t_frame);
+	
     m_synchronizing = true;
     
 	[m_view setFrame: t_frame];
@@ -1052,6 +1062,10 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyOffscreen:
 			Switch(*(bool *)p_value);
 			break;
+		case kMCPlatformPlayerPropertyScalefactor:
+			m_scale = *(double *)p_value;
+			Synchronize();
+			break;
 		case kMCPlatformPlayerPropertyRect:
 			m_rect = *(MCRectangle *)p_value;
 			Synchronize();
@@ -1247,6 +1261,10 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 
         case kMCPlatformPlayerPropertyMirrored:
             *(bool *)r_value = m_mirrored;
+			break;
+			
+		case kMCPlatformPlayerPropertyScalefactor:
+            *(double *)r_value = m_scale;
 			break;
 	}
 }

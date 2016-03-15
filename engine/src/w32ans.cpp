@@ -41,6 +41,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <strsafe.h>
 
+// We need the Vista versions of the shell headers
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_VISTA
+#include <shobjidl.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+
 extern void MCRemoteFileDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uint32_t p_type_count, MCStringRef p_initial_folder, MCStringRef p_initial_file, bool p_save, bool p_files, MCStringRef &r_value);
 extern void MCRemoteFolderDialog(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef &r_value);
 extern void MCRemoteColorDialog(MCStringRef p_title, uint32_t p_red, uint32_t p_green, uint32_t p_blue, bool& r_chosen, MCColor& r_chosen_color);

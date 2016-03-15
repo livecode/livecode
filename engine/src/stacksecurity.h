@@ -63,6 +63,12 @@ bool MCStackSecurityEmscriptenStartupCheck(MCStack *p_stack);
 
 #endif /* __EMSCRIPTEN__ */
 
+//////////
+
+struct MCDeployParameters;
+bool MCStackSecurityPreDeploy(uint32_t p_platform, MCDeployParameters& p_params);
+void MCStackSecurityExecutionTimeout(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

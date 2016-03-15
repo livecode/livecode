@@ -441,4 +441,11 @@ public handler TestCodeOfChar()
 	MCUnitTestHandlerThrows(TestCodeOfChar_Empty, "char->code (empty)")
 end handler
 
+constant kVarSel is "a\u{fe0e}"
+
+public handler TestVariationSelector()
+	test "variation selector is part of grapheme" when \
+		char 1 of kVarSel is kVarSel
+end handler
+
 end module

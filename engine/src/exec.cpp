@@ -664,7 +664,7 @@ bool MCExecContext::CopyElementAsEnum(MCArrayRef p_array, MCNameRef p_key, bool 
 		return false;
 		
 	MCExecValue t_value;
-	t_value . valueref_value = t_val;
+	t_value . valueref_value = MCValueRetain(t_val);
 	t_value . type = kMCExecValueTypeValueRef;
 	
 	MCExecParseEnum(*this, p_enum_type_info, t_value, r_intenum);
@@ -965,7 +965,8 @@ static bool EvalExprAsStrictNumber(MCExecContext* self, MCExpression *p_expr, Ex
     
 	p_expr -> eval_ctxt(*self, t_value);
     
-    if (MCExecTypeIsValueRef(t_value . type) && MCValueIsEmpty(t_value . valueref_value))
+    if (t_value . type == kMCExecValueTypeNone
+        || (MCExecTypeIsValueRef(t_value . type) && MCValueIsEmpty(t_value . valueref_value)))
     {
         self -> LegacyThrow(p_error);
         
@@ -1187,7 +1188,7 @@ MCVarref* MCExecContext::GetIt() const
 #ifdef _SERVER
     // If we are here it means we must be in global scope, executing in a
     // MCServerScript object.
-    return static_cast<MCServerScript *>(m_object) -> GetIt();
+    return static_cast<MCServerScript *>(m_object . object) -> GetIt();
 #else
     // We should never get here as execution only occurs within handlers unless
     // in server mode.
@@ -3354,9 +3355,9 @@ void MCExecTypeConvertNumbers(MCExecContext& ctxt, MCExecValueType p_from_type, 
         double t_from = *(double*)p_from_value;
         
         if (p_to_type == kMCExecValueTypeInt)
-            *(integer_t*)p_to_value = (integer_t)t_from;
+            *(integer_t*)p_to_value = (integer_t)(t_from < 0.0 ? t_from - 0.5 : t_from + 0.5);
         else if (p_to_type == kMCExecValueTypeUInt)
-            *(uinteger_t*)p_to_value = (uinteger_t)t_from;
+            *(uinteger_t*)p_to_value = (uinteger_t)(t_from < 0.0 ? 0 : t_from + 0.5);
         else if (p_to_type == kMCExecValueTypeFloat)
             *(float*)p_to_value = (float)t_from;
         else
@@ -3390,14 +3391,14 @@ void MCExecTypeConvertNumbers(MCExecContext& ctxt, MCExecValueType p_from_type, 
     }
     else if (p_from_type == kMCExecValueTypeFloat)
     {
-        integer_t t_from = *(integer_t*)p_from_value;
+        float t_from = *(float*)p_from_value;
         
         if (p_to_type == kMCExecValueTypeDouble)
             *(double*)p_to_value = (double)t_from;
         else if (p_to_type == kMCExecValueTypeInt)
-            *(integer_t*)p_to_value = (integer_t)t_from;
+            *(integer_t*)p_to_value = (integer_t)(t_from < 0.0 ? t_from - 0.5 : t_from + 0.5);
         else if (p_to_type == kMCExecValueTypeUInt)
-            *(uinteger_t*)p_to_value = (uinteger_t)t_from;
+            *(uinteger_t*)p_to_value = (uinteger_t)(t_from < 0.0 ? 0 : t_from + 0.5);
         else
             ctxt . Throw();
     }

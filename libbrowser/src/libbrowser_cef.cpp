@@ -296,7 +296,7 @@ bool MCCefInitialise(void)
 	
 	CefMainArgs t_args;
 	CefSettings t_settings;
-	t_settings.multi_threaded_message_loop = false;
+	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
 	t_settings.no_sandbox = true;
 	
@@ -369,7 +369,7 @@ bool MCCefBrowserInitialise(void)
 	if (t_success)
 		t_success = MCCefInitialise();
 	
-	if (t_success)
+	if (t_success && !MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
 		t_success = MCBrowserAddRunloopAction(MCCefBrowserRunloopAction, nil);
 	
 	s_cefbrowser_initialised = t_success;
@@ -394,10 +394,8 @@ void MCCefBrowserFinalise(void)
 	if (!s_cefbrowser_initialised)
 		return;
 	
-	// IM-2014-03-13: [[ revBrowserCEF ]] CEF library can't be cleanly shutdown and restarted - don't call finalise
-	// MCCefFinalise();
-	
-	MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
+	if (!MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
+		MCBrowserRemoveRunloopAction(MCCefBrowserRunloopAction, nil);
 	
 	s_cefbrowser_initialised = false;
 }
@@ -526,9 +524,10 @@ struct MCCefErrorInfo
 {
 	CefString url;
 	CefString error_message;
+	CefLoadHandler::ErrorCode error_code;
 };
 
-class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler
+class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
 {
 private:
 	int m_browser_id;
@@ -545,13 +544,14 @@ private:
 	
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
-	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg)
+	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg, CefLoadHandler::ErrorCode p_error_code)
 	{
 		m_load_error_frames[p_id].url = p_url;
 		m_load_error_frames[p_id].error_message = p_error_msg;
+		m_load_error_frames[p_id].error_code = p_error_code;
 	}
 	
-	bool RemoveLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg)
+	bool FindLoadErrorFrame(int64_t p_id, MCCefErrorInfo &r_info, bool p_delete)
 	{
 		std::map<int64_t, MCCefErrorInfo>::iterator t_iter;
 		t_iter = m_load_error_frames.find(p_id);
@@ -559,9 +559,38 @@ private:
 		if (t_iter == m_load_error_frames.end())
 			return false;
 		
-		r_error_url = t_iter->second.url;
-		r_error_msg = t_iter->second.error_message;
-		m_load_error_frames.erase(t_iter);
+		r_info = t_iter->second;
+		
+		if (p_delete)
+			m_load_error_frames.erase(t_iter);
+		
+		return true;
+	}
+	
+	bool RemoveLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg, CefLoadHandler::ErrorCode &r_error_code)
+	{
+		MCCefErrorInfo t_info;
+		
+		if (!FindLoadErrorFrame(p_id, t_info, true))
+			return false;
+		
+		r_error_url = t_info.url;
+		r_error_msg = t_info.error_message;
+		r_error_code = t_info.error_code;
+		
+		return true;
+	}
+	
+	bool FetchLoadErrorFrame(int64_t p_id, CefString &r_error_url, CefString &r_error_msg, CefLoadHandler::ErrorCode &r_error_code)
+	{
+		MCCefErrorInfo t_info;
+		
+		if (!FindLoadErrorFrame(p_id, t_info, false))
+			return false;
+		
+		r_error_url = t_info.url;
+		r_error_msg = t_info.error_message;
+		r_error_code = t_info.error_code;
 		
 		return true;
 	}
@@ -585,6 +614,7 @@ public:
 //	virtual CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
+	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
 	
 	void AddIgnoreUrl(const CefString &p_url)
 	{
@@ -743,6 +773,15 @@ public:
 		return !m_owner->GetAllowNewWindow();
 	}
 	
+	// CefDragHandler interface
+
+	// Called on UI thread
+	virtual bool OnDragEnter(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefDragData> p_drag_data, CefDragHandler::DragOperationsMask p_mask)
+	{
+		// cancel the drag event
+		return true;
+	}
+
 	// CefRequestHandler interface
 	
 	// Called on UI thread
@@ -879,8 +918,14 @@ public:
 		// render process may have restarted so resend js handler list
 		m_owner->SyncJavaScriptHandlers();
 		
-		CefString t_url;
-		t_url = p_frame->GetURL();
+		CefString t_url, t_error;
+		CefLoadHandler::ErrorCode t_error_code;
+		
+		bool t_is_error;
+		t_is_error = FetchLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error, t_error_code);
+		
+		if (!t_is_error)
+			t_url = p_frame->GetURL();
 		
 		if (IgnoreUrl(t_url))
 			return;
@@ -892,10 +937,18 @@ public:
 		bool t_frame;
 		t_frame = !p_frame->IsMain();
 		
-		if (!t_frame)
-			m_owner->OnNavigationBegin(t_frame, t_url_str);
-
-		m_owner->OnDocumentLoadBegin(t_frame, t_url_str);
+		if (t_is_error)
+		{
+			if (t_error_code == ERR_UNKNOWN_URL_SCHEME)
+				m_owner->OnNavigationRequestUnhandled(t_frame, t_url_str);
+		}
+		else
+		{
+			if (!t_frame)
+				m_owner->OnNavigationBegin(t_frame, t_url_str);
+			
+			m_owner->OnDocumentLoadBegin(t_frame, t_url_str);
+		}
 		
 		if (t_url_str != nil)
 			MCCStringFree(t_url_str);
@@ -908,9 +961,10 @@ public:
 			return;
 		
 		CefString t_url, t_error;
+		CefLoadHandler::ErrorCode t_error_code;
 		
 		bool t_is_error;
-		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error);
+		t_is_error = RemoveLoadErrorFrame(p_frame->GetIdentifier(), t_url, t_error, t_error_code);
 		
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
@@ -927,17 +981,20 @@ public:
 		
 		if (t_is_error)
 		{
-			char *t_err_str;
-			t_err_str = nil;
-			/* UNCHECKED */ MCCefStringToUtf8String(t_error, t_err_str);
-			
-			m_owner->OnDocumentLoadFailed(t_frame, t_url_str, t_err_str);
-			
-			if (!t_frame)
-				m_owner->OnNavigationFailed(t_frame, t_url_str, t_err_str);
-			
-			if (t_err_str != nil)
-				MCCStringFree(t_err_str);
+			if (t_error_code != ERR_UNKNOWN_URL_SCHEME)
+			{
+				char *t_err_str;
+				t_err_str = nil;
+				/* UNCHECKED */ MCCefStringToUtf8String(t_error, t_err_str);
+				
+				m_owner->OnDocumentLoadFailed(t_frame, t_url_str, t_err_str);
+				
+				if (!t_frame)
+					m_owner->OnNavigationFailed(t_frame, t_url_str, t_err_str);
+				
+				if (t_err_str != nil)
+					MCCStringFree(t_err_str);
+			}
 		}
 		else
 		{
@@ -956,7 +1013,7 @@ public:
 		// IM-2015-11-16: [[ Bug 16360 ]] Contrary to the CEF API docs, OnLoadEnd is NOT called after OnLoadError when the error code is ERR_ABORTED.
 		//    This occurs when requesting a new url be loaded when in the middle of loading the previous url, or when the url load is otherwise cancelled.
 		if (p_error_code != ERR_ABORTED)
-			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text);
+			AddLoadErrorFrame(p_frame->GetIdentifier(), p_failed_url, p_error_text, p_error_code);
 	}
 	
 	// ContextMenuHandler interface
@@ -991,7 +1048,18 @@ bool MCCefBrowserBase::Initialize()
 	// IM-2014-05-06: [[ Bug 12384 ]] Prevent callback messages for dummy URL
 	m_client->AddIgnoreUrl(t_url);
 	PlatformConfigureWindow(t_window_info);
-	CefBrowserHost::CreateBrowserSync(t_window_info, m_client.get(), t_url, t_settings, NULL);
+
+	if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
+	{
+		// need to use asnyc version when not on UI thread
+		if (!CefBrowserHost::CreateBrowser(t_window_info, m_client.get(), t_url, t_settings, NULL))
+			return false;
+
+		while (m_browser == nil)
+			MCBrowserRunloopWait();
+	}
+	else
+		CefBrowserHost::CreateBrowserSync(t_window_info, m_client.get(), t_url, t_settings, NULL);
 	
 	return m_browser != nil;
 }
@@ -1065,7 +1133,12 @@ MCBrowser *MCCefBrowserInstantiate(void *p_display, void *p_parent_window)
 void MCCefBrowserBase::OnCefBrowserCreated(CefRefPtr<CefBrowser> p_browser)
 {
 	if (m_browser == nil)
+	{
 		m_browser = p_browser;
+		// Make sure we break out of the wait loop if created asynchronously
+		if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
+			MCBrowserRunloopBreakWait();
+	}
 }
 
 void MCCefBrowserBase::OnCefBrowserClosed(CefRefPtr<CefBrowser> p_browser)
@@ -1675,11 +1748,19 @@ MCCefBrowserFactory::MCCefBrowserFactory()
 
 MCCefBrowserFactory::~MCCefBrowserFactory()
 {
+	// IM-2016-03-10: [[ Bug 17029 ]] Shutdown CEF library when factory deleted
+	Finalize();
 }
 
 bool MCCefBrowserFactory::Initialize()
 {
 	return MCCefBrowserInitialise();
+}
+
+void MCCefBrowserFactory::Finalize()
+{
+	MCCefBrowserFinalise();
+	MCCefFinalise();
 }
 
 bool MCCefBrowserFactory::CreateBrowser(void *p_display, void *p_parent_view, MCBrowser *&r_browser)

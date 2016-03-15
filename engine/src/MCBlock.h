@@ -88,7 +88,7 @@ public:
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this block has
 	//   an extension style attribute section.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
-	IO_stat save(IO_handle stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, uint32_t p_version);
 
 	// MW-2012-02-14: [[ FontRefs ]] To open a block, we need the parent's fontref.
 	void open(MCFontRef parent_font);
@@ -146,7 +146,7 @@ public:
 	void importattrs(const MCFieldCharacterStyle& x_style);
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Measure the size of the serialized attributes.
-	uint32_t measureattrs(void);
+	uint32_t measureattrs(uint32_t p_version);
 
 #ifdef LEGACY_EXEC
 	void setatts(Properties which, void *value);
@@ -169,8 +169,6 @@ public:
 	coord_t getsubwidth(MCDC *dc, coord_t x, findex_t i, findex_t l);
 	coord_t getwidth(MCDC *dc, coord_t x);
 	void reset();
-	uint2 getascent(void);
-	uint2 getdescent(void);
     coord_t GetAscent() const;
     coord_t GetDescent() const;
     coord_t GetLeading() const;

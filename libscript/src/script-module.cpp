@@ -403,6 +403,18 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
+                    case kMCScriptBytecodeOpAssignArray:
+	                    // assignarray <dst>, [ <key_1>, <value_1>, ..., <key_n>, <value_n> ]
+	                    if (t_arity < 1)
+		                    goto invalid_bytecode_error;
+	                    if (t_arity % 2 != 1) // parameters must come in pairs
+		                    goto invalid_bytecode_error;
+
+	                    for (uindex_t i = 0; i < t_arity; ++i)
+	                    {
+		                    t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
+	                    }
+	                    break;
                 }
             }
             

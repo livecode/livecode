@@ -29,7 +29,7 @@ public:
     
 	virtual bool GetNativeView(void *&r_view);
 	
-    MCNativeLayerMac(MCWidgetRef, NSView *p_view);
+    MCNativeLayerMac(MCObject *p_object, NSView *p_view);
     ~MCNativeLayerMac();
     
 private:
@@ -39,6 +39,10 @@ private:
 
     // Returns the NSWindow* for the stack containing this widget
     NSWindow* getStackWindow();
+	// Returns the nsview of the parent of this control
+	bool getParentView(NSView *&r_view);
+
+	NSRect calculateFrameRect(const MCRectangle &p_rect);
     
     // Performs the attach/detach operations
 	virtual void doAttach();
@@ -46,6 +50,7 @@ private:
 	
 	virtual bool doPaint(MCGContextRef p_context);
 	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
 	virtual void doSetVisible(bool p_visible);
 	
 	// Performs a relayering operation

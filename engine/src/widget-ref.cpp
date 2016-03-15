@@ -156,10 +156,18 @@ bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
     MCWidgetRef t_old_widget;
     t_old_widget = MCcurrentwidget;
     MCcurrentwidget = AsWidget();
-    
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
     bool t_success;
     t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
-    
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
     MCcurrentwidget = t_old_widget;
     
     return t_success;
@@ -170,13 +178,102 @@ bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
     MCWidgetRef t_old_widget;
     t_old_widget = MCcurrentwidget;
     MCcurrentwidget = AsWidget();
-    
+	
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
+	
     bool t_success;
     t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
-    
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
     MCcurrentwidget = t_old_widget;
     
     return t_success;
+}
+
+static bool chunk_property_handler(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_get_operation, MCNameRef& r_handler)
+{
+    const char *t_handler_prefix;
+    if (p_is_get_operation)
+        t_handler_prefix = "Get";
+    else
+        t_handler_prefix = "Set";
+    
+    MCAutoStringRef t_handler_string;
+    if (!MCStringFormat(&t_handler_string, "%s%@Of%@", t_handler_prefix, p_property, p_chunk_name))
+        return false;
+    
+    return MCNameCreate(*t_handler_string, r_handler);
+}
+
+bool MCWidgetBase::HasPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_getter)
+{
+    MCTypeInfoRef t_typeinfo;
+    return QueryPropertyOfChunk(p_property, p_chunk_name, p_is_getter, t_typeinfo);
+}
+
+bool MCWidgetBase::QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, bool p_is_getter, MCTypeInfoRef& r_type_info)
+{
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, p_is_getter, &t_handler))
+        return false;
+    
+    MCTypeInfoRef t_handler_typeinfo;
+    if (!MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
+        return false;
+
+    if (p_is_getter)
+    {
+        if (MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo) != 1)
+            return false;
+        
+        r_type_info = MCHandlerTypeInfoGetReturnType(t_handler_typeinfo);
+    }
+    else
+    {
+        // Chunk property setter needs two parameters,
+        if (MCHandlerTypeInfoGetParameterCount(t_handler_typeinfo) != 2)
+            return false;
+        
+        r_type_info = MCHandlerTypeInfoGetParameterType(t_handler_typeinfo, 1);
+    }
+
+    return true;
+}
+
+bool MCWidgetBase::SetPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(2))
+        return false;
+    
+    t_args[0] = MCValueRetain(p_path);
+    t_args[1] = MCValueRetain(p_value);
+    
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, false, &t_handler))
+        return false;
+    
+    return DispatchRestricted(*t_handler, t_args . Ptr(), t_args . Count());
+}
+
+bool MCWidgetBase::GetPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value)
+{
+    MCAutoValueRefArray t_args;
+    if (!t_args . New(1))
+        return false;
+    
+    t_args[0] = MCValueRetain(p_path);
+    
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, true, &t_handler))
+        return false;
+    
+    return DispatchRestricted(*t_handler, t_args . Ptr(), t_args . Count(), &r_value);
 }
 
 bool MCWidgetBase::OnLoad(MCValueRef p_rep)
@@ -210,9 +307,6 @@ bool MCWidgetBase::OnOpen(void)
     if (!DispatchRecursive(kDispatchOrderBeforeBottomUp, MCNAME("OnOpen")))
 		return false;
 
-	if (GetHost()->getNativeLayer())
-		GetHost()->getNativeLayer()->OnOpen();
-	
 	return OnAttach();
 }
 
@@ -221,9 +315,6 @@ bool MCWidgetBase::OnClose(void)
 	if (!OnDetach())
 		return false;
 	
-    if (GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnClose();
-    
     bool t_success;
     t_success = true;
     
@@ -313,7 +404,7 @@ bool MCWidgetBase::OnPaint(MCGContextRef p_gcontext)
 	}
 	
 	if (t_success && !t_view_rendered)
-		t_success = Dispatch(MCNAME("OnPaint"));
+		t_success = DispatchRestricted(MCNAME("OnPaint"));
     
     if (m_children != nil)
     {
@@ -427,29 +518,16 @@ bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_b
 
 bool MCWidgetBase::OnGeometryChanged(void)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnGeometryChanged(GetHost()->getrect());
-    
     return Dispatch(MCNAME("OnGeometryChanged"));
 }
 
 bool MCWidgetBase::OnLayerChanged()
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnLayerChanged();
-    
     return Dispatch(MCNAME("OnLayerChanged"));
 }
 
 bool MCWidgetBase::OnVisibilityChanged(bool p_visible)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnVisibilityChanged(p_visible);
-    
-    
     MCAutoValueRefArray t_args;
     if (!t_args . New(1))
         return false;
@@ -469,10 +547,6 @@ bool MCWidgetBase::OnParentPropertyChanged(void)
 
 bool MCWidgetBase::OnToolChanged(Tool p_tool)
 {
-    if (GetHost() != nil &&
-        GetHost()->getNativeLayer())
-        GetHost()->getNativeLayer()->OnToolChanged(p_tool);
-    
     bool t_success;
     t_success = true;
     if (p_tool == T_BROWSE)
@@ -772,88 +846,129 @@ MCGRectangle MCWidgetBase::MapRectFromGlobal(MCGRectangle rect)
 
 //////////
 
-bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
 	MCWidgetRef t_old_widget_object;
 	t_old_widget_object = MCcurrentwidget;
 	MCcurrentwidget = AsWidget();
+
+	// Make sure the host object's 'scriptdepth' is incremented and
+	// decremented appropriately. This prevents script from deleting
+	// a widget which has its LCB code on the stack (just as it would if
+	// it had its LCS code on the stack).
+	MCWidget *t_host;
+	t_host = GetHost();
+	if (t_host != nil)
+		t_host -> lockforexecution();
 	
+	bool t_success;
+	MCAutoValueRef t_retval;
+	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
+	
+	if (t_host != nil)
+		t_host -> unlockforexecution();
+	
+	if (t_success)
+	{
+		if (r_result != NULL)
+			*r_result = t_retval . Take();
+	}
+	
+	MCcurrentwidget = t_old_widget_object;
+	
+	return t_success;
+	
+}
+
+bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
+{
 	MCStack *t_old_default_stack, *t_this_stack;
 	t_old_default_stack = MCdefaultstackptr;
 	
-    MCObject *t_old_target;
-    if (GetHost() != nil)
+	// Preserve the host ptr we get across the dispatch so that
+	// we definitely return things to the way they were.
+	MCWidget *t_host;
+	t_host = GetHost();
+	
+    MCObjectPtr t_old_target;
+    if (t_host)
     {
         t_old_target = MCtargetptr;
         
-        MCtargetptr = GetHost();
-        t_this_stack = MCtargetptr->getstack();
+        MCtargetptr . object = t_host;
+        MCtargetptr . part_id = 0;
+        t_this_stack = MCtargetptr . object -> getstack();
         MCdefaultstackptr = t_this_stack;
     }
     else
         MCEngineScriptObjectPreventAccess();
-        
 	
     // Invoke event handler.
     bool t_success;
-    MCValueRef t_retval;
-    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
-    
-    if (t_success)
-    {
-        if (r_result != NULL)
-            *r_result = t_retval;
-        else
-            MCValueRelease(t_retval);
-    }
-    else if (GetHost() != nil)
-        GetHost() -> SendError();
-    
-    if (GetHost() != nil)
-    {
-        MCtargetptr = t_old_target;
-        if (MCdefaultstackptr == t_this_stack)
-            MCdefaultstackptr = t_old_default_stack;
-    }
-    else
-        MCEngineScriptObjectAllowAccess();
-    
-	MCcurrentwidget = t_old_widget_object;
+	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
+	
+	if (t_host != nil)
+	{
+		MCtargetptr = t_old_target;
+		if (MCdefaultstackptr == t_this_stack)
+			MCdefaultstackptr = t_old_default_stack;
+	}
+	else
+		MCEngineScriptObjectAllowAccess();
+	
+    if (!t_success)
+	{
+		// Refetch the host pointer *just in case* something has happened
+		// to it.
+		t_host = GetHost();
+		if (t_host != nil)
+			t_host -> SendError();
+	}
 	
 	return t_success;
 }
 
 bool MCWidgetBase::DispatchRestricted(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-	MCWidgetRef t_old_widget_object;
-	t_old_widget_object = MCcurrentwidget;
-	MCcurrentwidget = AsWidget();
-	
     MCEngineScriptObjectPreventAccess();
     
-    // Invoke event handler.
-    bool t_success;
-    MCValueRef t_retval;
-    t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, t_retval);
-    
+	// Invoke event handler.
+	bool t_success;
+	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
+	
     MCEngineScriptObjectAllowAccess();
-    
-    if (t_success)
-    {
-        if (r_result != NULL)
-            *r_result = t_retval;
-        else
-            MCValueRelease(t_retval);
-    }
-    
-	MCcurrentwidget = t_old_widget_object;
+	
+	if (!t_success)
+	{
+		MCWidget *t_host;
+		t_host = GetHost();
+		if (t_host != nil)
+			t_host -> SendError();
+		else
+		{
+			MCAutoErrorRef t_error;
+			MCErrorCatch(&t_error);
+		}
+	}
 	
 	return t_success;
 }
 
 void MCWidgetBase::DispatchRestrictedNoThrow(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-    DispatchRestricted(p_event, x_args, p_arg_count, r_result);
+	MCEngineScriptObjectPreventAccess();
+	
+	// Invoke event handler.
+	bool t_success;
+	t_success = DoDispatch(p_event, x_args, p_arg_count, r_result);
+	
+	MCEngineScriptObjectAllowAccess();
+	
+	if (!t_success)
+	{
+		MCAutoErrorRef t_error;
+		MCErrorCatch(&t_error);
+	}
 }
 
 bool MCWidgetBase::DispatchRecursive(DispatchOrder p_order, MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
@@ -1159,6 +1274,30 @@ bool MCWidgetSetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef p_va
 bool MCWidgetGetProperty(MCWidgetRef self, MCNameRef p_property, MCValueRef& r_value)
 {
     return MCWidgetAsBase(self) -> GetProperty(p_property, r_value);
+}
+
+bool MCWidgetHasPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter)
+{
+    return MCWidgetAsBase(self) -> HasPropertyOfChunk(p_property, p_chunk_name, p_getter);
+}
+
+bool MCWidgetQueryPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, bool p_getter, MCTypeInfoRef& r_type_info)
+{
+    MCNewAutoNameRef t_handler;
+    if (!chunk_property_handler(p_property, p_chunk_name, p_getter, &t_handler))
+        return false;
+    
+    return MCWidgetAsBase(self) -> QueryPropertyOfChunk(p_property, p_chunk_name, p_getter, r_type_info);
+}
+
+bool MCWidgetSetPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef p_value)
+{
+    return MCWidgetAsBase(self) -> SetPropertyOfChunk(p_property, p_chunk_name, p_path, p_value);
+}
+
+bool MCWidgetGetPropertyOfChunk(MCWidgetRef self, MCNameRef p_property, MCNameRef p_chunk_name, MCProperListRef p_path, MCValueRef& r_value)
+{
+    return MCWidgetAsBase(self) -> GetPropertyOfChunk(p_property, p_chunk_name, p_path, r_value);
 }
 
 bool MCWidgetOnLoad(MCWidgetRef self, MCValueRef p_rep)

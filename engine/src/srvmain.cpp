@@ -655,10 +655,6 @@ int platform_main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
-    MCScriptFinalize();
-    MCModulesFinalize();
-	MCFinalize();
-
 	for (int i = 0; i < argc; i++)
 	{
 		MCValueRelease(t_new_argv[i]);
@@ -670,6 +666,10 @@ int platform_main(int argc, char *argv[], char *envp[])
 		MCValueRelease(t_new_envp[i]);
 	}
 	MCMemoryDeleteArray(t_new_envp);
+
+    MCScriptFinalize();
+    MCModulesFinalize();
+	MCFinalize();
 
 	exit(t_exit_code);
 }

@@ -466,7 +466,54 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size)
 {
-	return NULL;
+	// scale rectangle from logical -> device coords
+	MCRectangle t_rect;
+	t_rect = logicaltoscreenrect(r);
+	
+	// don't scale size - we want the bitmap to be sized to logical coords.
+	int16_t t_size_width, t_size_height;
+	if (size != nil)
+	{
+		t_size_width = size->x;
+		t_size_height = size->y;
+	}
+	else
+	{
+		t_size_width = r.width;
+		t_size_height = r.height;
+	}
+	
+	jobject t_bitmap;
+	// get snapshot image as java Bitmap object
+	MCAndroidEngineRemoteCall("getSnapshotBitmapAtSize", "oiiiiii", &t_bitmap, t_rect.x, t_rect.y, t_rect.width, t_rect.height, t_size_width, t_size_height);
+	if (t_bitmap == nil)
+		return nil;
+	
+	// read Bitmap info & data into MCImageBitmap struct
+	JNIEnv *env;
+	env = MCJavaGetThreadEnv();
+	AndroidBitmapInfo t_info;
+	AndroidBitmap_getInfo(env, t_bitmap, &t_info);
+	
+	MCImageBitmap t_imagebitmap;
+	t_imagebitmap.width = t_info.width;
+	t_imagebitmap.height = t_info.height;
+	t_imagebitmap.stride = t_info.stride;
+	
+	if (AndroidBitmap_lockPixels(env, t_bitmap, (void**)&t_imagebitmap.data) < 0)
+		return nil;
+	
+	MCImageBitmapCheckTransparency(&t_imagebitmap);
+	
+	MCImageBitmap *t_copy;
+	t_copy = nil;
+	
+	// return a copy of the image bitmap
+	MCImageCopyBitmap(&t_imagebitmap, t_copy);
+	
+	AndroidBitmap_unlockPixels(env, t_bitmap);
+	
+	return t_copy;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1786,7 +1833,7 @@ void MCAndroidObjectCallWithArgs(jobject p_object, const char *p_method, const c
     if (t_success)
         MCAndroidJavaMethodCall(nil, p_object, p_method, p_return_value, t_params, p_on_engine_thread);
 
-    MCJavaMethodParamsFree(t_env, t_params);
+    MCJavaMethodParamsFree(t_env, t_params, !p_on_engine_thread);
 }
 
 void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, const char *p_signature, void *p_return_value, bool p_on_engine_thread, va_list p_args)
@@ -1803,7 +1850,7 @@ void MCAndroidStaticCallWithArgs(const char *p_class, const char *p_method, cons
     if (t_success)
         MCAndroidJavaMethodCall(p_class, nil, p_method, p_return_value, t_params, p_on_engine_thread);
 
-    MCJavaMethodParamsFree(t_env, t_params);
+    MCJavaMethodParamsFree(t_env, t_params, !p_on_engine_thread);
 }
 
 void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...)
@@ -2905,7 +2952,7 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
     MCExecValue t_value;
     MCExecContext ctxt(nil, nil, nil);
     
-    if (MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, t_value))
+    if (MCdefaultstackptr -> getcustomprop(ctxt, *t_set_name, *t_prop_name, nil, t_value))
     {
         MCAutoStringRef t_string_value;
         MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeStringRef, &(&t_string_value));
@@ -2961,24 +3008,3 @@ void MCJavaDetachCurrentThread()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// No theming for mobile platforms yet
-bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&)
-{
-    return false;
-}
-
-bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef& r_font)
-{
-    return MCFontCreate(MCNAME("Arial"), 0, 12, r_font);
-}

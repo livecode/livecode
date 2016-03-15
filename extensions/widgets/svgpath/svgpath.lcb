@@ -1,4 +1,24 @@
--- declaring extension as widget, followed by identifier
+/*
+Copyright (C) 2015-2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget displays an SVG path as an icon.  It has a default state and a
+"highlighted" state.
+*/
 widget com.livecode.widget.svgpath
 --
 
@@ -7,206 +27,209 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.library.iconSVG
-use com.livecode.widgetutils
+use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "SVG Icon"
-metadata author is "Trevor DeVore / Benjamin Beaumont"
-metadata version is "1.0.2"
+metadata author is "LiveCode"
+metadata version is "2.0.0"
 metadata svgicon is "M61.8,0H4C1.8,0,0,1.8,0,4v27.8c0,2.2,1.8,4,4,4h57.8c2.2,0,4-1.8,4-4V4C65.8,1.8,64,0,61.8,0z M20.9,25.3c-1.2,0.9-2.8,1.4-4.9,1.4c-0.8,0-1.6-0.1-2.2-0.2c-0.7-0.1-1.3-0.3-1.9-0.5c-0.1,0.2-0.3,0.4-0.5,0.5s-0.5,0.2-0.8,0.2c-0.6,0-1-0.1-1.2-0.3c-0.2-0.2-0.4-0.6-0.4-1.2l-0.1-3.2v-0.2c0-0.6,0.1-1,0.3-1.3c0.2-0.2,0.6-0.4,1.2-0.4c0.6,0,1.1,0.4,1.5,1.3c0.1,0.2,0.2,0.4,0.2,0.5c0.4,0.7,0.9,1.2,1.5,1.6c0.6,0.4,1.4,0.5,2.4,0.5c0.8,0,1.5-0.2,2-0.5c0.5-0.4,0.7-0.8,0.7-1.5c0-1-1.1-1.7-3.2-2.2c-0.6-0.1-1.1-0.3-1.5-0.4c-1.8-0.5-3-1.1-3.7-1.8c-0.7-0.7-1-1.7-1-2.9c0-1.6,0.6-2.9,1.8-3.9c1.2-1,2.7-1.5,4.6-1.5c0.6,0,1.2,0.1,1.8,0.2c0.6,0.1,1.2,0.3,1.8,0.6c0.1-0.3,0.3-0.5,0.5-0.6c0.2-0.1,0.4-0.2,0.8-0.2c0.5,0,0.9,0.1,1,0.3c0.2,0.2,0.2,0.6,0.3,1.2l0.1,2.7v0.2c0,0.5-0.1,0.9-0.3,1.1c-0.2,0.2-0.6,0.3-1.1,0.3c-0.7,0-1.1-0.4-1.5-1.1c0-0.1-0.1-0.2-0.1-0.2c-0.3-0.6-0.7-1-1.2-1.3c-0.5-0.3-1.1-0.4-1.7-0.4c-0.8,0-1.5,0.2-2,0.6s-0.8,0.9-0.8,1.5c0,0.8,1.2,1.5,3.5,2c0.4,0.1,0.7,0.1,0.9,0.2c1.8,0.4,3.1,1,3.8,1.8c0.8,0.8,1.2,1.9,1.2,3.2C22.6,23.1,22,24.4,20.9,25.3zM40.9,12.5c-0.3,0.3-0.6,0.4-1.1,0.4h-0.2l-4.2,12c-0.2,0.6-0.4,1-0.6,1.1s-0.6,0.2-1.1,0.2h-1.7c-0.8,0-1.4-0.4-1.7-1.3l0-0.1l-4.3-12h-0.2c-0.5,0-0.8-0.1-1.1-0.4s-0.4-0.6-0.4-1.1c0-0.6,0.1-0.9,0.4-1.2s0.7-0.4,1.3-0.4H30c0.6,0,1,0.1,1.3,0.4c0.3,0.2,0.4,0.6,0.4,1.2c0,0.5-0.1,0.9-0.4,1.2c-0.3,0.2-0.7,0.4-1.3,0.4h-0.4l3.3,9.8l3.4-9.8H36c-0.6,0-1-0.1-1.3-0.4c-0.3-0.2-0.4-0.6-0.4-1.2c0-0.5,0.1-0.9,0.4-1.2c0.3-0.2,0.7-0.4,1.3-0.4h3.5c0.6,0,1.1,0.1,1.3,0.4c0.3,0.2,0.4,0.6,0.4,1.2C41.3,11.9,41.2,12.2,40.9,12.5z M57.8,20.6c-0.3,0.3-0.6,0.4-1.1,0.4h-0.2v3.3v0.2c0,0.3,0,0.5-0.1,0.6s-0.2,0.2-0.4,0.4c-0.5,0.3-1.4,0.6-2.5,0.8c-1.1,0.2-2.3,0.4-3.5,0.4c-2.4,0-4.4-0.8-5.9-2.4c-1.5-1.6-2.2-3.7-2.2-6.2c0-2.5,0.8-4.5,2.3-6.2c1.5-1.6,3.4-2.5,5.8-2.5c0.6,0,1.3,0.1,1.9,0.2s1.3,0.4,2,0.7c0.2-0.3,0.4-0.6,0.6-0.7c0.2-0.1,0.4-0.2,0.7-0.2c0.5,0,0.8,0.1,1,0.4c0.2,0.2,0.3,0.6,0.3,1.2l0,3.6c0,0.6-0.1,1.1-0.3,1.3c-0.2,0.2-0.6,0.3-1.1,0.3c-0.4,0-0.7-0.1-0.9-0.3c-0.2-0.2-0.4-0.5-0.5-1C53.3,14,53,13.4,52.5,13s-1.2-0.6-2.2-0.6c-1.4,0-2.5,0.5-3.3,1.4c-0.8,1-1.1,2.3-1.1,4.2s0.4,3.2,1.2,4.2c0.8,1,1.9,1.5,3.4,1.5c0.3,0,0.7,0,1.1-0.1c0.4-0.1,0.9-0.2,1.5-0.4V21h-1.6c-0.6,0-1.1-0.1-1.3-0.3c-0.3-0.2-0.4-0.6-0.4-1.1c0-0.6,0.1-0.9,0.4-1.2s0.7-0.4,1.3-0.4h5c0.6,0,1.1,0.1,1.4,0.3s0.4,0.6,0.4,1.2C58.2,20,58.1,20.4,57.8,20.6z"
 
-private variable mState        as String
-private variable mColor        as Color
-private variable mHiliteColor  as Color
-private variable  mPath    		as String
+private variable mPathName as String
+private variable mPath    		as String
 private variable mHilited      as Boolean
-private variable mToggleHilite as Boolean
 private variable mMaintainAspectRatio as Boolean
-private variable mFlipVertically     as Boolean // some SVG Paths need to be flipped (all font awesome SVG paths do, Illustrator SVG does not)
+-- some SVG Paths need to be flipped (all font awesome SVG paths do,
+-- Illustrator SVG does not)
+private variable mFlipVertically     as Boolean
 private variable mAngle     as Real
-variable mPathName as String
+private variable mFillRule as String
 
-/*
+/**
 Syntax:
-set the iconColor of <widget> to <pColor>
-get the iconColor of <widget>
+set the foreColor of <widget> to <pColor>
+get the foreColor of <widget>
 
-Summary: Determines the color of the icon.
-
-Parameters:
-pColor: The color of the icon, in RGB or RGBA format
-
-Example: set the iconColor of widget "SVG Icon" to "255,255,0,128"
+Summary: Determines the color of the icon when not highlighted.
 
 Description:
-Use the iconColor property to set the color of the widget icon. The color is
-in the form of a 3 or 4 item string, the 4th optional item being the alpha value,
-all between 0 and 255.
-
+Use the <foreColor> property to set the color of the SVG path, when the icon
+isn't highlighted.
 */
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.default is ""
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.label is "Normal Color"
 
-property iconColor            get getColor          set setColor
-metadata iconColor.editor is "com.livecode.pi.colorwithalpha"
-
-/*
+/**
 Syntax:
-set the iconHiliteColor of <widget> to <pColor>
-get the iconHiliteColor of <widget>
+set the hiliteColor of <widget> to <pColor>
+get the hiliteColor of <widget>
 
-Summary: Determines the color of the icon when clicked.
-
-Parameters:
-pColor: The color of the iconwhen clicked, in RGB or RGBA format
-
-Example: set the iconHiliteColor of widget "SVG Icon" to "255,255,0,128"
+Summary: Determines the color of the icon when highlighted.
 
 Description:
-Use the iconHiliteColor property to set the color of the widget icon when clicked.
-The color is in the form of a 3 or 4 item string, the 4th optional item being the
-alpha value, all between 0 and 255.
-
+Use the <hiliteColor> property to set the color of the SVG path, when the icon
+is highlighted.
 */
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.default is ""
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.label is "Highlight Color"
 
-property iconHiliteColor      get getHiliteColor    set setHiliteColor
-metadata iconHiliteColor.editor is "com.livecode.pi.colorwithalpha"
-
-/*
+/**
 Syntax:
-set the iconPathPreset of <widget> to <pIconName>
-get the iconPathPreset of <widget>
+set the iconPresetName of <widget> to <pIconName>
+get the iconPresetName of <widget>
 
-Summary: One of the predefined SVG icon path names.
+Summary: A predefined SVG icon path names.
 
 Parameters:
 pIconName: The name of the icon to display.
 
-Example: set the iconPathPreset of widget "SVG Icon" to "thumbs up"
+Example: set the iconPresetName of widget "SVG Icon" to "thumbs up"
 
 Description:
-Use the iconPathPreset property to set the icon of the widget to one of the
-predefined values. The complete list of preset values is available by executing
+Use the <iconPresetName> property to set the icon of the widget to one of the
+predefined graphics provided by the "IconSVG" library.
 
-``` put iconNames()```
-
+You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
 */
+property iconPresetName get mPathName set setPathPreset
+metadata iconPresetName.editor is "com.livecode.pi.svgicon"
+metadata iconPresetName.default is "Star"
+metadata iconPresetName.label is "Preset"
 
-property iconPathPreset            get getPathPreset           set setPathPreset
-metadata iconPathPreset.editor is "com.livecode.pi.svgicon"
-metadata iconPathPreset.default is "Star"
-
-/*
+/**
 Syntax:
 set the iconPath of <widget> to <pSVGPath>
 get the iconPath of <widget>
 
-Summary: Manipulates the svg path displayed by the icon.
+Summary: The path data displayed by the SVG path widget.
 
 Parameters:
-pSVGPath: The path of the icon to display.
+pSVGPath: A string containing valid SVG path syntax.
 
 Example:
 -- Create a filled triangle
 set the iconPath of widget "SVG Icon" to "M150 0 L75 200 L225 200 Z"
 
 Description:
-Use the iconPath property to set the icon of the widget to an SVG path.
+The SVG path string to be displayed by the SVG path widget.
 
-See http://www.w3schools.com/svg/svg_path.asp for more information on valid SVG path operations.
+See https://www.w3.org/TR/SVG/paths.html#PathData for the SVG path data
+specification.
 */
-
-property iconPath       get mPath           set setPath
+property iconPath get mPath set setPath
 metadata iconPath.editor is "com.livecode.pi.text"
+metadata iconPath.label is "Path Data"
 
-/*
+/**
 Syntax:
-set the isHilited of <widget> to {true|false}
-get the isHilited of <widget>
+set the highlight of <widget> to {true|false}
+get the highlight of <widget>
 
-Summary: Whether the icon is hilited or not.
+Summary: `true` if the SVG path is highlighted; `false` otherwise
 
 Description:
-Use the isHilited property to hilite the icon or check if it is hilited from script.
+Use the `highlight` property to test or control whether the SVG path is
+displayed as highlighted or not.
 */
+property "highlight" get mHilited set setIsHilited
+metadata highlight.default is "false"
+metadata highlight.label is "Hilited"
 
-property isHilited            get mHilited          set setIsHilited
-
-/*
-Syntax:
-set the toggleHilite of <widget> to {true|false}
-get the toggleHilite of <widget>
-
-Summary: Whether the icon has toggle behavior or not.
-
-Description:
-Use the toggleHilite property to make the icon behave like a toggle. The
-default behavior is toggleHilite false, so that the icon returns to its
-unhilited state when the mouse button is released. When toggleHilite is true,
-clicking the icon causes it to remain hilited until clicked again.
-*/
-property toggleHilite         get mToggleHilite     set mToggleHilite
-
-/*
+/**
 Syntax:
 set the maintainAspectRatio of <widget> to {true|false}
 get the maintainAspectRatio of <widget>
 
-Summary: Whether the icon maintains its aspect ratio when resized.
+Summary: Whether the SVG path maintains its aspect ratio when resized.
 
 Description:
-If the maintainAspectRatio of the icon widget is true, the icon will be its maximum
-size within its bounds while maintaining the original ratio of width to height. If
-false, it will stretch to fit the extent of its bounds.
-
+If the <maintainAspectRatio> of the SVG path is `true`, the icon will be its
+maximum size within its bounds while maintaining the original ratio of width
+to height. If `false`, it will stretch to fit the extent of its bounds.
 */
 property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
+metadata maintainAspectRatio.default is "true"
+metadata maintainAspectRatio.label is "Fix Aspect Ratio"
 
-/*
+/**
 Syntax:
-set the flipVertically of <widget> to {true|false}
-get the flipVertically of <widget>
+set the flipped of <widget> to {true|false}
+get the flipped of <widget>
 
-Summary: Whether the icon is flipped vertically.
+Summary: `true` if the SVG path is flipped top-to-bottom; `false` otherwise
 
 Description:
-Use the flipped vertically to flip the icon upside down.
-
+When <flipped> is set to `true`, the SVG path is drawn upside down.
 */
-property flipVertically       get mFlipVertically       set setFlipVertically
+property "flipped" get mFlipVertically set setFlipVertically
+metadata flipped.default is "false"
+metadata flipped.label is "Flip"
 
-/*
+/**
 Syntax:
-set the iconAngle of <widget> to <pAngle>
-get the iconAngle of <widget>
+set the angle of <widget> to <pAngle>
+get the angle of <widget>
+
+Summary: The angle of rotation of the SVG path, in degrees clockwise.
+
+Description:
+The <angle> property controls the angle of rotation of for the SVG path
+around the centre of the path's bounding box.  The rotation is in clockwise
+degrees.
+*/
+property "angle" get mAngle set setAngle
+metadata angle.editor is "com.livecode.pi.number"
+metadata angle.default is "0"
+metadata angle.label is "Rotation"
+
+/**
+Syntax:
+set the fillRule of <widget> to <pRule>
+get the fillRule of <widget>
 
 Parameters:
-pAngle: The angle of rotation in degrees.
+pRule(enum): The fill rule to be used.
+- "non-zero": Fill regions encircled at least once by the path.
+- "even odd": Fill regions encircled an even number of times by the path.
 
-Summary: The angle of rotation of the icon.
+Summary: The fill rule to be used when rendering the SVG path.
 
 Description:
-Use the iconAngle property to rotate the icon <pAngle> degrees clockwise.
+Use the <fillRule> property to set the fill rule to be used for the widget.
+You may need to adjust it to ensure that paths that cross themselves, and paths
+that are made up of overlapping subpaths, are filled correctly.
+
+The areas enclosed by the path are each filled or not filled depending on the
+fill rule used and the number of times the path loops around them.  When the
+path goes around a region clockwise, it adds 1 to number of encirclements.
+When it goes around a region anticlockwise, it subtracs 1 from the number of
+encirclements.
+
+See https://www.w3.org/TR/SVG/painting.html#FillRuleProperty for examples of
+the "non-zero" and "even odd" fill rules.
 */
 
-property iconAngle       get mAngle       set setAngle
+property fillRule       get mFillRule      set setFillRule
+metadata fillRule.editor is "com.livecode.pi.enum"
+metadata fillRule.options is "non-zero,even odd"
+metadata fillRule.default is "non-zero"
+metadata fillRule.label is "Fill Rule"
 --
 
 ----------
 -- called when widget is created
 public handler OnCreate()
-	put "up" into mState
-	
-	put color [0,0,0] into mColor
-	put stringToColor("255,0,100") into mHiliteColor
 	put 0 into mAngle
-	
 	put false into mHilited
-	put false into mToggleHilite
 	put true into mMaintainAspectRatio
 	put false into mFlipVertically
-
-	variable tArray as Array
-	put the empty array into tArray
-	setPathPreset("Star")	
+	put "non-zero" into mFillRule
+	setPathPreset("Star")
 end handler
 ----------
 
@@ -214,15 +237,13 @@ end handler
 -- this handler is called when the widget is saved
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-	
+
 	put mPath into rProperties["svg path"]
-	put colorToString(mColor, true) into rProperties["color"]
-	put colorToString(mHiliteColor, true) into rProperties["hilite color"]
 	put mHilited into rProperties["hilited"]
-	put mToggleHilite into rProperties["toggle hilite"]
 	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
 	put mFlipVertically into rProperties["flip vertically"]
 	put mAngle into rProperties["angle"]
+	put mFillRule into rProperties["fillRule"]
 end handler
 ----------
 
@@ -230,46 +251,38 @@ end handler
 -- this handler is called when the widget is loaded
 public handler OnLoad(in pProperties as Array)
 	put pProperties["svg path"] into mPath
-	put stringToColor(pProperties["color"]) into mColor
-	put stringToColor(pProperties["hilite color"]) into mHiliteColor
 	put pProperties["hilited"] into mHilited
-	put pProperties["toggle hilite"] into mToggleHilite
 	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
 	put pProperties["flip vertically"] into mFlipVertically
 	put pProperties["angle"] into mAngle
+
+   // Older SVG widgets do not have this property
+	if "fillRule" is among the keys of pProperties then
+		put pProperties["fillRule"] into mFillRule
+	end if
 end handler
 ----------
 
 ----------
 -- the following handlers deal with mouse events
-public handler OnMouseUp()		
-  if the current mouse position is within my bounds then
-  	if mToggleHilite then
-	  	put not mHilited into mHilited
-  	end if
-		post "mouseUp" to my script object with [intToString(the click button)] -- formatint needed until dp-2
-	end if
-  put "up" into mState
-	redraw all
-end handler
-
-public handler OnClick()
+public handler OnMouseUp()
 	if the click count is 2 then
-		post "mouseDoubleUp" with [intToString(the click button)]	
+		post "mouseDoubleUp" with [the click button formatted as string]
+	else
+		post "mouseUp" with [the click button formatted as string]
 	end if
 end handler
-
-public handler OnMouseCancel()
-	put "up" into mState
-	redraw all
-end handler
-
 
 public handler OnMouseDown()
-	put "down" into mState
-	redraw all
-	
-	post "mouseDown" to my script object with [intToString(the click button)]
+	post "mouseDown" with [the click button formatted as string]
+end handler
+
+public handler OnMouseEnter()
+	post "mouseEnter"
+end handler
+
+public handler OnMouseLeave()
+	post "mouseLeave"
 end handler
 ----------
 
@@ -291,32 +304,10 @@ public handler setFlipVertically(in pBoolean as Boolean)
 	redraw all
 end handler
 
-
 public handler setPath(in pPath as String) returns nothing
 	put pPath into mPath
+	put "" into mPathName
 	redraw all
-end handler
-
-
-public handler setColor(in pColor as String) returns nothing
-	put stringToColor(pColor) into mColor
-	redraw all
-end handler
-
-
-public handler getColor() returns String
-	return colorToString(mColor, true)
-end handler
-
-
-public handler setHiliteColor(in pColor as String) returns nothing
-	put stringToColor(pColor) into mHiliteColor
-	redraw all
-end handler
-
-
-public handler getHiliteColor() returns String
-	return colorToString(mHiliteColor, true)
 end handler
 
 public handler setPathPreset(in pPresetName as String) returns nothing
@@ -325,48 +316,51 @@ public handler setPathPreset(in pPresetName as String) returns nothing
 	redraw all
 end handler
 
-public handler getPathPreset() returns String
-	return mPathName
-end handler
 
 public handler setAngle(in pAngle as Number) returns nothing
 	put pAngle into mAngle
 	redraw all
 end handler
 
+public handler setFillRule(in pRule as String) returns nothing
+	put pRule into mFillRule
+	redraw all
+end handler
 
 ----------
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	variable tPath as Path
 	put path mPath into tPath
-	
-	variable tBounds	
+
+	variable tBounds
 	if mFlipVertically then
 		scale tPath by [1,-1]
 		translate tPath by [0, the height of the bounding box of tPath]
 	end if
-	
+
 	if mAngle > 0 then
 		rotate tPath by mAngle
 	end if
-		
+
 	// scale to fit within widget and maintain aspect ratio
 	if mMaintainAspectRatio then
-		constrainPathToRect(my bounds, tPath)		
+		constrainPathToRect(my bounds, tPath)
 	else
 		scale tPath by [my width / the width of the bounding box of tPath, \
-			my height / the height of the bounding box of tPath]
-			put the bounding box of tPath into tBounds
-			translate tPath by [the left of tBounds * -1, the top of tBounds * -1]
+				my height / the height of the bounding box of tPath]
+		put the bounding box of tPath into tBounds
+		translate tPath by [the left of tBounds * -1, the top of tBounds * -1]
 	end if
-		
-	if mState is "up" and mHilited is false then
-		set the paint of this canvas to solid paint with mColor
+
+	if  mHilited is false then
+		set the paint of this canvas to my foreground paint
 	else
-		set the paint of this canvas to solid paint with mHiliteColor
+		set the paint of this canvas to my highlight paint
 	end if
-	
+
+	set the fill rule of this canvas to mFillRule
+
 	fill tPath on this canvas
 end handler
 

@@ -26,10 +26,10 @@ Example:
 set the textFont of field "Input" to "Arial,Japanese"
 
 Example:
-set the textFont of button "Hello" to "Courier"
+set the textFont of field "Text" to "Japanese"
 
 Example:
-set the textFont of field "Text" to "Japanese"
+set the textFont of button "Themed" to "(System UI Font - Messages)"
 
 Value: The <textFont> of an <object> or <chunk> is either empty or a <string>.
 
@@ -42,6 +42,12 @@ If the <chunk> contains more than one font, the <chunk|chunk's> <textFont> <prop
 
 On Mac OS systems, if the specified font isn't available, the system font (which is set in the Appearance control panel and specifies the font used for menus) is used. On Unix systems, if the specified font isn't available, Helvetica is used. On Windows systems, if the specified font isn't available, the current Windows font is used.
 
-References: printTextFont (property), owner (property), printFontTable (property), allowInlineInput (property), HTMLText (property), string (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), font (glossary), chunk (glossary)
+To get the list of available fonts, use the <fontNames> function.
+
+Some special font names can be used to request the themed fonts used for drawing UI elements. These are documented in the <fontNames> function.
+
+Setting the <textFont> to `(Default)` causes the control to use the default font for that type of control rather than inheriting the font from a parent object.
+
+References: fontNames (function), printTextFont (property), owner (property), printFontTable (property), allowInlineInput (property), HTMLText (property), string (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), font (glossary), chunk (glossary)
 
 Tags: ui

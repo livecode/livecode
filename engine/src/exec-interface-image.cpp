@@ -739,10 +739,10 @@ void MCImage::SetInk(MCExecContext& ctxt, intenum_t ink)
     notifyneeds(false);
 }
 
-void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+void MCImage::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
-    Boolean wasvisible = isvisible();
-    MCObject::SetVisibility(ctxt, part, setting, visible);
+	bool wasvisible = isvisible();
+	MCObject::SetVisible(ctxt, part, setting);
     if (!(MCbufferimages || flags & F_I_ALWAYS_BUFFER)
         && !isvisible() && m_rep != nil)
         closeimage();
@@ -760,16 +760,6 @@ void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, 
             MCscreen->addtimer(this, MCM_internal, t_frame_duration);
         }
     }
-}
-
-void MCImage::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
-{
-    SetVisibility(ctxt, part, setting, true);
-}
-
-void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
-{
-    SetVisibility(ctxt, part, setting, false);
 }
 
 // MERG-2015-02-11: [[ ImageMetadata ]] Refactored image metadata property

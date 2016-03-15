@@ -22,8 +22,6 @@ Use the <unlock clipboard> <command> to make the contents of the clipboard avail
 
 >*Tip:* Use <lock clipboard> to ensure the clipboard does not change between accesses.
 
-Unlocking the clipboard will throw an error if the clipboard is not locked.
-
 
 References: lock clipboard (command), clipboard (function), clipboardData (property), fullClipboardData (property), rawClipboardData (property)
 

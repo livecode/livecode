@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "globals.h"
+#include "uidc.h"
 
 #include "variable.h"
 
@@ -1149,31 +1150,9 @@ void MCIPhoneSystem::KillAll()
     return;
 }
 
-// MM-2015-06-08: [[ MobileSockets ]] Poll sockets.
 Boolean MCIPhoneSystem::Poll(real8 p_delay, int p_fd)
 {
-    Boolean handled = False;
-    fd_set rmaskfd, wmaskfd, emaskfd;
-    FD_ZERO(&rmaskfd);
-    FD_ZERO(&wmaskfd);
-    FD_ZERO(&emaskfd);
-    int4 maxfd = 0;
-    
-    handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
-    if (handled)
-        p_delay = 0.0;
-    
-    struct timeval timeoutval;
-    timeoutval.tv_sec = (long)p_delay;
-    timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
-    
-    int n = 0;
-    n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
-    if (n <= 0)
-        return handled;
-    
-    MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
-    return True;
+    return False;
 }
 
 Boolean MCIPhoneSystem::IsInteractiveConsole(int p_fd)
@@ -1206,6 +1185,15 @@ bool MCIPhoneSystem::AlternateLanguages(MCListRef &r_list)
 bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 {
     return False;
+}
+
+void MCIPhoneSystem::ShowMessageDialog(MCStringRef p_title,
+                                       MCStringRef p_message)
+{
+    if (MCscreen == nil)
+        return;
+    
+    MCscreen -> popupanswerdialog(nil, 0, 0, p_title, p_message, true);
 }
 
 //////////////////

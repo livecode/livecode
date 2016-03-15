@@ -92,10 +92,11 @@ uindex_t MCMacRawClipboard::GetItemCount() const
 
 const MCMacRawClipboardItem* MCMacRawClipboard::GetItemAtIndex(uindex_t p_index) const
 {
-    // Range check
+#if UINDEX_MAX > NSUIntegerMax
     if (p_index > NSUIntegerMax)
         return NULL;
-    
+#endif
+
     // Retrieve the item at the specified index, if it exists
     if (p_index >= [m_items count])
         return NULL;

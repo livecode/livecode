@@ -1,7 +1,10 @@
+---
+version: 8.0.0-dp-10
+---
 # Consistent value union and intersect semantics
 
-The array union and intersect and their recursive counterparts now follow a consistent
-recipe to produce their result.
+The array **union** and **intersect** commands and their recursive
+counterparts now follow a consistent recipe to produce their result.
 
 `union <left> with <right>` now has the semantics of the following LiveCode function:
 
@@ -35,19 +38,22 @@ function ArrayIntersect(pLeft, pRight, pRecursive)
 end ArrayIntersect
 ```
 
-Previously the semantics for intersect were different depending on whether the intersect
-was in a recursive step or not. The two affected forms are:
+Previously the semantics for **intersect** were different depending on
+whether the intersect was in a recursive step or not. The two affected
+forms are:
 
-`intersect <string> with <value>`
-- in 6.7, `<string>` becomes `empty`.
-- in 8.0 DP 10, `<string>` is preserved.
+```
+intersect <string> with <value>
+```
 
-and 
+- in LiveCode 6.7, `<string>` becomes `empty`.
+- in LiveCode 8.0, `<string>` is unchanged.
 
 ```
 put "a" into tLeftArray[1][1]
 put "b" into tRightArray[1]
 intersect tLeftArray with tRightArray recursively
 ```
-- in 6.7 `tLeftArray` is unchanged.
-- from 8.0 DP 10, `tLeftArray[1]` becomes `empty`
+
+- in LiveCode 6.7 `tLeftArray` is unchanged.
+- in LiveCode 8.0, `tLeftArray[1]` becomes `empty`

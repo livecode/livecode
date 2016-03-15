@@ -172,6 +172,8 @@
     list(Position: POS, List: EXPRESSIONLIST)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
+    array(Position: POS, Pairs: EXPRESSIONLIST)
+    pair(Position: POS, Key: EXPRESSION, Value: EXPRESSION)
     nil
 
 'type' INVOKELIST

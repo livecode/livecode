@@ -1258,6 +1258,7 @@ LT factor_table[] =
         {"nativechartonum", TT_FUNCTION, F_NATIVE_CHAR_TO_NUM},
         {"navigationarrows", TT_PROPERTY, P_NAVIGATION_ARROWS},
 		{"networkinterfaces", TT_PROPERTY, P_NETWORK_INTERFACES},
+        {"newest", TT_PREP, PT_NEWEST},
         {"next", TT_CHUNK, CT_NEXT},
         {"ninth", TT_CHUNK, CT_NINTH},
         {"no", TT_UNOP, O_NOT},
@@ -1697,6 +1698,8 @@ LT factor_table[] =
         {"textsize", TT_PROPERTY, P_TEXT_SIZE},
         {"textstyle", TT_PROPERTY, P_TEXT_STYLE},
         {"the", TT_THE, F_UNDEFINED},
+        {"theme", TT_PROPERTY, P_THEME},
+        {"themeclass", TT_PROPERTY, P_THEME_CONTROL_TYPE},
         {"there", TT_UNOP, O_THERE},
         {"third", TT_CHUNK, CT_THIRD},
         {"thirdcolor", TT_PROPERTY, P_HILITE_COLOR},
@@ -2131,17 +2134,20 @@ static LT sugar_table[] =
 		{"path", TT_UNDEFINED, SG_PATH},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
 		{"pattern", TT_UNDEFINED, SG_PATTERN},
+		{"preserving", TT_UNDEFINED, SG_PRESERVING},
         {"real", TT_UNDEFINED, SG_REAL},
-        {"really", TT_UNDEFINED, SG_REALLY},
 		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
 		// AL-2013-10-30: [[ Bug 11351 ]] Ensure table is in alphabetical order.
         {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
 		{"regex", TT_UNDEFINED, SG_REGEX},
+		{"replacing", TT_UNDEFINED, SG_REPLACING},
 		{"resource", TT_UNDEFINED, SG_RESOURCE},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
+        {"strictly", TT_UNDEFINED, SG_STRICTLY},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
+		{"styles", TT_UNDEFINED, SG_STYLES},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'success'
 		{"success", TT_UNDEFINED, SG_SUCCESS},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'true'

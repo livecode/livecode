@@ -1604,12 +1604,20 @@ void MCUIDC::siguser()
 
 Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-	uint4 slength = MCStringGetLength(s);
-	MCAutoPointer<char> startptr;
+    // SN-2015-11-26: [[ Bug 16501 ]] Do not use GetOldString (nativises)
+    MCAutoPointer<char> t_cstring;
+    MCStringConvertToCString(s, &t_cstring);
+
+    uint4 slength = strlen(*t_cstring);
+    MCAutoPointer<char> startptr;
     startptr = new char[slength + 1];
-	char *sptr = *startptr;
-	MCU_lower(sptr, MCStringGetOldString(s));
-	sptr[slength] = '\0';
+
+    MCU_lower(*startptr, *t_cstring);
+
+    (*startptr)[slength] = '\0';
+
+    char* sptr = *startptr;
+
 	if (*sptr == '#')
 	{
 		uint2 r, g, b;
@@ -1664,7 +1672,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 	char *tptr = sptr;
 	while (*tptr)
 		if (isspace((uint1)*tptr))
-			strcpy(tptr, tptr + 1);
+            memmove(tptr, tptr + 1, strlen(tptr));
 		else
 			tptr++;
 	uint2 high = ELEMENTS(color_table);
@@ -1964,7 +1972,7 @@ void MCUIDC::enactraisewindows(void)
 }
 //
 
-int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
+int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking)
 {
 	return 0;
 }

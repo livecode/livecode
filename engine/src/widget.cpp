@@ -87,7 +87,6 @@ MCWidget::MCWidget(void)
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
-    m_native_layer = nil;
 }
 
 MCWidget::MCWidget(const MCWidget& p_other) :
@@ -96,7 +95,6 @@ MCWidget::MCWidget(const MCWidget& p_other) :
     m_kind = nil;
     m_rep = nil;
     m_widget = nil;
-    m_native_layer = nil;
 }
 
 MCWidget::~MCWidget(void)
@@ -104,7 +102,6 @@ MCWidget::~MCWidget(void)
     MCValueRelease(m_widget);
     MCValueRelease(m_kind);
     MCValueRelease(m_rep);
-    delete m_native_layer;
 }
 
 void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
@@ -135,9 +132,7 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
         
         if (p_rep != nil)
             m_rep = MCValueRetain(p_rep);
-        
-        SendError();
-    }
+	}
 }
 
 Chunk_term MCWidget::gettype(void) const
@@ -158,22 +153,6 @@ const MCObjectPropertyTable *MCWidget::getpropertytable(void) const
 bool MCWidget::visit_self(MCObjectVisitor* p_visitor)
 {
     return p_visitor -> OnWidget(this);
-}
-
-void MCWidget::open(void)
-{
-	MCControl::open();
-	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 0 -> 1
-	if (opened == 1 && m_widget != nil)
-		MCwidgeteventmanager->event_open(this);
-}
-
-void MCWidget::close(void)
-{
-	// IM-2015-09-01: [[ Bug 15836 ]] Only send widget event when transitioning from 1 -> 0
-	if (opened == 1 && m_widget != nil)
-		MCwidgeteventmanager->event_close(this);
-	MCControl::close();
 }
 
 void MCWidget::kfocus(void)
@@ -272,7 +251,7 @@ Boolean MCWidget::mup(uint2 p_which, bool p_release)
 
 Boolean MCWidget::mfocus(int2 p_x, int2 p_y)
 {
-	if (!(getflag(F_VISIBLE) || MCshowinvisibles) ||
+	if (!(getflag(F_VISIBLE) || showinvisible()) ||
 		(getflag(F_DISABLED) && (getstack() -> gettool(this) == T_BROWSE)))
 		return False;
 	
@@ -351,17 +330,6 @@ void MCWidget::timer(MCNameRef p_message, MCParameter *p_parameters)
     }
 }
 
-void MCWidget::setrect(const MCRectangle& p_rectangle)
-{
-	MCRectangle t_old_rect;
-	t_old_rect = rect;
-	
-	rect = p_rectangle;
-	
-    if (m_widget != nil)
-        MCwidgeteventmanager->event_setrect(this, t_old_rect);
-}
-
 void MCWidget::recompute(void)
 {
     if (m_widget != nil)
@@ -407,7 +375,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_SCRIPT:
 		case P_PARENT_SCRIPT:
 		case P_NUMBER:
-            /*		case P_FORE_PIXEL:
+            		case P_FORE_PIXEL:
              case P_BACK_PIXEL:
              case P_HILITE_PIXEL:
              case P_BORDER_PIXEL:
@@ -435,7 +403,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
              case P_SHADOW_PATTERN:
              case P_FOCUS_PATTERN:
              case P_PATTERNS:
-             case P_TEXT_HEIGHT:
+             /*case P_TEXT_HEIGHT:
              case P_TEXT_ALIGN:*/
         case P_TEXT_FONT:
         case P_TEXT_SIZE:
@@ -480,6 +448,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
         case P_REV_AVAILABLE_VARIABLES:
     
         case P_KIND:
+        case P_THEME_CONTROL_TYPE:
 			return MCControl::getprop(ctxt, p_part_id, p_which, p_index, p_effective, r_value);
             
         default:
@@ -490,7 +459,7 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
     // Forward to the custom property handler
-    return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, r_value);
+    return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, r_value);
 }
 
 bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value)
@@ -514,7 +483,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_SCRIPT:
 		case P_PARENT_SCRIPT:
 		case P_NUMBER:
-            /*		case P_FORE_PIXEL:
+            		case P_FORE_PIXEL:
              case P_BACK_PIXEL:
              case P_HILITE_PIXEL:
              case P_BORDER_PIXEL:
@@ -542,7 +511,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
              case P_SHADOW_PATTERN:
              case P_FOCUS_PATTERN:
              case P_PATTERNS:
-             case P_TEXT_HEIGHT:
+             /*case P_TEXT_HEIGHT:
              case P_TEXT_ALIGN:*/
              case P_TEXT_FONT:
              case P_TEXT_SIZE:
@@ -583,6 +552,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
         case P_DISABLED:
             
         case P_KIND:
+        case P_THEME_CONTROL_TYPE:
 			return MCControl::setprop(ctxt, p_part_id, p_which, p_index, p_effective, p_value);
             
         default:
@@ -593,17 +563,46 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
     
     // Forward to the custom property handler
-    return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, p_value);
+    return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, p_value);
 }
 
-bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
+static bool is_custom_prop(MCWidgetRef self, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, bool p_is_get_operation)
+{
+    if (self == nil)
+        return true;
+    
+    if (!MCNameIsEmpty(p_set_name))
+        return true;
+    
+    if (p_path == nil)
+        return !MCWidgetHasProperty(self, p_prop_name);
+    
+    return !MCWidgetHasPropertyOfChunk(self, p_prop_name, MCNAME("Element"), p_is_get_operation);
+}
+
+bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, MCExecValue& r_value)
 {
     // Treat as a normal custom property if not a widget property
-    if (m_widget == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetHasProperty(m_widget, p_prop_name))
-        return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, r_value);
+    if (is_custom_prop(m_widget, p_set_name, p_prop_name, p_path, true))
+        return MCObject::getcustomprop(ctxt, p_set_name, p_prop_name, p_path, r_value);
+    
+    bool t_success;
+    t_success = true;
     
     MCValueRef t_value;
-    if (!MCWidgetGetProperty(m_widget, p_prop_name, t_value))
+    if (t_success)
+    {
+        if (p_path != nil)
+        {
+            t_success = MCWidgetGetPropertyOfChunk(m_widget, p_prop_name, MCNAME("Element"), p_path, t_value);
+        }
+        else
+        {
+            t_success = MCWidgetGetProperty(m_widget, p_prop_name, t_value);
+        }
+    }
+    
+    if (!t_success)
     {
         CatchError(ctxt);
         return false;
@@ -622,11 +621,11 @@ bool MCWidget::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     return true;
 }
 
-bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
+bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, MCExecValue p_value)
 {
     // Treat as a normal custom property if not a widget property
-    if (m_widget == nil || !MCNameIsEmpty(p_set_name) || !MCWidgetHasProperty(m_widget, p_prop_name))
-        return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_value);
+    if (is_custom_prop(m_widget, p_set_name, p_prop_name, p_path, false))
+        return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_path, p_value);
     
     MCAutoValueRef t_value;
     if (MCExecTypeIsValueRef(p_value . type))
@@ -639,8 +638,16 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
     }
     
     MCTypeInfoRef t_get_type, t_set_type;
-    if (!MCWidgetQueryProperty(m_widget, p_prop_name, t_get_type, t_set_type))
-        return false;
+    if (p_path != nil)
+    {
+        if (!MCWidgetQueryPropertyOfChunk(m_widget, p_prop_name, MCNAME("Element"), false, t_set_type))
+            return false;
+    }
+    else
+    {
+        if (!MCWidgetQueryProperty(m_widget, p_prop_name, t_get_type, t_set_type))
+            return false;
+    }
     
     if (t_set_type != nil &&
         !MCExtensionConvertFromScriptType(ctxt, t_set_type, InOut(t_value)))
@@ -649,10 +656,21 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         return false;
     }
     
-    if (!MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
+    if (p_path != nil)
     {
-        CatchError(ctxt);
-        return false;
+        if (!MCWidgetSetPropertyOfChunk(m_widget, p_prop_name, MCNAME("Element"), p_path, In(t_value)))
+        {
+            CatchError(ctxt);
+            return false;
+        }
+    }
+    else
+    {
+        if (!MCWidgetSetProperty(m_widget, p_prop_name, In(t_value)))
+        {
+            CatchError(ctxt);
+            return false;
+        }
     }
     
     return true;
@@ -660,26 +678,50 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
 
 void MCWidget::toolchanged(Tool p_new_tool)
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
+	MCControl::toolchanged(p_new_tool);
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_toolchanged(this, p_new_tool);
 }
 
 void MCWidget::layerchanged()
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_layerchanged(this);
+	MCControl::layerchanged();
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_layerchanged(this);
 }
 
 void MCWidget::visibilitychanged(bool p_visible)
 {
-    if (m_widget == nil)
-        return;
-    
-    MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+	MCControl::visibilitychanged(p_visible);
+	
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_visibilitychanged(this, p_visible);
+}
+
+void MCWidget::geometrychanged(const MCRectangle &p_rect)
+{
+	MCControl::geometrychanged(p_rect);
+
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_setrect(this, p_rect);
+}
+
+void MCWidget::OnOpen()
+{
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_open(this);
+	
+	MCControl::OnOpen();
+}
+
+void MCWidget::OnClose()
+{
+	MCControl::OnClose();
+	
+	if (m_widget != nil)
+		MCwidgeteventmanager -> event_close(this);
 }
 
 Exec_stat MCWidget::handle(Handler_type p_type, MCNameRef p_method, MCParameter *p_parameters, MCObject *p_passing_object)
@@ -719,8 +761,14 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
     return checkloadstat(t_stat);
 }
 
-IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
+IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
+	/* If the file format doesn't support widgets, skip the widget */
+	if (p_version < 8000)
+	{
+		return IO_NORMAL;
+	}
+
     // Make the widget generate a rep.
     MCAutoValueRef t_rep;
     if (m_widget != nil)
@@ -739,7 +787,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
         return t_stat;
     
     // Save the object state.
-	if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext)) != IO_NORMAL)
+    if ((t_stat = MCObject::save(p_stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return t_stat;
     
     // Now the widget kind.
@@ -750,7 +798,7 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext)
     if ((t_stat = IO_write_valueref_new(*t_rep, p_stream)) != IO_NORMAL)
         return t_stat;
     
-    if ((t_stat = savepropsets(p_stream)) != IO_NORMAL)
+    if ((t_stat = savepropsets(p_stream, p_version)) != IO_NORMAL)
         return t_stat;
     
     // We are done.
@@ -859,7 +907,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
         }
     }
     else
-    {
+	{
         setforeground(dc, DI_BACK, False);
         dc->setbackground(MCscreen->getwhite());
         dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
@@ -871,15 +919,12 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
 	}
 }
 
 Boolean MCWidget::maskrect(const MCRectangle& p_rect)
 {
-	if (!(getflag(F_VISIBLE) || MCshowinvisibles))
+	if (!(getflag(F_VISIBLE) || showinvisible()))
 		return False;
 
 	MCRectangle drect = MCU_intersect_rect(p_rect, rect);
@@ -896,39 +941,6 @@ void MCWidget::SetDisabled(MCExecContext& ctxt, uint32_t p_part_id, bool p_flag)
     
     if (t_is_disabled != getflag(F_DISABLED))
         recompute();
-}
-
-bool MCWidget::GetNativeView(void *&r_view)
-{
-	if (m_native_layer == nil)
-		return false;
-	
-	return m_native_layer->GetNativeView(r_view);
-}
-
-bool MCWidget::SetNativeView(void *p_view)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCNativeLayer *t_layer;
-	t_layer = nil;
-	
-	if (t_success && p_view != nil)
-	{
-		t_layer = MCNativeLayer::CreateNativeLayer(getwidget(), p_view);
-		t_success = t_layer != nil;
-	}
-	
-	if (t_success)
-	{
-		if (m_native_layer != nil)
-			delete m_native_layer;
-		
-		m_native_layer = t_layer;
-	}
-	
-	return t_success;
 }
 
 MCWidgetRef MCWidget::getwidget(void) const

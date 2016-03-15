@@ -133,6 +133,7 @@ MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {
 	MCRectangle t_old = MCEmscriptenViewGetBounds();
 	/* UNCHECKED */ MCEmscriptenViewSetBounds(p_rect);
+	return t_old;
 }
 
 /* ================================================================

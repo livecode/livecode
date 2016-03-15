@@ -89,6 +89,17 @@ static const char *s_interface_native_types[] =
 	nil
 };
 
+static const char *s_interface_mapped_types[] =
+{
+    "string",
+    "number",
+    "data",
+    "array",
+    "dictionary",
+    
+    nil
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const char *g_input_filename;
@@ -180,8 +191,12 @@ static void InterfaceCheckType(InterfaceRef self, Position p_where, NameRef p_ty
 	for(uint32_t i = 0; s_interface_native_types[i] != nil; i++)
 		if (NameEqualToCString(p_type, s_interface_native_types[i]))
 			return;
-			
-	for(uint32_t i = 0; i < self -> enum_count; i++)
+    
+    for(uint32_t i = 0; s_interface_mapped_types[i] != nil; i++)
+        if (NameEqualToCString(p_type, s_interface_mapped_types[i]))
+            return;
+    
+    for(uint32_t i = 0; i < self -> enum_count; i++)
 		if (NameEqual(self -> enums[i] . name, p_type))
 			return;
 			

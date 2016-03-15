@@ -158,7 +158,6 @@ Boolean MChidepalettes = False;
 Boolean MCdontuseNS;
 Boolean MCdontuseQT;
 Boolean MCdontuseQTeffects;
-Boolean MCfreescripts = True;
 uint4 MCeventtime;
 uint2 MCbuttonstate;
 uint2 MCmodifierstate;
@@ -241,7 +240,7 @@ uint2 MCnsockets;
 MCStack **MCusing;
 uint2 MCnusing;
 uint2 MCiconicstacks;
-uint2 MCwaitdepth;
+MCSemaphore MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
 MCClipboard* MCclipboard;
@@ -273,7 +272,7 @@ MCCard *MCdynamiccard;
 Boolean MCdynamicpath;
 MCObject *MCerrorptr;
 MCObject *MCerrorlockptr;
-MCObject *MCtargetptr;
+MCObjectPtr MCtargetptr;
 MCObject *MCmenuobjectptr;
 MCGroup *MCsavegroupptr;
 MCGroup *MCdefaultmenubar;
@@ -384,7 +383,7 @@ MCPlatformSoundRecorderRef MCrecorder;
 #endif
 
 // AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
-uint4 MCstackfileversion = 7000;
+uint4 MCstackfileversion = 8000;
 uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
@@ -554,7 +553,6 @@ void X_clear_globals(void)
 	MCdontuseNS = False;
 	MCdontuseQT = False;
 	MCdontuseQTeffects = False;
-	MCfreescripts = True;
 	MCeventtime = 0;
 	MCbuttonstate = 0;
 	MCmodifierstate = 0;
@@ -634,7 +632,7 @@ void X_clear_globals(void)
 	MCusing = nil;
 	MCnusing = 0;
 	MCiconicstacks = 0;
-	MCwaitdepth = 0;
+	MCwaitdepth = MCSemaphore("wait-depth");
 	MCrecursionlimit = 400000;
 	MCclipboard = NULL;
 	MCselection = NULL;
@@ -663,7 +661,7 @@ void X_clear_globals(void)
 	MCdynamicpath = False;
 	MCerrorptr = nil;
 	MCerrorlockptr = nil;
-	MCtargetptr = nil;
+	memset(&MCtargetptr, 0, sizeof(MCObjectPtr));
 	MCmenuobjectptr = nil;
 	MCsavegroupptr = nil;
 	MCdefaultmenubar = nil;
@@ -764,7 +762,7 @@ void X_clear_globals(void)
 #endif
     
 	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
-	MCstackfileversion = 7000;
+	MCstackfileversion = 8000;
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
@@ -1122,6 +1120,11 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
         if (!t_success)
             return false;
     }
+    else
+    {
+        MCcommandname = MCValueRetain(kMCEmptyString);
+        MCcommandarguments = MCValueRetain(kMCEmptyArray);
+    }
     
     MCDeletedObjectsSetup();
 
@@ -1199,37 +1202,8 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	// IM-2014-01-27: [[ HiDPI ]] Initialize pixel scale settings
 	MCResInitPixelScaling();
-
-	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
-	//   screen, otherwise we don't have a root fontref!
-	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
-#if defined(TARGET_PLATFORM_WINDOWS)
-	/*if (MCmajorosversion >= 0x0600)
-	{
-		// Vista onwards
-		MCdispatcher -> setfontattrs(MCSTR("Segoe UI"), 12, FA_DEFAULT_STYLE);
-	}
-	else
-	{
-		// Pre-Vista
-		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
-	}*/
-#elif defined(TARGET_PLATFORM_MACOS_X)
-    /*if (MCmajorosversion < 0x10A0)
-        MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
-    else
-    {
-        MCdispatcher -> setfontattrs("Helvetica Neue", 11, FA_DEFAULT_STYLE);
-        MCttfont = "Helvetica Neue";
-    }*/
-#elif defined(TARGET_PLATFORM_LINUX)
-    //MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
-#else
-	MCdispatcher -> setfontattrs(MCSTR(DEFAULT_TEXT_FONT), DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
-#endif
-
-    // MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
-	//   screen, otherwise we don't have a root fontref!
+    
+    // Set up fonts
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
@@ -1248,7 +1222,12 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 			MClook = MCcurtheme->getthemefamilyid();
 		}
 		else
-			delete newtheme;
+        {
+            // Fall back to the Win95 theme if the Windows theme failed to load
+            if (newtheme->getthemefamilyid() == LF_WIN95)
+                MClook = LF_WIN95;
+            delete newtheme;
+        }
     }
 
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
@@ -1490,9 +1469,11 @@ int X_close(void)
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
-    
+
+#ifdef MCSSL
     MCSocketsFinalize();
-    
+#endif /* MCSSL */
+
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
     MCAdFinalize();

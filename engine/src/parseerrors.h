@@ -1706,45 +1706,57 @@ enum Parse_errors
 	// MDW-2014-08-23: [[ feature_floor ]] ceil: error in source expression
 	// {PE-0554} ceil: error in source expression
 	PE_CEIL_BADPARAM,
-	
-	// {PE-0555} load: error in extension expression
+    
+    // SN-2015-11-15: [[ Bug 165452 ]] New error, if a global variable shadows
+    // a local variable declared beforehand
+    // {PE-0555} global: shadowing a local variable
+    PE_GLOBAL_SHADOW,
+    
+	// {PE-0556} load: error in extension expression
 	PE_LOAD_BADEXTENSION,
 	
-	// {PE-0556} load: expected 'resource'
+	// {PE-0557} load: expected 'resource'
 	PE_LOAD_NORESOURCE,
 	
-	// {PE-0557} load: expected 'path'
+	// {PE-0558} load: expected 'path'
 	PE_LOAD_NOPATH,
 	
-	// {PE-0558} load: error in resource path expression
+	// {PE-0559} load: error in resource path expression
 	PE_LOAD_BADRESOURCEPATH,
     
-    // {PE-0559} load: missing file or display name
+    // {PE-0560} load: missing file or display name
     PE_LOAD_NOFILE,
     
-    // {PE-0560} load: missing 'from'
+    // {PE-0561} load: missing 'from'
     PE_LOAD_NOFROM,
 
-    // {PE-0561} is really: missing 'an' or 'a'
-    PE_ISREALLY_NOAN,
+    // {PE-0562} is strictly: missing 'an' or 'a'
+    PE_ISSTRICTLY_NOAN,
     
-    // {PE-0562} is really: missing 'string'
-    PE_ISREALLY_NOSTRING,
+    // {PE-0563} is strictly: missing 'string'
+    PE_ISSTRICTLY_NOSTRING,
     
-    // {PE-0563} is really: missing type
-    PE_ISREALLY_NOTYPE,
+    // {PE-0564} is strictly: missing type
+    PE_ISSTRICTLY_NOTYPE,
     
-    // {PE-0564} import: no array expression
+    // {PE-0565} import: no array expression
     PE_IMPORT_NOARRAY,
     
-    // {PE-0565} export: no array expression
+    // {PE-0566} export: no array expression
     PE_EXPORT_NOARRAY,
 	
-	// {PE-0566} go: error in widget expression
+	// {PE-0567} go: error in widget expression
 	PE_GO_BADWIDGETEXP,
 	
-	// {PE-0567} launch: error in widget expression
+	// {PE-0568} launch: error in widget expression
 	PE_LAUNCH_BADWIDGETEXP,
+
+	// {PE-0568} save: error in format expression
+	PE_SAVE_BADFORMATEXP,
+	
+	// {PE-0569} replace: missing 'styles'
+	PE_REPLACE_NOSTYLES,
+	
 };
 
 extern const char *MCparsingerrors;

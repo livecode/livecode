@@ -832,13 +832,23 @@ static MCColorPanelDelegate* s_color_dialog_delegate;
     if (s_color_dialog_result == kMCPlatformDialogResultSuccess)
     {
         NSColor *t_color;
-        
-        // PM-2015-01-07: [[ Bug 14308]] Do not use calibrated RGB color space unless necessary since it makes magnifying glass misbehaving
         t_color =  [mColorPanel color];
         
-        // PM-2014-12-15: [[ Bug 14210 ]] Use calibrated RGB color space to prevent throwing an exception when adjusting the grayscale color in the color slider tab of property inspector
-        if ([[t_color colorSpace] colorSpaceModel] != NSRGBColorSpaceModel)
-           t_color = [t_color colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+        // Some NSColor's will not have a colorspace (e.g. named ones from the developer
+        // pane). Since trying to get a colorSpace of such a thing throws an exception
+        // we wrap the colorSpace access call.
+        NSColorSpace *t_colorspace;
+        @try {
+            t_colorspace = [t_color colorSpace];
+        }
+        @catch (NSException *exception) {
+            t_colorspace = nil;
+        }
+        
+        // If we have no colorspace, or the colorspace is not already RGB convert.
+        if (t_colorspace == nil ||
+            [t_colorspace colorSpaceModel] != NSRGBColorSpaceModel)
+            t_color = [t_color colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
     
         // Convert the value from to a colour component value.
         s_color_dialog_color . red   = (uint2) ([t_color redComponent] * UINT16_MAX);

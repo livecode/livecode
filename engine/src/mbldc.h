@@ -198,7 +198,7 @@ public:
 
 	//
 	
-	int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+    int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
 	bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	////////// COMMON IMPLEMENTATION METHODS

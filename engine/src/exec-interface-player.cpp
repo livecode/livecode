@@ -697,10 +697,10 @@ void MCPlayer::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
     Redraw();
 }
 
-void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
     uint4 oldflags = flags;
-    MCObject::SetVisibility(ctxt, part, setting, visible);
+	MCControl::SetVisible(ctxt, part, setting);
     
     // PM-2015-07-01: [[ Bug 15191 ]] Keep the LC 6.7 behaviour in non-platform player, to make the video layer to hide 
 #ifndef FEATURE_PLATFORM_PLAYER
@@ -711,16 +711,6 @@ void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting,
     // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_VISIBLE getter refactored to the MCPlayer implementations
     updatevisibility();
-}
-
-void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
-{
-    SetVisibility(ctxt, part, setting, true);
-}
-
-void MCPlayer::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
-{
-    SetVisibility(ctxt, part, setting, false);
 }
 
 void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)

@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "mode.h"
 #include "font.h"
+#include "exec.h"
 
 #include "context.h"
 
@@ -153,14 +154,27 @@ void MCTooltip::opentip()
 	}
 
 	minheight = minwidth = 1;
-	setsprop(P_BACK_COLOR, MCttbgcolor);
+    
+    // Get the colour for the tooltip background
+    MCColor t_bg_color;
+    if (MCPlatformGetControlThemePropColor(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyBackgroundColor, t_bg_color))
+    {
+        MCExecContext ctxt(this, nil, nil);
+        SetBackPixel(ctxt, &t_bg_color.pixel);
+    }
+    else
+        setsprop(P_BACK_COLOR, MCttbgcolor);
 
-	// MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
-	//   a name and create the font.
-	MCAutoNameRef t_tt_font;
-    /* UNCHECKED */ MCNameCreate(MCttfont, t_tt_font);
-	/* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
-
+    // Get the font for the tooltip
+    if (!MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, m_font))
+    {
+        // MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
+        //   a name and create the font.
+        MCAutoNameRef t_tt_font;
+        /* UNCHECKED */ MCNameCreate(MCttfont, t_tt_font);
+        /* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
+    }
+    
 	rect.width = 0;
 
 	if (MCcurtheme != NULL)
@@ -254,4 +268,15 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 
 	if (!MCaqua && !t_themed)
 		drawborder(dc, trect, 1);
+}
+
+MCPlatformControlType MCTooltip::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        return kMCPlatformControlTypeTooltip;
 }

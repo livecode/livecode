@@ -1375,9 +1375,9 @@ void MCCefBrowserBase::SetHScroll(int p_hscroll_pixels)
 	MCCStringFree(t_scroll_script);
 }
 
-int MCCefBrowserBase::GetWindowId(void)
+uintptr_t MCCefBrowserBase::GetWindowId(void)
 {
-	int t_id;
+	uintptr_t t_id;
 	t_id = 0;
 
 	/* UNCHECKED */ PlatformGetWindowID(t_id);
@@ -1385,7 +1385,7 @@ int MCCefBrowserBase::GetWindowId(void)
 	return t_id;
 }
 
-void MCCefBrowserBase::SetWindowId(int p_new_id)
+void MCCefBrowserBase::SetWindowId(uintptr_t p_new_id)
 {
 	/* TODO - IMPLEMENT */
 }

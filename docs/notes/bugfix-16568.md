@@ -1,0 +1,1 @@
+# Browser widget visibility not updated correctly when in a group

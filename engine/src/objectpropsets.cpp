@@ -443,9 +443,9 @@ void MCObject::deletepropsets(void)
 	}
 }
 
-IO_stat MCObject::savepropsets(IO_handle stream)
+IO_stat MCObject::savepropsets(IO_handle stream, uint32_t p_version)
 {
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 		return savepropsets_legacy(stream);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Emit all the propsets in

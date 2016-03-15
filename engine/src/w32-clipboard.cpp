@@ -466,7 +466,14 @@ bool MCWin32RawClipboard::PushUpdates()
 
 	// Clipboard is now clean
 	if (t_result == S_OK)
+	{
+		// Flush the clipboard. By doing this now, we ensure that other apps
+		// won't hang if LiveCode is busy processing something and they
+		// attempt to fetch data from the clipboard.
+		OleFlushClipboard();
+		
 		m_dirty = false;
+	}
 
 	return (t_result == S_OK);
 }
@@ -491,6 +498,10 @@ bool MCWin32RawClipboard::PullUpdates()
 	// Create a new item to wrap this data object
 	m_external_data = true;
 	m_item = new MCWin32RawClipboardItem(this, t_contents);
+
+	if (t_contents != NULL)
+		t_contents->Release();
+
 	return (m_item != NULL);
 }
 
@@ -542,7 +553,8 @@ MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_cl
   m_object(p_object),
   m_reps()
 {
-	;
+	if (m_object != nil)
+		m_object->AddRef();
 }
 
 MCWin32RawClipboardItem::~MCWin32RawClipboardItem()

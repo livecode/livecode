@@ -142,6 +142,53 @@ static Language2FontCharset s_fontcharsetmap[] =
 	{LCH_UNICODE, ANSI_CHARSET}
 };
 
+// Sets the lfFaceName of a LOGFONT structure to the correct name for the
+// appropriate special UI font
+static void set_facename_for_status_font(LOGFONTW& x_logfont)
+{
+    // Cache the face name to avoid repeated queries
+    static WCHAR s_facename[sizeof(x_logfont.lfFaceName) / sizeof(x_logfont.lfFaceName[0])];
+    if (s_facename[0] == 0)
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        memcpy(s_facename, ncm.lfStatusFont.lfFaceName, sizeof(s_facename));
+    }
+    
+    memcpy(x_logfont.lfFaceName, s_facename, sizeof(s_facename));
+}
+
+static void set_facename_for_menu_font(LOGFONTW& x_logfont)
+{
+    // Cache the face name to avoid repeated queries
+    static WCHAR s_facename[sizeof(x_logfont.lfFaceName) / sizeof(x_logfont.lfFaceName[0])];
+    if (s_facename[0] == 0)
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        memcpy(s_facename, ncm.lfMenuFont.lfFaceName, sizeof(s_facename));
+    }
+    
+    memcpy(x_logfont.lfFaceName, s_facename, sizeof(s_facename));
+}
+
+static void set_facename_for_message_font(LOGFONTW& x_logfont)
+{
+    // Cache the face name to avoid repeated queries
+    static WCHAR s_facename[sizeof(x_logfont.lfFaceName) / sizeof(x_logfont.lfFaceName[0])];
+    if (s_facename[0] == 0)
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        memcpy(s_facename, ncm.lfMessageFont.lfFaceName, sizeof(s_facename));
+    }
+    
+    memcpy(x_logfont.lfFaceName, s_facename, sizeof(s_facename));
+}
+
 MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	// MW-2012-05-03: [[ Values* ]] 'reqname' is now an autoref type.
@@ -158,24 +205,39 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	LOGFONTW logfont;
 	memset(&logfont, 0, sizeof(LOGFONTW));
 
-    
-    //parse font and encoding
-    MCStringRef t_name = MCNameGetString(fname);
-    MCAutoStringRef t_font_name;
-    uindex_t t_offset;
-	if (MCStringFirstIndexOfChar(t_name, ',', 0, kMCCompareExact, t_offset))
+    // Is the font name one of the special UI font names?
+    if (MCNameIsEqualTo(fname, MCN_font_usertext))
+        set_facename_for_message_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_menutext))
+        set_facename_for_menu_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_content))
+        set_facename_for_message_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_message))
+        set_facename_for_message_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_tooltip))
+        set_facename_for_status_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_system))
+        set_facename_for_message_font(logfont);
+    else
     {
-        MCStringCopySubstring(t_name, MCRangeMake(0, t_offset), &t_font_name);
-        t_name = *t_font_name;
-    }
-    
-	MCAutoStringRefAsWString t_fname_wstr;
-	if (!t_fname_wstr.Lock(t_name))
-		return;
+        //parse font and encoding
+        MCStringRef t_name = MCNameGetString(fname);
+        MCAutoStringRef t_font_name;
+        uindex_t t_offset;
+        if (MCStringFirstIndexOfChar(t_name, ',', 0, kMCCompareExact, t_offset))
+        {
+            MCStringCopySubstring(t_name, MCRangeMake(0, t_offset), &t_font_name);
+            t_name = *t_font_name;
+        }
+        
+        MCAutoStringRefAsWString t_fname_wstr;
+        if (!t_fname_wstr.Lock(t_name))
+            return;
 
-	// Copy the family name
-	if (StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
-			return;
+        // Copy the family name
+        if (StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
+                return;
+    }
 
 	// MW-2012-05-03: [[ Bug 10180 ]] Make sure the default charset for the font
 	//   is chosen - otherwise things like WingDings don't work!
@@ -227,22 +289,13 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	GetTextMetricsW(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
 	font->size = size;
-	// MW-2013-12-19: [[ Bug 11606 ]] Use Mac-style metric adjustment in printer (ideal
-	//   layout mode).
-	if (!printer)
-	{
-		font->ascent = MulDiv(tm.tmAscent, 15, 16);
-		font->descent = tm.tmDescent;
-	}
-	else
-	{
-		font -> ascent = size - 1;
-		font -> descent = size * 2 / 14 + 1;
-	}
 	font->printer = printer;
     
-    font->m_ascent = tm.tmAscent;
-    font->m_descent = tm.tmDescent;
+    // We divide the internal leading evenly over ascent and descent. This is
+    // done because we need to account for it but the text layout code doesn't
+    // know about internal leading.
+    font->m_ascent = tm.tmAscent + (tm.tmInternalLeading+1)/2;
+    font->m_descent = tm.tmDescent + (tm.tmInternalLeading)/2;
     font->m_leading = tm.tmExternalLeading;
     font->m_xheight = tm.tmAveCharWidth;
 }

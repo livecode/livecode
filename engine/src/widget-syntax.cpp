@@ -198,6 +198,14 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecPost(MCStringRef p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyName(MCStringRef& r_name)
+{
+	if (!MCWidgetEnsureCurrentWidget())
+		return;
+	
+	r_name = MCValueRetain(MCNameGetString(MCWidgetGetHost(MCcurrentwidget) -> getname()));
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyBounds(MCCanvasRectangleRef& r_rect)
 {
     if (!MCWidgetEnsureCurrentWidget())
@@ -260,6 +268,69 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyDisabled(bool& r_disabled)
         return;
     
     r_disabled = MCWidgetGetDisabled(MCcurrentwidget);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyPaint(uinteger_t p_type, MCCanvasPaintRef& r_paint)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidget *t_host;
+    t_host = MCWidgetGetHost(MCcurrentwidget);
+    
+    // If getforecolor() returns true then we have a solid color.
+    MCColor t_color;
+    MCPatternRef t_pattern = nil;
+    int2 x, y;
+    if (t_host -> getforecolor((uint2)p_type,
+                               False,
+                               False,
+                               t_color,
+                               t_pattern,
+                               x, y,
+                               CONTEXT_TYPE_SCREEN,
+                               t_host,
+                               False))
+    {
+        MCAutoValueRefBase<MCCanvasColorRef> t_canvas_color;
+        if (!MCCanvasColorCreateWithRGBA(t_color . red / 65535.0f,
+                                         t_color . green / 65535.0f,
+                                         t_color . blue / 65535.0f,
+                                         1.0f,
+                                         &t_canvas_color))
+            return;
+        
+        MCCanvasSolidPaintMakeWithColor(*t_canvas_color,
+                                        (MCCanvasSolidPaintRef&)r_paint);
+        return;
+    }
+    
+    // If t_pattern is not nil we have a pattern, offset by
+    // (x, y).
+    if (t_pattern != nil)
+    {
+        // We have to adjust the x, y offset here as it is in card
+        // co-ordinates, but canvas's operate in object co-ordinates.
+        MCAutoValueRefBase<MCCanvasTransformRef> t_canvas_transform;
+        if (!MCCanvasTransformCreateWithMCGAffineTransform(MCGAffineTransformPreTranslate(MCPatternGetTransform(t_pattern),
+                                                                                          x - t_host -> getrect() . x,
+                                                                                          y - t_host -> getrect() . y),
+                                                           &t_canvas_transform))
+            return;
+        
+        MCAutoValueRefBase<MCCanvasImageRef> t_canvas_image;
+        if (!MCCanvasImageCreateWithImageRep(MCPatternGetSource(t_pattern),
+                                             &t_canvas_image))
+            return;
+        
+        MCCanvasPatternCreateWithImage(*t_canvas_image,
+                                       *t_canvas_transform,
+                                       (MCCanvasPatternRef&)r_paint);
+        return;
+    }
+
+    // In all other cases just return solid black.
+    MCCanvasSolidPaintMakeWithColor(kMCCanvasColorBlack, (MCCanvasSolidPaintRef&)r_paint);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMousePosition(bool p_current, MCCanvasPointRef& r_point)

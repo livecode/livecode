@@ -39,7 +39,6 @@
 			'ext_suffix': '',
 			'exe_suffix': '',
 			'debug_info_suffix': '.dbg',
-			
 			'silence_warnings': 0,
 		},
 	

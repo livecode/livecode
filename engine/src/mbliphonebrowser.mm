@@ -48,7 +48,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 class MCiOSBrowserControl;
 
-@interface MCiOSBrowserDelegate : NSObject <UIWebViewDelegate>
+@interface com_runrev_livecode_MCiOSBrowserDelegate : NSObject <UIWebViewDelegate>
 {
 	MCiOSBrowserControl *m_instance;
 	bool m_pending_request;
@@ -130,7 +130,7 @@ protected:
 	virtual void DeleteView(UIView *view);
 	
 private:
-	MCiOSBrowserDelegate *m_delegate;
+	com_runrev_livecode_MCiOSBrowserDelegate *m_delegate;
 	bool m_delay_requests;
 };
 
@@ -902,7 +902,7 @@ UIView *MCiOSBrowserControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCiOSBrowserDelegate alloc] initWithInstance: this];
+	m_delegate = [[com_runrev_livecode_MCiOSBrowserDelegate alloc] initWithInstance: this];
 	[t_view setDelegate: m_delegate];
 	
 	return t_view;
@@ -1013,7 +1013,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCiOSBrowserDelegate
+@implementation com_runrev_livecode_MCiOSBrowserDelegate
 
 - (id)initWithInstance:(MCiOSBrowserControl*)instance
 {

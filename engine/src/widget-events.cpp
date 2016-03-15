@@ -40,6 +40,7 @@
 #include "chunk.h"
 #include "graphicscontext.h"
 #include "dispatch.h"
+#include "tooltip.h"
 
 #include "globals.h"
 #include "context.h"
@@ -281,6 +282,16 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
 
     if (t_focused_widget == nil)
     {
+        // We can still be focused if the mouse is within the resize handles
+        if (p_widget -> getstate(CS_SELECTED)
+            && p_widget -> sizehandles(p_x, p_y) != 0)
+        {
+            t_focused_widget = p_widget -> getwidget();
+        }
+    }
+    
+    if (t_focused_widget == nil)
+    {
         if (m_mouse_focus != nil &&
             MCWidgetGetHost(m_mouse_focus) != p_widget)
             return False;
@@ -332,11 +343,16 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
         // The mouse has moved into a widget within this control.
         if (t_focused_changed)
         {
-            mouseLeave(m_mouse_focus);
+            if (m_mouse_focus != nil)
+                mouseLeave(m_mouse_focus);
         
             MCValueAssignOptional(m_mouse_focus, t_focused_widget);
             
             mouseEnter(m_mouse_focus);
+            
+            // If we are in browse mode, then trigger the tooltip.
+            if (p_widget -> getstack() -> gettool(p_widget) == T_BROWSE)
+                MCtooltip -> settip(p_widget -> gettooltip());
         }
         
         if (t_pos_changed)
@@ -345,9 +361,12 @@ Boolean MCWidgetEventManager::event_mfocus(MCWidget* p_widget, int2 p_x, int2 p_
     else if (t_focused_widget == nil)
     {
         // The mouse has moved out of this widget.
-        mouseLeave(m_mouse_focus);
+        if (t_focused_changed)
+        {
+            mouseLeave(m_mouse_focus);
         
-        MCValueAssignOptional(m_mouse_focus, t_focused_widget);
+            MCValueAssignOptional(m_mouse_focus, t_focused_widget);
+        }
     }
     
     // If we are the focused widget, then we handled it.

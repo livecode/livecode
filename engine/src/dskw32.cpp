@@ -5245,6 +5245,20 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         
         return dns_servers_from_registry(r_list);
     }
+    
+    virtual void ShowMessageDialog(MCStringRef p_title,
+                                   MCStringRef p_message)
+    {
+        MCAutoStringRefAsWString t_title_w;
+        if (!t_title_w . Lock(p_title))
+            return;
+        
+        MCAutoStringRefAsWString t_message_w;
+        if (!t_message_w . Lock(p_message))
+            return;
+        
+        MessageBoxW(HWND_DESKTOP, *t_message_w, *t_title_w, MB_APPLMODAL | MB_OK);
+    }
 };
 
 // MW-2010-05-09: This is bootstrap 'main' that effectively implemented a CreateProcess

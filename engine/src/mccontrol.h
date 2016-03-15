@@ -132,7 +132,7 @@ public:
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite) = 0;
 
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
 	virtual Boolean kfocusset(MCControl *target);
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual MCControl *findnum(Chunk_term type, uint2 &num);
@@ -170,7 +170,7 @@ public:
 	void drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 	               Arrow_direction dir, Boolean border, Boolean hilite);
 	void continuesize(int2 x, int2 y);
-	uint2 sizehandles();
+	uint2 sizehandles(int2 px, int2 py);
 	void start(Boolean canclone);
 	void end(bool p_send_mouse_up, bool p_release);
 	void create(int2 x, int2 y);

@@ -83,7 +83,6 @@ extern Boolean MCproportionalthumbs;
 extern Boolean MCdontuseNS;
 extern Boolean MCdontuseQT;
 extern Boolean MCdontuseQTeffects;
-extern Boolean MCfreescripts;
 extern uint4 MCeventtime;
 extern uint2 MCbuttonstate;
 extern uint2 MCmodifierstate;
@@ -163,7 +162,7 @@ extern uint2 MCnsockets;
 extern MCStack **MCusing;
 extern uint2 MCnusing;
 extern uint2 MCiconicstacks;
-extern uint2 MCwaitdepth;
+extern MCSemaphore MCwaitdepth;
 extern uint4 MCrecursionlimit;
 
 
@@ -181,7 +180,7 @@ extern MCStack *MCstaticdefaultstackptr;
 extern MCStack *MCmousestackptr;
 extern MCStack *MCclickstackptr;
 extern MCStack *MCfocusedstackptr;
-extern MCObject *MCtargetptr;
+extern MCObjectPtr MCtargetptr;
 extern MCObject *MCmenuobjectptr;
 extern MCCard *MCdynamiccard;
 extern Boolean MCdynamicpath;

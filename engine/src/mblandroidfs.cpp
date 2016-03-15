@@ -590,3 +590,51 @@ real8 MCAndroidSystem::GetFreeDiskSpace()
     return 0.0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2016-03-04: [[ Bug 16917 ]] Return location of installed libraries.
+bool MCAndroidGetLibraryPath(MCStringRef &r_path)
+{
+	MCStringRef t_path;
+	t_path = nil;
+	
+	MCAndroidEngineCall("getLibraryPath", "x", &t_path);
+	
+	if (t_path == nil)
+		return false;
+	
+	r_path = t_path;
+	return true;
+}
+
+// IM-2016-03-04: [[ Bug 16917 ]] Return full path to the given library
+bool MCAndroidResolveLibraryPath(MCStringRef p_library, MCStringRef &r_path)
+{
+	// if the path is absolute then just return a copy.
+	if (MCStringBeginsWithCString(p_library, (const char_t*)"/", kMCStringOptionCompareExact))
+		return MCStringCopy(p_library, r_path);
+	
+	MCAutoStringRef t_path;
+	if (!MCAndroidGetLibraryPath(&t_path))
+		return false;
+	
+	if (!t_path.MakeMutable())
+		return false;
+	
+	if (!MCStringEndsWithCString(*t_path, (const char_t*)"/", kMCStringOptionCompareExact))
+	{
+		if (!MCStringAppendNativeChar(*t_path, '/'))
+			return false;
+	}
+	
+	if (!MCStringAppend(*t_path, p_library))
+		return false;
+	
+	if (!t_path.MakeImmutable())
+		return false;
+	
+	r_path = t_path.Take();
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////

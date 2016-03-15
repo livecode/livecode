@@ -521,7 +521,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	return IO_NORMAL;
 }
 
-IO_stat MCStack::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCStack::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	uint32_t t_size, t_flags;
 	t_size = 0;
@@ -538,12 +538,12 @@ IO_stat MCStack::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
 
-IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -570,7 +570,7 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 //---- 2.7+:
 //  . F_OPAQUE now valid -  previous versions must be true
 	uint4 t_old_flags;
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		t_old_flags = flags;
 		flags |= F_OPAQUE;
@@ -592,7 +592,7 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//   we don't want to apply it to the rect that we save, so temporarily
 	//   adjust around object save. 
 	rect . height += getscroll();
-	stat = MCObject::save(stream, p_part, true);
+	stat = MCObject::save(stream, p_part, true, p_version);
 	rect = t_rect_to_restore;
 	if (stat != IO_NORMAL)
 		return stat;
@@ -605,18 +605,18 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 
 //---- 2.7+:
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		flags = t_old_flags;
 	}
 //
 	
-	stat = save_stack(stream, p_part, p_force_ext);
+	stat = save_stack(stream, p_part, p_force_ext, p_version);
 	
 	return stat;
 }
 
-IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 	
@@ -625,12 +625,12 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_TITLE)
 	{
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if (MCstackfileversion >= 7000)
+		if (p_version >= 7000)
 		{
 			if ((stat = IO_write_stringref_new(title, stream, true)) != IO_NORMAL)
 				return stat;
 		}
-		else if (MCstackfileversion >= 5500)
+		else if (p_version >= 5500)
 		{
 			// MW-2012-03-04: [[ StackFile5500 ]] If the stackfile version is 5.5, then
 			//   write out UTF-8 directly.
@@ -664,11 +664,11 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
     }
 	
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-    if ((stat = IO_write_stringref_new(externalfiles, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+    if ((stat = IO_write_stringref_new(externalfiles, stream, p_version >= 7000)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
-	if ((stat = MCLogicalFontTableSave(stream, MCstackfileversion)) != IO_NORMAL)
+	if ((stat = MCLogicalFontTableSave(stream, p_version)) != IO_NORMAL)
 		return stat;
 	
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -677,13 +677,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCAutoStringRef t_sf;
 		if (!getstackfiles(&t_sf))
 			return IO_ERROR;
-		if ((stat = IO_write_stringref_new(*t_sf, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(*t_sf, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_MENU_BAR)
-		if ((stat = IO_write_nameref_new(_menubar, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+		if ((stat = IO_write_nameref_new(_menubar, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	
 	if (flags & F_LINK_ATTS)
@@ -692,30 +692,30 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
         
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-            || (stat = IO_write_stringref_new(linkatts->colorname != nil ? linkatts->colorname : kMCEmptyString, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+            || (stat = IO_write_stringref_new(linkatts->colorname != nil ? linkatts->colorname : kMCEmptyString, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-                || (stat=IO_write_stringref_new(linkatts->hilitecolorname != nil ? linkatts->hilitecolorname : kMCEmptyString, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
+                || (stat=IO_write_stringref_new(linkatts->hilitecolorname != nil ? linkatts->hilitecolorname : kMCEmptyString, stream, p_version >= 7000))!=IO_NORMAL)
 			return stat;
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-                || (stat=IO_write_stringref_new(linkatts->visitedcolorname != nil ? linkatts->visitedcolorname : kMCEmptyString, stream, MCstackfileversion >= 7000))!=IO_NORMAL)
+                || (stat=IO_write_stringref_new(linkatts->visitedcolorname != nil ? linkatts->visitedcolorname : kMCEmptyString, stream, p_version >= 7000))!=IO_NORMAL)
 			return stat;
 		
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = savepropsets(stream)) != IO_NORMAL)
+	if ((stat = savepropsets(stream, p_version)) != IO_NORMAL)
 		return stat;
 	if (cards != NULL)
 	{
 		MCCard *cptr = cards;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = (MCCard *)cptr->next();
 		}
@@ -726,7 +726,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCControl *cptr = controls;
 		do
 		{
-			if ((stat = cptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = cptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			cptr = (MCControl *)cptr->next();
 		}
@@ -737,7 +737,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCAudioClip *acptr = aclips;
 		do
 		{
-			if ((stat = acptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = acptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			acptr = (MCAudioClip *)acptr->next();
 		}
@@ -748,7 +748,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCVideoClip *vptr = vclips;
 		do
 		{
-			if ((stat = vptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = vptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			vptr = (MCVideoClip *)vptr->next();
 		}
@@ -759,7 +759,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		MCStack *sptr = substacks;
 		do
 		{
-			if ((stat = sptr->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+			if ((stat = sptr->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 				return stat;
 			sptr = (MCStack *)sptr->nptr;
 		}

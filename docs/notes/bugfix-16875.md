@@ -1,0 +1,1 @@
+# Don't modify card controls if group command fails
