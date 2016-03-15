@@ -110,7 +110,7 @@ pango libpango-1.0.so.0
 	pango_font_metrics_get_underline_thickness: (pointer) -> (integer)
 	pango_font_metrics_unref: (pointer) -> ()
 
-lcms liblcms.so.1
+lcms liblcms2.so.2
 	cmsOpenProfileFromFile: (pointer, pointer) -> (pointer)
 	cmsOpenProfileFromMem: (pointer, integer) -> (pointer)
 	cmsCloseProfile: (pointer) -> (integer)
@@ -126,7 +126,7 @@ lcms liblcms.so.1
 	cmsGetColorSpace: (pointer) -> (integer)
 	
 	cmsBuildGamma: (integer, double) -> (pointer)
-	cmsFreeGamma: (pointer) -> ()
+	cmsFreeToneCurve: (pointer) -> ()
 
 gdk libgdk-x11-2.0.so.0
 	gdk_drawable_get_image: (pointer, integer, integer, integer, integer) -> (pointer)
