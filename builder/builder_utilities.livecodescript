@@ -62,6 +62,11 @@ on builderBuild pWhich, pPlatforms, pEdition, pType
             dispatch "toolsBuilderRun" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
          end repeat
          break
+      case "Bundle"
+         repeat for each line tPlatform in pPlatforms
+            dispatch "toolsBuilderRunBundle" to stack builderToolsBuilderStack() with tPlatform, pEdition, tVersion
+         end repeat
+         break
       case "Engine"
          dispatch "engineBuilderRun" to stack builderEngineBuilderStack() with "environment", pEdition, tVersion
          repeat for each line tPlatform in pPlatforms

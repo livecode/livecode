@@ -5809,7 +5809,25 @@ static bool __MCStringExpandAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 	// Fetch the capacity.
 	uindex_t t_capacity;
 	t_capacity = __MCStringGetCapacity(self);
-    
+
+	/* Overflow check.  A string's length needs to fit into an
+	 * index_t, because sometimes negative indices are used.  Ensure that the
+	 * length of the expanded string (including a null byte) fits. */
+	if (INDEX_MAX == p_count || INDEX_MAX - p_count - 1 < self->char_count)
+	{
+		return MCErrorThrowOutOfMemory();
+	}
+
+	/* Overflow check.  A string's total storage size must fit into a
+	 * size_t.  The maximum capacity (i.e. number of chars) depends on whether it's a
+	 * Unicode (multibyte) or native (unibyte) string representation. */
+	size_t t_capacity_limit =
+		SIZE_MAX / (__MCStringIsNative(self) ? sizeof(char_t) : sizeof(unichar_t));
+	if (t_capacity_limit == p_count || t_capacity_limit - p_count - 1 < self->char_count)
+	{
+		return MCErrorThrowOutOfMemory();
+	}
+
 	// The capacity field stores the total number of chars that could fit not
 	// including the implicit NUL, so if we fit, we can fast-track.
 	if (t_capacity != 0 && self -> char_count + p_count <= t_capacity)

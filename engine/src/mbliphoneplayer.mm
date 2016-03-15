@@ -955,14 +955,15 @@ void MCiOSPlayerControl::ExecStop(MCExecContext& ctxt)
 {
     [m_controller stop];
 }
+// PM-2016-02-23: [[ Bug 16984 ]] Make sure the seek direction is respected
 void MCiOSPlayerControl::ExecBeginSeekingBackward(MCExecContext& ctxt)
 {
-    [m_controller beginSeekingForward];
+    [m_controller beginSeekingBackward];
 }
 
 void MCiOSPlayerControl::ExecBeginSeekingForward(MCExecContext& ctxt)
 {
-    [m_controller beginSeekingBackward];
+    [m_controller beginSeekingForward];
 }
 void MCiOSPlayerControl::ExecEndSeeking(MCExecContext& ctxt)
 {
