@@ -11,6 +11,7 @@ LiveCode supports the following versions of Windows:
 * Windows 7 (both 32-bit and 64-bit)
 * Windows Server 2008
 * Windows 8.x (Desktop)
+* Windows 10
 
 **Note:** On 64-bit Windows installations, LiveCode runs as a 32-bit application through the WoW layer.
 
@@ -52,8 +53,6 @@ The Mac engine supports:
 * 10.9.x (Mavericks) on Intel
 * 10.10.x (Yosemite) on Intel
 * 10.11.x (El Capitan) on Intel
-
-**Note:** LiveCode runs as a 32-bit application regardless of the capabilities of the underlying processor.
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
