@@ -809,8 +809,15 @@ end ExtensionsCreate
 
 private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
    set the itemdelimiter to slash
-   builderLog "report", "Creating release notes for" && item -1 of pExtPath
    
+   -- Skip the extension if it doesn't appear to have been compiled
+   if there is not a file ExtensionsGetManifestPath(pExtPath) then
+      builderLog "report", "Skipping uncompiled extension" && item -1 of pExtPath
+      exit ExtensionsCreatePath
+   end if
+
+   builderLog "report", "Creating release notes for" && item -1 of pExtPath
+
    -- Scan and collate all information for this particular extension
    local tNotesPath
    put pExtPath & "/notes" into tNotesPath
@@ -853,6 +860,23 @@ private function ExtensionsGetSectionName pExtPath
 end ExtensionsGetSectionName
 
 private function ExtensionsGetName pExtPath
+   local tManifest, tXmlId
+   put FileGetContents(ExtensionsGetManifestPath(pExtPath)) into tManifest
+   put revXMLCreateTree(tManifest, true, true, false) into tXmlId
+   
+   if tXmlId begins with "xmlerr" then
+      throw "Invalid extension manifest XML in [[tManifestFile]]"
+   end if
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tXmlId, "/package/title"), "UTF-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return empty
+   end if
+   return tTargetName
+end ExtensionsGetName
+
+private function ExtensionsGetKind pExtPath
    -- Horrible-ish hack for extracting the "real" name of the LiveCode
    -- module.  See also tools/build-extensions.sh.
    local tShortName
@@ -868,27 +892,16 @@ private function ExtensionsGetName pExtPath
       end if
    end repeat
 
-   -- Try to figure out the path for the compiled manifest file
+   return tModuleName
+end ExtensionsGetKind
+
+private function ExtensionsGetManifestPath pExtPath
    local tManifestFile
    put FileGetPath("built-extensions") into tManifestFile
-   put slash & tModuleName after tManifestFile
+   put slash & ExtensionsGetKind(pExtPath) after tManifestFile
    put slash & "manifest.xml" after tManifestFile
-   
-   local tManifest, tXmlId
-   put FileGetContents(tManifestFile) into tManifest
-   put revXMLCreateTree(tManifest, true, true, false) into tXmlId
-   
-   if tXmlId begins with "xmlerr" then
-      throw "Invalid extension manifest XML in [[tManifestFile]]"
-   end if
-   
-   local tTargetName
-   put textDecode(revXMLNodeContents(tXmlId, "/package/title"), "UTF-8") into tTargetName
-   if tTargetName begins with "xmlerr" then
-      return empty
-   end if
-   return tTargetName
-end ExtensionsGetName
+   return tManifestFile
+end ExtensionsGetManifestPath
 
 ----------------------------------------------------------------
 -- Dictionary change generation
@@ -1369,25 +1382,15 @@ end FileGetUTF8Contents
 private function FileGetContents pPath, pEncoding
    local tContents, tResult
    
-   if pEncoding is empty then
-      open file pPath for binary read
-   else
-      open file pPath for pEncoding text read
-   end if
-   
+   put url("binfile:" & pPath) into tContents
    put the result into tResult
    if tResult is not empty then
-      throw merge("Failed to open [[pPath]]: [[tResult]]")
-   end if
-   
-   read from file pPath until end
-   put the result into tResult
-   if tResult is not empty and tResult is not "eof" then
       throw merge("Failed to read [[pPath]]: [[tResult]]")
    end if
-   put it into tContents
    
-   close file pPath -- unchecked
+   if pEncoding is not empty then
+      put textDecode(tContents, pEncoding) into tContents
+   end if
    
    return tContents
 end FileGetContents
