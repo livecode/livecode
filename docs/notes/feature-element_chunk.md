@@ -1,11 +1,11 @@
 # Widget element chunk
 
 In order to facilitate more efficient manipulation of a widget's underlying data,
-the following syntax has been added:
+the following LiveCode Script syntax has been added:
 
-`the <property> of { element <index> , of } <widget>`
+    the <property> of { element <index> , of } <widget>
 
-This syntax maps to the following handlers:
+This syntax maps to the following LiveCode Builder handlers:
 - `Set<Property>OfElement(<path>, <value>)`
 - `Get<Property>OfElement(<path>)`
 
