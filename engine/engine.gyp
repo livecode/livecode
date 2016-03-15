@@ -272,7 +272,7 @@
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
 							
-							'-Wl,-T,<(src_top_dir_abs)/engine/linux.link',
+							'-Wl,-T,<(src_top_dir_abs)/engine/standalone-armv6-hf.link',
 						],
 						
 						'actions':
