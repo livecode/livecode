@@ -5815,7 +5815,7 @@ static bool __MCStringExpandAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 	 * length of the expanded string (including a null byte) fits. */
 	if (INDEX_MAX == p_count || INDEX_MAX - p_count - 1 < self->char_count)
 	{
-		return MCErrorThrow(kMCErrorOutOfMemory);
+		return MCErrorThrowOutOfMemory();
 	}
 
 	/* Overflow check.  A string's total storage size must fit into a
@@ -5825,7 +5825,7 @@ static bool __MCStringExpandAt(MCStringRef self, uindex_t p_at, uindex_t p_count
 		SIZE_MAX / (__MCStringIsNative(self) ? sizeof(char_t) : sizeof(unichar_t));
 	if (t_capacity_limit == p_count || t_capacity_limit - p_count - 1 < self->char_count)
 	{
-		return MCErrorThrow(kMCErrorOutOfMemory);
+		return MCErrorThrowOutOfMemory();
 	}
 
 	// The capacity field stores the total number of chars that could fit not
