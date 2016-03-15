@@ -1619,7 +1619,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-                dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false, kMCDrawTextNoBreak);
+                dc -> drawtext_substring(textx, cury + yoffset + 1, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}

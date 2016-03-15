@@ -1718,7 +1718,13 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	uint32_t t_part_id;
 	if (t_success)
         t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
-
+    
+    // Check that the object is a button or a stack.
+    if (t_success &&
+        t_object -> gettype() != CT_BUTTON &&
+        t_object -> gettype() != CT_STACK)
+        t_success = false;
+    
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
 	bool t_is_cyclic;

@@ -1,4 +1,4 @@
-﻿script "Command Line Builder"
+script "Command Line Builder"
 local sWarnAsError
 
 on startup

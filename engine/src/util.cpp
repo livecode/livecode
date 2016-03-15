@@ -2343,9 +2343,9 @@ void MCU_base64decode(MCStringRef in, MCDataRef &out)
 // SN-2014-12-02": [[ Bug 14015 ]] The fix should only affect the URLs explicitely encoded as UTF-8
 bool MCFiltersUrlEncode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
 
-void MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded)
+bool MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded)
 {
-	/* UNCHECKED */ MCFiltersUrlEncode(p_url, p_use_utf8, r_encoded);
+	return MCFiltersUrlEncode(p_url, p_use_utf8, r_encoded);
 }
 
 bool MCFiltersUrlDecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
