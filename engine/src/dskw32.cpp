@@ -3697,6 +3697,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// absolute path
 			t_canonised_path = p_path;
 		}
+		
+		// PM-2016-03-15: [[ Bug 16300 ]] In case of a serial port, the path is of the form "COMX:" where X=1,2,..
+		else if (MCStringBeginsWith(p_path, MCSTR("COM"),kMCStringOptionCompareCaseless) && MCStringEndsWith(p_path, MCSTR(":"), kMCStringOptionCompareExact))
+		{
+			t_canonised_path = MCValueRetain(p_path);
+		}
+		
 		else
 		{
 			// relative to current folder
