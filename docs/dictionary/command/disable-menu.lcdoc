@@ -42,12 +42,12 @@ Since a LiveCode menu bar is implemented as a group of buttons (one button per m
 
 Example of disabling a sub menu item using an open parenthesis:
 
-Main1
-  Sub1
-  (Sub2
-  Sub3
-Main2
-Main3
+	Main1
+		Sub1
+		(Sub2
+		Sub3
+	Main2
+	Main3
 
 The menu item "Sub2" will be disabled.
 

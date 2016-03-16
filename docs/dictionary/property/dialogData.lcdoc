@@ -29,8 +29,8 @@ Since the <dialogData> <property> is <global> and can be set or accessed by any 
 
 >*Tip:*  The built-in "Answer Dialog" and "Ask Dialog" stacks, which are used by the <ask> and <answer> <command|commands>, use the <dialogData> <property> to <pass> data between the <development environment> and the <dialog box>. To see the <script|scripts> used for these <stacks>, enter one of the following <statement|statements> into the <message box>:
 
-  edit the script of card 1 of stack "Answer Dialog"
-  edit the script of card 1 of stack "Ask Dialog"
+    edit the script of card 1 of stack "Answer Dialog"
+    edit the script of card 1 of stack "Ask Dialog"
 
 References: default (property), stack (object), field (object), default (keyword), button (keyword), string (keyword), message box (keyword), pass (control_st), script (glossary), variable (glossary), handler (glossary), property (glossary), dialog box (glossary), development environment (glossary), modal dialog box (glossary), command (glossary), caller (glossary), parameter (glossary), statement (glossary), pass (glossary), answer (command), ask (command), modeless (command), global (command), stacks (function)
 

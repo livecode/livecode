@@ -40,12 +40,12 @@ Setting a button's <menuMode> to "popup" has the same result as creating the equ
 
 tabbed:  Displays the <button(object)|button's> contents as a horizontal list of tabs, like the tabs on <file> <folders>. Each <line> of the <button(object)|button's> contents is the title of a tab. Usually, <tabbed button|tabbed buttons> are used for <dialog box|dialog boxes> or <palette|palettes> containing a different <group> of <control|controls> for each tab. You can <handle> the <menuPick> <message> to display the correct <group> when a tab is clicked:
 
-  on menuPick newTab,oldTab -- sent when user clicks a tab
-    lock screen -- hide the swap
-    hide group oldTab
-    show group newTab
-    unlock screen
-  end menuPick
+      on menuPick newTab,oldTab -- sent when user clicks a tab
+         lock screen -- hide the swap
+         hide group oldTab
+         show group newTab
+         unlock screen
+      end menuPick
 
 comboBox:  Displays the <button(object)|button's> contents as a drop-down scrolling list, with an editable <field> at the top.
 

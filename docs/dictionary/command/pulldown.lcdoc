@@ -23,9 +23,9 @@ Use the <pulldown> <command> to display a <stack menu> as a pulldown <menu> in s
 
 Use the <pulldown> <command> in a <mouseDown> <handler> to display the <menu> :
 
-  on mouseDown
-    pulldown stack "Lookup Options"
-  end mouseDown
+    on mouseDown
+       pulldown stack "Lookup Options"
+    end mouseDown
 
 While the menu is displayed, the handler pauses.
 

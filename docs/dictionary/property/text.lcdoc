@@ -30,8 +30,8 @@ Use the <text> <property> to work with the contents of a <field>, <button(keywor
 Fields
 The text of a field is simply the contents of the field. You can also use the <target> <keyword> to obtain the contents of a <field> :
 
-  the text of the target is target
--- evaluates to true if target is a field
+    the text of the target is target
+    -- evaluates to true if target is a field
 
 The <text> of a field is always returned in the native encoding.
 
@@ -67,8 +67,8 @@ There are also some formats that are not fully supported but can be imported. Th
 
 These two statements are equivalent:
 
-  set the text of object to <string> 
-  put <string> into object
+    set the text of object tObjectId to tString
+    put tString into object tObjectId
 
 >*Tip:*  Instead of displaying a <button(object)|button's> text when using the <button(keyword)> as a menu, you can designate a <stack> to be displayed as the menu contents. This type of menu is called a <stack menu>. If the <button's (object)> <menuName> <property> is not empty, the <stack> specified by the <menuName> is used as the menu contents, instead of the <button's (object)>text <property>.
 
