@@ -175,11 +175,10 @@ private:
 		if (m_widget == nil)
 			return MCErrorThrowOutOfMemory();
 		
+        m_widget->setparent(this);
 		m_widget->bind(p_kind, nil);
-		
-		appendcontrol(m_widget);
-		curcard->newcontrol(m_widget, False);
-		
+		m_widget->attach(OP_NONE, false);
+        
 		MCExecContext ctxt(MCdefaultstackptr, nil, nil);
 		uintptr_t t_iter;
 		t_iter = 0;
@@ -382,7 +381,7 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	t_old_popup = s_widget_popup;
 	s_widget_popup = t_popup;
 
-	t_popup -> setparent(MCdispatcher);
+    t_popup -> setparent(MCdispatcher);
 	MCdispatcher -> add_transient_stack(t_popup);
 	
 	if (!t_popup->openpopup(p_kind, t_at, p_properties))
