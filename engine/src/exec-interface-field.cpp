@@ -75,7 +75,8 @@ static MCExecEnumTypeElementInfo _kMCInterfaceFieldCursorMovementElementInfo[] =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceTextDirectionElementInfo[] =
 {
-    { "auto", kMCTextDirectionAuto, false },
+	// PM-2016-03-16: [[ Bug 17122 ]] Allow setting the textDirection to "empty"
+    { "", kMCTextDirectionAuto, false },
     { "rtl", kMCTextDirectionRTL, false },
     { "ltr", kMCTextDirectionLTR, false },
 };
