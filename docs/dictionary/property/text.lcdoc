@@ -38,7 +38,7 @@ The <text> of a field is always returned in the native encoding.
 Buttons
 The <text> of a <button(keyword)> is used as the <button(object)|button's> <menu> contents. (A menu whose contents is the <text> of a <button(keyword)> is called a <button menu>. ) If the <button(object)|button's> <style> is not set to "menu", the setting of its <text> <property> has no effect. However, the <text> <property> can be used to store data in a <button(keyword)>, regardless of the <button(object)|button's> <style>; the text is not visible to the user unless the <button(keyword)> is a <button menu>.
 
-See the <menu keyword> entry for more information about the format of menu item entries in the menu button text.
+See the <menu(keyword)> entry for more information about the format of menu item entries in the menu button text.
 
 The <text> of a button is always returned in the native encoding.
 

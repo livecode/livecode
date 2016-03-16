@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the style of <object> to <style> 
 
-Summary: Specifies the general <appearance> and <behavior> of an <object>.
+Summary: Specifies the general <appearance> and <behavior> of an <object(object)>.
 
 Associations: button
 
