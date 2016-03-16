@@ -494,61 +494,78 @@ struct MCObjectListener
 };
 
 static MCObjectListener *s_object_listeners = nil;
+static bool s_listeners_locked = false;
 
-// MW-2013-08-27: [[ Bug 11126 ]] Whilst processing, these statics hold the next
-//   listener / target to process, thus avoiding dangling pointers.
-static MCObjectListener *s_next_listener_to_process = nil;
-static MCObjectListenerTarget *s_next_listener_target_to_process = nil;
-
-static void remove_object_listener_from_list(MCObjectListener *&p_listener, MCObjectListener *p_prev_listener)
+static void prune_object_listeners()
 {
-	MCObjectListenerTarget *t_target;
-	t_target = nil;
-	MCObjectListenerTarget *t_next_target;
-	t_next_target = nil;
-	for (t_target = p_listener -> targets; t_target != nil; t_target = t_next_target)
-	{
-		t_next_target = t_target -> next;
-		t_target -> target -> Release();
-		MCMemoryDelete(t_target);
-	}	
-	
-	if (p_listener -> object -> Exists())
-		p_listener -> object -> Get() -> unlisten();
-	p_listener -> object -> Release();
-	if (p_prev_listener != nil)
-		p_prev_listener -> next = p_listener -> next;
-	else
-		s_object_listeners = p_listener -> next;
-	// MW-2013-08-27: [[ Bug 11126 ]] If this pointer is going away, make sure we fetch the next
-	//   listener into the static.
-	if (s_next_listener_to_process == p_listener)
-		s_next_listener_to_process = p_listener -> next;
-	MCMemoryDelete(p_listener);
-	p_listener = p_prev_listener;
-}
+    if (s_listeners_locked)
+        return;
+    
+    MCObjectListener *t_prev_listener;
+    t_prev_listener = nil;
+    
+    MCObjectListener *t_listener;
+    t_listener = s_object_listeners;
 
-static void remove_object_listener_target_from_list(MCObjectListenerTarget *&p_target, MCObjectListenerTarget *p_prev_target, MCObjectListener* &p_listener, MCObjectListener* p_prev_listener)
-{
-	p_target -> target -> Release();
-	if (p_prev_target != nil)
-		p_prev_target -> next = p_target -> next;
-	else
-		p_listener -> targets = p_target -> next;
-	if (p_listener -> targets == nil)
-		remove_object_listener_from_list(p_listener, p_prev_listener);
-	// MW-2013-08-27: [[ Bug 11126 ]] If this pointer is going away, make sure we fetch the next
-	//   target into the static.
-	if (p_target == s_next_listener_target_to_process)
-		s_next_listener_target_to_process = p_target -> next;
-	MCMemoryDelete(p_target);
-	p_target = p_prev_target;
+    for (t_listener = s_object_listeners; t_listener != nil; t_listener = t_listener -> next)
+    {
+        MCObjectListenerTarget *t_target;
+        t_target = nil;
+        MCObjectListenerTarget *t_prev_target;
+        t_prev_target = nil;
+        
+        bool t_listener_exists;
+        t_listener_exists = t_listener -> object -> Exists();
+        
+        // Check all the listener's targets to see if they can be pruned
+        for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
+        {
+            // Prune target from listener target list if listener
+            // doesn't exist, or if target doesn't exist
+            if (!t_listener_exists || !t_target -> target -> Exists())
+            {
+                t_target -> target -> Release();
+                
+                if (t_prev_target != nil)
+                    t_prev_target -> next = t_target -> next;
+                else
+                    t_listener -> targets = t_target -> next;
+                
+                MCMemoryDelete(t_target);
+                t_target = t_prev_target;
+            }
+        }
+        
+        // If the listening object no longer exists, or the list of
+        // listener targets is nil, then prune from listener list.
+        if (!t_listener_exists || t_listener -> targets == nil)
+        {
+            t_listener -> object -> Release();
+            
+            if (t_prev_listener != nil)
+                t_prev_listener -> next = t_listener -> next;
+            else
+                s_object_listeners = t_listener -> next;
+            
+            MCMemoryDelete(t_listener);
+            t_listener = t_prev_listener;
+        }
+    }
 }
 
 void MCInternalObjectListenerMessagePendingListeners(void)
 {
 	if (MCobjectpropertieschanged)
 	{
+        // Lock the listener list, so that no items are removed as a result
+        // of propertyChenged messages in the IDE. If an object is unlistened
+        // to as a result of these messages, Exists() will return false and
+        // the object will be skipped, and removed properly later on.
+        s_listeners_locked = true;
+        
+        bool t_changed;
+        t_changed = false;
+        
 		MCobjectpropertieschanged = False;
 		
 		MCObjectListener *t_prev_listener;
@@ -558,12 +575,10 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 		t_listener = s_object_listeners;
 		while(t_listener != nil)
 		{
-			// MW-2013-08-27: [[ Bug 11126 ]] This static is updated by the remove_* functions
-			//   to ensure we don't get any dangling pointers.
-			s_next_listener_to_process = t_listener -> next;
-			
 			if (!t_listener -> object -> Exists())
-				remove_object_listener_from_list(t_listener, t_prev_listener);
+            {
+                t_changed = true;
+            }
 			else
 			{
 				uint8_t t_properties_changed;
@@ -584,32 +599,56 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 					{
 						t_listener -> last_update_time = t_new_time;
 						t_target = t_listener->targets;
+                        
 						while (t_target != nil)
 						{
-							// MW-2013-08-27: [[ Bug 11126 ]] This static is updated by the remove_* functions
-							//   to ensure we don't get any dangling pointers.
-							s_next_listener_target_to_process = t_target -> next;
-							
-							if (!t_target -> target -> Exists())
-								remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
-							else
-							{
-								// MM-2012-11-06: Added resizeControl(Started/Ended) and gradientEdit(Started/Ended) messages.
-								if (t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)				
-									t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
-								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)								
-									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
-								if (t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)								
-									t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
-								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)								
-									t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
-								if (t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)								
-									t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
+                            bool t_target_exists;
+                            t_target_exists = t_target -> target -> Exists();
+                            
+                            // Make sure the target object still exists and is still
+                            // being listened to before sending any messages.
+                            if (t_target_exists
+                                && t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)
+                            {
+                                t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
+                                t_target_exists = t_target -> target -> Exists();
+                            }
+                            
+                            if (t_target_exists
+                                && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)
+                            {
+                                t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
+                                t_target_exists = t_target -> target -> Exists();
+                            }
+                                
+                            if (t_target_exists
+                                && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)
+                            {
+                                t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
+                                t_target_exists = t_target -> target -> Exists();
+                            }
+                                
+                            if (t_target_exists
+                                && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)
+                            {
+                                t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
+                                t_target_exists = t_target -> target -> Exists();
+                            }
+                                
+                            if (t_target_exists
+                                && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)
+                            {
+                                t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
+                                t_target_exists = t_target -> target -> Exists();
+                            }
+                            
+                            if (!t_target_exists)
+                            {
+                                t_changed = true;
+                            }
 								
-								t_prev_target = t_target;					
-							}
-							
-							t_target = s_next_listener_target_to_process;
+                            t_prev_target = t_target;
+							t_target = t_target -> next;
 						}
 					}
 					else
@@ -619,66 +658,20 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 				t_prev_listener = t_listener;
 			}
 			
-			// MW-2013-08-27: [[ Bug 11126 ]] Use the static as the next in the chain.
-			t_listener = s_next_listener_to_process;
+            t_listener = t_listener -> next;
 		}
+        s_listeners_locked = false;
+        
+        if (t_changed)
+            prune_object_listeners();
 	}
 }
-
-#ifdef LEGACY_EXEC
-void MCInternalObjectListenerListListeners(MCExecPoint &ep)
-{
-	ep . clear();
-	MCObjectHandle *t_current_object;
-	t_current_object = ep . getobj() -> gethandle();
-	
-	bool t_first;
-	t_first = true;
-	
-	MCObjectListener *t_prev_listener;
-	t_prev_listener = nil;
-	
-	MCObjectListener *t_listener;
-	t_listener = s_object_listeners;
-	while(t_listener != nil)
-	{
-		if (!t_listener -> object -> Exists())
-			remove_object_listener_from_list(t_listener, t_prev_listener);
-		else
-		{				
-			MCObjectListenerTarget *t_target;
-			t_target = nil;
-			MCObjectListenerTarget *t_prev_target;
-			t_prev_target = nil;	
-			
-			MCExecPoint ep1(ep);
-			t_listener -> object -> Get() -> getprop(0, P_LONG_ID, ep1, false);
-						
-			for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
-			{
-				if (!t_target -> target -> Exists())
-					remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
-				else if (t_target -> target ==  t_current_object)
-				{
-					ep . concatmcstring(ep1 . getsvalue(), EC_RETURN, t_first);
-					t_first = false;		
-				}
-			}
-			
-			t_prev_listener = t_listener;
-		}
-		
-		if (t_listener != nil)
-			t_listener = t_listener -> next;
-		else
-			t_listener = s_object_listeners;
-	}
-}
-#endif
 
 void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_listeners, uindex_t& r_count)
 {
-	MCObjectHandle *t_current_object;
+    prune_object_listeners();
+	
+    MCObjectHandle *t_current_object;
 	t_current_object = ctxt . GetObject() -> gethandle();
 	
 	MCObjectListener *t_prev_listener;
@@ -691,31 +684,26 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 	while(t_listener != nil)
 	{
         MCStringRef t_string;
-		if (!t_listener -> object -> Exists())
-			remove_object_listener_from_list(t_listener, t_prev_listener);
-		else
-		{
-			MCObjectListenerTarget *t_target;
-			t_target = nil;
-			MCObjectListenerTarget *t_prev_target;
-			t_prev_target = nil;
-            
-            MCAutoValueRef t_long_id;
-			t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
-            
-			for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
-			{
-				if (!t_target -> target -> Exists())
-					remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
-				else if (t_target -> target ==  t_current_object)
-                {
-                    ctxt . ConvertToString(*t_long_id, t_string);
-                    t_listeners . Push(t_string);
-                }
-			}
-			
-			t_prev_listener = t_listener;
-		}
+
+        MCObjectListenerTarget *t_target;
+        t_target = nil;
+        MCObjectListenerTarget *t_prev_target;
+        t_prev_target = nil;
+        
+        MCAutoValueRef t_long_id;
+        t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
+        
+        for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
+        {
+            if (t_target -> target ==  t_current_object)
+            {
+                ctxt . ConvertToString(*t_long_id, t_string);
+                t_listeners . Push(t_string);
+            }
+        }
+        
+        t_prev_listener = t_listener;
+
 		
 		if (t_listener != nil)
 			t_listener = t_listener -> next;
@@ -897,15 +885,22 @@ public:
 			MCObjectHandle *t_target_object;
             t_target_object = ctxt . GetObjectHandle();
 			
+            bool t_changed;
+            t_changed = false;
 			for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
 			{
 				if (t_target -> target == t_target_object)
 				{
-					remove_object_listener_target_from_list(t_target, t_prev_target, t_listener, t_prev_listener);
-                    return;
+                    t_target -> target -> Release();
+                    t_target -> target = nil;
+                    t_changed = true;
+                    break;
 				}
 				t_prev_target = t_target;
-			}			
+			}
+            
+            if (t_changed)
+                prune_object_listeners();
         }
 	}
 	
