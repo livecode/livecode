@@ -322,9 +322,11 @@ metadata htmlText.user_visible is "false" -- bug 16927
 
 property vScrollbar get getVScrollbar set setVScrollbar
 metadata vScrollbar.editor is "com.livecode.pi.boolean"
+metadata vScrollbar.default is "false"
 
 property hScrollbar get getHScrollbar set setHScrollbar
 metadata hScrollbar.editor is "com.livecode.pi.boolean"
+metadata hScrollbar.default is "false"
 
 property userAgent get getUserAgent set setUserAgent
 metadata userAgent.editor is "com.livecode.pi.text"
