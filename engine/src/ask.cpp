@@ -117,6 +117,7 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 
 		default:
 			sp . backup();
+			mode = AT_QUESTION;
 			t_error = parse_question(sp);
 		break;
 	}
