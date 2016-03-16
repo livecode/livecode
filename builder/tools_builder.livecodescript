@@ -669,13 +669,10 @@ function getTaggedVersion pVersion
    return pVersion
 end getTaggedVersion
 
-function getReadableVersion pVersion
+function getFullReadableVersion pVersion
    local tNumber
    set the itemDelimiter to "-"
    put item 1 of pVersion into tNumber
-   if tNumber ends with ".0" then
-      delete char -2 to -1 of tNumber
-   end if
    
    if item 2 of pVersion is "gm" then
       delete item -2 to -1 of pVersion
@@ -689,10 +686,25 @@ function getReadableVersion pVersion
    end if
    
    return tNumber & tTag
+end getFullReadableVersion
+
+function getReadableVersion pVersion
+   put getFullReadableVersion(pVersion) into pVersion
+   set the itemDelimiter to space
+
+   local tNumber, tTag
+   put item 1 of pVersion into tNumber
+
+   if tNumber ends with ".0" then
+      delete char -2 to -1 of tNumber
+      put tNumber into item 1 of pVersion
+   end if
+
+   return pVersion
 end getReadableVersion
 
 function getBundleFilenameStub pVersion, pPlatform, pEdition
-   return "LiveCode" && the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition && getReadableVersion(pVersion)
+   return "LiveCode" && the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition && getFullReadableVersion(pVersion)
 end getBundleFilenameStub
 
 function getInstallerFilenameStub pVersion, pPlatform, pEdition
