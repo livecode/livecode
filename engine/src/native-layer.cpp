@@ -137,7 +137,8 @@ void MCNativeLayer::OnVisibilityChanged(bool p_visible)
 
 void MCNativeLayer::UpdateVisibility()
 {
-	if (ShouldShowLayer())
+	// IM-2016-03-16: [[ Bug 17138 ]] Always defer updates if the layer is not shown, and can't be drawn to the context.
+	if (ShouldShowLayer() || m_can_render_to_context)
 	{
 		if (m_defer_geometry_changes)
 		{
@@ -148,7 +149,7 @@ void MCNativeLayer::UpdateVisibility()
 	}
 	else
 	{
-		if (!GetCanRenderToContext())
+		if (!m_defer_geometry_changes)
 		{
 			m_defer_geometry_changes = true;
 			m_deferred_rect = m_rect;
@@ -256,7 +257,15 @@ MCObject* MCNativeLayer::findNextLayerBelow(MCObject* p_object)
 
 void MCNativeLayer::SetCanRenderToContext(bool p_can_render)
 {
+	bool t_update;
+	t_update = m_can_render_to_context != p_can_render;
+
 	m_can_render_to_context = p_can_render;
+
+	// IM-2016-03-16: [[ Bug 17138 ]] We may have to defer geometry updates, or apply deferred changes if this changes.
+	//    This is handled by UpdateVisiblity()
+	if (t_update)
+		UpdateVisibility();
 }
 
 bool MCNativeLayer::GetCanRenderToContext()

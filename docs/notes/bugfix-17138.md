@@ -1,0 +1,1 @@
+# Browser: Fix windows browser not setting correct size when resized after creation
