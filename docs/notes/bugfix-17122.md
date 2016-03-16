@@ -1,1 +1,1 @@
-#  Setting the textDirection of a field to empty no longer causes an error
+#  [Dict] Allowed values for textDirection are "rtl", "ltr" and "auto"
