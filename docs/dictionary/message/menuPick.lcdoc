@@ -4,7 +4,7 @@ Type: message
 
 Syntax: menuPick <chosenItem> [| <submenuName>], <previousTab> 
 
-Summary: Sent to a <button> when a <menu item> is chosen from the <menu> associated with that <button>.
+Summary: Sent to a <button(object)> when a <menu item> is chosen from the <menu> associated with that <button(object)>.
 
 Associations: button
 

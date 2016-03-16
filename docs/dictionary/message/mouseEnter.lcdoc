@@ -18,7 +18,7 @@ on mouseEnter -- show a Help field for the control the mouse is over
 end mouseEnter
 
 Description:
-Handle the <mouseEnter> <message> to perform an action (for example, display additional information or <highlight> a <button>) when the <mouse pointer> enters an <object>.
+Handle the <mouseEnter> <message> to perform an action (for example, display additional information or <highlight> a <button(object)>) when the <mouse pointer> enters an <object>.
 
 The <mouseEnter> <message> is sent only when the <Browse tool> is being used.
 
@@ -28,6 +28,6 @@ If the mouse button is down when the mouse pointer enters the control, no <mouse
 
 If a control is shown (by changing its visible <property> to true or using the <show> <command>), and the <mouse pointer> is over the <control> when it is shown, LiveCode sends a <mouseEnter> <message> to the <control>.
 
-References: control (keyword), dragEnter (message), show (command), mouseControl (function), property (glossary), highlight (glossary), button (glossary), Browse tool (glossary), message (glossary), mouse pointer (glossary), command (glossary), object (object)
+References: control (keyword), dragEnter (message), show (command), mouseControl (function), property (glossary), highlight (glossary), button (object), Browse tool (glossary), message (glossary), mouse pointer (glossary), command (glossary), object (object)
 
 Tags: ui
