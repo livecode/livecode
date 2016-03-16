@@ -67,7 +67,7 @@ The following named keys are supported:
 
 On Mac OS X, these keys will be replaced with the appropriate system standard glyph.
 
-A tag can be specified as a `|` character followed by a string of ASCII characters.  If such a tag is present then that tag will take the place of the menu label as the parameter to the <menuPick message>.
+A tag can be specified as a `|` character followed by a string of ASCII characters.  If such a tag is present then that tag will take the place of the menu label as the parameter to the <menuPick(message)>.
 
 A tag will only be recognised following the `<accelerator>`.  To specify a menu tag without an accelerator shortcut, an empty `<accelerator>` can be specified using `/|` followed by the tag text.
 
@@ -83,6 +83,6 @@ decoration must be set along with the <maximize> or <minimize>
 decorations: you cannot use <maximize> or <minimize> without including
 <menu>.
 
-References: style (property), properties (property), menuMode (property), decorations (property), menuPick message (message), menu (keyword), button (keyword), minimize (keyword), text (keyword), maximize (keyword), menuItem (keyword), property (glossary), menu item (glossary), OS X (glossary), Windows (glossary), menu bar (glossary), keyword (glossary), expression (glossary), Mac OS (glossary), evaluate (glossary), Unix (glossary), menus (function), doMenu (command), button (object)
+References: style (property), properties (property), menuMode (property), decorations (property), menuPick (message), menu (keyword), button (keyword), minimize (keyword), text (keyword), maximize (keyword), menuItem (keyword), property (glossary), menu item (glossary), OS X (glossary), Windows (glossary), menu bar (glossary), keyword (glossary), expression (glossary), Mac OS (glossary), evaluate (glossary), Unix (glossary), menus (function), doMenu (command), button (object)
 
 Tags: menus
