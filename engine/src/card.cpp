@@ -890,7 +890,14 @@ Boolean MCCard::mdown(uint2 which)
 		}
 	}
 	if (cptr != NULL)
-	{
+    {
+        // When a control is created with its constructor, it will copy
+        // the id of the given control. In the case of template objects
+        // (as above) the id will be zero. Therefore, we must make sure
+        // the object has a valid id here, otherwise it gets attached to
+        // the card via an objptr with id 0 - which is not good.
+        cptr -> setid(getstack() -> newid());
+        
 		getstack()->appendcontrol(cptr);
 		mfocused = newcontrol(cptr, False);
 		cptr->create(MCmousex, MCmousey);
