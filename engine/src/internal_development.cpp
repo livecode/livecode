@@ -501,39 +501,59 @@ static void prune_object_listeners()
     if (s_listeners_locked)
         return;
     
+    MCObjectListener *t_listener;
+    t_listener = s_object_listeners;
+    
     MCObjectListener *t_prev_listener;
     t_prev_listener = nil;
     
-    MCObjectListener *t_listener;
-    t_listener = s_object_listeners;
+    MCObjectListener *t_next_listener;
+    t_next_listener = nil;
 
-    for (t_listener = s_object_listeners; t_listener != nil; t_listener = t_listener -> next)
+    while (t_listener != nil)
     {
+        t_next_listener = t_listener -> next;
+        
         MCObjectListenerTarget *t_target;
-        t_target = nil;
+        t_target = t_listener -> targets;
+        
         MCObjectListenerTarget *t_prev_target;
         t_prev_target = nil;
+        
+        MCObjectListenerTarget *t_next_target;
+        t_next_target = nil;
         
         bool t_listener_exists;
         t_listener_exists = t_listener -> object -> Exists();
         
         // Check all the listener's targets to see if they can be pruned
-        for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
+        while (t_target != nil)
         {
+            t_next_target = t_target -> next;
+            
             // Prune target from listener target list if listener
-            // doesn't exist, or if target doesn't exist
-            if (!t_listener_exists || !t_target -> target -> Exists())
+            // doesn't exist, or if target doesn't exist, or if target
+            // has been set to nil.
+            if (!t_listener_exists || t_target -> target == nil
+                || !t_target -> target -> Exists())
             {
-                t_target -> target -> Release();
+                // Release the target if it hasn't already been released
+                if (t_target -> target != nil)
+                    t_target -> target -> Release();
                 
                 if (t_prev_target != nil)
-                    t_prev_target -> next = t_target -> next;
+                    t_prev_target -> next = t_next_target;
                 else
-                    t_listener -> targets = t_target -> next;
+                    t_listener -> targets = t_next_target;
                 
                 MCMemoryDelete(t_target);
-                t_target = t_prev_target;
             }
+            else
+            {
+                t_prev_target = t_target;
+            }
+            
+            t_target = t_next_target;
         }
         
         // If the listening object no longer exists, or the list of
@@ -543,13 +563,18 @@ static void prune_object_listeners()
             t_listener -> object -> Release();
             
             if (t_prev_listener != nil)
-                t_prev_listener -> next = t_listener -> next;
+                t_prev_listener -> next = t_next_listener;
             else
-                s_object_listeners = t_listener -> next;
+                s_object_listeners = t_next_listener;
             
             MCMemoryDelete(t_listener);
-            t_listener = t_prev_listener;
         }
+        else
+        {
+            t_prev_listener = t_listener;
+        }
+        
+        t_listener = t_next_listener;
     }
 }
 
@@ -602,8 +627,11 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                         
 						while (t_target != nil)
 						{
+                            MCObjectHandle *t_obj;
+                            t_obj = t_target -> target;
+                            
                             bool t_target_exists;
-                            t_target_exists = t_target -> target -> Exists();
+                            t_target_exists = t_obj != nil && t_obj -> Exists();
                             
                             // Make sure the target object still exists and is still
                             // being listened to before sending any messages.
@@ -611,35 +639,35 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                                 && t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)
                             {
                                 t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
-                                t_target_exists = t_target -> target -> Exists();
+                                t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                             
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)
                             {
                                 t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
-                                t_target_exists = t_target -> target -> Exists();
+                                t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)
                             {
                                 t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
-                                t_target_exists = t_target -> target -> Exists();
+                                t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)
                             {
                                 t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
-                                t_target_exists = t_target -> target -> Exists();
+                                t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)
                             {
                                 t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
-                                t_target_exists = t_target -> target -> Exists();
+                                t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                             
                             if (!t_target_exists)
