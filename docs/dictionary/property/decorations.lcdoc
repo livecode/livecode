@@ -23,11 +23,11 @@ set the decorations of stack "Splash Screen" to empty
 Example:
 set the decorations of stack myStack to 127 -- a WDEF resource
 
-Value (enum): The <decorations> of a <stack> is one of the following:
-        - "default"
-        - empty
-        - one or more of "title", "minimize", "maximize", "close", "menu", "system", "noShadow", and "metal", separated by commas
-        - a WDEF identifier (on Mac OS or OS X systems)
+Value: The <decorations> of a <stack> is one of the following:
+- "default"
+- empty
+- one or more of "title", "minimize", "maximize", "close", "menu", "system", "noShadow", and "metal", separated by commas
+- a WDEF identifier (on Mac OS or OS X systems)
 
 By default, the <decorations> <property> of newly created <stacks> is set to "default"
 

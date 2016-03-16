@@ -33,13 +33,7 @@ put homegrownMP3Data into URL "binfile:My file.MP3"
 
 Parameters:
 value (string): 
-container (enum): Specifies the kind of container into which a value is to be placed. The container is one of the following:
-- "field"
-- "button"
-- "image"
-- "URL"
-- "variable"
-- "message box"
+container: The container into which the <value> should be placed.  This usually an <object reference> or a <variable> name.
 destinationURL: 
 
 The result: >*Important:* If writing to a url container fails, an error is returned in the result. For example:. <put> the result into  tResult. >*Note:* Unlike its use with the <file> and <binfile URL> types, the <put> <command>, when used with a <resfileURL>, does not create the <file> if it doesn't exist. Instead, an error message is returned in the <result>. To create the file, first use a <statement> like the following:. * When used with an ftp <URL>, <upload|uploads> the <value> to an <FTP> <server>. If an error occurs during uploading, the error is placed in the <result> <function>. The first <word> returned by the <result> <function> is error, followed (where appropriate) by the text of the error message returned by the <FTP> <server>, including the <server> response code. >*Important:* If a <blocking> operation involving a <URL> (using the <put command> to <upload> a <URL>, the <post command>, the <delete URL command>, or a <statement> that gets an <FTP> or <httpURL>) is going on, no other <blocking URL> operation can start until the previous one is finished. If you attempt to use a <URL> in an <expression>, or put data into a <URL>, while another <blocking URL> operation is in progress, the <result> is set to Error Previous request not completed.

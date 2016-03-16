@@ -17,7 +17,7 @@ Platforms: mobile
 Example:
 put mobileCurrentLocation() into theLocation
 
-Returns (enum): If location tracking has been enabled the <mobileCurrentLocation> function returns an array with the following keys
+Returns (array): If location tracking has been enabled the <mobileCurrentLocation> function returns an array with the following keys
 - horizontal accuracy : the maximum error in meters of the position indicated by longitude and latitude
 - latitude : the latitude of the current location, measured in degrees relative to the equator. Positive values indicate positions in the Northern Hemisphere, negative values in the Southern.
 - longitude : the longitude of the current location, measured in degrees relative to the zero meridian. Positive values extend east of the meridian, negative values extend west.

@@ -19,12 +19,12 @@ Example:
 put the outputTextEncoding into tCurrentTextEncoding
 
 Parameters:
-textEncoding (enum): The type of text encoding to use. One of the following.
-- "windows-1252" (synonym: windows): use the Windows 'Latin-1' encoding (codepage 1252) [ this is the native text encoding for the Windows engine ]
-- "macintosh" (synonym: mac): use the MacRoman encoding [ this is the native text encoding of the Mac engine ]
-- "iso-8859-1" (synonym: linux): use the ISO-8859-1 encoding [ this is the native text encoding of the Linux engine ]
-- "utf-8" (synonym: utf8): use the UTF-8 encoding
-- "native": use the native encoding for the platform the engine is running on. This is the default
+textEncoding (enum): The type of text encoding to use.
+- windows-1252, windows: use the Windows 'Latin-1' encoding (codepage 1252); this is the native text encoding for the Windows engine
+- macintosh, mac: use the MacRoman encoding; this is the native text encoding of the Mac engine
+- iso-8859-1, linux: use the ISO-8859-1 encoding; this is the native text encoding of the Linux engine
+- utf-8, utf8: use the UTF-8 encoding
+- native: use the native encoding for the platform the engine is running on; this is the default
 
 Description:
 Use the <outputTextEncoding> property to determines what text conversion to perform when writing text strings to stdout.

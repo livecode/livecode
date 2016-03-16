@@ -28,11 +28,11 @@ Example:
 ask "Please say hello:" with "DEFAULT" titled "Hello World"
 
 Parameters:
-iconType (enum): The icon that is displayed on the left side of the dialog box. If you do not specify an icon, none is displayed. iOS and Android do not support iconType. The following types are supported:
-- "information"
-- "question"
-- "error"
-- "warning"
+iconType (enum): The icon that is displayed on the left side of the dialog box. If you do not specify an icon, none is displayed. iOS and Android do not support <iconType>.
+- information : Non-critical notification
+- question : Request for information from the user
+- error : Notification of error or failure condition
+- warning : Notification of unexpected or abnormal condition
 question (string): A string of formatted (or unformated) text.
 defaultResponse (string): A string, and is placed in the text box when the dialog box appears. If no defaultResponse is specified, the text box is empty when the dialog box appears.
 windowTitle: Appears in the title bar of the dialog box. If no windowTitle is given, the title bar is blank.

@@ -29,15 +29,15 @@ sort cards of stack "Manson" descending dateTime by item 1 of field "Date"
 
 Parameters:
 stack: A reference to any open stack. If you don't specify a stack, the cards of the current stack are sorted.
-direction (enum): One of the following options. If you don't specify a direction, the sort is 'ascending'.
-- "ascending": sorts in ascending order
-- "descending": sorts in descending order
-sortType (enum): One of the following options. If you don't specify a sortType, the sortType is 'text'.
-- "international": sorts by collation according to the system locale
-- "numeric": sorts by number. (Use this form if the sortKey consists of numbers)
-- "datetime": treats the sortKey as a date and/or time
-- "text": sorts using a codepoint by codepoint comparison
-- "binary": sorts using a byte by byte comparison
+direction (enum): If you don't specify a <direction>, the sort is `ascending`.
+- ascending: sorts in ascending order
+- descending: sorts in descending order
+sortType (enum): If you don't specify a <sortType>, the <sortType> is `text`.
+- international: sorts by collation according to the system locale
+- numeric: sorts by number. (Use this form if the sortKey consists of numbers)
+- datetime: treats the sortKey as a date and/or time
+- text: sorts using a codepoint by codepoint comparison
+- binary: sorts using a byte by byte comparison
 sortKey: An expression that evaluates to a value for each card in the stack. Any object references within the sortKey are treated as pertaining to each card being evaluated, so for example, a reference to a field is evaluated according to that field's contents on each card.
 
 Description:

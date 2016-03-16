@@ -24,11 +24,10 @@ else
    put "Paused" && CR after fld "myField"
 end if
 
-Value:
-The <status> of a <player> is a string that can take any of the following values:
-- loading (for remote multimedia files only)
-- playing
-- paused
+Value (enum):
+- loading: for remote multimedia files only
+- playing:
+- paused:
 
 This property is read-only and cannot be set.
 

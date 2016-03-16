@@ -25,7 +25,7 @@ Example:
 answer color with "AliceBlue"
 
 Parameters:
-startingColor (enum): A color reference consisting of one of the following:
+startingColor: A <color reference> in one of the following forms:
 -  a standard color name
 -  three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue
 -  an HTML-style color consisting of a hash mark (#) followed by three hexadecimal numbers, one for each of red, green, and blue.
@@ -46,6 +46,6 @@ The color is returned in the form of three comma-separated integers between zero
 Changes:
 The option to specify a startingColor was introduced in version 1.1.1. In previous versions, the dialog box displayed white by default.
 
-References: systemColorSelector (property), backgroundColor (property), colors (property), foregroundColor (property), it (keyword), answer (command), result (function), colorNames (function), dialog box (glossary), variable (glossary), command (glossary), return (glossary), function (control_st)
+References: systemColorSelector (property), backgroundColor (property), colors (property), foregroundColor (property), it (keyword), answer (command), result (function), colorNames (function), dialog box (glossary), variable (glossary), command (glossary), return (glossary), function (control_st), color reference (glossary)
 
 Tags: ui

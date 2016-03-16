@@ -30,7 +30,7 @@ set the textStyle of button "Off" to "italic,bold"
 Example:
 set the textStyle["bold"] of field "name" to true
 
-Value (enum): The <textStyle> of an <object> or <chunk> is either "plain", empty, "mixed", or one or more of the following, separated by commas:
+Value: The <textStyle> of an <object> or <chunk> is either "plain", empty, "mixed", or one or more of the following, separated by commas:
         - bold
         - italic
         - underline

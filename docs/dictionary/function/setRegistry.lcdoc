@@ -24,7 +24,18 @@ setRegistry(theKey,empty)
 Parameters:
 keyPath: The keyPath parameter is the path to a registry entry.
 value: The new setting for the entry specified by the keyPath.
-type: One of the following: "binary", "dword", "dwordlittleendian", "dwordbigendian", "expandsz", "link", "multisz", "none", "resourcelist", "string", or "sz". If you don't specify a type, "string" is used.
+type (enum):
+- binary:
+- dword:
+- dwordlittleendian:
+- dwordbigendian:
+- expandsz:
+- link:
+- multisz:
+- none:
+- resourcelist:
+- string: (default)
+- sz:
 
 The result: If Windows sends an error message to the application, the result <function> <return|returns> the <error message>.
 

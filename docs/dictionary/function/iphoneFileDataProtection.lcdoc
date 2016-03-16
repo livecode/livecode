@@ -20,11 +20,11 @@ end if
 Parameters:
 filename (string): A string containing the path to the file.
 
-Returns (enum): The iphoneFileDataProtection function returns a string containing one of the following:
-- "none"
-- "complete"
-- "complete unless open" (iOS 5 and later only)
-- "complete until first user authentication" (iOS 5 and later only)
+Returns (enum):
+- none:
+- complete:
+- complete unless open: (iOS 5 and later only)
+- complete until first user authentication: (iOS 5 and later only)
 
 Description:
 Use the <iphoneFileDataProtection> function to query the current level of protection of a particular file set using the command <iphoneSetFileDataProtection>.

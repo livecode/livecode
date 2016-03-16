@@ -19,18 +19,18 @@ Example:
 iphoneSetKeyboardReturnKey "numeric"
 
 Parameters:
-returnKey (enum): Specifies what the return key function is. This is one of the following:
-- "default": the normal return key
-- "go": the 'Go' return key
-- "google": the 'Google' return key
-- "join": the 'Join' return key
-- "next": the 'Next' return key
-- "route": the 'Route' return key
-- "search": the 'Search' return key
-- "send": the 'Send' return key
-- "yahoo": the 'Yahoo' return key
-- "done": the 'Done' return key
-- "emergency call": the 'emergency call' return key
+returnKey (enum): Specifies what the return key function is.
+- default: the normal return key
+- go: the 'Go' return key
+- google: the 'Google' return key
+- join: the 'Join' return key
+- next: the 'Next' return key
+- route: the 'Route' return key
+- search: the 'Search' return key
+- send: the 'Send' return key
+- yahoo: the 'Yahoo' return key
+- done: the 'Done' return key
+- emergency call: the 'emergency call' return key
 
 Description:
 Use the iphoneSetKeyboardReturnKey command to configure the type of return key displayed on the keyboard.
