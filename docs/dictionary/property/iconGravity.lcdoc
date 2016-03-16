@@ -19,7 +19,7 @@ set the iconGravity of button "next" to "top"
 
 Parameters:
 button: A reference or expression that evaluate to an button reference.
-position (enum): A string representing to desired layout of the icon of the button and is one of the following:
+position (enum): A string representing to desired layout of the icon of the button.
 - "empty": This property has no effect and placement of the icon follows previous engine rules.
 - "left": Renders the icon at the middle left side of the button.
 - "top": Renders the icon at the middle top of the button.
