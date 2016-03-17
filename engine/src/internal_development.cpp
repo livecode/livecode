@@ -718,15 +718,18 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
         MCObjectListenerTarget *t_prev_target;
         t_prev_target = nil;
         
-        MCAutoValueRef t_long_id;
-        t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
-        
-        for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
+        if (t_listener -> object -> Exists())
         {
-            if (t_target -> target ==  t_current_object)
+            MCAutoValueRef t_long_id;
+            t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
+        
+            for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
             {
-                ctxt . ConvertToString(*t_long_id, t_string);
-                t_listeners . Push(t_string);
+                if (t_target -> target ==  t_current_object)
+                {
+                    ctxt . ConvertToString(*t_long_id, t_string);
+                    t_listeners . Push(t_string);
+                }
             }
         }
         
