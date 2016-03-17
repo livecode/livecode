@@ -110,7 +110,7 @@ bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
     return t_success;
 }
 
-bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
+bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
 {
     IO_handle t_stream;
     t_stream = MCS_fakeopenwrite();
