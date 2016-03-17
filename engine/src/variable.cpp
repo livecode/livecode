@@ -110,7 +110,7 @@ bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
     return t_success;
 }
 
-bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
+bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
 {
     IO_handle t_stream;
     t_stream = MCS_fakeopenwrite();
@@ -221,11 +221,16 @@ bool MCVariable::decode(void *p_buffer, uindex_t p_size)
         case kMCEncodedValueTypeLegacyArray:
         {
             MCAutoArrayRef t_array;
-            t_stat = MCArrayLoadFromHandleLegacy(&t_array, t_stream);
+			if (!MCArrayCreateMutable(&t_array))
+				t_stat = IO_ERROR;
+				
+			if (t_stat == IO_NORMAL)
+            	t_stat = MCArrayLoadFromHandleLegacy(*t_array, t_stream);
 
-            if (t_stat == IO_NORMAL)
-                /* UNCHECKED */ setvalueref(*t_array);
+            if (t_stat == IO_NORMAL && !setvalueref(*t_array))
+                t_stat = IO_ERROR;
         }
+		break;
         default:
             t_stat = IO_ERROR;
         break;

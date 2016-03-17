@@ -844,7 +844,7 @@ public:
 
     ///////////
     // Does what MCVariableValue equivalent was doing
-    bool encode(void *&r_buffer, uindex_t r_size);
+    bool encode(void *&r_buffer, uindex_t& r_size);
     bool decode(void *p_buffer, uindex_t p_size);
 };
 

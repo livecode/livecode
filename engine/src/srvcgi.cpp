@@ -62,7 +62,7 @@ static MCVariable *s_cgi_files;      // ArrayRef
 static MCVariable *s_cgi_get;        // nativised StringRef
 static MCVariable *s_cgi_get_raw;    // StringRef
 static MCVariable *s_cgi_get_binary; // DataRef
-static MCVariable *s_cgi_cookie;     // StringRef
+static MCVariable *s_cgi_cookie;     // ArrayRef
 
 static bool s_cgi_processed_post = false;
 
@@ -912,6 +912,11 @@ static bool cgi_compute_get_var(void *p_context, MCVariable *p_var)
 
         cgi_store_form_urlencoded(s_cgi_get, *t_query_data, true);
 	}
+	else
+	{
+		// Set the $_GET variable to the empty array
+		s_cgi_get->setvalueref(kMCEmptyArray);
+	}
 
     return true;
 }
@@ -945,6 +950,11 @@ static bool cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
             /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)MCStringGetCharPtr(*t_query_string), 2 * MCStringGetLength(*t_query_string), &t_query_data);
 
         cgi_store_form_urlencoded(s_cgi_get_binary, *t_query_data, true);
+	}
+	else
+	{
+		// Set the $_GET_BINARY variable to the empty array
+		s_cgi_get_binary->setvalueref(kMCEmptyArray);
 	}
     return true;
 }
@@ -1041,6 +1051,12 @@ static bool cgi_compute_post_variables()
 		
         cgi_store_form_multipart(t_stdin_handle);
 		MCS_close(t_stdin_handle);
+	}
+	else
+	{
+		// Set the $_POST and $_POST_BINARY variables to empty arrays
+		s_cgi_post->setvalueref(kMCEmptyArray);
+		s_cgi_post_binary->setvalueref(kMCEmptyArray);
 	}
     return t_success;
 }
@@ -1408,8 +1424,12 @@ static bool cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
             cgi_store_cookie_urlencoded(s_cgi_cookie, *t_query_data, true);
     }
     else
-        // returns true if nothing had to be computed
-        return true;
+	{
+        // There is no cookie data so set the variable to the empty array (it
+		// needs to be an array rather than the empty type because the rest of
+		// the CGI code assumes $_COOKIE holds an array).
+		s_cgi_cookie->setvalueref(kMCEmptyArray);
+	}
 
     return t_success;
 }
