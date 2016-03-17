@@ -227,11 +227,8 @@ bool MCVariable::decode(void *p_buffer, uindex_t p_size)
 			if (t_stat == IO_NORMAL)
             	t_stat = MCArrayLoadFromHandleLegacy(*t_array, t_stream);
 
-			if (t_stat == IO_NORMAL && !t_array.MakeImmutable())
-				t_stat = IO_ERROR;
-
-            if (t_stat == IO_NORMAL)
-                setvalueref(*t_array);
+            if (t_stat == IO_NORMAL && !setvalueref(*t_array))
+                t_stat = IO_ERROR;
         }
 		break;
         default:
