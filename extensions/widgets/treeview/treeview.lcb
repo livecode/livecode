@@ -101,6 +101,7 @@ The arrayData is the data currently being displayed by the tree view widget.
 **/
 
 property arrayData 					get getArrayData 				set setArrayData
+metadata arrayData.label is "Array data"
 
 /**
 Syntax: set the hilitedElement of <widget> to <pPath>
@@ -120,6 +121,7 @@ of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsu
 **/
 
 property hilitedElement			get getSelectedElement			set setSelectedElement
+metadata hilitedElement.label is "Hilited element"
 
 /**
 Name: foreColor
@@ -139,7 +141,7 @@ Use the <foreColor> property to get or set the color the tree view widget uses f
 **/
 
 metadata foregroundColor.default is "50,50,50"
-metadata foregroundColor.label is "Text Color"
+metadata foregroundColor.label is "Text color"
 
 /**
 Name: backColor
@@ -159,7 +161,7 @@ Use the <backColor> property to get or set the color the tree view widget uses f
 background of its rows.
 **/
 metadata backgroundColor.default is "244,244,244"
-metadata backgroundColor.label is "Row Background Color"
+metadata backgroundColor.label is "Row background color"
 
 /**
 Syntax: set the hiliteColor of <widget> to <pColor>
@@ -176,7 +178,7 @@ the selected row.
 **/
 
 metadata hiliteColor.default is "10,95,244"
-metadata hiliteColor.label is "Selected Row Color"
+metadata hiliteColor.label is "Selected row color"
 
 /**
 Name: borderColor
@@ -198,7 +200,7 @@ border, and the separator (if the <showSeparator> property is true).
 References: showSeparator (property)
 **/
 metadata borderColor.default is "109,109,109"
-metadata borderColor.label is "Border Color"
+metadata borderColor.label is "Border color"
 
 /**
 Syntax: set the sortOrder of <widget> to <pOrder>
@@ -222,6 +224,7 @@ property sortOrder                 get getSortOrder                 set setSortO
 
 metadata sortOrder.editor is "com.livecode.pi.enum"
 metadata sortOrder.options is "ascending,descending"
+metadata sortOrder.label is "Sort order"
 
 /**
 Syntax: set the sortType of <widget> to <pType>
@@ -245,6 +248,7 @@ property sortType                 get getSortType                 set setSortTyp
 
 metadata sortType.editor is "com.livecode.pi.enum"
 metadata sortType.options is "text,numeric"
+metadata sortType.label is "Sort type"
 
 /**
 Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
@@ -257,6 +261,7 @@ Use the alternateRowBackgrounds property if you want to more clearly distinguish
 **/
 
 property alternateRowBackgrounds 	get mAlternateRowBackgrounds 	set setRowBackgrounds
+metadata alternateRowBackgrounds.label is "Alternate row backgrounds"
 
 /**
 Syntax: set the showBorder of <widget> to {true|false}
@@ -270,6 +275,7 @@ object.
 **/
 
 property showBorder			get mFrameBorder				set setFrameBorder
+metadata showBorder.label is "Show border"
 
 /**
 Syntax: set the readOnly of <widget> to {true|false}
@@ -285,6 +291,7 @@ appear at the right to enable the removal of that element, or the addition of a 
 **/
 
 property readOnly					get mReadOnly					set setReadOnly
+metadata readOnly.label is "Read only"
 
 /**
 Syntax: set the arrayStyle of <widget> to {true|false}
@@ -300,6 +307,7 @@ References: arrayData (property)
 **/
 
 property arrayStyle                 get mArrayStyle                 set setArrayStyle
+metadata arrayStyle.label is "Array style"
 
 /**
 Syntax: set the showSeparator of <widget> to {true|false}
@@ -314,6 +322,7 @@ of the tree view widget in columns separated by a movable divide.
 Related: separatorRatio (property)
 **/
 property showSeparator		get mShowSeparator		set setShowSeparator
+metadata showSeparator.label is "Show separator"
 
 /**
 Syntax: set the separatorRatio of <widget> to {true|false}
@@ -334,6 +343,7 @@ metadata separatorRatio.editor is "com.livecode.pi.number"
 metadata separatorRatio.step is "0.05"
 metadata separatorRatio.min is "0"
 metadata separatorRatio.max is "1"
+metadata separatorRatio.label is "Separator ratio"
 
 metadata themeClass.default is "list"
 metadata themeClass.user_visible is "false"

@@ -65,7 +65,7 @@ the actions, where each line is a comma delimited list of the different componen
 
 property itemArray get getHeaderActions set setHeaderActions
 metadata itemArray.editor is "com.livecode.pi.navbar"
-metadata itemArray.label is "Header Actions"
+metadata itemArray.label is "Header actions"
 
 /**
 Summary: Sets the header actions display style.
@@ -85,7 +85,7 @@ property itemStyle get mActionStyle set setActionStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
 metadata itemStyle.options is "icons,text"
 metadata itemStyle.default is "icons"
-metadata itemStyle.label is "Action Display Style"
+metadata itemStyle.label is "Action display style"
 
 /**
 Summary: Sets the action names of the header bar
@@ -100,7 +100,7 @@ Description:
 Sets the names of the header bar actions, where <pNames> is a comma delimited list of the names.
 **/
 property itemNames get getActionNames set setActionNames
-metadata itemNames.label is "Action Names"
+metadata itemNames.label is "Action names"
 
 /**
 Summary: Sets the action labels of the header bar
@@ -226,7 +226,7 @@ Use this property to determine whether the title is visible (true) or not (false
 **/
 property "showLabel" get mShowTitle set setTitleVisibility
 metadata showLabel.default is "true"
-metadata showLabel.label is "Show Title"
+metadata showLabel.label is "Show title"
 
 /**
 Summary: Whether to display the first action on the left
@@ -240,7 +240,7 @@ the left hand side of the header bar.
 **/
 property firstItemLeft get mFirstActionLeft set setFirstActionLeft
 metadata firstItemLeft.default is "true"
-metadata firstItemLeft.label is "First Action On Left"
+metadata firstItemLeft.label is "First action on left"
 
 /**
 Syntax: set the <opaque> of <widget> to {true | false}
@@ -249,12 +249,12 @@ Syntax: get the <opaque> of <widget>
 Summary: Whether the background of the header bar is drawn opaque or not
 
 Description:
-Use the <opaque> property to determine whether objects underneath the header bar are 
+Use the <opaque> property to determine whether objects underneath the header bar are
 visible or not.
 **/
 property "opaque" get mIsOpaque set setBackgroundOpacity
 metadata opaque.default is "true"
-metadata opaque.label is "Opaque Background"
+metadata opaque.label is "Opaque background"
 
 /**
 Syntax: set the <showBorder> of <widget> to {true | false}
@@ -263,12 +263,12 @@ Syntax: get the <showBorder> of <widget>
 Summary: Whether the dividing line at the bottom of the header bar is drawn or not
 
 Description:
-Use the <showBorder> property to determine whether the dividing line at the bottom of the 
+Use the <showBorder> property to determine whether the dividing line at the bottom of the
 header bar is drawn or not.
 **/
 property showBorder get mShowDivide set setShowDivide
 metadata showBorder.default is "false"
-metadata showBorder.label is "Show Bottom Border"
+metadata showBorder.label is "Show bottom border"
 
 /**
 Syntax: set the foreColor of <widget> to <pColor>
@@ -281,7 +281,7 @@ Use the <foreColor> property to control the text color of the header bar.
 **/
 metadata foregroundColor.editor		is "com.livecode.pi.color"
 metadata foregroundColor.section is "Colors"
-metadata foregroundColor.label is "Text Color"
+metadata foregroundColor.label is "Text color"
 metadata foregroundColor.default is "0,0,0"
 
 /**
@@ -296,7 +296,7 @@ header bar.
 **/
 metadata backgroundColor.editor		is "com.livecode.pi.color"
 metadata backgroundColor.section is "Colors"
-metadata backgroundColor.label is "Background Color"
+metadata backgroundColor.label is "Background color"
 metadata backgroundColor.default is "244,244,244"
 
 /**
@@ -310,7 +310,7 @@ Use the <hiliteColor> property to control the color of the icons of the header b
 **/
 metadata hiliteColor.editor		is "com.livecode.pi.color"
 metadata hiliteColor.section is "Colors"
-metadata hiliteColor.label is "Highlight Color"
+metadata hiliteColor.label is "Hilite color"
 metadata hiliteColor.default is "10,95,244"
 
 /**
@@ -325,7 +325,7 @@ Use the <borderColor> property to control the color of the header bar border.
 
 metadata borderColor.editor		is "com.livecode.pi.color"
 metadata borderColor.section is "Colors"
-metadata borderColor.label is "Border Color"
+metadata borderColor.label is "Border color"
 metadata borderColor.default is "109,109,109"
 
 metadata textSize.default is "16"
