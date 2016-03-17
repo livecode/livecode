@@ -912,6 +912,11 @@ static bool cgi_compute_get_var(void *p_context, MCVariable *p_var)
 
         cgi_store_form_urlencoded(s_cgi_get, *t_query_data, true);
 	}
+	else
+	{
+		// Set the $_GET variable to the empty array
+		s_cgi_get->setvalueref(kMCEmptyArray);
+	}
 
     return true;
 }
@@ -945,6 +950,11 @@ static bool cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
             /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)MCStringGetCharPtr(*t_query_string), 2 * MCStringGetLength(*t_query_string), &t_query_data);
 
         cgi_store_form_urlencoded(s_cgi_get_binary, *t_query_data, true);
+	}
+	else
+	{
+		// Set the $_GET_BINARY variable to the empty array
+		s_cgi_get_binary->setvalueref(kMCEmptyArray);
 	}
     return true;
 }

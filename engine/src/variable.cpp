@@ -221,11 +221,19 @@ bool MCVariable::decode(void *p_buffer, uindex_t p_size)
         case kMCEncodedValueTypeLegacyArray:
         {
             MCAutoArrayRef t_array;
-            t_stat = MCArrayLoadFromHandleLegacy(&t_array, t_stream);
+			if (!MCArrayCreateMutable(&t_array))
+				t_stat = IO_ERROR;
+				
+			if (t_stat == IO_NORMAL)
+            	t_stat = MCArrayLoadFromHandleLegacy(*t_array, t_stream);
+
+			if (t_stat == IO_NORMAL && !t_array.MakeImmutable())
+				t_stat = IO_ERROR;
 
             if (t_stat == IO_NORMAL)
-                /* UNCHECKED */ setvalueref(*t_array);
+                setvalueref(*t_array);
         }
+		break;
         default:
             t_stat = IO_ERROR;
         break;
