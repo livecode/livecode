@@ -638,35 +638,40 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)
                             {
-                                t_target -> target -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
+                                t_obj -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
+                                t_obj = t_target -> target;
                                 t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                             
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)
                             {
-                                t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
+                                t_obj -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
+                                t_obj = t_target -> target;
                                 t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)
                             {
-                                t_target -> target -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
+                                t_obj -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
+                                t_obj = t_target -> target;
                                 t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)
                             {
-                                t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
+                                t_obj -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
+                                t_obj = t_target -> target;
                                 t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)
                             {
-                                t_target -> target -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
+                                t_obj -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
+                                t_obj = t_target -> target;
                                 t_target_exists = t_obj != nil && t_obj -> Exists();
                             }
                             
