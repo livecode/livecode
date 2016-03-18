@@ -1,1 +1,1 @@
-# Document the deletWidget message
+# Document the deleteWidget message
