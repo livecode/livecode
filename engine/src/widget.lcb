@@ -531,9 +531,9 @@ begin
 end syntax
 
 /*
-Summary:	Returns the height of the widget.
+Summary:	Returns the width of the widget.
 
-Returns:	The height of the widget.
+Returns:	The width of the widget.
 */
 
 syntax MyWidth is expression
