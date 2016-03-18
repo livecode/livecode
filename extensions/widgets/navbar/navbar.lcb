@@ -95,7 +95,7 @@ error to be thrown
 */
 property itemArray get getNavData set setNavData
 metadata itemArray.editor is "com.livecode.pi.navbar"
-metadata itemArray.label is "Navigation Data"
+metadata itemArray.label is "Navigation data"
 
 /**
 Syntax: set the itemNames of <widget> to <pNames>
@@ -117,7 +117,7 @@ property itemNames		get getNavNames			set setNavNames
 metadata itemNames.editor is "com.livecode.pi.editorList"
 metadata itemNames.subeditor is "com.livecode.pi.string"
 metadata itemNames.delimiter is ","
-metadata itemNames.label is "Navigation Names"
+metadata itemNames.label is "Navigation names"
 
 /**
 Syntax: set the itemIcons of <widget> to <pIcons>
@@ -213,7 +213,7 @@ property itemStyle	get mItemStyle	set setItemStyle
 metadata itemStyle.editor is "com.livecode.pi.enum"
 metadata itemStyle.options is "icons,text,both"
 metadata itemStyle.default is "both"
-metadata itemStyle.label is "Display Style"
+metadata itemStyle.label is "Display style"
 
 /**
 Syntax: set the hiliteColor of <widget> to <pColor>
@@ -226,7 +226,7 @@ Use the <hiliteColor> property to control the color used to draw icons and text
 of the currently-selected navbar item.
 */
 metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.label is "Selected Item Color"
+metadata hiliteColor.label is "Selected item color"
 metadata hiliteColor.section is "Colors"
 metadata hiliteColor.default is "10,95,244"
 
@@ -243,7 +243,7 @@ Use the <foreColor> property to control the color used to draw icons and text
 of the navbar items that are not selected.
 */
 metadata foregroundColor.editor is "com.livecode.pi.color"
-metadata foregroundColor.label is "Item Color"
+metadata foregroundColor.label is "Item color"
 metadata foregroundColor.section is "Colors"
 metadata foregroundColor.default is "128,128,128"
 
@@ -260,7 +260,7 @@ Use the <backColor> property to control the way the background of the navbar
 is painted.
 */
 metadata backgroundColor.editor is "com.livecode.pi.color"
-metadata backgroundColor.label is "Background Color"
+metadata backgroundColor.label is "Background color"
 metadata backgroundColor.section is "Colors"
 metadata backgroundColor.default is "244,244,244"
 
@@ -275,7 +275,7 @@ Use the <borderColor> property to control the color used to draw the top border
 of the navbar.
 */
 metadata borderColor.editor is "com.livecode.pi.color"
-metadata borderColor.label is "Border Color"
+metadata borderColor.label is "Border color"
 metadata borderColor.section is "Colors"
 metadata borderColor.default is "166,166,166"
 
@@ -297,7 +297,7 @@ References: hilitedItemName (property)
 property hilitedItem	get mSelectedItem 	set setNavSelectedItem
 metadata hilitedItem.editor is "com.livecode.pi.integer"
 metadata hilitedItem.default is "1"
-metadata hilitedItem.label is "Selected Item Index"
+metadata hilitedItem.label is "Selected item index"
 metadata hilitedItem.step is "1"
 metadata hilitedItem.min is "1"
 
@@ -317,7 +317,7 @@ item.
 References: hilitedItem (property)
 */
 property hilitedItemName	get getNavSelectedItemName	set setNavSelectedItemName
-metadata hilitedItemName.label is "Selected Item Name"
+metadata hilitedItemName.label is "Selected item name"
 
 /**
 Syntax: set the editMode of <widget> to (true | false)
@@ -359,7 +359,7 @@ of the navbar is drawn or not.
 */
 property showBorder get mShowDivide set setShowDivide
 metadata showBorder.default is "true"
-metadata showBorder.label is "Show Border"
+metadata showBorder.label is "Show border"
 
 /**
 Syntax: set the <opaque> of <widget> to {true | false}
@@ -373,7 +373,7 @@ transparent.
 */
 property "opaque" get mShowBackground set setShowBackground
 metadata opaque.default is "true"
-metadata opaque.label is "Opaque Background"
+metadata opaque.label is "Opaque background"
 
 metadata textSize.default is "10"
 

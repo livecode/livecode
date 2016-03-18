@@ -330,9 +330,11 @@ metadata hScrollbar.default is "false"
 
 property userAgent get getUserAgent set setUserAgent
 metadata userAgent.editor is "com.livecode.pi.text"
+metadata userAgent.label is "User agent"
 
 property javascriptHandlers get getJavaScriptHandlers set setJavaScriptHandlers
 metadata javascriptHandlers.editor is "com.livecode.pi.text"
+metadata javascriptHandlers.label is "JavaScript handlers"
 
 --------------------------------------------------------------------------------
 

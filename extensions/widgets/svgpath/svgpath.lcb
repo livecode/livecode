@@ -59,7 +59,7 @@ isn't highlighted.
 metadata foregroundColor.editor is "com.livecode.pi.color"
 metadata foregroundColor.default is ""
 metadata foregroundColor.section is "Colors"
-metadata foregroundColor.label is "Normal Color"
+metadata foregroundColor.label is "Normal color"
 
 /**
 Syntax:
@@ -75,7 +75,7 @@ is highlighted.
 metadata hiliteColor.editor is "com.livecode.pi.color"
 metadata hiliteColor.default is ""
 metadata hiliteColor.section is "Colors"
-metadata hiliteColor.label is "Highlight Color"
+metadata hiliteColor.label is "Hilite color"
 
 /**
 Syntax:
@@ -123,7 +123,7 @@ specification.
 */
 property iconPath get mPath set setPath
 metadata iconPath.editor is "com.livecode.pi.text"
-metadata iconPath.label is "Path Data"
+metadata iconPath.label is "Path data"
 
 /**
 Syntax:
@@ -154,7 +154,7 @@ to height. If `false`, it will stretch to fit the extent of its bounds.
 */
 property maintainAspectRatio  get mMaintainAspectRatio  set setMaintainAspectRatio
 metadata maintainAspectRatio.default is "true"
-metadata maintainAspectRatio.label is "Fix Aspect Ratio"
+metadata maintainAspectRatio.label is "Fix aspect ratio"
 
 /**
 Syntax:
@@ -218,7 +218,7 @@ property fillRule       get mFillRule      set setFillRule
 metadata fillRule.editor is "com.livecode.pi.enum"
 metadata fillRule.options is "non-zero,even odd"
 metadata fillRule.default is "non-zero"
-metadata fillRule.label is "Fill Rule"
+metadata fillRule.label is "Fill rule"
 --
 
 ----------

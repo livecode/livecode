@@ -88,7 +88,7 @@ metadata graphColors.editor is "com.livecode.pi.editorList"
 metadata graphColors.subeditor is "com.livecode.pi.color"
 metadata graphColors.delimiter is "\n"
 metadata graphColors.default is "255,0,155,255\n155,100,255,255\n100,255,100,255"
-metadata graphColors.label is "Line Colors"
+metadata graphColors.label is "Line colors"
 metadata graphColors.section is "Colors"
 
 /*
@@ -106,7 +106,7 @@ Controls whether the horizontal lines on the graph are shown.
 */
 property graphXLines get mGridHShow set setXLinesVisibility
 metadata graphXLines.default is "true"
-metadata graphXLines.label is "Horizontal Grid Lines"
+metadata graphXLines.label is "Horizontal grid lines "
 
 /*
 Summary: Controls whether the vertical lines on the graph are shown.
@@ -123,7 +123,7 @@ Controls whether the vertical lines on the graph are shown.
 */
 property graphYLines get mGridVShow set setYLinesVisibility
 metadata graphYLines.default is "true"
-metadata graphYLines.label is "Vertical Grid Lines"
+metadata graphYLines.label is "Vertical grid lines"
 
 /*
 Summary: Controls which point on the graph is highlighted.
@@ -141,7 +141,7 @@ coordinates using dotted lines from both the axes.
 */
 property hilitedCoordinates get GetHilitedCoordinates set SetHilitedCoordinates
 metadata hilitedCoordinates.default is ""
-metadata hilitedCoordinates.label is "Hilited Coordinates"
+metadata hilitedCoordinates.label is "Hilited coordinates"
 
 /*
 Summary: Controls the color of the hilited coordinates
@@ -159,7 +159,7 @@ with the current <hilitedCoordinates>
 */
 property hilitedCoordinatesColor get mHilitedCoordinatesColor set SetHilitedCoordinatesColor
 metadata hilitedCoordinatesColor.default is "0,0,0,255"
-metadata hilitedCoordinatesColor.label is "Hilited Coordinates Color"
+metadata hilitedCoordinatesColor.label is "Hilited coordinates color"
 metadata hilitedCoordinatesColor.editor is "com.livecode.pi.colorWithAlpha"
 metadata hilitedCoordinatesColor.section is "Colors"
 

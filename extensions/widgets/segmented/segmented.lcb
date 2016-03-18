@@ -60,7 +60,7 @@ segment, or to allow multiple segments to be highlighted.
 **/
 property multipleHilites		get mMultiSelect		set setMultiSelect		
 metadata multipleHilites.default		is "false"
-metadata multipleHilites.label			is "Multiple Hilites"
+metadata multipleHilites.label			is "Multiple hilites"
 
 /**
 Syntax: set the showBorder of <widget> to { true | false }
@@ -88,7 +88,7 @@ property itemCount 	get mNumSegments		set setSegmentCount
 metadata itemCount.editor		is "com.livecode.pi.integer"
 metadata itemCount.step is "1"
 metadata itemCount.min is "0"
-metadata itemCount.label is "Number of Segments"
+metadata itemCount.label is "Number of segments"
 
 /**
 Syntax: set the itemStyle of <widget> to <pSegmentDisplay>
@@ -108,7 +108,7 @@ property itemStyle		get mSegmentDisplay		set setSegmentDisplay
 metadata itemStyle.editor		is "com.livecode.pi.enum"
 metadata itemStyle.options		is "text,icons"
 metadata itemStyle.default		is "text"
-metadata itemStyle.label		is "Display Style"
+metadata itemStyle.label		is "Display style"
 
 /**
 Syntax: set the itemNames of <widget> to <pNames>
@@ -126,7 +126,7 @@ metadata itemNames.editor		is "com.livecode.pi.editorList"
 metadata itemNames.subeditor		is "com.livecode.pi.string"
 metadata itemNames.delimiter		is ","
 metadata itemNames.default		is "segment1,segment2,segment3"
-metadata itemNames.label			is "Segment Names"
+metadata itemNames.label			is "Segment names"
 
 /**
 Syntax: set the itemLabels of <widget> to <pLabels>
@@ -145,7 +145,7 @@ metadata itemLabels.editor			is "com.livecode.pi.editorList"
 metadata itemLabels.subeditor		is "com.livecode.pi.string"
 metadata itemLabels.delimiter		is ","
 metadata itemLabels.default			is "Label 1,Label 2,Label 3"
-metadata itemLabels.label			is "Segment Labels"
+metadata itemLabels.label			is "Segment labels"
 
 /**
 Syntax: set the itemIcons of <widget> to <pIcons>
@@ -178,20 +178,20 @@ Syntax: get the hilitedItemIcons of <widget>
 Summary: Sets the selected icons of the segments.
 
 Parameters:
-pIcons: A comma-delimited list of icon names which display as the icons for 
+pIcons: A comma-delimited list of icon names which display as the icons for
 each segment when it is highlighted.
 
 Description:
 Use the <hilitedItemIcons> property to get or set the icons of the segments when they are
 highlighted.
-The name of an icon must be one of the names returned by the iconNames() function 
+The name of an icon must be one of the names returned by the iconNames() function
 of the com.livecode.library.iconSVG library.
 
 References: itemIcons (property)
 **/
 
 property hilitedItemIcons		get getSelectedIcons		set setSelectedIcons
-metadata hilitedItemIcons.label 		is "Highlighted Segment Icons"
+metadata hilitedItemIcons.label 		is "Hilited segment icons"
 metadata hilitedItemIcons.editor		is "com.livecode.pi.editorlist"
 metadata hilitedItemIcons.subeditor	is "com.livecode.pi.svgicon"
 metadata hilitedItemIcons.delimiter	is ","
@@ -217,7 +217,7 @@ metadata itemMinWidths.editor		is "com.livecode.pi.editorList"
 metadata itemMinWidths.subeditor	is "com.livecode.pi.number"
 metadata itemMinWidths.delimiter	is ","
 metadata itemMinWidths.default 	is "50,50,50"
-metadata itemMinWidths.label	 	is "Minimum Segment Widths"
+metadata itemMinWidths.label	 	is "Minimum segment widths"
 
 /**
 Syntax: set the hilitedItems of <widget> to <pIndices>
@@ -237,7 +237,7 @@ References: hilitedItemNames (property)
 property hilitedItems	get getSelectedSegmentIndices	set setSelectedSegmentIndices
 metadata hilitedItems.editor		is "com.livecode.pi.string"
 metadata hilitedItems.default	is ""
-metadata hilitedItems.label 		is "Highlighted Segment Indices"
+metadata hilitedItems.label 		is "Hilited segment indices"
 
 /**
 Syntax: set the hilitedItemNames of <widget> to <pIndices>
@@ -257,7 +257,7 @@ References: hilitedItems (property)
 property hilitedItemNames	get getSelectedSegmentNames	set setSelectedSegmentNames
 metadata hilitedItemNames.editor		is "com.livecode.pi.string"
 metadata hilitedItemNames.default	is ""
-metadata hilitedItemNames.label 		is "Highlighted Segment Names"
+metadata hilitedItemNames.label 		is "Hilited segment names"
 
 /**
 Syntax: set the foreColor of <widget> to <pColor>
@@ -287,7 +287,7 @@ segments.
 metadata backgroundColor.editor		is "com.livecode.pi.color"
 metadata backgroundColor.default is "244,244,244"
 metadata backgroundColor.section is "Colors"
-metadata backgroundColor.label is "Segment Color"
+metadata backgroundColor.label is "Segment color"
 
 /**
 Syntax: set the hiliteColor of <widget> to <pColor>
@@ -302,7 +302,7 @@ of the selected segment.
 metadata hiliteColor.editor		is "com.livecode.pi.color"
 metadata hiliteColor.default is "10,95,244"
 metadata hiliteColor.section is "Colors"
-metadata hiliteColor.label is "Selected Segment Color"
+metadata hiliteColor.label is "Selected segment color"
 
 /**
 Syntax: set the borderColor of <widget> to <pColor>
@@ -317,7 +317,7 @@ Use the <borderColor> property to control the text color of the segments.
 metadata borderColor.editor		is "com.livecode.pi.color"
 metadata borderColor.default is "109,109,109"
 metadata borderColor.section is "Colors"
-metadata borderColor.label is "Border Color"
+metadata borderColor.label is "Border color"
 
 /**
 Syntax: set the hilitedTextColor of <widget> to <pColor>
@@ -333,7 +333,7 @@ property hilitedTextColor 	get getSelectedLabelColor		set setSelectedLabelColor
 metadata hilitedTextColor.editor		is "com.livecode.pi.color"
 metadata hilitedTextColor.default is "255,255,255"
 metadata hilitedTextColor.section is "Colors"
-metadata hilitedTextColor.label is "Highlighted Segment Label Color"
+metadata hilitedTextColor.label is "Hilited segment label color"
 
 metadata themeClass.default is "list"
 metadata themeClass.user_visible is "false"
