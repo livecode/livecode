@@ -30,9 +30,9 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       Initialize pVersion, pOutputDir
       
       BaseCreate
-      V1NotesCreate "engine", "Engine changes"
-      V1NotesCreate "ide", "IDE changes"
-      V2NotesCreate "lcb", "LiveCode Builder changes"
+      V1NotesCreate "engine", "engine", "Engine changes"
+      V1NotesCreate "ide", "IDE", "IDE changes"
+      V2NotesCreate "lcb", "LCB", "LiveCode Builder changes"
       ExtensionsCreate
       DictionaryCreate
       PreviousCreate
@@ -267,7 +267,7 @@ Each file details a single bug fix or feature implementation.
 Single-line files are added to the table of bugfixes.  Multi-line
 files get their own section in the release notes.
 */
-private command V1NotesCreate pType, pTitle
+private command V1NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
@@ -278,7 +278,7 @@ private command V1NotesCreate pType, pTitle
    put V1NotesScan(pType) into tScannedNotes
    
    -- Next generate markdown
-   V1NotesGenerate pType, tScannedNotes
+   V1NotesGenerate pType, pReadableType, tScannedNotes
 end V1NotesCreate
 
 /*
@@ -371,7 +371,7 @@ private command V1NotesScanVersion pType, pVersion, pFiles, @xScan
    end repeat
 end V1NotesScanVersion
 
-private command V1NotesGenerate pType, pScanData
+private command V1NotesGenerate pType, pReadableType, pScanData
    local tBugInfo
    
    -- Process versions in reverse order
@@ -388,7 +388,7 @@ private command V1NotesGenerate pType, pScanData
       subtract 1 from tTagCount
    end repeat
    
-   BugGenerate tBugInfo
+   BugGenerate tBugInfo, pReadableType
 end V1NotesGenerate
 
 private command V1NotesGenerateVersion pType, pVersion, pScanData, @xBugInfo
@@ -546,7 +546,7 @@ end V1NotesGenerateBlock
 -- New-style notes
 ----------------------------------------------------------------
 
-private command V2NotesCreate pType, pTitle
+private command V2NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
@@ -560,7 +560,7 @@ private command V2NotesCreate pType, pTitle
    
    V2NotesGenerate pType, tCollated, 1
    
-   BugGenerate tBugInfo
+   BugGenerate tBugInfo, pReadableType
 end V2NotesCreate
 
 -- There isn't actually any difference between the information
@@ -804,7 +804,7 @@ private command ExtensionsCreate
    end repeat
    
    V2NotesGenerate "extensions", tCollated, 1
-   BugGenerate tBugInfo
+   BugGenerate tBugInfo, "extension"
 end ExtensionsCreate
 
 private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
@@ -1032,11 +1032,11 @@ private function BugUrl pId
    return merge("http://quality.livecode.com/show_bug.cgi?id=[[pId]]")
 end BugUrl
 
-private command BugGenerate pBugInfo
-   V2BugGenerate pBugInfo
+private command BugGenerate pBugInfo, pBugCategory
+   V2BugGenerate pBugInfo, pBugCategory
 end BugGenerate
 
-private command V1BugGenerate pBugInfo
+private command V1BugGenerate pBugInfo, pBugCategory
    
    local tTags, tTagCount
    put the keys of pBugInfo into tTags
@@ -1060,7 +1060,7 @@ private command V1BugGenerate pBugInfo
       if tPrettyVersion is "HEAD" then 
          put sVersion into tPrettyVersion
       end if
-      MarkdownAppend "notes", merge("## Specific bug fixes ([[tPrettyVersion]])")
+      MarkdownAppend "notes", merge("## Specific [[pBugCategory]] bug fixes ([[tPrettyVersion]])")
       
       -- Generate the table itself
       -- Use HTML to allow using HTML classes to distinguish between
@@ -1084,13 +1084,13 @@ private command V1BugGenerate pBugInfo
    end repeat
 end V1BugGenerate
 
-private command V2BugGenerate pBugInfo
+private command V2BugGenerate pBugInfo, pBugCategory
    local tTags, tTagCount
    put the keys of pBugInfo into tTags
    GitSortTags tTags
    put the number of lines of tTags into tTagCount
    
-   MarkdownAppend "notes", "## Specific bug fixes"
+   MarkdownAppend "notes", merge("## Specific [[pBugCategory]] bug fixes")
    
    local tVersion, tBugs, tPrettyVersion, tBugList
    local tLine, tId, tDesc, tUrl
