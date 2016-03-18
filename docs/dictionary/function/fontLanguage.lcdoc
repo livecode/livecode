@@ -21,7 +21,7 @@ Parameters:
 fontName: The name of any font that is installed on the current system.
 
 Returns (enum):
-- ANSI: for English:language fonts
+- ANSI: for English-language fonts
 - Arabic:
 - Bulgarian:
 - Chinese:
