@@ -28,17 +28,18 @@ if URLStatus(myFile) is "error" then get libURLErrorData(myFile)
 Parameters:
 url: A URL, or an expression that evaluates to a URL.
 
-Returns (enum):
-- queued: on hold until a previous request to the same site is completed
-- contacted: the site has been contacted but no data has been sent or received yet
-- requested: the URL has been requested
-- loading, bytesReceived, bytesTotal: the <URL> data is being received
-- uploading,bytesReceived,bytesTotal: the file is being <upload|uploaded> to the URL
-- cached: the URL is in the <cache> and the <download> is complete
-- uploaded: the application has finished uploading the file to the URL
-- error: an error occurred and the URL was not transferred
-- timeout: the application timed out when attempting to transfer the URL
-- (empty)  : the URL was not loaded, or has been unloaded
+Returns:
+A string describing the current status of the URL operation.
+- `queued`: on hold until a previous request to the same site is completed
+- `contacted`: the site has been contacted but no data has been sent or received yet
+- `requested`: the URL has been requested
+- `loading,<bytesReceived>,<bytesTotal>`: the <URL> data is being received; items 2 and 3 of the return value provide progress information
+- `uploading,<bytesReceived>,<bytesTotal>`: the file is being <upload|uploaded> to the URL; items 2 and 3 of the return value provide progress information
+- `cached`: the URL is in the <cache> and the <download> is complete
+- `uploaded`: the application has finished uploading the file to the URL
+- `error`: an error occurred and the URL was not transferred
+- `timeout`: the application timed out when attempting to transfer the URL
+- (empty): the URL was not loaded, or has been unloaded
 
 Description:
 Use the <URLStatus> <function> to check the progress of an <upload> or <download>.
