@@ -146,7 +146,7 @@ component Misc
 		
 component Plugins
 	into [[ToolsFolder]]/Plugins place
-		stack ide:Plugins/Go_RevNet.rev
+		stack ide:Plugins/Go_LiveNet.livecode
 		stack ide:Plugins/Navigator.rev
 		stack "ide:Plugins/RegExBuilder 1.6.rev"
 		stack ide:Plugins/revapplicationoverview.rev
