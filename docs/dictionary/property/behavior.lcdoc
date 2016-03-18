@@ -2,53 +2,92 @@ Name: behavior
 
 Type: property
 
-Syntax: set the behavior of <childObject> to <behaviorObjectReference> 
+Syntax: set the behavior of <object> to [<button> | <stack>]
 
-Summary: Specifies where an object used as a custom control should inherit its behavior from.
+Summary: Allows an <object> to inherit its <script> <handler|handlers> from another <object>
 
 Synonyms: parentScript
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack, card, field, button, graphic, scrollbar, player, image, widget
 
 Introduced: 3.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop,server,web,mobile
 
 Example:
 set the behavior of tNewGroup to the long id of button "Widget" of card "Behaviors"
 
-Value:
-The <behavior> property is a reference to a button containing the script to use.  The format stored in the object it's assigned to is similar to a long ID, except that a long ID includes the full path to the stack file and the form stored in the behavior includes only the stack name, allowing the reference to continue to work after the stack file has been moved to another computer.
-When setting the value of the <behavior> property to a long ID, LiveCode converts it to a rugged form without the stack file path.
-
-By default, the <behavior> of newly created objects is empty.
+Value: A <object reference|reference> to a <button> or <stack> containing the <script> to use as a <behavior>, or <empty> if the control should have no <behavior>.
 
 Description:
-Behaviors are a method to create common functionality between objects without duplicating the scripts.
+Behaviors are a method to create common functionality between
+<object|objects> without duplicating the <script|scripts>.
 
-An object with a <behavior> set will act as though its script was set to the script of the <behavior> button. If multiple objects share the same <behavior>, each will have its own set of script local variables. Any references to me, the owner of me etc will resolve to the child object currently executing.
+The value of the <behavior> <property> is a <object reference|reference>
+to a <button> or <stack> containing the script to
+use.  The format stored in the object it's assigned to is similar to a
+<id(property)|long ID>.  The main difference is that where a long ID includes
+the full path to the <stack file>, the form stored in the <behavior>
+includes only the stack <name>, allowing the reference to continue to
+work after the stack file has been moved to another computer. If you
+set the <behavior> to a long ID, LiveCode converts it to a rugged form
+without the stack <file path>.
 
-The button containing the behavior script can be located anywhere. In particular this allows for it be located in a password protected stack, allowing you to protect the script without need to protect the controls using it.
+By default, the <behavior> of newly created objects is <empty>.
 
-Behaviors are resolved by LiveCode immediately after loading a stack file, the engine acts as though it is resolving a control reference of the form: button id &lt;id&gt; of stack &lt;stack name&gt; [ of stack &lt;mainstack name&gt;]. Thus the stackFiles property will be searched and stacks loaded into memory as appropriate.
+An object with a <behavior> set will act as though its script was set
+to the script of the <behavior> <button> or <stack>. If multiple
+objects share the same <behavior>, each will have its own set of
+<script local variable|script local variables>. Any references to
+`me`, `the owner of me`, and so on, will resolve to the child object
+currently executing.
 
-The <behavior> property does not track changes to the name of the stack and/or substack - if the name of a stack containing behavior objects is changed, then all references to these behaviors will be broken. This apparent strictness is necessary to ensure that behaviors act consistently while LiveCode is running.
+The <button> or <stack> containing the <behavior> script can be located
+anywhere. In particular this allows for it be located in a <password>
+protected stack, allowing you to protect the script without need to
+protect the controls using it.
+
+Behaviors are resolved by LiveCode immediately after loading a stack
+file.  The engine acts as though it is resolving a control reference
+of the form:
+
+    button id <id> of stack <stack name> \
+          [ of stack <mainstack name> ]
+
+Thus the <stackFiles> property will be searched and stacks loaded into
+memory as appropriate.
+
+The <behavior> property does not track changes to the <name> of the
+stack and/or <substack> - if the name of a stack containing <behavior>
+objects is changed, then all references to these <behavior|behaviors>
+will be broken. This apparent strictness is necessary to ensure that
+behaviors act consistently while LiveCode is running.
 
 For example, let's say you have the following setup:
-field "Action" - behaviour set to button "Derived"
-button "Derived" - behaviour set to button "Root"
-button "Root"
+* <field> "Action" - <behavior> set to button "Derived"
+* button "Derived" - <behavior> set to button "Root"
+* button "Root"
 
-Then the message path will be:
-field "Action"
-button "Derived"
-button "Root"
+Then the <message path> will be:
+1. field "Action"
+2. button "Derived"
+3. button "Root"
 
->*Note:*  that the synonym parentScript is probably going to be removed before the release of version 3.5, so it should not be used. Please see the Engine Change log in the LiveCode folder for more information.
+**Note:** The synonym `parentScript` is deprecated and should not be used.
 
 Changes:
-As of version 6.1 the behavior property of a control currently being used as a behavior will now be taken into account and result in the child behaviour deferring to the parent behavior in the same way a control defers to its behavior.
+From version 6.7.5, a stack can be used as a behavior.
+From version 6.1, the behavior property of a control currently
+  being used as a behavior will now be taken into account and result
+  in the child behavior deferring to the parent behavior in the same
+  way a control defers to its behavior.
 
-References: dispatch (command)
+References:
+empty (constant),
+dispatch (command),
+button (object), field (object), object (object), stack (object),
+control (glossary), file path (glossary), handler (glossary), message path (glossary), object reference (glossary), script (glossary), script local variable (glossary), stack file (glossary), substack (glossary),
+ID (property), name (property), password (property), stackFiles (property),
+me (keyword)
