@@ -4,7 +4,7 @@ Type: message
 
 Syntax: deleteButton
 
-Summary: Sent to a <button> just before it is removed from the <stack>.
+Summary: Sent to a <button(object)> just before it is removed from the <stack>.
 
 Associations: button
 
@@ -21,12 +21,12 @@ on deleteButton -- prevent the deletion by immediately undoing it
 end deleteButton
 
 Description:
-Handle the <deleteButton> message if you want to perform cleanup before a <button> is removed from the <stack>.
+Handle the <deleteButton> message if you want to perform cleanup before a <button(object)> is removed from the <stack>.
 
-The actual deletion is not triggered by the <deleteButton> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <button> from being removed.
+The actual deletion is not triggered by the <deleteButton> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <button(object)> from being removed.
 
-However, the undo <command> will restore a <button> after it is deleted by the user.
+However, the undo <command> will restore a <button(object)> after it is deleted by the user.
 
-References: button (keyword), delete (command), stack (object), trap (glossary), button (glossary), message (glossary), command (glossary), pass (control_st)
+References: button (object), delete (command), stack (object), trap (glossary), button (glossary), message (glossary), command (glossary), pass (control_st)
 
 Tags: objects

@@ -26,6 +26,6 @@ Handle the <focusOut> <message> if you want to perform preparation or do other t
 
 If the control is an unlocked field or a button whose menuMode is "comboBox", the <closeField> or <exitField> <message> is sent to it instead of the <focusOut> <message>.
 
-References: field (keyword), button (keyword), exitField (message), suspendStack (message), closeField (message), focus (command), message (glossary), control (glossary), focus (glossary)
+References: field (keyword), button (object), exitField (message), suspendStack (message), closeField (message), focus (command), message (glossary), control (glossary), focus (glossary)
 
 Tags: ui

@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: rectangle
 
-Summary: Specifies that a <button>, <field>, or <graphic> <object> is shaped like a rectangle. It also designates the <paint tool> used to draw rectangles and squares.
+Summary: Specifies that a <button(object)>, <field>, or <graphic> <object> is shaped like a rectangle. It also designates the <paint tool> used to draw rectangles and squares.
 
 Synonyms: rect
 
@@ -31,6 +31,6 @@ Setting the style of a <graphic(keyword)> to rectangle makes the graphic into a 
 
 Setting the style of a <field> or <button> to rectangle <a/>makes it a rectangle shape.
 
-References: width (property), brushColor (property), height (property), properties (property), penColor (property), brushPattern (property), field (keyword), button (keyword), graphic (keyword), choose (command), object (object), graphic (object), keyword (glossary), paint tool (glossary)
+References: width (property), brushColor (property), height (property), properties (property), penColor (property), brushPattern (property), field (keyword), button (object), graphic (keyword), choose (command), object (object), graphic (object), keyword (glossary), paint tool (glossary)
 
 Tags: ui

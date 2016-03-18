@@ -6895,51 +6895,72 @@ bool MCSVGParseParams(const char *p_string, MCRange &x_range, MCSVGPathCommand p
 
 bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_context)
 {
-	if (!MCStringCanBeNative(p_string))
-		return MCSVGThrowPathParseError(0, MCSTR("String must contain ascii characters only"));
 	
-	MCSVGPathCommand t_command;
-	float32_t t_params[7];
-	uindex_t t_param_count;
+	// Lock the string as native - only ASCII characters are valid in SVG path data.
+	// The resulting string will be the same length as the input, but with ? where
+	// any non-native chars are. Since an error will be thrown at the point of the
+	// first non-ASCII char, we don't have to worry about char index mapping.
+	MCAutoStringRefAsCString t_native_string;
+	if (!t_native_string.Lock(p_string))
+		return false;
 	
-	bool t_success;
-	t_success = true;
+	// Compute the initial range of the string.
+	MCRange t_range;
+	t_range = MCRangeMake(0, strlen(*t_native_string));
 	
 	bool t_first_command;
 	t_first_command = true;
-	
-	const char *t_native_string;
-	uindex_t t_length;
-	t_native_string = (const char*)MCStringGetNativeCharPtrAndLength(p_string, t_length);
-	
-	MCRange t_range;
-	t_range = MCRangeMake(0, t_length);
-	
-	while (t_success && !MCRangeIsEmpty(t_range))
+	while (!MCRangeIsEmpty(t_range))
 	{
+		MCSVGPathCommand t_command;
+		
+		// First skip any whitespace in the string. After this we know that we should
+		// be expecting a path command, anything else is an error.
+		MCSVGSkipWhitespace(*t_native_string, t_range);
+		
+		// If we don't manage to parse a path command then we assume it is a sequence
+		// of the previous command.
 		bool t_have_command;
-		t_have_command = MCSVGParsePathCommand(t_native_string, t_range, t_command);
-		if (t_have_command)
-			MCSVGSkipWhitespace(t_native_string, t_range);
+		t_have_command = MCSVGParsePathCommand(*t_native_string, t_range, t_command);
 		
-		if (t_first_command && !(t_have_command && (t_command == kMCSVGPathMoveTo || t_command == kMCSVGPathRelativeMoveTo)))
-			return MCSVGThrowPathParseError(t_range.offset, MCSTR("Path must begin with moveto command"));
-
-		t_first_command = false;
+		if (t_first_command)
+		{
+			// If this is the first command then it must exist and it must be a moveto.
+			if (!t_have_command ||
+				(t_command != kMCSVGPathMoveTo &&
+				 t_command != kMCSVGPathRelativeMoveTo))
+				return MCSVGThrowPathParseError(t_range.offset, MCSTR("Path must begin with moveto command"));
+			
+			t_first_command = false;
+		}
+		else
+		{
+			// If this is subsequent command and we did not parse a command then we
+			// must map a move to to the corresponding line to. If we previously had
+			// a close, then it is an error (since you can't have multiple closes -
+			// they have no params!).
+			if (!t_have_command)
+			{
+				if (t_command == kMCSVGPathMoveTo)
+					t_command = kMCSVGPathLineTo;
+				else if (t_command == kMCSVGPathRelativeMoveTo)
+					t_command = kMCSVGPathRelativeLineTo;
+				else if (t_command == kMCSVGPathClose)
+					return MCSVGThrowPathParseError(t_range.offset, MCSTR("Path command character expected"));
+			}
+		}
 		
-		// switch to lineto after moveto
-		if (!t_have_command && t_command == kMCSVGPathMoveTo)
-			t_command = kMCSVGPathLineTo;
-		if (!t_have_command && t_command == kMCSVGPathRelativeMoveTo)
-			t_command = kMCSVGPathRelativeLineTo;
+		// Attempt to parse the parameters.
+		float32_t t_params[7];
+		uindex_t t_param_count;
+		if (!MCSVGParseParams(*t_native_string, t_range, t_command, t_params, t_param_count))
+			return false;
 		
-		t_success = MCSVGParseParams(t_native_string, t_range, t_command, t_params, t_param_count);
-		
-		if (t_success)
-			t_success = p_callback(p_context, t_command, t_params, t_param_count);
+		if (!p_callback(p_context, t_command, t_params, t_param_count))
+			return false;
 	}
 	
-	return t_success;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

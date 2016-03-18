@@ -27,10 +27,10 @@ The period between <mouseStillDown> <message|messages> is specified by the <idle
 
 The <mouseStillDown> <message> is sent only when the <Browse tool> is being used. If an <unlock|unlocked> <field> is clicked with <mouse button> 1 or 2, no <mouseStillDown> <message> is sent.
 
-Usually, it is easier and more efficient to use the mouseMove <message> to track the movement of the mouse while the <button> is being held down.
+Usually, it is easier and more efficient to use the mouseMove <message> to track the movement of the mouse while the <mouse button> is being held down.
 
 >*Note:* If there is no <mouseStillDown> <handler> in the target <object|object's> <script>, no <mouseStillDown> <message> is sent, even if there is a <mouseStillDown> <handler> in an <object> that's further along the <message path>.
 
-References: idleTicks (property), script (property), properties (property), repeatDelay (property), idleRate (property), mouseUp (message), mouseDoubleDown (message), mouseDown (message), mouseRelease (message), control (keyword), button (keyword), handler (glossary), mouse button (glossary), Browse tool (glossary), message (glossary), message path (glossary), unlock (glossary), card (glossary), field (glossary), mouse pointer (glossary), clickLoc (function), mouse (function), click (command), object (object)
+References: idleTicks (property), script (property), properties (property), repeatDelay (property), idleRate (property), mouseUp (message), mouseDoubleDown (message), mouseDown (message), mouseRelease (message), control (keyword), handler (glossary), mouse button (glossary), Browse tool (glossary), message (glossary), message path (glossary), unlock (glossary), card (glossary), field (glossary), mouse pointer (glossary), clickLoc (function), mouse (function), click (command), object (object)
 
 Tags: ui

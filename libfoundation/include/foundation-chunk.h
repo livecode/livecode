@@ -36,21 +36,15 @@ enum MCChunkType
     kMCChunkTypeByte,
 };
 
-struct MCChunkCountInRangeState
-{
-    MCValueRef value;
-    MCRange *range;
-};
+typedef uinteger_t (MCChunkCountCallback(void *context, MCRange *range));
 
-typedef uinteger_t (MCChunkCountCallback(void *context));
-
-uinteger_t MCChunkCountByteChunkCallback(void *context);
-uinteger_t MCChunkCountCodepointChunkCallback(void *context);
+uinteger_t MCChunkCountByteChunkCallback(void *context, MCRange *range);
+uinteger_t MCChunkCountCodepointChunkCallback(void *context, MCRange *range);
 
 uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange *p_range);
 
-bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
-bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count);
 
 bool MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 

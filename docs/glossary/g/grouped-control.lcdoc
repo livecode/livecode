@@ -7,6 +7,6 @@ Type: glossary
 Description:
 A <control>, such as a <button> or <field,> that is part of a <group>.
 
-References: control (object), button (object), field, (glossary), group (glossary)
+References: control (object), button (object), field (object), group (glossary)
 
 Tags: objects
