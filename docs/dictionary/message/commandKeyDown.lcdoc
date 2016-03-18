@@ -21,7 +21,7 @@ Parameters:
 keyName: The actual character of the pressed key.
 
 Description:
-Handle the <commandKeyDown> message if you want to provide Command-key or Control-key shortcuts (other than those provided in <menus> and <button> accelerators).
+Handle the <commandKeyDown> message if you want to provide Command-key or Control-key shortcuts (other than those provided in <menus> and <button(object)> accelerators).
 
 The <commandKeyDown> <message> is sent to the <active (focused) control(glossary)>, or to the <current card> if no <control> is <focus|focused>.
 
@@ -29,6 +29,6 @@ If the Command key is pressed along with the Return, Tab, Backspace, Delete, or 
 
 >*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <commandKeyDown> <message> is sent when the user presses a key while holding down the <Command key>. On <Unix> or <Windows|Windows systems>, the <commandKeyDown> <message> is sent when the user presses the Control key, whether or not another key is pressed at the same time.
 
-References: control (keyword), functionKey (message), enterKey (message), arrowKey (message), deleteKey (message), tabKey (message), backspaceKey (message), controlKeyDown (message), optionKeyDown (message), returnKey (message), commandKey (function), controlKey (function), menus (function), current card (glossary), key combination (glossary), handler (glossary), Windows (glossary), button (glossary), message (glossary), Command key (glossary), Mac OS (glossary), Unix (glossary), focus (glossary), active control (glossary), function (control_st)
+References: control (keyword), functionKey (message), enterKey (message), arrowKey (message), deleteKey (message), tabKey (message), backspaceKey (message), controlKeyDown (message), optionKeyDown (message), returnKey (message), commandKey (function), controlKey (function), menus (function), current card (glossary), key combination (glossary), handler (glossary), Windows (glossary), button (object), message (glossary), Command key (glossary), Mac OS (glossary), Unix (glossary), focus (glossary), active control (glossary), function (control_st)
 
 Tags: ui

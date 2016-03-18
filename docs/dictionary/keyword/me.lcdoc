@@ -29,9 +29,9 @@ Use the <me> <keyword> within a <handler> to determine which <object|object's> <
 
 The <me> <keyword> is a reference to the <object> whose <script> contains the current <handler>. If <me> is executed in a <behavior> <script>, then <me> refers to the object that is executing the <behavior> <script>.
 
-If the currently executing handler is in the script of the object that received the original message, then <me> is the same as the <object> whose <name> is <return|returned> by the <target> <function>. For example, suppose a <button> <script> contains a <mouseDown> handler. The value of the <target> <function> within that <mouseDown> <handler> is the same as the name of me: the name of the button.
+If the currently executing handler is in the script of the object that received the original message, then <me> is the same as the <object> whose <name> is <return|returned> by the <target> <function>. For example, suppose a <button(object)> <script> contains a <mouseDown> handler. The value of the <target> <function> within that <mouseDown> <handler> is the same as the name of me: the name of the button.
 
-However, if the mouseDown <handler> is in the <card(object)|card's> <script> instead of the <button(object)|button's>, <me> is not the same as the <object> specified by the <target>. In this case, <me> is the <card(keyword)>, but the <target> <function> <return|returns> the <button(object)|button's> name, because the <button> is the <object> that first received the <mouseDown> <message>.
+However, if the mouseDown <handler> is in the <card(object)|card's> <script> instead of the <button(object)|button's>, <me> is not the same as the <object> specified by the <target>. In this case, <me> is the <card(keyword)>, but the <target> <function> <return|returns> the <button(object)|button's> name, because the <button(object)> is the <object> that first received the <mouseDown> <message>.
 
 The <me> <keyword> can be used anywhere an <object reference> is used.
 

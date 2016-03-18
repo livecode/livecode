@@ -22,12 +22,12 @@ You can underline an object (which underlines all the text displayed by the obje
 
 To add underlining to an object without removing other styles (such as bold), append the <underline> <keyword> to the end of the <textStyle>. The following example adds underlining to the styles of a <button> :
 
-  if the textStyle of button 1 is empty then
-    set the textStyle of button 1 to "underline"
-  else
-    set the textStyle of button 1 to \
-      (the textStyle of button 1) & comma & "underline"
-  end if
+    if the textStyle of button 1 is empty then
+       set the textStyle of button 1 to "underline"
+    else
+       set the textStyle of button 1 to \
+             (the textStyle of button 1) & comma & "underline"
+    end if
 
 References: button (keyword), italic (keyword), textStyle (property), property (glossary), keyword (glossary)
 

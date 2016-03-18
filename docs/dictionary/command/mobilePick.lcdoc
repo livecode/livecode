@@ -54,7 +54,7 @@ Use the <mobilePick> command to display a native list picker that allows the use
 
 A standard action-sheet pops up on the iPhone, containing the standard picker-wheel user interface element. On the iPad, a standard pop-over is presented to display a single column of data or a picker-wheel to display multiple columns of data. On Android, the default pop-up is presented to display a single option picker.
 
-iOS Behavior
+### iOS Behavior
 There are three modes of operation for <mobilePick>, depending on the values for <initialIndex>.
 
 If all <initialIndex> values are non-zero, the operation acts as a way to change an existing selection. The items specified by the initial index are selected (checked or hilited on iPad if a single column is specified).
@@ -67,7 +67,7 @@ If the 'Cancel' button is displayed, then any selection made by the user can be 
 
 If the 'Done' button is displayed, then all 0's are returned if no default values were specified and the user did not make any selections on the pickers.
 
-Android Behavior
+### Android Behavior
 
 >*Warning:* No support is provided in LiveCode for multi column pickers on Android. This currently a limitation of Android.
 

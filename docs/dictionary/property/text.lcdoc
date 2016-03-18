@@ -30,22 +30,24 @@ Use the <text> <property> to work with the contents of a <field>, <button(keywor
 Fields
 The text of a field is simply the contents of the field. You can also use the <target> <keyword> to obtain the contents of a <field> :
 
-  the text of the target is target
--- evaluates to true if target is a field
+    the text of the target is target
+    -- evaluates to true if target is a field
 
 The <text> of a field is always returned in the native encoding.
 
-Buttons
+### Buttons
+
 The <text> of a <button(keyword)> is used as the <button(object)|button's> <menu> contents. (A menu whose contents is the <text> of a <button(keyword)> is called a <button menu>. ) If the <button(object)|button's> <style> is not set to "menu", the setting of its <text> <property> has no effect. However, the <text> <property> can be used to store data in a <button(keyword)>, regardless of the <button(object)|button's> <style>; the text is not visible to the user unless the <button(keyword)> is a <button menu>.
 
-See the <menu keyword> entry for more information about the format of menu item entries in the menu button text.
+See the <menu(keyword)> entry for more information about the format of menu item entries in the menu button text.
 
 The <text> of a button is always returned in the native encoding.
 
-Images
+### Images
 The <text> of an image is the binary data that makes up the image. The following formats are supported:
 
-Fully Supported Formats
+####Fully Supported Formats
+
 Setting the text to one of these formats displays the image as expected and sets the paintCompression to the correct type automatically. The data is also preserved meaning that getting the <text> returns the original data unchanged.
 - GIF (All platforms)
 - JPEG (All platforms)
@@ -53,7 +55,7 @@ Setting the text to one of these formats displays the image as expected and sets
 - WMF (Windows only - Windows Metafile)
 - EMF (Windows only - Windows Enhanced Metafile)
 
-Import Only Formats
+#### Import Only Formats
 There are also some formats that are not fully supported but can be imported. The image is converted to one of the supported formats, depending on the global <paintCompression property>.
 - BMP (Windows bitmap)
 - XWD (X Windows Dump format)
@@ -67,8 +69,8 @@ There are also some formats that are not fully supported but can be imported. Th
 
 These two statements are equivalent:
 
-  set the text of object to <string> 
-  put <string> into object
+    set the text of object tObjectId to tString
+    put tString into object tObjectId
 
 >*Tip:*  Instead of displaying a <button(object)|button's> text when using the <button(keyword)> as a menu, you can designate a <stack> to be displayed as the menu contents. This type of menu is called a <stack menu>. If the <button's (object)> <menuName> <property> is not empty, the <stack> specified by the <menuName> is used as the menu contents, instead of the <button's (object)>text <property>.
 

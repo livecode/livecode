@@ -19,13 +19,13 @@ Parameters:
 stack: Any stack reference. The stack's first card contains a button for each menu item in the pulldown menu.
 
 Description:
-Use the <pulldown> <command> to display a <stack menu> as a pulldown <menu> in situations where it is not possible to attach the <menu> to a <button> (for example, if the contents of the <menu> are not known in advance).
+Use the <pulldown> <command> to display a <stack menu> as a pulldown <menu> in situations where it is not possible to attach the <menu> to a <button(object)> (for example, if the contents of the <menu> are not known in advance).
 
 Use the <pulldown> <command> in a <mouseDown> <handler> to display the <menu> :
 
-  on mouseDown
-    pulldown stack "Lookup Options"
-  end mouseDown
+    on mouseDown
+       pulldown stack "Lookup Options"
+    end mouseDown
 
 While the menu is displayed, the handler pauses.
 

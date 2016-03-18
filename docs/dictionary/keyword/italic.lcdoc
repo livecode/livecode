@@ -22,12 +22,12 @@ You can italicize an object (which italicizes all the text displayed by the obje
 
 To add italics to an object without removing other styles (such as bold), add the <italic> <keyword> to the end of the <textStyle>. The following example adds italic to the styles of a <button> :
 
-  if the textStyle of button 1 is empty then
-    set the textStyle of button 1 to "italic"
-  else
-    set the textStyle of button 1 to \
-   (the textStyle of button 1) & comma & "italic"
-  end if
+    if the textStyle of button 1 is empty then
+       set the textStyle of button 1 to "italic"
+    else
+       set the textStyle of button 1 to \
+             (the textStyle of button 1) & comma & "italic"
+    end if
 
 References: underline (keyword), button (keyword), strikeout (keyword), plain (keyword), bold (keyword), textStyle (property), property (glossary), keyword (glossary)
 
