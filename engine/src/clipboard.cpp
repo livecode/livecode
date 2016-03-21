@@ -693,9 +693,10 @@ bool MCClipboard::HasImage() const
 
 bool MCClipboard::HasTextOrCompatible() const
 {
-    // Styled text is compatible with plain text
+    // Styled text is compatible with plain text. A list of file paths can also
+    // be auto-converted into text.
     AutoLock t_lock(this);
-    return HasText() || HasLiveCodeStyledTextOrCompatible();
+    return HasText() || HasLiveCodeStyledTextOrCompatible() || HasFileList();
 }
 
 bool MCClipboard::HasLiveCodeStyledTextOrCompatible() const
@@ -800,6 +801,10 @@ bool MCClipboard::CopyAsText(MCStringRef& r_text) const
     if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeMacRoman, kMCStringEncodingMacRoman, r_text))
         return true;
     if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeCP1252, kMCStringEncodingWindows1252, r_text))
+        return true;
+    
+    // As a fallback, try to convert a list of file paths into text
+    if (CopyAsFileList(r_text))
         return true;
     
     // None of the text representations existed
