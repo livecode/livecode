@@ -110,7 +110,7 @@ bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
     return t_success;
 }
 
-bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
+bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
 {
     IO_handle t_stream;
     t_stream = MCS_fakeopenwrite();
@@ -221,11 +221,16 @@ bool MCVariable::decode(void *p_buffer, uindex_t p_size)
         case kMCEncodedValueTypeLegacyArray:
         {
             MCAutoArrayRef t_array;
-            t_stat = MCArrayLoadFromHandleLegacy(&t_array, t_stream);
+			if (!MCArrayCreateMutable(&t_array))
+				t_stat = IO_ERROR;
+				
+			if (t_stat == IO_NORMAL)
+            	t_stat = MCArrayLoadFromHandleLegacy(*t_array, t_stream);
 
-            if (t_stat == IO_NORMAL)
-                /* UNCHECKED */ setvalueref(*t_array);
+            if (t_stat == IO_NORMAL && !setvalueref(*t_array))
+                t_stat = IO_ERROR;
         }
+		break;
         default:
             t_stat = IO_ERROR;
         break;
@@ -617,7 +622,7 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
     t_value_as_data = nil;
     // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
 	if (ctxt . ConvertToData(t_current_value, t_value_as_data) &&
-	    MCDataMutableCopy(t_value_as_data, t_value_as_data) &&
+	    MCDataMutableCopyAndRelease(t_value_as_data, t_value_as_data) &&
 		((p_setting == kMCVariableSetAfter && MCDataAppend(t_value_as_data, p_data)) ||
          (p_setting == kMCVariableSetBefore && MCDataPrepend(t_value_as_data, p_data))) &&
 		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))

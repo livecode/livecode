@@ -690,21 +690,21 @@ static void runloop_observer(CFRunLoopObserverRef observer, CFRunLoopActivity ac
 		MCPlatformBreakWait();
 }
 
-static bool s_event_checking_enabled = true;
+static uindex_t s_event_checking_enabled = 0;
 
 void MCMacPlatformEnableEventChecking(void)
 {
-	s_event_checking_enabled = true;
+	s_event_checking_enabled += 1;
 }
 
 void MCMacPlatformDisableEventChecking(void)
 {
-	s_event_checking_enabled = false;
+	s_event_checking_enabled -= 1;
 }
 
 bool MCMacPlatformIsEventCheckingEnabled(void)
 {
-	return s_event_checking_enabled;
+	return s_event_checking_enabled == 0;
 }
 
 bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
