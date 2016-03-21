@@ -218,6 +218,10 @@ void MCScreenDC::setcursor(Window p_window, MCCursorRef p_cursor)
 bool MCImageCreateIcon(MCImageBitmap *p_bitmap, uint32_t p_width, uint32_t p_height, bool p_cursor, uint32_t p_xhot, uint32_t p_yhot, HICON &r_icon);
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot)
 {
+	// PM-2016-03-21: [[ Bug 17042 ]] Make sure the image actually exists
+	if (p_image == nil)
+        return nil;
+		
 	HCURSOR t_alpha_cursor = nil;
 	/* UNCHECKED */ MCImageCreateIcon(p_image, p_image->width, p_image->height, true, p_xhot, p_yhot, t_alpha_cursor);
 
