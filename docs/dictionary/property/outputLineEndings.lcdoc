@@ -19,10 +19,10 @@ Example:
 put the outputLineEndings into tLineEnding
 
 Parameters:
-lineEnding (enum): The type of line ending to use. One of the following:
-- "lf"
-- "cr"
-- "crlf"
+lineEnding (enum): The type of line ending to use.
+- lf: Normally used by Linux and Mac OS X
+- crlf: Normally used by Windows
+- cr: Not normally used on modern systems
 
 Description:
 Use the <outputTextEncoding> property to determine what text conversion to perform when writing text strings to stdout.

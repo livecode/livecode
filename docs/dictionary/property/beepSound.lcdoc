@@ -23,17 +23,11 @@ set the beepSound to "internal"
 Example:
 set the beepSound to "vibrate"
 
-Parameters:
-beepType (enum): A string containing one of the following:
-- "system" (default): The system standard alert sound is played.
-- "internal": The computer's motherboard speaker is used (if present).
-- "vibrate": The device vibrates rather than play a sound (iOS only).
+Value: (enum): A string describing the beep method.
+- system: The system standard alert sound is played (default).
+- internal: The computer's motherboard speaker is used (if present).
+- vibrate: The device vibrates rather than play a sound (iOS only).
 
-Value (enum): The <beepSound> property is one of the following:
-   - system : this performs beep on mobile devices
-   - internal
-   - vibrate
-   - empty
 
 Description:
 Use the <beepSound> property to change the sound made when the beep command is used.

@@ -25,11 +25,11 @@ Example:
 answer the currPrompt of me with "OK" or "Cancel" as sheet
 
 Parameters:
-iconType (enum): Displayed on the left side of the dialog box. If you do not specify an icon, none is displayed. One of the following types:
-- "information"
-- "question"
-- "error"
-- "warning"
+iconType (enum): Displayed on the left side of the dialog box. If you do not specify an icon, none is displayed.
+- information : Non-critical notification
+- question : Request for information from the user
+- error : Notification of error or failure condition
+- warning : Notification of unexpected or abnormal condition
 prompt (string): The dialog box expands if necessary to fit the contents on desktops, display space on iOS and Android devices can be more restrictive and not provide enough space to expand sufficiently.
 button1: 
 buttons: Up to seven buttons can be specified, separated by the word "or". The buttons and the dialog box expand if necessary to fit the button names; the total number of characters in the buttons is limited only by the maximum dialog box size and the font size. Display space on iOS and Android devices can be more restrictive and not provide enough space to expand sufficiently. The last button you specify is the default button. Pressing Return or Enter is equivalent to clicking the default button. If you do not specify any button names, the dialog box contains a single OK button.

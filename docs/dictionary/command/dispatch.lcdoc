@@ -23,10 +23,10 @@ message: Is an expression that evaluates to the name of a handler.
 target: A reference to any LiveCode object.
 argumentList: A comma separated list of expressions containing the arguments to send.
 
-It (enum): Once finished, the variable ' <it> ' contains one of the following three values:
--"handled" : the message was handled and not passed
--"unhandled" : no matching handlers were found
--"passed" : the message was handled but passed by all handlers
+It (enum): Set by <dispatch> to indicate how the message was processed.
+- handled : the message was handled and not passed
+- unhandled : no matching handlers were found
+- passed : the message was handled but passed by all handlers
 
 Description:
 Use the <dispatch> command to send a mesage to an object, via the message path and find out whether it was handled or not.

@@ -34,11 +34,11 @@ object:
 metadata (array): The <metadata> is an array of metadata. Currently the only key supported is "density" with a value in pixels per inch (ppi).
 filePath: Specifies the name and location of the file you want to export to. If you specify a name but not a location, the file is created in the <defaultFolder>.
 container: A reference to a container, usually an image or a URL.
-format (enum): One of the following: paint, JPEG, GIF, or PNG.
-- "paint": save the exported image in PBM format (paint) format
-- "JPEG": save the exported image in JPEG format
-- "GIF": save the exported image in GIF format
-- "PNG": save the exported image in PNG format
+format (enum): The desired file format to save.
+- paint : PBM
+- JPEG: Joint Photographic Experts Group
+- GIF: Graphics Interchange Format
+- PNG: Portable Network Graphics
 maskFile: Specifies the name and location of a file to export as an image mask. You can use a maskFile only when exporting in PBM format (paint).
 effect: Specifies whether graphic effects and a blendLevel should be applied to the object before rendering export.
 ...: Denotes the usual possible suffixes for the export snapshot command.

@@ -34,7 +34,7 @@ set the fillGradient["ramp"] of graphic 1 to "0.00000,204,0,106" & return  & "1.
 unlock screen
 
 Parameters:
-propertiesArray (enum): An array. The array keys containing the gradient property to set with the corresponding array value containing the value to set the property to. The properties array should contain one of more of the following key|value pairs:
+propertiesArray (array): The array keys containing the gradient property to set with the corresponding array value containing the value to set the property to. The properties array should contain one of more of the following key|value pairs:
 - "type": One of: linear, radial, conical, spiral, diamond, xy or sqrtxy
 - "ramp": A return delimited list of gradient stops that define the layout of the of the gradient. A gradient stop is a comma delimited list with the following structure: position,color,alpa. For example the gradient stop "0.5,255,0,0,125" would add a stop half way along the gradient, it would be red and semi transparent.    
 	- "position": A number between 0 and 1.

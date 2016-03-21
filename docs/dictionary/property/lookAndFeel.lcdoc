@@ -18,7 +18,7 @@ set the lookAndFeel to "Motif
 Example:
 set the lookAndFeel to the selectedLine of field "Appearance"
 
-Value (enum): The <lookAndFeel> is one of the following:By default, the <lookAndFeel> is set to the <platform> the <stack> is being used on. On Windows XP, <Mac OS> and <OS X|OS X systems>, the <lookAndFeel> is set to "Appearance Manager" by <default> 
+Value (enum):
 -Appearance Manager  : standard Windows XP, Mac OS and OS X look and feel
 -Macintosh  : emulated Mac OS Platinum appearance, used regardless of current theme
 -Motif  : standard Motif look and feel for Unix systems
@@ -30,6 +30,8 @@ Use the <lookAndFeel> <property> to preview the <appearance> of <stacks> on a <p
 The <lookAndFeel> <property> determines the <appearance> and <behavior> of <scrollbar|scrollbars>, <object> borders, <checkbox|checkboxes> and <radio button|radio buttons>, and <button menu|button menus>. It also changes the <appearance> of the <active (focused) control(glossary)>.
 
 However, changing this property does not provide an exact representation of the appearance and behavior of the stack on the target platform. For example, cursors do not change, and neither do the placement of the menu bar or the way window dragging and resizing works. Only the appearance of controls is affected.
+
+By default, the <lookAndFeel> is set to the <platform> the <stack> is being used on. On Windows XP, <Mac OS> and <OS X|OS X systems>, the <lookAndFeel> is set to "Appearance Manager" by <default>.
 
 The "Appearance Manager" option can be used only on Windows XP, Mac OS and OS X systems. If you set the <lookAndFeel> to "Appearance Manager" on a <Unix>  <system>, it is reset to "Motif". Similarly, tf you set the <lookAndFeel> to "Appearance Manager" on a pre-Windows XP <system>, it is reset to "Wondows 95".
 

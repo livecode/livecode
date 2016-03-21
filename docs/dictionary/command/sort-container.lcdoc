@@ -35,15 +35,15 @@ sort items of myInfo by word 2 of each -- sort by word 2 of the line
 
 Parameters:
 container: A reference to a field, button, variable, or the message box.
-direction (enum): One of the following options. If you don't specify a direction, the sort is 'ascending'.
-- "ascending": sorts in ascending order
-- "descending": sorts in descending order
-sortType (enum): One of the following options. If you don't specify a sortType, the sortType is 'text'.
-- "international": sorts by collation according to the system locale
-- "numeric": sorts by number. (Use this form if the sortKey consists of numbers)
-- "datetime": treats the sortKey as a date and/or time
-- "text": sorts using a codepoint by codepoint comparison
-- "binary": sorts using a byte by byte comparison
+direction (enum): If you don't specify a <direction>, the sort is `ascending`.
+- ascending: sorts in ascending order
+- descending: sorts in descending order
+sortType (enum): If you don't specify a <sortType>, the <sortType> is `text`.
+- international: sorts by collation according to the system locale
+- numeric: sorts by number. (Use this form if the sortKey consists of numbers)
+- datetime: treats the sortKey as a date and/or time
+- text: sorts using a codepoint by codepoint comparison
+- binary: sorts using a byte by byte comparison
 sortKey: An expression that evaluates to a value for each line or item in the container. If the sortKey contains a chunk expression, the keyword each indicates that the chunk expression is evaluated for each line or item. If you don't specify a sortKey, the entire line (or item) is used as the sortKey.
 
 Description:

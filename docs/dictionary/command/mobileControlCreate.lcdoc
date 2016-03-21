@@ -35,12 +35,12 @@ Example:
 mobileControlCreate "multiline", "myMultiLineTextInput"
 
 Parameters:
-controlType (enum): The type of control to create from among the following.
-- "browser": Native iOS or Android web browser control
-- "scroller": Native iOS or Android scroller control
-- "player": Native iOS or Android player control
-- "input": Native iOS  or Android text input control
-- "multiline": Native iOS or Android multi-line text control
+controlType (enum): The type of control to create.
+- browser: Native iOS or Android web browser control
+- scroller: Native iOS or Android scroller control
+- player: Native iOS or Android player control
+- input: Native iOS  or Android text input control
+- multiline: Native iOS or Android multi-line text control
 
 controlName: Optional string to use to identify the control. 
 The <controlName> must be unique amongst all existing controls and 

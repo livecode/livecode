@@ -20,22 +20,22 @@ the fontLanguage of "Osaka"
 Parameters:
 fontName: The name of any font that is installed on the current system.
 
-Returns (enum): The <fontLanguage> of a font is one of the following:
-- ANSI (for English:language fonts)
-- Arabic
-- Bulgarian
-- Chinese
-- Greek
-- Hebrew
-- Japanese
-- Korean
-- Polish
-- Roman
-- Russian
-- Thai
-- Turkish
-- SimpleChinese
-- Ukrainian
+Returns (enum):
+- ANSI: for English-language fonts
+- Arabic:
+- Bulgarian:
+- Chinese:
+- Greek:
+- Hebrew:
+- Japanese:
+- Korean:
+- Polish:
+- Roman:
+- Russian:
+- Thai:
+- Turkish:
+- SimpleChinese:
+- Ukrainian:
 
 Description:
 Use the <fontLanguage> <function> to list only the fonts intended for a particular language.

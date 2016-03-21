@@ -32,11 +32,11 @@ recipients: A comma delimited list of email addresses to be placed in the 'To' f
 ccs: A comma delimited list of email addresses to be placed in the 'CC' field.
 bccs: A comma delimited list of email addresses to be placed in the 'BCC' field.
 body: The body of the email in UTF-16 encoded text.
-attachments (enum): Either empty to send no attachments, a single attachment array or a one-based numeric array of attachment arrays to include. The attachments parameter consists of either a single array, or an array of arrays listing the attachments to include. A single attachment array should consist of the following keys:
+attachments (array): Either empty to send no attachments, a single attachment array or a one-based numeric array of attachment arrays to include. The attachments parameter consists of either a single array, or an array of arrays listing the attachments to include. A single attachment array should consist of the following keys:
 - "data": The binary data to attach to the email (not needed if a file is present).
 - "file": The filename of the file on disk to attach to the email (not needed if data present).
 
-The result (enum): Upon completion of a compose request, the result is set to one of the following:
+The result (enum): Set by <mobileComposeUnicodeMail> to indicate its results.
 - sent : the email was sent successfully
 - cancel : the email was not sent, and the user elected not to save it for later
 

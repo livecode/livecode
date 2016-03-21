@@ -38,13 +38,13 @@ go invisible stack "Preferences"
 Parameters:
 card: Any card reference. Cards can be described by their name, number, or ID properties.
 stack: Any stack reference, or any file path or http URL reference that resolves to a stack file. If you specify a file path or http URL, the command opens the main stack of the specified stack file.
-mode (enum): one of the following:
-- "editable window"
-- "palette"
-- "modal dialog box"
-- "modeless dialog box"
-- "sheet dialog box": appears in defaultStack
-- "drawer": appears in defaultStack, centered at left side if there's room
+mode (enum):
+- editable window :
+- palette :
+- modal dialog box :
+- modeless dialog box :
+- sheet dialog box : appears in <defaultStack>
+- drawer : appears in <defaultStack>, centered at left side if there's room
 window: The name or windowID property of any open stack. If a window is specified, the stack opens in that window, replacing the stack that was previously displayed in that window.
 number: The number of cards to move within the recent cards list.
 
@@ -93,6 +93,6 @@ if there is a stack myPath then go card 2 of stack myPath
 
 The go... as sheet form was introduced in version 2.0. Previous versions did not support sheet dialogs.
 
-References: lockRecent property (property), lockScreen (property), lockScreen property (property), HCImportStat (property), visible property (property), previous (keyword), recent (keyword), as (keyword), card (keyword), unlock recent (command), show command (command), show cards (command), drawer (command), modeless (command), push (command), stack (object)
+References: lockRecent property (property), lockScreen (property), lockScreen property (property), HCImportStat (property), visible property (property), previous (keyword), recent (keyword), as (keyword), card (keyword), unlock recent (command), show command (command), show cards (command), drawer (command), modeless (command), push (command), stack (object), defaultStack (property)
 
 Tags: navigation

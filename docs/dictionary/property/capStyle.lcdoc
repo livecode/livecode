@@ -17,13 +17,10 @@ Platforms: desktop,server,web,mobile
 Example:
 set the capStyle of graphic "dashedRectangle1" to "round"
 
-Parameters:
-style (enum): One of the following values:
-- "round": Lines are ended by a half-circle centred at the end-point of the line. This is the default.
-- "butt": No cap is added.
-- "square": The edge is extended beyond the end-point by half the line width.
-
-Value (enum): The <capStyle> property returns one of "butt", "square" or "round"
+Value (enum): 
+- round: Lines are ended by a half-circle centred at the end-point of the line. This is the default.
+- butt: No cap is added.
+- square: The edge is extended beyond the end-point by half the line width.
 
 Description:
 Set the capStyle property to specify how the ends of lines and dashes are drawn.

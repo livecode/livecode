@@ -22,7 +22,7 @@ set the printRanges to the text of field "Ranges" of group "Printer Settings"
 Example:
 set the printRanges to "1-5,10,12-20"
 
-Value (enum): The <printRanges> property is one of the following values.
+Value: The <printRanges> property is one of the following values.
   - "selection": print the current selection (Windows only).
   - "current": print the current page (Windows only).
   - "all": print all pages

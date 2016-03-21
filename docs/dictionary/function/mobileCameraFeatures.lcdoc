@@ -21,10 +21,10 @@ Example:
 put mobileCameraFeatures("rear") into tFeatures
 
 Parameters:
-camera (enum): A string with one of the following:
-- "rear": return only capabilities of the rear camera
-- "front": return only capabilities of the front camera
-- "empty": return capabilities of all cameras
+camera (enum):
+- rear: return only capabilities of the rear camera
+- front: return only capabilities of the front camera
+- empty: return capabilities of all cameras
 
 Returns:
 The <mobileCameraFeatures> function returns a comma-delimited list of one or more of the following:

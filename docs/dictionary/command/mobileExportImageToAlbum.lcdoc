@@ -2,7 +2,7 @@ Name: mobileExportImageToAlbum
 
 Type: command
 
-Syntax: mobileExportImageToAlbum <imageTextOrControl> [<fileName>]
+Syntax: mobileExportImageToAlbum [ <imageData> | <image> ] [<fileName>]
 
 Summary: Saves an image to the user's photo album.
 
@@ -30,9 +30,8 @@ put the long ID of image "myImage" into tImageID
 mobileExportImageToAlbum tImageID, "my_file"
 
 Parameters:
-imageTextOrControl (enum): One of the following:
-- "binary data": The binary data of an image (the 'text') in PNG, GIF or JPEG format.
-- "image long id": The long id of an image object containing an image in PNG, GIF or JPEG format.
+imageData: The binary data of an image in PNG, GIF or JPEG format.
+image: An <object reference> for an <image(object)> containing an image in PNG, GIF or JPEG format.
 fileName: Name under which the image file is to be saved on the Android file system. A random name is generated if a name is not specified.
 
 The result (enum): The <mobileExportImageToAlbum> command returns empty in the result if exporting succeeded. Otherwise it returns one of:
@@ -46,4 +45,4 @@ Use the <mobileExportImageToAlbum> to save an image to the user's photo album of
 
 >*Note:* When running in the iOS simulator, there needs to be at least one image in the photo album for exporting to succeed. You can add images to the photo album in a simulator by dragging an image on the simulator window, and saving the image to album from Safari (click and hold on the image to bring up an alert with the option).
 
-References: mobilePickPhoto (command)
+References: mobilePickPhoto (command), object reference (glossary), image (object)

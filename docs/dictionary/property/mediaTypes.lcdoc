@@ -17,13 +17,13 @@ Platforms: desktop,server,web,mobile
 Example:
 if the mediaTypes of player 1 contains "audio" then increaseLoudness
 
-Value (enum): The <mediaTypes> is a list of one or more of the following, separated by commas:
-        - video
-        - audio
-        - text
-        - qtvr
-        - sprite
-        - flash
+Value (set):
+- video:
+- audio:
+- text:
+- qtvr:
+- sprite:
+- flash:
 
 This property is read:only and cannot be set
 
