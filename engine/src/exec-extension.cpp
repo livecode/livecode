@@ -251,6 +251,14 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
         if (MCNameIsEqualTo(t_ext -> module_name, *t_name))
         {
+			// If the retain count of the module is not 1, then it can't be
+			// unloaded.
+			if (MCScriptGetRetainCountOfModule(t_ext -> module) != 1)
+			{
+				ctxt . SetTheResultToCString("module in use");
+				return;
+			}
+			
             if (t_ext -> instance != nil)
                 MCScriptReleaseInstance(t_ext -> instance);
             MCScriptReleaseModule(t_ext -> module);
@@ -264,8 +272,11 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
             
             MCextensionschanged = true;
             
-            break;
+			return;
         }
+	
+	// If we get here the module was not found.
+	ctxt . SetTheResultToCString("module not loaded");
 }
 
 void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_list)

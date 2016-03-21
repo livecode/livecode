@@ -211,6 +211,9 @@ MCScriptModuleRef MCScriptRetainModule(MCScriptModuleRef module);
 // Release a module.
 void MCScriptReleaseModule(MCScriptModuleRef module);
 
+// Return the reference count of the given module.
+uint32_t MCScriptGetRetainCountOfModule(MCScriptModuleRef module);
+
 // Gets the module ptr for the most recent LCB stack frame on the current thread's stack.
 MCScriptModuleRef MCScriptGetCurrentModule(void);
 

@@ -29,7 +29,11 @@ Use the <unload extension> <command> to unload a <LiveCode Builder extension>. T
 If the extension is a library, its public handlers will no longer be in the message path.
 If it is a widget, it will no longer be available as a control to add to a stack. 
 
->*Note:* If there is an instance of a widget still present on a stack in memory, the <unload extension> <command> will fail.
+If a module with the given identifier has already been loaded into memory, the result will be set to "module already loaded".
+
+If there is no module with the given identifier loaded into memory, the result will be set to "module not loaded".
+
+If the module is currently in use by another module or a widget, the result will be set to "module in use".
 
 References: load extension (command), loadedExtensions (function), LiveCode Builder extension (glossary)
 

@@ -375,6 +375,13 @@ void MCScriptReleaseObject(MCScriptObject *self)
         MCScriptDestroyObject(self);
 }
 
+uint32_t MCScriptGetRetainCountOfObject(MCScriptObject *self)
+{
+	__MCScriptValidateObject__(self);
+	
+	return self -> references;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScriptReleaseObjectArray(MCScriptObject **p_elements, uindex_t p_count)
