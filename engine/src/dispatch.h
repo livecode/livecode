@@ -177,6 +177,7 @@ public:
 	void configure(Window w);
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
+	MCFontlist *getfontlist();
 	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
     MCFontStruct *loadfontwithhandle(MCSysFontHandle, MCNameRef p_name);
 	
@@ -201,11 +202,6 @@ public:
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif
-
-	MCFontlist *getfontlist()
-	{
-		return fonts;
-	}
 	
 	MCStack *findstackname(MCNameRef);
 	MCStack *findstackid(uint4 fid);
