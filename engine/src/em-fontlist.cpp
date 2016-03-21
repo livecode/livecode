@@ -88,8 +88,6 @@ MCFontnode::MCFontnode(MCNameRef p_name,
     m_font_info.m_xheight = t_metrics.fXHeight;
 
     m_font_info.size = p_size;
-
-    //MCLog("Created dummy font: %@ %hi %hi", p_name, p_size, p_style);
 }
 
 MCFontnode::~MCFontnode()
@@ -258,7 +256,6 @@ MCFontlist::getfontstructinfo(MCNameRef & r_name,
 MCSysFontHandle emscripten_get_font_by_name(MCNameRef p_name,
                                             uint16_t p_style)
 {
-	MCLog("%s: %@", __FUNCTION__, p_name);
 	/* Decode style */
 	bool t_italic = (0 != (p_style & FA_ITALIC));
 	bool t_bold = (0x05 < (p_style & FA_WEIGHT));
