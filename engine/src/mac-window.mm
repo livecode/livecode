@@ -1709,8 +1709,15 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	MCRectangle t_content;
 	MCMacPlatformMapScreenNSRectToMCRectangle(t_new_cocoa_content, t_content);
 	
+	// Make sure we don't tickle the event queue whilst resizing, otherwise
+	// redraws can be done by the OS during the process resulting in tearing
+	// as the window resizes.
+	MCMacPlatformDisableEventChecking();
+	
 	// And get the super class to deal with it.
 	HandleReshape(t_content);
+	
+	MCMacPlatformEnableEventChecking();
 }
 
 void MCMacPlatformWindow::ProcessDidResize(void)
