@@ -143,9 +143,8 @@ MCFontnode::remove(MCFontnode *& list)
  * MCFontlist implementation for Emscripten
  * ================================================================ */
 
-MCFontlist::MCFontlist()
+MCFontlist::MCFontlist() : m_font_list(nil)
 {
-	m_font_list = NULL;
 }
 
 MCFontlist::~MCFontlist()
