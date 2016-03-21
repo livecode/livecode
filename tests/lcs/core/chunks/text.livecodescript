@@ -29,3 +29,34 @@ on TestDeleteItemOfLine
 	delete item 1 of line 2 of tLines
 	TestAssert "delete item of line comprising item does not delete line", the number of lines in tLines is 3
 end TestDeleteItemOfLine
+
+on TestPutIntoItemAdd
+	local tItems
+	put "a" into tItems
+	put "b" into item 2 of tItems
+	TestAssert "force item addition expression", tItems is "a,b"
+	
+	put "a" into tItems
+	put "b" into item 3 to 4 of tItems
+	TestAssert "force item addition range", tItems is "a,,b"
+	
+	put "a" into tItems
+	put "b" into the third item of tItems
+	TestAssert "force item addition ordinal", tItems is "a,,b"
+end TestPutIntoItemAdd
+
+on TestPutIntoItemReplace
+	local tItems
+	put "a,b" into tItems
+	put "c" into item 2 of tItems
+	TestAssert "item replacement expression", tItems is "a,c"
+	
+	put "a,b,c,d" into tItems
+	put "e" into item 3 to 4 of tItems
+	TestAssert "item replacement range", tItems is "a,b,e"
+	
+	put "a,b,c" into tItems
+	put "d" into the middle item of tItems
+	TestAssert "item replacement ordinal", tItems is "a,d,c"
+end TestPutIntoItemReplace
+
