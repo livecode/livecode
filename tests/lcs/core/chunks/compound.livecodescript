@@ -21,3 +21,33 @@ on TestBug17112
 	put "a" & return & "b" into tLines
 	TestAssert "char range of line overrun", char 1 to 100 of line 1 of tLines is "a"
 end TestBug17112
+
+on TestPutIntoItemOfLineAdd
+	local tLines
+	put "a" & return & "1" into tLines
+	put "b" into item 2 of line 1 of tLines
+	TestAssert "force item of line addition expression", tLines is ("a,b" & return & "1")
+	
+	put "a" & return & "1" into tLines
+	put "b" into item 3 to 4 of line 1 of tLines
+	TestAssert "force item of line addition range", tLines is ("a,,b" & return & "1")
+	
+	put "a" & return & "1" into tLines
+	put "b" into the third item of line 1 of tLines
+	TestAssert "force item of line addition ordinal", tLines is ("a,,b" & return & "1")
+end TestPutIntoItemOfLineAdd
+
+on TestPutIntoItemOfLineReplace
+	local tLines
+	put "a,b" & return & "1" into tLines
+	put "c" into item 2 of line 1 of tLines
+	TestAssert "item of line replacement expression", tLines is ("a,c" & return & "1")
+	
+	put "a,b,c,d" & return & "1" into tLines
+	put "e" into item 3 to 4 of line 1 of tLines
+	TestAssert "item of line replacement range", tLines is ("a,b,e" & return & "1")
+	
+	put "a,b,c" & return & "1" into tLines
+	put "d" into the middle item of line 1 of tLines
+	TestAssert "item of line replacement ordinal", tLines is ("a,d,c" & return & "1")
+end TestPutIntoItemOfLineReplace

@@ -113,31 +113,42 @@ uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_deli
     return t_count;
 }
 
-// AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a given range, to prevent substring copying in text chunk resolution.
+// AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a
+// given range, to prevent substring copying in text chunk resolution.
+
+// Note the returned r_first and r_chunk count *are* allowed to overrun
+// the given range - MCStringsMarkTextChunkInRange does the work of
+// ensuring the absolute indices are restricted accordingly.
 bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
     uinteger_t t_count;
     bool t_counted;
     t_counted = false;
-
-    if (p_first < 0 || p_last < 0 || p_range != nil)
+    
+    // If the first index is negative, count chunks and adjust accordingly.
+    // Resolved index should be the index *before* the target first chunk.
+    if (p_first < 0)
     {
         t_count = p_callback(p_context, p_range);
         t_counted = true;
-        
-        if (p_first < 0)
-            p_first += t_count;
-        else
-            p_first--;
-        
-        if (p_last < 0)
-            p_last += t_count + 1;
-        else
-            p_last = MCMin(p_last, t_count);
+        p_first += t_count;
     }
     else
         p_first--;
+    
+    // If the last index is negative, count chunks and adjust accordingly.
+    // Resolved index should be the index of the target last chunk.
+    if (p_last < 0)
+    {
+        if (!t_counted)
+        {
+            t_count = p_callback(p_context, p_range);
+            t_counted = true;
+        }
+        
+        p_last += t_count + 1;
+    }
     
     t_chunk_count = p_last - p_first;
     

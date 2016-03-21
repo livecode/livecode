@@ -475,9 +475,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 MCStringMapIndices(*t_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
         
                 r_start = t_offset + t_cu_range.offset;
-                r_end = t_offset + t_cu_range.offset + t_cu_range.length;
-                //r_start = p_first;
-                //r_end = p_first + p_count;
+                r_end = MCU_min(t_offset + t_cu_range.offset + t_cu_range.length, t_length);
             }
             break;
         case CT_CODEUNIT:
@@ -485,7 +483,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             if (p_include_chars)
             {
                 r_start = p_first + t_offset;
-                r_end = MCU_min(p_first + t_offset + p_count, t_offset + t_length);
+                r_end = MCU_min(p_first + t_offset + p_count, t_length);
             }
             break;
         default:
