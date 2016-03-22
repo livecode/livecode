@@ -1581,8 +1581,9 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
             }
 
             nvalue = MCNumberFetchAsReal(*t_number);
+            MCStringSetNumericValue(MCNameGetString(gettoken_nameref()), nvalue);
 
-			newfact = insertfactor(new MCLiteralNumber(gettoken_nameref(), nvalue), curfact, top);
+			newfact = insertfactor(new MCLiteral(gettoken_nameref()), curfact, top);
 			newfact->parse(*this, doingthe);
 			needfact = False;
         }
