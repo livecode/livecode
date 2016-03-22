@@ -573,7 +573,7 @@ static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2
 	{
 		// MW-2008-11-02: [[ Bug ]] If this scrollbar is rendered as a little arrows control, then
 		//   ensure we hit-test it as such!
-		if (drect.height > drect.width && drect.height / drect.width < 3)
+		if (drect.height > drect.width && (drect.width == 0 || drect.height / drect.width < 3))
 		{
 			if (my <= drect . y + drect . height / 2)
 				wpart = WTHEME_PART_ARROW_DEC;
@@ -642,7 +642,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 	}
 	else if (t_info.slider.info.kind == kThemeScrollBar || t_info.slider.info.kind == kThemeSmallScrollBar)
 	{
-		if (drect.height > drect.width && drect.height / drect.width < 3)
+		if (drect.height > drect.width && (drect.width == 0 || drect.height / drect.width < 3))
 		{
 			converttohirect(drect, t_info . button . bounds);
 			t_info . button . bounds . origin . x++;

@@ -923,7 +923,7 @@ void MCScrollbar::compute_barsize()
 	{
 		if (getstyleint(flags) == F_VERTICAL)
 		{
-			uint2 twidth = rect.width;
+			uint2 twidth = rect.width != 0 ? rect.width : 1;
 			barsize = MCU_max(nffw, 1);
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Use MCString primitives.
 			if (MCStringGetLength(startstring) > barsize)
