@@ -949,6 +949,10 @@ public:
     // display for widgets.
     MCStringRef gettooltip(void) {return tooltip;}
     
+    // Returns true if this object is an ancestor *control* of p_object
+    //  in the parent chain.
+    bool isancestorof(MCObject *p_object);
+    
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
