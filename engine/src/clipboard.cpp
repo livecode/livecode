@@ -837,12 +837,25 @@ bool MCClipboard::CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const
         }
     }
     
-    // Could not grab as either styled text or RTF. One last try with HTML...
+    // Could not grab as either styled text or RTF. Try with HTML.
     MCAutoDataRef t_html;
     if (CopyAsData(kMCRawClipboardKnownTypeHTML, &t_html))
     {
         // Convert to LiveCode styled text
         MCDataRef t_pickled_text = ConvertHTMLToStyledText(*t_html);
+        if (t_pickled_text != NULL)
+        {
+            r_pickled_text = t_pickled_text;
+            return true;
+        }
+    }
+    
+    // Finally, try plain text.
+    MCAutoStringRef t_plain_text;
+    if (CopyAsText(&t_plain_text))
+    {
+        // Convert to LiveCode styled text
+        MCDataRef t_pickled_text = ConvertTextToStyledText(*t_plain_text);
         if (t_pickled_text != NULL)
         {
             r_pickled_text = t_pickled_text;
