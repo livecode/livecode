@@ -14,6 +14,7 @@ import subprocess
 settings = {
     'ALLOW_MEMORY_GROWTH': 1,
     'ASSERTIONS': 1,
+    'DEMANGLE_SUPPORT': 1,
     'EMTERPRETIFY': 1,
     'EMTERPRETIFY_ASYNC': 1,
     'LINKABLE': 1,
