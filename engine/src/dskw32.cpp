@@ -3692,7 +3692,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             // Check for the remaining serial port paths "CON:","PRN:","AUX:","NUL:"
             else
             {
-                if (MCStringIsEqualToCString(p_path, serialPortNames[i].m_prefix, kMCStringOptionCompareCaseless))
+                if (t_len == 4 && MCStringBeginsWithCString(p_path, (const char_t *)serialPortNames[i].m_prefix, kMCStringOptionCompareCaseless))
                     return true;
             }
         }
