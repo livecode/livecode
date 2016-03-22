@@ -235,8 +235,15 @@ Syntax: set the firstItemLeft of <widget> to { true | false }
 Syntax: get the firstItemLeft of <widget>
 
 Description:
-If the <firstItemLeft> property is true, then the first action in the <itemArray> is displayed on 
-the left hand side of the header bar.
+
+If the <firstItemLeft> property is `true`, then the first action in the
+<itemArray> is displayed on the left hand side of the header bar.
+
+**Note:** In some <theme|themes>, the first action always has its
+label displayed when <firstItemLeft> is `true`.  If you don't want
+this to happen, you can set the action's label to the empty string.
+
+References: itemArray (property), theme (property)
 **/
 property firstItemLeft get mFirstActionLeft set setFirstActionLeft
 metadata firstItemLeft.default is "true"
