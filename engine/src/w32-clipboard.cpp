@@ -300,10 +300,11 @@ MCStringRef MCWin32RawClipboardCommon::DecodeTransferredFileList(MCDataRef p_dat
 	else 
 		MCStringCreateWithBytes(t_bytes, t_path_char_count*1, kMCStringEncodingNative, false, t_decoded);
 
-	// Replace the NULs with newlines
+	// Replace the NULs with newlines and trim the trailing newline
 	if (t_decoded != NULL 
 		&& (!MCStringMutableCopyAndRelease(t_decoded, t_decoded)
 		|| !MCStringFindAndReplaceChar(t_decoded, '\0', '\n', kMCStringOptionCompareExact)
+		|| !MCStringRemove(t_decoded, MCRangeMake(MCStringGetLength(t_decoded)-1, 1))
 		|| !MCStringCopyAndRelease(t_decoded, t_decoded)))
 	{
 		MCValueRelease(t_decoded);
