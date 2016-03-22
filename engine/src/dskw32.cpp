@@ -3650,33 +3650,51 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	static bool isValidSerialPortPath(MCStringRef p_path)
     {
-        const char *serialPortNamesWithDigits[] = {"COM","LPT"};
-        const char *serialPortNamesWithoutDigits[] = {"CON:","PRN:","AUX:","NUL:"};
-		
-        int size_of_serialPortNamesWithDigits = sizeof(serialPortNamesWithDigits) / sizeof( serialPortNamesWithDigits[0]);
-        int size_of_serialPortNamesWithoutDigits = sizeof(serialPortNamesWithoutDigits) / sizeof( serialPortNamesWithoutDigits[0]);
-		
-        // Check for serial port paths of the form 'COM[0-9]+:' and 'LPT[0-9]+:'
+        // All serial port paths end with ":", and are at least 4 chars long
         uint4 t_len = MCStringGetLength(p_path);
-        for (int i=0;i<size_of_serialPortNamesWithDigits;i++)
-        {
-            if (MCStringBeginsWith(p_path, MCSTR(serialPortNamesWithDigits[i]), kMCStringOptionCompareCaseless) &&
-				MCStringGetCharAtIndex(p_path, t_len-1) == ':' && t_len > 4)
-            {
-                for (int j=3;j<t_len-1;j++)
-                {
-                    if (!isdigit(MCStringGetCharAtIndex(p_path, j)))
-                        return false;
-                }
-                return true;
-            }
-        }
+        if (t_len < 4 || MCStringGetCharAtIndex(p_path, t_len-1) != ':')
+            return false;
 		
-        // Check for the remaining serial port paths "CON:","PRN:","AUX:","NUL:"
-        for (int i=0;i<size_of_serialPortNamesWithoutDigits;i++)
+        typedef struct
         {
-            if (MCStringIsEqualToCString(p_path, serialPortNamesWithoutDigits[i], kMCStringOptionCompareCaseless))
-                return true;
+            const char *m_prefix;
+            bool m_numbered;
+        } SerialPortInfo;
+		
+        SerialPortInfo serialPortNames[]=
+        {
+            {"COM", true},
+            {"LPT", true},
+            {"CON", false},
+            {"PRN", false},
+            {"AUX", false},
+            {"NUL", false},
+        };
+		
+        uint4 t_size = sizeof(serialPortNames) / sizeof(serialPortNames[0]);
+		
+        for (int i=0; i<t_size; i++)
+        {
+            // Check for serial port paths of the form 'COM[0-9]+:' and 'LPT[0-9]+:'
+            if (serialPortNames[i].m_numbered)
+            {
+                if (MCStringBeginsWithCString(p_path, (const char_t *)serialPortNames[i].m_prefix, kMCStringOptionCompareCaseless)
+                    && t_len > 4)
+                {
+                    for (int j=3; j<t_len-1; j++)
+                    {
+                        if (!isdigit(MCStringGetCharAtIndex(p_path, j)))
+                            return false;
+                    }
+                    return true;
+                }
+            }
+            // Check for the remaining serial port paths "CON:","PRN:","AUX:","NUL:"
+            else
+            {
+                if (MCStringIsEqualToCString(p_path, serialPortNames[i].m_prefix, kMCStringOptionCompareCaseless))
+                    return true;
+            }
         }
 		
         return false;
