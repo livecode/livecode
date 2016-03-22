@@ -459,6 +459,16 @@ void MCScriptReleaseModule(MCScriptModuleRef self)
     MCScriptReleaseObject(self);
 }
 
+uint32_t MCScriptGetRetainCountOfModule(MCScriptModuleRef self)
+{
+	if (nil == self)
+		return 0;
+	
+	__MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+	
+	return MCScriptGetRetainCountOfObject(self);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module)
@@ -501,7 +511,7 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
         if (MCNameIsEqualTo(t_other_module -> name, t_module -> name))
         {
             MCScriptDestroyObject(t_module);
-            return MCErrorThrowGeneric(MCSTR("module with that name already loaded"));
+            return MCErrorThrowGeneric(MCSTR("module already loaded"));
         }
     
     // Link our module into the global module list.
