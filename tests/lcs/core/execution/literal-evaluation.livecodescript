@@ -1,6 +1,6 @@
 script "CoreExecutionLiteralEvaluation"
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
