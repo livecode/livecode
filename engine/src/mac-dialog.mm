@@ -616,7 +616,13 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 		[t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
 	}
 	else
-		[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+	{
+		extern uint4 MCmajorosversion;
+		if (MCmajorosversion >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
+			[t_panel setMessage: [NSString stringWithMCStringRef: p_prompt]];
+		else
+			[t_panel setTitle: [NSString stringWithMCStringRef: p_prompt]];
+	}
 	
     // MW-2014-07-17: [[ Bug 12826 ]] If we have at least one type, add a delegate. Only add as
     //   an accessory view if more than one type.
@@ -640,6 +646,12 @@ void MCPlatformBeginFileDialog(MCPlatformFileDialogKind p_kind, MCPlatformWindow
 	// MM-2012-03-01: [[ BUG 10046]] Make sure the "new folder" button is enabled for save dialogs
 	else 
 		[t_panel setCanCreateDirectories: YES];
+	
+	if ([t_panel respondsToSelector:@selector(isAccessoryViewDisclosed)])
+	{
+		// show accessory view when dialog opens
+		[t_panel setAccessoryViewDisclosed: YES];
+	}
 	
 	MCMacPlatformBeginOpenSaveDialog(p_owner, t_panel, *t_initial_folder, *t_initial_file);
 }
