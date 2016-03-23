@@ -292,8 +292,12 @@ void MCWidget::munfocus(void)
 
 void MCWidget::mdrag(void)
 {
+#ifdef WIDGETS_HANDLE_DND
     if (m_widget != nil)
         MCwidgeteventmanager->event_mdrag(this);
+#else
+	MCControl::mdrag();
+#endif
 }
 
 Boolean MCWidget::doubledown(uint2 p_which)
