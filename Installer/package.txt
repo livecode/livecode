@@ -106,13 +106,13 @@ component Uninstaller
 		register key "HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/[[ProductTitle]]"
 		with RegistryRoot as "HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/[[ProductTitle]]" do
 			register value "DisplayIcon" as path "[[TargetFolder]]/[[ProductName]].exe"
-			register value "DisplayName" as "RunRev [[ProductTitle]]"
+			register value "DisplayName" as "[[ProductTitle]]"
 			register value "DisplayVersion" as "[[VersionTag]]"
 			register value "InstallDate" as "[[TodaysDate]]"
 			register value "InstallLocation" as path "[[TargetFolder]]"
 			register value "NoModify" as 1
 			register value "NoRepair" as 1
-			register value "Publisher" as "RunRev Ltd."
+			register value "Publisher" as "LiveCode Ltd."
 			register value "Version" as "[[VersionTag]]"
 			register value "UninstallString" as path "\q[[TargetFolder]]/.setup.exe\q uninstall"
 	if TargetPlatform is "Linux" then
