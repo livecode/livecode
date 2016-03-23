@@ -821,10 +821,6 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
 	
     bool t_failure, t_can_debug;
     t_can_debug = true;
-    
-    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
-    Boolean t_old_expectation = m_numberexpected;
-    m_numberexpected = True;
 
     MCExecValue t_value;
     double t_result;
@@ -862,8 +858,7 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
             r_result = t_value . float_value;
         else
             r_result = t_value . double_value;
-        
-        m_numberexpected = t_old_expectation;
+		
 		return true;
     }
 	
@@ -958,22 +953,16 @@ static bool EvalExprAsStrictNumber(MCExecContext* self, MCExpression *p_expr, Ex
 {
 	MCAssert(p_expr != nil);
 	
-    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
     MCExecValue t_value;
-    Boolean t_number_expected = self -> GetNumberExpected();
-    self -> SetNumberExpected(True);
-    
+	
 	p_expr -> eval_ctxt(*self, t_value);
     
     if (t_value . type == kMCExecValueTypeNone
         || (MCExecTypeIsValueRef(t_value . type) && MCValueIsEmpty(t_value . valueref_value)))
     {
         self -> LegacyThrow(p_error);
-        
         return false;
     }
-    
-    self -> SetNumberExpected(t_number_expected);
     
     if (!self -> HasError())
         MCExecTypeConvertAndReleaseAlways(*self, t_value . type, &t_value, p_type, &r_value);
@@ -995,14 +984,9 @@ static bool EvalExprAsNumber(MCExecContext* self, MCExpression *p_expr, Exec_err
 {
 	MCAssert(p_expr != nil);
 	
-    // SN-2014-04-08 [[ NumberExpectation ]] Ensure we get a number when it's possible instead of a ValueRef
     MCExecValue t_value;
-    Boolean t_number_expected = self -> GetNumberExpected();
-    self -> SetNumberExpected(True);
     
 	p_expr -> eval_ctxt(*self, t_value);
-    
-    self -> SetNumberExpected(t_number_expected);
     
     if (!self -> HasError())
         MCExecTypeConvertAndReleaseAlways(*self, t_value . type, &t_value, p_type, &r_value);

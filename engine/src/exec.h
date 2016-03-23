@@ -1423,11 +1423,6 @@ public:
 	{
         return m_nfforce;
 	}
-    
-    Boolean GetNumberExpected() const
-    {
-        return m_numberexpected;
-    }
 	
 	//////////
 
@@ -1497,11 +1492,6 @@ public:
 	void SetRowDelimiter(MCStringRef p_value)
 	{
         MCValueAssign(m_rowdel, p_value);
-    }
-    
-    void SetNumberExpected(Boolean p_value)
-    {
-        m_numberexpected = (bool)p_value;
     }
 
     //////////
@@ -1819,10 +1809,6 @@ private:
     bool m_wholematches : 1;
     bool m_usesystemdate : 1;
     bool m_useunicode : 1;
-    // SN-2014-04-08 [[ NumberExpectation ]]
-    // New property allowing to specify, when evaluating a literal number,
-    // that we expect a number over a valueref
-    bool m_numberexpected : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
