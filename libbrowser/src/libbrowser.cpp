@@ -244,6 +244,9 @@ bool MCBrowserFactoryGet(const char *p_factory, MCBrowserFactoryRef &r_factory)
 			if (MCBrowserFactoryEnsureAvailable(s_factory_list[i], r_factory))
 				return true;
 		}
+        
+        // no browser factories were available
+        return false;
 	}
 	
 	for (uint32_t i = 0; s_factory_list[i].factory_id != nil; i++)
