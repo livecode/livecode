@@ -347,9 +347,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BEEP_DURATION, Int16, Interface, BeepDuration)
 	DEFINE_RW_PROPERTY(P_BEEP_SOUND, String, Interface, BeepSound)
 	DEFINE_RW_PROPERTY(P_TOOL, String, Interface, Tool)
-	DEFINE_RW_PROPERTY(P_BRUSH, UInt16, Interface, Brush)
-	DEFINE_RW_PROPERTY(P_ERASER, UInt16, Interface, Eraser)
-	DEFINE_RW_PROPERTY(P_SPRAY, UInt16, Interface, Spray)
+	DEFINE_RW_PROPERTY(P_BRUSH, UInt32, Interface, Brush)
+	DEFINE_RW_PROPERTY(P_ERASER, UInt32, Interface, Eraser)
+	DEFINE_RW_PROPERTY(P_SPRAY, UInt32, Interface, Spray)
 
 	DEFINE_RW_PROPERTY(P_DEFAULT_NETWORK_INTERFACE, String, Network, DefaultNetworkInterface)
 	DEFINE_RO_PROPERTY(P_NETWORK_INTERFACES, String, Network, NetworkInterfaces)
