@@ -1,4 +1,6 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+script "CoreExecutionLiteralEvaluation"
+/*
+Copyright (C) 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -14,30 +16,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-//
-// MCLiteral class declarations
-//
-#ifndef	LITERAL_H
-#define	LITERAL_H
+on TestEvaluateNumericLiteral
+   set the numberFormat to "00"
+   TestAssert "numeric literal remains string", (2 & empty) is "2"
+   TestAssert "numeric literal becomes number in numeric context", ((2 + 0) & empty) is "02"
 
-#include "express.h"
-
-class MCLiteral : public MCExpression
-{
-	MCValueRef value;
-public:
-	MCLiteral(MCValueRef v)
-	{
-		/* UNCHECKED */ value = MCValueRetain(v);
-	}
-	~MCLiteral(void)
-	{
-		MCValueRelease(value);
-	}
-
-    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-	virtual void compile(MCSyntaxFactoryRef ctxt);
-};
-
-#endif
+   local tArray
+   put "2" into tArray["2"]
+   TestAssert "numeric literal remains string in computation context", (tArray[2] + 1) is "03"
+end TestEvaluateNumericLiteral

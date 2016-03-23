@@ -621,11 +621,6 @@ void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 #endif /* MCMinus */
 
     MCExecValue t_left, t_right;
-    
-    Boolean t_old_expectation;
-    
-    t_old_expectation = ctxt . GetNumberExpected();
-    ctxt . SetNumberExpected(True);
 
     if (left == nil)
     {
@@ -635,7 +630,6 @@ void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
              || !ctxt . ConvertToNumberOrArray(t_left))
     {
         ctxt . LegacyThrow(EE_MINUS_BADLEFT);
-        ctxt . SetNumberExpected(t_old_expectation);
         return;
     }
 
@@ -643,13 +637,9 @@ void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
             || !ctxt . ConvertToNumberOrArray(t_right))
     {
         ctxt . LegacyThrow(EE_MINUS_BADRIGHT);
-        ctxt . SetNumberExpected(t_old_expectation);
         MCExecTypeRelease(t_left);
         return;
     }
-    
-    // Set the number expectation back to its previous state
-    ctxt . SetNumberExpected(t_old_expectation);
 
     r_value . valueref_value = nil;
     if (t_left. type == kMCExecValueTypeArrayRef)
