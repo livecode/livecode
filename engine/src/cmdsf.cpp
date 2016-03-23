@@ -1415,16 +1415,19 @@ void MCExport::exec_ctxt(MCExecContext &ctxt)
 
     if (sformat == EX_OBJECT)
     {
-        MCObject *optr = NULL;
-        if (image != NULL)
+        if (image == nil)
         {
-            //get image from chunk
-            uint4 parid;
-            if (!image->getobj(ctxt, optr, parid, True))
-            {
-                ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
-                return;
-            }
+            ctxt . LegacyThrow(EE_EXPORT_NOTANIMAGE);
+            return;
+        }
+        
+        MCObject *optr = NULL;
+        //get image from chunk
+        uint4 parid;
+        if (!image->getobj(ctxt, optr, parid, True))
+        {
+            ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);
+            return;
         }
         
         MCAutoArrayRef t_array;
