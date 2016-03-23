@@ -973,9 +973,11 @@ void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
     MCWidgetOnSave(m_widget, &t_value);
-    MCExtensionConvertToScriptType(ctxt, InOut(t_value));
-    if (ctxt . HasError())
+    if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
+    {
+        CatchError(ctxt);
         return;
+    }
     r_state = (MCArrayRef)t_value . Take();
 }
 
