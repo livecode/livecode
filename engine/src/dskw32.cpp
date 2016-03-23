@@ -3759,7 +3759,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		// PM-2016-03-15: [[ Bug 16300 ]] Detect correctly the case of a serial port path
 		else if (isValidSerialPortPath(MCStringRef p_path))
 		{
-			t_canonised_path = MCValueRetain(p_path);
+			t_canonised_path = p_path;
 		}
 		
 		else
