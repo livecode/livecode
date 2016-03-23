@@ -61,7 +61,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGImageImageRep::MCGImageImageRep(MCGImageRef p_image)
+MCGImageImageRep::MCGImageImageRep(MCGImageRef p_image) :
+    m_bitmap(nil)
 {
 	m_frame.x_scale = 1.0;
 	m_frame.y_scale = 1.0;
