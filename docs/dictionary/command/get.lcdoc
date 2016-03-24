@@ -34,7 +34,12 @@ The <get> <command> is a shorthand way of writing the following statement:
 
   put expression into it
 
->*Note:* When specifying URLs for Android and iOS, you must use the appropriate form that confirms to the RFC standards. Ensure that you <urlEncode> any username and password fields appropriately for FTP urls.  The Android and iOS engines do not support 'libUrl', which would allow characters such as @ in the username.
+> *Note:* When specifying URLs for iOS or Android, you must use the
+> appropriate form that conforms to [RFC
+> 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
+> <URLEncode> any username and password fields appropriately for FTP
+> URLs. The Android and iOS engines do not support 'libUrl', which
+> would allow characters such as @ in the username.
 
 References: it (keyword), post (command), unload (command), put (command), libURLSetFTPStopTime (command), load (command), set (command), libURLSetLogField (command), getProp (control_st), value (function), URLEncode (function), expression (glossary), command (glossary), variable (glossary)
 

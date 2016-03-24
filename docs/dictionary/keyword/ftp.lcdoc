@@ -81,7 +81,7 @@ The following example shows how to set a flag in a global variable to prevent mu
 
 To send any FTP command to an FTP server, use the libURLftpCommand <function>.
 
-For technical information about URLs and the <ftp> <URL> scheme, see RFC 1630 at http://www.ietf.org/rfc/rfc1630.txt.
+For technical information about URLs and the <ftp> <URL> scheme, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
 
 >*Important:*  The <ftp> <keyword> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
 

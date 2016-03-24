@@ -56,6 +56,11 @@ get URL fileURLToGet
 
 >*Note:* When included in a standalone application, the Internet library is implemented as a hidden group and made available when the group receives its first openBackground message. During the first part of the application startup process, before this message is sent, the <post> command is not yet available. This may affect attempts to use this command in startup, preOpenStack, openStack, or preOpenCard hand in the main stack. Once the application has finished starting up, the library is available and the <post> command can be used in any handler.
 
->*Note:* The Android and iOS engines do not support 'libUrl' but allow you to use post in the background. When specifying URLs for Android and iOS, you must use the appropriate form that confirms to the RFC standards. Ensure that you urlEncode any username and password fields appropriately for FTP urls.
+> *Note:* The Android and iOS engines do not support 'libUrl' but do
+> allow you to use <post> in the background. When specifying URLs for
+> Android or iOS, you must use the appropriate form that conforms to
+> [RFC 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
+> <URLEncode> any username and password fields appropriately for FTP
+> URLs.
 
 References: httpHeaders (property), HTTPProxy (property), urlProgress (message), URL (keyword), ftp (keyword), http (keyword), variable (glossary), ommand (glossary), property (glossary), blocking (glossary), web server (glossary), command (glossary), expression (glossary), syntax (glossary), server (glossary), upload (glossary), statement (glossary), handler (glossary), result (function), URLStatus (function), URLEncode (function), libURLFormData (function), URLDecode (function), libURLMultipartFormAddPart (function), libURLMultipartFormData (function), post (command), write to socket (command), delete URL (command), read from socket (command), put (command), libURLSetExpect100 (command), libURLSetLogField (command), open socket (command), libURLSetCustomHTTPHeaders (command), function (control_st)

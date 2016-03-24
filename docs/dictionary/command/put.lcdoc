@@ -75,7 +75,12 @@ Then you can use the <put> <command> with a <resfile> <URL> type to create the <
 
 >*Note:* On windows, it is imperative not to name a file with one of the reserved device names: CON, PRN, AUX, NUL, COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8 and LPT9. Also do not use these names followed by an extension, for example, NUL.tx7.
 
->*Note:* The iOS engines does not support 'libUrl' but allows you to use put in the background. When specifying URLs for iOS, you must use the appropriate form that confirms to the RFC standards. Ensure that you <URLEncode> any username and password fields appropriately for FTP urls.
+> *Note:* The Android and iOS engines do not support 'libUrl' but do
+> allow you to use <put> in the background. When specifying URLs for
+> iOS, you must use the appropriate form that conforms to [RFC
+> 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
+> <URLEncode> any username and password fields appropriately for FTP
+> URLs.
 
 References: explicitVariables (property), urlProgress (message), binfile URL (keyword), ftp (keyword), message box (keyword), file (keyword), resfileURL (keyword), binfile (keyword), URL (keyword), resfile (keyword), httpURL (keyword), after (keyword), field (keyword), before (keyword), http (keyword), word (keyword), handler (glossary), variable (glossary), property (glossary), blocking (glossary), binary file (glossary), command (glossary), declare (glossary), resource fork (glossary), blocking URL (glossary), error (glossary), expression (glossary), local variable (glossary), upload (glossary), server (glossary), statement (glossary), container (glossary), result (function), value (function), URLEncode (function), delete URL command (command), libURLftpUploadcommand (command), put (command), local (command), put command (command), post command (command), libURLftpUpload (command), libURLDownloadToFile (command), function (control_st)
 

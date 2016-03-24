@@ -30,7 +30,7 @@ To replace the default headers instead of adding to them, use the <libURLSetCust
 
 >*Important:* If you have used the <libURLSetCustomHTTPHeaders> <command> to set all the headers, the <httpHeaders> setting is ignored and the headers set by <libURLSetCustomHTTPHeaders> are used instead. 
 
-For technical information about the standard headers recognized in the HTTP 1.1 protocol, see RFC 2616 at http://www. ietf. org/rfc/rfc2616. txt.
+For technical information about the standard headers recognized in the HTTP 1.1 protocol, see [RFC 2616](https://tools.ietf.org/html/rfc2616).
 
 References: URL (keyword), default (keyword), http (keyword), string (keyword), post (command), libURLSetCustomHTTPHeaders (command), URLDecode (function), libURLLastRHHeaders (function), property (glossary), expression (glossary), command (glossary), web server (glossary), server (glossary)
 

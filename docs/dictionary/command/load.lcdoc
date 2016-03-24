@@ -50,7 +50,12 @@ The file is downloaded into a local cache. It does not remain available after th
 
 >*Important:*  The <load> <command> is part of the <Internet library on desktop platforms(library)>. To ensure that the <command> works in a <standalone desktop application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure Internet Library is selected in the list of script libraries. The iOS and Android engines do not support 'libUrl' but allows you to use <load> in the background.
 
->*Note:* When specifying URLs for iOS and Android, you must use the appropriate form that confirms to the RFC standards. Ensure that you <URLEncode> any username and password fields appropriately for FTP urls.
+
+> *Note:* When specifying URLs for iOS or Android, you must use the
+> appropriate form that conforms to [RFC
+> 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
+> <URLEncode> any username and password fields appropriately for FTP
+> URLs.
 
 >*Note:*  When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <load> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <load> <command> can be used in any <handler>.
 
