@@ -599,8 +599,31 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    get shell ("hdiutil detach" && escapeArg(tVolumeName))
    
    -- Generate an initial read-write DMG and mount it
+   -- This needs to be run with root privileges to get the ownership correct
+   -- If the $GENERATE_DMG_SCRIPT env var is set, the script identified by
+   -- that path will be used instead of the one stored in the repo
    builderLog "message", "Generating initial DMG"
-   get shell ("hdiutil create -fs HFS+ -format UDRW -attach -volname" && escapeArg(tVolumeName) && "-srcfolder" && escapeArg(tDmgFolder) && escapeArg(tTempDmg))
+   local tGenerateScript
+   if $GENERATE_DMG_SCRIPT is not empty then
+      -- Check that the generate script is identical to the in-repo copy
+      -- so it is kept up-to-date
+      local tLocalScript
+      local tRepoScript
+      get shell("which" && escapeArg($GENERATE_DMG_SCRIPT))
+      put url("file:" & line 1 of it) into tLocalScript
+      put url("file:" & builderSystemFolder() & "/generate-dmg.sh") into tRepoScript
+      if tLocalScript is not tRepoScript then
+         builderLog "error", "Local DMG generation script differs from the repo copy (please update)"
+         throw "failure"
+      end if
+      
+      put $GENERATE_DMG_SCRIPT into tGenerateScript
+   else if $GENERATE_DMG_SUDO is not empty and $GENERATE_DMG_SUDO is not 0 then
+      put "sudo -n" && escapeArg(builderSystemFolder() & "/generate-dmg.sh") into tGenerateScript
+   else
+      put escapeArg(builderSystemFolder() & "/generate-dmg.sh") into tGenerateScript
+   end if
+   get shell (tGenerateScript && escapeArg(tVolumeName) && escapeArg(tDmgFolder) && escapeArg(tTempDmg))
    if "created:" is not in it then
       builderLog "error", "Failed to create initial DMG:" && it
       throw "failure"
