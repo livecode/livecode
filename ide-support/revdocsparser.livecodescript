@@ -147,9 +147,10 @@ function revDocsGenerateDocsFilesFromBuiltIn pModuleInterfacePath, pRepoPath
    put the files into tFiles
    filter tFiles with "*.lcdoc"
    repeat for each line tFile in tFiles
-      get url("file:" & tFile)
-      if it is not empty then
-         put it into tDocsA[tCount]
+      local tContents
+      put revDocsUtf8FileContents(tFile) into tContents
+      if tContents is not empty then
+         put tContents into tDocsA[tCount]
          add 1 to tCount
       end if
    end repeat
@@ -266,8 +267,10 @@ function revDocsParseDictionaryToLibraryArray pRootDir
          filter it with "*.lcdoc"
          repeat for each line tFile in it
             wait 0 with messages
-            put textDecode(url ("binfile:" & tRoot & slash & tLine & slash & tFile), "utf-8") into tText
-            put revDocsParseDocText(tText, tRoot & slash & tLine & slash & tFile) into tParsedA
+            local tFullPath
+            put tRoot & slash & tLine & slash & tFile into tFullPath
+            put revDocsUtf8FileContents(tFullPath) into tText
+            put revDocsParseDocText(tText, tFullPath) into tParsedA
             put tParsedA["doc"][1] into tLibraryA[tCount]
             add 1 to tCount
          end repeat
@@ -282,9 +285,8 @@ Summary: Takes a .lcdoc file and formats it as a JSON array.
 
 function revDocsFormatAPIAsJSON pLibraryName, pAuthor, pAPIFile
    # Get the data
-   local tText, tData
-   put url ("binfile:" & pAPIFile) into tData
-   put textDecode(tData, "utf-8") into tText
+   local tText
+   put revDocsUtf8FileContents(pAPIFile) into tText
    
    return revDocsFormatDocTextAsJSON(pAPIFile, tText, pLibraryName, pAuthor)
 end revDocsFormatAPIAsJSON
@@ -294,9 +296,8 @@ Summary: Takes a .lcdoc file and parses it into a library array.
 */
 function revDocsParseFileToArray pFile, pType, @xCount, @xLibraryA
    # Get the data
-   local tText, tData
-   put url ("binfile:" & pFile) into tData
-   put textDecode(tData, "utf-8") into tText
+   local tText
+   put revDocsUtf8FileContents(pFile) into tText
    
    return revDocsParseFileContentsToArray(pFile, tText, pType, xCount, xLibraryA)
 end revDocsParseFileToArray
@@ -364,7 +365,9 @@ Tags: Package building
 */
 
 function revDocsGenerateDocsFileFromModularFile pFile
-   return revDocsGenerateDocsFileFromModular(url ("file:" & pFile), pFile)
+   local tContents
+   put revDocsUtf8FileContents(pFile) into tContents
+   return revDocsGenerateDocsFileFromModular(tContents, pFile)
 end revDocsGenerateDocsFileFromModularFile
 
 /*
@@ -913,7 +916,10 @@ function revDocsCollectGlossarySynonyms pRoot
       if it is not empty then
          repeat for each line tFile in it
             if tFile begins with "." then next repeat
-            put url ("file:" & pRoot & slash & "glossary" & slash & tLine & slash & tFile) into tText
+            local tFullPath
+            put pRoot & slash & "glossary" & slash & \ 
+                  tLine & slash & tFile into tFullPath
+            put revDocsUtf8FileContents(tFullPath) into tText
             get lineOffset("Name:", tText)
             put word 2 to -1 of line it of tText into tName
             if tName is empty then
@@ -1241,7 +1247,7 @@ end __updateParamsFromSyntaxLine
 
 function revDocsFormatDocFileAsJSON pFile, pLibraryName, pAuthor
    local tFileContents
-   put url("binfile:" & pFile) into tFileContents
+   put revDocsUtf8FileContents(pFile) into tFileContents
    return revDocsFormatDocTextAsJSON(pFile, tFileContents, pLibraryName, pAuthor)
 end revDocsFormatDocFileAsJSON
 
@@ -1258,7 +1264,7 @@ end revDocsFormatDocTextAsJSON
 
 function revDocsParseDocFileToLibraryArray pFile, pLibraryName, pAuthor
    local tFileContents
-   put url("binfile:" & pFile) into tFileContents
+   put revDocsUtf8FileContents(pFile) into tFileContents
    return revDocsParseDocTextToLibraryArray(pFile, tFileContents, pLibraryName, pAuthor)
 end revDocsParseDocFileToLibraryArray
 
@@ -1275,7 +1281,7 @@ end revDocsParseDocTextToLibraryArray
 
 function revDocsParseDocFile pFile
    local tFileContents
-   put url("binfile:" & pFile) into tFileContents
+   put revDocsUtf8FileContents(pFile) into tFileContents
    return revDocsParseDocText(tFileContents, pFile)
 end revDocsParseDocFile
 
@@ -2527,8 +2533,7 @@ end revDocsGuideNameFromFile
 function revDocsGuideData pFolder, pLocation, pFile
    local tGuideContent, tGuideFile
    put pFolder & slash & pFile into tGuideFile
-   put url ("binfile:" & tGuideFile) into tGuideContent
-   put textDecode(tGuideContent, "utf-8") into tGuideContent
+   put revDocsUtf8FileContents(tGuideFile) into tGuideContent
    
    local tGuideDataA
    if tGuideContent is not empty then
