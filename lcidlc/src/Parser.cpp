@@ -314,7 +314,7 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 	self -> position = t_token -> start;
 	
     if (!t_is_bool)
-        r_value = t_token -> value;
+        r_value = ValueRetain(t_token -> value);
 	
 	return true;
 }
@@ -835,10 +835,12 @@ static bool ParserReduceParameterDefinition(ParserRef self)
                 return false;
     }
 	
-	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_is_optional, t_default))
-		return false;
-
-	return true;
+    bool t_success;
+    t_success = InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_is_optional, t_default);
+    
+    ValueRelease(t_default);
+    
+    return t_success;
 }
 
 static bool ParserReduceReturnDefinition(ParserRef self)

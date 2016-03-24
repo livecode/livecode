@@ -1364,8 +1364,9 @@ void MCControl::continuesize(int2 x, int2 y)
 		}
 	if (MCmodifierstate & MS_SHIFT)
 	{
-		double newaspect;
-		newaspect = newrect.height / (double)newrect.width;
+		double newaspect, newwidth;
+        newwidth = newrect.width != 0 ? (double)newrect.width : 1;
+        newaspect = newrect.height / newwidth;
 
 		if (aspect < newaspect)
 		{

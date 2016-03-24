@@ -739,12 +739,7 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
         }
         
         t_prev_listener = t_listener;
-
-		
-		if (t_listener != nil)
-			t_listener = t_listener -> next;
-		else
-			t_listener = s_object_listeners;
+        t_listener = t_listener -> next;
 	}
     t_listeners . Take(r_listeners, r_count);
 }

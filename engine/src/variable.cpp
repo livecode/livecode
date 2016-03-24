@@ -163,10 +163,10 @@ bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
     else
         t_stat = IO_ERROR;
 
-    char *t_buffer;
-    size_t t_length;
     if (t_stat == IO_NORMAL)
     {
+        char *t_buffer;
+        size_t t_length;
         t_stat = MCS_closetakingbuffer(t_stream, (void*&)t_buffer, t_length);
 
         if (t_stat == IO_NORMAL)
@@ -177,7 +177,9 @@ bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
         else
             delete t_buffer;
     }
-
+    else
+        MCS_close(t_stream);
+    
     return t_stat == IO_NORMAL;
 }
 

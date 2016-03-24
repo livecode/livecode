@@ -771,10 +771,6 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], t_new_style);
 		ctxt . styles[ctxt . style_index] = t_new_style;
 
-		// Nothing more to do if this isn't a text run
-		if (p_event_type != kMCFieldExportEventNativeRun && p_event_type != kMCFieldExportEventUnicodeRun)
-			return true;
-		
 		// Now emit the text, if native its easy, otherwise we must process.
 		if (MCStringIsNative(p_event_data.m_text))
 			export_rtf_emit_native_text(ctxt.m_text,
