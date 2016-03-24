@@ -40,6 +40,8 @@ Returns: The <revBrowserOpen> function returns a value. If successful this will 
 Description:
 The <revBrowserOpen> function opens a new browser in the window with the given <windowId>. If a <url> is given, the new browser immediately navigates to this url.
 
+>*Note:* The <url> must be a standards-compliant URL.  In particular, `file:` URLs must be of the form `file://<absolute path>`, and the path should be <URLEncode|URL-encoded>.
+
 >*Cross-platform note:*  On Windows systems, the Internet Explorer browser is used by the <revBrowserOpen> function while on OS X Systems the Safari browser is used. To ensure cross-platform compatibility, don't use features that are not supported by both browsers, eg "ftp://" urls, which are only supported by Internet Explorer. 
 
 It is no longer necessary to initialise the Browser using XBrowser_Init, and this command now does nothing, but is still included to prevent legacy code causing script errors.

@@ -67,7 +67,10 @@ end if
 
 Then you can use the <put> <command> with a <resfile> <URL> type to create the <resource fork>.
 
->*Important:* The syntax for file urls in LiveCode does not conform to RFC1738. To ensure proper operation on all platforms make sure you use file:path rather than file://path.
+>*Important:* The syntax for file URLs with LiveCode's <URL(keyword)>
+>does not conform to [RFC 1738](https://tools.ietf.org/html/rfc1738).
+>To ensure proper operation on all platforms make sure you use
+>`file:path` rather than `file://path`.
 
 * When used with an http <URL>, uses the <HTTP> PUT method to <upload> the <value> to the <server>. However, since most <HTTP> <server|servers> don't implement the PUT method, you usually will use an <FTP> <URL> instead to <upload> files to an <HTTP> <server>.
 

@@ -22,6 +22,8 @@ widget: A widget reference.
 Description:
 Use the <launch url> command to open a url within a widget. When <launch url in widget> is called, LiveCode sends a "OnLaunchURL" message to that widget with <url> as the parameter. The widget can then display the url in an appropriate manner.
 
-References: launch url (command), launch document (command), URL (keyword), widget (object)
+>*Note:* The <url> must be a standards-compliant URL.  In particular, `file:` urls must be of the form `file://<absolute path>`, and the path should be <URLEncode|URL-encoded>.
+
+References: launch url (command), launch document (command), URLEncode (function), URL (keyword), widget (object)
 
 Tags: widget
