@@ -927,6 +927,15 @@ public:
     void GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value);
     void SetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool *p_value);
 
+    // Invalidates the given rect of this field *unless* this field is the entry
+    // box in a combo-box. Because the text is vertically-centred in those
+    // fields, the y offsets calculated during dirty calculations are wrong and
+    // the rect cannot be trusted so a full-field invalidation is needed.
+    //
+    // This override is non-virtual as the method is never called in a dynamic
+    // context.
+    void layer_redrawrect(const MCRectangle& m_dirty_rect);
+    
 protected:
     
     // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
