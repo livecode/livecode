@@ -862,15 +862,16 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
             t_success = MCStringFormat(r_results[i], "%d", t_compiled->matchinfo[t_match_index].rm_so + 1);
             if (t_success)
                 t_success = MCStringFormat(r_results[i + 1], "%d", t_compiled->matchinfo[t_match_index].rm_eo);
-            
-            if (++t_match_index >= NSUBEXP)
-                t_match_index = 0;
         }
         else
         {
             r_results[i] = MCValueRetain(kMCEmptyString);
             r_results[i + 1] = MCValueRetain(kMCEmptyString);
         }
+        // matchChunk did set empty values of positionVarsList with regex "(a)?(B)" applied on "B"
+        // if an optional capture group didn't match (which is valid), index wasn't updated.
+        if (++t_match_index >= NSUBEXP)
+            t_match_index = 0;
     }
     
     if (t_success)
