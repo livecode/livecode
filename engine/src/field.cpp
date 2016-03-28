@@ -3608,3 +3608,22 @@ MCPlatformControlState MCField::getcontrolstate()
     
     return MCPlatformControlState(t_state);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCField::layer_redrawrect(const MCRectangle& m_dirty_rect)
+{
+    // If the parent of this field is a button, this is the entry field for
+    // a combo-box. In that case, the text is vertically centred(-ish)
+    // within the field so the y offsets we calculate here are wrong.
+    // Calculating the correct position is fairly complicated so the simpler
+    // solution is to just invalidate the whole field in that case.
+    //
+    // This doesn't make much of a difference performance-wise; the number
+    // of pixels to be rasterised is higher but only by 3 or 4 rows in most
+    // cases.
+    if (getparent()->gettype() != CT_BUTTON)
+        MCControl::layer_redrawrect(m_dirty_rect);
+    else
+        MCControl::layer_redrawrect(rect);
+}
