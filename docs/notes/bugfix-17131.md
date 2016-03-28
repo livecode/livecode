@@ -1,0 +1,1 @@
+# Don't draw selection handles when objects are made invisible
