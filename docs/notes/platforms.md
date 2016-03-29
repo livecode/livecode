@@ -61,8 +61,8 @@ Currently, the supported versions of Xcode are:
 *Xcode 4.6 on MacOS X 10.7
 *Xcode 5.1 on MacOS X 10.8
 *Xcode 6.2 on MacOS X 10.9
-*Xcode 6.2, 6.4 and 7.2 on Mac OS X 10.10
-*Xcode 7.2 on MacOS X 10.11
+*Xcode 6.2 and 7.2 on Mac OS X 10.10
+*Xcode 7.3 on MacOS X 10.11
 
 It is also possible to set other versions of Xcode, to allow testing on a wider range of iOS simulators. For instance, on Yosemite, you can add *Xcode 5.1* in the *Mobile Support* preferences, to let you test your stack on the *iOS Simulator 7.1*.
 
@@ -71,8 +71,8 @@ We currently support the following iOS Simulators:
 *6.1
 *7.1
 *8.2
-*8.4
 *9.2
+*9.3
 
 ## Android
 LiveCode allows you to save your stack as an Android application, and also to deploy it on an Android device or simulator from the IDE.
