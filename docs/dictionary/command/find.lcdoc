@@ -21,12 +21,12 @@ Example:
 find string "beat must go on" in field "Quotes"
 
 Parameters:
-form (enum): One of the following words:If no form is specified, the find normal form is used.
--  normal
--  characters or character (or chars or char)
--  words or word
--  string
--  whole
+form (enum): If no <form> is specified, the normal form is used.
+-  normal : Find each word in textToFind, at start of the field's words
+-  characters, character, chars, char : Find each word in textToFind, anywhere in the field's words
+-  words, word : Find each word in textToFind, as complete words
+-  whole : Find the whole of textToFind, as a sequence of complete words
+-  string : Find the whole of textToFind, anywhere
 textToFind (string): 
 field: Any expression that evaluates to a field reference. If the field is not specified, the find command searches all the fields in the current stack (except fields whose dontSearch property is set to true).
 

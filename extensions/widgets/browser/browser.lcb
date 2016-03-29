@@ -160,39 +160,6 @@ The <javascriptHandlers> is a list of LiveCode handlers that are made available 
 >*Warning:* Setting the <javascriptHandlers> property gives JavaScript running within the Web browser permission to execute parts of your application through the handlers you choose to expose. If using this feature, make sure that you have complete control over the webpages which you load into the browser widget, and consider using https to ensure that third-parties cannot inject malicious code into them.
 
 
-Name: browserType
-Type: property
-
-Syntax:
-set the browserType of <widget> to <pBrowserType>
-get the browserType of <widget>
-
-Summary: Specifies the underlying browser implementation to use with this browser widget.
-
-Parameters:
-pBrowserType(string): A string identifying a particular browser implementation.
-
-Example:
-	// Specify that we want this browser widget to use the CEF (Chromium Embedded Framework) browser implementation.
-	set the browserType of widget "myBrowser" to "CEF"
-
-Description:
-The <browserType> specifies which available browser implementation to use for a browser widget. The default implementation for each platform will be used when <browserType> is empty.
-*Supported browser implementations*
-
-* Windows
-  * "CEF" - (Default) Based on the Chromium Embedded Framework
-* Mac OS X:
-  * "WebView" - (Default) Based on the WebView component of the OSX WebKit framework.
-  * "CEF" - Based on the Chromium Embedded Framework
-* Linux:
-  * "CEF" - (Default) Based on the Chromium Embedded Framework
-* iOS:
-  * "UIWebView" - (Default) Based on the UIWebView component of the iOS UIKit framework.
-* Android:
-  * "WebView" - (Default) Based on the WebView component of the Android standard libraries.
-
-
 Name: browserDocumentLoadBegin
 Type: message
 Syntax: browserDocumentLoadBegin pUrl
@@ -355,17 +322,19 @@ metadata htmlText.user_visible is "false" -- bug 16927
 
 property vScrollbar get getVScrollbar set setVScrollbar
 metadata vScrollbar.editor is "com.livecode.pi.boolean"
+metadata vScrollbar.default is "false"
 
 property hScrollbar get getHScrollbar set setHScrollbar
 metadata hScrollbar.editor is "com.livecode.pi.boolean"
+metadata hScrollbar.default is "false"
 
 property userAgent get getUserAgent set setUserAgent
 metadata userAgent.editor is "com.livecode.pi.text"
+metadata userAgent.label is "User agent"
 
 property javascriptHandlers get getJavaScriptHandlers set setJavaScriptHandlers
 metadata javascriptHandlers.editor is "com.livecode.pi.text"
-
-property browserType get mBrowserType set setBrowserType
+metadata javascriptHandlers.label is "JavaScript handlers"
 
 --------------------------------------------------------------------------------
 
@@ -375,7 +344,6 @@ foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rFuncPtr as Poin
 
 variable mOpened as Boolean
 variable mBrowser as optional MCBrowserRef
-variable mBrowserType as String
 variable mProperties as Array
 
 --
@@ -389,22 +357,11 @@ constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEn
 --------------------------------------------------------------------------------
 
 public handler OnLoad(in pProperties as Array)
-	if "browserType" is among the keys of pProperties then
-		put pProperties["browserType"] into mBrowserType
-		delete pProperties["browserType"]
-	else
-		put the empty string into mBrowserType
-	end if
-
 	put pProperties into mProperties
 end handler
 
 public handler OnSave(out rProperties as Array)
 	put mProperties into rProperties
-
-	if mBrowserType is not the empty string then
-		put mBrowserType into rProperties["browserType"]
-	end if
 end handler
 
 ----------
@@ -413,7 +370,6 @@ end handler
 public handler OnCreate()
 	libbrowserInit()
 
-	put the empty string into mBrowserType
 	put the empty array into mProperties
 	put false into mOpened
 end handler
@@ -427,8 +383,8 @@ private handler InitBrowserView()
 	MCWidgetGetMyStackNativeView(tParent)
 		
 	variable tFactory as MCBrowserFactoryRef
-	if not MCBrowserFactoryGet(mBrowserType, tFactory) then
-		throw "error getting browser factory for type: " & mBrowserType
+	if not MCBrowserFactoryGet(the empty string, tFactory) then
+		throw "error getting browser factory"
 	end if
 	
 	variable tDisplay as Pointer
@@ -539,20 +495,6 @@ private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowse
 end handler
 
 ----------
-
-private handler setBrowserType(in pBrowserType as String)
-	if pBrowserType is not mBrowserType then
-		if mOpened then
-			FinalizeBrowserView()
-		end if
-
-		put pBrowserType into mBrowserType
-
-		if mOpened then
-			InitBrowserView()
-		end if
-	end if
-end handler
 
 private handler getProperty(in pProperty as String) returns any
 	if mBrowser is nothing then
@@ -761,7 +703,7 @@ public handler OnPaint() returns nothing
 	put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
 
 	variable tNameString as String
-	put property "name" of my script object into tNameString
+	put my name into tNameString
 	
 	set the font of this canvas to font "Arial" at size 14
 

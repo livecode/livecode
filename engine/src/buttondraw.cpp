@@ -443,6 +443,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
                 sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
                 theight = nlines * fheight;
             }
+            
+            coord_t starty = sy;
+            uint2 i;
+            coord_t twidth = 0;
+            
+            dc->save();
+            dc->cliprect(t_content_rect);
 
             // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
 			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
@@ -470,13 +477,6 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				icons->curicon->drawcentered(dc, centerx + loff, centery + loff, (state & CS_HILITED) != 0);
 				icondrawed = True;
 			}
-
-			coord_t starty = sy;
-			uint2 i;
-			coord_t twidth = 0;
-			
-			dc->save();
-			dc->cliprect(t_content_rect);
 			
 			uindex_t t_totallen = 0;
 			for (i = 0 ; i < nlines ; i++)
@@ -1619,7 +1619,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-                dc -> drawtext(textx, cury + yoffset, t_tab, m_font, false, kMCDrawTextNoBreak);
+                dc -> drawtext_substring(textx, cury + yoffset + 1, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}

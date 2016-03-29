@@ -1,0 +1,1 @@
+# Fetch all docs content as text decoded from utf-8

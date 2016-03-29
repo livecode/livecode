@@ -299,6 +299,7 @@ bool MCCefInitialise(void)
 	t_settings.multi_threaded_message_loop = MC_CEF_USE_MULTITHREADED_MESSAGELOOP;
 	t_settings.command_line_args_disabled = true;
 	t_settings.no_sandbox = true;
+	t_settings.log_severity = LOGSEVERITY_DISABLE;
 	
 	bool t_success;
 	t_success = MCCefStringFromUtf8String(MCCefPlatformGetSubProcessName(), &t_settings.browser_subprocess_path);

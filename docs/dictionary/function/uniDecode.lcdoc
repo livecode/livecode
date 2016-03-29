@@ -25,25 +25,25 @@ uniDecode(field "JIS Input","Japanese") -- converts to JIS
 
 Parameters:
 stringToDecode (string): any string, or expression that evaluates to a string.
-language (enum): one of the following
-- "ANSI" (synonym for "English"
-- "Arabic"
-- "Bulgarian"
-- "Chinese"
-- "English"
-- "Greek"
-- "Hebrew"
-- "Japanese" (Shift-JIS)
-- "Korean"
-- "Polish"
-- "Roman"
-- "Russian" (Cyrillic)
-- "Thai"
-- "Turkish"
-- "SimplifiedChinese"
-- "Unicode" (UTF-16)
-- "UTF8"
-- "w" (synonym for "Unicode"
+language (enum):
+- ANSI: synonym for "English"
+- Arabic:
+- Bulgarian:
+- Chinese:
+- English: synonym for "ANSI"
+- Greek:
+- Hebrew:
+- Japanese: (Shift-JIS)
+- Korean:
+- Polish:
+- Roman:
+- Russian: (Cyrillic)
+- Thai:
+- Turkish:
+- SimplifiedChinese:
+- Unicode: (UTF-16)
+- UTF8:
+- w: synonym for "Unicode"
 
 The result: As of LiveCode 7.0 the uniDecode function has been deprecated. It will continue to work as in previous versions but should not be used in new code as the existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). This functions is only useful in combination with the also-deprecated uniEncode function and unicodeText field property.
 

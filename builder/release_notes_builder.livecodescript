@@ -30,9 +30,9 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       Initialize pVersion, pOutputDir
       
       BaseCreate
-      V1NotesCreate "engine", "Engine changes"
-      V1NotesCreate "ide", "IDE changes"
-      V2NotesCreate "lcb", "LiveCode Builder changes"
+      V1NotesCreate "engine", "engine", "Engine changes"
+      V1NotesCreate "ide", "IDE", "IDE changes"
+      V2NotesCreate "lcb", "LCB", "LiveCode Builder changes"
       ExtensionsCreate
       DictionaryCreate
       PreviousCreate
@@ -267,7 +267,7 @@ Each file details a single bug fix or feature implementation.
 Single-line files are added to the table of bugfixes.  Multi-line
 files get their own section in the release notes.
 */
-private command V1NotesCreate pType, pTitle
+private command V1NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
@@ -278,7 +278,7 @@ private command V1NotesCreate pType, pTitle
    put V1NotesScan(pType) into tScannedNotes
    
    -- Next generate markdown
-   V1NotesGenerate pType, tScannedNotes
+   V1NotesGenerate pType, pReadableType, tScannedNotes
 end V1NotesCreate
 
 /*
@@ -371,7 +371,7 @@ private command V1NotesScanVersion pType, pVersion, pFiles, @xScan
    end repeat
 end V1NotesScanVersion
 
-private command V1NotesGenerate pType, pScanData
+private command V1NotesGenerate pType, pReadableType, pScanData
    local tBugInfo
    
    -- Process versions in reverse order
@@ -388,7 +388,7 @@ private command V1NotesGenerate pType, pScanData
       subtract 1 from tTagCount
    end repeat
    
-   BugGenerate tBugInfo
+   BugGenerate tBugInfo, pReadableType
 end V1NotesGenerate
 
 private command V1NotesGenerateVersion pType, pVersion, pScanData, @xBugInfo
@@ -546,7 +546,7 @@ end V1NotesGenerateBlock
 -- New-style notes
 ----------------------------------------------------------------
 
-private command V2NotesCreate pType, pTitle
+private command V2NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
@@ -560,7 +560,7 @@ private command V2NotesCreate pType, pTitle
    
    V2NotesGenerate pType, tCollated, 1
    
-   BugGenerate tBugInfo
+   BugGenerate tBugInfo, pReadableType
 end V2NotesCreate
 
 -- There isn't actually any difference between the information
@@ -804,13 +804,20 @@ private command ExtensionsCreate
    end repeat
    
    V2NotesGenerate "extensions", tCollated, 1
-   BugGenerate tBugInfo
+   BugGenerate tBugInfo, "extension"
 end ExtensionsCreate
 
 private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
    set the itemdelimiter to slash
-   builderLog "report", "Creating release notes for" && item -1 of pExtPath
    
+   -- Skip the extension if it doesn't appear to have been compiled
+   if there is not a file ExtensionsGetManifestPath(pExtPath) then
+      builderLog "report", "Skipping uncompiled extension" && item -1 of pExtPath
+      exit ExtensionsCreatePath
+   end if
+
+   builderLog "report", "Creating release notes for" && item -1 of pExtPath
+
    -- Scan and collate all information for this particular extension
    local tNotesPath
    put pExtPath & "/notes" into tNotesPath
@@ -853,6 +860,23 @@ private function ExtensionsGetSectionName pExtPath
 end ExtensionsGetSectionName
 
 private function ExtensionsGetName pExtPath
+   local tManifest, tXmlId
+   put FileGetContents(ExtensionsGetManifestPath(pExtPath)) into tManifest
+   put revXMLCreateTree(tManifest, true, true, false) into tXmlId
+   
+   if tXmlId begins with "xmlerr" then
+      throw "Invalid extension manifest XML in [[tManifestFile]]"
+   end if
+   
+   local tTargetName
+   put textDecode(revXMLNodeContents(tXmlId, "/package/title"), "UTF-8") into tTargetName
+   if tTargetName begins with "xmlerr" then
+      return empty
+   end if
+   return tTargetName
+end ExtensionsGetName
+
+private function ExtensionsGetKind pExtPath
    -- Horrible-ish hack for extracting the "real" name of the LiveCode
    -- module.  See also tools/build-extensions.sh.
    local tShortName
@@ -868,27 +892,16 @@ private function ExtensionsGetName pExtPath
       end if
    end repeat
 
-   -- Try to figure out the path for the compiled manifest file
+   return tModuleName
+end ExtensionsGetKind
+
+private function ExtensionsGetManifestPath pExtPath
    local tManifestFile
    put FileGetPath("built-extensions") into tManifestFile
-   put slash & tModuleName after tManifestFile
+   put slash & ExtensionsGetKind(pExtPath) after tManifestFile
    put slash & "manifest.xml" after tManifestFile
-   
-   local tManifest, tXmlId
-   put FileGetContents(tManifestFile) into tManifest
-   put revXMLCreateTree(tManifest, true, true, false) into tXmlId
-   
-   if tXmlId begins with "xmlerr" then
-      throw "Invalid extension manifest XML in [[tManifestFile]]"
-   end if
-   
-   local tTargetName
-   put textDecode(revXMLNodeContents(tXmlId, "/package/title"), "UTF-8") into tTargetName
-   if tTargetName begins with "xmlerr" then
-      return empty
-   end if
-   return tTargetName
-end ExtensionsGetName
+   return tManifestFile
+end ExtensionsGetManifestPath
 
 ----------------------------------------------------------------
 -- Dictionary change generation
@@ -1019,11 +1032,11 @@ private function BugUrl pId
    return merge("http://quality.livecode.com/show_bug.cgi?id=[[pId]]")
 end BugUrl
 
-private command BugGenerate pBugInfo
-   V2BugGenerate pBugInfo
+private command BugGenerate pBugInfo, pBugCategory
+   V2BugGenerate pBugInfo, pBugCategory
 end BugGenerate
 
-private command V1BugGenerate pBugInfo
+private command V1BugGenerate pBugInfo, pBugCategory
    
    local tTags, tTagCount
    put the keys of pBugInfo into tTags
@@ -1047,7 +1060,7 @@ private command V1BugGenerate pBugInfo
       if tPrettyVersion is "HEAD" then 
          put sVersion into tPrettyVersion
       end if
-      MarkdownAppend "notes", merge("## Specific bug fixes ([[tPrettyVersion]])")
+      MarkdownAppend "notes", merge("## Specific [[pBugCategory]] bug fixes ([[tPrettyVersion]])")
       
       -- Generate the table itself
       -- Use HTML to allow using HTML classes to distinguish between
@@ -1071,13 +1084,13 @@ private command V1BugGenerate pBugInfo
    end repeat
 end V1BugGenerate
 
-private command V2BugGenerate pBugInfo
+private command V2BugGenerate pBugInfo, pBugCategory
    local tTags, tTagCount
    put the keys of pBugInfo into tTags
    GitSortTags tTags
    put the number of lines of tTags into tTagCount
    
-   MarkdownAppend "notes", "## Specific bug fixes"
+   MarkdownAppend "notes", merge("## Specific [[pBugCategory]] bug fixes")
    
    local tVersion, tBugs, tPrettyVersion, tBugList
    local tLine, tId, tDesc, tUrl
@@ -1369,25 +1382,15 @@ end FileGetUTF8Contents
 private function FileGetContents pPath, pEncoding
    local tContents, tResult
    
-   if pEncoding is empty then
-      open file pPath for binary read
-   else
-      open file pPath for pEncoding text read
-   end if
-   
+   put url("binfile:" & pPath) into tContents
    put the result into tResult
    if tResult is not empty then
-      throw merge("Failed to open [[pPath]]: [[tResult]]")
-   end if
-   
-   read from file pPath until end
-   put the result into tResult
-   if tResult is not empty and tResult is not "eof" then
       throw merge("Failed to read [[pPath]]: [[tResult]]")
    end if
-   put it into tContents
    
-   close file pPath -- unchecked
+   if pEncoding is not empty then
+      put textDecode(tContents, pEncoding) into tContents
+   end if
    
    return tContents
 end FileGetContents

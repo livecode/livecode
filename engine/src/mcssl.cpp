@@ -774,7 +774,7 @@ bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path)
 	return SSL_CTX_load_verify_locations(p_ssl_ctx, p_path, NULL) != 0;
 }
 
-#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_WINDOWS)
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(_WIN32)
 
 void free_x509_stack(STACK_OF(X509) *p_stack)
 {
@@ -958,7 +958,7 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 	return true;
 }
 
-#elif defined(TARGET_PLATFORM_WINDOWS)
+#elif defined(_WIN32)
 
 bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
 {
@@ -981,11 +981,7 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
 		if (t_valid)
 		{
 			X509 *t_x509 = NULL;
-#if defined(TARGET_PLATFORM_WINDOWS)
 			const unsigned char *t_data = (const unsigned char*) t_cert_enum->pbCertEncoded;
-#else
-			unsigned char *t_data = t_cert_enum->pbCertEncoded;
-#endif
 			long t_len = t_cert_enum->cbCertEncoded;
 
 			t_success = NULL != (t_x509 = d2i_X509(NULL, &t_data, t_len));
@@ -1027,11 +1023,7 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 		if (t_valid)
 		{
 			X509_CRL *t_crl = NULL;
-#if defined(TARGET_PLATFORM_WINDOWS)
 			const unsigned char *t_data = (const unsigned char*)t_crl_enum->pbCrlEncoded;
-#else
-			unsigned char *t_data = t_crl_enum->pbCrlEncoded;
-#endif
 			long t_len = t_crl_enum->cbCrlEncoded;
 
 			t_success = NULL != (t_crl = d2i_X509_CRL(NULL, &t_data, t_len));

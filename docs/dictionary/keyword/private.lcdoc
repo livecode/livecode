@@ -2,7 +2,7 @@ Name: private
 
 Type: keyword
 
-Syntax: private (command|function) <name> <parameterList> 
+Syntax: private (command|function) <handlerName> <parameterList> 
 
 Summary: The <private> keyword makes a function or command local to the script in which it is present
 
@@ -20,23 +20,40 @@ end someLocalCommand
 Example:
 private function someLocalFunction
    -- do something
- end someLocalFunction
+end someLocalFunction
 
 Parameters:
-name: 
-parameterList: 
+handlerName: The name of the handler
+parameterList: A comma-delimited list of the parameters
 
 Description:
-Use the <private> keyword to declare a <function> or <command> as local to the object whose script it is in and stop it being directly called by any other objects.
+Use the <private> keyword to declare a <function> or <command> as local 
+to the object whose script it is in and stop it being directly called by 
+any other objects.
 
-Whenever an implicit handler call is made (ie calling the handler simply by its name as opposed to using send or call), LiveCode will check the current script for a private handler before allowing the call to pass through the message path. If a private handler is found in the curent script, it will be directly called.
+Whenever an implicit handler call is made (ie calling the handler simply 
+by its name as opposed to using send or call), LiveCode will check the 
+current script for a private handler before allowing the call to pass 
+through the message path. If a private handler is found in the curent 
+script, it will be directly called.
 
->*Note:* Attempting to compile a private handler containing a <pass control structure> will cause a compilation error because private handlers cannot be passed through the message path.
+> *Note:* Attempting to compile a private handler containing a <pass> 
+control structure will cause a compilation error because private 
+handlers cannot be passed through the message path.
 
-The use of private handlers for functionality local to a particular object is recommended as it encourages better encapsulation and helps avoid problems with namespace pollution caused by multiple handlers in the message path with the same name.
+The use of private handlers for functionality local to a particular 
+object is recommended as it encourages better encapsulation and helps 
+avoid problems with namespace pollution caused by multiple handlers in 
+the message path with the same name.
 
-Using private handlers when appropriate will also result in a performance gain as less messages are passed through the message path.
+Using private handlers when appropriate will also result in a 
+performance gain as fewer messages are passed through the message path.
 
->*Note:* Although it is also possible to use <on> when declaring a private handler this is not recommended as it implies that the handler is a message sent when some event occurs. As private handlers are not passed through the message path, this is incorrect and can make the code harder to understand. Please see the <on control structure> entry for more details.
+> *Note:* Although it is also possible to use <on> when declaring a 
+private handler this is not recommended as it implies that the handler 
+is a message sent when some event occurs. As private handlers are not 
+passed through the message path, this is incorrect and can make the code 
+harder to understand. Please see the <on> control structure entry for 
+more details.
 
-References: command (glossary), function (glossary), on control structure (glossary), pass control structure (glossary), on (control_st), function (control_st)
+References: command (glossary), function (glossary), pass (control_st), on (control_st), function (control_st)

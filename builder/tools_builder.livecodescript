@@ -29,7 +29,6 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    -- Fetch the documentation
    local tDocsFolder
    put builderBuiltDocsFolder() into tDocsFolder
-   
    -- Now build the package
    local tPackageFile
    toolsBuilderMakePackage pVersion, pEdition, pPlatform, tEngineFolders, tIdeFolder, tDocsFolder
@@ -61,6 +60,19 @@ command toolsBuilderRunDisk pPlatform, pEdition, pVersion
    
    toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputFile
 end toolsBuilderRunDisk
+
+command toolsBuilderRunBundle pPlatform, pEdition, pVersion
+   if pPlatform is not "macosx" then
+      exit toolsBuilderRunBundle
+   end if
+   
+   if the platform is not "macos" then
+      builderLog "error", "Cannot generate MacOSX app bundle on this platform"
+      exit toolsBuilderRunBundle
+   end if
+   
+   toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
+end toolsBuilderRunBundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -457,56 +469,188 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    end switch
 end toolsBuilderMakeInstaller
 
-command toolsBuilderMakeDisk pVersion, pEdition, pPlatform, tInputZip
-   -- Compute the output file
+private function escapeArg pArg
+   replace "'" with "\'" in pArg
+   put "'" before pArg
+   put "'" after pArg
+   return pArg
+end escapeArg
+
+private function findSigningIdentity
+   get shell("/usr/bin/security -q find-identity -v")
+   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   return it
+end findSigningIdentity
+
+command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
+   -- Compute the name of the installer bundle
    local tOutputFileStub, tOutputFileFolder
    put builderOutputFolder() into tOutputFileFolder
    put tOutputFileFolder & slash & getInstallerFilenameStub(pVersion, pPlatform, pEdition) into tOutputFileStub
-   builderEnsureFolderForFile tOutputFileStub
    
-   get shell("/usr/bin/security -q find-identity -v")
-   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
-   if it is not empty then
-      builderLog "message", "Signing macosx installer'" && tOutputFileStub & ".app" & "'"
-      wait 1 second
-      get shell("/usr/bin/codesign -s" && word 2 of it && "'" & tOutputFileStub & ".app'")
-      if it is not empty then
-         builderLog "error", "Could not macosx sign installer:" && it
+   -- Remove any stale app bundles
+   local tAppBundle
+   put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
+   if there is a folder tAppBundle then
+      builderLog "message", "Removing old macosx app bundle" && "'" & tAppBundle & "'"
+      get shell ("rm -r" && escapeArg(tAppBundle))
+      if the result is not zero then
+         builderLog "error", "Failed to remove old macosx app bundle:" && it
          throw "failure"
       end if
-      builderLog "report", "Successfully signed macosx installer'" && tOutputFileStub & ".app" & "'"
-   else
-      builderLog "warning", "No valid identity found for signing OSX installer"
    end if
    
-   local tEdition
-   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
+   -- Run the installer to generate the raw app bundle
+   builderLog "message", "Installing macosx IDE to" && "'" & tAppBundle & "'"
+   get shell(tOutputFileStub & ".app/Contents/MacOS/installer install noui -log /dev/stderr -location" && escapeArg(tAppBundle))
+   if the result is not zero then
+      builderLog "error", "Failed to run macosx installer:" && it
+      throw "failure"
+   end if
    
-   local tDmgFile, tDmgName, tDmgAppFolder
-   put tOutputFileStub & ".dmg" into tDmgFile
-    put "LiveCode" && tEdition && getReadableVersion(pVersion) && "Installer" into tDmgName
-    put (tOutputFileFolder & slash & "Install LiveCode" && tEdition && getReadableVersion(pVersion) & ".app") into tDmgAppFolder
+   -- Remove the list of installed files from the app bundle (it isn't needed)
+   delete file tAppBundle & "/.setup.txt"
+   
+   -- Copy just the executable out of the installer to use as the auto-updater
+   -- (on OSX, the payload is separate and is un-neccessary)
+   builderLog "message", "Adding auto-updater to app bundle"
+   get shell ("cp" && escapeArg(tAppBundle & "/LiveCode Setup.app/Contents/MacOS/Installer") && escapeArg(tAppBundle & "/Contents/MacOS/autoupdater"))
+   if the result is not zero then
+      builderLog "error", "Failed to add auto-updater:" && it
+      throw "failure"
+   end if
+   
+   -- Remove the rest of the installer from the app bundle
+   builderLog "message", "Removing installer from app bundle"
+   get shell("rm -r" && escapeArg(tAppBundle & "/LiveCode Setup.app"))
+   if the result is not zero then
+      builderLog "error", "Failed to clean macosx app bundle:" & it
+      throw "failure"
+   end if
+   
+   -- Copy a shell script and AppleScript into the app bundle to catch attempts 
+   -- from old auto-updaters to launch the installer
+   builderLog "message", "Adding installer shim to app bundle"
+   get shell ("install -m755" && escapeArg(builderCommunityResourceFolder() & "/dmg/fake-installer.sh") && escapeArg(tAppBundle & "/Contents/MacOS/installer"))
+   if the result is not zero then
+      builderLog "error", "Failed to copy installer stub shell script:" && it
+      throw "failure"
+   end if
+   get shell ("osacompile" && "-o" && escapeArg(tAppBundle & "/Contents/MacOS/installer.scpt") && escapeArg(builderCommunityResourceFolder() & "/dmg/open-dmg.applescript"))
+   if the result is not zero then
+      builderLog "error", "Failed to compile installer stub AppleScript:" && it
+      throw "failure"
+   end if
+   
+   -- Find the signing identity and sign the app bundle
+   get findSigningIdentity()
+   if it is not empty then
+      builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
+      wait 1 second
+      get shell("/usr/bin/codesign --sign" && word 2 of it && "--deep --verbose=2" && escapeArg(tAppBundle))
+      if the result is not zero then
+         builderLog "error", "Could not sign macosx app bundle:" && it
+         throw "failure"
+      end if
+      builderLog "report", "Successfully signed macosx app bundle" && "'" & tAppBundle & "'"
+   else
+      builderLog "warning", "No valid identity found for signing OSX app bundle"
+   end if
+end toolsBuilderMakeAppBundle
+
+command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
+   -- Get the name of the app bundle that is being built
+   local tOutputFileFolder
+   local tDmgFolder
+   local tAppBundle
+   put builderOutputFolder() into tOutputFileFolder
+   put builderOutputFolder() & slash & "DMG" into tDmgFolder
+   put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
+   
+   -- DMG output filename
+   local tDmgFile
+   local tTempDmg
+   put tOutputFileFolder & slash & getDmgFilenameStub(pVersion, pPlatform, pEdition) & ".dmg" into tDmgFile
+   put tOutputFileFolder & slash & getDmgFilenameStub(pVersion, pPlatform, pEdition) & "-rw.dmg" into tTempDmg
+   
+   -- Remove any stale DMG folder
+   if there is a folder tDmgFolder then
+      builderLog "message", "Removing old DMG directory"
+      get shell ("rm -r" && escapeArg(tDmgFolder))
+      if the result is not zero then
+         builderLog "error","Failed to remove old DMG directory:" && it
+         throw "failure"
+      end if
+   end if
+
+   -- Create a new DMG folder
+   create folder tDmgFolder
+   
+   -- Copy the app bundle into the DMG contents folder
+   builderLog "message", "Copying app bundle into DMG directory"
+   get shell ("cp -R" && escapeArg(tAppBundle) && escapeArg(tDmgFolder & slash))
+   if the result is not zero then
+      builderLog "error", "Failed to copy app bundle into DMG directory:" && it
+      throw "failure"
+   end if
+   
    builderLog "message", "Building Mac DMG to '" & tDmgFile & "'"
    if there is a file tDmgFile then
       delete file tDmgFile
-      if there is a file tDmgFile then
-         builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
-         throw "failure"
-      end if
+   end if
+   if there is a file tTempDmg then
+      delete file tTempDmg
+   end if
+   if there is a file tDmgFile or there is a file tTempDmg then
+      builderLog "error", "Could not remove existing dmg - make sure it is not mounted"
+      throw "failure"
    end if
    
+   -- The following is sometimes needed to work around bugs in hdiutil
    --local tTrashFile
    --put builderWorkspaceFolder() & "/deploy/.Trash" into tTrashFile
    --put empty into URL ("file:" & tTrashFile)
    
-   -- Do the DMG build
-   rename (tOutputFileStub & ".app") to tDmgAppFolder
-   -- SN-2015-03-09: [[ DMG creation failure ]] Ensure that hdiutil will allocate enough
-   --  memory if the installer end up being over a gigabyte large.
-   get shell("hdiutil create -fs HFS+ -size 1G -volname" && quote & tDmgName & quote && "-srcfolder" && quote & tDmgAppFolder & quote && quote & tDmgFile & quote)
-   rename tDmgAppFolder to (tOutputFileStub & ".app")
+   -- Attempt to detach any DMGs with the name we're about to create
+   -- We ignore failures here as it may not be mounted and an already-mounted
+   -- disk will cause a very visible error during the next step.
+   local tVolumeName
+   put getBundleFilenameStub(pVersion, pPlatform, pEdition) into tVolumeName
+   get shell ("hdiutil detach" && escapeArg(tVolumeName))
+   
+   -- Generate an initial read-write DMG and mount it
+   builderLog "message", "Generating initial DMG"
+   get shell ("hdiutil create -fs HFS+ -format UDRW -attach -volname" && escapeArg(tVolumeName) && "-srcfolder" && escapeArg(tDmgFolder) && escapeArg(tTempDmg))
    if "created:" is not in it then
-      builderLog "error", "Dmg creation failed -" && the last line of it
+      builderLog "error", "Failed to create initial DMG:" && it
+      throw "failure"
+   end if
+   
+   -- Generate the multi-resolution TIFF for the DMG background image
+   local tBackgroundImage
+   put tOutputFileFolder & slash & "bg-" & pEdition & ".tiff" into tBackgroundImage
+   builderLog "message", "Generating DMG background image"
+   get shell ("tiffutil -cathidpicheck" && escapeArg(builderCommunityResourceFolder() & "/dmg/bg-" & pEdition & ".png") \
+         && escapeArg(builderCommunityResourceFolder() & "/dmg/bg-" & pEdition & "@2x.png") \
+         && "-out" && escapeArg(tBackgroundImage))
+   if the result is not zero then
+      builderLog "error","Failed to generate DMG background image:" && it
+      throw "failure"
+   end if
+   
+   -- Run the DMG prettifier script (this unmounts the DMG at the end)
+   builderLog "message", "Setting DMG background and styling"
+   get shell (builderRepoFolder() & "/tools/make-dmg-pretty.sh" && escapeArg(tVolumeName) && escapeArg(tBackgroundImage))
+   if it is not empty or the result is not zero then
+      builderLog "error", "Failed to apply DMG styling:" && it
+      throw "failure"
+   end if 
+   
+   -- Convert the DMG into a read-only, compressed DMG
+   builderLog "message", "Compressing DMG"
+   get shell ("hdiutil convert" && escapeArg(tTempDmg) && "-format UDBZ -o" && escapeArg(tDmgFile))
+   if the result is not zero or not line -1 of it begins with "created:" then
+      builderLog "error", "Failed to compress DMG:" && it
       throw "failure"
    end if
    
@@ -525,13 +669,10 @@ function getTaggedVersion pVersion
    return pVersion
 end getTaggedVersion
 
-function getReadableVersion pVersion
+function getFullReadableVersion pVersion
    local tNumber
    set the itemDelimiter to "-"
    put item 1 of pVersion into tNumber
-   if tNumber ends with ".0" then
-      delete char -2 to -1 of tNumber
-   end if
    
    if item 2 of pVersion is "gm" then
       delete item -2 to -1 of pVersion
@@ -545,7 +686,26 @@ function getReadableVersion pVersion
    end if
    
    return tNumber & tTag
+end getFullReadableVersion
+
+function getReadableVersion pVersion
+   put getFullReadableVersion(pVersion) into pVersion
+   set the itemDelimiter to space
+
+   local tNumber, tTag
+   put item 1 of pVersion into tNumber
+
+   if tNumber ends with ".0" then
+      delete char -2 to -1 of tNumber
+      put tNumber into item 1 of pVersion
+   end if
+
+   return pVersion
 end getReadableVersion
+
+function getBundleFilenameStub pVersion, pPlatform, pEdition
+   return "LiveCode" && the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition && getFullReadableVersion(pVersion)
+end getBundleFilenameStub
 
 function getInstallerFilenameStub pVersion, pPlatform, pEdition
    set the itemDelimiter to "-"
@@ -561,12 +721,26 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
    else if pPlatform begins with "linux" then
       put "Linux" into pPlatform
    end if
-   
-   -- Ensure that the edition name is capitalised appropriately
-   local tEdition
-   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
-   return "LiveCode" & tEdition & "Installer-" & pVersion & "-" & pPlatform
+
+   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "Installer-" & pVersion & "-" & pPlatform
 end getInstallerFilenameStub
+
+function getDmgFilenameStub pVersion, pPlatform, pEdition
+      set the itemDelimiter to "-"
+   if item 2 of pVersion is "gm" then
+      delete item -2 to -1 of pVersion
+   end if
+   replace "-" with "_" in pVersion
+   replace "." with "_" in pVersion
+   if pPlatform is "macosx" then
+      put "Mac" into pPlatform
+   else if pPlatform is "windows" then
+      put "Windows" into pPlatform
+   else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
+      put "Linux" into pPlatform
+   end if
+   return "LiveCode" & the upper of char 1 of pEdition & the lower of char 2 to -1 of pEdition & "-" & pVersion & "-" & pPlatform
+end getDmgFilenameStub
 
 function loadTextFile pFile
    get url ("binfile:" & pFile)

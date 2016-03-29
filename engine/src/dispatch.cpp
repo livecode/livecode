@@ -1686,6 +1686,27 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 	target -> updatewindow(p_dirty_region);
 }
 
+MCFontlist *MCDispatch::getfontlist()
+{
+	/* There's lots of code in the engine that immediately
+	 * dereferences the result of getfontlist().  So, *require* it to
+	 * return valid font list, by loading a font if necessary. */
+	if (nil == fonts)
+	{
+		MCFontRef t_font;
+		bool t_success =
+			MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGeneric,
+			                                  kMCPlatformControlPartNone,
+			                                  kMCPlatformControlStateNormal,
+			                                  kMCPlatformThemePropertyTextFont,
+			                                  t_font);
+		MCAssert(t_success); /* Can't proceed if this fails */
+	}
+
+	MCAssert(nil != fonts);
+	return fonts;
+}
+
 MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 #if defined(_LINUX_DESKTOP)

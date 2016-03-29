@@ -1995,37 +1995,6 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
    put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
    put item 1 to -2 of pStandalonePath into tCurrentLocation
    switch
-      case pPlatform contains "MacOSX"
-         local tCEFFramework
-         put (item 1 to -3 of pStandalonePath) & "/Frameworks" into tCEFFramework
-         
-         revSBEnsureFolder tCEFFramework
-         if the result is not empty then
-            revStandaloneAddWarning "MacOS, external failed to create folder:" && quote & tCEFFramework & quote
-         end if
-         revSBCopyFolderToDestination tCefResources & "/Chromium Embedded Framework.framework", tCEFFramework, "revStandaloneProgressCallback", the long id of me
-         if the result is not empty then
-            revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & "/Resources" & quote
-         end if
-         
-         local tHelpers
-         if pCopyRevBrowserResources then
-            put "revbrowser-cefprocess.app" & return after tHelpers
-            put "revbrowser-cefprocess EH.app" & return after tHelpers
-            put "revbrowser-cefprocess NP.app" & return after tHelpers
-         end if
-         if pCopyLibBrowserResources then
-            put "libbrowser-cefprocess.app" & return after tHelpers
-            put "libbrowser-cefprocess EH.app" & return after tHelpers
-            put "libbrowser-cefprocess NP.app" & return after tHelpers
-         end if
-         repeat for each line tHelper in tHelpers
-            revSBCopyFolderToDestination tCefResources & slash & tHelper, tCEFFramework, "revStandaloneProgressCallback", the long id of me
-            if the result is not empty then
-               revStandaloneAddWarning "MacOS, external failed to copy:" && quote & tCefResources & slash & tHelper & quote
-            end if
-         end repeat
-         break
       case pPlatform = "Windows"
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          

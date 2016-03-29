@@ -132,9 +132,7 @@ void MCWidget::bind(MCNameRef p_kind, MCValueRef p_rep)
         
         if (p_rep != nil)
             m_rep = MCValueRetain(p_rep);
-        
-        SendError();
-    }
+	}
 }
 
 Chunk_term MCWidget::gettype(void) const
@@ -294,8 +292,12 @@ void MCWidget::munfocus(void)
 
 void MCWidget::mdrag(void)
 {
+#ifdef WIDGETS_HANDLE_DND
     if (m_widget != nil)
         MCwidgeteventmanager->event_mdrag(this);
+#else
+	MCControl::mdrag();
+#endif
 }
 
 Boolean MCWidget::doubledown(uint2 p_which)
@@ -909,7 +911,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
         }
     }
     else
-    {
+	{
         setforeground(dc, DI_BACK, False);
         dc->setbackground(MCscreen->getwhite());
         dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
@@ -975,9 +977,11 @@ void MCWidget::GetState(MCExecContext& ctxt, MCArrayRef& r_state)
 {
     MCAutoValueRef t_value;
     MCWidgetOnSave(m_widget, &t_value);
-    MCExtensionConvertToScriptType(ctxt, InOut(t_value));
-    if (ctxt . HasError())
+    if (!MCExtensionConvertToScriptType(ctxt, InOut(t_value)))
+    {
+        CatchError(ctxt);
         return;
+    }
     r_state = (MCArrayRef)t_value . Take();
 }
 

@@ -22,65 +22,57 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uinteger_t MCChunkCountByteChunkCallback(void *context)
+uinteger_t MCChunkCountByteChunkCallback(void *context, MCRange *p_range)
 {
-    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
-    
     uinteger_t t_length;
-    t_length = MCDataGetLength((MCDataRef)t_state -> value);
+    t_length = MCDataGetLength(*(MCDataRef *)context);
     
-    if (t_state -> range == nil)
+    if (p_range == nil)
         return t_length;
 
     MCRange t_range;
-    t_range = *t_state -> range;
+    t_range = *p_range;
     
     return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
 
-uinteger_t MCChunkCountCodeunitChunkCallback(void *context)
+uinteger_t MCChunkCountCodeunitChunkCallback(void *context, MCRange *p_range)
 {
-    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
-    
     uinteger_t t_length;
-    t_length = MCStringGetLength((MCStringRef)t_state -> value);
+    t_length = MCStringGetLength(*(MCStringRef *)context);
     
-    if (t_state -> range == nil)
+    if (p_range == nil)
         return t_length;
     
     MCRange t_range;
-    t_range = *t_state -> range;
+    t_range = *p_range;
     
     return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
 
-uinteger_t MCChunkCountGraphemeChunkCallback(void *context)
+uinteger_t MCChunkCountGraphemeChunkCallback(void *context, MCRange *p_range)
 {
-    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
-
     MCRange t_range;
-    if (t_state -> range == nil)
-        t_range = MCRangeMake(0, MCStringGetLength((MCStringRef)t_state -> value));
+    if (p_range == nil)
+        t_range = MCRangeMake(0, MCStringGetLength(*(MCStringRef *)context));
     else
-        t_range = *t_state -> range;
+        t_range = *p_range;
     
     MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices((MCStringRef)t_state -> value, t_range, t_grapheme_range);
+    MCStringUnmapGraphemeIndices(*(MCStringRef *)context, t_range, t_grapheme_range);
     return t_grapheme_range . length;
 }
 
-uinteger_t MCChunkCountElementChunkCallback(void *context)
+uinteger_t MCChunkCountElementChunkCallback(void *context, MCRange *p_range)
 {
-    MCChunkCountInRangeState *t_state = static_cast<MCChunkCountInRangeState *>(context);
-    
     uinteger_t t_length;
-    t_length = MCProperListGetLength((MCProperListRef)t_state -> value);
+    t_length = MCProperListGetLength(*(MCProperListRef *)context);
     
-    if (t_state -> range == nil)
+    if (p_range == nil)
         return t_length;
     
     MCRange t_range;
-    t_range = *t_state -> range;
+    t_range = *p_range;
     
     return t_range . offset + t_range . length > t_length ? t_length - t_range . offset : t_range . length;
 }
@@ -90,7 +82,6 @@ struct MCChunkCountContext
     MCStringRef string;
     MCStringRef delimiter;
     MCStringOptions options;
-    MCRange *range;
 };
 
 static bool count_chunks(void *context, MCStringRef p_string, MCRange p_range)
@@ -102,12 +93,12 @@ static bool count_chunks(void *context, MCStringRef p_string, MCRange p_range)
     return true;
 }
 
-uinteger_t MCChunkCountChunkChunkCallback(void *context)
+uinteger_t MCChunkCountChunkChunkCallback(void *context, MCRange *p_range)
 {
     MCChunkCountContext *t_state;
     t_state = (MCChunkCountContext *)context;
     
-    return MCChunkCountChunkChunksInRange(t_state -> string, t_state -> delimiter, t_state -> options, t_state -> range);
+    return MCChunkCountChunkChunksInRange(t_state -> string, t_state -> delimiter, t_state -> options, p_range);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,29 +113,42 @@ uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_deli
     return t_count;
 }
 
-// AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a given range, to prevent substring copying in text chunk resolution.
-bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+// AL-2015-02-10: [[ Bug 14532 ]] Allow chunk extents to be counted in a
+// given range, to prevent substring copying in text chunk resolution.
+
+// Note the returned r_first and r_chunk count *are* allowed to overrun
+// the given range - MCStringsMarkTextChunkInRange does the work of
+// ensuring the absolute indices are restricted accordingly.
+bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
     uinteger_t t_count;
     bool t_counted;
     t_counted = false;
     
-    if (p_first < 0 || p_last < 0)
+    // If the first index is negative, count chunks and adjust accordingly.
+    // Resolved index should be the index *before* the target first chunk.
+    if (p_first < 0)
     {
-        t_count = p_callback(p_context);
+        t_count = p_callback(p_context, p_range);
         t_counted = true;
-        
-        if (p_first < 0)
-            p_first += t_count;
-        else
-            p_first--;
-        
-        if (p_last < 0)
-            p_last += t_count + 1;
+        p_first += t_count;
     }
     else
         p_first--;
+    
+    // If the last index is negative, count chunks and adjust accordingly.
+    // Resolved index should be the index of the target last chunk.
+    if (p_last < 0)
+    {
+        if (!t_counted)
+        {
+            t_count = p_callback(p_context, p_range);
+            t_counted = true;
+        }
+        
+        p_last += t_count + 1;
+    }
     
     t_chunk_count = p_last - p_first;
     
@@ -163,7 +167,7 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
             return false;
         
         if (!t_counted)
-            t_count = p_callback(p_context);
+            t_count = p_callback(p_context, p_range);
         
         // If the range extends beyond the number of chunks, the end index is out of range unless we are
         // looking for an end boundary, in which case it can exceed the end index by 1.
@@ -184,7 +188,7 @@ bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool 
 
 // AL-2015-03-03: Add booleans to allow chunk ranges to be out of range by 1 in strict mode.
 //  This is so that executing things like 'the offset of x after 0 in x' doesn't throw an error.
-bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count)
+bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count)
 {
     int32_t t_chunk_count;
     t_chunk_count = 1;
@@ -193,9 +197,9 @@ bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, 
     bool t_counted;
     t_counted = false;
     
-    if (p_first < 0)
+    if (p_first < 0 || p_range != nil)
     {
-        t_count = p_callback(p_context);
+        t_count = p_callback(p_context, p_range);
         t_counted = true;
         p_first += t_count;
     }
@@ -210,7 +214,7 @@ bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, 
             return false;
         
         if (!t_counted)
-            t_count = p_callback(p_context);
+            t_count = p_callback(p_context, p_range);
         
         // If the range extends beyond the number of chunks, the end index is out of range unless we are
         // looking for an end boundary, in which case it can exceed the end index by 1.
@@ -233,72 +237,42 @@ bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, 
 
 bool MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_data;
-    t_state . range = p_range;
-    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountByteChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountByteChunkCallback, &p_data, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfByteChunkByExpressionInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_data;
-    t_state . range = p_range;
-    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountByteChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountByteChunkCallback, &p_data, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfCodeunitChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_string;
-    t_state . range = p_range;
-    
-    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountCodeunitChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountCodeunitChunkCallback, &p_string, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_string;
-    t_state . range = p_range;
-    
-    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountCodeunitChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountCodeunitChunkCallback, &p_string, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfGraphemeChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_string;
-    t_state . range = p_range;
-    
-    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountGraphemeChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountGraphemeChunkCallback, &p_string, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfGraphemeChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_string;
-    t_state . range = p_range;
-    
-    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountGraphemeChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountGraphemeChunkCallback, &p_string, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfElementChunkByRangeInRange(MCProperListRef p_list, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_list;
-    t_state . range = p_range;
-    
-    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountElementChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountElementChunkCallback, &p_list, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfElementChunkByExpressionInRange(MCProperListRef p_list, MCRange *p_range, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
 {
-    MCChunkCountInRangeState t_state;
-    t_state . value = p_list;
-    t_state . range = p_range;
-    
-    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountElementChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountElementChunkCallback, &p_list, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfChunkChunkByRangeInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
@@ -307,9 +281,8 @@ bool MCChunkGetExtentsOfChunkChunkByRangeInRange(MCStringRef p_string, MCRange *
     t_state . string = p_string;
     t_state . delimiter = p_delimiter;
     t_state . options = p_options;
-    t_state . range = p_range;
     
-    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountChunkChunkCallback, &t_state, r_first, r_chunk_count);
+    return MCChunkGetExtentsByRangeInRange(p_strict, p_boundary_start, p_boundary_end, p_first, p_last, MCChunkCountChunkChunkCallback, &t_state, p_range, r_first, r_chunk_count);
 }
 
 bool MCChunkGetExtentsOfChunkChunkByExpressionInRange(MCStringRef p_string, MCRange *p_range, MCStringRef p_delimiter, MCStringOptions p_options, integer_t p_first, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count)
@@ -318,9 +291,8 @@ bool MCChunkGetExtentsOfChunkChunkByExpressionInRange(MCStringRef p_string, MCRa
     t_ctxt . string = p_string;
     t_ctxt . delimiter = p_delimiter;
     t_ctxt . options = p_options;
-    t_ctxt . range = p_range;
     
-    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountChunkChunkCallback, &t_ctxt, r_first, r_chunk_count);
+    return MCChunkGetExtentsByExpressionInRange(p_strict, p_boundary_start, p_boundary_end, p_first, MCChunkCountChunkChunkCallback, &t_ctxt, p_range, r_first, r_chunk_count);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

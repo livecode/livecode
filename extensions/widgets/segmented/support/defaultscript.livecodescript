@@ -1,6 +1,8 @@
 ﻿script "com.livecode.widget.segmented.__DefaultScript"
--- Sent when the set of selected segments changes
--- pList is the new list of selected segments
-on selectionChanged pList
-   
-end selectionChanged
+-- Sent when a navigation item is clicked
+--
+-- Use the "hilitedItems" property to get the current item number and the
+-- "hilitedItemNames" property to get its item name
+on hiliteChanged
+   put the hilitedItems of me && the hilitedItemNames of me
+end hiliteChanged

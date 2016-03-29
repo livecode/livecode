@@ -23,7 +23,7 @@ end if
 Parameters:
 purchaseID: a numeric purchase identifier
 
-Returns (enum): Returns one of the following
+Returns (enum):
    - initialized : the purchase request has been created but not sent. In this state additional properties such as the item quantity can be set.
    - sendingRequest : the purchase request is being sent to the store/marketplace.
    - paymentReceived : the requested item has been paid for. The item should now be delivered to the user and confirmed cia the <mobilePurchaseConfirmDelivery> command.

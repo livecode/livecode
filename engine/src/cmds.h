@@ -844,14 +844,24 @@ public:
 
 class MCReplace : public MCStatement
 {
+	enum Mode
+	{
+		kIgnoreStyles,
+		kReplaceStyles,
+		kPreserveStyles,
+	};
+	
 	MCExpression *pattern;
 	MCExpression *replacement;
 	MCChunk *container;
+	Mode mode;
+	
 public:
 	MCReplace()
 	{
 		pattern = replacement = NULL;
 		container = NULL;
+		mode = kIgnoreStyles;
 	}
 	virtual ~MCReplace();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1829,15 +1839,20 @@ class MCGo : public MCStatement
 	MCChunk *widget;
 	Chunk_term direction;
 public:
-	MCGo()
-	{
-		mode = WM_LAST;
-		stack = background = card = NULL;
-		window = NULL;
-		marked = thisstack = False;
-		visible = True;
-		widget = nil;
-	}
+    MCGo() :
+        background(nil),
+        stack(nil),
+        card(nil),
+		window(nil),
+		mode(WM_LAST),
+        marked(False),
+        visible(True),
+        thisstack(False),
+		widget(nil),
+        direction(CT_BACKWARD)
+    {
+        ;
+    };
 	virtual ~MCGo();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);

@@ -118,7 +118,7 @@ switch button.
 metadata backgroundColor.editor is "com.livecode.pi.color"
 metadata backgroundColor.default is "244,244,244"
 metadata backgroundcolor.section is "Colors"
-metadata backgroundColor.label is "Background Color"
+metadata backgroundColor.label is "Background color"
 
 /**
 Syntax: set the hiliteColor of <widget> to <pColor>
@@ -133,7 +133,7 @@ switch button.
 metadata hiliteColor.editor is "com.livecode.pi.color"
 metadata hiliteColor.default is "10,95,244"
 metadata hilitecolor.section is "Colors"
-metadata hiliteColor.label is "Highlight Color"
+metadata hiliteColor.label is "Hilite color"
 
 /**
 Syntax: set the borderColor of <widget> to <pColor>
@@ -148,7 +148,7 @@ switch button.
 metadata borderColor.editor is "com.livecode.pi.color"
 metadata borderColor.default is "109,109,109"
 metadata bordercolor.section is "Colors"
-metadata borderColor.label is "Border Color"
+metadata borderColor.label is "Border color"
 
 
 -- private instance variables

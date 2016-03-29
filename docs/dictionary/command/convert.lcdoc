@@ -26,7 +26,7 @@ convert the date && the time to seconds
 
 Parameters:
 dateAndTime (string): A string or container with a date, a time, or a date and time separated by a space, tab, or return character.
-format (enum): One of the following (examples are February 17, 2000 at 10:13:21 PM, in the Eastern time zone, using US date and time formats): If you specify both a date and time format, they can be in either order and must be separated by a space. The resulting date and time are in the order you provided, separated by a space. If you specify seconds or dateItems, you can request only one format.
+format: One of the following (examples are February 17, 2000 at 10:13:21 PM, in the Eastern time zone, using US date and time formats): If you specify both a date and time format, they can be in either order and must be separated by a space. The resulting date and time are in the order you provided, separated by a space. If you specify seconds or dateItems, you can request only one format.
 - "short date":  2/17/00
 - "abbreviated date":  Thu, Feb 17, 2000
 - "long date":  Thursday, February 17, 2000

@@ -57,7 +57,6 @@ struct MCChunkCountState
     MCStringRef string;
     Chunk_term chunk;
     MCExecContext *ctxt;
-    MCRange *range;
 };
 
 // AL-2015-02-10: [[ Bug 14532 ]] Allow chunks to be counted in a given range, to prevent substring copying in text chunk resolution.
@@ -97,12 +96,12 @@ void MCStringsCountChunks(MCExecContext& ctxt, Chunk_term p_chunk_type, MCString
     MCStringsCountChunksInRange(ctxt, p_chunk_type, p_string, MCRangeMake(0, MCStringGetLength(p_string)), r_count);
 }
 
-uinteger_t MCStringsCountChunkCallback(void *context)
+uinteger_t MCStringsCountChunkCallback(void *context, MCRange *p_range)
 {
     MCChunkCountState *t_state = static_cast<MCChunkCountState *>(context);
     uinteger_t t_count;
-    if (t_state -> range != nil)
-        MCStringsCountChunksInRange(*t_state -> ctxt, t_state -> chunk, t_state -> string, *t_state -> range, t_count);
+    if (p_range != nil)
+        MCStringsCountChunksInRange(*t_state -> ctxt, t_state -> chunk, t_state -> string, *p_range, t_count);
     else
         MCStringsCountChunks(*t_state -> ctxt, t_state -> chunk, t_state -> string, t_count);
     return t_count;
@@ -185,8 +184,7 @@ void MCStringsGetExtentsByRangeInRange(MCExecContext& ctxt, Chunk_term p_chunk_t
         t_state . string = (MCStringRef)p_string;
         t_state . chunk = p_chunk_type;
         t_state . ctxt = &ctxt;
-        t_state . range = p_range;
-        MCChunkGetExtentsByRangeInRange(false, false, false, p_first, p_last, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
+        MCChunkGetExtentsByRangeInRange(false, false, false, p_first, p_last, MCStringsCountChunkCallback, &t_state, p_range, r_first, r_chunk_count);
     }
 }
 
@@ -203,8 +201,7 @@ void MCStringsGetExtentsByExpressionInRange(MCExecContext& ctxt, Chunk_term p_ch
         t_state . string = (MCStringRef)p_string;
         t_state . chunk = p_chunk_type;
         t_state . ctxt = &ctxt;
-        t_state . range = p_range;
-        MCChunkGetExtentsByExpressionInRange(false, false, false, p_first, MCStringsCountChunkCallback, &t_state, r_first, r_chunk_count);
+        MCChunkGetExtentsByExpressionInRange(false, false, false, p_first, MCStringsCountChunkCallback, &t_state, p_range, r_first, r_chunk_count);
     }
 }
 
@@ -478,9 +475,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 MCStringMapIndices(*t_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
         
                 r_start = t_offset + t_cu_range.offset;
-                r_end = t_offset + t_cu_range.offset + t_cu_range.length;
-                //r_start = p_first;
-                //r_end = p_first + p_count;
+                r_end = MCU_min(t_offset + t_cu_range.offset + t_cu_range.length, t_length);
             }
             break;
         case CT_CODEUNIT:
@@ -488,7 +483,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             if (p_include_chars)
             {
                 r_start = p_first + t_offset;
-                r_end = MCU_min(p_first + t_offset + p_count, t_offset + t_length);
+                r_end = MCU_min(p_first + t_offset + p_count, t_length);
             }
             break;
         default:

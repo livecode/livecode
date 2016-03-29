@@ -229,8 +229,29 @@ Summary: Sent when the mouse button is pushed within the widget's rect.
 Name: OnMouseUp
 Type: message
 Syntax: OnMouseUp
-Summary: Sent when the mouse button is released regardless of whether the pointer
-is within the widget's rect or not.
+Summary: Sent when the user releases the mouse button.
+
+Example:
+
+public handler OnMouseUp() returns nothing
+    if the mouse position is not within my bounds then
+       return
+    end if
+
+    if the click button is 1 then
+       -- do primary button action
+    else
+       -- do secondary button action
+    end if
+end handler
+
+Description:
+The <OnMouseUp> message is sent when a mouse button is released.
+
+**Note:** A widget may receive the <OnMouseUp> message even if the
+mouse pointer isn't within the widget's bounds.
+
+References: TheClickButton(expression), TheMouseLocation(expression)
 
 
 Name: OnMouseScroll
@@ -472,6 +493,7 @@ end syntax
 // ---------- External properties of widgets ---------- //
 
 public foreign handler MCWidgetGetMyScriptObject(out rObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetMyName(out rName as String) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyRectangle(out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyBounds(out rRect as Rectangle) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyWidth(out rWidth as Real) returns nothing binds to "<builtin>"
@@ -493,7 +515,19 @@ begin
     MCWidgetGetMyScriptObject(output)
 end syntax
 
-/* 
+/*
+Summary:	Returns the name of the widget's script object
+
+Returns:	The name of the widget's script object
+*/
+
+syntax MyName is expression
+	"my" "name"
+begin
+	MCWidgetGetMyName(output)
+end syntax
+
+/*
 Summary:	Returns the rectangle of the widget in the parent
 
 Returns:	The rectangle of the widget in the parent
@@ -518,9 +552,9 @@ begin
 end syntax
 
 /*
-Summary:	Returns the height of the widget.
+Summary:	Returns the width of the widget.
 
-Returns:	The height of the widget.
+Returns:	The width of the widget.
 */
 
 syntax MyWidth is expression

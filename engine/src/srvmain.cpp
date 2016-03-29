@@ -474,9 +474,6 @@ static void IO_printf(IO_handle stream, const char *format, ...)
 
 static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *p_entry)
 {
-	MCServerScript *t_script;
-	t_script = static_cast<MCServerScript *>(p_context);
-	
 	if (p_entry -> is_folder)
 		return true;
 	
@@ -585,7 +582,14 @@ void X_main_loop(void)
 			
 			Parse_stat t_parse_stat;
 			t_parse_stat = t_handler -> parse(sp, false);
-			t_stat = MCserverscript -> exechandler(t_handler, &t_exec_stack);
+			if (t_parse_stat != PS_NORMAL)
+			{
+				t_stat = ES_ERROR;
+			}
+				else
+			{
+				t_stat = MCserverscript -> exechandler(t_handler, &t_exec_stack);
+			}
 			
 			delete t_handler;
 			delete t_handlerlist;
@@ -661,7 +665,7 @@ int platform_main(int argc, char *argv[], char *envp[])
 	}
 	MCMemoryDeleteArray(t_new_argv);
 
-	for (int i = 0; i < t_envp_count; i++)
+	for (uindex_t i = 0; i < t_envp_count; i++)
 	{
 		MCValueRelease(t_new_envp[i]);
 	}

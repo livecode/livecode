@@ -22,12 +22,12 @@ on newButton -- put new buttons at a random location
 end newButton
 
 Description:
-Handle the <newButton> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <button> is created.
+Handle the <newButton> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <button(object)> is created.
 
-Normally, the <newButton> <message> is handled at a higher level of the <message path>, since the newly created <button> does not yet have a <script> unless the <templateButton> contains one.
+Normally, the <newButton> <message> is handled at a higher level of the <message path>, since the newly created <button(object)> does not yet have a <script> unless the <templateButton> contains one.
 
-The actual creation is not triggered by the <newButton> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <button> from being created.
+The actual creation is not triggered by the <newButton> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <button(object)> from being created.
 
-References: templateButton (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), button (glossary), message (glossary), tool (glossary), message path (glossary), pass (control_st)
+References: templateButton (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), button (object), message (glossary), tool (glossary), message path (glossary), pass (control_st)
 
 Tags: objects

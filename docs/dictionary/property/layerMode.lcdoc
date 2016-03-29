@@ -30,14 +30,10 @@ if it is "dynamic" then
    answer "group needs updated for fast scrolling"
 end if
 
-Parameters:
-object: The name or ID of the object.
-mode (enum): A string specifying the mode of the object. One of the following:
-- "static": (default) The object is static and does not move or change.
-- "dynamic": The object is dynamic and subject to change and/or movement.
-- "scrolling": Applies to groups only and is used where the group contains contents to scroll. The group must be unadorned or the layerMode is set to 'dynamic' (no borders, no scrollbars).
-
-Value: Getting the <layerMode> property of the target object returns the value in the it variable.
+Value (enum): A string specifying the mode of the object.
+- static: (default) The object is static and does not move or change.
+- dynamic: The object is dynamic and subject to change and/or movement.
+- scrolling: Applies to groups only and is used where the group contains contents to scroll. The group must be unadorned or the layerMode is set to 'dynamic' (no borders, no scrollbars).
 
 Description:
 Use the layerMode property to specify if an object is static or dynamic. The LiveCode engine uses this to optimize rendering performance by caching objects that are moving or changing regularly.

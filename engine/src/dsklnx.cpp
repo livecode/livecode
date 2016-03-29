@@ -1993,7 +1993,7 @@ public:
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
-            MCStringRef t_unicode_name;
+            MCAutoStringRef t_unicode_name;
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
@@ -2006,22 +2006,21 @@ public:
             struct stat buf;
             stat(t_entry_path, &buf);
 
-            if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
-                p_entry.name = t_unicode_name;
-            else
-                p_entry.name = kMCEmptyString;
+            t_success = MCStringCreateWithSysString(direntp -> d_name, &t_unicode_name);
+            
+            if (t_success)
+            {
+                p_entry.name = *t_unicode_name;
+                p_entry.data_size = buf.st_size;
+                p_entry.modification_time = (uint32_t)buf.st_mtime;
+                p_entry.access_time = (uint32_t)buf.st_atime;
+                p_entry.group_id = buf.st_uid;
+                p_entry.user_id = buf.st_uid;
+                p_entry.permissions = buf.st_mode & 0777;
+                p_entry.is_folder = S_ISDIR(buf.st_mode);
 
-            p_entry.data_size = buf.st_size;
-            p_entry.modification_time = (uint32_t)buf.st_mtime;
-            p_entry.access_time = (uint32_t)buf.st_atime;
-            p_entry.group_id = buf.st_uid;
-            p_entry.user_id = buf.st_uid;
-            p_entry.permissions = buf.st_mode & 0777;
-            p_entry.is_folder = S_ISDIR(buf.st_mode);
-
-            t_success = p_callback(x_context, &p_entry);
-
-            MCValueRelease(t_unicode_name);
+                t_success = p_callback(x_context, &p_entry);
+            }
         }
 
 		delete t_entry_path;

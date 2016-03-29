@@ -69,6 +69,7 @@ void MCScriptDestroyObject(MCScriptObject *object);
 
 MCScriptObject *MCScriptRetainObject(MCScriptObject *object);
 void MCScriptReleaseObject(MCScriptObject *object);
+uint32_t MCScriptGetRetainCountOfObject(MCScriptObject *object);
 
 void MCScriptReleaseObjectArray(MCScriptObject **elements, uindex_t count);
 

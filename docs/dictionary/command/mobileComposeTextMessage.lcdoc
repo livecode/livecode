@@ -19,7 +19,7 @@ Parameters:
 recipients: A comma delimited list of telephone numbers.
 body: The body text of the message.
 
-The result (enum): Upon completion of a compose request, the result is set to one of the following:
+The result (enum): Set by <mobileComposeTextMessage> to indicate its results.
 - sent : the text was sent (iOS only)
 - cancel : the text was not sent, and the user elected not to save it for later
 - failed : the text could not be sent

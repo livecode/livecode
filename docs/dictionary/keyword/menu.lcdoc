@@ -26,50 +26,63 @@ If a button's <style> is set to "menu", its <menuMode> <property> determines how
 You can use the <menu> <keyword> to refer to one of the <button(object)|buttons> in the current <menu bar>. For example, if the first <menu> in the <menu bar> is called "File", the <expression> the name of menu 1 <evaluate|evaluates> to "button "File"". (Remember that in LiveCode, <menus> are usually implemented as <button(object)|buttons>:  the <button(object)|button's> <style> and <menuMode> <properties> control how it is displayed, and the <button(object)|button's> <text> <property> is used as the list of <menu item|menu items>.)
 
 The syntax for menu item strings is:
-  [&lt;flags&gt;] &lt;label&gt; ['/' &lt;accelerator&gt; ['|' &lt;tag&gt;]]
 
-Where &lt;flags&gt; may include:
-  !&lt;c|n|r&gt;                               (the menu item has respectively, a check, no check, or a selected radio button)
-  (                                            (the menu item is disabled)
-  -                                            (the menu item is replaced with a menu separator)
-  multiple tab characters               (where the number of tabs specifes the depth of the menu item.  Use this to create submenus)
+    [<flags>] <label> ['/' <accelerator> ['|' <tag>]]
 
-The &lt;accelerator&gt; can be specified as one of:
-  &lt;char&gt;                                 (Command key + specified char)
-  &lt;keyname&gt;                         (Named key without modifiers)
-  &lt;modifiers&gt; &lt;char&gt;           (Specified modifiers + character)
-  &lt;modifiers&gt; &lt;keyname&gt;   (Specified modifiers + named key)
-  
-Here &lt;modifiers&gt; is either:
-  1) a space separated list of:
-        'command' or 'cmd', 'control' or 'ctrl', 'option' or 'opt', 'alt', 'shift'
-        in this case the keyname/char should be separated from the list by a space
-  2) a sequence of characters:
-  ^        (Command)
-  @       (Shift)
-  #        (Option)
-  %       (Control)
-           in this case no space between the sequence and keyname/char is required.
+Where `<flags>` may include:
+
+* `!c`, `!n`, `!r`: the menu item has respectively, a check, no check, or a selected radio button
+* `(`: the menu item is disabled
+* `-`: the menu item is replaced with a menu separator
+* multiple tab characters: the number of tabs specifes the depth of the menu item; use this to create submenus
+
+The `<accelerator>` can be specified as one of:
+
+* `<char>`: Command key + specified char
+* `<keyname>`: Named key without modifiers
+* `<modifiers> <char>`: Specified modifiers + character
+* `<modifiers> <keyname>`: Specified modifiers + named key
+
+In the `<accelerator>`, `<modifiers>` is either:
+
+* a space separated list of: 'command' or 'cmd', 'control' or 'ctrl', 'option' or 'opt', 'alt', 'shift'; in this case the keyname/char should be separated from the list by a space
+* a sequence of characters, including:
+  * `^`: Command
+  * `@`: Shift
+  * `#`: Option
+  * `%`: Control
+
+  In this case no space between the sequence and keyname/char is required
 
 The following named keys are supported:
-        F1, F2, F3, F4, ... F15,
-        Left, Up, Right, Down,
-        Backspace, Delete,
-        Tab, Space,
-        Return, Enter,
-        Home, End, Escape,
-        PgUp, PgDown,
-        Insert (not on Mac OS X)
- 
+
+* F1, F2, F3, F4, ... F15,
+* Left, Up, Right, Down,
+* Backspace, Delete,
+* Tab, Space,
+* Return, Enter,
+* Home, End, Escape,
+* PgUp, PgDown,
+* Insert (not on Mac OS X)
+
 On Mac OS X, these keys will be replaced with the appropriate system standard glyph.
 
-A tag can be specified as a '|' character followed by a string of ascii characters.  If such a tag is present then that tag will take the place of the menu label as the parameter to the <menuPick message>.
-A tag will only be recognised following &lt;accelerator&gt;.  To specify a menu tag without an accelerator shortcut, an empty &lt;accelerator&gt; can be specified using '/|' followed by the tag text.
+A tag can be specified as a `|` character followed by a string of ASCII characters.  If such a tag is present then that tag will take the place of the menu label as the parameter to the <menuPick(message)>.
 
->*Note:* As Windows and Linux do not have the 'Command' modifier, on those platforms 'Command' is an synonym for 'Control'. To ensure cross-platform uniformity it is important that you use 'Command' in preference to 'Control' since 'Control' on Mac OS X is a less frequently used modifier.
+A tag will only be recognised following the `<accelerator>`.  To specify a menu tag without an accelerator shortcut, an empty `<accelerator>` can be specified using `/|` followed by the tag text.
 
->*Cross-platform note:*  The <menu> decoration has no effect on <Mac OS> and <OS X|OS X systems>. On <Windows|Windows systems>, the <menu> decoration must be set along with the <maximize> or <minimize> decorations: you cannot use <maximize> or <minimize> without including <menu>.
+**Note:** As Windows and Linux do not have the 'Command' modifier, on
+those platforms 'Command' is an synonym for 'Control'. To ensure
+cross-platform uniformity it is important that you use 'Command' in
+preference to 'Control' since 'Control' on Mac OS X is a less
+frequently used modifier.
 
-References: style (property), properties (property), menuMode (property), decorations (property), menuPick message (message), menu (keyword), button (keyword), minimize (keyword), text (keyword), maximize (keyword), menuItem (keyword), property (glossary), menu item (glossary), OS X (glossary), Windows (glossary), menu bar (glossary), keyword (glossary), expression (glossary), Mac OS (glossary), evaluate (glossary), Unix (glossary), menus (function), doMenu (command), button (object)
+**Cross-platform note:** The <menu> decoration has no effect on <Mac OS>
+and <OS X|OS X systems>. On <Windows|Windows systems>, the <menu>
+decoration must be set along with the <maximize> or <minimize>
+decorations: you cannot use <maximize> or <minimize> without including
+<menu>.
+
+References: style (property), properties (property), menuMode (property), decorations (property), menuPick (message), menu (keyword), button (keyword), minimize (keyword), text (keyword), maximize (keyword), menuItem (keyword), property (glossary), menu item (glossary), OS X (glossary), Windows (glossary), menu bar (glossary), keyword (glossary), expression (glossary), Mac OS (glossary), evaluate (glossary), Unix (glossary), menus (function), doMenu (command), button (object)
 
 Tags: menus

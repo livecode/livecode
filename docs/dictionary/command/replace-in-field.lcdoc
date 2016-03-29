@@ -1,0 +1,37 @@
+Name: replace in field
+
+Type: command
+
+Syntax: replace <oldString> with <newString> in <fieldContainer> (preserving | replacing) styles 
+
+Summary: Replaces text in a field container with other text with control over what happens to existing styling.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+replace "A" with "N" in field 1 preserving styles -- changes all As to Ns; the Ns will retain the styling of the As
+
+Example:
+replace "foo" with "bar" in char 1 to 3 of tFieldId replacing styles -- changes foo to bar in the given range of the field reference in tFieldId; the bars will have no styling.
+
+Parameters:
+oldString (string): Any expression that evaluates to a string, and specifies the text to replace.
+newString (string): Any expression that evaluates to a string, and specifies the text to replace the oldString with.
+fieldContainer: A field chunk.
+
+Description:
+Use the <replace in field> <command> to replace all instances of one <string> with another <string> in (part of) a field, with the choice as to whether styling is preserved or replaced.
+
+If the preserving form is used, then the found strings will be replaced in the target field and the replacement text will take the same style as the first character in the found string.
+
+If the replacing form is used, then the found strings will be replaced in the target field and the replacement text will have no style.
+
+All styling outside of the instances of the pattern which are found is unaffected.
+
+References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st)
+
+Tags: text processing

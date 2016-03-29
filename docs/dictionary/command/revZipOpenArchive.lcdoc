@@ -22,13 +22,18 @@ revZipOpenArchive the cArchive of me, "read"
 
 Parameters:
 archivePath: The absolute path to the zip archive to open.
-mode: One of the following: 	read: to open an existing archive for reading. 	write: to create a new archive for writing to. 	update: to open an existing or new archive for writing to. If revZipOpenArchive encounters an error, the result is set to an error code beginning with "ziperr", otherwise the result will be empty.
+mode(enum):
+- read : to open an existing archive for reading.
+- write : to create a new archive for writing to.
+- update : to open an existing or new archive for writing to.
+
+The result: If <revZipOpenArchive> encounters an error, the <result> is set to an error code beginning with "ziperr".  Otherwise the result will be <empty>.
 
 Description:
 Use the <revZipOpenArchive> command to load a zip archive into memory and make it available for processing. This command needs to be issued before trying to get any information from, or make any changes to, an archive. 
 
 The <revZipOpenArchive> command should be followed by a matching <revZipCloseArchive> command, once the archive is no longer needed. Any changes made to an archive will not be written to disk until <revZipCloseArchive> is called.
 
-References: revZipAddUncompressedItemWithFile (command), revZipAddUncompressedItemWithData (command), revZipDeleteItem (command), revZipCloseArchive (command), revZipExtractItemToVariable (command), revZipAddItemWithData (command)
+References: revZipAddUncompressedItemWithFile (command), revZipAddUncompressedItemWithData (command), revZipDeleteItem (command), revZipCloseArchive (command), revZipExtractItemToVariable (command), revZipAddItemWithData (command), result (function), empty (constant)
 
 Tags: text processing

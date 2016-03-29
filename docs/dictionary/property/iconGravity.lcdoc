@@ -17,22 +17,18 @@ Platforms: desktop,server,web,mobile
 Example:
 set the iconGravity of button "next" to "top"
 
-Parameters:
-button: A reference or expression that evaluate to an button reference.
-position (enum): A string representing to desired layout of the icon of the button and is one of the following:
-- "empty": This property has no effect and placement of the icon follows previous engine rules.
-- "left": Renders the icon at the middle left side of the button.
-- "top": Renders the icon at the middle top of the button.
-- "right": Renders the icon at the middle right of the button.
-- "bottom": Renders the icon at the middle bottom of the button.
-- "topLeft": Renders the icon at the top left of the button.
-- "topRight": Renders the icon at the top right of the button.
-- "bottomLeft": Renders the icon at the bottom left of the button.
-- "bottomRight": Renders the icon at the bottom right of the button.
-- "center": Renders the icon in the center of the button.
-- "resize": Stretches the icon to fill the button.
-
-Value: The <iconGravity> property return a string. By default, the <iconGravity> property of an button is empty.
+Value(enum): A string representing the desired layout of the icon of the button.
+- (empty): This property has no effect and placement of the icon follows previous engine rules (default)
+- left: Renders the icon at the middle left side of the button.
+- top: Renders the icon at the middle top of the button.
+- right: Renders the icon at the middle right of the button.
+- bottom: Renders the icon at the middle bottom of the button.
+- topLeft: Renders the icon at the top left of the button.
+- topRight: Renders the icon at the top right of the button.
+- bottomLeft: Renders the icon at the bottom left of the button.
+- bottomRight: Renders the icon at the bottom right of the button.
+- center: Renders the icon in the center of the button.
+- resize: Stretches the icon to fill the button.
 
 Description:
 Use to iconGravity property to position the icon of a button independent of the label.

@@ -3429,6 +3429,23 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 		MCperror->add(PE_REPLACE_BADCONTAINER, sp);
 		return PS_ERROR;
 	}
+	
+	// Parse the replace in field suffix:
+	//    replace ... with ... in <fieldchunk> (replacing | preserving) styles
+	//
+	if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REPLACING) == PS_NORMAL)
+		mode = kReplaceStyles;
+	else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PRESERVING) == PS_NORMAL)
+		mode = kPreserveStyles;
+	if (mode != kIgnoreStyles)
+	{
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STYLES) != PS_NORMAL)
+		{
+			MCperror->add(PE_REPLACE_NOSTYLES, sp);
+			return PS_ERROR;
+		}
+	}
+	
 	return PS_NORMAL;
 }
 
@@ -3499,18 +3516,54 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
     MCAutoStringRef t_replacement;
     if (!ctxt . EvalExprAsStringRef(replacement, EE_REPLACE_BADREPLACEMENT, &t_replacement))
         return;
-    
-    
-    MCAutoStringRef t_target;
-    if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, &t_target))
-        return;
+	
+	// The ignore styles mode treats all targets as strings, so we use
+	// the string-based method.
+	//
+	// The replace styles mode is only valid for field chunks. It will
+	// replace both the text and complete styling of each found string.
+	//
+	// The preserve styles mode is only valid for field chunks. It will
+	// replace the text and merge the styling of the replacement pattern
+	// with the found string. As the replacement string can only be
+	// plain text at the moment, it is equivalent to using the same style
+	// as the first char in the found string.
+	
+	if (mode == kIgnoreStyles)
+	{
+		MCAutoStringRef t_target;
+		if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, &t_target))
+			return;
 
-    MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
-    
-    if (ctxt . HasError())
-        return;
-    
-    container -> set(ctxt, PT_INTO, *t_target);
+		MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
+		
+		if (ctxt . HasError())
+			return;
+		
+		container -> set(ctxt, PT_INTO, *t_target);
+	}
+	else
+	{
+		MCObjectChunkPtr t_obj_chunk;
+		
+		if (!container -> evalobjectchunk(ctxt,
+										  true,
+										  false,
+										  t_obj_chunk) ||
+			t_obj_chunk . object -> gettype() != CT_FIELD)
+		{
+			ctxt . LegacyThrow(EE_REPLACE_BADFIELDCHUNK);
+			return;
+		}
+		
+		MCInterfaceExecReplaceInField(ctxt,
+									  *t_pattern,
+									  *t_replacement,
+									  t_obj_chunk,
+									  mode == kPreserveStyles);
+		
+		MCValueRelease(t_obj_chunk . mark . text);
+	}
 }
 
 void MCReplace::compile(MCSyntaxFactoryRef ctxt)

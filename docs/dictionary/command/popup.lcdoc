@@ -35,24 +35,24 @@ Use the <popup> command to display a contextual menu.
 
 Use the <popup> command in a <mouseDown> handler to display the menu. 
 
-The popup menu appears with its top left corner at the <location>. If no <location> is specified, the menu's top left corner is at the <mouse location>. While the popup menu is displayed, the handler pauses.
+The popup menu appears with its top left corner at the <location>. If no <location> is specified, the menu's top left corner is at the <mouseLoc|mouse location>. While the popup menu is displayed, the handler pauses.
 
-Choosing a menu item from the popup menu sends a <menuPick message> to the button (for a button menu) or a <mouseUp message> to the clicked control in the stack (for a stack menu). The button or stack menu handles the menu choice.
+Choosing a menu item from the popup menu sends a <menuPick(message)> message to the button (for a button menu) or a <mouseUp message> to the clicked control in the stack (for a stack menu). The button or stack menu handles the menu choice.
 
 If you use a button to hold the contents of the menu, the contents of the button's <menuItem Keyword> is displayed in the popup. 
 
->*Important:*  If you use a button to hold the contents of the menu, the following properties must be set:
-- <style property> must be set to "menu"
-- <menuMode property> must be set to "popup"
-- <visible property> may be set to either true or false.
+**Important:**  If you use a button to hold the contents of the menu, the following properties must be set:
+- <style(property)> must be set to "menu"
+- <menuMode(property)> must be set to "popup"
+- <visible(property)> may be set to either true or false.
 
->*Important:*  You must escape reserved characters in the button's <menuItem Keyword>. These include:
-- & (To display the string "A&B" in the popup menu, use "A&&B")
-- \ (To display the string "A\B" in the popup menu, use "A\\B")
-- / (To display the string "A/B" in the popup menu, use "A//B")
+**Important:**  You must escape reserved characters in the button's <menuItem(Keyword)>. These include:
+- `&` (To display the string "A&B" in the popup menu, use "A&&B")
+- `\` (To display the string "A\B" in the popup menu, use "A\\B")
+- `/` (To display the string "A/B" in the popup menu, use "A//B")
 
->*Important:*  The <menuMouseButton property> of a button used with the <popup> command must be set to zero. Setting it to any other value may result in unexpected behavior when the menu is used. To control which mouse buttons may be used to access the menu, use the mouse button parameter of the <mouseDown message>, as described above.
+**Important:**  The <menuMouseButton(property)> of a button used with the <popup> command must be set to zero. Setting it to any other value may result in unexpected behavior when the menu is used. To control which mouse buttons may be used to access the menu, use the mouse button parameter of the <mouseDown(message)> message, as described above.
 
-References: style property (property), toolTip (property), menuMode property (property), visible property (property), menuMouseButton property (property), menuPick message (message), mouseDown (message), mouseDown message (message), mouseUp message (message), button (keyword), menuItem Keyword (keyword), popup (keyword), menu item (glossary), popup menu (glossary), clickLoc (function), mouse location (function), pulldown (command), stack (object), button (object)
+References: style property (property), toolTip (property), menuMode (property), visible (property), menuMouseButton (property), menuPick (message), mouseDown (message), mouseDown (message), mouseUp message (message), button (keyword), menuItem (keyword), popup (keyword), menu item (glossary), popup menu (glossary), clickLoc (function), mouseLoc (function), pulldown (command), stack (object), button (object)
 
 Tags: math

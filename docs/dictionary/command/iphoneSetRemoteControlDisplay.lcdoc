@@ -16,7 +16,7 @@ Example:
 iphoneSetRemoteControlDisplay pDisplayDataArray
 
 Parameters:
-displayData (enum): An array with one or more of the following keys
+displayData(array): An array with one or more of the following keys:
 - "title": string
 - "artist": string
 - "artwork": Either the text of an image or an image filename.

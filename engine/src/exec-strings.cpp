@@ -2862,7 +2862,8 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     
     MCStringsSortIndirect(t_indicies, p_count, t_sort_compare, t_sort_keys);
     
-    t_sort_freer(t_sort_keys, p_count);
+    if (t_sort_freer != nil)
+        t_sort_freer(t_sort_keys, p_count);
     
     if (t_temp_items != nil)
     {

@@ -959,52 +959,70 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (t_state -> details)
 	{
         MCAutoStringRef t_details;
+		
+		// The current expectation is that urlEncode maps to and from the native
+		// encoding. This causes a problem on Mac where filenames are stored in
+		// NFD form - i.e. u-umlaut is u then umlaut. As the decomposed form has
+		// no representation when urlEncoded via the native encoding, it does no
+		// harm to first normalize to NFC - i.e. decomposed strings won't work now
+		// but at least these means some strings will work.
+		MCAutoStringRef t_normalized;
+		if (!MCStringNormalizedCopyNFC(p_entry -> name, &t_normalized))
+			return false;
         
         // SN-2015-01-22: [[ Bug 14412 ]] the detailed files should return
         //   URL-encoded filenames
         MCAutoStringRef t_url_encoded;
-        MCU_urlencode(p_entry -> name, false, &t_url_encoded);
+        if (!MCU_urlencode(*t_normalized, false, &t_url_encoded))
+			return false;
         
 #ifdef _WIN32
-		/* UNCHECKED */ MCStringFormat(&t_details,
-                                       "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                       *t_url_encoded,
-                                       p_entry -> data_size,
-                                       p_entry -> creation_time,
-                                       p_entry -> modification_time,
-                                       p_entry -> access_time,
-                                       p_entry -> permissions);
+		if (!MCStringFormat(&t_details,
+							"%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
+							*t_url_encoded,
+							p_entry -> data_size,
+							p_entry -> creation_time,
+							p_entry -> modification_time,
+							p_entry -> access_time,
+							p_entry -> permissions))
+			return false;
 #elif defined(_MACOSX)
-		/* UNCHECKED */ MCStringFormat(&t_details,
-                                       "%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
-                                       *t_url_encoded,
-                                       p_entry -> data_size,
-                                       p_entry -> resource_size,
-                                       p_entry -> creation_time,
-                                       p_entry -> modification_time,
-                                       p_entry -> access_time,
-                                       p_entry -> backup_time,
-                                       p_entry -> user_id,
-                                       p_entry -> group_id,
-                                       p_entry -> permissions,
-                                       p_entry -> file_type);
+		if (!MCStringFormat(&t_details,
+							"%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
+							*t_url_encoded,
+							p_entry -> data_size,
+							p_entry -> resource_size,
+							p_entry -> creation_time,
+							p_entry -> modification_time,
+							p_entry -> access_time,
+							p_entry -> backup_time,
+							p_entry -> user_id,
+							p_entry -> group_id,
+							p_entry -> permissions,
+							p_entry -> file_type))
+			return false;
 #else
-		/* UNCHECKED */ MCStringFormat(&t_details,
-                                       "%@,%lld,,,%u,%u,,%d,%d,%03o,",
-                                       *t_url_encoded,
-                                       p_entry -> data_size,
-                                       p_entry -> modification_time,
-                                       p_entry -> access_time,
-                                       p_entry -> user_id,
-                                       p_entry -> group_id,
-                                       p_entry -> permissions);
+		if (!MCStringFormat(&t_details,
+							"%@,%lld,,,%u,%u,,%d,%d,%03o,",
+							*t_url_encoded,
+							p_entry -> data_size,
+							p_entry -> modification_time,
+							p_entry -> access_time,
+							p_entry -> user_id,
+							p_entry -> group_id,
+							p_entry -> permissions))
+			return false;
         
 #endif
 
-		/* UNCHECKED */ MCListAppend(t_state->list, *t_details);
+		if (!MCListAppend(t_state->list, *t_details))
+			return false;
 	}
 	else
-    /* UNCHECKED */ MCListAppendFormat(t_state->list, "%@", p_entry -> name);
+	{
+		if (!MCListAppendFormat(t_state->list, "%@", p_entry -> name))
+			return false;
+	}
 	
 	return true;
 }
@@ -1024,7 +1042,10 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
     // SN-2015-11-09: [[ Bug 16223 ]] Make sure that the list starts with ..
     // if we ask for folders.
     if (!p_files)
-        MCListAppendCString(*t_list, "..");
+	{
+		if (!MCListAppendCString(*t_list, ".."))
+			return false;
+	}
     
 	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
 		return false;

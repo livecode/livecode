@@ -761,6 +761,8 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	if (t_license_class == kMCLicenseClassNone)
 		t_license_class = MClicenseparameters . license_class;
 	
+	t_params . banner_class = t_license_class;
+	
 	// Now check to see if we should build a trial - this if the license class is a
 	// trail, or the banner_class override is specified and the chosen option is
 	// compatible with the license class.

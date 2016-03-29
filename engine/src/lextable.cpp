@@ -2134,17 +2134,20 @@ static LT sugar_table[] =
 		{"path", TT_UNDEFINED, SG_PATH},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'pattern'.
 		{"pattern", TT_UNDEFINED, SG_PATTERN},
+		{"preserving", TT_UNDEFINED, SG_PRESERVING},
         {"real", TT_UNDEFINED, SG_REAL},
 		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
 		// AL-2013-10-30: [[ Bug 11351 ]] Ensure table is in alphabetical order.
         {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
 		{"regex", TT_UNDEFINED, SG_REGEX},
+		{"replacing", TT_UNDEFINED, SG_REPLACING},
 		{"resource", TT_UNDEFINED, SG_RESOURCE},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
         {"strictly", TT_UNDEFINED, SG_STRICTLY},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
+		{"styles", TT_UNDEFINED, SG_STYLES},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'success'
 		{"success", TT_UNDEFINED, SG_SUCCESS},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'true'

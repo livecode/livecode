@@ -81,6 +81,7 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_string)
 	{
 	case kMCSPutBeforeMessage:
         t_success = MCmb -> set(ctxt, p_string, kMCVariableSetBefore);
+        break;
 	case kMCSPutOutput:
 	case kMCSPutIntoMessage:
 		t_success = MCmb -> set(ctxt, p_string);

@@ -1256,3 +1256,16 @@ CWebBrowserBase *InstantiateBrowser(int p_window_id)
 	return t_browser;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2016-03-10: [[ RemoveCefOSX ]] CEF browser no longer supported on OSX
+CWebBrowserBase *MCCefBrowserInstantiate(int p_window_id)
+{
+	return nil;
+}
+
+void MCCefFinalise(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////

@@ -44,8 +44,9 @@ LiveCode 8.0 includes many other enhancements, including:
 
 * more powerful and complete clipboard access, sponsored by [FMProMigrator](https://www.fmpromigrator.com)
 
-* 64-bit Mac standalone deployment and SSL support for PostgreSQL
-  connections, sponsored by the community Feature Exchange
+* 64-bit Mac standalone deployment, SSL support for PostgreSQL
+  connections, and "find and replace" that preserves text style, all
+  sponsored by the community Feature Exchange
 
 * optimised Unicode text processing
 
@@ -54,3 +55,5 @@ LiveCode 8.0 includes many other enhancements, including:
 * a new JSON library extension
 
 * greatly improved native theming on desktop platforms
+
+* a new IDE Start Center and interactive tutorial

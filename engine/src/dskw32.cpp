@@ -3648,6 +3648,64 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return ResolveNativePath(p_path, r_resolved_path);
 	}
     
+	static bool isValidSerialPortPath(MCStringRef p_path)
+    {
+        // All serial port paths end with ":", and are at least 4 chars long
+        uindex_t t_len = MCStringGetLength(p_path);
+		
+        if (t_len < 4 || MCStringGetCharAtIndex(p_path, t_len-1) != ':')
+            return false;
+        
+        typedef struct
+        {
+            const char *m_prefix;
+            bool m_numbered;
+        } SerialPortInfo;
+		
+        SerialPortInfo serialPortNames[]=
+        {
+            {"COM", true},
+            {"LPT", true},
+            {"CON", false},
+            {"PRN", false},
+            {"AUX", false},
+            {"NUL", false},
+        };
+		
+        size_t t_size = sizeof(serialPortNames) / sizeof(serialPortNames[0]);
+        for (int i=0; i<t_size; i++)
+        {
+            /* Must always begin with the correct prefix */
+            if (!MCStringBeginsWithCString(p_path, (const char_t*)serialPortNames[i].m_prefix, kMCStringOptionCompareCaseless))
+            {
+                continue;
+            }
+			
+            // If not numbered, then there should only be prefix + ":"
+            // (and we already checked for the ":" earlier)
+            if (!serialPortNames[i].m_numbered)
+            {
+                return t_len == 4;
+            }
+			
+            /* Check for a numbered part, which must be non-empty */
+            if (t_len <= 4)
+            {
+                return false;
+            }
+			
+            for (int t_offset = 3; t_offset < t_len - 1; ++t_offset)
+            {
+                if (!isdigit(MCStringGetCharAtIndex(p_path, t_offset)))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+	
 	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path)
 	{
 		if (MCStringGetLength(p_path) == 0)
@@ -3697,6 +3755,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// absolute path
 			t_canonised_path = p_path;
 		}
+		
+		// PM-2016-03-15: [[ Bug 16300 ]] Detect correctly the case of a serial port path
+		else if (isValidSerialPortPath(p_path))
+		{
+			t_canonised_path = p_path;
+		}
+		
 		else
 		{
 			// relative to current folder

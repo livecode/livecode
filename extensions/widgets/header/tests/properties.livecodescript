@@ -1,6 +1,6 @@
 ﻿script "HeaderBarWidgetProperties"
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015 - 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -32,26 +32,26 @@ on TestCreateHeader
 end TestCreateHeader
 
 on TestSetTheme
-   set the widgetTheme of widget "testHeader" to "Android"
-   TestAssert "theme set to Android", the widgetTheme of widget "testHeader" is "Android"
+   set the theme of widget "testHeader" to "Android"
+   TestAssert "theme set to Android", the theme of widget "testHeader" is "Android"
    
-   set the widgetTheme of widget "testHeader" to "iOS"
-   TestAssert "theme set to iOS", the widgetTheme of widget "testHeader" is "iOS"
+   set the theme of widget "testHeader" to "iOS"
+   TestAssert "theme set to iOS", the theme of widget "testHeader" is "iOS"
 end TestSetTheme
 
 on TestSetBGOpacity
-   set the backgroundOpacity of widget "testHeader" to false
-   TestAssert "set backgroundOpacity to false", the backgroundOpacity of widget "testHeader" is false
+   set the opaque of widget "testHeader" to false
+   TestAssert "set backgroundOpacity to false", the opaque of widget "testHeader" is false
    
-   set the backgroundOpacity of widget "testHeader" to true
-   TestAssert "set backgroundOpacity to false", the backgroundOpacity of widget "testHeader" is true
+   set the opaque of widget "testHeader" to true
+   TestAssert "set backgroundOpacity to false", the opaque of widget "testHeader" is true
 end TestSetBGOpacity
 
 on TestSetActionStyle
-   set the actionStyle of widget "testHeader" to "names"
-   TestAssert "actionStyle set to names", the actionStyle of widget "testHeader" is "names"
+   set the itemStyle of widget "testHeader" to "names"
+   TestAssert "actionStyle set to names", the itemStyle of widget "testHeader" is "names"
    
-   set the actionStyle of widget "testHeader" to "icons"
-   TestAssert "actionStyle set to icons", the actionStyle of widget "testHeader" is "icons"
+   set the itemStyle of widget "testHeader" to "icons"
+   TestAssert "actionStyle set to icons", the itemStyle of widget "testHeader" is "icons"
 end TestSetActionStyle
 

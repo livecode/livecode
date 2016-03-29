@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-load extension from file (revIDESpecialFolderPath("extensions") & slash & "com.livecode.extensions.livecode.navbar" & slash & "module.lcm")
+load extension from file "packaged_extensions/com.livecode.widget.navbar/module.lcm"
 if the result is empty then
 	create widget "My Navbar" as "com.livecode.widget.navbar"
 end if

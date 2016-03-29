@@ -2698,6 +2698,15 @@ enum Exec_errors
 
 	// {EE-0883} save: error in file format expression
 	EE_SAVE_BADNOFORMATEXP,
+	
+	// {EE-0884} replace: not a field chunk
+	EE_REPLACE_BADFIELDCHUNK,
+	
+	// {EE-0885} call: too few arguments
+	EE_INVOKE_TOOFEWARGS,
+	
+	// {EE-0886} call: too many arguments
+	EE_INVOKE_TOOMANYARGS
 };
 
 extern const char *MCexecutionerrors;

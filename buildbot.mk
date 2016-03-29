@@ -205,12 +205,19 @@ dist-tools-commercial:
 	$(buildtool_command) --platform mac --platform win --platform linux --stage tools --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
+distmac-bundle-community:
+	$(buildtool_command) --platform mac --stage bundle --edition community
+distmac-bundle-indy:
+	$(buildtool_command) --platform mac --stage bundle --edition indy
+distmac-bundle-business:
+	$(buildtool_command) --platform mac --stage bundle --edition business
+
 # Make a list of installers to be uploaded to the distribution server, and release notes
 # If a checksum file is needed, generate it with sha1sum
 # Upload the release notes if we are on Linux
 dist-upload-files.txt sha1sum.txt:
 	set -e; \
-	find . -maxdepth 1 -name 'LiveCode*Installer-*-Mac.dmg' \
+	find . -maxdepth 1 -name 'LiveCode*-*-Mac.dmg' \
 	                -o -name 'LiveCode*Installer-*-Windows.exe' \
 	                -o -name 'LiveCode*Installer-*-Linux.*' \
 	                -o -name 'LiveCode*Server-*-Linux*.zip' \
@@ -263,7 +270,7 @@ distmac-extract:
 	tar -xvf mac-installer.tar.xz
 
 # Final installer creation for Mac
-distmac-disk-%:
+distmac-disk-%: distmac-bundle-%
 	$(buildtool_command) --platform mac --stage disk --edition $*
 
 distmac-upload: dist-upload

@@ -26,37 +26,37 @@ Any button's contents can be viewed as a menu if the button's style <property> i
 
 You can also associate a stack with the button, using the <menuName> <property>. In this case, the contents of the <stack|stack's> first <card> are displayed as a <menu>.
 
-pulldown:  Displays each <line> of the <button(object)|button's> contents as a <menu item> in a normal pulldown menu. Use this <menuMode> for <button(object)|buttons> that are grouped into a <menubar>.
+* "pulldown":  Displays each <line> of the <button(object)|button's> contents as a <menu item> in a normal pulldown menu. Use this <menuMode> for <button(object)|buttons> that are grouped into a <menubar>.
 
-Setting a button's <menuMode> to "pulldown" has the same result as creating the equivalent <menu item|menu items> (as <button(object)|buttons>) in a <stack>, then using the <pulldown> command to display the <stack> as a <menu>.
+  Setting a button's <menuMode> to "pulldown" has the same result as creating the equivalent <menu item|menu items> (as <button(object)|buttons>) in a <stack>, then using the <pulldown> command to display the <stack> as a <menu>.
 
->*Note:* On <Mac OS> and <OS X|OS X systems>, pulldown menus in a window are drawn by the standard operating system routines if the <button(object)|button's> <showBorder> <property> is set to true and its <borderWidth> is not zero. Pulldown menus in the <menu bar> are always drawn by the operating system.
+  **Note:** On <Mac OS> and <OS X|OS X systems>, pulldown menus in a window are drawn by the standard operating system routines if the <button(object)|button's> <showBorder> <property> is set to true and its <borderWidth> is not zero. Pulldown menus in the <menu bar> are always drawn by the operating system.
 
-cascade:  Displays each <line> of the <button(object)|button's> contents as a <menu item> in a <cascading menu|hierarchical menu>. (The <button(keyword)> must be part of a <stack menu>.)
+* "cascade":  Displays each <line> of the <button(object)|button's> contents as a <menu item> in a <cascading menu|hierarchical menu>. (The <button(keyword)> must be part of a <stack menu>.)
 
-popup:  Displays each <line> of the <button(object)|button's> contents as a <menu item> in a <popup menu>. The <menu> appears at the <point> of the mouse click.
+* "popup":  Displays each <line> of the <button(object)|button's> contents as a <menu item> in a <popup menu>. The <menu> appears at the <point> of the mouse click.
 
-Setting a button's <menuMode> to "popup" has the same result as creating the equivalent <menu item|menu items> (as <button(object)|buttons>) in a <stack>, then using the <popup> <command> to display the <stack> as a <menu>.
+  Setting a button's <menuMode> to "popup" has the same result as creating the equivalent <menu item|menu items> (as <button(object)|buttons>) in a <stack>, then using the <popup> <command> to display the <stack> as a <menu>.
 
-tabbed:  Displays the <button(object)|button's> contents as a horizontal list of tabs, like the tabs on <file> <folders>. Each <line> of the <button(object)|button's> contents is the title of a tab. Usually, <tabbed button|tabbed buttons> are used for <dialog box|dialog boxes> or <palette|palettes> containing a different <group> of <control|controls> for each tab. You can <handle> the <menuPick> <message> to display the correct <group> when a tab is clicked:
+* "tabbed":  Displays the <button(object)|button's> contents as a horizontal list of tabs, like the tabs on <file> <folders>. Each <line> of the <button(object)|button's> contents is the title of a tab. Usually, <tabbed button|tabbed buttons> are used for <dialog box|dialog boxes> or <palette|palettes> containing a different <group> of <control|controls> for each tab. You can <handle> the <menuPick> <message> to display the correct <group> when a tab is clicked:
 
-  on menuPick newTab,oldTab -- sent when user clicks a tab
-    lock screen -- hide the swap
-    hide group oldTab
-    show group newTab
-    unlock screen
-  end menuPick
+      on menuPick newTab,oldTab -- sent when user clicks a tab
+         lock screen -- hide the swap
+         hide group oldTab
+         show group newTab
+         unlock screen
+      end menuPick
 
-comboBox:  Displays the <button(object)|button's> contents as a drop-down scrolling list, with an editable <field> at the top.
+* "comboBox":  Displays the <button(object)|button's> contents as a drop-down scrolling list, with an editable <field> at the top.
 
->*Note:* If a <button(object)|button's> <menuMode> is set to "comboBox", the <button(keyword)> receives <field> <message|messages>. For example, when the user clicks in the editable <field>, an <openField> <message> is sent to the <button(keyword)>.
+  **Note:** If a <button(object)|button's> <menuMode> is set to "comboBox", the <button(keyword)> receives <field> <message|messages>. For example, when the user clicks in the editable <field(object)>, an <openField> <message> is sent to the <button(keyword)>.
 
-option:  Displays an option menu (when the <lookAndFeel> <property> is set to "Motif"), a drop-down list (when the <lookAndFeel> <property> is set to "Windows 95"), or a Mac-style <popup menu> (when the <lookAndFeel> <property> is set to "Appearance Manager" or "Macintosh"). Setting a <button(object)|button's> <menuMode> to option has the same result as creating the equivalent menu items (as <button(object)|buttons>) in a <stack>, then using the <option> <command> to display the <stack> as a menu.
+* "option":  Displays an option menu (when the <lookAndFeel> <property> is set to "Motif"), a drop-down list (when the <lookAndFeel> <property> is set to "Windows 95"), or a Mac-style <popup menu> (when the <lookAndFeel> <property> is set to "Appearance Manager" or "Macintosh"). Setting a <button(object)|button's> <menuMode> to option has the same result as creating the equivalent menu items (as <button(object)|buttons>) in a <stack>, then using the <option> <command> to display the <stack> as a menu.
 
-Regardless of the <menuType>, a <menuPick> <message> is sent to the <button(keyword)> when the user chooses a <menu item> from the <menu>.
+Regardless of the <menuMode>, a <menuPick> <message> is sent to the <button(keyword)> when the user chooses a <menu item> from the <menu>.
 
 If the button's style <property> is not set to "menu", the setting of its <menuMode> <property> has no effect.
 
-References: menuLines (property), showBorder (property), menuName (property), menubar (property), borderWidth (property), lookAndFeel (property), titleWidth (property), openField (message), menuPick (message), file (keyword), button (keyword), text (keyword), popup (keyword), popup menu (glossary), stack menu (glossary), appearance (glossary), field (glossary), cascading menu (glossary), line (glossary), property (glossary), command (glossary), tabbed button (glossary), behavior (glossary), handle (glossary), palette (glossary), message (glossary), Mac OS (glossary), OS X (glossary), dialog box (glossary), menu bar (glossary), menu (glossary), point (glossary), menu item (glossary), card (glossary), menus (function), folders (function), pulldown (command), option (command), group (command), popup (command), stack (object), control (object), button (object)
+References: menuLines (property), showBorder (property), menuName (property), menubar (property), borderWidth (property), lookAndFeel (property), titleWidth (property), openField (message), menuPick (message), file (keyword), button (keyword), text (keyword), popup (keyword), popup menu (glossary), stack menu (glossary), appearance (glossary), field (glossary), cascading menu (glossary), line (glossary), property (glossary), command (glossary), tabbed button (glossary), behavior (glossary), handle (glossary), palette (glossary), message (glossary), Mac OS (glossary), OS X (glossary), dialog box (glossary), menu bar (glossary), menu (glossary), point (glossary), menu item (glossary), card (glossary), menus (function), folders (function), pulldown (command), option (command), group (command), popup (command), stack (object), control (object), button (object), 
 
 Tags: menus

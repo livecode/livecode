@@ -6,7 +6,7 @@ Syntax: set the [{ long | abbr[ev[iated]] | short }] name of <object> to <string
 
 Syntax: get the name
 
-Summary: Specifies the name of an <object>.
+Summary: Specifies the name of an <object(object)>.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -22,7 +22,7 @@ set the name of the target to it
 Example:
 set the name of last card button to "Bing!"
 
-Value: The <name> of an <object> is a <string>.
+Value: The <name> of an <object(object)> is a <string>.
 
 Description:
 Use an object's <name> <property> to refer to the <object(object)>.
@@ -31,7 +31,7 @@ The short name of an object is simply the name that the object has been assigned
 
 The abbreviated name of an object is the <object(object)|object's> type followed by the <object(object)|object's> short name in quotes. For example, if a <player|player's> short name is Heaven, its abbreviated name is player "Heaven". If you don't specify a modifier for the <name> <property>, the abbreviated name is what you get.
 
-The long name of an object includes information about its <owner> (and about the <owner> of that <object(object)>, and so forth). For example, suppose a <stack> named "My <stack>" contains a <card> named "My Card". This <card> has a <group> named "My Group" which contains a <button> named "My Button". The <card> also has a <card control|card field> named "My Field". If "My Stack" is a <main stack> and it's in a <file> whose <file path|path> is "/Drive/Folder/Stack.rev", the long names of these <objects> look like this:
+The long name of an object includes information about its <owner> (and about the <owner> of that <object(object)>, and so forth). For example, suppose a <stack> named "My <stack>" contains a <card> named "My Card". This <card> has a <group> named "My Group" which contains a <button> named "My Button". The <card> also has a <card control|card field> named "My Field". If "My Stack" is a <main stack> and it's in a <file> whose <file path|path> is "/Drive/Folder/Stack.rev", the long names of these <objects(object)> look like this:
 
 * The stack:
    stack "/Drive/Folder/Stack.rev"
@@ -55,7 +55,7 @@ The long <name> of a <background> includes the name of the <current card>, if th
 
 You can use an object's <name> to refer to the <object(object)> in a <statement>. However, the <name> need not be seen on screen, even if the <object(object)> is one that normally has a visible name (such as a <button>). If a <stack> or <control(object)|control's> <label> <property> is not empty, the <label> <property> is used when a visible label is displayed. If a <stack|stack's> <label> <property> is empty, its <name> is used as the window title. Likewise, if a <control(object)|control's> <label> <property> is empty, its <name> is used as the label. This means that you can use any <string> you want for the <name> without worrying about the user-interface impact on your application: if the <name> is not user-friendly, set the <label> to something that is.
 
-A stack's <name> cannot be empty. (Other <objects> can have empty names.) Attempting to set a <stack|stack's> <name> to empty does not rename it.
+A stack's <name> cannot be empty. (Other <objects(object)> can have empty names.) Attempting to set a <stack|stack's> <name> to empty does not rename it.
 
 If an object's <name> is empty, getting its <name> yields its <ID> <property> instead. In this case, the abbreviated ID form is always reported, regardless of what form of the <name> <property> you request.
 

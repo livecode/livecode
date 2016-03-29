@@ -29,12 +29,12 @@ mark cards by finding "?" in field "Nationality"
 Parameters:
 card: Any card reference.
 condition (bool): An expression that evaluates to true or false for each card in the current stack. Any object references within the condition are treated as pertaining to each card being evaluated, so for example, a reference to a field is evaluated for each card.
-form (enum): One of the following words:If no form is specified normal will be used.
--  normal
--  characters or character (or chars or char)
--  words or word
--  string
--  whole
+form (enum): See the <find> <command> for more information. If no <form> is specified, the normal is used.
+-  normal :
+-  characters, character, chars, char :
+-  words, word :
+-  string :
+-  whole :
 findString (string): 
 field: Any field reference.
 

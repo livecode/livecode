@@ -1423,11 +1423,6 @@ public:
 	{
         return m_nfforce;
 	}
-    
-    Boolean GetNumberExpected() const
-    {
-        return m_numberexpected;
-    }
 	
 	//////////
 
@@ -1497,11 +1492,6 @@ public:
 	void SetRowDelimiter(MCStringRef p_value)
 	{
         MCValueAssign(m_rowdel, p_value);
-    }
-    
-    void SetNumberExpected(Boolean p_value)
-    {
-        m_numberexpected = (bool)p_value;
     }
 
     //////////
@@ -1819,10 +1809,6 @@ private:
     bool m_wholematches : 1;
     bool m_usesystemdate : 1;
     bool m_useunicode : 1;
-    // SN-2014-04-08 [[ NumberExpectation ]]
-    // New property allowing to specify, when evaluating a literal number,
-    // that we expect a number over a valueref
-    bool m_numberexpected : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3149,6 +3135,7 @@ void MCInterfaceExecExportObjectToArray(MCExecContext& ctxt, MCObject *p_contain
 void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked);
 void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
 void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
+void MCInterfaceExecReplaceInField(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCObjectChunkPtr& p_container, bool p_preserve_styles);
 
 void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool);
 

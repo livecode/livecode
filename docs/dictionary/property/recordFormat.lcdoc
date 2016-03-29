@@ -18,8 +18,8 @@ set the recordFormat to "wave"
 Example:
 set the recordFormat to the storedSoundFormat of me
 
-Value (enum): The <recordFormat> is one of the following:By default, the <recordFormat> <property> is "aiff"
--aiff : records a file in AIFF format
+Value (enum): 
+-aiff : records a file in AIFF format (default)
 -wave : records a file in WAV format
 -ulaw : records a file in AU format
 -movie : records a file in QuickTime format

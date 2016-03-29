@@ -693,9 +693,10 @@ bool MCClipboard::HasImage() const
 
 bool MCClipboard::HasTextOrCompatible() const
 {
-    // Styled text is compatible with plain text
+    // Styled text is compatible with plain text. A list of file paths can also
+    // be auto-converted into text.
     AutoLock t_lock(this);
-    return HasText() || HasLiveCodeStyledTextOrCompatible();
+    return HasText() || HasLiveCodeStyledTextOrCompatible() || HasFileList();
 }
 
 bool MCClipboard::HasLiveCodeStyledTextOrCompatible() const
@@ -802,6 +803,10 @@ bool MCClipboard::CopyAsText(MCStringRef& r_text) const
     if (CopyAsEncodedText(t_item, kMCRawClipboardKnownTypeCP1252, kMCStringEncodingWindows1252, r_text))
         return true;
     
+    // As a fallback, try to convert a list of file paths into text
+    if (CopyAsFileList(r_text))
+        return true;
+    
     // None of the text representations existed
     return false;
 }
@@ -832,12 +837,25 @@ bool MCClipboard::CopyAsLiveCodeStyledText(MCDataRef& r_pickled_text) const
         }
     }
     
-    // Could not grab as either styled text or RTF. One last try with HTML...
+    // Could not grab as either styled text or RTF. Try with HTML.
     MCAutoDataRef t_html;
     if (CopyAsData(kMCRawClipboardKnownTypeHTML, &t_html))
     {
         // Convert to LiveCode styled text
         MCDataRef t_pickled_text = ConvertHTMLToStyledText(*t_html);
+        if (t_pickled_text != NULL)
+        {
+            r_pickled_text = t_pickled_text;
+            return true;
+        }
+    }
+    
+    // Finally, try plain text.
+    MCAutoStringRef t_plain_text;
+    if (CopyAsText(&t_plain_text))
+    {
+        // Convert to LiveCode styled text
+        MCDataRef t_pickled_text = ConvertTextToStyledText(*t_plain_text);
         if (t_pickled_text != NULL)
         {
             r_pickled_text = t_pickled_text;

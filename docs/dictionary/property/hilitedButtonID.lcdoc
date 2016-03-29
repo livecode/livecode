@@ -29,8 +29,8 @@ Setting the <hilitedButtonID> of a <group> sets the <hilite> <property> of the r
 
 The <hilitedButtonID> <property> is most useful in <radio button|radio-button clusters>. In a <radio button|radio-button cluster>, only one <button(keyword)> can be <highlight|highlighted> at once:  clicking another <button(keyword)> unhighlights the first one. The <radioBehavior> <property> of a <group> of <button(object)|buttons> specifies whether they act as a <radio button|radio-button cluster>.
 
-The hilitedButton, <hilitedButtonName>, and <hilitedButtonID> <property|properties> all refer in different ways to the same <button(keyword)>. When any of them changes, all of them change.
+The <hilitedButton(property)>, <hilitedButtonName(property)>, and <hilitedButtonID> <property|properties> all refer in different ways to the same <button(object)>. When any of them changes, all of them change.
 
-References: hilitedButtonName (property), ID (property), button (keyword), hilite (command), group (command), button (object), property (glossary), highlight (glossary), hilitedButtonName (glossary), radio button (glossary), radioBehavior (glossary)
+References: hilitedButton(property) hilitedButtonName (property), ID (property), button (keyword), hilite (command), group (command), button (object), property (glossary), highlight (glossary), hilitedButtonName (glossary), radio button (glossary), radioBehavior (glossary)
 
 Tags: ui
