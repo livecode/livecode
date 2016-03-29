@@ -43,10 +43,20 @@ sdk_path() {
   echo "$PWD/$1/Contents/Developer/Platforms/$2.platform/Developer/SDKs/$2$3.sdk"
 }
 
+# plist_path XCODE PLATFORM
+plist_path() {
+  echo "$PWD/$1/Contents/Developer/Platforms/$2.platform/Info.plist"
+}
+
 # have_sdk XCODE PLATFORM VERSION
 have_sdk () {
-  p=$(sdk_path $1 $2 $3)
+  local p=$(sdk_path $1 $2 $3)
   test -a "$p" -a -d "$p/"
+}
+
+# min_sdk VERSION_LIST
+min_sdk () {
+  echo "$1" | xargs -n1 | sort -u | head -n1
 }
 
 # find_sdk PLATFORM VERSION
@@ -59,26 +69,42 @@ find_sdk () {
   done
 }
 
+# set_sdk_minversion PLATFORM VERSION_LIST
+set_sdk_minversion () {
+  echo "# Setting $1 SDK minimum version"
+  local v=$(min_sdk "$2")
+  local plist="$(plist_path Xcode.app $1)"
+  if defaults write "${plist}" MinimumSDKVersion "'${v}'"; then
+    echo "ok - $1 $v"
+  else
+    echo "not ok - $1 $v"
+    success="no"
+  fi
+}
+
 # install_sdks PLATFORM VERSION_LIST
 install_sdks () {
+  echo "# Installing $1 SDK symlinks"
   for v in $2; do
     if have_sdk Xcode.app $1 $v; then
       # SDK is already set up
-      echo "ok - $1 $v" >&2
+      echo "ok - $1 $v"
 
     else
       # Try to link the required SDK into place
-      target_sdk=$(find_sdk $1 $v)
+      local target_sdk=$(find_sdk $1 $v)
 
       if [ -n "$target_sdk" ] &&
         ln -s "$target_sdk" $(sdk_path Xcode.app $1 $v); then
-        echo "ok - $1 $v" >&2
+        echo "ok - $1 $v"
       else
-        echo "not ok - $1$v" >&2
+        echo "not ok - $1 $v"
         success="no"
       fi
     fi
   done
+
+  set_sdk_minversion "$1" "$2"
 }
 
 install_sdks "iPhoneOS" "$iphoneos_versions"
@@ -87,6 +113,6 @@ install_sdks "MacOSX" "$macosx_versions"
 
 if [ $success != "yes" ]; then
   echo >&2
-  echo "ERROR: Some SDKs couldn't be found" >&2
+  echo "ERROR: Some SDKs couldn't be installed" >&2
   exit 1
 fi
