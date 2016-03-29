@@ -36,15 +36,11 @@ if [ -e "${XCODES_DIR}/Xcode_6_2_0" ] ; then
 	addiOS "${XCODES_DIR}/Xcode_6_2_0/Xcode.app/Contents/Developer" iPhoneSimulator 8.2 "i386 x86_64"
 	addiOS "${XCODES_DIR}/Xcode_6_2_0/Xcode.app/Contents/Developer" iPhoneOS 8.2 "armv7 arm64"
 fi
-if [ -e "${XCODES_DIR}/Xcode_6_3_0" ] ; then
-	addiOS "${XCODES_DIR}/Xcode_6_3_0/Xcode.app/Contents/Developer" iPhoneSimulator 8.3 "i386 x86_64"
-	addiOS "${XCODES_DIR}/Xcode_6_3_0/Xcode.app/Contents/Developer" iPhoneOS 8.3 "armv7 arm64"
-fi
-if [ -e "${XCODES_DIR}/Xcode_6_4_0" ] ; then
-	addiOS "${XCODES_DIR}/Xcode_6_4_0/Xcode.app/Contents/Developer" iPhoneSimulator 8.4 "i386 x86_64"
-	addiOS "${XCODES_DIR}/Xcode_6_4_0/Xcode.app/Contents/Developer" iPhoneOS 8.4 "armv7 arm64"
-fi
 if [ -e "${XCODES_DIR}/Xcode_7_2_0" ] ; then
 	addiOS "${XCODES_DIR}/Xcode_7_2_0/Xcode.app/Contents/Developer" iPhoneSimulator 9.2 "i386 x86_64"
 	addiOS "${XCODES_DIR}/Xcode_7_2_0/Xcode.app/Contents/Developer" iPhoneOS 9.2 "armv7 arm64"
+fi
+if [ -e "${XCODES_DIR}/Xcode_7_3_0" ] ; then
+	addiOS "${XCODES_DIR}/Xcode_7_3_0/Xcode.app/Contents/Developer" iPhoneSimulator 9.3 "i386 x86_64"
+	addiOS "${XCODES_DIR}/Xcode_7_3_0/Xcode.app/Contents/Developer" iPhoneOS 9.3 "armv7 arm64"
 fi
