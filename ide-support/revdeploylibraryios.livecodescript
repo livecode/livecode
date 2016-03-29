@@ -17,9 +17,8 @@ local sDeviceSDKs
 
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
--- SN-2015-05-01: [[ Xcode 6.4 ]] Add iOS 8.4 amongst the uable iOS SDK
 function deployUsableIosSdk
-   return "5.1,6.1,7.1,8.2,8.4,9.2"
+   return "5.1,6.1,7.1,8.2,9.2,9.3"
 end deployUsableIosSdk
 
 // SN-2015-05-01: [[ Xcode 6.4 ]] Return the pair iOS SDK / Xcode for the current MacOS version
@@ -33,21 +32,21 @@ function deployGetIphoneOSes
    else if tMacVersion < 101000 then
       put "8.2,6.2" into tList[1]
    else if tMacVersion < 101100 then
-      put "8.4,6.4" into tList[1]
-      put "8.2,6.2" into tList[2]
+      put "8.2,6.2" into tList[1]
       // Xcode 7.0 can be installed from Mac OSX 10.10.4 onwards
       if tMacVersion >= 101004 then
-         put "9.2,7.1" into tList[3]
+         put "9.2,7.2" into tList[2]
       end if
    else
-      put "9.2,7.1" into tList[1]
+   	  // Xcode 7.3 requires a Mac running OS X 10.11 or later
+      put "9.3,7.3" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "5.1.1,6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2"
+   return "5.1.1,6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
