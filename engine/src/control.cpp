@@ -1103,6 +1103,9 @@ void MCControl::sizerects(MCRectangle *rects)
 
 void MCControl::drawselected(MCDC *dc)
 {
+    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+        return;
+    
 	if (MCdragging)
 		return;
 

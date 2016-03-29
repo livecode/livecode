@@ -2917,6 +2917,9 @@ void MCGroup::boundcontrols()
 
 void MCGroup::drawselectedchildren(MCDC *dc)
 {
+    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+        return;
+    
     MCControl *t_control = controls;
     if (t_control == nil)
         return;
