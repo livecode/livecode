@@ -555,12 +555,8 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 			return;
 		}
 		
-		// Otherwise intersect the dirty rect with the parent's rect.
-		t_dirty_rect = MCU_intersect_rect(t_dirty_rect, t_control -> parent -> getrect());
-
-		// Expand due to bitmap effects (if any).
-		if (t_parent_control -> m_bitmap_effects != nil)
-			MCBitmapEffectsComputeBounds(t_parent_control -> m_bitmap_effects, t_dirty_rect, t_dirty_rect);
+		// Otherwise intersect the dirty rect with the parent's effective rect.
+		t_dirty_rect = MCU_intersect_rect(t_dirty_rect, t_parent_control -> geteffectiverect());
 
 		t_control = t_parent_control;
 	}

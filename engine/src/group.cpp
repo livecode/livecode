@@ -3897,3 +3897,22 @@ void MCGroup::scheduledelete(bool p_is_child)
 		while(t_control != controls);
 	}
 }
+
+MCRectangle MCGroup::geteffectiverect(void) const
+{
+    MCRectangle t_rect;
+    t_rect = MCControl::geteffectiverect();
+    
+    if (controls != NULL)
+    {
+        MCControl *t_control;
+        t_control = controls;
+        do
+        {   t_rect = MCU_union_rect(t_rect, t_control -> geteffectiverect());
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    return t_rect;
+}
