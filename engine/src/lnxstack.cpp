@@ -313,24 +313,35 @@ void MCStack::sethints()
 			break;
 		}
 
-	    /* UNCHECKED */ MCStringCreateMutable(0, &t_app_name);
-		if (t_env == kMCModeEnvironmentTypeEditor)
-	    	/* UNCHECKED */ MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
-		else
-			/* UNCHECKED */ MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
-	    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_app_name, '.', '_', kMCStringOptionCompareExact);
-	    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_app_name, '-', '_', kMCStringOptionCompareExact);
+		if (MCStringCreateMutable(0, &t_app_name))
+		{
+			bool t_success = true;
+			if (t_env == kMCModeEnvironmentTypeEditor)
+				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+			else
+				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
+				
+			if (t_success)
+			{
+				t_success = MCStringFindAndReplaceChar(*t_app_name, '.', '_', kMCStringOptionCompareExact) 
+					&& MCStringFindAndReplaceChar(*t_app_name, '-', '_', kMCStringOptionCompareExact);
+			}
+			
+			if (!t_success)
+				t_app_name.Reset();
+		}
 	}
 	else
 	{
 		t_app_name = MCNameGetString(MCdispatcher->gethome()->getname());
 	}
 
-    /* UNCHECKED */ t_app_name_cstr.Lock(*t_app_name);
-
-	chints.res_name = (char*)*t_app_name_cstr;
-	chints.res_class = (char*)*t_app_name_cstr;
-    x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
+    if (t_app_name_cstr.Lock(*t_app_name))
+	{
+		chints.res_name = (char*)*t_app_name_cstr;
+		chints.res_class = (char*)*t_app_name_cstr;
+    	x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
+	}
 
     // TODO: is this just another way of ensuring on-top-ness?
 	//if (mode >= WM_PALETTE)
