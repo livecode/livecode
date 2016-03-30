@@ -88,7 +88,7 @@ void MCNativeLayerX11::OnToolChanged(Tool p_new_tool)
 
 void MCNativeLayerX11::updateInputShape()
 {
-    if (m_show_for_tool)
+    if (!m_show_for_tool)
         // In edit mode. Mask out all input events
         gdk_window_input_shape_combine_region(gtk_widget_get_window(GTK_WIDGET(m_child_window)), m_input_shape, 0, 0);
     else
