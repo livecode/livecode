@@ -41,6 +41,8 @@ extern "C" LIBRARY_EXPORT void setidcounterref(unsigned int *tidcounter)
 	DBObject::idcounter = tidcounter;
 }
 
+extern "C" LIBRARY_EXPORT void setcallbacksref(DBcallbacks *callbacks);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // The static function export table for iOS external linkage requirements.
@@ -67,6 +69,7 @@ extern "C" {
 		{ "newdbconnectionref", (void *)newdbconnectionref },
 		{ "releasedbconnectionref", (void *)releasedbconnectionref },
 		{ "setidcounterref", (void *)setidcounterref },
+		{ "setcallbacksref", (void *)setcallbacksref },
 		{ 0, 0 }
 	};
 	
