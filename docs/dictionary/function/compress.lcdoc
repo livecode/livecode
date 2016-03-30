@@ -34,7 +34,7 @@ The compressed result is typically about half to a third the size of the origina
 
 >*Important:*  The value <return|returned> by the <compress> <function> consists of <binary file|binary data> and may include control characters, so displaying it on screen or trying to edit it may produce unexpected results. If you use a <URL> to place the <return|returned> data in a <file>, it's important to use the <binfile> <URL> scheme; using the <file> <URL> scheme will corrupt <binary file|binary data>.
 
-For technical information about the format used by the <compress> <function>, see RFC 1952 at http://www.ietf.org/rfc/rfc1952.txt. The <compress> <function> uses the zlib compression library.
+For technical information about the format used by the <compress> <function>, see [RFC 1952](https://tools.ietf.org/html/rfc1952). The <compress> <function> uses the zlib compression library.
 
 References: URL (keyword), inverse (keyword), file (keyword), binfile (keyword), string (keyword), compress (function), decompress (function), return (glossary), binary file (glossary), function (control_st)
 

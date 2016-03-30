@@ -43,9 +43,14 @@ where the connectionID is a number assigned by the <accept> <command>. (You only
 
 The <callbackMessage> is sent to the <object> whose <script> contains the <accept> <command>. Either one or two <parameter|parameters> are sent with this <message>. The first <parameter> is the <IP address> of the system or <process> making the connection. If a <datagram> is being accepted, the second <parameter> is the contents of the <datagram>.
 
-For technical information about sockets, see RFC 147 at http://www.ietf.org/rfc/rfc147.txt.
-For technical information about UDP datagrams, see RFC 768 at http://www.ietf.org/rfc/rfc0768.txt.
-For technical information about the numbers used to designate standard ports, see the list of port numbers at http://www.iana.org/assignments/port-numbers, in particular the section entitled "Well Known Port Numbers".
+- For technical information about sockets, see [RFC
+  147](https://tools.ietf.org/html/rfc147)
+- For technical information about UDP datagrams, see [RFC
+  768](https://tools.ietf.org/html/rfc768)
+- For technical information about the numbers used to designate
+  standard ports, see the
+  [official IANA list of port assignments](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml)
+  and [RFC 6335](https://tools.ietf.org/html/rfc6335)
 
 References: HTTPProxy (property), script (property), read from socket (command), write to socket (command), close socket (command), open socket (command), openSockets (function), hostAddressToName (function), hostName (function), hostAddress (function), peerAddress (function), hostNameToAddress (function), datagram (glossary), IP address (glossary), TCP (glossary), port (glossary), command (glossary), socket (glossary), UDP (glossary), host (glossary), server (glossary), message (glossary), parameter (glossary), process (glossary), object (object)
 

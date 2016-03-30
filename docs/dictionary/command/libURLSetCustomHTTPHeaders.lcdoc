@@ -48,7 +48,7 @@ If you specify a set of headers using the <libURLSetCustomHTTPHeaders> <command>
 
 >*Note:*  When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <libURLSetCustomHTTPHeaders> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <libURLSetCustomHTTPHeaders> <command> can be used in any <handler>.
 
-For technical information about the standard headers recognized in the HTTP 1.1 protocol, see RFC 2616 at http://www.ietf.org/rfc/rfc2616.txt.
+For technical information about the standard headers recognized in the HTTP 1.1 protocol, see [RFC 2616](https://tools.ietf.org/html/rfc2616).
 
 References: httpHeaders (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Internet library (library), LiveCode custom library (library), library (library), https (keyword), URL (keyword), default (keyword), http (keyword), application (glossary), standalone application (glossary), property (glossary), web server (glossary), command (glossary), expression (glossary), main stack (glossary), Standalone Application Settings (glossary), server (glossary), HTTP (glossary), message (glossary), handler (glossary), libURLLastHTTPHeaders (function), post (command), libURLSetCustomHTTPHeaders (command), group (command)
 

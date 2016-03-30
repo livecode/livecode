@@ -33,7 +33,7 @@ An internet <date> looks like this: Sun, 28 Oct 2001 17:18:54 -0800
 
 >*Note:* The <internet> <keyword> is implemented internally as a <property> and appears in the <propertyNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set> <command>.
 
-For technical information about the date format produced by the <internet> <keyword>, see RFC 2822 at http://www.ietf.org/rfc/rfc2822.txt.
+For technical information about the date format produced by the <internet> <keyword>, see [RFC 2822](https://tools.ietf.org/html/rfc2822).
 
 References: short (keyword), abbreviated (keyword), convert (command), set (command), format (function), propertyNames (function), date (function), function (control_st), keyword (glossary), property (glossary), command (glossary), protocol (glossary), error (glossary), expression (glossary)
 
