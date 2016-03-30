@@ -1495,7 +1495,7 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 
 void MCStack::GetMenuBar(MCExecContext& ctxt, MCStringRef& r_menubar)
 {
-	r_menubar = (MCStringRef)MCValueRetain(getmenubar());
+	r_menubar = MCValueRetain(MCNameGetString(getmenubar()));
 }
 
 void MCStack::SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar)
