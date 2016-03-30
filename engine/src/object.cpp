@@ -5588,10 +5588,17 @@ void MCDeletedObjectsSetup(void)
 
 void MCDeletedObjectsTeardown(void)
 {
-    // Teardown occurs after the outer wait loop so we should have a single pool
-    // with no parent.
-    MCAssert(MCdeletedobjectpool != nil && MCdeletedobjectpool -> parent == nil);
-    
+	// Teardown should always happen (at some point) after Setup so we
+	// should always have a pool to deal with.
+	MCAssert(MCdeletedobjectpool != nil);
+	
+	// Teardown occurs in X_close and can occur whilst inside a nested wait.
+	// In particular, on Mac the NSApp willTerminate method will never return
+	// meaning there are inbalanced waits on the stack. Therefore, we must
+	// 'LeaveWait' until the MCdeletedobjetpool has a nil parent.
+	while(MCdeletedobjectpool -> parent != nil)
+		MCDeletedObjectsLeaveWait(true);
+	
     // Ensure all objects in the pool are deleted.
     MCDeletedObjectsDoDrain();
     
