@@ -12,9 +12,7 @@ on TestExportInteger
 
 	local tJson
 	put JsonExport(tArray) into tJson
-	TestDiagnostic tJson
-	TestDiagnostic tExpected
-	TestAssertBroken "export large integer losslessly", tExpected is tArray, \
+	TestAssertBroken "export large integer losslessly", tExpected is tJson, \
 			"bug 17239"
 end TestExportInteger
 
