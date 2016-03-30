@@ -3748,11 +3748,11 @@ void MCObject::SetRectProp(MCExecContext& ctxt, bool p_effective, MCRectangle p_
 			MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (MCU_point_in_rect(rect, MCmousex, MCmousey))
 			{
-				if (!MCU_point_in_rect(t_rect, MCmousex, MCmousey) && this == mfocused)
+				if (!MCU_point_in_rect(t_rect, MCmousex, MCmousey) && isancestorof(mfocused))
 					needmfocus = true;
 			}
 			else
-				if (MCU_point_in_rect(t_rect, MCmousex, MCmousey) && this != mfocused)
+				if (MCU_point_in_rect(t_rect, MCmousex, MCmousey) && isancestorof(mfocused))
 					needmfocus = true;
 		}
 
