@@ -1540,6 +1540,10 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    end if
    
    put line tCurrentLine of pData into tSyntaxLine
+   repeat while tSyntaxLine ends with "\"
+      add 1 to tCurrentLine
+      put line tCurrentLine of pData into char -1 of tSyntaxLine
+   end repeat
    add 1 to tCurrentLine
    
    repeat with x = tCurrentLine to the number of lines in pData
