@@ -657,7 +657,7 @@ bool MCClipboard::HasPNG() const
     if (t_item == NULL)
         return false;
 	
-#ifdef __MAC__
+#if defined(__MAC__) && !defined(MODE_SERVER)
 	// Many Mac apps (like Preview) present things as TIFF on the clipboard. Since
 	// the engine doesn't currently understand TIFF generally we make TIFF data
 	// masquerade as PNG.
@@ -943,7 +943,7 @@ bool MCClipboard::CopyAsPNG(MCDataRef& r_png) const
     if (CopyAsData(kMCRawClipboardKnownTypePNG, r_png))
 		return true;
 	
-#ifdef __MAC__
+#if defined(__MAC__) && !defined(MODE_SERVER)
 	MCAutoDataRef t_tiff_data;
 	if (!CopyAsData(kMCRawClipboardKnownTypeTIFF, &t_tiff_data))
 		return false;
