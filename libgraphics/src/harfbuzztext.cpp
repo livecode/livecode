@@ -72,8 +72,10 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
     MCMemoryAllocate(sizeof(uint16_t) * t_count, r_run . glyphs);
     MCMemoryAllocate(sizeof(MCGPoint) * t_count, r_run . positions);
     
+	// IM-2016-03-31: [[ Bug 17281 ]] positions may have negative values, so we need to use signed offsets.
+	index_t x_offset, y_offset;
+	
     uindex_t run_index = 0;
-    uindex_t x_offset, y_offset;
     uindex_t advance_y = 0;
     uindex_t advance_x = 0;
     
