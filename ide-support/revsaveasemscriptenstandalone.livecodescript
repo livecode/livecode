@@ -473,22 +473,24 @@ end getAssetFilesFromPath
 -- <pStackFile> is not modified.
 private function getPreparedStackAsData pStackFile, pBuildFolder
    local tStack, tError, tResult
-   local tTempFile
+   local tTempFile, tCleanTempFile
    local tStandaloneSettings
    local tStackData
    
    put the long id of stack pStackFile into tStack
    
-   if revIDEStackNameIsIDEStack(the name of tStack) then
-      -- Don't manipulate IDE stacks if for some reason someone
-      -- tries to put one into a standalone
-      put the filename of tStack into tTempFile
-      
-   else
-      try
+   try
+      if revIDEStackNameIsIDEStack(the name of tStack) then
+         -- Don't manipulate IDE stacks if for some reason someone
+         -- tries to put one into a standalone
+         put the filename of tStack into tTempFile
+         put false into tCleanTempFile
+
+      else
          
          -- Get a temporary filename
          put getTemporaryBuildFile(pBuildFolder, ".livecode") into tTempFile
+         put true into tCleanTempFile
          
          -- Clear standalone settings
          if isCommercialDeployment() then
@@ -521,30 +523,31 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          unlock screen
          unlock messages
          
-      catch tError
-         if there is a file tTempFile then
-            delete file tTempFile
-         end if
-      end try
-      
-      if tError is not empty then 
-         throw tError
       end if
-   end if
-   
-   
-   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
-   open file tTempFile for binary read
-   if the result is not empty then
-      throw tTempFile & ":" && the result
-   end if
-   read from file tTempFile until end
-   put it into tStackData
-   if the result is not "eof" then
-      throw tTempFile & ":" && the result
-   end if
-   close file tTempFile
       
+      -- Compute the SHA-1 hash of the first 1 kB of the boot stack
+      open file tTempFile for binary read
+      if the result is not empty then
+         throw tTempFile & ":" && the result
+      end if
+      read from file tTempFile until end
+      put it into tStackData
+      if the result is not "eof" then
+         throw tTempFile & ":" && the result
+      end if
+      close file tTempFile
+
+   catch tError
+   end try
+   
+   if tCleanTempFile and there is a file tTempFile then
+      delete file tTempFile
+   end if
+
+   if tError is not empty then
+      throw tError
+   end if
+
    return tStackData
 end getPreparedStackAsData
 
