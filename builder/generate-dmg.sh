@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e
 set -x
 
 # If this script is not run as root, the DMG will have incorrect ownership
@@ -34,10 +33,6 @@ if [ $EUID -eq 0 ] ; then
 fi
 
 hdiutil create -fs HFS+ -format UDRW -scrub ${ids} -attach -volname "${volname}" -srcfolder "${srcfolder}" "${output}"
-
-# Exit on failure
-result=$?
-if [ $result -ne 0 ] ; then exit $result ; fi
 
 # Ensure the ownership of the output image is correct
 user=$(who am i | awk '{print $1}')
