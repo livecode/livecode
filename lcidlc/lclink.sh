@@ -52,8 +52,8 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
 
 fi
 
-# Workaround trailing whitespace issue
-FRAMEWORK_SEARCH_PATHS="$(echo -e "${FRAMEWORK_SEARCH_PATHS}" | sed -e 's/[[:space:]]*$//')"
+# Workaround trailing whitespace and multiple spaces issues
+FRAMEWORK_SEARCH_PATHS="$(echo -e "${FRAMEWORK_SEARCH_PATHS}" | sed -e 's/[[:space:]]*$//' | sed -e 's/  */ /')"
 
 FRAMEWORK_SEARCH_PATHS="-F${FRAMEWORK_SEARCH_PATHS// / -F}"
 
