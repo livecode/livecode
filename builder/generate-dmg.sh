@@ -1,15 +1,23 @@
 #!/bin/bash
 
+set -e
 set -x
 
 # If this script is not run as root, the DMG will have incorrect ownership
 if [ $EUID -ne 0 ] ; then
+	# If this is being invoked with the intention of being privileged,
+	# this failure is a hard error.
+	if [ "${GENERATE_DMG_SCRIPT}" != "" ] ; then
+		echo >&2 "ERROR: this script must be run as root"
+		exit -1
+	fi	
 	echo >&2 "WARNING: not building DMG as root; app will have incorrect ownership"
 fi
 
 # Arguments are the name of the volume to create, the input folder and the output filename
 if [ $# -ne 3 ] ; then
 	echo >&2 "ERROR: usage: ./generate-dmg.sh volname srcfolder output"
+	exit -2
 fi
 
 volname="$1"
