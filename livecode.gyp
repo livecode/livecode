@@ -54,6 +54,15 @@
 					},
 				],
 				[
+					'OS == "mac"',
+					{
+						'dependencies':
+						[
+							'Installer/osx-installer-stub.gyp:osx-installer-stub',
+						],
+					},
+				],
+				[
 					'OS == "mac" or OS == "win"',
 					{
 						'dependencies':
