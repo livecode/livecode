@@ -38,3 +38,4 @@ hdiutil create -fs HFS+ -format UDRW -scrub ${ids} -attach -volname "${volname}"
 user=$(who am i | awk '{print $1}')
 group=$(id -g -n "${user}")
 chown ${user}:${group} "${output}"
+chmod 644 "${output}"
