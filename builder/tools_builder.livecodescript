@@ -530,6 +530,10 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
       throw "failure"
    end if
    
+   -- Remove a problematic (but un-neccessary) file from the CEF framework bundle
+   -- Doing it here is ugly, but is temporary (only needed in 6.7 and 7.1).
+   get shell ("rm -f" && escapeArg(tAppBundle & "/Contents/Frameworks/Chromium Embedded Framework.framework/Manifest"))
+
    -- Find the signing identity and sign the app bundle
    get findSigningIdentity()
    if it is not empty then
