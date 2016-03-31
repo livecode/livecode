@@ -656,7 +656,15 @@ bool MCClipboard::HasPNG() const
     MCAutoRefcounted<const MCRawClipboardItem> t_item = GetItem();
     if (t_item == NULL)
         return false;
-    
+	
+#ifdef __MAC__
+	// Many Mac apps (like Preview) present things as TIFF on the clipboard. Since
+	// the engine doesn't currently understand TIFF generally we make TIFF data
+	// masquerade as PNG.
+	if (t_item -> HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeTIFF)))
+		return true;
+#endif
+	
     return t_item->HasRepresentation(m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypePNG));
 }
 
@@ -932,7 +940,22 @@ bool MCClipboard::CopyAsHTML(MCDataRef& r_html_data) const
 
 bool MCClipboard::CopyAsPNG(MCDataRef& r_png) const
 {
-    return CopyAsData(kMCRawClipboardKnownTypePNG, r_png);
+    if (CopyAsData(kMCRawClipboardKnownTypePNG, r_png))
+		return true;
+	
+#ifdef __MAC__
+	MCAutoDataRef t_tiff_data;
+	if (!CopyAsData(kMCRawClipboardKnownTypeTIFF, &t_tiff_data))
+		return false;
+	
+	extern bool MCMacPasteboardConvertTIFFToPNG(MCDataRef p_in_data, MCDataRef& r_out_data);
+	if (!MCMacPasteboardConvertTIFFToPNG(*t_tiff_data, r_png))
+		return false;
+	
+	return true;
+#else
+	return false;
+#endif
 }
 
 bool MCClipboard::CopyAsGIF(MCDataRef& r_gif) const
