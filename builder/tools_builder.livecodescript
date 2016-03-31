@@ -510,18 +510,30 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    
    -- Copy a shell script and AppleScript into the app bundle to catch attempts 
    -- from old auto-updaters to launch the installer
+   local tEngineFolder
+   builderFetchEngine empty, "macosx"
+   put the result into tEngineFolder
    builderLog "message", "Adding installer shim to app bundle"
-   get shell ("install -m755" && escapeArg(builderCommunityResourceFolder() & "/dmg/fake-installer.sh") && escapeArg(tAppBundle & "/Contents/MacOS/installer"))
+   get shell ("install -m755" && escapeArg(tEngineFolder & "/installer-stub") && escapeArg(tAppBundle & "/Contents/MacOS/installer"))
    if the result is not zero then
       builderLog "error", "Failed to copy installer stub shell script:" && it
       throw "failure"
    end if
-   get shell ("osacompile" && "-o" && escapeArg(tAppBundle & "/Contents/MacOS/installer.scpt") && escapeArg(builderCommunityResourceFolder() & "/dmg/open-dmg.applescript"))
+   get shell ("mkdir -p" && escapeArg(tAppBundle & "/Contents/Resources/Installer"))
+   if the result is not zero then
+      builderLog "error", "Failed to create installer resources directory:" && it
+      throw "failure"
+   end if
+   get shell ("osacompile" && "-o" && escapeArg(tAppBundle & "/Contents/Resources/Installer/ShowDmgWindow.scpt") && escapeArg(builderCommunityResourceFolder() & "/dmg/open-dmg.applescript"))
    if the result is not zero then
       builderLog "error", "Failed to compile installer stub AppleScript:" && it
       throw "failure"
    end if
    
+   -- Remove a problematic (but un-neccessary) file from the CEF framework bundle
+   -- Doing it here is ugly, but is temporary (only needed in 6.7 and 7.1).
+   get shell ("rm -f" && escapeArg(tAppBundle & "/Contents/Frameworks/Chromium Embedded Framework.framework/Manifest"))
+
    -- Find the signing identity and sign the app bundle
    get findSigningIdentity()
    if it is not empty then
