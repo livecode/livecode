@@ -1,0 +1,1 @@
+# Display tooltips assigned to IDE palette headers and footers
