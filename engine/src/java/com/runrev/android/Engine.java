@@ -1407,7 +1407,11 @@ public class Engine extends View implements EngineApi
 		
 		m_bitmap_view . resizeBitmap(t_rect.width(), t_rect.height());
 		
-		doReconfigure(t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
+		// pass view location
+		int[] t_origin = new int[2];
+		getLocationOnScreen(t_origin);
+		
+		doReconfigure(t_origin[0], t_origin[1], t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
 		
 		// Make sure we trigger handling
 		if (m_wake_on_event)
@@ -3439,7 +3443,7 @@ public class Engine extends View implements EngineApi
 
 	public static native void doProcess(boolean timedout);
 
-	public static native void doReconfigure(int w, int h, Bitmap bitmap);
+	public static native void doReconfigure(int x, int y, int w, int h, Bitmap bitmap);
 
     public static native String doGetCustomPropertyValue(String set, String property);
 
