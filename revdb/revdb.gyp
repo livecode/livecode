@@ -108,6 +108,7 @@
 					'_setidcounterref',
 					'_newdbconnectionref',
 					'_releasedbconnectionref',
+					'_setcallbacksref',
 				],
 			},
 			
