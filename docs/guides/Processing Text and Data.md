@@ -194,8 +194,8 @@ These, however, are not valid chunk expressions:
 
 The full hierarchy is as follows:
 
-	paragraph > sentence > trueWord > line > item > 
-		segment > token > character > codepoint > codeunit > byte
+	paragraph > sentence > line > item > segment >
+		trueWord > token > character > codepoint > codeunit > byte
 
 ### Using Parentheses in Chunk Expressions
 
@@ -417,8 +417,8 @@ For more details, see the *replace command* in the
 
 ### Retrieving the Position of a Matching Chunk
 
-The **offset**, **itemOffset**, **tokenOffset**, **segmentOffset**,
-**lineOffset**, **trueWordOffset**, **sentenceOffset** and
+The **offset**, **itemOffset**, **tokenOffset**, **trueWordOffset**,
+**segmentOffset**, **lineOffset**, **sentenceOffset** and
 **paragraphOffset** functions can be used to locate the position chunks
 within a larger container. For example, this expression returns the
 character number where the letter "C" was found:
@@ -434,7 +434,7 @@ A chunk expression describes the location of a piece of text in a longer
 string.
 
 Chunk expressions can describe **characters**, **items**, **tokens**, 
-**segments**, **lines**, **trueWords**, **sentences** and **paragraphs**
+**trueWords**, **segments**, **lines**, **sentences** and **paragraphs**
 of text.
 
 To count backward from the end of a string, use negative numbers. For
