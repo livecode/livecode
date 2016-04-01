@@ -36,6 +36,7 @@ MCWin32RawClipboardCommon::format_mapping MCWin32RawClipboardCommon::s_formats[]
 	{ 0, "PNG" },										// PNG image
 	{ 0, "GIF" },										// GIF image
 	{ 0, "JFIF" },										// JPEG image
+	{ 6, "CF_TIFF" },									// TIFF image
 	{ CF_METAFILEPICT, "CF_METAFILEPICT" },				// Windows Metafile image
 	{ CF_ENHMETAFILE, "CF_ENHMETAFILE" },				// Windows Enhanced Metafile image
 	{ CF_DIB, "CF_DIB" },								// Windows bitmap image
@@ -66,7 +67,6 @@ MCWin32RawClipboardCommon::format_mapping MCWin32RawClipboardCommon::s_formats[]
 	{ 10, "CF_PENDATA" },								// Windows 3.1 (!) pen input data
 	{ 11, "CF_RIFF" },									// RIFF-encoded audio
 	{ 4, "CF_SYLK" },									// Microsoft Symbolic Link format
-	{ 6, "CF_TIFF" },									// TIFF image
 	{ 12, "CF_WAVE" },									// PCM audio
 };
 
