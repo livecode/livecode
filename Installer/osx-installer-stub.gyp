@@ -17,6 +17,11 @@
 				'osx-installer-stub.mm',
 			],
 
+			'libraries':
+			[
+				'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+			],
+
 			'all_dependent_settings':
 			{
 				'variables':
