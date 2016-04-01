@@ -114,6 +114,8 @@ static void *s_yield_callback_context = nil;
 
 // The bitmap containing the current visible state of the view
 static jobject s_android_bitmap = nil;
+static int s_android_bitmap_loc_x = 0;
+static int s_android_bitmap_loc_y = 0;
 static int s_android_bitmap_width = 0;
 static int s_android_bitmap_height = 0;
 static int s_android_bitmap_stride = 0;
@@ -693,9 +695,7 @@ Window MCScreenDC::get_current_window(void)
 
 static MCRectangle android_view_get_bounds(void)
 {
-	MCRectangle r;
-	MCU_set_rect(r, 0, 0, s_android_bitmap_width, s_android_bitmap_height);
-	return r;
+	return MCRectangleMake(s_android_bitmap_loc_x, s_android_bitmap_loc_y, s_android_bitmap_width, s_android_bitmap_height);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1947,7 +1947,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, jobject object, bool timedout) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobject object, double time, bool dispatch, bool anyevent) __attribute__((visibility("default")));
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int w, int h, jobject bitmap) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int x, int y, int w, int h, jobject bitmap) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobject object, int action, int id, int timestamp, int x, int y) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doShake(JNIEnv *env, jobject object, int action, jlong timestamp) __attribute__((visibility("default")));
@@ -2130,9 +2130,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobjec
 	MCscreen -> wait(time, dispatch, anyevent);
 }
 
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int w, int h, jobject bitmap)
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int x, int y, int w, int h, jobject bitmap)
 {
-	MCLog("doReconfigure(%d, %d, %p)", w, h, bitmap);
+	MCLog("doReconfigure(%d, %d, %d, %d, %p)", x, y, w, h, bitmap);
 
 	bool t_resizing_bitmap;
 	t_resizing_bitmap = (s_android_bitmap != nil);
@@ -2150,6 +2150,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env,
 	s_android_bitmap_width = t_info . width;
 	s_android_bitmap_height = t_info . height;
 	s_android_bitmap_stride = t_info . stride;
+	
+	s_android_bitmap_loc_x = x;
+	s_android_bitmap_loc_y = y;
 
 	// MW-2011-10-01: [[ Bug 9772 ]] If we are resizing, we do a 'fit window', else
 	//   we yield to engine.
