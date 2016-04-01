@@ -652,7 +652,7 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
          throw "failure"
       end if
       
-      put $GENERATE_DMG_SCRIPT into tGenerateScript
+      put "sudo -n" && $GENERATE_DMG_SCRIPT into tGenerateScript
    else if $GENERATE_DMG_SUDO is not empty and $GENERATE_DMG_SUDO is not 0 then
       put "sudo -n" && escapeArg(builderSystemFolder() & "/generate-dmg.sh") into tGenerateScript
    else
