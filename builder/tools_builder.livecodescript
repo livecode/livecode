@@ -530,18 +530,30 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    
    -- Copy a shell script and AppleScript into the app bundle to catch attempts 
    -- from old auto-updaters to launch the installer
+   local tEngineFolder
+   builderFetchEngine empty, "macosx"
+   put the result into tEngineFolder
    builderLog "message", "Adding installer shim to app bundle"
-   get shell ("install -m755" && escapeArg(builderCommunityResourceFolder() & "/dmg/fake-installer.sh") && escapeArg(tAppBundle & "/Contents/MacOS/installer"))
+   get shell ("install -m755" && escapeArg(tEngineFolder & "/installer-stub") && escapeArg(tAppBundle & "/Contents/MacOS/installer"))
    if the result is not zero then
       builderLog "error", "Failed to copy installer stub shell script:" && it
       throw "failure"
    end if
-   get shell ("osacompile" && "-o" && escapeArg(tAppBundle & "/Contents/MacOS/installer.scpt") && escapeArg(builderCommunityResourceFolder() & "/dmg/open-dmg.applescript"))
+   get shell ("mkdir -p" && escapeArg(tAppBundle & "/Contents/Resources/Installer"))
+   if the result is not zero then
+      builderLog "error", "Failed to create installer resources directory:" && it
+      throw "failure"
+   end if
+   get shell ("osacompile" && "-o" && escapeArg(tAppBundle & "/Contents/Resources/Installer/ShowDmgWindow.scpt") && escapeArg(builderCommunityResourceFolder() & "/dmg/open-dmg.applescript"))
    if the result is not zero then
       builderLog "error", "Failed to compile installer stub AppleScript:" && it
       throw "failure"
    end if
    
+   -- Remove a problematic (but un-neccessary) file from the CEF framework bundle
+   -- Doing it here is ugly, but is temporary (only needed in 6.7 and 7.1).
+   get shell ("rm -f" && escapeArg(tAppBundle & "/Contents/Frameworks/Chromium Embedded Framework.framework/Manifest"))
+
    -- Find the signing identity and sign the app bundle
    get findSigningIdentity()
    if it is not empty then
@@ -619,8 +631,31 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    get shell ("hdiutil detach" && escapeArg(tVolumeName))
    
    -- Generate an initial read-write DMG and mount it
+   -- This needs to be run with root privileges to get the ownership correct
+   -- If the $GENERATE_DMG_SCRIPT env var is set, the script identified by
+   -- that path will be used instead of the one stored in the repo
    builderLog "message", "Generating initial DMG"
-   get shell ("hdiutil create -fs HFS+ -format UDRW -attach -volname" && escapeArg(tVolumeName) && "-srcfolder" && escapeArg(tDmgFolder) && escapeArg(tTempDmg))
+   local tGenerateScript
+   if $GENERATE_DMG_SCRIPT is not empty then
+      -- Check that the generate script is identical to the in-repo copy
+      -- so it is kept up-to-date
+      local tLocalScript
+      local tRepoScript
+      get shell("which" && escapeArg($GENERATE_DMG_SCRIPT))
+      put url("file:" & line 1 of it) into tLocalScript
+      put url("file:" & builderSystemFolder() & "/generate-dmg.sh") into tRepoScript
+      if tLocalScript is not tRepoScript then
+         builderLog "error", "Local DMG generation script differs from the repo copy (please update)"
+         throw "failure"
+      end if
+      
+      put "sudo -n" && $GENERATE_DMG_SCRIPT into tGenerateScript
+   else if $GENERATE_DMG_SUDO is not empty and $GENERATE_DMG_SUDO is not 0 then
+      put "sudo -n" && escapeArg(builderSystemFolder() & "/generate-dmg.sh") into tGenerateScript
+   else
+      put escapeArg(builderSystemFolder() & "/generate-dmg.sh") into tGenerateScript
+   end if
+   get shell (tGenerateScript && escapeArg(tVolumeName) && escapeArg(tDmgFolder) && escapeArg(tTempDmg))
    if "created:" is not in it then
       builderLog "error", "Failed to create initial DMG:" && it
       throw "failure"

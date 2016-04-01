@@ -5327,19 +5327,7 @@ void MCObject::sync_mfocus(void)
             // MW-2012-02-22: [[ Bug 10018 ]] If the target is a group then check
             //   to see if it is the ancestor of the mfocused control; otherwise
             //   just compare directly.
-            if (mfocused != nil && gettype() == CT_GROUP)
-            {
-                while(mfocused -> gettype() != CT_CARD)
-                {
-                    if (mfocused == this)
-                    {
-                        needmfocus = True;
-                        break;
-                    }
-                    mfocused = mfocused -> getparent();
-                }
-            }
-            else if (this == mfocused)
+            if (isancestorof(mfocused))
                 needmfocus = true;
         }
         else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
@@ -5359,6 +5347,20 @@ void MCObject::sync_mfocus(void)
     
     if (needmfocus)
         MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
+}
+
+bool MCObject::isancestorof(MCObject *p_object)
+{
+    if (p_object == nil)
+        return false;
+    
+    if (this == p_object)
+        return true;
+    
+    if (gettype() != CT_GROUP)
+        return false;
+    
+    return isancestorof(p_object -> getparent());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

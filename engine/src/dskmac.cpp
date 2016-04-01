@@ -4211,7 +4211,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         //
         
         MCAutoStringRef dptr; // Check to see if this can ever happen anymore - if not, remove
-        /* UNCHECKED */ GetCurrentFolder(&dptr);
+        if (!GetCurrentFolder(&dptr))
+			dptr = kMCEmptyString;
         if (MCStringGetLength(*dptr) <= 1)
         {
             // The current directory is the root dir, which normally indicates
@@ -5244,15 +5245,22 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         dptr[outlen] = 0;
         return dptr;
 #endif /* MCS_getcurdir_dsk_mac */
-        char namebuf[PATH_MAX + 2];
-        if (NULL == getcwd(namebuf, PATH_MAX))
+		char *t_cwd_sys;
+		errno = 0;
+		t_cwd_sys = getcwd (NULL, 0);
+		
+		if (NULL == t_cwd_sys)
+		{
+			// TODO: Report errno appropriately.
+			return false;
+		}
+		
+		if (!MCStringCreateWithBytesAndRelease((byte_t*)t_cwd_sys, strlen(t_cwd_sys), kMCStringEncodingUTF8, false, r_path))
+		{
+			free(t_cwd_sys);
             return false;
-        
-        if (!MCStringCreateWithBytes((byte_t*)namebuf, strlen(namebuf), kMCStringEncodingUTF8, false, r_path))
-        {
-            r_path = MCValueRetain(kMCEmptyString);
-            return false;
-        }
+		}
+		
         return true;
     }
     
@@ -6157,7 +6165,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
         {
             MCAutoStringRef t_folder;
-            /* UNCHECKED */ GetCurrentFolder(&t_folder);
+            if (!GetCurrentFolder(&t_folder))
+				t_folder = kMCEmptyString;
             
             MCAutoStringRef t_resolved;
             if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||

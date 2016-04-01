@@ -1338,10 +1338,13 @@ int X_close(void)
 	delete MCselected;
     delete MCtodestroy;
 	delete MCstacks;
-	delete MCcstack;
-	delete MCrecent;
     
     MCDeletedObjectsTeardown();
+    
+    // These card lists must be deleted *after* draining the deleted
+    // objects pool, as they are used in stack destructors
+    delete MCcstack;
+    delete MCrecent;
     
 	// Temporary workaround for a crash
     //MCS_close(IO_stdin);

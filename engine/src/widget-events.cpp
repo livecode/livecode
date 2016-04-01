@@ -669,7 +669,14 @@ void MCWidgetEventManager::mouseEnter(MCWidgetRef p_widget)
 #endif
     
     if (p_widget != nil)
+    {
         alwaysBubbleEvent(p_widget, MCWidgetOnMouseEnter);
+        // If the mouse is entering the root widget, make sure
+        // the focused member variable of the MCWidget object
+        // is set.
+        if (MCWidgetIsRoot(p_widget))
+            MCWidgetGetHost(p_widget) -> SetFocused(true);
+    }
 }
 
 void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
@@ -687,7 +694,14 @@ void MCWidgetEventManager::mouseLeave(MCWidgetRef p_widget)
 #endif
     
     if (p_widget != nil)
+    {
         alwaysBubbleEvent(p_widget, MCWidgetOnMouseLeave);
+        // If the mouse is leaving the root widget, make sure
+        // the focused member variable of the MCWidget object
+        // is nil.
+        if (MCWidgetIsRoot(p_widget))
+            MCWidgetGetHost(p_widget) -> SetFocused(false);
+    }
 }
 
 bool MCWidgetEventManager::mouseDown(MCWidgetRef p_widget, uinteger_t p_which)

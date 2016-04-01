@@ -47,6 +47,7 @@ const char * const MCLinuxRawClipboard::s_formats[kMCRawClipboardKnownTypeLast+1
     "image/png",                    // PNG image
     "image/gif",                    // GIF image
     "image/jpeg",                   // JPEG image
+	"image/tiff",					// TIFF image
     NULL,                           // Windows metafile
     NULL,                           // Windows enhanced metafile
     NULL,                           // Windows bitmap
