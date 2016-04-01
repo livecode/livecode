@@ -194,6 +194,8 @@ public:
     
     bool isInRunMode();
     
+    void SetFocused(bool p_setting);
+    
 protected:
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
