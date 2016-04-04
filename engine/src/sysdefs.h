@@ -1309,8 +1309,8 @@ enum Chunk_term {
     CT_PARAGRAPH,
     CT_SENTENCE,
     CT_ITEM,
-    CT_TRUEWORD,
     CT_WORD,
+    CT_TRUEWORD,
     CT_TOKEN,
     CT_CHARACTER,
     // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
