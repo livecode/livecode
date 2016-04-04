@@ -493,7 +493,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    put tOutputFileFolder & slash & getBundleFilenameStub(pVersion, pPlatform, pEdition) & ".app" into tAppBundle
    if there is a folder tAppBundle then
       builderLog "message", "Removing old macosx app bundle" && "'" & tAppBundle & "'"
-      get shell ("rm -r" && escapeArg(tAppBundle))
+      get shell ("chmod -Rvv u+w" && escapeArg(tAppBundle) && "&&" && "rm -r" && escapeArg(tAppBundle))
       if the result is not zero then
          builderLog "error", "Failed to remove old macosx app bundle:" && it
          throw "failure"
@@ -554,6 +554,15 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    -- Doing it here is ugly, but is temporary (only needed in 6.7 and 7.1).
    get shell ("rm -f" && escapeArg(tAppBundle & "/Contents/Frameworks/Chromium Embedded Framework.framework/Manifest"))
 
+   -- Ensure the permissions on the app bundle are correct
+   -- This needs to be done *before* signing as it affects the signature
+   -- Can't remove write permission yet, though, as signing writes into the bundle
+   get shell ("chmod -Rvv ugo+rX" && escapeArg(tAppBundle))
+   if the result is not zero then
+      builderLog "error", "Failed to set app bundle permissions:" && it
+      throw "failure"
+   end if
+
    -- Find the signing identity and sign the app bundle
    get findSigningIdentity()
    if it is not empty then
@@ -567,6 +576,13 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
       builderLog "report", "Successfully signed macosx app bundle" && "'" & tAppBundle & "'"
    else
       builderLog "warning", "No valid identity found for signing OSX app bundle"
+   end if
+
+   -- One last permission change (but a non-signature-breaking one) to prevent accidental IDE modifications
+   get shell ("chmod -Rvv -w" && escapeArg(tAppBundle))
+   if the result is not zero then
+      builderLog "error", "Failed to make app bundle read-only:" && it
+      throw "failure"
    end if
 end toolsBuilderMakeAppBundle
 
@@ -588,7 +604,7 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    -- Remove any stale DMG folder
    if there is a folder tDmgFolder then
       builderLog "message", "Removing old DMG directory"
-      get shell ("rm -r" && escapeArg(tDmgFolder))
+      get shell ("chmod -Rvv u+w" && escapeArg(tDmgFolder) && "&&" && "rm -r" && escapeArg(tDmgFolder))
       if the result is not zero then
          builderLog "error","Failed to remove old DMG directory:" && it
          throw "failure"
@@ -599,8 +615,9 @@ command toolsBuilderMakeDisk pVersion, pEdition, pPlatform
    create folder tDmgFolder
    
    -- Copy the app bundle into the DMG contents folder
+   -- Note the need to preserve permissions!
    builderLog "message", "Copying app bundle into DMG directory"
-   get shell ("cp -R" && escapeArg(tAppBundle) && escapeArg(tDmgFolder & slash))
+   get shell ("cp -Rp" && escapeArg(tAppBundle) && escapeArg(tDmgFolder & slash))
    if the result is not zero then
       builderLog "error", "Failed to copy app bundle into DMG directory:" && it
       throw "failure"
