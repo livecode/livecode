@@ -392,7 +392,11 @@ then in a terminal window, in a suitable directory, run
 
 `git clone --recursive https://github.com/<your user name>/livecode.git`
 
-once this is done, add the livecode repo as upstream
+once this is done, change directory into the newly created directory
+
+ cd livecode
+
+and add the livecode repo as upstream
 
 `git remote add upstream https://github.com/livecode/livecode.git`
 
