@@ -2006,18 +2006,8 @@ private command docsBuilderAddMergExtFolders pEdition, @xFolders
 end docsBuilderAddMergExtFolders
 
 private command docsBuilderGetAdditionalDictionaryFolders pEdition, @xFolders
-   docsBuilderEnsureMergExt "community"
-   docsBuilderAddMergExtFolders "community", xFolders
-   
-   if pEdition is not "community" then
-      docsBuilderEnsureMergExt "indy"
-      docsBuilderAddMergExtFolders "indy", xFolders
-   end if
-   
-   if pEdition is "business" then
-      docsBuilderEnsureMergExt "business"
-      docsBuilderAddMergExtFolders "business", xFolders
-   end if
+   docsBuilderEnsureMergExt pEdition
+   docsBuilderAddMergExtFolders pEdition, xFolders
 end docsBuilderGetAdditionalDictionaryFolders
 
 private command docsBuilderGetDictionaryFolders pEdition, @xFolders
