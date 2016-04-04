@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This widget is displays a gradient according to the value of its *gradientStops* property.
 
 Name: gradientStopsChanged
@@ -56,7 +56,7 @@ Example:
 Description:
 Handle the <selectedStopChanged> message to perform an operation when the selectedStop property of a gradient ramp editor widget changes.
 
-*/
+**/
 
 widget com.livecode.widget.gradientRampEditor
 
@@ -143,7 +143,7 @@ end handler
 -- Property getting and setting
 ----------------------------------------------------------------------------------------------------
 
-/*
+/**
 Syntax: set the gradientStops of <widget> to <pGradientStops>
 Syntax: get the gradientStops of <widget>
 
@@ -167,7 +167,7 @@ Example:
 Description:
 Color gradients are smooth transitions between the colors defined at consecutive offsets. The <gradientStops> property represents the offset and color of each of these stops.
 
-*/
+**/
 property gradientStops get getGradientStops set setGradientStops
 
 public handler getGradientStops() returns String
@@ -215,7 +215,7 @@ public handler setGradientStops(in pStops as String) returns nothing
    redraw all
 end handler
 
-/*
+/**
 Syntax: set the selectedStop of <widget> to <pIndex>
 Syntax: get the selectedStop of <widget>
 
@@ -247,7 +247,7 @@ If any gradient stop is selected, its index is returned by the <selectedStop>
 property. Otherwise the property returns 0. Setting the <selectedStop> property
 to 0 causes the currently selected gradient stop to be deselected.
 
-*/
+**/
 property selectedStop get mCurrentlySelectedStopIndex set setSelectedStop
 
 public handler setSelectedStop(in pIndex as Integer) returns nothing
@@ -293,12 +293,16 @@ end handler
 
 public handler OnMouseMove() returns nothing
    if mIsDraggingStop then
-      set the offset of mGradientRamp[mCurrentlySelectedStopIndex] to clampToRange(xCoordToGradientOffset(the x of the mouse position) / 100, 0, 1)
-      -- Dragging the stops around can potentially mean that the ramp is no longer ordered (by offset).
-      -- Reorder the ramp to put things back into line (required for gradient rendering).
-      reorderGradientRamp()
-      redraw all
-      gradientStopsChanged()
+      variable tOffset as Number
+      put clampToRange(xCoordToGradientOffset(the x of the mouse position) / 100, 0, 1) into tOffset
+      if tOffset is not the offset of mGradientRamp[mCurrentlySelectedStopIndex] then
+         set the offset of mGradientRamp[mCurrentlySelectedStopIndex] to tOffset
+         -- Dragging the stops around can potentially mean that the ramp is no longer ordered (by offset).
+         -- Reorder the ramp to put things back into line (required for gradient rendering).
+         reorderGradientRamp()
+         redraw all
+         gradientStopsChanged()
+      end if 
    end if
 end handler
 
