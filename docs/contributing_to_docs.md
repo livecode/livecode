@@ -392,13 +392,18 @@ then in a terminal window, in a suitable directory, run
 
 `git clone --recursive https://github.com/<your user name>/livecode.git`
 
-once this is done, add the livecode repo as upstream
+once this is done, change directory into the newly created directory
+
+`cd livecode`
+
+and add the livecode repo as upstream
 
 `git remote add upstream https://github.com/livecode/livecode.git`
 
 make sure your name and email address are set up
 
 `git config --global user.name "<your name>"`
+
 `git config --global user.email "<your email address>"`
 
 checkout the `community-docs` branch
@@ -440,7 +445,7 @@ Push the changes to your fork of the repo
 
 `git push`
 
-Navigate to your fork on the Git website, https://github.com/<user name>/livecode/
+Navigate to your fork on the Git website, https://github.com/"<your user name>"/livecode/
 
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 
