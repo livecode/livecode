@@ -7,6 +7,6 @@ Type: glossary
 Description:
 A part of the text in a <field> whose text style is "link".
 
-References: field (object)
+References: field (glossary)
 
 Tags: ui

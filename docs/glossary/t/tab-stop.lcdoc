@@ -7,6 +7,6 @@ Type: glossary
 Description:
 Distance from the left edge of a <field> to the position of the <insertion point> when you press Tab.
 
-References: field (object), insertion point (glossary)
+References: field (glossary), insertion point (glossary)
 
 Tags: ui

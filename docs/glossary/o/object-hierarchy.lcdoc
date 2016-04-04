@@ -9,6 +9,6 @@ The chain of ownership in which one <object> is <owner|owned> by another. A <car
  
 Also, the chain of all the <object|objects> above a specific <object> in the hierarchy.
 
-References: card (object), stack (object), object (object), grouped control (glossary), substack (glossary), owner (glossary), card control (glossary), group (glossary), main stack (glossary)
+References: card (glossary), stack (glossary), object (glossary), grouped control (glossary), substack (glossary), owner (glossary), card control (glossary), group (glossary), main stack (glossary)
 
 Tags: objects

@@ -9,6 +9,6 @@ A set of values, or <channel>, that encodes transparency information for an <ima
  
 Each <pixel> in the <image> has a number that specifies how transparent it is. An <image|image's> alpha channel consists of the transparency numbers for all the <pixel|pixels> in the <image>.
 
-References: image (object), pixel (glossary), channel (glossary)
+References: image (glossary), pixel (glossary), channel (glossary)
 
 Tags: ui

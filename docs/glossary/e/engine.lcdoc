@@ -9,4 +9,4 @@ The back-end software that powers the LiveCode <development environment>, as wel
  
 The engine includes the <LiveCode> <compile|compiler>, the <object hierarchy>, and <object> display routines.
 
-References: object hierarchy (glossary), LiveCode (glossary), standalone application (glossary), compile (glossary), development environment (glossary), object (object)
+References: object hierarchy (glossary), LiveCode (glossary), standalone application (glossary), compile (glossary), development environment (glossary), object (glossary)

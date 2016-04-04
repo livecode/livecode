@@ -7,6 +7,6 @@ Type: glossary
 Description:
 A state in which only the <group> being edited is shown, you can select and edit individual <control|controls> in the group, and any new <control|controls> you create are automatically added to the <group>.
 
-References: group (glossary), control (object)
+References: group (glossary), control (glossary)
 
 Tags: objects

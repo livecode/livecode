@@ -7,6 +7,6 @@ Type: glossary
 Description:
 A <property> that is part of the <LiveCode> language. Most built-in properties affect the <appearance> or <behavior> of the <object>.
 
-References: property (glossary), appearance (glossary), behavior (glossary), LiveCode (glossary), object (object)
+References: property (glossary), appearance (glossary), behavior (glossary), LiveCode (glossary), object (glossary)
 
 Tags: properties

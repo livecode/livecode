@@ -9,6 +9,6 @@ A <card> containing one or more <report viewer> objects.
  
 You use <report viewer|report viewers>, along with other <object|objects> such as <graphic|graphics>, to lay out a report, then use the <Report Builder> to set up and print the report.
 
-References: card (object), object (object), graphic (object), report viewer (glossary), Report Builder (glossary)
+References: card (glossary), object (glossary), graphic (glossary), report viewer (glossary), Report Builder (glossary)
 
 Tags: printing

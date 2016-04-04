@@ -9,4 +9,4 @@ A directive that causes LiveCode to perform an action (such as open a window, pu
  
 LiveCode has many <built-in command|built-in commands>, which are described in the LiveCode Dictionary. You can also create your own <custom command|custom commands>.
 
-References: field (object), built-in command (glossary), custom command (glossary)
+References: field (glossary), built-in command (glossary), custom command (glossary)

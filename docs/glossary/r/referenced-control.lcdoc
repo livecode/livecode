@@ -9,6 +9,6 @@ A <control> (<image> or <player>) whose contents are located in a separate <file
  
 The <control|control's> <filename> <property> determines where the contents are located.
 
-References: filename (property), property (glossary), file (glossary), player (object), image (object), stack (object), control (object)
+References: filename (property), property (glossary), file (glossary), player (glossary), image (glossary), stack (glossary), control (glossary)
 
 Tags: file system

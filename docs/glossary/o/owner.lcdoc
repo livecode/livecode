@@ -11,6 +11,6 @@ Also, the application that will open a <file> when the <file> is double-clicked.
  
 Also, on <OS X> and <Unix|Unix systems>, the user who owns a <file>.
 
-References: card (object), stack (object), object (object), file (glossary), OS X (glossary), main stack (glossary), object hierarchy (glossary), substack (glossary), group (glossary), card control (glossary), Unix (glossary), grouped control (glossary)
+References: card (glossary), stack (glossary), object (glossary), file (glossary), OS X (glossary), main stack (glossary), object hierarchy (glossary), substack (glossary), group (glossary), card control (glossary), Unix (glossary), grouped control (glossary)
 
 Tags: objects

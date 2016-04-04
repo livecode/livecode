@@ -7,6 +7,6 @@ Type: glossary
 Description:
 Any valid way of describing an <object> that LiveCode can understand. <object|Objects> can be referred to by <name>, <number>, or <ID>.
 
-References: ID (property), name (property), object (object), number (function)
+References: ID (property), name (property), object (glossary), number (function)
 
 Tags: objects
