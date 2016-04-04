@@ -4,7 +4,7 @@ Type: object
 
 Syntax: stack
 
-Summary: The basic LiveCode <object> : a window.
+Summary: The basic LiveCode <object>: a window.
 
 Synonyms: window,wd
 
