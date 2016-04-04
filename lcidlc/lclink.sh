@@ -106,15 +106,18 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 
     ARCHS="-arch ${ARCHS// / -arch }"
 
-	if [ $BUILD_DYLIB -eq 1 ]; then
-		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
-	fi
+	# Build the 'dylib' form of the external - this is used by simulator builds, and as
+	# a dependency check for device builds - otherwise dsymutil call below may fail
+	"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -dynamiclib $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $SYMBOL_ARGS $SYMBOLS $DEPS $OTHER_FLAGS
 
 	if [ $? -ne 0 ]; then
 		exit $?
 	fi
 
-	"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+	# Only build static library on device builds
+	if [ $BUILD_DYLIB -eq 0 ]; then
+		"$DEVELOPER_BIN_DIR/g++" -stdlib=libc++ -nodefaultlibs -Wl,-r -Wl,-x $ARCHS $MIN_OS_VERSION -isysroot "$SDKROOT" $FRAMEWORK_SEARCH_PATHS $STATIC_FRAMEWORKS -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION $OTHER_FLAGS -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+	fi
 else
 	# Only executed if the binaries have a FAT header, and we need an architecture-specific
 	# linking
