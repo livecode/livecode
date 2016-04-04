@@ -9,6 +9,6 @@ A filter that allows only certain values. All <value|values> that don't conform 
  
 In an <image>, a mask is used to remove transparent <pixel|pixels>.
 
-References: image (object), pixel (glossary), value (glossary)
+References: image (glossary), pixel (glossary), value (glossary)
 
 Tags: multimedia

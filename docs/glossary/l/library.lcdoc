@@ -9,4 +9,4 @@ A repository of code that is available to be used by other routines. LiveCode in
  
 You can make the <script> of any <stack> into a library with the <start using> <command>, or make any <object|object's> <script> into a library using the <insert script> <command>.
 
-References: start using (command), insert script (command), command (glossary), custom libraries (glossary), script (glossary), stack (object), object (object)
+References: start using (command), insert script (command), command (glossary), custom libraries (glossary), script (glossary), stack (glossary), object (glossary)

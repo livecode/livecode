@@ -19,4 +19,4 @@ A <widget> is a new type of custom <control> which, once compiled and packaged, 
 
 For detailed information about using <LCB>, please consult the Extending LiveCode guide, and explore the <LCB> API by selecting <LiveCode Builder> from the API dropdown menu.
 
-References: widget (object), LiveCode (glossary), LiveCode Builder extension (glossary), library extension (glossary), control (glossary), stack (glossary), IDE (glossary), message path (glossary)
+References: widget (glossary), LiveCode (glossary), LiveCode Builder extension (glossary), library extension (glossary), control (glossary), stack (glossary), IDE (glossary), message path (glossary)

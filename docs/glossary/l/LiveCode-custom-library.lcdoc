@@ -9,4 +9,4 @@ One of several <libraries> of <custom function|custom functions>, <command|comma
  
 <img src="202651"></img> >*Tip:*>*Important:*   If your <stack|stacks> use <command|commands> from a LiveCode custom library, be sure to select the appropriate option in the <Standalone Application Settings> window to include the <library> in your <standalone application|standalone>.
 
-References: property (glossary), custom function (glossary), libraries (glossary), Standalone Application Settings (glossary), development environment (glossary), standalone application (glossary), command (glossary), stack (object), library (library)
+References: property (glossary), custom function (glossary), libraries (glossary), Standalone Application Settings (glossary), development environment (glossary), standalone application (glossary), command (glossary), stack (glossary), library (library)

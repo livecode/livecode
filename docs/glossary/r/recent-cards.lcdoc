@@ -7,6 +7,6 @@ Type: glossary
 Description:
 <card|Cards> the user has visited between starting up the application and going to the <current card>.
 
-References: card (object), current card (glossary)
+References: card (glossary), current card (glossary)
 
 Tags: navigation

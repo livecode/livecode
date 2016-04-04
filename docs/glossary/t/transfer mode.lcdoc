@@ -9,6 +9,6 @@ A mathematical operation that determines how an <object> is drawn in its window.
  
 Some transfer modes make the <object> partly or completely transparent by combining each <pixel|pixel's> color with the color underneath it.
 
-References: object (object), pixel (glossary)
+References: object (glossary), pixel (glossary)
 
 Tags: ui

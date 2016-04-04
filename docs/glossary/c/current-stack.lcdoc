@@ -9,6 +9,6 @@ The <stack> that's being worked on, usually the <active window>. The current sta
  
 Also, the <stack> that contains the <object> whose <script> is currently <execute|executing>.
 
-References: property (glossary), defaultStack (glossary), script (glossary), active window (glossary), execute (glossary), stack (object), object (object)
+References: property (glossary), defaultStack (glossary), script (glossary), active window (glossary), execute (glossary), stack (glossary), object (glossary)
 
 Tags: windowing

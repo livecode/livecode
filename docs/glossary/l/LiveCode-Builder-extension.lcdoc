@@ -12,4 +12,4 @@ A <widget> when loaded is a <control> that can be created on the <stack> by drag
 
 A <library extension|library> when loaded has its public handlers added to the bottom of the <message path> and then called in LiveCode in exactly the same way as script handlers. 
 
-References: widget (object), LiveCode Builder language (glossary), library extension (glossary), control (glossary), stack (glossary), create widget (command), message path (glossary)
+References: widget (glossary), LiveCode Builder language (glossary), library extension (glossary), control (glossary), stack (glossary), create widget (command), message path (glossary)

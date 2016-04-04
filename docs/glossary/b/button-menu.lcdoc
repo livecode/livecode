@@ -9,6 +9,6 @@ A <menu> built from the contents of a <button>, and displayed when the <button> 
  
 Button menus can be displayed as pulldown or <popup menu|popup menus>, <combo box|combo boxes>, or <tabbed button|dialog tabs>.
 
-References: tabbed button (glossary), combo box (glossary), popup menu (glossary), menu (glossary), button (object)
+References: tabbed button (glossary), combo box (glossary), popup menu (glossary), menu (glossary), button (glossary)
 
 Tags: menus

@@ -9,6 +9,6 @@ To choose text, part of an <image>, or an <object> so you can manipulate it or g
  
 Selected text is normally <highlight|highlighted>. You select part of an <image> with the Select <tool>, and the selected portion is shown with a dotted outline. Selected <object|objects> are shown with selection handles at each side and corner.
 
-References: image (object), object (object), highlight (glossary), tool (glossary)
+References: image (glossary), object (glossary), highlight (glossary), tool (glossary)
 
 Tags: ui

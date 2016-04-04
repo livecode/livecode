@@ -39,4 +39,4 @@ When saving in the **2.4 format**, the following properties will also be lost or
 * <opaque> property: lost for cards
 * <blendLevel> property: lost
 
-References: stack file (glossary), stack (object), save (command), blendLevel (property), ink (property), Unicode (glossary), field (object), button (object), script (glossary), custom property (glossary), textFont (property), textStyle (property), textSize (property), unicodeToolTip (property), antialiased (property), opaque (property), card (object), widget (object), version (function)
+References: stack file (glossary), stack (glossary), save (command), blendLevel (property), ink (property), Unicode (glossary), field (glossary), button (glossary), script (glossary), custom property (glossary), textFont (property), textStyle (property), textSize (property), unicodeToolTip (property), antialiased (property), opaque (property), card (glossary), widget (glossary), version (function)

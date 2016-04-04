@@ -7,6 +7,6 @@ Type: glossary
 Description:
 A <custom property> for which an <object> has a <getProp> or <setProp> <handler>, but which is never attached to the <object>.
 
-References: getProp (control_st), setProp (control_st), object (object), custom property (glossary), handler (glossary)
+References: getProp (control_st), setProp (control_st), object (glossary), custom property (glossary), handler (glossary)
 
 Tags: properties

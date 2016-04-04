@@ -9,6 +9,6 @@ The <control> that receives any characters the user types. Typically, this <cont
  
 When a <control> becomes active, it is said to receive the <focus>.
 
-References: field (object), control (object), insertion point (glossary), focus (glossary)
+References: field (glossary), control (glossary), insertion point (glossary), focus (glossary)
 
 Tags: ui

@@ -9,6 +9,6 @@ A <chunk> of text that is <delimit|delimited> by the <character> in the <lineDel
  
 Also, a straight line <graphic>, or a line drawn with the paint tools.
 
-References: lineDelimiter (property), property (glossary), character (glossary), delimit (glossary), delimiter (glossary), chunk (glossary), graphic (object)
+References: lineDelimiter (property), property (glossary), character (glossary), delimit (glossary), delimiter (glossary), chunk (glossary), graphic (glossary)
 
 Tags: text processing
