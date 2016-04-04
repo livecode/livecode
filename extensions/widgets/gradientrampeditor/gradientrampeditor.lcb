@@ -293,12 +293,16 @@ end handler
 
 public handler OnMouseMove() returns nothing
    if mIsDraggingStop then
-      set the offset of mGradientRamp[mCurrentlySelectedStopIndex] to clampToRange(xCoordToGradientOffset(the x of the mouse position) / 100, 0, 1)
-      -- Dragging the stops around can potentially mean that the ramp is no longer ordered (by offset).
-      -- Reorder the ramp to put things back into line (required for gradient rendering).
-      reorderGradientRamp()
-      redraw all
-      gradientStopsChanged()
+      variable tOffset as Number
+      put clampToRange(xCoordToGradientOffset(the x of the mouse position) / 100, 0, 1) into tOffset
+      if tOffset is not the offset of mGradientRamp[mCurrentlySelectedStopIndex] then
+         set the offset of mGradientRamp[mCurrentlySelectedStopIndex] to tOffset
+         -- Dragging the stops around can potentially mean that the ramp is no longer ordered (by offset).
+         -- Reorder the ramp to put things back into line (required for gradient rendering).
+         reorderGradientRamp()
+         redraw all
+         gradientStopsChanged()
+      end if 
    end if
 end handler
 
