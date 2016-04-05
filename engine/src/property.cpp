@@ -5430,14 +5430,13 @@ void MCProperty::eval_global_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 	if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
         t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
         
-    if (t_info != nil)
+    if (t_info != nil && t_info -> getter != nil)
     {
         MCExecFetchProperty(ctxt, t_info, *t_index, r_value);
         return;
 	}
 
-    MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
-    ctxt . Throw();
+    ctxt . LegacyThrow(EE_PROPERTY_NOPROP);
 }
 
 void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
@@ -5534,14 +5533,13 @@ void MCProperty::set_global_property(MCExecContext& ctxt, MCExecValue p_value)
     if (!MCPropertyInfoTableLookup(which, effective, t_info, t_is_array_prop))
         t_info = lookup_mode_property(getmodepropertytable(), which, effective, t_is_array_prop);
     
-    if (t_info != nil)
+    if (t_info != nil && t_info -> setter != nil)
     {
         MCExecStoreProperty(ctxt, t_info, *t_index, p_value);
         return;
 	}
     
-    MCeerror->add(EE_PROPERTY_CANTSET, line, pos);
-    ctxt . Throw();
+    ctxt . LegacyThrow(EE_PROPERTY_CANTSET);
 }
 
 void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
