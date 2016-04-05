@@ -41,7 +41,7 @@ public foreign type ScriptObject binds to "MCEngineScriptObjectTypeInfo"
 
 public foreign handler MCEngineExecResolveScriptObject(in pObjectId as String) returns ScriptObject binds to "<builtin>"
 public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
-public foreign handler MCEngineEvalScriptObjectDoesNotExists(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCEngineEvalScriptObjectDoesNotExist(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, out rValue as any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pValue as any, in pProperty as String, in pObject as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) returns nothing binds to "<builtin>"
@@ -144,7 +144,7 @@ References: ResolveScriptObject(statement)
 syntax ScriptObjectDoesNotExist is postfix operator with comparison precedence
     <Object: Expression> "does" "not" "exist"
 begin
-    MCEngineEvalScriptObjectDoesNotExists(Object, output)
+    MCEngineEvalScriptObjectDoesNotExist(Object, output)
 end syntax
 
 /*
