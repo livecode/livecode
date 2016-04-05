@@ -133,10 +133,12 @@ UPLOAD_MAX_RETRIES = 50
 ifeq ($(BUILD_EDITION),commercial)
   dist-docs: dist-docs-commercial
   dist-docs: dist-guide-commercial
+  dist-notes: dist-notes-commercial
 endif
 
 dist-docs: dist-docs-community
 dist-docs: dist-guide-community
+dist-notes: dist-notes-community
 
 dist-docs-community:
 	mkdir -p $(docs_build_dir)
@@ -153,11 +155,18 @@ dist-docs-commercial:
 	  --stage docs --edition business \
 	  --built-docs-dir $(docs_build_dir)/cooked-commercial
 
-dist-notes:
+dist-notes-community:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
-	    --stage notes --warn-as-error
-	    
+	  --stage notes --warn-as-error \
+	  --built-docs-dir $(docs_build_dir)/cooked-community
+
+dist-notes-commercial:
+	WKHTMLTOPDF=$(WKHTMLTOPDF) \
+	$(buildtool_command) --platform $(buildtool_platform) \
+	  --stage notes --warn-as-error \
+	  --built-docs-dir $(docs_build_dir)/cooked-commercial
+
 dist-guide-community:
 	WKHTMLTOPDF=$(WKHTMLTOPDF) \
 	$(buildtool_command) --platform $(buildtool_platform) \
