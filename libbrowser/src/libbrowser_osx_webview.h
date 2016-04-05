@@ -60,6 +60,9 @@ protected:
 	//bool GetHorizontalScrollbarEnabled(bool& r_value);
 	//bool SetHorizontalScrollbarEnabled(bool p_value);
 	
+	bool GetUserAgent(char*& r_user_agent);
+	bool SetUserAgent(const char *p_user_agent);
+	
 	bool GetJavaScriptHandlers(char *&r_handlers);
 	bool SetJavaScriptHandlers(const char *p_handlers);
 	

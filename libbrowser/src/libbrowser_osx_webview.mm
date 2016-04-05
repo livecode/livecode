@@ -516,6 +516,48 @@ bool MCWebViewBrowser::SetHTMLText(const char *p_htmltext)
 	return ExecLoad(LIBBROWSER_DUMMY_URL, p_htmltext);
 }
 
+bool MCWebViewBrowser::GetUserAgent(char*& r_user_agent)
+{
+	WebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	__block char *t_result;
+	t_result = nil;
+	MCBrowserRunBlockOnMainFiber(^{
+		NSString *t_user_agent;
+		t_user_agent = [t_view customUserAgent];
+		
+		t_result = strdup(t_user_agent != nil ? [t_user_agent cStringUsingEncoding: NSUTF8StringEncoding] : "");
+	});
+	
+	if (t_result == nil)
+		return false;
+	
+	r_user_agent = t_result;
+	
+	return true;
+}
+
+bool MCWebViewBrowser::SetUserAgent(const char *p_user_agent)
+{
+	WebView *t_view;
+	if (!GetView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		NSString *t_ns_user_agent;
+		if (strcmp(p_user_agent, "") == 0)
+			t_ns_user_agent = nil;
+		else
+			t_ns_user_agent = [NSString stringWithCString: p_user_agent encoding: NSUTF8StringEncoding];
+		
+		[t_view setCustomUserAgent: t_ns_user_agent];
+	});
+	
+	return true;
+}
+
 bool MCWebViewBrowser::GetJavaScriptHandlers(char *&r_handlers)
 {
 	return MCCStringClone(m_js_handlers ? m_js_handlers : "", r_handlers);
@@ -712,6 +754,9 @@ bool MCWebViewBrowser::SetStringProperty(MCBrowserProperty p_property, const cha
 		case kMCBrowserJavaScriptHandlers:
 			return SetJavaScriptHandlers(p_utf8_string);
 			
+		case kMCBrowserUserAgent:
+			return SetUserAgent(p_utf8_string);
+			
 		default:
 			break;
 	}
@@ -731,6 +776,9 @@ bool MCWebViewBrowser::GetStringProperty(MCBrowserProperty p_property, char *&r_
 			
 		case kMCBrowserJavaScriptHandlers:
 			return GetJavaScriptHandlers(r_utf8_string);
+			
+		case kMCBrowserUserAgent:
+			return GetUserAgent(r_utf8_string);
 			
 		default:
 			break;
