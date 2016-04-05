@@ -291,6 +291,8 @@ metadata hScrollbar.label is "Horizontal scrollbar"
 Name: userAgent
 Type: property
 
+OS: mac,windows,linux,android
+
 Syntax:
 set the userAgent of <widget> to <pUserAgent>
 get the userAgent of <widget>
