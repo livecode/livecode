@@ -282,7 +282,7 @@ Single-line files are added to the table of bugfixes.  Multi-line
 files get their own section in the release notes.
 */
 private command V1NotesCreate pType, pReadableType, pTitle
-   builderLog "report", merge("Creating [[pType]] release notes")
+   builderLog "report", merge("Creating [[pReadableType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
    MarkdownAppend "updates", merge("# [[pTitle]]")
@@ -561,7 +561,7 @@ end V1NotesGenerateBlock
 ----------------------------------------------------------------
 
 private command V2NotesCreate pType, pReadableType, pTitle
-   builderLog "report", merge("Creating [[pType]] release notes")
+   builderLog "report", merge("Creating [[pReadableType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
    MarkdownAppend "updates", merge("# [[pTitle]]")
