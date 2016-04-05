@@ -1,0 +1,1 @@
+# Remove extraneous angle brackets from style property dictionary entry

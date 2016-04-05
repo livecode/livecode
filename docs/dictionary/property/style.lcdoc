@@ -2,9 +2,9 @@ Name: style
 
 Type: property
 
-Syntax: set the style of <object> to <style> 
+Syntax: set the style of <object> to <styleName> 
 
-Summary: Specifies the general <appearance> and <behavior> of an <object(object)>.
+Summary: Specifies the general appearance and behavior of an <object(object)>.
 
 Associations: button
 
@@ -22,7 +22,8 @@ Value: The <style> of an <object> is a string.
 Description:
 Use the <style> <property> to set an object's specific type.
 
-The possible settings of an object's <style> <property> depend on the kind of <object>.
+The possible settings of an object's <style> <property> depend on the 
+kind of <object>.
 
 The <style> of a <button(object)> is one of the following:
 * "standard" : the standard button for the current <lookAndFeel> setting
@@ -35,7 +36,9 @@ The <style> of a <button(object)> is one of the following:
 * "checkbox": a <checkbox> option button
 * "radioButton": a radio button
 
-The <style> of a <button(object)> interacts with certain other <properties>. For example, setting the <opaque> of a standard <button(object)> to false sets its <style> to "transparent".
+The <style> of a <button(object)> interacts with certain other 
+<properties>. For example, setting the <opaque> of a standard 
+<button(object)> to false sets its <style> to "transparent".
 
 The <style> of a <field> is one of the following:
 * "transparent": no border; text is displayed but background is transparent
@@ -58,7 +61,10 @@ The <style> of a <scrollbar> is one of the following:
 * "scale": a "bead on a wire" slider control
 * "progress": a sliding progress bar display
 
-Vertical scale and progress scrollbars always reflect the current lookAndFeel setting. Horizontal scale and progress <scrollbars> use the <Motif> look and feel, unless the <lookAndFeel> is set to "Appearance Manager".
+Vertical scale and progress scrollbars always reflect the current 
+<lookAndFeel> setting. Horizontal scale and progress <scrollbars> use 
+the <Motif> look and feel, unless the <lookAndFeel> is set to 
+"Appearance Manager".
 
 The <style> of a <stack> determines its behavior and is one of the following:
 * "topLevel": editable window
