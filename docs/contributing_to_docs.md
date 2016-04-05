@@ -445,7 +445,7 @@ Push the changes to your fork of the repo
 
 `git push`
 
-Navigate to your fork on the Git website, https://github.com/"<your user name>"/livecode/
+Navigate to your fork on the Git website, https://github.com/"&lt;your user name&gt;"/livecode/
 
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 
