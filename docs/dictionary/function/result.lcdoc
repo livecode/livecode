@@ -23,20 +23,45 @@ if the result is not empty then exit mouseUp
 The result: The <result> <function> <return|returns> a <string>.
 
 Description:
-Use the <result> <function> to check whether the last <command> <execute|executed> encountered an <error>, or get the last value returned with the control structure <return>.
+Use the <result> <function> to check whether the last <command> 
+<execute|executed> encountered an <error>, or get the last value 
+returned with the control structure <return>.
 
-Many commands (such as go and <find>) set the <value> of the <result> <function> when they finish. In most cases, if the <result> is empty, the <command> was successful; if the <result> is not empty, the <command> failed and the <result> contains an error message. See the specific <command> for information about whether it sets the <result> <function>.
+Many commands (such as go and <find>) set the <value> of the <result> 
+<function> when they finish. In most cases, if the <result> is empty, 
+the <command> was successful; if the <result> is not empty, the 
+<command> failed and the <result> contains an error message. See the 
+specific <command> for information about whether it sets the <result> 
+<function>.
 
-If a command fails because of an operating-system error (such as a file not being available), the <sysError> <function> returns the error message that the operating system reported to LiveCode. In this case, you can use the <sysError> <function> to get additional information about the error if the <result> is not empty.
+If a command fails because of an operating-system error (such as a file 
+not being available), the <sysError> <function> returns the error 
+message that the operating system reported to LiveCode. In this case, 
+you can use the <sysError> <function> to get additional information 
+about the error if the <result> is not empty.
 
-If the <return> <control structure> appears within an <on> <handler>, the <result> <function> is set to the <return value>. If a <handler> contains the lines
+If the <return> <control structure> appears within an <on> <handler>, 
+the <result> <function> is set to the <return value>. If a <handler> 
+contains the lines
+
+	myMessage
+	put the result
 
 and the "myMessage" handler contains the line
 
-the text "some value" appears in the message box when the handler runs. You can use this capability to return an error message if a custom message handler fails.
+	return "some value"
 
-The <result> <function> is set to empty when the current <handler> finishes <execute|executing>.
+the text "some value" appears in the message box when the handler runs. 
+You can use this capability to return an error message if a custom 
+message handler fails.
 
->*Important:* If you need to check the <result>, do so immediately after the <statement> whose result you want to check (or save the <value> of the <result> in a <variable> for later checking). This ensures that the result you are checking is the correct one, not a value set by a later <statement>.
+The <result> <function> is set to empty when the current <handler> 
+finishes <execute|executing>.
+
+>*Important:* If you need to check the <result>, do so immediately 
+> after the <statement> whose result you want to check (or save the 
+> <value> of the <result> in a <variable> for later checking). This 
+> ensures that the result you are checking is the correct one, not a 
+> value set by a later <statement>.
 
 References: string (keyword), catch (keyword), find (command), sysError (function), value (function), on (control_st), return (control_st), function (control_st), return (glossary), variable (glossary), handler (glossary), return value (glossary), execute (glossary), statement (glossary), error (glossary), control structure (glossary), command (glossary)
