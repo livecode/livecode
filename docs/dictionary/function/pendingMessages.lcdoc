@@ -35,6 +35,8 @@ The time the message is scheduled for is in the same format as the long seconds 
 
 Once scheduled, a message cannot be changed. You can cancel a pending message with the <cancel> <command>, and re-send it with the <send> <command>.
 
++>*Note:*  LiveCode will not check pendingMessages until after all other executing handlers have completed.  It will not interrupt any executing handler.
+
 References: items (keyword), cancel (command), send (command), function (control_st), property (glossary), message (glossary), command (glossary), return (glossary), object (object)
 
 Tags: objects
