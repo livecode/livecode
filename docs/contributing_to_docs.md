@@ -306,15 +306,15 @@ which shows all your outstanding pull requests).
 
 **Click on the 'Files Changed' tab**
 
-![](pull-request.png)
+![](images/pull-request.png)
 
 **Click on the pencil again to make further changes**
 
-![](edit-file-again.png)
+![](images/edit-file-again.png)
 
 **Commit your changes to the same branch**
 
-![](commit-new-changes.png)
+![](images/commit-new-changes.png)
 
 The pull request will be automatically updated.
 
