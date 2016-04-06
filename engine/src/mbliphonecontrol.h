@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -42,7 +42,7 @@ public:
     virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
-    void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     void SetVisible(MCExecContext& ctxt, bool p_visible);
     void SetOpaque(MCExecContext& ctxt, bool p_opaque);
     void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha);

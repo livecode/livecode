@@ -1,0 +1,37 @@
+Name: mobilePurchaseGet
+
+Type: function
+
+Syntax: mobilePurchaseGet(<purchaseID>, <propertyName>)
+
+Summary: Returns the value of a property of an in-app purchase.
+
+Introduced: 5.0.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobilePurchaseGet(tPurchaseID, "quantity") into tQuantity
+
+Parameters:
+purchaseID: a numeric purchase request identifier.
+propertyName (enum): the name of a purchase request property.
+- "quantity": The number of items purchased.
+- "productID": The identifier of the purchased product.
+- "purchaseDate": The date the purchase or restore request was sent.
+- "transactionIdentifier": The unique identifier of a successful purchase or restore.
+- "receipt": A block of data that can be used to confirm the purchase from a remote server with the iTunes store.
+- "originalPurchaseDate": For restored purchases only, the date of the original purchase.
+- "originalTransactionIdentifier": For restored purchases only, the transaction identifier of the original purchase.
+- "originalReceipt": For restored purchases only, the receipt of the original purchase.
+
+Returns: Returns the value of the property, propertyName, for the in-app purchase, purchaseID.
+
+Description:
+Use the <mobilePurchaseGet> function to get the value of a property of an in-app purchase.
+
+The <mobilePurchaseGet> function returns the value of an in-app purchase property.
+
+References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseError (function), mobileCanMakePurchase (function), mobilePurchases (function), purchaseStateUpdate (message)

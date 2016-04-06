@@ -1,0 +1,12 @@
+Name: lossless compression
+
+Synonyms: lossless compression,lossless compression method,lossless
+
+Type: glossary
+
+Description:
+A type of <compress|compression> technique, used for pictures, that retains all the picture's original information. Unlike <lossy compression> methods, lossless compression allows the picture to be repeatedly compressed and uncompressed without reducing the quality of the image.
+
+References: compress (glossary), lossy compression (glossary)
+
+Tags: multimedia

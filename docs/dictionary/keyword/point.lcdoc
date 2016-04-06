@@ -1,0 +1,33 @@
+Name: point
+
+Type: keyword
+
+Syntax: point
+
+Summary: Used with the <is a> and <is not a> <operator|operators> to specify whether a value is a <point>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if it is not a point then exit mouseUp
+
+Description:
+Use the <point> <keyword> to find out whether a <value> can be used in <expression|expressions> that require a <point> on the screen.
+
+If the value consists of two numbers separated by a comma or by whitespace, it is a point. The numbers may be non-integers.
+
+If the value is an expression, it is evaluated and LiveCode checks whether the final value is a point. For example, the value of the expression "22 + 3,23" is 25,23 (which is a point), so the following expression evaluates to true:
+
+  22 + 3,23 is a point
+
+However, the expression
+  "22 + 3,23" is a point
+evaluates to false, because the double quotes prevent the expression "22 + 3,23" from being evaluated.
+
+References: point (keyword), is a (operator), is not a (operator), value (function), operator (glossary), keyword (glossary), expression (glossary)
+
+Tags: properties

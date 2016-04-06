@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+extern int s_is_werror_enabled;
+extern int s_verbose_level;
+
 void InitializeReports(void);
 void FinalizeReports(void);
 
@@ -36,10 +39,16 @@ void Error_CouldNotWriteOutputFile(const char *path);
 void Error_CouldNotWriteInterfaceFile(const char *path);
 void Error_MalformedToken(long position, const char *token);
 void Error_MalformedSyntax(long position);
+void Error_IntegerLiteralOutOfRange(long position);
     
 void Warning_EmptyUnicodeEscape(long position);
 void Warning_UnicodeEscapeTooBig(long position);
-    
+
+void Error_Bootstrap(const char *format, ...);
+
+void Debug_Emit(const char *p_format, ...);
+void Debug_Depend(const char *p_format, ...);
+
 #ifdef __cplusplus
 }
 #endif

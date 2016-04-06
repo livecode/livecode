@@ -1,0 +1,12 @@
+Name: sheet
+
+Synonyms: sheet,sheet dialog,sheet dialog box,sheet dialog boxes
+
+Type: glossary
+
+Description:
+On <OS X|OS X systems>, a <dialog box> associated with a specific window. A sheet appears within the window, sliding out from under the <title bar>. The user can use other windows, but cannot use the sheet's window until the sheet is dismissed.
+
+References: title bar (glossary), OS X (glossary), dialog box (glossary)
+
+Tags: windowing

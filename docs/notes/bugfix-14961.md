@@ -1,0 +1,1 @@
+# Gradient - Quality set to "good" makes LC crash

@@ -1,0 +1,41 @@
+Name: browserLoadRequested
+
+Type: message
+
+Syntax: browserLoadRequested <url>, <type> 
+
+Summary: Sent when a URL has been requested.
+
+Introduced: 5.0.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on browserLoadRequested pURL, pType
+   put "URL" && pURL && "requested" into field "status bar"
+end browserLoadRequested
+
+Parameters:
+url: The URL that has started to load.
+type (enum): The reason for the request. One of:
+- "click"
+- "submit"
+- "navigate"
+- "reload"
+- "resubmit"
+- "other"
+
+Description:
+Handle the <browserLoadRequested> message to perform an action when a URL has been requested.
+
+The <browserLoadRequested> message is sent to the object containing the script that created the UIWebView browser control after a url has been requested and passed for loading.
+
+If <delayRequests(command)> has been set to false, <browserLoadRequested> is sent as soon as the URL is requested.
+
+If <delayRequests(command)> is set to true, <browserLoadRequested> is only sent if the corresponding <browserLoadRequest> message has been passed.
+
+>*Note:* The <browserLoadRequested> message is sent in response to the webView:shouldStartLoadWithRequest: delegate method.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), browserStartedLoading (message), browserFinishedLoading (message), browserLoadRequest (message), browserLoadFailed (message)

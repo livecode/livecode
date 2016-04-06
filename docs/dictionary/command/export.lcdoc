@@ -1,0 +1,51 @@
+Name: export
+
+Type: command
+
+Syntax: export [<format>] [with metadata <metadata>] to {file <filePath> | <container>} [with mask <maskFile>]
+
+Syntax: export <image> [with metadata <metadata>] to {file <filePath> | <container>} [as <format>] [with mask <maskFile>]
+
+Summary: <export|Exports> the <selected> <image> as a <PBM>, <JPEG>, <GIF>, <BMP> or <PNG> <file>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Security: disk
+
+Example:
+export paint to file "Picture" with mask "../circlemask"
+
+Example:
+export JPEG to URL "binfile:next.jpg"
+
+Example:
+export image "Parachute" to myVariable as GIF
+
+Example:
+export image thisImage to file "Thumbnail" as PNG
+
+Parameters:
+format(enum): The desired file format to export.
+- paint : PBM, PGM, or PPM
+- JPEG : Joint Photographic Experts Group
+- GIF : Graphics Interchange Format
+- BMP : device independent bitmap
+- PNG : Portable Network Graphics
+metadata: 
+filePath: The filePath specifies the name and location of the file you want to export to. If you specify a name but not a location, the file is created in the defaultFolder.
+container: A reference to a container, usually another image or a URL.
+maskFile: The maskFile specifies the name and location of a file to export as an image mask. You can use a maskFile only when exporting in PBM format (paint).
+image: A reference to an image. The metadata is an array of metadata. Currently the only key supported is "density" with a value in pixels per inch (ppi).
+
+Description:
+Use the <export> <command> to <export> an <image> to a <file> or <container>.
+
+If you use the form export <format> to..., the selected <image> is exported.
+
+The export paint form exports the image as a PBM, PGM, or PPM file, depending on the image's colors. (Optionally, you can specify a location for the mask file.) The export JPEG form exports as a JPEG file, the export PNG form exports as a PNG file and the export BMP form exports as a BMP. If you don't specify a <format>, the file is exported as <PBM>, PGM, or <PPM>.
+
+References: JPEGQuality (property), selected (property), file (keyword), image (keyword), paint (keyword), as (keyword), export (command), export snapshot (command), import (command), JPEG (glossary), GIF (glossary), export (glossary), PBM (glossary), container (glossary), PPM (glossary), PNG (glossary), BMP (glossary), command (glossary)

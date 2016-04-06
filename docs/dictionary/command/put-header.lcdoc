@@ -1,0 +1,36 @@
+Name: put header
+
+Type: command
+
+Syntax: put [ new ] header <header> 
+
+Summary: Replaces or adds a CGI output header to the current list that is generated the first time any data is output to stdout.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put url ("binfile:" & tPathToMyImage) into tImageData
+put header "Content-Type: image/gif"
+put header "Content-Length: " && the length of tImageData
+put tImageData
+
+Parameters:
+header: 
+string (string): A string with the following form "header: value".
+
+Description:
+Use the put content command to replace or add a CGI output header to the current list that will be generated the first time any data is output to stdout.
+
+If new is not specified, any existing header of the same name has its value replaced by the action. If new is specified, or an existing header is not found, a new entry is made at the end of the header list.
+
+After headers have been output, the put header variant has no further effect.
+
+When headers get sent, if there is not a 'Content-Type' header in the list, the LiveCode Server automatically sends: Content-Type: text/html.
+
+References: put content (command), put (command), put markup (command), put text (command), put binary (command), after (keyword), before (keyword)
+
+Tags: text processing

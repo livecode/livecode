@@ -1,0 +1,133 @@
+Name: specialFolderPath
+
+Type: function
+
+Syntax: the specialFolderPath of <folderIdentifier> 
+
+Syntax: specialFolderPath(<folderIdentifier>)
+
+Summary: Returns the names and locations of system-related <folders>.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android,html5
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+specialFolderPath("Preferences")
+
+Example:
+set the defaultFolder to specialFolderPath("desktop")
+
+Example:
+put specialFolderPath("asup") into appSupportFolder
+
+Example:
+put url ("file:" & specialFolderPath("engine") & slash & "foo.txt") into tFileContents
+
+Example:
+set the folder to specialFolderPath("engine") & slash & "myimages"
+put the files into tMyImages
+
+Parameters:
+folderIdentifier (enum): A string naming the special folder to locate (e.g. "home") or (on Windows only) a CSIDL value.
+
+The result: If the <folderIdentifier> is either not supported on the current <platform> or doesn't exist on the current system, the result is set to "folder not found".
+
+Returns: The <specialFolderPath> function returns a folder name and location.
+
+Description:
+Use the <specialFolderPath> function to place preferences in the Preferences <folder>, save files to the Documents folder, find out which files are installed in the System or Fonts folders, and so on.
+
+If the folder is not found, the <specialFolderPath> function returns empty. If the <folderIdentifier> is either not supported on the current <platform> or doesn't exist on the current system, the result is set to "folder not found".
+
+Some of the special folders you can specify with the <specialFolderPath> function need not have the standard names. (For example, the System Folder on Mac OS systems is not necessarily named "System Folder".) For this reason, the <specialFolderPath> function returns the full path to the folder, including the name of the folder.
+
+**On Windows systems**, the <folderIdentifier> can alternatively be a Constant Special Item ID List (CSIDL) value that identifies a special folder.  Note that not all CSIDL values work on all versions of Windows.  The following <folderIdentifier> values are supported:
+
+* Windows folder names:
+  * "home": The current user's profile folder
+  * "desktop": The current user's desktop folder
+  * "documents": The current user's "My Documents" folder
+  * "support": The current user's application-specific data ("AppData") folder
+  * "system": The Windows System folder
+  * "start": The folder that contains Start Menu items
+  * "fonts": The folder that contains fonts
+  * "temporary": The folder where temporary files can be placed
+  * "engine": The folder containing the LiveCode engine and the executable files copied in the standalone application
+  * "resources": In development mode, the current stack's folder.  In a standalone, the resources folder where files or folders specified in the Standalone Builder are located.
+* Examples of common Windows CSIDL numbers:
+  * 0x001a: Same as "support"
+  * 0x0023: The application-specific data folder shared by all users
+  * 0x000d: The current user's "My Music" folder
+  * 0x000e: The current user's "My Videos" folder
+  * 0x0027: The current user's "My Pictures" folder
+  * 0x000a: The "Recycle Bin".
+
+**On Mac OS systems**, the following <folderIdentifier> values are supported:
+
+* "home": The current user's home folder
+* "desktop": The current user's desktop folder
+* "preferences": The current user's preferences folder
+* "documents": The current user's documents folder
+* "support": The current user's application-specific data folder
+* "system": The System Folder (usually `/System`)
+* "fonts": The folder that contains fonts
+* "temporary": The folder where temporary files can be placed
+* "engine": The folder containing the LiveCode engine and the executable files copied in the standalone application
+* "resources": In development mode, the current stack's folder.  In a standalone, the resources folder where files or folders specified in the Standalone Builder are located.
+
+**On iOS systems**, only create files in the "documents", "cache" and "temporary" folders.  Be careful not to change or add any files within the application bundle.  The application bundle is digitally signed when it is built, and any changes after this point will invalidate the signature and prevent it from launching.
+
+iOS imposes strict controls over what you can and cannot access.  Each application in iOS is stored in its own "sandbox" folder (`specialFolderPath("home")`).  An application is free to read and write files anywhere beneath this folder, but it is not allowed to access anything outside of the "sandbox".
+
+Note that iOS devices have case-sensitive filesystems, but the iOS simulator's filesystem has the same case-sensitivity as the host system (i.e. usually case-insensitive).
+
+The following <folderIdentifier> values are supported:
+
+* "home": The (unique) folder containing the application bundle and its associated data and folders
+* "documents": The folder in which document data should be stored (backed up by iTunes on sync)
+* "library": The folder in which to store data of various types (backed up by iTunes on sync).  In particular, data private to the application should be stored in a folder named with the app's bundle identifier inside the "library" folder
+* "cache": The folder where transient data that needs to be preserved between launches should be stored (*not* backed up by iTunes)
+* "temporary": The folder where temporary data that is *not* preserved between launches should be stored (*not* backed up by iTunes)
+* "engine": The folder containing the built standalone engine (i.e. the bundle).  This is useful for constructing paths to resources that have been copied into the bundle at build time
+* "resources": Same as "engine".
+
+**On Android systems**, note that the filesystem is case-sensitive.
+
+An Android application is installed on the device as a ZIP package.  This means that any assets that are included are not available as separate files in the device's native filesystem.  In order to manage this, LiveCode "virtualizes" the a sset files you include, allowing read-only access with all the standard LiveCode file and folder handling commands and functions.  To access the assets you have included with your application, use filenames relative to `specialFolderPath("engine")`.
+
+The following <folderIdentifier> values are supported:
+
+* "documents": The folder where application-specific data can be placed (typically valuable)
+* "cache": The folder where transient application-specific data can be placed (typically not valuable)
+* "engine": The (virtual) folder containing the application's LiveCode engine and other resources that were copied into the application at build time
+* "resources": Same as "engine".
+
+**On Linux systems**, the following <folderIdentifier> values are supported:
+
+* "home": The current user's home folder
+* "desktop": The current user's desktop folder
+* "temporary": The folder where temporary files can be placed
+* "engine": The folder containing the LiveCode engine and the executable files copied in the standalone application
+* "resources": In development mode, the current stack's folder.  In a standalone, the resources folder where files or folders specified in the Standalone Builder are located.
+
+**In HTML5 standalones**, you can read and write files from anywhere, since the whole filesystem is virtual and temporary.  For compatibility purposes, the following <folderIdentifier> values are supported:
+
+* "home": Always `/livecode`
+* "fonts": The folder that contains fonts
+* "temporary": A folder where temporary files can be placed
+* "engine": The folder where the standalone initial filesystem is extracted
+* "resources": The resources folder where files or folders specified in the Standalone Builder are located.
+
+Changes:
+Support for special folder constants (on Mac OS and OS X) and CSIDL numbers (on Windows) was added in version 2.0.
+Support for using the <specialFolderPath> function on Unix systems was added in version 2.9.
+Support for using the <specialFolderPath> function on iOS systems was added in version 4.5.2.
+Support for using the <specialFolderPath> function on Android systems was added in version 4.6.2.
+Support for using the <specialFolderPath> function on HTML5 systems was added in version 8.0.0.
+
+References: revSetDatabaseDriverPath (command), tempName (function), folders (function), platform (function), folder (glossary)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -40,6 +40,10 @@
 
 #include "foundation.h"
 
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+#include "mblcontrol.h"
+#endif
+
 #include <signal.h>
 #ifdef _WIN32
 #include <float.h> // _isnan()
@@ -70,6 +74,7 @@ extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
 extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 extern MCSystemInterface *MCMobileCreateIPhoneSystem(void);
 extern MCSystemInterface *MCMobileCreateAndroidSystem(void);
+extern MCSystemInterface *MCDesktopCreateEmscriptenSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -208,6 +213,26 @@ static void handle_signal(int p_signal)
 #endif
 #endif
 
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+extern bool MCIsPlatformMessage(MCNameRef name);
+extern bool MCHandlePlatformMessage(MCNameRef name, MCParameter *parameters, Exec_stat& r_result);
+static MCHookGlobalHandlersDescriptor s_global_handlers_desc =
+{
+    MCIsPlatformMessage,
+    MCHandlePlatformMessage,
+};
+
+extern bool MCNativeControlCreate(MCNativeControlType type, MCNativeControl*& r_control);
+static MCHookNativeControlsDescriptor s_native_control_desc =
+{
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupType,
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupProperty,
+    (bool(*)(MCStringRef,intenum_t&))MCNativeControl::LookupAction,
+    (bool(*)(intenum_t,void*&))MCNativeControlCreate,
+    nil,
+};
+#endif
+
 void MCS_common_init(void)
 {	
 	MCsystem -> Initialize();    
@@ -217,7 +242,7 @@ void MCS_common_init(void)
 
 	// MW-2013-10-08: [[ Bug 11259 ]] We use our own tables on linux since
 	//   we use a fixed locale which isn't available on all systems.
-#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
+#if !defined(_LINUX_SERVER) && !defined(_LINUX_DESKTOP) && !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER) && !defined(__EMSCRIPTEN__)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -226,7 +251,12 @@ void MCS_common_init(void)
 	for(uint4 i = 0; i < 256; ++i)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif
-	
+    
+#if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+    MCHookRegister(kMCHookGlobalHandlers, &s_global_handlers_desc);
+    MCHookRegister(kMCHookNativeControls, &s_native_control_desc);
+#endif
+    
 	MCStackSecurityInit();
 }
 
@@ -248,6 +278,8 @@ void MCS_init(void)
     MCsystem = MCMobileCreateIPhoneSystem();
 #elif defined (_ANDROID_MOBILE)
     MCsystem = MCMobileCreateAndroidSystem();
+#elif defined (__EMSCRIPTEN__)
+    MCsystem = MCDesktopCreateEmscriptenSystem();
 #else
 #error Unknown server platform.
 #endif
@@ -326,6 +358,44 @@ Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path)
         return False;
     
     return MCS_pathfromnative(*t_path, r_path);
+}
+
+// SN-2015-01-16: [[ Bug 14295 ]] Will return an error on Server
+void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resources_folder)
+{
+#ifdef _SERVER
+    r_resources_folder = MCValueRetain(kMCEmptyString);
+#else
+    // Add a check, in case MCS_getspecialfolder failed.
+    if (p_standalone)
+    {
+        if (!MCS_getspecialfolder(MCN_resources, r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
+    else
+    {
+        // If we are not in a standalone, we return the folder in which sits 'this stack'
+        uindex_t t_slash_index;
+        MCStringRef t_stack_filename;
+        t_stack_filename = MCdefaultstackptr -> getfilename();
+		
+		// PM-2015-12-10: [[ Bug 16577 ]] If we are on a substack, use the parent stack filename
+		if (MCStringIsEmpty(t_stack_filename))
+		{
+			MCStack *t_parent_stack;
+			t_parent_stack = static_cast<MCStack *>(MCdefaultstackptr -> getparent());
+			if (t_parent_stack != NULL)
+				t_stack_filename = t_parent_stack -> getfilename();
+		}
+
+        if (!MCStringLastIndexOfChar(t_stack_filename, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_slash_index))
+            t_slash_index = MCStringGetLength(t_stack_filename);
+
+        // If we can't copy the name, then we assign an empty string.
+        if (!MCStringCopySubstring(t_stack_filename, MCRangeMake(0, t_slash_index), r_resources_folder))
+            r_resources_folder = MCValueRetain(kMCEmptyString);
+    }
+#endif
 }
 
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
@@ -878,66 +948,81 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 {
 	MCS_getentries_state *t_state;
 	t_state = static_cast<MCS_getentries_state *>(p_context);
-	
-	if (!t_state -> files != p_entry -> is_folder)
-		return true;
+
+    // We never list '..', if the OS / filesystem lets us get it
+    if (MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
+        return true;
     
-#if defined(_MACOSX)
-    // Mac doesn't list the '..' folder
-    if (p_entry -> is_folder && MCListIsEmpty(t_state -> list)
-            && !MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
-        MCListAppendCString(t_state -> list, "..");
-#endif
+    if (!t_state -> files != p_entry -> is_folder)
+        return true;
 	
 	if (t_state -> details)
 	{
         MCAutoStringRef t_details;
+		
+		// The current expectation is that urlEncode maps to and from the native
+		// encoding. This causes a problem on Mac where filenames are stored in
+		// NFD form - i.e. u-umlaut is u then umlaut. As the decomposed form has
+		// no representation when urlEncoded via the native encoding, it does no
+		// harm to first normalize to NFC - i.e. decomposed strings won't work now
+		// but at least these means some strings will work.
+		MCAutoStringRef t_normalized;
+		if (!MCStringNormalizedCopyNFC(p_entry -> name, &t_normalized))
+			return false;
         
         // SN-2015-01-22: [[ Bug 14412 ]] the detailed files should return
         //   URL-encoded filenames
         MCAutoStringRef t_url_encoded;
-        MCU_urlencode(p_entry -> name, false, &t_url_encoded);
+        if (!MCU_urlencode(*t_normalized, false, &t_url_encoded))
+			return false;
         
 #ifdef _WIN32
-		/* UNCHECKED */ MCStringFormat(&t_details,
-                                       "%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                       *t_url_encoded,
-                                       p_entry -> data_size,
-                                       p_entry -> creation_time,
-                                       p_entry -> modification_time,
-                                       p_entry -> access_time,
-                                       p_entry -> permissions);
+		if (!MCStringFormat(&t_details,
+							"%@,%I64d,,%ld,%ld,%ld,,,,%03o,",
+							*t_url_encoded,
+							p_entry -> data_size,
+							p_entry -> creation_time,
+							p_entry -> modification_time,
+							p_entry -> access_time,
+							p_entry -> permissions))
+			return false;
 #elif defined(_MACOSX)
-		/* UNCHECKED */ MCStringFormat(&t_details,
-                                       "%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
-                                       *t_url_encoded,
-                                       p_entry -> data_size,
-                                       p_entry -> resource_size,
-                                       p_entry -> creation_time,
-                                       p_entry -> modification_time,
-                                       p_entry -> access_time,
-                                       p_entry -> backup_time,
-                                       p_entry -> user_id,
-                                       p_entry -> group_id,
-                                       p_entry -> permissions,
-                                       p_entry -> file_type);
+		if (!MCStringFormat(&t_details,
+							"%@,%lld,%lld,%u,%u,%u,%u,%d,%d,%03o,%.8s",
+							*t_url_encoded,
+							p_entry -> data_size,
+							p_entry -> resource_size,
+							p_entry -> creation_time,
+							p_entry -> modification_time,
+							p_entry -> access_time,
+							p_entry -> backup_time,
+							p_entry -> user_id,
+							p_entry -> group_id,
+							p_entry -> permissions,
+							p_entry -> file_type))
+			return false;
 #else
-		/* UNCHECKED */ MCStringFormat(&t_details,
-                                       "%@,%lld,,,%u,%u,,%d,%d,%03o,",
-                                       *t_url_encoded,
-                                       p_entry -> data_size,
-                                       p_entry -> modification_time,
-                                       p_entry -> access_time,
-                                       p_entry -> user_id,
-                                       p_entry -> group_id,
-                                       p_entry -> permissions);
+		if (!MCStringFormat(&t_details,
+							"%@,%lld,,,%u,%u,,%d,%d,%03o,",
+							*t_url_encoded,
+							p_entry -> data_size,
+							p_entry -> modification_time,
+							p_entry -> access_time,
+							p_entry -> user_id,
+							p_entry -> group_id,
+							p_entry -> permissions))
+			return false;
         
 #endif
 
-		/* UNCHECKED */ MCListAppend(t_state->list, *t_details);
+		if (!MCListAppend(t_state->list, *t_details))
+			return false;
 	}
 	else
-    /* UNCHECKED */ MCListAppendFormat(t_state->list, "%@", p_entry -> name);
+	{
+		if (!MCListAppendFormat(t_state->list, "%@", p_entry -> name))
+			return false;
+	}
 	
 	return true;
 }
@@ -954,7 +1039,15 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	t_state.details = p_detailed;
 	t_state.list = *t_list;
 	
-	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&t_state))
+    // SN-2015-11-09: [[ Bug 16223 ]] Make sure that the list starts with ..
+    // if we ask for folders.
+    if (!p_files)
+	{
+		if (!MCListAppendCString(*t_list, ".."))
+			return false;
+	}
+    
+	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
@@ -1088,6 +1181,25 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
 	
     if (!t_success)
         return IO_ERROR;
+    
+	return IO_NORMAL;
+}
+
+IO_stat MCS_closetakingbuffer_uint32(IO_handle& p_stream, void*& r_buffer, uint32_t& r_length)
+{
+    size_t t_size;
+    void *t_buffer;
+    if (MCS_closetakingbuffer(p_stream, t_buffer, t_size) != IO_NORMAL)
+        return IO_ERROR;
+    
+    if (t_size > UINT32_MAX)
+    {
+        free(t_buffer);
+        return IO_ERROR;
+    }
+    
+    r_buffer = t_buffer;
+    r_length = (uint32_t)t_size;
     
 	return IO_NORMAL;
 }
@@ -1536,8 +1648,16 @@ IO_stat MCS_readall(void *p_ptr, uint32_t p_byte_count, IO_handle p_stream, uint
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
     
+    // SN-2015-07-07: [[ Bug 15569 ]] Reading referenced images on Linux was
+    //  always failing, since it was reading a input buffer of 4096 bytes.
+    //  We should return IO_EOF in case the stream is exhausted, not an error.
     if (!p_stream -> Read(p_ptr, p_byte_count, r_bytes_read))
-        return IO_ERROR;
+    {
+        if (p_stream -> IsExhausted())
+            return IO_EOF;
+        else
+            return IO_ERROR;
+    }
     
     if (p_stream -> IsExhausted())
         return IO_EOF;
@@ -1751,11 +1871,25 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
     MCAutoStringRef t_resolved_path;
     MCAutoStringRef t_native_path;
-    
-    if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+
+    // SN-2015-06-08: [[ ResolvePath ]] Loading system libraries (such as
+    //  libpango-1.0.so.6, from linuxstubs.cpp) will fail if we turn the library
+    //  name into an invalid absolute name constructed from the current folder.
+    //  We consider any leaf path as a system library.
+    if (MCStringContains(p_filename, MCSTR("/"), kMCStringOptionCompareExact))
+    {
+        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+            return NULL;
+    }
+    else
+    {
+        t_resolved_path = p_filename;
+    }
+
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return NULL;
-    
-	return MCsystem -> LoadModule(*t_native_path);
+
+    return MCsystem -> LoadModule(*t_native_path);
 }
 
 MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)

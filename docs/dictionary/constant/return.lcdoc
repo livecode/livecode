@@ -1,0 +1,39 @@
+Name: return
+
+Type: constant
+
+Syntax: return
+
+Summary: Equivalent to the line feed <character> (ASCII 10, Control-J).
+
+Synonyms: CR,linefeed,LF
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put return after word 2 of theData
+
+Example:
+repeat until thisChar is return
+
+Description:
+Use the <return> <constant> as an easier-to-read substitute for numToChar(10).
+
+The <return> <constant> is needed because you can't type the <character> it represents in a <script>.
+
+The <return> <constant> is a synonym for linefeed. This is different from some other languages, in which <return> is equivalent to the carriage return <character> (ASCII 13, Control-M). For most purposes, Revoluton translates the linefeed <constant> and its synonyms into the appropriate end-of-line <character> for the current operating system. However, you should keep this nuance in mind when processing data from another system, which LiveCode has not translated:  <return> is not <ASCII> 13.
+
+The line feed character is the standard end-of-line delimiter on Unix systems. The end-of-line delimiter for Mac OS systems is a carriage return, and the end-of-line delimiter for Windows systems is a carriage return followed by a line feed. Internally, LiveCode always uses a line feed to end lines.
+
+>*Note:* If you specify text mode with the open driver, <open file>, or <open process> <command|commands>, LiveCode translates line feed <characters> to the appropriate end-of-line marker for the current <platform(function)> before writing data, and translates the current <platform(glossary)|platform's> end-of-line <delimiter> to a line feed after reading data. If you specify binary mode with these commands, LiveCode does not perform this automatic translation. Likewise, if you put data into a <file> <URL> or get data from it, end-of-line translation is performed, but not if you put data into or get data from a <binfile> <URL>.
+
+Changes:
+The LF synonym was added in version 2.0.
+
+References: character (keyword), characters (keyword), file (keyword), URL (keyword), binfile (keyword), CRLF (constant), formfeed (constant), script (property), constant (command), open file (command), open process (command), platform (function), command (glossary), ASCII (glossary), platform (glossary), delimiter (glossary)
+
+Tags: text processing

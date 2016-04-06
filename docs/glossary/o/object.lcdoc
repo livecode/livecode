@@ -1,0 +1,12 @@
+Name: object
+
+Synonyms: object
+
+Type: glossary
+
+Description:
+A LiveCode module capable of receiving <message|messages>. One of the building blocks of a LiveCode application.
+
+References: message (glossary)
+
+Tags: objects

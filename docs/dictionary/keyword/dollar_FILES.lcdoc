@@ -1,0 +1,48 @@
+Name: $_FILES
+
+Type: keyword
+
+Syntax: $_FILES
+
+Summary: <$_FILES> is an array variable that is used to handle file uploads.
+
+Introduced: 4.6.4
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_FILES into tFilesArray
+
+Example:
+put $_FILES["myFile"]["type"] into tFileType
+
+Example:
+if $_FILES["myFile"]["error"] is not empty then
+  ... do something ...
+end if
+
+Description:
+Use the <$_FILES> keyword to access the array generated from uploading a file.
+
+<$_FILES> is only available when running in CGI mode (Server).
+
+The $_FILES is array is used to store information about files that have been uploaded.
+
+The contents of <$_FILES> is as follows. The upload name 'userfile' is for demonstration purposes in this example and can be changed as required:
+$_FILES['userfile']['name'] // The original name of the file on the client machine. 
+$_FILES['userfile']['type'] // The mime type of the file, if the browser provided this information. 
+$_FILES['userfile']['size'] // The size, in bytes, of the uploaded file. 
+$_FILES['userfile']['filename'] // The temporary filename of the file in which the uploaded file was stored on the server. 
+$_FILES['userfile']['error'] // Any error string associated with this file upload. 
+
+The following error messages can be returned in the event of a file upload error:
+   "uplaod stopped" - The uploaded file was only partially uploaded. 
+   "upload failed" - No file was uploaded. 
+   "no upload folder" - Missing a temporary folder. 
+   "i/o error" - Failed to write file to disk. 
+
+The server engine copies the contents of the files into a temporary location. Once the script has finished executing, all temporary files that were created are deleted.
+
+References: $_GET_BINARY (keyword), $_SERVER (keyword), $_POST (keyword), $_POST_BINARY (keyword), $_GET (keyword), $_POST_RAW (keyword), $_GET_RAW (keyword)

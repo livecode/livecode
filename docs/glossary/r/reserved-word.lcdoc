@@ -1,0 +1,10 @@
+Name: reserved word
+
+Synonyms: reserved word,reserved,reserved term
+
+Type: glossary
+
+Description:
+A word that has a special meaning to <LiveCode> (for example, built-in <function> and <command> names, <keyword|keywords>, and so forth), and should not be used as the name of a <variable>, <custom property>, <custom command>, or <custom function>.
+
+References: LiveCode (glossary), custom function (glossary), variable (glossary), custom property (glossary), custom command (glossary), keyword (glossary), function (glossary), command (glossary)

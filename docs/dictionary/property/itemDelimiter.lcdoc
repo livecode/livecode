@@ -1,0 +1,41 @@
+Name: itemDelimiter
+
+Type: property
+
+Syntax: set the itemDelimiter to <character|character(s)> 
+
+Summary: Specifies the <character|character(s)> used to separate <items> in <chunk expression|chunk expressions>.
+
+Synonyms: itemDel
+
+Introduced: 1.0
+
+Changed: 7.0.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the itemDelimiter to numToChar(202)
+
+Example:
+set the itemDelimiter to tab
+
+Example:
+set the itemDelimiter to ";;"
+
+Value:
+From LiveCode 7.0, <itemDelimiter> can be a string of one or several <character|characters>. 
+By default, the <itemDelimiter> <property> is set to <comma>.
+
+Description:
+Use the <itemDelimiter> <property> to divide text into <chunk|chunks> based on a <delimit|delimiting> <character|character(s)>.
+
+From LiveCode 7.0, <itemDelimiter> can be a string of one or several <character|characters>.  <chunk expression|Chunk expressions> use the <itemDelimiter> to determine where one <item> ends and the next begins.
+
+Since the <itemDelimiter> is a <local property>, its value is <reset> to comma when the current <handler> finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its <value> in other <handler|handlers> it <call|calls>.
+
+References: item (keyword), items (keyword), character (keyword), comma (constant), colon (constant), formfeed (constant), reset (command), value (function), itemOffset (function), property (glossary), chunk expression (glossary), handler (glossary), execute (glossary), call (glossary), chunk (glossary), local property (glossary), delimit (glossary)
+
+Tags: text processing

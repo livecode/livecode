@@ -1,0 +1,1 @@
+# strokeGradient in subgraphics of polygon is off

@@ -1,0 +1,27 @@
+Name: mobileCreateContact
+
+Type: command
+
+Syntax: mobileCreateContact
+
+Summary: Allows the user to create a contact.
+
+Introduced: 5.5.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileCreateContact
+
+The result:
+The ID of the created contact is returned as the result.
+If no new contact is created, then empty is returned.
+
+Description:
+Allows the user to create a contact in the contact list.
+
+Use the <mobileCreateContact> command to display a native iOS or Android contact creation dialog that allows the user to create a contact list entry.
+
+References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobilePickContact (command), mobileShowContact (command), mobilePick (command), mobileAddContact (command), mobileFindContact (command), mobileUpdateContact (command), mobileGetContactData (function)

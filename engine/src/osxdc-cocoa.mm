@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -61,8 +61,6 @@ MCScreenDC::MCScreenDC(void)
 	m_current_scrap_data = NULL;
 	
 	m_dst_profile = nil;
-	
-	MCNotifyInitialize();
 }
 
 MCScreenDC::~MCScreenDC(void)

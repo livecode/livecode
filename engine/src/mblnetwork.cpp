@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -98,62 +98,6 @@ static bool MCS_mbl_resolve_callback(void *p_context, MCStringRef p_host)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-MCSocket::~MCSocket(void)
-{
-}
-
-MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock,Boolean a, Boolean s, Boolean issecure)
-{
-}
-
-void MCSocket::close(void)
-{
-}
-
-void MCSocket::doclose(void)
-{
-}
-
-Boolean MCSocket::init(MCSocketHandle newfd)
-{
-	return False;
-}
-
-MCSocket *MCS_open_socket(MCNameRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file, MCNameRef p_end_hostname)
-{
-	return NULL;
-}
-
-void MCS_close_socket(MCSocket *p_socket)
-{
-}
-
-
-void MCS_read_socket(MCSocket *s, MCExecContext &ctxt, uint4 length, const char *until, MCNameRef m, MCDataRef& r_data)
-{
-}
-
-void MCS_write_socket(const MCStringRef p_data, MCSocket *p_socket, MCObject *p_object, MCNameRef p_message)
-{
-}
-
-MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
-{
-	return NULL;
-}
-
-bool MCS_ha(MCSocket *s, MCStringRef& r_string)
-{
-	r_string = MCValueRetain(kMCEmptyString);
-	return true;
-}
-
-bool MCS_pa(MCSocket *p_socket, MCStringRef& r_string)
-{
-	r_string = MCValueRetain(kMCEmptyString);
-	return true;
-}
 
 bool MCS_hn(MCStringRef& r_string)
 {

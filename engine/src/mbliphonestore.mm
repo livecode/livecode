@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -244,7 +244,10 @@ void MCStoreGetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, M
 	{
 		MCExecValue t_value;
         MCExecFetchProperty(ctxt, t_info, t_purchase, t_value);
-		MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
+        if (ctxt.HasError())
+            r_property_value = MCValueRetain(kMCEmptyString);
+        else
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeStringRef, &r_property_value);
         return;
     }
     
@@ -326,7 +329,8 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 			return ES_NORMAL;
 
 		case kMCPurchasePropertyTransactionIdentifier:
-			if (t_transaction == nil)
+            // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
+			if (t_transaction == nil || [t_transaction transactionIdentifier] == nil)
 				break;
 			
 			ep.copysvalue([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
@@ -443,7 +447,10 @@ void MCPurchaseGetTransactionIdentifier(MCExecContext& ctxt, MCPurchase *p_purch
 	else
 		t_payment = t_ios_data->payment;
     
-    if (t_transaction != nil && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
+    // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
+    if (t_transaction != nil
+            && [t_transaction transactionIdentifier] != nil
+            && MCStringCreateWithCFString((CFStringRef)[t_transaction transactionIdentifier], r_identifier))
         return;
     
     ctxt . Throw();
@@ -492,7 +499,7 @@ void MCPurchaseGetOriginalTransactionIdentifier(MCExecContext& ctxt, MCPurchase 
 void MCPurchaseGetOriginalPurchaseDate(MCExecContext& ctxt, MCPurchase *p_purchase, integer_t& r_date)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-    \
+    
 	SKPaymentTransaction *t_transaction = nil;
 	SKPaymentTransaction *t_original_transaction = nil;
     t_transaction = t_ios_data->transaction;
@@ -693,7 +700,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 	}
 }
 
-@interface MCPurchaseObserver : NSObject <SKPaymentTransactionObserver>
+@interface com_runrev_livecode_MCPurchaseObserver : NSObject <SKPaymentTransactionObserver>
 {
 }
 
@@ -704,7 +711,7 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 @end
 
-@implementation MCPurchaseObserver
+@implementation com_runrev_livecode_MCPurchaseObserver
 
 - (void)paymentQueue:(SKPaymentQueue *)queue removedTransactions:(NSArray *)transactions
 {
@@ -782,14 +789,14 @@ void update_purchase_state(MCPurchase *p_purchase)
 
 @end
 
-MCPurchaseObserver *s_purchase_observer = nil;
+com_runrev_livecode_MCPurchaseObserver *s_purchase_observer = nil;
 
 bool MCStoreEnablePurchaseUpdates()
 {
 	if (s_purchase_observer != nil)
 		return true;
 	
-	s_purchase_observer = [[MCPurchaseObserver alloc] init];
+	s_purchase_observer = [[com_runrev_livecode_MCPurchaseObserver alloc] init];
 	if (s_purchase_observer == nil)
 		return false;
 	
@@ -815,7 +822,7 @@ bool MCStoreDisablePurchaseUpdates()
 bool MCStorePostProductRequestError(MCStringRef p_product, MCStringRef p_error);
 bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
-@interface MCProductsRequest : SKProductsRequest
+@interface com_runrev_livecode_MCProductsRequest : SKProductsRequest
 {
     NSString *m_product_id;
 }
@@ -825,7 +832,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @end
 
-@implementation MCProductsRequest
+@implementation com_runrev_livecode_MCProductsRequest
 
 - (id)initWithProductId:(NSString *)p_productId
 {
@@ -853,7 +860,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @end
 
-@interface MCProductsRequestDelegate : NSObject <SKProductsRequestDelegate>
+@interface com_runrev_livecode_MCProductsRequestDelegate : NSObject <SKProductsRequestDelegate>
 {
 }
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response;
@@ -863,7 +870,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 
 @end
 
-@implementation MCProductsRequestDelegate
+@implementation com_runrev_livecode_MCProductsRequestDelegate
 - (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
 {
     if (response.invalidProductIdentifiers != nil)
@@ -894,7 +901,7 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 {
     MCAutoStringRef t_product, t_error;
     
-    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(MCProductsRequest*)request getProductId], &t_product);
+    /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[(com_runrev_livecode_MCProductsRequest*)request getProductId], &t_product);
     /* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error description], &t_error);
 
     MCStorePostProductRequestError(*t_product, *t_error);
@@ -911,9 +918,9 @@ bool MCStoreRequestProductDetails(MCStringRef p_product_id)
     NSString *t_product_id = nil;
     
     t_product_id = [NSString stringWithMCStringRef: p_product_id];
-    t_request = [[MCProductsRequest alloc] initWithProductId: t_product_id];
+    t_request = [[com_runrev_livecode_MCProductsRequest alloc] initWithProductId: t_product_id];
     
-    [t_request setDelegate: [[MCProductsRequestDelegate alloc] init]];
+    [t_request setDelegate: [[com_runrev_livecode_MCProductsRequestDelegate alloc] init]];
     
     [t_request start];
     

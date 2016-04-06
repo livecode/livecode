@@ -1,0 +1,66 @@
+Name: sort container
+
+Type: command
+
+Syntax: sort [{lines | items} of] <container> [<direction>] [<sortType>] [by <sortKey> ]
+
+Summary: Sorts the lines or items of a container into a new order.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+sort field "Output"
+
+Example:
+put "5,4,3,2,1" into tNumbers
+sort items of tNumbers ascending numeric -- 5,4,3,2,1 becomes 1,2,3,4,5
+
+Example:
+put "1,ben" into line 1 of tData
+put "2,elanor" into line 2 of tData
+put "3,ali" into line 3 of tData
+sort lines of tData descending numeric by item 1 of each 
+
+# RESULT
+# 3,ali
+# 2,elanor
+# 1,ben
+
+Example:
+sort items of myInfo by word 2 of each -- sort by word 2 of the line
+
+Parameters:
+container: A reference to a field, button, variable, or the message box.
+direction (enum): If you don't specify a <direction>, the sort is `ascending`.
+- ascending: sorts in ascending order
+- descending: sorts in descending order
+sortType (enum): If you don't specify a <sortType>, the <sortType> is `text`.
+- international: sorts by collation according to the system locale
+- numeric: sorts by number. (Use this form if the sortKey consists of numbers)
+- datetime: treats the sortKey as a date and/or time
+- text: sorts using a codepoint by codepoint comparison
+- binary: sorts using a byte by byte comparison
+sortKey: An expression that evaluates to a value for each line or item in the container. If the sortKey contains a chunk expression, the keyword each indicates that the chunk expression is evaluated for each line or item. If you don't specify a sortKey, the entire line (or item) is used as the sortKey.
+
+Description:
+Use the sort container command to shuffle the order of lines or items in a container.
+
+If you don't specify lines or items, the lines of the container are sorted.
+
+The each keyword, when used in the sortKey, specifies the entire line or item. You can use the each keyword in an expression, as a placeholder for the current line or item. For example, this statement sorts the lines of a variable by the third word of each line:
+
+sort lines of myVariable by word 3 of each
+
+You can use the each keyword in any expression, not just chunk expressions.
+
+The sort container command is a stable sort. This means that if the sortKey for two items or lines is the same, sorting does not change their order, so you can do two successive sorts to create subcategories within the major sort categories.
+
+>*Tip:* To create a custom sort order, use the each keyword to pass each line or item to a custom function. The value returned by the function is used as the sort key for that line or item. It is not currently possible to debug custom sort functions, and doing so could make the IDE unstable. It is recommended to use logging messages instead.
+
+References: sort (command), convert (command), offset (function), text (keyword), each (keyword), ascending (keyword), descending (keyword)
+
+Tags: text processing

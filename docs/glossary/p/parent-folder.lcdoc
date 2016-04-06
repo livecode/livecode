@@ -1,0 +1,14 @@
+Name: parent folder
+
+Synonyms: parent folder,enclosing folder,parent directory,parent directories,enclosing directory,enclosing directories
+
+Type: glossary
+
+Description:
+The <folder> that contains another <folder>. 
+ 
+If a <folder> called "A" is located inside a <folder> called "B", "B" is the parent folder of "A".
+
+References: folder (glossary)
+
+Tags: file system

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Name=[[ProductTitle]]
+Comment=IDE for creating and editing LiveCode applications.
+Icon=runrev-[[ProductTag]]-[[TargetArchitecture]]
+Exec="[[TargetFolder]]/[[ProductName]].[[TargetArchitecture]]" %U
+Categories=Development;IDE;
+StartupWMClass=[[ProductTag]]

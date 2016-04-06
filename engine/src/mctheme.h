@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -120,6 +120,7 @@ enum Widget_Metric {
 	WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING,
 	WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE,
 	WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING,
+    WTHEME_METRIC_TABBUTTON_HEIGHT,             // Height of tab buttons, if fixed
 };
 
 enum Widget_Part {
@@ -151,7 +152,7 @@ enum Widget_ThemeProps {
     WTHEME_PROP_ALWAYSBUFFER,
     WTHEME_PROP_TABSELECTONMOUSEUP,
     WTHEME_PROP_DRAWTABPANEFIRST,
-    WTHEME_PROP_TABPANEATTEXTBASELINE
+    WTHEME_PROP_TABBUTTONSOVERLAPPANE,
     //theme controls should redraw when mouse is over objects
 };
 

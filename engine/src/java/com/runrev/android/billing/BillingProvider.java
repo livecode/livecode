@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -92,6 +92,11 @@ public interface BillingProvider
         public static void v(String tag, String string)
         {
             if (LOG) android.util.Log.v(tag, string);
+        }
+        
+        public static void e(String tag, String string)
+        {
+            if (LOG) android.util.Log.e(tag, string);
         }
     }
 }

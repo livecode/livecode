@@ -1,0 +1,40 @@
+Name: fontStyles
+
+Type: function
+
+Syntax: fontStyles (<fontName>, <fontSize>)
+
+Summary: <return|Returns> a list of styles available for a <font> and size.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+fontStyles ("Helvetica", 9)
+
+Example:
+fontStyles (thisFont, 0)
+
+Parameters:
+fontName: The name of a font that is installed on the system.
+fontSize: A point size that exists for the font.
+
+Returns: The <fontStyles> <function> <return|returns> a list of available styles, one per line.
+
+Description:
+Use the <fontStyles> function to determine which font styles can be displayed or printed.
+
+If you specify a <fontSize> of zero, the styles <return|returned> are the ones that are scalable for the specified font.
+The font styles are returned in a return delimited list, such as the following one:
+
+    plain
+    bold
+    italic
+    bold-italic
+
+References: textStyle (property), printTextStyle (property), fontSizes (function), fontNames (function), font (glossary), return (glossary), function (control_st)
+
+Tags: ui

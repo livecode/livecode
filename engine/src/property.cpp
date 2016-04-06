@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -184,7 +184,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
 	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
 	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
-	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfUInt, Interface, Dashes)
+	DEFINE_RW_PROPERTY(P_DASHES, ItemsOfLooseUInt, Interface, Dashes)
 	
 	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
 	
@@ -254,8 +254,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, Name, Interface, DefaultMenubar)
 	DEFINE_RW_CUSTOM_PROPERTY(P_STACK_FILE_VERSION, InterfaceStackFileVersion, Interface, StackFileVersion)
 	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
-	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
-	DEFINE_RW_PROPERTY(P_CURSOR, UInt32, Interface, Cursor)
+    DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt32, Interface, DefaultCursor)
+    DEFINE_RW_PROPERTY(P_CURSOR, OptionalUInt32, Interface, Cursor)
 
 	DEFINE_RW_PROPERTY(P_TWELVE_TIME, Bool, DateTime, TwelveTime)
 
@@ -263,7 +263,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_DONT_USE_QT, Bool, Multimedia, DontUseQt)
 	DEFINE_RW_PROPERTY(P_DONT_USE_QT_EFFECTS, Bool, Multimedia, DontUseQtEffects)
 	
-	DEFINE_RW_PROPERTY(P_RECURSION_LIMIT, UInt16, Engine, RecursionLimit)
+	// PM-2015-07-15: [[ Bug 15602 ]] Use 32-bit number for 'recursionLimit' property
+	DEFINE_RW_PROPERTY(P_RECURSION_LIMIT, UInt32, Engine, RecursionLimit)
 
 	DEFINE_RW_PROPERTY(P_IDLE_RATE, UInt16, Interface, IdleRate)
 	DEFINE_RW_PROPERTY(P_IDLE_TICKS, UInt16, Interface, IdleTicks)
@@ -346,9 +347,9 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BEEP_DURATION, Int16, Interface, BeepDuration)
 	DEFINE_RW_PROPERTY(P_BEEP_SOUND, String, Interface, BeepSound)
 	DEFINE_RW_PROPERTY(P_TOOL, String, Interface, Tool)
-	DEFINE_RW_PROPERTY(P_BRUSH, UInt16, Interface, Brush)
-	DEFINE_RW_PROPERTY(P_ERASER, UInt16, Interface, Eraser)
-	DEFINE_RW_PROPERTY(P_SPRAY, UInt16, Interface, Spray)
+	DEFINE_RW_PROPERTY(P_BRUSH, UInt32, Interface, Brush)
+	DEFINE_RW_PROPERTY(P_ERASER, UInt32, Interface, Eraser)
+	DEFINE_RW_PROPERTY(P_SPRAY, UInt32, Interface, Spray)
 
 	DEFINE_RW_PROPERTY(P_DEFAULT_NETWORK_INTERFACE, String, Network, DefaultNetworkInterface)
 	DEFINE_RO_PROPERTY(P_NETWORK_INTERFACES, String, Network, NetworkInterfaces)
@@ -362,6 +363,15 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragData)
     DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardTextData)
     DEFINE_RW_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragTextData)
+    
+    DEFINE_RW_ARRAY_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardData)
+    DEFINE_RW_PROPERTY(P_RAW_CLIPBOARD_DATA, Any, Pasteboard, RawClipboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragData)
+    DEFINE_RW_PROPERTY(P_RAW_DRAGBOARD_DATA, Any, Pasteboard, RawDragTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardData)
+    DEFINE_RW_PROPERTY(P_FULL_CLIPBOARD_DATA, Any, Pasteboard, FullClipboardTextData)
+    DEFINE_RW_ARRAY_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragData)
+    DEFINE_RW_PROPERTY(P_FULL_DRAGBOARD_DATA, Any, Pasteboard, FullDragTextData)
 
 	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog    
     DEFINE_RW_PROPERTY(P_COLOR_DIALOG_COLORS, LinesOfString, Dialog, ColorDialogColors)
@@ -381,7 +391,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
     DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALE, Double, Interface, ScreenPixelScale)
     // IM-2014-01-27: [[ HiDPI ]] Global property screenPixelScales returns a return-delimited
     // list of the pixel scales of all connected screens
-    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfDouble, Interface, ScreenPixelScales)
+    DEFINE_RO_PROPERTY(P_SCREEN_PIXEL_SCALES, LinesOfLooseDouble, Interface, ScreenPixelScales)
     
     // MW-2014-08-12: [[ EditionType ]] Return whether the engine is community or commercial.
     DEFINE_RO_PROPERTY(P_EDITION_TYPE, String, Engine, EditionType)
@@ -402,6 +412,42 @@ static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, c
 			r_info = &kMCPropertyInfoTable[i];
 			return true;
 		}
+	
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct Property_Override
+{
+	LT lt;
+	Properties property;
+};
+
+// List of syntax marks that should be interpreted as properties (if preceded by "the")
+Property_Override property_overrides[] =
+{
+	{{"url", TT_CHUNK, CT_URL}, P_URL},
+};
+extern const uint32_t property_overrides_size = ELEMENTS(property_overrides);
+
+bool lookup_property_override(const LT&p_lt, Properties &r_property)
+{
+	for (uint32_t i = 0; i < property_overrides_size; i++)
+		if (p_lt.type == property_overrides[i].lt.type && p_lt.which == property_overrides[i].lt.which)
+		{
+			r_property = property_overrides[i].property;
+			return true;
+		}
+	
+	return false;
+}
+
+bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name)
+{
+	for (uint32_t i = 0; i < property_overrides_size; i++)
+		if (property_overrides[i].property == p_property)
+			return MCNameCreateWithCString(property_overrides[i].lt.token, r_name);
 	
 	return false;
 }
@@ -509,13 +555,19 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	}
 	else
 		if (te->type != TT_PROPERTY)
+		{
+			Properties t_override;
+			
 			if (te->type == TT_CLASS && te->which == CT_MARKED)
 				which = P_MARKED;
+			else if (the && lookup_property_override(*te, t_override))
+				which = t_override;
 			else
 			{
 				MCperror->add(PE_PROPERTY_NOTAPROP, sp);
 				return PS_ERROR;
 			}
+		}
 		else
 			which = (Properties)te->which;
 
@@ -721,7 +773,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_RAISE_PALETTES:
 	case P_RAISE_WINDOWS:
 	case P_DONT_USE_NS:
-	case P_DONT_USE_QT:
 	case P_DONT_USE_QT_EFFECTS:
 	case P_PROPORTIONAL_THUMBS:
 	case P_SHARED_MEMORY:
@@ -805,7 +856,6 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_FTP_PROXY:
 	case P_HTTP_HEADERS:
 	case P_HTTP_PROXY:
-	case P_SHOW_INVISIBLES:
 	case P_SOCKET_TIMEOUT:
 	case P_RANDOM_SEED:
 	case P_ADDRESS:
@@ -915,6 +965,10 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_REV_LICENSE_INFO:
 	case P_DRAG_DATA:
 	case P_CLIPBOARD_DATA:
+    case P_RAW_CLIPBOARD_DATA:
+    case P_RAW_DRAGBOARD_DATA:
+    case P_FULL_CLIPBOARD_DATA:
+    case P_FULL_DRAGBOARD_DATA:
 		if (sp.next(type) != PS_NORMAL)
 			return PS_NORMAL;
 		if (type != ST_LB)
@@ -944,6 +998,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 			break;
 		}
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
@@ -983,6 +1038,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_UNDERLINE_LINKS:
 	case P_SELECT_GROUPED_CONTROLS:
 	case P_ICON:
+	case P_SHOW_INVISIBLES:
 		if (sp.next(type) != PS_NORMAL)
 			break;
 		if (which < P_FIRST_ARRAY_PROP)
@@ -1224,7 +1280,10 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 	//   customprop is non-nil. Handle this case here rather than in the caller to
 	//   simplify code.
 	if (which == P_CUSTOM)
-    /* UNCHECKED */ MCNameClone(customprop, t_prop_name);
+    {
+        if (!MCNameClone(customprop, t_prop_name))
+            return false;
+    }
 	
 	// At present, something like the 'pVar[pIndex] of me' is evaluated as 'the pVar of me'
 	// this is because any index is extracted from the pVar variable. It might be worth
@@ -1236,39 +1295,63 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
         if (!ctxt  . EvalExprAsStringRef(destvar, EE_PROPERTY_BADEXPRESSION, &t_string))
             return false;
 
-        MCScriptPoint sp(*t_string);
+        // AL-2015-08-27: [[ Bug 15798 ]] Parse into index and property name before determining
+        //  if this is a custom property or not (otherwise things like textStyle["bold"] are
+        //  interpreted as custom properties).
+        MCAutoStringRef t_icarray, t_property_name;
+        uindex_t t_offset, t_end_offset;
+        // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
+        //  it from the initial name
+        if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset) &&
+            MCStringLastIndexOfChar(*t_string, ']', UINDEX_MAX, kMCStringOptionCompareExact, t_end_offset) &&
+            t_end_offset == MCStringGetLength(*t_string) - 1)
+        {
+            if (!MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name))
+                return false;
+            
+            // AL-2015-08-27: [[ Bug 15798 ]] If the index is quoted, we don't want to include the
+            //  quotes in the index name.
+            if (MCStringGetCodepointAtIndex(*t_string, t_offset + 1) == '"' &&
+                MCStringGetCodepointAtIndex(*t_string, t_end_offset - 1) == '"')
+            {
+                t_offset++;
+                t_end_offset--;
+            }
+            
+            if (!MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, t_end_offset - t_offset - 1), &t_icarray))
+                return false;
+        }
+        else
+            t_property_name = *t_string;
+        
+        if (*t_icarray != nil)
+        {
+            if (!MCNameCreate(*t_icarray, t_index_name))
+                return false;
+        }
+        
+        MCScriptPoint sp(*t_property_name);
 		Symbol_type type;
 		const LT *te;
 		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL && te->type == TT_PROPERTY && sp.next(type) == PS_EOF)
 			t_prop = (Properties)te -> which;
 		else
-		{
-            MCAutoStringRef t_icarray, t_property_name;
-			uindex_t t_offset;
-            // SN-2014-08-08: [[ Bug 13135 ]] Targetting a custom var should resolve the index AND suppress
-            //  it from the initial name
-            if (MCStringFirstIndexOfChar(*t_string, '[', 0, kMCStringOptionCompareExact, t_offset))
-            {
-                MCStringCopySubstring(*t_string, MCRangeMake(t_offset + 1, MCStringGetLength(*t_string) - t_offset - 2), &t_icarray);
-                MCStringCopySubstring(*t_string, MCRangeMake(0, t_offset), &t_property_name);
-            }
-            else
-                t_property_name = *t_string;
-            
+        {
 			// MW-2011-09-02: [[ Bug 9698 ]] Always create a name for the property, otherwise
 			//   if the var contains empty, this function returns a nil name which causes
 			//   customprop to be used incorrectly.
             //            
-            /* UNCHECKED */ MCNameCreate(*t_property_name, t_prop_name);
-            
-			if (*t_icarray != nil)
-            /* UNCHECKED */ MCNameCreate(*t_icarray, t_index_name);
+            if (!MCNameCreate(*t_property_name, t_prop_name))
+                return false;
             
 			t_prop = P_CUSTOM;
 		}
 	}
 	else if (customindex != nil)
-        /* UNCHECKED */ ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name);
+    {
+        if (!ctxt . EvalExprAsNameRef(customindex, EE_PROPERTY_BADEXPRESSION, t_index_name))
+            return false;
+    }
     
 	r_which = t_prop;
 	r_prop_name = t_prop_name;
@@ -2572,8 +2655,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		return ep.getboolean(MChidebackdrop, line, pos, EE_PROPERTY_NAB);
 	case P_DONT_USE_NS:
 		return ep.getboolean(MCdontuseNS, line, pos, EE_PROPERTY_NAB);
-	case P_DONT_USE_QT:
-		return ep.getboolean(MCdontuseQT, line, pos, EE_PROPERTY_NAB);
+	
 	case P_DONT_USE_QT_EFFECTS:
 		return ep.getboolean(MCdontuseQTeffects, line, pos, EE_PROPERTY_NAB);
 	case P_PROPORTIONAL_THUMBS:
@@ -2940,6 +3022,7 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 		return ES_NORMAL;
 
 	case P_BRUSH_COLOR:
+	case P_DONT_USE_QT:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
 	case P_PEN_COLOR:
@@ -2999,6 +3082,8 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 					MCbrushpattern = t_new_pattern;
 				}
 				break;
+			case P_DONT_USE_QT:
+				return ep.getboolean(MCdontuseQT, line, pos, EE_PROPERTY_NAB);
 			case P_PEN_PATTERN:
 				{
 					if (ep.getuint4(MCpenpmid, line, pos, EE_PROPERTY_PENPATNAN) != ES_NORMAL)
@@ -5455,22 +5540,8 @@ void MCProperty::eval_object_property_ctxt(MCExecContext& ctxt, MCExecValue& r_v
 	
 	if (t_prop == P_CUSTOM)
 	{
-		MCObject *t_object;
-		uint4 t_parid;
-		if (t_success)
-            t_success = target -> getobjforprop(ctxt, t_object, t_parid);
-		
-		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
-		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
-		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
-		//   MCChunk::setprop.
-		if (t_success)
-		{
-			if (*t_index_name == nil)
-				t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, r_value);
-			else
-				t_success = t_object -> getcustomprop(ctxt, *t_prop_name, *t_index_name, r_value);
-		}
+        if (t_success)
+            t_success = target -> getcustomprop(ctxt, *t_prop_name, *t_index_name, r_value);
 	}
 	else
 	{
@@ -5561,24 +5632,7 @@ void MCProperty::set_object_property(MCExecContext& ctxt, MCExecValue p_value)
     
 	if (t_prop == P_CUSTOM)
 	{
-		MCObject *t_object;
-		uint4 t_parid;
-		t_success = target -> getobjforprop(ctxt, t_object, t_parid);
-		
-		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
-		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
-		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
-		//   MCChunk::setprop.
-		if (t_success)
-		{
-			if (*t_index_name == nil)
-				t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), *t_prop_name, p_value);
-			else
-				t_success = t_object -> setcustomprop(ctxt, *t_prop_name, *t_index_name, p_value);
-			// MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
-			if (t_success)
-				t_object -> signallisteners(t_prop);
-		}
+        t_success = target -> setcustomprop(ctxt, *t_prop_name, *t_index_name, p_value);
 	}
 	else
 	{   

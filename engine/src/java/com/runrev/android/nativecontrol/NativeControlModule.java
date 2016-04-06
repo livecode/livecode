@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,6 +26,7 @@ import android.view.*;
 import android.widget.*;
 
 import java.util.*;
+import java.lang.reflect.*;
 
 public class NativeControlModule
 {
@@ -75,31 +76,64 @@ public class NativeControlModule
 		
 		m_controls.remove(t_control);
     }
+	
+	public void onPause()
+	{
+		for (NativeControl t_control : m_controls)
+			t_control.onPause();
+	}
+	
+	public void onResume()
+	{
+		for (NativeControl t_control : m_controls)
+			t_control.onResume();
+	}
     
-    public Object createBrowser()
+    public Object createControl(String p_class_name)
     {
         initContainer();
-        return new BrowserControl(this);
+        
+        // First lookup the class with the given name.
+        Class t_class;
+        try
+        {
+            t_class = Class.forName(p_class_name);
+        }
+        catch(Exception e)
+        {
+            return null;
+        }
+        
+        // Check that the class is a subclass of NativeControl.
+        if (t_class.getSuperclass() != NativeControl.class)
+            return null;
+        
+        // Lookup a constructor with signature (NativeControl).
+        Constructor<NativeControl> t_constructor;
+        try
+        {
+            t_constructor = t_class.getDeclaredConstructor(new Class[] { NativeControlModule.class });
+        }
+        catch(Exception e)
+        {
+            return null;
+        }
+        
+        // Finally attempt to construct a new instance of the object.
+        NativeControl t_control;
+        try
+        {
+            t_control = t_constructor.newInstance(new Object[] { this });
+        }
+        catch(Exception e)
+        {
+            return null;
+        }
+        
+        // Success!
+        return t_control;
     }
-    
-    public Object createScroller()
-    {
-        initContainer();
-        return new ScrollerControl(this);
-    }
-    
-    public Object createPlayer()
-    {
-        initContainer();
-        return new VideoControl(this);
-    }
-    
-    public Object createInput()
-    {
-        initContainer();
-        return new InputControl(this);
-    }
-    
+        
     public static ViewGroup.LayoutParams createLayoutParams(int left, int top, int right, int bottom)
     {
         RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(right - left, bottom - top);

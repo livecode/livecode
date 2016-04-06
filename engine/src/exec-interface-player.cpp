@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "exec-interface.h"
 #include "filepath.h"
+
+#include "osspec.h"
 
 #include "player.h"
 
@@ -251,16 +253,40 @@ void MCPlayer::Redraw(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
+static bool MCPathIsURL(MCStringRef p_path)
+{
+    return MCStringBeginsWithCString(p_path, (char_t*)"http://", kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWithCString(p_path, (char_t*)"https://", kMCStringOptionCompareCaseless) ||
+            MCStringBeginsWithCString(p_path, (char_t*)"ftp://", kMCStringOptionCompareCaseless)||
+            // PM-2015-06-30: [[ Bug 14418 ]] Allow URLs of the form file://
+            MCStringBeginsWithCString(p_path, (char_t*)"file://", kMCStringOptionCompareCaseless);
+}
+
+// PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path to the stack folder
+// PM-2015-01-26: [[ Bug 14435 ]] Make possible to set the filename using a relative path to the default folder
 bool MCPlayer::resolveplayerfilename(MCStringRef p_filename, MCStringRef &r_filename)
 {
-    if (MCPathIsAbsolute(p_filename) || MCPathIsRemoteURL(p_filename))
+    if (MCPathIsAbsolute(p_filename) || MCPathIsURL(p_filename))
     {
         r_filename = MCValueRetain(p_filename);
         return true;
     }
 
-   return getstack()->resolve_relative_path(p_filename, r_filename);
+	{
+		MCAutoStringRef t_filename;
+		bool t_relative_to_stack = getstack()->resolve_relative_path(p_filename, &t_filename);
+		if (t_relative_to_stack && MCS_exists(*t_filename, True))
+			return MCStringCopy(*t_filename, r_filename);
+	}
+
+	{
+		MCAutoStringRef t_filename;
+		bool t_relative_to_default_folder = getstack()->resolve_relative_path_to_default_folder(p_filename, &t_filename);
+		if (t_relative_to_default_folder && MCS_exists(*t_filename, True))
+			return MCStringCopy(*t_filename, r_filename);
+	}
+
+    return false;
 }
 
 void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
@@ -273,24 +299,33 @@ void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 
 void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (filename == nil || p_name == nil ||
-		!MCStringIsEqualTo(p_name, filename, kMCCompareExact))
+    // Edge case: Suppose filenameA is a valid relative path to defaultFolderA,
+    //  but invalid relative path to defaultFolderB
+    //    1. Set defaultFolder to defaultFolderB. Set the filename to filenameA.
+    //       Video will become empty, since the relative path is invalid.
+    //    2. Change the defaultFolder to defaultFolderA. Set the filename again
+    //       to filenameA. Now the relative path is valid
+    MCAutoStringRef t_string;
+    bool t_resolved_path;
+    t_resolved_path = false;
+
+    t_resolved_path = resolveplayerfilename(p_name, &t_string);
+
+    // handle the edge case mentioned below: If t_resolved_path then the movie path has to be updated
+    // PM-2015-04-14: [[ Bug 15196 ]] Allow setting the player filename to empty more than once
+	if (filename == nil || MCStringIsEmpty(p_name) ||
+        !MCStringIsEqualTo(p_name, filename, kMCCompareExact) || t_resolved_path)
 	{
 		MCValueRelease(filename);
 		filename = NULL;
 		playstop();
 		starttime = MAXUINT4; //clears the selection
 		endtime = MAXUINT4;
+
+        // PM-2015-01-26: [[ Bug 14435 ]] Resolve the filename in MCPlayer::prepare(),
+        //  to avoid prepending the defaultFolder or the stack folder to the filename property
 		if (p_name != nil)
-        {
-#ifdef FEATURE_PLATFORM_PLAYER
-            // PM-2014-12-19: [[ Bug 14245 ]] Make possible to set the filename using a relative path
-            resolveplayerfilename(p_name, filename);
-#else
-            // PM-2015-01-27: [[ Bug 14449 ]] Keep the old behaviour when not in OSX, since the filename is resolved later in x11_prepare/qt_prepare/avi_prepare depending on platform
             filename = MCValueRetain(p_name);
-#endif
-        }
 		prepare(kMCEmptyString);
 #ifdef FEATURE_PLATFORM_PLAYER
         // PM-2014-10-24: [[ Bug 13776 ]] Make sure we attach the player after prepare()
@@ -307,7 +342,7 @@ void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
     }
 #ifdef FEATURE_PLATFORM_PLAYER
     // PM-2014-12-22: [[ Bug 14232 ]] Update the result in case a an invalid/corrupted filename is set more than once in a row
-    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && hasinvalidfilename())
+    else if (MCStringIsEqualTo(p_name, filename, kMCStringOptionCompareCaseless) && (hasinvalidfilename() || !t_resolved_path))
         ctxt . SetTheResultToCString("could not create movie reference");
 #endif
 
@@ -662,24 +697,20 @@ void MCPlayer::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
     Redraw();
 }
 
-void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 {
     uint4 oldflags = flags;
-    MCObject::SetVisibility(ctxt, part, setting, visible);
+	MCControl::SetVisible(ctxt, part, setting);
+    
+    // PM-2015-07-01: [[ Bug 15191 ]] Keep the LC 6.7 behaviour in non-platform player, to make the video layer to hide 
+#ifndef FEATURE_PLATFORM_PLAYER
+    if (flags != oldflags && !(flags & F_VISIBLE))
+        playstop();
+#endif
     
     // SN-2014-07-03: [[ PlatformPlayer ]]
     // P_VISIBLE getter refactored to the MCPlayer implementations
     updatevisibility();
-}
-
-void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
-{
-    SetVisibility(ctxt, part, setting, true);
-}
-
-void MCPlayer::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
-{
-    SetVisibility(ctxt, part, setting, false);
 }
 
 void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
@@ -701,26 +732,11 @@ void MCPlayer::GetEnabledTracks(MCExecContext& ctxt, uindex_t& r_count, uinteger
     getenabledtracks(r_count, r_tracks);
 }
 
-void MCPlayer::GetForeColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
+void MCPlayer::SetEnabledTracks(MCExecContext& ctxt, uindex_t p_count, uinteger_t* p_tracks)
 {
-    getforegrouncolor(r_color);
-}
-
-void MCPlayer::SetForeColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
-{
-    setforegroundcolor(p_color);
-    Redraw();
-}
-
-void MCPlayer::GetHiliteColor(MCExecContext &ctxt, MCInterfaceNamedColor &r_color)
-{
-    gethilitecolor(r_color);
-}
-
-void MCPlayer::SetHiliteColor(MCExecContext &ctxt, const MCInterfaceNamedColor &p_color)
-{
-    sethilitecolor(p_color);
-    Redraw();
+    // PM-2015-06-01: [[ PlatformPlayer ]]
+    // P_ENABLED_TRACKS setter refactored to the MCPlayer implementations
+    setenabledtracks(p_count, p_tracks);
 }
 
 #ifdef FEATURE_PLATFORM_PLAYER
@@ -736,4 +752,29 @@ void MCPlayer::GetStatus(MCExecContext& ctxt, intenum_t& r_status)
         r_status = kMCInterfacePlayerStatusNone;
     
 }
+
+void MCPlayer::GetMirrored(MCExecContext &ctxt, bool &r_mirrored)
+{
+    r_mirrored = getflag(F_MIRRORED);
+}
+
+void MCPlayer::SetMirrored(MCExecContext &ctxt, bool p_mirrored)
+{
+    bool t_dirty;
+    t_dirty = changeflag(p_mirrored, F_MIRRORED);
+    
+    if (t_dirty)
+        setmirrored((flags & F_MIRRORED) != 0); //set/unset mirrored player
+}
+
 #endif
+
+void MCPlayer::SetDontUseQT(MCExecContext &ctxt, bool p_dont_use_qt)
+{
+    setdontuseqt(p_dont_use_qt);
+}
+
+void MCPlayer::GetDontUseQT(MCExecContext &ctxt, bool &r_dont_use_qt)
+{
+    getdontuseqt(r_dont_use_qt);
+}

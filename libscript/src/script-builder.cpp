@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -15,8 +15,9 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <foundation.h>
+#include <foundation-auto.h>
 
-#include "script.h"
+#include "libscript/script.h"
 #include "script-private.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +65,7 @@ struct MCScriptModuleBuilder
     uindex_t current_line;
     
     MCProperListRef current_list_value;
+	MCArrayRef current_array_value;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +127,7 @@ void MCScriptBeginModule(MCScriptModuleKind p_kind, MCNameRef p_name, MCScriptMo
     self -> current_line = 0;
     
     self -> current_list_value = nil;
+    self -> current_array_value = nil;
     
     r_builder = self;
 }
@@ -164,6 +167,7 @@ bool MCScriptEndModule(MCScriptModuleBuilderRef self, MCStreamRef p_stream)
     MCMemoryDeleteArray(self -> operands);
     
     MCValueRelease(self -> current_list_value);
+    MCValueRelease(self -> current_array_value);
     
     MCMemoryDelete(self);
 
@@ -323,6 +327,49 @@ void MCScriptEndListValueInModule(MCScriptModuleBuilderRef self, uindex_t& r_ind
     
     MCValueRelease(self -> current_list_value);
     self -> current_list_value = nil;
+}
+
+void MCScriptBeginArrayValueInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    if (self -> current_array_value != nil ||
+        !MCArrayCreateMutable(self -> current_array_value))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptContinueArrayValueInModule(MCScriptModuleBuilderRef self,
+                                        uindex_t p_key_idx,
+                                        uindex_t p_value_idx)
+{
+	MCNewAutoNameRef t_key;
+
+    if (self == nil || !self -> valid)
+        return;
+
+    if (self -> current_array_value == nil ||
+        !MCNameCreate(reinterpret_cast<MCStringRef>(self->module.values[p_key_idx]), &t_key) ||
+        !MCArrayStoreValue(self -> current_array_value, false,
+                           *t_key, self -> module . values[p_value_idx]))
+    {
+        self -> valid = false;
+        return;
+    }
+}
+
+void MCScriptEndArrayValueInModule(MCScriptModuleBuilderRef self, uindex_t& r_index)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    MCScriptAddValueToModule(self, self -> current_array_value, r_index);
+
+    MCValueRelease(self -> current_array_value);
+    self -> current_array_value = nil;
 }
 
 void MCScriptAddTypeToModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
@@ -569,7 +616,7 @@ void MCScriptAddOptionalTypeToModule(MCScriptModuleBuilderRef self, uindex_t p_t
     __add_script_type(self, t_type, r_type);
 }
 
-void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_return_type)
+static void MCScriptBeginCommonHandlerTypeInModule(MCScriptModuleBuilderRef self, bool p_is_foreign, uindex_t p_return_type)
 {
     if (self == nil ||
         !self -> valid)
@@ -582,10 +629,20 @@ void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_
         return;
     }
     
-    t_type -> kind = kMCScriptTypeKindHandler;
+    t_type -> kind = p_is_foreign ? kMCScriptTypeKindForeignHandler : kMCScriptTypeKindHandler;
     t_type -> return_type = p_return_type;
     
     self -> current_type = t_type;
+}
+
+void MCScriptBeginHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_return_type)
+{
+    MCScriptBeginCommonHandlerTypeInModule(self, false, p_return_type);
+}
+
+void MCScriptBeginForeignHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t p_return_type)
+{
+    MCScriptBeginCommonHandlerTypeInModule(self, true, p_return_type);
 }
 
 void MCScriptContinueHandlerTypeInModule(MCScriptModuleBuilderRef self, MCScriptHandlerTypeParameterMode p_mode, MCNameRef p_name, uindex_t p_type)
@@ -620,7 +677,7 @@ void MCScriptEndHandlerTypeInModule(MCScriptModuleBuilderRef self, uindex_t& r_n
     
     for(uindex_t i = 0; i < self -> module . type_count; i++)
     {
-        if (self -> module . types[i] -> kind != kMCScriptTypeKindHandler)
+        if (self -> module . types[i] -> kind != t_type -> kind)
             continue;
         
         MCScriptHandlerType *t_other_type;
@@ -1218,7 +1275,7 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         uindex_t t_encoded_target_address;
         if (t_target_address >= 0)
             t_encoded_target_address = t_target_address * 2;
-        else if (t_target_address < 0)
+        else
             t_encoded_target_address = (-t_target_address) * 2 + 1;
         
         t_operands[t_address_index] = (1 << 31) | t_encoded_target_address;
@@ -1239,10 +1296,10 @@ void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef self)
         
         __emit_position(self, t_pos_address_offset + t_address, self -> instructions[i] . file, self -> instructions[i] . line);
         
-        __emit_bytecode_byte(self, t_op | (MCMin(t_arity, 15) << 4));
+        __emit_bytecode_byte(self, t_op | (MCMin(t_arity, 15U) << 4));
         
-        if (t_arity >= 15)
-            __emit_bytecode_byte(self, t_arity - 15);
+        if (t_arity >= 15U)
+            __emit_bytecode_byte(self, t_arity - 15U);
         
         for(uindex_t j = 0; j < t_arity; j++)
             __emit_bytecode_uint(self, t_operands[j]);
@@ -1381,6 +1438,31 @@ void MCScriptEmitEndAssignListInModule(MCScriptModuleBuilderRef self)
     if (self == nil || !self -> valid)
         return;
     
+    __end_instruction(self);
+}
+
+void MCScriptEmitBeginAssignArrayInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    __begin_instruction(self, kMCScriptBytecodeOpAssignArray);
+    __continue_instruction(self, p_reg);
+}
+
+void MCScriptEmitContinueAssignArrayInModule(MCScriptModuleBuilderRef self, uindex_t p_reg)
+{
+    if (self == nil || !self -> valid)
+        return;
+
+    __continue_instruction(self, p_reg);
+}
+
+void MCScriptEmitEndAssignArrayInModule(MCScriptModuleBuilderRef self)
+{
+    if (self == nil || !self -> valid)
+        return;
+
     __end_instruction(self);
 }
 

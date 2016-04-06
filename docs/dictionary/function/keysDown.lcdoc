@@ -1,0 +1,34 @@
+Name: keysDown
+
+Type: function
+
+Syntax: the keysDown
+
+Syntax: keysDown()
+
+Summary: <return|Returns> a list of the keys currently being pressed.
+
+Introduced: 1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+the keysDown
+
+Example:
+if myKey is in the keysDown then exit to top
+
+Returns: The <keysDown> <function> <return|returns> a list of <keycode|keycodes> of pressed keys, separated by commas if more than one key is being pressed.
+
+Description:
+Use the <keysDown> <function> to respond to a keypress while a <handler> is being <execute|executed>.
+
+The keycodes returned by the <keysDown> <function> are the same as those <pass|passed> as <parameter|parameters> with the <rawKeyDown> and <rawKeyUp> <message|messages>.
+
+The <keysDown> <function> returns empty if no keys are being pressed.
+
+References: rawKeyUp (message), keyUp (message), rawKeyDown (message), keyDown (message), controlKeyDown (message), shiftKey (function), altKey (function), capsLockKey (function), optionKey (function), commandKey (function), controlKey (function), return (glossary), keycode (glossary), handler (glossary), execute (glossary), pass (glossary), message (glossary), parameter (glossary), function (control_st)
+
+Tags: ui

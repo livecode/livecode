@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -118,12 +118,8 @@ public:
 #ifdef LEGACY_EXEC
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
 #endif
-	void eval_ctxt(MCExecContext& ctxt, MCStringRef p_expression, MCExecValue& r_value);
-	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
 	//Exec_stat eval(MCExecPoint &);
-	uint4 linecount();
-	void deletestatements(MCStatement *statements);
-	void doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line = 0, uinteger_t p_pos = 0);
+    uint4 linecount();
 
 	// Used by the externals API, this method returns the current incarnation of
 	// the 'it' variable in this handler - if any.

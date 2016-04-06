@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -36,8 +36,11 @@ MCTypeInfoRef __MCCustomValueResolveTypeInfo(__MCValue *p_value)
     return __MCTypeInfoResolve(t_value -> typeinfo);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCreateCustom(MCTypeInfoRef p_typeinfo, size_t p_extra_bytes, MCValueRef& r_value)
 {
+	__MCAssertIsTypeInfo(p_typeinfo);
+
 	__MCValue *t_value;
 	if (!__MCValueCreate(kMCValueTypeCodeCustom, sizeof(__MCCustomValue) + p_extra_bytes, t_value))
 		return false;
@@ -51,17 +54,23 @@ bool MCValueCreateCustom(MCTypeInfoRef p_typeinfo, size_t p_extra_bytes, MCValue
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 MCValueTypeCode MCValueGetTypeCode(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
 
 	MCAssert(self != nil);
+    __MCAssertIsValue(self);
 
 	return __MCValueGetTypeCode(self);
 }
 
+MC_DLLEXPORT_DEF
 MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
 {
+	MCAssert(p_value != nil);
+    __MCAssertIsValue(p_value);
+    
     switch(MCValueGetTypeCode(p_value))
     {
         case kMCValueTypeCodeNull:
@@ -98,47 +107,61 @@ MCTypeInfoRef MCValueGetTypeInfo(MCValueRef p_value)
     
     MCLog("%p, %d", p_value, MCValueGetTypeCode(p_value));
     
-    MCUnreachable();
+    MCUnreachableReturn(kMCNullTypeInfo);
 }
 
+MC_DLLEXPORT_DEF
 uindex_t MCValueGetRetainCount(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
     
 	MCAssert(self != nil);
+    __MCAssertIsValue(self);
     
     return self -> references;
 }
 
+MC_DLLEXPORT_DEF
 MCValueRef MCValueRetain(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
 
 	MCAssert(self != nil);
-
+    __MCAssertIsValue(self);
+    
 	self -> references += 1;
 
 	return self;
 }
 
+MC_DLLEXPORT_DEF
 void MCValueRelease(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
 
-	if (self != nil)
-	{
-		self -> references -= 1;
-		if (self -> references > 0)
-			return;
-	}
-	else
-		return;
-
-	__MCValueDestroy(self);
+	if (self == nil)
+        return;
+    
+    __MCAssertIsValue(self);
+        
+    uint32_t t_new_references;
+    t_new_references = self -> references - 1;
+    if (t_new_references == 0)
+    {
+        __MCValueDestroy(self);
+        return;
+    }
+    
+    self -> references = t_new_references;
+    return;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCopy(MCValueRef p_value, MCValueRef& r_immutable_copy)
 {
+	MCAssert(p_value != nil);
+    __MCAssertIsValue(p_value);
+    
 	__MCValue *t_copy;
 	if (__MCValueImmutableCopy((__MCValue *)p_value, false, t_copy))
 	{
@@ -149,8 +172,12 @@ bool MCValueCopy(MCValueRef p_value, MCValueRef& r_immutable_copy)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCopyAndRelease(MCValueRef p_value, MCValueRef& r_immutable_copy)
 {
+	MCAssert(p_value != nil);
+    __MCAssertIsValue(p_value);
+    
 	__MCValue *t_copy;
 	if (__MCValueImmutableCopy((__MCValue *)p_value, true, t_copy))
 	{
@@ -161,10 +188,14 @@ bool MCValueCopyAndRelease(MCValueRef p_value, MCValueRef& r_immutable_copy)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 hash_t MCValueHash(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
-
+    
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
+    
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeNull:
@@ -208,19 +239,24 @@ hash_t MCValueHash(MCValueRef p_value)
     case kMCValueTypeCodeForeignValue:
         return __MCForeignValueHash((__MCForeignValue *)self);
 	default:
-		break;
+        break;
 	}
 
-	MCAssert(false);
-
-	return 0;
+	MCUnreachableReturn(false);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
 	__MCValue *other_self = (__MCValue *)p_other_value;
 
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
+    
+	MCAssert(other_self != nil);
+    __MCAssertIsValue(other_self);
+    
 	// If the pointers are the same, we are equal.
 	if (self == other_self)
 		return true;
@@ -292,15 +328,17 @@ bool MCValueIsEqualTo(MCValueRef p_value, MCValueRef p_other_value)
 	}
 
 	// We should never get here!
-	MCAssert(false);
-
-	return false;
+	MCUnreachableReturn(false);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 {
 	__MCValue *self = (__MCValue *)p_value;
-
+    
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
+    
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeNull:
@@ -338,15 +376,18 @@ bool MCValueCopyDescription(MCValueRef p_value, MCStringRef& r_desc)
 	default:
 		return MCStringCopy (MCSTR("<unknown>"), r_desc);
 	}
-	MCUnreachable();
-	return false;
+	MCUnreachableReturn(false);
 }
 
 //////////
 
+MC_DLLEXPORT_DEF
 bool MCValueIsMutable(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
+    
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
     
     if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
         return false;
@@ -360,9 +401,13 @@ bool MCValueIsMutable(MCValueRef p_value)
 	        __MCCustomDefaultIsMutable (p_value));
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueMutableCopy(MCValueRef p_value, MCValueRef& r_mutable_copy)
 {
 	__MCValue *self = (__MCValue *)p_value;
+    
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
     
     if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
         return false;
@@ -376,9 +421,13 @@ bool MCValueMutableCopy(MCValueRef p_value, MCValueRef& r_mutable_copy)
 	        __MCCustomDefaultMutableCopy (p_value, false, r_mutable_copy));
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueMutableCopyAndRelease(MCValueRef p_value, MCValueRef& r_mutable_copy)
 {
 	__MCValue *self = (__MCValue *)p_value;
+    
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
     
     if (__MCValueGetTypeCode(self) != kMCValueTypeCodeCustom)
         return false;
@@ -394,10 +443,14 @@ bool MCValueMutableCopyAndRelease(MCValueRef p_value, MCValueRef& r_mutable_copy
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCValueIsUnique(MCValueRef p_value)
 {
 	__MCValue *self = (__MCValue *)p_value;
-
+    
+	MCAssert(self != nil);
+    __MCAssertIsValue(self);
+    
 	switch(__MCValueGetTypeCode(self))
 	{
 	case kMCValueTypeCodeNull:
@@ -414,8 +467,12 @@ bool MCValueIsUnique(MCValueRef p_value)
 	return (self -> flags & kMCValueFlagIsInterred) != 0;
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueInter(MCValueRef p_value, MCValueRef& r_unique_value)
 {
+	MCAssert(p_value != nil);
+    __MCAssertIsValue(p_value);
+    
 	// If the value is already unique then this is just a copy.
 	if (MCValueIsUnique(p_value))
 	{
@@ -427,8 +484,12 @@ bool MCValueInter(MCValueRef p_value, MCValueRef& r_unique_value)
 	return __MCValueInter((__MCValue *)p_value, false, r_unique_value);
 }
 
+MC_DLLEXPORT_DEF
 bool MCValueInterAndRelease(MCValueRef p_value, MCValueRef& r_unique_value)
 {
+	MCAssert(p_value != nil);
+    __MCAssertIsValue(p_value);
+    
 	// If the value is already unique then this is just a copy but since
 	// we also need to release value, we just return ourselves.
 	if (MCValueIsUnique(p_value))
@@ -442,22 +503,30 @@ bool MCValueInterAndRelease(MCValueRef p_value, MCValueRef& r_unique_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This is the layout of a valueref which is on the free-list.
+struct __MCFreedValue: public __MCValue
+{
+    __MCFreedValue *next;
+};
+
 // MW-2014-03-21: [[ Faster ]] Memory allocation is relatively slow, therefore
 //   we use a per-typecode pool of previously used __MCValue's. This saves a
 //   a per-value malloc, particularly for types which are short-lived (such
 //   as numbers).
 struct MCValuePool
 {
-    __MCValue *values;
+    __MCFreedValue *values;
     uindex_t count;
 };
 static MCValuePool *s_value_pools;
-#define kMCValuePoolSize (kMCValueTypeCodeList + 1)
+
+// Stores the number of pools that we have.
+uindex_t kMCValuePoolCount = kMCValueTypeCodeList + 1;
 
 bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_value)
 {
 	void *t_value;
-    
+	
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
     //   pool isn't empty grab the ptr from there.
     if (p_type_code <= kMCValueTypeCodeList && s_value_pools[p_type_code] . count > 0)
@@ -471,15 +540,26 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
 		 * it.  The first few bytes of the buffer should contain the
 		 * address of the following buffer (if there is one). */
 		VALGRIND_MAKE_MEM_UNDEFINED(t_value, p_size);
-		VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCValue *));
+		VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCFreedValue));
 #endif /* HAVE_VALGRIND */
 
+        // Check that the value we are about to return has not been corrupted
+        // due to a dangling reference.
+        MCAssert(((__MCFreedValue *)t_value) -> references == 0 &&
+                 ((__MCFreedValue *)t_value) -> flags == UINT32_MAX);
+        
         s_value_pools[p_type_code] . count -= 1;
-        s_value_pools[p_type_code] . values = *(__MCValue **)t_value;
+        s_value_pools[p_type_code] . values = ((__MCFreedValue *)t_value) -> next;
         MCMemoryClear(t_value, p_size);
 	}
     else
     {
+        // The minimum size of a valueref has to be sizeof(MCValuePoolLink).
+        // This is to ensure we have enough space to chain in the free list.
+        
+        if (p_size < sizeof(__MCFreedValue))
+            p_size = sizeof(__MCFreedValue);
+        
         if (!MCMemoryNew(p_size, t_value))
             return false;
     }
@@ -557,16 +637,23 @@ void __MCValueDestroy(__MCValue *self)
         break;
     default:
         // Shouldn't get here
-        MCAssert(false);
+        MCUnreachableReturn();
 	}
+	
+	// Ensure that an immediate abort will be caused in Debug mode if a destroyed MCValueRef pointer is passed to
+	// a libfoundation function
+#ifdef _DEBUG
+    self -> references = 0;
+	self -> flags = UINT32_MAX;
+#endif
 
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
     //   pool isn't full, add it to the pool.
     if (t_code <= kMCValueTypeCodeList && s_value_pools[t_code] . count < 32)
     {
         s_value_pools[t_code] . count += 1;
-        *(__MCValue **)self = s_value_pools[t_code] . values;
-        s_value_pools[t_code] . values = self;
+        ((__MCFreedValue *)self) -> next = s_value_pools[t_code] . values;
+        s_value_pools[t_code] . values = (__MCFreedValue *)self;
 
 #ifdef HAVE_VALGRIND
 		/* Valgrind support */
@@ -590,7 +677,7 @@ void __MCValueDestroy(__MCValue *self)
 
 		return;
     }
-    
+	
 	MCMemoryDelete(self);
 }
 
@@ -1035,6 +1122,7 @@ bool __MCValueImmutableCopy(__MCValue *self, bool p_release, __MCValue*& r_new_v
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCBooleanCreateWithBool(bool p_value, MCBooleanRef& r_boolean)
 {
     r_boolean = MCValueRetain(p_value ? kMCTrue : kMCFalse);
@@ -1043,13 +1131,13 @@ bool MCBooleanCreateWithBool(bool p_value, MCBooleanRef& r_boolean)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNullRef kMCNull;
-MCBooleanRef kMCTrue;
-MCBooleanRef kMCFalse;
+MC_DLLEXPORT_DEF MCNullRef kMCNull;
+MC_DLLEXPORT_DEF MCBooleanRef kMCTrue;
+MC_DLLEXPORT_DEF MCBooleanRef kMCFalse;
 
 bool __MCValueInitialize(void)
 {
-    if (!MCMemoryNewArray(kMCValuePoolSize, s_value_pools))
+    if (!MCMemoryNewArray(kMCValuePoolCount, s_value_pools))
         return false;
     
 	if (!__MCValueCreate(kMCValueTypeCodeNull, kMCNull))
@@ -1069,35 +1157,43 @@ bool __MCValueInitialize(void)
 
 void __MCValueFinalize(void)
 {
-    for(uindex_t i = 0; i < kMCValuePoolSize; i++)
+    // First delete the constant valuerefs.
+    MCValueRelease(kMCFalse);
+    kMCFalse = nil;
+    
+    MCValueRelease(kMCTrue);
+    kMCTrue = nil;
+    
+    MCValueRelease(kMCNull);
+    kMCNull = nil;
+    
+    // Next delete the unique value array.
+    MCMemoryDeleteArray(s_unique_values);
+    s_unique_values = nil;
+    s_unique_value_count = 0;
+    s_unique_value_capacity_idx = 0;
+    
+    // Make sure to delete the value pools last, as they need to be around until
+    // all other valuerefs have been deleted.
+    for(uindex_t i = 0; i < kMCValuePoolCount; i++)
         while(s_value_pools[i] . count > 0)
         {
-            __MCValue *t_value;
+            __MCFreedValue *t_value;
             t_value = s_value_pools[i] . values;
-
+            
 #ifdef HAVE_VALGRIND
 			/* Valgrind support */
 			/* The first few bytes of the buffer actually contain the
 			 * address of the following buffer. */
-			VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCValue *));
+			VALGRIND_MAKE_MEM_DEFINED(t_value, sizeof (__MCFreedValue));
 #endif /* HAVE_VALGRIND */
-
-			s_value_pools[i] . values = *(__MCValue **)t_value;
+            
+			s_value_pools[i] . values = t_value -> next;
 			s_value_pools[i] . count -= 1;
             MCMemoryDelete(t_value);
         }
-    
-	MCMemoryDeleteArray(s_unique_values);
-	s_unique_values = nil;
-
-	MCValueRelease(kMCFalse);
-	kMCFalse = nil;
-	
-	MCValueRelease(kMCTrue);
-	kMCTrue = nil;
-
-	MCValueRelease(kMCNull);
-	kMCNull = nil;
+	MCMemoryDeleteArray(s_value_pools);
+    s_value_pools = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

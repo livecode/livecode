@@ -1,0 +1,34 @@
+Name: outputTextEncoding
+
+Type: property
+
+Syntax: set the outputTextEncoding to <textEncoding> 
+
+Summary: The <outputTextEncoding> property determines what text conversion to perform when writing text strings to stdout.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+set the outputTextEncoding to "utf8"
+
+Example:
+put the outputTextEncoding into tCurrentTextEncoding
+
+Parameters:
+textEncoding (enum): The type of text encoding to use.
+- windows-1252, windows: use the Windows 'Latin-1' encoding (codepage 1252); this is the native text encoding for the Windows engine
+- macintosh, mac: use the MacRoman encoding; this is the native text encoding of the Mac engine
+- iso-8859-1, linux: use the ISO-8859-1 encoding; this is the native text encoding of the Linux engine
+- utf-8, utf8: use the UTF-8 encoding
+- native: use the native encoding for the platform the engine is running on; this is the default
+
+Description:
+Use the <outputTextEncoding> property to determines what text conversion to perform when writing text strings to stdout.
+
+<outputTextEncoding> is only available when running in CGI mode (Server).
+
+>*Note:* The naming of the encodings here corresponds directly to the IANA assigned charset names which is why they are perhaps slightly different from text encoding naming elsewhere in the engine.

@@ -1,0 +1,42 @@
+Name: beep
+
+Type: command
+
+Syntax: beep [<numberOfTimes>]
+
+Summary: Sounds the system beep.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+beep
+
+Example:
+beep 7
+
+Example:
+beep trunc(field "Severity Level")
+
+Parameters:
+numberOfTimes (integer): An integer (or an expression that evaluates to an integer) and specifies how many beeps are sounded. If the <numberOfTimes> is not specified, one beep is sounded.
+
+Description:
+Use the <beep> command to get the user's attention.
+
+If the <numberOfTimes> is less than 1, the <beep> command has no effect (but does not cause a <error|script error>).
+
+>*Cross-platform note:* <Windows> and <OS X> do not <execute> the <beep> command if it's issued while a beep is playing. This means that if you specify a <numberOfTimes> on a <Windows> or <OS X|OS X system>, the user might hear fewer beeps because not all of them are sent to the speaker. To ensure that the user hears a specific number of beeps, use a <loop> with a <wait> command (where the wait time is at least as long as the beep sound's duration) after each beep:
+
+>*Note:* Overuse of the <beep> command has been known to cause user stress.
+
+>*Note:* The iPhone has no default system alert sound so if a sound is required one must be specified using the <beepSound> property. The action of <beep> is controlled by the system and depends on the user's preference settings. In particular a beep will only cause a vibration if the user has enabled that feature. Similarly, a beep will only cause a sound if the phone is not in silent mode.
+
+>*Note:* Android tries to use the default NOTIFICATION sound or uses the RINGTONE sound, if the NOTIFICATION sound is not available.
+
+References: wait (command), play (command), beepSound (property), beepDuration (property), beepLoudness (property), beepPitch (property), playLoudness (property), Windows (glossary), loop (glossary), error (glossary), execute (glossary), OS X (glossary)
+
+Tags: multimedia

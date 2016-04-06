@@ -1,0 +1,38 @@
+Name: regular
+
+Type: keyword
+
+Syntax: regular
+
+Summary: Designates the <paint tool> used to draw <regular polygon|regular polygons>. It also specifies, through the <style> <property>, that a <graphic> is a <regular polygon>.
+
+Synonyms: regular polygon,reg polygon,regular poly,reg poly
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the style of graphic "All Angles" to regular
+
+Example:
+choose regular polygon tool
+
+Description:
+Use the <regular> <keyword> to paint a <regular polygon> with the penColor or to change a <graphic> to a <regular polygon> shape.
+
+Regular polygons are geometric shapes whose sides are all the same length, such as squares, equilateral triangles, hexagons, and so on. (You set the number of sides with the polySides property.)
+
+When using the Regular tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw a polygon in the penColor, filled with the <brushColor> (or <brushPattern>). The number of sides is determined by the <global> <polySides> <property>.
+
+If you try to paint with the Regular tool on a card that has no images, an image the size of the card is created to hold the painting. If the current card already has one or more images, painting outside the image has no effect.
+
+Setting the <style> of a <graphic> to "regular" makes the <graphic> into a <regular polygon>. <Regular polygon(keyword)> <graphic(object)|graphics>, unlike painted <polygon|polygons>, can be changed and reshaped: use the <polySides> <properties> to change the shape.
+
+>*Important:*  You can use the synonyms--regular polygon, reg polygon, regular poly, and reg poly--to choose the <regular> <paint tool>, but not to set a <graphic(object)|graphic's> <style> <property>.
+
+References: polySides (property), style (property), brushColor (property), properties (property), brushPattern (property), global (command), choose (command), graphic (object), property (glossary), paint tool (glossary), graphic (glossary), keyword (glossary), polygon (glossary), regular polygon (glossary)
+
+Tags: ui

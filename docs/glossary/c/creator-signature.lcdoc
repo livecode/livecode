@@ -1,0 +1,12 @@
+Name: creator signature
+
+Synonyms: creator signature,creator,file creator
+
+Type: glossary
+
+Description:
+On <Mac OS> and <OS X|OS X systems>, a four- <character> signature attached to each file. The creator signature identifies the application that should be <launch|launched> when the <file> is opened.
+
+References: character (glossary), file (glossary), launch (glossary), Mac OS (glossary), OS X (glossary)
+
+Tags: file system

@@ -1,0 +1,12 @@
+Name: appearance
+
+Synonyms: look,appearance
+
+Type: glossary
+
+Description:
+The way <control|controls>, <menu|menus>, windows, and so forth look on the screen. Part of the look and feel of a <user interface>, along with <behavior>.
+
+References: behavior (glossary), menu (glossary), user interface (glossary), control (glossary)
+
+Tags: ui

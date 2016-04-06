@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -41,8 +41,7 @@ public:
 	};
 };
 
-static MCPlatformCursor *s_hidden_cursor = nil;
-static MCPlatformCursor *s_current_cursor = nil;
+static bool s_cursor_is_hidden = false;
 static NSCursor *s_watch_cursor = nil;
 
 static unsigned char s_watch_cursor_bits[] =
@@ -181,12 +180,23 @@ void MCPlatformReleaseCursor(MCPlatformCursorRef p_cursor)
 	MCMemoryDelete(p_cursor);
 }
 
-void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
+void MCPlatformSetCursor(MCPlatformCursorRef p_cursor)
 {
 	if (p_cursor -> is_standard)
-	{
+    {
+        // By default, we want the cursor to be visible.
+        if (s_cursor_is_hidden)
+        {
+            [NSCursor unhide];
+            s_cursor_is_hidden = false;
+        }
 		switch(p_cursor -> standard)
 		{
+        // SN-2015-06-16: [[ Bug 14056 ]] Hidden cursor is part of the cursors
+        case kMCPlatformStandardCursorNone:
+            [NSCursor hide];
+            s_cursor_is_hidden = true;
+            break;
 		case kMCPlatformStandardCursorArrow:
             [[NSCursor arrowCursor] set];
 			break;
@@ -213,29 +223,6 @@ void MCPlatformShowCursor(MCPlatformCursorRef p_cursor)
 	}
 	else
 		[p_cursor -> custom set];
-}
-
-void MCPlatformHideCursor(void)
-{
-	if (s_hidden_cursor == nil)
-	{
-		uint32_t t_img_data;
-		t_img_data = 0;
-		
-		MCImageBitmap t_image;
-		t_image . width = 1;
-		t_image . height = 1;
-		t_image . stride = 4;
-		t_image . data = &t_img_data;
-		
-		MCPoint t_hot_spot;
-		t_hot_spot . x = 0;
-		t_hot_spot . y = 0;
-		MCPlatformCreateCustomCursor(&t_image, t_hot_spot, s_hidden_cursor);
-	
-	}
-
-	MCPlatformShowCursor(s_hidden_cursor);
 }
 
 void MCPlatformHideCursorUntilMouseMoves(void)

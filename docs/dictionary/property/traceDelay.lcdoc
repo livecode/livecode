@@ -1,0 +1,31 @@
+Name: traceDelay
+
+Type: property
+
+Syntax: set the traceDelay to <milliseconds> 
+
+Summary: Used by the <debugger|script debugger> to specify how long to wait between lines when a <handler> is being traced.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Example:
+set the traceDelay to 1000 -- 1 second between steps
+
+Value:
+The <traceDelay> <property> is a positive <integer>.
+By default, the <traceDelay> <property> is set to 500 (one-half second).
+
+Description:
+Use the <traceDelay> <property> to make tracing faster or slower.
+
+When a handler is traced, each line is executed, after the delay specified in the <traceDelay> property. Using the <debugger|script debugger>, you can trace a <handler> slowly while watching the order in which lines are <execute|executed> and the value of <variable|variables> as they change, in order to track down any <error|errors> in the <handler>. Increasing the <traceDelay> causes the trace to take place more slowly, giving you more time to interpret the situation as the <handler> is traced. Decreasing the <traceDelay> speeds up tracing, which can be useful when <debug|debugging> long <handler|handlers>.
+
+If the debugger is not active, this property has no effect.
+
+>*Important:*  This <property> may change or be removed in future releases.
+
+References: debugDo (command), property (glossary), variable (glossary), handler (glossary), error (glossary), execute (glossary), debugger (glossary), debug (glossary), integer (keyword)

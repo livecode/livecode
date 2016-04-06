@@ -1,0 +1,36 @@
+Name: mobilePurchaseSet
+
+Type: command
+
+Syntax: mobilePurchaseSet <purchaseID>, <propertyName>, <value> 
+
+Summary: Sets the value of a property of an in-app purchase.
+
+Introduced: 5.0.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobilePurchaseSet tPurchaseID, "quantity", 10
+
+Parameters:
+purchaseID: a numeric purchase request identifier.
+propertyName (enum): the name of a purchase request property.
+- "quantity": The number of items purchased.
+- "productID": The identifier of the purchased product.
+- "purchaseDate": The date the purchase or restore request was sent.
+- "transactionIdentifier": The unique identifier of a successful purchase or restore.
+- "receipt": A block of data that can be used to confirm the purchase from a remote server with the iTunes store.
+- "originalPurchaseDate": For restored purchases only, the date of the original purchase.
+- "originalTransactionIdentifier": For restored purchases only, the transaction identifier of the original purchase.
+- "originalReceipt": For restored purchases only, the receipt of the original purchase.
+value: The value the property is set to.
+
+Description:
+Use the <mobilePurchaseSet> command to set the value of a property of an in-app purchase.
+
+Before sending a purchase request using the <mobilePurchaseSendRequest> command, you can configure aspects of it by setting certain properties, this is done using the <mobilePurchaseSet> command, specifying the purchase, the property being set and its value.
+
+References: mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), iphoneRequestProductDetails (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchaseState (function), mobilePurchaseError (function), mobileCanMakePurchase (function), mobilePurchaseGet (function), mobilePurchases (function), purchaseStateUpdate (message)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -63,6 +63,11 @@ MCPlatformWindow::MCPlatformWindow(void)
 	m_is_focused = false;
 	m_is_iconified = false;
     m_is_realized = false;
+	
+	m_is_opaque = true;
+    
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    m_document_filename = MCValueRetain(kMCEmptyString);
 }
 
 MCPlatformWindow::~MCPlatformWindow(void)
@@ -75,6 +80,9 @@ MCPlatformWindow::~MCPlatformWindow(void)
     // SN-2014-06-23: Title updated to StringRef
 	MCValueRelease(m_title);
 	
+    // MERG-2015-10-11: [[ DocumentFilename ]] documentFilename property
+    MCValueRelease(m_document_filename);
+    
 	free(m_attachments);
 }
 
@@ -172,6 +180,9 @@ void MCPlatformWindow::Hide(void)
 	
 	// Update the state.
 	m_is_visible = false;
+    
+	// CW-2015-19-22: [[ Bug 15979 ]] Reset m_is_iconified, otherwise if the window is reopened, it cannot be iconified.
+	m_is_iconified = false;
 	
 	// Hide the window.
 	DoHide();
@@ -300,6 +311,11 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 				MCPlatformWindowMaskRetain(m_mask);
 			m_changes . mask_changed = true;
 			break;
+		case kMCPlatformWindowPropertyIsOpaque:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			m_is_opaque = *(bool *)p_value;
+			m_changes . is_opaque_changed = true;
+			break;
 		case kMCPlatformWindowPropertyContentRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
 			m_content = *(MCRectangle *)p_value;
@@ -373,6 +389,12 @@ void MCPlatformWindow::SetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			m_ignore_mouse_events = *(bool *)p_value;
 			m_changes . ignore_mouse_events_changed = true;
 			break;
+        // MERG-2015-10-11: [[ DocumentFilename ]] Handle document filename
+        case kMCPlatformWindowPropertyDocumentFilename:
+            assert(p_type == kMCPlatformPropertyTypeMCString);
+            MCValueAssign(m_document_filename, *(MCStringRef*)p_value);
+            m_changes . document_filename_changed = true;
+            break;
 		default:
 			assert(false);
 			break;
@@ -403,6 +425,10 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 			break;
 		case kMCPlatformWindowPropertyMask:
 			assert(p_type == kMCPlatformPropertyTypeWindowMask);
+			break;
+		case kMCPlatformWindowPropertyIsOpaque:
+			assert(p_type == kMCPlatformPropertyTypeBool);
+			*(bool *)r_value = m_is_opaque;
 			break;
 		case kMCPlatformWindowPropertyFrameRect:
 			assert(p_type == kMCPlatformPropertyTypeRectangle);
@@ -440,6 +466,11 @@ void MCPlatformWindow::GetProperty(MCPlatformWindowProperty p_property, MCPlatfo
 		case kMCPlatformWindowPropertyCursor:
 			*(MCPlatformCursorRef *)r_value = m_cursor;
 			break;
+        // MERG-2015-10-11: [[ DocumentFilename ]] Handle document filename
+        case kMCPlatformWindowPropertyDocumentFilename:
+            assert(p_type == kMCPlatformPropertyTypeMCString);
+            *(MCStringRef*)r_value = MCValueRetain(m_document_filename);
+            break;
 		default:
 			assert(false);
 			break;
@@ -563,9 +594,9 @@ void MCPlatformWindow::HandleKeyUp(MCPlatformKeyCode p_key_code, codepoint_t p_m
 	MCPlatformCallbackSendKeyUp(this, p_key_code, p_mapped_char, p_unmapped_char);
 }
 
-void MCPlatformWindow::HandleDragEnter(MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+void MCPlatformWindow::HandleDragEnter(MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCPlatformCallbackSendDragEnter(this, p_pasteboard, r_operation);
+	MCPlatformCallbackSendDragEnter(this, p_dragboard, r_operation);
 }
 
 void MCPlatformWindow::HandleDragMove(MCPoint p_location, MCPlatformDragOperation& r_operation)

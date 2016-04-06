@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -574,6 +574,46 @@ inline float64_t MCPrinter::GetLayoutScale(void) const
 {
 	return m_layout_scale;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCCustomPrintingDevice;
+
+class MCCustomPrinter: public MCPrinter
+{
+public:
+	MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device);
+	~MCCustomPrinter(void);
+    
+	void SetDeviceOptions(MCArrayRef p_options);
+    
+    // We promote these to public in the custom printer so that we can aggregate
+    // a normal printer around a custom printer (i.e. on Linux).
+	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device);
+	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
+    
+protected:
+	void DoInitialize(void);
+	void DoFinalize(void);
+    
+	bool DoReset(MCStringRef p_name);
+	bool DoResetSettings(MCDataRef p_settings);
+    
+	const char *DoFetchName(void);
+	void DoFetchSettings(void*& r_bufer, uint4& r_length);
+    
+	void DoResync(void);
+    
+	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner);
+	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner);
+
+private:
+	MCStringRef m_device_name;
+	MCCustomPrintingDevice *m_device;
+	MCArrayRef m_device_options;
+};
+
+Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer);
 
 ////////////////////////////////////////////////////////////////////////////////
 

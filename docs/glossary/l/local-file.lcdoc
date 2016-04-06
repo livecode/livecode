@@ -1,0 +1,12 @@
+Name: local file
+
+Synonyms: local file,local files,local disk,local volume,local drive,local folder,local directory,local directories,local system
+
+Type: glossary
+
+Description:
+A file that's located on the system where the <application> is running. 
+ 
+A local disk is one that's connected directly to your system, not connected via a local network or the Internet.
+
+References: application (glossary)

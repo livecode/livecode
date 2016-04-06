@@ -1,0 +1,32 @@
+Name: flagged
+
+Type: property
+
+Syntax: set the flagged of <fieldChunk> to {true | false}
+
+Summary: The <flagged> property of a field chunk specifies whether it is underlined with a red dotted line.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the flagged of char 1 to 5 of field 1 to true
+
+Example:
+get the flagged of word 6 of field 1
+
+Example:
+put "one two three four five six seven eight nine ten eleven" into field 1
+set the flagged of word 10 of field 1 to true
+if the flagged of word 10 of field 1 is true then
+   answer "You have a mistake in your text"
+end if
+
+References: styledText (property), metadata (property)
+
+Tags: text processing

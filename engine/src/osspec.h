@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -133,6 +133,8 @@ extern bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef
 extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
 							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error);
 extern Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path);
+// SN-2015-01-16: [[ Bug 14295 ]] Added mode-specific way to get the resources folder
+extern void MCS_getresourcesfolder(bool p_standalone, MCStringRef &r_resourcesfolder);
 extern bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path);
 extern bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path);
 extern Boolean MCS_createalias(MCStringRef srcpath, MCStringRef dstpath);
@@ -187,7 +189,6 @@ extern void MCS_setplayloudness(uint2 p_loudness);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern Boolean MCS_handle_sockets(void);
 extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
 extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile, MCNameRef p_end_hostname);

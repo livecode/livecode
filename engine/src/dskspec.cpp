@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //#include "execpt.h"
 #include "exec.h"
+#include "stack.h"
 #include "object.h"
 #include "globals.h"
 #include "param.h"
@@ -78,8 +79,10 @@ bool MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_string)
     bool t_success;
     switch (p_kind)
 	{
-    case kMCSPutOutput:
-    case kMCSPutBeforeMessage:
+	case kMCSPutBeforeMessage:
+        t_success = MCmb -> set(ctxt, p_string, kMCVariableSetBefore);
+        break;
+	case kMCSPutOutput:
 	case kMCSPutIntoMessage:
 		t_success = MCmb -> set(ctxt, p_string);
         break;

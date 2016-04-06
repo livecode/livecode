@@ -1,0 +1,39 @@
+Name: exists
+
+Type: function
+
+Syntax: exists(<object>)
+
+Summary: <return|Returns> true if the specified <object> exists, false if it does not.
+
+Synonyms: existence
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+exists(card field 1)
+
+Example:
+exists(button "OK" of card "Preferences")
+
+Parameters:
+object: Any object reference.
+
+Returns (bool): The <exists> function <return|returns> true or false.
+
+Description:
+Use the <exists> function to make sure an <object> exists before you try to perform an action on it, or to determine whether to create an <object>.
+
+To find out whether any of a certain type of object exist, use the <exists> <function> with the number 1. For example, exists(image 1) <return|returns> true if there are any <image|images> on the <current card>, and false otherwise.
+
+You can also specify a chunk of a container, but in this case the <exists> <function> always <return|returns> true.
+
+>*Tip:*  To find out whether a <file> or <folder> exists, or whether a <process> is running, use the <there is a operator>.
+
+References: owner (property), there is a operator (operator), there is a (operator), there is no (operator), file (keyword), folder (glossary), current card (glossary), return (glossary), process (glossary), isNumber (function), object (object), image (object), function (control_st)
+
+Tags: objects

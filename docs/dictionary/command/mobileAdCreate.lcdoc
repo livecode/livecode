@@ -1,0 +1,48 @@
+Name: mobileAdCreate
+
+Type: command
+
+Syntax: mobileAdCreate <ad>, [<type>], [<topLeft>], [<metaData>]
+
+Summary: Place an ad of the given type
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileAdCreate "Ad1", "text", (0,0), tMetaData
+
+Parameters:
+ad: The name of the ad to create. This is used to reference the ad throughout its lifetime.
+type (enum): The type of the ad. The possible ad types are
+- "banner": This is the default.
+- "text"
+- "full screen"
+topLeft: The location in pixel of the top left corner of the ad (coordinates are in left,top - x,y order). The default is: 0,0
+metaData (enum): An array of values that are used to target the ad. The keys are as follows:
+- "phone number": The user's mobile number (MSISDN format with international prefix).
+- "keywords": Keywords relevant to the user's specific session. This is comma separated without spaces.
+- "gender": The expected gender of the target user. The allowed values are M, m, Male, F, f, Female.
+- "distribution id": The distribution Channel ID (559 for banner ads and full screen ads, 600 for text ads).
+- "refresh": A value in seconds that defines how often the ad should refresh. Values are between 30 and 300 seconds. The default is 120 seconds.
+- "age": An integer defining the expected age of the target user.
+- "coordinates": GPS ISO code location data in latitude, longitude format. - This is only available on iOS.
+- "location": A comma delimited list of country, state/province, city. - This is only available on iOS.
+
+The result:
+If successful, the result is empty.
+The result contains: not registered with service, if you did not register your app id using mobileAdRegister before calling <mobileAdCreate>.
+
+The result contains: ad already exists, if an ad of the given name already exists.
+
+The result contains: could not create ad, if the ad could not be created. This is the case, if the app does not have Internet permissions or the registered app key is not valid.
+
+Description:
+Use the <mobileAdCreate> to place an add of a given type.
+
+Place an ad of the given type. If no type is specified, a banner ad is placed. On Android, the Internet permissions checkbox must be ticked in the Standalone Application Settings. It is also recommended that both the fine and coarse location checkboxes are ticked. This allows the ad served to be tailored to the user's location. On iOS, the location of the user can be set directly in the meta data.
+
+References: mobileAdRegister (command), mobileAdDelete (command), mobileAds (function)

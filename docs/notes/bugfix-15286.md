@@ -1,0 +1,1 @@
+# Palette Actions: Nav items need tooltips

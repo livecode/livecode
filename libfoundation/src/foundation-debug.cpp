@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_DEBUG)
+#if defined(DEBUG_LOG)
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 
@@ -143,7 +143,7 @@ void __MCUnreachable(void)
 
 void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
 {
-    fprintf(stderr, "MCAssert failed: %s:%u \"%s\"", p_file, p_line, p_message);
+    fprintf(stderr, "MCAssert failed: %s:%u \"%s\"\n", p_file, p_line, p_message);
     abort();
 }
 
@@ -209,6 +209,42 @@ void __MCUnreachable(void)
 {
 	fprintf(stderr, "**** UNREACHABLE CODE EXECUTED ****\n");
 	abort();
+}
+
+#elif defined(__EMSCRIPTEN__)
+
+void __MCUnreachable(void)
+{
+	fprintf(stderr, "**** UNREACHABLE CODE EXECUTED ****\n");
+	abort();
+}
+
+void __MCAssert(const char *p_file, uint32_t p_line, const char *p_message)
+{
+    fprintf(stderr, "MCAssert failed: %s:%u \"%s\"", p_file, p_line, p_message);
+    abort();
+}
+
+void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
+{
+	MCAutoStringRef t_string;
+	
+	va_list t_args;
+	va_start(t_args, p_format);
+	MCStringFormatV(&t_string, p_format, t_args);
+	va_end(t_args);
+	
+	char *t_cstring;
+	if (MCStringConvertToCString(*t_string, t_cstring))
+	{
+		fprintf(stderr, "%s\n", t_cstring);
+		MCMemoryDeallocate(t_cstring);
+	}
+}
+
+void __MCLogWithTrace(const char *p_file, uint32_t p_line, const char *p_format, ...)
+{
+	__MCLog(p_file, p_line, p_format);
 }
 
 #endif

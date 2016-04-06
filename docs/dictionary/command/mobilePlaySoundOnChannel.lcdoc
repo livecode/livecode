@@ -1,0 +1,44 @@
+Name: mobilePlaySoundOnChannel
+
+Type: command
+
+Syntax: mobilePlaySoundOnChannel <sound>, <channel>, <type> 
+
+Summary: Plays a sound on a given channel.
+
+Synonyms: iphonePlaySoundOnChannel
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobilePlaySoundOnChannel theSound, theChannel, theType
+
+Example:
+mobilePlaySoundOnChannel "sounds/warning.mp4", "queued", "next"
+
+Example:
+put specialFolderPath("engine") & "/sounds/applause.mp4" into tSoundFile
+mobilePlaySoundOnChannel tSoundFile, "current", "now"
+
+Parameters:
+sound: The sound file to be played.
+channel: The name of the channel to play the sound on.
+type (enum): One of:
+- "now": The sound is played immediately, replacing any current sound (and queued sound) on the channel.
+- "next": The sound is queued to play immediately after the current sound. If no sound is playing the sound is prepared to play now, but the channel is immediately paused. This allows the sound to be prepared in advance of it being needed.
+- "looping": The sound is played immediately, replacing any current sound (and queued sound) on the channel and is looped indefinitely.
+
+Description:
+Use the <mobilePlaySoundOnChannel> command to play a sound on a given channel.
+
+If a sound channel with the given name doesn't exist a new one is created. When queuing a sound using next, the engine will 'pre-prepare' the sound long before the current sound is played, this ensures minimal latency between the current sound ending and the next one beginning.
+
+If an empty string is passed as the <sound> parameter, the current and scheduled sound on the given channel will be stopped and cleared.
+
+When the sound has finished playing naturally (not stopped/replaced) on a given channel, a <soundFinishedOnChannel> message is sent to the object which played the sound.
+
+References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message), iphoneSetAudioCategory (command)

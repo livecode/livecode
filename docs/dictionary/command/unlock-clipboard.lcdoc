@@ -1,0 +1,28 @@
+Name: unlock clipboard
+
+Type: command
+
+Syntax: unlock [the] clipboard
+
+Summary: Unlocks the clipboard and pushes the changes to the system clipboard.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+unlock the clipboard
+
+Description:
+Use the <unlock clipboard> <command> to make the contents of the clipboard available to other apps.
+
+>*Note:* If you use the <clipboardData> or <fullClipboardData> properties, locking the clipboard is not required (it will be done automatically) but is recommended.
+
+>*Tip:* Use <lock clipboard> to ensure the clipboard does not change between accesses.
+
+
+References: lock clipboard (command), clipboard (function), clipboardData (property), fullClipboardData (property), rawClipboardData (property)
+
+Tags: ui, clipboard

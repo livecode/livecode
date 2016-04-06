@@ -1,0 +1,14 @@
+Name: array dimension
+
+Synonyms: array dimension,array's dimension,dimension of an array,dimension of arrays
+
+Type: glossary
+
+Description:
+The dimension of an array is the number of items in a single element's key. For example, a two-dimensional array has keys that look like this: myArr[4,2] 
+ 
+An array can be displayed as a grid with the same dimension. For example, a one-dimensional <array> can be displayed as a simple list, and a two-dimensional array can be displayed as a set of rows and columns.
+
+References: array (glossary)
+
+Tags: properties

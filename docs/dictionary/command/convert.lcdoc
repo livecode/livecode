@@ -1,0 +1,74 @@
+Name: convert
+
+Type: command
+
+Syntax: convert <dateAndTime> [from <format> [and <format>]] to <format> [and <format>]
+
+Summary: Changes a date, a time, or a date and time to a specified format.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+convert "11/22/90" to long english date
+
+Example:
+convert the internet date from internet date to system date
+
+Example:
+convert lastChangedTime to abbreviated time and long date
+
+Example:
+convert the date && the time to seconds
+
+Parameters:
+dateAndTime (string): A string or container with a date, a time, or a date and time separated by a space, tab, or return character.
+format: One of the following (examples are February 17, 2000 at 10:13:21 PM, in the Eastern time zone, using US date and time formats): If you specify both a date and time format, they can be in either order and must be separated by a space. The resulting date and time are in the order you provided, separated by a space. If you specify seconds or dateItems, you can request only one format.
+- "short date":  2/17/00
+- "abbreviated date":  Thu, Feb 17, 2000
+- "long date":  Thursday, February 17, 2000
+- "short time":  10:13 PM
+- "abbreviated time":  10:13 PM
+- "long time":  10:13:21 PM
+- "internet date":   Thu, 17 Feb 2000 22:13:21 -0500
+- "seconds":   the number of seconds since the start of the eon
+- "dateItems":   2000,2,17,22,13,21,5
+
+The result: For example, suppose you start with 9:30 AM , convert that time to <dateItems> format, then add 45 minutes to item 5 (the minute) of the resulting value. This gives you 75 as the minute. When you convert the value to any other time format, the <convert> <command> automatically converts "75 minutes" to "1 hour and 15 minutes":.
+
+It: If the <dateAndTime> is a <container>, the converted date and time is placed in the <container>, replacing the previous contents. If the <dateAndTime> is a <string>, the converted date and time is placed in the <it> <variable>.
+
+Description:
+Use the <convert> <command> to change a date or time to a <format> that's more convenient for calculation or display.
+
+The dateItems format is a comma-separated list of numbers:
+* the year
+* the month number
+* the day of the month
+* the hour in 24-hour time
+* the minute
+* the second
+* the numeric day of the week where Sunday is day 1, Monday is day 2, and so forth
+
+The <convert> <command> can handle dates in dateItems format where one or more of the items is out of the normal range. This means you can add arbitrary numbers to an item in the dateItems and let the <convert> <command> handle the calculations that span minute, hour, day, month, and year boundaries.
+
+  convert "9:30 AM" to dateItems
+  add 45 to item 5 of it
+  convert it to time -- yields "10:15 AM"
+
+You can optionally use the <english> or <system> <keyword> before the <short>, <abbreviated>, or <long> date or time. If the <useSystemDate> is true, or if you use the <system> keyword, the user's current system preferences are used to format the date or time. Otherwise, the standard US date and time formats are used.
+
+The internet date, seconds, and dateItems formats are invariant and do not change according to the user's preferences.
+
+>*Note:* The <convert> command assumes all dates / times are in local time except for 'the seconds', which is taken to be universal time.
+
+>*Note:* If you convert a date without a time to a form that includes the time, the time will be given as midnight local time.
+
+>*Note:* The range of dates that the <convert> <command> can handle is limited by the operating system's date routines. In particular, Windows systems are limited to dates after 1/1/1970.
+
+References: useSystemDate (property), centuryCutoff (property), twelveHourTime (property), is a (operator), dateItems (keyword), system (keyword), long (keyword), short (keyword), string (keyword), seconds (keyword), abbreviated (keyword), internet (keyword), english (keyword), it (keyword), sort container (command), convert (command), time (function), dateFormat (function), milliseconds (function), date (function), format (function), keyword (glossary), variable (glossary), command (glossary), container (glossary)
+
+Tags: math

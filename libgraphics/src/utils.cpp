@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -284,18 +284,23 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 	bool t_success;
 	t_success = true;
 	
+    // Skia won't except odd numbers of dashes, so we must replicate in that case.
+    uint32_t t_dash_count;
+    if (t_success)
+        t_dash_count = (self -> count % 2) == 0 ? self -> count : self -> count * 2;
+        
 	SkScalar *t_dashes;
 	if (t_success)
-		t_success = MCMemoryNewArray(self -> count, t_dashes);
+		t_success = MCMemoryNewArray(t_dash_count, t_dashes);
 	
 	SkDashPathEffect *t_dash_effect;
 	t_dash_effect = NULL;
 	if (t_success)
 	{
-		for (uint32_t i = 0; i < self -> count; i++)
-			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i]);	
+		for (uint32_t i = 0; i < t_dash_count; i++)
+			t_dashes[i] = MCGFloatToSkScalar(self -> lengths[i % self -> count]);
 	
-		t_dash_effect = new SkDashPathEffect(t_dashes, self -> count, MCGFloatToSkScalar(self -> phase));
+		t_dash_effect = new SkDashPathEffect(t_dashes, (int)t_dash_count, MCGFloatToSkScalar(self -> phase));
 		t_success = t_dash_effect != NULL;
 	}
 	
@@ -684,6 +689,27 @@ MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRec
 	return t_intersection;
 }
 
+MCGRectangle MCGRectangleUnion(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
+{
+	if (MCGRectangleIsEmpty(p_rect_1))
+		return p_rect_2;
+	else if (MCGRectangleIsEmpty(p_rect_2))
+		return p_rect_1;
+	
+	MCGRectangle t_union;
+	t_union . origin . x = MCMin(p_rect_1 . origin . x, p_rect_2 . origin . x);
+	t_union . origin . y = MCMin(p_rect_1 . origin . y, p_rect_2 . origin . y);
+	
+	MCGFloat t_right, t_bottom;
+	t_right = MCMax(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
+	t_bottom = MCMax(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
+	
+	t_union . size . width = t_right - t_union . origin . x;
+	t_union . size . height = t_bottom - t_union . origin . y;
+	
+	return t_union;
+}
+
 MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &p_rect_1, const MCGIntegerRectangle &p_rect_2)
 {
 	int32_t t_left, t_top;
@@ -928,6 +954,8 @@ bool solve_simul_eq_2_vars(const MCGFloat p_eq_1[3], const MCGFloat p_eq_2[3], M
 		a2 = -(b * p_eq_2[1] + p_eq_2[2]) / p_eq_2[0];
 		if (a2 * p_eq_1[0] + b * p_eq_2[1] + p_eq_2[2] != 0)
 			return false;
+        
+        a = a2;
 	}
 	else
 		return false;

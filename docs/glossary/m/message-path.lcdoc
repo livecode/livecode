@@ -1,0 +1,12 @@
+Name: message path
+
+Synonyms: message path
+
+Type: glossary
+
+Description:
+The order in which <object|objects> are given the opportunity to respond to a <message>.
+
+References: message (glossary), object (glossary)
+
+Tags: objects

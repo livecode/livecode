@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -219,6 +219,7 @@ public:
     void SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align);
     void SetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign p_align);
     void SetEnabled(MCExecContext& ctxt, bool p_value);
+	void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type);
     void SetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType p_type);
     void SetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType p_type);
@@ -235,6 +236,7 @@ public:
     void GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align);
     void GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align);
     void GetEnabled(MCExecContext& ctxt, bool& r_value);
+	void GetEditable(MCExecContext& ctxt, bool& r_value);
     void GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type);
     void GetAutoCorrectionType(MCExecContext& ctxt, MCNativeControlInputAutocorrectionType& r_type);
     void GetKeyboardType(MCExecContext& ctxt, MCNativeControlInputKeyboardType& r_type);
@@ -267,7 +269,7 @@ MCPropertyInfo MCAndroidInputControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_FONT_SIZE, UInt32, MCAndroidInputControl, TextSize)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_TEXT_ALIGN, NativeControlInputTextAlign, MCAndroidInputControl, TextAlign)
     DEFINE_RW_CTRL_PROPERTY(P_ENABLED, Bool, MCAndroidInputControl, Enabled)
-    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCAndroidInputControl, Enabled)
+    DEFINE_RW_CTRL_PROPERTY(P_EDITABLE, Bool, MCAndroidInputControl, Editable)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTO_CAPITALIZATION_TYPE, NativeControlInputCapitalizationType, MCAndroidInputControl, AutoCapitalizationType)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_AUTOCORRECTION_TYPE, NativeControlInputAutocorrectionType, MCAndroidInputControl, AutoCorrectionType)
     DEFINE_RW_CTRL_ENUM_PROPERTY(P_KEYBOARD_TYPE, NativeControlInputKeyboardType, MCAndroidInputControl, KeyboardType)
@@ -420,6 +422,17 @@ void MCAndroidInputControl::SetEnabled(MCExecContext& ctxt, bool p_value)
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "setEnabled", "vb", nil, p_value);
 }
+
+// PM-2015-01-14: [[ Bug 16704 ]] Allow a non-editable multiline fld to be scrolled
+void MCAndroidInputControl::SetEditable(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setEditable", "vb", nil, p_value);
+}
+
 
 void MCAndroidInputControl::SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type)
 {
@@ -637,6 +650,8 @@ void MCAndroidInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInp
     t_view = GetView();
     
     MCInputTextAlign t_align;
+    // Default to the switch's default
+    t_align = kMCInputTextAlignLeft;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getTextAlign", "v", &t_align);
@@ -662,6 +677,8 @@ void MCAndroidInputControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeCo
     t_view = GetView();
     
     MCInputVerticalAlign t_align;
+    // Default to the switch's default
+    t_align = kMCInputVerticalAlignCenter;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getVerticalAlign", "i", &t_align);
@@ -692,12 +709,25 @@ void MCAndroidInputControl::GetEnabled(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
+void MCAndroidInputControl::GetEditable(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getEditable", "b", &r_value);
+    else
+        r_value = false;
+}
+
 void MCAndroidInputControl::GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type)
 {
     jobject t_view;
     t_view = GetView();
     
     MCInputCapitalizationType t_type;
+    // Default to the switch default
+    t_type = kMCInputCapitalizeNone;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getCapitalization", "i", &t_type);
@@ -739,6 +769,8 @@ void MCAndroidInputControl::GetKeyboardType(MCExecContext& ctxt, MCNativeControl
     t_view = GetView();
 
     MCInputKeyboardType t_type;
+    // Default to the switch's default
+    t_type = kMCInputKeyboardTypeDefault;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getKeyboardType", "v", &t_type);
@@ -776,6 +808,8 @@ void MCAndroidInputControl::GetReturnKey(MCExecContext& ctxt, MCNativeControlInp
     t_view = GetView();
 
     MCInputReturnKeyType t_type;
+    // Default to the switch's default
+    t_type = kMCInputReturnKeyTypeDefault;
     
     if (t_view != nil)
         MCAndroidObjectRemoteCall(t_view, "getReturnKeyType", "i", &t_type);

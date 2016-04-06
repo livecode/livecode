@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -43,9 +43,9 @@ UIViewController *MCIPhoneGetViewController(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __IPHONE_4_0
-@interface MCIPhonePickEventDelegate : UIViewController <EKEventEditViewDelegate>
+@interface com_runrev_livecode_MCIPhonePickEventDelegate : UIViewController <EKEventEditViewDelegate>
 #else
-@interface MCIPhonePickEventDelegate : UIViewController <EKEventEditViewDelegate, EKEventViewDelegate>
+@interface com_runrev_livecode_MCIPhonePickEventDelegate : UIViewController <EKEventEditViewDelegate, EKEventViewDelegate>
 #endif
 {
     bool m_running;
@@ -63,7 +63,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-@implementation MCIPhonePickEventDelegate
+@implementation com_runrev_livecode_MCIPhonePickEventDelegate
 
 - (id)init
 {
@@ -536,8 +536,8 @@ bool MCSystemShowEvent(MCStringRef p_event_id, MCStringRef& r_result)
     bool t_result = false;
     NSString* t_ns_result = nil;
     NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
-    MCIPhonePickEventDelegate *t_show_event;
-    t_show_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_show_event;
+    t_show_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 	[t_show_event showViewEvent:t_ns_event withResult: t_ns_result];
     if (t_ns_result != nil)
 		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
@@ -550,8 +550,8 @@ bool MCSystemCreateEvent(MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = nil;
-    MCIPhonePickEventDelegate *t_create_event;
-    t_create_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_create_event;
+    t_create_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 	[t_create_event showCreateEvent: t_ns_result];
     if (t_ns_result.length > 0)
 		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
@@ -564,8 +564,8 @@ bool MCSystemUpdateEvent(MCStringRef p_event_id, MCStringRef& r_result)
     bool t_result = false;
     NSString* t_ns_result = nil; 
     NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
-    MCIPhonePickEventDelegate *t_update_event;
-    t_update_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_update_event;
+    t_update_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 
 	if (t_ns_event != nil)
     {
@@ -585,8 +585,8 @@ bool MCSystemGetEventData(MCExecContext &r_ctxt, MCStringRef p_event_id, MCArray
     bool t_result = false;
     NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
     MCCalendar t_event_result;
-    MCIPhonePickEventDelegate *t_get_event;
-    t_get_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_get_event;
+    t_get_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
     t_event_result = [t_get_event getEventData: t_ns_event withGotData:t_result];
     // Convert the event structure to an array of pairs
     if (t_result == true)
@@ -600,8 +600,8 @@ bool MCSystemRemoveEvent(MCStringRef p_event_id, bool p_reocurring, MCStringRef&
     bool t_result = false;
     NSString* t_ns_result = NULL;
     NSString* t_ns_event = [NSString stringWithMCStringRef: p_event_id];
-    MCIPhonePickEventDelegate *t_delete_event;
-    t_delete_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_delete_event;
+    t_delete_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
     [t_delete_event deleteEvent: t_ns_event withInstances:p_reocurring withResult: t_ns_result];
     if (t_ns_result != NULL)
 		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_event_id_deleted);
@@ -614,8 +614,8 @@ bool MCSystemAddEvent(MCCalendar p_new_calendar_data, MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = NULL;
-    MCIPhonePickEventDelegate *t_add_event;
-    t_add_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_add_event;
+    t_add_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 	[t_add_event addEvent: p_new_calendar_data withResult: t_ns_result];
 	if (t_ns_result != NULL)
 		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
@@ -627,8 +627,8 @@ bool MCSystemGetCalendarsEvent(MCStringRef& r_result)
 {
     bool t_result = false;
     NSString* t_ns_result = NULL;
-    MCIPhonePickEventDelegate *t_get_calendars_event;
-    t_get_calendars_event = [[MCIPhonePickEventDelegate alloc] init];
+    com_runrev_livecode_MCIPhonePickEventDelegate *t_get_calendars_event;
+    t_get_calendars_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
 	[t_get_calendars_event getCalendarsEvent: t_ns_result];
 	if (t_ns_result != NULL)
 		t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);
@@ -659,8 +659,8 @@ bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringR
     }
     if (t_start_date != NULL && t_end_date != NULL)
     {
-        MCIPhonePickEventDelegate *t_find_event;
-        t_find_event = [[MCIPhonePickEventDelegate alloc] init];
+        com_runrev_livecode_MCIPhonePickEventDelegate *t_find_event;
+        t_find_event = [[com_runrev_livecode_MCIPhonePickEventDelegate alloc] init];
     	[t_find_event findEvent:t_start_date andEnd: t_end_date withResult: t_ns_result];
 	    if (t_ns_result != NULL)
             t_result = MCStringCreateWithCFString((CFStringRef)t_ns_result, r_result);

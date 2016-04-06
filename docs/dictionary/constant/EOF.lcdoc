@@ -1,0 +1,29 @@
+Name: EOF
+
+Type: constant
+
+Syntax: EOF
+
+Summary: Equivalent to the EOT <character> (ASCII 4, Control-D).
+
+Synonyms: end,endOfFile
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+read from file monsterFile until EOF
+
+Description:
+Use the <EOF> <constant> to read an entire <file>, or to read all data from a <process>.
+
+The <EOF> <constant> signifies the end of a <file>.
+
+When used with the <read from process> or <read from file> <command>, the <EOF> <constant> causes LiveCode to keep reading data until no more data remains to be read.
+
+References: constant (command), read from process (command), read from file (command), character (keyword), end (keyword), stdout (keyword), file (keyword), command (glossary), process (glossary)
+
+Tags: file system

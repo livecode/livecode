@@ -1,0 +1,33 @@
+Name: endArrow
+
+Type: property
+
+Syntax: set the endArrow of <graphic> to {true | false}
+
+Summary: Specifies whether the last <vertex> in a <polygon> <graphic> has an arrowhead.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the endArrow of graphic ID 4 to false
+
+Value (bool): The <endArrow> of a <graphic> is true or false.
+
+Description:
+Use the <endArrow> <property> to place an arrowhead at the ending <point> of an irregular <polygon> or <line> <graphic>.
+
+By default, the endArrow property of newly created graphics is set to false.
+
+For irregular polygons, the end arrow is placed at the point corresponding to the last line of the graphic's points <property>.
+
+If the style <property> of the <graphic> is not polygon or line, the setting of its <endArrow> <property> has no effect.
+
+References: relativePoints (property), startArrow (property), arrowSize (property), polygon (keyword), line (keyword), point (keyword), graphic (keyword), vertex (glossary), property (glossary)
+
+Tags: ui

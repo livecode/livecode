@@ -1,0 +1,40 @@
+Name: longFilePath
+
+Type: function
+
+Syntax: the longFilePath of <filePath> 
+
+Syntax: longFilePath(<filePath>)
+
+Summary: <return|Returns> the long-format equivalent of an 8.3-format <file path>.
+
+Introduced: 1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: disk
+
+Example:
+the longFilePath of it
+
+Example:
+if storedPath is not the longFilePath of storedFile then checkVersion
+
+Parameters:
+filePath: The filePath is the location and name of the file or folder whose long equivalent you want. If you specify a name but not a location, LiveCode assumes the file or folder is in the defaultFolder.
+
+Returns: The <longFilePath> function returns a file path.
+
+Description:
+Use the <longFilePath> function to get the long equivalent of a short file path passed from the command line.
+
+The <longFilePath> function transforms the <filePath> without looking for the file, so it returns a value even if the <filePath> does not exist- namely the <filePath> prefixed with the current <defaultFolder>.
+
+>*Warning:* 
+In pre 7.x versions on Mac and Linux the <longFilePath> function returned the <filePath> without changing it, post 7.x the <longFilePath> function returns the full path to the file. This change may affect existing code.
+
+References: defaultFolder (property), shortFilePath (function), file path (glossary), return (glossary)
+
+Tags: file system

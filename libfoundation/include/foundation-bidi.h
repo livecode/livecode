@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -43,7 +43,7 @@ enum MCTextDirection
 #define kMCBidiALM      0x061C      // Arabic letter mark
 
 
-void MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, uint8_t *&r_levels, uindex_t& r_level_size);
+bool MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, uint8_t *&r_levels, uindex_t& r_level_size);
 uint8_t MCBidiFirstStrongIsolate(MCStringRef p_string, uindex_t p_offset);
 
 #endif // __MC_FOUNDATION_BIDI__

@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2003-2015 Runtime Revolution Ltd.
+Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * Random value generation
  * ================================================================ */
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSRandomData (uindex_t p_length, MCDataRef & r_data)
 {
 	MCDataRef t_mutable;
@@ -52,7 +52,7 @@ MCSRandomData (uindex_t p_length, MCDataRef & r_data)
 	return MCDataCopyAndRelease (t_mutable, r_data);
 }
 
-real64_t
+MC_DLLEXPORT_DEF real64_t
 MCSRandomReal (void)
 {
 	real64_t t_random_bytes;

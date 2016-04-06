@@ -1,0 +1,30 @@
+Name: lockRecent
+
+Type: property
+
+Syntax: set the lockRecent to {true | false}
+
+Summary: Specifies whether visited <card|cards> are added to the <recent cards|recent cards list> used by go back, go forth, and go recent.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the lockRecent to true
+
+Value (bool):The <lockRecent> is true or false.
+By default, the <lockRecent> <property> is set to false. It is <reset> to false when no <handler|handlers> are <execute|executing>.
+
+Description:
+Use the <lockRecent> <property> to to prevent the user from having easy access to a <card> used only by a <handler>.
+
+If the <lockRecent> <property> is set to true, visits to a <card> are not recorded in the <recent cards|recent cards list>.
+
+The <lockRecent> <property> is automatically set to false when a <palette>, <modeless>, or <modal> <stack> is opened, even if a <handler> is still running.
+
+References: card (keyword), push (command), palette (command), reset (command), modal (command), show cards (command), unlock recent (command), modeless (command), card (object), stack (object), property (glossary), handler (glossary), recent cards (glossary), execute (glossary)
+
+Tags: navigation

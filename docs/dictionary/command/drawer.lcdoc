@@ -1,0 +1,57 @@
+Name: drawer
+
+Type: command
+
+Syntax: drawer <stack> {[at] left | bottom | right} [{of | in} <parentStack>] [aligned [to] {left | right | top | bottom | center}]
+
+Summary: Displays a <stack> as a <drawer> of another <stack>.
+
+Introduced: 2.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+drawer stack "Recent Transactions" at right
+
+Example:
+drawer stack "Tips" at left of stack "Main" aligned to top
+
+Example:
+drawer me at bottom aligned to left
+
+Example:
+drawer stack "Help List" at right of this stack
+
+Example:
+drawer stack "Connections" at right aligned to center
+
+Parameters:
+stack: Any stack reference.
+parentStack: Any reference to a stack in an open window.
+
+Description:
+Use the <drawer> <command> to slide a <stack> out of one edge of another <stack>.
+
+The <drawer> <command> opens the <stack> as a <drawer(command)> of the specified <parentStack>. (The stack's <rectangle> and <location> <properties> are ignored.)
+
+You can open a drawer at the left, bottom, or right edge of the <parentStack>. If you don't specify an edge, the <drawer(command)> opens at the left if there is room for it to fully open. Otherwise, it opens at the right.
+
+You can align a drawer to the top, bottom, or center (of the parentStack's left or right edge) or to the left, right, or center (of the bottom edge). If you don't specify an alignment, the <drawer(command)> is aligned to the center of the specified edge. To let the user access multiple drawers on one side of a window, align them to different locations on that side:
+
+  drawer "Basic Tools" at left of this stack aligned to top
+  drawer "Colors" at left of this stack aligned to bottom
+
+>*Cross-platform note:*  On <Mac OS>, <Unix>, and <Windows|Windows systems>, <drawer(glossary)|drawers> are not supported, so the <drawer> <command> opens the <stack> as a <palette> instead. The <palette> uses the current <rectangle> of the <stack> and does not resize or move it.
+
+To slide the drawer back in, either close the stack or hide it:
+
+  close stack "Colors"
+  hide stack "Colors"
+
+If the <stack> is already open, the <drawer> <command> closes the <stack> and reopens it as a <drawer(command)>, so <closeStack> and <openStack>, <closeCard> and <openCard>, and (if applicable) <closeBackground> and <openBackground> <message|messages> are sent to the <current card> as a result of <execute|executing> this <command>. Use the <lock messages> <command> before <execute|executing> <drawer> if you want to prevent the close <message|messages> from being sent; the open <message|messages> are sent regardless of the setting of the <lockMessages> <property>.
+
+References: mode (property), properties (property), lockMessages (property), location (property), rectangle (keyword), openCard (message), closeStack (message), closeCard (message), closeBackground (message), openStack (message), openBackground (message), topLevel (command), go (command), lock messages (command), drawer (command), palette (command), stack (object), property (glossary), current card (glossary), Windows (glossary), execute (glossary), message (glossary), Mac OS (glossary), drawer (glossary), Unix (glossary), command (glossary)
+
+Tags: windowing

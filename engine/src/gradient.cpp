@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -448,10 +448,10 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
             t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
     }
     
+    MCerrorlock--;
+    
     if (t_success)
     {
-        MCerrorlock--;
-        
         r_value . arrayref_value = MCValueRetain(*v);
         r_value . type = kMCExecValueTypeArrayRef;
         return true;
@@ -969,7 +969,10 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
         MCAutoArrayRef t_array;
         MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeArrayRef, &(&t_array));
         if (ctxt . HasError())
+        {
+            delete t_gradient;
             return false;
+        }
         
         if (MCArrayIsEmpty(*t_array))
         {
@@ -1176,8 +1179,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 		}
 		break;
 	default:
-		MCUnreachable();
-		return 0;
+        MCUnreachableReturn(0);
 	}
 	if (p_mirror)
 	{

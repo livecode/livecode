@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -43,9 +43,17 @@ template<typename T> inline T& InOut(MCAutoValueRefBase<T>& p_auto)
 template<typename T> class MCAutoValueRefBase
 {
 public:
+
 	inline MCAutoValueRefBase(void)
+		: m_value(nil)
 	{
-		m_value = nil;
+	}
+    
+    inline explicit MCAutoValueRefBase(T p_value)
+		: m_value(nil)
+	{
+        if (p_value)
+            m_value = MCValueRetain(p_value);
 	}
 
 	inline ~MCAutoValueRefBase(void)
@@ -71,6 +79,13 @@ public:
 		return m_value;
 	}
     
+    void Reset(T value = nil)
+    {
+        if (m_value)
+            MCValueRelease(m_value);
+        m_value = (value) ? (T)MCValueRetain(value) : NULL;
+    }
+    
     inline T& operator ! (void)
     {
 		return m_value;
@@ -80,7 +95,8 @@ public:
     // retaining it - the auto container is considered to now own the value.
     inline void Give(T value)
     {
-        MCAssert(m_value == nil);
+        if (m_value)
+            MCValueRelease(m_value);
         m_value = value;
     }
     
@@ -124,10 +140,22 @@ private:
     MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
-template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)> class MCAutoMutableValueRefBase: public MCAutoValueRefBase<T>
+template<typename T, bool (*MutableCopyAndRelease)(T, T&), bool (*ImmutableCopyAndRelease)(T, T&)>
+class MCAutoMutableValueRefBase :
+  public MCAutoValueRefBase<T>
 {
 public:
-	inline T operator = (T value)
+    inline MCAutoMutableValueRefBase() :
+      MCAutoValueRefBase<T>()
+    {
+    }
+    
+    inline explicit MCAutoMutableValueRefBase(T p_value) :
+      MCAutoValueRefBase<T>(p_value)
+    {
+    }
+    
+    inline T operator = (T value)
 	{
         return MCAutoValueRefBase<T>::operator =(value);
 	}
@@ -303,7 +331,7 @@ public:
 		return m_values;
 	}
     
-    T& operator [] (const int p_index)
+    T& operator [] (const uindex_t p_index)
     {
         MCAssert(m_values != nil);
         return m_values[p_index];
@@ -317,6 +345,7 @@ private:
 typedef MCAutoValueRefArrayBase<MCValueRef> MCAutoValueRefArray;
 typedef MCAutoValueRefArrayBase<MCNumberRef> MCAutoNumberRefArray;
 typedef MCAutoValueRefArrayBase<MCStringRef> MCAutoStringRefArray;
+typedef MCAutoValueRefArrayBase<MCDataRef> MCAutoDataRefArray;
 typedef MCAutoValueRefArrayBase<MCArrayRef> MCAutoArrayRefArray;
 typedef MCAutoValueRefArrayBase<MCListRef> MCAutoListRefArray;
 typedef MCAutoValueRefArrayBase<MCBooleanRef> MCAutoBooleanRefArray;
@@ -423,6 +452,92 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCAutoStringRefAsUTF16String
+{
+public:
+	MCAutoStringRefAsUTF16String(void)
+		: m_string(nil), m_buf(nil), m_length(0)
+	{
+	}
+
+	~MCAutoStringRefAsUTF16String(void)
+	{
+		Unlock();
+	}
+
+	bool Lock(MCStringRef p_string)
+	{
+		if (nil == p_string)
+		{
+			return false;
+		}
+
+		m_length = MCStringGetLength(p_string);
+
+		if (MCStringIsNative(p_string))
+		{
+			m_string = nil;
+			return MCStringConvertToWString(p_string, m_buf);
+		}
+		else
+		{
+			m_string = MCValueRetain(p_string);
+			m_buf = nil;
+			return true;
+		}
+	}
+
+	void Unlock(void)
+	{
+		if (nil != m_string)
+		{
+			MCValueRelease(m_string);
+		}
+		else
+		{
+			MCMemoryDeleteArray(m_buf);
+		}
+
+		m_string = nil;
+		m_buf = nil;
+		m_length = 0;
+	}
+
+	const unichar_t *Ptr(void)
+	{
+		if (nil != m_buf)
+		{
+			return m_buf;
+		}
+		else if (nil != m_string)
+		{
+			return MCStringGetCharPtr(m_string);
+		}
+		else
+		{
+			MCUnreachable();
+			return nil;
+		}
+	}
+
+	uindex_t Size(void)
+	{
+		return m_length;
+	}
+
+	const unichar_t *operator * (void)
+	{
+		return Ptr();
+	}
+
+private:
+	MCStringRef m_string;
+	unichar_t *m_buf;
+	uindex_t m_length;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(__MAC__) || defined(__IOS__)
 #include <CoreFoundation/CoreFoundation.h>
 class MCAutoStringRefAsCFString
@@ -458,17 +573,67 @@ private:
     CFStringRef m_cfstring;
 };
 
-#endif // __MAC__ || __IOS__
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__LINUX__)
+class MCAutoStringRefAsPascalString
+{
+public:
+    MCAutoStringRefAsPascalString(void)
+    {
+        m_pascal_string = nil;
+    }
+    
+    ~MCAutoStringRefAsPascalString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        // A Pascal-style counted string can only contain a maximum of 255 chars
+        // so the string length has to be clamped to that.
+        uindex_t t_length = MCStringGetLength(p_string);
+        if (t_length > 255)
+            return false;
+        
+        // Allocate a buffer, adding an extra char for the count byte
+        MCMemoryNewArray(t_length + 1, m_pascal_string);
+        
+        // Copy the string to the buffer, leaving a byte at the beginning for
+        // the count.
+        MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), m_pascal_string+1);
+        
+        // Write the count byte
+        *m_pascal_string = uint8_t(t_length);
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_pascal_string);
+        m_pascal_string = nil;
+    }
+    
+    unsigned char* operator * (void)
+    {
+        return m_pascal_string;
+    }
+    
+private:
+    unsigned char *m_pascal_string;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCAutoStringRefAsSysString
 {
 public:
     MCAutoStringRefAsSysString()
     {
-        m_sysstring = nil;
+        m_bytes = nil;
+        m_byte_count = 0;
     }
 
     ~MCAutoStringRefAsSysString()
@@ -478,29 +643,40 @@ public:
 
     bool Lock(MCStringRef p_string)
     {
-        return MCStringConvertToSysString(p_string, m_sysstring);
+        MCAssert(m_bytes == nil);
+        return MCStringConvertToSysString(p_string, m_bytes, m_byte_count);
     }
 
     void Unlock()
     {
-        if (m_sysstring != nil)
-            free((void*)m_sysstring);
-        m_sysstring = nil;
+        if (m_bytes != nil)
+        {
+            free(m_bytes);
+            m_bytes = nil;
+            m_byte_count = 0;
+        }
     }
 
-    const char * operator * () const
+    const char *operator * () const
     {
-        return m_sysstring;
+        return Ptr();
+    }
+    
+    const char *Ptr(void) const
+    {
+        MCAssert(m_bytes != nil);
+        return m_bytes;
+    }
+    
+    size_t Size(void) const
+    {
+        return m_byte_count;
     }
 
 private:
-    const char *m_sysstring;
+    char *m_bytes;
+    size_t m_byte_count;
 };
-#elif defined(__WINDOWS__)
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsWS
-#else
-#  define MCAutoStringRefAsSysString MCAutoStringRefAsUTF8String
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -647,6 +823,12 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* This version of MCAutoPointer should be used when you need to
+ * manage a value created with the "new" operator.  For example:
+ *
+ *     MCAutoPointer<int> number;
+ *     number = new int;
+ */
 template<typename T> class MCAutoPointer
 {
 public:
@@ -690,6 +872,52 @@ public:
 		m_ptr = nil;
 	}
 
+private:
+	T *m_ptr;
+};
+
+/* This version of MCAutoPointer should be used when you need to
+ * manage a value created with the "new[]" operator.  For example:
+ *
+ *     MCAutoPointer<int[]> numbers;
+ *     numbers = new int[25];
+ */
+template<typename T> class MCAutoPointer<T[]>
+{
+public:
+	MCAutoPointer(void) : m_ptr(nil) {}
+	~MCAutoPointer(void) { delete[] m_ptr; }
+
+	T* operator = (T* value)
+	{
+		delete[] m_ptr;
+		m_ptr = value;
+		return value;
+	}
+
+	T*& operator & (void)
+	{
+		MCAssert(m_ptr != nil);
+		return m_ptr;
+	}
+
+	T* operator -> (void)
+	{
+		MCAssert(m_ptr != nil);
+		return m_ptr;
+	}
+
+	T* operator * (void)
+	{
+		return m_ptr;
+	}
+
+	void Take(T* & r_ptr)
+	{
+		r_ptr = m_ptr;
+		m_ptr = nil;
+	}
+	
 private:
 	T *m_ptr;
 };
@@ -807,7 +1035,7 @@ public:
 		return m_ptr;
 	}
 
-	uindex_t Size()
+	uindex_t Size() const
 	{
 		return m_size;
 	}
@@ -883,12 +1111,12 @@ public:
 
 	//////////
 
-	T& operator [] (int p_index)
+	T& operator [] (uindex_t p_index)
 	{
 		return m_ptr[p_index];
 	}
     
-    const T& operator [] (int p_index) const
+    const T& operator [] (uindex_t p_index) const
     {
         return m_ptr[p_index];
     }

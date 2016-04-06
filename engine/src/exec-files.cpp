@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
+#include "mode.h"
 
 #include "globals.h"
 #include "osspec.h"
@@ -29,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "util.h"
 #include "uidc.h"
+#include "mcerror.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -254,9 +256,18 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
 		return;
 	}
 
+    bool t_error;
     MCNewAutoNameRef t_path;
+    t_error = false;
     MCNameCreate(p_folder, &t_path);
-	if (MCS_getspecialfolder(*t_path, r_path))
+    // We have a special, mode-specific resource folder
+    if (MCNameIsEqualTo(*t_path, MCN_resources, kMCStringOptionCompareCaseless))
+        MCModeGetResourcesFolder(r_path);
+    else if (!MCS_getspecialfolder(*t_path, r_path))
+        t_error = true;
+
+    // MCModeGetResourcesFolder won't fail, but can return an empty path
+    if (!t_error)
 	{
 		if (MCStringIsEmpty(r_path))
 			ctxt.SetTheResultToCString("folder not found");
@@ -731,13 +742,15 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 {
 	if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
-		ctxt . LegacyThrow(EE_SHELL_NOPERM);
+		MCeerror->add(EE_SHELL_NOPERM, 0, 0, p_command);
+		ctxt . Throw();
 		return;
 	}
 
 	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
-		ctxt . LegacyThrow(EE_SHELL_BADCOMMAND);
+		MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
+		ctxt . Throw();
 		return;
 	}
 }
@@ -1111,6 +1124,9 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
     if (t_success)
         t_success = MCStringCreateMutable(0, t_buffer);
     
+    bool t_used_buffer;
+    t_used_buffer = true;
+    
 	uindex_t t_num_chars;
 	switch (p_unit_type) 
 	{
@@ -1259,18 +1275,20 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
             t_success = MCDataCreateWithBytes((byte_t*)t_current . Chars(), tsize, (MCDataRef&)r_output);
         else
             t_success = MCStringCreateWithBytes((byte_t*)t_current . Chars(), tsize, kMCStringEncodingNative, false, (MCStringRef&)r_output);
+        
+        // AL_2015-03-27: [[ Bug 15056 ]] Don't overwrite the output value with the buffer in this case.
+        t_used_buffer = false;
         break;
 	}
-    if (t_success)
+    if (t_success && t_used_buffer)
         t_success = MCStringCopyAndRelease(t_buffer, (MCStringRef&)r_output);
+    else
+        MCValueRelease(t_buffer);
     
     if (t_success)
         r_stat = IO_NORMAL;
     else
-    {
-        MCValueRelease(t_buffer);
         r_stat = IO_ERROR;
-    }
 }
 
 // Refactoring of the waiting block used in MCFilesExecPerformRead*
@@ -1524,11 +1542,24 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
 
         break;
     case FU_CHARACTER:
-        //  This loop accumulates codeunits into the buffer and then returns when it crosses a char boundary
-        //  It does this by monitoring the length of the range [index, length(buffer)) for its length in characters
+    {
+        // In order to make the reading of 1 char faster, we use a temporary,
+        // small buffer.
+        // We copy the codeunit(s) we read over the last character boundary at
+        //  the previous reading, and put it into our reading buffer.
+        MCAutoStringRef t_read_buffer;
+        uindex_t t_initial_length;
+        
+        if (!MCStringMutableCopySubstring(x_buffer, MCRangeMake(p_last_boundary, UINDEX_MAX), &t_read_buffer))
+            return false;
+        
+        // We keep track of the number of codeunit that we have copied for the
+        //  main buffer.
+        t_initial_length = MCStringGetLength(*t_read_buffer);
+        
         while(true)
         {
-            uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat);
+            uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, *t_read_buffer, r_stat);
 
             if (!t_codeunit_read)
             {
@@ -1547,16 +1578,24 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
             }
 
             MCRange t_cu_range, t_char_range;
-            t_cu_range = MCRangeMake(p_last_boundary, MCStringGetLength(x_buffer) - p_last_boundary);
-            MCStringUnmapIndices(x_buffer, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
+            t_cu_range = MCRangeMake(0, MCStringGetLength(*t_read_buffer));
+            MCStringUnmapIndices(*t_read_buffer, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
 
             if (t_char_range . length > 1)
             {
-                // The codeunit loaded is now on part of a second character: must end now the loop and mark the position
+                // We append the reading buffer MINUS the initial codeunits
+                MCAutoStringRef t_new_codeunits;
+                if (!MCStringCopySubstring(*t_read_buffer, MCRangeMake(t_initial_length, UINDEX_MAX), &t_new_codeunits)
+                        || !MCStringAppend(x_buffer, *t_new_codeunits))
+                    return false;
+                
+                // The last codeunit is now on part of a new character:
+                //  we can end here the loop, and appendmust end now the loop and mark the position
                 r_new_boundary = MCStringGetLength(x_buffer) - t_codeunit_read;
                 break;
             }
         }
+    }
         break;
 
     default:

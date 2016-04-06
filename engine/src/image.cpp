@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -101,6 +101,7 @@ MCPropertyInfo MCImage::kProperties[] =
 	DEFINE_RO_OBJ_ENUM_PROPERTY(P_PAINT_COMPRESSION, InterfaceImagePaintCompression, MCImage, PaintCompression)
 	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCImage, Angle)
     DEFINE_RW_OBJ_PROPERTY(P_CENTER_RECTANGLE, OptionalRectangle, MCImage, CenterRectangle)
+    DEFINE_RO_OBJ_RECORD_PROPERTY(P_METADATA, MCImage, Metadata)
 
 };
 
@@ -144,6 +145,7 @@ MCImage::MCImage()
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the image animate message is only posted from a single thread.
     m_animate_posted = false;
+    
 }
 
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
@@ -256,7 +258,7 @@ void MCImage::close()
 
 Boolean MCImage::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	
@@ -601,7 +603,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 			MCControl::timer(mptr, params);
 }
 
-void MCImage::setrect(const MCRectangle &nrect)
+void MCImage::applyrect(const MCRectangle &nrect)
 {
 	MCRectangle orect = rect;
 	rect = nrect;
@@ -951,6 +953,17 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
             else
                 ep . clear();
         break;
+        // MERG-2014-09-18: [[ ImageMetadata ]] return the image metadata as an array
+    case P_METADATA:
+        if (m_rep != nil)
+        {
+            MCImageMetadata t_metadata;
+            m_rep->GetMetadata(t_metadata);
+            MCImageGetMetadata(ep, t_metadata);
+        }
+        else
+            ep . clear();
+        break;
 #endif /* MCImage::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
@@ -1152,7 +1165,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			MCPoint t_hotspot;
 			char *t_name = nil;
 			IO_handle t_stream = nil;
-
+            
 			if (data.getlength() == 0)
 			{
 				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
@@ -1177,7 +1190,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 						t_success = setcompressedbitmap(t_compressed);
 					else if (t_bitmap != nil)
 						t_success = setbitmap(t_bitmap, 1.0);
-				}
+                }
 
 				MCImageFreeBitmap(t_bitmap);
 				MCImageFreeCompressedBitmap(t_compressed);
@@ -1235,7 +1248,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 				}
 
 				setbitmap(t_copy, 1.0);
-			}
+            }
 
 			MCImageFreeBitmap(t_copy);
 
@@ -1303,7 +1316,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			dirty = True;
 		}
 		break;
-	case P_RESIZE_QUALITY:
+    case P_RESIZE_QUALITY:
 		if (data == "best")
 			resizequality = INTERPOLATION_BICUBIC;
 		else if (data == "good")
@@ -1441,7 +1454,7 @@ MCControl *MCImage::clone(Boolean attach, Object_pos p, bool invisible)
 
 Boolean MCImage::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle drect = MCU_intersect_rect(srect, rect);
 	if (drect.width == 0 || drect.height == 0)
@@ -1629,9 +1642,6 @@ void MCImage::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 
 		if (getstate(CS_MAGNIFY))
 			drawmagrect(dc);
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
 	}
 }
 
@@ -1643,7 +1653,7 @@ void MCImage::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 //  SAVING AND LOADING
 //
 
-IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// Extended data area for an image consists of:
 	//   uint1 resize_quality;
@@ -1681,11 +1691,11 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
                 // FG-2014-10-17: [[ Bugfix 13706 ]]
                 // Calculate the correct size for 7.0+ style strings
                 // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
-                t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], MCstackfileversion >= 7000);
+                t_length += p_stream . MeasureStringRefNew(s_control_color_names[i], p_version >= 7000);
             }
 			else
                 // AL-2014-11-07: [[ Bug 13851 ]] Measure empty string if the color name is nil
-                t_length += p_stream . MeasureStringRefNew(kMCEmptyString, MCstackfileversion >= 7000);
+                t_length += p_stream . MeasureStringRefNew(kMCEmptyString, p_version >= 7000);
 	
 		t_length += sizeof(uint16_t);
 		t_length += s_control_pixmap_count * sizeof(uint4);
@@ -1710,7 +1720,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 			t_stat = p_stream . WriteColor(s_control_colors[i]);
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, MCstackfileversion >= 7000);
+			t_stat = p_stream . WriteStringRefNew(s_control_color_names[i] != nil ? s_control_color_names[i] : kMCEmptyString, p_version >= 7000);
 		
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);
@@ -1732,7 +1742,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
     }
     
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
@@ -1744,7 +1754,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
     
 	if (p_remaining >= 1)
 	{
-		t_stat = p_stream . ReadU8(resizequality);
+		t_stat = checkloadstat(p_stream . ReadU8(resizequality));
 		
 		if (t_stat == IO_NORMAL)
 			p_remaining -= 1;
@@ -1753,18 +1763,18 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_length;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_length);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
         
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
 		
 		// MW-2013-09-05: [[ Bug 11127 ]] If we have control colors then read them in
 		//   (first do colors, then pixmapids - if any).
 		if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLCOLORS) != 0)
 		{
 			s_have_control_colors = true;
-			t_stat = p_stream . ReadU16(s_control_color_count);
-			t_stat = p_stream . ReadU16(s_control_color_flags);
+			t_stat = checkloadstat(p_stream . ReadU16(s_control_color_count));
+			t_stat = checkloadstat(p_stream . ReadU16(s_control_color_flags));
 
             if (t_stat == IO_NORMAL)
 			{
@@ -1773,11 +1783,11 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 			}
 
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
-				t_stat = p_stream . ReadColor(s_control_colors[i]);
+				t_stat = checkloadstat(p_stream . ReadColor(s_control_colors[i]));
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			{
 				// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-				t_stat = p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000);
+				t_stat = checkloadstat(p_stream . ReadStringRefNew(s_control_color_names[i], p_version >= 7000));
 				if (t_stat == IO_NORMAL && MCStringIsEmpty(s_control_color_names[i]))
 				{
 					MCValueRelease(s_control_color_names[i]);
@@ -1785,28 +1795,28 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 				}
 			}
             if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadU16(s_control_pixmap_count);
+				t_stat = checkloadstat(p_stream . ReadU16(s_control_pixmap_count));
 			
 			if (t_stat == IO_NORMAL && 
 				!MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids))
-				t_stat = IO_ERROR;
+				t_stat = checkloadstat(IO_ERROR);
 			for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
-				t_stat = p_stream . ReadU32(s_control_pixmapids[i] . id);
+				t_stat = checkloadstat(p_stream . ReadU32(s_control_pixmapids[i] . id));
 		}
         
         if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CENTERRECT) != 0)
         {
-            t_stat = p_stream . ReadS16(m_center_rect . x);
+            t_stat = checkloadstat(p_stream . ReadS16(m_center_rect . x));
             if (t_stat == IO_NORMAL)
-                t_stat = p_stream . ReadS16(m_center_rect . y);
+                t_stat = checkloadstat(p_stream . ReadS16(m_center_rect . y));
             if (t_stat == IO_NORMAL)
-                t_stat = p_stream . ReadU16(m_center_rect . width);
+                t_stat = checkloadstat(p_stream . ReadU16(m_center_rect . width));
             if (t_stat == IO_NORMAL)
-                t_stat = p_stream . ReadU16(m_center_rect . height);
+                t_stat = checkloadstat(p_stream . ReadU16(m_center_rect . height));
         }
 
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
 
 		if (t_stat == IO_NORMAL)
 			p_remaining -= t_length + t_header_length;
@@ -1818,7 +1828,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 	return t_stat;
 }
 
-IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -1881,7 +1891,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	uint1 t_old_ink = ink;
 
 //--- pre-2.7 Conversion
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		if (ink == GXblendSrcOver)
 		{
@@ -1904,7 +1914,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	uint4 oldflags = flags;
 	if (flags & F_HAS_FILENAME)
 		flags &= ~(F_TRUE_COLOR | F_COMPRESSION | F_NEED_FIXING);
-	stat = MCControl::save(stream, p_part, t_has_extension || p_force_ext);
+	stat = MCControl::save(stream, p_part, t_has_extension || p_force_ext, p_version);
 
 	flags = oldflags;
 
@@ -1939,7 +1949,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_HAS_FILENAME)
     {
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(filename, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(filename, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -2017,7 +2027,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_ANGLE)
 		if ((stat = IO_write_uint2(angle, stream)) != IO_NORMAL)
 			return stat;
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 IO_stat MCImage::load(IO_handle stream, uint32_t version)
@@ -2202,7 +2212,7 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 
 // MW-2012-03-28: [[ Bug 10130 ]] This is a no-op as the image object has no
 //   font.
-bool MCImage::recomputefonts(MCFontRef p_parent_font)
+bool MCImage::recomputefonts(MCFontRef p_parent_font, bool p_force)
 {
 	return false;
 }
@@ -2279,13 +2289,11 @@ void MCImage::apply_transform()
 	else
 		m_has_transform = false;
 	
-	MCThreadMutexLock(MCimagerepmutex);
 	if (m_resampled_rep != nil && !(m_has_transform && MCGAffineTransformIsRectangular(m_transform) && m_resampled_rep->Matches(rect.width, rect.height, m_transform.a == -1.0, m_transform.d == -1.0, m_rep)))
 	{
 		m_resampled_rep->Release();
 		m_resampled_rep = nil;
 	}
-	MCThreadMutexUnlock(MCimagerepmutex);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2439,7 +2447,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 
 	if (t_success)
 	{
-		t_success = MCImageGetFileRepForStackContext(p_filename, getstack(), t_rep);
+		t_success = MCImageGetRepForReferenceWithStackContext(p_filename, getstack(), t_rep);
 
 		// MM-2013-11-27: [[ Bug 11522 ]] If we can't get the image rep, make sure we still store the filename.
 		if (t_success)

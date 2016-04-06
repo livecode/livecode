@@ -1,0 +1,30 @@
+Name: printCardBorders
+
+Type: property
+
+Syntax: set the printCardBorders to {true | false}
+
+Summary: Specifies whether the printed image of a <card> is outlined.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+set the printCardBorders to false
+
+Value (bool):The <printCardBorders> is true or false.
+By default, the <printCardBorders> <property> is set to false.
+
+Description:
+Use the <printCardBorders> <property> to place a border around each <card> when printed.
+
+If the card's <showBorder> <property> is false, the border is not drawn and the setting of this <property> has no effect.
+
+References: showBorder (property), printMargins (property), card (keyword), print (command), property (glossary)
+
+Tags: printing

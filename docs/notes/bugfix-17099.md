@@ -1,0 +1,1 @@
+# Windows: Fix crash when recieving drag-drop from another application.

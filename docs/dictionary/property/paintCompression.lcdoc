@@ -1,0 +1,45 @@
+Name: paintCompression
+
+Type: property
+
+Syntax: get the paintCompression of <image> 
+
+Syntax: set the paintCompression to {png | jpeg | gif | rle}
+
+Summary: Specifies the <compress|compression> <format> used for storing an <image>.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the paintCompression to "PNG"
+
+Example:
+if the paintCompression of image "Photo" is "pict" then warnUser
+
+Value (enum): A string describing the compression format.
+- png:
+- jpeg:
+- gif:
+- rle:
+- pict:
+
+The result: >*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, <PICT> <files> can be <import|imported>, and the <paintCompression> of the resulting <image(keyword)> is set to pict. However, PICT <image(object)|images> cannot be displayed on <Unix> or <Windows|Windows systems> unless they are converted to another <format>.
+
+Description:
+Use the <paintCompression> <property> to obtain the <format> of <image(object)|images>, or to change the <format> used for new <image(object)|images>.
+
+When an image is changed with a paint tool, it is recompressed the next time you leave the card it's on. The format in which it is compressed is set by the global <paintCompression> <property>.
+
+To change an image's compression format, first set the <paintCompression> to the desired value, then paint in the <image(keyword)>. Then either go to another <card> and return, or close and re-open the <stack>.
+
+If an image's alphaData <property> contains any value other than 255 (opaque), it is automatically recompressed in PNG format to preserve the <alpha channel> data.
+
+By <default>, the <global> <paintCompression> <property> is set to "rle" in standalones and "png" in the development environment.The <paintCompression> of an <image> is one of the following: "png", "jpeg", "gif", "rle", or "pict". By <default>, the <paintCompression> <property> of a newly created <image> is set to "rle" if it was created with the <create> <command> or by using a <paint tool>. If the <image> was created with the <import> <command>, its <paintCompression> is set to the <format> of the <import|imported> picture <file>.For images, this property is read-only and cannot be set; you can set only the global <paintCompression> 
+
+References: JPEGQuality (property), default (keyword), file (keyword), image (keyword), card (keyword), create (command), import (command), global (command), choose (command), format (function), files (function), property (glossary), compress (glossary), PICT (glossary), OS X (glossary), Windows (glossary), import (glossary), Mac OS (glossary), Unix (glossary), alpha channel (glossary), command (glossary), paint tool (glossary), stack (object), image (object)
+
+Tags: multimedia

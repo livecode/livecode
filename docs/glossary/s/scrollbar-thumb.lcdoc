@@ -1,0 +1,14 @@
+Name: scrollbar thumb
+
+Synonyms: thumb,scroll thumb,elevator,elevator box,elevator boxes,scrollbar thumb
+
+Type: glossary
+
+Description:
+The small box in a <scrollbar> whose position indicates the amount of scroll. 
+ 
+You can drag the thumb along the <scrollbar> to change the amount of scroll.
+
+References: scrollbar (glossary)
+
+Tags: ui

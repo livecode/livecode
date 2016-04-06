@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -29,9 +29,18 @@ extern void InitializeCustomInvokeLists(void);
 
 static int s_is_bootstrap = 0;
 
+extern enum DependencyModeType DependencyMode;
+extern int OutputFileAsC;
+extern int OutputFileAsBytecode;
+
 int IsBootstrapCompile(void)
 {
     return s_is_bootstrap;
+}
+
+int IsDependencyCompile(void)
+{
+    return DependencyMode != kDependencyModeNone;
 }
 
 void bootstrap_main(int argc, char *argv[])
@@ -46,14 +55,28 @@ void bootstrap_main(int argc, char *argv[])
     }
     
     s_is_bootstrap = 1;
+
+    /* Treat all warnings as errors in bootstrap mode */
+    s_is_werror_enabled = 1;
     
     for(i = 0; i < argc; i++)
     {
-        if (strcmp(argv[i], "--template") == 0 && i + 1 < argc)
+        if (0 == strcmp(argv[i], "-v") || 0 == strcmp(argv[i], "--verbose"))
+        {
+            ++s_verbose_level;
+            continue;
+        }
+        else if (strcmp(argv[i], "--inputg") == 0 && i + 1 < argc)
            SetTemplateFile(argv[++i]);
-        else if (strcmp(argv[i], "--output") == 0 && i + 1 < argc)
-            SetOutputFile(argv[++i]);
-        else if (strcmp(argv[i], "--modulepath") == 0 && i + 1 < argc)
+        else if (strcmp(argv[i], "--outputg") == 0 && i + 1 < argc)
+            SetOutputGrammarFile(argv[++i]);
+        else if (strcmp(argv[i], "--outputc") == 0 && i + 1 < argc)
+        {
+            OutputFileAsC = 1;
+            OutputFileAsBytecode = 0;
+            SetOutputCodeFile(argv[++i]);
+        }
+        else if (strcmp(argv[i], "--outputi") == 0 && i + 1 < argc)
             AddImportedModuleDir(argv[++i]);
         else
             AddFile(argv[i]);
@@ -65,43 +88,7 @@ void bootstrap_main(int argc, char *argv[])
         InitializeCustomInvokeLists();
         ROOT();
     }
-    
-    /*
-    // Get the filename.
-    const char *t_in_file;
-    t_in_file = argv[0];
-    
-    // Compute the output filename.
-    const char *t_in_leaf;
-    t_in_leaf = strrchr(t_in_file, '/');
-    if (t_in_leaf == NULL)
-        t_in_leaf = t_in_file;
-    
-    char t_out_file[256];
-    sprintf(t_out_file, "_G_/%s.g", t_in_leaf);
-    extern FILE *yyout;
-    yyout = fopen(t_out_file, "w");
-    if (yyout == NULL)
-    {
-        fprintf(stderr, "Could not open output file '%s'\n", t_out_file);
-        return 1;
-    }
-    
-    extern FILE *yyin;
-    yyin = fopen(t_in_file, "r");
-    if (yyin == NULL)
-    {
-        fprintf(stderr, "Could not open file '%s'\n", argv[0]);
-        return 1;
-    }
-    
-    Run();
-    
-    return 0;*/
 }
-
-extern int OutputFileAsC;
-extern int OutputFileAsBytecode;
 
 /* Print some sort of helpful message if the user doesn't pass sane arguments */
 static void
@@ -110,6 +97,7 @@ usage(int status)
     fprintf(stderr,
 "Usage: lc-compile [OPTION ...] --output OUTFILE [--] LCBFILE\n"
 "       lc-compile [OPTION ...] --outputc OUTFILE [--] LCBFILE\n"
+"       lc-compile [OPTION ...] --deps DEPTYPE [--] LCBFILE ... LCBFILE\n"
 "\n"
 "Compile a LiveCode Builder source file.\n"
 "\n"
@@ -117,7 +105,15 @@ usage(int status)
 "      --modulepath PATH    Search PATH for module interface files.\n"
 "      --output OUTFILE     Filename for bytecode output.\n"
 "      --outputc OUTFILE    Filename for C source code output.\n"
+"      --deps make          Generate lci file dependencies in make format for\n"
+"                           the input source files.\n"
+"      --deps order         Generate the order the input source files should be\n"
+"                           compiled in.\n"
+"      --deps changed-order Generate the order the input source files should be\n"
+"                           compiled in, but only if they need recompiling.\n"
 "      --manifest MANIFEST  Filename for generated manifest.\n"
+"      -Werror              Turn all warnings into errors.\n"
+"  -v, --verbose            Output extra debugging information.\n"
 "  -h, --help               Print this message.\n"
 "  --                       Treat all remaining arguments as filenames.\n"
 "\n"
@@ -125,7 +121,7 @@ usage(int status)
 "searched in the order they appear.  An interface file may be generated in\n"
 "the first PATH specified.\n"
 "\n"
-"Report bugs to <http://quality.runrev.com/>\n"
+"Report bugs to <http://quality.livecode.com/>\n"
             );
     exit (status);
 }
@@ -134,6 +130,7 @@ static void full_main(int argc, char *argv[])
 {
     /* Process options. */
     int have_input_file = 0;
+    int have_output_file = 0;
     int end_of_args = 0;
     int argi;
 
@@ -141,9 +138,31 @@ static void full_main(int argc, char *argv[])
     for (argi = 0; argi < argc; ++argi)
     {
         const char *opt = argv[argi];
-        const char *optarg = (argi + 1 < argc) ? argv[argi+1] : NULL;
+        const char *optarg = (argi + 1 < argc) && 0 != strncmp(argv[argi+1], "--", 2) ? argv[argi+1] : NULL;
         if (!end_of_args)
         {
+            if (0 == strcmp(opt, "--deps"))
+            {
+                const char *t_option;
+                if (optarg)
+                    t_option = argv[++argi];
+                else
+                    t_option = "make";
+                
+                if (0 == strcmp(t_option, "make"))
+                    DependencyMode = kDependencyModeMake;
+                else if (0 == strcmp(t_option, "order"))
+                    DependencyMode = kDependencyModeOrder;
+                else if (0 == strcmp(t_option, "changed-order"))
+                    DependencyMode = kDependencyModeChangedOrder;
+                else
+                {
+                    fprintf(stderr, "ERROR: Invalid --deps option '%s'.\n\n",
+                            t_option);
+                    usage(1);
+                }
+                continue;
+            }
             if (0 == strcmp(opt, "--modulepath") && optarg)
             {
                 AddImportedModuleDir(argv[++argi]);
@@ -151,21 +170,37 @@ static void full_main(int argc, char *argv[])
             }
             if (0 == strcmp(opt, "--output") && optarg)
             {
-                SetOutputFile(argv[++argi]);
+                SetOutputBytecodeFile(argv[++argi]);
                 OutputFileAsBytecode = 1;
                 OutputFileAsC = 0;
+                have_output_file = 1;
                 continue;
             }
             if (0 == strcmp(opt, "--outputc") && optarg)
             {
-                SetOutputFile(argv[++argi]);
+                SetOutputCodeFile(argv[++argi]);
                 OutputFileAsC = 1;
                 OutputFileAsBytecode = 0;
+                have_output_file = 1;
                 continue;
             }
             if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
+                continue;
+            }
+            /* FIXME This should be expanded to support "-W error",
+             * "--warn error", "--warn=error", etc.  Also options for
+             * enabling/disabling/errorifying particular warning
+             * types. */
+            if (0 == strcmp(opt, "-Werror"))
+            {
+                s_is_werror_enabled = 1;
+                continue;
+            }
+            if (0 == strcmp(opt, "-v") || 0 == strcmp(opt, "--verbose"))
+            {
+                ++s_verbose_level;
                 continue;
             }
             if (0 == strcmp(opt, "-h") || 0 == strcmp(opt, "--help"))
@@ -189,19 +224,27 @@ static void full_main(int argc, char *argv[])
         }
 
         /* Accept only one input file */
-        if (!have_input_file)
+        if (DependencyMode == 0 || have_output_file)
         {
-            AddFile(opt);
-            have_input_file = 1;
-            continue;
+            if (!have_input_file)
+            {
+                AddFile(opt);
+                have_input_file = 1;
+                continue;
+            }
+            else
+            {
+                fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
+                continue;
+            }
+            
+            break; /* Doesn't match any option */
         }
         else
         {
-            fprintf(stderr, "WARNING: Ignoring multiple input filenames.\n");
-            continue;
+            AddFile(opt);
+            have_input_file = 1;
         }
-
-        break; /* Doesn't match any option */
     }
 
 	// If there is no filename, error.

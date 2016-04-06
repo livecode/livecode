@@ -1,0 +1,108 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library provides low-level system functionality for modular
+LiveCode programs.
+*/
+
+module com.livecode.date
+
+use com.livecode.foreign
+
+public foreign handler MCDateExecGetLocalDate(out rDateTime as List) returns nothing binds to "<builtin>"
+public foreign handler MCDateExecGetUniversalDate(out rDateTime as List) returns nothing binds to "<builtin>"
+public foreign handler MCDateExecGetUniversalTime(out rSeconds as CDouble) returns nothing binds to "<builtin>"
+
+/*
+Summary:	The local Gregorian date
+
+Example:
+	variable tDateTime as List
+	put the local date into tDateTime
+
+	variable tDayOfMonth as Number
+	put tDateTime[3] into tDayOfMonth
+
+Description:
+Returns the local date as a list of seven numeric components.  The
+elements of the list are:
+
+* The year
+* The month (1-12)
+* The day of the month (1-31, depending on the month)
+* The hour (0-23)
+* The minute (0-59)
+* The second (0-59)
+* The offset from UTC in seconds
+
+References: UniversalDate (expression)
+
+Tags: Date and time
+*/
+syntax LocalDate is expression
+	"the" "local" "date"
+begin
+	MCDateExecGetLocalDate(output)
+end syntax
+
+/*
+Summary:	The UTC Gregorian date
+
+Example:
+	variable tDateTime as List
+	put the universal date into tDateTime
+
+	variable tMinuteOfHour as Number
+	put tDateTime[5] into tMinuteOfHour
+
+Description:
+Returns the universal date (i.e. the current date in the UTC+00:00
+time zone) as a list of seven numeric components.  The elements of the
+list are the same as for <LocalDate>.
+
+References: LocalDate (expression)
+
+Tags: Date and time
+*/
+syntax UniversalDate is expression
+	"the" "universal" "date"
+begin
+	MCDateExecGetUniversalDate(output)
+end syntax
+
+/*Summary:	The seconds
+
+Example:
+	variable tTime as real
+	put the universal time into tTime
+
+Description:
+Returns the current universal time relative to the start of the UNIX epoch - 1st
+January 1970 in seconds.
+
+Tags: Date and time
+*/
+syntax UniversalTime is expression
+    "the" "universal" "time"
+begin
+    MCDateExecGetUniversalTime(output)
+end syntax
+
+--
+
+end module

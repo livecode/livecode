@@ -21,6 +21,7 @@
 	<array>
 		${BUNDLE_ICONS}
 	</array>
+	${DISABLE_ATS}
 	<key>CFBundleDisplayName</key>
 		${BUNDLE_DISPLAY_NAME_SUPPORT}
 	<key>MinimumOSVersion</key>
@@ -52,6 +53,10 @@
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		${IPAD_SUPPORTED_ORIENTATIONS}
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		${PLAY_AUDIO_WHEN_IN_BACKGROUND}
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>

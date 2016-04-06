@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -520,7 +520,7 @@ static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8
     while (bidiIncrementISRIndex(classes, t_run, t_index));
 }
 
-void MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, uint8_t *&r_levels, uindex_t& r_level_size)
+bool MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, uint8_t *&r_levels, uindex_t& r_level_size)
 {
     intenum_t t_base_level;
     if (p_base_level == kMCTextDirectionAuto)
@@ -533,12 +533,19 @@ void MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, ui
     
     // Map every codepoint in the string to its bidi class
     MCAutoArray<uint8_t> t_classes;
-    /* UNCHECKED */ t_classes.New(t_length);
+	if (!t_classes.New(t_length))
+	{
+		return false;
+	}
+
     MCUnicodeGetProperty(MCStringGetCharPtr(p_string), t_length, kMCUnicodePropertyBidiClass, kMCUnicodePropertyTypeUint8, t_classes.Ptr());
     
     // Create an array to store the BiDi level of each character
     uint8_t *t_levels;
-    MCMemoryAllocate(t_length, t_levels);
+	if (!MCMemoryAllocate(t_length, t_levels))
+	{
+		return false;
+	}
     
     // AL-2014-11-13: [[ Bug 13948 ]] Set the array of levels to zero, since there are some 'default' characters
     //  whose levels are not set by any of the explicit direction rules of the BiDi algorithm
@@ -837,6 +844,8 @@ void MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, ui
     
     r_level_size = t_length;
     r_levels = t_levels;
+
+	return true;
 }
 
 uint8_t MCBidiFirstStrongIsolate(MCStringRef p_string, uindex_t p_offset)

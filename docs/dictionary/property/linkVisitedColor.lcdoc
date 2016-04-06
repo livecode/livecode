@@ -1,0 +1,42 @@
+Name: linkVisitedColor
+
+Type: property
+
+Syntax: set the linkVisitedColor to {<colorName> | <RGBColor>}
+
+Syntax: set the linkVisitedColor of <stack> to {empty | <colorName> | <RGBColor>}
+
+Summary: Specifies the color of <grouped text> that has been clicked during the current session.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the linkVisitedColor to "purple"
+
+Example:
+set the linkVisitedColor of stack "Help" to empty
+
+Value:
+The <linkVisitedColor> is a <color reference>.
+The <colorName> is any standard color name.
+
+The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+
+By default, the <linkVisitedColor> is set to "81,24,128" (a dark purple). The <linkVisitedColor> of a newly created <stack> is set to empty by <default>.
+
+Description:
+Use the <linkVisitedColor> <property> to make <grouped text> look and behave like links in a <browser|web browser>.
+
+Visited text is text whose <visited> <property> is true. This <property> is set to true when the user has clicked a text group during the current session.
+
+If the <linkVisitedColor> of a <stack> is empty, <grouped text> in that <stack> is shown with the <global> <linkVisitedColor> <property> if the text's <visited> <property> is true.
+
+If the <linkVisitedColor> of a <stack> is not empty, already-visited <grouped text> in that <stack> is shown with the <stack|stack's> <linkVisitedColor> <property>, regardless of the <global> setting.
+
+References: visited (property), link (keyword), default (keyword), global (command), stack (object), property (glossary), grouped text (glossary), hexadecimal (glossary), integer (glossary), browser (glossary), color reference (glossary)
+
+Tags: ui

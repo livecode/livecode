@@ -1,0 +1,36 @@
+Name: groupIDs
+
+Type: property
+
+Syntax: get the groupIDs of <card> 
+
+Summary: Reports the <group|groups> on a <card>.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+repeat with x = 1 to the number of lines of the groupIDs of this card
+
+Value:
+The <groupIDs> of a <card> reports a list of short <ID> <properties> of <group|groups>, one per <line>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <groupIDs> <property> to find out which <group|groups> are placed on a <card>.
+
+If a group on the <card> contains <group|groups>, only the top-level <group|groups> are reported.
+
+To find out which groups are in a stack, use the <backgroundIDs> <property>.
+
+Changes:
+In versions before 1.1, groupIDs and backgroundIDs were synonyms and could be used interchangeably.
+
+References: cardIDs (property), groupNames (property), properties (property), backgroundIDs (property), editBackground (property), ID (property), card (keyword), line (keyword), property (glossary), group (glossary)
+
+Tags: objects

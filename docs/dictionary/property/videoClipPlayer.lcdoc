@@ -1,0 +1,31 @@
+Name: videoClipPlayer
+
+Type: property
+
+Syntax: set the videoClipPlayer to <playerPath> 
+
+Summary: Specifies the name of the program used to play movies and sounds.
+
+Synonyms: vcPlayer
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,web
+
+Example:
+set the videoClipPlayer to "/usr/bin/xanim.new"
+
+Value: The <videoClipPlayer> is a <string> consisting of the <file path> of a program.
+
+Description:
+Use the <videoClipPlayer> <property> to specify the video player used on <Unix|Unix systems>.
+
+LiveCode uses the program specified by the <videoClipPlayer> when you use the <play> <command>.
+
+By default, on Unix systems, audio clips and video clips are played with the "xanim" player.
+
+References: shellCommand (property), dontRefresh (property), string (keyword), play (command), QTVersion (function), videoClip (object), property (glossary), Unix (glossary), file path (glossary), command (glossary)
+
+Tags: multimedia

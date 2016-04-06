@@ -7,5 +7,6 @@
 	<key>get-task-allow</key>
 	<false/>
 	${REMOTE_NOTIFICATIONS}
+	${BETA_REPORT_ENTITLEMENT}
 </dict>
 </plist>

@@ -1,0 +1,56 @@
+Name: documentFilename
+
+Type: property
+
+Syntax: set the documentFilename of <stack> to <filename>
+
+Summary: Specifies the file path to the file that the stack represents.
+
+Associations: stack
+
+Introduced: 8.0.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop
+
+Example:
+answer file "Open document"
+if it is not empty then
+  put it into theFilename
+  set the documentFilename of stack "Template Document Editor" to theFilename
+  clone stack "Template Document Editor"
+end if
+
+Example:
+put the documentFilename of this stack into theFilename
+if theFilename is not empty then
+  # load data from file
+  try
+    put arrayDecode(url ("binfile:" & theFilename)) into theDataA
+    # load the data into the UI
+    UpdateWithData theDataA
+  catch error
+    # file corrupted
+  end try
+end if
+
+Parameters:
+Stack: The name or ID of the stack.
+Filename: The full or relative path to the document.
+
+Description:
+Use the <documentFilename> property to associate a stack being presented to the
+user with a document on disk.
+
+On mac setting the <documentFilename> property will set the represented filename
+of the window. The window will show an icon for the file next to the window
+title.
+
+On other platforms there is no visual representation of the association between
+the stack and the document filename but the property may still be used to manage
+the association.
+
+>*Note:* The <documentFilename> property is not persistent (not saved into the stackfile).
+
+Tags: windowing

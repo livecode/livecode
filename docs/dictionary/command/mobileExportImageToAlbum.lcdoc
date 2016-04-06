@@ -1,0 +1,48 @@
+Name: mobileExportImageToAlbum
+
+Type: command
+
+Syntax: mobileExportImageToAlbum [ <imageData> | <image> ] [<fileName>]
+
+Summary: Saves an image to the user's photo album.
+
+Synonyms: iphoneExportImageToAlbum
+
+Introduced: 4.6.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileExportImageToAlbum tImageText
+
+Example:
+mobileExportImageToAlbum the text of image 1
+
+Example:
+put the long ID of image "myImage" into tImageID
+mobileExportImageToAlbum tImageID
+
+Example:
+// Android only
+put the long ID of image "myImage" into tImageID
+mobileExportImageToAlbum tImageID, "my_file"
+
+Parameters:
+imageData: The binary data of an image in PNG, GIF or JPEG format.
+image: An <object reference> for an <image(object)> containing an image in PNG, GIF or JPEG format.
+fileName: Name under which the image file is to be saved on the Android file system. A random name is generated if a name is not specified.
+
+The result (enum): The <mobileExportImageToAlbum> command returns empty in the result if exporting succeeded. Otherwise it returns one of:
+   - 'could not find image' : the image object could not be found
+   - 'not an image' : the object was not an image
+   - 'not a supported format' : the image object in not of PNG, GIF or JPEG format'
+   - 'export failed : an error occurred while trying to save the image to the album
+
+Description:
+Use the <mobileExportImageToAlbum> to save an image to the user's photo album of gallery. If used on an iOS device that has a camera, the image is saved to the Camera Roll, otherwise it is saved to the Saved Photos album. On Android, images are saved to the default Pictures folder (the Write External Storage permission must be enabled to allow the application to write in the public folder).
+
+>*Note:* When running in the iOS simulator, there needs to be at least one image in the photo album for exporting to succeed. You can add images to the photo album in a simulator by dragging an image on the simulator window, and saving the image to album from Safari (click and hold on the image to bring up an alert with the option).
+
+References: mobilePickPhoto (command), object reference (glossary), image (object)

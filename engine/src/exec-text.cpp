@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -58,9 +58,19 @@ bool MCTextBaseFontName(MCStringRef p_font, MCStringRef& r_base_name)
 void MCTextEvalFontNames(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_names)
 {
 	MCAutoListRef t_name_list;
+    MCAutoStringRef t_names;
 	if (MCdispatcher->getfontlist()->getfontnames(p_type, &t_name_list) &&
-		MCListCopyAsString(*t_name_list, r_names))
-		return;
+		MCListCopyAsString(*t_name_list, &t_names))
+    {
+        // Prepend the special UI font names
+        if (MCStringFormat(r_names, "%@\n%@\n%@\n%@\n%@\n%@\n%@\n%@",
+                           MCN_font_default, MCN_font_usertext, MCN_font_menutext,
+                           MCN_font_content, MCN_font_message, MCN_font_tooltip,
+                           MCN_font_system, *t_names))
+        {
+            return;
+        }
+    }
 
 	ctxt . Throw();
 }

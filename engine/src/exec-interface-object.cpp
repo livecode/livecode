@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -114,6 +114,7 @@ static PropList stackprops[] =
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},
+		{"showInvisibles", P_SHOW_INVISIBLES},
         {"startUpIconic", P_START_UP_ICONIC},
         {"style", P_STYLE},
         {"stackFiles", P_STACK_FILES},
@@ -1009,10 +1010,15 @@ static void MCInterfaceShadowParse(MCExecContext& ctxt, MCStringRef p_input, MCI
 
 static void MCInterfaceShadowFormat(MCExecContext& ctxt, const MCInterfaceShadow& p_input, MCStringRef& r_output)
 {
-	if (p_input . flag)
-		r_output = (MCStringRef)MCValueRetain(kMCTrue);
-	else
-		r_output = (MCStringRef)MCValueRetain(kMCFalse);
+    if (p_input . is_flag)
+    {
+        if (p_input . flag)
+            r_output = MCValueRetain(kMCTrueString);
+        else
+            r_output = MCValueRetain(kMCFalseString);
+    }
+    else
+        ctxt . FormatInteger(p_input . shadow, r_output);
 }
 
 static void MCInterfaceShadowFree(MCExecContext& ctxt, MCInterfaceShadow& p_input)
@@ -1194,6 +1200,58 @@ MCExecEnumTypeInfo _kMCInterfaceListStyleTypeInfo =
 	_kMCInterfaceListStyleElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeElementInfo[] =
+{
+    { "", kMCInterfaceThemeEmpty, false },
+    { "native", kMCInterfaceThemeNative, false },
+    { "legacy", kMCInterfaceThemeLegacy, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeTypeInfo =
+{
+    "Interface.Theme",
+    sizeof (_kMCInterfaceThemeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeElementInfo
+};
+
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceThemeControlTypeElementInfo[] =
+{
+    { "", kMCPlatformControlTypeGeneric, false },
+    { "button", kMCPlatformControlTypeButton, false },
+    { "checkbox", kMCPlatformControlTypeCheckbox, false },
+    { "radiobutton", kMCPlatformControlTypeRadioButton, false },
+    { "tabbutton", kMCPlatformControlTypeTabButton, false },
+    { "tabpane", kMCPlatformControlTypeTabPane, false },
+    { "label", kMCPlatformControlTypeLabel, false },
+    { "inputfield", kMCPlatformControlTypeInputField, false },
+    { "list", kMCPlatformControlTypeList, false },
+    { "menu", kMCPlatformControlTypeMenu, false },
+    { "menuitem", kMCPlatformControlTypeMenuItem, false },
+    { "optionmenu", kMCPlatformControlTypeOptionMenu, false },
+    { "pulldownmenu", kMCPlatformControlTypePulldownMenu, false },
+    { "combobox", kMCPlatformControlTypeComboBox, false },
+    { "popupmenu", kMCPlatformControlTypePopupMenu, false },
+    { "progressbar", kMCPlatformControlTypeProgressBar, false },
+    { "scrollbar", kMCPlatformControlTypeScrollBar, false },
+    { "slider", kMCPlatformControlTypeSlider, false },
+    { "spinarrows", kMCPlatformControlTypeSpinArrows, false },
+    { "window", kMCPlatformControlTypeWindow, false },
+    { "messagebox", kMCPlatformControlTypeMessageBox, false },
+    { "richtext", kMCPlatformControlTypeRichText, false },
+    { "tooltip", kMCPlatformControlTypeTooltip, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
+{
+    "Interface.ControlType",
+    sizeof (_kMCInterfaceThemeControlTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceThemeControlTypeElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1204,6 +1262,8 @@ MCExecEnumTypeInfo *kMCInterfaceInkNamesTypeInfo = &_kMCInterfaceInkNamesTypeInf
 MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo = &_kMCInterfaceEncodingTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1337,20 +1397,20 @@ void MCObject::GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id)
 	ctxt . Throw();
 }
 
-void MCObject::GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name)
+void MCObject::GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name)
 {
 	MCAutoValueRef t_long_name;
-	if (names(P_LONG_NAME, &t_long_name))
+	if (getnameproperty(P_LONG_NAME, p_part_id, &t_long_name))
 		if (ctxt.ConvertToString(*t_long_name, r_long_name))
 			return;
 	
 	ctxt . Throw();
 }
 
-void MCObject::GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id)
+void MCObject::GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id)
 {
 	MCAutoValueRef t_long_id;
-	if (names(P_LONG_ID, &t_long_id))
+	if (getnameproperty(P_LONG_ID, p_part_id, &t_long_id))
 		if (ctxt.ConvertToString(*t_long_id, r_long_id))
 			return;
 	
@@ -1658,7 +1718,13 @@ void MCObject::SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_scrip
 	uint32_t t_part_id;
 	if (t_success)
         t_success = t_chunk -> getobj(ctxt, t_object, t_part_id, False);
-
+    
+    // Check that the object is a button or a stack.
+    if (t_success &&
+        t_object -> gettype() != CT_BUTTON &&
+        t_object -> gettype() != CT_STACK)
+        t_success = false;
+    
 	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
 	//   of the parentScript.
 	bool t_is_cyclic;
@@ -2029,6 +2095,12 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	if (getcindex(which - P_FORE_COLOR, i))
 	{
 		get_interface_color(colors[i], colornames[i], r_color);
+        
+        // AL-2015-05-20: [[ Bug 15378 ]] Reinstate fix for bug 9419:
+        //  If the object isn't already open, then alloc the color first.
+        if (!opened)
+            MCscreen -> alloccolor(r_color . color);
+        
 		return true;	
 	}
 	else if (effective)
@@ -2288,7 +2360,14 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 		if (!MCStringFirstIndexOfChar(p_input, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
-		if (t_new_offset > t_old_offset)
+		// PM-2015-12-02: [[ Bug 16524 ]] Make sure empty lines reset color props
+		if (t_new_offset == t_old_offset)
+		{
+			uint2 i;
+			if (getcindex(index, i))
+				destroycindex(index, i);
+		}
+		else if (t_new_offset > t_old_offset)
 		{
 			MCInterfaceNamedColor t_color;
 			t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_color_string);
@@ -3037,6 +3116,7 @@ void MCObject::SetOpaque(MCExecContext& ctxt, bool setting)
 }
 void MCObject::GetShadow(MCExecContext& ctxt, MCInterfaceShadow& r_shadow)
 {
+    r_shadow . is_flag = true;
 	r_shadow . flag = getflag(F_SHADOW);
 }
 
@@ -3078,118 +3158,58 @@ void MCObject::Set3D(MCExecContext& ctxt, bool setting)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCObject::SetVisibility(MCExecContext& ctxt, uint32_t part, bool setting, bool visible)
+void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
 	bool dirty;
 	dirty = changeflag(setting, F_VISIBLE);
-
-	if (!visible)
-	{
-		flags ^= F_VISIBLE;
-		dirty = !dirty;
-	}
 
 	// MW-2011-10-17: [[ Bug 9813 ]] Record the current effective rect of the object.
 	MCRectangle t_old_effective_rect;
 	if (dirty && opened && gettype() >= CT_GROUP)
 		t_old_effective_rect = static_cast<MCControl *>(this) -> geteffectiverect();
 	
-	bool needmfocus;
-	needmfocus = false;
+    if (dirty)
+    {
+        signallisteners(P_VISIBLE);
+        // AL-2015-09-23: [[ Bug 15197 ]] Hook up widget OnVisibilityChanged.
+        visibilitychanged((flags & F_VISIBLE) != 0);
+    }
+    
+    if (dirty && opened)
+    {
+        // MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
+        if (gettype() >= CT_GROUP)
+            static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
+    }
+    
 	if (dirty)
-	{
-		if (opened && getstack() == MCmousestackptr)
-		{
-			if (!(flags & F_VISIBLE))
-			{
-				MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
-				// MW-2012-02-22: [[ Bug 10018 ]] If the target is a group then check
-				//   to see if it is the ancestor of the mfocused control; otherwise
-				//   just compare directly.
-				if (mfocused != nil && gettype() == CT_GROUP)
-				{
-					while(mfocused -> gettype() != CT_CARD)
-					{
-						if (mfocused == this)
-						{
-							needmfocus = True;
-							break;
-						}
-						mfocused = mfocused -> getparent();
-					}
-				}
-				else if (this == mfocused)
-					needmfocus = true;
-			}
-			else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
-				needmfocus = true;
-		}
-
-		if (state & CS_KFOCUSED)
-			getcard(part)->kunfocus();
-
-		// MW-2008-08-04: [[ Bug 7094 ]] If we change the visibility of the control
-		//   while its grabbed, we should ungrab it - otherwise it sticks to the
-		//   cursor.
-		if (gettype() >= CT_GROUP && getstate(CS_GRAB))
-			state &= ~CS_GRAB;
-
-		if (resizeparent())
-			dirty = false;
-	}
-
-	if (dirty)
-		signallisteners(P_VISIBLE);
-	
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Take note of the change in visibility.
-		if (gettype() >= CT_GROUP)
-			static_cast<MCControl *>(this) -> layer_visibilitychanged(t_old_effective_rect);
-	}
-
-	if (needmfocus)
-		MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
+        // AL-2015-06-30: [[ Bug 15556 ]] Use refactored function to sync mouse focus
+        sync_mfocus();
 }
 
 void MCObject::GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = getflag(F_VISIBLE);
-}
-
-void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
-{
-	SetVisibility(ctxt, part, setting, true);
+	r_setting = isvisible(false);
 }
 
 void MCObject::GetEffectiveVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-    bool t_vis;
-    t_vis = getflag(F_VISIBLE);
-    
-    // if visible and effective and parent is a
-    // group then keep searching parent properties
-    if (t_vis && parent != NULL && parent->gettype() == CT_GROUP)
-        parent->GetEffectiveVisible(ctxt, part, t_vis);
-    
-    r_setting = t_vis;
+	r_setting = isvisible(true);
 }
 
 void MCObject::GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	r_setting = (flags & F_VISIBLE) == False;
+	r_setting = !isvisible(false);
 }
 
 void MCObject::SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting)
 {
-	SetVisibility(ctxt, part, setting, false);
+	SetVisible(ctxt, part, !setting);
 }
 
 void MCObject::GetEffectiveInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
 {
-	bool t_setting;
-    GetEffectiveVisible(ctxt, part, t_setting);
-    r_setting = !t_setting;
+    r_setting = !isvisible(true);
 }
 
 void MCObject::GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting)
@@ -3272,10 +3292,10 @@ void MCObject::GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner)
 		parent -> GetAbbrevName(ctxt, r_owner);
 }
 
-void MCObject::GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner)
+void MCObject::GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner)
 {
 	if (parent != nil)
-		parent -> GetLongName(ctxt, r_owner);
+        parent -> GetLongName(ctxt, p_part_id, r_owner);
 }
 
 void MCObject::DoGetProperties(MCExecContext& ctxt, uint32_t part, bool p_effective, MCArrayRef& r_props)
@@ -3728,11 +3748,11 @@ void MCObject::SetRectProp(MCExecContext& ctxt, bool p_effective, MCRectangle p_
 			MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
 			if (MCU_point_in_rect(rect, MCmousex, MCmousey))
 			{
-				if (!MCU_point_in_rect(t_rect, MCmousex, MCmousey) && this == mfocused)
+				if (!MCU_point_in_rect(t_rect, MCmousex, MCmousey) && isancestorof(mfocused))
 					needmfocus = true;
 			}
 			else
-				if (MCU_point_in_rect(t_rect, MCmousex, MCmousey) && this != mfocused)
+				if (MCU_point_in_rect(t_rect, MCmousex, MCmousey) && isancestorof(mfocused))
 					needmfocus = true;
 		}
 
@@ -3806,6 +3826,9 @@ void MCObject::SetRectPoint(MCExecContext& ctxt, bool effective, Properties whic
 	case P_TOP_RIGHT:
 		point . x -= t_rect . width;
 		break;
+	default:
+		MCUnreachable();
+		break;
 	}
 
 	t_rect . x = point . x;
@@ -3872,6 +3895,9 @@ void MCObject::SetRectValue(MCExecContext& ctxt, bool effective, Properties whic
 		if (!getflag(F_LOCK_LOCATION))
 			t_rect . y += (t_rect . height - value) >> 1;
 		t_rect . height = MCU_max(value, 1);
+		break;
+	default:
+		MCUnreachable();
 		break;
 	}
 
@@ -4306,4 +4332,46 @@ void MCObject::GetCardNames(MCExecContext& ctxt, MCCard *p_cards, bool p_all, ui
 	}
     
     t_names . Take(r_names, r_count);
+}
+
+void MCObject::GetTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme;
+}
+
+void MCObject::SetTheme(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme = MCInterfaceTheme(p_theme);
+    
+    // Changing the theme probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = gettheme();
+}
+
+void MCObject::GetThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = m_theme_type;
+}
+
+void MCObject::SetThemeControlType(MCExecContext& ctxt, intenum_t p_theme)
+{
+    m_theme_type = MCPlatformControlType(p_theme);
+    
+    // Changing the theming type probably changed the font
+    if (recomputefonts(parent ? parent->m_font : nil, true))
+        recompute();
+    
+    Redraw();
+}
+
+void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
+{
+    r_theme = getcontroltype();
 }

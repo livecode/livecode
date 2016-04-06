@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,422 +15,1687 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This widget is a navigation bar.
 
-Name: navitems
-Type: property
-Syntax: set the navitems of <widget> to <pNavItems>
-Syntax: get the navitems of <widget>
-Summary: Sets the navigation items
+Name: hiliteChanged
+Type: message
+Syntax: on hiliteChanged
+Summary: Sent when a navigation item is selected
 
-Parameters:
-pNavItems: The navigation items.
-
-Description:
-Sets the navigation items from pNavItems, where pNavItems is a line delimited list of items, where each line is a comma delimited list of the
-different components of the navigation item: name, label, icon, selected icon.
-
-Name: selecteditem
-Type: property
-Syntax: set the selecteditem of <widget> to <pSelectedItem>
-Syntax: get the selecteditem of <widget>
-
-Summary: Sets the selected navigation item
-
-Parameters:
-pSelectedItem: The number of a nav item.
+Example:
+on hiliteChanged
+	go card the hilitedItemName of me
+end hiliteChanged
 
 Description:
-Selects a navigation item.
+Handle the <hiliteChanged> message in the widget's object script to respond to
+a selection made by the user.
+
+References: hilitedItem (property), hilitedItemName (property)
 */
+
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.navbar
+widget com.livecode.widget.navbar
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.iconSVG
+use com.livecode.library.widgetutils
 --
 
 -- adding metadata to ensure the extension displays correctly in livecode
 metadata author is "LiveCode"
-metadata version is "1.0.2"
+metadata version is "2.0.0"
 metadata title is "Navigation Bar"
+metadata preferredSize is "320,49"
+metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
+
 --
 
--- property declarations
-property navitems 		get getNavItems		set setNavItems
-metadata navitems.editor is "com.livecode.pi.text"
-metadata navitems.default is "contacts,Contacts,f007,f007\nfavourites,Favourites,f005,f006\nmusic,Music,f001,f001\nsearch,Search,f002,f002"
+/**
+Syntax: set the itemArray of <widget> to <pNavArray>
+Syntax: get the itemArray of <widget>
 
-property selecteditem	get mSelectedItem 	set setNavSelectedItem
-metadata selecteditem.default is "1"
+Summary:  The <itemArray> is all the collective data of the icons and labels of the navbar
+
+Parameters:
+pNavArray(array): An array containing all the navigation data:
+
+Description:
+The <itemArray> is a numerically keyed array, each element of which contains
+an array describing the label and icons of the navigation item at that index.
+
+The structure of the <itemArray> is:
+
+```
+{ key (integer): The index of the navigation item
+	value (array): The array containing the data for the item at this index
+	{ key : "label"
+		value (string): The label of this item
+		key : "name"
+		value (string): The name of this item
+		key : "icon_name"
+		value (string) : The name of the icon to display when the item is not highlighted
+		key : "hilited_icon_name"
+		value (string) : The name of the icon to display when the item is highlighted
+	}
+}
+```
+
+Any individual keys ("label", "icon_name", "hilited_icon_name") missing when
+setting the <itemArray> will be added, and set to their defaults - "circle" for
+the icons, and "New Item" for the label.
+
+**Note:** Setting the <navData> to a non-numerically keyed array will cause an
+error to be thrown
+*/
+property itemArray get getNavData set setNavData
+metadata itemArray.editor is "com.livecode.pi.navbar"
+metadata itemArray.label is "Navigation data"
+
+/**
+Syntax: set the itemNames of <widget> to <pNames>
+Syntax: get the itemNames of <widget>
+Summary: The names of the navigation items
+
+Parameters:
+pNames(string): A comma delimited list of the navigation item names.
+
+Description:
+The names of the navigation items of the widget.
+
+Adding an item to the <itemNames> of the navbar causes a new navigation item to
+be created with the default icon and label. Removing an item from the
+<itemNames> causes the corresponding item to be removed from the navigation
+items.
+*/
+property itemNames		get getNavNames			set setNavNames
+metadata itemNames.editor is "com.livecode.pi.editorList"
+metadata itemNames.subeditor is "com.livecode.pi.string"
+metadata itemNames.delimiter is ","
+metadata itemNames.label is "Navigation names"
+
+/**
+Syntax: set the itemIcons of <widget> to <pIcons>
+Syntax: get the itemIcons of <widget>
+Summary: The icons for the navigation items when not highlighted
+
+Parameters:
+pIcons(string): A comma delimited list of icon names.
+
+Description:
+The icons of the navigation items of the widget.  Adding an item to the
+<itemIcons> causes a new navigation item to be created with the default label
+and name.
+
+Each icon name must be one of the predefined graphics provided by the "IconSVG"
+library.  You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+
+**Note:** Removing an item from the <itemIcons> does not cause the
+corresponding item to be removed from the navigation items, but merely resets
+it to the default icon.
+
+References: hilitedItemIcons (property)
+
+*/
+property itemIcons		get getNavIcons			set setNavIcons
+metadata itemIcons.user_visible is "false"
+
+/**
+Syntax: set the hilitedItemIcons of <widget> to <pIcons>
+Syntax: get the hilitedItemIcons of <widget>
+Summary: The icons for the navigation items when hilited
+
+Parameters:
+pIcons(string): A comma delimited list icon names.
+
+Description:
+The icons for the navigation items of the widget to be shown when the items are
+highlighted.  Adding an item to the <hilitedItemIcons> causes a new navigation
+item to be created with the default label and name.
+
+The name of an icon must be one of the names returned by the iconNames() function of the com.livecode.library.iconSVG library.
+
+Each icon name must be one of the predefined graphics provided by the "IconSVG"
+library.  You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+
+**Note:** Removing an item from the <hilitedItemIcons> does not cause the
+corresponding item to be removed from the navigation items, but merely resets
+it to the default icon.
+
+References: itemIcons (property)
+*/
+property hilitedItemIcons		get getNavSelectedIcons			set setNavSelectedIcons
+metadata hilitedItemIcons.user_visible is "false"
+
+/**
+Syntax: set the itemLabels of <widget> to <pLabels>
+Syntax: get the itemLabels of <widget>
+Summary: The labels displayed for the navigation items
+
+Parameters:
+pLabels(string): A comma delimited list of labels.
+
+Description:
+The display labels for navigation items of the widget. Adding an item to the
+<itemLabels> causes a new navigation item to be created with the default icon
+and name.
+
+**Note:** Removing an item from the <itemLabels> does not cause the
+corresponding item to be removed from the navigation items, but merely resets
+it to the default label.
+*/
+property itemLabels		get getNavLabels		set setNavLabels
+metadata itemLabels.user_visible is "false"
+
+/**
+Syntax: set the itemStyle of <widget> to <pItemStyle>
+Syntax: get the itemStyle of <widget>
+
+Summary: The display style of the widget
+
+Parameters:
+pItemStyle(enum): The display style
+-"icons": display icons only
+-"text": display names only
+-"both": display icons and names
+
+Description:
+Use the <itemStyle> property to control which elements of the navigation items are displayed.
+*/
+property itemStyle	get mItemStyle	set setItemStyle
+metadata itemStyle.editor is "com.livecode.pi.enum"
+metadata itemStyle.options is "icons,text,both"
+metadata itemStyle.default is "both"
+metadata itemStyle.label is "Display style"
+
+/**
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
+
+Summary: Controls the color of navbar icons and text when selected.
+
+Description:
+Use the <hiliteColor> property to control the color used to draw icons and text
+of the currently-selected navbar item.
+*/
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.label is "Selected item color"
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.default is "10,95,244"
+
+/**
+Name: foreColor
+
+Syntax: set the foreColor of <widget> to <pColor>
+Syntax: get the foreColor of <widget>
+
+Summary: Controls the color of navbar icons and text when not selected.
+
+Description:
+Use the <foreColor> property to control the color used to draw icons and text
+of the navbar items that are not selected.
+*/
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.label is "Item color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.default is "128,128,128"
+
+/**
+Name: backColor
+
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: Controls the background color of the navbar.
+
+Description:
+Use the <backColor> property to control the way the background of the navbar
+is painted.
+*/
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.label is "Background color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.default is "244,244,244"
+
+/**
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: Controls the border color of the navbar.
+
+Description:
+Use the <borderColor> property to control the color used to draw the top border
+of the navbar.
+*/
+metadata borderColor.editor is "com.livecode.pi.color"
+metadata borderColor.label is "Border color"
+metadata borderColor.section is "Colors"
+metadata borderColor.default is "166,166,166"
+
+/**
+Syntax: set the hilitedItem of <widget> to <pItemNumber>
+Syntax: get the hilitedItem of <widget>
+
+Summary: The index of the highlighted navigation item
+
+Parameters:
+pItemNumber(integer): The number of a navigation item.
+
+Description:
+The <hilitedItem> is the item number of the currently-highlighted navigation
+item, starting from 1.
+
+References: hilitedItemName (property)
+*/
+property hilitedItem	get mSelectedItem 	set setNavSelectedItem
+metadata hilitedItem.editor is "com.livecode.pi.integer"
+metadata hilitedItem.default is "1"
+metadata hilitedItem.label is "Selected item index"
+metadata hilitedItem.step is "1"
+metadata hilitedItem.min is "1"
+
+/**
+Syntax: set the hilitedItemName of <widget> to <pName>
+Syntax: get the hilitedItemName of <widget>
+
+Summary: The name of the highlighted navigation item
+
+Parameters:
+pName(string): The name of a navigation item.
+
+Description:
+The <hilitedItemName> is the name of the currently-highlighted navigation
+item.
+
+References: hilitedItem (property)
+*/
+property hilitedItemName	get getNavSelectedItemName	set setNavSelectedItemName
+metadata hilitedItemName.label is "Selected item name"
+
+/**
+Syntax: set the editMode of <widget> to (true | false)
+Syntax: get the editMode of <widget>
+
+Summary: Whether the widget is in edit mode or not
+
+Description:
+This is currently an experimental feature of the navigation bar, and allows the icons to
+be changed by clicking on the outlined regions, and new items to be added with the add button.
+*/
+property editMode get mEditMode set setEditMode
+metadata editMode.user_visible is "false"
+
+/**
+Syntax: get the desiredHeight of <widget>
+
+Summary: The height that the widget ought to be displayed at
+
+Example:
+create widget as "com.livecode.widget.navbar"
+set the height of it to the desiredHeight of it
+
+Description:
+Returns the height that the widget ought to be displayed at
+*/
+property desiredHeight	get getDesiredHeight
+metadata desiredHeight.user_visible is "false"
+
+/**
+Syntax: set the <showBorder> of <widget> to {true | false}
+Syntax: get the <showBorder> of <widget>
+
+Summary: Whether the dividing line at the top of the navbar is drawn or not
+
+Description:
+Use the <showBorder> property to determine whether the dividing line at the top
+of the navbar is drawn or not.
+*/
+property showBorder get mShowDivide set setShowDivide
+metadata showBorder.default is "true"
+metadata showBorder.label is "Show border"
+
+/**
+Syntax: set the <opaque> of <widget> to {true | false}
+Syntax: get the <opaque> of <widget>
+
+Summary: Whether the background of the navbar is opaque
+
+Description:
+If the <opaque> property is `false`, the background of the navbar will be
+transparent.
+*/
+property "opaque" get mShowBackground set setShowBackground
+metadata opaque.default is "true"
+metadata opaque.label is "Opaque background"
+
+metadata textSize.default is "10"
+
 --
 
 -- private instance variables
-private variable mTheme as String
-private variable mNavItems as List
+private variable mNavData as List
+
 private variable mSelectedItem as Integer
 private variable mItemStyle as String
 
 private variable mNavItemCount as Integer
 private variable mBoxWidth as Real
-private variable mLeft as Real
+
+private variable mWidth as Real
+private variable mHeight as Real
+
+private variable mRecalculate as Boolean
+
+private variable mEditMode as Boolean
+private variable mAddIcon as Path
+private variable mDeleteIcon as Path
+private variable mReorderIcon as Path
+
+private variable mDragData as optional Array
+
+private variable mHiliteColor as Color
+
+private variable mShowDivide as Boolean
+private variable mShowBackground as Boolean
+
+private variable mActionPaths as Array
+
 --
+
+constant kIconPaddingRatio is 0.1225
+constant kLabelPaddingRatio is 0.06
+constant kLabelHeightRatio is 0.165
+
+constant kEditModePaddingUnit is 10
+constant kEditModeLineHeight is 50
+
+constant kIconOnlyPaddingRatio is 0.2
+
+constant kDefaultNavName is "new item"
+constant kDefaultNavLabel is "New Item"
+constant kDefaultNavIconName is "circle"
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
-	
-	put mTheme into rProperties["theme"]
-	put mNavItems into rProperties["items"]
+
+	put getNavData() into rProperties["items"]
 	put mSelectedItem into rProperties["selected"]
 	put mItemStyle into rProperties["itemStyle"]
-	
-	return rProperties
+	put mShowDivide into rProperties["showBorder"]
+	put mShowBackground into rProperties["opaque"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["theme"] into mTheme
-	put pProperties["items"] into mNavItems
+	setNavData(pProperties["items"])
 	put pProperties["selected"] into mSelectedItem
-	put pProperties["itemStyle"] into mItemStyle
-end handler
+	setItemStyle(pProperties["itemStyle"])
 
-public handler OnCreate() as undefined
-	--properties
-	put "ios-8" into mTheme
-	-- creating a list of navigation items
-	put the empty list into mNavItems
-	put [["contacts","favourites","music","search"],["Contacts","Favourites","Music","Search"],["f007","f006","f001","f002"],["f007","f005","f001","f002"]] into mNavItems
-	--
-	put 1 into mSelectedItem
-	put "icons and names" into mItemStyle
-	
-	-- initialise variables
-	put 0 into mNavItemCount
-	put 0 into mBoxWidth
-	put 0 into mLeft
-	
-	set my height to 48
-	set my width to 200
-end handler
+	if "showBorder" is among the keys of pProperties then
+		put pProperties["showBorder"] into mShowDivide
+	else
+		put true into mShowDivide
+	end if
 
-public handler OnPaint() as undefined
-
-	// update variables
-	put the number of elements in (element 1 of mNavItems) into mNavItemCount
-	put my width / mNavItemCount into mBoxWidth
-	put 0 into mLeft
-	
-	// background
-	set the paint of this canvas to getPaint("background","fill")
-	fill getPath("bounding box") on this canvas
-	
-	// Calculate the size of each box we're drawing into
-	variable tElement
-	variable tCount as Integer
-	put 1 into tCount
-	
-	variable tX as Integer
-	repeat with tX from 1 up to mNavItemCount
-	
-		if mSelectedItem is tCount then
-			set the paint of this canvas to getPaint("text","selected-fill")
-		else
-			set the paint of this canvas to getPaint("text","fill")
-		end if
-		
-		-- Draw the text of the nav bar
-		if mItemStyle is "icons and names" then
-			set the font of this canvas to getFont("label")
-			fill text (element tX of element 2 of mNavItems) at center of getRect("label") on this canvas
-		end if
-	
-		-- Draw the icon text
-		set the font of this canvas to getFont("icon")
-		if tCount is mSelectedItem then
-            get the char with code ((element tX of element 4 of mNavItems) converted from base 16)
-		else
-            get the char with code ((element tX of element 4 of mNavItems) converted from base 16)
-		end if
-		fill text the result at center of getRect("icon") on this canvas
-		
-		add mBoxWidth to mLeft
-		add 1 to tCount
-	end repeat
-		
-	// top line
-	set the paint of this canvas to getPaint("background","stroke")
-	fill getPath("line") on this canvas
-end handler
-
-public handler OnMouseUp() as undefined
-
-	variable tSelected as Number
-	put locToNavItem(the click position) into tSelected
-	
-	if tSelected > 0 then
-		put tSelected into mSelectedItem
-		redraw all
-		
-		variable tItemLabel as String
-		put element mSelectedItem of element 2 of mNavItems into tItemLabel
-		post "navigate" with [tItemLabel]
+	if "opaque" is among the keys of pProperties then
+		put pProperties["opaque"] into mShowBackground
+	else
+		put true into mShowBackground
 	end if
 end handler
-----------
 
-----------
--- this handler converts mNavItems in a form that can be combined for output 
-private handler getNavItems() as String
-	
+public handler OnCreate() returns nothing
+	-- creating a list of navigation items
+
 	variable tNavItems as List
 	put the empty list into tNavItems
-	
-	variable tCount as Integer
-	variable tListLine as List
-	variable tStringLine as String
-	variable tItemList as List
-	
-	put the empty string into tStringLine
-	put the empty list into tItemList
-	
-	repeat with tCount from 1 up to the number of elements in element 1 of mNavItems
-		put the empty list into tListLine
-			
-		push element tCount of element 1 of mNavItems onto back of tListLine
-		push element tCount of element 2 of mNavItems onto back of tListLine
-		push element tCount of element 3 of mNavItems onto back of tListLine
-		push element tCount of element 4 of mNavItems onto back of tListLine
-		
-		combine tListLine with "," into tStringLine
-		push tStringLine onto back of tItemList
-	end repeat
-	
-	variable tNavItemString as String
-	put the empty string into tNavItemString
-	combine tItemList with newline into tNavItemString
-	
-	return tNavItemString
+
+	variable tArray as Array
+	put the empty array into tArray
+
+	put "contacts" into tArray["name"]
+	put "Contacts" into tArray["label"]
+	put "user" into tArray["icon_name"]
+	put "" into tArray["hilited_icon_name"]
+	put "" into tArray["icon"]
+	put "" into tArray["hilited_icon"]
+	push tArray onto tNavItems
+
+	put "favourites" into tArray["name"]
+	put "Favourites" into tArray["label"]
+	put "star empty" into tArray["icon_name"]
+	put "" into tArray["hilited_icon_name"]
+	put "" into tArray["icon"]
+	put "" into tArray["hilited_icon"]
+	push tArray onto tNavItems
+
+	put "music" into tArray["name"]
+	put "Music" into tArray["label"]
+	put "music" into tArray["icon_name"]
+	put "" into tArray["hilited_icon_name"]
+	put "" into tArray["icon"]
+	put "" into tArray["hilited_icon"]
+	push tArray onto tNavItems
+
+	put "search" into tArray["name"]
+	put "Search" into tArray["label"]
+	put "search" into tArray["icon_name"]
+	put "" into tArray["hilited_icon_name"]
+	put "" into tArray["icon"]
+	put "" into tArray["hilited_icon"]
+	push tArray onto tNavItems
+	put the number of elements in tNavItems into mNavItemCount
+
+	put tNavItems into mNavData
+
+	put 1 into mSelectedItem
+	put nothing into mDragData
+	put "both" into mItemStyle
+
+	put 0 into mBoxWidth
+
+	initialiseEditData()
+
+	put true into mRecalculate
+	put false into mEditMode
+
+	put path iconSVGPathFromName("plus") into mAddIcon
+	put path iconSVGPathFromName("minus sign") into mDeleteIcon
+	put path iconSVGPathFromName("reorder") into mReorderIcon
+
+	put color [0, 121/255,1] into mHiliteColor
+
+	put true into mShowDivide
+	put true into mShowBackground
+
+	put the empty array into mActionPaths
 end handler
 
-public handler getPath(in pObject as String) as Path
-	if pObject is "bounding box" then
-		return rectangle path of my bounds 
-	else if pObject is "line" then
-		return rectangle path of rectangle [0,0,my width,1]
+public handler OnPaint() returns nothing
+
+	if mRecalculate then
+		updateParameters()
+	end if
+
+	if not mEditMode then
+		drawNavBar()
+	else
+		drawNavBarEditMode()
 	end if
 end handler
 
-public handler getRect(in pObject as String) as Rectangle
-	if pObject is "label" then
-		return rectangle [mLeft,my height * 0.65,mLeft+mBoxWidth,my height]
-		
-	else if pObject is "icon" then
-		if mItemStyle is "icons and names" then
-			return rectangle [mLeft,my height * 0.05,mLeft+mBoxWidth,my height * 0.65]
-		else if mItemStyle is "icons" then
-			return rectangle [mLeft, 0, mLeft+mBoxWidth, my height]
+----------------------------------------------------------------
+-- Drawing in normal mode
+----------------------------------------------------------------
+
+private handler drawNavBar() returns nothing
+	-- background
+	if mShowBackground then
+		set the paint of this canvas to my background paint
+		fill getPath("background") on this canvas
+	end if
+
+	if mNavItemCount is not 0 then
+		drawNavBarContent()
+	end if
+
+	-- Draw the top line
+	if mShowDivide then
+		set the paint of this canvas to my border paint
+		set the stroke width of this canvas to 0
+		stroke getPath("line") on this canvas
+	end if
+end handler
+
+private handler drawNavBarContent() returns nothing
+	variable tX as Integer
+	repeat with tX from 1 up to mNavItemCount
+		-- Draw the text of the nav bar
+		if mItemStyle is in ["text","both"] then
+			drawLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"], tX is mSelectedItem)
 		end if
-	
+
+		if mItemStyle is in ["icons","both"] then
+			-- Draw the icon
+			if tX is mSelectedItem then
+				drawIcon(mNavData[tX]["hilited_icon_path"], true)
+			else
+				drawIcon(mNavData[tX]["icon_path"], false)
+			end if
+
+		end if
+	end repeat
+end handler
+
+----------------------------------------------------------------
+-- Drawing in edit mode
+----------------------------------------------------------------
+
+private handler drawNavBarEditMode() returns nothing
+	// Make sure the subsequent drawing operations are opaque
+	set the opacity of this canvas to 1
+	// background
+	set the paint of this canvas to getPaint("background","editmode-fill")
+	fill getPath("bounding box") on this canvas
+
+	set the paint of this canvas to getPaint("background","editmode-stroke")
+	set the stroke width of this canvas to 0
+	stroke getPath("bounding box") on this canvas
+
+	if mNavItemCount is 0 then
+		set the paint of this canvas to getPaint("add", "fill")
+		fill mActionPaths["add_icon_path"] on this canvas
+	else
+		drawEditModeContent()
 	end if
 end handler
 
-public handler getPaint(pLocation, pType) as Paint
+private handler drawEditModeContent() returns nothing
+	variable tX as Integer
+	repeat with tX from 1 up to mNavItemCount
+			-- Draw the text of the nav bar
+			drawEditModeLabel(mNavData[tX]["label"], mNavData[tX]["label_rect"])
+			-- Draw the icon
+			drawIcon(mNavData[tX]["icon_path"], false)
+			-- Draw the selectedIcon
+			drawIcon(mNavData[tX]["hilited_icon_path"], true)
+			-- Draw the 'add item' item
+			drawActionItems(tX)
+			-- Draw the rects round the editable elements
+			--drawEditableRects(this canvas)
+			-- Draw the line between items
+			drawEditModeDivide(tX)
+	end repeat
+
+	if mDragData is not nothing then
+		drawDragData()
+	end if
+end handler
+
+private handler drawDragData()
+	if mDragData is nothing then
+		return
+	end if
+
+	variable tTargetPath as Path
+	if "target" is among the keys of mDragData then
+		if mDragData["target"] is 0 then
+			put line path from point [0, mDragData["target"] * kEditModeLineHeight + 2] to point [mWidth, mDragData["target"] * kEditModeLineHeight + 2] into tTargetPath
+		else if mDragData["target"] is mNavItemCount then
+			put line path from point [0, mDragData["target"] * kEditModeLineHeight - 2] to point [mWidth, mDragData["target"] * kEditModeLineHeight - 2] into tTargetPath
+		else
+			put line path from point [0, mDragData["target"] * kEditModeLineHeight] to point [mWidth, mDragData["target"] * kEditModeLineHeight] into tTargetPath
+		end if
+
+		set the paint of this canvas to getPaint("text", "selected-fill")
+		set the stroke width of this canvas to 3
+		stroke tTargetPath on this canvas
+	end if
+
+	if "rect" is among the keys of mDragData then
+		set the opacity of this canvas to 0.4
+		set the paint of this canvas to getPaint("background","drag-fill")
+		fill rectangle path of mDragData["rect"] on this canvas
+		-- Draw the text of the nav bar
+		drawEditModeLabel(mDragData["label"], mDragData["label_rect"])
+		-- Draw the icon
+		drawIcon(mDragData["icon_path"], false)
+		-- Draw the selectedIcon
+		drawIcon(mDragData["hilited_icon_path"], true)
+	end if
+end handler
+
+private handler drawEditModeDivide(in pNumber as Number) returns nothing
+	if pNumber is mNavItemCount then
+		return
+	end if
+	variable tPath as Path
+	put line path from point [1, kEditModeLineHeight * pNumber] to point [mWidth - 1, kEditModeLineHeight * pNumber + 1] into tPath
+	set the paint of this canvas to my border paint
+	set the stroke width of this canvas to 0
+	stroke tPath on this canvas
+end handler
+
+private handler drawIcon(in pIconPath as Path, in pSelected as Boolean)
+	if pSelected then
+		set the paint of this canvas to my highlight paint
+	else
+		set the paint of this canvas to my foreground paint
+	end if
+
+	fill pIconPath on this canvas
+end handler
+
+private handler drawLabel(in pLabel as String, in pRect as Rectangle, in pSelected as Boolean)
+	if pSelected then
+		set the paint of this canvas to my highlight paint
+	else
+		set the paint of this canvas to my foreground paint
+	end if
+
+	set the font of this canvas to getFont("label")
+	fill text pLabel at center of pRect on this canvas
+end handler
+
+private handler drawEditModeLabel(in pLabel as String, in pRect as Rectangle)
+	set the paint of this canvas to getPaint("text","editmode-fill")
+	set the font of this canvas to getFont("editmode-label")
+	fill text pLabel at left of pRect on this canvas
+end handler
+
+constant kStandardActions is ["add","delete","reorder"]
+private handler drawActionItems(in pRow as Integer)
+	drawActionItemsList(kStandardActions, pRow)
+end handler
+
+private handler drawActionItemsList(in pActions as List, in pRow as Integer)
+	variable tIconPath as Path
+	variable tElement as String
+	repeat for each element tElement in pActions
+		-- Draw the item
+		set the paint of this canvas to getPaint(tElement, "fill")
+		put mNavData[pRow][tElement & "_icon_path"] into tIconPath
+		fill tIconPath on this canvas
+	end repeat
+end handler
+
+public handler OnMouseUp() returns nothing
+	variable tClickPos as Point
+	put the click position into tClickPos
+	if mEditMode then
+		-- Dismiss the transient fields when the widget is clicked
+		post "dismissTransient"
+		widgetClicked(tClickPos, true)
+	end if
+end handler
+
+public handler OnMouseDown() returns nothing
+	variable tClickPos as Point
+	put the click position into tClickPos
+	if mEditMode then
+		widgetClicked(tClickPos, false)
+	else
+		variable tSelected as Number
+		put locToNavItem(tClickPos) into tSelected
+
+		if tSelected > 0 then
+			put tSelected into mSelectedItem
+			redraw all
+
+			variable tItemLabel as String
+			put mNavData[mSelectedItem]["label"] into tItemLabel
+			post "hiliteChanged"
+		end if
+	end if
+end handler
+
+public handler OnMouseMove() returns nothing
+		if mDragData is not nothing then
+			calculateDragRow(the y of the mouse position)
+			redraw all
+			return
+		end if
+
+		if mEditMode then
+			updateEditModeTooltip(the mouse position)
+			return
+		end if
+end handler
+
+private handler updateParameters()
+	initialiseEditData()
+
+	// update variables
+	put my width into mWidth
+	put my height into mHeight
+	put the number of elements in mNavData into mNavItemCount
+
+	if mNavItemCount is 0 then
+		put mWidth into mBoxWidth
+	else
+		put mWidth / mNavItemCount into mBoxWidth
+	end if
+
+	if mEditMode then
+		if mNavItemCount is 0 then
+			calculateAddItemRect()
+		else
+			calculateEditModeIconRects()
+		end if
+	else if mNavItemCount is not 0 then
+		calculateIconRects()
+	end if
+	put false into mRecalculate
+end handler
+
+private handler updateEditModeTooltip(in pPosition as Point) returns nothing
+    variable tElement as Array
+	repeat for each element tElement in mEditData
+		if pPosition is within tElement["rect"] then
+			if "tooltip" is among the keys of tElement then
+				set property "tooltip" of my script object to tElement["tooltip"]
+				return
+			end if
+		end if
+	end repeat
+
+	set property "tooltip" of my script object to ""
+end handler
+
+private handler calculateEditModeIconRects() returns nothing
+	// calculate the drawing rects
+	variable tX as Integer
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+	variable tLineHeight as Real
+	put kEditModeLineHeight into tLineHeight
+
+	repeat with tX from 1 up to mNavItemCount
+		variable tLabelLeft as Real
+		variable tLabelRight as Real
+
+		variable tLineTop as Real
+		variable tLineBottom as Real
+		put (tX - 1) * tLineHeight into tLineTop
+		put tX * tLineHeight into tLineBottom
+
+		-- One 1/2 line height icon + 2 lots of padding gives width of data to left of label
+		put 2 * kEditModePaddingUnit + tLineHeight / 4 into tLabelLeft
+		-- Two 1/4 line height icons + two line height icons + 4 lots of padding gives width of data to right of label
+		put mWidth - (4 * kEditModePaddingUnit + 5 * tLineHeight / 2) into tLabelRight
+
+		put rectangle [tLabelLeft, tLineTop + kEditModePaddingUnit, tLabelRight, tLineBottom - kEditModePaddingUnit] into mNavData[tX]["label_rect"]
+		-- Allow label to be edited inline
+		setEditableTextRect("label", tX, mNavData[tX]["label_rect"], "Label")
+
+		if mNavData[tX]["icon_name"] is not empty then
+			put iconSVGPathFromName(mNavData[tX]["icon_name"]) into mNavData[tX]["icon"]
+		end if
+		put path mNavData[tX]["icon"] into tIconPath
+
+		variable tLeft as Real
+		put tLabelRight + kEditModePaddingUnit into tLeft
+
+		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mNavData[tX]["icon_path"]
+		put tIconRect into mNavData[tX]["icon_rect"]
+
+		if mNavData[tX]["hilited_icon_name"] is not empty then
+			put iconSVGPathFromName(mNavData[tX]["hilited_icon_name"]) into mNavData[tX]["hilited_icon"]
+		end if
+
+		if mNavData[tX]["hilited_icon"] is not "" then
+			put path mNavData[tX]["hilited_icon"] into tIconPath
+		end if
+
+		add tLineHeight to tLeft
+		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mNavData[tX]["hilited_icon_path"]
+		put tIconRect into mNavData[tX]["hilited_icon_rect"]
+
+		setEditableRect("icon", tX, mNavData[tX]["icon_rect"], \
+				"Icon", "com.livecode.widget.iconPicker", iconSelected)
+		setEditableRect("selectedIcon", tX, mNavData[tX]["hilited_icon_rect"], \
+				"Highlighted Icon", "com.livecode.widget.iconPicker", iconSelected)
+
+		calculateEditModeActionPathsForRow(tX)
+	end repeat
+end handler
+
+private handler calculateAddItemRect()
+	calculateEditModeActionIconPaths(["add"])
+	setActionRect("add_icon", 1, \
+			the bounding box of mActionPaths["add_icon_path"], "Add Item", \
+			addItem, true)
+end handler
+
+private handler calculateEditModeActionPathsForRow(in pRow as Integer)
+	calculateEditModeActionIconPaths(kStandardActions)
+
+	variable tIconPath as Path
+	put mActionPaths["add_icon_path"] into tIconPath
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
+	put tIconPath into mNavData[pRow]["add_icon_path"]
+	setActionRect("add_icon", pRow, the bounding box of tIconPath, \
+			"Add Item", addItem, true)
+
+	put mActionPaths["delete_icon_path"] into tIconPath
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
+	put tIconPath into mNavData[pRow]["delete_icon_path"]
+	setActionRect("delete_icon", pRow, the bounding box of tIconPath, \
+			"Delete Item", deleteItem, true)
+
+	put mActionPaths["reorder_icon_path"] into tIconPath
+	translate tIconPath by [0, (pRow - 1) * kEditModeLineHeight]
+	put tIconPath into mNavData[pRow]["reorder_icon_path"]
+	setActionRect("reorder_icon", pRow, the bounding box of tIconPath, \
+			"Reposition Item", reorderItem, false)
+
+end handler
+
+private handler calculateEditModeActionIconPaths(in pActions as List)
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+
+	variable tActionFraction as Real
+	put 1/4 into tActionFraction
+
+	variable tLeft as Real
+	variable tTop as Real
+	variable tRight as Real
+	variable tBottom as Real
+	put my width - 2 * (kEditModeLineHeight * tActionFraction + kEditModePaddingUnit) into tLeft
+	put kEditModeLineHeight * (1 - tActionFraction) / 2 into tTop
+	put tLeft + kEditModeLineHeight * tActionFraction into tRight
+	put kEditModeLineHeight - kEditModeLineHeight * (1 - tActionFraction) / 2 into tBottom
+
+	if "add" is in pActions then
+		put rectangle [tLeft, tTop, tRight, tBottom] into tIconRect
+		put mAddIcon into tIconPath
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mActionPaths["add_icon_path"]
+	end if
+
+	if "reorder" is in pActions then
+		add kEditModeLineHeight * tActionFraction + kEditModePaddingUnit to tLeft
+		put tLeft + kEditModeLineHeight * tActionFraction into tRight
+		put rectangle [tLeft, tTop, tRight, tBottom] into tIconRect
+		put mReorderIcon into tIconPath
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mActionPaths["reorder_icon_path"]
+	end if
+
+	if "delete" is in pActions then
+		put rectangle [kEditModePaddingUnit, tTop, kEditModePaddingUnit + kEditModeLineHeight * tActionFraction, tBottom] into tIconRect
+		put mDeleteIcon into tIconPath
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mActionPaths["delete_icon_path"]
+	end if
+end handler
+
+private handler calculateDragRow(in pY as Real) returns nothing
+	variable tLineHeight as Real
+	put kEditModeLineHeight into tLineHeight
+
+	-- calculate the drag destination
+	put the floor of ((pY + tLineHeight / 2) / tLineHeight) into mDragData["target"]
+
+	variable tLabelLeft as Real
+	variable tLabelRight as Real
+
+	variable tLineTop as Real
+	variable tLineBottom as Real
+	put pY - mDragData["offset"] into tLineTop
+	put tLineTop + tLineHeight  into tLineBottom
+
+	-- calculate the drawing rects
+	put rectangle [0, tLineTop, mWidth, tLineBottom] into mDragData["rect"]
+
+	-- One 1/2 line height icon + 2 lots of padding gives width of data to left of label
+	put 2 * kEditModePaddingUnit + tLineHeight / 4 into tLabelLeft
+	-- Two 1/4 line height icons + two line height icons + 4 lots of padding gives width of data to right of label
+	put mWidth - (4 * kEditModePaddingUnit + 5 * tLineHeight / 2) into tLabelRight
+
+	put rectangle [tLabelLeft, tLineTop + kEditModePaddingUnit, tLabelRight, tLineBottom - kEditModePaddingUnit] into mDragData["label_rect"]
+
+	variable tIconPath as Path
+	variable tIconRect as Rectangle
+	put path mNavData[mDragData["item"]]["icon"] into tIconPath
+
+		variable tLeft as Real
+		put tLabelRight + kEditModePaddingUnit into tLeft
+
+		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mDragData["icon_path"]
+
+		if mNavData[mDragData["item"]]["hilited_icon"] is not "" then
+			put path mNavData[mDragData["item"]]["icon"] into tIconPath
+		end if
+
+		add tLineHeight to tLeft
+		put rectangle [tLeft + kEditModePaddingUnit, tLineTop + kEditModePaddingUnit, tLeft + tLineHeight - kEditModePaddingUnit, tLineBottom - kEditModePaddingUnit] into tIconRect
+		constrainPathToRect(tIconRect, tIconPath)
+		put tIconPath into mDragData["hilited_icon_path"]
+end handler
+
+private handler calculateIconRects() returns nothing
+	variable tNumItems as Number
+	variable tIdx as Number
+	variable tXOffset as Number
+	variable tYOffset as Number
+	variable tIconName as String
+	variable tIconPadding as Number
+	variable tIconRectInfo as List
+	variable tLabelRectInfo as List
+	variable tIconRect as Rectangle
+	variable tLabelRect as Rectangle
+	variable tIconType as String
+	variable tIconPath as Path
+
+	put the number of elements in mNavData into tNumItems
+
+	repeat with tIdx from 1 up to tNumItems
+
+		-- Compute vertical centreline for text and icon
+		put mBoxWidth * (tIdx - 0.5) into tXOffset
+
+		-- Compute label rect
+		if mItemStyle is "text" then
+			-- Each label's effective rect is the whole of the item's box
+			put [tXOffset - mBoxWidth / 2, 0, \
+					tXOffset + mBoxWidth / 2, my height] into tLabelRectInfo
+
+		else
+			-- Each label is located below the corresponding icon
+			put [tXOffset - mBoxWidth / 2, \
+					my height * (1 - kLabelPaddingRatio - kLabelHeightRatio), \
+					tXOffset + mBoxWidth / 2, \
+					my height * (1 - kLabelPaddingRatio)] into tLabelRectInfo
+		end if
+
+		put rectangle tLabelRectInfo into tLabelRect
+		put tLabelRect into mNavData[tIdx]["label_rect"]
+
+		if mItemStyle is "text" then
+			-- Don't need to process icons
+			next repeat
+		end if
+
+		-- Compute icon rect
+
+		if mItemStyle is "icons" then
+			-- Position icons along horizontal centreline
+			put my height * kIconOnlyPaddingRatio into tIconPadding
+			put [tXOffset - (mBoxWidth/2), \
+					tIconPadding, \
+					tXOffset + (mBoxWidth/2), \
+					my height - tIconPadding] into tIconRectInfo
+		else
+			-- Position icons above text
+			put my height * kIconPaddingRatio into tIconPadding
+			put [tXOffset - (mBoxWidth/2), \
+					tIconPadding, \
+					tXOffset + (mBoxWidth/2), \
+					the top of tLabelRect - tIconPadding] into tIconRectInfo
+		end if
+
+		put rectangle tIconRectInfo into tIconRect
+
+		-- Fit icons into the icon rect.  Repeat twice, once for the "normal"
+		-- icon and once for the "hilited" icon.  Note that we carry the "normal"
+		-- path round to become the "hilited" icon if there's no "hilited" icon
+		-- specified.
+		put the empty path into tIconPath
+		repeat for each element tIconType in ["icon","hilited_icon"]
+			-- Update icon path
+			if mNavData[tIdx][tIconType & "_name"] is not empty then
+				put iconSVGPathFromName(mNavData[tIdx][tIconType & "_name"]) \
+					into mNavData[tIdx][tIconType]
+			else
+				put "" into mNavData[tIdx][tIconType]
+			end if
+
+			-- Fit the icon path to the icon rect
+			if mNavData[tIdx][tIconType] is not empty then
+				-- Fit icon path to Rectangle
+				put path mNavData[tIdx][tIconType] into tIconPath
+				constrainPathToRect(tIconRect, tIconPath)
+			end if
+
+			put tIconPath into mNavData[tIdx][tIconType & "_path"]
+			put tIconRect into mNavData[tIdx][tIconType & "_rect"]
+		end repeat
+	end repeat
+end handler
+
+public handler OnGeometryChanged()
+	put true into mRecalculate
+end handler
+
+--Callback when an icon is selected from the icon picker widget
+public handler iconSelected(in pSelectedIcon as optional any, in pType as String, in pNumber as Number)
+	if pSelectedIcon is not nothing then
+		if pType is "selectedIcon" then
+			put pSelectedIcon into mNavData[pNumber]["hilited_icon_name"]
+			put "" into mNavData[pNumber]["hilited_icon"]
+		else
+			put pSelectedIcon into mNavData[pNumber]["icon_name"]
+			put "" into mNavData[pNumber]["icon"]
+		end if
+
+		-- If the selected icon is the same as the icon, just put empty into the selected icon name
+		-- that way, when the icon is changed, the selected icon will change too.
+		if mNavData[pNumber]["hilited_icon_name"] is mNavData[pNumber]["icon_name"] then
+			put "" into mNavData[pNumber]["hilited_icon_name"]
+			put "" into mNavData[pNumber]["hilited_icon"]
+		end if
+		post "dataChanged"
+		put true into mRecalculate
+		redraw all
+	end if
+end handler
+
+private handler clickPosToComponent(in pClickPos as Point) returns Integer
+	variable tX as Integer
+	repeat with tX from 1 up to mNavItemCount
+		variable tIconRect as Rectangle
+    	put mNavData[tX]["icon_rect"] into tIconRect
+		if pClickPos is within tIconRect then
+			return tX
+		end if
+	end repeat
+
+	return 0
+end handler
+
+private handler locToNavItem(in pLoc as Point) returns Integer
+	return the floor of (the x of pLoc / mBoxWidth) + 1
+end handler
+
+private handler yPosToLine(in pY as Number) returns Integer
+	variable tLineHeight as Real
+	put mHeight / mNavItemCount into tLineHeight
+	return the floor of (pY / tLineHeight) + 1
+end handler
+
+public handler setHiliteColor(in pColor as String) returns nothing
+	put stringToColor(pColor) into mHiliteColor
+	redraw all
+end handler
+
+public handler getHiliteColor() returns String
+	return colorToString(mHiliteColor, false)
+end handler
+
+public handler getPath(in pObject as String) returns Path
+	variable tRect
+	put my bounds into tRect
+	if pObject is "bounding box" then
+		return rectangle path of rectangle [the left of tRect + 0.5, the top of tRect + 0.5, the right of tRect - 0.5, the bottom of tRect - 0.5]
+	else if pObject is "line" then
+		return line path from point [0, 0.5] to point [my width, 0.5]
+		-- Offset background by 1 from the top so that line is allowed to be transparent
+	else if pObject is "background" then
+		return rectangle path of rectangle [the left of tRect + 0.5, the top of tRect + 1, the right of tRect - 0.5, the bottom of tRect - 0.5]
+	end if
+end handler
+
+public handler getPaint(pLocation, pType) returns Paint
 	if pLocation is "background" then
-		if pType is "fill" then
-			return solid paint with color [246/255, 246/255, 247/255]
+		if pType is "drag-fill" then
+			return solid paint with color [200/255, 200/255, 200/255]
 		else if pType is "stroke" then
-			return solid paint with color [178/255, 178/255, 178/255]
+			return solid paint with color [0, 0, 0, 0.2]
+		else if pType is "editmode-stroke" then
+			return solid paint with color [193/255, 193/255, 193/255]
+		else if pType is "editmode-fill" then
+			return solid paint with color [1, 1, 1]
 		end if
 	else if pLocation is "text" then
 		if pType is "fill" then
 			return solid paint with color [146/255, 146/255, 146/255]
 		else if pType is "selected-fill" then
-			return solid paint with color [0, 122/255 ,1]
+			return solid paint with mHiliteColor
+		else if pType is "additem" or pType is "deleteitem" then
+			return solid paint with color [1, 1, 1]
+		else if pType is "editmode-fill" then
+			return solid paint with color [0, 0, 0]
 		end if
 	end if
-	
+
+	if pLocation is "add" then
+		return solid paint with color [146/255, 146/255, 146/255]
+	else if pLocation is "reorder" then
+		return solid paint with color [146/255, 146/255, 146/255]
+	else if pLocation is "delete" then
+		return solid paint with color [240/255, 0, 0]
+	end if
+
 	return solid paint with color [1, 100/255, 200/255]
 end handler
 
-private handler getFont(in pType as String) as Font
-	if pType is "label" then
-		if mTheme is "ios-8" then
-			return font "Helvetica Neue" at size 10
-		else
-			return the font of this canvas
-		end if
-		
-	else if pType is "icon" then
-		return font "fontawesome" at size 20
-	end if
+private handler getFont(in pType as String) returns Font
+	return my font
 end handler
 
-public handler setTheme(in pThemeName as String) as undefined
-	put pThemeName into mTheme
-	redraw all
-end handler
-
-public handler setNavSelectedItem(in pSelectedItem as Integer) as undefined
-	if pSelectedItem > 0 and pSelectedItem <= the number of elements in mNavItems then
+public handler setNavSelectedItem(in pSelectedItem as Integer) returns nothing
+	if pSelectedItem is not mSelectedItem and \
+			pSelectedItem > 0 and \
+			pSelectedItem <= the number of elements in mNavData then
 		put pSelectedItem into mSelectedItem
+		post "hiliteChanged"
 		redraw all
 	end if
 end handler
 
-public handler setItemStyle(in pItemStyle as String) as undefined
-	put pItemStyle into mItemStyle
-	redraw all
-end handler
+public handler setNavSelectedItemName(in pName as String) returns nothing
+	variable tCount as Number
+	variable tItem as Array
 
-private handler setNavItems(in pNavItems as String) as undefined
-	
-	variable tNavItems as List
-	split pNavItems by newline into tNavItems
-	
-	variable tNavElement
-	variable tListElement
-	
-	variable tFinalActions as List
-	variable tStringToList as List
-	put the empty list into tFinalActions
-	
-	repeat for each element tNavElement in tNavItems
-		put the empty list into tStringToList
-		split tNavElement by "," into tStringToList
-		
-		repeat for each element tListElement in tStringToList
-			push tListElement onto back of tFinalActions
-		end repeat
-		
-	end repeat
-	
-	variable tNavCount as Integer
-	variable tCount as Integer
-	put the trunc of (the number of elements in tFinalActions)/4 into tNavCount
-	
-	variable tNameList as List
-	variable tLabelList as List
-	variable tIconList as List
-	variable tSelectedIconList as List
-	put the empty list into tNameList
-	put the empty list into tLabelList
-	put the empty list into tIconList
-	put the empty list into tSelectedIconList
-	
-	repeat with tCount from 1 up to tNavCount
-		push element (4*tCount)-3 of tFinalActions onto back of tNameList
-		push element (4*tCount)-2 of tFinalActions onto back of tLabelList
-		push element (4*tCount)-1 of tFinalActions onto back of tIconList
-		push element 4*tCount of tFinalActions onto back of tSelectedIconList
-	end repeat
-	
-	put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems
-	
-	redraw all
-end handler
-
-public handler addNavItem(in pNewItem as String) as undefined
-
-	variable tNewItem as List
-	split pNewItem by "," into tNewItem
-
-	variable tNameList as List
-	variable tLabelList as List
-	variable tIconList as List
-	variable tSelectedIconList as List
-	put element 1 of mNavItems into tNameList
-	put element 2 of mNavItems into tLabelList
-	put element 3 of mNavItems into tIconList
-	put element 4 of mNavItems into tSelectedIconList
-	
-	push element 1 of tNewItem onto back of tNameList
-	push element 2 of tNewItem onto back of tLabelList
-	push element 3 of tNewItem onto back of tIconList
-	push element 4 of tNewItem onto back of tSelectedIconList
-	
-	put [tNameList,tLabelList,tIconList,tSelectedIconList] into mNavItems
-
-	redraw all
-end handler
-
-public handler removeNavItem(in pItem as String) as undefined
-	
-	variable tItems as String
-	variable tItemList as List
-	put getNavItems() into tItems
-	split tItems by newline into tItemList
-	put the empty string into tItems
-	
-	variable tItemElement
-	variable tCount as Integer
-	put 1 into tCount
-	
-	repeat for each element tItemElement in tItemList
-		if tItemElement contains pItem then
-			delete element tCount of tItemList
-		end if
-	add 1 to tCount
-	end repeat
-	
-	combine tItemList with newline into tItems
-	
-	setNavItems(tItems)
-	
-	redraw all
-end handler
-
-private handler locToNavItem(in pLoc as Point) as Integer
-	variable tNavItemCount as Integer
-	put the number of elements in (element 1 of mNavItems) into tNavItemCount
-	
-	variable tX as Integer
-	//alert_point(pLoc)
-	repeat with tX from 1 up to tNavItemCount
-		if pLoc is within navItemRect(tX) then
-			return tX
+	-- Find the item index corresponding to pName and set it as the
+	-- currently-highlighted item.
+	put 0 into tCount
+	repeat for each element tItem in mNavData
+		add 1 to tCount
+		if mNavData["name"] is pName then
+			setNavSelectedItem(tCount)
+			exit repeat
 		end if
 	end repeat
-	
-	return 0
 end handler
 
-private handler navItemRect(in pItemCount) as Rectangle
-	variable tNavItemCount as Integer
-	variable tBoxWidth as Real
-	
-	put the number of elements in (element 1 of mNavItems) into tNavItemCount
-	put my width / tNavItemCount into tBoxWidth
-	
-	variable tLeft as Real
-	
-	if pItemCount is 1 then
-		put 0 into tLeft
-	else
-		put tBoxWidth * (pItemCount-1) into tLeft
+public handler getNavSelectedItemName() returns String
+	return mNavData[mSelectedItem]["name"]
+end handler
+
+public handler setItemStyle(in pItemStyle as String) returns nothing
+	-- Cope with old-style item style property values
+	if pItemStyle is "icons and names" then
+		put "both" into pItemStyle
 	end if
-	
-	return rectangle [tLeft,0,tLeft+tBoxWidth,my height]
+	if pItemStyle is "names" then
+		put "text" into pItemStyle
+	end if
+
+	put pItemStyle into mItemStyle
+	put true into mRecalculate
+	redraw all
 end handler
 
-private handler alert_number(in pNumber as Number) as undefined
-	execute script "answer" && pNumber formatted as string
+public handler setEditMode(in pEditMode as Boolean) returns nothing
+	put pEditMode into mEditMode
+
+	put true into mRecalculate
+	redraw all
 end handler
 
-private handler alert_point(in pPoint as Point) as undefined
-	variable tClickPoint as List
-	split pPoint by "," into tClickPoint
+--------------------------------------------------------------------------------
+--
+--		Data utilities
+--
+--------------------------------------------------------------------------------
 
-	variable tX as Number
-	variable tY as Number
-	
-	put (element 1 of tClickPoint) parsed as number - the left of my rectangle into tX
-	put (element 2 of tClickPoint) parsed as number - the top of my rectangle into tY
+private handler listToArray(in pList as List) returns Array
+	variable tCount
+	variable tArray
+	put the empty array into tArray
 
-	execute script "answer" && tX formatted as string & "," & tY formatted as string
+	variable tKey as String
+	repeat with tCount from 1 up to the number of elements in pList
+		put tCount formatted as string into tKey
+		put defaultNavArray() into tArray[tKey]
+
+		variable tAttribute as String
+		repeat for each key tAttribute in tArray[tKey]
+			put pList[tCount][tAttribute] into tArray[tKey][tAttribute]
+		end repeat
+	end repeat
+	return tArray
+end handler
+
+private handler setData(in pArray as Array, in pKeys as List, out rList as List)
+	-- Excessive hoop-jumping to work around the fact that keys of numerically keyed LCS array
+	-- comes into LCB as strings, and therefore must be parsed as number to sort, then formatted back
+	-- to be used as keys again. Because parse/format of integer doesn't currently roundtrip, we need to
+	-- create a lookup from the original strings.
+	variable tKey
+	variable tOrder as List
+	put the empty list into tOrder
+	variable tLookup as Array
+	put the empty array into tLookup
+	variable tNumericKey as Number
+	repeat for each key tKey in pArray
+		put tKey parsed as number into tNumericKey
+		push tNumericKey onto tOrder
+		put tKey into tLookup[tNumericKey formatted as string]
+	end repeat
+	sort tOrder in ascending numeric order
+
+	variable tOrderKey
+	variable tElement as Array
+	variable tList as List
+	put the empty list into tList
+
+	variable tOriginalKey as String
+	repeat for each element tOrderKey in tOrder
+		put the empty array into tElement
+		repeat for each element tKey in pKeys
+			put tLookup[tOrderKey formatted as string] into tOriginalKey
+			-- Use default item if key is not present
+			if tKey is among the keys of pArray[tOriginalKey] then
+				put pArray[tOriginalKey][tKey] into tElement[tKey]
+			else
+				put defaultNavElement(tKey) into tElement[tKey]
+			end if
+		end repeat
+		if tElement["label"] is "" then
+			put "New Item" into tElement["label"]
+		end if
+		-- If the selected icon is the same as the icon, just put empty into the selected icon name
+		-- that way, when the icon is changed, the selected icon will change too.
+		if tElement["hilited_icon_name"] is tElement["icon_name"] then
+			put "" into tElement["hilited_icon_name"]
+		end if
+		push tElement onto tList
+	end repeat
+
+	put tList into rList
+end handler
+
+private handler getDataElement(in pElementName as String, in pList as List) returns String
+	variable tList
+	put the empty list into tList
+
+	variable tElement
+	repeat for each element tElement in pList
+		push tElement[pElementName] onto tList
+	end repeat
+
+	variable tElements
+	combine tList with "," into tElements
+	return tElements
+end handler
+
+private handler setDataElement(in pElementName as String, in pElements as String, in pDefaultArray as Array, inout xList as List)
+	variable tElements
+	split pElements by "," into tElements
+
+	variable tCount
+	put 0 into tCount
+
+	variable tElement
+	repeat for each element tElement in xList
+		add 1 to tCount
+		if tCount > the number of elements in tElements then
+			put pDefaultArray[pElementName] into xList[tCount][pElementName]
+		else
+			put tElements[tCount] into xList[tCount][pElementName]
+		end if
+	end repeat
+
+	// If we there are more of the given element than there are items, generate more
+	add 1 to tCount
+	repeat with tCount from tCount up to the number of elements in tElements
+		push pDefaultArray onto xList
+		put tElements[tCount] into xList[tCount][pElementName]
+	end repeat
+
+	put true into mRecalculate
+    post "navDataChanged"
+	redraw all
+end handler
+
+-- Only the primary data element ("name" for both actions and nav) can *reduce*
+-- the number of elements in the data list.
+private handler setPrimaryDataElement(in pElementName as String, \
+		in pElements as String, in pUnique as Boolean, \
+		in pDefaultArray as Array, inout xList as List)
+	variable tElements as List
+	variable tElement as String
+	variable tCount as Number
+
+	split pElements by "," into tElements
+
+	-- Enforce uniqueness, if requested
+	if pUnique then
+		put 0 into tCount
+		repeat with tCount from 1 up to the number of elements in tElements
+			if the index of tElements[tCount] after tCount in tElements is not 0 then
+				throw "duplicate" && pElementName && tElements[tCount]
+				return
+			end if
+		end repeat
+	end if
+
+	put 0 into tCount
+	repeat for each element tElement in tElements
+		add 1 to tCount
+		if tCount > the number of elements in xList then
+			push pDefaultArray onto xList
+		end if
+
+		put tElement into xList[tCount][pElementName]
+	end repeat
+
+	// If we there are more items than there are primary elements, pop them off.
+	add 1 to tCount
+	repeat with tCount from tCount up to the number of elements in xList
+		pop xList
+	end repeat
+
+	put true into mRecalculate
+    post "dataChanged"
+	redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Nav data handling
+--
+--------------------------------------------------------------------------------
+
+private handler defaultNavElement(in pKey as String) returns String
+	if pKey is "name" then
+		return kDefaultNavName
+	else if pKey is "label" then
+		return kDefaultNavLabel
+	else if pKey is "icon_name" then
+		return kDefaultNavIconName
+	else if pKey is "hilited_icon_name" then
+		return ""
+	else if pKey is "icon" then
+		return ""
+	else if pKey is "hilited_icon" then
+		return ""
+	end if
+	return ""
+end handler
+
+private handler defaultNavArray() returns Array
+	variable tArray as Array
+	put the empty array into tArray
+	put kDefaultNavName into tArray["name"]
+	put kDefaultNavLabel into tArray["label"]
+	put kDefaultNavIconName into tArray["icon_name"]
+	put "" into tArray["hilited_icon_name"]
+	put "" into tArray["icon"]
+	put "" into tArray["hilited_icon"]
+	return tArray
+end handler
+
+private handler navDataDifferent(in pLeft as List, in pRight as List) returns Boolean
+    if the number of elements in pLeft is not the number of elements in pRight then
+        return true
+    end if
+
+	variable tIndex as Number
+	repeat with tIndex from 1 up to the number of elements in pLeft
+        if pLeft[tIndex]["label"] is not pRight[tIndex]["label"] then
+            return true
+        end if
+
+        if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+            return true
+        end if
+
+        if pLeft[tIndex]["hilited_icon_name"] is not pRight[tIndex]["hilited_icon_name"] then
+            if not (pLeft[tIndex]["hilited_icon_name"] is "" and pRight[tIndex]["hilited_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["hilited_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["hilited_icon_name"] is "") then
+                return true
+            end if
+        end if
+	end repeat
+	return false
+end handler
+
+private handler getNavData() returns Array
+	return listToArray(mNavData)
+end handler
+
+private handler setNavData(in pNavData as Array)
+	variable tNavData as List
+	setData(pNavData, the keys of defaultNavArray(), tNavData)
+	if navDataDifferent(tNavData, mNavData) then
+		put tNavData into mNavData
+		put true into mRecalculate
+		post "dataChanged"
+		redraw all
+	end if
+end handler
+
+private handler getNavNames() returns String
+	return getDataElement("name", mNavData)
+end handler
+
+private handler setNavNames(in pNames as String)
+	setPrimaryDataElement("name", pNames, true, defaultNavArray(), mNavData)
+end handler
+
+private handler getNavIcons() returns String
+	return getDataElement("icon_name", mNavData)
+end handler
+
+private handler setNavIcons(in pIcons as String)
+	setDataElement("icon_name", pIcons, defaultNavArray(), mNavData)
+end handler
+
+private handler getNavSelectedIcons() returns String
+	return getDataElement("hilited_icon_name", mNavData)
+end handler
+
+private handler setNavSelectedIcons(in pIcons as String)
+	setDataElement("hilited_icon_name", pIcons, defaultNavArray(), mNavData)
+end handler
+
+private handler getNavLabels() returns String
+	return getDataElement("label", mNavData)
+end handler
+
+private handler setNavLabels(in pLabels as String)
+	setDataElement("label", pLabels, defaultNavArray(), mNavData)
+end handler
+
+private handler addItem(in pItem as Number)
+	if mNavData is [] then
+		push defaultNavArray() onto mNavData
+	else
+		splice [defaultNavArray()] after element pItem of mNavData
+	end if
+	put true into mRecalculate
+	post "dataChanged"
+	redraw all
+end handler
+
+private handler deleteItem(in pItem as Number)
+	delete element pItem of mNavData
+	put true into mRecalculate
+	post "dataChanged"
+	redraw all
+end handler
+
+private handler moveItem(in pFrom as Number, in pTo as Number) returns nothing
+	-- Do nothing if this isn't really a move.
+	if pFrom is pTo then
+		return
+	end if
+
+	variable tItem as Array
+	put mNavData[pFrom] into tItem
+	delete element pFrom of mNavData
+	if pTo is 1 then
+		splice [tItem] before element 1 of mNavData
+	else
+		splice [tItem] after element (pTo - 1) of mNavData
+	end if
+	post "dataChanged"
+	put true into mRecalculate
+end handler
+
+private handler reorderItem(in pItem as Number)
+	put {} into mDragData
+	put the y of the mouse position - ((pItem - 1) * kEditModeLineHeight) into mDragData["offset"]
+	put pItem into mDragData["item"]
+	put mNavData[pItem]["label"] into mDragData["label"]
+	redraw all
+end handler
+
+private handler dragDrop() returns nothing
+	if mDragData is nothing then
+		return
+	end if
+
+	if "target" is among the keys of mDragData then
+		if mDragData["item"] > mDragData["target"] then
+			moveItem(mDragData["item"], mDragData["target"] + 1)
+		else if mDragData["target"] > mDragData["item"] then
+			moveItem(mDragData["item"], mDragData["target"])
+		end if
+		put nothing into mDragData
+		redraw all
+	end if
+end handler
+
+private handler getDesiredHeight() returns Number
+	if mEditMode and mNavItemCount is not 0 then
+		return kEditModeLineHeight * mNavItemCount
+	end if
+
+    return kEditModeLineHeight
+end handler
+
+private handler setShowDivide(in pShowDivide as Boolean) returns nothing
+	if pShowDivide is mShowDivide then
+		return
+	end if
+
+	put pShowDivide into mShowDivide
+	redraw all
+end handler
+
+private handler setShowBackground(in pShowBackground as Boolean) returns nothing
+	if pShowBackground is mShowBackground then
+		return
+	end if
+
+	put pShowBackground into mShowBackground
+	redraw all
+end handler
+
+--------------------------------------------------------------------------------
+--
+--		Editable rect things
+--
+--------------------------------------------------------------------------------
+
+handler type PopupCallback(in pPopupResult as optional any, in pType as String, in pNumber as Number)
+handler type ActionCallback(in pNumber as Number)
+
+private variable mEditData as Array
+
+public handler initialiseEditData()
+	put the empty array into mEditData
+end handler
+
+public handler setEditableRect(in pComponent as String, in pNumber as Number, \
+		in pRect as Rectangle, in pTooltip as String, in pPopup as String, \
+		in pCallback as PopupCallback)
+	variable tComponentID as String
+	put pComponent && pNumber formatted as string into tComponentID
+
+	put the empty array into mEditData[tComponentID]
+
+	put pRect into mEditData[tComponentID]["rect"]
+	put pTooltip into mEditData[tComponentID]["tooltip"]
+	put pPopup into mEditData[tComponentID]["popup"]
+	put pCallback into mEditData[tComponentID]["callback"]
+	put pComponent into mEditData[tComponentID]["type"]
+	put pNumber into mEditData[tComponentID]["number"]
+	put true into mEditData[tComponentID]["mouseup"]
+end handler
+
+public handler setEditableTextRect(in pComponent as String, \
+		in pNumber as Number, in pRect as Rectangle, in pTooltip as String)
+	variable tComponentID as String
+	put pComponent && pNumber formatted as string into tComponentID
+
+	put the empty array into mEditData[tComponentID]
+
+	put pRect into mEditData[tComponentID]["rect"]
+	put pTooltip into mEditData[tComponentID]["tooltip"]
+	put pComponent into mEditData[tComponentID]["type"]
+	put pNumber into mEditData[tComponentID]["number"]
+	put true into mEditData[tComponentID]["mouseup"]
+	end handler
+
+public handler setActionRect(in pComponent as String, in pNumber as Number, \
+		in pRect as Rectangle, in pTooltip as String, \
+		in pAction as ActionCallback, in pMouseUp as Boolean)
+	variable tComponentID as String
+	put pComponent && pNumber formatted as string into tComponentID
+
+	put the empty array into mEditData[tComponentID]
+
+	put pRect into mEditData[tComponentID]["rect"]
+	put pTooltip into mEditData[tComponentID]["tooltip"]
+	put pComponent into mEditData[tComponentID]["type"]
+	put pNumber into mEditData[tComponentID]["number"]
+	put pAction into mEditData[tComponentID]["action"]
+	put pMouseUp into mEditData[tComponentID]["mouseup"]
+end handler
+
+public handler drawEditableRects(in pCanvas as Canvas)
+	variable tElement as Array
+	repeat for each element tElement in mEditData
+		set the paint of pCanvas to solid paint with color [0,0,0]
+		stroke rectangle path of tElement["rect"] on pCanvas
+	end repeat
+end handler
+
+private handler widgetClicked(in pClickPosition as Point, in pMouseUp as Boolean)
+	if pMouseUp then
+		dragDrop()
+	end if
+
+	variable tElement as Array
+	repeat for each element tElement in mEditData
+		if tElement["mouseup"] is pMouseUp and pClickPosition is within tElement["rect"] then
+			if "popup" is among the keys of tElement then
+				doPopup(pClickPosition, tElement)
+			else if "action" is among the keys of tElement then
+				doAction(tElement)
+			else
+				addEditableField(tElement)
+			end if
+		end if
+	end repeat
+end handler
+
+private handler doPopup(in pClickPos as Point, in pArray as Array)
+	variable tResult
+
+	-- Popup the icon picker with the currently selected icon as the initial selection
+	variable tProperties as Array
+	put the empty array into tProperties
+	if pArray["type"] is "selectedIcon" and mNavData[pArray["number"]]["hilited_icon_name"] is not "" then
+		put mNavData[pArray["number"]]["hilited_icon_name"] into tProperties["selectedIcon"]
+	else
+		put mNavData[pArray["number"]]["icon_name"] into tProperties["selectedIcon"]
+	end if
+
+	popup widget pArray["popup"] at pClickPos with properties tProperties
+	put the result into tResult
+
+	variable tCallback as PopupCallback
+	put pArray["callback"] into tCallback
+	tCallback(tResult, pArray["type"], pArray["number"])
+end handler
+
+private handler doAction(in pArray as Array)
+	variable tCallback as ActionCallback
+	put pArray["action"] into tCallback
+	tCallback(pArray["number"])
+end handler
+
+private handler formatRectAsString(in pRect as Rectangle)
+	variable tResult as String
+	put (the left of pRect) formatted as string into tResult
+	put "," & (the top of pRect) formatted as string after tResult
+	put "," & (the right of pRect) formatted as string after tResult
+	put "," & (the bottom of pRect) formatted as string after tResult
+	return tResult
+end handler
+
+private handler addEditableField(in pElement as Array)
+	-- Work around the fact that LCB currently doesn't have editable text fields
+	post "editField" with [formatRectAsString(pElement["rect"]), pElement["number"]]
 end handler
 
 end widget

@@ -1,0 +1,36 @@
+Name: backgroundIDs
+
+Type: property
+
+Syntax: get the backgroundIDs of <stack> 
+
+Summary: Reports the <background|backgrounds> in a <stack>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get last line of the backgroundIDs of this stack
+
+Value:
+The <backgroundIDs> of a <stack> reports a list of short <ID> <properties> of <group|groups>, one per <line>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <backgroundIDs> <property> to find out which <background|backgrounds> are available.
+
+The <backgroundIDs> is the list of all <background|backgrounds> in the <stack> whose <backgroundBehavior> <property> is set to true, whether they appear on the <current card> or not. If a <group(command)> in the <stack> contains <group(glossary)|groups>, only the top-level <group(glossary)|groups> are reported.
+
+To find out which groups are placed on a card, use the <groupIDs> <property>.
+
+Changes:
+In versions before 1.1, groupIDs and backgroundIDs were synonyms and could be used interchangeably.
+
+References: properties (property), groupIDs (property), backgroundBehavior (property), ID (property), line (keyword), group (command), stack (object), property (glossary), current card (glossary), background (glossary), group (glossary)
+
+Tags: objects

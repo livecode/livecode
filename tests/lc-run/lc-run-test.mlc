@@ -1,9 +1,0 @@
-module com.livecode.lc_run_test
-
-use com.livecode.lc_run_lib
-
-public handler main()
-	lib_main()
-end handler
-
-end module

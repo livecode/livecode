@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -509,8 +509,7 @@ void MCMutableImageRep::startdraw()
 		selrect.x = mx - rect.x;
 		selrect.y = my - rect.y;
 		selrect.width = selrect.height = 1;
-		brect.width = brect.height = 1;
-		selrect = MCU_bound_rect(selrect, rect.x, rect.y, rect.width, rect.height);
+		brect = selrect = MCU_bound_rect(selrect, rect.x, rect.y, rect.width, rect.height);
 		state |= CS_DRAW | CS_OWN_SELECTION;
 
 		MCactiveimage = m_owner;
@@ -566,6 +565,8 @@ void MCMutableImageRep::continuedraw()
 
 			stroke_path(t_path);
 
+            MCGPathRelease(t_path);
+            
 			brect = MCU_compute_rect(points[polypoints-1].x,
 			                         points[polypoints-1].y, mx, my);
 			brect = MCU_reduce_rect(brect, -((MClinesize >> 1) + 1));
@@ -689,12 +690,13 @@ void MCMutableImageRep::enddraw()
 		{
 			MCU_offset_points(points, polypoints, -rect.x, -rect.y);
 
-			/* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
-			 * but we should be able to build the path directly */
-			MCGPathRef t_path = nil;
-			/* UNCHECKED */ MCGPathCreateMutable(t_path);
 			if (polypoints > 0)
 			{
+                /* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
+                 * but we should be able to build the path directly */
+                MCGPathRef t_path = nil;
+                /* UNCHECKED */ MCGPathCreateMutable(t_path);
+                
 				MCGPathMoveTo(t_path, MCGPointMake(points[0].x, points[0].y));
 				for (uint32_t i = 0; i < polypoints; i++)
 					MCGPathLineTo(t_path, MCGPointMake(points[i].x, points[i].y));
@@ -705,7 +707,9 @@ void MCMutableImageRep::enddraw()
 					fill_path(t_path);
 				}
 				stroke_path(t_path);
-			}
+                
+                MCGPathRelease(t_path);
+            }
 
 			delete points;
 			points = NULL;
@@ -957,7 +961,7 @@ MCRectangle MCMutableImageRep::drawbrush(Tool which)
 		newrect.y -= rect.y;
 		x = newrect.x;
 		if (yinc == 1)
-			y = newrect.y;
+			y = newrect.y - 1; // PM-2015-06-29: [[ Bug 4123]] Eraser/Brush tool in Magnify palette is one pixel off in y-axis
 		else
 			y = newrect.y + newrect.height - 1;
 		dx = newrect.width - 1;
@@ -1350,7 +1354,9 @@ MCRectangle MCMutableImageRep::drawline(Boolean cancenter)
 	/* UNCHECKED */ MCGPathCreateMutable(t_path);
 	MCGPathAddLine(t_path, MCGPointMake(oldx - rect.x, oldy - rect.y), MCGPointMake(mx - rect.x, my - rect.y));
 	stroke_path(t_path);
-
+    
+    MCGPathRelease(t_path);
+    
 	return brect;
 }
 
@@ -1967,12 +1973,14 @@ void MCMutableImageRep::image_undo(Ustruct *us)
     
     // PM-2014-10-01: [[ Bug 13568 ]] Make sure that pressing undo (cmd+z) twice when using paint tools, the second undo undoes the first one.
     MCImageBitmap *t_old_bitmap;
+    t_old_bitmap = nil;
     MCImageCopyBitmap(m_bitmap, t_old_bitmap);
 
     MCImageFreeBitmap(m_bitmap);
     m_bitmap = m_undo_image;
     m_undo_image = nil;
     /* UNCHECKED */ MCImageCopyBitmap(t_old_bitmap, m_undo_image);
+    MCImageFreeBitmap(t_old_bitmap);
     
     // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
     m_owner->invalidate_rep(rect);
@@ -2006,3 +2014,11 @@ void MCMutableImageRep::shutdown()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+bool MCMutableImageRep::GetMetadata(MCImageMetadata& r_metadata)
+{
+    r_metadata = m_metadata;
+    
+    return true;
+}

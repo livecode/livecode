@@ -1,0 +1,25 @@
+Name: title
+
+Type: keyword
+
+Syntax: title
+
+Summary: Used with the <decorations> <property> to indicate whether the window has a <title bar>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the decorations of this stack to "title,minimize"
+
+Description:
+Use the <title> <keyword> to turn a window's <title bar> on or off.
+
+Setting a stack's <decorations> <property> to <maximize>, <minimize>, or <menu> automatically includes <title> in the value of the <decorations>, turning on the window's <title bar>.
+
+References: decorations (property), draggable (property), menu (keyword), minimize (keyword), maximize (keyword), property (glossary), title bar (glossary), keyword (glossary)
+
+Tags: windowing

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -146,16 +146,11 @@ bool X_main_loop_iteration(void)
 	// MW-2011-08-26: [[ Redraw ]] Make sure we flush any updates.
 	MCRedrawUpdateScreen();
 	MCabortscript = False;
-	if (!MCtodestroy->isempty() || MCtodelete != NULL)
-	{
-		MCtooltip->cleartip();
-		while (MCtodelete != NULL)
-		{
-			MCObject *optr = MCtodelete->remove(MCtodelete);
-			delete optr;
-		}
-		MCtodestroy->destroy();
-	}
+    if (!MCtodestroy -> isempty())
+    {
+        MCtooltip -> cleartip();
+        MCtodestroy -> destroy();
+    }
 	MCU_cleaninserted();
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;

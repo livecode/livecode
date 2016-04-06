@@ -1,0 +1,30 @@
+Name: whole
+
+Type: keyword
+
+Syntax: whole
+
+Summary: Used with the <find> <command> to search for a <string> of characters consisting of entire <words>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+find whole "this card" in field "Comments"
+
+Example:
+find whole "run" -- finds "run", but not "grunt" or "running"
+
+Description:
+Use the <whole> <keyword> to find a <string>.
+
+A word is a set of characters enclosed by spaces, tabs, or returns. When using the <find command>, punctuation next to a word is considered part of the word.
+
+When used with the <find command>, the <whole> <keyword> finds <card|cards> that contain the specified <string> only if the found <string> consists of entire <words>.
+
+References: string (keyword), characters (keyword), words (keyword), wholeMatches (property), find (command), find command (command), card (object), command (glossary), keyword (glossary)
+
+Tags: database

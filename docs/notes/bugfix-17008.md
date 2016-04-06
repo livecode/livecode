@@ -1,0 +1,1 @@
+# Selection handles should disappear when selected object is deleted

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -403,7 +403,8 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 				}
 				else
 					close(0);
-				execvp(name, argv);
+                // The executable name should be argv[0].
+                execvp(argv[0], argv);
 				_exit(-1);
 			}
 			MCS_checkprocesses();
@@ -670,37 +671,36 @@ char *MCS_resolvepath(const char *path)
 		}
 		delete tpath;
 	}
-	else
-		tildepath = strclone(path);
+    else if (path[0] != '/')
+    {
+        // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+        //  absolute path.
+        char *t_curfolder;
+        t_curfolder = MCS_getcurdir();
+        tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+        /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+        delete t_curfolder;
+    }
+    else
+        tildepath = strclone(path);
 
 	struct stat64 buf;
 	if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
 		return tildepath;
-	int4 size;
-	char *newname = new char[PATH_MAX + 2];
-	if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
-	{
-		delete tildepath;
-		delete newname;
-		return NULL;
-	}
-	delete tildepath;
-	newname[size] = '\0';
-	if (newname[0] != '/')
-	{
-		char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-		strcpy(fullpath, path);
-		char *sptr = strrchr(fullpath, '/');
-		if (sptr == NULL)
-			sptr = fullpath;
-		else
-			sptr++;
-		strcpy(sptr, newname);
-		delete newname;
-		newname = MCS_resolvepath(fullpath);
-		delete fullpath;
-	}
-	return newname;
+
+    char *newname = new char[PATH_MAX + 2];
+
+    // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+    if (realpath(tildepath, newname) == NULL)
+    {
+        // Clear the memory in case of failure
+        delete newname;
+        newname = NULL;
+    }
+
+    delete tildepath;
+    return newname;
 }
 
 char *MCS_get_canonical_path(const char *p_path)
@@ -895,8 +895,11 @@ IO_handle MCS_open(const char *path, const char *mode,
 		struct stat64 buf;
 		if (fd != -1 && !fstat64(fd, &buf))
 		{
-			uint4 len = buf.st_size - offset;
-			if (len != 0)
+			// The length of a file could be > 32-bit, so we have to check that
+			// the file size fits into a 32-bit integer as that is what the
+			// IO_header form we use supports.
+			off_t len = buf.st_size - offset;
+			if (len != 0 && len < UINT32_MAX)
 			{
 				char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
 				                            fd, offset);
@@ -906,7 +909,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 				if (buffer != MAP_FAILED)
 				{
 					delete newpath;
-					handle = new IO_header(NULL, buffer, len, fd, 0);
+					handle = new IO_header(NULL, buffer, (uint4)len, fd, 0);
 					return handle;
 				}
 			}
@@ -1021,6 +1024,19 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 				execl(MCshellcmd, MCshellcmd, "-s", NULL);
 				_exit(-1);
 			}
+			if (MCprocesses[index].pid == -1)
+			{
+				MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+				MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+				MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+				close(tochild[0]);
+				close(tochild[1]);
+				close(toparent[0]);
+				close(toparent[1]);
+
+				MCprocesses[index].pid = 0;
+				return IO_ERROR;
+			}
 			MCS_checkprocesses();
 			close(tochild[0]);
 			write(tochild[1], ep.getsvalue().getstring(),
@@ -1029,30 +1045,22 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 			close(tochild[1]);
 			close(toparent[1]);
 			MCS_nodelay(toparent[0]);
-			if (MCprocesses[index].pid == -1)
-			{
-				if (MCprocesses[index].pid > 0)
-					MCS_kill(MCprocesses[index].pid, SIGKILL);
-
-				MCprocesses[index].pid = 0;
-				MCeerror->add
-				(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-				return IO_ERROR;
-			}
 		}
 		else
 		{
+			MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+			MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+			MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
 			close(tochild[0]);
 			close(tochild[1]);
-			MCeerror->add
-			(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
 			return IO_ERROR;
 		}
 	}
 	else
 	{
-		MCeerror->add
-		(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+		MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+		MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+		MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
 		return IO_ERROR;
 	}
 	char *buffer = ep.getbuffer(0);
@@ -1685,7 +1693,6 @@ Boolean MCS_poll(real8 delay, int fd)
 	int4 n;
 	uint2 i;
 	Boolean wasalarm = alarmpending;
-	Boolean handled = False;
 	if (alarmpending)
 		MCS_alarm(0.0);
 	
@@ -1713,27 +1720,6 @@ Boolean MCS_poll(real8 delay, int fd)
 		if (MCinputfd > maxfd)
 			maxfd = MCinputfd;
 	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
-		   MCsockets[i]->resolve_state != kMCSocketStateError)
-		{
-			if (MCsockets[i]->connected && !MCsockets[i]->closing
-				&& !MCsockets[i]->shared || MCsockets[i]->accepting)
-				FD_SET(MCsockets[i]->fd, &rmaskfd);
-			if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-				FD_SET(MCsockets[i]->fd, &wmaskfd);
-			FD_SET(MCsockets[i]->fd, &emaskfd);
-			if (MCsockets[i]->fd > maxfd)
-				maxfd = MCsockets[i]->fd;
-			if (MCsockets[i]->added)
-			{
-				delay = 0.0;
-				MCsockets[i]->added = False;
-				handled = True;
-			}
-		}
-	}
 
 	if (g_notify_pipe[0] != -1)
 	{
@@ -1750,34 +1736,12 @@ Boolean MCS_poll(real8 delay, int fd)
 	
 		n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 	if (n <= 0)
-		return handled;
+		return False;
 	if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
 		return True;
 	if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
 		readinput = True;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-		{
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-		}
-		else
-		{
-			/* read first here, otherwise a situation can arise when select indicates
-			 * read & write on the socket as part of the sslconnect handshaking
-			 * and so consumed during writesome() leaving no data to read
-			 */
-			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-				MCsockets[i]->readsome();
-			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-				MCsockets[i]->writesome();
-		}
-	}
-	
+    
 	if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
 	{
 		char t_notify_char;

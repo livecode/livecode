@@ -1,0 +1,34 @@
+Name: visitedIcon
+
+Type: property
+
+Syntax: set the visitedIcon of <button> to {<imageID> | <imageName>}
+
+Summary: Specifies an <image> to display in a <button(keyword)> when the <button(object)|button's> <visited> <property> is true.
+
+Associations: button
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the visitedIcon of button "To Do List" to 5499
+
+Example:
+set the visitedIcon of me to the ID of image "Done"
+
+Value:
+The <visitedIcon> <property> is the <ID> or <name> of an <image> to use for an icon. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+By default, the <visitedIcon> <property> of newly created <button|buttons> is set to zero.
+
+Description:
+Use the <visitedIcon> <property> to change a <button|button's> appearance when it has been clicked during the current session.
+
+When the button has been clicked during the current session, the <visitedIcon> is displayed within the button's rectangle instead of the <icon> (if one has been specified).
+
+References: icon (property), visited (property), name (property), ID (property), image (keyword), button (keyword), button (object), property (glossary), current stack (glossary), stacks (function)
+
+Tags: ui

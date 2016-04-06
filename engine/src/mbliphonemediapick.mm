@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,7 +38,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhonePickMediaDelegate : UIViewController <MPMediaPickerControllerDelegate, UIPopoverControllerDelegate>
+@interface com_runrev_livecode_MCIPhonePickMediaDelegate : UIViewController <MPMediaPickerControllerDelegate, UIPopoverControllerDelegate>
 {
 	bool m_running;
 	NSArray *media_returned;
@@ -50,7 +50,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-@implementation MCIPhonePickMediaDelegate
+@implementation com_runrev_livecode_MCIPhonePickMediaDelegate
 
 - (id)init
 {
@@ -105,11 +105,11 @@ bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, N
 // HC-2011-10-28: [[ Media Picker ]] Ensure we do not crash if the media picker is used on the simulator.
 	r_media_returned = nil;
 #ifndef __i386__
-	__block MCIPhonePickMediaDelegate *t_media_picker;
+	__block com_runrev_livecode_MCIPhonePickMediaDelegate *t_media_picker;
 	__block NSArray *t_result_data;
 	t_result_data = nil;
     MCIPhoneRunBlockOnMainFiber(^(void) {
-        t_media_picker = [[MCIPhonePickMediaDelegate alloc] init];
+        t_media_picker = [[com_runrev_livecode_MCIPhonePickMediaDelegate alloc] init];
     });
     [t_media_picker showMediaPicker: p_allow_multiple_items andTypes: p_media_types withResult: t_result_data];
 	if (t_result_data != nil)

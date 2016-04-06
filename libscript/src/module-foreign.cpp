@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
- Copyright (C) 2015 Runtime Revolution Ltd.
+ Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -22,11 +22,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C"
-{
-    MC_DLLEXPORT MCTypeInfoRef kMCNativeCStringTypeInfo;
-	MC_DLLEXPORT MCTypeInfoRef kMCWStringTypeInfo;
-}
+MCTypeInfoRef kMCNativeCStringTypeInfo;
+MCTypeInfoRef kMCWStringTypeInfo;
+MCTypeInfoRef kMCUTF8StringTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCNativeCStringTypeInfo(void) { return kMCNativeCStringTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCWStringTypeInfo(void) { return kMCWStringTypeInfo; }
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCUTF8StringTypeInfo(void) { return kMCUTF8StringTypeInfo; }
 
 MCTypeInfoRef kMCForeignZStringNullErrorTypeInfo;
 
@@ -259,6 +261,42 @@ __wstring_export (MCValueRef value,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool
+__utf8string_import (void *contents,
+				  bool release,
+				  MCValueRef & r_value)
+{
+	char *t_utf8string;
+	t_utf8string = *(char **) contents;
+
+	if (release)
+		return MCStringCreateWithBytesAndRelease((byte_t*)t_utf8string, t_utf8string?strlen(t_utf8string):0, kMCStringEncodingUTF8, false, (MCStringRef&)r_value);
+	else
+		return MCStringCreateWithBytes((byte_t*)t_utf8string, t_utf8string?strlen(t_utf8string):0, kMCStringEncodingUTF8, false, (MCStringRef&)r_value);
+}
+
+static bool
+__utf8string_export (MCValueRef value,
+				  bool release,
+				  void *contents)
+{
+	if (!MCForeignEvalStringNonNull ((MCStringRef) value))
+		return false;
+	
+	char *t_utf8string_value;
+	if (!MCStringConvertToUTF8String((MCStringRef)value, t_utf8string_value))
+		return false;
+	
+	if (release)
+		MCValueRelease (value);
+	
+	*(char **)contents = t_utf8string_value;
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc, MCTypeInfoRef& r_typeinfo)
 {
     MCAutoStringRef t_name_string;
@@ -274,7 +312,9 @@ static bool __build_typeinfo(const char *p_name, MCForeignTypeDescriptor *p_desc
     return true;
 }
 
-bool MCForeignModuleInitialize(void)
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_foreign_Initialize(void)
 {
     MCForeignPrimitiveType p;
     MCForeignTypeDescriptor d;
@@ -314,6 +354,24 @@ bool MCForeignModuleInitialize(void)
 	if (!__build_typeinfo("com.livecode.foreign.WString", &d, kMCWStringTypeInfo))
 		return false;
 
+	d . size = sizeof(char *);
+	d . basetype = kMCNullTypeInfo;
+	d . bridgetype = kMCStringTypeInfo;
+	p = kMCForeignPrimitiveTypePointer;
+	d . layout = &p;
+	d . layout_size = 1;
+	d . initialize = __cbuffer_initialize;
+	d . finalize = __cbuffer_finalize;
+	d . defined = __cbuffer_defined;
+	d . move = __cbuffer_move;
+	d . copy = __cstring_copy;
+	d . equal = __cstring_equal;
+	d . hash = __cstring_hash;
+	d . doimport = __utf8string_import;
+	d . doexport = __utf8string_export;
+	if (!__build_typeinfo("com.livecode.foreign.UTF8String", &d, kMCUTF8StringTypeInfo))
+		return false;
+	
 	/* ---------- */
 
 	if (!MCNamedErrorTypeInfoCreate (MCNAME("com.livecode.foreign.NullInZStringError"), MCNAME("foreign"), MCSTR("cannot export char U+0000 in nul-terminated string buffer"), kMCForeignZStringNullErrorTypeInfo))
@@ -322,7 +380,7 @@ bool MCForeignModuleInitialize(void)
     return true;
 }
 
-void MCForeignModuleFinalize(void)
+extern "C" void com_livecode_foreign_Finalize(void)
 {
     MCValueRelease(kMCNativeCStringTypeInfo);
 	MCValueRelease(kMCWStringTypeInfo);

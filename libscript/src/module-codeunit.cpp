@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -18,12 +18,12 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalNumberOfCodeunitsIn(MCStringRef p_target, index_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalNumberOfCodeunitsIn(MCStringRef p_target, index_t& r_output)
 {
     r_output = MCStringGetLength(p_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalIsAmongTheCodeunitsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalIsAmongTheCodeunitsOf(MCStringRef p_needle, MCStringRef p_target, bool& r_output)
 {
     // Error if there is more than one char in needle.
     if (MCStringGetLength(p_needle) != 1)
@@ -36,7 +36,7 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalIsAmongTheCodeunitsOf(MCStringRef p_n
     r_output = MCStringFirstIndexOfChar(p_target, MCStringGetCodepointAtIndex(p_needle, 0), 0, kMCStringOptionCompareExact, t_dummy);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitFetchCodeunitRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitFetchCodeunitRangeOf(index_t p_start, index_t p_finish, MCStringRef p_target, MCStringRef& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfCodeunitChunkByRangeInRange(p_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -49,7 +49,7 @@ extern "C" MC_DLLEXPORT void MCCodeunitFetchCodeunitRangeOf(index_t p_start, ind
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitStoreCodeunitRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitStoreCodeunitRangeOf(MCStringRef p_value, index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfCodeunitChunkByRangeInRange(x_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -72,17 +72,17 @@ extern "C" MC_DLLEXPORT void MCCodeunitStoreCodeunitRangeOf(MCStringRef p_value,
     MCValueAssign(x_target, *t_new_string);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitFetchCodeunitOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitFetchCodeunitOf(index_t p_index, MCStringRef p_target, MCStringRef& r_output)
 {
     MCCodeunitFetchCodeunitRangeOf(p_index, p_index, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitStoreCodeunitOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitStoreCodeunitOf(MCStringRef p_value, index_t p_index, MCStringRef& x_target)
 {
     MCCodeunitStoreCodeunitRangeOf(p_value, p_index, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsInRange(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, MCRange p_range, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalOffsetOfCodeunitsInRange(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, MCRange p_range, uindex_t& r_output)
 {
     uindex_t t_offset;
     t_offset = 0;
@@ -104,12 +104,12 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsInRange(bool p_is_la
     r_output = t_offset;
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunits(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalOffsetOfCodeunits(bool p_is_last, MCStringRef p_needle, MCStringRef p_target, uindex_t& r_output)
 {
     MCCodeunitEvalOffsetOfCodeunitsInRange(p_is_last, p_needle, p_target, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsAfter(bool p_is_last, MCStringRef p_needle, index_t p_after, MCStringRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalOffsetOfCodeunitsAfter(bool p_is_last, MCStringRef p_needle, index_t p_after, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(p_target, nil, p_after, true, true, false, t_start, t_count))
@@ -121,7 +121,7 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsAfter(bool p_is_last
     MCCodeunitEvalOffsetOfCodeunitsInRange(p_is_last, p_needle, p_target, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsBefore(bool p_is_first, MCStringRef p_needle, index_t p_before, MCStringRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalOffsetOfCodeunitsBefore(bool p_is_first, MCStringRef p_needle, index_t p_before, MCStringRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfCodeunitChunkByExpressionInRange(p_target, nil, p_before, true, false, true, t_start, t_count))
@@ -133,57 +133,57 @@ extern "C" MC_DLLEXPORT void MCCodeunitEvalOffsetOfCodeunitsBefore(bool p_is_fir
     MCCodeunitEvalOffsetOfCodeunitsInRange(!p_is_first, p_needle, p_target, MCRangeMake(0, t_start), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalContains(MCStringRef p_source, MCStringRef p_needle, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalContains(MCStringRef p_source, MCStringRef p_needle, bool& r_result)
 {
     r_result = MCStringContains(p_source, p_needle, kMCStringOptionCompareExact);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalBeginsWith(MCStringRef p_source, MCStringRef p_prefix, bool& r_result)
 {
     r_result = MCStringBeginsWith(p_source, p_prefix, kMCStringOptionCompareExact);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitEvalEndsWith(MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitEvalEndsWith(MCStringRef p_source, MCStringRef p_suffix, bool& r_result)
 {
     r_result = MCStringEndsWith(p_source, p_suffix, kMCStringOptionCompareExact);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitFetchFirstCodeunitOf(MCStringRef p_target, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitFetchFirstCodeunitOf(MCStringRef p_target, MCStringRef& r_output)
 {
     MCCodeunitFetchCodeunitOf(1, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitStoreFirstCodeunitOf(MCStringRef p_value, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitStoreFirstCodeunitOf(MCStringRef p_value, MCStringRef& x_target)
 {
     MCCodeunitStoreCodeunitOf(p_value, 1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitFetchLastCodeunitOf(MCStringRef p_target, MCStringRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitFetchLastCodeunitOf(MCStringRef p_target, MCStringRef& r_output)
 {
     MCCodeunitFetchCodeunitOf(-1, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitStoreLastCodeunitOf(MCStringRef p_value, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitStoreLastCodeunitOf(MCStringRef p_value, MCStringRef& x_target)
 {
     MCCodeunitStoreCodeunitOf(p_value, -1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitExecDeleteCodeunitRangeOf(index_t p_start, index_t p_finish, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitExecDeleteCodeunitRangeOf(index_t p_start, index_t p_finish, MCStringRef& x_target)
 {
     MCCodeunitStoreCodeunitRangeOf(kMCEmptyString, p_start, p_finish, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitExecDeleteCodeunitOf(index_t p_index, MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitExecDeleteCodeunitOf(index_t p_index, MCStringRef& x_target)
 {
     MCCodeunitStoreCodeunitOf(kMCEmptyString, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitExecDeleteFirstCodeunitOf(MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitExecDeleteFirstCodeunitOf(MCStringRef& x_target)
 {
     MCCodeunitExecDeleteCodeunitOf(1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCCodeunitExecDeleteLastCodeunitOf(MCStringRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCCodeunitExecDeleteLastCodeunitOf(MCStringRef& x_target)
 {
     MCCodeunitExecDeleteCodeunitOf(-1, x_target);
 }
@@ -199,7 +199,7 @@ extern "C" MC_DLLEXPORT void MCCodeunitExecDeleteLastCodeunitOf(MCStringRef& x_t
 //   repeat for each char tCodeunit in tVar
 //   end repeat
 // Will result in tCodeunit containing the value it had at the point of end repeat.
-extern "C" MC_DLLEXPORT bool MCCodeunitRepeatForEachCodeunit(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
+extern "C" MC_DLLEXPORT_DEF bool MCCodeunitRepeatForEachCodeunit(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;
@@ -214,3 +214,16 @@ extern "C" MC_DLLEXPORT bool MCCodeunitRepeatForEachCodeunit(void*& x_iterator, 
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_codeunit_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_codeunit_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

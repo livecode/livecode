@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -18,15 +18,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <foundation.h>
 #include <foundation-system.h>
 #include <foundation-auto.h>
-#include <script.h>
-#include <script-auto.h>
+#include <libscript/script.h>
+#include <libscript/script-auto.h>
 
 #if defined(__WINDOWS__)
 #	include <windows.h>
 #endif
 
-extern bool MCModulesInitialize(void);
-extern void MCModulesFinalize(void);
+extern "C" bool MCModulesInitialize(void);
+extern "C" void MCModulesFinalize(void);
 
 /* Possible exit statuses used by lc-run */
 enum {
@@ -74,7 +74,7 @@ MCRunUsage (int p_exit_status)
 "\n"
 "Any ARGS are available in \"the command arguments\".\n"
 "\n"
-"Report bugs to <http://quality.runrev.com/>\n"
+"Report bugs to <http://quality.livecode.com/>\n"
 	         );
 	exit (p_exit_status);
 }
@@ -108,9 +108,27 @@ MCRunHandlerError (void)
 	MCErrorRef t_error;
 
 	if (MCErrorCatch (t_error))
+	{
 		t_reason = MCErrorGetMessage (t_error);
+
+		/* Print stack trace */
+		uindex_t t_num_frames = MCErrorGetDepth (t_error);
+		for (uindex_t t_depth = 0; t_depth < t_num_frames; ++t_depth)
+		{
+			MCAutoStringRef t_frame;
+			/* UNCHECKED */ MCStringFormat (&t_frame,
+			                                "#%u\tat %@:%u:%u\n",
+			                                t_depth,
+			                                MCErrorGetTargetAtLevel (t_error, t_depth),
+			                                MCErrorGetRowAtLevel (t_error, t_depth),
+			                                MCErrorGetColumnAtLevel (t_error, t_depth));
+			MCRunPrintMessage (stderr, *t_frame);
+		}
+	}
 	else
+	{
 		/* UNCHECKED */ MCStringCopy (MCSTR("Unknown error"), &t_reason);
+	}
 
 	/* UNCHECKED */ MCStringFormat (&t_message,
 	                                "ERROR: Uncaught error: %@\n",
@@ -170,6 +188,32 @@ MCRunPrintMessage (FILE *p_stream,
 
 #define MC_RUN_STRING_EQUAL(s,c) \
 	(MCStringIsEqualToCString ((s),(c),kMCStringOptionCompareExact))
+
+/* Some extremely basic command-line argument processing.  This takes
+ * a command-line argument and transforms it to a path in the LiveCode
+ * internal format (i.e. "/" as separator).
+ *
+ * FIXME This is currently very basic.  For correctness, it should
+ * make the path absolute and then canonicalize it (by removing
+ * multiple separators, ".." and "."  elements, and generating an
+ * error if invalid path characters are found). */
+static bool
+MCRunParseCommandLineFilename (MCStringRef p_arg,
+                               MCStringRef & r_filename)
+{
+#if defined (__WINDOWS__)
+	/* On Windows, simply turn all backslashes to slashes and hope that the
+	 * result is sensible. */
+	MCAutoStringRef t_filename;
+	return
+		MCStringMutableCopy (p_arg, &t_filename) &&
+		MCStringFindAndReplaceChar (*t_filename, '\\', '/',
+		                            kMCStringOptionCompareExact) &&
+		MCStringCopy (*t_filename, r_filename);
+#else
+	return MCStringCopy (p_arg, r_filename);
+#endif
+}
 
 static bool
 MCRunParseCommandLine (int argc,
@@ -258,9 +302,14 @@ MCRunParseCommandLine (int argc,
 
 				++t_arg_idx; /* Consume option argument */
 
+				/* Convert argument to filename */
+				MCAutoStringRef t_load_path;
+				if (!MCRunParseCommandLineFilename (t_argopt, &t_load_path))
+					return false;
+
 				/* Add to load list */
 				if (!MCProperListPushElementOntoFront (x_config.m_load_filenames,
-				                                       t_argopt))
+				                                       *t_load_path))
 					return false;
 				continue;
 			}
@@ -291,7 +340,9 @@ MCRunParseCommandLine (int argc,
 		 * command arguments". */
 		if (!t_have_filename)
 		{
-			t_filename = MCValueRetain (t_arg);
+			if (!MCRunParseCommandLineFilename (t_arg, &t_filename))
+				return false;
+
 			t_have_filename = true;
 			t_accept_options = false;
 		}
@@ -330,18 +381,12 @@ MCRunLoadModule (MCStringRef p_filename,
                  MCScriptModuleRef & r_module)
 {
 	MCAutoDataRef t_module_data;
-	MCAutoValueRefBase<MCStreamRef> t_stream;
 	MCAutoScriptModuleRef t_module;
 
 	if (!MCSFileGetContents (p_filename, &t_module_data))
 		return false;
 
-	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (*t_module_data),
-	                                MCDataGetLength (*t_module_data),
-	                                &t_stream))
-		return false;
-
-	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+	if (!MCScriptCreateModuleFromData (*t_module_data, &t_module))
 		return false;
 
 	r_module = MCScriptRetainModule (*t_module);
@@ -482,3 +527,14 @@ main (int argc,
 
 	exit (0);
 }
+
+/* ----------------------------------------------------------------
+ * Dummy module finit/inits - no canvas, engine, widget module
+ * ---------------------------------------------------------------- */
+
+extern "C" bool com_livecode_engine_Initialize(void) { return true; }
+extern "C" void com_livecode_engine_Finalize(void) { }
+extern "C" bool com_livecode_widget_Initialize(void) { return true; }
+extern "C" void com_livecode_widget_Finalize(void) { }
+extern "C" bool com_livecode_canvas_Initialize(void) { return true; }
+extern "C" void com_livecode_canvas_Finalize(void) { }

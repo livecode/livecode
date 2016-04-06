@@ -1,0 +1,12 @@
+Name: protocol
+
+Synonyms: protocol
+
+Type: glossary
+
+Description:
+A standard <format> and set of rules for transferring a particular kind of data between systems.
+
+References: format (glossary)
+
+Tags: networking

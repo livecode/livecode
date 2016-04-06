@@ -1,0 +1,32 @@
+Name: processor
+
+Type: function
+
+Syntax: the processor
+
+Syntax: processor()
+
+Summary: <return|Returns> a <string> describing the system's CPU chip.
+
+Introduced: 1.0
+
+OS: mac,windows,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the processor
+
+Example:
+if the processor is "ARM" then ...
+
+Returns (enum):
+- x86 : Windows systems (any architecture) and Mac OS X and Linux systems with a 32 bit processor.
+- x86_64 : Mac and Linux systems running a 64 bit processor
+- i386 : iOS Simulator.
+- ARM : iOS and Android Devices and the Android simulator
+
+Description:
+Use the <processor> function to determine which microprocessor the device has.
+
+References: string (keyword), machine (function), platform (function), return (glossary)

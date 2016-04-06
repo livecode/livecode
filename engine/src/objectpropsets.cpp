@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -443,9 +443,9 @@ void MCObject::deletepropsets(void)
 	}
 }
 
-IO_stat MCObject::savepropsets(IO_handle stream)
+IO_stat MCObject::savepropsets(IO_handle stream, uint32_t p_version)
 {
-	if (MCstackfileversion < 7000)
+	if (p_version < 7000)
 		return savepropsets_legacy(stream);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Emit all the propsets in
@@ -480,12 +480,12 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_CUSTOM)
 		{
 			MCNameRef pname;
 			if ((stat = IO_read_nameref_new(pname, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			
 			MCObjectPropertySet *v;
 			/* UNCHECKED */ MCObjectPropertySet::createwithname_nocopy(pname, v);
@@ -498,7 +498,7 @@ IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 				props = p = v;
 
 			if ((stat = p->loadprops_new(stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
@@ -563,12 +563,12 @@ IO_stat MCObject::loadpropsets_legacy(IO_handle stream)
 	{
 		uint1 type;
 		if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (type == OT_CUSTOM)
 		{
 			MCNameRef pname;
 			if ((stat = IO_read_nameref_new(pname, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// If there is already a next pset, then it means its had array values loaded.
 			// Thus we just advance and update the name.
@@ -586,7 +586,7 @@ IO_stat MCObject::loadpropsets_legacy(IO_handle stream)
 			}
 
 			if ((stat = p->loadprops_legacy(stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
@@ -644,7 +644,7 @@ IO_stat MCObject::loadarraypropsets_legacy(MCObjectInputStream& p_stream)
 		}
 	}
 
-	return t_stat;
+	return checkloadstat(t_stat);
 }
 
 IO_stat MCObject::saveunnamedpropset_legacy(IO_handle stream)

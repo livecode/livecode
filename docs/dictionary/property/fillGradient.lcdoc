@@ -1,0 +1,56 @@
+Name: fillGradient
+
+Type: property
+
+Syntax: set the fillGradient [of graphic] to <propertiesArray> 
+
+Summary: Specifies the gradient to use to fill the graphic object.
+
+Associations: graphic
+
+Introduced: 3.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the fillGradient of graphic 1 to tPropertiesArray
+
+Example:
+set the fillGradient["type"] of graphic 1 to "linear"
+
+Example:
+-- Create the properties array and then set the fillGradient
+put "linear" into tGradientProperties["type"]
+put "0.00000,204,0,106" & return  & "1.00000,0,156,157" into tGradientProperties["ramp"]
+set the fillGradient of graphic 1 to tGradientProperties
+
+Example:
+-- Set the properties of the fillGradient individually
+lock screen
+set the fillGradient["type"] of graphic 1 to "linear"
+set the fillGradient["ramp"] of graphic 1 to "0.00000,204,0,106" & return  & "1.00000,0,156,157"
+unlock screen
+
+Parameters:
+propertiesArray (array): The array keys containing the gradient property to set with the corresponding array value containing the value to set the property to. The properties array should contain one of more of the following key|value pairs:
+- "type": One of: linear, radial, conical, spiral, diamond, xy or sqrtxy
+- "ramp": A return delimited list of gradient stops that define the layout of the of the gradient. A gradient stop is a comma delimited list with the following structure: position,color,alpa. For example the gradient stop "0.5,255,0,0,125" would add a stop half way along the gradient, it would be red and semi transparent.    
+	- "position": A number between 0 and 1.
+	- "color": An RGB color value. 3 integers between 0 and 255 separated by a comma. For example "255,0,88".
+	- "alpha": A number between 0 (transparent) and 255 (opaque), if omitted it is assumed to be 255.
+- "from": A coordinate specifying the starting point of the gradient.
+- "to": A coordinate specifying the end point of the gradient.
+- "via": A coordinate specifying the intermediate point of the gradient (affects scaling and shearing of the gradient).
+- "quality": The quality can be set to normal or good (higher detail but slower). This property is normal by default. 
+- "repeat": A number between 1 and 255 that specifies the number of times the gradient ramp is repeated between the start and end points. This property is 1 by default.  
+- "mirror": A boolean value specifying whether alternating repetitions of the ramp are reversed. This property is false by default. 
+- "wrap": A boolean value specifying whether the ramp is repeated to fill the entire graphic a object. This property is false by default.
+
+Value (array): The <fillGradient> property returns an array keyed by the gradient properties set on the object.
+
+Description:
+use the <fillGradient> property to set a gradient background on an object.
+
+References: opaque (property), antialiased (property)

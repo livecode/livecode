@@ -1,0 +1,33 @@
+Name: linkText
+
+Type: property
+
+Syntax: set the linkText of <chunk> of <field> to <textString> 
+
+Summary: Attaches data to a section of text in a <field>.
+
+Associations: field
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the linkText of line 2 to 3 of field "Contents" to "Leaves of Grass"
+
+Value:
+The <linkText> of a <chunk> is a <string>.
+By default, the <linkText> <property> of any <chunk> is empty.
+
+Description:
+Use the <linkText> <property> to store the destination of a link, the text of an associated <file>, a definition, or other data along with a <chunk> of text in a <field>.
+
+The <linkText> <property> can be set for any <chunk> in a <field>.
+
+However, it is most useful when used with grouped text. If the <linkText> of <grouped text> is set to a value, the value is passed with the <linkClicked> <message> when the user clicks the text. This lets you use the <linkText> to specify the destination of a link or other data to use when the text is clicked.
+
+References: scriptTextSize (property), fixedLineHeight (property), file (keyword), field (keyword), link (keyword), string (keyword), linkClicked (message), property (glossary), grouped text (glossary), message (glossary), chunk (glossary)
+
+Tags: navigation

@@ -1,0 +1,31 @@
+Name: releaseStack
+
+Type: message
+
+Syntax: releaseStack
+
+Summary: Sent to a <stack> when the <stack> is removed from the <message path> with the <stop using> <command>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on releaseStack
+  -- turn off a checkbox to show that this stack is no longer in use
+  set the hilite of button (the short name of the target) \
+     of card "Libraries" to false
+end releaseStack
+
+Description:
+Handle the <releaseStack> <message> if you want to perform some task or set a configuration when a <stack> is no longer in use.
+
+The <releaseStack> <message> is sent to the <stack> being released with the <stop using> <command>, even if the <stack> was not in use before the <stop using> <command> was <execute|executed>.
+
+References: stacksInUse (property), libraryStack (message), stop using (command), start using (command), stack (object), message (glossary), command (glossary), execute (glossary), message path (glossary)
+
+Tags: objects

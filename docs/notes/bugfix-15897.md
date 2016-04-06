@@ -1,0 +1,1 @@
+# LiveCode crashes when trying to clone a group containing a widget object whose kind is not installed

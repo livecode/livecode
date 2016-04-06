@@ -1,0 +1,39 @@
+Name: family
+
+Type: property
+
+Syntax: set the family of <button> to <number> 
+
+Summary: Coordinates a set of <radio button|radio buttons> so that only one <button> of a family can be <highlight|highlighted>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the family of button "Choice #1" to 3
+
+Value:
+The <family> of a button is an <integer>.
+By default, the <family> <property> of newly created <button|buttons> is set to zero (no family).
+
+Description:
+Use the <family> <property> to set up a cluster of related <button(object)|buttons>.
+
+Setting the <family> of a <button(keyword)> to a number makes the <button(keyword)> a member of that family. All the <button(object)|buttons> in a <card> or <group(command)> whose <family> <property> is the same behave as a <radio button|radio-button cluster>: only one <button(keyword)> in the family can be <highlight|highlighted> at a time, and <highlight|highlighting> another member of the family unhighlights all the others.
+
+If a button's <family> <property> is zero, it is not a member of any family.
+
+If the buttons are part of a group, the group's backgroundBehavior <property> must be set to true.
+
+This property exists to aid compatibility with imported HyperCard stacks. Unlike the property in HyperTalk, it has no effect on buttons whose style <property> is not "radioButton".
+
+>*Tip:*  You can also create a <radio button|radio-button cluster> by putting the <button(object)|buttons> in a <group(command)> and setting the <group(glossary)|group's> <radioBehavior> <property> to true.
+
+References: hilitedButtonName (property), radioBehavior (property), card (keyword), integer (keyword), button (keyword), group (command), selectedButton (function), property (glossary), highlight (glossary), radio button (glossary), group (glossary), button (object)
+
+Tags: ui

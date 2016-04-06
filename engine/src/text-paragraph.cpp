@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -489,7 +489,7 @@ void MCTextParagraph::runBidiAlgorithm()
     // Run the Unicode BiDi algorithm to get the direction level for each
     // codeunit within this paragraph.
     MCAutoArray<uint8_t> t_levels;
-    MCBidiResolveTextDirection(m_text, getConcreteTextDirection(), t_levels.PtrRef(), t_levels.SizeRef());
+    /* UNCHECKED */ MCBidiResolveTextDirection(m_text, getConcreteTextDirection(), t_levels.PtrRef(), t_levels.SizeRef());
     
     // Scan through the list of blocks and ensure that each block has a
     // consistent direction level (if not, it will need to be split)

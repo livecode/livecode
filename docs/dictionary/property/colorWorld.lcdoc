@@ -1,0 +1,30 @@
+Name: colorWorld
+
+Type: property
+
+Syntax: get the colorWorld
+
+Summary: Reports whether the screen is set to use color.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+if the colorWorld then showColorIcons
+
+Value (bool):The <colorWorld> is true or false.
+The <colorWorld> <property> is <read-only> and cannot be set.
+
+Description:
+Use the <colorWorld> <property> to determine whether the screen is color or <black-and-white>.
+
+If the <colorWorld> <property> reports true, the screen is using color or grayscale. If the <colorWorld> is false, the screen is <black-and-white>.
+
+If the system has more than one monitor, the <colorWorld> <property> reports the color status of the main screen.
+
+The value returned by the <colorWorld> function is updated only when you start up the <application>. If you change the screen settings after starting up the <application>, you must quit and restart to update the <colorWorld>.
+
+References: bufferMode (property), colorMap (property), screenDepth (function), screenColors (function), property (glossary), application (glossary), black-and-white (glossary), read-only (glossary)

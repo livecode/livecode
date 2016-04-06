@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -444,7 +444,25 @@ static void CallObjCStringMethod(ObjCStringMethodPtr p_method, char *p_argc[], i
 		NSString *t_method_result;
 		t_method_result = p_method();
 		if (!CatchException(r_result, r_error))
-			*r_result = strdup([t_method_result cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+        {
+            // SN-2015-01-22: [[ Bug 14423 ]] Convert to UTF-8 by default, because we
+            //  want to return the actual codec names, nothing with '?'
+            char *t_string;
+            NSData* t_data;
+            t_data = [t_method_result dataUsingEncoding: NSUTF8StringEncoding
+                                   allowLossyConversion:True];
+            
+            t_string = new char[[t_data length] + 1];
+            
+            if (t_string == NULL)
+                *r_result = NULL;
+            else
+            {
+                memcpy((void*)t_string, (const void*)[t_data bytes], [t_data length]);
+                t_string [[t_data length]] = '\0';
+                *r_result = t_string;
+            }
+        }
 	}
 	@catch(id t_error)
 	{
@@ -510,7 +528,7 @@ static void CallVoidMethodWithObjCString(VoidMethodWithObjCStringPtr p_method, c
 	{
 		ClearException();
 		
-		p_method([NSString stringWithCString: p_argc[0] encoding: NSMacOSRomanStringEncoding]);
+		p_method([NSString stringWithCString: p_argc[0] encoding: NSUTF8StringEncoding]);
 		
 		CatchException(r_result, r_error);
 	}

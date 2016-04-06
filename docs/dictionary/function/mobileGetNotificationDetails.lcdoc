@@ -1,0 +1,37 @@
+Name: mobileGetNotificationDetails
+
+Type: function
+
+Syntax: mobileGetNotificationDetails(<notificationID>)
+
+Summary: Returns an array giving details about a local notification
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+get mobileGetNotificationDetails(tNotificationID)
+
+Example:
+put mobileGetNotificationDetails(tID) into tNotificationDetails
+put tNotificationDetails["body"] into field "text"
+
+Parameters:
+notificationID: the id number of the notification
+
+Returns (array):The <mobileGetNotificationDetails> function returns an array containing the following entries:
+   body - the text that is to be displayed on the notification dialog (iOS) or statusbar entry (Android) when the application is not running 
+   title - the button text on the notification dialog (iOS) or the title of the statusbar entry (Android)
+   payload - the text presented to the app via the <localNotificationReceived> message
+   play sound - boolean indicating if a sound is to be played when the notification is received
+   badge value - the number value which should be displayed on the app logo (iOS) or on the status bar icon (Android) when the notification is received. No number is displayed if this is 0 (zero).
+
+Description:
+Use the <mobileGetNotificationDetails> function to return an array of details about a local notification.
+
+Use the <mobileGetNotificationDetails> function to retrive information about a notification created using the <mobileCreateLocalNotification> command.
+
+References: mobileCancelLocalNotification (command), mobileCancelAllLocalNotifications (command), mobileCreateLocalNotification (command), localNotificationReceived (message)

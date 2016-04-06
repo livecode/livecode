@@ -1,0 +1,235 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This widget displays a color with optional alpha channel.
+*/
+widget com.livecode.widget.colorSwatch
+--
+
+-- dependency declarations
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.widgetutils
+
+--
+
+-- adding metadata to ensure the extension displays correctly in LiveCode
+metadata author is "LiveCode"
+metadata version is "0.0.1"
+metadata title is "Color Swatch"
+metadata preferredSize is "24,24"
+metadata svgicon is "M86.6,0H7.9C3.5,0,0,3.5,0,7.9v78.8c0,4.3,3.5,7.9,7.9,7.9h78.8c4.3,0,7.9-3.5,7.9-7.9V7.9C94.5,3.5,91,0,86.6,0z M23.3,81l-11-16.4h21.9L23.3,81z M81.5,81.5H47.2l0.1-34.1H13.1L13,13h68.5V81.5z"
+metadata userVisible is "false"
+--
+
+-- property declarations
+
+/*
+Syntax:
+set the swatchColor of <widget> to <pColor>
+get the swatchColor of <widget>
+
+Summary: Determines the color displayed by the swatch.
+
+Parameters:
+pColor: The color of the swatch in RGB or RGBA format, or empty.
+
+Example: set the swatchColor of widget "Color Swatch" to empty
+
+Example:
+    on copySwatchColorToGraphic pSwatchName, pGraphicName
+        local tColorWithAlpha
+        put the swatchColor of widget pSwatchName into tColorWithAlpha
+
+        local tColor, tBlendLevel
+        put item 1 to 3 of tColorWithAlpha into tColor
+        put (255 - item 4 of tColorWithAlpha) / 2.55 into tBlendLevel
+
+        set the backcolor of graphic pGraphicName to tColor
+        set the blendLevel of graphic pGraphicName to tBlendLevel
+    end copySwatchColorToGraphic
+
+
+Description:
+Use the iconColor property to set the color of the widget icon. The color is
+in the form of a 3 or 4 item string, the 4th optional item being the alpha value,
+all between 0 and 255.
+
+>*Note:* The color returned by the <swatchColor> property, if not empty,
+always includes an alpha value which is 255 by default.
+
+*/
+
+property swatchColor get getColor set setColor
+metadata swatchColor.editor is "com.livecode.pi.colorwithalpha"
+metadata swatchColor.default is "255,100,0"
+metadata swatchColor.label is "Swatch Color"
+--
+
+-- private instance variables
+private variable mColor as optional Color
+private variable mPadding as Number
+--
+
+----------
+-- this handler is called when the widget is created
+public handler OnCreate() returns nothing
+	put stringToColor("100,255,168,150") into mColor
+	updateConstants()
+end handler
+----------
+
+public handler updateConstants() returns nothing
+	put the minimum of (my width * 0.15) and (my height * 0.15) into mPadding
+	if mPadding > 10 then
+		put 10 into mPadding
+	else if mPadding < 4 then
+		put 4 into mPadding
+	end if
+end handler
+
+public handler OnMouseUp() returns nothing
+	post "mouseUp" with [the click button]
+end handler
+
+----------
+-- this handler is called whenever LiveCode needs to redraw the widget
+public handler OnPaint() returns nothing
+	variable tPath
+
+	-- Draw the background
+	put rounded rectangle path of rectangle [0.5, 0.5, my width-0.5, my height-0.5] with radius 5 into tPath
+	set the paint of this canvas to getPaint("background")
+	fill tPath on this canvas
+	set the paint of this canvas to getPaint("stroke")
+	set the stroke width of this canvas to 1
+	stroke tPath on this canvas
+
+	-- Draw the pattern for the swatch
+
+
+    variable tSpaceBottom as Number
+    put my height - mPadding into tSpaceBottom
+	-- Draw the color
+	if mColor is not nothing then
+		if the alpha of mColor is not 1 then
+			variable tCudeSize as Number
+			variable tCudeCount as Integer
+			variable tSpace as Number
+			put my width - (mPadding * 2) into tSpace
+			put the rounded of (tSpace / 8) into tCudeCount
+			put tSpace / tCudeCount into tCudeSize
+
+			variable tTop as Number
+			variable tLeft as Number
+			variable tX as Integer
+			variable tCount as Integer
+			put mPadding into tTop
+			put 1 into tCount
+
+			set the paint of this canvas to solid paint with stringToColor("220,220,220")
+
+			repeat while tTop < my height - mPadding
+				put mPadding into tLeft
+				put 1 into tX
+				variable tBottom as Number
+				put tTop+tCudeSize into tBottom
+				if tBottom > tSpaceBottom then
+					put tSpaceBottom into tBottom
+				end if
+				repeat with tX from 1 up to tCudeCount
+					if (tCount is 1 and (tX mod 2) is 1) or (tCount is 0 and (tX mod 2) is 0) then
+						add rectangle path of rectangle [tLeft, tTop, tLeft+tCudeSize, tBottom] to this canvas
+					end if
+					add tCudeSize to tLeft
+				end repeat
+				add tCudeSize to tTop
+
+				if tCount is 1 then
+					put 0 into tCount
+				else
+					put 1 into tCount
+				end if
+			end repeat
+			fill this canvas
+
+			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+			set the paint of this canvas to getPaint("stroke")
+			set the stroke width of this canvas to 0
+			stroke tPath on this canvas
+
+			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+			set the paint of this canvas to solid paint with mColor
+			fill tPath on this canvas
+		else
+			put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+			set the paint of this canvas to solid paint with mColor
+			fill tPath on this canvas
+		end if
+	else
+		put line path from point [mPadding, mPadding] to point [my width - mPadding, tSpaceBottom] into tPath
+		set the paint of this canvas to solid paint with stringToColor("255,0,0")
+		set the stroke width of this canvas to 2
+		stroke tPath on this canvas
+
+		put rectangle path of rectangle [mPadding, mPadding, my width - mPadding, tSpaceBottom] into tPath
+		set the paint of this canvas to getPaint("stroke")
+		set the stroke width of this canvas to 0
+		stroke tPath on this canvas
+	end if
+end handler
+----------
+
+public handler onGeometryChanged() returns nothing
+	updateConstants()
+end handler
+
+----------
+public handler setColor(in tColor as optional String) returns nothing
+	if tColor is not empty then
+		put stringToColor(tColor) into mColor
+	else
+		put nothing into mColor
+	end if
+	redraw all
+end handler
+
+public handler getColor() returns String
+    if mColor is nothing then
+        return ""
+    else
+        return colorToString(mColor, true)
+    end if
+end handler
+----------
+
+----------
+-- this handler returns a paint
+public handler getPaint(pType) returns Paint
+	if pType is "background" then
+		return solid paint with stringToColor("255,255,255")
+	else if pType is "stroke" then
+		return solid paint with stringToColor("0,0,0,50")
+	end if
+
+	return solid paint with stringToColor("255,100,200")
+end handler
+
+
+end widget

@@ -1,0 +1,37 @@
+Name: ^
+
+Type: operator
+
+Syntax: <number> ^ <exponent> 
+
+Summary: Raises a number to a power.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+7^3
+
+Example:
+myNumber^(1/2)
+
+Example:
+put 2^bitDepth into numberOfColors
+
+Parameters:
+number: The number and exponent are numbers, or expressions that evaluate to numbers.
+exponent: 
+
+The result: If the <exponent> is zero, the result of this <operator> is 1, regardless of what the <number> is.
+
+Description:
+Use the <^> <operator> to raise a number to a power, or to find a root of a number.
+
+If the <exponent> is a fraction, with 1 as the numerator, the <^> <operator> finds the specified root of the <number>. For example, if the <exponent> is 1/2, the <operation> yields the square root of <number>; if the <exponent> is 1/4, the <operation> yields the 4th root of the <number>, and so on.
+
+References: ln1 (function), exp (function), sqrt (function), operator (glossary), operation (glossary)
+
+Tags: math

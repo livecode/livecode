@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -343,7 +343,7 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
-class MCClipboard : public MCConstantFunctionCtxt<MCNameRef, MCPasteboardEvalClipboard>
+class MCClipboardFunc : public MCConstantFunctionCtxt<MCNameRef, MCPasteboardEvalClipboard>
 {
 public:
 	// virtual Exec_stat eval(MCExecPoint &);
@@ -495,6 +495,21 @@ class MCClickLine : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalCl
 public:
 	// virtual Exec_stat eval(MCExecPoint &);
 	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalClickLineMethodInfo; }
+};
+
+class MCCommandArguments : public MCFunction
+{
+    MCExpression* argument_index;
+public:
+    MCCommandArguments() { argument_index = NULL; }
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+};
+
+class MCCommandName : public MCFunction
+{
+public:
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 };
 
 class MCClickLoc : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickLoc>

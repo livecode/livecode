@@ -1,0 +1,10 @@
+Name: read-only
+
+Synonyms: read only,readonly,read-only
+
+Type: glossary
+
+Description:
+Information that can be looked at, but not changed or deleted.
+
+Tags: ui

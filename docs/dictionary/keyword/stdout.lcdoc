@@ -1,0 +1,36 @@
+Name: stdout
+
+Type: keyword
+
+Syntax: stdout
+
+Summary: Used with the <write to file> <command> to designate the <standard output>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+write field 3 to stdout
+
+Description:
+Use the <stdout> <keyword> to write data to the <standard output, (glossary)>usually the screen or console window.
+
+On Unix systems, output from a program is normally written to the screen, but can be redirected to go to another device, process, or file. This redirection is done on the command line when the program is started up.
+
+On a server in CGI mode, writing to <stdout> for the first time triggers any headers to be generated. 
+
+When you use the <write to file> <command> with the <stdout> <keyword>, LiveCode writes data to the <standard output>.
+
+>*Note:* On <OS X|OS X systems>, the <standard output> is the Console window, not the Terminal window.
+
+Support for using <stdout> on Server was added in version 4.6.3.
+
+Changes:
+Support for using <stdout> on <OS X|OS X systems> was added in version 2.0.
+
+References: write to process (command), write to file (command), stdin (keyword), stderr (keyword), standard output (glossary), keyword (glossary), standard output, (glossary), command (glossary), OS X (glossary)
+
+Tags: file system

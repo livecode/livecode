@@ -1,0 +1,39 @@
+Name: centerRect
+
+Type: property
+
+Syntax: set the centerRect[angle] of <image> to <left>, <top>, <right>, <bottom> 
+
+Syntax: get the [effective] centerRect[angle] of <image> 
+
+Summary: Specifies a region of pixels that should be stretched when the image is stretched.
+
+Associations: image
+
+Introduced: 6.7
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the centerRect of image "buttonImage" to 20,20,45,200
+
+Parameters:
+image: A reference or expression that evaluate to an image reference.
+rect: Empty or a comma delimited list of 4 integers representing the left,top,right,bottom of the rectangle being specified. By default, the centerRect property is empty.
+
+Value: The <centerRect> property return a comma delimited list of integers representing the top, left, right and bottom of the centerRect. By default, the <centerRect> property of an image is empty.
+
+Description:
+Use to centerRect property to specifies a region of pixels that should be stretched when the image is stretched.
+
+If empty, then the property has no effect. 
+
+If the centerRect is set to a rectangle, then it is interpreted as relative to the source image rect (i.e. 0, 0, the formattedWidth of image, the formattedHeight of image) and it specifies a region of pixels that should be stretched when the image is stretched. In particular, the centerRect is stretched in both x and y directions, the corners outside of the centerRect are not stretched and the sides are stretched horizontally or vertically only depending on orientation.
+
+The centerRect is useful for images being used as backgrounds to buttons as it allows a single image to be used to specify the borders and center stretching area.
+
+References: rectangle (property)
+
+Tags: ui

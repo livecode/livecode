@@ -1,0 +1,14 @@
+Name: mask
+
+Synonyms: masked,mask
+
+Type: glossary
+
+Description:
+A filter that allows only certain values. All <value|values> that don't conform to the mask are discarded. 
+ 
+In an <image>, a mask is used to remove transparent <pixel|pixels>.
+
+References: image (glossary), pixel (glossary), value (glossary)
+
+Tags: multimedia

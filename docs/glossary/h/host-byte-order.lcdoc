@@ -1,0 +1,12 @@
+Name: host byte order
+
+Synonyms: host byte order
+
+Type: glossary
+
+Description:
+The order in which the local system (the "host") stores <byte|bytes> when using multi- <byte> data types. This depends on the operating system and microprocessor your computer has.
+
+References: byte (glossary)
+
+Tags: text processing

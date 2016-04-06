@@ -1,0 +1,1 @@
+# Define MC_BROWSER_DLLEXPORT(_DEF) in libbrowser.h identically to MC_DLLEXPORT(_DEF) in foundation.h

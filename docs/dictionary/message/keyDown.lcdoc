@@ -1,0 +1,39 @@
+Name: keyDown
+
+Type: message
+
+Syntax: keyDown <keyName> 
+
+Summary: Sent when the user presses a key.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on keyDown theKey 
+  if theKey is not a number then beep
+  else pass keyDown
+end keyDown
+
+Parameters:
+keyName: The actual character of the pressed key.
+
+Description:
+Handle the <keyDown> <message> if you want to do something special when the user presses any key or a particular key you check for in the <handler>.
+
+The message is sent to the active (focused) control, or to the current card if no control is focused.
+
+If the key pressed is the Return, Tab, Backspace, Delete, or Enter key, an arrow key, or a function key, no <keyDown> <message> is sent. Instead, the <returnKey>, <tabKey>, <backspaceKey>, <deleteKey>, <enterKey>, <arrowKey>, or <functionKey> <message> is sent.
+
+If the insertion point is in a field, the entry of typed characters is triggered by the <keyDown> <message>. This means that <trap|trapping> the <keyDown> <message> and not <pass|passing> it prevents typing from being entered in the <field>.
+
+>*Note:* The <keyDown> <message> is sent before the <character> is placed in the <field>, so if you need to use the new content of the <field>, handle the <keyUp> <message> instead.
+
+>*Note:* The <keydown> message is not sent when either of the Option, Control or Command keys are down. In this case, first a  <rawKeyDown message> is sent, then one of <optionKeyDown>, <controlKeyDown> or <commandKeyDown> is sent instead of <keydown>.
+
+References: emacsKeyBindings (property), extendKey (property), powerKeys (property), field (keyword), rawKeyDown message (message), commandKeyDown (message), returnKey (message), enterInField (message), controlKeyDown (message), arrowKey (message), backspaceKey (message), tabKey (message), functionKey (message), enterKey (message), deleteKey (message), keyUp (message), optionKeyDown (message), escapeKey (message), focus (command), keysDown (function), handler (glossary), character (glossary), pass (glossary), message (glossary), trap (glossary)
+
+Tags: ui

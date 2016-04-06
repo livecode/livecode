@@ -1,0 +1,29 @@
+Name: printRectangle
+
+Type: property
+
+Syntax: get the printRectangle
+
+Summary: Reports the printable region of the page.
+
+Introduced: 2.9
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+set the rect of group "Print output" to the printRectangle
+
+Value: The <printRectangle> is a comma-separated list of integers in the form left,top,right,bottom. The integers are in points and are relative to the top-left of the page.
+
+Description:
+Use the <printRectangle> property to determine the printable region of the physical page as returned by the printer. This rectangle will always be contained within the printPaperRectangle.
+
+The <printRectangle> property is read-only and cannot be set.
+
+References: print (command), answer printer (command), printPaperRectangle (property)
+
+Tags: printing

@@ -1,0 +1,1 @@
+# Numberformat shouldn't affect number to string conversion in array access

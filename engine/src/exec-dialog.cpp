@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -347,7 +347,7 @@ void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_
 
 void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef p_prompt, MCStringRef *p_buttons, uindex_t p_button_count, MCStringRef p_title, bool p_sheet)
 {
-#ifndef _MOBILE
+#if !defined(_MOBILE) && !defined(__EMSCRIPTEN__)
 	MCAutoStringRef t_value, t_result;
 	MCAutoListRef t_button_list;
 	MCAutoStringRef t_buttons_string;
@@ -397,7 +397,7 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	}
 
 	int32_t t_result;
-	t_result = MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt);
+	t_result = MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt, false);
 	if (t_result == -1)
 		ctxt.SetTheResultToValue(MCN_cancel);
 	else if (p_button_count == 0)
@@ -439,8 +439,18 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 			t_parent_stack = MCdefaultstackptr;
 		else
 			t_parent_stack = MCtopstackptr;
-
+        
+        Boolean added = False;
+        if (MCnexecutioncontexts < MAX_CONTEXTS)
+        {
+            MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+            added = True;
+        }
+        
 		t_success = ES_NORMAL == t_stack->openrect(t_parent_stack->getrect(), p_sheet ? WM_SHEET : WM_MODAL, p_sheet ? t_parent_stack : nil, WP_DEFAULT, OP_NONE);
+        
+        if (added)
+            MCnexecutioncontexts--;
 	}
 
 	MCtrace = t_old_trace;
@@ -458,7 +468,7 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 
 void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prompt, MCStringRef p_answer, bool p_hint_answer, MCStringRef p_title, bool p_as_sheet)
 {
-#ifndef _MOBILE
+#if !defined(_MOBILE) && !defined(__EMSCRIPTEN__)
 	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;
@@ -700,7 +710,17 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 		else
 			t_parent_stack = MCtopstackptr;
 		
+        Boolean added = False;
+        if (MCnexecutioncontexts < MAX_CONTEXTS)
+        {
+            MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+            added = True;
+        }
+        
 		t_success = ES_NORMAL == t_stack->openrect(t_parent_stack->getrect(), p_as_sheet ? WM_SHEET : WM_MODAL, p_as_sheet ? t_parent_stack : nil, WP_DEFAULT, OP_NONE);
+        
+        if (added)
+            MCnexecutioncontexts--;
 	}
 	
 	MCtrace = t_old_trace;

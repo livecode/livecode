@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -732,7 +732,7 @@ Boolean MCAudioClip::open_audio()
 		return x11audio -> init(NULL, nchannels, swidth);
 	return false ;
 }
-#elif defined _SERVER || defined(_MOBILE)
+#elif defined _SERVER || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 Boolean MCAudioClip::open_audio()
 {
 	return False;
@@ -854,7 +854,7 @@ Boolean MCAudioClip::play()
 	}
 
 	return True;
-#elif defined(_SERVER) || defined(_MOBILE)
+#elif defined(_SERVER) || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 	return True;
 #else
 #error "MCAudioClip::play() not supported for this platform"
@@ -913,9 +913,9 @@ bool MCAudioClip::isPlaying()
 //  SAVING AND LOADING
 //
 
-IO_stat MCAudioClip::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCAudioClip::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCAudioClip::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
@@ -923,13 +923,13 @@ IO_stat MCAudioClip::extendedload(MCObjectInputStream& p_stream, uint32_t p_vers
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCAudioClip::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCAudioClip::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
 	if ((stat = IO_write_uint1(OT_AUDIO_CLIP, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, false)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, false, p_version)) != IO_NORMAL)
 		return stat;
 	if (osamples != NULL)
 	{
@@ -957,7 +957,7 @@ IO_stat MCAudioClip::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_write_uint2(loudness, stream)) != IO_NORMAL)
 			return stat;
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
@@ -965,26 +965,26 @@ IO_stat MCAudioClip::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (size != 0)
 	{
 		samples = new int1[size];
 		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if ((stat = IO_read_uint2(&format, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&nchannels, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&swidth, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&rate, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_LOUDNESS)
 		if ((stat = IO_read_uint2(&loudness, stream)) != IO_NORMAL)
-            return stat;
+            return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
 

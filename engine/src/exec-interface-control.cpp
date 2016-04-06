@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -96,10 +96,10 @@ static MCExecCustomTypeInfo _kMCInterfaceMarginsTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
 {
-	{ "static", kMCLayerModeHintStatic },
-    { "dynamic", kMCLayerModeHintDynamic },
-	{ "scrolling", kMCLayerModeHintScrolling },
-	{ "container", kMCLayerModeHintContainer }
+	{ "static", kMCLayerModeHintStatic, false },
+	{ "dynamic", kMCLayerModeHintDynamic, false },
+	{ "scrolling", kMCLayerModeHintScrolling, false },
+	{ "container", kMCLayerModeHintContainer, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
@@ -410,9 +410,9 @@ void MCControl::SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow
 
 static MCExecEnumTypeElementInfo _kMCInterfaceBitmapEffectBlendModeElementInfo[] =
 {
-    { "normal", kMCBitmapEffectBlendModeNormal },
-    { "multiply", kMCBitmapEffectBlendModeMultiply },
-    { "colordodge", kMCBitmapEffectBlendModeColorDodge },
+	{ "normal", kMCBitmapEffectBlendModeNormal, false },
+	{ "multiply", kMCBitmapEffectBlendModeMultiply, false },
+	{ "colordodge", kMCBitmapEffectBlendModeColorDodge, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectBlendModeTypeInfo =
@@ -426,10 +426,10 @@ static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectBlendModeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceBitmapEffectFilterElementInfo[] =
 {
-    { "gaussian", kMCBitmapEffectFilterFastGaussian },
-    { "box1pass", kMCBitmapEffectFilterOnePassBox },
-    { "box2pass", kMCBitmapEffectFilterTwoPassBox },
-    { "box3pass", kMCBitmapEffectFilterThreePassBox },
+	{ "gaussian", kMCBitmapEffectFilterFastGaussian, false },
+	{ "box1pass", kMCBitmapEffectFilterOnePassBox, false },
+	{ "box2pass", kMCBitmapEffectFilterTwoPassBox, false },
+	{ "box3pass", kMCBitmapEffectFilterThreePassBox, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectFilterTypeInfo =
@@ -443,8 +443,8 @@ static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectFilterTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceBitmapEffectSourceElementInfo[] =
 {
-    { "edge", kMCBitmapEffectSourceEdge },
-    { "center", kMCBitmapEffectSourceCenter },
+	{ "edge", kMCBitmapEffectSourceEdge, false },
+	{ "center", kMCBitmapEffectSourceCenter, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceBitmapEffectSourceTypeInfo =

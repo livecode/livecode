@@ -1,0 +1,12 @@
+Name: standard input
+
+Synonyms: stdin,standard input
+
+Type: glossary
+
+Description:
+The source where a program looks for incoming data. 
+ 
+Usually, the standard input is the keyboard by default. On <Unix|Unix systems>, the standard input can be redirected to a <file>, a network connection, or another source of data.
+
+References: Unix (glossary), file (glossary)

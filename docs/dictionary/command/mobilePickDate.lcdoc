@@ -1,0 +1,82 @@
+Name: mobilePickDate
+
+Type: command
+
+Syntax: mobilePickDate [<style>] [, <current>] [, <start>] [, <end>] [, step] [, buttons]
+
+Summary: Allows the user to select the date, time or both the date and time (iOS Only) using the native device date picker.
+
+Synonyms: iphonePickDate
+
+Introduced: 4.6.4
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobilePickDate "date"
+
+Example:
+mobilePickDate "time",,,,10
+
+Example:
+mobilePickDate "time",,,,10, "cancelDone"
+
+Example:
+on displayDate
+   local tSelected, tRangeStart, tRangeEnd, tInterval, tDateResult
+
+   put "07/29/2011" into tSelected // the date and time selected by default
+   put "07/20/2011" into tRangeStart // the minimum date and time that can be selected
+   put "08/01/2011" into tRangeEnd // the maximum date and time that can be selected
+   put 5 into tInterval
+
+   // convert the dates into seconds since the UNIX Epoch
+   convert tSelected to seconds
+   convert tRangeStart to seconds
+   convert tRangeEnd to seconds
+
+   // launch the date and time picker
+   mobilePickDate "dateTime", tSelected, tRangeStart, tRangeEnd, tInterval
+
+   // get the result
+   put the result into tDateResult
+
+   // check and display the result in the text field
+   if tDateResult is 0 then
+       put "No Selection Made" into field "DateField"
+   else
+       convert tDateResult from seconds to internet date
+       put tDateResult into field "DateField"
+   end if
+end displayDate
+
+Parameters:
+style (enum): Indicates the mode of <mobilePickDate>. It determines whether <mobilePickDate> allows selection of "date", "time" or "dateTime" (iOS Only). The default <style> on iOS is "dateTime". The default <style> on Android is "date"
+- "date" (default on Android): display a native picker to choose the date
+- "time": display a native picker to choose the time
+- "datetime" (default on iOS) (iOS only): display a native picker to choose the date and time
+current: The date, time or date and time that is to be displayed. If this is empty, then the current date time is used. If this value is set, then it must be specified in seconds.
+start: The start range of the date picker. If this value is empty, there is no lower boundary. The value is ignored if <start> is greater than <end>. If this value is set then it must be specified in seconds. Start and end parameters will be ignored on Android when picking 'time'.
+end: The end range of the date picker. If this value is empty, there is no upper boundary. The value is ignored if <start> is greater than <end>. If this value is set then it must be specified in seconds. Start and end parameters will be ignored on Android when picking 'time'.
+step (iOS Only): Specifies the minute interval size. This parameter is ignored if <style> is set to "date". The default is 1.
+buttons (iOS Only) (enum): Specifies if "Cancel" and/or "Done" buttons should be forced to be displayed with the date picker dialog. The default behavior is device dependent, exhibiting the most native operation.
+- "done": display the Done button on the Date Picker
+- "cancelDone": display the Cancel and Done buttons on the Date Picker
+- "cancel": display the Cancel button on the Date Picker
+
+The result:
+The selected date, time or date and time are returned in the result. The value is in seconds since the UNIX Epoch.
+If the picker is cancelled then cancel is returned in the result.
+
+Description:
+Allows the user to select the date, time or both the date and time (iOS Only) from the native date picker on the mobile device.
+
+Use the <mobilePickDate> command to display a native date-picker-wheel on iOS or a native date picker dialog on Android. They allow the user to select the date, the time or both the date and time (iOS Only).
+
+On the iPhone, a standard Action Sheet pops up containing the standard date-picker-wheel user interface element. On the iPad, a standard pop-over is presented with a list to choose from.
+
+There are three modes of operation of the <mobilePickDate> command, depending on the value of <style>. If <style> is set to "date" the date picker allows the user to select a date, starting from the current date or a parameter set date. If <style> is set to "time" the date picker allows the user to select a time, starting from the current time or a parameter set time. If <style> is set to "dateTime" (iOS Only) the date picker allows the user to select a date and time, starting from the current date and time or a parameter set date and time.
+
+References: mobilePick (command)

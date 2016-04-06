@@ -1,0 +1,35 @@
+Name: revBrowserNavigate
+
+Type: command
+
+Syntax: revBrowserNavigate <instanceId>, <url> 
+
+Syntax: XBrowser_Navigate <url> [, <instanceId>]
+
+Summary: Navigates a browser to a given url.
+
+Synonyms: XBrowser_Navigate
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+revBrowserNavigate sBrowserId, "http://www.google.com"
+
+Parameters:
+instanceId: The instanceId  is an integer that identifies a browser control opened by the revBrowserOpen function.
+url: Any url that the browser supports. Eg "http://www.livecode.com", "https://livecode.com".
+
+The result: The <revBrowserNavigate> command places empty into the result.
+
+Description:
+The <revBrowserNavigate> function navigates to the given <url> in the browser identified by the <instanceId>. 
+
+>*Note:* For general information on using the browser library, please see the notes in the <revBrowserOpen function> reference.
+
+References: revBrowserForward (command), revBrowserRedraw (command), revBrowserStop (command), revBrowserRefresh (command), revBrowserBack (command), revBrowserOpen (function), revBrowserOpen function (function), queryRecordChanged (message), browserBeforeNavigate (message), browserNavigateComplete (message), browserNavigateCompleteFrame (message)

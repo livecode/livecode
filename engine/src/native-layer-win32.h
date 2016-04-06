@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -25,34 +25,35 @@ class MCNativeLayerWin32 : public MCNativeLayer
 {
 public:
     
-    virtual void OnOpen();
-    virtual void OnClose();
-    virtual void OnAttach();
-    virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void OnVisibilityChanged(bool p_visible);
-	virtual void OnToolChanged(Tool p_new_tool);
-	virtual void OnLayerChanged();
-    
-    MCNativeLayerWin32(MCWidget*);
+	virtual bool GetNativeView(void *&r_view);
+	
+    MCNativeLayerWin32(MCObject *p_object, HWND p_view);
     ~MCNativeLayerWin32();
     
 private:
     
-    MCWidget* m_widget;
     HWND m_hwnd;
     HBITMAP m_cached;
+
+	HWND m_viewport_hwnd;
+	MCRectangle m_intersect_rect;
     
     // Returns the HWND for the stack containing this widget
     HWND getStackWindow();
     
     // Performs the attach/detach operations
-    void doAttach();
-    void doDetach();
+	virtual void doAttach();
+	virtual void doDetach();
+	
+	virtual bool doPaint(MCGContextRef p_context);
+	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
+	virtual void doSetVisible(bool p_visible);
+	
+	void updateViewportGeometry();
 
 	// Performs a relayering operation
-	void doRelayer();
+	virtual void doRelayer();
 };
 
 #endif // ifndef __MC_WIDGET_NATIVE__

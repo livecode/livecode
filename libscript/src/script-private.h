@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -33,15 +33,17 @@ extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptNotAStringValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptTypeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +69,7 @@ void MCScriptDestroyObject(MCScriptObject *object);
 
 MCScriptObject *MCScriptRetainObject(MCScriptObject *object);
 void MCScriptReleaseObject(MCScriptObject *object);
+uint32_t MCScriptGetRetainCountOfObject(MCScriptObject *object);
 
 void MCScriptReleaseObjectArray(MCScriptObject **elements, uindex_t count);
 
@@ -90,10 +93,10 @@ extern void __MCScriptAssertFailed__(const char *label, const char *expr, const 
 
 #else
 
-#define __MCScriptValidateObject__(obj)
-#define __MCScriptValidateObjectAndKind__(obj, kind)
-#define __MCScriptAssert__(expr, label)
-#define __MCScriptUnreachable__(label)
+#define __MCScriptValidateObject__(obj) do { } while (false)
+#define __MCScriptValidateObjectAndKind__(obj, kind) do { } while (false)
+#define __MCScriptAssert__(expr, label) do { } while (false)
+#define __MCScriptUnreachable__(label) do { } while (false)
 
 #endif
 
@@ -124,6 +127,7 @@ enum MCScriptTypeKind
     kMCScriptTypeKindOptional,
     kMCScriptTypeKindHandler,
     kMCScriptTypeKindRecord,
+    kMCScriptTypeKindForeignHandler,
 };
 
 struct MCScriptType
@@ -421,6 +425,12 @@ MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef module, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCScriptHandlerValue
+{
+    MCScriptCommonHandlerDefinition *definition;
+    MCHandlerRef value;
+};
+
 struct MCScriptInstance: public MCScriptObject
 {
     // The module defining the instance.
@@ -428,11 +438,28 @@ struct MCScriptInstance: public MCScriptObject
     
     // The module's array of slots (module -> slot_count in length).
     MCValueRef *slots;
+    
+    // The instance's handler refs. This is a mapping from handler def to
+    // MCHandlerRef. The MCHandlerRefs are freed when the instance is freed.
+    MCScriptHandlerValue *handlers;
+    uindex_t handler_count;
 };
 
 void MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
 bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptHandlerDefinition *handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_result);
+
+// Evaluate the value of the given handler definition. This will create an
+// appropriate MCHandlerRef which can then be called. The instance retains the
+// handler ref and releases when the instance goes away. This implicitly means
+// that any C function ptrs generated from MCHandlerRefs have lifetime equivalent
+// to that of the instance.
+//
+// If the definition is a foreign function and it cannot be bound, then nil is
+// returned for the handler (i.e. it is not an error).
+//
+// The function returns false if there is a memory error.
+bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptCommonHandlerDefinition *definition, MCHandlerRef& r_handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -551,6 +578,13 @@ enum MCScriptBytecodeOp
     // build a list. (This will be replaced by an invoke when variadic bindings are
     // implemented).
     kMCScriptBytecodeOpAssignList,
+
+	// Array creation assignment.
+	//   assign-array <dst>, <key_1>, <value_1>, ..., <key_n>, <value_n>
+	// Dst is a register.  The remaining arguments are registers and
+	// are used, pair-wise, to build an array. (This will be replaced by an invoke
+	// when variadic bindings are implemented).
+	kMCScriptBytecodeOpAssignArray,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);

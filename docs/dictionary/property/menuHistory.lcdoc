@@ -1,0 +1,39 @@
+Name: menuHistory
+
+Type: property
+
+Syntax: set the menuHistory of <button> to <itemNumber> 
+
+Summary: Specifies the number of the currently <selected> item of the <menu> that belongs to a <button>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the menuHistory of button "Tabs" to 1
+
+Value:
+The <menuHistory> of a <button(keyword)> is an <integer> between 1 and the number of <menu item|menu items> in the <menu>.
+By default, the <menuHistory> <property> of newly created <button(object)|buttons> is set to 1.
+
+Description:
+Use the <menuHistory> <property> to change the selected item in a <menu>, or to find out which <menu item> is currently selected.
+
+When you set the <menuHistory> <property>, a <menuPick> <message> is sent to the <button(keyword)>.
+
+If the button's menuMode is "comboBox", setting its <menuHistory> also changes the <button(object)|button's> <label> to the new <menu item>.
+
+If the button's menuMode is "tabbed", setting its <menuHistory> also changes the active tab.
+
+If the button's menuMode is "option", setting its <menuHistory> changes the <label>. It also determines which <menu item> is under the <mouse pointer> when the <menu> next appears. Make sure to set the <menuHistory> <property> of an option menu whenever you change the current choice, so that the choice is under the <mouse pointer> when the user clicks the menu.
+
+>*Note:* The effect of the <menuHistory> <property> in <cascading menu|cascading menus> is ambiguous. Avoid setting or relying on the <menuHistory> of a <cascading menu>.
+
+References: menuName (property), selected (property), label (property), menuPick (message), integer (keyword), menu (keyword), button (keyword), button (object), menuButton (function), selectedText (function), pulldown (command), property (glossary), message (glossary), mouse pointer (glossary), menu item (glossary), cascading menu (glossary)
+
+Tags: menus

@@ -1,0 +1,12 @@
+Name: current card
+
+Synonyms: current card
+
+Type: glossary
+
+Description:
+The <card> currently being displayed in a <stack window>.
+
+References: card (glossary), stack window (glossary)
+
+Tags: navigation

@@ -1,0 +1,40 @@
+Name: iconGravity
+
+Type: property
+
+Syntax: set the iconGravity of <button> to <position> 
+
+Summary: Specifies wether the icon of a button is placed independently of the label.
+
+Associations: button
+
+Introduced: 6.7
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the iconGravity of button "next" to "top"
+
+Value(enum): A string representing the desired layout of the icon of the button.
+- (empty): This property has no effect and placement of the icon follows previous engine rules (default)
+- left: Renders the icon at the middle left side of the button.
+- top: Renders the icon at the middle top of the button.
+- right: Renders the icon at the middle right of the button.
+- bottom: Renders the icon at the middle bottom of the button.
+- topLeft: Renders the icon at the top left of the button.
+- topRight: Renders the icon at the top right of the button.
+- bottomLeft: Renders the icon at the bottom left of the button.
+- bottomRight: Renders the icon at the bottom right of the button.
+- center: Renders the icon in the center of the button.
+- resize: Stretches the icon to fill the button.
+
+Description:
+Use to iconGravity property to position the icon of a button independent of the label.
+
+The margins and borderWidth are taken into account when rendering the icon - the rectangle the icon is placed in is taken to be the button rect after subtracting margins and borderWidth all the way round.
+
+References: borderWidth (property), icon (property), margins (property), iconGravity (property)
+
+Tags: ui

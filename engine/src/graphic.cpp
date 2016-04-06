@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -39,7 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 #include "exec-interface.h"
-#include "systhreads.h"
 
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
@@ -89,14 +88,14 @@ MCPropertyInfo MCGraphic::kProperties[] =
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_FILL, MCGraphic, GradientFill)
     DEFINE_RW_OBJ_RECORD_PROPERTY(P_GRADIENT_STROKE, MCGraphic, GradientStroke)
     
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LinesOfPoint, MCGraphic, MarkerPoints)
-    DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfUInt, MCGraphic, Dashes)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_MARKER_POINTS, LegacyPoints, MCGraphic, MarkerPoints)
+    DEFINE_RW_OBJ_LIST_PROPERTY(P_DASHES, ItemsOfLooseUInt, MCGraphic, Dashes)
     // AL-2014-09-23: [[ Bug 13521 ]] Mark non-effective versions of properties as such
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RW_OBJ_NON_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
     // SN-2014-06-24: [[ rect_point ]] allow effective [relative] points as read-only
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LinesOfPoint, MCGraphic, Points)
-    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LinesOfPoint, MCGraphic, RelativePoints)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_POINTS, LegacyPoints, MCGraphic, Points)
+    DEFINE_RO_OBJ_EFFECTIVE_LIST_PROPERTY(P_RELATIVE_POINTS, LegacyPoints, MCGraphic, RelativePoints)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
@@ -232,7 +231,7 @@ const char *MCGraphic::gettypestring()
 
 Boolean MCGraphic::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && (getstack()->gettool(this) == T_BROWSE)))
 		return False;
 	if ((state & CS_SIZE || state & CS_MOVE) && points != NULL
@@ -298,6 +297,9 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 		// MW-2011-08-18: [[ Layers ]] Notify of a changed rect and invalidate.
 		layer_rectchanged(drect, true);
 		message_with_args(MCM_mouse_move, x, y);
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	else if (m_edit_tool != NULL && m_edit_tool->mfocus(x, y))
@@ -325,6 +327,9 @@ Boolean MCGraphic::mdown(uint2 which)
 			nrealpoints++;
 		startx = mx;
 		starty = my;
+        
+        // AL-2015-07-15: [[ Bug 15605 ]] Notify property listener of the change in points property
+        signallisteners(P_POINTS);
 		return True;
 	}
 	if (state & CS_MFOCUSED)
@@ -421,7 +426,7 @@ Boolean MCGraphic::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCGraphic::setrect(const MCRectangle &nrect)
+void MCGraphic::applyrect(const MCRectangle &nrect)
 {
 	if (realpoints != NULL)
 	{
@@ -1496,7 +1501,7 @@ MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 
 Boolean MCGraphic::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle drect = MCU_intersect_rect(srect, rect);
 	if (drect.width == 0 || drect.height == 0)
@@ -1911,9 +1916,21 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 {
 	if (getstyleint(flags) == F_POLYGON && npts > 1)
 	{
+        // The points of a graphic can only have at most one trailing break.
+        // If it has one crop it from the pts list for processing.
+        bool t_has_trailing_break;
+        t_has_trailing_break = false;
+        if (npts >= 1 &&
+            pts[npts - 1] . x == MININT2)
+        {
+            t_has_trailing_break = true;
+            npts -= 1;
+        }
+            
 		uint2 i ;
 		uint2 t_count = 0 ;
 		MCPoint *startpt = pts ;
+        
 		for (i=1; i<=npts; i++)
 		{
 			if ((i==npts) || (pts[i].x == MININT2))
@@ -1925,7 +1942,12 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 				startpt = pts+i+1 ;
 			}
 		}
-		if (t_count)
+        
+        // Make sure we allocate enough room for any trailing break.
+        if (t_has_trailing_break)
+            t_count++;
+		
+        if (t_count)
 		{
 			MCPoint *newpts = new MCPoint[npts+t_count] ;
 			startpt = pts ;
@@ -1947,7 +1969,11 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 			{
 				*(currentpt++) = *startpt ;
 			}
-			
+            
+            // If we had a trailing break, then re-add it.
+			if (t_has_trailing_break)
+                currentpt -> x = currentpt -> y = MININT2;
+            
 			delete pts;
 			pts = newpts;
 			npts += t_count ;
@@ -2162,7 +2188,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
         
         // MM-2014-08-20: [[ Bug 13230 ]] Marker points are offset as they are drawn which causes issues with multi-threading.
         //  Could be refactored so that the offsetting happens in a separate buffer, but for the moment just put locks around it.
-        MCThreadMutexLock(MCgraphicmutex);
 		for (i = 0 ; i < nrealpoints ; i++)
 		{
 			if (realpoints[i].x != MININT2)
@@ -2190,7 +2215,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		if (last != MAXUINT2)
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
-        MCThreadMutexUnlock(MCgraphicmutex);
 	}
 	MCStringRef slabel = getlabeltext();
 	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))
@@ -2290,11 +2314,9 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 	if (!p_isolated)
 	{
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-		if (m_edit_tool != NULL)
-			m_edit_tool->drawhandles(dc);
+        
+        if (m_edit_tool != NULL)
+            m_edit_tool->drawhandles(dc);
 	}
 
 	dc -> setquality(QUALITY_DEFAULT);
@@ -2454,7 +2476,7 @@ void MCGraphic::setfillrule(uint2 p_rule)
 //  SAVING AND LOADING
 //
 
-IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
 	// Extended data area for a graphic consists of:
 	//   tag graphic_extensions
@@ -2529,7 +2551,7 @@ IO_stat MCGraphic::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	}
 
 	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part);
+		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
 
 	return t_stat;
 }
@@ -2542,16 +2564,16 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 	if (p_remaining > 0)
 	{
 		uint4 t_flags, t_length, t_header_size;
-		t_stat = p_stream . ReadTag(t_flags, t_length, t_header_size);
+		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_size));
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . Mark();
+			t_stat = checkloadstat(p_stream . Mark());
 
 		uint4 t_corrected_length;
 		t_corrected_length = 0;
 
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_MITERLIMIT) != 0)
 		{
-			t_stat = p_stream . ReadFloat32(m_stroke_miter_limit);
+			t_stat = checkloadstat(p_stream . ReadFloat32(m_stroke_miter_limit));
 			if (t_length == 0)
 				t_corrected_length += 4;
 		}
@@ -2559,7 +2581,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_FILLGRADIENT) != 0)
 		{
 			MCGradientFillInit(m_fill_gradient, rect);
-			t_stat = MCGradientFillUnserialize(m_fill_gradient, p_stream);
+			t_stat = checkloadstat(MCGradientFillUnserialize(m_fill_gradient, p_stream));
 			if (t_length == 0)
 				t_corrected_length += MCGradientFillMeasure(m_fill_gradient);
 		}
@@ -2567,7 +2589,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_STROKEGRADIENT) != 0)
 		{
 			MCGradientFillInit(m_stroke_gradient, rect);
-			t_stat = MCGradientFillUnserialize(m_stroke_gradient, p_stream);
+			t_stat = checkloadstat(MCGradientFillUnserialize(m_stroke_gradient, p_stream));
 			if (t_length == 0)
 				t_corrected_length += MCGradientFillMeasure(m_stroke_gradient);
 		}
@@ -2575,13 +2597,13 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		// MW-2008-08-12: [[ Bug 2849 ]] Make sure margins are saved with the graphic object
 		if (t_stat == IO_NORMAL && (t_flags & GRAPHIC_EXTRA_MARGINS) != 0)
 		{
-			t_stat = p_stream . ReadS16(leftmargin);
+			t_stat = checkloadstat(p_stream . ReadS16(leftmargin));
 			if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadS16(topmargin);
+				t_stat = checkloadstat(p_stream . ReadS16(topmargin));
 			if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadS16(rightmargin);
+				t_stat = checkloadstat(p_stream . ReadS16(rightmargin));
 			if (t_stat == IO_NORMAL)
-				t_stat = p_stream . ReadS16(bottommargin);
+				t_stat = checkloadstat(p_stream . ReadS16(bottommargin));
 		}
 
 		// During the 3.0.0 development cycle, the graphic extended data area was different since it
@@ -2589,7 +2611,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 		// be non-zero, and length to be zero. In this case, we rely on the file pointer not needing
 		// updating so we only do the following for non-zero length.
 		if (t_stat == IO_NORMAL && t_length != 0)
-			t_stat = p_stream . Skip(t_length);
+			t_stat = checkloadstat(p_stream . Skip(t_length));
 
 		if (t_stat == IO_NORMAL)
 		{
@@ -2608,7 +2630,7 @@ IO_stat MCGraphic::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 	return t_stat;
 }
 
-IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	uint2 i;
 	IO_stat stat;
@@ -2631,7 +2653,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined, default false
 	uint4 t_old_flags;
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 	{
 		t_old_flags = flags;
 		flags &= ~F_G_ANTI_ALIASED;
@@ -2641,11 +2663,11 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	bool t_has_extensions;
 	t_has_extensions = m_stroke_gradient != NULL || m_fill_gradient != NULL || m_stroke_miter_limit != 10.0 ||
 		leftmargin != defaultmargin || topmargin != defaultmargin || rightmargin != defaultmargin || bottommargin != defaultmargin;
-	if ((stat = MCControl::save(stream, p_part, t_has_extensions || p_force_ext)) != IO_NORMAL)
+	if ((stat = MCControl::save(stream, p_part, t_has_extensions || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 //---- 2.7+:
-	if (MCstackfileversion < 2700)
+	if (p_version < 2700)
 		flags = t_old_flags;
 //----
 
@@ -2711,7 +2733,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//   legacy unicode output.
     if (flags & F_G_LABEL)
 	{
-		if (MCstackfileversion < 7000)
+		if (p_version < 7000)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -2723,7 +2745,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		}
 	}
 
-	return savepropsets(stream);
+    return savepropsets(stream, p_version);
 }
 
 IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
@@ -2733,7 +2755,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	Boolean loaddashes = False;
 
 	if ((stat = MCControl::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
@@ -2746,58 +2768,58 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		m_font_flags |= FF_HAS_UNICODE;
 
 	if ((stat = IO_read_uint2(&angle, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&linesize, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	switch (flags & F_STYLE)
 	{
 	case F_G_RECTANGLE:
 		break;
 	case F_ROUNDRECT:
 		if ((stat = IO_read_uint2(&roundradius, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		break;
 	case F_REGULAR:
 		if ((stat = IO_read_uint2(&nsides, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		break;
 	case F_OVAL:
 		if ((stat = IO_read_uint2(&startangle, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&arcangle, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		break;
 	case F_POLYGON:
 		if ((stat = IO_read_uint2(&markerlsize, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&nmarkerpoints, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (nmarkerpoints != 0)
 		{
 			markerpoints = new MCPoint[nmarkerpoints];
 			for (i = 0 ; i < nmarkerpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&markerpoints[i].x, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 				if ((stat = IO_read_int2(&markerpoints[i].y, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 			}
 		}
 	case F_LINE:
 	case F_CURVE:
 		if ((stat = IO_read_uint2(&arrowsize, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&nrealpoints, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (nrealpoints != 0)
 		{
 			realpoints = new MCPoint[nrealpoints];
 			for (i = 0 ; i < nrealpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&realpoints[i].x, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 				if ((stat = IO_read_int2(&realpoints[i].y, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 			}
 		}
 		if (version < 1400)
@@ -2809,14 +2831,14 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	if (loaddashes || flags & F_DASHES)
 	{
 		if ((stat = IO_read_uint2(&ndashes, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (ndashes != 0)
 		{
 			flags |= F_DASHES;
 			dashes = new uint1[ndashes];
 			for (i = 0 ; i < ndashes ; i++)
 				if ((stat = IO_read_uint1(&dashes[i], stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 			// sanity check: ensure dashes are not all 0
 			bool t_allzero = true;
 			for (i=0; i<ndashes && t_allzero; i++)
@@ -2838,12 +2860,12 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		if (version < 7000)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 		else
 		{
 			if ((stat = IO_read_stringref_new(label, stream, true)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
     }
 	

@@ -1,2 +1,0 @@
-bundle revfont	import ../libexternal	support-ppc 10.2.0	support-386 10.4.0	define _MACOSX
-	include ../libexternal/include	compile-c++ src/revfont.cpp	compile-c++ src/osxfont.cpp	compile-plist rsrc/revfont-Info.plist	link-framework Carbon	link-library external	output revfont

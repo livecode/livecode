@@ -1,0 +1,12 @@
+Name: matched
+
+Synonyms: unmatched,matched,matching
+
+Type: glossary
+
+Description:
+Containing both the start and end word or symbol. 
+ 
+For example, an <expression> with matched parentheses contains a close parenthesis ")" for each open parenthesis "(".
+
+References: expression (glossary)

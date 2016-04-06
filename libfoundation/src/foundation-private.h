@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -54,6 +54,7 @@ struct __MCValue
 enum
 {
     kMCTypeInfoTypeCodeMask = 0xff,
+    kMCTypeInfoFlagHandlerIsForeign = 1 << 8,
     
     // We use typecodes well above the fixed ones we have to
     // indicate 'special' typeinfo (i.e. those with no real
@@ -63,6 +64,13 @@ enum
     kMCTypeInfoTypeIsAlias = 253,
     kMCTypeInfoTypeIsOptional = 252,
     kMCTypeInfoTypeIsForeign = 251,
+};
+
+struct MCHandlerTypeLayout
+{
+    MCHandlerTypeLayout *next;
+    int abi;
+    char cif[1];
 };
 
 struct __MCTypeInfo: public __MCValue
@@ -89,6 +97,8 @@ struct __MCTypeInfo: public __MCValue
             MCHandlerTypeFieldInfo *fields;
             uindex_t field_count;
             MCTypeInfoRef return_type;
+            void **layout_args;
+            MCHandlerTypeLayout *layouts;
         } handler;
         struct
         {
@@ -148,11 +158,11 @@ enum
 	// If set then the string is not native
 	kMCStringFlagIsNotNative = 1 << 2,
     // If set, the string contains no non-BMP characters
-    kMCStringFlagIsSimple = 1 << 3,
+    kMCStringFlagIsBasic = 1 << 3,
     // If set, the string has been checked for simplicity
     kMCStringFlagIsChecked = 1 << 4,
-    // If set, the string has NO combining chars
-    kMCStringFlagIsUncombined = 1 << 5,
+    // If set, the string is basic and contains NO combining chars
+    kMCStringFlagIsTrivial = 1 << 5,
     // If set, the string has been converted to a number
     kMCStringFlagHasNumber = 1 << 6,
     // If set, indicates that the string can be losslessly nativized
@@ -244,6 +254,7 @@ struct __MCString: public __MCValue
                 char_t *native_chars;
             };
             uindex_t capacity;
+            double numeric_value;
         };
     };
 };
@@ -385,15 +396,20 @@ struct __MCRecord: public __MCValue
 
 ////////
 
+struct MCErrorFrame
+{
+    MCErrorFrame *caller;
+    MCValueRef target;
+    uindex_t row;
+    uindex_t column;
+};
+
 struct __MCError: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     MCStringRef message;
     MCArrayRef info;
-    
-    MCValueRef target;
-    uindex_t row;
-    uindex_t column;
+    MCErrorFrame *backtrace;
 };
 
 ////////
@@ -416,6 +432,8 @@ struct __MCHandler: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     const MCHandlerCallbacks *callbacks;
+    void *closure;
+    void *function_ptr;
     char context[1];
 };
 
@@ -569,30 +587,6 @@ bool __MCCustomDefaultMutableCopy(MCValueRef, bool, MCValueRef &);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-hash_t MCNativeCharsHash(const char_t *chars, uindex_t char_count, MCStringOptions p_options);
-
-bool MCNativeCharsEqualExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-bool MCNativeCharsEqualCaseless(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-
-compare_t MCNativeCharsCompareExact(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-compare_t MCNativeCharsCompareCaseless(const char_t *left, uindex_t left_length, const char_t *right, uindex_t right_length);
-
-// Return the number of characters of prefix that are equal to those at the
-// beginning of string.
-uindex_t MCNativeCharsSharedPrefixExact(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-uindex_t MCNativeCharsSharedPrefixCaseless(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-
-// Return the number of characters of suffix that are equal to those at the
-// end of string.
-uindex_t MCNativeCharsSharedSuffixExact(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-uindex_t MCNativeCharsSharedSuffixCaseless(const char_t *string, uindex_t left_length, const char_t *suffix, uindex_t right_length);
-
-// Lowercase all the characters in-place.
-void MCNativeCharsLowercase(char_t *chars, uindex_t char_count);
-
-// Uppercase all the characters in-place.
-void MCNativeCharsUppercase(char_t *chars, uindex_t char_count);
-
 // Fold the given native char for caseless comparison.
 char_t MCNativeCharFold(char_t c);
 
@@ -607,34 +601,6 @@ bool MCNativeCharsFormatV(char_t*& r_string, uindex_t& r_size, const char *forma
 
 //////////
 
-//hash_t MCUnicodeCharsHashExact(const unichar_t *chars, uindex_t char_count);
-//hash_t MCUnicodeCharsHashCaseless(const unichar_t *chars, uindex_t char_count);
-
-//bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-//bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-
-//compare_t MCUnicodeCharsCompareExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-//compare_t MCUnicodeCharsCompareCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-
-// Return the number of characters of prefix that are equal to those at the
-// beginning of string.
-//uindex_t MCUnicodeCharsSharedPrefixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-//uindex_t MCUnicodeCharsSharedPrefixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-
-// Return the number of characters of suffix that are equal to those at the
-// end of string.
-//uindex_t MCUnicodeCharsSharedSuffixExact(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-//uindex_t MCUnicodeCharsSharedSuffixCaseless(const unichar_t *string, uindex_t left_length, const unichar_t *suffix, uindex_t right_length);
-
-// Lowercase all the characters in-place.
-//void MCUnicodeCharsLowercase(unichar_t *chars, uindex_t char_count);
-
-// Uppercase all the characters in-place.
-//void MCUnicodeCharsUppercase(unichar_t *chars, uindex_t char_count);
-
-//bool MCUnicodeCharsEqualExact(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-//bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, const unichar_t *right, uindex_t right_length);
-
 bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, char_t *nchars, uindex_t& r_nchar_count, char_t invalid);
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
 
@@ -645,11 +611,41 @@ bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
 char_t MCUnicodeCharMapToNativeLossy(unichar_t nchar);
 unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 
-//unichar_t MCUnicodeCharFold(unichar_t);
+////////////////////////////////////////////////////////////////////////////////
+// INTERNAL MCVALUE TYPE ASSERTIONS
+//
 
-//unichar_t MCUnicodeCharLowercase(unichar_t);
+inline void
+__MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
+{
+	MCResolvedTypeInfo r;
+	MCAssert(MCTypeInfoResolve(x, r) && p(r.type));
+}
 
-//unichar_t MCUnicodeCharUppercase(unichar_t);
+#define __MCAssertValueType(x,T) MCAssert(MCValueGetTypeCode(x) == kMCValueTypeCode##T)
+
+// A valid ValueRef must have references > 0 and flags != -1
+#define __MCAssertIsValue(x)    MCAssert(((__MCValue *)x) -> flags != UINT32_MAX && ((__MCValue *)x) -> references > 0);
+
+#define __MCAssertIsNumber(x)   __MCAssertValueType(x,Number)
+#define __MCAssertIsName(x)     __MCAssertValueType(x,Name)
+#define __MCAssertIsString(x)   __MCAssertValueType(x,String)
+#define __MCAssertIsData(x)     __MCAssertValueType(x,Data)
+#define __MCAssertIsArray(x)    __MCAssertValueType(x,Array)
+#define __MCAssertIsList(x)     __MCAssertValueType(x,List)
+#define __MCAssertIsSet(x)      __MCAssertValueType(x,Set)
+#define __MCAssertIsTypeInfo(x) __MCAssertValueType(x,TypeInfo)
+#define __MCAssertIsError(x)    __MCAssertValueType(x,Error)
+#define __MCAssertIsRecord(x)   __MCAssertValueType(x,Record)
+#define __MCAssertIsHandler(x)  __MCAssertValueType(x,Handler)
+#define __MCAssertIsProperList(x) __MCAssertValueType(x,ProperList)
+
+#define __MCAssertIsLocale(x)   MCAssert(nil != (x)) /* FIXME */
+
+#define __MCAssertIsMutableString(x) MCAssert(MCStringIsMutable(x))
+#define __MCAssertIsMutableData(x)   MCAssert(MCDataIsMutable(x))
+
+#define __MCAssertIsErrorTypeInfo(x) __MCAssertResolvedTypeInfo(x, MCTypeInfoIsError)
 
 ////////////////////////////////////////////////////////////////////////////////
 

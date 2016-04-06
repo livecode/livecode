@@ -1,0 +1,29 @@
+Name: iphoneDeviceResolution
+
+Type: function
+
+Syntax: iphoneDeviceResolution()
+
+Summary: Returns the device's screen resolution in pixels
+
+Introduced: 4.5.2
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+put iphoneDeviceResolution() into tScreenResolution
+
+Returns (string): The <iphoneDeviceResolution> function returns a string of the form width, height - with the values given in pixels.
+
+Description:
+Use the <iphoneDeviceResolution> function to find the resolution of the device's screen in pixels
+
+The <iphoneDeviceResolution> function returns the resolution of the device's screen in pixels.
+
+The new iPhone 4 has a display with double the resolution in both horizontal and vertical directions. By default, iOS handles this by mapping one logical 'point' to two physical 'pixels' with applications (LiveCode included) interpreting everything in terms of logical points. This means that apps targetted for older devices will run identically on the newer iPhone 4 devices.
+
+The <screenRect> and associated properties all deal in logical points, they do not reflect the actual device resolution at which the app is being displayed. To fetch the device screen's resolution in pixels use the <iphoneDeviceResolution> function.
+
+References: iphoneUseDeviceResolution (command), screenRect (function), iphoneDeviceScale (function)

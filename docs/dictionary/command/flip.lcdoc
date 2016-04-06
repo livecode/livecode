@@ -1,0 +1,40 @@
+Name: flip
+
+Type: command
+
+Syntax: flip [<image>] {horizontal | vertical}
+
+Summary: <change> </change>selected</a> part of an <image>.
+
+Introduced: 1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web,mobile
+
+Example:
+flip vertical
+
+Example:
+flip image 1 vertical
+
+Example:
+flip image "Logo" horizontal
+
+Parameters:
+image: Any image reference.
+
+Description:
+Use the <flip> <command> to turn an <image> over.
+
+Theform flips the image vertically, swapping its top and bottom. Theform flips the image side to side, swapping its right and left.
+
+If you don't specify an <image>, the portion currently selected with the Select <paint tool> is flipped.
+
+The flipping operation is its own inverse: flipping an image twice in the same direction restores it to its original appearance.
+
+>*Important:* Flipping a <referenced control|referenced image> changes its orientation only temporarily. The next time the <referenced control|referenced image> is displayed, its original orientation returns.
+
+References: choose (command), crop (command), revRotatePoly (command), image (keyword), command (glossary), referenced control (glossary), paint tool (glossary)
+
+Tags: multimedia

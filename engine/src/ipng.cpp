@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -115,7 +115,7 @@ public:
 	virtual MCImageLoaderFormat GetFormat() { return kMCImageFormatPNG; }
 	
 protected:
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count);
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata);
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count);
 	
 private:
@@ -140,7 +140,7 @@ MCPNGImageLoader::~MCPNGImageLoader()
 		png_destroy_read_struct(&m_png, &m_info, &m_end_info);
 }
 
-bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count)
+bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata)
 {
 	bool t_success = true;
 	
@@ -175,6 +175,25 @@ bool MCPNGImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 			&m_bit_depth, &m_color_type,
 			&t_interlace_method, &t_compression_method, &t_filter_method);
 	}
+    
+    // MERG-2014-09-12: [[ ImageMetadata ]] load image metatadata
+    if (t_success)
+    {
+        uint32_t t_X;
+        uint32_t t_Y;
+        int t_units;
+        
+        if (png_get_pHYs(m_png, m_info, &t_X, &t_Y, &t_units) && t_units != PNG_RESOLUTION_UNKNOWN)
+        {
+            MCImageMetadata t_metadata;
+            MCMemoryClear(&t_metadata, sizeof(t_metadata));
+            t_metadata.has_density = true;
+            t_metadata.density = floor(t_X * 0.0254 + 0.5);
+            
+            r_metadata = t_metadata;
+        }
+        
+    }
 
 	if (t_success)
 	{

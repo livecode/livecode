@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -36,6 +36,106 @@
 #import <AppKit/NSImageRep.h>
 #import <CoreText/CoreText.h>
 
+
+// Returns the name of the legacy font
+static NSString* get_legacy_font_name()
+{
+    if (MCmajorosversion < 0x10A0)
+        return @"Lucida Grande";
+    if (MCmajorosversion > 0x10B0)
+        return @"San Francisco";
+    else
+        return @"Helvetica Neue";
+}
+
+// Returns the correct font for a control of the given type
+static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlState p_state, MCNameRef* r_name = nil)
+{
+    // Always return the same font regardless of control type in legacy mode
+    if (p_state & kMCPlatformControlStateCompatibility)
+    {
+        static NSFont* s_legacy_font = nil;
+        if (nil == s_legacy_font)
+            s_legacy_font = [[NSFont fontWithName:get_legacy_font_name() size:11] retain];
+        if (nil == s_legacy_font)
+            s_legacy_font = [[NSFont systemFontOfSize:11] retain];
+
+        MCAssert(nil != s_legacy_font);
+
+        if (r_name)
+            *r_name = nil;
+        return s_legacy_font;
+    }
+    
+    switch (p_type)
+    {
+        case kMCPlatformControlTypeRichText:
+        {
+            static NSFont* s_user_font = [[NSFont userFontOfSize:-1.0] retain];
+            if (r_name)
+                *r_name = MCValueRetain(MCN_font_usertext);
+            return s_user_font;
+        }
+            
+        case kMCPlatformControlTypeMenu:
+        case kMCPlatformControlTypeMenuItem:
+        case kMCPlatformControlTypePopupMenu:
+        case kMCPlatformControlTypeOptionMenu:
+        case kMCPlatformControlTypePulldownMenu:
+        {
+            static NSFont* s_menu_font = [[NSFont menuFontOfSize:-1.0] retain];
+            if (r_name)
+                *r_name = MCValueRetain(MCN_font_menutext);
+            return s_menu_font;
+        }
+            
+        case kMCPlatformControlTypeInputField:
+        case kMCPlatformControlTypeComboBox:
+        {
+            static NSFont* s_content_font = [[NSFont controlContentFontOfSize:-1.0] retain];
+            if (r_name)
+                *r_name = MCValueRetain(MCN_font_content);
+            return s_content_font;
+        }
+            
+        case kMCPlatformControlTypeButton:
+        case kMCPlatformControlTypeCheckbox:
+        case kMCPlatformControlTypeLabel:
+        case kMCPlatformControlTypeRadioButton:
+        case kMCPlatformControlTypeList:
+        case kMCPlatformControlTypeMessageBox:
+        case kMCPlatformControlTypeTabButton:
+        case kMCPlatformControlTypeTabPane:
+        {
+            static NSFont* s_message_font = [[NSFont messageFontOfSize:-1.0] retain];
+            if (r_name)
+                *r_name = MCValueRetain(MCN_font_message);
+            return s_message_font;
+        }
+            
+        case kMCPlatformControlTypeTooltip:
+        {
+            static NSFont* s_tooltip_font = [[NSFont toolTipsFontOfSize:-1.0] retain];
+            if (r_name)
+                *r_name = MCValueRetain(MCN_font_tooltip);
+            return s_tooltip_font;
+        }
+            
+        default:
+        {
+            static NSFont* s_system_font = [[NSFont systemFontOfSize:[NSFont systemFontSize]] retain];
+            if (r_name)
+                *r_name = MCValueRetain(MCN_font_system);
+            return s_system_font;
+        }
+    }
+    
+    if (r_name)
+        *r_name = nil;
+    return nil;
+}
+
+
 bool MCPlatformGetControlThemePropBool(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, bool& r_bool)
 {
     return false;
@@ -53,12 +153,8 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
             // If in backwards-compatibility mode, all text is size 11
             if (p_state & kMCPlatformControlStateCompatibility)
                 r_int = 11;
-            else if (p_type == kMCPlatformControlTypeInputField)
-                r_int = 11;
             else
-                r_int = 13;
-            t_found = true;
-            break;
+                return [font_for_control(p_type, p_state) pointSize];
         }
         
         // Property is not known
@@ -99,6 +195,20 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                             t_color = [NSColor selectedTextColor];
                         else
                             t_color = [NSColor textColor];
+                        break;
+                    }
+                        
+                    case kMCPlatformControlTypeTabPane:
+                    case kMCPlatformControlTypeTabButton:
+                    {
+                        // These really should update like the other menu types
+                        // do when the window isn't active but we don't have
+                        // access to the active-tab-but-inactive-window button
+                        // appearance used for "real" tabbed controls.
+                        if (p_state & kMCPlatformControlStateSelected)
+                            t_color = [NSColor selectedMenuItemTextColor];
+                        else
+                            t_color = [NSColor controlTextColor];
                         break;
                     }
                         
@@ -168,6 +278,12 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                     case kMCPlatformControlTypeInputField:
                     case kMCPlatformControlTypeList:
                         t_color = [NSColor textBackgroundColor];
+                        break;
+                        
+                    case kMCPlatformControlTypeTooltip:
+                        // Undocumented but it works (and other mac apps use it)
+                        t_color = [NSColor toolTipColor];
+                        t_found = t_color != nil;
                         break;
                         
                     case kMCPlatformControlTypeWindow:
@@ -266,48 +382,12 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
 
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_which, MCFontRef& r_font)
 {
-    // First of all, get the expected size of the font for the given property
-    int t_font_size;
-    if (!MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size))
+    // Get the font for the given control type
+    MCNameRef t_font_name = nil;
+    NSFont* t_font = font_for_control(p_type, p_state, &t_font_name);
+    if (t_font == nil)
         return false;
     
-    // Only size 11 and 13 fonts are supported
-    if (t_font_size != 11 && t_font_size != 13)
-        return false;
-    
-    // Fonts are expensive to create so cache them
-    static MCFontRef s_user_font_11;
-    static MCFontRef s_user_font_13;
-    static MCFontRef s_system_font_11;
-    static MCFontRef s_system_font_13;
-    
-    MCFontRef* t_which_fontref = nil;
-    
-    NSFont* t_font = nil;
-    switch (p_type)
-    {
-        case kMCPlatformControlTypeInputField:
-            t_which_fontref = t_font_size == 11 ? &s_user_font_11 : &s_user_font_13;
-            if (*t_which_fontref == nil)
-                t_font = [[NSFont userFontOfSize: t_font_size] retain];
-            break;
-            
-        default:
-            t_which_fontref = t_font_size == 11 ? &s_system_font_11 : &s_system_font_13;
-            if (*t_which_fontref == nil)
-                t_font = [[NSFont systemFontOfSize: t_font_size] retain];
-            break;
-    }
-    
-    if (*t_which_fontref == nil && t_font == nil)
-        return false;
-    
-    if (*t_which_fontref == nil)
-    {
-        // Create the in-engine font representation
-        MCFontCreateWithHandle((MCSysFontHandle)t_font, *t_which_fontref);
-    }
-
-    r_font = MCFontRetain(*t_which_fontref);
-    return true;
+    // Ensure the font is registered and return it
+    return MCFontCreateWithHandle((MCSysFontHandle)t_font, t_font_name, r_font);
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -164,6 +164,9 @@ void MCMultimediaEvalRecordCompressionTypes(MCExecContext& ctxt, MCStringRef& r_
         MCListCopyAsString(t_state, r_string);
         MCValueRelease(t_state);
     }
+	else
+		// PM-2015-10-28: [[ Bug 16292 ]] Prevent crash and return empty if QT is not used
+		r_string = MCValueRetain(kMCEmptyString);
 #else
     extern void MCQTGetRecordCompressionList(MCStringRef &r_string);
     MCQTGetRecordCompressionList(r_string);
@@ -652,7 +655,7 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 {
 	if (p_player != nil)
 	{	
-		p_player->setflag(True, F_VISIBLE);
+		// PM-2015-07-10: [[ Bug 15472 ]] Preserve the visible/invisible state of the player
 		switch (p_operation)
 		{
 		case PP_FORWARD:
@@ -686,10 +689,21 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, bool p_looping, MCPoint *p_at, MCStringRef p_options)
 {
 #ifdef _MOBILE
-		extern bool MCSystemPlayVideo(MCStringRef p_video);
-		if (!MCSystemPlayVideo(p_clip))
-			MCresult->sets("no video support");
-		return;
+	// PM-2015-09-22: [[ Bug 15969 ]] Playing a video on iOS crashes when touching the screen
+	extern MCExecContext *MCECptr;
+	
+	// Add a new entry in the execution contexts
+	MCExecContext *oldctxt = MCECptr;
+	MCECptr = &ctxt;
+	
+	extern bool MCSystemPlayVideo(MCStringRef p_video);
+	if (!MCSystemPlayVideo(p_clip))
+		MCresult->sets("no video support");
+	
+	// Remove our entry from the contexts list
+	MCECptr = oldctxt;
+	
+	return;
 #endif
 
 	MCPlayer *tptr = MCMultimediaExecGetClip(p_clip, p_chunk_type);

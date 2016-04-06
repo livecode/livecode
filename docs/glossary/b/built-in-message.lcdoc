@@ -1,0 +1,12 @@
+Name: built-in message
+
+Synonyms: built-in message,builtin message
+
+Type: glossary
+
+Description:
+One of the <message|messages> built into LiveCode, which are sent when the user performs an action such as clicking or typing.
+
+References: message (glossary)
+
+Tags: objects

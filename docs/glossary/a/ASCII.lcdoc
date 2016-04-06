@@ -1,0 +1,14 @@
+Name: ASCII
+
+Synonyms: ASCII value,ASCII
+
+Type: glossary
+
+Description:
+American Standard Code for Information Interchange. ASCII represents each text <character> by a number in the range 0 to 127. This number is the character's ASCII value. 
+ 
+("ASCII value" is also used loosely, to refer to the numeric equivalent of special characters that aren't in the ASCII set.)
+
+References: character (glossary)
+
+Tags: text processing

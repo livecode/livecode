@@ -1,0 +1,30 @@
+Name: preserveVariables
+
+Type: property
+
+Syntax: set the preserveVariables to {true | false}
+
+Summary: Specifies that the values of script-local variables should be preserved across recompilations of the script.
+
+Synonyms: preserveVars
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the preserveVariables to true
+
+Value (bool):The <preserveVariables> is true or false.
+By default, the <preserveVariables> is set to false.
+
+Description:
+Set the <preserveVariables> to true to make LiveCode remember values of script-local variables across recompilation of the script. Script recompilation occurs when an object's script property is set. This property affects only variables at script scope, that do not have an initializer.
+
+The <preserveVariables> property is provided as a background compatibility aid. It should not, in general, be used in user scripts as the IDE automatically handles preservation of variables via the Variable Preservation option in the preferences and Script Editor Script menu.
+
+References: local (command)
+
+Tags: properties

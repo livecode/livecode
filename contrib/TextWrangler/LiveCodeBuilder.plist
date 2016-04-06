@@ -358,7 +358,7 @@ or equivalent.
 		<array>
 			<dict>
 				<key>BBLMLanguageSuffix</key>
-				<string>.mlc</string>
+				<string>.lcb</string>
 			</dict>
 		</array>
 		<key>Language Features</key>

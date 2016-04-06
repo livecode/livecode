@@ -1,0 +1,33 @@
+Name: printGutters
+
+Type: property
+
+Syntax: set the printGutters to <columnSpace>, <rowSpace> 
+
+Summary: Specifies how much blank space is used to separate printed <card|cards> on the page.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+set the printGutters to 9,27
+
+Value:
+The <printGutters> consists of two <non-negative> <integer|integers>, separated by commas.
+By default, the <printGutters> is set to 36,36 (one-half inch between cards, vertically and horizontally).
+
+Description:
+Use the <printGutters> <property> to control the amount of blank space between <card|cards>, when multiple <card|cards> are printed with the <open printing> <command>.
+
+The first item of the <printGutters> is the height in <points> of the blank strip between the right edge of one column of <card|cards> and the left edge of the next column. (There are 72 <points> to an inch.)
+
+The second item is the width in points of the blank strip between the bottom edge of one row of cards and the top edge of the next row.
+
+References: points (property), printRowsFirst (property), printMargins (property), print (command), open printing (command), card (object), property (glossary), integer (glossary), command (glossary), non-negative (glossary)
+
+Tags: printing

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1550,6 +1550,12 @@ bool MCExecPoint::copyaslegacycolor(MCColor& r_color)
 
 #if 0
 
+#include "scriptpt.h"
+#include "statemnt.h"
+#include "newobj.h"
+#include "license.h"
+#include "uidc.h"
+
 void MCExecPoint::clear()
 {
 	format = VF_STRING;
@@ -2528,4 +2534,147 @@ bool MCExecPoint::copyasstringref(MCStringRef& r_string)
 
 /////////
 
+// SN-2015-06-03: [[ Bug 11277 ]] Refactor similar functions from MCHandler and
+//  MCHandlerlist
+void MCExecPoint::deletestatements(MCStatement *p_statements)
+{
+    while (p_statements != NULL)
+    {
+        MCStatement *tsptr = p_statements;
+        p_statements = p_statements->getnext();
+        delete tsptr;
+    }
+}
+
+Exec_stat MCExecPoint::eval(MCExecPoint &ep)
+{
+    MCScriptPoint sp(ep);
+    
+    // SN-2015-06-03: [[ Bug 11277 ]] When we are out of handler, then it simply
+    //  sets the ScriptPoint handler to NULL (post-constructor state).
+    sp.sethandler(gethandler());
+    
+    MCExpression *exp = NULL;
+    Symbol_type type;
+    Exec_stat stat = ES_ERROR;
+    if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
+    {
+        stat = exp->eval(ep);
+        grabsvalue();
+    }
+    delete exp;
+    return stat;
+}
+
+Exec_stat MCExecPoint::doscript(MCExecPoint& ep, uint2 line, uint2 pos)
+{
+    MCScriptPoint sp(ep);
+    MCStatement *curstatement = NULL;
+    MCStatement *statements = NULL;
+    MCStatement *newstatement = NULL;
+    Symbol_type type;
+    const LT *te;
+    Exec_stat stat = ES_NORMAL;
+    Boolean oldexplicit = MCexplicitvariables;
+    MCexplicitvariables = False;
+    uint4 count = 0;
+    sp.setline(line - 1);
+    while (stat == ES_NORMAL)
+    {
+        switch (sp.next(type))
+        {
+            case PS_NORMAL:
+                if (type == ST_ID)
+                    if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
+                        newstatement = new MCComref(sp.gettoken_nameref());
+                    else
+                    {
+                        if (te->type != TT_STATEMENT)
+                        {
+                            MCeerror->add(EE_DO_NOTCOMMAND, line, pos, sp.gettoken());
+                            stat = ES_ERROR;
+                        }
+                        else
+                            newstatement = MCN_new_statement(te->which);
+                    }
+                    else
+                    {
+                        MCeerror->add(EE_DO_NOCOMMAND, line, pos, sp.gettoken());
+                        stat = ES_ERROR;
+                    }
+                if (stat == ES_NORMAL)
+                {
+                    if (curstatement == NULL)
+                        statements = curstatement = newstatement;
+                    else
+                    {
+                        curstatement->setnext(newstatement);
+                        curstatement = newstatement;
+                    }
+                    if (curstatement->parse(sp) != PS_NORMAL)
+                    {
+                        MCeerror->add(EE_DO_BADCOMMAND, line, pos, ep.getsvalue());
+                        stat = ES_ERROR;
+                    }
+                    count += curstatement->linecount();
+                }
+                break;
+            case PS_EOL:
+                if (sp.skip_eol() != PS_NORMAL)
+                {
+                    MCeerror->add(EE_DO_BADLINE, line, pos, ep.getsvalue());
+                    stat = ES_ERROR;
+                }
+                break;
+            case PS_EOF:
+                stat = ES_PASS;
+                break;
+            default:
+                stat = ES_ERROR;
+        }
+    }
+    MCexplicitvariables = oldexplicit;
+    
+    if (MClicenseparameters . do_limit > 0 && count >= MClicenseparameters . do_limit)
+    {
+        MCeerror -> add(EE_DO_NOTLICENSED, line, pos, ep . getsvalue());
+        stat = ES_ERROR;
+    }
+    
+    if (stat == ES_ERROR)
+    {
+        deletestatements(statements);
+        return ES_ERROR;
+    }
+    MCExecPoint ep2(ep);
+    while (statements != NULL)
+    {
+        Exec_stat stat = statements->exec(ep2);
+        if (stat == ES_ERROR)
+        {
+            deletestatements(statements);
+            MCeerror->add(EE_DO_BADEXEC, line, pos, ep.getsvalue());
+            return ES_ERROR;
+        }
+        if (MCexitall || stat != ES_NORMAL)
+        {
+            deletestatements(statements);
+            if (stat != ES_ERROR)
+                stat = ES_NORMAL;
+            return stat;
+        }
+        else
+        {
+            MCStatement *tsptr = statements;
+            statements = statements->getnext();
+            delete tsptr;
+        }
+    }
+    if (MCscreen->abortkey())
+    {
+        MCeerror->add(EE_DO_ABORT, line, pos);
+        return ES_ERROR;
+    }
+    return ES_NORMAL;
+}
 #endif

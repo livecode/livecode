@@ -1,3 +1,19 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include <cstring>
 #include <cctype>
 #include <cstdlib>
@@ -35,14 +51,15 @@ char *string_to_utf8(const char *p_string)
 		unsigned int v;
 		v = ((unsigned char *)p_string)[i];
 
-		if (v < 128)
+        if (v < 128)
 			t_utf8_string[j++] = v;
 		else
 		{
-			t_utf8_string[j++] = 0xC0 | (v >> 5);
-			t_utf8_string[j++] = 0x80 | (v & 63);
+            // SN-2015-03-11: [[ Bug 14413 ]] Do the expected shift
+            t_utf8_string[j++] = (0xC0 | (v >> 6));
+            t_utf8_string[j++] = (0x80 | (v & 63));
 		}
-	}
+    }
 
 	t_utf8_string[j] = '\0';
 

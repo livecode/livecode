@@ -1,0 +1,39 @@
+Name: iphoneActivityIndicatorStart
+
+Type: command
+
+Syntax: iphoneActivityIndicatorStart [<type>] [, <xposition>, <yposition>]
+
+Summary: Displays an animated activity indicator on the screen
+
+Introduced: 5.0.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneActivityIndicatorStart
+
+Example:
+iphoneActivityIndicatorStart "gray"
+
+Example:
+iphoneActivityIndicatorStart "whiteLarge", 100, 100
+
+Parameters:
+type (enum): Specifies the type of animation that is to be displayed. The default is "white".
+- "gray": displays a small gray spoked animation
+- "white": displays a small white spoked animation
+- "whiteLarge": displays a large white spoked animation
+xposition: Specifies the horizontal position on the screen at which the animation should be displayed.
+yposition: Specifies the vertical position on the screen at which the animation should be displayed.
+
+Description:
+The activity indicator displays an animated indicator on the screen.
+
+Use the <iphoneActivityIndicatorStart> command to display a native iOS activity indicator on the top of the LiveCode stack that is running.
+
+The <iphoneActivityIndicatorStart> command allows you to select from three types of animation and position the animation at a defined location on the screen. If a location is not specified, then the animation is positioned in the middle of the screen. You can turn the activity indicator off by calling <iphoneActivityIndicatorStop>.
+
+References: iphoneActivityIndicatorStop (command)

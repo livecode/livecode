@@ -1,0 +1,44 @@
+Name: create widget
+
+Type: command
+
+Associations: widget
+
+Syntax: create [invisible] widget [<controlName>] as <widgetKind> [in <group>]
+
+Summary: Create a <widget> control of the specified <kind>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+create widget "My Navbar" as "com.livecode.widget.navbar"
+
+Example:
+create group "Swatches"
+repeat with x = 1 to 20
+	create invisible widget ("Color Swatch" && x) as "com.livecode.widget.colorswatch" in group "Swatches"
+end repeat
+
+Parameters:
+controlName: The name to call the newly created <widget>. If you don't specify a name, the <widget> is created with a default name.
+widgetKind: The name of the module that defines the widget to be created.
+group: A reference or an expression that evaluates to a reference to a group on the current card. If you specify a group, the new <widget> is a member of the <group>, and exists on each <card> that has the <group>. If you don't specify a <group>, the <widget> is created on the current <card> and appears only on that <card>.
+
+It: The <create widget> command places the ID property of the newly created <widget> in the <it> variable.
+
+Description:
+Use the <create widget> command to make a new <widget> control or grouped <widget> control of <kind> <widgetKind>.
+
+If you use the invisible form, the <widget> is created with its <visible> property set to false, so it cannot be seen. Use this form to create a hidden <widget>, change its appearance or position, then make it visible.
+
+When the new <widget> is created, the pointer tool is automatically chosen.
+
+>*Note:* The <LCB extension|extension> of the specified <kind> must have been loaded using the <load extension> command. To see a list of the currently loaded <LiveCode Builder extension|extensions>, use the <loadedExtensions> <function>.
+
+References: kind (property), load extension (command), loadedExtensions (function), widget (object), card (object), group (object), visible (property), LiveCode Builder extension (glossary), it (keyword)
+
+Tags: objects, extensions

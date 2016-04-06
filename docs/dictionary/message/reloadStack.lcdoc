@@ -1,0 +1,39 @@
+Name: reloadStack
+
+Type: message
+
+Syntax: reloadStack <stackName>, <fileName> 
+
+Summary: Sent to a <main stack> when the user tries to open a <main stack> with the same <name> as a previously-opened <stack>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on reloadStack theStack,thePath -- bring reloaded window to front
+ -- if you're trying to open the same file (for example, double-
+  -- clicking the file), bring the already-open stack to the front:
+  if the effective filename of stack theStack is thePath
+  then go stack theStack
+  else beep -- trying to open a same-named stack in different file
+end reloadStack
+
+Parameters:
+stackName: The short name that belongs to the two conflicting main stacks.
+fileName: The full path to the file that is opening--the file that contains the second main stack with the same name.
+
+Description:
+Handle the <reloadStack> <message> when you want to prevent a stack from being reopened, or moderate conflicts between the names of <main stack|main stacks>, or prevent two <main stack|main stacks> with the same <name> from being open at one time.
+
+The opening of the stack is triggered by the <reloadStack> <message>. This means that <trap|trapping> the <reloadStack> <message> and not <pass|passing> it prevents the second <stack> from being opened.
+
+If a main stack's <destroyStack> <property> is set to false, the <stack> remains in memory--and can cause a <reloadStack> <message> to be sent--even after its window is closed.
+
+References: destroyStack (property), name (property), mainStacks (function), property (glossary), pass (glossary), message (glossary), main stack (glossary), trap (glossary), stack (object)
+
+Tags: objects

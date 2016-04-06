@@ -1,0 +1,34 @@
+Name: start using
+
+Type: command
+
+Syntax: start using <stack> 
+
+Summary: Places a <stack> into the <message path>.
+
+Synonyms: library
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+start using stack "mylibrary"
+
+Parameters:
+stack: Any stack reference.
+
+Description:
+Use the <start using> <command> to use a <stack|stack's> <script> as a <library> for frequently-used <handler|handlers>.
+
+The <start using> <command> places a <stack|stack's> <script> into the <message path> after the <current stack> and before any <object|objects> in the <backScripts>.
+
+When you start using a stack, the <libraryStack> <message> is sent to the <stack>.
+
+When a standalone application is running, it can insert up to fifty stacks into the <stacksInUse>. This limit is set by line 3 of the <scriptLimits> <function>. When using the <development environment>, you can insert any number of <stacks> into the <message path>.
+
+References: script (property), stacksInUse (property), releaseStack (message), libraryStack (message), library (library), stack (object), object (object), handler (glossary), current stack (glossary), message (glossary), command (glossary), development environment (glossary), message path (glossary), scriptLimits (function), backScripts (function), stacks (function), call (command), stop using (command), insert script (command), function (control_st)
+
+Tags: objects

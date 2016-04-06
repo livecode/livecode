@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1294,13 +1294,10 @@ void MCMessage::exec_ctxt(MCExecContext &ctxt)
 
 			// MW-2011-08-11: [[ Bug 9668 ]] Make sure we copy 'pdata' if we use it, since
 			//   mptr (into which it points) only lasts as long as this method call.
-			// MW-2013-11-15: [[ Bug 11277 ]] If no handler, evaluate in the context of the
-			//   server script object.
+			// MW-2013-11-15: [[ Bug 11277 ]] Refactor MCHandler::eval
 			Exec_stat t_stat;
-			if (ep.gethandler() != nil)
-				t_stat = ep . gethandler() -> eval(ep);
-			else
-				t_stat = ep . gethlist() -> eval(ep);
+            t_stat = ep . eval(ep);
+            
 			if (t_stat == ES_NORMAL)
 				newparam->set_argument(ep);
 			else
@@ -1912,7 +1909,7 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 		MCImageRep *t_rep;
 		t_rep = nil;
 		
-		if (MCImageGetFileRepForStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
+		if (MCImageGetRepForReferenceWithStackContext(ep.getcstring(), MCdefaultstackptr, t_rep))
 		{
 			MCImagePrepareRepForDisplayAtDensity(t_rep, MCdefaultstackptr->getdevicescale());
 			
@@ -2263,11 +2260,19 @@ void MCMM::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCMultimediaExecPlayLastVideoOperation(ctxt, PP_UNDEFINED);
 		}
-        // AL-2014-09-12: [[ Bug 13428 ]] The only valid audio action without a clip is stop
-        else if (audio)
-        {
-            MCMultimediaExecStopPlaying(ctxt);
-        }
+		// AL-2014-09-12: [[ Bug 13428 ]] The only valid audio action without a clip is stop
+		else if (audio)
+		{
+			MCMultimediaExecStopPlaying(ctxt);
+		}
+		
+		// PM-2015-09-23: [[ Bug 15994 ]] Calling 'play stop' on mobile should stop the currently played video
+		if (stop)
+		{
+#ifdef _MOBILE
+			MCMultimediaExecPlayVideoOperation(ctxt, nil, etype, kMCEmptyString, PP_STOP);
+#endif
+		}
 	}
 	else
 	{

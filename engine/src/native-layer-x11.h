@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -29,27 +29,22 @@ namespace x11
 class MCNativeLayerX11 : public MCNativeLayer
 {
 public:
-    
-    virtual void OnOpen();
-    virtual void OnClose();
-    virtual void OnAttach();
-    virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void OnVisibilityChanged(bool p_visible);
     virtual void OnToolChanged(Tool p_new_tool);
-    virtual void OnLayerChanged();
+	
+	virtual bool GetCanRenderToContext();
     
-    MCNativeLayerX11(MCWidget*);
+    virtual bool GetNativeView(void *&r_view);
+    
+    MCNativeLayerX11(MCObject *p_object, x11::Window p_view);
     ~MCNativeLayerX11();
     
 private:
     
-    MCWidget* m_widget;
     GtkWindow* m_child_window;
     GdkRegion* m_input_shape;
     GtkSocket* m_socket;
     x11::Window m_widget_xid;
+	MCRectangle m_intersect_rect;
     
     // Returns the handle for the stack containing this widget
     x11::Window getStackX11Window();
@@ -59,14 +54,21 @@ private:
     GtkFixed* getStackLayout();
     
     // Performs the attach/detach operations
-    void doAttach();
-    void doDetach();
+    virtual void doAttach();
+    virtual void doDetach();
+	
+	virtual bool doPaint(MCGContextRef p_context);
+	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
+	virtual void doSetVisible(bool p_visible);
     
     // Performs a relayering operation
-    void doRelayer();
+    virtual void doRelayer();
     
     // Updates the input mask for the widget (used to implement edit mode)
     void updateInputShape();
+    
+	void updateContainerGeometry();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_X11__

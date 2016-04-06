@@ -1,0 +1,32 @@
+Name: exp1
+
+Type: function
+
+Syntax: the exp1 of <number> 
+
+Syntax: exp1(<number>)
+
+Summary: <return|Returns> the natural exponential of a number, minus 1.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+exp1(myValue)
+
+Parameters:
+number: A real number, or an expression that evaluates to a number.
+
+Returns: The <exp1> function <return|returns> a positive number.
+
+Description:
+Use the <exp1> function to obtain a power of e minus 1, e^ <number> - 1.
+
+The transcendental number e appears in many mathematical formulas.
+
+References: ln1 (function), exp (function), return (glossary)
+
+Tags: math

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -108,7 +108,7 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 MCLicenseParameters MClicenseparameters =
 {
 	NULL, NULL, NULL, kMCLicenseClassNone, 0,
-	10, 10, 50, 10,
+	0, 0, 0, 0,
 	0,
 	NULL,
 };
@@ -150,7 +150,7 @@ MCPropertyInfo MCStack::kModeProperties[] =
 {
     DEFINE_RW_OBJ_PROPERTY(P_IDE_OVERRIDE, Bool, MCStack, IdeOverride)
     DEFINE_RO_OBJ_PROPERTY(P_REFERRING_STACK, String, MCStack, ReferringStack)
-    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfUInt, MCStack, UnplacedGroupIds)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_UNPLACED_GROUP_IDS, LinesOfLooseUInt, MCStack, UnplacedGroupIds)
 };
 
 MCObjectPropertyTable MCStack::kModePropertyTable =
@@ -165,7 +165,7 @@ MCPropertyInfo MCProperty::kModeProperties[] =
 	DEFINE_RW_PROPERTY(P_REV_CRASH_REPORT_SETTINGS, Array, Mode, RevCrashReportSettings)
     DEFINE_RO_PROPERTY(P_REV_MESSAGE_BOX_LAST_OBJECT, String, Mode, RevMessageBoxLastObject)
     DEFINE_RW_PROPERTY(P_REV_MESSAGE_BOX_REDIRECT, String, Mode, RevMessageBoxRedirect)
-	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
+	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, Mode, RevLicenseInfoByKey)
     DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
     DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, Mode, RevLicenseLimits)
     DEFINE_RO_PROPERTY(P_REV_OBJECT_LISTENERS, LinesOfString, Mode, RevObjectListeners)
@@ -197,7 +197,7 @@ public:
 
 static MCStringRef s_command_path = nil;
 
-static void restart_revolution(void)
+static void restart_livecode(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
     MCAutoStringRefAsUTF8String t_command_path;
@@ -264,7 +264,7 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 	
 	s_command_path = MCValueRetain(*t_command_path);
 
-	atexit(restart_revolution);
+	atexit(restart_livecode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,94 +302,121 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCAutoDataRef t_decompressed;
-	MCAutoDataRef t_compressed;
-	/* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, &t_compressed);
-	/* UNCHECKED */ MCFiltersDecompress(*t_compressed, &t_decompressed);
-    
-    IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(*t_decompressed), MCDataGetLength(*t_decompressed));
-	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
-	{
-		MCS_close(stream);
-		return stat;
-	}
-
-	MCS_close(stream);
-
-	/* FRAGILE */ memset((void *)MCDataGetBytePtr(*t_decompressed), 0, MCDataGetLength(*t_decompressed));
-
-	// Temporary fix to make sure environment stack doesn't get lost behind everything.
-#if defined(_MACOSX)
-	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
-	SetFrontProcess(&t_psn);
-#elif defined(_WINDOWS)
-	SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
-#endif
-	
-	MCenvironmentactive = True;
-	sptr -> setfilename(MCcmd);
-	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
-
-	{
-		MCdefaultstackptr -> setextendedstate(true, ECS_DURING_STARTUP);
-		MCdefaultstackptr -> message(MCM_start_up, nil, False, True);
-		MCdefaultstackptr -> setextendedstate(false, ECS_DURING_STARTUP);
-	}
-	
-	if (!MCquit)
+    if (MCnoui && MCnstacks > 0 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
     {
-        MCExecContext ctxt(nil, nil, nil);
-        MCValueRef t_valueref;
-        t_valueref = nil;
-        MCValueRef t_valueref2;
-        t_valueref2 = nil;
-		MCresult -> eval(ctxt, t_valueref);
-		
-		if (MCValueIsEmpty(t_valueref))
-		{
-			sptr -> open();
-			MCImage::init();
-			
-			X_main_loop();
-			MCresult -> eval(ctxt, t_valueref2);
-			if (MCValueIsEmpty(t_valueref2))
-            {
-                MCValueRelease(t_valueref);
-                MCValueRelease(t_valueref2);
-				return IO_NORMAL;
-            }
-            else
-                MCValueAssign(t_valueref, t_valueref2);
-                
-		}
-
-		// TODO: Script Wiping
-		// if (sptr -> getscript() != NULL)
-		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
-
-		destroystack(sptr, True);
-		MCtopstackptr = NULL;
-		MCquit = False;
-		MCenvironmentactive = False;
-
-		send_relaunch();
-        MCNewAutoNameRef t_name;
-        if(!ctxt . ConvertToName(t_valueref, &t_name))
+        if (MCdispatcher -> loadfile(MCstacknames[0], sptr) != IO_NORMAL)
         {
-            ctxt . Throw();
+            MCresult -> setvalueref(MCSTR("failed to read stackfile"));
             return IO_ERROR;
         }
+        
+        MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStringRef) * (MCnstacks-1));
+        MCnstacks -= 1;
+    }
+    else if (MCnoui)
+    {
+        MCresult -> setvalueref(MCSTR("cannot run in command line mode"));
+        return IO_ERROR;
+    }
+    else
+    {
+        MCDataRef t_decompressed;
+        MCDataRef t_compressed;
+        /* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
+        /* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
+        MCValueRelease(t_compressed);
+        
+        IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
+        if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
+        {
+            if (MCdispatcher -> loadfile(MCstacknames[0], sptr) != IO_NORMAL)
+            {
+                MCresult -> sets("failed to read stackfile");
+                return IO_ERROR;
+            }
+            
+            MCMemoryMove(MCstacknames, MCstacknames + 1, sizeof(MCStack *) * (MCnstacks - 1));
+            MCnstacks -= 1;
+        }
 
-		sptr = findstackname(*t_name);
-        if (t_valueref != nil)
-            MCValueRelease(t_valueref);
-        if (t_valueref2 != nil)
-            MCValueRelease(t_valueref2);
+        MCS_close(stream);
 
-		if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
-			return stat;
-	}
+        /* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
+        MCValueRelease(t_decompressed);
 
+        // Temporary fix to make sure environment stack doesn't get lost behind everything.
+    #if defined(_MACOSX)
+            ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+            SetFrontProcess(&t_psn);
+    #elif defined(_WINDOWS)
+            SetForegroundWindow(((MCScreenDC *)MCscreen) -> getinvisiblewindow());
+    #endif
+
+        MCenvironmentactive = True;
+        sptr -> setfilename(MCcmd);
+        MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
+
+        {
+            MCdefaultstackptr -> setextendedstate(true, ECS_DURING_STARTUP);
+            MCdefaultstackptr -> message(MCM_start_up, nil, False, True);
+            MCdefaultstackptr -> setextendedstate(false, ECS_DURING_STARTUP);
+        }
+        
+        if (!MCquit)
+        {
+            MCExecContext ctxt(nil, nil, nil);
+            MCValueRef t_valueref;
+            t_valueref = nil;
+            MCValueRef t_valueref2;
+            t_valueref2 = nil;
+            MCresult -> eval(ctxt, t_valueref);
+            
+            if (MCValueIsEmpty(t_valueref))
+            {
+                sptr -> open();
+                MCImage::init();
+                
+                X_main_loop();
+                MCresult -> eval(ctxt, t_valueref2);
+                if (MCValueIsEmpty(t_valueref2))
+                {
+                    MCValueRelease(t_valueref);
+                    MCValueRelease(t_valueref2);
+                    return IO_NORMAL;
+                }
+                else
+                    MCValueAssign(t_valueref, t_valueref2);
+                    
+            }
+
+            // TODO: Script Wiping
+            // if (sptr -> getscript() != NULL)
+            //	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
+
+            destroystack(sptr, True);
+            MCtopstackptr = NULL;
+            MCquit = False;
+            MCenvironmentactive = False;
+            
+            send_relaunch();
+            MCNewAutoNameRef t_name;
+            if(!ctxt . ConvertToName(t_valueref, &t_name))
+            {
+                ctxt . Throw();
+                return IO_ERROR;
+            }
+
+            sptr = findstackname(*t_name);
+            if (t_valueref != nil)
+                MCValueRelease(t_valueref);
+            if (t_valueref2 != nil)
+                MCValueRelease(t_valueref2);
+
+            if (sptr == NULL && (stat = loadfile(MCNameGetString(*t_name), sptr)) != IO_NORMAL)
+                return stat;
+        }
+    }
+    
 	if (!MCquit)
 	{
 		// OK-2007-11-13 : Bug 5525, after opening the IDE engine, the allowInterrupts should always default to false,
@@ -497,7 +524,7 @@ void MCStack::mode_load(void)
 		MClockmessages++;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
-        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, t_value);
+        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
 		MClockmessages--;
 
 		bool t_treat_as_ide;
@@ -937,7 +964,9 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 				static struct { const char *tag; uint32_t value; } s_class_map[] =
 				{
 					{ "community", kMCLicenseClassCommunity },
+					{ "evaluation", kMCLicenseClassEvaluation },
 					{ "commercial", kMCLicenseClassCommercial },
+					{ "professional evaluation", kMCLicenseClassProfessionalEvaluation },
 					{ "professional", kMCLicenseClassProfessional },
 					{ NULL, kMCLicenseClassNone }
 				};
@@ -979,6 +1008,7 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 					{ "server", kMCLicenseDeployToServer },
 					{ "ios-embedded", kMCLicenseDeployToIOSEmbedded },
 					{ "android-embedded", kMCLicenseDeployToIOSEmbedded },
+					{ "html5", kMCLicenseDeployToHTML5 },
 				};
 
 				MClicenseparameters . deploy_targets = 0;
@@ -1078,8 +1108,10 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 			{
 				"",
 				"Community",
+				"Evaluation"
 				"Commercial",
 				"Professional",
+				"Professional Evaluation",
 			};
 
 			static const char *s_deploy_targets[] =
@@ -1168,7 +1200,10 @@ IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename)
 // For development mode, the environment depends on the license edition
 MCNameRef MCModeGetEnvironment(void)
 {
-	return MCN_development;
+	if (MCnoui)
+        return MCN_development_cmdline;
+    else
+        return MCN_development;
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -1176,6 +1211,11 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeEditor;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Development-mode is not standalone
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    MCS_getresourcesfolder(false, r_resources_folder);
+}
 
 // In development mode, we are always licensed.
 bool MCModeGetLicensed(void)
@@ -1187,6 +1227,19 @@ bool MCModeGetLicensed(void)
 bool MCModeIsExecutableFirstArgument(void)
 {
 	return false;
+}
+
+// In development mode, we don't have command line arguments / name
+bool MCModeHasCommandLineArguments(void)
+{
+    return false;
+}
+
+// In development mode, we process environment variables
+bool
+MCModeHasEnvironmentVariables()
+{
+	return true;
 }
 
 // In development mode, we always automatically open stacks.
@@ -1832,8 +1885,15 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
         case 'S':
             t_handler_type = HT_SETPROP;
             break;
+        case 'A':
+            t_handler_type = HT_AFTER;
+            break;
+        case 'B':
+            t_handler_type = HT_BEFORE;
+            break;
         default:
             t_handler_type = HT_MESSAGE;
+            break;
     }
     
     Exec_stat t_status;
@@ -1843,12 +1903,14 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
     MCHandler *t_handler;
     t_status = hlist -> findhandler(t_handler_type, *t_name, t_handler);
 
-    if (t_handler != NULL)
+    if (t_status == ES_NORMAL)
     {
         MCAutoListRef t_list;
         t_handler -> getvarnames(true, &t_list);
         MCListCopyAsString(*t_list, r_variables);
     }
+    else
+        r_variables = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1911,7 +1973,9 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
             static struct { const char *tag; uint32_t value; } s_class_map[] =
             {
                 { "community", kMCLicenseClassCommunity },
+                { "evaluation", kMCLicenseClassEvaluation },
                 { "commercial", kMCLicenseClassCommercial },
+                { "professional evaluation", kMCLicenseClassProfessionalEvaluation },
                 { "professional", kMCLicenseClassProfessional },
                 { "", kMCLicenseClassNone }
             };
@@ -1928,34 +1992,56 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("multiplicity"), t_value))
-        MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
+    {
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger(*t_number);
+	    }
+    }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("scriptlimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("dolimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("usinglimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("insertlimit"), t_value))
     {
-        integer_t t_limit;
-        t_limit = MCNumberFetchAsInteger((MCNumberRef)t_value);
-        MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+	    MCAutoNumberRef t_number;
+	    if (ctxt.ConvertToNumber(t_value, &t_number))
+	    {
+		    integer_t t_limit;
+		    t_limit = MCNumberFetchAsInteger(*t_number);
+		    MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
+	    }
     }
     
     if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("deploy"), t_value))
@@ -1972,6 +2058,7 @@ void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
             { "server", kMCLicenseDeployToServer },
             { "ios-embedded", kMCLicenseDeployToIOSEmbedded },
             { "android-embedded", kMCLicenseDeployToIOSEmbedded },
+            { "html5", kMCLicenseDeployToHTML5 },
         };
         
         MClicenseparameters . deploy_targets = 0;
@@ -2110,7 +2197,9 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     {
         "",
         "Community",
+        "Evaluation",
         "Commercial",
+        "Professional Evaluation",
         "Professional",
     };
     
@@ -2126,6 +2215,7 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
         "Server",
         "iOS Embedded",
         "Android Embedded",
+        "HTML5",
     };
     
     bool t_success;
@@ -2140,7 +2230,7 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     {
         bool t_first;
         t_first = true;
-        for(uint32_t i = 0; t_success && i < 9; i++)
+        for(uint32_t i = 0; t_success && i < sizeof(s_deploy_targets) / sizeof(s_deploy_targets[0]); i++)
         {
             if ((MClicenseparameters . deploy_targets & (1 << i)) != 0)
             {
@@ -2167,17 +2257,18 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     ctxt . Throw();
 }
 
-void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCNameRef p_key, MCStringRef& r_info)
+// MW-2015-03-09: [[ Bug 14139 ]] Fixed licensing issue with thirdparties
+void MCModeGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info)
 {
     MCValueRef t_value;
     if (MClicenseparameters . addons == nil ||
         !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, t_value))
         {
-            r_info = MCValueRetain(kMCEmptyString);
+            r_info = MCValueRetain(kMCEmptyArray);
             return;
         }
     
-    if (ctxt . ConvertToString(t_value, r_info))
+    if (ctxt . ConvertToArray(t_value, r_info))
         return;
     
     ctxt . Throw();
@@ -2188,17 +2279,14 @@ void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStrin
 #ifdef FEATURE_PROPERTY_LISTENER
     // MM-2012-09-05: [[ Property Listener ]]
     MCInternalObjectListenerGetListeners(ctxt, r_listeners, r_count);
-    // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the count of listeners to zero.
 #else
     r_count = 0;
 #endif
-    
 }
 void MCModeGetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t& r_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
     r_time = MCpropertylistenerthrottletime;
-    // AL-2015-03-04: [[ Bug 14737 ]] Don't reset the returned throttle time to 0.
 #else
     r_time = 0;
 #endif

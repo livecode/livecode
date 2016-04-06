@@ -1,0 +1,33 @@
+Name: errorMode
+
+Type: property
+
+Syntax: set the errorMode to <mode> 
+
+Summary: Sets the engine action when an error is encountered.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+set the errorMode to "debugger"
+
+Example:
+set the errorMode to "inline"
+
+Parameters:
+mode (enum): Specifies the action to take when an error occurs. The mode types are:
+- "debugger": is for information only and indicates that the script is being run in 'remote debug' mode. This is only relevant to the on-rev engine
+- "inline": indicates that the error should be output into the stdout stream. In this case, the engine assumes that the output is HTML and puts the error messages in a 'pre' block
+- "stderr": specifies that the error should be written out to stderr
+- "quiet": indicates that nothing is output anywhere when an error occurs
+
+Description:
+Determines the action the engine takes when an error occurs and a custom <scriptExecutionError> handler has not been provided. 
+
+The <errorMode> property allows you to specify where to log or how to handle error messages that are not handled by a custom <scriptExecutionError> handler
+
+References: stderr (keyword), stdout (keyword), scriptExecutionError (message)

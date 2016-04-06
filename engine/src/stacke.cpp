@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "aclip.h"
 #include "card.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "player.h"
 #include "sellst.h"
 #include "visual.h"
@@ -699,6 +699,9 @@ Boolean pusheffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGI
 			t_end_dst = MCGRectangleTranslate(t_start_dst, 0.0, -(MCGFloat)drect.height);
 			break;
 			
+		default:
+			MCUnreachable();
+			break;
 	}
 	
 	p_target->Composite(t_start_dst, p_start, t_src_rect, 1.0, kMCGBlendModeCopy);
@@ -742,6 +745,9 @@ Boolean revealeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MC
 			t_end_src = MCGRectangleMake(0.0, 0.0, t_dst_rect.size.width, size);
 			break;
 			
+		default:
+			MCUnreachable();
+			break;
 	}
 	
 	t_end_dst = MCGRectangleTranslate(t_end_src, t_dst_rect.origin.x, t_dst_rect.origin.y);
@@ -784,6 +790,10 @@ Boolean scrolleffect_step(const MCRectangle &drect, MCStackSurface *p_target, MC
 			height = drect.height * t_position;
 			t_end_dst = MCGRectangleTranslate(t_end_src, 0.0, -t_end_src.size.height + height);
 			break;
+			
+		default:
+			MCUnreachable();
+			break;
 	}
 	
 	t_end_dst.origin.x += drect.x;
@@ -813,6 +823,10 @@ Boolean shrinkeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MC
 			
 		case VE_BOTTOM:
 			t_top = drect.height - height;
+			break;
+			
+		default:
+			MCUnreachable();
 			break;
 	}
 	t_bottom = t_top + height;
@@ -859,6 +873,10 @@ Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, M
 			
 		case VE_BOTTOM:
 			t_top = drect.height - height;
+			break;
+			
+		default:
+			MCUnreachable();
 			break;
 	}
 	
@@ -930,6 +948,10 @@ Boolean wipeeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGI
 		case VE_DOWN:
 			t_start_src = MCGRectangleMake(0.0, size, drect.width, drect.height - size);
 			t_end_src = MCGRectangleMake(0.0, 0.0, drect.width, size);
+			break;
+			
+		default:
+			MCUnreachable();
 			break;
 	}
 	

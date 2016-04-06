@@ -1,0 +1,22 @@
+Name: scriptLimits
+
+Type: function
+
+Syntax: the scriptLimits
+
+Syntax: scriptLimits()
+
+Summary: Previously returned the limits on dynamic scripting in the current environment.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Returns: The scriptLimits function now always returns 0,0,0,0.
+
+Description:
+Deprecated in LiveCode 6.7.
+
+The scriptLimits function is deprecated and should not be used. It previously described the limits on dynamic scripting in standalone applications.

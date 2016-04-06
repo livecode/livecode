@@ -1,0 +1,10 @@
+Name: script
+
+Synonyms: script
+
+Type: glossary
+
+Description:
+All the <LiveCode> code associated with a particular <object>.
+
+References: LiveCode (glossary), object (glossary)

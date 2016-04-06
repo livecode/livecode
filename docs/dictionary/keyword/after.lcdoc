@@ -1,0 +1,30 @@
+Name: after
+
+Type: keyword
+
+Syntax: after
+
+Summary: Used with the <put> <command> to place a <value> at the end of a <container> or <chunk>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+select after field 1 -- puts the insertion point at the end of the field
+
+Example:
+put space after item 2 of field "Formatted Address"
+
+Description:
+Use the <after> <keyword> to position the <insertion point> at a <selected> location in a <field>, or to add text at a specific location in a <container>.
+
+You can specify either a container, or a chunk within a container. If you don't specify a chunk, the <after> <keyword> specifies the very end of the <container>.
+
+When you use the <after> <keyword>, the current contents of the <container> or <chunk> is not affected. The text is added to the <container> or <chunk>, instead of replacing it.
+
+References: into (keyword), field (keyword), before (keyword), at (keyword), selected (property), put (command), value (function), keyword (glossary), insertion point (glossary), command (glossary), container (glossary), chunk (glossary)
+
+Tags: text processing

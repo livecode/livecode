@@ -1,0 +1,34 @@
+Name: armFill
+
+Type: property
+
+Syntax: set the armFill of <button> to {true | false}
+
+Summary: Determines whether a <button menu> is drawn with a border when <armed>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the armFill of button "Go Menu" to true
+
+Value (bool):The <armFill> is true or false.
+By default, the <armFill> <property> of newly created <button|buttons> is set to false.
+
+Description:
+Use the <armFill> <property> to control the appearance of an <armed> <menu item>.
+
+When armed, the button is filled with the color specified by the <accentColor> <property>.
+
+If the button's style <property> is not set to "menu", you can set the <button(object)|button's> <armFill> <property>, but it has no effect.
+
+If the button's showBorder <property> is true, the <armFill> <property> has no effect and the <button(object)|button's> fill color does not change when the <button(keyword)> is <armed>.
+
+References: accentColor (property), armed (property), armBorder (property), autoArm (property), hiliteColor (property), button (keyword), button (object), property (glossary), menu item (glossary), button menu (glossary)
+
+Tags: ui

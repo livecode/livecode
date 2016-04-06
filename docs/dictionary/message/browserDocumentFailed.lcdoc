@@ -1,0 +1,36 @@
+Name: browserDocumentFailed
+
+Type: message
+
+Syntax: browserDocumentFailed <instanceId>, <url>, <errorMessage> 
+
+Summary: Sent when a browser object has encountered an error when loading a url
+
+Associations: card
+
+Introduced: 6.7.3
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+on browserDocumentFailed pInstanceId, pUrl, pErrorMessage
+  answer "Failed to load URL" && quote & pUrl & quote & return & "Error message: " && pErrorMessage
+end browserDocumentFailed
+
+Parameters:
+instanceId: The integer identifer of the browser object
+url: The url that has failed to load
+errorMessage: A message explaining why the url failed to load >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
+
+Description:
+The <browserDocumentFailed> message is sent to the current card of a stack containing a browser object when the browser object has encountered an error while loading a url and all its dependent resources.
+
+If the target is the main frame of the browser (e.g. the html page with the "FRAMESET" declaration), then the <browserDocumentFailed> message is sent. Otherwise the <browserDocumentFailedFrame message> is sent instead.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: browserDownloadRequest (message), browserDocumentFailedFrame message (message), revBrowserOpenCef (function), revBrowserOpen function (function)

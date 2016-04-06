@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -145,9 +145,6 @@ static inline void __path_append_arc(uint1*& pr_commands, int4*& pr_data, int4 c
 
 void MCPath::release(void)
 {
-	if (this == NULL)
-		return;
-
 	f_references -= 1;
 	if (f_references == 0)
 		free(this);
@@ -155,9 +152,6 @@ void MCPath::release(void)
 
 void MCPath::retain(void)
 {
-	if (this == NULL)
-		return;
-
 	f_references += 1;
 }
 
@@ -600,17 +594,11 @@ MCPath *MCPath::create_empty(void)
 
 void MCPath::fill(MCCombiner *p_combiner, const MCRectangle& clip, bool p_even_odd)
 {
-	if (this == NULL)
-		return;
-
 	fill(f_commands, f_data, p_combiner, clip, p_even_odd);
 }
 
 void MCPath::stroke(MCCombiner *p_combiner, const MCRectangle& clip, MCStrokeStyle *p_stroke)
 {
-	if (this == NULL)
-		return;
-
 	uint2 t_width = p_stroke->width;
 	p_stroke->width *= 256;
 	stroke(f_commands, f_data, p_combiner, clip, p_stroke);

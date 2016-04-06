@@ -1,0 +1,32 @@
+Name: retainImage
+
+Type: property
+
+Syntax: set the retainImage of <EPSObject> to {true | false}
+
+Summary: Specifies whether an <EPS|EPS object> contains a preview <bitmap>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the retainImage of EPS 3 to false
+
+Value (bool):The <retainImage> of an <EPS|EPS object> is true or false.
+By default, the <retainImage> <property> of newly created <EPS|EPS objects> is set to false.
+
+Description:
+Use the <retainImage> <property> to create a preview <bitmap> that can be seen on systems without <Display PostScript>.
+
+If an EPS object's <retainImage> <property> is true, the non- <PostScript> preview <image> attached to the <EPS|Encapsulated PostScript> <file> is kept with the <EPS|EPS object> and used for display on systems that do not support <Display PostScript>.
+
+If the <retainImage> <property> is false, the preview <image> is deleted.
+
+This property is supported only on Unix systems with Display PostScript installed.
+
+References: retainPostScript (property), postScript (property), property (glossary), EPS (glossary), bitmap (glossary), Display PostScript (glossary), image (keyword), file (keyword)
+
+Tags: multimedia

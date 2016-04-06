@@ -1,10 +1,9 @@
 #!/bin/bash
 
 source "${BASEDIR}/scripts/platform.inc"
+source "${BASEDIR}/scripts/lib_versions.inc"
 
-# Version and configuration flags
-ICU_VERSION=52.1
-ICU_VERSION_MAJOR=52
+# Configuration flags
 ICU_CONFIG="--disable-shared --enable-static --prefix=/ --with-data-packaging=static --disable-samples --disable-tests --disable-extras"
 ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 
@@ -16,11 +15,17 @@ ICU_SRC="icu-${ICU_VERSION}"
 cd "${BUILDDIR}"
 
 # Needed for cross-compiles
-if [ "${PLATFORM}" == "linux" ] ; then
-	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-linux-i386"
-else
-	HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
-fi
+case $(uname) in
+	Linux*)
+		HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-linux-x86_64"
+		;;
+	Darwin*)
+		HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-mac-i386"
+		;;
+	CYGWIN*)
+		HOST_ICU_DIR="${BUILDDIR}/icu-${ICU_VERSION}-win32-i386"
+		;;
+esac
 
 if [ ! -d "$ICU_SRC" ] ; then
 	if [ ! -e "$ICU_TGZ" ] ; then
@@ -67,19 +72,19 @@ function buildICU {
 				fi
 				;;
 			android)
-				STDCXX="${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++"
-				if [ "${ARCH}" == "armv6" ] ; then
-					ARCH_STDCXX="${STDCXX}/libs/armeabi"
-				else
-					ARCH_STDCXX="${STDCXX}/libs/armeabi-v7a"
-				fi
 				CONFIG_TYPE="Linux --host=arm-linux-androideabi --with-cross-build=${HOST_ICU_DIR} --disable-tools"
-				export ANDROID_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0 -isystem${STDCXX}/include -isystem${ARCH_STDCXX}/include"
-				export ANDROID_LDFLAGS="-L${ARCH_STDCXX}"
+				export ANDROID_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0"
+				export ANDROID_CXXFLAGS="${ANDROID_CFLAGS}"
+				;;
+			emscripten)
+				CONFIG_FLAGS="--with-cross-build=${HOST_ICU_DIR}"
 				;;
 			ios)
 				CONFIG_TYPE=
 				CONFIG_FLAGS="--host=arm-apple-darwin --with-cross-build=${HOST_ICU_DIR} --disable-tools"
+				;;
+			win32)
+				CONFIG_TYPE="Cygwin/MSVC"
 				;;
 		esac
 	
@@ -120,14 +125,23 @@ function buildICU {
 			
 			# Method for configuration depends on the platform
 			if [ -z "${CONFIG_TYPE}" ] ; then
-				"../${ICU_SRC}/source/configure" ${ICU_CONFIG} ${CONFIG_FLAGS} > "${ICU_ARCH_LOG}" 2>&1
+				${EMCONFIGURE} "../${ICU_SRC}/source/configure" ${ICU_CONFIG} ${CONFIG_FLAGS} > "${ICU_ARCH_LOG}" 2>&1
 			else
 				"../${ICU_SRC}/source/runConfigureICU" ${CONFIG_TYPE} ${ICU_CONFIG} ${CONFIG_FLAGS} > "${ICU_ARCH_LOG}" 2>&1
 			fi
 			
+			# Disable C++11 support on platforms where we can't guarantee a compatible runtime
+			case "${PLATFORM}" in
+				android|linux)
+					sed -i -e "s/\(^CXXFLAGS.*\)--std=c++0x/\1/" icudefs.mk
+					;;
+			esac	
+
 			echo "Building ICU for ${NAME}"
 			export VERBOSE=1
-			make clean >> "${ICU_ARCH_LOG}" 2>&1 && make ${MAKEFLAGS} >> "${ICU_ARCH_LOG}" 2>&1 && make DESTDIR="${INSTALL_DIR}/${NAME}" install >> "${ICU_ARCH_LOG}" 2>&1
+			${EMMAKE} make clean >> "${ICU_ARCH_LOG}" 2>&1 && \
+			    ${EMMAKE} make ${MAKEFLAGS} >> "${ICU_ARCH_LOG}" 2>&1 && \
+			    ${EMMAKE} make DESTDIR="${INSTALL_DIR}/${NAME}" install >> "${ICU_ARCH_LOG}" 2>&1
 			RESULT=$?
 			cd ..
 			
@@ -144,12 +158,12 @@ function buildICU {
 	
 		# Generate the minimal data library
 		ORIGINAL_DIR=`pwd`
-		if [ ! -e "${ICU_SRC}/custom-data/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
-			mkdir -p "${ICU_SRC}/custom-data"
-			cd "${ICU_SRC}/custom-data"
+		if [ ! -e "${ICU_ARCH_SRC}/custom-data/icudt${ICU_VERSION_MAJOR}l.dat" ] ; then
+			mkdir -p "${ICU_ARCH_SRC}/custom-data"
+			cd "${ICU_ARCH_SRC}/custom-data"
 			curl http://downloads.livecode.com/prebuilts/icudata/minimal/icudt${ICU_VERSION_MAJOR}l.dat -o "icudt${ICU_VERSION_MAJOR}l.dat"
 		else
-			cd "${ICU_SRC}/custom-data"
+			cd "${ICU_ARCH_SRC}/custom-data"
 		fi
 		if [ ! -d "extracted" ] ; then
 			mkdir -p "extracted"
@@ -159,7 +173,7 @@ function buildICU {
 		if [ ! -d "out-${PLATFORM}-${ARCH}" ] ; then
 			mkdir -p "temp"
 			mkdir -p "out-${PLATFORM}-${ARCH}"
-			"${HOST_ICU_DIR}/bin/pkgdata" --bldopt "../../${ICU_ARCH_SRC}/data/icupkg.inc" --quiet --copyright --sourcedir "./extracted" --destdir "./out-${PLATFORM}-${ARCH}" --entrypoint icudt${ICU_VERSION_MAJOR} --tempdir "./temp" --name "icudt${ICU_VERSION_MAJOR}l" --mode static --revision "${ICU_VERSION}" --libname icudata "icudt${ICU_VERSION_MAJOR}.lst"
+			"${HOST_ICU_DIR}/bin/pkgdata" --without-assembly --bldopt "../../${ICU_ARCH_SRC}/data/icupkg.inc" --quiet --copyright --sourcedir "./extracted" --destdir "./out-${PLATFORM}-${ARCH}" --entrypoint icudt${ICU_VERSION_MAJOR} --tempdir "./temp" --name "icudt${ICU_VERSION_MAJOR}l" --mode static --revision "${ICU_VERSION}" --libname icudata "icudt${ICU_VERSION_MAJOR}.lst"
 
 			# Copy the data
 			rm -r "${INSTALL_DIR}/${NAME}/lib/libicudata.a"

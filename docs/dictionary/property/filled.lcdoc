@@ -1,0 +1,41 @@
+Name: filled
+
+Type: property
+
+Syntax: set the filled [of <graphic>] to {true | false}
+
+Summary: Specifies whether <graphic|graphics> and shapes drawn with the <paint tool|paint tools> are filled or hollow.
+
+Synonyms: showFill
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the filled to true -- affects paint tools
+
+Example:
+set the filled of graphic "Square" to false
+
+Value (bool):The <filled> of a <graphic(keyword)> is true or false.
+By default, the <filled> of newly created <graphic(object)|graphics> is set to false.
+
+Description:
+Use the <filled> <property> to change the appearance of graphics
+
+If the <filled> <property> is set to true, the interior of shapes is filled with the <brushColor> (or <brushPattern>, if one is set). If the <graphic(object)|graphic's> <style> <property> is "line", the <filled> <property> has no effect.
+
+The global setting of the <filled> <property> controls the appearance of shapes drawn with the <paint tool|paint tools>. Once a paint shape is drawn, its <appearance> cannot be changed by changing the <global> <filled> <property>.
+
+>*Tip:*  Clicking the interior of a <graphic(keyword)> whose <filled> is set to false does not send mouse <message|messages> to the <graphic(keyword)> unless the <graphic(keyword)> is already <selected>. To create a <graphic(keyword)> whose interior is transparent, but clickable, set the <graphic(object)|graphic's> <filled> <property> to true and its <ink> <property> to noOp<a/>.
+
+>*Note:* When applied to graphics, the <filled> property behaves as a synonym for the <opaque> property.
+
+References: brushColor (property), ink (property), style (property), opaque (property), brushPattern (property), markerFilled (property), powerKeys (property), selected (property), graphic (keyword), global (command), graphic (object), property (glossary), paint tool (glossary), appearance (glossary), message (glossary)
+
+Tags: ui

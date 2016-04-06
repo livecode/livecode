@@ -1,0 +1,43 @@
+Name: menuPick
+
+Type: message
+
+Syntax: menuPick <chosenItem> [| <submenuName>], <previousTab> 
+
+Summary: Sent to a <button(object)> when a <menu item> is chosen from the <menu> associated with that <button(object)>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on menuPick theItem -- in a pulldown menu
+  if theItem is "Close" then close the defaultStack
+  else if theItem is "Quit" then quit
+end menuPick
+
+Parameters:
+chosenItem: The label of the menu item the user chose. If the menu item is part of a submenu, the menu item label is followed by a vertical bar (|) and the submenu's label.
+submenuName: 
+previousTab: The text of the menu item that was selected before the user chose a new menu item. This parameter is included only if the button's menuMode property is set to "tabbed".>*Note:* If the specification of a menu or submenu includes a tag, that tag will replace the menu label in the chosenItem parameter
+
+Description:
+Handle the <menuPick> <message> to do something when the user chooses a <menu item> from a <button menu>, or chooses a tab in a <tabbed button>.
+
+>*Note:* If the specification of a menu or submenu includes a tag, that tag will replace the menu label in the <chosenItem> parameter
+
+The <menuPick> <message> is sent when the user clicks a tab in a <tabbed button>, when the user chooses a <menu item> from the <menu> associated with a <button(keyword)>, or when a <button(object)|button's> <menuHistory> <property> is set by a <handler>.
+
+The <menuPick> <message> is sent every time a <menu item> is chosen, even if the <menu> is a type that retains its state (such as an option menu) and the chosen <menu item> has not changed. (However, no <menuPick> <message> is sent when an already-chosen tab in a <tabbed button> is clicked, since no menu is displayed.)
+
+To get the item number of the currently chosen menu item, use the menuHistory <property>.
+
+>*Note:* The & and / characters can be used in a pulldown menu to create special effects. To be shown (instead of creating these effects), either <character> can be doubled. (For example, placing the line "This && That" in a <menu item> results in the <menu item> being displayed as "This & That", with one ampersand.) When the user chooses a <menu item> with these special characters, the <chosenItem> <parameter> is the text that appears in the menu as displayed, not the text of that line of the <button menu|menu button>.
+
+References: menuName (property), menuHistory (property), character (keyword), menu (keyword), button (keyword), pulldown (command), button (object), property (glossary), tabbed button (glossary), menu item (glossary), handler (glossary), message (glossary), menu (glossary), button menu (glossary), parameter (glossary)
+
+Tags: menus

@@ -1,0 +1,12 @@
+Name: focus
+
+Synonyms: focusing,focussing,focused,focussed,focusses,focus,keyboard focus
+
+Type: glossary
+
+Description:
+The active status of a window or <control>, in which the window or <control> can receive input from the keyboard. The <control> that currently has the focus receives any <character|characters> the user types.
+
+References: character (glossary), control (glossary)
+
+Tags: ui

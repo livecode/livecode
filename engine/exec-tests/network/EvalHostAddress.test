@@ -1,5 +1,5 @@
 setup
-put "www.runrev.com:80" into tSock
+put "www.livecode.com:80" into tSock
 open socket tSock
 test the hostaddress of tSock is "0.0.0.0"
 close socket tSock

@@ -1,0 +1,1 @@
+# Double-clicking widget in tools palette doesn't create one on the defaultStack

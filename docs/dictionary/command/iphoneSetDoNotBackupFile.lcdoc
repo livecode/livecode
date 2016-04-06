@@ -1,0 +1,32 @@
+Name: iphoneSetDoNotBackupFile
+
+Type: command
+
+Syntax: iphoneSetDoNotBackupFile <filename> [, <doNotBackup>]
+
+Summary: Sets the "do not backup" flag for the given file.
+
+Introduced: 5.5.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetDoNotBackupFile myFile, true
+
+Example:
+iphoneSetDoNotBackupFile specialFolderPath("documents") & "/appointments.txt", false
+
+Parameters:
+filename: The fulle path file to flag
+doNotBackup (boolean): A boolean value specifying if the file should be backed up
+
+Description:
+Use the <iphoneSetDoNotBackupFile> command to set a flag specifying whether a file should be backed up by iOS, or not.
+
+The <iphoneSetDoNotBackupFile> command sets a flag specifying whenere a file should be backed up by iOS, or not.
+
+If the <doNotBackup> parameter is true the file will not be considered for backup to the Cloud. If false the file will be treated normally. If the <doNotBackup> parameter is not given then the value of the flag will be set to true by default.
+
+References: iphoneSetFileDataProtection (command), iphoneFileDataProtection (function), iphoneDoNotBackupFile (function), protectedDataWillBecomeUnavailable (message), protectedDataDidBecomeAvailable (message)

@@ -1,0 +1,12 @@
+Name: encrypt
+
+Synonyms: encryption,encrypting,encrypted,encrypt
+
+Type: glossary
+
+Description:
+To scramble data so that it can't be read by anyone without the proper <password>.
+
+References: password (glossary)
+
+Tags: text processing

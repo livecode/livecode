@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -150,6 +150,8 @@ MCDispatch::MCDispatch()
 	m_drag_source = false;
 	m_drag_target = false;
 	m_drag_end_sent = false;
+    
+    m_showing_mnemonic_underline = false;
 
 	m_externals = nil;
 
@@ -277,7 +279,6 @@ Boolean MCDispatch::cut(Boolean home)
 	return MCnoui || (flags & F_WAS_LICENSED) != 0;
 }
 
-//extern Exec_stat MCHandlePlatformMessage(Handler_type htype, const MCString& mess, MCParameter *params);
 Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *params, MCObject *pass_from)
 {
 	Exec_stat stat = ES_NOT_HANDLED;
@@ -374,7 +375,7 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
     }
     
 	if (MCmessagemessages && stat != ES_PASS)
-		MCtargetptr->sendmessage(htype, mess, False);
+		MCtargetptr . object -> sendmessage(htype, mess, False);
 		
 	if (t_has_passed)
 		return ES_PASS;
@@ -662,7 +663,6 @@ IO_stat MCDispatch::readfile(MCStringRef p_openpath, MCStringRef p_name, IO_hand
 //   to handle font table cleanup).
 IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_handle &stream, MCStack *&sptr)
 {
-	Boolean loadhome = False;
 	uint32_t version;
 
     sptr = NULL;
@@ -673,7 +673,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		if (version > MAX_STACKFILE_VERSION)
 		{
 			MCresult->sets("stack was produced by a newer version");
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
         
 		// MW-2008-10-20: [[ ParentScripts ]] Set the boolean flag that tells us whether
@@ -688,7 +688,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 		        || IO_read_cstring_legacy(newsf, stream, 2) != IO_NORMAL)
 		{
 			MCresult->sets("stack is corrupted, check for ~ backup file");
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
 		delete newsf; // stackfiles is obsolete
 		MCtranslatechars = charset != CHARSET;
@@ -723,7 +723,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 				MCresult->sets("stack is corrupted, check for ~ backup file");
 			destroystack(sptr, False);
 			sptr = NULL;
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
 		
 		// MW-2011-08-09: [[ Groups ]] Make sure F_GROUP_SHARED is set
@@ -738,7 +738,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 				MCresult->sets("stack is corrupted, check for ~ backup file");
 			destroystack(sptr, False);
 			sptr = NULL;
-			return IO_ERROR;
+			return checkloadstat(IO_ERROR);
 		}
     }
     
@@ -763,7 +763,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
         if (IO_read(t_script, t_size, stream) == IO_ERROR)
         {
             MCresult -> sets("unable to read file");
-            return IO_ERROR;
+            return checkloadstat(IO_ERROR);
         }
 
         // SN-2014-10-16: [[ Merge-6.7.0-rc-3 ]] Update to StringRef
@@ -970,7 +970,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
 
 IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 {
-	IO_handle stream;
+    IO_handle stream;
 	MCAutoStringRef t_open_path;
 
 	bool t_found;
@@ -978,20 +978,13 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 	if (!t_found)
 	{
 		if ((stream = MCS_open(p_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
-			// This should probably use resolvepath().
-			if (MCStringGetCharAtIndex(p_name, 0) != PATH_SEPARATOR 
-				&& MCStringGetCharAtIndex(p_name, 1) != ':')
-			{
-				MCAutoStringRef t_curpath;
-				
-				/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-				/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
-			}
-			else
-				t_open_path = p_name;
-
-			t_found = true;
+        {
+            // SN-20015-06-01: [[ Bug 15432 ]] We want to use MCS_resolvepath to
+            //  keep consistency and let '~' be resolved as it is in MCS_open
+            //  MCS_resolve_path leaves a backslash-delimited path on Windows,
+            //  and MCS_get_canonical_path is made to cope with this.
+            //  In 7.0, MCS_resolvepath does not return a native path.
+            t_found = MCS_resolvepath(p_name, &t_open_path);
 		}
 	}
     
@@ -1006,11 +999,8 @@ IO_stat MCDispatch::loadfile(MCStringRef p_name, MCStack *&sptr)
 		else
 			t_leaf_name = p_name;
 		if ((stream = MCS_open(*t_leaf_name, kMCOpenFileModeRead, True, False, 0)) != NULL)
-		{
-			MCAutoStringRef t_curpath;
-			/* UNCHECKED */ MCS_getcurdir(&t_curpath);
-			/* UNCHECKED */ MCStringFormat(&t_open_path, "%@/%@", *t_curpath, p_name); 
-			t_found = true;
+        {
+            t_found = MCS_resolvepath(*t_leaf_name, &t_open_path);
 		}
 
         if (!t_found)
@@ -1066,7 +1056,7 @@ void MCDispatch::cleanup(IO_handle stream, MCStringRef linkname, MCStringRef bna
 		MCS_unbackup(bname, linkname);
 }
 
-IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
+IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t p_version)
 {
     IO_stat stat;
     
@@ -1078,20 +1068,22 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
     }
     else
     {
-        // MW-2014-12-17: [[ Widgets ]] Force writing out as 8.0 version stack if it
-        //   contains widgets, and only write out as 8.0 if it contains widgets.
-        uint32_t t_old_stackfileversion;
-        t_old_stackfileversion = MCstackfileversion;
-        if (sptr -> haswidgets() || sptr -> substackhaswidgets())
-            MCstackfileversion = 8000;
-        else if (MCstackfileversion == 8000)
-            MCstackfileversion = 7000;
-        
-        stat = dosavestack(sptr, p_fname);
+		/* If no version was specified, assume that 8.0 format was requested */
+		if (UINT32_MAX == p_version)
+		{
+			p_version = 8000;
+		}
+
+		/* If the stack doesn't contain widgets, and 8.0 format was requested,
+		 * use 7.0 format. */
+		if (8000 == p_version && !sptr->haswidgets())
+		{
+			p_version = 7000;
+		}
+
+        stat = dosavestack(sptr, p_fname, p_version);
         
         MCLogicalFontTableFinish();
-        
-        MCstackfileversion = t_old_stackfileversion;
     }
     
 	return stat;
@@ -1176,7 +1168,7 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
     return IO_NORMAL;
 }
 
-IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
+IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32_t p_version)
 {
 	if (MCModeCheckSaveStack(sptr, p_fname) != IO_NORMAL)
 		return IO_ERROR;
@@ -1229,13 +1221,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-    if (MCstackfileversion >= 8000)
+    if (p_version >= 8000)
 		t_header = newheader8000, t_header_size = 8;
-	else if (MCstackfileversion >= 7000)
+	else if (p_version >= 7000)
 		t_header = newheader7000, t_header_size = 8;
-	else if (MCstackfileversion >= 5500)
+	else if (p_version >= 5500)
 		t_header = newheader5500, t_header_size = 8;
-	else if (MCstackfileversion >= 2700)
+	else if (p_version >= 2700)
 		t_header = newheader, t_header_size = 8;
 	else
 		t_header = header, t_header_size = HEADERSIZE;
@@ -1263,7 +1255,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCgroupedobjectoffset . y = 0;
 	
 	MCresult -> clear();
-	if (sptr->save(stream, 0, false) != IO_NORMAL
+	if (sptr->save(stream, 0, false, p_version) != IO_NORMAL
 	        || IO_write_uint1(OT_END, stream) != IO_NORMAL)
 	{
 		if (MCresult -> isclear())
@@ -1356,15 +1348,22 @@ void MCDispatch::wkunfocus(Window w)
 
 Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 {
-	if (menu != NULL)
+    // Trigger a redraw as mnemonic underlines will need to be drawn
+    if ((MCmodifierstate & MS_ALT) && !m_showing_mnemonic_underline)
+    {
+        m_showing_mnemonic_underline = true;
+        MCRedrawDirtyScreen();
+    }
+    
+    if (menu != NULL)
 		return menu->kdown(p_string, key);
-
+    
 	MCStack *target = findstackd(w);
 	if (target == NULL || !target->kdown(p_string, key))
 	{
 		if (MCmodifierstate & MS_MOD1)
 		{
-			MCButton *bptr = MCstacks->findmnemonic(key);
+            MCButton *bptr = MCstacks->findmnemonic(key);
 			if (bptr != NULL)
 			{
 				bptr->activate(True, key);
@@ -1380,11 +1379,18 @@ Boolean MCDispatch::wkdown(Window w, MCStringRef p_string, KeySym key)
 
 void MCDispatch::wkup(Window w, MCStringRef p_string, KeySym key)
 {
-	if (menu != NULL)
+    // Trigger a redraw as mnemonic underlines will need to be cleared
+    if (!(MCmodifierstate & MS_ALT) && m_showing_mnemonic_underline)
+    {
+        m_showing_mnemonic_underline = false;
+        MCRedrawDirtyScreen();
+    }
+    
+    if (menu != NULL)
 		menu->kup(p_string, key);
 	else
 	{
-		MCStack *target = findstackd(w);
+        MCStack *target = findstackd(w);
 		if (target != NULL)
 			target->kup(p_string, key);
 	}
@@ -1426,6 +1432,7 @@ void MCDispatch::wmdrag(Window w)
 	if (!MCModeMakeLocalWindows())
 		return;
 
+    // Don't re-enter the drag-and-drop modal loop
 	if (isdragsource())
 		return;
 
@@ -1434,16 +1441,13 @@ void MCDispatch::wmdrag(Window w)
 	if (target != NULL)
 		target->mdrag();
 
-	MCPasteboard *t_pasteboard;
-	t_pasteboard = MCdragdata -> GetSource();
-
-	// OK-2009-03-13: [[Bug 7776]] - Check for null MCdragtargetptr to hopefully fix crash.
-	if (t_pasteboard != NULL && MCdragtargetptr != NULL)
+	// Did an object indicate that it is draggable (by setting itself as the
+    // drag object) and by putting some data on the drag board?
+	if (!MCdragboard->IsEmpty() && MCdragtargetptr != NULL)
 	{
 		m_drag_source = true;
 		m_drag_end_sent = false;
 
-		// MW-2009-02-02: [[ Improved image search ]]
 		// Search for the appropriate image object using the standard method - note
 		// here we search relative to the target of the dragStart message.
 		MCImage *t_image;
@@ -1466,10 +1470,20 @@ void MCDispatch::wmdrag(Window w)
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
 		
-		MCdragaction = MCscreen -> dodragdrop(w, t_pasteboard, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
+        // Ensure all of the data placed onto the drag board has been passed to
+        // the OS' drag board.
+        MCdragboard->PushUpdates(true);
+        
+        // Begin the drag-drop modal loop
+		MCdragaction = MCscreen -> dodragdrop(w, MCallowabledragactions, t_image, t_image != NULL ? &MCdragimageoffset : NULL);
 
+        // Perform the drop operation.
 		dodrop(true);
-		MCdragdata -> ResetSource();
+        
+        // Clear the drag board as its contents are no longer required. A manual
+        // push is required as the drag board doesn't update automatically.
+        MCdragboard->Clear();
+        MCdragboard->PushUpdates(true);
 
 		MCdragsource = NULL;
 		MCdragdest = NULL;
@@ -1479,7 +1493,10 @@ void MCDispatch::wmdrag(Window w)
 	}
 	else
 	{
-		MCdragdata -> ResetSource();
+        // Ensure that anything that got added to the drag board has been
+        // removed (this might happen, for example, if a script encountered
+        // an error after placing some of the drag data).
+        MCdragboard->Clear();
 		MCdragsource = NULL;
 		MCdragdest = NULL;
 		MCdropfield = NULL;
@@ -1496,12 +1513,14 @@ void MCDispatch::wmdown_stack(MCStack *target, uint2 which)
 	{
 		if (!isdragsource())
 		{
-			MCallowabledragactions = DRAG_ACTION_COPY;
+            // We are not currently a source for a drag-and-drop operation so
+            // reset all drag settings in case this is the start of one.
+            MCallowabledragactions = DRAG_ACTION_COPY;
 			MCdragaction = DRAG_ACTION_NONE;
 			MCdragimageid = 0;
 			MCdragimageoffset . x = 0;
 			MCdragimageoffset . y = 0;
-			MCdragdata -> ResetSource();
+            MCdragboard->Clear();
 		}
 		
 		if (target != NULL)
@@ -1563,17 +1582,18 @@ void MCDispatch::kfocusset(Window w)
 		target->kfocusset(NULL);
 }
 
-void MCDispatch::wmdragenter(Window w, MCPasteboard *p_data)
+void MCDispatch::wmdragenter(Window w)
 {
-	MCStack *target = findstackd(w);
+    // Find the stack that is being dragged over
+    MCStack *target = findstackd(w);
 	
+    // LiveCode is now the drop target for this drag-and-drop operation
 	m_drag_target = true;
 
-	if (m_drag_source)
-		MCdragdata -> SetTarget(MCdragdata -> GetSource());
-	else
-		MCdragdata -> SetTarget(p_data);
+    // Update the contents of the drag board
+    MCdragboard->PullUpdates();
 
+    // Change the mouse focus to the stack that has had the drag enter it
 	if (MCmousestackptr != NULL && target != MCmousestackptr)
 		MCmousestackptr -> munfocus();
 
@@ -1587,6 +1607,8 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 	static uint4 s_old_modifiers = 0;
 
 	MCStack *target = findstackd(w);
+    if (target == nil)
+        return DRAG_ACTION_NONE;
 	
 	// IM-2013-10-08: [[ FullscreenMode ]] Translate mouse location to stack coords
 	MCPoint t_mouseloc;
@@ -1604,13 +1626,17 @@ MCDragAction MCDispatch::wmdragmove(Window w, int2 x, int2 y)
 
 void MCDispatch::wmdragleave(Window w)
 {
-	MCStack *target = findstackd(w);
+    // No stacks have mouse focus now
+    MCStack *target = findstackd(w);
 	if (target != NULL && target == MCmousestackptr)
 	{
 		MCmousestackptr -> munfocus();
 		MCmousestackptr = NULL;
 	}
-	MCdragdata -> ResetTarget();
+    
+    // We are no longer the drop target and no longer care about the drag data.
+    MCdragboard->Unlock();
+    MCdragboard->ReleaseData();
 	m_drag_target = false;
 }
 
@@ -1621,11 +1647,13 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 	uint32_t t_drag_action;
 	t_drag_action = MCdragaction;
 	
+    // If a drag action was selected, do it.
 	if (t_drag_action != DRAG_ACTION_NONE)
 		dodrop(false);
 
+    // The drag operation has ended. Remove the drag board contents.
 	MCmousestackptr = NULL;
-	MCdragdata -> ResetTarget();
+    MCdragboard->Clear();
 	m_drag_target = false;
 
 	return t_drag_action;
@@ -1658,6 +1686,27 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 	target -> updatewindow(p_dirty_region);
 }
 
+MCFontlist *MCDispatch::getfontlist()
+{
+	/* There's lots of code in the engine that immediately
+	 * dereferences the result of getfontlist().  So, *require* it to
+	 * return valid font list, by loading a font if necessary. */
+	if (nil == fonts)
+	{
+		MCFontRef t_font;
+		bool t_success =
+			MCPlatformGetControlThemePropFont(kMCPlatformControlTypeGeneric,
+			                                  kMCPlatformControlPartNone,
+			                                  kMCPlatformControlStateNormal,
+			                                  kMCPlatformThemePropertyTextFont,
+			                                  t_font);
+		MCAssert(t_success); /* Can't proceed if this fails */
+	}
+
+	MCAssert(nil != fonts);
+	return fonts;
+}
+
 MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 #if defined(_LINUX_DESKTOP)
@@ -1676,12 +1725,12 @@ MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Bo
 	return fonts->getfont(fname, size, style, printer);
 }
 
-MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle)
+MCFontStruct *MCDispatch::loadfontwithhandle(MCSysFontHandle p_handle, MCNameRef p_name)
 {
-#if defined(_MACOSX)
+#if defined(_MACOSX) || defined (_MAC_SERVER) || defined (TARGET_SUBPLATFORM_IPHONE)
     if (fonts == nil)
         fonts = new MCFontlist;
-    return fonts->getfontbyhandle(p_handle);
+    return fonts->getfontbyhandle(p_handle, p_name);
 #else
     return NULL;
 #endif
@@ -1763,6 +1812,28 @@ MCStack *MCDispatch::findstackid(uint4 fid)
 	}
 	while (tstk != stacks);
 	return NULL;
+}
+
+bool MCDispatch::foreachstack(MCStackForEachCallback p_callback, void *p_context)
+{
+	bool t_continue;
+	t_continue = true;
+	
+	if (stacks)
+	{
+		MCStack *t_stack;
+		t_stack = stacks;
+		
+		do
+		{
+			t_continue = t_stack->foreachstack(p_callback, p_context);
+			
+			t_stack = (MCStack*)t_stack->next();
+		}
+		while (t_continue && t_stack != stacks);
+	}
+	
+	return t_continue;
 }
 
 bool MCDispatch::foreachchildstack(MCStack *p_stack, MCStackForEachCallback p_callback, void *p_context)
@@ -2024,6 +2095,16 @@ void MCDispatch::remove_transient_stack(MCStack *sptr)
 	sptr->remove(m_transient_stacks);
 }
 
+void MCDispatch::timer(MCNameRef p_message, MCParameter *p_parameters)
+{
+	if (MCNameIsEqualTo(p_message, MCM_internal, kMCCompareCaseless))
+	{
+		MCStackSecurityExecutionTimeout();
+	}
+	else
+		MCObject::timer(p_message, p_parameters);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCDispatch::loadexternal(MCStringRef p_external)
@@ -2092,14 +2173,14 @@ bool MCDispatch::loadexternal(MCStringRef p_external)
 //
 bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 {
-	r_objptr = NULL;
+    // We haven't created a new object as the result of this paste (yet...)
+    r_objptr = NULL;
 
 	if (MCactivefield != NULL)
 	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = MCclipboarddata -> FetchParagraphs(MCactivefield);
-
-		//
+        // There is an active field so paste the clipboard into it.
+        MCParagraph *t_paragraphs;
+        t_paragraphs = MCclipboard->CopyAsParagraphs(MCactivefield);
 
 		if (t_paragraphs != NULL)
 		{
@@ -2121,10 +2202,12 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 	}
 	
-	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
+	if (MCactiveimage != NULL && MCclipboard->HasImage())
 	{
-		MCAutoValueRef t_data;
-		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+        // There is a selected image object and there is an image on the
+        // clipboard so paste the image into it.
+        MCAutoDataRef t_data;
+		if (MCclipboard->CopyAsImage(&t_data))
         {
             MCExecContext ctxt(nil, nil, nil);
 
@@ -2132,7 +2215,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			t_image = new MCImage;
 			t_image -> open();
 			t_image -> openimage();
-			t_image -> SetText(ctxt, (MCDataRef)*t_data);
+			t_image -> SetText(ctxt, *t_data);
 			MCactiveimage -> pasteimage(t_image);
 			t_image -> closeimage();
 			t_image -> close();
@@ -2149,30 +2232,36 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		MCObject *t_objects;
 		t_objects = NULL;
 
-		if (!MCclipboarddata -> Lock())
+        // Attempt to lock the clipboard so we have a consistent view while we
+        // check for various pasteable data formats.
+		if (!MCclipboard->Lock())
 			return false;
-		if (MCclipboarddata -> HasObjects())
+        
+        // Does the clipboard contain LiveCode objects?
+		if (MCclipboard->HasLiveCodeObjects())
 		{
-			MCAutoValueRef t_data;
-			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
-				t_objects = MCObject::unpickle((MCDataRef)*t_data, MCdefaultstackptr);
+			MCAutoDataRef t_data;
+			if (MCclipboard->CopyAsLiveCodeObjects(&t_data))
+				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
 		}
-		else if (MCclipboarddata -> HasImage())
+        // What about image data (limited to the formats LiveCode can understand
+        // natively)?
+		else if (MCclipboard->HasImage())
 		{
-			MCAutoValueRef t_data;
-			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+			MCAutoDataRef t_data;
+			if (MCclipboard->CopyAsImage(&t_data))
             {
                 MCExecContext ctxt(nil, nil, nil);
 				
 				t_objects = new MCImage(*MCtemplateimage);
 				t_objects -> open();
-				static_cast<MCImage *>(t_objects) -> SetText(ctxt, (MCDataRef)*t_data);
+				static_cast<MCImage *>(t_objects) -> SetText(ctxt, *t_data);
 				t_objects -> close();
 			}
 		}
-		MCclipboarddata -> Unlock();
-
-		//
+        
+        // Let the clipboard update automatically again.
+        MCclipboard->Unlock();
 
 		if (t_objects != NULL)
 		{
@@ -2209,12 +2298,15 @@ void MCDispatch::dodrop(bool p_source)
 	{
 		// We are only the source
 		m_drag_end_sent = true;
+        
+#ifdef WIDGETS_HANDLE_DND
         if (MCdragsource->gettype() == CT_WIDGET)
             MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
         else
+#endif
             MCdragsource -> message(MCM_drag_end);
 
-		// OK-2008-10-21 : [[Bug 7316]] - Cursor in script editor follows mouse after dragging to non-Revolution target.
+		// OK-2008-10-21 : [[Bug 7316]] - Cursor in script editor follows mouse after dragging to non-LiveCode target.
 		// I have no idea why this apparently only happens in the script editor, but this seems to fix it and doesn't seem too risky :)
 		// MW-2008-10-28: [[ Bug 7316 ]] - This happens because the script editor is doing stuff with drag messages
 		//   causing the default engine behaviour to be overriden. In this case, some things have to happen to the field
@@ -2260,9 +2352,11 @@ void MCDispatch::dodrop(bool p_source)
 	bool t_auto_dest;
 	t_auto_dest = MCdragdest != NULL && MCdragdest -> gettype() == CT_FIELD && MCdragdest -> getstate(CS_DRAG_TEXT);
 
+    // Is the engine handling this drag internally AND the same field is both
+    // the source and destination for the drag?
 	if (t_auto_source && t_auto_dest && MCdragsource == MCdragdest)
 	{
-		// Source and target is the same field
+		// Source and target are the same field
 		MCField *t_field;
 		t_field = static_cast<MCField *>(MCdragsource);
 
@@ -2280,10 +2374,11 @@ void MCDispatch::dodrop(bool p_source)
 			return;
 		}
 
+        // Give the script the opportunity to intercept the drop
 		if (t_field -> message(MCM_drag_drop) != ES_NORMAL)
 		{
 			MCParagraph *t_paragraphs;
-			t_paragraphs = MCdragdata -> FetchParagraphs(MCdropfield);
+            t_paragraphs = MCdragboard->CopyAsParagraphs(MCdropfield);
 
 			// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 			//   textChanged message by a lock screen pair.
@@ -2332,18 +2427,25 @@ void MCDispatch::dodrop(bool p_source)
     t_auto_drop = MCdragdest != NULL;
     if (t_auto_drop)
     {
+#ifdef WIDGETS_HANDLE_DND
         if (MCdragdest->gettype() == CT_WIDGET)
         {
             MCwidgeteventmanager->event_dnd_drop(reinterpret_cast<MCWidget*>(MCdragdest));
             t_auto_drop = false;
         }
         else
+#endif
         {
             t_auto_drop = MCdragdest -> message(MCM_drag_drop) != ES_NORMAL;
         }
     }
 
-	if (t_auto_dest && t_auto_drop && MCdragdata != NULL && MCdropfield != NULL)
+    // Is the engine handling this drag-and-drop operation internally AND both
+    // the source and target are fields?
+    //
+    // There is a case above for if they are the same field so getting here
+    // implies that the source and destination are different fields.
+	if (t_auto_dest && t_auto_drop && MCdragboard != NULL && MCdropfield != NULL)
 	{
 		// MW-2012-02-16: [[ Bug ]] Bracket any actions that result in
 		//   textChanged message by a lock screen pair.
@@ -2352,8 +2454,9 @@ void MCDispatch::dodrop(bool p_source)
 		// Process an automatic drop action
 		MCdropfield -> seltext(t_start_index, t_start_index, True);
 
+        // Convert the clipboard contents to paragraphs
 		MCParagraph *t_paragraphs;
-		t_paragraphs = MCdragdata -> FetchParagraphs(MCdropfield);
+        t_paragraphs = MCdragboard->CopyAsParagraphs(MCdropfield);
 		MCdropfield -> pastetext(t_paragraphs, true);
 
 		Ustruct *us = MCundos->getstate();
@@ -2382,12 +2485,14 @@ void MCDispatch::dodrop(bool p_source)
 	if (MCdragsource != NULL)
 	{
 		m_drag_end_sent = true;
+#ifdef WIDGETS_HANDLE_DND
         if (MCdragsource->gettype() == CT_WIDGET)
         {
             MCwidgeteventmanager->event_dnd_end(reinterpret_cast<MCWidget*>(MCdragsource));
             t_auto_end = false;
         }
         else
+#endif
         {
             t_auto_end = MCdragsource -> message(MCM_drag_end) != ES_NORMAL;
         }
@@ -2570,12 +2675,13 @@ void MCDispatch::addlibrarymapping(MCStringRef p_mapping)
     MCArrayStoreValue(m_library_mapping, false, *t_name_as_nameRef, *t_target);
 }
 
-bool MCDispatch::fetchlibrarymapping(const char* p_name, MCStringRef& r_path)
+// SN-2015-04-07: [[ Bug 15164 ]] Change p_name to be a StringRef.
+bool MCDispatch::fetchlibrarymapping(MCStringRef p_name, MCStringRef& r_path)
 {
     MCNewAutoNameRef t_name;
     MCStringRef t_value;
 
-    if (!MCNameCreateWithCString(p_name, &t_name))
+    if (!MCNameCreate(p_name, &t_name))
         return false;
 
     // m_library_mapping only stores strings (function above)
@@ -2586,5 +2692,22 @@ bool MCDispatch::fetchlibrarymapping(const char* p_name, MCStringRef& r_path)
         return false;
 
     r_path = MCValueRetain(t_value);
+    return true;
+}
+
+bool MCDispatch::recomputefonts(MCFontRef, bool p_force)
+{
+    // Call the general recompute function first
+    MCObject::recomputefonts(NULL, p_force);
+    
+    // Recompute the fonts for all stacks
+    MCStack* t_stack = stacks;
+    do
+    {
+        t_stack->recomputefonts(m_font, p_force);
+        t_stack = t_stack->next();
+    }
+    while (t_stack != stacks);
+    
     return true;
 }

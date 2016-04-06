@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -142,6 +142,53 @@ static Language2FontCharset s_fontcharsetmap[] =
 	{LCH_UNICODE, ANSI_CHARSET}
 };
 
+// Sets the lfFaceName of a LOGFONT structure to the correct name for the
+// appropriate special UI font
+static void set_facename_for_status_font(LOGFONTW& x_logfont)
+{
+    // Cache the face name to avoid repeated queries
+    static WCHAR s_facename[sizeof(x_logfont.lfFaceName) / sizeof(x_logfont.lfFaceName[0])];
+    if (s_facename[0] == 0)
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        memcpy(s_facename, ncm.lfStatusFont.lfFaceName, sizeof(s_facename));
+    }
+    
+    memcpy(x_logfont.lfFaceName, s_facename, sizeof(s_facename));
+}
+
+static void set_facename_for_menu_font(LOGFONTW& x_logfont)
+{
+    // Cache the face name to avoid repeated queries
+    static WCHAR s_facename[sizeof(x_logfont.lfFaceName) / sizeof(x_logfont.lfFaceName[0])];
+    if (s_facename[0] == 0)
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        memcpy(s_facename, ncm.lfMenuFont.lfFaceName, sizeof(s_facename));
+    }
+    
+    memcpy(x_logfont.lfFaceName, s_facename, sizeof(s_facename));
+}
+
+static void set_facename_for_message_font(LOGFONTW& x_logfont)
+{
+    // Cache the face name to avoid repeated queries
+    static WCHAR s_facename[sizeof(x_logfont.lfFaceName) / sizeof(x_logfont.lfFaceName[0])];
+    if (s_facename[0] == 0)
+    {
+        NONCLIENTMETRICSW ncm;
+        ncm.cbSize = sizeof(ncm);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+        memcpy(s_facename, ncm.lfMessageFont.lfFaceName, sizeof(s_facename));
+    }
+    
+    memcpy(x_logfont.lfFaceName, s_facename, sizeof(s_facename));
+}
+
 MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	// MW-2012-05-03: [[ Values* ]] 'reqname' is now an autoref type.
@@ -158,24 +205,39 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	LOGFONTW logfont;
 	memset(&logfont, 0, sizeof(LOGFONTW));
 
-    
-    //parse font and encoding
-    MCStringRef t_name = MCNameGetString(fname);
-    MCAutoStringRef t_font_name;
-    uindex_t t_offset;
-	if (MCStringFirstIndexOfChar(t_name, ',', 0, kMCCompareExact, t_offset))
+    // Is the font name one of the special UI font names?
+    if (MCNameIsEqualTo(fname, MCN_font_usertext))
+        set_facename_for_message_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_menutext))
+        set_facename_for_menu_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_content))
+        set_facename_for_message_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_message))
+        set_facename_for_message_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_tooltip))
+        set_facename_for_status_font(logfont);
+    else if (MCNameIsEqualTo(fname, MCN_font_system))
+        set_facename_for_message_font(logfont);
+    else
     {
-        MCStringCopySubstring(t_name, MCRangeMake(0, t_offset), &t_font_name);
-        t_name = *t_font_name;
-    }
-    
-	MCAutoStringRefAsWString t_fname_wstr;
-	if (!t_fname_wstr.Lock(t_name))
-		return;
+        //parse font and encoding
+        MCStringRef t_name = MCNameGetString(fname);
+        MCAutoStringRef t_font_name;
+        uindex_t t_offset;
+        if (MCStringFirstIndexOfChar(t_name, ',', 0, kMCCompareExact, t_offset))
+        {
+            MCStringCopySubstring(t_name, MCRangeMake(0, t_offset), &t_font_name);
+            t_name = *t_font_name;
+        }
+        
+        MCAutoStringRefAsWString t_fname_wstr;
+        if (!t_fname_wstr.Lock(t_name))
+            return;
 
-	// Copy the family name
-	if (StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
-		return;
+        // Copy the family name
+        if (StringCchCopyW(logfont.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
+                return;
+    }
 
 	// MW-2012-05-03: [[ Bug 10180 ]] Make sure the default charset for the font
 	//   is chosen - otherwise things like WingDings don't work!
@@ -227,22 +289,13 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style, Boolean printe
 	GetTextMetricsW(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
 	font->size = size;
-	// MW-2013-12-19: [[ Bug 11606 ]] Use Mac-style metric adjustment in printer (ideal
-	//   layout mode).
-	if (!printer)
-	{
-		font->ascent = MulDiv(tm.tmAscent, 15, 16);
-		font->descent = tm.tmDescent;
-	}
-	else
-	{
-		font -> ascent = size - 1;
-		font -> descent = size * 2 / 14 + 1;
-	}
 	font->printer = printer;
     
-    font->m_ascent = tm.tmAscent;
-    font->m_descent = tm.tmDescent;
+    // We divide the internal leading evenly over ascent and descent. This is
+    // done because we need to account for it but the text layout code doesn't
+    // know about internal leading.
+    font->m_ascent = tm.tmAscent + (tm.tmInternalLeading+1)/2;
+    font->m_descent = tm.tmDescent + (tm.tmInternalLeading)/2;
     font->m_leading = tm.tmExternalLeading;
     font->m_xheight = tm.tmAveCharWidth;
 }
@@ -319,27 +372,45 @@ void MCFontlist::freeprinterfonts()
 	while (tmp != fonts);
 }
 
+// SN-2015-03-02: [[ Bug 14661 ]] New context for the
+//  font listing callback function.
+//  An array is used to keep track of the font already
+//  added (hash comparison faster than that looking for
+//  a string in a list)
+struct MCFontListing
+{
+	MCArrayRef array;
+	MCListRef list;
+};
+
 int CALLBACK fontnames_FontFamProc(const LOGFONTW * lpelf,
 								   const TEXTMETRICW * lpntm,
 								   DWORD FontType, LPARAM lParam)
 {
-	MCListRef t_list = (MCListRef)lParam;
-	MCAutoStringRef t_name;
+	// SN-2015-03-02: [[ Bug 14661 ]] A MCFontListing struct
+	//  is now passed to the callback functions.
+	MCFontListing* t_fontlist = (MCFontListing*)lParam;
+	MCNewAutoNameRef t_name;
 
 	size_t t_length;
-	if (StringCchLength(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
+	if (StringCchLengthW(lpelf->lfFaceName, LF_FACESIZE, &t_length) != S_OK)
 		return False;
 
-	if (!MCStringCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
+	if (!MCNameCreateWithChars(lpelf->lfFaceName, t_length, &t_name))
 		return False;
 
-	// Skip names that we have already added to the list
-	MCAutoStringRef t_list_string;
-	/* UNCHECKED */ MCListCopyAsString(t_list, &t_list_string);
-	if (MCStringContains(*t_list_string, *t_name, kMCStringOptionCompareCaseless))
+	// SN-2015-03-02: [[ Bug 14661 ]] Skip names that 
+	//  we have already added to the array, comparing
+	//  full name to full name. That avoid to skip
+	//  "Segoe UI" if "Segoe UI Light" has already been 
+	//  loaded, like it was with MCStringContains
+	MCValueRef t_value;
+	if (MCArrayFetchValue(t_fontlist->array, true, *t_name, t_value))
 		return True;
 
-	return MCListAppend(t_list, *t_name) ? True : False;
+	// Add the font name in the array, and in the list.
+	MCArrayStoreValue(t_fontlist -> array, true, *t_name, kMCEmptyString);
+	return MCListAppend(t_fontlist->list, MCNameGetString(*t_name)) ? True : False;
 }
 
 bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
@@ -349,11 +420,6 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 		r_names = MCValueRetain(kMCEmptyList);
 		return true;
 	}
-
-	MCAutoListRef t_list;
-
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
 
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	HDC hdc;
@@ -368,10 +434,27 @@ bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lf.lfFaceName[0] = '\0';
 	lf.lfPitchAndFamily = 0;
-	if (EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)*t_list, 0) != True)
-		return false;
 
-	return MCListCopy(*t_list, r_names);
+	// SN-2015-03-02: [[ Bug 14661 ]] Initialise the
+	//  MCFontListing members.
+	bool t_success;
+	MCFontListing t_fontlist = {nil, nil};
+
+	t_success = MCArrayCreateMutable(t_fontlist.array)
+				&& MCListCreateMutable('\n', t_fontlist.list);
+
+	if (t_success)
+		t_success = EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontnames_FontFamProc, (LPARAM)(&t_fontlist), 0) == True;
+
+	if (t_success)
+		t_success = MCListCopy(t_fontlist.list, r_names);
+
+	// SN-2015-03-02: [[ Bug 14661 ]] Cleanup the
+	//  MCFontListing members.
+	MCValueRelease(t_fontlist . array);
+	MCValueRelease(t_fontlist . list);
+
+	return t_success;
 }
 
 typedef struct
@@ -438,7 +521,7 @@ bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 	lf.lfPitchAndFamily = 0;
 
 	// Copy the font family name
-	if (StringCchCopy(lf.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
+	if (StringCchCopyW(lf.lfFaceName, LF_FACESIZE, *t_fname_wstr) != S_OK)
 		return false;
 
 	EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROCW)fontsizes_FontFamProc, (LPARAM)&context, 0);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -48,7 +48,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 class MCiOSBrowserControl;
 
-@interface MCiOSBrowserDelegate : NSObject <UIWebViewDelegate>
+@interface com_runrev_livecode_MCiOSBrowserDelegate : NSObject <UIWebViewDelegate>
 {
 	MCiOSBrowserControl *m_instance;
 	bool m_pending_request;
@@ -130,7 +130,7 @@ protected:
 	virtual void DeleteView(UIView *view);
 	
 private:
-	MCiOSBrowserDelegate *m_delegate;
+	com_runrev_livecode_MCiOSBrowserDelegate *m_delegate;
 	bool m_delay_requests;
 };
 
@@ -161,12 +161,12 @@ MCObjectPropertyTable MCiOSBrowserControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSBrowserControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Advance, MCiOSBrowserControl, Advance)
-    DEFINE_CTRL_EXEC_METHOD(Retreat, MCiOSBrowserControl, Retreat)
-    DEFINE_CTRL_EXEC_METHOD(Reload, MCiOSBrowserControl, Reload)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCiOSBrowserControl, Stop)
-    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, MCiOSBrowserControl, String, String, Load)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, MCiOSBrowserControl, String, Execute)
+    DEFINE_CTRL_EXEC_METHOD(Advance, Void, MCiOSBrowserControl, Advance)
+    DEFINE_CTRL_EXEC_METHOD(Retreat, Void, MCiOSBrowserControl, Retreat)
+    DEFINE_CTRL_EXEC_METHOD(Reload, Void, MCiOSBrowserControl, Reload)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCiOSBrowserControl, Stop)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, String_String, MCiOSBrowserControl, String, String, Load)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, String, MCiOSBrowserControl, String, Execute)
 };
 
 MCNativeControlActionTable MCiOSBrowserControl::kActionTable =
@@ -902,7 +902,7 @@ UIView *MCiOSBrowserControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCiOSBrowserDelegate alloc] initWithInstance: this];
+	m_delegate = [[com_runrev_livecode_MCiOSBrowserDelegate alloc] initWithInstance: this];
 	[t_view setDelegate: m_delegate];
 	
 	return t_view;
@@ -1013,7 +1013,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCiOSBrowserDelegate
+@implementation com_runrev_livecode_MCiOSBrowserDelegate
 
 - (id)initWithInstance:(MCiOSBrowserControl*)instance
 {

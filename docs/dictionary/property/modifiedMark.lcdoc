@@ -1,0 +1,29 @@
+Name: modifiedMark
+
+Type: property
+
+Syntax: set the modifiedMark of <stack> to {true | false}
+
+Summary: Specifies whether the modified indicator dot should be displayed on the close-box of a stack.
+
+Associations: stack
+
+Introduced: 4.6
+
+OS: mac
+
+Platforms: desktop,server,web
+
+Example:
+set the modifiedMark of stack 1 to true
+
+Value (bool): The <modifiedMark> of stack is true or false.
+
+Description:
+Use the <modifiedMark> property to display the modified state of a stack.
+
+Standard Mac document windows typically display the modified state of the document they represent by adding a dark dot to the close-box. It is possible to control the display of this dot in LiveCode by using the <modifiedMark> property.
+
+The indicator will be displayed when the property is set to true.
+
+>*Cross-platform note:* This property has no effect on Windows nor Linux.

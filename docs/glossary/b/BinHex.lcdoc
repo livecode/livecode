@@ -1,0 +1,14 @@
+Name: BinHex
+
+Synonyms: hqx,.hqx,Bin Hex,BinHex,binhexed,binhexing,binhexes
+
+Type: glossary
+
+Description:
+A <format> for transforming <binary file|binary files> by encoding them as <ASCII> text for transfer over 7-bit links (which garble non-text <file|files>). 
+ 
+The names of BinHex files usually end in ".hqx".
+
+References: file (glossary), binary file (glossary), format (glossary), ASCII (glossary)
+
+Tags: file system

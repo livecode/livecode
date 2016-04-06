@@ -1,0 +1,38 @@
+Name: systemWindow
+
+Type: property
+
+Syntax: set the systemWindow of <stack> to {true | false}
+
+Summary: Makes a window float above all running applications.
+
+Associations: stack
+
+Introduced: 2.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+set the systemWindow of stack "Magnifier" to true
+
+Example:
+set the systemWindow of the target to false
+
+Value (bool): The <systemWindow> <property> of a <stack> is true or false. By <default>, the <systemWindow> of a newly created <stack> is set to false.
+
+Description:
+Use the <systemWindow> property to create a stack that can be used as a systemwide utility, available in all applications.
+
+The <systemWindow> <property> determines the window's layer. If the <systemWindow> is true, the window floats above all running applications, no matter which application is active.
+
+A stack whose <systemWindow> <property> is true has the same appearance as a <palette>.
+
+On Mac OS systems, the <systemWindow> <property> has no effect.
+
+>*Note:* The setting of this property determines whether the <stack|stack's> <decorations> <property> includes "system".
+
+References: decorations (property), draggable (property), systemWindow (property), default (keyword), minimize (keyword), maximize (keyword), palette (command), stack (object), property (glossary)
+
+Tags: windowing

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -144,13 +144,7 @@ real8 IO_cleansockets(real8 ctime)
 	while (i < MCnsockets)
 		if (!MCsockets[i]->waiting && MCsockets[i]->fd == 0
 			&& MCsockets[i]->nread == 0 && MCsockets[i]->resolve_state != kMCSocketStateResolving)
-		{
-			delete MCsockets[i];
-			uint2 j = i;
-			while (++j < MCnsockets)
-				MCsockets[j - 1] = MCsockets[j];
-			MCnsockets--;
-		}
+            MCSocketsRemoveFromSocketList(i);
 		else
 		{
 			MCSocket *s = MCsockets[i++];
@@ -197,13 +191,7 @@ void IO_freeobject(MCObject *o)
 	}
 #else
 		if (MCsockets[i]->object == o)
-		{
-			delete MCsockets[i];
-			uint2 j = i;
-			while (++j < MCnsockets)
-				MCsockets[j - 1] = MCsockets[j];
-			MCnsockets--;
-		}
+            MCSocketsRemoveFromSocketList(i);
 		else
 			i++;
 #endif

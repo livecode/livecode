@@ -1,0 +1,33 @@
+Name: revZipReplaceItemWithFile
+
+Type: command
+
+Syntax: revZipReplaceItemWithFile <archivePath>, <itemName>, <filePath> 
+
+Summary: Replaces the contents of an item in a zip archive with the contents of a file.
+
+Introduced: 2.7.3
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipReplaceItemWithFile tArchive, "myZippedItem", myFile
+
+Example:
+revZipReplaceItemWithFile the cArchive of me, "Test.txt", "Test_New.txt"
+
+Parameters:
+archivePath: The absolute path to the zip archive to process.
+itemName: The name of the item in the zip archive to replace.
+filePath: The absolute path to the file whose contents should be placed in the item to replace. If the revZipReplaceItemWithFile command encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+
+Description:
+Use the <revZipReplaceItemWithFile> command put the contents of a file on disk into one of the items of an open zip archive. The archive must have first been opened with the <revZipOpenArchive command>.
+
+References: revZipOpenArchive command (command), revZipReplaceItemWithData (command)
+
+Tags: text processing

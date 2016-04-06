@@ -1,0 +1,42 @@
+Name: peerAddress
+
+Type: function
+
+Syntax: the peerAddress of <host> : <port> [| <connectionID>]
+
+Syntax: peerAddress(<host> : <port> [| <connectionID>])
+
+Summary: <return|Returns> the <IP address> of the remote system at the other end of a <socket>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+peerAddress("ftp.example.org:21")
+
+Example:
+the peerAddress of "www.example.org:8080|primaryConnection"
+
+Example:
+the peerAddress of mySocket
+
+Parameters:
+host: An IP address or domain name.
+port: The port number of the port the socket is connected to.
+connectionID (string): A string identifying the socket.
+
+Returns: The <peerAddress> <function> <return|returns> the <IP address> of the computer. This address is in the form X.X.X.X, where each X is a number with between 1 and 3 digits.
+
+Description:
+Use the <peerAddress> <function> to find the <IP address|Internet address> of the computer a <socket> is connected to.
+
+The socket must be open. If the specified socket has not been opened, the <peerAddress> <function> <return|returns> "not an open socket". If you have issued an open socket <command> to create the <socket>, you cannot use the <peerAddress> <function> until after the <socket> has been created and the <command> has completed.
+
+The <connectionID> is needed only if more than one <socket> is connected to the same <port> of the same <host>. The <connectionID> is assigned by the <accept> or <open socket> <command> that created the <socket>.
+
+References: accept (command), open socket (command), hostAddress (function), hostAddressToName (function), DNSServers (function), socket (glossary), host (glossary), IP address (glossary), command (glossary), return (glossary), port (glossary), function (control_st)
+
+Tags: networking

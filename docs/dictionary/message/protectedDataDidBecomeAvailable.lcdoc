@@ -1,0 +1,28 @@
+Name: protectedDataDidBecomeAvailable
+
+Type: message
+
+Syntax: protectedDataDidBecomeAvailable
+
+Summary: Sent when the device is unlocked and protected data files are available again.
+
+Introduced: 5.5.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+on protectedDataDidBecomeAvailable
+   -- Reconnect to databases
+   -- Reopen file connection
+end protectedDataDidBecomeAvailable
+
+Description:
+Handle the <protectedDataDidBecomeAvailable> message if you want to reopen connections to files that have been protected using the <iphoneFileDataProtection> function when the device is unlocked.
+
+The <protectedDataDidBecomeAvailable> message is sent to the current card of the default stack when the device is locked.
+
+References: iphoneSetFileDataProtection (command), iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function), iphoneDoNotBackupFile (function), protectedDataWillBecomeUnavailable (message)
+
+Tags: ui

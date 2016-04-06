@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -434,6 +434,8 @@ bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value);
 
 bool MCSystemGetDeviceToken (MCStringRef& r_device_token);
 bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url);
+
+bool MCSystemGetLaunchData(MCArrayRef &r_lauch_data);
 
 bool MCSystemBeep(int32_t p_number_of_times);
 bool MCSystemVibrate(int32_t p_number_of_times);

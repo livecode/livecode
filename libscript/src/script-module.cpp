@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -17,7 +17,8 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include "script.h"
+#include "libscript/script.h"
+#include <libscript/script-auto.h>
 #include "script-private.h"
 
 #include <stddef.h>
@@ -78,6 +79,7 @@ MC_PICKLE_BEGIN_VARIANT(MCScriptType, kind)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindOptional, MCScriptOptionalType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindHandler, MCScriptHandlerType)
     MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindRecord, MCScriptRecordType)
+    MC_PICKLE_VARIANT_CASE(kMCScriptTypeKindForeignHandler, MCScriptHandlerType)
 MC_PICKLE_END_VARIANT()
 
 //////////
@@ -244,8 +246,6 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
         {
             MCScriptForeignHandlerDefinition *t_def;
             t_def = static_cast<MCScriptForeignHandlerDefinition *>(self -> definitions[i]);
-            MCMemoryDeleteArray(t_def -> function_argtypes);
-            MCMemoryDelete(t_def -> function_cif);
         }
     
     // Remove ourselves from the context slot owners list.
@@ -403,6 +403,18 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
                         for(uindex_t i = 0; i < t_arity; i++)
                             t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
                         break;
+                    case kMCScriptBytecodeOpAssignArray:
+	                    // assignarray <dst>, [ <key_1>, <value_1>, ..., <key_n>, <value_n> ]
+	                    if (t_arity < 1)
+		                    goto invalid_bytecode_error;
+	                    if (t_arity % 2 != 1) // parameters must come in pairs
+		                    goto invalid_bytecode_error;
+
+	                    for (uindex_t i = 0; i < t_arity; ++i)
+	                    {
+		                    t_temporary_count = MCMax(t_temporary_count, t_operands[i] + 1);
+	                    }
+	                    break;
                 }
             }
             
@@ -447,6 +459,16 @@ void MCScriptReleaseModule(MCScriptModuleRef self)
     MCScriptReleaseObject(self);
 }
 
+uint32_t MCScriptGetRetainCountOfModule(MCScriptModuleRef self)
+{
+	if (nil == self)
+		return 0;
+	
+	__MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+	
+	return MCScriptGetRetainCountOfObject(self);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_module)
@@ -489,7 +511,7 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
         if (MCNameIsEqualTo(t_other_module -> name, t_module -> name))
         {
             MCScriptDestroyObject(t_module);
-            return MCErrorThrowGeneric(MCSTR("module with that name already loaded"));
+            return MCErrorThrowGeneric(MCSTR("module already loaded"));
         }
     
     // Link our module into the global module list.
@@ -500,6 +522,25 @@ bool MCScriptCreateModuleFromStream(MCStreamRef stream, MCScriptModuleRef& r_mod
     r_module = t_module;
     
     return true;
+}
+
+MC_DLLEXPORT_DEF bool
+MCScriptCreateModuleFromData (MCDataRef data,
+                              MCScriptModuleRef & r_module)
+{
+	MCAutoValueRefBase<MCStreamRef> t_stream;
+	MCAutoScriptModuleRef t_module;
+
+	if (!MCMemoryInputStreamCreate (MCDataGetBytePtr (data),
+	                                MCDataGetLength (data),
+	                                &t_stream))
+		return false;
+
+	if (!MCScriptCreateModuleFromStream (*t_stream, &t_module))
+		return false;
+
+	r_module = MCScriptRetainModule (*t_module);
+	return true;
 }
 
 bool MCScriptLookupModule(MCNameRef p_name, MCScriptModuleRef& r_module)
@@ -723,6 +764,10 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 void *t_symbol;
 #ifdef _WIN32
 				t_symbol = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(t_type -> binding));
+#elif defined(__EMSCRIPTEN__)
+				void *t_handle = dlopen(NULL, RTLD_LAZY);
+				t_symbol = dlsym(t_handle, MCStringGetCString(t_type->binding));
+				dlclose(t_handle);
 #else
                 t_symbol = dlsym(RTLD_DEFAULT, MCStringGetCString(t_type -> binding));
 #endif
@@ -733,8 +778,10 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                                                    nil);
 					goto error_cleanup;
                 }
-                
-                t_typeinfo = MCValueRetain(*(MCTypeInfoRef *)t_symbol);
+
+                /* The symbol is a function that returns a type info reference. */
+                MCTypeInfoRef (*t_type_func)(void) = (MCTypeInfoRef (*)(void)) t_symbol;
+                t_typeinfo = MCValueRetain(t_type_func());
             }
             break;
             case kMCScriptTypeKindRecord:
@@ -757,22 +804,31 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
             }
             break;
             case kMCScriptTypeKindHandler:
+            case kMCScriptTypeKindForeignHandler:
             {
                 MCScriptHandlerType *t_type;
                 t_type = static_cast<MCScriptHandlerType *>(self -> types[i]);
                 
                 MCAutoArray<MCHandlerTypeFieldInfo> t_parameters;
-                for(uindex_t i = 0; i < t_type -> parameter_count; i++)
+                for(uindex_t j = 0; j < t_type -> parameter_count; j++)
                 {
                     MCHandlerTypeFieldInfo t_parameter;
-                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[i] . mode;
-                    t_parameter . type = self -> types[t_type -> parameters[i] . type] -> typeinfo;
+                    t_parameter . mode = (MCHandlerTypeFieldMode)t_type -> parameters[j] . mode;
+                    t_parameter . type = self -> types[t_type -> parameters[j] . type] -> typeinfo;
                     if (!t_parameters . Push(t_parameter))
 						goto error_cleanup;
                 }
                 
-                if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
-					goto error_cleanup; // oom
+                if (t_type -> kind == kMCScriptTypeKindHandler)
+                {
+                    if (!MCHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
+                        goto error_cleanup; // oom
+                }
+                else
+                {
+                    if (!MCForeignHandlerTypeInfoCreate(t_parameters . Ptr(), t_type -> parameter_count, self -> types[t_type -> return_type] -> typeinfo, &t_typeinfo))
+                        goto error_cleanup; // oom
+                }
             }
             break;
         }
@@ -909,8 +965,7 @@ bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperLis
         return false;
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler ||
-            self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindForeignHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler)
             if (!MCProperListPushElementOntoBack(*t_handlers, self -> exported_definitions[i] . name))
                 return false;
     
@@ -998,7 +1053,8 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p
     
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)
     {
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler)
+        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler &&
+            self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindForeignHandler)
             continue;
         
         if (!MCNameIsEqualTo(p_handler, self -> exported_definitions[i] . name))
@@ -1136,15 +1192,22 @@ static void def_to_name(MCScriptModuleRef self, uindex_t p_index, MCStringRef& r
 {
     MCScriptDefinition *t_def;
     t_def = self -> definitions[p_index];
+    
+    MCNameRef t_name;
     if (t_def -> kind == kMCScriptDefinitionKindExternal)
     {
         MCScriptExternalDefinition *t_ext_def;
         t_ext_def = static_cast<MCScriptExternalDefinition *>(t_def);
         
-        MCStringFormat(r_string, "%@", /*self -> dependencies[self -> imported_definitions[t_ext_def -> index] . module] . name, */self -> imported_definitions[t_ext_def -> index] . name);
+        t_name = self -> imported_definitions[t_ext_def -> index] . name;
     }
     else
-        MCStringFormat(r_string, "%@", self -> definition_names[p_index]);
+        t_name = self -> definition_names[p_index];
+    
+    if (!MCNameIsEqualTo(t_name, MCNAME("undefined")))
+        MCStringFormat(r_string, "%@", t_name);
+    else
+        MCStringFormat(r_string, "nothing");
 }
 
 static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef& r_string)
@@ -1163,6 +1226,7 @@ static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef&
             MCStringFormat(r_string, "optional %@", *t_target_name);
         }
         break;
+        case kMCScriptTypeKindForeignHandler:
         case kMCScriptTypeKindHandler:
         {
             MCAutoStringRef t_sig;
@@ -1181,7 +1245,10 @@ static void type_to_string(MCScriptModuleRef self, uindex_t p_type, MCStringRef&
             }
             MCAutoStringRef t_rtype;
             type_to_string(self, t_htype -> return_type, &t_rtype);
-            MCStringAppendFormat(*t_sig, ") as %@", *t_rtype);
+            if (MCStringIsEqualToCString(*t_rtype, "undefined", kMCStringOptionCompareCaseless))
+                MCStringAppendFormat(*t_sig, ") returns nothing");
+            else
+                MCStringAppendFormat(*t_sig, ") returns %@", *t_rtype);
             MCStringCopy(*t_sig, r_string);
         }
         break;
@@ -1221,6 +1288,13 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
                     case kMCScriptTypeKindForeign:
                     {
                         __writeln(stream, "foreign type %@", t_def_name);
+                    }
+                    break;
+                    case kMCScriptTypeKindForeignHandler:
+                    {
+                        MCAutoStringRef t_sig;
+                        type_to_string(self, static_cast<MCScriptTypeDefinition *>(t_def) -> type, &t_sig);
+                        __writeln(stream, "foreign handler type %@%@", t_def_name, *t_sig);
                     }
                     break;
                     case kMCScriptTypeKindHandler:

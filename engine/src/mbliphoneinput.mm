@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -51,7 +51,7 @@ UIView *MCIPhoneGetView(void);
 class MCiOSInputControl;
 
 // Note that we use the notifications, rather than delegate methods.
-@interface MCiOSInputDelegate : NSObject <UITextFieldDelegate, UITextViewDelegate>
+@interface com_runrev_livecode_MCiOSInputDelegate : NSObject <UITextFieldDelegate, UITextViewDelegate>
 {
 	MCiOSInputControl *m_instance;
 	bool m_didchange_pending;
@@ -76,8 +76,9 @@ class MCiOSInputControl;
 @end
 
 
-@interface MCiOSMultiLineDelegate : MCiOSInputDelegate <UIScrollViewDelegate>
+@interface com_runrev_livecode_MCiOSMultiLineDelegate : com_runrev_livecode_MCiOSInputDelegate <UIScrollViewDelegate>
 {
+    UIView* m_view;
 	int32_t m_verticaltextalign;
 }
 
@@ -150,12 +151,12 @@ public:
     
 	void HandleNotifyEvent(MCNameRef p_notification);
 
-	MCiOSInputDelegate *GetDelegate(void);
+	com_runrev_livecode_MCiOSInputDelegate *GetDelegate(void);
 	
 protected:
 	virtual ~MCiOSInputControl(void);
 	
-	MCiOSInputDelegate *m_delegate;
+	com_runrev_livecode_MCiOSInputDelegate *m_delegate;
 };
 
 // single line input control
@@ -439,7 +440,7 @@ MCObjectPropertyTable MCiOSInputControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSInputControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Focus, MCiOSInputControl, Focus)
+    DEFINE_CTRL_EXEC_METHOD(Focus, Void, MCiOSInputControl, Focus)
 };
 
 MCNativeControlActionTable MCiOSInputControl::kActionTable =
@@ -519,7 +520,7 @@ MCObjectPropertyTable MCiOSMultiLineControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSMultiLineControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, Integer_Integer, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
 };
 
 MCNativeControlActionTable MCiOSMultiLineControl::kActionTable =
@@ -1319,7 +1320,7 @@ void MCiOSInputControl::ExecFocus(MCExecContext &ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCiOSInputDelegate *MCiOSInputControl::GetDelegate(void)
+com_runrev_livecode_MCiOSInputDelegate *MCiOSInputControl::GetDelegate(void)
 {
 	return m_delegate;
 }
@@ -1612,7 +1613,7 @@ UIView *MCiOSInputFieldControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCiOSInputDelegate alloc] initWithInstance: this view: t_view];
+	m_delegate = [[com_runrev_livecode_MCiOSInputDelegate alloc] initWithInstance: this view: t_view];
 	[t_view setDelegate: m_delegate];
 	
 	return t_view;
@@ -1680,7 +1681,7 @@ void MCiOSMultiLineControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
         
         if (p_type & kMCNativeControlInputDataDetectorTypeAll)
             t_types |= UIDataDetectorTypeAll;
-        if (p_type & kMCNativeControlInputDataDetectorTypeEmailAddress)
+        if (p_type & kMCNativeControlInputDataDetectorTypeMapAddress)
             t_types |= UIDataDetectorTypeAddress;
         if (p_type & kMCNativeControlInputDataDetectorTypePhoneNumber)
             t_types |= UIDataDetectorTypePhoneNumber;
@@ -1697,8 +1698,8 @@ void MCiOSMultiLineControl::SetVerticalTextAlign(MCExecContext& ctxt, MCNativeCo
 {
 	if (m_delegate != nil)
     {
-       	MCiOSMultiLineDelegate *t_delegate;
-        t_delegate = (MCiOSMultiLineDelegate*)m_delegate;
+       	com_runrev_livecode_MCiOSMultiLineDelegate *t_delegate;
+        t_delegate = (com_runrev_livecode_MCiOSMultiLineDelegate*)m_delegate;
         
         [t_delegate setVerticalTextAlign:(int32_t)p_align];
     }
@@ -1750,7 +1751,7 @@ void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
         if (t_native_types & UIDataDetectorTypeAll)
         {
             t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
-            t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
+            t_types |= kMCNativeControlInputDataDetectorTypeMapAddress;
             t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
             t_types |= kMCNativeControlInputDataDetectorTypeWebUrl;
         }
@@ -1758,7 +1759,7 @@ void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
         if (t_native_types & UIDataDetectorTypeCalendarEvent)
             t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
         if (t_native_types & UIDataDetectorTypeAddress)
-            t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
+            t_types |= kMCNativeControlInputDataDetectorTypeMapAddress;
         if (t_native_types & UIDataDetectorTypePhoneNumber)
             t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
         if (t_native_types & UIDataDetectorTypeLink)
@@ -1770,8 +1771,8 @@ void MCiOSMultiLineControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeCo
 
 void MCiOSMultiLineControl::GetVerticalTextAlign(MCExecContext& ctxt, MCNativeControlInputVerticalAlign& r_align)
 {
-	MCiOSMultiLineDelegate *t_delegate;
-	t_delegate = (MCiOSMultiLineDelegate*)m_delegate;
+	com_runrev_livecode_MCiOSMultiLineDelegate *t_delegate;
+	t_delegate = (com_runrev_livecode_MCiOSMultiLineDelegate*)m_delegate;
  
     if (t_delegate)
         r_align = (MCNativeControlInputVerticalAlign)[t_delegate getVerticalTextAlign];
@@ -2201,8 +2202,8 @@ Exec_stat MCiOSMultiLineControl::Set(MCNativeControlProperty p_property, MCExecP
 	if (t_view == nil)
 		return MCiOSControl::Set(p_property, ep);
 	
-	MCiOSMultiLineDelegate *t_delegate;
-	t_delegate = (MCiOSMultiLineDelegate*)m_delegate;
+	com_runrev_livecode_MCiOSMultiLineDelegate *t_delegate;
+	t_delegate = (com_runrev_livecode_MCiOSMultiLineDelegate*)m_delegate;
 	
 	bool t_bool;
 	NSString *t_string;
@@ -2280,8 +2281,8 @@ Exec_stat MCiOSMultiLineControl::Get(MCNativeControlProperty p_property, MCExecP
 	if (t_view == nil)
 		return MCiOSControl::Get(p_property, ep);
 	
-	MCiOSMultiLineDelegate *t_delegate;
-	t_delegate = (MCiOSMultiLineDelegate*)m_delegate;
+	com_runrev_livecode_MCiOSMultiLineDelegate *t_delegate;
+	t_delegate = (com_runrev_livecode_MCiOSMultiLineDelegate*)m_delegate;
 	
 	switch(p_property)
 	{	
@@ -2436,7 +2437,7 @@ UIView *MCiOSMultiLineControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCiOSMultiLineDelegate alloc] initWithInstance: this view: t_view];
+	m_delegate = [[com_runrev_livecode_MCiOSMultiLineDelegate alloc] initWithInstance: this view: t_view];
 	[t_view setDelegate: m_delegate];
 	
 	return t_view;
@@ -2524,7 +2525,7 @@ static struct { NSString *name; SEL selector; } s_input_notifications[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCiOSInputDelegate
+@implementation com_runrev_livecode_MCiOSInputDelegate
 
 - (id)initWithInstance:(MCiOSInputControl*)instance view: (UIView *)view
 {
@@ -2684,7 +2685,7 @@ private:
 	MCiOSMultiLineControl *m_target;
 };
 
-@implementation MCiOSMultiLineDelegate
+@implementation com_runrev_livecode_MCiOSMultiLineDelegate
 
 - (id)initWithInstance:(MCiOSInputControl *)instance view:(UIView *)view
 {
@@ -2693,6 +2694,10 @@ private:
 		return nil;
 	
 	m_verticaltextalign = kMCNativeControlInputVerticalAlignTop;
+    
+    // SN-2015-10-19: [[ Bug 16234 ]] We need to keep track of our view, as we
+    //  will be deallocated after m_instance has cleared up its view.
+    m_view = view;
 
 	[view addObserver:self forKeyPath:@"contentSize" options:NSKeyValueObservingOptionNew context:nil];
 	
@@ -2703,7 +2708,7 @@ private:
 //   can be removed that reference this object.
 - (void)dealloc
 {
-	[m_instance -> GetView() removeObserver: self forKeyPath:@"contentSize"];
+    [m_view removeObserver: self forKeyPath:@"contentSize"];
 	[super dealloc];
 }
    

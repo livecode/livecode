@@ -1,0 +1,41 @@
+Name: cancel
+
+Type: command
+
+Syntax: cancel <messageQueueID> 
+
+Summary: Removes a <message> that was queued with the <send> <command> and is waiting to be sent.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web
+
+Example:
+cancel 2298
+
+Example:
+cancel item 1 of last line of the pendingMessages
+
+Parameters:
+messageQueueID: The ID number of the message.
+
+Description:
+Use the <cancel> <command> to get rid of <message|messages> that were set up but are no longer required.
+
+The ID number of the message is returned by the <send> <command> that sent the <message>. This number is also the first <item> of the line corresponding to the message in the <pendingMessages> <function>.
+
+All pending messages are automatically canceled when the application quits.
+
+It is common to need to cancel a number of messages when leaving a card or stack, if the messages only pertain to that card or stack. For example, you might have queued a number of messages that create an animated display on the current card, and need to cancel them when the user goes to another card. The best solution in a case like this is to place each message ID number in a global variable or custom property at the time the <message> is sent. Then you can cancel all those <message|messages> in a <repeat> <loop> :
+
+    global myPendingMessages -- you've stored the message IDs here
+    repeat for each line thisMessageID in myPendingMessages
+     cancel thisMessageID
+    end repeat
+  end closeCard
+
+References: item (keyword), send (command), flushEvents (function), pendingMessages (function), command (glossary), message (glossary), loop (glossary), function (control_st), repeat (control_st)
+
+Tags: objects

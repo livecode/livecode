@@ -1,0 +1,10 @@
+Name: factor
+
+Synonyms: factor
+
+Type: glossary
+
+Description:
+The first fully-resolvable part of an <expression> : a <value>, source of <value>, or combination of <value|values> that does not contain any <binary> <operator|operators> outside parentheses.
+
+References: operator (glossary), value (glossary), binary (glossary), expression (glossary)

@@ -1,0 +1,37 @@
+Name: savingMobileStandalone
+
+Type: message
+
+Syntax: savingMobileStandalone <targetType>, <appBundle> 
+
+Summary: Sent to the mainstack when a mobile standalone application is being saved or the simulation is started.
+
+Associations: stack
+
+Introduced: 5.5.3
+
+OS: ios,android
+
+Platforms: desktop,server,web
+
+Example:
+on savingMobileStandalone pTarget, pFolder
+   repeat with X = 1 to the number of cards of this stack
+      repeat with Y = 1 to the number of fields of card X of this stack
+         if not the lockText of field Y of card X of this stack then
+            put empty into field Y of card X of this stack
+         end if
+      end repeat
+   end repeat
+end savingMobileStandalone
+
+Parameters:
+targetType: targetType is either "simulator" or "device", depending on the type of build.
+appBundle: appBundle is a string variable containing the folder that the mobile standalone application was saved in.           >*Note:* Modifications made when you handle this message are not saved in the original stack file. They are only seen in the standalone application. If you make changes to the stack in savingMobileStandalone that you want to appear in the built application, you must save the stack before returning from the handler. The mobile standalone builder uses the stack file as it is on disk after return from the message to build the app.
+
+Description:
+When a mobile stack is saved as a standalone application it is removed from memory then reopened. This message is sent to the stack after it is reopened and therefore offers the opportunity to do a last modification of the stack before saving the mobile standalone. 
+
+>*Note:* Modifications made when you handle this message are not saved in the original stack file. They are only seen in the standalone application. If you make changes to the stack in <savingMobileStandalone> that you want to appear in the built application, you must save the stack before returning from the handler. The mobile standalone builder uses the stack file as it is on disk after return from the message to build the app.
+
+References: mobileStandaloneSaved (message), savingStandalone (message), standaloneSaved (message)

@@ -1,0 +1,36 @@
+Name: metal
+
+Type: property
+
+Syntax: set the metal of <stack> to {true | false}
+
+Summary: Displays a window with a textured-metal appearance.
+
+Associations: stack
+
+Introduced: 2.1
+
+OS: mac
+
+Platforms: desktop,server,web
+
+Example:
+set the metal of this stack to false
+
+Example:
+set the metal of stack "Calculator" to true
+
+Value (bool): The <metal> <property> of a <stack> is true or false. By <default>, the <metal> of a newly created <stack> is set to false.
+
+Description:
+Use the <metal> property to give OS X windows a distinctive appearance suitable for applications such as calculators, oscilliscopes, video camera controllers, and other uses that emulate or control a physical device
+
+Before using the <metal> <property>, consult Apple's <Aqua> user-interface guidelines to determine whether the use is appropriate. In general, <metal window|metal windows> should be used to represent physical devices or interfaces to such devices, and should be used only for the application's main window (not for <palette|palettes> and <dialog box|dialog boxes>).
+
+On Mac OS, Unix, and Windows systems, the <metal> <property> has no effect.
+
+>*Note:* The setting of this property determines whether the <stack|stack's> <decorations> <property> includes "metal".
+
+References: backgroundPattern (property), decorations (property), default (keyword), stack (object), property (glossary), dialog box (glossary), Aqua (glossary), palette (glossary), metal window (glossary)
+
+Tags: ui

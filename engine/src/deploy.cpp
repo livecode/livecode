@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -81,6 +81,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "deploy.h"
 #include "mode.h"
 #include "license.h"
+#include "stacksecurity.h"
+
+#include "debug.h"
 
 #include "capsule.h"
 
@@ -195,7 +198,7 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		MCValueRelease(t_temp_string);
 	}
 	
-	if (!ctxt.CopyElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
+	if (!ctxt.CopyOptElementAsFilepath(p_array, MCNAME("stackfile"), false, t_temp_string))
 		return false;
 	MCValueAssign(stackfile, t_temp_string);
 	MCValueRelease(t_temp_string);
@@ -269,6 +272,14 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
     MCValueRelease(t_temp_string);
     MCValueRelease(t_temp_array);
 
+    // SN-2015-02-16: [[ iOS Font mapping ]] Read the fontmappings options from the deploy parameters.
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("fontmappings"), false, t_temp_string))
+        return false;
+    MCStringSplit(t_temp_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, t_temp_array);
+    MCValueAssign(fontmappings, t_temp_array);
+    MCValueRelease(t_temp_string);
+    MCValueRelease(t_temp_array);
+
     // The 'min_os_version' is either a string or an array. If it is a string then
     // it encodes the version against the 'Unknown' architecture which is interpreted
     // by the deploy command to mean all architectures. Otherwise, the keys in the
@@ -312,6 +323,49 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 		return false;
 	MCValueAssign(modules, t_temp_array);
 	MCValueRelease(t_temp_array);
+    
+    MCAutoStringRef t_architectures_string;
+    if (!ctxt.CopyOptElementAsString(p_array, MCNAME("architectures"), false, &t_architectures_string))
+        return false;
+    if (!MCStringIsEmpty(*t_architectures_string))
+    {
+        // Split the string up into items
+        MCAutoProperListRef t_architectures;
+        if (!MCStringSplitByDelimiter(*t_architectures_string, MCSTR(","), kMCStringOptionCompareExact, &t_architectures))
+            return false;
+        
+        // Process the architectures
+        MCValueRef t_architecture;
+        for (uindex_t i = 0; i < MCProperListGetLength(*t_architectures); i++)
+        {
+            // Fetch this item and make sure it is a string
+            t_architecture = MCProperListFetchElementAtIndex(*t_architectures, i);
+            if (t_architecture == nil || MCValueGetTypeCode(t_architecture) != kMCValueTypeCodeString)
+                return false;
+            
+            // Map it to an architecture ID
+            MCDeployArchitecture t_id;
+            if (!MCDeployMapArchitectureString((MCStringRef)t_architecture, t_id))
+                return false;
+            
+            // Append it to the list of desired architectures
+            if (!architectures.Push(t_id))
+                return false;
+        }
+    }
+	
+	// If the 'banner_class' string is present, then set the class override.
+	MCAutoStringRef t_banner_class;
+	if (!ctxt . CopyOptElementAsString(p_array, MCNAME("banner_class"), false, &t_banner_class))
+		return false;
+	if (MCStringIsEqualToCString(*t_banner_class,
+								 "commercial",
+								 kMCStringOptionCompareCaseless))
+		banner_class = kMCLicenseClassEvaluation;
+	else if (MCStringIsEqualToCString(*t_banner_class,
+									  "professional",
+									  kMCStringOptionCompareCaseless))
+		banner_class = kMCLicenseClassProfessionalEvaluation;
 	
     return true;
 }
@@ -321,8 +375,49 @@ bool MCDeployParameters::InitWithArray(MCExecContext &ctxt, MCArrayRef p_array)
 static bool MCDeployWriteDefinePrologueSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
 {
 	MCCapsulePrologueSection t_prologue;
+	t_prologue . banner_timeout = p_params . banner_timeout;
+	t_prologue . program_timeout = p_params . timeout;
+	
+	MCDeployByteSwapRecord(true, "ll", &t_prologue, sizeof(t_prologue));
 	
 	return MCDeployCapsuleDefine(p_capsule, kMCCapsuleSectionTypePrologue, &t_prologue, sizeof(t_prologue));
+}
+
+static bool MCDeployWriteDefineLicenseSection(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
+{
+	// The edition byte encoding is development/standalone engine pair
+	// specific.
+	unsigned char t_edition;
+	switch(MClicenseparameters . license_class)
+	{
+		case kMCLicenseClassNone:
+			t_edition = 0;
+			break;
+			
+		case kMCLicenseClassCommunity:
+			t_edition = 1;
+			break;
+		
+		case kMCLicenseClassEvaluation:
+		case kMCLicenseClassCommercial:
+			t_edition = 2;
+			break;
+			
+		case kMCLicenseClassProfessionalEvaluation:
+		case kMCLicenseClassProfessional:
+			t_edition = 3;
+			break;
+	}
+	
+	return MCDeployCapsuleDefine(p_capsule,
+								 kMCCapsuleSectionTypeLicense,
+								 &t_edition,
+								 sizeof(t_edition));
+}
+
+static bool MCDeployWriteDefineBannerSecion(const MCDeployParameters& p_params, MCDeployCapsuleRef p_capsule)
+{
+	return MCDeployCapsuleDefine(p_capsule, kMCCapsuleSectionTypeBanner, MCDataGetBytePtr(p_params . banner_stackfile), MCDataGetLength(p_params . banner_stackfile));
 }
 
 // This method generates the standalone specific capsule elements. This is
@@ -331,10 +426,20 @@ static bool MCDeployWriteCapsuleDefineStandaloneSections(const MCDeployParameter
 {
 	bool t_success;
 	t_success = true;
-
+	
+	// First emit the prologue.
 	if (t_success)
 		t_success = MCDeployWriteDefinePrologueSection(p_params, p_capsule);
 
+    // Next emit the license info.
+    if (t_success)
+		t_success = MCDeployWriteDefineLicenseSection(p_params, p_capsule);
+	
+	// Next emit the banner.
+	if (t_success &&
+		!MCDataIsEmpty(p_params . banner_stackfile))
+		t_success = MCDeployWriteDefineBannerSecion(p_params, p_capsule);
+	
 	return t_success;
 }
 
@@ -395,31 +500,18 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
                 t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_module_files[i]);
         }
     
-    // TEMPORARY - Iterator through all loaded extensions and add them to the list.
-    if (t_success)
-    {
-        extern bool MCEngineIterateExtensionFilenames(uintptr_t& x_iterator, MCStringRef& r_filename);
-        MCStringRef t_filename;
-        uintptr_t t_iterator;
-        t_iterator = 0;
-        while(t_success && MCEngineIterateExtensionFilenames(t_iterator, t_filename))
-        {
-            MCDeployFileRef t_file;
-            t_file = nil;
-            if (t_success &&
-                !MCDeployFileOpen(t_filename, kMCOpenFileModeRead, t_file))
-                t_success = MCDeployThrow(kMCDeployErrorNoModule);
-            if (t_success)
-                t_success = t_module_files . Push(t_file);
-            if (t_success)
-                t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeModule, t_file);
-            if (!t_success && t_file != nil)
-                MCDeployFileClose(t_file);
-        }
-    }
-    
     ////////
     
+			
+    // Add any font mappings
+    if (t_success)
+        for(uint32_t i = 0; i < MCArrayGetCount(p_params.fontmappings) && t_success; i++)
+        {
+            MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.fontmappings, i + 1, t_val);
+            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeFontmap, (MCStringRef)t_val);
+        }
+
 	// Now we add the main stack
 	if (t_success)
 		t_success = MCDeployCapsuleDefineFromFile(t_capsule, kMCCapsuleSectionTypeStack, t_stackfile);
@@ -610,6 +702,8 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 			m_platform = PLATFORM_IOS_EMBEDDED;
 		else if (sp . token_is_cstring("androidembedded"))
 			m_platform = PLATFORM_ANDROID_EMBEDDED;
+		else if (sp . token_is_cstring("emscripten"))
+			m_platform = PLATFORM_EMSCRIPTEN;
 		else
 			return PS_ERROR;
 	}
@@ -621,7 +715,7 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 
 void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 {
-	bool t_soft_error;
+    bool t_soft_error;
     t_soft_error = false;
     bool t_has_error;
     t_has_error = false;
@@ -646,10 +740,51 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 	}
 #endif
 
-	// Now, if we are not licensed for a target, then its an error.
+	// If the banner_class field is set and we are not a trial license, we
+	// override the license class with that specified.
+	uint32_t t_license_class;
+	t_license_class = kMCLicenseClassNone;
+	if (MClicenseparameters . license_class == kMCLicenseClassCommercial)
+	{
+		// If we have a commercial license, then we only allow a commercial
+		// evaluation.
+		if (t_params . banner_class == kMCLicenseClassEvaluation)
+			t_license_class = kMCLicenseClassEvaluation;
+	}
+	else if (MClicenseparameters . license_class == kMCLicenseClassProfessional)
+	{
+		// If we are a professional license, then we allow any kind of
+		// trial.
+		t_license_class = t_params . banner_class;
+	}
+	
+	if (t_license_class == kMCLicenseClassNone)
+		t_license_class = MClicenseparameters . license_class;
+	
+	t_params . banner_class = t_license_class;
+	
+	// Now check to see if we should build a trial - this if the license class is a
+	// trail, or the banner_class override is specified and the chosen option is
+	// compatible with the license class.
+	bool t_is_trial;
+    t_is_trial = false;
+	if (t_license_class == kMCLicenseClassEvaluation ||
+		t_license_class == kMCLicenseClassProfessionalEvaluation)
+		t_is_trial = true;
+	
+	// Now, if we are not licensed for a target, then its an error. If we are in trial
+	// mode, however, all platforms are licensed (apart from embedded) they just will
+	// timeout.
 	bool t_is_licensed;
 	t_is_licensed = false;
-	if (m_platform == PLATFORM_WINDOWS)
+	
+    if (MCnoui && MClicenseparameters . license_class == kMCLicenseClassCommunity)
+        t_is_licensed = true;
+	else if (t_is_trial &&
+			 m_platform != PLATFORM_IOS_EMBEDDED &&
+			 m_platform != PLATFORM_ANDROID_EMBEDDED)
+		t_is_licensed = true;
+	else if (m_platform == PLATFORM_WINDOWS)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToWindows) != 0;
 	else if (m_platform == PLATFORM_MACOSX)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToMacOSX) != 0;
@@ -663,6 +798,8 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToIOSEmbedded) != 0;
 	else if (m_platform == PLATFORM_ANDROID_EMBEDDED)
 		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToAndroidEmbedded) != 0;
+	else if (m_platform == PLATFORM_EMSCRIPTEN)
+		t_is_licensed = (MClicenseparameters . deploy_targets & kMCLicenseDeployToHTML5) != 0;
 
 	if (!t_is_licensed)
 	{
@@ -670,7 +807,67 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_soft_error = true;
 		t_has_error = true;
 	}
-
+	
+	if (t_is_trial &&
+		m_platform == PLATFORM_EMSCRIPTEN)
+	{
+		ctxt . SetTheResultToCString("trial of html5 is not possible");
+		t_soft_error = true;
+		t_has_error = true;
+	}
+	
+	uint32_t t_platform;
+	switch(m_platform)
+	{
+		case PLATFORM_MACOSX:
+			t_platform = kMCLicenseDeployToMacOSX;
+			break;
+		case PLATFORM_WINDOWS:
+			t_platform = kMCLicenseDeployToWindows;
+			break;
+		case PLATFORM_LINUX:
+			t_platform = kMCLicenseDeployToLinux;
+			break;
+		case PLATFORM_IOS:
+			t_platform = kMCLicenseDeployToIOS;
+			break;
+		case PLATFORM_ANDROID:
+			t_platform = kMCLicenseDeployToAndroid;
+			break;
+		case PLATFORM_IOS_EMBEDDED:
+			t_platform = kMCLicenseDeployToIOSEmbedded;
+			break;
+		case PLATFORM_ANDROID_EMBEDDED:
+			t_platform = kMCLicenseDeployToAndroidEmbedded;
+			break;
+		case PLATFORM_EMSCRIPTEN:
+			t_platform = kMCLicenseDeployToHTML5;
+			break;
+	}
+	
+	if (!t_has_error)
+	{
+		// If this is a trial then set the timeout.
+		if (t_is_trial)
+		{
+			if (m_platform != PLATFORM_IOS &&
+				m_platform != PLATFORM_ANDROID &&
+				m_platform != PLATFORM_EMSCRIPTEN)
+				t_params . timeout = 5 * 60;
+			else
+				t_params . timeout = 1 * 60;
+			
+			t_params . banner_timeout = 10;
+		}
+		
+		// Pass the deploy parameters through any stack security related steps.
+		if (!MCStackSecurityPreDeploy(t_platform, t_params))
+		{
+			t_soft_error = true;
+			t_has_error = true;
+		}
+	}
+	
 	if (!t_has_error)
 	{
 		if (m_platform == PLATFORM_WINDOWS)
@@ -685,6 +882,8 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 			MCDeployToAndroid(t_params);
 		else if (m_platform == PLATFORM_IOS_EMBEDDED)
 			MCDeployToIOS(t_params, true);
+		else if (m_platform == PLATFORM_EMSCRIPTEN)
+			MCDeployToEmscripten(t_params);
 
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
@@ -771,11 +970,11 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 			ctxt . Throw();
 	
 	if (!ctxt . HasError())
-		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
+		if (!MCValueIsEmpty(t_params . certstore) && (!MCValueIsEmpty(t_params . certificate) || !MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	if (!ctxt . HasError())
-		if (t_params . certstore == NULL && (t_params . certificate == NULL || t_params . privatekey == NULL))
+		if (MCValueIsEmpty(t_params . certstore) && (MCValueIsEmpty(t_params . certificate) || MCValueIsEmpty(t_params . privatekey)))
 			ctxt . Throw();
 
 	bool t_can_sign;
@@ -788,8 +987,15 @@ void MCIdeSign::exec_ctxt(MCExecContext &ctxt)
 
 	if (t_can_sign && !ctxt . HasError())
 	{
+        MCExecContext *t_old_ec;
+        t_old_ec = MCECptr;
+        
+        MCECptr = &ctxt;
+        
 		if (m_platform == PLATFORM_WINDOWS)
 			MCDeploySignWindows(t_params);
+        
+        MCECptr = t_old_ec;
 
 		MCDeployError t_error;
 		t_error = MCDeployCatch();
@@ -1038,13 +1244,10 @@ void MCIdeDmgBuild::exec_ctxt(MCExecContext& ctxt)
 
 	/////////
 
+    // SN-2015-06-19: [[ CID 100294 ]] Check the return value.
     MCAutoStringRef t_string;
-	if (!ctxt . HasError())
-    {
-        /* UNCHECKED */ ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string);
-    }
-
-	if (!ctxt . HasError())
+	if (!ctxt . HasError()
+            && ctxt . EvalExprAsStringRef(m_filename, EE_UNDEFINED, &t_string))
 	{
         MCAutoPointer<char> temp;
         if (!MCStringConvertToCString(*t_string, &temp))

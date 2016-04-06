@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -27,34 +27,34 @@ class MCNativeLayerMac : public MCNativeLayer
 {
 public:
     
-    virtual void OnOpen();
-    virtual void OnClose();
-    virtual void OnAttach();
-    virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void OnVisibilityChanged(bool p_visible);
-    virtual void OnToolChanged(Tool p_new_tool);
-    virtual void OnLayerChanged();
-    
-    MCNativeLayerMac(MCWidget*);
+	virtual bool GetNativeView(void *&r_view);
+	
+    MCNativeLayerMac(MCObject *p_object, NSView *p_view);
     ~MCNativeLayerMac();
     
 private:
     
-    MCWidget* m_widget;
     NSView* m_view;
     NSBitmapImageRep *m_cached;
 
     // Returns the NSWindow* for the stack containing this widget
     NSWindow* getStackWindow();
+	// Returns the nsview of the parent of this control
+	bool getParentView(NSView *&r_view);
+
+	NSRect calculateFrameRect(const MCRectangle &p_rect);
     
     // Performs the attach/detach operations
-    void doAttach();
-    void doDetach();
-    
-    // Performs a relayering operation
-    void doRelayer();
+	virtual void doAttach();
+	virtual void doDetach();
+	
+	virtual bool doPaint(MCGContextRef p_context);
+	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
+	virtual void doSetVisible(bool p_visible);
+	
+	// Performs a relayering operation
+	virtual void doRelayer();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_MAC__

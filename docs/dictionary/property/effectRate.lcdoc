@@ -1,0 +1,33 @@
+Name: effectRate
+
+Type: property
+
+Syntax: set the effectRate to <milliseconds> 
+
+Summary: Specifies the speed of visual effects.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the effectRate to 500 -- zippy
+
+Example:
+set the effectRate to 5000 -- quite s-s-s-l-l-l-o-o-o-w-w-w...
+
+Value:
+The <effectRate> is an <integer> between zero and 65535.
+By default, the <effectRate> <property> is set to 2000 (2 seconds).
+
+Value:
+You can specify five speeds with the visual effect <command> : very fast, fast, normal, slow, or very slow. The <effectRate> <property> specifies how long a very slow <a/>visual effect takes.
+
+Description:
+Use the <effectRate> <property> to fine-tune the speed of visual effects.
+
+References: idleRate (property), syncRate (property), property (glossary), command (glossary), integer (keyword)
+
+Tags: multimedia

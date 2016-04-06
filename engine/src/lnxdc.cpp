@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -87,15 +87,16 @@ MCScreenDC::MCScreenDC()
 	backdrop_hard = false;
 	backdrop_active = false;
     
-    m_im_context = NULL;
+    m_has_native_theme = false;
+    m_has_native_color_dialogs = false;
+    m_has_native_file_dialogs = false;
+    m_has_native_print_dialogs = false;
 
-	MCNotifyInitialize();
+	m_im_context = NULL;
 }
 
 MCScreenDC::~MCScreenDC()
 {
-	MCNotifyFinalize();
-
 	if (opened)
 		close(True);
 	if (ncolors != 0)
@@ -111,6 +112,7 @@ MCScreenDC::~MCScreenDC()
 		delete allocs;
 	}
 	
+    MCNameDelete(vendorname);
 	
 	while (pendingevents != NULL)
 	{
@@ -437,6 +439,12 @@ bool MCScreenDC::platform_get_display_handle(void *&r_display)
 	r_display = x11::gdk_x11_display_get_xdisplay(getDisplay());
 	
 	return true;
+}
+
+void *MCScreenDC::GetNativeWindowHandle(Window p_window)
+{
+	// x11 window handle - dtouint returns the X11 Window id.
+	return (void*)dtouint(p_window);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -346,12 +346,12 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 // Returns whether the first string begins with the second
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption);
+                         MCUnicodeCompareOption, uindex_t *r_first_match_length);
 
 // Returns whether the first string ends with the second
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                       MCUnicodeCompareOption);
+                       MCUnicodeCompareOption, uindex_t *r_first_match_length);
 
 // Returns whether the string contains the given substring
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,
@@ -463,6 +463,25 @@ bool    MCUnicodeCreateSortKey(MCLocaleRef, MCUnicodeCollateOption,
                                const unichar_t* p_in, uindex_t p_in_length,
                                byte_t* &r_out, uindex_t &r_out_length);
 
+/////
+
+// The collator reference - this is not a valueref!
+typedef void *MCUnicodeCollatorRef;
+
+// Creates a collation object which can be reused.
+bool MCUnicodeCreateCollator(MCLocaleRef locale, MCUnicodeCollateOption options, MCUnicodeCollatorRef& r_collator);
+
+// Destroys a previously create collator.
+void MCUnicodeDestroyCollator(MCUnicodeCollatorRef collator);
+
+int32_t MCUnicodeCollateWithCollator(MCUnicodeCollatorRef collator,
+                                     const unichar_t* p_first, uindex_t p_first_len,
+                                     const unichar_t* p_second, uindex_t p_second_len);
+
+// Create a sort key using the given collator.
+bool MCUnicodeCreateSortKeyWithCollator(MCUnicodeCollatorRef collator,
+                                        const unichar_t* p_in, uindex_t p_in_length,
+                                        byte_t* &r_out, uindex_t &r_out_length);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -546,7 +565,7 @@ inline uinteger_t MCUnicodeCodepointAdvanceSurrogate(const unichar_t* p_input, u
 	{
         // FG-2014-10-23: [[ Bugfix 13761 ]] Codepoint was calculated incorrectly
         uinteger_t t_codepoint;
-		t_codepoint = (0x10000 + ((p_input[x_index] - 0xD800) << 10)) | (p_input[x_index + 1] - 0xDC00);
+		t_codepoint = (0x10000U + ((p_input[x_index] - 0xD800U) << 10)) | (p_input[x_index + 1] - 0xDC00U);
 		x_index += 2;
 		return t_codepoint;
 	}
@@ -697,6 +716,8 @@ inline uinteger_t MCUnicodeMapFromNative_ISO8859_1(char_t p_native)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCUnicodeIsGraphemeClusterBoundary(codepoint_t p_left, codepoint_t p_right);
 
+////////////////////////////////////////////////////////////////////////////////
 
 #endif  /* ifndef __MC_FOUNDATION_UNICODE__ */

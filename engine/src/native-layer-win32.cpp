@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -38,7 +38,10 @@
 #include "redraw.h"
 #include "font.h"
 #include "chunk.h"
+#include "group.h"
 #include "graphicscontext.h"
+
+#include "graphics_util.h"
 
 #include "globals.h"
 #include "context.h"
@@ -46,12 +49,12 @@
 #include "native-layer-win32.h"
 
 
-MCNativeLayerWin32::MCNativeLayerWin32(MCWidget *p_widget) :
-  m_widget(p_widget),
-  m_hwnd(NULL),
-  m_cached(NULL)
+MCNativeLayerWin32::MCNativeLayerWin32(MCObject *p_object, HWND p_view) :
+	m_hwnd(p_view),
+	m_cached(NULL),
+	m_viewport_hwnd(nil)
 {
-
+	m_object = p_object;
 }
 
 MCNativeLayerWin32::~MCNativeLayerWin32()
@@ -62,208 +65,216 @@ MCNativeLayerWin32::~MCNativeLayerWin32()
 		DeleteObject(m_cached);
 }
 
-void MCNativeLayerWin32::OnToolChanged(Tool p_new_tool)
-{
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Make visible if requested
-        if (m_widget->getflags() & F_VISIBLE)
-            ShowWindow(m_hwnd, SW_SHOWNOACTIVATE);
-        m_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        ShowWindow(m_hwnd, SW_HIDE);
-        m_widget->Redraw();
-    }
-}
-
-void MCNativeLayerWin32::OnOpen()
-{
-	// Unhide the widget, if required
-	if (isAttached() && m_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerWin32::OnClose()
-{
-	if (isAttached() && m_widget->getopened() == 0)
-        doDetach();
-}
-
-void MCNativeLayerWin32::OnAttach()
-{
-    m_attached = true;
-    doAttach();
-}
-
+// IM-2016-01-19: [[ NativeLayer ]] Windows (prior to Windows 8) doesn't do transparent child windows
+//    so instead we place each child window in its own container, sized to expose only the area that
+//    should be visible when the native layer is clipped by the bounds of any groups it is in.
 void MCNativeLayerWin32::doAttach()
 {
-    if (m_hwnd == NULL)
-    {
-        MCRectangle rect = m_widget->getrect();
-        m_hwnd = CreateWindow
-        (
-         L"BUTTON",
-         L"Native Button",
-         WS_TABSTOP|WS_CHILD|WS_CLIPSIBLINGS|BS_DEFPUSHBUTTON,
-         rect.x,
-         rect.y,
-         rect.width,
-         rect.height,
-         getStackWindow(),
-         NULL,
-         (HINSTANCE)GetWindowLong(getStackWindow(), GWL_HINSTANCE),
-         NULL
-         );
-    }
+	HWND t_parent;
+	t_parent = getStackWindow();
+
+	if (m_viewport_hwnd == nil)
+		/* UNCHECKED */ CreateNativeContainer((void*&)m_viewport_hwnd);
 
 	// Set the parent to the stack
-	SetParent(m_hwnd, getStackWindow());
+	SetParent(m_viewport_hwnd, t_parent);
 
-	// Restore the visibility state of the widget (in case it changed due to a
+	SetParent(m_hwnd, m_viewport_hwnd);
+
+	// Restore the state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
-	if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
-		ShowWindow(m_hwnd, SW_SHOWNOACTIVATE);
+	m_rect = m_object->getrect();
+	if (m_object->getparent()->gettype() == CT_GROUP)
+		m_viewport_rect = ((MCGroup*)m_object->getparent())->getviewportgeometry();
 	else
-		ShowWindow(m_hwnd, SW_HIDE);
-}
+		m_viewport_rect = m_rect;
 
-void MCNativeLayerWin32::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+	doSetViewportGeometry(m_viewport_rect);
+	doSetGeometry(m_rect);
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerWin32::doDetach()
 {
     // Change the window to an invisible child of the desktop
-	ShowWindow(m_hwnd, SW_HIDE);
+	doSetVisible(false);
 	SetParent(m_hwnd, NULL);
+	SetParent(m_viewport_hwnd, NULL);
 }
 
-void MCNativeLayerWin32::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 {
-	// If the widget is not in edit mode, we trust it to paint itself
-	if (!m_widget->inEditMode())
-		return;
+	MCRectangle t_rect;
+	t_rect = m_object->getrect();
 
+	bool t_success;
+	t_success = true;
+	
 	// Create a DC to use for the drawing operation. We create a new DC
 	// compatible to the one that would normally be used for a paint operation.
-	HDC t_hdc, t_hwindowdc;
+	HDC t_hwindowdc;
 	t_hwindowdc = GetDC(m_hwnd);
-	t_hdc = CreateCompatibleDC(t_hwindowdc);
+	
+	HDC t_hdc;
+	t_hdc = nil;
+	if (t_success)
+	{
+		t_hdc = CreateCompatibleDC(t_hwindowdc);
+		t_success = t_hdc != nil;
+	}
 
 	// Create a bitmap for the DC to draw into
-	if (m_cached == NULL)
+	if (t_success && m_cached == NULL)
 	{
 		// Note: this *must* be the original DC because the compatible DC originally
 		// has a monochrome (1BPP) bitmap selected into it and we don't want that.
-		MCRectangle t_rect;
-		t_rect = m_widget->getrect();
 		m_cached = CreateCompatibleBitmap(t_hwindowdc, t_rect.width, t_rect.height);
+		t_success = m_cached != nil;
 	}
 
-	// Tell the DC to draw into the bitmap we've created
-	SelectObject(t_hdc, m_cached);
-
-	// Use the WM_PRINT message to get the control to draw. WM_PAINT should
-	// only be called by the windowing system and MSDN recommends PRINT instead
-	// if drawing into a specific DC is required.
-	SendMessage(m_hwnd, WM_PRINT, (WPARAM)t_hdc, PRF_CHILDREN|PRF_CLIENT);
-
-	// Get the information we need to turn this into a bitmap the engine can use
 	BITMAP t_bitmap;
-	GetObject(m_cached, sizeof(BITMAP), &t_bitmap);
 
-	// Allocate some memory for capturing the bits from the bitmap
-	HANDLE t_dib;
 	void *t_bits;
-	t_dib = GlobalAlloc(GHND, t_bitmap.bmWidth * t_bitmap.bmHeight * 4);
-	t_bits = GlobalLock(t_dib);
-
-	// Describe the format of the device-independent bitmap we want
-	BITMAPINFOHEADER t_bi;
-	t_bi.biSize = sizeof(BITMAPINFOHEADER);
-	t_bi.biWidth = t_bitmap.bmWidth;
-	t_bi.biHeight = -t_bitmap.bmHeight;	// Negative: top-down (else bottom-up bitmap)
-	t_bi.biPlanes = 1;
-	t_bi.biBitCount = 32;
-	t_bi.biCompression = BI_RGB;
-	t_bi.biSizeImage = 0;
-	t_bi.biXPelsPerMeter = 0;
-	t_bi.biYPelsPerMeter = 0;
-	t_bi.biClrUsed = 0;
-	t_bi.biClrImportant = 0;
-
-	// Finally, we can get the bits that were drawn.
-	GetDIBits(t_hdc, m_cached, 0, t_bitmap.bmHeight, t_bits, (LPBITMAPINFO)&t_bi, DIB_RGB_COLORS);
-
-	// Process the bits to handle the alpha channel
-	uint32_t *t_argb;
-	t_argb = reinterpret_cast<uint32_t*>(t_bits);
-	for (size_t i = 0; i < t_bitmap.bmWidth*t_bitmap.bmHeight; i++)
+	t_bits = nil;
+	
+	if (t_success)
 	{
-		// Set to fully-opaque (kMCGRasterFormat_xRGB doesn't seem to work...)
-		t_argb[i] |= 0xFF000000;
+		// Tell the DC to draw into the bitmap we've created
+		SelectObject(t_hdc, m_cached);
+
+		// Use the WM_PRINT message to get the control to draw. WM_PAINT should
+		// only be called by the windowing system and MSDN recommends PRINT instead
+		// if drawing into a specific DC is required.
+		SendMessage(m_hwnd, WM_PRINT, (WPARAM)t_hdc, PRF_CHILDREN|PRF_CLIENT);
+
+		// Get the information we need to turn this into a bitmap the engine can use
+		GetObject(m_cached, sizeof(BITMAP), &t_bitmap);
+
+		// Allocate some memory for capturing the bits from the bitmap
+		t_success = MCMemoryAllocate(t_bitmap.bmWidth * t_bitmap.bmHeight * 4, t_bits);
 	}
 
-	// Turn these bits into something the engine can draw
-	MCGRaster t_raster;
 	MCGImageRef t_gimage;
-	MCImageDescriptor t_descriptor;
-	t_raster.format = kMCGRasterFormat_ARGB;
-	t_raster.width = t_bitmap.bmWidth;
-	t_raster.height = t_bitmap.bmHeight;
-	t_raster.stride = 4*t_bitmap.bmWidth;
-	t_raster.pixels = t_bits;
-	/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
-	memset(&t_descriptor, 0, sizeof(MCImageDescriptor));
-	t_descriptor.image = t_gimage;
-	t_descriptor.x_scale = t_descriptor.y_scale = 1.0;
+	t_gimage = nil;
 
-	// At last - we can draw it!
-	p_dc->drawimage(t_descriptor, 0, 0, t_raster.width, t_raster.height, 0, 0);
-	MCGImageRelease(t_gimage);
+	if (t_success)
+	{
+		// Describe the format of the device-independent bitmap we want
+		BITMAPINFOHEADER t_bi;
+		t_bi.biSize = sizeof(BITMAPINFOHEADER);
+		t_bi.biWidth = t_bitmap.bmWidth;
+		t_bi.biHeight = -t_bitmap.bmHeight;	// Negative: top-down (else bottom-up bitmap)
+		t_bi.biPlanes = 1;
+		t_bi.biBitCount = 32;
+		t_bi.biCompression = BI_RGB;
+		t_bi.biSizeImage = 0;
+		t_bi.biXPelsPerMeter = 0;
+		t_bi.biYPelsPerMeter = 0;
+		t_bi.biClrUsed = 0;
+		t_bi.biClrImportant = 0;
+
+		// Finally, we can get the bits that were drawn.
+		GetDIBits(t_hdc, m_cached, 0, t_bitmap.bmHeight, t_bits, (LPBITMAPINFO)&t_bi, DIB_RGB_COLORS);
+
+		// Process the bits to handle the alpha channel
+		uint32_t *t_argb;
+		t_argb = reinterpret_cast<uint32_t*>(t_bits);
+		for (size_t i = 0; i < t_bitmap.bmWidth*t_bitmap.bmHeight; i++)
+		{
+			// Set to fully-opaque (kMCGRasterFormat_xRGB doesn't seem to work...)
+			t_argb[i] |= 0xFF000000;
+		}
+
+		// Turn these bits into something the engine can draw
+		MCGRaster t_raster;
+		MCImageDescriptor t_descriptor;
+		t_raster.format = kMCGRasterFormat_ARGB;
+		t_raster.width = t_bitmap.bmWidth;
+		t_raster.height = t_bitmap.bmHeight;
+		t_raster.stride = 4*t_bitmap.bmWidth;
+		t_raster.pixels = t_bits;
+		
+		t_success = MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
+	}
+
+	if (t_success)
+	{
+		// At last - we can draw it!
+		MCGRectangle rect = {{0, 0}, {t_rect.width, t_rect.height}};
+		MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
+	}
+
+	if (t_gimage != nil)
+		MCGImageRelease(t_gimage);
 
 	// Clean up the drawing resources that we allocated
-	GlobalUnlock(t_dib);
-	GlobalFree(t_dib);
-	DeleteDC(t_hdc);
+	if (t_bits != nil)
+		MCMemoryDeallocate(t_bits);
+
+	if (t_hdc != nil)
+		DeleteDC(t_hdc);
+
 	ReleaseDC(m_hwnd, t_hwindowdc);
+	
+	return t_success;
 }
 
-void MCNativeLayerWin32::OnGeometryChanged(const MCRectangle& p_old_rect)
+void MCNativeLayerWin32::updateViewportGeometry()
 {
-	// Move the window. Only trigger a repaint if not in edit mode
+	m_intersect_rect = MCU_intersect_rect(m_viewport_rect, m_rect);
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
 	MCRectangle t_rect;
-	t_rect = m_widget->getrect();
-	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, !m_widget->inEditMode());
+	t_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+
+	// Move the window. Only trigger a repaint if not in edit mode
+	MoveWindow(m_viewport_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
+}
+
+void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
+{
+	m_viewport_rect = p_rect;
+	updateViewportGeometry();
+}
+
+void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
+{
+	m_rect = p_rect;
+	updateViewportGeometry();
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_rect;
+	t_rect = MCRectangleGetTransformedBounds(m_rect, m_object->getstack()->getdevicetransform());
+
+	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
+	MCRectangle t_intersect_rect;
+	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+
+	t_rect.x -= t_intersect_rect.x;
+	t_rect.y -= t_intersect_rect.y;
+
+    // Move the window. Only trigger a repaint if not in edit mode
+	MoveWindow(m_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
 
 	// We need to delete the bitmap that we've been caching
 	DeleteObject(m_cached);
 	m_cached = NULL;
 }
 
-void MCNativeLayerWin32::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerWin32::doSetVisible(bool p_visible)
 {
 	ShowWindow(m_hwnd, p_visible ? SW_SHOWNOACTIVATE : SW_HIDE);
-}
-
-void MCNativeLayerWin32::OnLayerChanged()
-{
-	doRelayer();
+	ShowWindow(m_viewport_hwnd, p_visible ? SW_SHOWNOACTIVATE : SW_HIDE);
 }
 
 void MCNativeLayerWin32::doRelayer()
 {
-	// Find which native layer this should be inserted after
-	MCWidget* t_before;
-	t_before = findNextLayerBelow(m_widget);
+    // Find which native layer this should be inserted after
+	MCObject *t_before;
+	t_before = findNextLayerBelow(m_object);
 
 	// Insert the widget in the correct place (but only if the card is current)
-	if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+	if (isAttached() && m_object->getstack()->getcard() == m_object->getstack()->getcurcard())
 	{
 		HWND t_insert_after;
 		if (t_before != NULL)
@@ -284,12 +295,73 @@ void MCNativeLayerWin32::doRelayer()
 
 HWND MCNativeLayerWin32::getStackWindow()
 {
-	return (HWND)m_widget->getstack()->getrealwindow();
+    return (HWND)m_object->getstack()->getrealwindow();
+}
+
+bool MCNativeLayerWin32::GetNativeView(void *&r_view)
+{
+	r_view = m_hwnd;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
-	return new MCNativeLayerWin32(this);
+	return new MCNativeLayerWin32(p_object, (HWND)p_view);
 }
+
+extern HINSTANCE MChInst;
+bool getcontainerclass(ATOM &r_class)
+{
+	static ATOM s_container_class = nil;
+
+	if (s_container_class == nil)
+	{
+		WNDCLASSEX t_class;
+		MCMemoryClear(t_class);
+
+		t_class.cbSize = sizeof(WNDCLASSEX);
+		t_class.lpfnWndProc = DefWindowProc;
+		t_class.hInstance = MChInst;
+		t_class.lpszClassName = "LCCONTAINER";
+
+		s_container_class = RegisterClassEx(&t_class);
+
+		DWORD t_err;
+		t_err = GetLastError();
+
+		if (s_container_class == nil)
+			return false;
+	}
+
+	r_class = s_container_class;
+
+	return true;
+}
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_container)
+{
+	ATOM t_class;
+	if (!getcontainerclass(t_class))
+		return false;
+
+	HWND t_container;
+	t_container = CreateWindow((LPCSTR)t_class, "Container", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, nil);
+
+	DWORD t_err;
+	t_err = GetLastError();
+
+	if (t_container == nil)
+		return false;
+
+	r_container = t_container;
+	return true;
+}
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+	DestroyWindow((HWND)p_view);
+}
+
+////////////////////////////////////////////////////////////////////////////////

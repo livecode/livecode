@@ -1,0 +1,18 @@
+Name: revXMLRPC_DeleteParam
+
+Type: command
+
+Syntax: revXMLRPC_DeleteParam <XML-RPC document>,<param number>
+
+Summary: Deletes a single parameter from an XML-RPC document structure.
+
+Introduced: 2.5
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: disk,process
+
+Example:
+revXMLRPC_DeleteParam theRequest,3

@@ -1,0 +1,35 @@
+Name: lineIncrement
+
+Type: property
+
+Syntax: set the lineIncrement of <scrollbar> to <distance> 
+
+Summary: Specifies how far a <scrollbar> scrolls when one of its arrows is clicked.
+
+Synonyms: lineInc
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the lineIncrement of scrollbar "Whole Page" to 100
+
+Value:
+The <lineIncrement> of a <scrollbar(keyword)> is a number between the <scrollbar(object)|scrollbar's> <startValue> and <endValue>.
+By default, the <lineIncrement> <property> of newly created <scrollbar(object)|scrollbars> is set to 512.
+
+Description:
+Use the <lineIncrement> <property> to change the amount that is scrolled when the scrollbar arrows are clicked.
+
+When the user clicks the arrows at the ends of a scrollbar, the scrollbar moves one line up or down (or to the left or right, for a horizontal scrollbar). Use the <lineIncrement> <property> to specify how far the <scrollbar thumb> moves.
+
+The startValue and <endValue> <properties> set the scale used for the <lineIncrement>, so for example, if the <lineIncrement> is set to one-hundredth of the difference between the <startValue> and <endValue>, clicking an arrow moves the <scrollbar> one-hundredth of its length.
+
+References: endValue (property), properties (property), startValue (property), pageIncrement (property), scrollbar (keyword), scrollbarLineInc (message), scrollbarLineDec (message), scrollbar (object), property (glossary), scrollbar thumb (glossary)
+
+Tags: ui

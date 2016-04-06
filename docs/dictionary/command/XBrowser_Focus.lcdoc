@@ -1,0 +1,30 @@
+Name: XBrowser_Focus
+
+Type: command
+
+Syntax: XBrowser_Focus [<instanceId>]
+
+Summary: Has no affect, included for backwards comptability
+
+Introduced: 2.8.1
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: network
+
+Example:
+XBrowser_Focus tBrowserId
+
+Parameters:
+instanceId: The integer identifier of a browser object
+
+The result: The XBrowser_Focus command puts empty into the <result>.
+
+Description:
+The <XBrowser_Focus> command has no effect and is included for backwards compatibility with older applications.
+
+>*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+
+References: XBrowser_Unfocus (command), revBrowserOpen (function), revBrowserOpen function (function), result (function)

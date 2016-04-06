@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -158,6 +158,9 @@ void MCScreenDC::setcursor(Window w, MCCursorRef c)
 
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot)
 {
+	if (p_image == nil)
+        return nil;
+		
 	// Create a pixbuf from the image data
     GdkPixbuf *t_cursor_pixbuf;
     t_cursor_pixbuf = gdk_pixbuf_new_from_data((const guchar*)p_image->data, GDK_COLORSPACE_RGB, true, 8, p_image->width, p_image->height, p_image->stride, NULL, NULL);

@@ -1,0 +1,35 @@
+Name: arrowSize
+
+Type: property
+
+Syntax: set the arrowSize of <graphic> to <size> 
+
+Summary: Specifies the size of an an arrow at one end of a <line> or <polygon> <graphic>.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the arrowSize of last graphic to 20
+
+Value:
+The <arrowSize> of a <graphic(keyword)> is a number between 1 and 65535.
+By default, the <arrowSize> <property> of newly created <graphic(object)|graphics> is set to 3.
+
+Description:
+Use the <arrowSize> <property> to change the size of arrows at the ends of <lines> and <polygon|polygons>.
+
+The arrow of a graphic is proportional to the graphic's <lineSize>; changing the <lineSize> increases or decreases the size of the arrow, although the <graphic|graphic's> <arrowSize> <property> is not changed. If the <lineSize> is zero, the arrow is not visible.
+
+Set the <startArrow> or <endArrow> <properties> to true to make the arrows visible.
+
+You can set the <arrowSize> of <graphic|graphics> other than <lines> and <polygon|polygons>, but doing so has no effect.
+
+References: properties (property), lineSize (property), startArrow (property), endArrow (property), polygon (keyword), line (keyword), lines (keyword), graphic (keyword), graphic (object), property (glossary), polygon (glossary)
+
+Tags: ui

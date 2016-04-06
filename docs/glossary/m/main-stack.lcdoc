@@ -1,0 +1,14 @@
+Name: main stack
+
+Synonyms: main stack,mainstack
+
+Type: glossary
+
+Description:
+A <stack> that contains another <stack>. 
+ 
+Each <stack file> contains one main stack, and may optionally contain one or more <substack|substacks>.
+
+References: substack (glossary), stack file (glossary), stack (glossary)
+
+Tags: objects

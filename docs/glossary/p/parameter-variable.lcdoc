@@ -1,0 +1,12 @@
+Name: parameter variable
+
+Synonyms: parameter variable
+
+Type: glossary
+
+Description:
+A special <variable> whose name is one of the <parameter|parameters> of the current <handler>, and whose value is whatever value was passed to the <handler> for that <parameter>.
+
+References: variable (glossary), handler (glossary), parameter (glossary)
+
+Tags: properties

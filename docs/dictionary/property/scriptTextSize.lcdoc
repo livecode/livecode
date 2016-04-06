@@ -1,0 +1,16 @@
+Name: scriptTextSize
+
+Type: property
+
+Syntax: set the scriptTextSize to <pointSize> 
+
+Summary: Deprecated and will be removed in a future release.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Description:
+The <scriptTextSize> property is present in LiveCode for compatibility with scripts imported from HyperCard and should not be used in new code. It will be removed entirely in a future release.

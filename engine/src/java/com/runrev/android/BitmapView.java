@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -157,7 +157,7 @@ public class BitmapView extends View
 		Resources t_resources;
 		t_resources = getContext().getResources();
 		
-		p_canvas . drawRGB(50, 50, 50);
+		p_canvas . drawRGB(255, 255, 255);
 		
 		int t_splash_image_id;
 		t_splash_image_id = t_resources.getIdentifier("drawable/splash_image", null, t_package);

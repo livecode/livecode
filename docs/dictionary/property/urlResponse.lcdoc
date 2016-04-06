@@ -1,0 +1,30 @@
+Name: urlResponse
+
+Type: property
+
+Syntax: the urlResponse
+
+Summary: Returns the HTTP server response for a post, get, delete or put url operation.
+
+Introduced: 3.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get the urlResponse
+
+Example:
+put the urlResponse into tURLContent
+
+Value: The urlResponse property returns a string.
+
+Description:
+Use the urlResponse property to check the data returned by the server after an HTTP request.
+
+All HTTP requests cause data to be sent to the server and data to be returned from the server. The <urlResponse> property allows you to access any data returned by the HTTP server in the last URL operation, the urlResonse property returns empty if the operation failed.
+
+The HTTP requests which cause data to be returned by the <urlResponse> property are <get>, <put>, <delete> and <post>.
+
+References: post (command), delete URL (command), put (command), get (command), delete (command), result (function), URL (keyword)

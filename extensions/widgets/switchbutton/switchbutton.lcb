@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,202 +15,546 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
-A switch button, consisting of two mutually exclusive choices or states.
+/**
+This widget is a switch button, consisting of two mutually exclusive choices or states.
 
-Name: checked
-Type: property
-Syntax: set the checked of <widget> to <pIsChecked>
-Syntax: get the checked of <widget>
-Summary: The checked state of the switch button.
+Name: hiliteChanged
+Type: message
+Syntax: on hiliteChanged
+Summary: Sent when the switch is changed to either the on or off position
 
-pIsChecked (boolean): The state of the button.
+Example:
+on hiliteChanged
+	set the visible of group 1 to the highlight of me
+end switchChanged
 
 Description:
-The checked property determines whether the switch button displays as on (true) or off (false).
+Handle the hiliteChanged message in the widget's object script to respond to
+the user switching the button on or off.
 */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.switchButton
+widget com.livecode.widget.switchbutton
 --
 
 -- dependancy declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
+use com.livecode.library.iconSVG
+use com.livecode.library.widgetutils
 --
 
--- metadata
+-- adding metadata to ensure the extension displays correctly in livecode
 metadata title is "Switch Button"
 metadata author is "LiveCode"
-metadata version is "1.0.3"
+metadata version is "2.0.0"
+metadata preferredSize is "64,48"
+metadata svgicon is "M47.3,0H18.5C8.3,0,0,8.3,0,18.5v0C0,28.7,8.3,37,18.5,37h28.8c10.2,0,18.5-8.3,18.5-18.5v0C65.8,8.3,57.5,0,47.3,0zM19.8,33.5c-8.3,0-15-6.7-15-15c0-8.3,6.7-15,15-15s15,6.7,15,15C34.8,26.8,28,33.5,19.8,33.5z"
 --
 
--- property declarations
-property checked			get mIsChecked		set setChecked
-metadata checked.default is "false"
---
+/**
+Syntax: set the theme of <widget> to <pWidgetTheme>
+Syntax: get the theme of <widget>
+
+Summary: Specifies the theme to use when drawing the switch button.
+
+Value (string):
+The <theme> of the switch button is a name identifying the
+style to use when drawing it.
+
+Description:
+Use the <theme> property to control the general appearance of the switch
+button.  The currently-supported values are "native", "iOS" and "Android".
+
+**Note**: The value of the <theme> property is not saved by the switch button.
+Set the <theme> property to preview the way the switch button will appear when
+used on an Android or iOS device.
+*/
+property "theme" get mTheme set setWidgetTheme
+metadata theme.editor is "com.livecode.pi.enum"
+metadata theme.options is "native,iOS,Android"
+metadata theme.default is "native"
+metadata theme.label is "Theme"
+
+/**
+Syntax: set the highlight of <widget> to {true | false}
+Syntax: get the highlight of <widget>
+
+Summary: Whether the switch is on or off
+
+Value (boolean): `true` if the switch is in the on position; `false` otherwise.
+
+Description:
+Use this property to determine whether the switch button displays as on.
+*/
+property "highlight" get mSwitchIsOn set setSwitch
+metadata highlight.default is "false"
+metadata highlight.label is "Hilited"
+
+/**
+Syntax: set the showBorder of <widget> to {true|false}
+Syntax: get the showBorder of <widget>
+
+Summary: Whether the widget has a border or not.
+
+Description:
+Use the <showBorder> property to control whether the switch button has a border
+around it or not
+*/
+property showBorder get mShowFrameBorder set setShowFrameBorder
+metadata showBorder.default is "true"
+
+/**
+Syntax: set the backColor of <widget> to <pColor>
+Syntax: get the backColor of <widget>
+
+Summary: Controls the background color of the switch button
+
+Description:
+Use the <backColor> property to control the off-position fill color of the
+switch button.
+*/
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.default is "244,244,244"
+metadata backgroundcolor.section is "Colors"
+metadata backgroundColor.label is "Background color"
+
+/**
+Syntax: set the hiliteColor of <widget> to <pColor>
+Syntax: get the hiliteColor of <widget>
+
+Summary: Controls the color of the switch button when it is in the on position
+
+Description:
+Use the <hiliteColor> property to control the on-position fill color of the
+switch button.
+*/
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.default is "10,95,244"
+metadata hilitecolor.section is "Colors"
+metadata hiliteColor.label is "Hilite color"
+
+/**
+Syntax: set the borderColor of <widget> to <pColor>
+Syntax: get the borderColor of <widget>
+
+Summary: Controls the color of the switch button when it is in the on position
+
+Description:
+Use the <borderColor> property to control the on-position fill color of the
+switch button.
+*/
+metadata borderColor.editor is "com.livecode.pi.color"
+metadata borderColor.default is "109,109,109"
+metadata bordercolor.section is "Colors"
+metadata borderColor.label is "Border color"
+
 
 -- private instance variables
-private variable mIsChecked as Boolean
-private variable mState as String
+private variable mTheme as String
+private variable mWidgetTheme as String
+private variable mSwitchIsOn as Boolean
+private variable mShowFrameBorder as Boolean
+
+private variable mIsPressed as Boolean
+private variable mXClick as Real
+private variable mMouseHasMoved as Boolean
+private variable mSwitchIsInOnPosition as Boolean
+
+private variable mClickableRect as Rectangle
+
+constant kGeometry is { \
+	"margin-px":    { "iOS": 4,    "android": 4 }, \
+	"length":       { "iOS": 1.75, "android": 2 }, \
+	"trackwidth":   { "iOS": 1,    "android": 0.66 }, \
+	"thumbstretch": { "iOS": 0.5,  "android": 0 } \
+}
+
+constant kPaints is { \
+	"track": { \
+		"off": { \
+			"fill": { \
+				"iOS": [["background", 1]], "android": [["background", 1], ["border", 0.5]] \
+			}, \
+			"stroke": { \
+				"iOS": [["border", 1]], "android": [["border", 1]] \
+			} \
+		}, \
+		"on": { \
+			"fill": { \
+				"iOS": [["highlight", 1]], "android": [["background", 1], ["highlight", 0.5]] \
+			}, \
+			"stroke": { \
+				"iOS": [["border", 1]], "android": [["border", 1]] \
+			} \
+		} \
+	}, \
+	"thumb": { \
+		"off": { \
+			"fill": { \
+				"iOS": [["background", 1]], "android": [["background", 1]] \
+			}, \
+			"stroke": { \
+				"iOS": [["border", 1]], "android": [["border", 1]] \
+			} \
+		}, \
+		"on": { \
+			"fill": { \
+				"iOS": [["background", 1]], "android": [["highlight", 1]] \
+			}, \
+			"stroke": { \
+				"iOS": [["border", 1]], "android": [["border", 1]] \
+			} \
+		} \
+	} \
+}
+
+constant kStrokeWidth is 1
+
+constant kDisabledOpacity is 0.5
+
 --
 
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 
-	put mIsChecked into rProperties["checked"]
-	
-	return rProperties
+	put mSwitchIsOn into rProperties["highlight"]
+	put mShowFrameBorder into rProperties["showBorder"]
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["checked"] into mIsChecked
+	put pProperties["highlight"] into mSwitchIsOn
+	put pProperties["showBorder"] into mShowFrameBorder
 end handler
 
-public handler OnCreate()
-	put false into mIsChecked
-	put "not animating" into mState
+public handler OnCreate() returns nothing
+	put "native" into mTheme
+	put getNativeThemeName() into mWidgetTheme
+	put false into mSwitchIsOn
+	put true into mShowFrameBorder
+
+	put false into mIsPressed
+	put 0 into mXClick
+	put false into mMouseHasMoved
+	put false into mSwitchIsInOnPosition
+
+	updateVariables()
 end handler
 
-public handler OnPaint()
+public handler OnPaint() returns nothing
+	updateVariables()
 
-	-- draw the check box when animating and not animating
-	set the stroke width of this canvas to 2
-	set the paint of this canvas to getPaint("border")
-	stroke getPath("box") on this canvas
-	set the paint of this canvas to getPaint("background")
-	fill getPath("box") on this canvas
-	--
-	
-	-- when the state is "not animating"
-	if mState is "not animating" then
-		
-		-- draw the circle 
-		set the paint of this canvas to getPaint("circle")
-		
-		if mIsChecked is true then
-			fill getPath("right circle") on this canvas
-		else
-			fill getPath("left circle") on this canvas
-		end if
-	
-		set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
-		set the stroke width of this canvas to 0.5
-
-		if mIsChecked is true then
-			stroke getPath("right circle") on this canvas
-		else
-			stroke getPath("left circle") on this canvas
-		end if
-		--
-	
-	-- when the state is "animating"
-	else if mState is "animating" then
-		set the stroke width of this canvas to (my width/2)*0.01
-		
-		if mIsChecked is false then
-		
-			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
-			stroke getPath("left rect") on this canvas
-			stroke getPath("ellipse") on this canvas
-			stroke getPath("left circle") on this canvas
-			
-			set the paint of this canvas to solid paint with color [1,1,1]
-			fill getPath("left rect") on this canvas
-			fill getPath("ellipse") on this canvas
-			fill getPath("left circle") on this canvas
-	
-		else if mIsChecked is true then
-		
-			set the paint of this canvas to solid paint with color [96/255, 96/255, 96/255]
-			stroke getPath("right rect") on this canvas
-			stroke getPath("ellipse") on this canvas
-			stroke getPath("right circle") on this canvas
-	
-			set the paint of this canvas to solid paint with color [1,1,1]
-			fill getPath("right rect") on this canvas
-			fill getPath("ellipse") on this canvas
-			fill getPath("right circle") on this canvas
-		
-		end if
-		
+	variable tTransform as optional Transform
+	variable tScale as optional Number
+	if not paintGetTransform(tTransform, tScale) then
+		return
 	end if
-	--
-	
+
+	transform this canvas by tTransform
+	set the stroke width of this canvas to 1/tScale
+
+	paintDrawComponent("track")
+	paintDrawComponent("thumb")
 end handler
 
-public handler OnMouseDown()
-	if the click position is within getRect("bounding box") then
-		put "animating" into mState
+private handler paintGetTransform(out rTransform as optional Transform, \
+		out rScale as optional Number) returns Boolean
+
+	-- Sanity check
+	if my width is 0 or my height is 0 then
+		return false
+	end if
+
+	-- Create a canvas transformation that places the centre of the control at
+	-- (0, 0), and ensures that the whole control is visible when the radius of
+	-- the control's "thumb" is 1.
+
+	variable tX
+	variable tY
+	put (the left of mClickableRect + the right of mClickableRect) / 2 into tX
+	put (the top of mClickableRect + the bottom of mClickableRect) / 2 into tY
+
+	variable tScale
+	put (the height of mClickableRect / 2) into tScale
+
+	variable tTransform
+	put transform with translation [tX, tY] into tTransform
+
+	scale tTransform by [tScale]
+
+	-- Flip horizontally for "on" position
+	if mSwitchIsInOnPosition then
+		scale tTransform by [-1, 1]
+	end if
+
+	put tScale into rScale
+	put tTransform into rTransform
+	return true
+end handler
+
+private handler paintGetPath(in pComponent as String) returns Path
+
+	-- X position of centre of thumb
+	variable tCentreX as Number
+	put 1 - kGeometry["length"][mWidgetTheme] into tCentreX
+
+	variable tTrack as Number
+	variable tStretch as Number
+
+	if pComponent is "track" then
+		put kGeometry["trackwidth"][mWidgetTheme] into tTrack
+		return rounded rectangle path of rectangle \
+				[tCentreX - tTrack, -tTrack, tTrack - tCentreX, tTrack] \
+				with radius tTrack
+
+	else if pComponent is "thumb" then
+		if mIsPressed then
+			put kGeometry["thumbstretch"][mWidgetTheme] into tStretch
+			return rounded rectangle path of rectangle \
+					[tCentreX - 1, -1, tCentreX + 1 + tStretch, 1] with radius 1
+		else
+			return circle path centered at point [tCentreX, 0] with radius 1
+		end if
+	end if
+end handler
+
+private handler paintGetPaint(in pComponent as String, in pType as String) \
+		returns List
+
+	if pType is "stroke" and not mShowFrameBorder then
+		return []
+	end if
+
+	variable tState as String
+	if mSwitchIsInOnPosition then
+		put "on" into tState
+	else
+		put "off" into tState
+	end if
+
+	variable tRaw as List
+	put kPaints[pComponent][tState][pType][mWidgetTheme] into tRaw
+
+	variable tPaints as List
+	put [] into tPaints
+
+	variable tPaintInfo as List
+	repeat for each element tPaintInfo in tRaw
+		if tPaintInfo[1] is "background" then
+			put my background paint into tPaintInfo[1]
+		else if tPaintInfo[1] is "border" then
+			put my border paint into tPaintInfo[1]
+		else if tPaintInfo[1] is "highlight" then
+			put my highlight paint into tPaintInfo[1]
+		end if
+
+		push tPaintInfo onto back of tPaints
+	end repeat
+
+	return tPaints
+end handler
+
+private handler paintDrawComponent(in pComponent as String)
+	variable tPath as Path
+	put paintGetPath(pComponent) into tPath
+
+	variable tBaseOpacity as Number
+
+	variable tStrokePaints as List
+	variable tFillPaints as List
+
+	put paintGetPaint(pComponent, "stroke") into tStrokePaints
+	put paintGetPaint(pComponent, "fill") into tFillPaints
+
+	if tStrokePaints is empty and tFillPaints is empty then
+		return
+	end if
+
+	save state of this canvas
+
+	-- When the control is disabled, first paint everything in the background
+	-- paint, then paint the control over the top with reduced opacity
+	-- FIXME This is ugly!
+	if my disabled then
+		set the paint of this canvas to my background paint
+		if tFillPaints is not empty then
+			fill tPath on this canvas
+		end if
+		if tStrokePaints is not empty then
+			stroke tPath on this canvas
+		end if
+
+		put kDisabledOpacity into tBaseOpacity
+	else
+		put 1 into tBaseOpacity
+	end if
+
+	-- Loop over the fills, applying them in turn
+	variable tPaintInfo as List
+	repeat for each element tPaintInfo in tFillPaints
+		set the paint of this canvas to tPaintInfo[1]
+		set the opacity of this canvas to tPaintInfo[2] * tBaseOpacity
+		fill tPath on this canvas
+	end repeat
+
+	-- Loop over the strokes, applying them in turn
+	repeat for each element tPaintInfo in tStrokePaints
+		set the paint of this canvas to tPaintInfo[1]
+		set the opacity of this canvas to tPaintInfo[2] * tBaseOpacity
+		stroke tPath on this canvas
+	end repeat
+
+	restore state of this canvas
+end handler
+
+----------------------------------------------------------------
+-- Other stuff
+----------------------------------------------------------------
+
+private handler updateVariables() returns nothing
+
+	-- Compute the rectangle for which the widget should respond to clicks.
+
+	if my width is 0 or my height is 0 then
+		put my bounds into mClickableRect
+		return
+	end if
+
+	variable tMargin as Number
+	variable tAspectRatio as Number
+	put kGeometry["margin-px"][mWidgetTheme] into tMargin
+	put kGeometry["length"][mWidgetTheme] into tAspectRatio
+
+	variable tMidWidth as Number
+	variable tMidHeight as Number
+	put my width / 2 into tMidWidth
+	put my height / 2 into tMidHeight
+
+	variable tHalfWidth as Number
+	variable tHalfHeight as Number
+	put tMidWidth - tMargin into tHalfWidth
+	put tMidHeight - tMargin into tHalfHeight
+
+	if tHalfHeight * tAspectRatio < tHalfWidth then
+		-- height controlled
+		put tHalfHeight * tAspectRatio into tHalfWidth
+	else
+		-- width controlled
+		put tHalfWidth / tAspectRatio into tHalfHeight
+	end if
+
+	put rectangle [tMidWidth - tHalfWidth, tMidHeight - tHalfHeight, \
+			tMidWidth + tHalfWidth, tMidHeight + tHalfHeight] into mClickableRect
+end handler
+
+public handler OnMouseMove() returns nothing
+	if mIsPressed then
+		variable tXMousePos as Real
+		variable tChange as Real
+		variable tMovedRight as Boolean
+
+		put true into mMouseHasMoved
+
+		put the x of the mouse position into tXMousePos
+		put tXMousePos - mXClick into tChange
+		if tChange > 0 then
+			put true into tMovedRight
+		else
+			put false into tMovedRight
+		end if
+
+		if tMovedRight then
+			put true into mSwitchIsInOnPosition
+		else
+			put false into mSwitchIsInOnPosition
+		end if
+
 		redraw all
 	end if
 end handler
 
-public handler OnMouseUp()
-	if the click position is within getRect("bounding box") then
-		setChecked(not(mIsChecked))
-		put "not animating" into mState
+public handler OnMouseDown() returns nothing
+	if my enabled is false then
+		return
+	end if
+
+	if the click position is within mClickableRect then
+		put the x of the click position into mXClick
+		put true into mIsPressed
 		redraw all
 	end if
-
-	post "mouseUp" with [mIsChecked]
 end handler
 
-private handler getPath(in pShape as String) as Path
-	if pShape is "box" then
-		return rounded rectangle path of rectangle [(my width)/2 - (my height)/2, (my height)/4, (my width)/2 + (my height)/2, 3*(my height)/4] with radius (my height)/4
-	else if pShape is "left circle" then
-		return circle path centered at point [(my width)/2 - (my height)/4, (my height)/2] with radius (my height)/4
-	else if pShape is "right circle" then
-		return circle path centered at point [(my width)/2 + (my height)/4, (my height)/2] with radius (my height)/4
-	else if pShape is "ellipse" then
-		return ellipse path centered at point [(my width)/2, (my height)/2] with radii [(my height)/8, (my height)/4]
-	else if pShape is "left rect" then
-		return rectangle path of rectangle [(my width)/2 - (my height)/4, (my height)/4, (my width)/2, 3*(my height)/4]
-	else if pShape is "right rect" then
-		return rectangle path of rectangle [(my width)/2, (my height)/4, (my width)/2 + (my height)/4, 3*(my height)/4]
+public handler OnMouseUp() returns nothing
+	if my enabled is false then
+		return
 	end if
-end handler
 
-private handler getRect(in pObject as String) as Rectangle
-	if pObject is "bounding box" then
-		return rectangle [(my width)/2 - 3*(my height)/4, (my height)/4, (my width)/2 + 3*(my height)/4, 3*(my height)/4]
-	end if
-end handler
-
-private handler getPaint(in pObject as String) as Paint
-
-	if pObject is "border" then
-		if mIsChecked is false then
-			return solid paint with color [224/255, 224/255, 224/255]
-		else
-			return solid paint with color [0, 204/255, 0]
+	if mMouseHasMoved then
+		setSwitch(mSwitchIsInOnPosition)
+		put false into mMouseHasMoved
+	else
+		if the click position is within mClickableRect then
+			setSwitch(not(mSwitchIsOn))
 		end if
-		
-	else if pObject is "background" then
-		if mIsChecked is true then
-			return solid paint with color [0, 204/255, 0]
-				
-		else if mIsChecked is false then
-			if mState is "not animating" then
-				return solid paint with color [1,1,1]
-			else 
-				return solid paint with color [224/255, 224/255, 224/255]
-			end if
-			
-		end if
-		
-	else if pObject is "circle" then
-		return solid paint with color [1,1,1]
-		
+	end if
+
+	post "hiliteChanged"
+	put false into mIsPressed
+end handler
+
+public handler OnMouseRelease() returns nothing
+	if my enabled is false then
+		return
+	end if
+
+	if mMouseHasMoved then
+		setSwitch(mSwitchIsInOnPosition)
+		put false into mMouseHasMoved
+		post "hiliteChanged"
+		put false into mIsPressed
 	end if
 end handler
 
-public handler setChecked(in pIsChecked as Boolean) as undefined
-	put pIsChecked into mIsChecked
+--------------------------------------------------------------------------------
+--
+--		Setting Properties
+--
+--------------------------------------------------------------------------------
+
+constant kKnownThemes is ["iOS", "Android"]
+
+private handler setWidgetTheme(in pTheme as String) returns nothing
+
+	if pTheme is mTheme then
+		return
+	end if
+
+	put pTheme into mTheme
+
+	if mTheme is "native" then
+		put getNativeThemeName() into mWidgetTheme
+	else
+		put mTheme into mWidgetTheme
+	end if
+
+	if not (mWidgetTheme is in kKnownThemes) then
+		throw "invalid theme name '" & mWidgetTheme & "'"
+	end if
+
 	redraw all
 end handler
 
+private handler setSwitch(in pIsOn as Boolean) returns nothing
+	put pIsOn into mSwitchIsOn
+	put mSwitchIsOn into mSwitchIsInOnPosition
+	redraw all
+end handler
+
+private handler setShowFrameBorder(in pShowBorder as Boolean) returns nothing
+	put pShowBorder into mShowFrameBorder
+	redraw all
+end handler
 
 end widget

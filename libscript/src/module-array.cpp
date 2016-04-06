@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -58,7 +58,7 @@ static bool list_array_elements(void *context, MCArrayRef p_target, MCNameRef p_
     return MCProperListPushElementOntoBack(t_list, p_value);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperListRef& r_output)
 {
     MCProperListRef t_list;
     if (MCProperListCreateMutable(t_list) &&
@@ -67,7 +67,7 @@ extern "C" MC_DLLEXPORT void MCArrayEvalKeysOf(MCArrayRef p_target, MCProperList
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayEvalElementsOf(MCArrayRef p_target, MCProperListRef& r_output)
 {
     MCProperListRef t_list;
     if (MCProperListCreateMutable(t_list) &&
@@ -76,19 +76,19 @@ extern "C" MC_DLLEXPORT void MCArrayEvalElementsOf(MCArrayRef p_target, MCProper
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayEvalNumberOfElementsIn(MCArrayRef p_target, uindex_t& r_output)
 {
     r_output = MCArrayGetCount(p_target);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayEvalIsAmongTheElementsOf(MCValueRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCValueRef t_value;
     t_value = p_needle != nil ? p_needle : kMCNull;
     r_output = !MCArrayApply(p_target, is_not_among_the_elements_of, t_value);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_needle, bool p_is_not, MCArrayRef p_target, bool& r_output)
 {
     MCNewAutoNameRef t_key;
     if (!create_key_for_array(p_needle, p_target, &t_key))
@@ -103,7 +103,7 @@ extern "C" MC_DLLEXPORT void MCArrayEvalIsAmongTheKeysOfCaseless(MCStringRef p_n
         r_output = !r_output;
 }
 
-extern "C" MC_DLLEXPORT void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayFetchElementOfCaseless(MCArrayRef p_target, MCStringRef p_key, MCValueRef& r_output)
 {
     MCNewAutoNameRef t_key;
     
@@ -121,7 +121,7 @@ extern "C" MC_DLLEXPORT void MCArrayFetchElementOfCaseless(MCArrayRef p_target, 
     r_output = MCValueRetain(t_value);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
+extern "C" MC_DLLEXPORT_DEF void MCArrayStoreElementOfCaseless(MCValueRef p_value, MCArrayRef& x_target, MCStringRef p_key)
 {
     MCNewAutoNameRef t_key;
     MCAutoArrayRef t_array;
@@ -141,7 +141,7 @@ extern "C" MC_DLLEXPORT void MCArrayStoreElementOfCaseless(MCValueRef p_value, M
     MCValueAssign(x_target, *t_new_array);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayDeleteElementOfCaseless(MCArrayRef& x_target, MCStringRef p_key)
+extern "C" MC_DLLEXPORT_DEF void MCArrayDeleteElementOfCaseless(MCArrayRef& x_target, MCStringRef p_key)
 {
     MCNewAutoNameRef t_key;
     MCAutoArrayRef t_array;
@@ -158,12 +158,12 @@ extern "C" MC_DLLEXPORT void MCArrayDeleteElementOfCaseless(MCArrayRef& x_target
     MCValueAssign(x_target, *t_new_array);
 }
 
-extern "C" MC_DLLEXPORT void MCArrayEvalEmpty(MCArrayRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCArrayEvalEmpty(MCArrayRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyArray);
 }
 
-extern "C" bool MC_DLLEXPORT MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCArrayRef p_array)
+extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCArrayRef p_array)
 {
     MCValueRef t_value;
     // If this is a numerical array, do it in order
@@ -195,7 +195,7 @@ extern "C" bool MC_DLLEXPORT MCArrayRepeatForEachElement(void*& x_iterator, MCVa
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& r_iterand, MCArrayRef p_array)
+extern "C" bool MC_DLLEXPORT_DEF MCArrayRepeatForEachKey(void*& x_iterator, MCStringRef& r_iterand, MCArrayRef p_array)
 {
     MCNameRef t_key;
     MCValueRef t_value;
@@ -212,3 +212,16 @@ extern "C" bool MC_DLLEXPORT MCArrayRepeatForEachKey(void*& x_iterator, MCString
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_array_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_array_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

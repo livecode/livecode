@@ -1,0 +1,38 @@
+Name: listIndent
+
+Type: property
+
+Syntax: set the listIndent of <line> of <field> to 1
+
+Summary: Specifies the size of the margins used when indenting lists.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the listIndent of field 1 to 20
+
+Example:
+set the listIndent of line 1 of field 1 to 10
+
+Example:
+-- Set the listIndent of all the lines in a field that are lists  to 10
+repeat with x = 0 to the number of lines of field 1
+   if the listStyle of line x of field 1 is not empty then
+      set the listDepth of line x of field 1 to 10
+   end if
+end repeat
+
+Value: The <listDepth> of a line or field returns the size of the margins being used to indent the list line(s).
+
+Description:
+Use the <listIndent> property to control the size of the margins used by LiveCode when indenting lists.
+
+References: borderWidth (property), vgrid (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), listBehavior (property), hidden (property), textSize (property), firstIndent (property), tabstops (property), spaceBelow (property), listStyle (property), rightIndent (property), listDepth (property), hgrid (property), hScrollbar (property), borderColor (property), formattedWidth (property)
+
+Tags: ui

@@ -1,0 +1,26 @@
+Name: do in widget
+
+Type: command
+
+Syntax: do <script> in <widget>
+
+Summary: Executes a list of statements within a widget.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+// Use JavaScript to hide "myButton" in the page displayed in a browser widget.
+do "document.getElementById('myButton').hidden = 'hidden'" in widget "myBrowser"
+
+Parameters:
+script (string): The code to execute within the widget.
+widget: A widget reference
+
+Description:
+Use the <do in widget> command to execute statements in a widget. LiveCode sends a "OnDo" message with <script> as parameter to the widget, which can then handle that messages to run the code appropriately.
+
+References: do (command), widget (object)

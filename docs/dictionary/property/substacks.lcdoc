@@ -1,0 +1,41 @@
+Name: substacks
+
+Type: property
+
+Syntax: set the substacks of <stack> to <substacksList> 
+
+Summary: Specifies which <stacks> are associated with a <main stack>, and saved in the same <file>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the substacks of this stack after loadedStacks
+
+Example:
+if the substacks of stack "Hello" contains "Goodbye" then exit mouseUp
+
+Example:
+get the substacks of stack "/Disk/Folder/stackfile.rev"
+
+Value: The <substacks> of a <stack> is a list of <stacks>, one per <line>.
+
+Description:
+Use the <substacks> <property> to organize <stacks> in <files>.
+
+Each LiveCode file contains either a single main stack, or a main stack and one or more substacks. The <substacks> <property> reports on the <substacks> of a <main stack>.
+
+The <substacks> of a <substack> is empty. Attempting to set the <substacks> <property> of a <substack> causes an <execution error>.
+
+Setting the <substacks> of a <main stack> to empty removes all the <substacks> from memory. The next time the <main stack> is saved, the <substacks> are removed permanently.
+
+>*Warning:*  You can move a <substack> from one <main stack> to another by setting the <substacks> <property> of the destination <stack>. However, since this may cause a conflict if more than one <substack> with the same name is open or in memory, it is safer to move a <substack> by setting the <substack|substack's> <mainStack> <property>.
+
+References: file (keyword), line (keyword), substacks (property), mainStack (property), revert (command), files (function), stacks (function), mainStacks (function), property (glossary), substack (glossary), main stack (glossary), execution error (glossary), stack (object)
+
+Tags: objects

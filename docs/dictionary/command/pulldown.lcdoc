@@ -1,0 +1,38 @@
+Name: pulldown
+
+Type: command
+
+Syntax: pulldown <stack> 
+
+Summary: Displays a pulldown <menu> whose whose <menu item|menu items> are <button|buttons> in a <stack>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+pulldown stack "See Also"
+
+Parameters:
+stack: Any stack reference. The stack's first card contains a button for each menu item in the pulldown menu.
+
+Description:
+Use the <pulldown> <command> to display a <stack menu> as a pulldown <menu> in situations where it is not possible to attach the <menu> to a <button(object)> (for example, if the contents of the <menu> are not known in advance).
+
+Use the <pulldown> <command> in a <mouseDown> <handler> to display the <menu> :
+
+    on mouseDown
+       pulldown stack "Lookup Options"
+    end mouseDown
+
+While the menu is displayed, the handler pauses.
+
+The menu appears aligned with the left edge of the control containing the handler. The menu appears below the control, if there is room on the screen. Choosing a menu item from the menu sends a mouseUp <message> to the <stack>.
+
+>*Note:* On <Mac OS> and <OS X|OS X systems>, pulldown menus in a window are drawn by the standard operating system routines if the <button(object)|button's> <showBorder> <property> is set to true and its <borderWidth> is not zero. Pulldown menus in the <menu bar> are always drawn by the operating system.
+
+References: borderWidth (property), style (property), menuHistory (property), menuMode (property), menuMouseButton (property), showBorder (property), menu (keyword), mouseDown (message), menuPick (message), option (command), popup (command), stack (object), button (object), property (glossary), menu item (glossary), stack menu (glossary), button (glossary), handler (glossary), OS X (glossary), menu bar (glossary), message (glossary), menu (glossary), Mac OS (glossary), command (glossary)
+
+Tags: menus

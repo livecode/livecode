@@ -1,0 +1,14 @@
+Name: byte
+
+Synonyms: byte
+
+Type: glossary
+
+Description:
+A unit of data equal to 8 <bit|bits>. A byte can have any of 256 (2 to the 8th power) values. One byte of storage can hold one <character> of text. 
+ 
+(Additional units include the nybble [4 <bit|bits>, or half a byte], playte [2 bytes], plattyr [4 bytes], and crayte [8 bytes]. However, these units are much too silly to be referenced in this glossary.)
+
+References: character (glossary), bit (glossary)
+
+Tags: text processing

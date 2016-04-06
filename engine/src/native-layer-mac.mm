@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -44,6 +44,8 @@
 #include "globals.h"
 #include "context.h"
 
+#include "group.h"
+#include "widget.h"
 #include "native-layer-mac.h"
 
 #import <AppKit/NSWindow.h>
@@ -55,13 +57,15 @@
 #include "platform-internal.h"
 #include "mac-internal.h"
 
+#include "graphics_util.h"
 
-MCNativeLayerMac::MCNativeLayerMac(MCWidget* p_widget) :
-  m_widget(p_widget),
-  m_view(nil),
+
+MCNativeLayerMac::MCNativeLayerMac(MCObject *p_object, NSView *p_view) :
+  m_view(p_view),
   m_cached(nil)
 {
-    ;
+	m_object = p_object;
+	[m_view retain];
 }
 
 MCNativeLayerMac::~MCNativeLayerMac()
@@ -77,79 +81,17 @@ MCNativeLayerMac::~MCNativeLayerMac()
     }
 }
 
-void MCNativeLayerMac::OnToolChanged(Tool p_new_tool)
-{
-    if (p_new_tool == T_BROWSE || p_new_tool == T_HELP)
-    {
-        // In run mode. Make visible if requested
-        if (m_widget->getflags() & F_VISIBLE)
-            [m_view setHidden:NO];
-        m_widget->Redraw();
-    }
-    else
-    {
-        // In edit mode
-        [m_view setHidden:YES];
-        m_widget->Redraw();
-    }
-}
-
-void MCNativeLayerMac::OnOpen()
-{
-    // Unhide the widget, if required
-    if (isAttached() && m_widget->getopened() == 1)
-        doAttach();
-}
-
-void MCNativeLayerMac::OnClose()
-{
-    if (isAttached() && m_widget->getopened() == 0)
-        doDetach();
-}
-
-#import <AppKit/NSButton.h>
-
-void MCNativeLayerMac::OnAttach()
-{
-    m_attached = true;
-    doAttach();
-}
-
 void MCNativeLayerMac::doAttach()
 {
-    if (m_view == nil)
-    {
-        NSRect t_nsrect;
-        MCRectangle t_rect, t_cardrect;
-        t_rect = m_widget->getrect();
-        t_cardrect = m_widget->getcard()->getrect();
-        t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
-        
-        NSButton *t_button;
-        t_button = [[NSButton alloc] initWithFrame:t_nsrect];
-        [t_button setTitle:@"Native button"];
-        [t_button setButtonType:NSMomentaryPushInButton];
-        [t_button setBezelStyle:NSRoundedBezelStyle];
-        [t_button setHidden:YES];
-        m_view = t_button;
-    }
-    
     // Act as if there was a re-layer to put the widget in the right place
     // *** Can we assume open happens in back-to-front order? ***
     doRelayer();
     
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
-    if ((m_widget->getflags() & F_VISIBLE) && !m_widget->inEditMode())
-        [m_view setHidden:NO];
-    else
-        [m_view setHidden:YES];
-}
-
-void MCNativeLayerMac::OnDetach()
-{
-    m_attached = false;
-    doDetach();
+	
+	doSetGeometry(m_object->getrect());
+	doSetVisible(ShouldShowLayer());
 }
 
 void MCNativeLayerMac::doDetach()
@@ -158,12 +100,8 @@ void MCNativeLayerMac::doDetach()
     [m_view removeFromSuperview];
 }
 
-void MCNativeLayerMac::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
+bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 {
-    // If the widget is not in edit mode, we trust it to paint itself
-    if (!m_widget->inEditMode())
-        return;
-
     // Get an image rep suitable for storing the cached bitmap
     if (m_cached == nil)
     {
@@ -177,80 +115,175 @@ void MCNativeLayerMac::OnPaint(MCDC* p_dc, const MCRectangle& p_dirty)
     // Turn the NSBitmapImageRep into something we can actually draw
     MCGRaster t_raster;
     MCGImageRef t_gimage;
-    MCImageDescriptor t_descriptor;
     t_raster.format = kMCGRasterFormat_ARGB;
     t_raster.width = [m_cached pixelsWide];
     t_raster.height = [m_cached pixelsHigh];
     t_raster.stride = [m_cached bytesPerRow];
     t_raster.pixels = [m_cached bitmapData];
-    /* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_gimage);
-    memset(&t_descriptor, 0, sizeof(MCImageDescriptor));
-    t_descriptor.image = t_gimage;
-    t_descriptor.x_scale = t_descriptor.y_scale = 1.0;
+    
+    if (!MCGImageCreateWithRasterNoCopy(t_raster, t_gimage))
+		return false;
     
     // Draw the image
     // FG-2014-10-10: a y offset of 1 is needed to keep things lined up, for some reason...
-    p_dc->drawimage(t_descriptor, 0, 0, t_raster.width, t_raster.height, 0, 1);
+    MCGRectangle rect = {{0, 1}, {t_raster.width, t_raster.height}};
+    MCGContextDrawImage(p_context, t_gimage, rect, kMCGImageFilterNone);
     MCGImageRelease(t_gimage);
+    
+    return true;
 }
 
-void MCNativeLayerMac::OnGeometryChanged(const MCRectangle& p_old_rect)
+NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 {
-    NSRect t_nsrect;
-    MCRectangle t_rect, t_cardrect;
-    t_rect = m_widget->getrect();
-    t_cardrect = m_widget->getcard()->getrect();
-    t_nsrect = NSMakeRect(t_rect.x, t_cardrect.height-t_rect.y-t_rect.height-1, t_rect.width, t_rect.height);
-    [m_view setFrame:t_nsrect];
+	int32_t t_gp_height;
+	t_gp_height = m_object->getcard()->getrect().height;
+	
+	NSRect t_rect;
+	t_rect = NSMakeRect(p_rect.x, t_gp_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
+	
+	return t_rect;
+}
+
+void MCNativeLayerMac::doSetViewportGeometry(const MCRectangle &p_rect)
+{
+}
+
+void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)
+{
+    [m_view setFrame:calculateFrameRect(p_rect)];
     [m_view setNeedsDisplay:YES];
     [m_cached release];
     m_cached = nil;
 }
 
-void MCNativeLayerMac::OnVisibilityChanged(bool p_visible)
+void MCNativeLayerMac::doSetVisible(bool p_visible)
 {
     [m_view setHidden:!p_visible];
-}
-
-void MCNativeLayerMac::OnLayerChanged()
-{
-    doRelayer();
 }
 
 void MCNativeLayerMac::doRelayer()
 {
     // Find which native layer this should be inserted below
-    MCWidget* t_before;
-    t_before = findNextLayerAbove(m_widget);
-    
+    MCObject *t_before;
+    t_before = findNextLayerAbove(m_object);
+	
+	NSView *t_parent_view;
+	t_parent_view = nil;
+	
+	if (!getParentView(t_parent_view))
+		return;
+	
     // Insert the widget in the correct place (but only if the card is current)
-    if (isAttached() && m_widget->getstack()->getcard() == m_widget->getstack()->getcurcard())
+    if (isAttached() && m_object->getcard() == m_object->getstack()->getcurcard())
     {
         [m_view removeFromSuperview];
         if (t_before != nil)
         {
             // There is another native layer above this one
-            MCNativeLayerMac *t_before_layer;
-            t_before_layer = reinterpret_cast<MCNativeLayerMac*>(t_before->getNativeLayer());
-            [[getStackWindow() contentView] addSubview:m_view positioned:NSWindowBelow relativeTo:t_before_layer->m_view];
+			NSView *t_before_view;
+			/* UNCHECKED */ t_before->GetNativeView((void*&)t_before_view);
+            [t_parent_view addSubview:m_view positioned:NSWindowBelow relativeTo:t_before_view];
         }
         else
         {
             // This is the top-most native layer
-            [[getStackWindow() contentView] addSubview:m_view];
+            [t_parent_view addSubview:m_view];
         }
-        [[getStackWindow() contentView] setNeedsDisplay:YES];
+        [t_parent_view setNeedsDisplay:YES];
     }
 }
 
 NSWindow* MCNativeLayerMac::getStackWindow()
 {
-    return ((MCMacPlatformWindow*)(m_widget->getstack()->getwindow()))->GetHandle();
+    return ((MCMacPlatformWindow*)(m_object->getstack()->getwindow()))->GetHandle();
+}
+
+bool MCNativeLayerMac::getParentView(NSView *&r_view)
+{
+	if (m_object->getparent()->gettype() == CT_GROUP)
+	{
+		MCNativeLayer *t_container;
+		t_container = nil;
+		
+		if (!((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
+			return false;
+		
+		return t_container->GetNativeView((void*&)r_view);
+	}
+	else
+	{
+		r_view = [getStackWindow() contentView];
+		return true;
+	}
+}
+
+bool MCNativeLayerMac::GetNativeView(void *&r_view)
+{
+	r_view = m_view;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeLayer* MCWidget::createNativeLayer()
+MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)
 {
-    return new MCNativeLayerMac(this);
+	if (p_view == nil)
+		return nil;
+	
+    return new MCNativeLayerMac(p_object, (NSView*)p_view);
+}
+
+//////////
+
+// IM-2015-12-16: [[ NativeLayer ]] Keep the coordinate system of group contents the same as
+//                the top-level window view by keeping its bounds the same as its frame.
+//                This allows us to place contents in terms of window coords without having to
+//                adjust for the location of the group container.
+@interface com_runrev_livecode_MCContainerView: NSView
+
+- (void)setFrameOrigin:(NSPoint)newOrigin;
+- (void)setFrameSize:(NSSize)newSize;
+
+@end
+
+@compatibility_alias MCContainerView com_runrev_livecode_MCContainerView;
+
+@implementation com_runrev_livecode_MCContainerView
+
+- (void)setFrameOrigin:(NSPoint)newOrigin
+{
+	[super setFrameOrigin:newOrigin];
+	[self setBoundsOrigin:newOrigin];
+}
+
+- (void)setFrameSize:(NSSize)newSize
+{
+	[super setFrameSize:newSize];
+	[self setBoundsSize:newSize];
+}
+
+@end
+
+bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+{
+	NSView *t_view;
+	t_view = [[[ MCContainerView alloc] init] autorelease];
+	
+	if (t_view == nil)
+		return false;
+	
+	[t_view setAutoresizesSubviews:NO];
+	r_view = t_view;
+	
+	return true;
+}
+
+//////////
+
+void MCNativeLayer::ReleaseNativeView(void *p_view)
+{
+	if (p_view == nil)
+		return;
+	
+	[(NSView*)p_view release];
 }

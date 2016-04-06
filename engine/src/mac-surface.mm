@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -64,6 +64,9 @@ MCMacPlatformSurface::MCMacPlatformSurface(MCMacPlatformWindow *p_window, CGCont
 	// Retain the window to ensure it doesn't vanish whilst the surface is alive.
 	m_window = p_window;
 	m_window -> Retain();
+	
+	// IM-2015-02-23: [[ WidgetPopup ]] Find out if this surface is for an opaque window
+	MCPlatformGetWindowProperty(p_window, kMCPlatformWindowPropertyIsOpaque, kMCPlatformPropertyTypeBool, &m_opaque);
 	
 	// Borrow the CGContext and MCRegion for now.
 	m_cg_context = p_cg_context;
@@ -150,7 +153,8 @@ bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r
         m_raster . width = t_bounds . size . width * t_scale;
         m_raster . height = t_bounds . size . height * t_scale;
         m_raster . stride = m_raster . width * sizeof(uint32_t);
-        m_raster . format = kMCGRasterFormat_xRGB;
+		// IM-2015-02-23: [[ WidgetPopup ]] Specify ARGB format for non-opaque surfaces
+		m_raster . format = m_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
         m_raster . pixels = t_bits;
     }
     
@@ -163,7 +167,7 @@ bool MCMacPlatformSurface::LockPixels(MCGIntegerRectangle p_region, MCGRaster& r
     r_raster . width = t_actual_area . size . width * t_scale;
     r_raster . height = t_actual_area . size . height * t_scale;
     r_raster . stride = m_raster . stride;
-    r_raster . format = kMCGRasterFormat_xRGB;
+    r_raster . format = m_raster . format;
     r_raster . pixels = (uint8_t*)m_raster . pixels + (int32_t)((t_actual_area . origin . y - t_bounds . origin.y) * t_scale * m_raster . stride + (t_actual_area . origin . x - t_bounds . origin . x) * t_scale * sizeof(uint32_t));
     
 	r_locked_area = t_actual_area;
@@ -323,7 +327,9 @@ void MCMacPlatformSurface::Unlock(void)
 MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 {
 	if ([m_window -> GetHandle() respondsToSelector: @selector(backingScaleFactor)])
-		return objc_msgSend_fpret(m_window -> GetHandle(), @selector(backingScaleFactor));
+    {
+        return objc_msgSend_fpret_type<CGFloat>(m_window -> GetHandle(), @selector(backingScaleFactor));
+    }
 	return 1.0f;
 }
 
@@ -392,7 +398,7 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 			return kCGBlendModeLuminosity;
 	}
 	
-	MCAssert(false); // unknown blend mode
+	MCUnreachableReturn(kCGBlendModeNormal); // unknown blend mode
 }
 
 static void MCMacRenderCGImage(CGContextRef p_target, CGRect p_dst_rect, CGImageRef p_src, MCGFloat p_alpha, MCGBlendMode p_blend)

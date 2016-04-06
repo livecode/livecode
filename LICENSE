@@ -1,7 +1,7 @@
 Notes:
 
 The majority of the code in the LiveCode Community edition is copyrighted
-by Runtime Revolution Ltd and has been released under the GPLv3.
+by LiveCode Ltd and has been released under the GPLv3.
 
 However, the revBrowser component on Windows and secure sockets and
 encryption feature on Windows and Linux utilises code that is under a
@@ -9,7 +9,7 @@ license incompatible with the GPL. Specifically revBrowser uses ATL and
 the secure sockets and encryption feature uses OpenSSL.
 
 To this end, as a special exception to the terms and conditions of the
-GPL listed below, Runtime Revolution Ltd gives you explicit permission to
+GPL listed below, LiveCode Ltd gives you explicit permission to
 combine its GPL code contained in LiveCode Community with ATL and
 OpenSSL. You may copy and distribute such a combination provided that
 you adhere to the terms and conditions of all of the GPL and licenses

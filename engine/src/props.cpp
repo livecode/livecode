@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -579,6 +579,7 @@ static PropList playerprops[] =
         {"cantSelect", P_CANT_SELECT},
         {"colorOverlay", P_BITMAP_EFFECT_COLOR_OVERLAY},
         {"disabled", P_DISABLED},
+		{"dontuseqt", P_DONT_USE_QT},
         {"dropShadow", P_BITMAP_EFFECT_DROP_SHADOW},
         {"endTime", P_END_TIME},
         {"fileName", P_FILE_NAME},
@@ -596,13 +597,13 @@ static PropList playerprops[] =
         {"layerMode", P_LAYER_MODE},
         {"lockLoc", P_LOCK_LOCATION},
         {"looping", P_LOOPING},
+        {"mirrored", P_MIRRORED},
         {"name", P_SHORT_NAME},
         {"outerGlow", P_BITMAP_EFFECT_OUTER_GLOW},
         {"opaque", P_OPAQUE},
         {"playRate", P_PLAY_RATE},
         {"playSelection", P_PLAY_SELECTION},
         {"rect", P_RECTANGLE},
-        //{"selectedareacolor", P_SELECTED_AREA_COLOR},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},

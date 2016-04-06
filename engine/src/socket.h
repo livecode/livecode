@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -19,6 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dllst.h"
 #include "object.h"
+
+#if defined(_WINDOWS_DESKTOP) || defined(_WINDOWS_SERVER)
+#include <winsock2.h>
+#else
+#include <sys/select.h>
+#endif
 
 enum MCSocketType {
     MCSOCK_TCP,
@@ -176,8 +182,8 @@ public:
 	Boolean sslaccept();
 	void sslclose();
 protected:
-#ifdef _MACOSX
-	CFSocketRef cfsockref;
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
+    CFSocketRef cfsockref;
 	CFRunLoopSourceRef rlref;
 #endif
 
@@ -212,5 +218,14 @@ bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_looku
 							MCSockAddrToStringCallback p_callback, void *p_context);
 bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef &r_string);
 bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef& r_string);
+
+bool MCSocketsInitialize(void);
+void MCSocketsFinalize(void);
+
+void MCSocketsAppendToSocketList(MCSocket *s);
+void MCSocketsRemoveFromSocketList(uint32_t socket_no);
+
+bool MCSocketsAddToFileDescriptorSets(int4 &r_maxfd, fd_set &r_rmaskfd, fd_set &r_wmaskfd, fd_set &r_emaskfd);
+void MCSocketsHandleFileDescriptorSets(fd_set &p_rmaskfd, fd_set &p_wmaskfd, fd_set &p_emaskfd);
 
 #endif // SOCKET_H

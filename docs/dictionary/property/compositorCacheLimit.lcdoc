@@ -1,0 +1,37 @@
+Name: compositorCacheLimit
+
+Type: property
+
+Syntax: set the compositorCacheLimit of <stack> to <cacheLimit> 
+
+Summary: Specifies the maximum number of bytes the engine should use to cache content for the stack.
+
+Associations: stack
+
+Introduced: 5.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+set the compositorCacheLimit of this stack to 8388608 -- 8Mb
+
+Example:
+put 4 *1024 * 1024 into tCacheLimit -- 4Mb
+set the compositorCacheLimit of this stack to tCacheLimit
+
+Parameters:
+Stack: The name or ID of the stack.
+cacheLimit: A number containing the maximum number of bytes to be used when caching dynamic content.
+
+Description:
+Use the compositorCacheLimit property to specify the maximum number of bytes the engine should use to cache content for the stack. If the limit is not big enough to render the stack, accelerated rendering is not used and the default rendering used instead.
+
+>*Note:* The required size of the <compositorCacheLimit> can be determined by the objects whose <layerMode> property is set to 'dynamic'.  The compositorCacheLimit should be set to the amount of memory the LiveCode engine needs to cache them. If you have 10 layers all 400x400 pixels, you need roughly 10*400*400*4 bytes. Experimentation is required to find the optimal value.
+
+>*Note:* Set the compositor properties in a preOpenStack or preOpenCard handler - they are not persistent (not saved into the stackfile).
+
+References: compositorType (property), compositorTileSize (property), layerMode (property)
+
+Tags: windowing

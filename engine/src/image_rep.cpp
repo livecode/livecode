@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -23,13 +23,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "image.h"
 #include "image_rep.h"
-#include "systhreads.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCImageRep::MCImageRep()
 {
 	m_reference_count = 0;
+    
+    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 }
 
 MCImageRep::~MCImageRep()
@@ -38,13 +39,14 @@ MCImageRep::~MCImageRep()
 
 MCImageRep *MCImageRep::Retain()
 {
-    MCThreadAtomicInc((int32_t *)&m_reference_count);
+    m_reference_count += 1;
 	return this;
 }
 
 void MCImageRep::Release()
 {
-	if (MCThreadAtomicDec((int32_t *)&m_reference_count) == 1)
+    m_reference_count -= 1;
+    if (m_reference_count == 0)
         delete this;
 }
 
@@ -74,6 +76,7 @@ MCLoadableImageRep::MCLoadableImageRep()
 	m_frames_premultiplied = false;
 	
 	m_next = m_prev = nil;
+    
 }
 
 MCLoadableImageRep::~MCLoadableImageRep()
@@ -88,12 +91,8 @@ bool MCLoadableImageRep::EnsureHeader()
 {
 	if (!m_have_header)
 	{
-		// IM-2014-09-30: [[ Bug 13501 ]] CalculateGeometry is not thread-safe due to
-		//   possible geturl call.
-		MCThreadMutexLock(MCimagerepmutex);
 		if (!m_have_header)
 			m_have_header = LoadHeader(m_width, m_height, m_frame_count);
-		MCThreadMutexUnlock(MCimagerepmutex);
 	}
 	
 	return m_have_header;
@@ -366,23 +365,14 @@ bool MCLoadableImageRep::LockImageFrame(uindex_t p_frame, MCGFloat p_density, MC
 	// frame index check
 	if (p_frame >= m_frame_count)
 		return false;
-	
-    // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread locks an image frame at a time.
-    //  This could potentially be improved to be less obtrusive and resource hungry (mutex per image)
-    MCThreadMutexLock(MCimagerepmutex);
     
 	if (!EnsureImageFrames())
-    {
-        MCThreadMutexUnlock(MCimagerepmutex);
 		return false;
-    }
 	
 	r_frame = m_frames[p_frame];
     MCGImageRetain(r_frame . image);
     
 	MoveRepToHead(this);
-    
-    MCThreadMutexUnlock(MCimagerepmutex);
 	
 	return true;
 }
@@ -424,13 +414,25 @@ void MCLoadableImageRep::UnlockBitmap(uindex_t p_index, MCImageBitmap *p_bitmap)
 
 	if (m_frames == nil)
 		ConvertToMCGFrames(m_bitmap_frames, m_frame_count, false);
-	
+    
+    // PM-2015-07-13: [[ Bug 15590 ]] Free the correct number of frames
 	MCImageFreeFrames(m_bitmap_frames, m_frame_count);
 	m_bitmap_frames = nil;
 	
 	Release();
 
 	MoveRepToHead(this);
+}
+
+// MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+bool MCLoadableImageRep::GetMetadata(MCImageMetadata& r_metadata)
+{
+    if (!EnsureHeader())
+        return false;
+    
+    r_metadata = m_metadata;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -737,7 +739,6 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 	
 	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))
 	{
-        //MCLog("image rep cache hit for file %@", p_filename);
 		r_rep = t_rep->Retain();
 		return true;
 	}

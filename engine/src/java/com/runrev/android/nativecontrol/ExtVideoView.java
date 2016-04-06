@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -43,6 +43,7 @@ import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnVideoSizeChangedListener;
+import android.media.MediaPlayer.OnBufferingUpdateListener;
 import android.net.Uri;
 import android.os.PowerManager;
 import android.util.AttributeSet;
@@ -245,11 +246,11 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     }
 
     private void openVideo() {
-        if ((mUri == null && mFileDescriptor == null) || mSurfaceHolder == null) {
+		if ((mUri == null && mFileDescriptor == null) || mSurfaceHolder == null) {
             // not ready for playback just yet, will try again later
             return;
         }
-        // Tell the music playback service to pause
+		// Tell the music playback service to pause
         // TODO: these constants need to be published somewhere in the framework.
         Intent i = new Intent("com.android.music.musicservicecommand");
         i.putExtra("command", "pause");
@@ -307,6 +308,17 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             return;
         }
     }
+	
+	// PM-2015-11-05: [[ Bug 16368 ]] Toggling the visibility of the android player should show/hide the controller (if any)
+	public void setControllerVisible(boolean p_visible)
+	{
+		if (mMediaController != null ){
+			if (p_visible)
+				mMediaController.show(0);
+			else
+				mMediaController.hide();
+		}
+	}
 
     public void setMediaController(MediaController controller) {
         if (mMediaController != null) {
@@ -315,7 +327,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mMediaController = controller;
         attachMediaController();
     }
-    
+	
     public MediaController getMediaController() {
         return mMediaController;
     }
@@ -327,6 +339,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     (View)this.getParent() : this;
             mMediaController.setAnchorView(anchorView);
             mMediaController.setEnabled(isInPlaybackState());
+			
+			// PM-2015-10-19: [[ Bug 16027 ]] Make sure the controller shows/hides when changing its visibility on demand
+			if (isInPlaybackState())
+				mMediaController.show(0);
         }
     }
 
@@ -368,7 +384,13 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             }
             if (mMediaController != null) {
                 mMediaController.setEnabled(true);
+
+				// PM-2015-10-19: [[ Bug 16027 ]] Show the controller once the player is prepared (as on iOS)
+				if (isInPlaybackState()){
+					mMediaController.show(0);
+				}
             }
+
             mVideoWidth = mp.getVideoWidth();
             mVideoHeight = mp.getVideoHeight();
 
@@ -389,9 +411,6 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     // start the video here instead of in the callback.
                     if (mTargetState == STATE_PLAYING) {
                         start();
-                        if (mMediaController != null) {
-                            mMediaController.show();
-                        }
                     } else if (!isPlaying() &&
                                (seekToPosition != 0 || getCurrentPosition() > 0)) {
                        if (mMediaController != null) {
@@ -454,7 +473,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
     private MediaPlayer.OnBufferingUpdateListener mBufferingUpdateListener =
         new MediaPlayer.OnBufferingUpdateListener() {
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
-            mCurrentBufferPercentage = percent;
+			if (isInPlaybackState())
+			{
+				mCurrentBufferPercentage = percent;
+			}
         }
     };
 
@@ -533,10 +555,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     seekTo(mSeekWhenPrepared);
                 }
                 start();
-                if (mMediaController != null) {
-                    mMediaController.show();
-                }
-            }
+			}
         }
 
         public void surfaceCreated(SurfaceHolder holder)
@@ -617,7 +636,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
                     keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                 if (mMediaPlayer.isPlaying()) {
                     pause();
-                    mMediaController.show();
+					mMediaController.show(0);
                 } else {
                     start();
                     mMediaController.hide();
@@ -626,7 +645,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             } else if (keyCode == KeyEvent.KEYCODE_MEDIA_STOP
                     && mMediaPlayer.isPlaying()) {
                 pause();
-                mMediaController.show();
+				mMediaController.show(0);
             } else {
                 toggleMediaControlsVisiblity();
             }
@@ -640,7 +659,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         if (mMediaController.isShowing()) {
             mMediaController.hide();
         } else {
-            mMediaController.show();
+            mMediaController.show(0);
         }
     }
 
@@ -650,6 +669,12 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             mCurrentState = STATE_PLAYING;
         }
         mTargetState = STATE_PLAYING;
+
+		// PM-2015-10-19: [[ Bug 16027 ]] Show the controller here, to make sure it is enabled even if
+		// mobileControlDo sPlayerId, "play" is called from a callback message
+		if (mMediaController != null) {
+			mMediaController.show(0);
+		}
     }
 
     public void stop() {
@@ -723,6 +748,18 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mDuration = -1;
         return mDuration;
     }
+
+	// PM-2015-09-15: [[ Bug 15925 ]] Allow mobileControlGet(myPlayer, "playableDuration" on Android
+	public int getPlayableDuration()
+	{
+		if (getDuration() > 0)
+		{
+			int percent = getBufferPercentage();
+			return (mDuration * percent) / 100;
+		}
+
+		return -1;
+	}
 
     public int getCurrentPosition() {
         if (isInPlaybackState()) {

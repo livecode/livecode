@@ -1,0 +1,29 @@
+Name: postScript
+
+Type: property
+
+Syntax: set the postScript of <EPSObject> to 
+
+Summary: Specifies the actual <PostScript> code associated with an <EPS|EPS object>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the postScript of EPS "To Print" to field "Result"
+
+Value:
+The <postScript> of an <EPS|EPS object> is a <string>.
+By default, the <postScript> <property> of newly created <EPS|EPS objects> is set to empty.
+
+Description:
+Use the <postScript> <property> to examine or change the <PostScript> code of an <EPS|EPS object>.
+
+This property is supported only on Unix systems with Display PostScript installed.
+
+References: pageCount (property), postScript (property), prolog (property), retainImage (property), EPS (glossary), property (glossary), string (keyword)
+
+Tags: multimedia

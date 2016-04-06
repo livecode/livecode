@@ -1,0 +1,34 @@
+Name: processID
+
+Type: function
+
+Syntax: the processID
+
+Syntax: processID()
+
+Summary: <return|Returns> the <process> ID of LiveCode (or a <standalone application>).
+
+Introduced: 1.0
+
+OS: linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: process
+
+Example:
+the processID
+
+Example:
+write the processID & linefeed to process someOtherProcess
+
+Returns: The <processID> function <return|returns> a positive integer.
+
+Description:
+Use the <processID> function to communicate with another application.
+
+On Unix systems, the <processID> uniquely identifies the <process> belonging to the running <application>. Other <process|processes> can use the <processID> to address LiveCode.
+
+The <processID> function does not <return> a meaningful value on <Mac OS> or <Windows|Windows systems>.
+
+References: kill (command), application (glossary), Windows (glossary), standalone application (glossary), return (glossary), Mac OS (glossary), process (glossary), return (constant)

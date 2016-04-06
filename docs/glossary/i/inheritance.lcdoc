@@ -1,0 +1,14 @@
+Name: inheritance
+
+Synonyms: inherit,inheriting,inherited,inheritance
+
+Type: glossary
+
+Description:
+The structure under which some <object|objects> can use the behavior defined for other <object|objects>. 
+ 
+In LiveCode, <object|objects> inherit some of the properties of their <owner>. For example, all the <object|objects> on a <card> inherit the <card|card's> <handler|handlers>.
+
+References: owner (glossary), handler (glossary), card (glossary), object (glossary)
+
+Tags: objects

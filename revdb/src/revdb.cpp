@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -23,9 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS) || defined(_WINDOWS_SERVER)
 #include "w32support.h"
-#elif defined(_LINUX) || defined(TARGET_SUBPLATFORM_ANDROID)
+#elif defined(_LINUX) || defined(_LINUX_SERVER) || defined(TARGET_SUBPLATFORM_ANDROID)
 #include "unxsupport.h"
-#elif defined(_MACOSX)
+#elif defined(_MACOSX) || defined (_MAC_SERVER)
 #include "osxsupport.h"
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 #include "iossupport.h"
@@ -743,7 +743,7 @@ void GetColumnByNumber(DBCursor *thecursor, char *&result, int columnid, char *v
 inline const char *BooltoStr(Bool b) {return b == True?"True":"False";}
 
 /// @brief Sets the location that revdb should look for drivers next time a connection is attempted.
-/// @param driverPath The folder path to look for drivers in. This should be a path in Revolution format.
+/// @param driverPath The folder path to look for drivers in. This should be a path in LiveCode format.
 /// No input checking is carried out, if the path is invalid, then the intended drivers will just not be found.
 void REVDB_SetDriverPath(char *args[], int nargs, char **retstring,
 	       Bool *pass, Bool *error)
@@ -2381,6 +2381,6 @@ EXTERNAL_END_DECLARATIONS
 extern "C"
 {
 	extern struct LibInfo __libinfo;
-	__attribute((section("__DATA,__libs"))) __attribute__((visibility("default"))) volatile struct LibInfo *__libinfoptr_revdb = &__libinfo;
+	__attribute((section("__DATA,__libs"))) volatile struct LibInfo *__libinfoptr_revdb __attribute__((__visibility__("default"))) = &__libinfo;
 }
 #endif

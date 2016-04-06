@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -371,6 +371,7 @@ MCDo::~MCDo()
 {
 	delete source;
 	delete alternatelang;
+	delete widget;
 }
 
 Parse_stat MCDo::parse(MCScriptPoint &sp)
@@ -390,8 +391,12 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 			caller = true;
 		else
 		{
-			MCperror->add(PE_DO_BADENV, sp);
-			return PS_ERROR;
+			widget = new MCChunk(False);
+			if (widget->parse(sp, False) != PS_NORMAL)
+			{
+				MCperror->add(PE_DO_BADENV, sp);
+				return PS_ERROR;
+			}
 		}
 		
 		return PS_NORMAL;
@@ -487,10 +492,8 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
 	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
 	//   server script object.
 	Exec_stat stat;
-	if (ep . gethandler() != nil)
-		stat = ep.gethandler()->doscript(*epptr, line, pos);
-	else
-		stat = ep.gethlist()->doscript(*epptr, line, pos);
+    stat = ep.doscript(*epptr, line, pos);
+    
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
@@ -500,6 +503,20 @@ void MCDo::exec_ctxt(MCExecContext& ctxt)
     if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
         return;
     
+	if (widget)
+	{
+		MCObject *t_object;
+		uint32_t t_parid;
+		if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+		{
+			ctxt.LegacyThrow(EE_DO_BADWIDGETEXP);
+			return;
+		}
+		
+		MCInterfaceExecDoInWidget(ctxt, *t_script, (MCWidget*)t_object);
+		return;
+	}
+	
     if (browser)
     {
         MCLegacyExecDoInBrowser(ctxt, *t_script);
@@ -538,7 +555,12 @@ void MCDo::compile(MCSyntaxFactoryRef ctxt)
 
 	source -> compile(ctxt);
 
-	if (browser)
+	if (widget != nil)
+	{
+		widget->compile(ctxt);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDoInWidgetMethodInfo);
+	}
+	else if (browser)
 		MCSyntaxFactoryExecMethod(ctxt, kMCLegacyExecDoInBrowserMethodInfo);
 	else if (alternatelang != nil)
 	{
@@ -922,11 +944,11 @@ void MCGet::exec_ctxt(MCExecContext& ctxt)
 	return ES_NORMAL;
 #endif /* MCGet */
 
-    MCAutoValueRef t_value;
-    if (!ctxt . EvalExprAsValueRef(value, EE_GET_BADEXP, &t_value))
+    MCExecValue t_value;
+    if (!ctxt . EvaluateExpression(value, EE_GET_BADEXP, t_value))
         return;
 
-    MCEngineExecGet(ctxt, *t_value);
+    MCEngineExecGet(ctxt, t_value);
 }
 
 void MCGet::compile(MCSyntaxFactoryRef ctxt)
@@ -2214,7 +2236,7 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 	}
 
 	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
-	// this keeps the behavior consistent with previous versions of Revolution.
+	// this keeps the behavior consistent with previous versions of LiveCode.
 	if (t_item_count < 1)
 	{
 		delete t_item_text;
@@ -2338,7 +2360,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 		else
 		{
 			MCField *fptr = (MCField *)optr;
-			if (optr->gettype() != CT_FIELD || !of->nochunks()
+			if (optr->gettype() != CT_FIELD || !of->notextchunks()
 			        || fptr->sort(ep, parid, chunktype, direction,
 			                      format, by) != ES_NORMAL)
 			{
@@ -2375,10 +2397,23 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
         }
 		if (t_object . object != nil && t_object . object->gettype() > CT_GROUP && chunktype <= CT_GROUP)
 			chunktype = CT_LINE;
-	} 
+    }
+    // SN-2015-04-01: [[ Bug 14885 ]] Make sure that the default stack is used
+    //  if none is specified.
+    else
+        t_object . object = MCdefaultstackptr;
     
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
-		MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+    {
+        if (t_object . object == nil ||
+            t_object . object -> gettype() != CT_STACK)
+		{
+            ctxt . LegacyThrow(EE_SORT_CANTSORT);
+			return;
+		}
+        
+        MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+    }
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
         MCStringRef t_sorted_target;
@@ -2396,7 +2431,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 	}
 	else
 	{
-		if (t_object . object->gettype() != CT_FIELD || !of->nochunks())
+		if (t_object . object->gettype() != CT_FIELD || !of->notextchunks())
 		{
             ctxt . LegacyThrow(EE_SORT_CANTSORT);
 			return;

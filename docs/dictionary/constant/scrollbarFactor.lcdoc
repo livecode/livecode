@@ -1,0 +1,23 @@
+Name: scrollbarFactor
+
+Type: constant
+
+Syntax: scrollbarFactor
+
+Summary: Equal to 65535.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get scrollbarFactor
+
+Description:
+This constant is obsolete and no longer used in LiveCode.
+
+References: endValue (property), vScroll (property), startValue (property), hScroll (property)
+
+Tags: ui

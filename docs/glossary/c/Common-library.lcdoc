@@ -1,0 +1,10 @@
+Name: Common library
+
+Synonyms: Common libraries,Common library
+
+Type: library
+
+Description:
+One of the <LiveCode custom libraries>, which implements <function|functions> and <command|commands> that are shared between other <custom libraries> or used for miscellaneous purposes.
+
+References: LiveCode custom libraries (glossary), command (glossary), function (glossary), custom libraries (glossary)

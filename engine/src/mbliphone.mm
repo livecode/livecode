@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -22,8 +22,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "globals.h"
+#include "uidc.h"
 
 #include "variable.h"
+
+#include "socket.h"
 
 #undef isatty
 #include <unistd.h>
@@ -94,8 +97,8 @@ real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////
 
-MC_DLLEXPORT extern "C" void *load_module(const char *);
-MC_DLLEXPORT extern "C" void *resolve_symbol(void *, const char *);
+extern "C" MC_DLLEXPORT_DEF void *load_module(const char *);
+extern "C" MC_DLLEXPORT_DEF void *resolve_symbol(void *, const char *);
 
 struct LibExport
 {
@@ -109,6 +112,7 @@ struct LibInfo
 	struct LibExport *exports;
 };
 
+MC_DLLEXPORT_DEF
 void *load_module(const char *p_path)
 {
 	const char *t_last_component;
@@ -147,7 +151,8 @@ void *load_module(const char *p_path)
 	return NULL;	
 }
 
-void *resolve_symbol(void *p_module, const char *p_symbol)
+void *resolve_symbol(void *p_module, const char *p_symbol) __attribute__((__visibility__("default")))
+
 {
 	LibInfo *t_lib;
 	t_lib = (LibInfo *)((uintptr_t)p_module & ~1);
@@ -666,7 +671,7 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
 {
 	MCAutoStringRef t_path;
 	
-	if (MCNameIsEqualToCString(p_type, "temporary", kMCCompareCaseless))
+	if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
 	{
         MCAutoStringRef t_temp;
         MCStringCreateWithCFString((CFStringRef)NSTemporaryDirectory() , &t_temp);
@@ -678,23 +683,26 @@ Boolean MCIPhoneSystem::GetStandardFolder(MCNameRef p_type, MCStringRef& r_folde
         else
             /* UNCHECKED */ MCStringCopy(*t_temp, &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "documents", kMCCompareCaseless))
+	else if (MCNameIsEqualTo(p_type, MCN_documents, kMCCompareCaseless))
 	{
 		NSArray *t_paths;
 		t_paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "home", kMCCompareCaseless))
+	else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
 	{
         MCStringCreateWithCFString((CFStringRef)NSHomeDirectory() , &t_path);
 	}
 	else if (MCNameIsEqualToCString(p_type, "cache", kMCCompareCaseless))
 	{
 		NSArray *t_paths;
-		t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        t_paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
 		MCStringCreateWithCFString((CFStringRef)[t_paths objectAtIndex: 0] , &t_path);
 	}
-	else if (MCNameIsEqualToCString(p_type, "engine", kMCCompareCaseless))
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+    else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+             || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
 	{
 		extern MCStringRef MCcmd;
         uindex_t t_index;
@@ -824,16 +832,35 @@ bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 //}
 
 
-bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool MCIPhoneSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
+	MCAutoStringRefAsUTF8String t_path;
+	if (p_folder == nil)
+	  /* UNCHECKED */ t_path . Lock(MCSTR("."));
+	else
+	  /* UNCHECKED */ t_path . Lock(p_folder);
+
 	DIR *t_dir;
-	t_dir = opendir(".");
+	t_dir = opendir(*t_path);
 	if (t_dir == NULL)
 		return false;
 	
 	MCSystemFolderEntry t_entry;
 	memset(&t_entry, 0, sizeof(MCSystemFolderEntry));
 	
+	/* For each directory entry, we need to construct a path that can
+	 * be passed to stat(2).  Allocate a buffer large enough for the
+	 * path, a path separator character, and any possible filename. */
+	size_t t_path_len = strlen(*t_path);
+	size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+	char *t_entry_path = new char[t_entry_path_len + 1];
+	strcpy (t_entry_path, *t_path);
+	if ((*t_path)[t_path_len - 1] != '/')
+	{
+		strcat (t_entry_path, "/");
+		++t_path_len;
+	}
+
 	bool t_success;
 	t_success = true;
 	while(t_success)
@@ -846,8 +873,13 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
 		if (strcmp(t_dir_entry -> d_name, ".") == 0)
 			continue;
 		
+		/* Truncate the directory entry path buffer to the path
+		 * separator. */
+		t_entry_path[t_path_len] = 0;
+		strcat (t_entry_path, t_dir_entry->d_name);
+
 		struct stat t_stat;
-		stat(t_dir_entry -> d_name, &t_stat);
+		stat(t_entry_path, &t_stat);
                 
         MCStringRef t_unicode_str;
         MCStringCreateWithBytes((byte_t*)t_dir_entry -> d_name, strlen(t_dir_entry -> d_name), kMCStringEncodingUTF8, false, t_unicode_str);
@@ -867,6 +899,7 @@ bool MCIPhoneSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callb
         MCValueRelease(t_unicode_str);
 	}
 	
+	delete t_entry_path;
 	closedir(t_dir);
 	
 	return t_success;
@@ -1152,6 +1185,15 @@ bool MCIPhoneSystem::AlternateLanguages(MCListRef &r_list)
 bool MCIPhoneSystem::GetDNSservers(MCListRef &r_list)
 {
     return False;
+}
+
+void MCIPhoneSystem::ShowMessageDialog(MCStringRef p_title,
+                                       MCStringRef p_message)
+{
+    if (MCscreen == nil)
+        return;
+    
+    MCscreen -> popupanswerdialog(nil, 0, 0, p_title, p_message, true);
 }
 
 //////////////////

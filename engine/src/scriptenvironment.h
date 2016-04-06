@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_SCRIPT_ENVIRONMENT__
-#define __MC_SCRIPT_ENVIRONMEMT__
+#define __MC_SCRIPT_ENVIRONMENT__
 
 typedef char *(*MCScriptEnvironmentCallback)(const char* const* p_arguments, unsigned int p_argument_count);
 

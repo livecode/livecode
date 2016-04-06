@@ -1,0 +1,14 @@
+Name: XML
+
+Synonyms: XML,Extensible Markup Language
+
+Type: glossary
+
+Description:
+eXtensible Markup Language. A language used for defining markup languages (such as <HTML>). 
+ 
+Using XML, you can create custom sets of tags, along with rules for using them, suitable for any sort of data storage and retrieval.
+
+References: HTML (glossary)
+
+Tags: text processing

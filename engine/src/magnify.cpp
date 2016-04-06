@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -117,13 +117,13 @@ Boolean MCMagnify::doubleup(uint2 which)
 	return False;
 }
 
-IO_stat MCMagnify::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCMagnify::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
 	if ((stat = IO_write_uint1(OT_MAGNIFY, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 
 	return IO_NORMAL;
@@ -154,7 +154,7 @@ IO_stat MCMagnify::extendedload(MCObjectInputStream& p_stream, uint32_t p_versio
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCMagnify::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCMagnify::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }

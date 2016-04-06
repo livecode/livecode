@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -44,13 +44,16 @@ enum
 	kMCLicenseDeployToServer = 1 << 7,
 	kMCLicenseDeployToIOSEmbedded = 1 << 8,
 	kMCLicenseDeployToAndroidEmbedded = 1 << 9,
+    kMCLicenseDeployToHTML5 = 1 << 10,
 };
 
 enum
 {
 	kMCLicenseClassNone,
 	kMCLicenseClassCommunity,
+	kMCLicenseClassEvaluation,
 	kMCLicenseClassCommercial,
+	kMCLicenseClassProfessionalEvaluation,
 	kMCLicenseClassProfessional,
 };
 

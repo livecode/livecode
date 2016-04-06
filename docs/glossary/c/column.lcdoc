@@ -1,0 +1,12 @@
+Name: column
+
+Synonyms: column,database column
+
+Type: glossary
+
+Description:
+In a <database>, all the values of a particular <field> from all <record|records> in the <database>.
+
+References: field (glossary), database (glossary), record (glossary)
+
+Tags: database

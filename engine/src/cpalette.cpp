@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -85,7 +85,7 @@ static void getcells(uint2 &xcells, uint2 &ycells)
 
 Boolean MCColors::mfocus(int2 x, int2 y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	if (state & CS_MOVE || state & CS_SIZE)
 		return MCControl::mfocus(x, y);
@@ -291,9 +291,9 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 //  SAVING AND LOADING
 //
 
-IO_stat MCColors::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCColors::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return MCObject::defaultextendedsave(p_stream, p_part);
+	return MCObject::defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCColors::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
@@ -301,21 +301,21 @@ IO_stat MCColors::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 	return MCObject::defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCColors::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCColors::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
 	if ((stat = IO_write_uint1(OT_COLORS, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 IO_stat MCColors::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -310,6 +310,12 @@ const char *MCDeployErrorToString(MCDeployError p_error)
 		case kMCDeployErrorMacOSXBadCpuType:
 		case kMCDeployErrorMacOSXBadTarget:
 			return "invalid mac/ios standalone engine file";
+
+		case kMCDeployErrorEmscriptenBadStack:
+			return "could not prepare startup stack";
+		
+		case kMCDeployErrorTrialBannerError:
+			return "could not create trial banner";
 
 		case kMCDeployErrorNoCertificate:
 			return "could not load certificate";

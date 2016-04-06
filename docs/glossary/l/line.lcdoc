@@ -1,0 +1,14 @@
+Name: line
+
+Synonyms: line
+
+Type: glossary
+
+Description:
+A <chunk> of text that is <delimit|delimited> by the <character> in the <lineDelimiter> <property>. (By default, the line <delimiter> is a return character.) 
+ 
+Also, a straight line <graphic>, or a line drawn with the paint tools.
+
+References: lineDelimiter (property), property (glossary), character (glossary), delimit (glossary), delimiter (glossary), chunk (glossary), graphic (glossary)
+
+Tags: text processing

@@ -1,0 +1,43 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.date.tests
+
+public handler TestLocalDate()
+	variable tDate
+	put the local date into tDate
+	test "local date element count" when the number of elements in tDate is 7
+	test "local date month range" when tDate[2] >= 1 and tDate[2] <= 12
+	test "local date day range" when tDate[3] >= 1 and tDate[3] <= 31
+	test "local date hour range" when tDate[4] >= 0 and tDate[4] <= 23
+	test "local date minute range" when tDate[5] >= 0 and tDate[5] <= 59
+	test "local date second range" when tDate[6] >= 0 and tDate[6] <= 59
+end handler
+
+public handler TestUniversalDate()
+	variable tDate
+	put the universal date into tDate
+	test "utc date element count" when the number of elements in tDate is 7
+	test "utc date month range" when tDate[2] >= 1 and tDate[2] <= 12
+	test "utc date day range" when tDate[3] >= 1 and tDate[3] <= 31
+	test "utc date hour range" when tDate[4] >= 0 and tDate[4] <= 23
+	test "utc date minute range" when tDate[5] >= 0 and tDate[5] <= 59
+	test "utc date second range" when tDate[6] >= 0 and tDate[6] <= 59
+	test "utc date no gmt offset" when tDate[7] is 0
+end handler
+
+end module

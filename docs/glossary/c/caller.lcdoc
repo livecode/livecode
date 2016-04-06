@@ -1,0 +1,12 @@
+Name: caller
+
+Synonyms: calling handler,caller
+
+Type: glossary
+
+Description:
+The <handler> that invoked whichever handler is currently running. 
+ 
+For example, if Handler A uses a <custom command> which is defined by Handler B, then Handler A is the caller of Handler B.
+
+References: handler (glossary), custom command (glossary)

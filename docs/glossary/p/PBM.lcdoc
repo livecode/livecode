@@ -1,0 +1,12 @@
+Name: PBM
+
+Synonyms: PBM,.pbm
+
+Type: glossary
+
+Description:
+Portable Bit Map. A black-and-white picture <format> created for the "pbmplus" image conversion program and usually used on <Unix|Unix systems>.
+
+References: format (glossary), Unix (glossary)
+
+Tags: multimedia

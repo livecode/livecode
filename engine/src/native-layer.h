@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -19,35 +19,72 @@
 #define __MC_NATIVE_LAYER__
 
 
+class MCObject;
+
 class MCNativeLayer
 {
 public:
     
-    virtual void OnOpen() = 0;
-    virtual void OnClose() = 0;
-    virtual void OnAttach() = 0;
-    virtual void OnDetach() = 0;
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty) = 0;
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect) = 0;
-    virtual void OnVisibilityChanged(bool p_visible) = 0;
-    virtual void OnToolChanged(Tool p_new_tool) = 0;
-    virtual void OnLayerChanged() = 0;
+    virtual void OnAttach();
+    virtual void OnDetach();
+	virtual bool OnPaint(MCGContextRef p_context);
+    virtual void OnGeometryChanged(const MCRectangle& p_new_rect);
+	virtual void OnViewportGeometryChanged(const MCRectangle &p_rect);
+    virtual void OnVisibilityChanged(bool p_visible);
+    virtual void OnToolChanged(Tool p_new_tool);
+    virtual void OnLayerChanged();
     
     virtual ~MCNativeLayer() = 0;
     
     // Returns true if the layer would be attached if its card were visible
     bool isAttached() const;
-    
+	
+	virtual bool GetNativeView(void *&r_view) = 0;
+	
+	// Implemented by the platform-specific native layers: creates a new layer
+	static MCNativeLayer *CreateNativeLayer(MCObject *p_object, void *p_native_view);
+	static bool CreateNativeContainer(void *&r_view);
+	static void ReleaseNativeView(void *p_view);
+
+	void SetCanRenderToContext(bool p_can_render);
+	virtual bool GetCanRenderToContext();
+
 protected:
-    
+	
+	void UpdateVisibility();
+	
+	// Platform-specific implementations
+	virtual void doAttach() = 0;
+	virtual void doDetach() = 0;
+	virtual bool doPaint(MCGContextRef p_context) = 0;
+	virtual void doSetVisible(bool p_visible) = 0;
+	virtual void doSetGeometry(const MCRectangle &p_rect) = 0;
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect) = 0;
+	virtual void doRelayer() = 0;
+	
+	MCObject *m_object;
+	
     bool m_attached;
-    
+	bool m_visible;
+	bool m_show_for_tool;
+    bool m_can_render_to_context;
+
+	MCRectangle m_rect;
+	MCRectangle m_viewport_rect;
+
+	bool m_defer_geometry_changes;
+	MCRectangle m_deferred_rect;
+	MCRectangle m_deferred_viewport_rect;
+
     MCNativeLayer();
     
+	// Returns true if the layer should be currently visible
+	virtual bool ShouldShowLayer();
+	
     // Utility function for subclasses: given a widget, finds the native layer
     // immediately below or above it. If none exist, returns nil.
-    static MCWidget* findNextLayerBelow(MCWidget*);
-    static MCWidget* findNextLayerAbove(MCWidget*);
+    static MCObject* findNextLayerBelow(MCObject*);
+    static MCObject* findNextLayerAbove(MCObject*);
 };
 
 

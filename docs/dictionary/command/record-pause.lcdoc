@@ -1,0 +1,29 @@
+Name: record pause
+
+Type: command
+
+Syntax: record pause
+
+Summary: Pauses the current sound recording.
+
+Introduced: 6.7
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+if the hilite of button "pause" then
+   record pause
+end if
+
+Description:
+Use the <record pause> command to pause a recording being made. 
+
+The <record pause> command pauses a recording started with the <record sound> command.
+
+The <recording> property remains true while a recording is paused.
+
+References: record resume (command), record sound (command), stop recording (command), recording (property)
+
+Tags: multimedia

@@ -1,0 +1,1 @@
+# Ensure various forms of empty are not converted to 0 in object id expression

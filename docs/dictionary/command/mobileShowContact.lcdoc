@@ -1,0 +1,33 @@
+Name: mobileShowContact
+
+Type: command
+
+Syntax: mobileShowContact <contactId> 
+
+Summary: Allows the user to show a contact from the contacts list.
+
+Introduced: 5.5.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileShowContact 23
+
+Example:
+mobileShowContact field "InpudData ID"
+
+Parameters:
+contactId: The ID of the contact to show.
+
+The result:
+The ID of the shown contact is returned as the result.
+If no item with the specified ID exists, then the interface is not shown and empty is returned.
+
+Description:
+Allows the user to show a contact from the contact list.
+
+Use the <mobileShowContact> command to display a native iOS or Android contact viewer that allows the user to see a contact list entry.
+
+References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobilePickContact (command), mobilePick (command), mobileAddContact (command), mobileFindContact (command), mobileCreateContact (command), mobileUpdateContact (command), mobileGetContactData (function)

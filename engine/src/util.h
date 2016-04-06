@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -21,10 +21,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "parsedef.h"
+#include "sysdefs.h"
+#include "typedefs.h"
+#include "mcsemaphore.h"
+
 typedef struct
 {
 	uint2 lockscreen;
-	uint2 errorlock;
+	MCSemaphore errorlock;
 	Boolean watchcursor;
 	Boolean lockerrors;
 	Boolean lockmessages;
@@ -135,8 +140,7 @@ extern void MCU_additem(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	                             Boolean isunicode = False);
-extern void MCU_sort(MCSortnode *items, uint4 nitems,
-                       Sort_type dir, Sort_type form);
+
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
@@ -157,6 +161,7 @@ extern void MCU_set_rect(MCRectangle &rect, int2 x, int2 y, uint2 w, uint2 h);
 extern void MCU_set_rect(MCRectangle32 &rect, int32_t x, int32_t y, int32_t w, int32_t h);
 extern Boolean MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y);
 extern Boolean MCU_rect_in_rect(const MCRectangle &p, const MCRectangle &w);
+extern bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line);
 extern Boolean MCU_point_on_line(MCPoint *points, uint2 npoints,
 	                                 int2 x, int2 y, uint2 linesize);
 extern Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints,
@@ -191,7 +196,7 @@ extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCDataRef in, MCStringRef &out);
 extern void MCU_base64decode(MCStringRef in, MCDataRef &out);
 extern void MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_result);
-extern void MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded);
+extern bool MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
@@ -239,7 +244,9 @@ extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey,
 // AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading
 // SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
 //  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
+// SN-2015-04-07: [[ Bug 15164 ]] Added StringRef version of MCU_loadmodule
 extern "C" void* MCU_loadmodule(const char *p_module);
+extern "C" void* MCU_loadmodule_stringref(MCStringRef p_module);
 extern "C" void MCU_unloadmodule(void* p_module);
 extern "C" void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol);
 
@@ -281,5 +288,8 @@ inline MCRectangle MCU_make_rect(int2 x, int2 y, uint2 w, uint2 h)
 	r . height = h;
 	return r;
 }
+
+// Test whether p_string is a valid LiveCode script token
+extern bool MCU_is_token(MCStringRef p_string);
 
 #endif

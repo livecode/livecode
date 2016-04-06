@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -153,6 +153,7 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 	return value;
 }
 
+MC_DLLEXPORT_DEF
 bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted)
 {
     if (!MCStringCanBeNative(p_string))
@@ -167,6 +168,7 @@ bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_convert
 	return t_done;
 }
 
+MC_DLLEXPORT_DEF
 bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool p_convert_octals)
 {
     if (!MCStringCanBeNative(p_string))
@@ -207,6 +209,7 @@ bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCTypeConvertStringToBool(MCStringRef p_string, bool& r_converted)
 {
     if (MCStringIsEqualTo(p_string, kMCTrueString, kMCStringOptionCompareCaseless))

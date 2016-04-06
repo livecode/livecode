@@ -2,6 +2,7 @@
 ################################################################################
 
 local sJavaRoot
+constant kArchs = "armeabi"
 
 ################################################################################
 
@@ -52,6 +53,29 @@ private command buildAPK pUnalignedApkFile, pUnsignedParam, pAssetArchive, pClas
    return tResult
 end buildAPK
 
+private function updateMinimumAPI pVersionSet, pLimit
+   local tLimitType
+   if pVersionSet < pLimit then
+      put "lowest" into tLimitType
+   else
+      put "highest" into tLimitType
+   end if
+   
+   answer "The minimum Android API is currently set to" && \
+         pVersionSet && \
+         "but the" & tLimitType & " Android API available from LiveCode" && the version && \
+         "is" && pLimit & "." & LF & \
+         "Do you want to update the minimum Android API to" && pLimit & "?" \
+         with "No" or "Yes" \
+         titled "Minimum Android API error"
+   
+   return (it is "Yes")
+end updateMinimumAPI
+
+private function badAndroidApiMessage
+   return "Not a valid Android API"
+end badAndroidApiMessage
+
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    start using stack "revSBLibrary"
    
@@ -91,8 +115,29 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    if tSettings["android,status bar hidden"] is empty then
       put "false" into tSettings["android,status bar hidden"]
    end if
+   
+   // SN-2015-05-13: [[ AndroidVersions ]] Make sure that the minimum version is
+   // the minimum version that we can use.
+   local tMinimumVersion, tMaximumVersion
+   put item 1 of revIDEDeployAndroidGetApisList() into tMinimumVersion
+   put last item of revIDEDeployAndroidGetApisList() into tMaximumVersion
+   
    if tSettings["android,minimum version"] is empty then
-      put 8 into tSettings["android,minimum version"]
+      put tMinimumVersion into tSettings["android,minimum version"]
+   else if tSettings["android,minimum version"] < tMinimumVersion then
+      // In case the minimum version is still 2.2 (for instance), we warn the user
+      //  that we want to update it, before doing so.
+      if updateMinimumAPI(tSettings["android,minimum version"], tMinimumVersion) then
+         put tMinimumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
+   else if tSettings["android,minimum version"] > tMaximumVersion then
+      if updateMinimumAPI(tSettings["android,minimum version"], tMaximumVersion) then
+         put tMaximumVersion into tSettings["android,minimum version"]
+      else
+         throw badAndroidAPIMessage()
+      end if
    end if
    
    put tSettings["android,statusBarIcon"] into tStatusBarIcon
@@ -151,7 +196,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    delete the last char of tExternals
    
    -- Compute the stackfiles list
-   local tStackFiles
+   local tStackFiles, tFunction
    lock messages
    // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
    put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
@@ -177,7 +222,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       put tBuildFolder & slash & "classes_app" into tClassesBuildFolder
       put tBuildFolder & slash & "libs" into tLibsBuildFolder
-      put tLibsBuildFolder & slash & "armeabi" into tArmLibsBuildFolder
+      
+      // MERG: TODO when support for other Archs is added this needs work
+      put tLibsBuildFolder & slash & kArchs into tArmLibsBuildFolder
       put tBuildFolder & slash & "res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
       put tResBuildFolder & slash & "layout" into tLayoutResBuildFolder
@@ -207,18 +254,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       if tExternals is not empty then
          put return after tExternals
       end if
+      set the itemDelimiter to "."
       repeat for each line tFile in tFiles
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
          -- Look for manifest template
-         set the itemDelimiter to slash
-         if the last item of tFilePath is "AndroidManifest.xml" then
-            put tFilePath into tManifestFile
+         local tManifest
+         if tFilePath ends with "AndroidManifest.xml" then
+            put url ("binfile:" & tFilePath) into tManifest
          end if
          
          -- Only look for lcext files.
-         set the itemDelimiter to "."
          if the last item of tFilePath is not "lcext" then
             next repeat
          end if
@@ -231,7 +278,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
          --   extracted.
          -- Now attempt to process the external
-         if addExternalFromFile(tFilePath, tClassesBuildFolder, tArmLibsBuildFolder) then
+         if addExternalFromFile(tFilePath, tClassesBuildFolder, tLibsBuildFolder) then
             -- Add the external to the list to load
             put char 1 to -7 of tFileName & return after tExternals
          end if
@@ -246,8 +293,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put tBuildFolder & slash & "AndroidManifest.xml" into tManifestFile
       end if
       
-      local tManifest
-      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      if tManifest is empty then
+         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Manifest.xml")) into tManifest
+      end if
       // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
       if the result is not empty then
          throw "Cannot find the template Manifest"
@@ -405,6 +453,24 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       replace "${PROVIDER}" with tProvider in tManifest
       
+      // SN-2015-09-24: [[ Bug 15875 ]] Add the screenSize configChanges value for API > 12
+      //  Otherwise the app restarts on orientation change.
+      local tConfigChangesProp
+      put "keyboardHidden|orientation" into tConfigChangesProp
+      if tSettings["android,minimum version"] > 12 then
+         put "|screenSize" after tConfigChangesProp
+      end if
+      replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
+      
+      // SN-2015-09-30: [[ Bug 10267 ]] Hardware Acceleration option added
+      local tHardwareAccelerated
+      if tSettings["android,hardware accelerated"] then
+         put "true" into tHardwareAccelerated
+      else
+         put "false" into tHardwareAccelerated
+      end if
+      replace "${HARDWARE_ACCELERATED}" with tHardwareAccelerated in tManifest
+      
       #put tManifest into url ("binfile:c:/scratch/manifestdump.xml")
       put tManifest into url ("binfile:" & tManifestFile)
       if the result is not empty then
@@ -560,6 +626,17 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       revStandaloneProgress "Building executable..."
       
       local tDeploy
+      # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in android standalone
+      repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
+         local tExtensionFile
+         put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+         if tDeploy["modules"] is empty then
+            put tExtensionFile into tDeploy["modules"]
+         else
+            put return & tExtensionFile after tDeploy["modules"]
+         end if
+      end repeat
+      
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
       // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
@@ -850,6 +927,8 @@ private command addAssetsToArchive pFiles, pBaseFolder, pArchive
             put tFile & return after tFonts
          else if tFile ends with ".lcext" or tFile ends with ".dylib" then
             -- MW-2012-07-05: [[ Externals ]] If an 'lcext' file or dylib file is found then we ignore it.
+         else if tFile ends with "AndroidManifest.xml" then
+            -- MW-2015-04-24: [[ TemplateAppMetadata ]] If an template manifest is found then we ignore it.
          else
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tName, tFile
          end if
@@ -941,30 +1020,67 @@ private function addExternalFromFile pExternal, pClassesFolder, pLibsFolder
    end if
    
    -- Get the name of the external.
+   local tExternalName
    set the itemDelimiter to slash
    get the last item of pExternal
    set the itemDelimiter to "."
-   get the first item of it
-   set the itemDelimiter to comma
+   put the first item of it into tExternalName
+   set the itemDelimiter to slash
    
    -- Compute the class / lib names.
-   local tClassesFile, tLibFile
-   put pClassesFolder & slash & "lib" & it & ".jar" into tClassesFile
-   put pLibsFolder & slash & "lib" & it & ".so" into tLibFile
+   local tClassesFile, tLibFileA
+   put pClassesFolder & slash & "lib" & tExternalName & ".jar" into tClassesFile
    
    -- Otherwise open the archive and check for appropriate android components
    revZipOpenArchive pExternal, "read"
    if the result is empty then
-      revZipExtractItemToFile pExternal, "Android/Classes", tClassesFile
-      revZipExtractItemToFile pExternal, "Android/External-armeabi", tLibFile
+      
+      -- MERG-2015-10-14: [[ ThirdpartyLibs ]] Add support for thirdparty librares
+      local tZipItems
+      put revZipEnumerateItems(pExternal) into tZipItems
+      filter tZipItems with "Android/*"
+      
+      local tZipItemsFiltered
+      filter tZipItems with regex pattern ".*(\.jar|Classes)$" into tZipItemsFiltered
+      repeat for each line tZipItem in tZipItemsFiltered
+         if tZipItem ends with ".jar" then
+            revZipExtractItemToFile pExternal, tZipItem, \
+                  pClassesFolder & slash & the last item of tZipItem 
+         else 
+            # will be Classes file
+            revZipExtractItemToFile pExternal, tZipItem, tClassesFile
+         end if
+      end repeat
+      
+      repeat for each word tArch in kArchs
+         filter tZipItems with "*" & tArch & "*" into tZipItemsFiltered
+         put pLibsFolder & slash & tArch & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
+         
+         repeat for each line tZipItem in tZipItemsFiltered
+            if tZipItem ends with ".so" then
+               revZipExtractItemToFile pExternal, tZipItem, \
+                     pLibsFolder & slash & tArch & slash & the last item of tZipItem 
+            else 
+               # will be External-<Arch> file
+               revZipExtractItemToFile pExternal, tZipItem, tLibFileA[tArch]
+            end if
+         end repeat
+      end repeat
+      
       revZipCloseArchive pExternal
    end if
    
-   if there is a file tClassesFile and there is no file tLibFile then
-      throw "android external contains classes but no library"
+   if there is a file tClassesFile then
+      repeat for each word tArch in kArchs
+         if there is no file tLibFileA[tArch] then
+            throw "android external contains classes but no library for " & tArch
+         end if
+      end repeat
+      
+      return true
    end if
    
-   return there is a file tLibFile
+   return false
 end addExternalFromFile
 
 ################################################################################
@@ -1082,6 +1198,17 @@ private function pathToZipAlign pRoot
    return the result
 end pathToZipAlign
 
+// SN-2015-07-02: [[ GypifiedAndroid ]] Get the right folder for android binaries
+private function pathToRepoAndroidBinaries
+   local tBuild
+   if revEnvironmentBinariesPath() contains "/Debug" then
+      put "Debug" into tBuild
+   else
+      put "Release" into tBuild
+   end if
+   return revEnvironmentRepositoryPath() & "/build-android-armv6/livecode/out/" & tBuild
+end pathToRepoAndroidBinaries
+
 private function pathToDex pRoot
    // SN-2014-10-16: [[ ScriptifiedStack ]] Stack name updated
    dispatch function "pathToDex" to stack "revDeployLibraryAndroid" with pRoot
@@ -1117,11 +1244,14 @@ function mapFilePath pPath
       set the itemDelimiter to slash
       
       // Get the list of files in the targetted directory
+      local tOldFolder, tFiles
       put the defaultFolder into tOldFolder
       set the defaultFolder to item 1 to -2 of pPath
+      
       put the files into tFiles
       set the defaultFolder to tOldFolder
       
+      local tLineOffset
       put lineOffset(last item of pPath, tFiles) into tLineOffset
       
       // We return empty if we can't find the specified file
@@ -1135,47 +1265,49 @@ function mapFilePath pPath
    end if
    
    local tPath
-   local tRepo, tComponent, tBuild, tSuffix
+   local tBinariesFolder, tComponent, tSuffix
    set the itemDelimiter to slash
-   put revEnvironmentRepositoryPath() into tRepo
-   put the last item of pPath into tComponent
-   if revEnvironmentBinariesPath() contains "/Debug" then
-      put "debug" into tBuild
-   else
-      put "release" into tBuild
+   put pathToRepoAndroidBinaries() into tBinariesFolder
+   
+   // SN-2015-07-02: [[ GypifiedAndroid ]] Throw an error if there is
+   //  not the expected build folder
+   if there is no folder tBinariesFolder then
+      throw "Error: Android binaries folder" && tBinariesFolder && "could not be found"
    end if
-   put revLicenseType() into tSuffix
+   
+   put the last item of pPath into tComponent
+   put the editionType into tSuffix
    put toUpper(char 1 of tSuffix) into char 1 of tSuffix
    switch tComponent
       case "notify_icon.png"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/notify_icon.png") into tPath
+         put merge("[[tBinariesFolder]]/notify_icon.png") into tPath
          break
       case "Manifest.xml"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/Manifest.xml") into tPath
+         put merge("[[tBinariesFolder]]/Manifest.xml") into tPath
          break
       case "livecode_inputcontrol.xml"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/livecode_inputcontrol.xml") into tPath
+         put merge("[[tBinariesFolder]]/livecode_inputcontrol.xml") into tPath
          break
       case "Classes"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/Classes-[[tSuffix]]") into tPath
+         put merge("[[tBinariesFolder]]/Classes-[[tSuffix]]") into tPath
          break
       case "Standalone"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/Standalone-[[tSuffix]]") into tPath
+         put merge("[[tBinariesFolder]]/Standalone-[[tSuffix]]") into tPath
          break
       case "revzip"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/RevZip") into tPath
+         put merge("[[tBinariesFolder]]/RevZip") into tPath
          break
       case "revdb"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/RevDb") into tPath
+         put merge("[[tBinariesFolder]]/RevDb") into tPath
          break
       case "revxml"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/RevXml") into tPath
+         put merge("[[tBinariesFolder]]/RevXml") into tPath
          break
       case "dbsqlite"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/DbSqlite") into tPath
+         put merge("[[tBinariesFolder]]/DbSqlite") into tPath
          break
       case "dbmysql"
-         put merge("[[tRepo]]/_build/android/[[tBuild]]/DbMysql") into tPath
+         put merge("[[tBinariesFolder]]/DbMysql") into tPath
          break
       default
          put pPath into tPath

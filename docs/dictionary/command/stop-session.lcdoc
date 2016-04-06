@@ -1,0 +1,25 @@
+Name: stop session
+
+Type: command
+
+Syntax: stop session
+
+Summary: Ends the session explicitly, saving the contents of the $_SESSION variable.
+
+Introduced: 5.0
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+stop session
+
+Description:
+Use the <stop session> command to end the session explicitly and save the contents of the $_SESSION variable.
+
+The location where the $_SESSION array is stored is configured using the <sessionSavePath property>.
+
+References: start session (command), delete session (command), sessionSavePath (property), sessionLifetime (property), sessionId (property), sessionSavePath property (property), sessionName (property)
+
+Tags: multimedia

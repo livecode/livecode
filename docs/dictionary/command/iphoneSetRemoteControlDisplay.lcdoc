@@ -1,0 +1,47 @@
+Name: iphoneSetRemoteControlDisplay
+
+Type: command
+
+Syntax: iphoneSetRemoteControlDisplay <displayData> 
+
+Summary: Configures the information displayed on the remote control device, or on the (locked) home screen controls.
+
+Introduced: 6.1
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetRemoteControlDisplay pDisplayDataArray
+
+Parameters:
+displayData(array): An array with one or more of the following keys:
+- "title": string
+- "artist": string
+- "artwork": Either the text of an image or an image filename.
+- "composer": string
+- "genre": string
+- "album title": string
+- "album track count": number
+- "album track number": number
+- "disk count": number
+- "disk number": number
+- "chapter count": number
+- "chapter number": number
+- "playback duration": number
+- "elapsed playback time": number
+- "playback rate": number
+- "playback queue index": number
+- "playback queue count": number
+
+Description:
+Use the <iphoneSetRemoteControlDisplay> command to configure the information displayed on the remote control device, or on the (locked) home screen controls.
+
+The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).
+
+Use the <iphoneSetRemoteControlDisplay> command to configure the information that may be displayed on the remote control device, or on the (locked) home screen controls.
+>*Note:* There is no guarantee that any of this information will be used, it is up to the remote control device / iOS to decide.
+>*Note:* This functionality is only available on iOS 5.x and above.
+
+References: iphoneEnableRemoteControl (command), iphoneDisableRemoteControl (command), iphoneSetAudioCategory (command), iphoneRemoteControlEnabled (function), remoteControlReceived (message)

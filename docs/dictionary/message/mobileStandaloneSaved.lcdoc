@@ -1,0 +1,36 @@
+Name: mobileStandaloneSaved
+
+Type: message
+
+Syntax: mobileStandaloneSaved <targetType>, <appBundle> 
+
+Summary: Sent to the mainstack after it has been saved as a mobile standalone application or the simulation was started.
+
+Associations: stack
+
+Introduced: 5.5.3
+
+OS: ios,android
+
+Platforms: desktop,server,web
+
+Example:
+on mobileStandaloneSaved pTarget, pFolder
+  get shell("hdiutil create -fs HFS+ -volname MyApp"&\
+      " -size 100m ~/Desktop/MyApp.dmg")
+  get shell("hdiutil mount ~/Desktop/MyApp.dmg")
+  get shell("ditto -rsrc -V "&pFolder&" /Volumes/MyApp"&\
+      " &gt;&gt;  /Volumes/Backup/MyApp.log")
+  get shell("hdiutil unmount /Volumes/MyApp")
+  get shell("hdiutil burn ~/Desktop/MyApp.dmg"& \
+      " -noverifyburn -noeject")
+end mobileStandaloneSaved
+
+Parameters:
+targetType: targetType is either "simulator" or "device", depending on the type of build.
+appBundle: appBundle is a string variable containing the folder that the mobile standalone application was saved in. This is empty if the build failed.
+
+Description:
+After a mobile stack has been saved as a standalone application it is reopened. This message is then sent to the mainstack to allow custom build time automation.
+
+References: savingStandalone (message), standaloneSaved (message), savingMobileStandalone (message)

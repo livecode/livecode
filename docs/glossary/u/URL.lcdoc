@@ -1,0 +1,12 @@
+Name: URL
+
+Synonyms: URL
+
+Type: glossary
+
+Description:
+Uniform (or Universal) Resource Locator. The address of a resource or <file> on the Internet. A URL contains the <protocol> and location of the resource.
+
+References: protocol (glossary), file (glossary)
+
+Tags: networking

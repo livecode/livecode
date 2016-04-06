@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -102,6 +102,7 @@ void MCFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCMemoryAllocate(size_t p_size, void*& r_block)
 {
 	void *t_block;
@@ -114,6 +115,7 @@ bool MCMemoryAllocate(size_t p_size, void*& r_block)
 	return MCErrorThrowOutOfMemory();
 }
 
+MC_DLLEXPORT_DEF
 bool MCMemoryAllocateCopy(const void *p_block, size_t p_block_size, void*& r_block)
 {
 	if (MCMemoryAllocate(p_block_size, r_block))
@@ -124,6 +126,7 @@ bool MCMemoryAllocateCopy(const void *p_block, size_t p_block_size, void*& r_blo
 	return MCErrorThrowOutOfMemory();
 }
 
+MC_DLLEXPORT_DEF
 bool MCMemoryReallocate(void *p_block, size_t p_new_size, void*& r_new_block)
 {
 	void *t_new_block;
@@ -136,6 +139,7 @@ bool MCMemoryReallocate(void *p_block, size_t p_new_size, void*& r_new_block)
 	return MCErrorThrowOutOfMemory();
 }
 
+MC_DLLEXPORT_DEF
 void MCMemoryDeallocate(void *p_block)
 {
 	free(p_block);
@@ -143,6 +147,7 @@ void MCMemoryDeallocate(void *p_block)
 
 //////////
 
+MC_DLLEXPORT_DEF
 bool MCMemoryNew(size_t p_size, void*& r_record)
 {
 	if (MCMemoryAllocate(p_size, r_record))
@@ -153,6 +158,7 @@ bool MCMemoryNew(size_t p_size, void*& r_record)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 void MCMemoryDelete(void *p_record)
 {
 	MCMemoryDeallocate(p_record);
@@ -223,15 +229,24 @@ MCHashInt(T i)
 	return MCHashUInt((i >= 0) ? i : (-i));
 }
 
+MC_DLLEXPORT_DEF
 hash_t MCHashInteger(integer_t i)
 {
 	return MCHashInt (i);
 }
 
+MC_DLLEXPORT_DEF
 hash_t
 MCHashUInteger (uinteger_t i)
 {
 	return MCHashUInt(i);
+}
+
+MC_DLLEXPORT_DEF
+hash_t
+MCHashSize (ssize_t i)
+{
+	return MCHashInt (i);
 }
 
 hash_t
@@ -240,11 +255,13 @@ MCHashUSize (size_t i)
 	return MCHashUInt (i);
 }
 
+MC_DLLEXPORT_DEF
 hash_t MCHashPointer(void *p)
 {
 	return MCHashUInt((uintptr_t) p);
 }
 
+MC_DLLEXPORT_DEF
 hash_t MCHashDouble(double d)
 {
 	double i;
@@ -260,8 +277,11 @@ hash_t MCHashDouble(double d)
 
 #define ELF_STEP(B) T1 = (H << 4) + B; T2 = T1 & 0xF0000000; if (T2) T1 ^= (T2 >> 24); T1 &= (~T2); H = T1;
 
+MC_DLLEXPORT_DEF
 hash_t MCHashBytes(const void *p_bytes, size_t length)
 {
+	MCAssert(nil != p_bytes || 0 == length);
+
 	uint8_t *bytes = (uint8_t *)p_bytes;
 
     /* The ELF hash algorithm, used in the ELF object file format */
@@ -288,8 +308,10 @@ hash_t MCHashBytes(const void *p_bytes, size_t length)
     return H;
 }
 
+MC_DLLEXPORT_DEF
 hash_t MCHashBytesStream(hash_t p_start, const void *p_bytes, size_t length)
 {
+	MCAssert(p_bytes != nil || length == 0);
     MCAssert((length % 4) == 0);
     uint8_t *bytes = (uint8_t *)p_bytes;
     

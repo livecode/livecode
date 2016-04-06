@@ -1,0 +1,28 @@
+Name: card
+
+Type: keyword
+
+Syntax: card
+
+Summary: Used with the <visual effect> <command> to show the destination <card(keyword)> at the end of the visual effect. Also used to refer to <card(object)|cards>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+visual effect push left to card
+
+Example:
+go to card 1
+
+Description:
+Use the <card> <keyword> to improve the clarity of your code. For example, if a <handler> contains several <visual effect> <command|commands>, you can use the <card> <keyword> explicitly to <point> up the fact that different destination images are being used.
+
+Since by default, the image shown at the end of a visual effect is the destination card, you never actually need to use the <card> <keyword>; if you leave it out, the ending image is the <card> anyway.
+
+References: card (keyword), black (keyword), point (keyword), visual effect (command), card (object), command (glossary), keyword (glossary), handler (glossary)
+
+Tags: multimedia

@@ -1,0 +1,12 @@
+Name: decrypt
+
+Synonyms: decryption,decrypting,decrypted,decrypt
+
+Type: glossary
+
+Description:
+To unscramble <encrypt|encrypted> data, recovering the original text. Decrypting data requires that you have the correct <password>.
+
+References: password (glossary), encrypt (glossary)
+
+Tags: text processing

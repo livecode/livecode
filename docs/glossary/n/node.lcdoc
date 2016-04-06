@@ -1,0 +1,14 @@
+Name: node
+
+Synonyms: node,XML node
+
+Type: glossary
+
+Description:
+The basic part of which an <XML tree> is made. 
+ 
+A node in an <XML tree> corresponds to an element in an <XML> document.
+
+References: XML tree (glossary), XML (glossary)
+
+Tags: text processing

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,6 +16,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_SYSDEFS__
 #define __MC_SYSDEFS__
+
+
+#include "globdefs.h"
+
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -35,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_RELAUNCH_SUPPORT
 #define FEATURE_QUICKTIME
 #define FEATURE_QUICKTIME_EFFECTS
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_DESKTOP)
 
@@ -42,10 +47,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
-#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_PLATFORM_RECORDER
 #define FEATURE_PLATFORM_AUDIO
+#define FEATURE_NOTIFY 1
+
+// QuickTime is not supported in 64-bit OSX applications as it has been
+// deprecated by Apple.
+#ifndef __LP64__
+#define FEATURE_QUICKTIME
+#define FEATURE_QUICKTIME_EFFECTS
+#endif
 
 #elif defined(_LINUX_DESKTOP)
 
@@ -53,24 +65,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define MCSSL
 #define FEATURE_MPLAYER
+#define FEATURE_NOTIFY 1
 
 #elif defined(_WINDOWS_SERVER)
 
 #define PLATFORM_STRING "Win32"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_SERVER)
 
 #define PLATFORM_STRING "MacOS"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
 
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
+#define FEATURE_NOTIFY 1
 
 #elif defined(_IOS_MOBILE)
 
@@ -79,12 +95,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LF__
 #define PLATFORM_STRING "iphone"
 
+#define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
+
 #elif defined(_ANDROID_MOBILE)
 
 #define MCSSL
 #define __ISO_8859_1__
 #define __LF__
 #define PLATFORM_STRING "android"
+
+#define FEATURE_PLATFORM_URL 1
+#define FEATURE_NOTIFY 1
+
+#elif defined(__EMSCRIPTEN__)
+
+#define PLATFORM_STRING "HTML5"
+
+#define FEATURE_PLATFORM_URL 1
 
 #endif
 
@@ -96,7 +124,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #if defined(_MSC_VER)
 #define _HAS_VSCPRINTF
 #define _HAS_QSORT_S
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 #define _HAS_VSNPRINTF
 #undef _HAS_QSORT_R
 #elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER) || defined(_IOS_MOBILE)
@@ -244,12 +272,6 @@ typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
 typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
-#define PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-
 #if defined(_DEBUG)
 
 #include <crtdbg.h>
@@ -287,8 +309,6 @@ struct MCFontStruct
 {
 	MCSysFontHandle fid;
 	uint16_t size;
-	int ascent;
-	int descent;
 	Boolean printer;
     
     coord_t m_ascent;
@@ -350,8 +370,6 @@ struct MCFontStruct
 	MCSysFontHandle fid;
 	uint2 size;
 	uint2 style;
-	int ascent;
-	int descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -367,7 +385,7 @@ struct MCFontStruct
 #define SECONDS_MIN -32535244799.0
 #define SECONDS_MAX 32535244799.0
 
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 
 #include <stdarg.h>
 #include <errno.h>
@@ -414,9 +432,8 @@ extern uint2 MCctypetable[];
 
 struct MCFontStruct
 {
-	uint16_t size;
-	uint2 ascent;
-	uint2 descent;
+    MCSysFontHandle fid;
+    uint16_t size;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -468,8 +485,6 @@ struct MCFontStruct
 	MCSysFontHandle fid;
 	uint2 size;
 	uint2 style;
-	int ascent;
-	int descent;
     
     coord_t m_ascent;
     coord_t m_descent;
@@ -513,8 +528,6 @@ inline uint1 MCS_toupper(uint1 p_char)
 struct MCFontStruct
 {
 	uint16_t size;
-	int ascent;
-	int descent;
 	MCSysFontHandle fid;
     
     coord_t m_ascent;
@@ -531,20 +544,23 @@ struct MCFontStruct
 
 #endif
 
+// SN-2015-04-17: [[ Bug 15187 ]] Needed to know whether we are compiling for
+//  iOS Device or iOS Simulator
+#if defined TARGET_SUBPLATFORM_IPHONE
+#include <TargetConditionals.h>
+#endif
+
 //////////////////////////////////////////////////////////////////////
 //
 //  NEW / DELETE REDEFINTIONS
 //
 
-#ifndef PLACEMENT_NEW_DEFINED
-inline void *operator new (size_t size, void *p)
-{
-	return p;
-}
-#endif
+#include <new>
 
 // MW-2014-08-14: [[ Bug 13154 ]] Make sure we use the nothrow variants of new / delete.
-#ifndef __VISUALC__
+// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
+//  as they won't let iOS Simulator 6.3 engine compile.
+#if (!defined __VISUALC__) && (!TARGET_IPHONE_SIMULATOR)
 void *operator new (size_t size) throw();
 void *operator new[] (size_t size) throw();
 #endif
@@ -1199,8 +1215,8 @@ class MCParameter;
 class MCStack;
 class MCExecContext;
 
-typedef uint4 MCDragAction;
-typedef uint4 MCDragActionSet;
+typedef uint32_t MCDragAction;
+typedef uint32_t MCDragActionSet;
 
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
@@ -1340,8 +1356,8 @@ enum Chunk_term {
     CT_PARAGRAPH,
     CT_SENTENCE,
     CT_ITEM,
-    CT_TRUEWORD,
     CT_WORD,
+    CT_TRUEWORD,
     CT_TOKEN,
     CT_CHARACTER,
     // AL-2013-01-08 [[ CharChunks ]] Add 'codepoint, codeunit and byte' to chunk types
@@ -1358,6 +1374,13 @@ struct MCObjectPtr
 {
 	MCObject *object;
 	uint32_t part_id;
+    
+    MCObjectPtr& operator = (const MCObjectPtr& p_obj_ptr)
+    {
+        object = p_obj_ptr . object;
+        part_id = p_obj_ptr . part_id;
+        return *this;
+    }
 };
 
 // NOTE: the indices in this structure are UTF-16 code unit indices if the value is a stringref,
@@ -1407,10 +1430,6 @@ struct MCObjectChunkIndexPtr
 	MCMarkedText mark;
     MCNameRef index;
 };
-
-// MM-2014-07-31: [[ ThreadedRendering ]]
-typedef struct __MCThreadCondition *MCThreadConditionRef;
-typedef struct __MCThreadMutex *MCThreadMutexRef;
 
 //////////////////////////////////////////////////////////////////////
 

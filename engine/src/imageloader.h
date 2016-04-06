@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -16,6 +16,8 @@
 
 #ifndef __MC_IMAGE_LOADER_H__
 #define __MC_IMAGE_LOADER_H__
+
+#include "objdefs.h"
 
 // Supported import formats
 enum MCImageLoaderFormat
@@ -51,6 +53,8 @@ public:
 	bool GetName(MCStringRef &r_name);
 	// Returns the number of frames in the image
 	virtual bool GetFrameCount(uint32_t &r_frame_count);
+    // Returns the metadata for the image
+    bool GetMetadata(MCImageMetadata &r_metadata);
 	// Returns the decoded image bitmap frames
 	bool GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count);
 	
@@ -68,7 +72,7 @@ public:
 
 protected:
 	// Implemented by subclasses to perform the image header loading
-	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count) = 0;
+	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_xhot, uint32_t &r_yhot, MCStringRef &r_name, uint32_t &r_frame_count, MCImageMetadata &r_metadata) = 0;
 	// Implemented by subclasses to perform the image bitmap frame loading
 	virtual bool LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count) = 0;
 	
@@ -93,6 +97,8 @@ private:
 	
 	MCBitmapFrame *m_frames;
 	uint32_t m_frame_count;
+    
+    MCImageMetadata m_metadata;
 	
 	MCStringRef m_name;
 };

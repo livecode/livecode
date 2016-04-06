@@ -1,0 +1,31 @@
+Name: iphoneSetStatusBarStyle
+
+Type: command
+
+Syntax: iphoneSetStatusBarStyle <style> 
+
+Summary: Controls the style of the iOS status bar.
+
+Introduced: 4.5.2
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneSetStatusBarStyle tStyle
+
+Example:
+iphoneSetStatusBarStyle "translucent"
+
+Parameters:
+style (enum): The style of the iOS status bar.
+- "default": The default mode for the device.
+- "translucent": Semi-transparent status bar (in this case the stack appears underneath it).
+- "opaque": A black status bar (in this case the stack appears below it in pre-iOS 7, and underneath it in iOS 7+).
+- "solid": A black status bar (in this case the stack appears below it).
+
+Description:
+Use <iphoneSetStatusBarStyle> to change the style of the iOS status bar.
+
+References: mobileHideStatusBar (command), mobileShowStatusBar (command)

@@ -1,0 +1,35 @@
+Name: extendKey
+
+Type: property
+
+Syntax: set the extendKey to <keyNumber> 
+
+Summary: Specifies the key used to create special (extended <ASCII>) characters on <Unix|Unix systems>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the extendKey to 6 -- disables entry of high-bit chars
+
+Value:
+The <extendKey> is a positive <integer>.
+By default, the <extendKey> is set to 5, so the <modifier key> is the mod5 key specified by the "xmodmap" program on your computer.
+
+Description:
+Use the <extendKey> <property> to specify how to create special characters, or to prevent users from typing special characters.
+
+The <extendKey> specifies the <modifier key> used to toggle the high <bit> of <characters> on and off. Use the "xmodmap" program to find out which key is used for mod5 (or the <modifier key> specified for the <extendKey>).
+
+To enter a high-bit character, press the modifier key, then type the key that corresponds to that character, then press the modifier key again to return to entering regular ASCII characters.
+
+If the <extendKey> is greater than 5, entry of high-bit <characters> is disabled.
+
+The setting of this property has no effect on Mac OS and Windows systems.
+
+References: characters (keyword), integer (keyword), keyDown (message), numToChar (function), charToNum (function), property (glossary), Unix (glossary), bit (glossary), ASCII (glossary), modifier key (glossary)
+
+Tags: ui

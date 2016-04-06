@@ -1,0 +1,1 @@
+# mobileFindContact crashes LiveCode when contact not found

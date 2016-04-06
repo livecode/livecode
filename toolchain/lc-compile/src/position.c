@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -26,6 +26,8 @@
 #define COLUMNS_PER_ROW 1000
 #define ROWS_PER_FILE 10000
 #define COLUMNS_PER_FILE (COLUMNS_PER_ROW * ROWS_PER_FILE)
+
+#define MAXPATHLEN 4096
 
 static long s_current_position;
 
@@ -83,6 +85,13 @@ void GetFileOfPosition(long p_position, FileRef *r_file)
         Fatal_InternalInconsistency("Position encoded with invalid file index");
 }
 
+void GetFilenameOfPosition(long p_position, const char **r_filename)
+{
+    FileRef t_file;
+    GetFileOfPosition(p_position, &t_file);
+    GetFilePath(t_file, r_filename);
+}
+
 void GetCurrentPosition(long *r_result)
 {
     *r_result = s_current_position;
@@ -113,7 +122,7 @@ void AddImportedModuleDir(const char *p_dir)
 
 int AddImportedModuleFile(const char *p_name)
 {
-    char t_path[4096];
+    char t_path[MAXPATHLEN];
 	FILE *t_file;
     
     t_file = NULL;
@@ -122,7 +131,7 @@ int AddImportedModuleFile(const char *p_name)
 		int i;
         for(i = 0; i < ImportedModuleDirCount; i++)
         {
-            sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
+            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
             t_file = fopen(t_path, "r");
             if (t_file != NULL)
                 break;
@@ -130,7 +139,7 @@ int AddImportedModuleFile(const char *p_name)
     }
     else
     {
-        sprintf(t_path, "%s.lci", p_name);
+        /* OVERFLOW */ sprintf(t_path, "%s.lci", p_name);
         t_file = fopen(t_path, "r");
     }
     
@@ -144,18 +153,52 @@ int AddImportedModuleFile(const char *p_name)
     return 1;
 }
 
+void FindImportedModuleFile(const char *p_name, char** r_module_file)
+{
+    char t_path[MAXPATHLEN];
+	FILE *t_file;
+    
+    t_file = NULL;
+    if (ImportedModuleDirCount > 0)
+    {
+		int i;
+        for(i = 0; i < ImportedModuleDirCount; i++)
+        {
+            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[i], p_name);
+            t_file = fopen(t_path, "r");
+            if (t_file != NULL)
+                break;
+        }
+    }
+    else
+    {
+        /* OVERFLOW */ sprintf(t_path, "%s.lci", p_name);
+        t_file = fopen(t_path, "r");
+    }
+    
+    if (t_file == NULL)
+    {
+        if (ImportedModuleDirCount > 0)
+            /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+    }
+    else
+        fclose(t_file);
+    
+    *r_module_file = strdup(t_path);
+}
+
 FILE *
 OpenImportedModuleFile (const char *p_name,
                         char **r_filename)
 {
-    char t_path[4096];
+    char t_path[MAXPATHLEN];
     FILE *t_file;
 
     if (ImportedModuleDirCount == 0)
         return NULL;
 
     // Use the first modulepath to write the interface file into.
-    sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+    /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
 
 	if (NULL != r_filename)
 	{
@@ -182,7 +225,9 @@ static FileRef s_files;
 static FileRef s_current_file;
 static unsigned int s_next_file_index;
 static const char *s_template_file = NULL;
-static const char *s_output_file = NULL;
+static const char *s_output_bytecode_file = NULL;
+static const char *s_output_code_file = NULL;
+static const char *s_output_grammar_file = NULL;
 static const char *s_manifest_output_file = NULL;
 
 void InitializeFiles(void)
@@ -196,12 +241,25 @@ void FinalizeFiles(void)
 {
 }
 
+int FileAlreadyAdded(const char *p_filename)
+{
+    FileRef t_file;
+    for(t_file = s_files; t_file != NULL; t_file = t_file -> next)
+        if (strcmp(t_file -> path, p_filename) == 0)
+            return 1;
+
+    return 0;
+}
+
 void AddFile(const char *p_filename)
-{	
+{
 	FileRef t_new_file;
 	FileRef *t_last_file_ptr;
 	const char *t_name;
 
+    if (FileAlreadyAdded(p_filename))
+        return;
+    
     t_new_file = (FileRef)calloc(sizeof(struct File), 1);
     if (t_new_file == NULL)
         Fatal_OutOfMemory();
@@ -210,7 +268,11 @@ void AddFile(const char *p_filename)
     if (t_new_file -> path == NULL)
         Fatal_OutOfMemory();
     
+#ifndef _WIN32
     t_name = strrchr(p_filename, '/');
+#else
+    t_name = strrchr(p_filename, '\\');
+#endif
     if (t_name == NULL)
         t_name = p_filename;
     else
@@ -295,9 +357,19 @@ int GetCurrentFile(FileRef *r_file)
     return 1;
 }
 
-void SetOutputFile(const char *p_output)
+void SetOutputBytecodeFile(const char *p_output)
 {
-    s_output_file = p_output;
+    s_output_bytecode_file = p_output;
+}
+
+void SetOutputGrammarFile(const char *p_output)
+{
+    s_output_grammar_file = p_output;
+}
+
+void SetOutputCodeFile(const char *p_output)
+{
+    s_output_code_file = p_output;
 }
 
 void SetManifestOutputFile(const char *p_output)
@@ -310,17 +382,57 @@ void SetTemplateFile(const char *p_output)
     s_template_file = p_output;
 }
 
-FILE *OpenOutputFile(const char **r_filename)
+void GetOutputFile(const char **r_output)
 {
-    if (s_output_file == NULL)
+    if (s_output_bytecode_file != NULL)
+        *r_output = s_output_bytecode_file;
+    else
+        *r_output = s_output_code_file;
+}
+
+FILE *OpenOutputBytecodeFile(const char **r_filename)
+{
+    if (s_output_bytecode_file == NULL)
         return NULL;
 
 	if (NULL != r_filename)
 	{
-		*r_filename = s_output_file;
+		*r_filename = s_output_bytecode_file;
 	}
 
-    return fopen(s_output_file, "wb");
+    return fopen(s_output_bytecode_file, "wb");
+}
+
+FILE *OpenOutputCodeFile(const char **r_filename)
+{
+    if (s_output_code_file == NULL)
+        return NULL;
+    
+	if (NULL != r_filename)
+	{
+		*r_filename = s_output_code_file;
+	}
+    
+    return fopen(s_output_code_file, "w");
+}
+
+FILE *OpenOutputGrammarFile(const char **r_filename)
+{
+    if (s_output_grammar_file == NULL)
+        return NULL;
+
+	if (NULL != r_filename)
+	{
+		*r_filename = s_output_grammar_file;
+	}
+
+	if (s_output_grammar_file[0] == '-' &&
+	    s_output_grammar_file[1] == '\0')
+	{
+		return stdout;
+	}
+    
+    return fopen(s_output_grammar_file, "w");
 }
 
 FILE *OpenManifestOutputFile(void)

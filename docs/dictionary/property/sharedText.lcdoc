@@ -1,0 +1,34 @@
+Name: sharedText
+
+Type: property
+
+Syntax: set the sharedText of <field> to {true | false}
+
+Summary: Specifies whether a <grouped control|grouped field's> text is the same on all <card|cards> with that <group>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the sharedText of field "Section Marker" to true
+
+Value (bool):The <sharedText> of a <field(keyword)> is true or false.
+By default, the <sharedText> <property> of newly created <field(object)|fields> is set to false.
+
+Description:
+Use the <sharedText> <property> to create labels or other <field(object)|fields> with static text (the same on all <card(object)|cards> where the <field(keyword)> appears).
+
+If a field's <sharedText> <property> is set to true, the content of that <field(keyword)> is the same on all <card(object)|cards> where the <field(keyword)> appears. Changing the text on one <card(keyword)> changes it on all the <card(object)|cards>.
+
+If the field's <sharedText> is false, it can have different text on each <card(keyword)> where it appears, and changing the <field(object)|field's> text changes it only on the <current card>.
+
+If the field is a card field (not part of a group), its <sharedText> <property> has no effect.
+
+References: dontSearch (property), sharedHilite (property), field (keyword), card (keyword), group (command), card (object), field (object), grouped control (glossary), property (glossary), current card (glossary)
+
+Tags: ui

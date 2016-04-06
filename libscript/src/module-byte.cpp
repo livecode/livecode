@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -19,12 +19,12 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-extern "C" MC_DLLEXPORT void MCByteEvalNumberOfBytesIn(MCDataRef p_source, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalNumberOfBytesIn(MCDataRef p_source, uindex_t& r_output)
 {
     r_output = MCDataGetLength(p_source);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCDataRef p_target, bool p_is_not, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCDataRef p_target, bool p_is_not, bool& r_output)
 {
     // Error if there is more than one byte.
     if (MCDataGetLength(p_needle) != 1)
@@ -41,22 +41,22 @@ extern "C" MC_DLLEXPORT void MCByteEvalIsAmongTheBytesOf(MCDataRef p_needle, MCD
     r_output = t_found;
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalContainsBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalContainsBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataContains(p_target, p_needle);
 }
  
-extern "C" MC_DLLEXPORT void MCByteEvalBeginsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalBeginsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataBeginsWith(p_target, p_needle);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalEndsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalEndsWithBytes(MCDataRef p_target, MCDataRef p_needle, bool& r_output)
 {
     r_output = MCDataEndsWith(p_target, p_needle);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, MCRange p_range, uindex_t& r_output)
 {
     // Incoming range must be 0-based.
     uindex_t t_offset;
@@ -72,18 +72,18 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesInRange(MCDataRef p_needle, 
             t_found = MCDataLastIndexOf(p_target, p_needle, p_range, t_offset);
         
         if (t_found)
-            t_offset++;
+            t_offset += p_range.offset + 1;
     }
     
     r_output = t_offset;
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytes(MCDataRef p_needle, MCDataRef p_target, bool p_is_last, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalOffsetOfBytes(bool p_is_last, MCDataRef p_needle, MCDataRef p_target, uindex_t& r_output)
 {
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(0, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MCDataRef p_target, uindex_t p_after, bool p_is_last, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalOffsetOfBytesAfter(bool p_is_last, MCDataRef p_needle, index_t p_after, MCDataRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_after, true, true, false, t_start, t_count))
@@ -95,10 +95,14 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesAfter(MCDataRef p_needle, MC
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, p_is_last, MCRangeMake(t_start + t_count, UINDEX_MAX), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, MCDataRef p_target, uindex_t p_before, bool p_is_first, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteEvalOffsetOfBytesBefore(bool p_is_first, MCDataRef p_needle, index_t p_before, MCDataRef p_target, uindex_t& r_output)
 {
     uindex_t t_start, t_count;
-    if (!MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_before, true, false, true, t_start, t_count))
+	if (0 == p_before)
+	{
+		t_start = UINDEX_MAX;
+	}
+	else if (!MCChunkGetExtentsOfByteChunkByExpressionInRange(p_target, nil, p_before, true, false, true, t_start, t_count))
     {
         MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("chunk index out of range"), nil);
         return;
@@ -107,7 +111,7 @@ extern "C" MC_DLLEXPORT void MCByteEvalOffsetOfBytesBefore(MCDataRef p_needle, M
     return MCByteEvalOffsetOfBytesInRange(p_needle, p_target, !p_is_first, MCRangeMake(0, t_start), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_target, MCDataRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteFetchByteRangeOf(index_t p_start, index_t p_finish, MCDataRef p_target, MCDataRef& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfByteChunkByRangeInRange(p_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -120,7 +124,7 @@ extern "C" MC_DLLEXPORT void MCByteFetchByteRangeOf(index_t p_start, index_t p_f
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p_start, index_t p_finish, MCDataRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfByteChunkByRangeInRange(x_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -143,57 +147,57 @@ extern "C" MC_DLLEXPORT void MCByteStoreByteRangeOf(MCDataRef p_value, index_t p
     MCValueAssign(x_target, *t_new_data);
 }
 
-extern "C" MC_DLLEXPORT void MCByteFetchByteOf(index_t p_index, MCDataRef p_target, MCDataRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteFetchByteOf(index_t p_index, MCDataRef p_target, MCDataRef& r_output)
 {
     MCByteFetchByteRangeOf(p_index, p_index, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteStoreByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteStoreByteOf(MCDataRef p_value, index_t p_index, MCDataRef& x_target)
 {
     MCByteStoreByteRangeOf(p_value, p_index, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteFetchFirstByteOf(MCDataRef p_target, MCDataRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteFetchFirstByteOf(MCDataRef p_target, MCDataRef& r_output)
 {
     MCByteFetchByteOf(1, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteStoreFirstByteOf(MCDataRef p_value, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteStoreFirstByteOf(MCDataRef p_value, MCDataRef& x_target)
 {
     MCByteStoreByteOf(p_value, 1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteFetchLastByteOf(MCDataRef p_target, MCDataRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCByteFetchLastByteOf(MCDataRef p_target, MCDataRef& r_output)
 {
     MCByteFetchByteOf(-1, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCByteStoreLastByteOf(MCDataRef p_value, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteStoreLastByteOf(MCDataRef p_value, MCDataRef& x_target)
 {
     MCByteStoreByteOf(p_value, -1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteExecDeleteByteRangeOf(index_t p_start, index_t p_finish, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteExecDeleteByteRangeOf(index_t p_start, index_t p_finish, MCDataRef& x_target)
 {
     MCByteStoreByteRangeOf(kMCEmptyData, p_start, p_finish, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteExecDeleteByteOf(index_t p_index, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteExecDeleteByteOf(index_t p_index, MCDataRef& x_target)
 {
     MCByteStoreByteOf(kMCEmptyData, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteExecDeleteFirstByteOf(MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteExecDeleteFirstByteOf(MCDataRef& x_target)
 {
     MCByteExecDeleteByteOf(1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCByteExecDeleteLastByteOf(MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCByteExecDeleteLastByteOf(MCDataRef& x_target)
 {
     MCByteExecDeleteByteOf(-1, x_target);
 }
 
-extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& r_iterand, MCDataRef p_data)
+extern "C" MC_DLLEXPORT_DEF bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRef& r_iterand, MCDataRef p_data)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;
@@ -211,7 +215,7 @@ extern "C" MC_DLLEXPORT bool MCByteRepeatForEachByte(void*& x_iterator, MCDataRe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
 {
 	/* UNCHECKED */ MCSRandomData (p_count, r_data);
@@ -219,7 +223,7 @@ MCDataExecRandomBytes (uindex_t p_count, MCDataRef & r_data)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCByteEvalByteWithCode (uinteger_t p_value,
                         MCDataRef & r_data)
 {
@@ -236,7 +240,7 @@ MCByteEvalByteWithCode (uinteger_t p_value,
 	MCDataCreateWithBytes (&t_byte, 1, r_data);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCByteEvalCodeOfByte (MCDataRef p_data,
                       uinteger_t & r_value)
 {
@@ -247,6 +251,17 @@ MCByteEvalCodeOfByte (MCDataRef p_data,
 	}
 
 	r_value = MCDataGetByteAtIndex (p_data, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_byte_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_byte_Finalize(void)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

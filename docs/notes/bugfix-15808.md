@@ -1,0 +1,1 @@
+# Widgets: SVG Icon widget not documented

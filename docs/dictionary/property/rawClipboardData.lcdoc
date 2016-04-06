@@ -1,0 +1,52 @@
+Name: rawClipboardData
+
+Type: property
+
+Syntax: set the rawClipboardData[<key>] to <data>
+Syntax: set the rawClipboardData to empty
+
+Summary: provides low-level access to the contents of the <clipboard>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+lock the clipboard
+put the keys of the rawClipboardData
+unlock the clipboard
+
+Example:
+lock the clipboard
+set the rawClipboardData["text/plain;charset=utf-8"] to textEncode("Hello, World!", "UTF-8") -- Linux
+set the rawClipboardData["CF_UNICODE"] to textEncode("Hello, World!", "UTF-16") -- Windows
+set the rawClipboardData["public.utf8-plain-text"] to textEncode("Hello, World!", "UTF-8") -- OSX
+unlock the clipboard
+
+Value:
+The <rawClipboardData> pseudo-array provides low-level access to the data on the clipboard. It can only be accessed while the clipboard is locked.
+The keys for the <rawClipboardData> are platform-specific.
+
+Description:
+>*Note:*	The <rawClipboardData> cannot be accessed outside of a <lock clipboard>/<unlock clipboard> pair. This is to ensure the clipboard contents do not change during access.
+
+Use the <rawClipboardData> to gain low-level access to the system clipboard. 
+
+If the contents of the clipboard were placed there by another app, the clipboard will have to be cleared before being used: ``set the rawClipboardData to empty``.  Attempting to overwrite externally-provided data without clearing the clipboard will throw an error.
+
+This property should only be used if you require low-level access; the <fullClipboardData> <property> is more appropriate for most uses.
+
+As a low-level feature, platform differences are not hidden. In particular, the form of the keys of the <rawClipboardData> are platform-specific, but can be summarised as:
+ - Windows: arbitrary strings but keys of the form CF_xxx correspond to the clipboard formats defined by Windows itself
+ - OSX: Uniform Type Identifiers (UTIs) with an extension: OSTypes/MIME-types can be used by prefixing the key with com.apple.ostype:/public.mime-type:
+ - Linux: arbitrary strings (X11 atoms) but, by convention, MIME types are used
+
+>*Tip:*		All contents of the <rawClipboardData> are binary - use the <textEncode>/<textDecode> functions to convert to/from the appropriate encoding.
+
+>*Tip:*		It is good practice to clear the clipboard before use: ``set the rawClipboardData to empty``
+
+References: lock clipboard (command), unlock clipboard (command), clipboard (function), clipboard (property), clipboardData (property), fullClipboardData (property), rawDragData (property)
+
+Tags: ui, clipboard

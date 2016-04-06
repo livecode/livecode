@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "chunk.h"
 #include "object.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "mcerror.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -776,10 +776,12 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCExecPoint& ep, MCObjectRef *p_o
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				p_objects[i] . object -> del();
-				if (p_objects[i] . object -> gettype() == CT_STACK)
-					MCtodestroy -> remove(static_cast<MCStack *>(p_objects[i] . object));
-				p_objects[i] . object -> scheduledelete();
+				if (p_objects[i] . object -> del())
+                {
+                    if (p_objects[i] . object -> gettype() == CT_STACK)
+                        MCtodestroy -> remove(static_cast<MCStack *>(p_objects[i] . object));
+                    p_objects[i] . object -> scheduledelete();
+                }
 			}
 		}
 	}
@@ -983,36 +985,41 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
-	else if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
-             (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
+	else
     {
-        if (!script_only_stack)
+        // AL-2015-05-21: [[ Bug 15405 ]] Allow 'create widget as ... in group ...'
+        if (otype == CT_WIDGET)
         {
-            container = new MCChunk(False);
-            if (container->parse(sp, False) != PS_NORMAL)
+            if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
             {
-                MCperror->add
-                (PE_CREATE_BADBGORCARD, sp);
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
+                return PS_ERROR;
+            }
+            if (sp.parseexp(False, True, &kind) != PS_NORMAL)
+            {
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
                 return PS_ERROR;
             }
         }
-        else
+        
+        if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL ||
+            (otype == CT_STACK && sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL))
         {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
-        }
-    }
-    else if (otype == CT_WIDGET)
-    {
-        if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) != PS_NORMAL)
-        {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
-        }
-        if (sp.parseexp(False, True, &kind) != PS_NORMAL)
-        {
-            MCperror -> add(PE_CREATE_BADTYPE, sp);
-            return PS_ERROR;
+            if (!script_only_stack)
+            {
+                container = new MCChunk(False);
+                if (container->parse(sp, False) != PS_NORMAL)
+                {
+                    MCperror->add
+                    (PE_CREATE_BADBGORCARD, sp);
+                    return PS_ERROR;
+                }
+            }
+            else
+            {
+                MCperror -> add(PE_CREATE_BADTYPE, sp);
+                return PS_ERROR;
+            }
         }
     }
 	return PS_NORMAL;
@@ -1112,6 +1119,8 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
         t_new_stack -> setparent(MCdispatcher -> gethome());
         t_new_stack -> message(MCM_new_stack);
         t_new_stack -> setflag(False, F_VISIBLE);
+		// PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
+		t_new_stack -> open();
         ep . clear();
         t_new_stack -> setasscriptonly(ep);
         optr = t_new_stack;
@@ -1967,17 +1976,28 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 	Symbol_type type;
 	const LT *te;
 	initpoint(sp);
-	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
+	
+	// Allow flipping the portion currently selected with the Select paint tool
+	// In this case an image is not specified, i.e. "flip vertical"
+	if (sp.next(type) == PS_NORMAL && sp.lookup(SP_FLIP, te) == PS_NORMAL)
 	{
-		sp.backup();
-		image = new MCChunk(False);
-		if (image->parse(sp, False) != PS_NORMAL)
-		{
-			MCperror->add
-			(PE_FLIP_BADIMAGE, sp);
-			return PS_ERROR;
-		}
+		direction = (Flip_dir)te->which;
+		return PS_NORMAL;
 	}
+	
+	sp.backup();
+	
+	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
+	
+	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCFlip::exec
+	image = new MCChunk(False);
+	if (image->parse(sp, False) != PS_NORMAL)
+	{
+		MCperror->add(PE_FLIP_BADIMAGE, sp);
+		return PS_ERROR;
+	}
+	
+	
 	if (sp.next(type) != PS_NORMAL || sp.lookup(SP_FLIP, te) != PS_NORMAL)
 	{
 		MCperror->add
@@ -2148,6 +2168,7 @@ MCLaunch::~MCLaunch()
 {
 	delete doc;
 	delete app;
+	delete widget;
 }
 
 // Syntax should be:
@@ -2197,6 +2218,15 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 		as_url = t_is_url;
 	}
 
+	if (t_is_url && sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
+	{
+		widget = new MCChunk(False);
+		if (widget->parse(sp, False) != PS_NORMAL)
+		{
+			MCperror->add(PE_LAUNCH_BADWIDGETEXP, sp);
+			return PS_ERROR;
+		}
+	}
 	return PS_NORMAL;
 }
 
@@ -2302,7 +2332,23 @@ void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 	else if (doc != NULL)
 	{
 		if (as_url)
-			MCFilesExecLaunchUrl(ctxt, *t_document);
+		{
+			if (widget != nil)
+			{
+				MCObject *t_object;
+				uint32_t t_parid;
+				
+				if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+				{
+					ctxt.LegacyThrow(EE_LAUNCH_BADWIDGETEXP);
+					return;
+				}
+				
+				MCInterfaceExecLaunchUrlInWidget(ctxt, *t_document, (MCWidget*)t_object);
+			}
+			else
+				MCFilesExecLaunchUrl(ctxt, *t_document);
+		}
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
@@ -2324,7 +2370,15 @@ void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
 		doc -> compile(ctxt);
 
 		if (as_url)
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		{
+			if (widget)
+			{
+				widget->compile(ctxt);
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecLaunchUrlInWidgetMethodInfo);
+			}
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		}
 		else
 			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchDocumentMethodInfo);
 	}
@@ -2346,6 +2400,23 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 	{
         is_extension = true;
 		
+        if (sp.skip_token(SP_FACTOR, TT_FROM) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFROM, sp);
+            return PS_ERROR;
+        }
+        
+        // AL-2015-11-06: [[ Load Extension From Var ]] Allow loading an extension from data in a variable
+        if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_DATA) == PS_NORMAL)
+        {
+            from_data = true;
+        }
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+        {
+            MCperror->add(PE_LOAD_NOFILE, sp);
+            return PS_ERROR;
+        }
+        
 		if (sp.parseexp(False, True, &url) != PS_NORMAL)
 		{
 			MCperror->add(PE_LOAD_BADEXTENSION, sp);
@@ -2429,15 +2500,29 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
     
 	if (is_extension)
 	{
-		MCAutoStringRef t_filename;
 		MCAutoStringRef t_resource_path;
-		if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
-			return;
+        if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
+            return;
+        
+        // AL-2015-11-06: [[ Load Extension From Var ]] Allow loading an extension from data in a variable
+        if (from_data)
+        {
+            MCAutoDataRef t_data;
+            
+            if (!ctxt . EvalExprAsDataRef(url, EE_LOAD_BADEXTENSION, &t_data))
+                return;
 		
-		if (has_resource_path && !ctxt . EvalExprAsStringRef(message, EE_LOAD_BADRESOURCEPATH, &t_resource_path))
-			return;
+            MCEngineLoadExtensionFromData(ctxt, *t_data, *t_resource_path);
+        }
+        else
+        {
+            MCAutoStringRef t_filename;
+            
+            if (!ctxt . EvalExprAsStringRef(url, EE_LOAD_BADEXTENSION, &t_filename))
+                return; 
 		
-        MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
+            MCEngineExecLoadExtension(ctxt, *t_filename, *t_resource_path);
+        }
 	}
 	else
     {
@@ -2479,7 +2564,7 @@ Parse_stat MCUnload::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
     
-	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION))
+	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_EXTENSION) == PS_NORMAL)
 		is_extension = true;
 	else
 		sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL);
@@ -3344,6 +3429,23 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 		MCperror->add(PE_REPLACE_BADCONTAINER, sp);
 		return PS_ERROR;
 	}
+	
+	// Parse the replace in field suffix:
+	//    replace ... with ... in <fieldchunk> (replacing | preserving) styles
+	//
+	if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REPLACING) == PS_NORMAL)
+		mode = kReplaceStyles;
+	else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PRESERVING) == PS_NORMAL)
+		mode = kPreserveStyles;
+	if (mode != kIgnoreStyles)
+	{
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STYLES) != PS_NORMAL)
+		{
+			MCperror->add(PE_REPLACE_NOSTYLES, sp);
+			return PS_ERROR;
+		}
+	}
+	
 	return PS_NORMAL;
 }
 
@@ -3414,18 +3516,54 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
     MCAutoStringRef t_replacement;
     if (!ctxt . EvalExprAsStringRef(replacement, EE_REPLACE_BADREPLACEMENT, &t_replacement))
         return;
-    
-    
-    MCAutoStringRef t_target;
-    if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, &t_target))
-        return;
+	
+	// The ignore styles mode treats all targets as strings, so we use
+	// the string-based method.
+	//
+	// The replace styles mode is only valid for field chunks. It will
+	// replace both the text and complete styling of each found string.
+	//
+	// The preserve styles mode is only valid for field chunks. It will
+	// replace the text and merge the styling of the replacement pattern
+	// with the found string. As the replacement string can only be
+	// plain text at the moment, it is equivalent to using the same style
+	// as the first char in the found string.
+	
+	if (mode == kIgnoreStyles)
+	{
+		MCAutoStringRef t_target;
+		if (!ctxt . EvalExprAsMutableStringRef(container, EE_REPLACE_BADCONTAINER, &t_target))
+			return;
 
-    MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
-    
-    if (ctxt . HasError())
-        return;
-    
-    container -> set(ctxt, PT_INTO, *t_target);
+		MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
+		
+		if (ctxt . HasError())
+			return;
+		
+		container -> set(ctxt, PT_INTO, *t_target);
+	}
+	else
+	{
+		MCObjectChunkPtr t_obj_chunk;
+		
+		if (!container -> evalobjectchunk(ctxt,
+										  true,
+										  false,
+										  t_obj_chunk) ||
+			t_obj_chunk . object -> gettype() != CT_FIELD)
+		{
+			ctxt . LegacyThrow(EE_REPLACE_BADFIELDCHUNK);
+			return;
+		}
+		
+		MCInterfaceExecReplaceInField(ctxt,
+									  *t_pattern,
+									  *t_replacement,
+									  t_obj_chunk,
+									  mode == kPreserveStyles);
+		
+		MCValueRelease(t_obj_chunk . mark . text);
+	}
 }
 
 void MCReplace::compile(MCSyntaxFactoryRef ctxt)
@@ -3462,11 +3600,10 @@ void MCRevert::exec_ctxt(MCExecContext& ctxt)
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
 		MCerrorlock++;
-		sptr->del();
+		if (sptr->del())
+            sptr -> scheduledelete();
 		MCerrorlock--;
 		MClockmessages = oldlock;
-		MCtodestroy->add
-		(sptr);
 		sptr = MCdispatcher->findstackname(ep.getsvalue());
 		if (sptr != NULL)
 			sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
@@ -4349,6 +4486,7 @@ void MCRelayer::exec_ctxt(MCExecContext& ctxt)
             MCInterfaceExecRelayer(ctxt, relation, t_source, t_layer);
             break;
         case kMCRelayerFormRelativeToControl:
+        {
             MCObjectPtr t_target;
             if (!target -> getobj(ctxt, t_target, True))
             {
@@ -4356,6 +4494,7 @@ void MCRelayer::exec_ctxt(MCExecContext& ctxt)
                 return;
             }
             MCInterfaceExecRelayerRelativeToControl(ctxt, relation, t_source, t_target);
+        }
             break;
         case kMCRelayerFormRelativeToOwner:
             MCInterfaceExecRelayerRelativeToOwner(ctxt, relation, t_source);

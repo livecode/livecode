@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -315,10 +315,14 @@ void MCImage::copyimage()
 		MCImageFreeBitmap(t_bitmap);
 	}
 	else
-		/* UNCHECKED */ getclipboardtext(&t_image_data);
+		getclipboardtext(&t_image_data);
 	
 	if (*t_image_data != NULL)
-		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
+    {
+        // Clear the clipboard and add the image to it.
+        MCclipboard->Clear();
+        MCclipboard->AddImage(*t_image_data);
+    }
 }
 
 void MCImage::delimage()
@@ -466,6 +470,9 @@ void MCImage::crop(MCRectangle *newrect)
 	unlockbitmap(t_bitmap);
 
 	/* UNCHECKED */ setbitmap(t_cropimage, 1.0);
+	
+	// PM-2015-07-13: [[ Bug 15590 ]] Fix memory leak
+	MCImageFreeBitmap(t_cropimage);
 
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
@@ -738,6 +745,9 @@ MCCursorRef MCImage::createcursor()
 	{
 		MCColor t_palette[2];
 		MCColor *t_colors;
+        // SN-2015-06-02: [[ CID 90611 ]] Initialise t_colors
+        t_colors = NULL;
+        
 		if (!MCcursorbwonly)
 			MCImageGenerateOptimalPaletteWithWeightedPixels(t_cursor_bitmap, 2, t_colors);
 		else
@@ -1240,7 +1250,7 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 	MCImageBitmap *t_bitmap = nil;
 	IO_handle t_stream = nil;
 	
-	char *t_bytes = nil;
+	void *t_bytes = nil;
 	uindex_t t_byte_count = 0;
 	
 	t_success = nil != (t_stream = MCS_fakeopenwrite());
@@ -1248,7 +1258,7 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 	if (t_success)
 		t_success = MCImageEncodePNG(p_bitmap, nil, t_stream, t_byte_count);
 	
-	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count)))
+	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer_uint32(t_stream, t_bytes, t_byte_count))
 		t_success = false;
 	
 	if (t_success)

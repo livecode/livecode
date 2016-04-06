@@ -1,0 +1,25 @@
+Name: graphic
+
+Type: keyword
+
+Syntax: graphic
+
+Summary: Designates the Graphic <tool>, which is used to create new <graphic|graphics>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose graphic tool
+
+Description:
+Use the <graphic> <keyword> to create <graphic(object)|graphics>.
+
+When using the Graphic tool, the cursor is a crosshairs. This tool is used for creating graphics by clicking at one corner of the graphic and dragging to the opposite corner.
+
+You can set the style of the <templateGraphic> to the <graphic(keyword)> type you want, then draw the <graphic(keyword)> with the Graphic <tool>. The <graphic(keyword)> icons on the Tools <palette> work this way: each one sets the <style> of the <templateGraphic>, then chooses the Graphic <tool> so you can create the <graphic(keyword)>.
+
+References: templateGraphic (keyword), graphic (keyword), style (property), palette (command), choose (command), tool (function), graphic (object), keyword (glossary)

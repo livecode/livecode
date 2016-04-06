@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -60,6 +60,15 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.text.Collator;
 
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.CertificateException;
+
 // This is the main class that interacts with the engine. Although only one
 // instance of the engine is allowed, we still need an object on which we can
 // invoke methods from the native code so we wrap all this up into a single
@@ -106,12 +115,18 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
-    private FrameLayout m_view_layout;
+    private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
     
     // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
     private Collator m_collator;
+    
+    // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
+    private X509TrustManager m_trust_manager;
+    private String m_last_certificate_verification_error;
+	
+	private boolean m_new_intent;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,10 +209,16 @@ public class Engine extends View implements EngineApi
         // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
         m_collator = Collator.getInstance(Locale.getDefault());
 		
+        // MM-2015-06-11: [[ MobileSockets ]] Trust manager and last verification error, used for verifying ssl certificates.
+        m_trust_manager = null;
+        m_last_certificate_verification_error = null;
+        
 		// MW-2013-10-09: [[ Bug 11266 ]] Turn off keep-alive connections to
 		//   work-around a general bug in android:
 		// https://code.google.com/p/google-http-java-client/issues/detail?id=116
 		System.setProperty("http.keepAlive", "false");
+		
+		m_new_intent = false;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +278,8 @@ public class Engine extends View implements EngineApi
 		}
 	}
 
-	public void scheduleWakeUp(int p_in_time, boolean p_any_event)
+    // MM-2015-06-08: [[ MobileSockets ]] This can now potentially be called from several threads so make method synchronized.
+	public synchronized void scheduleWakeUp(int p_in_time, boolean p_any_event)
 	{
 		if (m_wake_scheduled)
 		{
@@ -275,6 +297,12 @@ public class Engine extends View implements EngineApi
 		return getContext() . getApplicationInfo() . sourceDir;
 	}
 
+	// IM-2016-03-04: [[ Bug 16917 ]] Return location of native libraries installed with this app
+	public String getLibraryPath()
+	{
+		return getContext() . getApplicationInfo() . nativeLibraryDir;
+	}
+	
 	public void finishActivity()
 	{
         // MM-2012-03-19: [[ Bug 10104 ]] Stop tracking any sensors on shutdown - not doing so prevents a restart for some reason.
@@ -919,7 +947,70 @@ public class Engine extends View implements EngineApi
 
 ////////////////////////////////////////////////////////////////////////////////
 
+	// Native layer view functionality
+	
+	Object getNativeLayerContainer()
+	{
+		if (m_view_layout == null)
+		{
+			FrameLayout t_main_view;
+			t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
+			
+			m_view_layout = new RelativeLayout(getContext());
+			t_main_view.addView(m_view_layout, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+			t_main_view.bringChildToFront(m_view_layout);
+		}
+		
+		return m_view_layout;
+	}
+	
+	Object createNativeLayerContainer()
+	{
+		return new RelativeLayout(getContext());
+	}
+	
+	// insert the view into the container, layered below p_view_above if not null.
+	void addNativeViewToContainer(Object p_view, Object p_view_above, Object p_container)
+	{
+		ViewGroup t_container;
+		t_container = (ViewGroup)p_container;
+		
+		int t_index;
+		if (p_view_above != null)
+			t_index = t_container.indexOfChild((View)p_view_above);
+		else
+			t_index = t_container.getChildCount();
+		
+		t_container.addView((View)p_view, t_index, new RelativeLayout.LayoutParams(0, 0));
+	}
+	
+	void removeNativeViewFromContainer(Object p_view)
+	{
+		// Remove view from its parent
+		View t_view;
+		t_view = (View)p_view;
+		
+		ViewGroup t_parent;
+		t_parent = (ViewGroup)t_view.getParent();
+		if (t_parent != null)
+			t_parent.removeView(t_view);
+	}
+	
+	void setNativeViewRect(Object p_view, int left, int top, int width, int height)
+	{
+		RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(width, height);
+		t_layout.leftMargin = left;
+		t_layout.topMargin = top;
+		t_layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+		t_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		
+		View t_view = (View)p_view;
+		
+		t_view.setLayoutParams(t_layout);
+	}
+	
     // native control functionality
+	
     void addNativeControl(Object p_control)
     {
         m_native_control_module.addControl(p_control);
@@ -930,71 +1021,29 @@ public class Engine extends View implements EngineApi
         m_native_control_module.removeControl(p_control);
     }
 
-    void removeNativeView(Object p_view)
-    {
-        View t_view = (View)p_view;
-        
-        if (m_view_layout != null)
-            m_view_layout.removeView(t_view);
-    }
+	Object createNativeControl(String p_class_name)
+	{
+		return m_native_control_module.createControl(p_class_name);
+	}
     
-    void placeNativeViewBelow(Object p_view, Object p_superior)
-    {
-        // Remove from any existing parent
-        removeNativeView(p_view);
-        
-        // The main view
-        FrameLayout t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
-        
-        // Create the layout for native layers if not already done
-        if (m_view_layout == null)
-        {
-            m_view_layout = new FrameLayout((LiveCodeActivity)getContext());
-            t_main_view.addView(m_view_layout);
-            t_main_view.bringChildToFront(m_view_layout);
-        }
-        
-        View t_view = (View)p_view;
-        int t_index = m_view_layout.getChildCount();
-        
-        if (p_superior != null)
-        {
-            View t_superior = (View)p_superior;
-            t_index = m_view_layout.indexOfChild(t_superior);
-        }
-        
-        m_view_layout.addView(t_view, t_index, new RelativeLayout.LayoutParams(0, 0));
-    }
-    
-    void setNativeViewRect(Object p_view, int left, int top, int width, int height)
-    {
-        FrameLayout.LayoutParams t_layout = new FrameLayout.LayoutParams(width, height);
-        t_layout.leftMargin = left;
-        t_layout.topMargin = top;
-
-        View t_view = (View)p_view;
-        
-        t_view.setLayoutParams(t_layout);
-    }
-
     Object createBrowserControl()
     {
-        return m_native_control_module.createBrowser();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.BrowserControl");
     }
 
     Object createScrollerControl()
     {
-        return m_native_control_module.createScroller();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.ScrollerControl");
     }
     
     Object createPlayerControl()
     {
-        return m_native_control_module.createPlayer();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
     }
     
     Object createInputControl()
     {
-        return m_native_control_module.createInput();
+        return m_native_control_module.createControl("com.runrev.android.nativecontrol.InputControl");
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1061,11 +1110,11 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void showListPicker(List p_items, String p_title, boolean p_item_selected, int p_selection_index, boolean p_use_checkmark, boolean p_use_cancel, boolean p_use_done)
+    public void showListPicker(List p_items, String p_title, boolean p_item_selected, int p_selection_index, boolean p_use_hilite, boolean p_use_cancel, boolean p_use_done)
     {
         String[] t_items;
         t_items = (String[])p_items.toArray(new String[p_items.size()]);
-        m_dialog_module.showListPicker(t_items, p_title, p_item_selected, p_selection_index, p_use_checkmark, p_use_cancel, p_use_done);
+        m_dialog_module.showListPicker(t_items, p_title, p_item_selected, p_selection_index, p_use_hilite, p_use_cancel, p_use_done);
     }
     public void onListPickerDone(int p_index, boolean p_done)
     {
@@ -1074,6 +1123,21 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
+////////////////////////////////////////////////////////////////////////////////
+	
+	// Return a bitmap snapshot of the specified region of the root view
+	public Object getSnapshotBitmapAtSize(int x, int y, int width, int height, int sizeWidth, int sizeHeight)
+	{
+		Bitmap t_bitmap = Bitmap.createBitmap(sizeWidth, sizeHeight, Bitmap.Config.ARGB_8888);
+		Canvas t_canvas = new Canvas(t_bitmap);
+		t_canvas.scale((float)sizeWidth / (float)width, (float)sizeHeight / (float)height);
+		t_canvas.translate((float)-x, (float)-y);
+		
+		getActivity().getWindow().getDecorView().getRootView().draw(t_canvas);
+		
+		return t_bitmap;
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 	public String getSystemVersion()
@@ -1152,10 +1216,13 @@ public class Engine extends View implements EngineApi
 		
 		boolean t_portrait = t_viewport.height() > t_viewport.width();
 
+		int[] t_origin = new int[2];
+		getLocationOnScreen(t_origin);
+		
 		// We have new values and the keyboard isn't showing so update any sizes we don't already know
 		if (p_update && !m_keyboard_visible)
 		{
-			t_working_rect = new Rect(0, 0, p_new_width, p_new_height);
+			t_working_rect = new Rect(t_origin[0], t_origin[1], t_origin[0] + p_new_width, t_origin[1] + p_new_height);
 			
 			if (t_portrait && !m_know_portrait_size)
 			{
@@ -1189,6 +1256,7 @@ public class Engine extends View implements EngineApi
 			t_working_rect = new Rect(t_viewport);
 			if (m_know_statusbar_size)
 				t_working_rect.bottom -= m_statusbar_size;
+			t_working_rect.offsetTo(t_origin[0], t_origin[1]);
 		}
 		
 		return t_working_rect;
@@ -1339,7 +1407,11 @@ public class Engine extends View implements EngineApi
 		
 		m_bitmap_view . resizeBitmap(t_rect.width(), t_rect.height());
 		
-		doReconfigure(t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
+		// pass view location
+		int[] t_origin = new int[2];
+		getLocationOnScreen(t_origin);
+		
+		doReconfigure(t_origin[0], t_origin[1], t_rect.width(), t_rect.height(), m_bitmap_view . getBitmap());
 		
 		// Make sure we trigger handling
 		if (m_wake_on_event)
@@ -1635,7 +1707,7 @@ public class Engine extends View implements EngineApi
         
         boolean t_success = true;
 
-        m_video_control = (VideoControl)m_native_control_module.createPlayer();
+        m_video_control = (VideoControl)m_native_control_module.createControl("com.runrev.android.nativecontrol.VideoControl");
         m_native_control_module.addControl(m_video_control);
 
 		Rect t_workarea = getWorkarea();
@@ -2026,7 +2098,7 @@ public class Engine extends View implements EngineApi
 		if (m_opengl_view == null)
 		{
 			m_opengl_view = new OpenGLView(getContext());
-
+            
 			// Add the view to the hierarchy - we add at the bottom and bring to
 			// the front as soon as we've shown the first frame.
 			((ViewGroup)getParent()).addView(m_opengl_view, 0,
@@ -2063,12 +2135,19 @@ public class Engine extends View implements EngineApi
 		}
 		});
 	}
-
-	public void hideBitmapView()
-	{
-		m_bitmap_view.setVisibility(View.INVISIBLE);
-	}
-
+    
+    // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
+    public void hideBitmapViewInTime()
+    {
+        post(new Runnable() {
+            public void run() {
+                if (m_opengl_view == null)
+                    return;
+                m_bitmap_view.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+    
 	public void showBitmapView()
 	{
 		m_bitmap_view.setVisibility(View.VISIBLE);
@@ -2683,6 +2762,144 @@ public class Engine extends View implements EngineApi
         return getLaunchUri(t_intent);
     }
 
+//////////
+
+	private static boolean isValueRefCompatible(Class p_class)
+	{
+		if (String.class == p_class)
+			return true;
+		if (Integer.class == p_class)
+			return true;
+		if (Double.class == p_class)
+			return true;
+		if (Boolean.class == p_class)
+			return true;
+		if (byte[].class == p_class)
+			return true;
+
+		if (p_class.isArray() && isValueRefCompatible(p_class.getComponentType()))
+			return true;
+			
+		return false;
+	}
+	
+	private static boolean isValueRefConvertable(Class p_class)
+	{
+		if (Bundle.class == p_class)
+			return true;
+		
+		if (p_class.isArray() && isValueRefConvertable(p_class.getComponentType()))
+			return true;
+		
+		return false;
+	}
+	
+	private static Object makeValueRefCompatible(Object p_object)
+	{
+		// Object types we can pass through safely
+		if (isValueRefCompatible(p_object.getClass()))
+			return p_object;
+			
+		// try converting bundle
+		else if (p_object instanceof Bundle)
+			return bundleToMap((Bundle)p_object);
+		
+		else if (p_object.getClass().isArray() && isValueRefConvertable(p_object.getClass()))
+		{
+			Object[] t_input_array = (Object[])p_object;
+			Object[] t_converted_array = new Object[t_input_array.length];
+			
+			for (int i = 0; i < t_input_array.length; i++)
+				t_converted_array[i] = makeValueRefCompatible(t_input_array[i]);
+			
+			return t_converted_array;
+		}
+		
+		// fallback to using toString() method
+		return p_object.toString();
+	}
+	
+	private static Map<String, Object> bundleToMap(Bundle p_bundle)
+	{
+		Map<String, Object> t_map;
+		t_map = new HashMap<String, Object>();
+		
+		for (String t_key : p_bundle.keySet())
+		{
+			Object t_value;
+			t_value = p_bundle.get(t_key);
+			
+			if (t_value != null)
+			{
+				Object t_converted;
+				t_converted = makeValueRefCompatible(t_value);
+			
+				if (t_converted != null)
+					t_map.put(t_key, t_converted);
+				else
+					Log.i(TAG, "conversion failed for bundle key " + t_key);
+			}
+		}
+		
+		return t_map;
+	}
+	
+	// IM-2015-07-08: [[ LaunchData ]] Retreive info from launch Intent and return as a Map object.
+	public Map<String, Object> getLaunchData()
+	{
+		Intent t_intent = ((Activity)getContext()).getIntent();
+		
+		// For now we're just storing strings, though this could change if we include the 'extra' data
+		Map<String, Object> t_data;
+		t_data = new HashMap<String, Object>();
+		
+		String t_value;
+		
+		if (t_intent != null)
+		{
+			t_value = t_intent.getAction();
+			if (t_value != null)
+				t_data.put("action", t_value);
+			
+			t_value = t_intent.getDataString();
+			if (t_value != null)
+				t_data.put("data", t_value);
+			
+			t_value = t_intent.getType();
+			if (t_value != null)
+				t_data.put("type", t_value);
+			
+			Set<String> t_categories;
+			t_categories = t_intent.getCategories();
+			
+			if (t_categories != null && !t_categories.isEmpty())
+			{
+				// Store categories as a string of comma-separated values
+				StringBuilder t_category_list;
+				t_category_list = new StringBuilder();
+				boolean t_first = true;
+				for (String t_category : t_categories)
+				{
+					if (!t_first)
+						t_category_list.append(',');
+					t_category_list.append(t_category);
+					t_first = false;
+				}
+				
+				t_data.put("categories", t_category_list.toString());
+			}
+			
+			// IM-2015-08-04: [[ Bug 15684 ]] Retrieve Intent extra data.
+			Bundle t_extras;
+			t_extras = t_intent.getExtras();
+			
+			if (t_extras != null && !t_extras.isEmpty())
+				t_data.put("extras", bundleToMap(t_extras));
+		}
+		
+		return t_data;
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////
 
     // called from the engine to signal that the engine has launched
@@ -2720,6 +2937,9 @@ public class Engine extends View implements EngineApi
         if (m_sound_module != null)
             m_sound_module.onPause();
 
+		if (m_native_control_module != null)
+			m_native_control_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -2739,11 +2959,26 @@ public class Engine extends View implements EngineApi
 
         if (m_sound_module != null)
             m_sound_module.onResume();
+		
+		if (m_native_control_module != null)
+			m_native_control_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
 
 		doResume();
+
+		if (m_new_intent)
+		{
+			doLaunchDataChanged();
+			
+			String t_launch_url;
+			t_launch_url = getLaunchUri();
+			if (t_launch_url != null)
+				doLaunchFromUrl(t_launch_url);
+
+			m_new_intent = false;
+		}
 
 		s_running = true;
 		if (m_text_editor_visible)
@@ -2751,6 +2986,9 @@ public class Engine extends View implements EngineApi
 		
 		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
 		dispatchNotifications();
+		
+		if (m_wake_on_event)
+			doProcess(false);
 	}
 
 	public void onDestroy()
@@ -2766,14 +3004,10 @@ public class Engine extends View implements EngineApi
 
     public void onNewIntent(Intent intent)
     {
-        String t_launch_url = getLaunchUri(intent);
-        if (t_launch_url != null)
-        {
-            doLaunchFromUrl(t_launch_url);
-            if (m_wake_on_event)
-                doProcess(false);
-        }
-    }
+		// IM-2015-10-08: [[ Bug 15417 ]] Update the Intent of the Activity to the new one.
+		((Activity)getContext()).setIntent(intent);
+		m_new_intent = true;
+	}
 
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -2826,7 +3060,9 @@ public class Engine extends View implements EngineApi
             t_folder.mkdirs();
             
             // The user did not supply a file name, so create one now
-            if (t_file_name == null)
+            // SN-2015-04-29: [[ Bug 15296 ]] From 7.0 onwards, t_file_name will
+            //   not be nil, but empty
+            if (t_file_name . isEmpty())
             {
                 t_uuid = UUID.randomUUID();
                 Log.i("revandroid", "Generated File Name: " + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/I" + t_uuid.toString().substring(0,7) + t_file_type);
@@ -2912,6 +3148,190 @@ public class Engine extends View implements EngineApi
     }
     
     ////////////////////////////////////////////////////////////////////////////////
+    
+    private X509TrustManager getTrustManager()
+    {
+        if (m_trust_manager != null)
+            return m_trust_manager;
+        
+        try
+        {
+            TrustManagerFactory t_trust_manager_factory;
+            t_trust_manager_factory = TrustManagerFactory . getInstance("X509");
+            t_trust_manager_factory . init((KeyStore) null);
+            
+            TrustManager[] t_trust_managers;
+            t_trust_managers = t_trust_manager_factory . getTrustManagers();
+            
+            if (t_trust_managers != null)
+            {
+                for (TrustManager t_trust_manager : t_trust_managers)
+                {
+                    if (t_trust_manager instanceof X509TrustManager)
+                    {
+                        m_trust_manager = (X509TrustManager) t_trust_manager;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            m_trust_manager = null;
+        }
+        
+        return m_trust_manager;
+    }
+    
+    private X509Certificate[] certDataToX509CertChain(Object[] p_cert_chain)
+    {
+        X509Certificate[] t_cert_chain;
+        try
+        {
+            t_cert_chain = new X509Certificate[p_cert_chain . length];
+            
+            CertificateFactory t_cert_factory;
+            t_cert_factory = CertificateFactory . getInstance("X.509");
+
+            for (int i = 0; i < p_cert_chain . length; i++)
+            {
+                byte[] t_cert_data;
+                t_cert_data = (byte[]) p_cert_chain[i];
+                
+                InputStream t_input_stream;
+                t_input_stream = new ByteArrayInputStream(t_cert_data);
+                
+                Certificate t_cert;
+                t_cert = t_cert_factory . generateCertificate(t_input_stream);
+                
+                t_cert_chain[i] = (X509Certificate) t_cert;
+            }
+        }
+        catch (Exception e)
+        {
+            t_cert_chain = null;
+        }
+
+        return t_cert_chain;
+    }
+    
+    private boolean hostNameMatchesCertificateDNSName(String p_host_name, String p_cert_host_name)
+    {
+        if (p_host_name == null || p_host_name . isEmpty() || p_cert_host_name == null || p_cert_host_name . isEmpty())
+            return false;
+
+        p_host_name = p_host_name . toLowerCase();
+        p_cert_host_name = p_cert_host_name . toLowerCase();
+        
+        if (!p_cert_host_name . contains("*"))
+            return p_host_name . equals(p_cert_host_name);
+
+        if (p_cert_host_name . startsWith("*.") && p_host_name . regionMatches(0, p_cert_host_name, 2, p_cert_host_name . length() - 2))
+            return true;
+        
+        String t_cert_host_name_prefix;
+        t_cert_host_name_prefix = p_cert_host_name . substring(0, p_cert_host_name . indexOf('*'));
+        if (t_cert_host_name_prefix != null && !t_cert_host_name_prefix . isEmpty() && !p_host_name . startsWith(t_cert_host_name_prefix))
+            return false;
+            
+        String t_cert_host_name_suffix;
+        t_cert_host_name_suffix = p_cert_host_name . substring(p_cert_host_name . indexOf('*') + 1);
+        if (t_cert_host_name_suffix != null && !t_cert_host_name_suffix . isEmpty() && !p_host_name . endsWith(t_cert_host_name_suffix))
+            return false;
+        
+        return true;
+    }
+    
+    private boolean hostNameIsValidForCertificate(String p_host_name, X509Certificate p_certificate)
+    {
+        Collection t_subject_alt_names;
+        try
+        {
+            t_subject_alt_names = p_certificate . getSubjectAlternativeNames();
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
+        
+        if (t_subject_alt_names != null)
+        {
+            for (Object t_subject_alt_name : t_subject_alt_names)
+            {
+                List t_entry;
+                t_entry = (List) t_subject_alt_name;
+                if (t_entry == null || t_entry . size() < 2)
+                    continue;
+                
+                Integer t_alt_name_type;
+                t_alt_name_type = (Integer) t_entry . get(0);
+                if (t_alt_name_type == null || t_alt_name_type != 2 /* DNS NAME */)
+                    continue;
+                
+                String t_alt_name;
+                t_alt_name = (String) t_entry . get(1);
+                if (t_alt_name == null)
+                    continue;
+                
+                if (hostNameMatchesCertificateDNSName(p_host_name, t_alt_name))
+                    return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    // MM-2015-06-11: [[ MobileSockets ]] Return true if the given certifcate chain should be trusted and matches the passed domain name.
+    public boolean verifyCertificateChainIsTrusted(Object[] p_cert_data, String p_host_name)
+    {
+        boolean t_success;
+        t_success = true;
+        
+        X509Certificate[] t_cert_chain;
+        t_cert_chain = null;
+        if (t_success)
+        {
+            t_cert_chain = certDataToX509CertChain(p_cert_data);
+            t_success = t_cert_chain != null;
+        }
+        
+        X509TrustManager t_trust_manager;
+        t_trust_manager = null;
+        if (t_success)
+        {
+            t_trust_manager = getTrustManager();
+            t_success = t_trust_manager != null;
+        }
+        
+        if (t_success)
+        {
+            try
+            {
+                t_trust_manager . checkServerTrusted(t_cert_chain, "RSA");
+            }
+            catch (CertificateException t_exception)
+            {
+                m_last_certificate_verification_error = t_exception . toString();
+                t_success = false;
+            }
+        }
+        
+        if (t_success)
+            t_success = hostNameIsValidForCertificate(p_host_name, t_cert_chain[0]);
+        
+        return t_success;
+    }
+    
+    // MM-2015-06-11: [[ MobileSockets ]] Return the last certificate verifcation error (if any) and reset the error to null.
+    public String getLastCertificateVerificationError()
+    {
+        String t_error;
+        t_error = m_last_certificate_verification_error;
+        m_last_certificate_verification_error = null;
+        return t_error;
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
 
 	// EngineApi implementation
 	
@@ -2979,11 +3399,13 @@ public class Engine extends View implements EngineApi
 		if (m_wake_on_event)
 			doProcess(false);
 	}
-	
+
     ////////////////////////////////////////////////////////////////////////////////
 
     // url launch callback
     public static native void doLaunchFromUrl(String url);
+	// intent launch callback
+	public static native void doLaunchDataChanged();
 
 	// callbacks from the billing service
 
@@ -3021,7 +3443,7 @@ public class Engine extends View implements EngineApi
 
 	public static native void doProcess(boolean timedout);
 
-	public static native void doReconfigure(int w, int h, Bitmap bitmap);
+	public static native void doReconfigure(int x, int y, int w, int h, Bitmap bitmap);
 
     public static native String doGetCustomPropertyValue(String set, String property);
 

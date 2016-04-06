@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -319,10 +319,10 @@ bool MCIdeScriptAction::eval_target_range(MCExecContext& ctxt, MCExpression *p_s
     int4 t_end = 0;
     MCField *t_target = nil;
 
-    t_success = ctxt . EvalExprAsInt(p_start, EE_OBJECT_NAN, t_start);
+    t_success = ctxt . EvalExprAsStrictInt(p_start, EE_OBJECT_NAN, t_start);
 
     if (t_success)
-        t_success = ctxt . EvalExprAsInt(p_end, EE_OBJECT_NAN, t_end);
+        t_success = ctxt . EvalExprAsStrictInt(p_end, EE_OBJECT_NAN, t_end);
 
     if (t_success)
         t_success = eval_target(ctxt, p_target, t_target);
@@ -846,23 +846,9 @@ static unsigned char next_valid_char(const unsigned char *p_text, uindex_t &x_in
 // And return the (beginning of the) this new char.
 static unichar_t next_valid_unichar(MCStringRef p_string, uindex_t &x_index)
 {
-    if (x_index + 1 <= MCStringGetLength(p_string))
-    {        
-        MCRange t_char_range;
-        MCRange t_cu_range;
-        
-        t_char_range . length = 1;
-        t_cu_range . offset = x_index + 1;
-        t_cu_range . length = 1;
-        do
-        {
-            ++t_cu_range . length;
-            MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
-        }
-        while (t_cu_range . offset + t_cu_range . length < MCStringGetLength(p_string) && t_char_range . length != 2);
-        
-        x_index += t_cu_range . length - 1;
-    }
+    x_index = MCStringGraphemeBreakIteratorAdvance(p_string, x_index);
+    if (x_index == kMCLocaleBreakIteratorDone)
+        x_index = MCStringGetLength(p_string);
     
     return MCStringGetCharAtIndex(p_string, x_index);
 }
@@ -1009,14 +995,14 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 	if (t_nesting > 0)
 	{
 		while(t_nesting > 0 && t_index < p_length - 1)
-		{
+        {
 			uindex_t t_new_index = t_index;
-			if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
+            /*if (t_char == '/' && next_valid_char(p_text, t_new_index) == '*')
 			{
 				t_nesting += 1;
 				t_index = t_new_index;
-			}
-			else if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
+            }
+            else */if (t_char == '*' && next_valid_char(p_text, t_new_index) == '/')
 			{
 				t_nesting -= 1;
 				t_index = t_new_index;
@@ -1361,8 +1347,8 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
         r_out_nesting = p_in_nesting;
         return;
     }
-    
-    if (MCStringIsUncombined(p_string))
+        
+    if (MCStringIsTrivial(p_string))
     {
         MCAutoStringRefAsCString t_cstring;
         t_cstring . Lock(p_string);
@@ -1678,56 +1664,27 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	int32_t t_initial_height;
 	t_initial_height = 0;
 
-	for(t_line = t_first_line, t_paragraph = t_first_paragraph; t_line <= t_last_line; t_line++, t_paragraph = t_paragraph -> next())
+	/* It may be necessary to go beyond the last requested line in order to
+	 * deal with comment nesting. */
+	for (t_line = t_first_line, t_paragraph = t_first_paragraph;
+	     t_line <= t_last_line ||
+		     (p_mutate && t_paragraph != t_sentinal_paragraph &&
+		      t_new_nesting != t_old_nesting);
+	     ++t_line, t_paragraph = t_paragraph -> next())
 	{
 		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
-		
-		// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
-		//   works.
-        MCAutoStringRefAsNativeChars t_text;
-		uint4 t_nesting, t_min_nesting;
-        
-        // SN-2014-03-24: We need the native string rather than the CString - avoid any compression of combining chars
-        uindex_t t_size;
-        char_t* t_native_chars;
-        t_text . Lock(t_paragraph -> GetInternalStringRef(), t_native_chars, t_size);
-        
+
+		uint32_t t_nesting, t_min_nesting;
+
 		t_paragraph -> clearzeros();
-//		tokenize(t_native_chars, t_size, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-        tokenize_stringref(t_paragraph -> GetInternalStringRef(), t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+		tokenize_stringref(t_paragraph -> GetInternalStringRef(),
+		                   t_new_nesting, t_nesting, t_min_nesting,
+		                   p_callback, t_paragraph);
 
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
-		if (p_mutate)
-			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
-        t_new_nesting = t_nesting;
+		t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
+		t_new_nesting = t_nesting;
 	}
-
-	if (p_mutate)
-		while(t_paragraph != t_sentinal_paragraph && t_new_nesting != t_old_nesting)
-		{
-			t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
-			
-			// MW-2012-02-23: [[ FieldChars ]] Nativize the paragraph so tokenization
-			//   works.
-            MCAutoStringRefAsNativeChars t_text;
-			uint4 t_nesting, t_min_nesting;
-            
-            // SN-2014-03-24: Use the nativised string which comprises the combining chars
-            uindex_t t_length;
-            char_t *t_native_chars;
-            
-            /* UNCHECKED */ t_text . Lock(t_paragraph -> GetInternalStringRef(), t_native_chars, t_length);
-            
-			t_paragraph -> clearzeros();
-			tokenize(t_native_chars, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-
-			t_old_nesting += t_state -> GetCommentDelta(t_line);
-			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
-			t_new_nesting = t_nesting;
-
-			t_paragraph = t_paragraph -> next();
-            t_line++;
-		}
 
 	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all
 	//   let's be a little more selective - only relaying out and redrawing the

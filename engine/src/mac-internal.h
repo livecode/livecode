@@ -98,6 +98,8 @@ class MCMacPlatformSurface;
 - (void)becomePseudoModalFor: (NSWindow*)window;
 - (NSWindow*)pseudoModalFor;
 
+- (OSErr)preDispatchAppleEvent: (const AppleEvent *)p_event withReply: (AppleEvent *)p_reply;
+
 @end
 
 @interface com_runrev_livecode_MCWindow: NSWindow
@@ -152,17 +154,20 @@ class MCMacPlatformSurface;
     
     MCPlatformDialogResult mResult;
     MCColor mColorPicked;
+	id eventMonitor;
 }
 
 -(id)   initWithColorPanel: (NSColorPanel*)p_panel
                contentView: (NSView*) p_view;
 -(void) dealloc;
+-(void) windowDidBecomeKey:(NSNotification *)notification;
 -(void) windowWillClose: (NSNotification *)notification;
 -(void) windowDidResize:(NSNotification *)notification;
 -(void) getColor;
 //-(void) changeColor:(id)sender;
 -(void) pickerCancelClicked;
 -(void) pickerOkClicked;
+-(void) processEscKeyDown;
 -(void) relayout;
 
 @end
@@ -445,6 +450,8 @@ private:
     MCGRaster m_raster;
 	
 	bool m_cg_context_first_lock;
+	
+	bool m_opaque;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -515,7 +522,9 @@ public:
 private:
 	// Compute the Cocoa window style from the window's current properties.
 	void ComputeCocoaStyle(NSUInteger& r_window_style);
-	
+    // MERG-2015-10-11: [[ DocumentFilename ]] Set documentFilename.
+    void UpdateDocumentFilename(void);
+    
 	// The window delegate object.
 	MCWindowDelegate *m_delegate;
 	
@@ -655,6 +664,22 @@ struct MCMacPlatformWindowMask
 void MCMacPlatformEnableEventChecking(void);
 void MCMacPlatformDisableEventChecking(void);
 bool MCMacPlatformIsEventCheckingEnabled(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// The function pointer for objc_msgSend_fpret needs to be cast in order
+// to get the correct return type, otherwise we can get strange results
+// on x86_64 because "long double" return values are returned in
+// different registers to "float" or "double".
+extern "C" void objc_msgSend_fpret(void);
+template <class R, class... Types> R objc_msgSend_fpret_type(id p_id, SEL p_sel, Types... p_params)
+{
+    // Cast the obj_msgSend_fpret function to the correct type
+    R (*t_send)(id, SEL, ...) = reinterpret_cast<R (*)(id, SEL, ...)> (&objc_msgSend_fpret);
+    
+    // Perform the call
+    return t_send(p_id, p_sel, p_params...);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

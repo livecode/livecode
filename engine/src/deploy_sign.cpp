@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -171,8 +171,8 @@ struct SpcString
 
 DECLARE_ASN1_FUNCTIONS(SpcString)
 ASN1_CHOICE(SpcString) = {
-	ASN1_IMP(SpcString, d.unicode, ASN1_BMPSTRING, 0),
-	ASN1_IMP(SpcString, d.ascii, ASN1_IA5STRING, 1)
+	ASN1_IMP_OPT(SpcString, d.unicode, ASN1_BMPSTRING, 0),
+	ASN1_IMP_OPT(SpcString, d.ascii, ASN1_IA5STRING, 1)
 } ASN1_CHOICE_END(SpcString)
 IMPLEMENT_ASN1_FUNCTIONS(SpcString)
 
@@ -219,9 +219,9 @@ struct SpcLink
 
 DECLARE_ASN1_FUNCTIONS(SpcLink)
 ASN1_CHOICE(SpcLink) = {
-	ASN1_IMP(SpcLink, d.url, ASN1_IA5STRING, 0),
-	ASN1_IMP(SpcLink, d.moniker, SpcSerializedObject, 1),
-	ASN1_EXP(SpcLink, d.file, SpcString, 2)
+	ASN1_IMP_OPT(SpcLink, d.url, ASN1_IA5STRING, 0),
+	ASN1_IMP_OPT(SpcLink, d.moniker, SpcSerializedObject, 1),
+	ASN1_EXP_OPT(SpcLink, d.file, SpcString, 2)
 } ASN1_CHOICE_END(SpcLink)
 IMPLEMENT_ASN1_FUNCTIONS(SpcLink)
 
@@ -939,10 +939,8 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 			t_data . setnext(&t_url);
 			t_url . setvalueref_argument(p_params . timestamper);
             extern MCExecContext *MCECptr;
-            // SN-2014-05-09 [[ ClearResult ]]
-            // isempty is different from isclear - 'isempty' returns false for a cleared result
 			if (MCECptr->GetObject() -> message(MCM_post_url, &t_data, False, True) == ES_NORMAL &&
-				MCresult -> isclear())
+				MCresult -> isempty())
 			{
 				t_failed = false;
 				break;
@@ -1078,7 +1076,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	EVP_PKEY* t_privatekey;
 	t_cert_chain = nil;
 	t_privatekey = nil;
-	if (t_success && p_params . certstore != nil)
+	if (t_success && !MCValueIsEmpty(p_params . certstore))
         t_success = MCDeployCertStoreLoad(p_params . passphrase,
                                           p_params . certstore,
 										  t_cert_chain, t_privatekey);
@@ -1256,7 +1254,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 
 	// Now we have our signature, we timestamp it - but only if we were
 	// given a timestamp authority url.
-	if (t_success && p_params . timestamper != nil)
+	if (t_success && !MCValueIsEmpty(p_params . timestamper))
 		t_success = MCDeploySignWindowsAddTimeStamp(p_params, t_signature);
 
 	// We now have a complete PKCS7 SignedData object which is now serialized.
@@ -1473,7 +1471,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadPrivateKey);
 
 	// We now have everything we need to attempt to decrypt the key (if necessary).
-	if (t_header . is_encrypted)
+	if (t_success && t_header . is_encrypted)
 	{
 		// First check we have a password
 		if (t_success && p_passphrase == nil)

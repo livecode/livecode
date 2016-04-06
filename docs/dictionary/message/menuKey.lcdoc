@@ -1,0 +1,27 @@
+Name: menuKey
+
+Type: message
+
+Syntax: menuKey
+
+Summary: Sent to the current card of the defaultStack when the hardware menu button is pressed.
+
+Introduced: 5.0.1
+
+OS: android
+
+Platforms: mobile
+
+Example:
+on menuKey
+  answer "You pressed the menu key" with "Okay"
+end menuKey
+
+Description:
+Handle the <menuKey> message to perform an action when the menu key is pressed.
+
+The <menuKey> message is sent to the current card of the <default stack> when the hardware menu button is pressed.
+
+References: default stack (property), backKey (message), searchKey (message)
+
+Tags: ui

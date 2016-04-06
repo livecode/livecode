@@ -1,0 +1,12 @@
+Name: container
+
+Synonyms: container
+
+Type: glossary
+
+Description:
+Something that holds data that can be retrieved. 
+ 
+In LiveCode, containers include  <variable|variables>, <URL|URLs>, <field|fields>, <button|buttons>, and <image|images>.
+
+References: URL (glossary), variable (glossary), field (glossary), image (glossary), button (glossary)

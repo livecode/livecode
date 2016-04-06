@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -166,19 +166,21 @@ void MCAndroidScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_r
 {
     jobject t_view;
     t_view = GetView();
-    
-    // SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
-    MCGRectangle t_rect;
-    t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2], p_rect[3]));
-    
+	
     // SN-2014-11-27: [[ Bug 14046 ]] m_content_rect stores user-pixel values
     m_content_rect . x = p_rect[0];
     m_content_rect . y = p_rect[1];
-    m_content_rect . width = p_rect[2];
-    m_content_rect . height = p_rect[3];
+    m_content_rect . width = p_rect[2] - p_rect[0];
+    m_content_rect . height = p_rect[3] - p_rect[1];
     
+	// PM-2016-01-14: [[Bug 16705]] Pass the correct width and height
     if (t_view != nil)
-        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, (integer_t)(t_rect.size.width - t_rect.origin.x), (integer_t)(t_rect.size.height - t_rect.origin.y));
+	{
+		// SN-2014-11-27: [[ Bug 14046 ]] Apply the fix for the bug 11485.
+		MCGRectangle t_rect;
+		t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2], p_rect[3]));
+        MCAndroidObjectRemoteCall(t_view, "setContentSize", "vii", nil, (integer_t)(t_rect.size.width), (integer_t)(t_rect.size.height));
+	}
 }
 
 void MCAndroidScrollerControl::GetContentRect(MCExecContext& ctxt, integer_t r_rect[4])
@@ -692,7 +694,8 @@ void MCAndroidScrollerControl::HandleScrollEvent(void)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target->message_with_args(MCM_scroller_did_scroll, m_content_rect.x + t_x, m_content_rect.y + t_y);
+		// PM-2016-01-14: [[Bug 16705]] Pass the correct offset - relative to the contentRect
+		t_target->message_with_args(MCM_scroller_did_scroll, t_x, t_y);
 		ChangeTarget(t_old_target);
 	}
 }

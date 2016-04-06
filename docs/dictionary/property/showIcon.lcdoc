@@ -1,0 +1,34 @@
+Name: showIcon
+
+Type: property
+
+Syntax: set the showIcon of <button> to {true | false}
+
+Summary: Specifies whether a <button|button's> icon is visible.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the showIcon of button 3 to false
+
+Value (bool):The <showIcon> of a button is true or false.
+By default, the <showIcon> <property> of newly created <button|buttons> is set to false.
+
+Description:
+Use the <showIcon> <property> to change a <button|button's> appearance.
+
+If a button's <showIcon> <property> is set to true, the <image> specified in the <button|button's> <icon> <property> is displayed in the <button|button's> rectangle. If the <showIcon> is false, the icon is not displayed.
+
+If the button's icon <property> is zero, the setting of this <property> has no effect.
+
+A button with an icon may need to be resized to show the entire icon.
+
+References: armedIcon (property), icon (property), hilitedIcon (property), image (keyword), button (object), property (glossary)
+
+Tags: ui

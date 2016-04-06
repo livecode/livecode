@@ -6,7 +6,7 @@
           ${INSTALL_LOCATION}>
 ${PUSH_PERMISSIONS}
 ${USES_PERMISSION}${USES_FEATURE}
-  <uses-sdk android:minSdkVersion="${MIN_SDK_VERSION}" />
+  <uses-sdk android:minSdkVersion="${MIN_SDK_VERSION}" android:targetSdkVersion="${MIN_SDK_VERSION}"/>
   <supports-screens
       android:largeScreens="true"
       android:normalScreens="true"
@@ -16,9 +16,10 @@ ${USES_PERMISSION}${USES_FEATURE}
     <activity android:name="${NAME}"
       android:theme="${THEME}"
       android:screenOrientation="${ORIENTATION}"
-      android:configChanges="keyboardHidden|orientation"
+      android:configChanges="${CONFIG_CHANGES}"
       android:windowSoftInputMode="stateHidden"
-      android:launchMode="singleTask">
+      android:launchMode="singleTask"
+      android:hardwareAccelerated="${HARDWARE_ACCELERATED}">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />

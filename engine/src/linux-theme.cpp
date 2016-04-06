@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -32,6 +32,7 @@
 
 #include <gtk/gtk.h>
 
+#define GTK_MAGIC_FONT_SCALE_FACTOR 96/72
 
 // Cached styles for various widget types
 static GtkStyle* s_styles[kMCPlatformControlTypeMessageBox+1];
@@ -42,19 +43,28 @@ static GtkWidget* s_widgets[kMCPlatformControlTypeMessageBox+1];
 // Container for widgets
 static GtkWidget* s_widget_container = NULL;
 
+extern "C" int initialise_weak_link_gtk(void);
+extern "C" int initialise_weak_link_X11(void);
 
 // Creates a GtkWidget corresponding to the requested control type
 static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatformControlPart p_part)
 {
+    // Do nothing if running in no-UI mode
+    if (MCnoui)
+        return NULL;
+    
     // Ensure that our container widget exists
     if (s_widget_container == NULL)
     {
+        if (!MCscreen -> hasfeature(PLATFORM_FEATURE_NATIVE_THEMES))
+            return NULL;
+        
         gtk_init(NULL, NULL);
         
         // Create a new window
         GtkWidget* t_window;
         t_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        s_widgets[kMCPlatformControlTypeGlobal] = t_window;
+        s_widgets[kMCPlatformControlTypeGeneric] = t_window;
         
         // Ensure it actually exists
         gtk_widget_realize(t_window);
@@ -80,8 +90,8 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
     
     switch (p_type)
     {
-        case kMCPlatformControlTypeGlobal:
-            t_the_widget = s_widgets[kMCPlatformControlTypeGlobal];
+        case kMCPlatformControlTypeGeneric:
+            t_the_widget = s_widgets[kMCPlatformControlTypeGeneric];
             t_suppress_add = true;
             break;
             
@@ -153,7 +163,7 @@ static GtkWidget* getWidgetForControlType(MCPlatformControlType p_type, MCPlatfo
             break;
             
         case kMCPlatformControlTypeWindow:
-            t_the_widget = s_widgets[kMCPlatformControlTypeGlobal];
+            t_the_widget = s_widgets[kMCPlatformControlTypeGeneric];
             g_object_ref(t_the_widget);
             t_suppress_add = true;
             break;
@@ -218,7 +228,8 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
                 break;
             }
             
-            r_int = pango_font_description_get_size(t_style->font_desc)/PANGO_SCALE;
+            r_int = (pango_font_description_get_size(t_style->font_desc) *
+                     GTK_MAGIC_FONT_SCALE_FACTOR / PANGO_SCALE);
             break;
         }
             
@@ -325,12 +336,28 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
     return t_found;
 }
 
+// Utility function needed by the Linux font code. Gets the family name of the
+// font for the given control type.
+bool MCPlatformGetControlThemePropString(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState, MCPlatformThemeProperty p_prop, MCStringRef& r_string)
+{
+    if (p_prop != kMCPlatformThemePropertyTextFont)
+        return false;
+    
+    GtkStyle* t_style;
+    t_style = getStyleForControlType(p_type, p_part);
+    if (t_style == NULL)
+        return false;
+    
+    const PangoFontDescription* t_pango = t_style->font_desc;
+    return MCStringCreateWithCString(pango_font_description_get_family(t_pango), r_string);
+}
+
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
     GtkStyle* t_style;
     t_style = getStyleForControlType(p_type, p_part);
     if (t_style == NULL)
-        return false;
+        return MCFontCreate(MCNAME(DEFAULT_TEXT_FONT), 0, 12, r_font);
     
     bool t_found;
     t_found = false;
@@ -359,13 +386,14 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
     // We use 12-point Helvetica on Linux, traditionally
     if (p_state & kMCPlatformControlStateCompatibility)
     {
-        MCNameCreateWithCString("Helvetica", t_font_name);
+        MCNameCreateWithCString(DEFAULT_TEXT_FONT, t_font_name);
         t_font_size = 12;
     }
     else
     {
         t_found = MCNameCreateWithCString(pango_font_description_get_family(t_pango), t_font_name);
         t_font_size = pango_font_description_get_size(t_pango)/PANGO_SCALE;
+        /* UNCHECKED */ MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_font_size);
     }
     
     if (t_found)

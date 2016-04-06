@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -44,6 +44,10 @@ class MCChunk : public MCExpression
 	MCCRef *card;
 	MCCRef *group;
 	MCCRef *object;
+    
+    // [[ Element Chunk ]] Add element chunk
+    MCCRef *element;
+    
 	MCCRef *cline;
 	MCCRef *token;
 	MCCRef *item;
@@ -97,7 +101,8 @@ public:
     bool evalobjectchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, MCObjectChunkPtr& r_chunk);
     bool evalvarchunk(MCExecContext& ctxt, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
     bool evalurlchunk(MCExecContext& ctxt, bool p_whole_chunk, bool p_force, int p_preposition, MCUrlChunkPtr& r_chunk);
-	
+	bool evalelementchunk(MCExecContext& ctxt, MCProperListRef& r_elements);
+    
 	void take_components(MCChunk *tchunk);
 
     // getobj calls getoptionalobj and throws in case nothing is returned.
@@ -130,6 +135,7 @@ public:
     /* WRAPPER */ Exec_stat mark(MCExecPoint &ep, Boolean force, Boolean wholechunk, MCMarkedText& r_mark, bool includechars = true);
 #endif
     void mark(MCExecContext &ctxt, bool set, bool wholechunk, MCMarkedText& x_mark, bool includechars = true);
+    void mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark);
 #ifdef LEGACY_EXEC
 	Exec_stat mark_legacy(MCExecPoint &, int4 &start, int4 &end, Boolean force, Boolean wholechunk, bool include_characters = true);
 
@@ -180,6 +186,11 @@ public:
     bool getprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue& r_value);
     bool setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Boolean effective, MCExecValue p_value);
     
+    bool getsetcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, bool p_is_get_operation, MCExecValue& r_value);
+    
+    bool getcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue& r_value);
+    bool setcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue p_value);
+    
 #ifdef LEGACY_EXEC
 	Exec_stat getprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 	Exec_stat setprop_legacy(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
@@ -219,6 +230,13 @@ public:
     {
         return (byte != nil);
     }
+    
+    // Returns true if the element chunk is non-nil and thus a property of
+    // the chunk expression should be evaluated accordingly
+    bool iselementchunk(void) const
+    {
+        return (element != nil);
+    }
 #ifdef LEGACY_EXEC
 	// Returns the field, part and range of the text chunk
 	Exec_stat marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_part, uint4& r_start, uint4& r_end);
@@ -231,15 +249,22 @@ public:
 	{
 		destobj = d;
 	}
-	Boolean nochunks()
+	bool notextchunks()
 	{
         // SN-2014-03-21: [[ Bug 11954 ]] Typo was ensuring to return false in any case
 		return cline == NULL && paragraph == NULL && sentence == NULL && item == NULL
                 && trueword == NULL && word == NULL && token == NULL && character == NULL
                 && codepoint == NULL && codeunit == NULL && byte == NULL;
 	}
+    bool noobjectchunks()
+    {
+        return stack == nil && background == nil && card == nil
+                && group == nil && object == nil;
+    }
 };
 
 MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term);
+bool MCChunkTermIsNestable(Chunk_term p_chunk_term);
+bool MCChunkTermHasRange(Chunk_term p_chunk_term);
 
 #endif

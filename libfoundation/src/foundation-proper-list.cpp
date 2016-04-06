@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -48,6 +48,7 @@ static void __MCProperListClampRange(MCProperListRef self, MCRange& x_range);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperListRef& r_list)
 {
 	bool t_success;
@@ -68,6 +69,7 @@ bool MCProperListCreate(const MCValueRef *p_values, uindex_t p_length, MCProperL
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListCreateMutable(MCProperListRef& r_list)
 {
 	if (!__MCValueCreate(kMCValueTypeCodeProperList, r_list))
@@ -94,6 +96,7 @@ MCProperListCreateAndRelease(MCValueRef *p_values,
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListCopy(MCProperListRef self, MCProperListRef& r_new_list)
 {
 	// If we aren't mutable, then we can just copy directly.
@@ -123,6 +126,7 @@ bool MCProperListCopy(MCProperListRef self, MCProperListRef& r_new_list)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListCopyAndRelease(MCProperListRef self, MCProperListRef& r_new_list)
 {
 	// If we aren't mutable, then new list is just us.
@@ -168,6 +172,7 @@ bool MCProperListCopyAndRelease(MCProperListRef self, MCProperListRef& r_new_lis
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListMutableCopy(MCProperListRef self, MCProperListRef& r_new_list)
 {
 	// If the list is immutable, then the new mutable list will be indirect
@@ -194,6 +199,7 @@ bool MCProperListMutableCopy(MCProperListRef self, MCProperListRef& r_new_list)
 	return __MCProperListCreateIndirect(self -> contents, r_new_list);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListMutableCopyAndRelease(MCProperListRef self, MCProperListRef& r_new_list)
 {
 	if (self -> references == 1)
@@ -214,6 +220,7 @@ bool MCProperListMutableCopyAndRelease(MCProperListRef self, MCProperListRef& r_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCProperListIsMutable(MCProperListRef self)
 {
 	return (self -> flags & kMCProperListFlagIsMutable) != 0;
@@ -224,6 +231,7 @@ bool MCProperListIsIndirect(MCProperListRef self)
 	return (self -> flags & kMCProperListFlagIsIndirect) != 0;
 }
 
+MC_DLLEXPORT_DEF
 uindex_t MCProperListGetLength(MCProperListRef self)
 {
 	if (!__MCProperListIsIndirect(self))
@@ -231,6 +239,7 @@ uindex_t MCProperListGetLength(MCProperListRef self)
 	return self -> contents -> length;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListIsEmpty(MCProperListRef self)
 {
 	if (!__MCProperListIsIndirect(self))
@@ -241,26 +250,31 @@ bool MCProperListIsEmpty(MCProperListRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCProperListPushElementsOntoBack(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length)
 {
     return MCProperListInsertElements(self, p_values, p_length, MCProperListGetLength(self));
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListPushElementsOntoFront(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length)
 {
     return MCProperListInsertElements(self, p_values, p_length, 0);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListPushElementOntoBack(MCProperListRef self, const MCValueRef p_value)
 {
     return MCProperListPushElementsOntoBack(self, &p_value, 1);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListPushElementOntoFront(MCProperListRef self, const MCValueRef p_value)
 {
     return MCProperListPushElementsOntoFront(self, &p_value, 1);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
 {
     if (MCProperListIsIndirect(p_value))
@@ -276,6 +290,7 @@ bool MCProperListAppendList(MCProperListRef self, MCProperListRef p_value)
     return MCProperListAppendList(self, *t_list);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListInsertElements(MCProperListRef self, const MCValueRef *p_values, uindex_t p_length, index_t p_index)
 {
     MCAssert(MCProperListIsMutable(self));
@@ -293,11 +308,13 @@ bool MCProperListInsertElements(MCProperListRef self, const MCValueRef *p_values
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListInsertElement(MCProperListRef self, MCValueRef p_value, index_t p_index)
 {
     return MCProperListInsertElements(self, &p_value, 1, p_index);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index_t p_index)
 {
     if (MCProperListIsIndirect(p_value))
@@ -313,6 +330,7 @@ bool MCProperListInsertList(MCProperListRef self, MCProperListRef p_value, index
     return MCProperListInsertList(self, *t_list, p_index);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t p_count)
 {
     MCAssert(MCProperListIsMutable(self));
@@ -337,6 +355,7 @@ bool MCProperListRemoveElements(MCProperListRef self, uindex_t p_start, uindex_t
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListRemoveElement(MCProperListRef self, uindex_t p_index)
 {
     return MCProperListRemoveElements(self, p_index, 1);
@@ -344,6 +363,7 @@ bool MCProperListRemoveElement(MCProperListRef self, uindex_t p_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 MCValueRef MCProperListFetchHead(MCProperListRef self)
 {
     if (MCProperListIsIndirect(self))
@@ -354,6 +374,7 @@ MCValueRef MCProperListFetchHead(MCProperListRef self)
     return self -> list[0];
 }
 
+MC_DLLEXPORT_DEF
 MCValueRef MCProperListFetchTail(MCProperListRef self)
 {
     if (MCProperListIsIndirect(self))
@@ -364,6 +385,7 @@ MCValueRef MCProperListFetchTail(MCProperListRef self)
     return self -> list[self -> length - 1];
 }
 
+MC_DLLEXPORT_DEF
 MCValueRef MCProperListFetchElementAtIndex(MCProperListRef self, uindex_t p_index)
 {
     if (MCProperListIsIndirect(self))
@@ -375,6 +397,7 @@ MCValueRef MCProperListFetchElementAtIndex(MCProperListRef self, uindex_t p_inde
     return self -> list[p_index];
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListPopBack(MCProperListRef self, MCValueRef& r_value)
 {
     MCAssert(MCProperListIsMutable(self));
@@ -395,6 +418,7 @@ bool MCProperListPopBack(MCProperListRef self, MCValueRef& r_value)
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListPopFront(MCProperListRef self, MCValueRef& r_value)
 {
     MCAssert(MCProperListIsMutable(self));
@@ -415,6 +439,7 @@ bool MCProperListPopFront(MCProperListRef self, MCValueRef& r_value)
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListCopySublist(MCProperListRef self, MCRange p_range, MCProperListRef& r_elements)
 {
     if (MCProperListIsIndirect(self))
@@ -426,13 +451,14 @@ bool MCProperListCopySublist(MCProperListRef self, MCRange p_range, MCProperList
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCProperListFirstIndexOfElement(MCProperListRef self, MCValueRef p_needle, uindex_t p_after, uindex_t& r_offset)
 {
 	return MCProperListFirstIndexOfElementInRange(self, p_needle,
 	            MCRangeMake(p_after, UINDEX_MAX), r_offset);
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCProperListFirstIndexOfElementInRange (MCProperListRef self,
                                         MCValueRef p_needle,
                                         MCRange p_range,
@@ -458,7 +484,7 @@ MCProperListFirstIndexOfElementInRange (MCProperListRef self,
 	return false;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCProperListLastIndexOfElementInRange (MCProperListRef self,
                                        MCValueRef p_needle,
                                        MCRange p_range,
@@ -482,13 +508,14 @@ MCProperListLastIndexOfElementInRange (MCProperListRef self,
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListFirstOffsetOfList(MCProperListRef self, MCProperListRef p_needle, uindex_t p_after, uindex_t& r_offset)
 {
 	return MCProperListFirstOffsetOfListInRange (self, p_needle,
 	            MCRangeMake (p_after, UINDEX_MAX), r_offset);
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCProperListFirstOffsetOfListInRange (MCProperListRef self,
                                       MCProperListRef p_needle,
                                       MCRange p_range,
@@ -542,7 +569,7 @@ MCProperListFirstOffsetOfListInRange (MCProperListRef self,
 	return false;
 }
 
-bool
+MC_DLLEXPORT_DEF bool
 MCProperListLastOffsetOfListInRange (MCProperListRef self,
                                      MCProperListRef p_needle,
                                      MCRange p_range,
@@ -573,7 +600,7 @@ MCProperListLastOffsetOfListInRange (MCProperListRef self,
 	 * possible match, relative to the last element in the range
 	 * (i.e. t_roffset = 0 for the last element). */
 	for (uindex_t t_roffset = p_needle->length - 1;
-	     t_roffset <= p_range.length;
+	     t_roffset < p_range.length;
 	     ++t_roffset)
 	{
 		/* Offset of first element in the match, relative to start of
@@ -604,6 +631,7 @@ MCProperListLastOffsetOfListInRange (MCProperListRef self,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCProperListIterate(MCProperListRef self, uintptr_t& x_iterator, MCValueRef& r_element)
 {
     if (MCProperListIsIndirect(self))
@@ -619,6 +647,7 @@ bool MCProperListIterate(MCProperListRef self, uintptr_t& x_iterator, MCValueRef
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListApply(MCProperListRef self, MCProperListApplyCallback p_callback, void *context)
 {
     if (MCProperListIsIndirect(self))
@@ -631,6 +660,7 @@ bool MCProperListApply(MCProperListRef self, MCProperListApplyCallback p_callbac
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, MCProperListRef& r_new_list, void *context)
 {
     if (MCProperListIsIndirect(self))
@@ -667,6 +697,7 @@ bool MCProperListMap(MCProperListRef self, MCProperListMapCallback p_callback, M
     return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListSort(MCProperListRef self, bool p_reverse, MCProperListQuickSortCallback p_callback)
 {
     MCAssert(MCProperListIsMutable(self));
@@ -727,6 +758,7 @@ static void MCProperListDoStableSort(MCValueRef*& list, uindex_t p_item_count, M
         list[i] = p_temp[i];
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListStableSort(MCProperListRef self, bool p_reverse, MCProperListCompareElementCallback p_callback, void *context)
 {
     MCAssert(MCProperListIsMutable(self));
@@ -750,11 +782,13 @@ bool MCProperListStableSort(MCProperListRef self, bool p_reverse, MCProperListCo
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListIsEqualTo(MCProperListRef self, MCProperListRef p_other)
 {
     return __MCProperListIsEqualTo(self, p_other);
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListBeginsWithList(MCProperListRef self, MCProperListRef p_prefix)
 {
     // If the list is indirect, get the contents.
@@ -784,6 +818,7 @@ bool MCProperListBeginsWithList(MCProperListRef self, MCProperListRef p_prefix)
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListEndsWithList(MCProperListRef self, MCProperListRef p_suffix)
 {
     // If the list is indirect, get the contents.
@@ -815,6 +850,7 @@ bool MCProperListEndsWithList(MCProperListRef self, MCProperListRef p_suffix)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCProperListIsListOfType(MCProperListRef self, MCValueTypeCode p_type)
 {
     // If the list is indirect, get the contents.
@@ -833,6 +869,7 @@ bool MCProperListIsListOfType(MCProperListRef self, MCValueTypeCode p_type)
     return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
 {
     if (MCProperListIsEmpty(self))
@@ -923,7 +960,13 @@ bool __MCProperListCopyDescription(__MCProperList *self, MCStringRef& r_string)
 	MCValueRef t_value;
 	while (MCProperListIterate (self, t_iter, t_value))
 	{
-		if (!MCListAppend (*t_contents_list, t_value))
+        // AL-2015-03-26: [[ Bug 15005 ]] Use MCValueCopyDescription to ensure the
+        //  description of a proper list is as full as possible.
+        MCAutoStringRef t_string;
+        if (!MCValueCopyDescription(t_value, &t_string))
+            return false;
+        
+		if (!MCListAppend (*t_contents_list, *t_string))
 			return false;
 	}
 
@@ -1079,7 +1122,7 @@ static bool __MCProperListResolveIndirect(__MCProperList *self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCProperListRef kMCEmptyProperList;
+MC_DLLEXPORT_DEF MCProperListRef kMCEmptyProperList;
 
 bool __MCProperListInitialize(void)
 {

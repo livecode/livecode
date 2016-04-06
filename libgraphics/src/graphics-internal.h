@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -288,9 +288,9 @@ inline SkPaint::Join MCGJoinStyleToSkJoinStyle(MCGJoinStyle p_style)
 		case kMCGJoinStyleRound:
 			return SkPaint::kRound_Join;
 		case kMCGJoinStyleMiter:
-			return SkPaint::kMiter_Join;
-		default:
-			MCUnreachable();
+            return SkPaint::kMiter_Join;
+        default:
+            MCUnreachableReturn(SkPaint::kMiter_Join);
 	}
 }
 
@@ -318,8 +318,8 @@ inline SkPaint::Cap MCGCapStyleToSkCapStyle(MCGCapStyle p_style)
 			return SkPaint::kRound_Cap;
 		case kMCGCapStyleSquare:
 			return SkPaint::kSquare_Cap;
-		default:
-			MCUnreachable();
+        default:
+            MCUnreachableReturn(SkPaint::kButt_Cap);
 	}
 }
 
@@ -368,8 +368,8 @@ inline SkPath::FillType MCGFillRuleToSkFillType(MCGFillRule p_rule)
 			return SkPath::kWinding_FillType;
 		case kMCGFillRuleEvenOdd:
 			return SkPath::kEvenOdd_FillType;
-		default:
-			MCUnreachable();
+        default:
+            MCUnreachableReturn(SkPath::kEvenOdd_FillType);
 	}
 }
 
@@ -397,6 +397,8 @@ inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format
 	case kMCGRasterFormat_U_ARGB:
 	case kMCGRasterFormat_xRGB:
 		return SkBitmap::kARGB_8888_Config;
+    default:
+        MCUnreachableReturn(SkBitmap::kA8_Config);
 	}
 }
 
@@ -409,8 +411,8 @@ inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_conf
 		return kMCGRasterFormat_A;
 	case SkBitmap::kARGB_8888_Config:
 		return p_opaque ? kMCGRasterFormat_xRGB : kMCGRasterFormat_ARGB;
-	default:
-		MCUnreachable();
+    default:
+        MCUnreachableReturn(kMCGRasterFormat_A);
 	}
 }
 

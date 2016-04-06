@@ -1,0 +1,50 @@
+Name: RTFText
+
+Type: property
+
+Syntax: set the RTFText of [<chunk> of] <field> to <RTFString> 
+
+Summary: Specifies the contents of a <field>, with its text <format|formatting> represented in <RTF|RTF format>.
+
+Associations: field
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the RTFText of field "Stuff" to URL "file:New Stuff.rtf"
+
+Example:
+put the RTFText of field "Destination" into URL myURL
+
+Value: The <RTFText> of a field is a string.
+
+Description:
+Use the <RTFText> property to import and export text in RTF format.
+
+The <RTFText> property is a representation of the styled text of the field in RTF format.
+
+Setting the <RTFText> of a field (or a chunk of a field) sets both the text contents and the font, size, style, and color attributes corresponding to the information in the <RTFString>. Any other formatting controls in the <RTFstring> are ignored.
+
+The <RTFText> property interprets the following RTF formatting controls:
+Colors:  \cf, \colortbl, \red, \green, \blue, \highlight
+Styles:  \plain, \b, \i, \ul, \ulnon, \strike, \dn, \up
+Font and character set:  \fcharset, \ansi, \mac, \pc, \pca, \u, \fonttbl, \f, \fs
+Others:  \header, \par, \line, \tab
+
+Getting the <RTFText> property reports a string consisting of the text of the field (or chunk of a field), with any font, size, style, and color properties embedded in the text in the form of RTF control words. Unicode text is supported.
+
+Paragraphs with a non-empty listStyle are appropriately marked in <rtfText> using both the (legacy) pn family of paragraph numbering tags and also with the new listtable tags.
+
+By using both sets of tags a reasonable degree of interoperability is achieved with both TextEdit (and other Cocoa applications) on Mac, and Word and WordPad on Windows. 
+>*Note:* Unfortunately, OpenOffice does not have particularly good rtf import / export capabilities (it doesn't even round-trip correctly through itself!) and thus copying / pasting of lists between LiveCode and OpenOffice will not work reliably or correctly.
+>*Important:* Because the RTF standard does not include the box, threeDbox, and link styles supported by LiveCode, the <RTFText> property does not necessarily include all information necessary to reproduce the style information in a chunk. To export and re-import field information without losing any style information, use the htmlTextproperty instead.
+
+For technical information about the RTF format, see the article at &lt;http://msdn.microsoft.com/library/en-us/dnrtfspec/html/rtfspec.asp&gt;.
+
+References: HTMLText (property), foregroundColor (property), dragData (property), field (keyword), charToNum (function), format (glossary), RTF (glossary)
+
+Tags: text processing

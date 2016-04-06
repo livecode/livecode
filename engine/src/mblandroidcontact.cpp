@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -141,7 +141,7 @@ bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 	
 	JNIEnv *t_env = MCJavaGetThreadEnv();
 	
-	t_success = MCJavaMapFromArray(t_env, p_contact, r_map);
+	t_success = MCJavaMapFromArrayRef(t_env, p_contact, r_map);
 	
 	return t_success;
 }
@@ -149,7 +149,7 @@ bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 bool MCAndroidContactFromJavaMap(jobject p_map, MCArrayRef &r_contact)
 {
 	JNIEnv *t_env = MCJavaGetThreadEnv();	
-	return MCJavaMapToArray(t_env, p_map, r_contact);
+	return MCJavaMapToArrayRef(t_env, p_map, r_contact);
 }
 
 bool MCSystemUpdateContact(MCArrayRef p_contact,

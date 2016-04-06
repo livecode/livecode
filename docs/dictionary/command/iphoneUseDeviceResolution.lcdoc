@@ -1,0 +1,44 @@
+Name: iphoneUseDeviceResolution
+
+Type: command
+
+Syntax: iphoneUseDeviceResolution { true | false }, [{ true | false }]
+
+Summary: Sets whether the full resolution of high-resolution devices is to be used
+
+Introduced: 4.5.2
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneUseDeviceResolution true
+
+Example:
+iphoneUseDeviceResolution true, true
+
+Example:
+iphoneUseDeviceResolution true, false
+
+Example:
+iphoneUseDeviceResolution false
+
+Parameters:
+true: 
+false: 
+
+Description:
+Use the <iphoneUseDeviceResolution> command to specify whether the full resolution of high-resolution devices should be used.
+
+The <iphoneUseDeviceResolution> command specifies whether the full resolution of high-resolution devices should be used.
+
+The iPhone 4 has a display with double the resolution in both horizontal and vertical directions. By default, iOS handles this by mapping one logical 'point' to two physical 'pixels' with applications (LiveCode included) interpreting everything in terms of logical points. This means that apps targetted for older devices can run identically on the newer iPhone 4 devices.
+
+If the <iphoneUseDeviceResolution> command is passed <true> as the first argument, LiveCode ensures that co-ordinates and sizes specified in LiveCode are treated as being in pixels, rather than logical points. In particular, when changed, a resizeStack message is sent notifying the size change of the current main-stack, and functions and properties (such as the screenRect) reflects co-ordinates in pixels.
+
+If the <iphoneUseDeviceResolution> command is passed <true> as the second argument, LiveCode ensures that co-ordinates and sizes specified in LiveCode for custom controls are treated as being in pixels, rather than logical points.
+
+>*Note:* The notion of pixel and logical point remains valid on older devices, it is just that it is always 1-1 thus using this command has no effect there. The scale of the device's screen (relative to a non-Retina display) can be queried using iphoneDeviceScale(). This function returns 2 if the display is a Retina display, or 1 otherwise.
+
+References: iphoneDeviceScale (function), iphoneDeviceResolution (function)

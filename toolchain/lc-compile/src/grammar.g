@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -31,13 +31,56 @@
     (|
         ErrorsDidOccur()
     ||
-        (|
-            IsBootstrapCompile()
-            BootstrapCompile(Modules)
-        ||
-            Compile(Modules)
-        |)
+        IsDependencyCompile()
+        
+        DependStart()
+
+        -- First generate the mapping between module name and source-file(s)
+        Depend_GenerateMapping(Modules)
+        
+        -- Now generate the direct dependencies for each module
+        Depend_GenerateDependencies(Modules)
+        
+        DependFinish()
+    ||
+        Compile(Modules)
     |)
+
+---------
+
+'action' Depend_GenerateMapping(MODULELIST)
+
+    'rule' Depend_GenerateMapping(modulelist(module(Position, Kind, Name, _), Rest)):
+        Name'Name -> ModuleName
+        GetFilenameOfPosition(Position -> Filename)
+        DependDefineMapping(ModuleName, Filename)
+        Depend_GenerateMapping(Rest)
+        
+    'rule' Depend_GenerateMapping(nil):
+        -- do nothing
+        
+'action' Depend_GenerateDependencies(MODULELIST)
+
+    'rule' Depend_GenerateDependencies(modulelist(module(_, _, Name, Definitions), Rest)):
+        Name'Name -> ModuleName
+        Depend_GenerateDependenciesForModule(ModuleName, Definitions)
+        Depend_GenerateDependencies(Rest)
+
+    'rule' Depend_GenerateDependencies(nil):
+        -- do nothing
+
+'action' Depend_GenerateDependenciesForModule(NAME, DEFINITION)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, sequence(Left, Right)):
+        Depend_GenerateDependenciesForModule(ModuleName, Left)
+        Depend_GenerateDependenciesForModule(ModuleName, Right)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, import(_, Name)):
+        Name'Name -> DependencyName
+        DependDefineDependency(ModuleName, DependencyName)
+
+    'rule' Depend_GenerateDependenciesForModule(ModuleName, _):
+        -- do nothing
 
 ---------
 
@@ -46,31 +89,32 @@
     'rule' Compile(Modules):
         InitializeBind
         BindModules(Modules, Modules)
-        CheckModules(Modules)
         (|
             ErrorsDidOccur()
         ||
-            where(Modules -> modulelist(Head, _))
-            Generate(Head)
-        |)
-
-'action' BootstrapCompile(MODULELIST)
-
-    'rule' BootstrapCompile(Modules):
-        BindModules(Modules, Modules)
-        CheckModules(Modules)
-        (|
-            ErrorsDidOccur()
-        ||
-            GenerateSyntaxForModules(Modules)
-            GenerateSyntaxRules()
+            CheckModules(Modules)
+            (|
+                ErrorsDidOccur()
+            ||
+                (|
+                    IsBootstrapCompile()
+                    GenerateSyntaxForModules(Modules)
+                    (|
+                        ErrorsDidOccur()
+                    ||
+                        GenerateSyntaxRules()
+                        GenerateModules(Modules)
+                    |)
+                ||
+                    where(Modules -> modulelist(Head, _))
+                    Generate(Head)
+                |)
+            |)
         |)
 
 'action' BindModules(MODULELIST, MODULELIST)
 
     'rule' BindModules(modulelist(Head, Tail), Imports):
-        InitializeBind
-        
         (|
             Head'Kind -> import
         ||
@@ -132,36 +176,30 @@
 
 'nonterm' Module(-> MODULE)
 
-    'rule' Module(-> module(Position, module, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, module, Name, Definitions)):
         OptionalSeparator
         "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, widget, Name, Imports, sequence(PreImportDefs, Definitions))):
+    'rule' Module(-> module(Position, widget, Name, Definitions)):
         OptionalSeparator
         "widget" @(-> Position) Identifier(-> Name) Separator
-        PreImportMetadata(-> PreImportDefs)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "widget" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, library, Name, Imports, sequence(PreImportDefs, Definitions))):
+    'rule' Module(-> module(Position, library, Name, Definitions)):
         OptionalSeparator
         "library" @(-> Position) Identifier(-> Name) Separator
-        PreImportMetadata(-> PreImportDefs)
-        Imports(-> Imports)
         Definitions(-> Definitions)
         "end" "library" OptionalSeparator
         END_OF_UNIT
 
-    'rule' Module(-> module(Position, import, Name, Imports, Definitions)):
+    'rule' Module(-> module(Position, import, Name, Definitions)):
         OptionalSeparator
         "import" "module" @(-> Position) Identifier(-> Name) Separator
-        Imports(-> Imports)
         ImportDefinitions(-> Definitions)
         "end" "module" OptionalSeparator
         END_OF_UNIT
@@ -177,11 +215,17 @@
         
 'nonterm' ImportDefinition(-> DEFINITION)
 
+    'rule' ImportDefinition(-> Import):
+        Import(-> Import)
+
     'rule' ImportDefinition(-> type(Position, public, Id, foreign(Position, ""))):
         "foreign" @(-> Position) "type" Identifier(-> Id)
     
-    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, Signature))):
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, normal, Signature))):
         "handler" @(-> Position) "type" Identifier(-> Id) Signature(-> Signature)
+
+    'rule' ImportDefinition(-> type(Position, public, Id, handler(Position, foreign, Signature))):
+        "foreign" @(-> Position) "handler" "type" Identifier(-> Id) Signature(-> Signature)
         
     'rule' ImportDefinition(-> type(Position, public, Id, Type)):
         "type" @(-> Position) Identifier(-> Id) "is" Type(-> Type)
@@ -202,17 +246,6 @@
 -- Metadata Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' PreImportMetadata(-> DEFINITION)
-
-    'rule' PreImportMetadata(-> sequence(Left, Right)):
-        Metadata(-> Left) Separator
-        PreImportMetadata(-> Right)
-        where(Left -> metadata(Position, _, _))
-        Warning_MetadataClausesShouldComeAfterUseClauses(Position)
-
-    'rule' PreImportMetadata(-> nil):
-        -- do nothing
-
 'nonterm' Metadata(-> DEFINITION)
 
     'rule' Metadata(-> metadata(Position, Key, Value)):
@@ -222,30 +255,29 @@
 -- Import Syntax
 --------------------------------------------------------------------------------
 
-'nonterm' Imports(-> IMPORT)
-
-    'rule' Imports(-> sequence(Head, Tail)):
-        Import(-> Head) Separator
-        Imports(-> Tail)
-        
-    'rule' Imports(-> nil):
-        -- empty
-        
-'nonterm' Import(-> IMPORT)
-
+'nonterm' Import(-> DEFINITION)
     'rule' Import(-> ImportList):
         "use" @(-> Position) IdentifierList(-> Identifiers)
         ExpandImports(Position, Identifiers -> ImportList)
 
-'action' ExpandImports(POS, IDLIST -> IMPORT)
+'action' ExpandImports(POS, IDLIST -> DEFINITION)
 
     'rule' ExpandImports(Position, idlist(Id, nil) -> import(Position, Id)):
         Id'Name -> Name
         GetStringOfNameLiteral(Name -> NameString)
         (|
-            AddImportedModuleFile(NameString)
+            (|
+                -- In bootstrap mode, all modules have to be listed on command line.
+                IsBootstrapCompile()
+            ||
+                AddImportedModuleFile(NameString)
+            |)
         ||
-            Error_UnableToFindImportedModule(Position, Name)
+            (|
+                IsDependencyCompile()
+            ||
+                Error_UnableToFindImportedModule(Position, Name)
+            |)
         |)
 
     'rule' ExpandImports(Position, idlist(Id, Tail) -> sequence(import(Position, Id), ExpandedTail)):
@@ -268,6 +300,9 @@
 
     'rule' Definition(-> Metadata):
         Metadata(-> Metadata)
+
+    'rule' Definition(-> Import):
+        Import(-> Import)
         
     'rule' Definition(-> Constant):
         ConstantDefinition(-> Constant)
@@ -326,7 +361,7 @@
     'rule' OptionalTypeClause(-> Type):
         "as" Type(-> Type)
         
-    'rule' OptionalTypeClause(-> optional(Position, any(Position))):
+    'rule' OptionalTypeClause(-> unspecified):
         @(-> Position)
 
 ---------- Type
@@ -338,7 +373,6 @@
     
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
         Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
-
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -350,8 +384,11 @@
             EnumFields(-> Fields)
         "end" "type"
         
-    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, Signature))):
+    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, normal, Signature))):
         Access(-> Access) "handler" @(-> Position) "type" Identifier(-> Name) Signature(-> Signature)
+
+    'rule' TypeDefinition(-> type(Position, Access, Name, handler(Position, foreign, Signature))):
+        Access(-> Access) "foreign" @(-> Position) "handler" "type" Identifier(-> Name) Signature(-> Signature)
 
 --
 
@@ -440,7 +477,15 @@
 'nonterm' Signature(-> SIGNATURE)
 
     'rule' Signature(-> signature(Parameters, Result)):
-        "(" OptionalParameterList(-> Parameters) ")" OptionalTypeClause(-> Result)
+        "(" OptionalParameterList(-> Parameters) ")" OptionalReturnsClause(-> Result)
+
+'nonterm' OptionalReturnsClause(-> TYPE)
+
+    'rule' OptionalReturnsClause(-> Type)
+        "returns" @(-> Position) Type(-> Type)
+
+    'rule' OptionalReturnsClause(-> unspecified)
+        @(-> Position)
 
 'nonterm' OptionalParameterList(-> PARAMETERLIST)
 
@@ -483,7 +528,10 @@
 
     'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
         "property" @(-> Position) Identifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
-        
+
+    'rule' PropertyDefinition(-> property(Position, public, Name, Getter, Setter)):
+        "property" @(-> Position) StringyIdentifier(-> Name) "get" Identifier(-> Getter) OptionalSetClause(-> Setter)
+
 'nonterm' OptionalSetClause(-> OPTIONALID)
 
     'rule' OptionalSetClause(-> id(Setter)):
@@ -503,13 +551,22 @@
 
 'nonterm' SyntaxDefinition(-> DEFINITION)
 
-    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Syntax, Methods)):
+    'rule' SyntaxDefinition(-> syntax(Position, public, Name, Class, Warnings, Syntax, Methods)):
         "syntax" @(-> Position) Identifier(-> Name) SyntaxClass(-> Class) Separator
+            SyntaxWarnings(-> Warnings)
             Syntax(-> Syntax) Separator
         "begin" Separator
             SyntaxMethods(-> Methods)
         "end" "syntax"
+    
+'nonterm' SyntaxWarnings(-> SYNTAXWARNING)
+
+    'rule' SyntaxWarnings(-> deprecated(Message)):
+        "deprecate" "with" "message" StringLiteral(-> Message) Separator
         
+    'rule' SyntaxWarnings(-> nil):
+        -- nothing
+
 'nonterm' SyntaxClass(-> SYNTAXCLASS)
 
     'rule' SyntaxClass(-> statement):
@@ -522,13 +579,13 @@
         "is" "iterator"
 
     'rule' SyntaxClass(-> prefix(Precedence)):
-        "is" "prefix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" "prefix" "operator" "with" SyntaxPrecedence(-> Precedence) "precedence"
 
     'rule' SyntaxClass(-> postfix(Precedence)):
-        "is" "postfix" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" "postfix" "operator" "with" SyntaxPrecedence(-> Precedence) "precedence"
 
     'rule' SyntaxClass(-> binary(Assoc, Precedence)):
-        "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" "precedence" INTEGER_LITERAL(-> Precedence)
+        "is" SyntaxAssoc(-> Assoc) "binary" "operator" "with" SyntaxPrecedence(-> Precedence) "precedence"
 
     'rule' SyntaxClass(-> phrase):
         "is" "phrase"
@@ -543,6 +600,77 @@
         
     'rule' SyntaxAssoc(-> right):
         "right"
+
+'nonterm' SyntaxPrecedence(-> SYNTAXPRECEDENCE)
+
+    'rule' SyntaxPrecedence(-> scoperesolution):
+        "scope" "resolution"
+
+    'rule' SyntaxPrecedence(-> functioncall):
+        "function" "call"
+
+    'rule' SyntaxPrecedence(-> subscript):
+        "subscript"
+
+    'rule' SyntaxPrecedence(-> property):
+        "property"
+
+    'rule' SyntaxPrecedence(-> subscriptchunk):
+        "subscript chunk"
+
+    'rule' SyntaxPrecedence(-> functionchunk):
+        "function chunk"
+
+    'rule' SyntaxPrecedence(-> constructor):
+        "constructor"
+
+    'rule' SyntaxPrecedence(-> conversion):
+        "conversion"
+
+    'rule' SyntaxPrecedence(-> exponentiation):
+        "exponentiation"
+
+    'rule' SyntaxPrecedence(-> modifier):
+        "modifier"
+
+    'rule' SyntaxPrecedence(-> multiplication):
+        "multiplication"
+
+    'rule' SyntaxPrecedence(-> addition):
+        "addition"
+
+    'rule' SyntaxPrecedence(-> bitwiseshift):
+        "bitwise shift"
+
+    'rule' SyntaxPrecedence(-> concatenation):
+        "concatenation"
+
+    'rule' SyntaxPrecedence(-> comparison):
+        "comparison"
+
+    'rule' SyntaxPrecedence(-> classification):
+        "classification"
+
+    'rule' SyntaxPrecedence(-> bitwiseand):
+        "bitwise and"
+
+    'rule' SyntaxPrecedence(-> bitwisexor):
+        "bitwise xor"
+
+    'rule' SyntaxPrecedence(-> bitwiseor):
+        "bitwise or"
+
+    'rule' SyntaxPrecedence(-> logicalnot):
+        "logical not"
+
+    'rule' SyntaxPrecedence(-> logicaland):
+        "logical and"
+
+    'rule' SyntaxPrecedence(-> logicalor):
+        "logical or"
+
+    'rule' SyntaxPrecedence(-> sequence):
+        "sequence"
 
 'nonterm' SyntaxMethods(-> SYNTAXMETHODLIST)
 
@@ -575,61 +703,41 @@
 
     'rule' Type(-> boolean(Position)):
         "Boolean" @(-> Position)
-    'rule' Type(-> boolean(Position)):
-        "boolean" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Boolean")
 
     'rule' Type(-> integer(Position)):
         "Integer" @(-> Position)
-    'rule' Type(-> integer(Position)):
-        "integer" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Integer")
 
     'rule' Type(-> real(Position)):
         "Real" @(-> Position)
-    'rule' Type(-> real(Position)):
-        "real" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Real")
 
     'rule' Type(-> number(Position)):
         "Number" @(-> Position)
-    'rule' Type(-> number(Position)):
-        "number" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Number")
 
     'rule' Type(-> string(Position)):
         "String" @(-> Position)
-    'rule' Type(-> string(Position)):
-        "string" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "String")
 
     'rule' Type(-> data(Position)):
         "Data" @(-> Position)
-    'rule' Type(-> data(Position)):
-        "data" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Data")
 
     'rule' Type(-> array(Position)):
         "Array" @(-> Position)
-    'rule' Type(-> array(Position)):
-        "array" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "Array")
 
     'rule' Type(-> list(Position, ElementType)):
         "List" @(-> Position) OptionalElementType(-> ElementType)
-    'rule' Type(-> list(Position, ElementType)):
-        "list" @(-> Position) OptionalElementType(-> ElementType)
-        Warning_DeprecatedTypeName(Position, "List")
 
     'rule' Type(-> undefined(Position)):
         "undefined" @(-> Position)
-        
+        Warning_DeprecatedTypeName(Position, "nothing")
+
+    'rule' Type(-> undefined(Position)):
+        "nothing" @(-> Position)
+
 'nonterm' OptionalElementType(-> TYPE)
 
     'rule' OptionalElementType(-> Type)
         "of" Type(-> Type)
         
-    'rule' OptionalElementType(-> optional(Position, any(Position))):
+    'rule' OptionalElementType(-> unspecified):
         @(-> Position)
 
 --------------------------------------------------------------------------------
@@ -889,6 +997,9 @@
     'rule' TermExpression(-> list(Position, List)):
         "[" @(-> Position) OptionalExpressionList(-> List) "]"
 
+    'rule' TermExpression(-> array(Position, Pairs)):
+        "{" @(-> Position) OptionalExpressionArray(-> Pairs) "}"
+
     'rule' TermExpression(-> Expression):
         "(" Expression(-> Expression) ")"
 
@@ -904,6 +1015,10 @@
 
     'rule' ConstantTermExpression(-> undefined(Position)):
         "undefined" @(-> Position)
+        Warning_UndefinedConstantDeprecated(Position)
+        
+    'rule' ConstantTermExpression(-> undefined(Position)):
+        "nothing" @(-> Position)
 
     'rule' ConstantTermExpression(-> true(Position)):
         "true" @(-> Position)
@@ -911,7 +1026,7 @@
     'rule' ConstantTermExpression(-> false(Position)):
         "false" @(-> Position)
 
-    'rule' ConstantTermExpression(-> integer(Position, Value)):
+    'rule' ConstantTermExpression(-> unsignedinteger(Position, Value)):
         INTEGER_LITERAL(-> Value) @(-> Position)
 
     'rule' ConstantTermExpression(-> real(Position, Value)):
@@ -948,6 +1063,29 @@
 
     'rule' ExpressionListAsExpression(-> list(Position, List)):
         ExpressionList(-> List) @(-> Position)
+
+----------
+
+'nonterm' OptionalExpressionArray(-> EXPRESSIONLIST)
+
+    'rule' OptionalExpressionArray(-> Pairs):
+        ExpressionArray(-> Pairs)
+
+    'rule' OptionalExpressionArray(-> nil):
+        -- empty
+
+'nonterm' ExpressionArray(-> EXPRESSIONLIST)
+
+    'rule' ExpressionArray(-> expressionlist(Head, Tail)):
+        ExpressionArrayEntry(-> Head) "," ExpressionArray(-> Tail)
+
+    'rule' ExpressionArray(-> expressionlist(Head, nil)):
+        ExpressionArrayEntry(-> Head)
+
+'nonterm' ExpressionArrayEntry(-> EXPRESSION)
+
+    'rule' ExpressionArrayEntry(-> pair(Position, Key, Value)):
+        Expression(-> Key) ":" @(-> Position) Expression(-> Value)
 
 --------------------------------------------------------------------------------
 -- Syntax Syntax
@@ -1174,13 +1312,39 @@
 'token' END_OF_UNIT
 'token' NEXT_UNIT
 
+'action' DefineCustomInvokeList(INT, INVOKELIST)
+'action' LookupCustomInvokeList(INT -> INVOKELIST)
+
+'action' CustomInvokeLists(INT -> INVOKELIST)
+    'rule' CustomInvokeLists(Index -> List):
+        LookupCustomInvokeList(Index -> List)
+
+'action' MakeCustomInvokeMethodArgs1(MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs1(Mode, Index -> invokesignature(Mode, Index, nil)):
+    
+'action' MakeCustomInvokeMethodArgs2(MODE, INT, MODE, INT -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs2(Mode1, Index1, Mode2, Index2 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, nil))):
+
+'action' MakeCustomInvokeMethodArgs3(MODE, INT, MODE, INT, MODE, INT, -> INVOKESIGNATURE)
+    'rule' MakeCustomInvokeMethodArgs3(Mode1, Index1, Mode2, Index2, Mode3, Index3 -> invokesignature(Mode1, Index1, invokesignature(Mode2, Index2, invokesignature(Mode3, Index3, nil)))):
+
+'action' MakeCustomInvokeMethodList(STRING, INVOKEMETHODTYPE, INVOKESIGNATURE, INVOKEMETHODLIST -> INVOKEMETHODLIST)
+    'rule' MakeCustomInvokeMethodList(Name, Type, Signature, Previous -> methodlist(Name, Type, Signature, Previous))
+
+'action' MakeCustomInvokeList(STRING, STRING, INVOKEMETHODLIST, INVOKELIST -> INVOKELIST)
+    'rule' MakeCustomInvokeList(Name, ModuleName, Methods, Previous -> List)
+        Info::INVOKEINFO
+        Info'Index <- -1
+        Info'ModuleIndex <- -1
+        Info'Name <- Name
+        Info'ModuleName <- ModuleName
+        Info'Methods <- Methods
+        where(invokelist(Info, Previous) -> List)
+
 --*--*--*--*--*--*--*--
 
 'action' InitializeCustomInvokeLists()
     'rule' InitializeCustomInvokeLists():
-        -- nothing
-'action' CustomInvokeLists(INT -> INVOKELIST)
-    'rule' CustomInvokeLists(_ -> nil):
         -- nothing
 'nonterm' CustomStatements(-> STATEMENT)
     'rule' CustomStatements(-> nil):

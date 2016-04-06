@@ -1,0 +1,31 @@
+Name: playDestination
+
+Type: property
+
+Syntax: set the playDestination to {internal | external}
+
+Summary: The <playDestination> specifies where sound output is sent.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Example:
+set the playDestination to external
+
+Value:
+The <playDestination> is "internal" or "external".
+By default, the <playDestination> is set to "internal".
+
+Description:
+Use the <playDestination> <property> to control whether sounds made with the <play> command on <Unix|Unix systems> are sent to the speakers or the audio jack.
+
+If the <playDestination> <property> is set to "internal", sounds are played on the computer's internal speaker. If the <playDestination> is "external", sounds are sent to the computer's audio <port>.
+
+The setting of this property has no effect on Mac OS , OS X, or Windows systems.
+
+References: stop (command), play (command), recordInput (property), property (glossary), Unix (glossary), port (glossary)
+
+Tags: multimedia

@@ -1,0 +1,12 @@
+Name: Browse tool
+
+Synonyms: Browse tool,Hand tool
+
+Type: glossary
+
+Description:
+<Tool> used in the LiveCode <development environment> to interact with a <stack>, click <button|buttons>, type text in <field|fields>, and test stack operations. 
+ 
+When the Browse tool is being used, the <cursor> is in the shape of a pointing hand. You change this shape by setting the <defaultCursor> <property>.
+
+References: defaultCursor (property), property (glossary), cursor (glossary), tool (glossary), development environment (glossary), stack (glossary), field (glossary), button (glossary)

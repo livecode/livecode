@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -177,8 +177,10 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     MCDateTime t_current;
     MCDateTime *t_current_ptr;
     t_current_ptr = nil;
-    
-    if (p_current != nil)
+	
+	// PM-2015-09-01: [[ Bug 15844 ]] Allow calling mobilePickDate with empty [, current] [, start] [, end] parameters
+	// i.e. mobilePickDate "time",,,,10
+    if (!MCStringIsEmpty(p_current))
     {
         if (!MCD_convert_to_datetime(ctxt, p_current, CF_UNDEFINED, CF_UNDEFINED, t_current))
             return;
@@ -189,7 +191,7 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     MCDateTime *t_start_ptr;
     t_start_ptr = nil;
     
-    if (p_start != nil)
+    if (!MCStringIsEmpty(p_start))
     {
         if (!MCD_convert_to_datetime(ctxt, p_start, CF_UNDEFINED, CF_UNDEFINED, t_start))
             return;
@@ -200,7 +202,7 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     MCDateTime *t_end_ptr;
     t_end_ptr = nil;
     
-    if (p_end != nil)
+    if (!MCStringIsEmpty(p_end))
     {
         if (!MCD_convert_to_datetime(ctxt, p_end, CF_UNDEFINED, CF_UNDEFINED, t_end))
             return;
@@ -240,6 +242,7 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
     t_cancelled = false;
     
     bool t_success;
+    t_success = true;
     MCAutoValueRef t_result_string;
     
     // SN-2014-12-03: [[ Bug 14120 ]] If the picker has been cancelled, we should not try to convert the uninitialised t_result.
@@ -257,6 +260,8 @@ void MCPickDoPickDateTime(MCExecContext& ctxt, MCStringRef p_current, MCStringRe
             t_success = (MCSystemPickDateAndTime(t_current_ptr, t_start_ptr, t_end_ptr, t_step, t_cancel_button, t_done_button, &t_result, t_cancelled, p_button_rect)
                          && (t_cancelled || MCD_convert_from_datetime(ctxt, t_result, CF_DATE, CF_TIME, &t_result_string)));
         break;
+    default:
+        MCUnreachable();
     }
     
     if (t_success)

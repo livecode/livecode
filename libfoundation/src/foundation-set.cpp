@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -24,13 +24,28 @@ static bool __MCSetClone(MCSetRef self, bool as_mutable, MCSetRef& r_new_self);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateSingleton(uindex_t p_element, MCSetRef& r_set)
 {
 	return MCSetCreateWithIndices(&p_element, 1, r_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateWithIndices(uindex_t *p_elements, uindex_t p_element_count, MCSetRef& r_set)
 {
+	if (p_element_count == 0)
+	{
+		if (nil != kMCEmptySet)
+		{
+			r_set = MCValueRetain(kMCEmptySet);
+			return true;
+		}
+	}
+	else
+	{
+		MCAssert(nil != p_elements);
+	}
+
 	MCSetRef t_set;
 	if (!MCSetCreateMutable(t_set))
 		return false;
@@ -41,8 +56,11 @@ bool MCSetCreateWithIndices(uindex_t *p_elements, uindex_t p_element_count, MCSe
 	return MCSetCopyAndRelease(t_set, r_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateWithLimbsAndRelease(uindex_t *p_limbs, uindex_t p_limb_count, MCSetRef& r_set)
 {
+	MCAssert(nil != p_limbs);
+
 	__MCSet *self;
 	if (!__MCValueCreate(kMCValueTypeCodeSet, self))
 		return false;
@@ -55,6 +73,7 @@ bool MCSetCreateWithLimbsAndRelease(uindex_t *p_limbs, uindex_t p_limb_count, MC
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCreateMutable(MCSetRef& r_set)
 {
 	__MCSet *self;
@@ -70,8 +89,11 @@ bool MCSetCreateMutable(MCSetRef& r_set)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetCopy(MCSetRef self, MCSetRef& r_new_set)
 {
+	__MCAssertIsSet(self);
+
 	if (!MCSetIsMutable(self))
 	{
 		r_new_set = MCValueRetain(self);
@@ -80,8 +102,11 @@ bool MCSetCopy(MCSetRef self, MCSetRef& r_new_set)
 	return __MCSetClone(self, false, r_new_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 {
+	__MCAssertIsSet(self);
+
 	if (!MCSetIsMutable(self))
 	{
 		r_new_set = self;
@@ -98,13 +123,18 @@ bool MCSetCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 	return __MCSetClone(self, false, r_new_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetMutableCopy(MCSetRef self, MCSetRef& r_new_set)
 {
+	__MCAssertIsSet(self);
 	return __MCSetClone(self, true, r_new_set);
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetMutableCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 {
+	__MCAssertIsSet(self);
+
 	if (self -> references == 1)
 	{
 		self -> flags |= kMCSetFlagIsMutable;
@@ -117,23 +147,33 @@ bool MCSetMutableCopyAndRelease(MCSetRef self, MCSetRef& r_new_set)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetIsMutable(MCSetRef self)
 {
+	__MCAssertIsSet(self);
+
 	return (self -> flags & kMCSetFlagIsMutable) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetIsEmpty(MCSetRef self)
 {
+	__MCAssertIsSet(self);
+
 	for(uindex_t i = 0; i < self -> limb_count; i++)
 		if (self -> limbs[i] != 0)
 			return false;
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIsEqualTo(MCSetRef self, MCSetRef other_self)
 {
+	__MCAssertIsSet(self);
+	__MCAssertIsSet(other_self);
+
 	for(uindex_t i = 0; i < MCMax(self -> limb_count, other_self -> limb_count); i++)
 	{
 		uindex_t t_left_limb, t_right_limb;
@@ -146,8 +186,12 @@ bool MCSetIsEqualTo(MCSetRef self, MCSetRef other_self)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetContains(MCSetRef self, MCSetRef other_self)
 {
+	__MCAssertIsSet(self);
+	__MCAssertIsSet(other_self);
+
 	for(uindex_t i = 0; i < MCMax(self -> limb_count, other_self -> limb_count); i++)
 	{
 		uindex_t t_left_limb, t_right_limb;
@@ -159,8 +203,12 @@ bool MCSetContains(MCSetRef self, MCSetRef other_self)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIntersects(MCSetRef self, MCSetRef other_self)
 {
+	__MCAssertIsSet(self);
+	__MCAssertIsSet(other_self);
+
 	for(uindex_t i = 0; i < MCMax(self -> limb_count, other_self -> limb_count); i++)
 	{
 		uindex_t t_left_limb, t_right_limb;
@@ -172,8 +220,11 @@ bool MCSetIntersects(MCSetRef self, MCSetRef other_self)
 	return false;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetContainsIndex(MCSetRef self, uindex_t p_element)
 {
+	__MCAssertIsSet(self);
+
 	if (p_element >= self -> limb_count * 32)
 		return false;
 	return (self -> limbs[p_element / 32] & (1 << (p_element % 32))) != 0;
@@ -181,6 +232,7 @@ bool MCSetContainsIndex(MCSetRef self, uindex_t p_element)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_DLLEXPORT_DEF
 bool MCSetIncludeIndex(MCSetRef self, uindex_t p_index)
 {
 	if (!MCSetIsMutable(self))
@@ -195,6 +247,7 @@ bool MCSetIncludeIndex(MCSetRef self, uindex_t p_index)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetExcludeIndex(MCSetRef self, uindex_t p_index)
 {
 	if (!MCSetIsMutable(self))
@@ -208,6 +261,7 @@ bool MCSetExcludeIndex(MCSetRef self, uindex_t p_index)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetUnion(MCSetRef self, MCSetRef p_other_set)
 {
 	if (!MCSetIsMutable(self))
@@ -222,6 +276,7 @@ bool MCSetUnion(MCSetRef self, MCSetRef p_other_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetDifference(MCSetRef self, MCSetRef p_other_set)
 {
 	if (!MCSetIsMutable(self))
@@ -237,6 +292,7 @@ bool MCSetDifference(MCSetRef self, MCSetRef p_other_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIntersect(MCSetRef self, MCSetRef p_other_set)
 {
 	if (!MCSetIsMutable(self))
@@ -251,8 +307,11 @@ bool MCSetIntersect(MCSetRef self, MCSetRef p_other_set)
 	return true;
 }
 
+MC_DLLEXPORT_DEF
 bool MCSetIterate(MCSetRef self, uindex_t& x_iterator, uindex_t& r_element)
 {
+	__MCAssertIsSet(self);
+
 	while(x_iterator < self -> limb_count * 32)
 	{
 		x_iterator++;
@@ -349,11 +408,12 @@ bool __MCSetCopyDescription(__MCSet *self, MCStringRef& r_string)
 	if (t_success)
 		t_success = MCStringAppendFormat(t_string, "}");
 	if (t_success)
-		return MCStringCopyAndRelease(t_string, r_string);
+		t_success = MCStringCopyAndRelease(t_string, r_string);
 	
-	MCValueRelease(t_string);
+    if (!t_success)
+        MCValueRelease(t_string);
 
-	return false;
+	return t_success;
 }
 
 bool __MCSetImmutableCopy(__MCSet *self, bool p_release, __MCSet*& r_immutable_value)

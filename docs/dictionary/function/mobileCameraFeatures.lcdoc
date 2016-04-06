@@ -1,0 +1,51 @@
+Name: mobileCameraFeatures
+
+Type: function
+
+Syntax: mobileCameraFeatures( [ <camera> ] )
+
+Summary: Returns the capabilities of the devices camera(s)
+
+Synonyms: iphoneCameraFeatures
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobileCameraFeatures(tCamera) into tFeatures
+
+Example:
+put mobileCameraFeatures("rear") into tFeatures
+
+Parameters:
+camera (enum):
+- rear: return only capabilities of the rear camera
+- front: return only capabilities of the front camera
+- empty: return capabilities of all cameras
+
+Returns:
+The <mobileCameraFeatures> function returns a comma-delimited list of one or more of the following:
+For a specific camera ("front" | "rear")
+* photo - the camera is capable of taking photos
+* video - the camera is capable of recording videos
+* flash - the camera has a flash that can be turned on or off
+* empty - the device does not have that type of camera
+
+If no camera parameter is specified:
+* front photo - the front camera can take photos
+* front video - the front camera can record video
+* front flash - the front camera has a flash
+* rear photo - the rear camera can take photos
+* rear video - the rear camera can record video
+* rear flash - the rear camera has a flash
+* empty - the device has no cameras.
+
+Description:
+Use <mobileCameraFeatures> to find out what camera capabilities the device has.
+
+At this time, Android can only detect whether there are front and/or back cameras and whether they can take photos.
+
+References: mobileExportImageToAlbum (command), mobilePickPhoto (command)

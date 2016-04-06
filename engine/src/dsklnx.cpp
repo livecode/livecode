@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -69,6 +69,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libgnomevfs/gnome-vfs-mime.h>
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 
+#include <gtk/gtk.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -351,8 +352,10 @@ static iconv_t fetch_converter(const char *p_encoding)
 
     if (t_current == NULL)
     {
+        // SN-2015-11-19: [[ Bug 16450 ]] Ask for UTF-16LE to avoid iconv to put
+        // a BOM char at the start of the stream
         iconv_t t_converter;
-        t_converter = iconv_open("UTF-16", p_encoding);
+        t_converter = iconv_open("UTF-16LE", p_encoding);
 
         ConverterRecord *t_record;
         t_record = new ConverterRecord;
@@ -989,9 +992,12 @@ public:
     #endif
     #endif
 
-
+#ifndef _SERVER
+		// ST-2015-04-20: [[ Bug 15257 ]] Stdin shouldn't be set to
+		// non-blocking in server.
         if (!IsInteractiveConsole(0))
             MCS_lnx_nodelay(0);
+#endif
 
         // MW-2013-10-01: [[ Bug 11160 ]] At the moment NBSP is not considered a space.
         MCctypetable[160] &= ~(1 << 4);
@@ -1465,7 +1471,10 @@ public:
         else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_resources, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -1721,8 +1730,10 @@ public:
             struct stat64 t_buf;
             if (t_fd != -1 && !fstat64(t_fd, &t_buf))
             {
-                uint4 t_len = t_buf.st_size;
-                if (t_len != 0)
+				// The length of a file could be > 32-bit, so we have to check that
+				// the file size fits into a 32-bit integer as that is what mmap expects
+				off_t t_len = t_buf.st_size;
+                if (t_len != 0 && t_len < UINT32_MAX)
                 {
                     char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
                                                 t_fd, 0);
@@ -1889,7 +1900,7 @@ public:
         dlclose(p_module);
     }
 
-    virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+    virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_lnx */ LEGACY_SYSTEM
         uint4 flag = files ? S_IFREG : S_IFDIR;
@@ -1949,9 +1960,15 @@ public:
         closedir(dirptr);
         *dptr = tptr;
 #endif /* MCS_getentries_dsk_lnx */
+		MCAutoStringRefAsSysString t_path;
+		if (p_folder == nil)
+			/* UNCHECKED */ t_path . Lock(MCSTR("."));
+		else
+			/* UNCHECKED */ t_path . Lock(p_folder);
+
         DIR *dirptr;
 
-        if ((dirptr = opendir(".")) == NULL)
+        if ((dirptr = opendir(*t_path)) == NULL)
         {
             return false;
         }
@@ -1960,34 +1977,53 @@ public:
 
         bool t_success = true;
 
+		/* For each directory entry, we need to construct a path that can
+		 * be passed to stat(2).  Allocate a buffer large enough for the
+		 * path, a path separator character, and any possible filename. */
+		size_t t_path_len = strlen(*t_path);
+		size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+		char *t_entry_path = new char[t_entry_path_len + 1];
+		strcpy (t_entry_path, *t_path);
+		if ((*t_path)[t_path_len - 1] != '/')
+		{
+			strcat (t_entry_path, "/");
+			++t_path_len;
+		}
+
         while (t_success && (direntp = readdir64(dirptr)) != NULL)
         {
             MCSystemFolderEntry p_entry;
-            MCStringRef t_unicode_name;
+            MCAutoStringRef t_unicode_name;
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
+
+			/* Truncate the directory entry path buffer to the path
+			 * separator. */
+			t_entry_path[t_path_len] = 0;
+			strcat (t_entry_path, direntp->d_name);
+
             struct stat buf;
-            stat(direntp->d_name, &buf);
+            stat(t_entry_path, &buf);
 
-            if (direntp -> d_name != nil && MCStringCreateWithSysString(direntp -> d_name, t_unicode_name))
-                p_entry.name = t_unicode_name;
-            else
-                p_entry.name = kMCEmptyString;
+            t_success = MCStringCreateWithSysString(direntp -> d_name, &t_unicode_name);
+            
+            if (t_success)
+            {
+                p_entry.name = *t_unicode_name;
+                p_entry.data_size = buf.st_size;
+                p_entry.modification_time = (uint32_t)buf.st_mtime;
+                p_entry.access_time = (uint32_t)buf.st_atime;
+                p_entry.group_id = buf.st_uid;
+                p_entry.user_id = buf.st_uid;
+                p_entry.permissions = buf.st_mode & 0777;
+                p_entry.is_folder = S_ISDIR(buf.st_mode);
 
-            p_entry.data_size = buf.st_size;
-            p_entry.modification_time = (uint32_t)buf.st_mtime;
-            p_entry.access_time = (uint32_t)buf.st_atime;
-            p_entry.group_id = buf.st_uid;
-            p_entry.user_id = buf.st_uid;
-            p_entry.permissions = buf.st_mode & 0777;
-            p_entry.is_folder = S_ISDIR(buf.st_mode);
-
-            t_success = p_callback(x_context, &p_entry);
-
-            MCValueRelease(t_unicode_name);
+                t_success = p_callback(x_context, &p_entry);
+            }
         }
 
+		delete t_entry_path;
         closedir(dirptr);
 
         return t_success;
@@ -2050,36 +2086,35 @@ public:
             }
             delete tpath;
         }
+        else if (path[0] != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            char *t_curfolder;
+            t_curfolder = MCS_getcurdir();
+            tildepath = new char[strlen(t_curfolder) + strlen(path) + 2];
+            /* UNCHECKED */ sprintf(tildepath, "%s/%s", t_curfolder, path);
+
+            delete t_curfolder;
+        }
         else
             tildepath = strclone(path);
 
         struct stat64 buf;
         if (lstat64(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
             return tildepath;
-        int4 size;
+
         char *newname = new char[PATH_MAX + 2];
-        if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+
+        // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+        if (realpath(tildepath, newname) == NULL)
         {
-            delete tildepath;
+            // Clear the memory in case of failure
             delete newname;
-            return NULL;
+            newname = NULL;
         }
+
         delete tildepath;
-        newname[size] = '\0';
-        if (newname[0] != '/')
-        {
-            char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-            strcpy(fullpath, path);
-            char *sptr = strrchr(fullpath, '/');
-            if (sptr == NULL)
-                sptr = fullpath;
-            else
-                sptr++;
-            strcpy(sptr, newname);
-            delete newname;
-            newname = MCS_resolvepath(fullpath);
-            delete fullpath;
-        }
         return newname;
 #endif /* MCS_resolvepath_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
@@ -2124,12 +2159,30 @@ public:
             else
                 t_tilde_path = p_path;
         }
+        else if (MCStringGetNativeCharAtIndex(p_path, 0) != '/')
+        {
+            // SN-2015-06-05: [[ Bug 15432 ]] Fix resolvepath on Linux: we want an
+            //  absolute path.
+            MCAutoStringRef t_curdir;
+            MCS_getcurdir(&t_curdir);
+
+            if (!MCStringFormat(&t_tilde_path, "%@/%@", *t_curdir, p_path))
+            {
+                return false;
+            }
+        }
         else
             t_tilde_path = p_path;
 
         // SN-2014-12-18: [[ Bug 14001 ]] Update the server file resolution to use realpath
         //  so that we get the absolute path (needed for MCcmd for instance).
-#ifdef _SERVER
+        // SN-2015-06-08: Use realpath on desktop as well.
+#ifndef _SERVER
+        // IM-2012-07-23
+        // Keep (somewhat odd) semantics of the original function for now
+        if (!MCS_lnx_is_link(*t_tilde_path))
+            return MCStringCopy(*t_tilde_path, r_resolved_path);
+#endif
         MCAutoStringRefAsSysString t_tilde_path_sys;
         t_tilde_path_sys . Lock(*t_tilde_path);
 
@@ -2149,40 +2202,6 @@ public:
         MCMemoryDelete(t_resolved_path);
 
         return t_success;
-#else
-
-        // IM-2012-07-23
-        // Keep (somewhat odd) semantics of the original function for now
-        if (!MCS_lnx_is_link(*t_tilde_path))
-            return MCStringCopy(*t_tilde_path, r_resolved_path);
-
-        MCAutoStringRef t_newname;
-        if (!MCS_lnx_readlink(*t_tilde_path, &t_newname))
-            return false;
-
-        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-        {
-            MCAutoStringRef t_resolved;
-
-            uindex_t t_last_component;
-            uindex_t t_path_length;
-
-            t_path_length = MCStringGetLength(p_path);
-
-            if (MCStringLastIndexOfChar(p_path, '/', t_path_length, kMCStringOptionCompareExact, t_last_component))
-                t_last_component++;
-            else
-                t_last_component = 0;
-
-            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-                !MCStringAppend(*t_resolved, *t_newname))
-                return false;
-
-            return MCStringCopy(*t_resolved, r_resolved_path);
-        }
-        else
-            return MCStringCopy(*t_newname, r_resolved_path);
-#endif
     }
 
     virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -2322,6 +2341,7 @@ public:
             {
                 MCU_realloc((char **)&MCprocesses, MCnprocesses,
                             MCnprocesses + 1, sizeof(Streamnode));
+                MCprocesses[MCnprocesses].pid = 0;
                 MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
                 MCprocesses[MCnprocesses].mode = OM_NEITHER;
                 MCprocesses[MCnprocesses].ohandle = NULL;
@@ -2345,6 +2365,20 @@ public:
                     execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
                     _exit(-1);
                 }
+                if (MCprocesses[index].pid == -1)
+                {
+					MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "fork");
+					MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+					MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
+					close(tochild[0]);
+					close(tochild[1]);
+					close(toparent[0]);
+					close(toparent[1]);
+
+                    MCprocesses[index].pid = 0;
+                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
+                    return false;
+                }
                 CheckProcesses();
                 close(tochild[0]);
 
@@ -2356,32 +2390,23 @@ public:
                 close(tochild[1]);
                 close(toparent[1]);
                 MCS_lnx_nodelay(toparent[0]);
-                if (MCprocesses[index].pid == -1)
-                {
-                    if (MCprocesses[index].pid > 0)
-                        Kill(MCprocesses[index].pid, SIGKILL);
-
-                    MCprocesses[index].pid = 0;
-                    MCeerror->add
-                    (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
-                    // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
-                    return false;
-                }
             }
             else
             {
+                MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+                MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+                MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
                 close(tochild[0]);
                 close(tochild[1]);
-                MCeerror->add
-                (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
                 // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
                 return false;
             }
         }
         else
         {
-            MCeerror->add
-            (EE_SHELL_BADCOMMAND, 0, 0, p_filename);
+            MCeerror->add(EE_SYSTEM_FUNCTION, 0, 0, "pipe");
+            MCeerror->add(EE_SYSTEM_CODE, 0, 0, errno);
+            MCeerror->add(EE_SYSTEM_MESSAGE, 0, 0, strerror(errno));
             // SN-2015-01-29: [[ Bug 14462 ]] Should return false, not true
             return false;
         }
@@ -3180,7 +3205,8 @@ public:
         timeoutval.tv_sec = (long)delay;
         timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
 
-            n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        
         if (n <= 0)
             return handled;
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
@@ -3233,10 +3259,6 @@ public:
         return True;
 #endif /* MCS_poll_dsk_lnx */
 
-#ifdef _LINUX_SERVER
-        Sleep(p_delay);
-        return False;
-#else
         Boolean readinput = False;
         int4 n;
         uint2 i;
@@ -3269,27 +3291,6 @@ public:
             if (MCinputfd > maxfd)
                 maxfd = MCinputfd;
         }
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            if (MCsockets[i]->resolve_state != kMCSocketStateResolving &&
-               MCsockets[i]->resolve_state != kMCSocketStateError)
-            {
-	            if ((MCsockets[i]->connected && !MCsockets[i]->closing
-	                 && !MCsockets[i]->shared) || MCsockets[i]->accepting)
-                    FD_SET(MCsockets[i]->fd, &rmaskfd);
-                if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-                    FD_SET(MCsockets[i]->fd, &wmaskfd);
-                FD_SET(MCsockets[i]->fd, &emaskfd);
-                if (MCsockets[i]->fd > maxfd)
-                    maxfd = MCsockets[i]->fd;
-                if (MCsockets[i]->added)
-                {
-                    p_delay = 0.0;
-                    MCsockets[i]->added = False;
-                    handled = True;
-                }
-            }
-        }
 
         if (g_notify_pipe[0] != -1)
         {
@@ -3298,42 +3299,68 @@ public:
                 maxfd = g_notify_pipe[0];
         }
 
+        // Prepare GLib for the poll we are about to do
+        gint t_glib_ready_priority;
+        if (g_main_context_prepare(NULL, &t_glib_ready_priority))
+            handled = true;
+        
+        // If things are already ready, ensure the timeout is zero
+        if (handled)
+            p_delay = 0.0;
+            
+        // Get the list of file descriptors that the GLib main loop needs to
+        // add to the poll operation.
+        GMainContext* t_glib_main_context = g_main_context_default();
+        MCAutoArray<GPollFD> t_glib_fds;
+        gint t_glib_timeout;
+        t_glib_fds.Extend(g_main_context_query(t_glib_main_context, G_MAXINT, &t_glib_timeout, NULL, 0));
+        g_main_context_query(t_glib_main_context, G_MAXINT, &t_glib_timeout, t_glib_fds.Ptr(), t_glib_fds.Size());
+        
+        // Add the GLib descriptors to the list
+        for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
+        {
+            // Are we polling this FD for reading?
+            if (t_glib_fds[i].events & (G_IO_IN|G_IO_PRI))
+                FD_SET(t_glib_fds[i].fd, &rmaskfd);
+            if (t_glib_fds[i].events & (G_IO_OUT))
+                FD_SET(t_glib_fds[i].fd, &wmaskfd);
+            if (t_glib_fds[i].events & (G_IO_ERR|G_IO_HUP))
+                FD_SET(t_glib_fds[i].fd, &emaskfd);
+            
+            if (t_glib_fds[i].events != 0 && t_glib_fds[i].fd > maxfd)
+                maxfd = t_glib_fds[i].fd;
+        }
+        
         MCModePreSelectHook(maxfd, rmaskfd, wmaskfd, emaskfd);
 
         struct timeval timeoutval;
         timeoutval.tv_sec = (long)p_delay;
         timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
 
-            n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+        
         if (n <= 0)
             return handled;
         if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
             return True;
         if (MCinputfd != -1 && FD_ISSET(MCinputfd, &rmaskfd))
             readinput = True;
-        for (i = 0 ; i < MCnsockets ; i++)
-        {
-            if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-            {
-                if (!MCsockets[i]->waiting)
-                {
-                    MCsockets[i]->error = strclone("select error");
-                    MCsockets[i]->doclose();
-                }
-            }
-            else
-            {
-                /* read first here, otherwise a situation can arise when select indicates
-                 * read & write on the socket as part of the sslconnect handshaking
-                 * and so consumed during writesome() leaving no data to read
-                 */
-                if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-                    MCsockets[i]->readsome();
-                if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-                    MCsockets[i]->writesome();
-            }
-        }
 
+        // Check whether any of the GLib file descriptors were signalled
+        for (uindex_t i = 0; i < t_glib_fds.Size(); i++)
+        {
+            if (FD_ISSET(t_glib_fds[i].fd, &rmaskfd))
+                t_glib_fds[i].revents |= G_IO_IN;
+            if (FD_ISSET(t_glib_fds[i].fd, &wmaskfd))
+                t_glib_fds[i].revents |= G_IO_OUT;
+            if (FD_ISSET(t_glib_fds[i].fd, &emaskfd))
+                t_glib_fds[i].revents |= G_IO_ERR;
+        }
+        
+        // Let GLib know which file descriptors were signalled. We don't
+        // dispatch these now as that will happen later.
+        g_main_context_check(t_glib_main_context, G_MAXINT, t_glib_fds.Ptr(), t_glib_fds.Size());
+        
         if (g_notify_pipe[0] != -1 && FD_ISSET(g_notify_pipe[0], &rmaskfd))
         {
             char t_notify_char;
@@ -3358,7 +3385,6 @@ public:
         if (wasalarm)
             Alarm(CHECK_INTERVAL);
         return True;
-#endif
     }
 
     virtual Boolean IsInteractiveConsole(int p_fd)
@@ -3528,6 +3554,44 @@ public:
         return MCListCreateMutable('\n', &t_list) &&
             MCListAppend(*t_list, MCresult->getvalueref()) &&
             MCListCopy(*t_list, r_list);
+    }
+    
+    virtual void ShowMessageDialog(MCStringRef p_title,
+                                   MCStringRef p_message)
+    {
+        MCAutoStringRefAsUTF8String t_title_utf8;
+        if (!t_title_utf8 . Lock(p_title))
+            return;
+        
+        MCAutoStringRefAsUTF8String t_message_utf8;
+        if (!t_message_utf8 . Lock(p_message))
+            return;
+        
+        typedef GtkMessageDialog *(*gtk_message_dialog_newPTR)(GtkWindow *parent,
+                                                               GtkDialogFlags flags,
+                                                               GtkMessageType type,
+                                                               GtkButtonsType buttons,
+                                                               const gchar *message_format,
+                                                               ...);
+        extern gtk_message_dialog_newPTR gtk_message_dialog_new_ptr;
+        
+        GtkMessageDialog *t_dialog;
+        t_dialog = gtk_message_dialog_new_ptr(NULL,
+                                              GTK_DIALOG_MODAL,
+                                              GTK_MESSAGE_INFO,
+                                              GTK_BUTTONS_CLOSE,
+                                              "%s",
+                                              *t_title_utf8);
+        
+        typedef void (*gtk_message_dialog_format_secondary_textPTR)(GtkMessageDialog *message_dialog,
+                                                                    const gchar *message_format,
+                                                                    ...);
+        extern gtk_message_dialog_format_secondary_textPTR gtk_message_dialog_format_secondary_text_ptr;
+        gtk_message_dialog_format_secondary_text_ptr(t_dialog,
+                                                     "%s",
+                                                     *t_message_utf8);
+        gtk_dialog_run(GTK_DIALOG(t_dialog));
+        gtk_widget_destroy(GTK_WIDGET(t_dialog));
     }
 };
 

@@ -1,0 +1,14 @@
+Name: explicit focus
+
+Synonyms: click-to-type focus,click focus,active focus,explicit focus,active-focus,explicit-focus
+
+Type: glossary
+
+Description:
+A mode in which you have to click a window to make it the <active window>. 
+ 
+Also called "active focus" or "click-to-type focus".
+
+References: active window (glossary)
+
+Tags: windowing

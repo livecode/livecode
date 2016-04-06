@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -35,6 +35,7 @@
 #include "eventqueue.h"
 
 #include "dispatch.h"
+#include "notify.h"
 
 #include "module-engine.h"
 
@@ -50,7 +51,10 @@ struct __MCScriptObjectImpl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectTypeInfo;
+
+extern "C" MC_DLLEXPORT_DEF MCTypeInfoRef MCEngineScriptObjectTypeInfo()
+{ return kMCEngineScriptObjectTypeInfo; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -116,7 +120,7 @@ void MCEngineScriptObjectAllowAccess(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
+extern "C" MC_DLLEXPORT_DEF MCScriptObjectRef MCEngineExecResolveScriptObject(MCStringRef p_object_id)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
         return nil;
@@ -164,7 +168,7 @@ extern "C" MC_DLLEXPORT MCScriptObjectRef MCEngineExecResolveScriptObject(MCStri
     return t_script_object;
 }
 
-extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_object, bool& r_exists)
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_object, bool& r_exists)
 {
     // This method does't require any script interaction so it always allowed.
     
@@ -177,7 +181,7 @@ extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectExists(MCScriptObjectRef p_
         r_exists = false;
 }
 
-extern "C" MC_DLLEXPORT void MCEngineEvalScriptObjectDoesNotExist(MCScriptObjectRef p_object, bool& r_not_exists)
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalScriptObjectDoesNotExist(MCScriptObjectRef p_object, bool& r_not_exists)
 {
     // This method does't require any script interaction so it always allowed.
     
@@ -217,64 +221,71 @@ static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, 
 	return true;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object)
+MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
         return nil;
     
-	MCObject *t_object;
-	uint32_t t_part_id;
-	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
-		return nil;
-	
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
-    
-    MCExecContext ctxt(MCdefaultstackptr, nil, nil);
+	
 	MCExecValue t_value;
-    
-    if (t_prop == P_CUSTOM)
-    {
-        MCNewAutoNameRef t_propset_name, t_propset_key;
-        t_propset_name = t_object -> getdefaultpropsetname();
-        if (!MCNameCreate(p_property, &t_propset_key))
-            return nil;
-        t_object -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
-    }
-    else
-        t_object -> getprop(ctxt, t_part_id, t_prop, nil, False, t_value);
-
-    if (ctxt . HasError())
-    {
-        MCEngineThrowScriptError();
-        return nil;
-    }
-    
-    // This function only relies on throws from libfoundation, so we don't have to do any higher-level
-    // error prodding.
-    MCValueRef t_value_ref;
-    MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &t_value_ref);
-    if (ctxt . HasError())
-        return nil;
-    
-    return t_value_ref;
+	
+	if (t_prop == P_CUSTOM)
+	{
+		MCNewAutoNameRef t_propset_name, t_propset_key;
+		t_propset_name = p_object -> getdefaultpropsetname();
+		if (!MCNameCreate(p_property, &t_propset_key))
+			return nil;
+		p_object -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, nil, t_value);
+	}
+	else
+		p_object -> getprop(ctxt, p_part_id, t_prop, nil, False, t_value);
+	
+	if (ctxt . HasError())
+	{
+		MCEngineThrowScriptError();
+		return nil;
+	}
+	
+	// This function only relies on throws from libfoundation, so we don't have to do any higher-level
+	// error prodding.
+	MCValueRef t_value_ref;
+	MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &t_value_ref);
+	if (ctxt . HasError())
+		return nil;
+	
+	return t_value_ref;
 }
 
-extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef p_value)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef& r_value)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
+    {
+        r_value = MCValueRetain(kMCNull);
         return;
+    }
     
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
-		return;
+    {
+        r_value = MCValueRetain(kMCNull);
+        return;
+    }
 	
+    MCExecContext ctxt(MCdefaultstackptr, nil, nil);
+
+    // AL-2015-07-24: [[ Bug 15630 ]] Syntax binding dictates value returned as out parameter rather than directly
+	r_value = MCEngineGetPropertyOfObject(ctxt, p_property, t_object, t_part_id);
+}
+
+// IM-2015-02-23: [[ WidgetPopup ]] Factored-out function for setting the named property of an object to a value.
+void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id, MCValueRef p_value)
+{
     MCValueRef t_value_copy;
     t_value_copy = MCValueRetain(p_value);
     
-    // Make sure the value is something the script world can understand.
-    MCExecContext ctxt(MCdefaultstackptr, nil, nil);
     if (!MCExtensionConvertToScriptType(ctxt, t_value_copy))
     {
         MCValueRelease(t_value_copy);
@@ -292,16 +303,16 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     if (t_prop == P_CUSTOM)
     {
         MCNewAutoNameRef t_propset_name, t_propset_key;
-        t_propset_name = t_object -> getdefaultpropsetname();
+		t_propset_name = p_object -> getdefaultpropsetname();
         if (!MCNameCreate(p_property, &t_propset_key))
         {
             MCValueRelease(t_value_copy);
             return;
         }
-        t_object -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, t_value);
+		p_object -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, nil, t_value);
     }
     else
-        t_object -> setprop(ctxt, t_part_id, t_prop, nil, False, t_value);
+		p_object -> setprop(ctxt, p_part_id, t_prop, nil, False, t_value);
     
     if (ctxt . HasError())
     {
@@ -310,7 +321,19 @@ extern "C" MC_DLLEXPORT void MCEngineExecSetPropertyOfScriptObject(MCStringRef p
     }
 }
 
-extern "C" MC_DLLEXPORT void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p_object, MCScriptObjectRef &r_owner)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfScriptObject(MCValueRef p_value, MCStringRef p_property, MCScriptObjectRef p_object)
+{
+	MCObject *t_object;
+	uint32_t t_part_id;
+	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+		return;
+	
+    MCExecContext ctxt(MCdefaultstackptr, nil, nil);
+
+	MCEngineSetPropertyOfObject(ctxt, p_property, t_object, t_part_id, p_value);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p_object, MCScriptObjectRef &r_owner)
 {
     // This method does't require any script interaction so it always allowed.
     
@@ -351,7 +374,7 @@ struct MCScriptObjectChildControlsVisitor : public MCObjectVisitor
 	MCProperListRef m_list;
 };
 
-extern "C" MC_DLLEXPORT void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalChildrenOfScriptObject(MCScriptObjectRef p_object, MCProperListRef &r_controls)
 {
     // This method does't require any script interaction so it always allowed.
     
@@ -431,7 +454,11 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
     
     if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, t_params))
         goto cleanup;
-    
+
+	/* Clear any existing value from the result to enable testing
+	 * whether dispatching generated a result. */
+	MCresult->clear();
+
     Exec_stat t_stat;
     t_stat = p_object -> dispatch(!p_is_function ? HT_MESSAGE : HT_FUNCTION, *t_message_as_name, t_params);
     if (t_stat == ES_ERROR)
@@ -444,15 +471,16 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
         s_last_message_was_handled = true;
     else
         s_last_message_was_handled = false;
-    
-    t_result = MCValueRetain(MCresult -> getvalueref());
+
+	/* Provide a return value iff the result was set */
+	t_result = MCValueRetain(MCresult->isclear() ? kMCNull : MCresult->getvalueref());
     
 cleanup:
     MCEngineFreeScriptParameters(t_params);
     return t_result;
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCEngineExecSendToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObjectWithArguments(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
         return nil;
@@ -465,7 +493,7 @@ extern "C" MC_DLLEXPORT MCValueRef MCEngineExecSendToScriptObjectWithArguments(b
     return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, t_object, p_arguments);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCEngineExecSendToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObject(bool p_is_function, MCStringRef p_message, MCScriptObjectRef p_object)
 {
     return MCEngineExecSendToScriptObjectWithArguments(p_is_function, p_message, p_object, kMCEmptyProperList);
 }
@@ -488,7 +516,7 @@ void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_obje
     MCscreen -> addmessage(p_object, *t_message_as_name, 0.0f, t_params);
 }
 
-extern "C" MC_DLLEXPORT void MCEngineExecPostToScriptObjectWithArguments(MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObjectWithArguments(MCStringRef p_message, MCScriptObjectRef p_object, MCProperListRef p_arguments)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
         return;
@@ -497,21 +525,21 @@ extern "C" MC_DLLEXPORT void MCEngineExecPostToScriptObjectWithArguments(MCStrin
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
 		return;
-	
+    
     MCEngineDoPostToObjectWithArguments(p_message, t_object, p_arguments);
 }
 
-extern "C" MC_DLLEXPORT void MCEngineExecPostToScriptObject(MCStringRef p_message, MCScriptObjectRef p_object)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_message, MCScriptObjectRef p_object)
 {
     MCEngineExecPostToScriptObjectWithArguments(p_message, p_object, kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasHandled(bool& r_handled)
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasHandled(bool& r_handled)
 {
     r_handled = s_last_message_was_handled;
 }
 
-extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasNotHandled(bool& r_not_handled)
+extern "C" MC_DLLEXPORT_DEF void MCEngineEvalMessageWasNotHandled(bool& r_not_handled)
 {
     bool t_handled;
     MCEngineEvalMessageWasHandled(t_handled);
@@ -520,7 +548,7 @@ extern "C" MC_DLLEXPORT void MCEngineEvalMessageWasNotHandled(bool& r_not_handle
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScript(MCStringRef p_script)
 {
     if (!MCEngineScriptObjectAccessIsAllowed())
         return nil;
@@ -623,17 +651,31 @@ public:
     }
 };
 
-extern "C" MC_DLLEXPORT void MCEngineExecLog(MCStringRef p_message)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecLog(MCValueRef p_message)
 {
+	if (p_message == nil)
+		p_message = kMCNull;
+
+    MCAutoStringRef t_message_desc;
+    if (!MCValueCopyDescription(p_message, &t_message_desc))
+        return;
+
+#ifdef _SERVER
+	MCAutoStringRefAsSysString t_sys_string;
+	t_sys_string . Lock(*t_message_desc);
+
+	MCS_write(*t_sys_string, 1, t_sys_string . Size(), IO_stderr);
+	MCS_write("\n", 1, 1, IO_stderr);
+
+	MCS_flush(IO_stderr);
+
+#else
     if (!MCStringIsEmpty(s_log_buffer))
     {
         if (!MCStringAppendChar(s_log_buffer, '\n'))
             return;
     }
 
-    MCAutoStringRef t_message_desc;
-    if (!MCValueCopyDescription(p_message, &t_message_desc))
-        return;
 
     if (!MCStringAppend(s_log_buffer, *t_message_desc))
         return;
@@ -643,9 +685,10 @@ extern "C" MC_DLLEXPORT void MCEngineExecLog(MCStringRef p_message)
     
     s_log_update_pending = true;
     MCEventQueuePostCustom(new MCEngineLogChangedEvent);
+#endif
 }
 
-extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MCProperListRef p_values)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecLogWithValues(MCStringRef p_message, MCProperListRef p_values)
 {
     MCAutoStringRef t_formatted_message;
     if (!MCStringCreateMutable(0, &t_formatted_message))
@@ -696,12 +739,35 @@ extern "C" MC_DLLEXPORT void MCEngineExecLogWithValues(MCStringRef p_message, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
-MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
+extern "C" MC_DLLEXPORT_DEF bool MCEngineAddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action)
+{
+	return MCscreen->AddRunloopAction(p_callback, p_context, r_action);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineRemoveRunloopAction(MCRunloopActionRef p_action)
+{
+	MCscreen->RemoveRunloopAction(p_action);
+}
+
+extern "C" MC_DLLEXPORT_DEF bool MCEngineRunloopWait()
+{
+	MCscreen->wait(60.0, True, True);
+	return true;
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineRunloopBreakWait()
+{
+	MCNotifyPing(false);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCEngineModuleInitialize(void)
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectDoesNotExistErrorTypeInfo = nil;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCEngineScriptObjectNoContextErrorTypeInfo = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_engine_Initialize(void)
 {
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.engine.ScriptObjectDoesNotExistError"), MCNAME("engine"), MCSTR("object does not exist"), kMCEngineScriptObjectDoesNotExistErrorTypeInfo))
 		return false;
@@ -720,7 +786,7 @@ bool MCEngineModuleInitialize(void)
     return true;
 }
 
-void MCEngineModuleFinalize(void)
+extern "C" void com_livecode_engine_Finalize(void)
 {
     MCValueRelease(s_log_buffer);
     MCValueRelease(kMCEngineScriptObjectTypeInfo);

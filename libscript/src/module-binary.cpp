@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -18,7 +18,7 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-extern "C" MC_DLLEXPORT void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_output)
 {
     MCAutoDataRef t_data;
     if (!MCDataMutableCopy(p_left, &t_data))
@@ -31,7 +31,7 @@ extern "C" MC_DLLEXPORT void MCBinaryEvalConcatenateBytes(MCDataRef p_left, MCDa
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
     MCBinaryEvalConcatenateBytes(p_source, x_target == (MCDataRef)kMCNull ? kMCEmptyData : x_target, &t_data);
@@ -42,7 +42,7 @@ extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesBefore(MCDataRef p_source, MCDa
     MCValueAssign(x_target, *t_data);
 }
 
-extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDataRef& x_target)
 {
     MCAutoDataRef t_data;
     MCBinaryEvalConcatenateBytes(x_target == (MCDataRef)kMCNull ? kMCEmptyData : x_target, p_source, &t_data);
@@ -53,27 +53,40 @@ extern "C" MC_DLLEXPORT void MCBinaryExecPutBytesAfter(MCDataRef p_source, MCDat
     MCValueAssign(x_target, *t_data);
 }
 
-extern "C" MC_DLLEXPORT void MCBinaryEvalIsEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryEvalIsEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = MCDataIsEqualTo(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCBinaryEvalIsNotEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryEvalIsNotEqualTo(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = !MCDataIsEqualTo(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCBinaryEvalIsLessThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryEvalIsLessThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = MCDataCompareTo(p_left, p_right) < 0;
 }
 
-extern "C" MC_DLLEXPORT void MCBinaryEvalIsGreaterThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
+extern "C" MC_DLLEXPORT_DEF void MCBinaryEvalIsGreaterThan(MCDataRef p_left, MCDataRef p_right, bool& r_result)
 {
     r_result = MCDataCompareTo(p_left, p_right) > 0;
 }
 
-extern "C" MC_DLLEXPORT void MCDataEvalEmpty(MCDataRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCDataEvalEmpty(MCDataRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyData);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_binary_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_binary_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

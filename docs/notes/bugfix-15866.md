@@ -1,0 +1,1 @@
+# Markdown table centering syntax treated as docs element

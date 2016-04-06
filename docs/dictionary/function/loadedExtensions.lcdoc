@@ -1,0 +1,35 @@
+Name: loadedExtensions
+
+Type: function
+
+Syntax: the loadedExtensions
+
+Syntax: loadedExtensions()
+
+Summary: <return|Returns> a list of the currently loaded extensions.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,iOS,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the loadedExtensions
+
+Example:
+if "com.livecode.extensions.livecode.switchButton" is among the lines of the loadedExtensions then
+	create widget as "com.livecode.extensions.livecode.switchButton"
+end if	
+
+Returns: The <loadedExtensions> <function> <return|returns> a list of the loaded <LiveCode Builder extension|extensions>, one per <line>.
+
+Description:
+Use the <loadedExtensions> <function> to find out which <LiveCode Builder extension|extensions> are loaded, in order to determine (for <library extension|libraries>) if its public handlers are available in the message path,
+or (for <widget|widgets>) if it is available to create with the <create widget> <command>.
+
+Each line of the list returned by the <loadedExtensions> <function> is the <kind> of the corresponding <LiveCode Builder extension|extension>.
+
+References: create widget (command), load extension (command), unload extension (command), function (glossary), return (glossary), LiveCode Builder extension (glossary), widget (object), library LiveCode Builder extension (glossary), line (keyword), kind (property)
+
+Tags: extensions

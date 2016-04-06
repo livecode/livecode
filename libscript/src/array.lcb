@@ -1,0 +1,360 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*  
+This library consists of the operations on arrays included in the standard library of LiveCode Builder.
+*/
+
+module com.livecode.array
+
+use com.livecode.foreign
+
+public foreign handler MCArrayEvalKeysOf(in Target as Array, out Value as List) returns nothing binds to "<builtin>"
+public foreign handler MCArrayEvalElementsOf(in Target as Array, out Value as List) returns nothing binds to "<builtin>"
+
+public foreign handler MCArrayEvalIsAmongTheKeysOfCaseless(in Needle as String, in IsNot as CBool, in Target as Array, out Result as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCArrayEvalIsAmongTheElementsOf(in Needle as optional any, in IsNot as CBool, in Target as Array, out Result as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCArrayEvalNumberOfElementsIn(in Target as Array, out Count as LCUIndex) returns nothing binds to "<builtin>"
+
+// Case insensitive map access / storage
+public foreign handler MCArrayFetchElementOfCaseless(in Target as Array, in Key as String, out Value as optional any) returns nothing binds to "<builtin>"
+public foreign handler MCArrayStoreElementOfCaseless(in Value as optional any, inout Target as Array, in Key as String) returns nothing binds to "<builtin>"
+
+public foreign handler MCArrayEvalEmpty(out Value as Array) returns nothing binds to "<builtin>"
+
+public foreign handler MCArrayRepeatForEachElement(inout Iterator as optional Pointer, out Iterand as optional any, in Container as Array) returns CBool binds to "<builtin>"
+public foreign handler MCArrayRepeatForEachKey(inout Iterator as optional Pointer, out Iterand as String, in Container as Array) returns CBool binds to "<builtin>"
+
+public foreign handler MCArrayDeleteElementOfCaseless(inout Target as Array, in Key as String) returns nothing binds to "<builtin>"
+
+--
+
+/* 
+Summary:        Returns the keys of an array.
+Target:         An expression which evaluates to an array.
+
+Returns: 	A list whose elements are the keys of <Target>. 
+
+Example:
+	variable tArray as Array
+	put the empty array into tArray
+	put "value1" into tArray["key1"]
+	put "value2" into tArray["key2"]
+	put "value3" into tArray["key3"]
+	
+	variable tKeys as List
+	put the keys of tArray into tKeys
+	sort tKeys in ascending order
+	
+	variable tKeysString as String
+	combine tKeys with "," into tKeysString 
+	// tKeysString is "key1,key2,key3"
+
+Description:
+>*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the keys.  
+
+References: com.livecode.sort(library)
+
+Tags: Arrays
+*/
+
+syntax KeysOfArray is prefix operator with property precedence
+    "the" "keys" "of" <Target: Expression>
+begin
+    MCArrayEvalKeysOf(Target, output)
+end syntax
+
+/* 
+Summary:        Returns the elements of an array.
+Target:         An expression which evaluates to an array.
+
+Returns: 	A list whose elements are the elements of <Target>. 
+
+Example:
+	variable tArray as Array
+	put the empty array into tArray
+	put 1 into tArray["key1"]
+	put 2 into tArray["key2"]
+	put 3 into tArray["key3"]
+	
+	variable tElements as List
+	put the elements of tArray into tElements
+	sort tElements in ascending numeric order
+	
+	// tElements is [1, 2, 3]
+	
+Description:
+>*Note:* The resulting list is not necessarily ordered in any way. Use the <com.livecode.sort> library to sort the elements.
+
+References: com.livecode.sort(library)
+
+Tags: Arrays
+*/
+
+syntax ElementsOfArray is prefix operator with property precedence
+    "the" "elements" "of" <Target: Expression>
+begin
+    MCArrayEvalElementsOf(Target, output)
+end syntax
+
+--
+
+/*
+Summary:        Returns the number of elements in <Target>
+Target:         An expression which evaluates to an array.
+
+Example:
+	variable tArray as Array
+	put the empty array into tArray
+	put 1 into tArray["key1"]
+	put 2 into tArray["key2"]
+	put 3 into tArray["key3"]
+	
+	variable tVar as Number
+	put the number of elements in tArray into tVar -- tVar contains 3
+	
+Description:
+The number of elements in tArray returns the number of key-value pairs stored in the array.
+
+Tags: Arrays
+*/
+
+syntax CountElementsOfArray is prefix operator with property precedence
+    "the" "number" "of" "elements" "in" <Target: Expression>
+begin
+    MCArrayEvalNumberOfElementsIn(Target, output)
+end syntax
+
+--
+
+/* 
+Summary:        Determines if an array has a given key
+Needle:         An expression which evaluates to an integer, string, or list of integers.
+Target:         An expression which evaluates to an array.
+
+Returns: 	Returns true if <Needle> can be found among the keys of <Target>.
+
+Example:
+	variable tArray as Array
+	put "value" into tArray["key"]
+	
+	variable tIsAmong as Boolean
+	put "key" is among the keys of tArray into tIsAmong -- tIsAmong is true
+
+Description:
+The keys of an array are case insensitive. Thus
+``` tVar is among the keys of tArray``` 
+is not equivalent to 
+``` tVar is in (the keys of tArray) ```
+as the latter <IsInList> operation *is* case sensitive.
+
+References: IsInList (operator)
+
+Tags: Arrays
+*/
+                
+syntax AmongKeysOfArray is neutral binary operator with comparison precedence
+    <Needle: Expression> ( "is not" <IsNot=true> | "is" <IsNot=false> | <IsNot=false> ) "among" "the" "keys" "of" <Target: Expression>
+begin
+//  EvalIsAmongTheKeysOfCaseSensitive(Needle, IsNot, Target, output)
+    MCArrayEvalIsAmongTheKeysOfCaseless(Needle, IsNot, Target, output)
+    //MCArrayEvalIsAmongTheKeysOfNumeric(Needle, IsNot, Target, output)
+    //MCArrayEvalIsAmongTheKeysOfMatrix(Needle, IsNot, Target, output)
+end syntax
+
+/* 
+Summary:        Determines if an array contains a given element
+Needle:         Any expression.
+Target:         An expression which evaluates to an array.
+
+Returns: 	Returns true if <Needle> can be found among the elements of <Target>.
+
+Example:
+	variable tArray as Array
+	put "value" into tArray["key"]
+	
+	variable tIsAmong as Boolean
+	put "value" is among the elements of tArray into tIsAmong -- tIsAmong is true
+
+Description:
+Elements are compared using the default comparison for that type. Thus for a string, ```tString```, 
+```tString is among the elements of tArray``` 
+is a case sensitive search.
+
+Tags: Arrays
+
+*/
+                
+syntax AmongElementsOfArray is neutral binary operator with comparison precedence
+    <Needle: Expression> ( "is not" <IsNot=true> | "is" <IsNot=false> | <IsNot=false> ) "among" "the" "elements" "of" <Target: Expression>
+begin
+    MCArrayEvalIsAmongTheElementsOf(Needle, IsNot, Target, output)
+end syntax
+
+--
+
+/*
+
+Summary:            Designates the element with key <Key> in <Target>.
+Index: 				An expression which evaluates to a string.
+Target:				An expression which evaluates to an array.
+
+Example:			
+	variable tArray as Array
+	put the empty array into tArray
+	put "value" into tArray["key"]
+	
+	variable tVar as String
+	put tArray["key"] into tVar -- tVar contains "value"
+
+Description:     
+Either locates the element container with the given key for use as the target container of another operation, or evaluates the element with the given key as the source of another operation.
+
+Tags: Arrays
+*/
+
+syntax SingletonElementOfArray is postfix operator with subscript precedence
+	<Target: Expression> "[" <Key: Expression> "]"
+begin
+    MCArrayFetchElementOfCaseless(Target, Key, output)
+	MCArrayStoreElementOfCaseless(input, Target, Key)
+end syntax
+
+--
+
+/*
+
+Summary:            Deletes the element with key <Key> in <Target>.
+Index: 				An expression which evaluates to a string.
+Target:				An expression which evaluates to an array.
+
+Example:			
+	variable tArray as Array
+	put the empty array into tArray
+	put "value" into tArray["key"]
+
+	delete tArray["key"] -- tArray is the empty array
+
+Description:     
+Either locates the element container with the given key for use as the target container of another operation, or evaluates the element with the given key as the source of another operation.
+
+Tags: Arrays
+*/
+
+syntax DeleteElementOfArray is statement
+	"delete" <Target: Expression> "[" <Key: Expression> "]"
+begin
+	MCArrayDeleteElementOfCaseless(Target, Key)
+end syntax
+
+--
+
+/* 
+
+Summary: 		Designates the array with no elements.
+
+Example:
+	variable tVar as Array
+	variable tCount as Number
+	put the empty array into tVar
+	put the number of elements in tVar into tCount -- tCount is 0
+	
+Description:
+Use ```the empty array``` to initialise an array variable.
+
+Tags: Arrays
+*/
+
+syntax EmptyArray is expression
+	"the" "empty" "array"
+begin
+	MCArrayEvalEmpty(output)
+end syntax
+
+--
+
+/*
+Summary:        Repeat over the elements of an array.
+Iterand:        Any variable of appropriate type.
+
+Example:
+    variable tArray as Array
+    put the empty array into tArray
+    put 1 into tArray["key1"]
+    put 2 into tArray["key2"]
+    put 3 into tArray["key3"]
+
+	variable tSum as Number
+	put 0 into tSum
+    
+    variable tElement
+    repeat for each element tElement in tArray
+        add tElement to tSum
+    end repeat
+
+    // tSum is 6
+    
+Description:
+Use repeat for each element to iterate over the elements of an array in no particular order. On each iteration, the <Iterand> will contain the next element of the array being iterated over.
+
+>*Note:* If <Iterand> is typed, then an error will be thrown if the array being iterated over contains any elements of a different type.
+
+Tags: Arrays
+*/
+
+syntax RepeatForEachElementInArray is iterator
+    "element" <Iterand: Expression>
+begin
+    MCArrayRepeatForEachElement(iterator, Iterand, container)
+end syntax
+
+/*
+Summary:        Repeat over the keys of an array.
+Iterand:        A string container.
+
+Example:
+    variable tArray as Array
+    put the empty array into tArray
+    put 1 into tArray["abc"]
+    put 2 into tArray["def"]
+    put 3 into tArray["ghi"]
+
+	variable tString as String
+	put "" into tString
+    
+    variable tKey as String
+    repeat for each key tKey in tArray
+        put tKey after tString
+    end repeat
+
+    variable tBool as Boolean
+    put tString contains "abc" into tBool -- tBool is true
+        
+Description:
+Use repeat for each key to iterate over the keys of an array in no particular order. On each iteration, the <Iterand> will contain the next key of the array being iterated over.
+
+Tags: Arrays, Control structures
+*/
+
+syntax RepeatForEachKey is iterator
+    "key" <Iterand: Expression>
+begin
+    MCArrayRepeatForEachKey(iterator, Iterand, container)
+end syntax
+
+end module

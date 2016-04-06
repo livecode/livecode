@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -18,7 +18,7 @@
 #include <foundation-auto.h>
 #include <foundation-chunk.h>
 
-extern "C" MC_DLLEXPORT void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalHeadOf(MCProperListRef p_target, MCValueRef& r_output)
 {
 	if (MCProperListIsEmpty (p_target))
 	{
@@ -29,7 +29,7 @@ extern "C" MC_DLLEXPORT void MCListEvalHeadOf(MCProperListRef p_target, MCValueR
     r_output = MCValueRetain(MCProperListFetchHead(p_target));
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalTailOf(MCProperListRef p_target, MCValueRef& r_output)
 {
 	if (MCProperListIsEmpty (p_target))
 	{
@@ -40,7 +40,7 @@ extern "C" MC_DLLEXPORT void MCListEvalTailOf(MCProperListRef p_target, MCValueR
     r_output = MCValueRetain(MCProperListFetchTail(p_target));
 }
 
-extern "C" MC_DLLEXPORT void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListExecPushSingleElementOnto(MCValueRef p_value, bool p_is_front, MCProperListRef& x_target)
 {
     MCAutoProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(x_target, &t_mutable_list))
@@ -67,7 +67,7 @@ extern "C" MC_DLLEXPORT void MCListExecPushSingleElementOnto(MCValueRef p_value,
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT MCValueRef MCListExecPopElement(bool p_is_front, MCProperListRef& x_source)
+extern "C" MC_DLLEXPORT_DEF MCValueRef MCListExecPopElement(bool p_is_front, MCProperListRef& x_source)
 {
     MCAutoProperListRef t_mutable_list;
     MCAutoValueRef t_result;
@@ -101,12 +101,12 @@ extern "C" MC_DLLEXPORT MCValueRef MCListExecPopElement(bool p_is_front, MCPrope
     return t_result.Take();
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalNumberOfElementsIn(MCProperListRef p_target, uindex_t& r_output)
 {
     r_output = MCProperListGetLength(p_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle, MCProperListRef p_target, bool& r_output)
 {
     MCValueRef t_value;
     t_value = p_needle != nil ? p_needle : kMCNull;
@@ -115,13 +115,13 @@ extern "C" MC_DLLEXPORT void MCListEvalIsAmongTheElementsOf(MCValueRef p_needle,
     r_output = MCProperListFirstIndexOfElement(p_target, t_value, 0, t_dummy);
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalContainsElements(MCProperListRef p_target, MCProperListRef p_needle, bool& r_output)
 {
     uindex_t t_dummy;
     r_output = MCProperListFirstOffsetOfList(p_target, p_needle, 0, t_dummy);
 }
 
-extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListFetchElementOf(index_t p_index, MCProperListRef p_target, MCValueRef& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByExpressionInRange(p_target, nil, p_index, true, false, false, t_start, t_count))
@@ -133,7 +133,7 @@ extern "C" MC_DLLEXPORT void MCListFetchElementOf(index_t p_index, MCProperListR
     r_output = MCValueRetain(MCProperListFetchElementAtIndex(p_target, t_start));
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, true, false, false, t_start, t_count))
@@ -159,7 +159,7 @@ extern "C" MC_DLLEXPORT void MCListStoreElementOf(MCValueRef p_value, index_t p_
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListFetchElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef p_target, MCProperListRef& r_output)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByRangeInRange(p_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -171,7 +171,7 @@ extern "C" MC_DLLEXPORT void MCListFetchElementRangeOf(index_t p_start, index_t 
     MCProperListCopySublist(p_target, MCRangeMake(t_start, t_count), r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreElementRangeOf(MCValueRef p_value, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByRangeInRange(x_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -197,19 +197,19 @@ extern "C" MC_DLLEXPORT void MCListStoreElementRangeOf(MCValueRef p_value, index
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListFetchIndexOf(MCProperListRef p_target, index_t p_index, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListFetchIndexOf(MCProperListRef p_target, index_t p_index, MCValueRef& r_output)
 {
     MCListFetchElementOf(p_index, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreIndexOf(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreIndexOf(MCValueRef p_value, MCProperListRef& x_target, index_t p_index)
 {
     MCValueRef t_value;
     t_value = p_value != nil ? p_value : kMCNull;
     MCListStoreElementOf(t_value, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreAfterElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, true, true, false, t_start, t_count))
@@ -236,7 +236,7 @@ extern "C" MC_DLLEXPORT void MCListStoreAfterElementOf(MCValueRef p_value, index
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreBeforeElementOf(MCValueRef p_value, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, true, false, true, t_start, t_count))
@@ -261,24 +261,24 @@ extern "C" MC_DLLEXPORT void MCListStoreBeforeElementOf(MCValueRef p_value, inde
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListFetchFirstElementOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListFetchFirstElementOf(MCProperListRef p_target, MCValueRef& r_output)
 {
     MCListFetchElementOf(1, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreFirstElementOf(MCValueRef p_value, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreFirstElementOf(MCValueRef p_value, MCProperListRef& x_target)
 {
     MCValueRef t_value;
     t_value = p_value != nil ? p_value : kMCNull;
     MCListStoreElementOf(t_value, 1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListFetchLastElementOf(MCProperListRef p_target, MCValueRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListFetchLastElementOf(MCProperListRef p_target, MCValueRef& r_output)
 {
     MCListFetchElementOf(-1, p_target, r_output);
 }
 
-extern "C" MC_DLLEXPORT void MCListStoreLastElementOf(MCValueRef p_value, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListStoreLastElementOf(MCValueRef p_value, MCProperListRef& x_target)
 {
     MCValueRef t_value;
     t_value = p_value != nil ? p_value : kMCNull;
@@ -287,7 +287,7 @@ extern "C" MC_DLLEXPORT void MCListStoreLastElementOf(MCValueRef p_value, MCProp
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern "C" MC_DLLEXPORT void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceIntoElementRangeOf(MCProperListRef p_list, index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByRangeInRange(x_target, nil, p_start, p_finish, true, false, false, t_start, t_count))
@@ -310,12 +310,12 @@ extern "C" MC_DLLEXPORT void MCListSpliceIntoElementRangeOf(MCProperListRef p_li
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceIntoElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementRangeOf(p_list, p_index, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceBeforeElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, true, false, true, t_start, t_count))
@@ -337,7 +337,7 @@ extern "C" MC_DLLEXPORT void MCListSpliceBeforeElementOf(MCProperListRef p_list,
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceAfterElementOf(MCProperListRef p_list, index_t p_index, MCProperListRef& x_target)
 {
     uindex_t t_start, t_count;
     if (!MCChunkGetExtentsOfElementChunkByExpressionInRange(x_target, nil, p_index, true, true, false, t_start, t_count))
@@ -361,52 +361,52 @@ extern "C" MC_DLLEXPORT void MCListSpliceAfterElementOf(MCProperListRef p_list, 
     MCValueAssign(x_target, *t_immutable);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceBefore(MCProperListRef p_list, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceBefore(MCProperListRef p_list, MCProperListRef& x_target)
 {
     MCListSpliceBeforeElementOf(p_list, 1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceAfter(MCProperListRef p_list, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceAfter(MCProperListRef p_list, MCProperListRef& x_target)
 {
     MCListSpliceAfterElementOf(p_list, -1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceIntoFirstElementOf(MCProperListRef p_list, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceIntoFirstElementOf(MCProperListRef p_list, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementOf(p_list, 1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListSpliceIntoLastElementOf(MCProperListRef p_list, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListSpliceIntoLastElementOf(MCProperListRef p_list, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementOf(p_list, -1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListExecDeleteElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListExecDeleteElementRangeOf(index_t p_start, index_t p_finish, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementRangeOf(kMCEmptyProperList, p_start, p_finish, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListExecDeleteElementOf(index_t p_index, MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListExecDeleteElementOf(index_t p_index, MCProperListRef& x_target)
 {
     MCListSpliceIntoElementOf(kMCEmptyProperList, p_index, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListExecDeleteFirstElementOf(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListExecDeleteFirstElementOf(MCProperListRef& x_target)
 {
     MCListExecDeleteElementOf(1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListExecDeleteLastElementOf(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCListExecDeleteLastElementOf(MCProperListRef& x_target)
 {
     MCListExecDeleteElementOf(-1, x_target);
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalEmpty(MCProperListRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalEmpty(MCProperListRef& r_output)
 {
     r_output = MCValueRetain(kMCEmptyProperList);
 }
 
-extern "C" MC_DLLEXPORT bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
+extern "C" MC_DLLEXPORT_DEF bool MCListRepeatForEachElement(void*& x_iterator, MCValueRef& r_iterand, MCProperListRef p_list)
 {
     uintptr_t t_offset;
     t_offset = (uintptr_t)x_iterator;
@@ -421,22 +421,22 @@ extern "C" MC_DLLEXPORT bool MCListRepeatForEachElement(void*& x_iterator, MCVal
     return true;
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalBeginsWith(MCProperListRef p_list, MCProperListRef p_prefix, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalBeginsWith(MCProperListRef p_list, MCProperListRef p_prefix, bool& r_output)
 {
     r_output = MCProperListBeginsWithList(p_list, p_prefix);
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalEndsWith(MCProperListRef p_list, MCProperListRef p_suffix, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalEndsWith(MCProperListRef p_list, MCProperListRef p_suffix, bool& r_output)
 {
     r_output = MCProperListEndsWithList(p_list, p_suffix);
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalIsEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalIsEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
 {
     r_output = MCProperListIsEqualTo(p_left, p_right);
 }
 
-extern "C" MC_DLLEXPORT void MCListEvalIsNotEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCListEvalIsNotEqualTo(MCProperListRef p_left, MCProperListRef p_right, bool& r_output)
 {
     r_output = !MCProperListIsEqualTo(p_left, p_right);
 }
@@ -466,12 +466,12 @@ MCListEvalIndexOfElementInRange (bool p_is_last,
 		                                                 p_range, t_offset);
 
 	if (t_found)
-		r_output = t_offset + 1;
+		r_output = t_offset + p_range.offset + 1;
 	else
 		r_output = 0;
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCListEvalIndexOfElement (bool p_is_last,
                           MCValueRef p_needle,
                           MCProperListRef p_haystack,
@@ -481,7 +481,7 @@ MCListEvalIndexOfElement (bool p_is_last,
 	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCListEvalIndexOfElementAfter (bool p_is_last,
                                MCValueRef p_needle,
                                index_t p_after,
@@ -503,8 +503,8 @@ MCListEvalIndexOfElementAfter (bool p_is_last,
 	                                 r_output);
 }
 
-extern "C" MC_DLLEXPORT void
-MCListEvalIndexOfElementBefore (bool p_is_last,
+extern "C" MC_DLLEXPORT_DEF void
+MCListEvalIndexOfElementBefore (bool p_is_first,
                                MCValueRef p_needle,
                                index_t p_before,
                                MCProperListRef p_haystack,
@@ -522,7 +522,7 @@ MCListEvalIndexOfElementBefore (bool p_is_last,
 		return;
 	}
 
-	MCListEvalIndexOfElementInRange (p_is_last, p_needle, p_haystack,
+	MCListEvalIndexOfElementInRange (!p_is_first, p_needle, p_haystack,
 	                                 MCRangeMake(0, t_start),
 	                                 r_output);
 }
@@ -552,12 +552,12 @@ MCListEvalOffsetOfListInRange (bool p_is_last,
 		                                               p_range, t_offset);
 
 	if (t_found)
-		r_output = t_offset + 1;
+		r_output = t_offset + p_range.offset + 1;
 	else
 		r_output = 0;
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCListEvalOffsetOfList (bool p_is_last,
                         MCProperListRef p_needle,
                         MCProperListRef p_haystack,
@@ -567,7 +567,7 @@ MCListEvalOffsetOfList (bool p_is_last,
 	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack, t_range, r_output);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCListEvalOffsetOfListAfter (bool p_is_last,
                              MCProperListRef p_needle,
                              index_t p_after,
@@ -589,8 +589,8 @@ MCListEvalOffsetOfListAfter (bool p_is_last,
 	                               r_output);
 }
 
-extern "C" MC_DLLEXPORT void
-MCListEvalOffsetOfListBefore (bool p_is_last,
+extern "C" MC_DLLEXPORT_DEF void
+MCListEvalOffsetOfListBefore (bool p_is_first,
                               MCProperListRef p_needle,
                               index_t p_before,
                               MCProperListRef p_haystack,
@@ -608,9 +608,20 @@ MCListEvalOffsetOfListBefore (bool p_is_last,
 		return;
 	}
 
-	MCListEvalOffsetOfListInRange (p_is_last, p_needle, p_haystack,
+	MCListEvalOffsetOfListInRange (!p_is_first, p_needle, p_haystack,
 	                               MCRangeMake(0, t_start),
 	                               r_output);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_list_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_list_Finalize(void)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

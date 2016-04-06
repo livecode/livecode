@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -45,7 +45,7 @@ extern UIView *MCIPhoneGetView(void);
 
 class MCiOSScrollerControl;
 
-@interface MCiOSScrollViewDelegate : NSObject <UIScrollViewDelegate>
+@interface com_runrev_livecode_MCiOSScrollViewDelegate : NSObject <UIScrollViewDelegate>
 {
 	MCiOSScrollerControl *m_instance;
 }
@@ -53,7 +53,7 @@ class MCiOSScrollerControl;
 - (id)initWithInstance:(MCiOSScrollerControl *)instance;
 @end
 
-@interface MCNativeViewEventForwarder : UIView
+@interface com_runrev_livecode_MCNativeViewEventForwarder : UIView
 {
 	UIView *m_target;
 	
@@ -146,8 +146,8 @@ protected:
 	virtual ~MCiOSScrollerControl(void);
 	
 private:
-	MCiOSScrollViewDelegate *m_delegate;
-	MCNativeViewEventForwarder *m_forwarder;
+	com_runrev_livecode_MCiOSScrollViewDelegate *m_delegate;
+	com_runrev_livecode_MCNativeViewEventForwarder *m_forwarder;
 	MCRectangle32 m_content_rect;
 };
 
@@ -186,7 +186,7 @@ MCObjectPropertyTable MCiOSScrollerControl::kPropertyTable =
 
 MCNativeControlActionInfo MCiOSScrollerControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(FlashScrollIndicators, MCiOSScrollerControl, FlashScrollIndicators)
+    DEFINE_CTRL_EXEC_METHOD(FlashScrollIndicators, Void, MCiOSScrollerControl, FlashScrollIndicators)
 };
 
 MCNativeControlActionTable MCiOSScrollerControl::kActionTable =
@@ -256,6 +256,12 @@ void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, integer_t p_rect[
     // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
     MCGRectangle t_rect;
     t_rect = MCNativeControlUserRectToDeviceRect(MCGRectangleMake(p_rect[0], p_rect[1], p_rect[2] - p_rect[0], p_rect[3] - p_rect[1]));
+	
+	// PM-2016-01-14: [[ Bug 16722]] m_content_rect stores user-pixel values - make sure we update it
+	m_content_rect . x = p_rect[0];
+    m_content_rect . y = p_rect[1];
+    m_content_rect . width = p_rect[2] - p_rect[0];
+    m_content_rect . height = p_rect[3] - p_rect[1];
     
     if (t_view != nil)
         [t_view setContentSize:CGSizeMake(t_rect . size . width, t_rect . size . height)];
@@ -281,8 +287,8 @@ void MCiOSScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)
     if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
     {
         // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
-        MCGPoint t_offset;
-        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat)p_scroll - m_content_rect . x, (MCGFloat) t_y));
+		MCGPoint t_offset;
+        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat)p_scroll, (MCGFloat) t_y));
         [t_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
     }
     
@@ -296,7 +302,7 @@ void MCiOSScrollerControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
     
     // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
     if (t_view)
-        r_scroll = m_content_rect.x + MCNativeControlUserXLocFromDeviceXLoc([t_view contentOffset].x);
+        r_scroll = MCNativeControlUserXLocFromDeviceXLoc([t_view contentOffset].x);
     else
         r_scroll = 0;
 }
@@ -309,8 +315,9 @@ void MCiOSScrollerControl::SetVScroll(MCExecContext& ctxt, integer_t p_scroll)
     if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
     {
         // MM-2013-11-26: [[ Bug 11485 ]] The user passes the properties of the scroller in user space, so must converted to device space before setting.
+		// PM-2016-03-04: [[ Bug 17038 ]] Pass the correct offset, relative to m_content_rect
         MCGPoint t_offset;
-        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) t_x, (MCGFloat) p_scroll - m_content_rect . y));
+        t_offset = MCNativeControlUserPointToDevicePoint(MCGPointMake((MCGFloat) t_x, (MCGFloat) p_scroll));
         [t_view setContentOffset: CGPointMake(t_offset . x, t_offset . y)];
     }
     
@@ -323,8 +330,9 @@ void MCiOSScrollerControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
 	t_view = (UIScrollView*)GetView();
     
     // MM-2013-11-26: [[ Bug 11485 ]] The user expects the properties of the scroller in user space, so must converted to device space before returning.
+	// PM-2016-03-04: [[ Bug 17038 ]] Get the correct offset, relative to m_content_rect
     if (t_view)
-        r_scroll = m_content_rect.y + MCNativeControlUserYLocFromDeviceYLoc([t_view contentOffset].y);
+        r_scroll = MCNativeControlUserYLocFromDeviceYLoc([t_view contentOffset].y);
     else
         r_scroll = 0;
 }
@@ -1182,7 +1190,8 @@ void MCiOSScrollerControl::HandleScrollEvent(void)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target->message_with_args(MCM_scroller_did_scroll, m_content_rect.x + t_x, m_content_rect.y + t_y);
+		// PM-2016-01-14: [[Bug 16705]] Pass the correct offset - relative to the contentRect
+		t_target->message_with_args(MCM_scroller_did_scroll, t_x, t_y);
 		ChangeTarget(t_old_target);
 	}
 }
@@ -1198,9 +1207,9 @@ UIView *MCiOSScrollerControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCiOSScrollViewDelegate alloc] initWithInstance: this];
+	m_delegate = [[com_runrev_livecode_MCiOSScrollViewDelegate alloc] initWithInstance: this];
 	[t_view setDelegate: m_delegate];
-	m_forwarder = [[MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
+	m_forwarder = [[com_runrev_livecode_MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
 	[t_view addSubview: m_forwarder];
 	
 	if (MCmajorosversion >= DELAYS_TOUCHES_WORKAROUND_MIN)
@@ -1310,7 +1319,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCiOSScrollViewDelegate
+@implementation com_runrev_livecode_MCiOSScrollViewDelegate
 
 - (id)initWithInstance:(MCiOSScrollerControl*)instance
 {
@@ -1385,7 +1394,7 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCNativeViewEventForwarder
+@implementation com_runrev_livecode_MCNativeViewEventForwarder
 
 - (id) initWithFrame: (CGRect)withFrame
 {

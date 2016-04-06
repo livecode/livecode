@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -89,6 +89,17 @@ static const char *s_interface_native_types[] =
 	nil
 };
 
+static const char *s_interface_mapped_types[] =
+{
+    "string",
+    "number",
+    "data",
+    "array",
+    "dictionary",
+    
+    nil
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern const char *g_input_filename;
@@ -152,6 +163,7 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 		break;
 	case kInterfaceErrorJavaImpliesInParam:
 		fprintf(stderr, "Java mapped methods can only have 'in' parameters\n");
+        break;
 	case kInterfaceErrorUnknownHandlerMapping:
 		fprintf(stderr, "Unknown handler mapping type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
 		break;
@@ -179,8 +191,12 @@ static void InterfaceCheckType(InterfaceRef self, Position p_where, NameRef p_ty
 	for(uint32_t i = 0; s_interface_native_types[i] != nil; i++)
 		if (NameEqualToCString(p_type, s_interface_native_types[i]))
 			return;
-			
-	for(uint32_t i = 0; i < self -> enum_count; i++)
+    
+    for(uint32_t i = 0; s_interface_mapped_types[i] != nil; i++)
+        if (NameEqualToCString(p_type, s_interface_mapped_types[i]))
+            return;
+    
+    for(uint32_t i = 0; i < self -> enum_count; i++)
 		if (NameEqual(self -> enums[i] . name, p_type))
 			return;
 			

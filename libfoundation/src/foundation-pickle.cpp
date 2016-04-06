@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -525,6 +525,7 @@ static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void
     return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCPickleRead(MCStreamRef stream, MCPickleRecordInfo *p_info, void* r_record)
 {
     bool t_success;
@@ -894,6 +895,7 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
     return t_success;
 }
 
+MC_DLLEXPORT_DEF
 bool MCPickleWrite(MCStreamRef stream, MCPickleRecordInfo *p_info, void *p_record)
 {
     bool t_success;
@@ -991,6 +993,7 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
     }
 }
 
+MC_DLLEXPORT_DEF
 void MCPickleRelease(MCPickleRecordInfo *p_info, void *p_record)
 {
     for(uindex_t i = 0; p_info -> fields[i] . kind != kMCPickleFieldTypeNone; i++)

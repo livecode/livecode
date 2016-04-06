@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -250,3 +250,16 @@ void MCEncodingExecDecompress(MCDataRef& x_target)
     
 }
 #endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_encoding_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_encoding_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

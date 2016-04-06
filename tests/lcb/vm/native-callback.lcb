@@ -1,0 +1,71 @@
+module __VMTEST.native_callback
+
+use com.livecode.foreign
+use com.livecode.__INTERNAL._testlib
+
+-------- MANUAL FUNCTION PTRS
+
+variable sTotal_Manual as Number
+
+handler type ProperListCallbackThunk_Manual(in pContext as optional Pointer, in pElement as optional any) returns CBool
+
+handler SumElementOfList_Manual(in pContext as optional Pointer, in pElement as optional any) returns CBool
+    add pElement to sTotal_Manual
+    return true
+end handler
+
+foreign handler MCHandlerGetFunctionPtr_Manual(in pHandler as any, out rFuncPtr as Pointer) returns CBool binds to "MCHandlerGetFunctionPtr"
+foreign handler MCProperListApply_Manual(in pList as List, in pCallback as Pointer, in pContext as optional Pointer) returns CBool binds to "MCProperListApply"
+
+public handler TestNativeCallback_Manual()
+    -- For memory management reasons we need to keep a reference to the handler
+    -- we want to use around for as long as the function ptr we need.
+    variable tHandler as ProperListCallbackThunk_Manual
+    put SumElementOfList_Manual into tHandler
+
+    -- Fetch the function pointer
+    variable tFunctionPtr as Pointer
+    test "create function pointer - manual" when MCHandlerGetFunctionPtr_Manual(tHandler, tFunctionPtr)
+
+    -- See if it works
+    put 0 into sTotal_Manual
+    MCProperListApply_Manual([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+    test "use function pointer - manual" when sTotal_Manual is (1 + 2 + 3 + 4 + 5 + 6)
+end handler
+
+--------- AUTOMATIC FUNCTION PTRS
+
+variable sTotal as Number
+
+foreign handler type MCProperListApplyCallback(in pContext as optional Pointer, in pElement as optional any) returns CBool
+
+handler SumElementOfList(in pContext as optional Pointer, in pElement as optional any) returns CBool
+    add pElement to sTotal
+    return true
+end handler
+
+foreign handler MCProperListApply(in pList as List, in pCallback as MCProperListApplyCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+
+public handler TestNativeCallback()
+    put 0 into sTotal
+    MCProperListApply([1, 2, 3, 4, 5, 6], SumElementOfList, nothing)
+    test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
+end handler
+
+--------- FOREIGN HANDLER FUNCTION PTRS
+
+-- This test checks that it is possible to pass foreign handlers around as
+-- handler values. We 'hack' this at the moment by massaging the types of
+-- imported foreign handlers (which works because ValueRefs are ptrs underneath).
+
+/*foreign handler MCProperListApply_Hack(in pList as List, in pCallback as MCProperListApplyCallback, in pContext as String) returns CBool binds to "MCProperListApply"
+
+handler TestNativeForeignCallback_Do()
+  MCProperListApply_Hack(["foo"], MCStringIsEqualTo_Hack, "bar")
+end handler
+
+public handler TestNativeForeignCallback()
+  MCUnitTestHandlerThrowsBroken(TestNativeForeignCallback_Do, "use native function pointer", "out-of-frame foreign handler calls not yet supported")
+end handler*/
+
+end module

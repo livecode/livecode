@@ -1,0 +1,34 @@
+Name: revXMLStartTree
+
+Type: message
+
+Syntax: revXMLStartTree
+
+Summary: Sent to the <current card> when the <revXMLCreateTreeFromFile> <function> starts parsing an <XML document>.
+
+Associations: card
+
+Introduced: 2.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk
+
+Example:
+on revXMLStartTree -- prepare a stack to hold a data subset
+  ask "Get XML data for which publisher?"
+  if it is empty then exit to top -- stop parsing
+  set the currPublisher of this stack to myPublisher -- store value
+  clone stack "Subtree" of this stack -- new stack to hold data subset
+end revXMLStartTree
+
+Description:
+Handle the <revXMLStartTree> <message> if you want to build your own subset of an <XML document>.
+
+The <revXMLCreateTree> or <revXMLCreateTreeFromFile> <function(glossary)|functions> take <XML> data and parse it. When you <call> either of these <function(glossary)|functions>, you can specify whether or not to send <message|messages> during the parsing operation.
+
+If you have specified that you want the function to send messages, the <revXMLStartTree> <message> is sent when the <function(control_st)> begins parsing the <XML>. If you have specified that you don't want <message|messages> sent, no <revXMLStartTree> <message|messages> are sent.
+
+References: revXMLEndTree (message), revStartXMLData (message), revStartXMLNode (message), call (command), revXMLDeleteTree (command), revXMLCreateTreeFromFile (function), revXMLRootNode (function), revXMLCreateTree (function), function (control_st), current card (glossary), message (glossary), XML document (glossary), function (glossary), XML (glossary)

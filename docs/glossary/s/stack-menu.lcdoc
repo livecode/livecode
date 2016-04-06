@@ -1,0 +1,14 @@
+Name: stack menu
+
+Synonyms: stack menu,panel menu,menu panel
+
+Type: glossary
+
+Description:
+A <menu> built from <button|buttons> placed in a <stack>. 
+ 
+Stack menus can be displayed in the <menu bar>, or as <popup menu|popup> or pulldown <menu|menus> or <combo box|combo boxes>.
+
+References: menu bar (glossary), combo box (glossary), popup menu (glossary), menu (glossary), stack (glossary), button (glossary)
+
+Tags: menus

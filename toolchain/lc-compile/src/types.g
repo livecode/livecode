@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -21,14 +21,13 @@
 
 'export'
     MODULE MODULELIST MODULEKIND
-    IMPORT
     DEFINITION SIGNATURE ACCESS SCOPE
-    TYPE FIELD FIELDLIST
+    TYPE FIELD FIELDLIST LANGUAGE
     PARAMETER MODE PARAMETERLIST
     STATEMENT
     EXPRESSION EXPRESSIONLIST
     INVOKELIST INVOKEINFO INVOKESIGNATURE INVOKEMETHODTYPE INVOKEMETHODLIST
-    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM
+    SYNTAX SYNTAXCLASS SYNTAXASSOC SYNTAXCONSTANT SYNTAXCONSTANTLIST SYNTAXMETHOD SYNTAXMETHODLIST SYNTAXTERM SYNTAXWARNING
     ID IDLIST OPTIONALID
     INTLIST
     NAMELIST
@@ -38,6 +37,7 @@
     SYNTAXINFO
     SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
+    SYNTAXPRECEDENCE
 
 --------------------------------------------------------------------------------
 
@@ -53,12 +53,7 @@
     application
 
 'type' MODULE
-    module(Position: POS, Kind: MODULEKIND, Name: ID, Imports: IMPORT, Definitions: DEFINITION)
-
-'type' IMPORT
-    sequence(Left: IMPORT, Right: IMPORT)
-    import(Position: POS, Name: ID)
-    nil
+    module(Position: POS, Kind: MODULEKIND, Name: ID, Definitions: DEFINITION)
 
 'type' SCOPE
     normal
@@ -67,6 +62,7 @@
 'type' DEFINITION
     sequence(Left: DEFINITION, Right: DEFINITION)
     metadata(Position: POS, Key: STRING, Value: STRING)
+    import(Position: POS, Name: ID)
     type(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
     constant(Position: POS, Access: ACCESS, Name: ID, Value: EXPRESSION)
     variable(Position: POS, Access: ACCESS, Name: ID, Type: TYPE)
@@ -75,7 +71,7 @@
     foreignhandler(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE, Binding: STRING)
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
-    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
+    syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Warnings: SYNTAXWARNING, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
     nil
 
 'type' SIGNATURE
@@ -95,7 +91,7 @@
     optional(Position: POS, Type: TYPE)
     record(Position: POS, Base: TYPE, Fields: FIELDLIST)
     enum(Position: POS, Base: TYPE, Fields: FIELDLIST)
-    handler(Position: POS, Signature: SIGNATURE)
+    handler(Position: POS, Language: LANGUAGE, Signature: SIGNATURE)
     boolean(Position: POS)
     integer(Position: POS)
     real(Position: POS)
@@ -104,7 +100,12 @@
     data(Position: POS)
     array(Position: POS)
     list(Position: POS, Element: TYPE)
+    unspecified
     nil
+
+'type' LANGUAGE
+    normal
+    foreign
 
 'type' FIELDLIST
     fieldlist(Head: FIELD, Tail: FIELDLIST)
@@ -160,6 +161,7 @@
     true(Position: POS)
     false(Position: POS)
     integer(Position: POS, Value: INT)
+    unsignedinteger(Position: POS, Value: INT)
     real(Position: POS, Value: DOUBLE)
     string(Position: POS, Value: STRING)
     slot(Position: POS, Name: ID)
@@ -170,6 +172,8 @@
     list(Position: POS, List: EXPRESSIONLIST)
     call(Position: POS, Handler: ID, Arguments: EXPRESSIONLIST)
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
+    array(Position: POS, Pairs: EXPRESSIONLIST)
+    pair(Position: POS, Key: EXPRESSION, Value: EXPRESSION)
     nil
 
 'type' INVOKELIST
@@ -192,14 +196,18 @@
     rule(Position: POS, Name: ID)
     mark(Position: POS, Variable: ID, Value: SYNTAXCONSTANT)
 
+'type' SYNTAXWARNING
+    deprecated(Message: STRING)
+    nil
+
 'type' SYNTAXCLASS
     phrase
     statement
     iterator
     expression
-    prefix(Precedence: INT)
-    postfix(Precedence: INT)
-    binary(Assoc: SYNTAXASSOC, Precedence: INT)
+    prefix(Precedence: SYNTAXPRECEDENCE)
+    postfix(Precedence: SYNTAXPRECEDENCE)
+    binary(Assoc: SYNTAXASSOC, Precedence: SYNTAXPRECEDENCE)
     expressionphrase
     expressionlistphrase
 
@@ -302,13 +310,55 @@
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
-'table' MODULEINFO(Index: INT)
-'table' SYMBOLINFO(Index: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
+'table' MODULEINFO(Index: INT, Generator: INT)
+'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)
 
 'table' TYPEINFO(Position: POS)
+
+--------------------------------------------------------------------------------
+
+-- All operators are classified as particular types representing their syntactic
+-- structure. These patterns have fixed precedence when used in expressions to
+-- ensure consistent interpretation.
+--
+-- These classifications easy syntactic description and ensure consistency. The
+-- parser maps them to concrete operator type and precedence level before
+-- building the AST.
+--
+-- Some classifications have the same underlying syntactic pattern but distinction
+-- is made to make it clear what the intent of the syntax is. Generally, if two
+-- classifications share a syntax pattern, then they must share the same precedence
+-- and operator type to ensure the principal of least surprise is enforced.
+--
+-- See also /docs/specs/lcb-precedence.md
+--
+'type' SYNTAXPRECEDENCE
+    scoperesolution,  -- com.livecode.module.Identifier
+    functioncall,     -- Handler()
+    subscript,        -- tList[5]
+    property,         -- the paint of tCanvas
+    subscriptchunk,   -- char 5 of tString
+    conversion,       -- tString parsed as number
+    functionchunk,    -- the length of tList
+    modifier,         -- -tNumber, bitwise not tNumber
+    exponentiation,   -- 2 ^ 10
+    multiplication,   -- /, *, div, mod
+    addition,         -- +, -
+    concatenation,    -- &, &&
+    bitwiseshift,     -- 1 shifted left by 3 bitwise
+    bitwiseand,       -- 5 bitwise and 1
+    bitwisexor,       -- 5 bitwise xor 1
+    bitwiseor,        -- 5 bitwise or 1
+    constructor,      -- rectangle tList
+    comparison,       -- <=, <, is, =
+    classification,   -- 5 is a number
+    logicalnot,       -- not tBoolean
+    logicaland,       -- tLeft and tRight
+    logicalor,        -- tLeft or tRight
+    sequence          -- ,
 
 --------------------------------------------------------------------------------
 

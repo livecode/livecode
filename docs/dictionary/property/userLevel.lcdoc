@@ -1,0 +1,20 @@
+Name: userLevel
+
+Type: property
+
+Syntax: set the userLevel to <number> 
+
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+
+Introduced: 1.0
+
+Platforms: desktop,server,web
+
+Description:
+In HyperCard, the <userLevel> <property> determines what actions the user can perform. In LiveCode, there are no separate user levels.
+
+By default, the <userLevel> <property> is set to 8. (This is greater than any of the <value|values> permitted in HyperCard for the <userLevel> <property>, so <import|imported> <stacks> that check whether the <userLevel> is greater than a certain number will continue to work without modification.)
+
+A handler can set the <userLevel> to any number without causing a <error|script error>, but the <behavior> of the <application> is not changed.
+
+References: cantModify (property), edit (command), choose (command), stacks (function), property (glossary), LiveCode (glossary), behavior (glossary), value (glossary), error (glossary), import (glossary), HyperCard (glossary), application (glossary)

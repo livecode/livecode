@@ -1,54 +1,30 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #ifndef __MC_DESKTOP_DC__
 #define __MC_DESKTOP_DC__
 
-#ifndef __MC_UIDC__
 #include "uidc.h"
-#endif
-
-#ifndef __MC_PLATFORM__
 #include "platform.h"
-#endif
-
-class MCSystemPasteboard: public MCPasteboard
-{
-public:
-	MCSystemPasteboard(MCPlatformPasteboardRef pasteboard);
-	~MCSystemPasteboard(void);
-	
-	virtual void Retain(void);
-	virtual void Release(void);	
-	
-	virtual bool Query(MCTransferType*& r_types, size_t& r_type_count);
-	virtual bool Fetch(MCTransferType p_type, MCDataRef& r_data);
-	
-private:
-	bool IsValid(void);
-	void Resolve(void);
-	void AddEntry(MCTransferType type, MCPlatformPasteboardFlavor flavor);
-	
-	struct Entry
-	{
-		MCTransferType type;
-		MCPlatformPasteboardFlavor flavor;
-		MCDataRef data;
-	};
-	
-	uint32_t m_references;
-	
-	MCPlatformPasteboardRef m_pasteboard;
-	uindex_t m_generation;
-	
-	MCTransferType *m_types;
-	Entry *m_entries;
-	uindex_t m_entry_count;
-	
-	bool m_valid;
-};
 
 class MCScreenDC: public MCUIDC
 {
 private:
 	uint2 beeppitch;
+    
 	uint2 beepduration;
 	Boolean menubarhidden;
 	
@@ -80,7 +56,7 @@ public:
 	virtual uint16_t platform_getwidth(void);
 	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
-	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	
 	virtual void resetcursors();
 	virtual void setcursor(Window w, MCCursorRef c);
@@ -98,6 +74,8 @@ public:
 	virtual void setinputfocus(Window window);
 	virtual uintptr_t dtouint(Drawable d);
 	virtual Boolean uinttowindow(uintptr_t, Window &w);
+	
+	virtual void *GetNativeWindowHandle(Window p_window);
 	
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
@@ -143,11 +121,6 @@ public:
 	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
 	
-	virtual void flushclipboard(void);
-	virtual bool ownsclipboard(void);
-	virtual bool setclipboard(MCPasteboard *p_pasteboard);
-	virtual MCPasteboard *getclipboard(void);
-	
 	virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
     virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 	
@@ -155,7 +128,7 @@ public:
     //  Mismatching types - thus the 'unimplemented' MCUICDC::snapshot was called instead of the MCScreenDC one
 	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname, MCPoint *size);
 	
-	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset);
     // SN-2014-07-23: [[ Bug 12907 ]] File > Import as control > Snapshot from screen
     //  Update as well MCSreenDC::createscriptenvironment (and callees)
 	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);

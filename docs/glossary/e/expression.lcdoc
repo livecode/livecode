@@ -1,0 +1,10 @@
+Name: expression
+
+Synonyms: expression
+
+Type: glossary
+
+Description:
+A <value>, a source of value, or a set of <value|values> combined with <operator|operators>, that can be taken as a single whole.
+
+References: operator (glossary), value (glossary)

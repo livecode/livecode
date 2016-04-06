@@ -1,0 +1,20 @@
+Name: editScripts
+
+Type: property
+
+Syntax: set the editScripts to {true | false}
+
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
+
+Introduced: 1.0
+
+OS: ios,android
+
+Platforms: desktop,server,web,mobile
+
+Description:
+The <editScripts> <property> is present in LiveCode for compatibility with scripts imported from SuperCard and should not be used in new stacks.
+
+It has no effect on the LiveCode environment, and although it may be set or evaluated without causing an error, its value will always be true.
+
+References: edit (command), property (glossary), SuperCard (glossary), LiveCode (glossary)

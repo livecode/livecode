@@ -1,0 +1,29 @@
+Name: libraryStack
+
+Type: message
+
+Syntax: libraryStack
+
+Summary: Sent to a <stack> when it is placed in the <message path> by the <start using> <command>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on libraryStack -- show visually in the stack that it's in use
+  set the hilite of button "Using" of card 1 of this stack to true
+end libraryStack
+
+Description:
+Handle the <libraryStack> <message> if you want to perform some task or set a configuration when a <stack> is placed in use.
+
+The <libraryStack> <message> is sent to a <stack> even if it was already in use before the <start using> <command> was <execute|executed>.
+
+References: releaseStack (message), start using (command), stack (object), message (glossary), command (glossary), execute (glossary), message path (glossary)
+
+Tags: objects

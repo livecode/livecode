@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -28,6 +28,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "srvflst.h"
 #elif defined(_MOBILE)
 #include "mblflst.h"
+#elif defined(__EMSCRIPTEN__)
+#include "em-fontlist.h"
 #endif
 
 #endif

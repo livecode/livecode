@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1130,28 +1130,36 @@ static void relocate_function_starts_command(linkedit_data_command *x, int32_t p
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCDeployArchitecture MCDeployMachArchToDeployArchitecture(cpu_type_t p_type, cpu_subtype_t p_subtype)
+{
+    MCDeployArchitecture t_arch;
+    if (p_type == CPU_TYPE_X86)
+        t_arch = kMCDeployArchitecture_I386;
+    else if (p_type == CPU_TYPE_X86_64)
+        t_arch = kMCDeployArchitecture_X86_64;
+    else if (p_type == CPU_TYPE_ARM && p_subtype == CPU_SUBTYPE_ARM_V6)
+        t_arch = kMCDeployArchitecture_ARMV6;
+    else if (p_type == CPU_TYPE_ARM && p_subtype == CPU_SUBTYPE_ARM_V7)
+        t_arch = kMCDeployArchitecture_ARMV7;
+    else if (p_type == CPU_TYPE_ARM && p_subtype == CPU_SUBTYPE_ARM_V7S)
+        t_arch = kMCDeployArchitecture_ARMV7S;
+    else if (p_type == CPU_TYPE_ARM64)
+        t_arch = kMCDeployArchitecture_ARM64;
+    else if (p_type == CPU_TYPE_POWERPC)
+        t_arch = kMCDeployArchitecture_PPC;
+    else if (p_type == CPU_TYPE_POWERPC64)
+        t_arch = kMCDeployArchitecture_PPC64;
+    else
+        t_arch = kMCDeployArchitecture_Unknown;
+    
+    return t_arch;
+}
+
 static bool MCDeployToMacOSXFetchMinOSVersion(const MCDeployParameters& p_params, mach_header& p_header, uint32_t& r_version)
 {
     // First work out what DeployArchitecture to look for.
     MCDeployArchitecture t_arch;
-    if (p_header . cputype == CPU_TYPE_X86)
-        t_arch = kMCDeployArchitecture_I386;
-    else if (p_header . cputype == CPU_TYPE_X86_64)
-        t_arch = kMCDeployArchitecture_X86_64;
-    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V6)
-        t_arch = kMCDeployArchitecture_ARMV6;
-    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V7)
-        t_arch = kMCDeployArchitecture_ARMV7;
-    else if (p_header . cputype == CPU_TYPE_ARM && p_header . cpusubtype == CPU_SUBTYPE_ARM_V7S)
-        t_arch = kMCDeployArchitecture_ARMV7S;
-    else if (p_header . cputype == CPU_TYPE_ARM64)
-        t_arch = kMCDeployArchitecture_ARM64;
-    else if (p_header . cputype == CPU_TYPE_POWERPC)
-        t_arch = kMCDeployArchitecture_PPC;
-    else if (p_header . cputype == CPU_TYPE_POWERPC64)
-        t_arch = kMCDeployArchitecture_PPC64;
-    else
-        t_arch = kMCDeployArchitecture_Unknown;
+    t_arch = MCDeployMachArchToDeployArchitecture(p_header.cputype, p_header.cpusubtype);
     
     // Search for both the architecture in the mach header and for the 'unknown'
     // architecture. If the real arch is found, then we use that version; otherwise
@@ -1850,56 +1858,86 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 		t_output_offset = sizeof(fat_header);
 		
 		// The fat_arch structures follow the fat header directly
-		uint32_t t_header_offset;
-		t_header_offset = sizeof(fat_header);
+        uint32_t t_header_read_offset, t_header_write_offset;
+		t_header_read_offset = t_header_write_offset = sizeof(fat_header);
 		
 		// Loop through all the fat headers.
+        uint32_t t_slice_count = 0;
 		for(uint32_t i = 0; i < t_fat_header . nfat_arch && t_success; i++)
 		{
 			fat_arch t_fat_arch;
-			if (!MCDeployFileReadAt(p_engine, &t_fat_arch, sizeof(fat_arch), t_header_offset))
+			if (!MCDeployFileReadAt(p_engine, &t_fat_arch, sizeof(fat_arch), t_header_read_offset))
 				t_success = MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
 			
-			uint32_t t_last_output_offset;
-			if (t_success)
-			{
+            // Ensure the header has the appropriate byte order
+            if (t_success)
                 swap_fat_arch(true, t_fat_arch);
-				
-				// Round the end of the last engine up to the nearest page boundary.
-				t_output_offset = (t_output_offset + ((1 << t_fat_arch . align))) & ~((1 << t_fat_arch . align) - 1);
-				
-				// Record the end of the last engine.
-				t_last_output_offset = t_output_offset;
-				
-				// Write out this arch's portion.
-				if (!p_embedded)
-					t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
-#if 0
-				else
-					t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
-#endif
-			}
+            
+            // Is this slice for an architecture we want to keep?
+            bool t_want_slice = true;
+            if (t_success && p_params.architectures.Size() > 0)
+            {
+                // Get the architecture for this slice and check whether it is
+                // in the list of desired slices or not
+                t_want_slice = false;
+                MCDeployArchitecture t_arch = MCDeployMachArchToDeployArchitecture(t_fat_arch.cputype, t_fat_arch.cpusubtype);
+                for (uindex_t j = 0; j < p_params.architectures.Size(); j++)
+                {
+                    if (p_params.architectures[j] == t_arch)
+                    {
+                        t_want_slice = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Do we want to keep this architecture?
+            if (t_want_slice)
+            {
+                uint32_t t_last_output_offset;
+                if (t_success)
+                {
+                    // Round the end of the last engine up to the nearest page boundary.
+                    t_output_offset = (t_output_offset + ((1 << t_fat_arch . align))) & ~((1 << t_fat_arch . align) - 1);
+                    
+                    // Record the end of the last engine.
+                    t_last_output_offset = t_output_offset;
+                    
+                    // Write out this arch's portion.
+                    if (!p_embedded)
+                        t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
+    #if 0
+                    else
+                        t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
+    #endif
+                }
+                
+                if (t_success)
+                {
+                    // Update the fat header.
+                    t_fat_arch . offset = t_last_output_offset;
+                    t_fat_arch . size = t_output_offset - t_last_output_offset;
+                    
+                    // Put it back to network byte order.
+                    swap_fat_arch(true, t_fat_arch);
+                    
+                    // Write out the header.
+                    t_success = MCDeployFileWriteAt(p_output, &t_fat_arch, sizeof(t_fat_arch), t_header_write_offset);
+                }
+                
+                // We've written another slice
+                t_slice_count++;
+                t_header_write_offset += sizeof(fat_arch);
+            }
 			
-			if (t_success)
-			{
-				// Update the fat header.
-				t_fat_arch . offset = t_last_output_offset;
-				t_fat_arch . size = t_output_offset - t_last_output_offset;
-				
-				// Put it back to network byte order.
-                swap_fat_arch(true, t_fat_arch);
-				
-				// Write out the header.
-				t_success = MCDeployFileWriteAt(p_output, &t_fat_arch, sizeof(t_fat_arch), t_header_offset);
-			}
-			
-			t_header_offset += sizeof(fat_arch);
+            t_header_read_offset += sizeof(fat_arch);
 		}
 		
 		// Final step is to update the fat header.
 		if (t_success)
 		{
-			swap_fat_header(true, t_fat_header);
+            t_fat_header.nfat_arch = t_slice_count;
+            swap_fat_header(true, t_fat_header);
 			t_success = MCDeployFileWriteAt(p_output, &t_fat_header, sizeof(t_fat_header), 0);
 		}
 	}
@@ -1913,7 +1951,8 @@ static bool MCDeployValidateMacEngine(const MCDeployParameters& p_params, mach_h
 {
 	// Check the CPU type is PowerPC or X86
 	if (p_header . cputype != CPU_TYPE_POWERPC &&
-		p_header . cputype != CPU_TYPE_X86)
+		p_header . cputype != CPU_TYPE_X86 &&
+        p_header . cputype != CPU_TYPE_X86_64)
 		return MCDeployThrow(kMCDeployErrorMacOSXBadCpuType);
 
 	// Check that Cocoa is one of the libraries linked to

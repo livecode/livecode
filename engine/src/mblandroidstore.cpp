@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -448,7 +448,13 @@ static bool purchase_confirm(MCPurchase *p_purchase)
     MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bix", &t_result, p_purchase->id, t_android_data->notification_id);
     
     if (t_result)
+    {
+        // PM-2015-03-04: [[ Bug 14779 ]] Send a purchaseStateUpdate msg with state=complete
+        p_purchase->state = kMCPurchaseStateComplete;
         MCPurchaseCompleteListUpdate(p_purchase);
+        MCPurchaseNotifyUpdate(p_purchase);
+        MCPurchaseRelease(p_purchase);
+    }
     
     return t_result;
 }
@@ -457,7 +463,7 @@ bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 {
     MCLog("MCPurchaseConfirmDelivery(%p)", p_purchase);
     
-    purchase_confirm(p_purchase);
+    return purchase_confirm(p_purchase);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

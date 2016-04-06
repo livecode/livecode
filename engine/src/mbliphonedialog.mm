@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -50,14 +50,14 @@ extern UITextView *MCIPhoneGetTextView(void);
 
 static bool s_in_modal = false;
 
-@interface ModalDelegate : NSObject <UITextFieldDelegate>
+@interface com_runrev_livecode_MCModalDelegate : NSObject <UITextFieldDelegate>
 {
 	NSInteger m_index;
 	UIAlertView *m_view;
 }
 @end
 
-@implementation ModalDelegate
+@implementation com_runrev_livecode_MCModalDelegate
 
 - (void)setView: (UIAlertView *)view
 {
@@ -104,7 +104,7 @@ struct popupanswerdialog_t
 	int32_t result;
 	
 	UIAlertView *alert_view;
-	ModalDelegate *delegate;
+	com_runrev_livecode_MCModalDelegate *delegate;
 };
 
 static void dopopupanswerdialog_prewait(void *p_context)
@@ -119,7 +119,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
 
     if (MCmajorosversion < 800)
     {
-        ctxt -> delegate = [[ModalDelegate alloc] init];
+        ctxt -> delegate = [[com_runrev_livecode_MCModalDelegate alloc] init];
         ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title message:t_prompt delegate:ctxt -> delegate cancelButtonTitle:nil otherButtonTitles:nil];
         
         if (ctxt -> button_count == 0)
@@ -193,7 +193,7 @@ static void dopopupanswerdialog_postwait(void *p_context)
     }
 }
 
-int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
+int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking)
 {
 	// MW-2010-12-18: You cannot nest alertviews on iOS, so we return an immediate cancel if we are in one
 	if (s_in_modal)
@@ -211,7 +211,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 	
 	s_in_modal = true;
 	while(s_in_modal)
-		MCscreen -> wait(1.0, True, True);
+		MCscreen -> wait(1.0, !p_blocking, True);
 	
 	MCIPhoneRunOnMainFiber(dopopupanswerdialog_postwait, &ctxt);
     
@@ -222,7 +222,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 #define kUITextFieldXPadding 12.0
 #define kUIAlertOffset 100.0
 
-@interface TextAlertView : UIAlertView
+@interface com_runrev_livecode_MCTextAlertView : UIAlertView
 {
 	NSInteger m_index;
 	UITextField *m_textResult;
@@ -237,7 +237,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 
 @end
 
-@implementation TextAlertView
+@implementation com_runrev_livecode_MCTextAlertView
 
 // UIAlertView/TextAlertView delegate method(s) 
 - (void)alertView:(UIAlertView *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
@@ -407,8 +407,8 @@ struct popupaskdialog_t
 	bool hint;
 	MCStringRef result;
 	
-	TextAlertView *alert;
-	ModalDelegate *delegate;
+	com_runrev_livecode_MCTextAlertView *alert;
+	com_runrev_livecode_MCModalDelegate *delegate;
 	UIAlertView *alert_view;
 	UITextField *text_field;
 };
@@ -429,13 +429,13 @@ static void dopopupaskdialog_prewait(void *p_context)
     
     if (MCmajorosversion < 800)
     {
-        ctxt -> delegate = [[ModalDelegate alloc] init];
+        ctxt -> delegate = [[com_runrev_livecode_MCModalDelegate alloc] init];
         
         UITextField *t_text_field;
         UIAlertView *t_alert;
         if (MCmajorosversion < 500)
         {
-            ctxt-> alert = [[TextAlertView alloc] initWithTitle:t_title
+            ctxt-> alert = [[com_runrev_livecode_MCTextAlertView alloc] initWithTitle:t_title
                                                         message:t_message
                                                        delegate:ctxt -> delegate
                                                            type:ctxt -> type

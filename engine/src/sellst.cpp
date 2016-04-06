@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -387,26 +387,31 @@ bool MCSellist::clipboard(bool p_is_cut)
 			return false;
 
 		// Now attempt to write it to the clipboard
-		MCclipboarddata -> Open();
+        if (!MCclipboard->Lock())
+            return false;
 
-		if (t_success)
-		{
-			if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, *t_pickle))
-				t_success = false;
-		}
-
-		// If its just a single image object, put image data on the clipboard too
+        // Clear the current contents of the clipboard
+        MCclipboard->Clear();
+        
+        // Add the serialised objects to the clipboard
+        if (t_success)
+            t_success = MCclipboard->AddLiveCodeObjects(*t_pickle);
+    
+		// If we are pasting just one object and it is an image, add it to the
+        // clipboard as an image, too, so that other applications can paste it.
 		if (t_success)
 			if (objects == objects -> next() && objects -> ref -> gettype() == CT_IMAGE)
 			{
-				MCAutoDataRef t_data;
+                // Failure to add the image to the clipboard is ignored as
+                // (while sub-optimal), the paste was mostly successful.
+                MCAutoDataRef t_data;
 				static_cast<MCImage *>(objects -> ref) -> getclipboardtext(&t_data);
 				if (*t_data != nil)
-					MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_data);
+                    MCclipboard->AddImage(*t_data);
 			}
 		
-		if (!MCclipboarddata -> Close())
-			t_success = false;
+        // Ensure out changes to the clipboard get pushed out to the OS
+        MCclipboard->Unlock();
 
 		// If we succeeded remove the objects if its a cut operation
 		if (t_success)
@@ -423,11 +428,11 @@ bool MCSellist::clipboard(bool p_is_cut)
 					if (tptr -> ref -> getstack() -> iskeyed())
 					{
 						if (tptr -> ref -> del())
-						{
-							if (tptr -> ref -> gettype() == CT_STACK)
-								MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
+                        {
+                            if (tptr -> ref -> gettype() == CT_STACK)
+                                MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
 							tptr -> ref -> scheduledelete();
-						}
+                        }
 					}
 
 					delete tptr;

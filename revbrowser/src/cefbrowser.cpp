@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -228,7 +228,7 @@ void MCCefFinalise(void)
 	if (!s_cef_initialised)
 		return;
 
-	CefShutdown();
+    //CefShutdown();
 
 	s_cef_initialised = false;
 }
@@ -586,6 +586,8 @@ public:
 		CefRefPtr<CefFrame> p_frame,
 		const CefString& p_target_url,
 		const CefString& p_target_frame_name,
+		CefLifeSpanHandler::WindowOpenDisposition p_target_disposition,
+		bool p_user_gesture,
 		const CefPopupFeatures& p_popup_features,
 		CefWindowInfo& p_window_info,
 		CefRefPtr<CefClient>& p_client,
@@ -637,23 +639,23 @@ public:
 		return t_cancel;
 	}
 
-	virtual bool OnBeforeResourceLoad(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request) OVERRIDE
+	virtual CefRequestHandler::ReturnValue OnBeforeResourceLoad(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, CefRefPtr<CefRequestCallback>) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
-			return true;
+			return RV_CANCEL;
 		
 		CefString t_url;
 		t_url = p_request->GetURL();
 
 		if (IgnoreUrl(t_url))
-			return false;
+			return RV_CONTINUE;
 
 		m_last_request_url = t_url;
 		
 		CefString t_user_agent;
 		if (!m_owner->GetUserAgent(t_user_agent))
-			return false;
+			return RV_CONTINUE;
 
 		// modify request headers to set user agent
 
@@ -669,7 +671,7 @@ public:
 
 		p_request->SetHeaderMap(t_headers);
 
-		return false;
+		return RV_CONTINUE;
 	}
 
 	// IM-2014-04-28: [[ CefBrowser ]] Use platform-specific method to get credentials when requested
@@ -1375,9 +1377,9 @@ void MCCefBrowserBase::SetHScroll(int p_hscroll_pixels)
 	MCCStringFree(t_scroll_script);
 }
 
-int MCCefBrowserBase::GetWindowId(void)
+uintptr_t MCCefBrowserBase::GetWindowId(void)
 {
-	int t_id;
+	uintptr_t t_id;
 	t_id = 0;
 
 	/* UNCHECKED */ PlatformGetWindowID(t_id);
@@ -1385,7 +1387,7 @@ int MCCefBrowserBase::GetWindowId(void)
 	return t_id;
 }
 
-void MCCefBrowserBase::SetWindowId(int p_new_id)
+void MCCefBrowserBase::SetWindowId(uintptr_t p_new_id)
 {
 	/* TODO - IMPLEMENT */
 }

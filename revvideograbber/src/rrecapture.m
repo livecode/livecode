@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -784,7 +784,7 @@ static void QTCaptureFileOutputSetCompressionForType(QTCaptureFileOutput *self, 
 - (BOOL)stopRecording: (BOOL *)r_success
 {
 	if (m_record_state == kCaptureSessionStateStopped)
-		return;
+		return NO;
 	
 	[m_record_output recordToOutputFileURL: nil];
 	
@@ -1178,7 +1178,7 @@ void rreCaptureResumePreviewing(void)
 NSString *rreCapturePreviewState(void)
 {
 	if (!CaptureSessionExists())
-		return;
+		return nil;
 	
 	return [g_session previewState];
 }
@@ -1259,7 +1259,7 @@ void rreCaptureSetRecordOutput(NSString *p_image_id)
 NSString *rreCaptureStartRecording(void)
 {
 	if (!CaptureSessionExists())
-		return;
+		return nil;
 	
 	BOOL t_success;
 	if (![g_session startRecording: &t_success])
@@ -1274,7 +1274,7 @@ NSString *rreCaptureStartRecording(void)
 NSString *rreCaptureStopRecording(void)
 {
 	if (!CaptureSessionExists())
-		return;
+		return nil;
 	
 	BOOL t_success;
 	[g_session stopRecording: &t_success];
@@ -1309,7 +1309,7 @@ void rreCaptureResumeRecording(void)
 int32_t rreCaptureGetRecordFrameRate(void)
 {
 	if (!CaptureSessionExists())
-		return;
+		return nil;
 	
 	return [g_session maxFrameRate];
 }
@@ -1325,7 +1325,7 @@ void rreCaptureSetRecordFrameRate(int32_t p_rate)
 NSString *rreCaptureGetRecordFrameSize(void)
 {
 	if (!CaptureSessionExists())
-		return;
+		return nil;
 	
 	NSSize t_size;
 	t_size = [g_session maxFrameSize];
@@ -1345,7 +1345,7 @@ void rreCaptureSetRecordFrameSize(int32_t p_width, int32_t p_height)
 NSString *rreCaptureRecordState(void)
 {
 	if (!CaptureSessionExists())
-		return;
+        return nil;
 	
 	return [g_session recordState];
 }

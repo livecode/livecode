@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -42,7 +42,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCIPhoneMailComposerDialog : MFMailComposeViewController <MFMailComposeViewControllerDelegate>
+@interface com_runrev_livecode_MCIPhoneMailComposerDialog : MFMailComposeViewController <MFMailComposeViewControllerDelegate>
 {
 	bool m_running;
 }
@@ -56,9 +56,9 @@ UIViewController *MCIPhoneGetViewController(void);
 
 @end
 
-static MCIPhoneMailComposerDialog *s_mail_composer_dialog = nil;
+static com_runrev_livecode_MCIPhoneMailComposerDialog *s_mail_composer_dialog = nil;
 
-@implementation MCIPhoneMailComposerDialog
+@implementation com_runrev_livecode_MCIPhoneMailComposerDialog
 
 - (bool)isRunning
 {
@@ -103,7 +103,7 @@ struct iphone_send_email_t
 	MCStringRef cc_addresses;
 	MCStringRef subject;
 	MCStringRef body;
-	MCIPhoneMailComposerDialog *dialog; 
+	com_runrev_livecode_MCIPhoneMailComposerDialog *dialog;
 };
 
 static void iphone_send_email_prewait(void *p_context)
@@ -143,7 +143,7 @@ static void iphone_send_email_prewait(void *p_context)
 	iphone_send_email_t *ctxt;
 	ctxt = (iphone_send_email_t *)p_context;
 	
-	ctxt -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
+	ctxt -> dialog = [[com_runrev_livecode_MCIPhoneMailComposerDialog alloc ] init];
 	[ ctxt -> dialog setMailComposeDelegate: ctxt -> dialog ];
 	
 	NSArray *t_recipients;
@@ -184,7 +184,7 @@ static void iphone_send_email_postwait(void *p_context)
 #ifdef /* MCIPhoneSendEmail */ LEGACY_EXEC
 static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addresses, const char *p_subject, const char *p_body)
 {
-	if (![MCIPhoneMailComposerDialog canSendMail])
+	if (![com_runrev_livecode_MCIPhoneMailComposerDialog canSendMail])
 	{
 		MCresult -> sets("not configured");
 		return;
@@ -345,7 +345,7 @@ struct compose_mail_t
 	MCMailType type;
 	MCAttachmentData *attachments;
 	uindex_t attachment_count;
-	MCIPhoneMailComposerDialog *dialog;
+	com_runrev_livecode_MCIPhoneMailComposerDialog *dialog;
 };
 
 static void compose_mail_prewait(void *p_context)
@@ -368,7 +368,7 @@ static void compose_mail_prewait(void *p_context)
 	
 	if (t_success)
 	{
-		ctxt -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
+		ctxt -> dialog = [[com_runrev_livecode_MCIPhoneMailComposerDialog alloc ] init];
 		[ ctxt -> dialog setMailComposeDelegate: ctxt -> dialog ];
 		
 		NSCharacterSet *t_separator_set;
@@ -455,7 +455,7 @@ static void compose_mail_prewait(void *p_context)
 	bool t_success;
 	t_success = true;
 
-	ctxt -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
+	ctxt -> dialog = [[com_runrev_livecode_MCIPhoneMailComposerDialog alloc ] init];
 	[ ctxt -> dialog setMailComposeDelegate: ctxt -> dialog ];
 
 	if (ctxt -> attachments != nil)
@@ -470,8 +470,9 @@ static void compose_mail_prewait(void *p_context)
 				t_data = [[NSData alloc] initWithBytes: nil length: 0];
 			else if (ctxt -> attachments[i] . data != nil)
 				t_data = [NSData dataWithMCDataRef: ctxt -> attachments[i] . data];
-			else if (ctxt -> attachments[i] . file != nil)
+			else
 			{
+                MCAssert(ctxt -> attachments[i] . file != nil);
 				MCAutoStringRef t_resolved_path;
 				MCS_resolvepath(ctxt -> attachments[i] . file, &t_resolved_path);
 				t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithMCStringRef: *t_resolved_path]];
@@ -579,7 +580,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 #ifdef /* MCHandleCanSendMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 {
-	if (![MCIPhoneMailComposerDialog canSendMail])
+	if (![com_runrev_livecode_MCIPhoneMailComposerDialog canSendMail])
 	{
 		MCresult -> sets(MCfalsestring);
 		return ES_NORMAL;
@@ -648,10 +649,14 @@ void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStrin
 
 void MCSystemGetCanSendMail(bool& r_result)
 {
-	r_result = [MCIPhoneMailComposerDialog canSendMail];
+	r_result = [com_runrev_livecode_MCIPhoneMailComposerDialog canSendMail];
 }
 
 void MCSystemMailResult(MCStringRef& r_result)
 {
-	r_result = MCValueRetain(kMCEmptyString);
+	// PM-2016-02-29: [[ Bug 17031 ]] Make sure we return 'the result'
+	// The result can be one of "cancel", "saved", "sent", "failed"
+	MCAssert(MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString);
+	
+	r_result = MCValueRetain((MCStringRef)MCresult -> getvalueref());
 }

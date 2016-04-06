@@ -1,0 +1,1 @@
+# Moving a group containing the focused object doesn't update the focused object

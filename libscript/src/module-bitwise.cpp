@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -16,22 +16,22 @@
 
 #include <foundation.h>
 
-extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseAnd(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseAnd(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = p_left & p_right;
 }
 
-extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseOr(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseOr(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = p_left | p_right;
 }
 
-extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t p_right, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseXor(integer_t p_left, integer_t p_right, integer_t& r_output)
 {
     r_output = p_left ^ p_right;
 }
 
-extern "C" MC_DLLEXPORT void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCBitwiseEvalBitwiseNot(integer_t p_operand, integer_t& r_output)
 {
     r_output = ~p_operand;
 }
@@ -46,7 +46,7 @@ MCBitwiseEvalBitwiseShiftCount (T p_operand, uinteger_t & p_shift)
 	p_shift = MCMin (p_shift, t_max_shift);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCBitwiseEvalBitwiseShiftRight (integer_t p_operand,
                                 uinteger_t p_shift,
                                 integer_t & r_output)
@@ -55,7 +55,7 @@ MCBitwiseEvalBitwiseShiftRight (integer_t p_operand,
 	r_output = p_operand >> p_shift;
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCBitwiseEvalBitwiseShiftLeft (integer_t p_operand,
                                uinteger_t p_shift,
                                integer_t& r_output)
@@ -72,6 +72,17 @@ MCBitwiseEvalBitwiseShiftLeft (integer_t p_operand,
 	}
 
 	r_output = t_shifted;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_bitwise_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_bitwise_Finalize(void)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

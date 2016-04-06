@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -69,12 +69,12 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_ID, UInt32, MCObject, Id)
 	DEFINE_RW_OBJ_PROPERTY(P_SHORT_ID, UInt32, MCObject, Id)
 	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_ID, String, MCObject, AbbrevId)
-	DEFINE_RO_OBJ_PROPERTY(P_LONG_ID, String, MCObject, LongId)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_LONG_ID, String, MCObject, LongId)
 	DEFINE_RW_OBJ_PROPERTY(P_NAME, String, MCObject, Name)
     // SN-2014-08-25: [[ Bug 13276 ]] Added the property definition for 'abbreviated name'
     DEFINE_RO_OBJ_PROPERTY(P_ABBREV_NAME, String, MCObject, AbbrevName)
 	DEFINE_RO_OBJ_PROPERTY(P_SHORT_NAME, String, MCObject, ShortName)
-	DEFINE_RO_OBJ_PROPERTY(P_LONG_NAME, String, MCObject, LongName)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_LONG_NAME, String, MCObject, LongName)
 	DEFINE_RW_OBJ_PROPERTY(P_ALT_ID, UInt32, MCObject, AltId)
 	DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_LAYER, InterfaceLayer, MCObject, Layer)
 	DEFINE_RW_OBJ_PROPERTY(P_SCRIPT, String, MCObject, Script)
@@ -183,7 +183,7 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_OWNER, OptionalString, MCObject, Owner)
 	DEFINE_RO_OBJ_PROPERTY(P_SHORT_OWNER, OptionalString, MCObject, ShortOwner)
 	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_OWNER, OptionalString, MCObject, AbbrevOwner)
-	DEFINE_RO_OBJ_PROPERTY(P_LONG_OWNER, OptionalString, MCObject, LongOwner)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_LONG_OWNER, OptionalString, MCObject, LongOwner)
 
 	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
     // MERG-2013-05-07: [[ RevisedPropsProp ]] Add support for 'the effective
@@ -235,8 +235,13 @@ MCPropertyInfo MCObject::kProperties[] =
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomPropertiesElement)
     DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomProperties)
 
-    DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeys) 
+    DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeys)
     
+    DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME, InterfaceTheme, MCObject, Theme)
+    DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME, InterfaceTheme, MCObject, Theme)
+    
+    DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
+    DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -451,8 +456,9 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
         
 		MCStack *oldstackptr = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
-		MCObject *oldtargetptr = MCtargetptr;
-		MCtargetptr = this;
+		MCObjectPtr oldtargetptr = MCtargetptr;
+		MCtargetptr . object = this;
+        MCtargetptr . part_id = 0;
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
@@ -474,8 +480,11 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	return t_stat;
 }
 
-bool MCObject::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue& r_value)
+bool MCObject::getcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, MCExecValue& r_value)
 {
+    if (p_path != nil)
+        return false;
+    
 	assert(p_set_name != nil);
 	assert(p_prop_name != nil);
     
@@ -1637,8 +1646,9 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		
 		MCStack *oldstackptr = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
-		MCObject *oldtargetptr = MCtargetptr;
-		MCtargetptr = this;
+		MCObjectPtr oldtargetptr = MCtargetptr;
+		MCtargetptr . object = this;
+        MCtargetptr . part_id = 0;
 		Boolean added = False;
 		if (MCnexecutioncontexts < MAX_CONTEXTS)
 		{
@@ -1659,19 +1669,22 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 	return t_stat;
 }
 
-bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCExecValue p_value)
+bool MCObject::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, MCExecValue p_value)
 {
-    MCValueRef t_value;
-    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &t_value);
+    if (p_path != nil)
+        return false;
+    
+    MCAutoValueRef t_value;
+    MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value , kMCExecValueTypeValueRef, &(&t_value));
     
 	Exec_stat t_stat;
-	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, t_value);
+	t_stat = sendsetprop(ctxt, p_set_name, p_prop_name, *t_value);
     
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 	{
 		MCObjectPropertySet *p;
 		/* UNCHECKED */ ensurepropset(p_set_name, false, p);
-		if (!p -> storeelement(ctxt, p_prop_name, t_value))
+		if (!p -> storeelement(ctxt, p_prop_name, *t_value))
 			return false;
 		return true;
 	}
@@ -2643,7 +2656,7 @@ void MCObject::setpointprop(MCExecContext& ctxt, uint32_t p_part_id, Properties 
 
 MCPlatformControlType MCObject::getcontroltype()
 {
-    return kMCPlatformControlTypeGlobal;
+    return m_theme_type;
 }
 
 MCPlatformControlPart MCObject::getcontrolsubpart()
@@ -2671,8 +2684,10 @@ MCPlatformControlState MCObject::getcontrolstate()
     if (getstack() && getstack()->getcurcard() == getcard() && getstack()->state & CS_KFOCUSED)
         t_state |= kMCPlatformControlStateWindowActive;
     
-    // Remain in backwards-compatible mode for now
-    t_state |= kMCPlatformControlStateCompatibility;
+    // Remain in backwards-compatible mode if requested
+    intenum_t t_theme = gettheme();
+    if (t_theme == kMCInterfaceThemeLegacy)
+        t_state |= kMCPlatformControlStateCompatibility;
     
     return MCPlatformControlState(t_state);
 }
@@ -2760,6 +2775,16 @@ bool MCObject::getthemeselectorsforprop(Properties which, MCPlatformControlType&
     r_prop = t_prop;
     r_proptype = t_proptype;
     return true;
+}
+
+MCInterfaceTheme MCObject::gettheme() const
+{
+    if (m_theme != kMCInterfaceThemeEmpty)
+        return m_theme;
+    else if (parent != nil)
+        return parent->gettheme();
+    else
+        return kMCInterfaceThemeNative;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

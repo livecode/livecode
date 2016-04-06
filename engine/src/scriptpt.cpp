@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1581,8 +1581,9 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
             }
 
             nvalue = MCNumberFetchAsReal(*t_number);
+            MCStringSetNumericValue(MCNameGetString(gettoken_nameref()), nvalue);
 
-			newfact = insertfactor(new MCLiteralNumber(gettoken_nameref(), nvalue), curfact, top);
+			newfact = insertfactor(new MCLiteral(gettoken_nameref()), curfact, top);
 			newfact->parse(*this, doingthe);
 			needfact = False;
         }
@@ -1616,7 +1617,16 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		default:
 			if (lookup(SP_FACTOR, te) == PS_NORMAL)
 			{
-				switch (te->type)
+				extern bool lookup_property_override(const LT&p_lt, Properties &r_property);
+				Properties t_property;
+				
+				Token_type t_type;
+				t_type = te->type;
+				if (doingthe && lookup_property_override(*te, t_property))
+				{
+					t_type = TT_PROPERTY;
+				}
+				switch (t_type)
 				{
 				case TT_THE:
 					doingthe = True;

@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -112,6 +112,16 @@ bool __MCSFileCreateStream (MCStringRef p_native_path, intenum_t p_mode, MCStrea
  * Filesystem operations
  * ================================================================ */
 
+enum MCSFileType
+{
+	kMCSFileTypeRegular = (1 << 0),
+	kMCSFileTypeDirectory = (1 << 1),
+	kMCSFileTypeSymbolicLink = (1 << 5),
+
+	/* File type known, but cannot be expressed with MCSFileType */
+	kMCSFileTypeUnsupported = (1 << 31),
+};
+
 /* Delete the file at path. */
 MC_DLLEXPORT bool MCSFileDelete (MCStringRef p_path);
 
@@ -126,12 +136,17 @@ MC_DLLEXPORT bool MCSFileDeleteDirectory (MCStringRef p_path);
  * returned list never includes "." and "..". */
 MC_DLLEXPORT bool MCSFileGetDirectoryEntries (MCStringRef p_path, MCProperListRef & r_entries);
 
+/* Get the type of the file located at p_path.  If p_follow_links is
+ * true, dereferences symbolic links in p_path. */
+MC_DLLEXPORT bool MCSFileGetType (MCStringRef p_path, bool p_follow_links, MCSFileType & r_type);
+
 #ifdef __MCS_INTERNAL_API__
 
 bool __MCSFileDelete (MCStringRef p_native_path);
 bool __MCSFileCreateDirectory (MCStringRef p_native_path);
 bool __MCSFileDeleteDirectory (MCStringRef p_native_path);
 bool __MCSFileGetDirectoryEntries (MCStringRef p_native_path, MCProperListRef & r_entries);
+bool __MCSFileGetType (MCStringRef p_native_path, bool p_follow_links, MCSFileType & r_type);
 
 #endif
 

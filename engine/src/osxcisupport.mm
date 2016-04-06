@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -326,17 +326,17 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_
 				
 				case REI_VISUALEFFECT_PARAMETER_TYPE_VECTOR:
 				{
-					float *t_vector_as_float;
+					CGFloat *t_vector_as_float;
 					unsigned int t_count;
 					unsigned int t_jndex;
 				
 					t_count = p_parameters -> entries[t_index] . value . vector . length;
 				
-					t_vector_as_float = (float*)alloca(sizeof(float) * t_count);
+					t_vector_as_float = (CGFloat*)alloca(sizeof(CGFloat) * t_count);
 					if (t_vector_as_float != NULL)
 					{
 						for(t_jndex = 0; t_jndex < t_count; ++t_jndex)
-							t_vector_as_float[t_jndex] = (float)p_parameters -> entries[t_index] . value . vector . coefficients[t_jndex];
+							t_vector_as_float[t_jndex] = CGFloat(p_parameters -> entries[t_index] . value . vector . coefficients[t_jndex]);
 						t_value = [CIVector vectorWithValues: t_vector_as_float count: t_count];
 						free(p_parameters -> entries[t_index] . value . vector . coefficients);
 					}

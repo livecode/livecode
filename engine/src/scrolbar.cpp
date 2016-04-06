@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -206,7 +206,7 @@ Boolean MCScrollbar::kdown(MCStringRef p_string, KeySym key)
 Boolean MCScrollbar::mfocus(int2 x, int2 y)
 {
 	// MW-2007-09-18: [[ Bug 1650 ]] Disabled state linked to thumb size
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (issbdisabled() && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_SCROLL)
@@ -589,7 +589,7 @@ Boolean MCScrollbar::doubleup(uint2 which)
 	return MCControl::doubleup(which);
 }
 
-void MCScrollbar::setrect(const MCRectangle &nrect)
+void MCScrollbar::applyrect(const MCRectangle &nrect)
 {
 	rect = nrect;
 	compute_barsize();
@@ -923,7 +923,7 @@ void MCScrollbar::compute_barsize()
 	{
 		if (getstyleint(flags) == F_VERTICAL)
 		{
-			uint2 twidth = rect.width;
+			uint2 twidth = rect.width != 0 ? rect.width : 1;
 			barsize = MCU_max(nffw, 1);
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Use MCString primitives.
 			if (MCStringGetLength(startstring) > barsize)
@@ -1161,7 +1161,7 @@ void MCScrollbar::update(real8 newpos, MCNameRef mess)
 		signallisteners(P_THUMB_POS);
 	
 	if ((thumbpos != oldpos || mode == SM_LINEDEC || mode == SM_LINEINC)
-	        && opened && (flags & F_VISIBLE || MCshowinvisibles))
+	        && opened && (flags & F_VISIBLE || showinvisible()))
 	{
 		if (thumbpos != oldpos)
 		{
@@ -1284,9 +1284,9 @@ void MCScrollbar::setembedded(void)
 //  SAVING AND LOADING
 //
 
-IO_stat MCScrollbar::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCScrollbar::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCScrollbar::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
@@ -1294,13 +1294,13 @@ IO_stat MCScrollbar::extendedload(MCObjectInputStream& p_stream, uint32_t p_vers
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
 	if ((stat = IO_write_uint1(OT_SCROLLBAR, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCControl::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	if (flags & F_SAVE_ATTS)
 	{
@@ -1323,10 +1323,10 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		{
             // MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_write_stringref_new(startstring, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_new(startstring, stream, p_version >= 7000)) != IO_NORMAL)
 				return stat;
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-            if ((stat = IO_write_stringref_new(endstring, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(endstring, stream, p_version >= 7000)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1336,7 +1336,7 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 				return stat;
 		}
 	}
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
@@ -1344,35 +1344,35 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_SAVE_ATTS)
 	{
 		uint2 i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		thumbpos = (real8)i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		thumbsize = (real8)i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		lineinc = (real8)i2;
 		if ((stat = IO_read_uint2(&i2, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		pageinc = (real8)i2;
 		if (flags & F_HAS_VALUES)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if ((stat = IO_read_stringref_new(startstring, stream, version >= 7000)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if (!MCStringToDouble(startstring, startvalue))
 				startvalue = 0.0;
 			
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			if ((stat = IO_read_stringref_new(endstring, stream, version >= 7000)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if (!MCStringToDouble(endstring, endvalue))
 				endvalue = 0.0;
 			
@@ -1382,11 +1382,11 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 			lineinc *= range;
 			pageinc *= range;
 			if ((stat = IO_read_uint2(&nffw, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&nftrailing, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&nfforce, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 		}
 	}
 	if (version <= 2000)

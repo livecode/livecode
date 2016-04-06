@@ -1,0 +1,12 @@
+Name: Darwin
+
+Synonyms: Darwin,Darwin layer
+
+Type: glossary
+
+Description:
+Operating system that is the underlying core of <OS X>, written by Apple Computer. Darwin is a variant of <Unix>. 
+ 
+It is possible to run Darwin by itself, without the <Aqua> user interface and other services that make up <OS X>. The Darwin version of the LiveCode <engine> supports only <command line|command-line> scripting.
+
+References: Unix (glossary), OS X (glossary), Aqua (glossary), engine (glossary), command line (glossary)

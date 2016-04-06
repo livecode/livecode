@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -80,7 +80,8 @@ bool MCSystemPickMedia(MCMediaType p_types, bool p_multiple, MCStringRef& r_resu
     
     while (s_media_status == kMCAndroidMediaWaiting)
         MCscreen->wait(60.0, False, True);
-    /* UNCHECKED */ MCStringCopy(s_media_content, r_result);
+
+    return MCStringCopy(s_media_content, r_result);
     //    MCLog("Media Types Returned: %s", s_media_content);
 }
 

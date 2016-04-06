@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -61,7 +61,9 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
                         Sort_type dir, Sort_type form, MCExpression *by)
 {
 	if (flags & F_SHARED_TEXT)
-		parid = 0;
+        parid = 0;
+    else if (parid == 0)
+        parid = getcard()->getid();
     
     // SN-2014-09-17: [[ Bug 13461 ]] We might get CT_FIELD as a chunk type.
     if (type == CT_FIELD)
@@ -162,8 +164,12 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 		return False;
 	if (opened)
 		fdata->setparagraphs(paragraphs);
+    
 	if (flags & F_SHARED_TEXT)
 		cardid = 0;
+	else if (cardid == 0)
+        cardid = getcard()->getid();
+    
 	MCCdata *tptr = fdata;
 	do
 	{
@@ -403,9 +409,9 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid, findex_t p_start
 {
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
-	else
-		if (parid == 0)
-			parid = getcard()->getid();
+	else if (parid == 0)
+        parid = getcard()->getid();
+    
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	MCParagraph *pgptr = fptr->getparagraphs();
     MCParagraph *t_old_pgptr;
@@ -637,16 +643,17 @@ MCParagraph *MCField::verifyindices(MCParagraph *p_top, findex_t& si, findex_t& 
 	return t_start_pg;
 }
 
-Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef p_text, Boolean undoing)
+Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringRef p_text, Boolean undoing, MCFieldStylingMode p_styling_mode)
 {
 	state &= ~CS_CHANGED;
 	if (!undoing)
 		MCundos->freestate();
+    
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
-	else
-		if (parid == 0)
-			parid = getcard()->getid();
+	else if (parid == 0)
+        parid = getcard()->getid();
+    
 	MCCdata *fptr = getcarddata(fdata, parid, True);
 	if (opened && fptr == fdata && focusedparagraph != NULL)
 	{
@@ -711,8 +718,10 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
         // First delete the portion of the first paragraph in the range.
         int4 tei;
         tei = MCMin(ei, pgptr -> gettextlength());
-        
-		pgptr->deletestring(si, tei);
+		
+		// Pass through the first style preservation flag. This will leave us with
+		// a zero length block at si (which finsertnew will extend).
+		pgptr->deletestring(si, tei, p_styling_mode);
         ei -= (tei - si);
         
 		if (ei > pgptr -> gettextlength())
@@ -1423,6 +1432,8 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
+	else if (parid == 0)
+        parid = getcard()->getid();
 
 	// MW-2011-12-08: [[ StyledText ]] Handle the styledText case.
 	if (which == P_HTML_TEXT || which == P_RTF_TEXT || which == P_STYLED_TEXT || which == P_UNICODE_TEXT || which == P_TEXT)
@@ -2743,13 +2754,20 @@ void MCField::cuttext()
 
 void MCField::copytext()
 {
-	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
+    // Do nothing if there is nothing to copy
+    if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
 		return;
 
+    // Serialise the text. Failures are ignored here as there isn't really a
+    // good way to alert the user that a copy-to-clipboard operation failed.
 	MCAutoDataRef t_data;
-	/* UNCHECKED */ pickleselection(&t_data);
+	pickleselection(&t_data);
 	if (*t_data != nil)
-		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+    {
+        // Clear the clipboard and copy the selection to it
+        MCclipboard->Clear();
+        MCclipboard->AddLiveCodeStyledText(*t_data);
+    }
 }
 
 void MCField::cuttextindex(uint4 parid, findex_t si, findex_t ei)

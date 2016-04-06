@@ -1,0 +1,30 @@
+Name: put content
+
+Type: command
+
+Syntax: put [ unicode ] content <string> 
+
+Summary: Write the given (unicode) string to stdout, processing it for suitable output in an SGML content context.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put content "&lt;p&gt;foobar&lt;/p&gt;"
+
+Example:
+put unicode content uniEncode(tMyUTF8Markup, "UTF8")
+# uniEncode() converts tMyUTF8Markup to UTF-16
+
+Parameters:
+string (string): A string containing the HTML markup to output. If 'unicode' is not specified, then string is considered to be in the native text encoding for the platform. If unicode is specified, then string is considered to be in UTF-16.
+
+Description:
+Use the put content command to write a string to stdout that contains HTML markup. This functions identically to 'put markup' except that '&lt;', '&gt;', '&' and '"' are encoded as named entities - &lt;, &gt;, & and ".
+
+References: put header (command), put (command), put markup (command), put text (command), put binary (command), after (keyword), before (keyword)
+
+Tags: text processing

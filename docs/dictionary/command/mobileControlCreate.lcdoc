@@ -1,0 +1,64 @@
+Name: mobileControlCreate
+
+Type: command
+
+Syntax: mobileControlCreate <controlType> [, <controlName> ]
+
+Summary: Creates a native iOS or Android control.
+
+Synonyms: iphoneControlCreate
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileControlCreate "browser"
+
+Example:
+mobileControlCreate "scroller", "myFirstScroller"
+
+Example:
+put "input" into tControlType
+mobileControlCreate tControlType, "myFirstInputField"
+
+Example:
+mobileControlCreate "player", "myFirstPlayer"
+mobileControlSet "myFirstPlayer", "visible", true
+mobileControlSet "myFirstPlayer", "rect", "50,50,500,500"
+mobileControlSet "myFirstPlayer", "filename", specialFolderPath("engine") & "/movie.mp4"
+mobileControlDo "myFirstPlayer", "play"
+
+Example:
+mobileControlCreate "multiline", "myMultiLineTextInput"
+
+Parameters:
+controlType (enum): The type of control to create.
+- browser: Native iOS or Android web browser control
+- scroller: Native iOS or Android scroller control
+- player: Native iOS or Android player control
+- input: Native iOS  or Android text input control
+- multiline: Native iOS or Android multi-line text control
+
+controlName: Optional string to use to identify the control. 
+The <controlName> must be unique amongst all existing controls and 
+cannot be an integer.
+
+The result: The unique (numeric) id for the new control is returned in 
+<the result>.
+
+Description:
+Low-level support has been added for creating and manipulating some 
+native mobile controls (views) on iOS and Android.
+
+Native mobile iOS and Android controllers can only be created 
+dynamically in script. 
+
+To destroy a native control use: <mobileControlDelete> 
+To configure a native control use: <mobileControlSet> 
+To read a property of a native control use: <mobileControlGet> 
+To control the behavior of a native control use: <mobileControlDo> 
+
+References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlGet (command), mobileControlGet (function), mobileControlTarget (function), the result (function), mobileControls (function)

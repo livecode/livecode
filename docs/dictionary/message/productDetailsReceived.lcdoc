@@ -1,0 +1,56 @@
+Name: productDetailsReceived
+
+Type: message
+
+Syntax: productDetailsReceived <productID>, <details> 
+
+Summary: Sent by the store when the request for specific product details is successful.
+
+Introduced: 6.7
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on productDetailsReceived pProdID, pDetails
+   answer "Querying details for product : " && pProdID
+   if pDetails is empty then
+      answer "pDetails is empty"
+   else
+      combine pDetails using return
+      answer pDetails
+   end if   
+end productDetailsReceived
+
+Parameters:
+productID: The identifier of the product for which the request for details was made.
+details (array): An array that contains information about the specified product. The keys of this array may differ, depending on the store.
+
+Description:
+Use the <productDetailsReceived> message to get details for a specific product.
+
+The message <productDetailsReceived> is sent in response to <mobileStoreRequestProductDetails> command, when the request is successful. The details are returned in the second parameter, <details>, which is an array with the following keys:
+
+For android stores (Google/Amazon/Samsung), the keys are : 
+- <productID> : identifier of the requested product
+- price : price of the requested product
+- description : description of the requested product
+- title : title of the requested product
+- itemType : type of the requested product
+- itemImageUrl : URL where the image of the requested product is stored
+- itemDownloadUrl : URL to download the requested product
+- subscriptionDurationUnit : subscription duration unit of the requested product
+- subscriptionDurationMultiplier : subscription duration multiplier of the requested product
+
+For iOS store (Apple), the keys are :
+- price : price of the requested product
+- description : description of the requested product
+- title : title of the requested product
+- currency code : price currency code of the requested product
+- currency symbol : currency symbol of the requested product
+- unicode description : unicode description of the requested product
+- unicode title : unicode title of the requested product
+- unicode currency symbol : unicode currency symbol of the requested product
+
+References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreRequestProductDetails (command), mobileStoreMakePurchase (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command), mobileStoreProductProperty (function), mobileStorePurchasedProducts (function), mobileStorePurchaseError (function), mobileStoreCanMakePurchase (function), purchaseStateUpdate (message), productRequestError (message)

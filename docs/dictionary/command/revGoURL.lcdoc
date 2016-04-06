@@ -1,0 +1,51 @@
+Name: revGoURL
+
+Type: command
+
+Syntax: revGoURL <URL> 
+
+Summary: Deprecated. Used to open a <URL> in a <browser|web browser>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+revGoURL "http://www.example.org/info.html"
+
+Example:
+revGoURL "http://me:secret@www.example.com/secret-plan/"
+
+Example:
+revGoURL it
+revGoURL "mailto:guido@sales.example.com"
+
+Example:
+revGoURL "file:///Folder/file.html"
+
+Parameters:
+URL: An expression that evaluates to a URL.
+
+Description:
+The <revGoURL> command is deprecated and should not be used in new code. To open a url from within a stack, use the <launch url command> instead.
+
+The <revGoURL> <command> was previously used to open a web page in the user's <browser> application from within a <stack>.
+
+On Windows and Linux systems, the <URL> is opened by the default system application for the url type. For "http" URLs, this will be the system default web browser, for "file" URLs it will be the default application associated with that file.
+
+On Mac OS and OS X systems, the <URL> is opened in the application the user has set for that URL protocol in the Internet control panel (or, for older system versions, Internet Config). For example, "mailto:" URLs are opened in the email program, "http:" URLs are opened in the web browser, and so on.
+
+>*Important:*  On <Mac OS|Mac OS systems>, the <revGoURL> <command> requires that <AppleScript> be installed and that the GURL <Apple Event> be supported. GURL support is included in <Mac OS> 8.5 or later, and is available for <Mac OS> 8.0 and 8.1 if the "Internet Scripting" file is installed in the "Scripting Additions" folder inside the Extensions folder. (This <file> is installed by the Internet Access installer on the 8.0 installation CD.) The <revGoURL> <command> is not supported for <Mac OS> versions before 8.0.
+
+Important: If the <URL> contains quotes, it is necessary either to <URLEncode> it or to replace the quotes with "%22", or unexpected behavior may be experienced.
+
+>*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revGoURL> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCardhandlers(message)> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revGoURL> <command> can be used in any <handler>.
+
+Changes:
+The revGoUrl command was deprecated in version 2.9 to be replaced by the launch url command.
+
+References: startup (message), openBackground (message), preOpenStack (message), openStack (message), Common library (library), launch url command (library), library (library), URL (keyword), file (keyword), application (glossary), AppleScript (glossary), main stack (glossary), handler (glossary), message (glossary), group (glossary), Mac OS (glossary), standalone application (glossary), Apple Event (glossary), command (glossary), browser (glossary), URLEncode (function), revMail (command), launch url (command), stack (object)
+
+Tags: networking

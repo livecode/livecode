@@ -1,0 +1,34 @@
+Name: environment
+
+Type: function
+
+Syntax: the environment
+
+Syntax: environment()
+
+Summary: Returns the type of running environment the stack is in.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+the environment
+
+Example:
+if the environment is "development" then showDevelopOptions
+
+Returns (enum): The <environment> function returns one of:
+-"development" : The stack is running under the development environment.
+-"standalone application" : The stack is running as a standalone application.
+-"helper application" : LiveCode is running as a standalone with secureMode set to true.
+-"browser" : The stack is running as a LiveCode applet.
+-"mobile" : The stack is running on a mobile device.
+-"command line" : The stack was launched from the command line with :ui
+
+Description:
+Use the <environment> function to change a stack's behavior depending on how the stack was opened.
+
+References: version (function), revLicenseType (function), buildNumber (function), systemVersion (function)

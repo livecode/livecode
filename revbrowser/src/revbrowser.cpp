@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -953,7 +953,7 @@ void revBrowserFind(CWebBrowserBase *p_instance, char *args[], int nargs, char *
 	if (t_result == NULL)
 		t_search_up = strcmp(args[1], "up") == 0;
 	
-	if (t_browser != NULL)
+	if (t_result == NULL && t_browser != NULL)
 		if (!t_browser -> FindString(args[0], t_search_up))
 			t_result = "not found";
 			
@@ -1790,8 +1790,9 @@ void XBrowserSetProp(char *args[], int nargs, char **retstring, Bool *pass, Bool
 			return;
 		}
 	}
-	else if (nargs == 2)
+	else
 	{
+        MCAssert(nargs == 2);
 		t_browser = s_browsers . GetActiveInstance();
 		if (t_browser == NULL)
 		{
@@ -1817,12 +1818,16 @@ void revBrowserInstances(char *p_arguments[], int p_argument_count, char **r_res
 //  SHUTDOWN
 //
 
-#ifndef _WINDOWS
 extern "C"
 {
+#ifdef _WINDOWS
+	void __declspec(dllexport) shutdownXtable(void);
+#else
 	void shutdownXtable(void) __attribute__((visibility("default")));
+#endif
 }
 
+void MCCefFinalise(void);
 void shutdownXtable(void)
 {
 	for(;;)
@@ -1833,8 +1838,9 @@ void shutdownXtable(void)
 			break;
 		s_browsers . Delete(t_browser);
 	}
+
+	MCCefFinalise();
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //

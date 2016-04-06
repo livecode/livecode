@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -52,7 +52,7 @@ typedef unsigned short WORD;
 // FG-2014-09-17: [[ Bugfix 13463 ]] "long" is 64 bits on Linux x86_64
 typedef uint32_t DWORD;
 typedef int32_t LONG;
-
+typedef uintptr_t LONG_PTR;
 
 #define IMAGE_DOS_SIGNATURE                 0x5A4D      // MZ
 #define IMAGE_OS2_SIGNATURE                 0x454E      // NE
@@ -1650,6 +1650,11 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	bool t_success;
 	t_success = true;
 
+    // Are we running deploy just for the purpose of changing the EXE icons?
+    bool t_icons_only = false;
+    if (MCStringIsEmpty(p_params.stackfile) && !MCStringIsEmpty(p_params.app_icon))
+        t_icons_only = true;
+    
 	// First thing to do is to open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
@@ -1665,8 +1670,9 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	t_section_headers = NULL;
 	if (t_success)
 		t_success = MCDeployToWindowsReadHeaders(t_engine, t_dos_header, t_nt_header, t_section_headers);
-
+    
 	IMAGE_SECTION_HEADER *t_payload_section, *t_project_section, *t_resource_section;
+    t_payload_section = t_project_section = t_resource_section = nil;
 	uint32_t t_section_count;
 	if (t_success)
 	{
@@ -1675,7 +1681,10 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 			t_payload_section = &t_section_headers[t_section_count - 3];
 		else
 			t_payload_section = nil;
-		t_project_section = &t_section_headers[t_section_count - 2];
+        
+        if (!t_icons_only)
+            t_project_section = &t_section_headers[t_section_count - 2];
+        
 		t_resource_section = &t_section_headers[t_section_count - 1];
 	}
 
@@ -1687,7 +1696,7 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsMissingSections);
 	if (t_success && memcmp(t_resource_section -> Name, ".rsrc", 6) != 0)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoResourceSection);
-	if (t_success && memcmp(t_project_section -> Name, ".project", 8) != 0)
+	if (t_success && !t_icons_only && memcmp(t_project_section -> Name, ".project", 8) != 0)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoProjectSection);
 	if (t_success && t_payload_section != nil && memcmp(t_payload_section -> Name, ".payload", 8) != 0)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoPayloadSection);
@@ -1742,7 +1751,9 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	t_output_offset = 0;
 	if (t_success)
 	{
-		if (t_payload_section == nil)
+		if (t_icons_only)
+            t_output_offset = t_resource_section -> PointerToRawData;
+        else if (t_payload_section == nil)
 			t_output_offset = t_project_section -> PointerToRawData;
 		else
 			t_output_offset = t_payload_section -> PointerToRawData;
@@ -1763,7 +1774,7 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	// Write out the project capsule struct
 	uint32_t t_project_size;
 	t_project_size = 0;
-	if (t_success)
+	if (t_success && !t_icons_only)
 		t_success = MCDeployWriteProject(p_params, false, t_output, t_output_offset, t_project_size);
 
 	// Next use the project size to compute the updated header values we need.
@@ -1782,7 +1793,7 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 
 		uint32_t t_project_section_size, t_project_section_delta;
 		t_project_section_size = (t_project_size + 4095) & ~4095;
-		t_project_section_delta = t_project_section_size - t_project_section -> SizeOfRawData;
+        t_project_section_delta = t_project_section == nil ? 0 : t_project_section_size - t_project_section -> SizeOfRawData;
 
 		uint32_t t_resource_section_size;
 		t_resource_section_size = MCWindowsResourcesMeasure(t_resources);
@@ -1799,13 +1810,19 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 			t_project_section -> PointerToRawData = t_payload_section -> PointerToRawData + t_payload_section_size;
 		}
 
-		// Resize and shift up the project section
-		t_project_section -> SizeOfRawData = t_project_section_size;
-		t_project_section -> Misc . VirtualSize = t_project_section_size;
+		// Resize and shift up the project section (if present)
+        if (t_project_section != nil)
+        {
+            t_project_section -> SizeOfRawData = t_project_section_size;
+            t_project_section -> Misc . VirtualSize = t_project_section_size;
+        }
 
 		// Resize and shift up the resource section.
-		t_resource_section -> VirtualAddress = t_project_section -> VirtualAddress + t_project_section_size;
-		t_resource_section -> PointerToRawData = t_project_section -> PointerToRawData + t_project_section_size;
+        if (t_project_section != nil)
+        {
+            t_resource_section -> VirtualAddress = t_project_section -> VirtualAddress + t_project_section_size;
+            t_resource_section -> PointerToRawData = t_project_section -> PointerToRawData + t_project_section_size;
+        }
 		t_resource_section -> SizeOfRawData = t_resource_section_size;
 		t_resource_section -> Misc . VirtualSize = t_resource_section_size;
 

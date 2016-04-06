@@ -1,0 +1,18 @@
+Name: ignoreMouseEvents
+
+Type: property
+
+Syntax: set the ignoreMouseEvents of stack "Notification" to true
+
+Syntax: get the ignoreMouseEvents of stack "Splash"
+
+Summary: The ignoreMouseEvents stack property provides a way to make a the mouse events on a stack's window pass through the window to windows or the desktop beneath the window.
+
+Introduced: 6.7.0
+
+OS: mac,windows
+
+Platforms: desktop
+
+Description:
+Set the <ignoreMouseEvents> of a stack to true so any mouse events that would normally be sent to the stack instead pass through the stack to whatever is beneath. The mouse events may go to a stack underneath the window, another application or the underlying desktop. The default value for ignoreMouseEvents on a newly created stack is false.

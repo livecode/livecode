@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -26,37 +26,32 @@ class MCNativeLayerIOS : public MCNativeLayer
 {
 public:
     
-    virtual void OnOpen();
-    virtual void OnClose();
-    virtual void OnAttach();
-    virtual void OnDetach();
-    virtual void OnPaint(MCDC* p_dc, const MCRectangle& p_dirty);
-    virtual void OnGeometryChanged(const MCRectangle& p_old_rect);
-    virtual void OnVisibilityChanged(bool p_visible);
-    virtual void OnToolChanged(Tool p_new_tool);
-    virtual void OnLayerChanged();
-    
-    MCNativeLayerIOS(MCWidget*);
+	virtual bool GetCanRenderToContext();
+
+    MCNativeLayerIOS(MCObject *p_object, UIView *p_native_view);
     ~MCNativeLayerIOS();
     
+	virtual bool GetNativeView(void *&r_view);
+	
 private:
     
-    MCWidget* m_widget;
     UIView* m_view;
     //NSBitmapImageRep *m_cached;
     
-    // Returns the main view
-    UIView* getMainView();
+    // Returns the UIView of the parent of this control
+	bool getParentView(UIView *&r_view);
     
     // Performs the attach/detach operations
-    void doAttach();
-    void doDetach();
+    virtual void doAttach();
+    virtual void doDetach();
     
+	virtual bool doPaint(MCGContextRef p_context);
+	virtual void doSetGeometry(const MCRectangle &p_rect);
+	virtual void doSetViewportGeometry(const MCRectangle &p_rect);
+	virtual void doSetVisible(bool p_visible);
+	
     // Performs a relayering operation
-    void doRelayer();
-    
-    // Sets the rect of the view
-    void doSetRect(const MCRectangle&);
+    virtual void doRelayer();
 };
 
 #endif // ifndef __MC_NATIVE_LAYER_IOS__

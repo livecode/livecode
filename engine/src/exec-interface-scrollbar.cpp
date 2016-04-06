@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "redraw.h"
 #include "scrolbar.h"
+#include "mctheme.h"
 
 #include "exec-interface.h"
 
@@ -299,4 +300,24 @@ void MCScrollbar::SetShowValue(MCExecContext& ctxt, bool setting)
 		flags &= ~F_SHOW_VALUE;
 
 	Redraw(t_dirty);
+}
+
+MCPlatformControlType MCScrollbar::getcontroltype()
+{
+    MCPlatformControlType t_type;
+    t_type = MCObject::getcontroltype();
+    
+    if (t_type != kMCPlatformControlTypeGeneric)
+        return t_type;
+    else
+        t_type = kMCPlatformControlTypeScrollBar;
+    
+    if ((flags & F_SB_STYLE) == F_SCALE)
+        t_type = kMCPlatformControlTypeSlider;
+    else if ((flags & F_SB_STYLE) == F_PROGRESS)
+        t_type = kMCPlatformControlTypeProgressBar;
+    else if (getwidgetthemetype() == WTHEME_TYPE_SMALLSCROLLBAR)
+        t_type = kMCPlatformControlTypeSpinArrows;
+    
+    return t_type;
 }

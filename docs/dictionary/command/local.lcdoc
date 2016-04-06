@@ -1,0 +1,49 @@
+Name: local
+
+Type: command
+
+Syntax: local <variablesList> 
+
+Summary: <declare|Declares> one or more <local variable|local variables> and assigns initial <value|values> to them.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+local currentStatus -- creates one local variable
+
+Example:
+local thisThing,thatThing,theOtherThing -- creates three variables
+
+Example:
+local A=1,B=2,C=3 -- creates variables with initial values
+
+Example:
+-- To make a numbered list of variables:
+repeat with x=1 to 20
+  do "local tVar_" & x & "; put empty into tVar_" & x
+end repeat
+
+Parameters:
+variablesList (enum): The variablesList consists of one or more name=value pairs, separated by commas:
+-  The name is any string.
+-  The value is any literal string.
+value: Optional; you can specify just the variable name. In this case, the specified local variables contain empty when created.
+
+Description:
+Use the <local> <command> to define a <local variable> for a <handler>, or to define a <script local variable> that is shared between all the <handler|handlers> in a <script>.
+
+The <local> <declare|declaration> is optional. You can use a <local variable> without <declare|declaring> it first in the <handler>. In this case, the <local variable> can be used only within that <handler>.
+
+The <local> <command> can appear anywhere in a <handler>. However, <variable> <declare|declarations> are usually placed at the beginning of a <handler>. This makes them easier to find and as local variables are created at the point in the script where they are declared it will ensure the variable isn't used before the declaration.
+
+You can also use the <local> <command> to create a <script local variable>. <script local variable|Script local variables> can be used by any <handler> in that <script>, without needing to be <declare|declared> in the <handler> itself, and their <value|values> are maintained from <handler> to <handler>. You create a <script local variable> by using the <local> <command> in a <script>, outside any <handler|handlers> in the <script>. (The difference between a <script local variable> and a <global|global variable> is that a <script local variable> can only be used in the <handler|handlers> of one <script>, while a <global|global variable> can be used in any <handler> or <script> with a <global> <declare|declaration> for that <variable>.)
+
+The value of a local variable is retained only while the handler is running. When the handler exits, the value of the local variable is lost.
+
+The value of a script local variable is retained between handlers, but is lost when you quit the application, when you close the stack (unless its destroyStack <property> is false). If variable preservation is turned on, script locals retain their values when the <script> is re-compiled, unless there is an error in the script. With variable preservation turned off, script locals lose their values when the script is recompiled.
+
+References: preserveVariables (property), script (property), explicitVariables (property), constant (command), do (command), delete variable (command), global (command), variableNames (function), localNames (function), property (glossary), variable (glossary), handler (glossary), value (glossary), global (glossary), local variable (glossary), declare (glossary), script local variable (glossary), command (glossary)

@@ -1,0 +1,38 @@
+Name: startAngle
+
+Type: property
+
+Syntax: set the startAngle [of <graphic>] to <angleInDegrees> 
+
+Summary: Determines the <point> at which an arc begins.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the startAngle of graphic ID 673 to 90 -- top
+
+Example:
+set the startAngle to the startAngle + 12
+
+Value:
+The <startAngle> of a <graphic> is an <integer> between zero and 359.
+By default, the <startAngle> <property> of a newly created <graphic> is zero.
+
+Description:
+Use the <startAngle> <property> to create an arc shape from an oval <graphic>, or to cause the Oval <paint tool> to draw arcs.
+
+By default, ovals display their entire arc from zero to 360°, forming a complete oval. Use the <startAngle> and <arcAngle> <properties> to specify that only a portion of the oval, forming an arc, should be drawn.
+
+The <startAngle> determines the starting <point> of the arc. The <angleInDegrees> zero is at the right edge, 3 o'clock. Increasing the <angleInDegrees> moves the starting <point> counter-clockwise around the arc.
+
+The global setting of the <arcAngle> <property> <control|controls> the appearance of arcs drawn with the <paint tool|paint tools>. Once a paint arc is drawn, its appearance cannot be changed by changing the <global> <arcAngle> <property>.
+
+For a graphic oval, the angle is the same as the <startAngle>. Changing one changes the other.
+
+References: properties (property), arcAngle (property), startAngle (property), integer (keyword), point (keyword), graphic (keyword), global (command), control (object), property (glossary), paint tool (glossary)
+
+Tags: ui

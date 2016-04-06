@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,39 +26,143 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #  include <windows.h>
 #endif
 
-/* Windows doesn't have localtime_r(), but it does have an equivalent
- * function with the arguments in the opposite order! */
 #if defined(__WINDOWS__)
-#  define localtime_r(s,t) (localtime_s(t,s))
+static bool
+MCDateGetTimeInfo(bool t_is_local,
+                  struct tm & r_timeinfo,
+                  long & r_timezone)
+{
+	if (t_is_local)
+	{
+		_get_timezone(&r_timezone);
+	}
+	else
+	{
+		r_timezone = 0;
+	}
+
+	time_t t_now;
+	time(&t_now);
+
+	/* Windows doesn't have localtime_r(), but it does have an equivalent
+	 * function with the arguments in the opposite order! */
+	if (0 != (t_is_local
+	          ? localtime_s(&r_timeinfo, &t_now)
+	          : gmtime_s(&r_timeinfo, &t_now)))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+#elif defined(__MAC__) || defined(__IOS__)
+static bool
+MCDateGetTimeInfo(bool t_is_local,
+                  struct tm & r_timeinfo,
+                  long & r_timezone)
+{
+	time_t t_now;
+	time(&t_now);
+
+	if (NULL == (t_is_local
+	             ? localtime_r(&t_now, &r_timeinfo)
+	             : gmtime_r(&t_now, &r_timeinfo)))
+	{
+		return false;
+	}
+
+	r_timezone = r_timeinfo.tm_gmtoff;
+
+	return true;
+}
+
+#elif defined(__LINUX__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+static bool
+MCDateGetTimeInfo(bool t_is_local,
+                  struct tm & r_timeinfo,
+                  long & r_timezone)
+{
+	time_t t_now;
+	time (&t_now);
+
+	if (NULL == (t_is_local
+	             ? localtime_r(&t_now, &r_timeinfo)
+	             : gmtime_r(&t_now, &r_timeinfo)))
+	{
+		return false;
+	}
+
+	if (t_is_local)
+	{
+		/* FIXME This may be expensive, but is probably required if
+		 * MCDateGetTimeInfo() is to behave properly over summer time
+		 * changes. */
+		tzset();
+		r_timezone = timezone;
+	}
+	else
+	{
+		r_timezone = 0;
+	}
+
+	return true;
+}
+
+#else
+#	error "MCDateGetTimeInfo() not implemented for this platform"
 #endif
 
-extern "C" MC_DLLEXPORT void
-MCDateExecGetLocalDate (MCProperListRef & r_datetime)
+static void
+MCDateExecGetDate(bool t_is_local,
+                  MCProperListRef & r_datetime)
 {
 	struct tm t_timeinfo;
-	time_t t_now;
+	long t_timezone;
 
-	time (&t_now);
-	if (NULL == localtime_r (&t_now, &t_timeinfo))
+	if (!MCDateGetTimeInfo(t_is_local, t_timeinfo, t_timezone))
+	{
 		return;
+	}
 
-	MCAutoNumberRef t_year, t_month, t_day, t_hour, t_minute, t_second;
+    // tm_mon is number of months since January
+    t_timeinfo . tm_mon++;
+    
+    // tm_year is number of years since 1900
+    t_timeinfo . tm_year += 1900;
+    
+	MCAutoNumberRef t_year, t_month, t_day, t_hour, t_minute, t_second,
+		t_gmtoff;
 	if (!(MCNumberCreateWithInteger (t_timeinfo.tm_year, &t_year) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_mon, &t_month) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_mday, &t_day) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_hour, &t_hour) &&
 	      MCNumberCreateWithInteger (t_timeinfo.tm_min, &t_minute) &&
-	      MCNumberCreateWithInteger (t_timeinfo.tm_sec, &t_second)))
+	      MCNumberCreateWithInteger (t_timeinfo.tm_sec, &t_second) &&
+	      MCNumberCreateWithInteger (t_timezone, &t_gmtoff)))
 		return;
 
 	const MCValueRef t_elements[] = {*t_year, *t_month, *t_day,
-	                                 *t_hour, *t_minute, *t_second};
+	                                 *t_hour, *t_minute, *t_second,
+	                                 *t_gmtoff};
 
-	if (!MCProperListCreate (t_elements, 6, r_datetime))
+	if (!MCProperListCreate (t_elements, 7, r_datetime))
         return;
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
+MCDateExecGetLocalDate (MCProperListRef & r_datetime)
+{
+	MCDateExecGetDate(true, r_datetime);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
+MCDateExecGetUniversalDate(MCProperListRef & r_datetime)
+{
+	MCDateExecGetDate(false, r_datetime);
+}
+
+extern "C" MC_DLLEXPORT_DEF void
 MCDateExecGetUniversalTime (double& r_time)
 {
 #ifndef _WINDOWS
@@ -81,3 +185,16 @@ MCDateExecGetUniversalTime (double& r_time)
 	r_time = t_time_unix;
 #endif
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_date_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_date_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

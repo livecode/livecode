@@ -1,0 +1,35 @@
+Name: numToByte
+
+Type: function
+
+Syntax: the numToByte of <numericValue> 
+
+Syntax: numToByte(<numericValue>)
+
+Summary: Returns the byte corresponding to a numeric value in the range 0-255.
+
+Introduced: 4.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+numToByte(65) -- returns a byte with numeric value 65
+
+Example:
+numToByte(0) -- returns a byte with numeric value 0
+
+Parameters:
+numericValue: An <integer> between zero and 255, or an <expression> that <evaluate|evaluates> to such an <integer>.
+
+Returns: The <numToByte> function returns a single byte.
+
+Description:
+Use the <byteToNum> function to translate numbers into their byte equivalents, or to interpret a byte (such as a control character) that can't be displayed.
+
+The <numToByte> function is the inverse of the <byteToNum> function.
+
+References: extendKey (property), charSet (property), HTMLText (property), useUnicode (property), uniEncode (function), binaryEncode (function), byteToNum (function), charToNum (function), base64Encode (function), macToISO (function), toUpper (function), ISOToMac (function), toLower (function), binaryDecode (function)
+
+Tags: text processing

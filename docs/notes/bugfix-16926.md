@@ -1,0 +1,1 @@
+# Generate per-edition docs during installer build

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -21,11 +21,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	OBJECT_H
 
 #include "dllst.h"
-#include "parsedef.h"
-#include "objdefs.h"
 #include "globals.h"
 #include "imagebitmap.h"
+#include "objdefs.h"
+#include "parsedef.h"
 #include "platform.h"
+#include "context.h"
+
+#include "native-layer.h"
 
 enum {
     MAC_SHADOW,
@@ -105,6 +108,13 @@ enum MCPropertyChangedMessageType
 	kMCPropertyChangedMessageTypeGradientEditEnded = 1 << 4
 };
 
+enum MCInterfaceTheme
+{
+    kMCInterfaceThemeEmpty = 0,         // Inherit the theme
+    kMCInterfaceThemeNative = 1,        // Native appearance
+    kMCInterfaceThemeLegacy = 2         // Backwards-compatibility theming
+};
+
 struct MCObjectShape
 {
 	// The type of shape.
@@ -163,6 +173,7 @@ struct MCObjectVisitor
 // MW-2012-02-19: [[ SplitTextAttrs ]] If this flag is set, then there is a font-flags
 //   byte in the extended data section.
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
+#define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
 class MCObjectHandle
 {
@@ -212,6 +223,17 @@ struct MCInterfaceTextStyle;
 struct MCInterfaceTriState;
 struct MCExecValue;
 
+struct MCDeletedObjectPool;
+void MCDeletedObjectsSetup(void);
+void MCDeletedObjectsTeardown(void);
+void MCDeletedObjectsEnterWait(bool p_dispatching);
+void MCDeletedObjectsLeaveWait(bool p_dispatching);
+void MCDeletedObjectsOnObjectCreated(MCObject *object);
+void MCDeletedObjectsOnObjectDeleted(MCObject *object);
+void MCDeletedObjectsOnObjectDestroyed(MCObject *object);
+
+void MCDeletedObjectsDoDrain(void);
+
 struct MCPatternInfo
 {
 	uint32_t id;
@@ -233,13 +255,13 @@ protected:
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
+	uint4 scriptdepth;
 	uint2 fontheight;
 	uint2 dflags;
 	uint2 ncolors;
 	uint2 npatterns;
 	uint2 altid;
 	uint1 hashandlers;
-	uint1 scriptdepth;
 	uint1 borderwidth;
 	int1 shadowoffset;
 	uint1 ink;
@@ -265,6 +287,12 @@ protected:
     
     // If this is true, then this object is in the parentScript resolution table.
     bool m_is_parent_script : 1;
+    
+    // Whether to use legacy theming (or native-like theming)
+    MCInterfaceTheme m_theme;
+    
+    // Override the type of the control for theming purposes
+    MCPlatformControlType m_theme_type;
 	
 	MCStringRef tooltip;
 	
@@ -283,6 +311,8 @@ protected:
 
 	// MW-2012-02-16: [[ LogFonts ]] The object's logical font attrs.
 	MCObjectFontAttrs *m_font_attrs;
+    
+    MCDeletedObjectPool *m_pool;
 
 	static uint1 dashlist[2];
 	static uint1 dotlist[2];
@@ -308,6 +338,10 @@ protected:
 	static MCObjectPropertyTable kPropertyTable;
     static MCPropertyInfo kModeProperties[];
 	static MCObjectPropertyTable kModePropertyTable;
+
+	// The native layer associated with this object
+	MCNativeLayer* m_native_layer;
+	
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -322,8 +356,8 @@ public:
 	virtual bool visit_self(MCObjectVisitor *p_visitor);
 	virtual bool visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor *p_visitor);
 
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
@@ -347,7 +381,8 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual uint2 gettransient() const;
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
+	void setrect(const MCRectangle &p_rect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 #ifdef LEGACY_EXEC
@@ -381,12 +416,27 @@ public:
     // FG-2014-10-14: [[ Native Widgets ]] Informs the object that its layer has changed
     virtual void layerchanged();
     
+    // AL-2015-09-23: [[ Native Widgets ]] Informs the object that its visibility has changed
+    virtual void visibilitychanged(bool p_visible);
+	
+	// IM-2015-12-11: [[ Native Widgets ]] Informs the object that its rect has changed
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
+	// IM-2016-01-19: [[ NativeWidgets ]] Informs the object that its visible area has changed.
+	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
+	
+	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it has been opened.
+	virtual void OnOpen();
+	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it will be closed.
+	virtual void OnClose();
+    
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// MW-2012-02-14: [[ FontRefs ]] Remap any fonts this object uses as font related property has changed.
-	virtual bool recomputefonts(MCFontRef parent_font);
+    // Set force to true to recompute even if it looks like nothing needs updated
+	virtual bool recomputefonts(MCFontRef parent_font, bool force = false);
 
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
@@ -401,8 +451,8 @@ public:
     
     virtual bool getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value);
 	virtual bool setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value);
-	virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue& r_value);
-	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCExecValue p_value);
+	virtual bool getcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue& r_value);
+	virtual bool setcustomprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCProperListRef p_path, MCExecValue p_value);
     
 	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
 	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
@@ -441,6 +491,12 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	bool GetNativeView(void *&r_view);
+	bool SetNativeView(void *p_view);
+	
+	// Gets the current native layer (if any) associated with this object
+	MCNativeLayer* getNativeLayer() const;
+	
 	MCNameRef getdefaultpropsetname(void);
 
 #ifdef LEGACY_EXEC
@@ -569,10 +625,22 @@ public:
 	{
 		return parent;
 	}
-	uint1 getscriptdepth() const
+	
+	uint4 getscriptdepth() const
 	{
 		return scriptdepth;
 	}
+	
+	void lockforexecution(void)
+	{
+		scriptdepth += 1;
+	}
+	
+	void unlockforexecution(void)
+	{
+		scriptdepth -= 1;
+	}
+	
 	void setparent(MCObject *newparent)
 	{
 		parent = newparent;
@@ -604,10 +672,18 @@ public:
 	MCImage *resolveimageid(uint4 image_id);
 	MCImage *resolveimagename(MCStringRef name);
 	
-	Boolean isvisible();
+	// IM-2015-12-07: [[ ObjectVisibility ]]
+	// Returns the visibility of the object. If effective is true then only returns true if the parent (and its parent, etc.) is also visible.
+	bool isvisible(bool p_effective = true);
+	
+	// IM-2016-02-26: [[ Bug 16244 ]]
+	// Returns whether to show this object when its 'visible' property is false
+	bool showinvisible();
+	
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o, bool selected = false);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCContextType dc_type,
+                         MCObject *o, bool selected = false);
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False, bool selected = false);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
@@ -671,6 +747,8 @@ public:
 	// New method for returning the various 'names' of an object. This should really
 	// return an 'MCValueRef' at some point, but as it stands that causes issues.
 	bool names(Properties which, MCValueRef& r_name);
+    bool getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val);
+    
 #ifdef LEGACY_EXEC
 	// Wrapper for 'names()' working in the old way (for convenience).
 	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
@@ -682,6 +760,7 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
+    void drawmarquee(MCContext *p_context, const MCRectangle &p_rect);
     
     // SN-2014-04-16 [[ Bug 12078 ]] Buttons and tooltip label are not drawn in the text direction
     void drawdirectionaltext(MCDC *dc, int2 sx, int2 sy, MCStringRef p_string, MCFontRef font);
@@ -820,14 +899,7 @@ public:
 		return kMCPropertyChangedMessageTypeNone;
 	}	
 
-	void scheduledelete(void);
-	
-	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
-	// returns true if the referenced image is still in use by this object
-	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
-	{
-		return false;
-	}
+	virtual void scheduledelete(bool p_is_child = false);
 
 	// MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
@@ -838,7 +910,14 @@ public:
 	bool getinidcache(void)
 	{
 		return m_in_id_cache;
-	}
+    }
+
+	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
+	// returns true if the referenced image is still in use by this object
+	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
+	{
+        return false;
+    }
     
     void setisparentscript(bool p_value)
     {
@@ -852,12 +931,27 @@ public:
     
     MCRectangle measuretext(MCStringRef p_text, bool p_is_unicode);
     
+    // Copy the font which should be used for this object. This will map/unmap
+    // as appropriate.
+    void copyfont(MCFontRef& r_font);
+    
     // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
     //   a widget.
-    bool haswidgets(void);
+    virtual bool haswidgets(void);
     
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
+    
+    // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
+    void sync_mfocus(void);
+    
+    // This accessor is used by the widget event manager to trigger tooltip
+    // display for widgets.
+    MCStringRef gettooltip(void) {return tooltip;}
+    
+    // Returns true if this object is an ancestor *control* of p_object
+    //  in the parent chain.
+    bool isancestorof(MCObject *p_object);
     
 	////////// PROPERTY SUPPORT METHODS
 
@@ -874,7 +968,6 @@ public:
 	void SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_id);
 	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
 
-	void SetVisibility(MCExecContext& ctxt, uint32_t part, bool flag, bool visible);
 	void SetRectProp(MCExecContext& ctxt, bool effective, MCRectangle p_rect);
 	void GetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint &r_point);
 	void SetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint point);
@@ -894,8 +987,8 @@ public:
 	void GetId(MCExecContext& ctxt, uint32_t& r_id);
 	virtual void SetId(MCExecContext& ctxt, uint32_t id);
 	void GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id);
-	void GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name);
-	void GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id);
+	void GetLongName(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_name);
+	void GetLongId(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_long_id);
 	void GetName(MCExecContext& ctxt, MCStringRef& r_name);
 	virtual void SetName(MCExecContext& ctxt, MCStringRef name);
 	void GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name);
@@ -1057,7 +1150,7 @@ public:
 	void GetOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner);
 	void GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner);
-	void GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetLongOwner(MCExecContext& ctxt, uint32_t p_part_id, MCStringRef& r_owner);
 
 	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
 	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
@@ -1135,6 +1228,14 @@ public:
     void GetCustomProperties(MCExecContext& ctxt, MCValueRef &r_array);
     void SetCustomProperties(MCExecContext& ctxt, MCValueRef p_array);
     
+    void GetTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    virtual void SetTheme(MCExecContext& ctxt, intenum_t  p_theme);
+    void GetEffectiveTheme(MCExecContext& ctxt, intenum_t& r_theme);
+    
+    void GetThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetThemeControlType(MCExecContext& ctxt, intenum_t  p_type);
+    void GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    
 	////////// ARRAY PROPS
     
     void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
@@ -1154,15 +1255,21 @@ public:
 #endif
     
 //////////
-				
+			
+    MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
+    
+    // Object pool instance variable manipulation
+    MCDeletedObjectPool *getdeletedobjectpool(void) const { return m_pool; }
+    void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
+
 protected:
-	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+    IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_remaining);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are the new propset pickle routines. If
 	//   sfv < 7000 then the legacy ones are used; otherwise new ones are.
 	IO_stat loadpropsets(IO_handle stream, uint32_t version);
-	IO_stat savepropsets(IO_handle stream);
+	IO_stat savepropsets(IO_handle stream, uint32_t p_version);
 	
 	// MW-2012-02-16: [[ LogFonts ]] Load the font attrs with the given index.
 	//   This method is protected as MCStack needs to call it to resolve its
@@ -1187,6 +1294,9 @@ protected:
     virtual MCPlatformControlPart getcontrolsubpart();
     virtual MCPlatformControlState getcontrolstate();
     bool getthemeselectorsforprop(Properties, MCPlatformControlType&, MCPlatformControlPart&, MCPlatformControlState&, MCPlatformThemeProperty&, MCPlatformThemePropertyType&);
+    
+    // Returns the effective theme for this object
+    MCInterfaceTheme gettheme() const;
     
 private:
 #ifdef OLD_EXEC
@@ -1240,6 +1350,8 @@ private:
 	// MW-2012-02-19: [[ SplitTextAttrs ]] Returns true if the object needs to save
 	//   the font-flags.
 	bool needtosavefontflags(void) const;
+    // Returns false if hasfontattrs() or a theme or theming type is set
+    bool inheritfont() const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);

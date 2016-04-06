@@ -1,0 +1,65 @@
+Name: mobileComposeUnicodeMail
+
+Type: command
+
+Syntax: mobileComposeUnicodeMail <subject>, [<recipients>, [<ccs>, [<bccs>, [<body>, [<attachments>]]]]]
+
+Summary: Opens a new email message in the user's email program.
+
+Synonyms: iphoneComposeUnicodeMail
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileComposeUnicodeMail tUnicodeHeader, "guido@example.net",,, tUnicodeMailBody, tAttachment
+
+Example:
+put "Hello World!" into tAttachment["data"]
+put "text/plain" into tAttachment["type"]
+put "Greetings.txt" into tAttachment["name"]
+mobileComposeUnicodeMail tUnicodeHeader, "test@livecode.com",,,, tAttachment
+
+Example:
+mobileComposeUnicodeMail uniEncode (tTextHeader, "UTF8"), "guido@example.net",,, uniEncode (tTextMailBody, "UTF8"), tAttachment
+
+Parameters:
+subject: The subject line of the email in UTF-16 encoded text.
+recipients: A comma delimited list of email addresses to be placed in the 'To' field.
+ccs: A comma delimited list of email addresses to be placed in the 'CC' field.
+bccs: A comma delimited list of email addresses to be placed in the 'BCC' field.
+body: The body of the email in UTF-16 encoded text.
+attachments (array): Either empty to send no attachments, a single attachment array or a one-based numeric array of attachment arrays to include. The attachments parameter consists of either a single array, or an array of arrays listing the attachments to include. A single attachment array should consist of the following keys:
+- "data": The binary data to attach to the email (not needed if a file is present).
+- "file": The filename of the file on disk to attach to the email (not needed if data present).
+
+The result (enum): Set by <mobileComposeUnicodeMail> to indicate its results.
+- sent : the email was sent successfully
+- cancel : the email was not sent, and the user elected not to save it for later
+
+Description:
+Use the <mobileComposeUnicodeMail> <command> to create a unicode email message with attachments from within a <stack on iOS or Android>. 
+
+This command interfaces with the iOS and Android mail composition interface
+
+If you specify a file for the attachment, the engine tries to use the least amount of memory by asking the operating system to only load it from disk when the file is needed. Therefore, using <mobileComposeUnicodeMail> should be the preferred method when attaching large amounts of data to an e-mail.
+For example, sending multiple attachments may be done like this:
+
+put "Hello World!" into tAttachments[1]["data"]
+put "text/plain" into tAttachments[1]["type"]
+put "Greetings.txt" into tAttachments[1]["name"]
+put "Goodbye World!" into tAttachments[2]["data"]
+put "text/plain" into tAttachments[2]["type"]
+put "Farewell.txt" into tAttachments[2]["name"]
+mobileComposeUnicodeMail tSubject, tTo, tCCs, tBCCs, tBody, tAttachments
+
+Some devices are not configured with e-mail sending capability. To determine if the current device is, use the <mobileCanSendMail> function. This returns true if the mail client is configured.
+
+>*Note:* Once the <mobileComposeUnicodeMail> command is called, you have no more control over what the user does with the message. They are free to modify the message and the addresses as they see fit.
+
+References: revMail (command), revGoURL (command), revMailUnicode (command), mobileComposeMail (command), mobileComposeHtmlMail (command), stack on iOS or Android (object), command (glossary), mobileCanSendMail (function)
+
+Tags: networking

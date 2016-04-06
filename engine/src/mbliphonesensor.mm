@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -88,7 +88,7 @@ static void initialize_core_motion(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-@interface MCIPhoneLocationDelegate : NSObject <CLLocationManagerDelegate>
+@interface com_runrev_livecode_MCIPhoneLocationDelegate : NSObject <CLLocationManagerDelegate>
 {
 	NSTimer *m_calibration_timer;
     bool m_ready;
@@ -96,13 +96,13 @@ static void initialize_core_motion(void)
 @end
 
 static CLLocationManager *s_location_manager = nil;
-static MCIPhoneLocationDelegate *s_location_delegate = nil;
+static com_runrev_livecode_MCIPhoneLocationDelegate *s_location_delegate = nil;
 static bool s_location_enabled = false;
 static bool s_heading_enabled = false;
 static bool s_tracking_heading_loosely = false;
 static int32_t s_location_calibration_timeout = 0;
 
-@implementation MCIPhoneLocationDelegate 
+@implementation com_runrev_livecode_MCIPhoneLocationDelegate
 
 - (void)dealloc
 {
@@ -240,7 +240,7 @@ static void initialize_core_location(void)
 	
     // PM-2014-10-07: [[ Bug 13590 ]] Configuration of the location manager object must always occur on a thread with an active run loop
     MCIPhoneRunBlockOnMainFiber(^(void) {s_location_manager = [[CLLocationManager alloc] init];});
-	s_location_delegate = [[MCIPhoneLocationDelegate alloc] init];
+	s_location_delegate = [[com_runrev_livecode_MCIPhoneLocationDelegate alloc] init];
     [s_location_delegate setReady: False];
     
    	[s_location_manager setDelegate: s_location_delegate];

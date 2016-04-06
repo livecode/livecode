@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "util.h"
 #include "variable.h"
-#include "script.h"
+#include "libscript/script.h"
 
 #include <locale.h>
 #include <langinfo.h>
@@ -48,7 +48,10 @@ void X_main_loop(void)
 		X_main_loop_iteration();
 }
 
-int main(int argc, char *argv[], char *envp[])
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
+
+int platform_main(int argc, char *argv[], char *envp[])
 {
 	// On Linux, the argv and envp could be in pretty much any format. The
 	// safest thing to do is let the C library's iconv convert to a known
@@ -56,7 +59,6 @@ int main(int argc, char *argv[], char *envp[])
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
 	
-	extern bool MCModulesInitialize();
 	if (!MCInitialize() || !MCSInitialize() ||
 	    !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -115,7 +117,6 @@ int main(int argc, char *argv[], char *envp[])
 	
 	int t_exit_code = X_close();
 
-	extern void MCModulesFinalize();
 	MCScriptFinalize();
 	MCModulesFinalize();
 	MCFinalize();

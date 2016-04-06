@@ -1,0 +1,34 @@
+Name: italic
+
+Type: keyword
+
+Syntax: italic
+
+Summary: Used with the <textStyle> <property> to indicate italicized text.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textStyle of button "Check It" to italic
+
+Description:
+Use the <italic> <keyword> to emphasize text by presenting it in italics.
+
+You can italicize an object (which italicizes all the text displayed by the object) or  a chunk in a field or button.
+
+To add italics to an object without removing other styles (such as bold), add the <italic> <keyword> to the end of the <textStyle>. The following example adds italic to the styles of a <button> :
+
+    if the textStyle of button 1 is empty then
+       set the textStyle of button 1 to "italic"
+    else
+       set the textStyle of button 1 to \
+             (the textStyle of button 1) & comma & "italic"
+    end if
+
+References: underline (keyword), button (keyword), strikeout (keyword), plain (keyword), bold (keyword), textStyle (property), property (glossary), keyword (glossary)
+
+Tags: ui

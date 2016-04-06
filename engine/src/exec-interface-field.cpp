@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -202,10 +202,10 @@ static MCExecCustomTypeInfo _kMCInterfaceFieldRangesTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
 {
-	{ "static", kMCLayerModeHintStatic },
-    { "dynamic", kMCLayerModeHintDynamic },
-	{ "scrolling", kMCLayerModeHintScrolling },
-	{ "container", kMCLayerModeHintContainer }
+	{ "static", kMCLayerModeHintStatic, false },
+	{ "dynamic", kMCLayerModeHintDynamic, false },
+	{ "scrolling", kMCLayerModeHintScrolling, false },
+	{ "container", kMCLayerModeHintContainer, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
@@ -751,8 +751,18 @@ void MCField::GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height)
 {
 	if (opened)
 	{
-		r_height = textheight + rect.height - getfheight()
-		          + topmargin + bottommargin - TEXT_Y_OFFSET;
+        // It seems that in all other locations that use TEXT_Y_OFFSET when
+        // calculating field heights, it is used 2*, presumably because it is
+        // being applied to both the top and bottom margins.
+        //
+        // The meaning of topmargin and bottommargin aren't exactly clear for
+        // fields - testing suggests that bottommargin is ignored entirely
+        // except when calculating formatted heights and similar while topmargin
+        // is obeyed... except that text may protrude by up to TEXT_Y_OFFSET
+        // pixels into the margin.
+        //
+        r_height = textheight + rect.height - getfheight()
+		          + topmargin + bottommargin - 2*TEXT_Y_OFFSET;
 	}
 	else
 		r_height = 0;

@@ -1,0 +1,848 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  TargetFolder:
+//    This is where the application executable/bundle will be placed:
+//      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
+//      Mac OS X: /Applications
+//      Linux: /opt/livecode/livecode-4.5-dp-5
+//
+//  SupportFolder:
+//    This is where supporting (user-accessible) resources will be placed:
+//      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
+//      Mac OS X: /Application/LiveCode 4.5 (dp 5).app/Contents/Support
+//      Linux: /opt/livecode/livecode-4.5-dp-5
+//
+//  ToolsFolder:
+//    This is where the toolset will be placed:
+//      Windows: C:/Program Files/LiveCode 4.5 (dp 5)
+//      Mac OS X: /Application/LiveCode 4.5 (dp 5).app/Contents/Tools
+//      Linux: /opt/livecode/livecode-4.5-dp-5
+//
+//  ProductTitle:
+//    LiveCode 4.5 (dp 5)
+//  ProductTag:
+//    livecode_4_5_dp_5
+//  ProductName:
+//    LiveCode
+
+installer LiveCode
+	include Misc
+	include Toolset
+	include Plugins
+	include Resources
+	include Documentation
+	include Toolchain.[[TargetPlatform]]
+	include Extensions
+	codesign
+		include Engine.[[TargetPlatform]]
+		with TargetFolder as [[ToolsFolder]] do
+			include Externals
+	with TargetFolder as [[ToolsFolder]]/Runtime/Windows/x86-32 do
+		set TargetPlatform to Windows
+		include Runtime
+		include Externals
+	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-32 do
+		set TargetPlatform to Linux
+		set TargetArchitecture to x86
+		include Runtime
+		include Externals
+	ifnot ProductBranch is 6.7 then
+		with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-64 do
+			set TargetPlatform to Linux
+			set TargetArchitecture to x86_64
+			include Runtime
+			include Externals
+//	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/armv6-hf do
+//		set TargetPlatform to Linux
+//		set TargetArchitecture to armv6-hf
+//		include Runtime
+//		include Externals
+	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
+		set TargetPlatform to MacOSX
+		set TargetArchitectures to i386
+		include Runtime
+		include Externals
+	if TargetPlatform is MacOSX then
+		include Mobile.MacOSX
+		include Runtime.iOS
+		include Runtime.Android
+		include Runtime.Emscripten
+	if TargetPlatform is Windows then
+		include Mobile.Windows
+		include Runtime.Android
+		include Runtime.Emscripten
+		shortcut "Desktop/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
+		shortcut "Programs/RunRev/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
+	if TargetPlatform is Linux then
+		include Mobile.Linux
+		include Runtime.Android
+		include Runtime.Emscripten
+		desktop application "repo:Installer/application.desktop" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+		if TargetEdition is Community then
+			desktop icon "repo:Installer/application.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+		if TargetEdition is Indy then
+			desktop icon "private:engine/rsrc/Indy/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+		if TargetEdition is Business then
+			desktop icon "private:engine/rsrc/Business/android-notify-icon.png" as "runrev-[[ProductTag]]-[[TargetArchitecture]]"
+	include Uninstaller
+	if BaseEdition is Commercial then
+		additional manifest "../Installer/commercial-package.txt"
+	if TargetEdition is Indy then
+		include Commercial.IndyComponents
+	if TargetEdition is Business then
+		include Commercial.BusinessComponents
+
+component Runtime
+	include Runtime.[[TargetPlatform]]
+
+component Externals
+	include Externals.[[TargetPlatform]]
+	include Databases.[[TargetPlatform]]
+	if TargetPlatform is Linux then
+		include Externals.CEF.Linux
+	if TargetPlatform is Windows then
+		include Externals.CEF.Windows
+	emit externals to "[[TargetFolder]]/Externals/Externals.txt"
+	emit dbdrivers to "[[TargetFolder]]/Externals/Database Drivers/Database Drivers.txt"
+
+component Uninstaller
+	if TargetPlatform is "Windows" then
+		place uninstaller at "[[TargetFolder]]/.setup.exe"
+		register key "HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/[[ProductTitle]]"
+		with RegistryRoot as "HKLM/Software/Microsoft/Windows/CurrentVersion/Uninstall/[[ProductTitle]]" do
+			register value "DisplayIcon" as path "[[TargetFolder]]/[[ProductName]].exe"
+			register value "DisplayName" as "[[ProductTitle]]"
+			register value "DisplayVersion" as "[[VersionTag]]"
+			register value "InstallDate" as "[[TodaysDate]]"
+			register value "InstallLocation" as path "[[TargetFolder]]"
+			register value "NoModify" as 1
+			register value "NoRepair" as 1
+			register value "Publisher" as "LiveCode Ltd."
+			register value "Version" as "[[VersionTag]]"
+			register value "UninstallString" as path "\q[[TargetFolder]]/.setup.exe\q uninstall"
+	if TargetPlatform is "Linux" then
+		place uninstaller at "[[TargetFolder]]/setup.[[TargetArchitecture]]"
+	if TargetPlatform is "MacOSX" then
+		place uninstaller at "[[TargetFolder]]/LiveCode Setup.app"
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+component Misc
+	into [[SupportFolder]] place
+		if TargetEdition is "Community" then
+			textfile "ide:License Agreement.txt"
+			textfile "ide:about.txt"
+			textfile "ide:IDE License.txt"
+			textfile "ide:Engine License.txt"
+		if TargetEdition is "Indy" then
+			textfile "private:License Agreement.txt"
+			textfile "private:about.txt"
+		if TargetEdition is "Business" then
+			textfile "private:License Agreement.txt"
+			textfile "private:about.txt"
+		textfile "ide:Open Source Licenses.txt"
+		file "repo:LiveCodeNotes-[[EscapedVersionTag]].pdf" as "Release Notes.pdf"
+		
+component Plugins
+	into [[ToolsFolder]]/Plugins place
+		stack ide:Plugins/Go_LiveNet.livecode
+		stack ide:Plugins/Navigator.rev
+		stack "ide:Plugins/RegExBuilder 1.6.rev"
+		stack ide:Plugins/revapplicationoverview.rev
+		stack ide:Plugins/revexample.rev
+		stack "ide:Plugins/revSmartProperties 1.2.rev"
+		stack "ide:Plugins/revSmartSave 1.1.rev"
+		stack "ide:Plugins/revTabRuler 1.2.rev"
+
+component Resources
+	into [[SupportFolder]]/Resources/Examples place
+		stack "ide:Resources/Examples/Core Image Sampler.rev"
+		stack "ide:Resources/Examples/Deep Mask Sampler.rev"
+		stack "ide:Resources/Examples/Relaunch Sampler.rev"
+		stack "ide:Resources/Examples/Font Loading Sampler.rev"
+		stack "ide:Resources/Examples/Browser Sampler.rev"
+		stack "ide:Resources/Examples/SQLite Sampler.rev"
+		stack "ide:Resources/Examples/Zip Build Sampler.rev"
+		stack "ide:Resources/Examples/Zip Extract Sampler.rev"
+		stack "ide:Resources/Examples/Data Grid Tour.livecode"
+	into "[[SupportFolder]]/Resources/Sample Projects" place
+		stack "ide:Resources/Sample Projects/Bouncy.rev"
+		stack "ide:Resources/Sample Projects/Internet Chat.rev"
+		stack "ide:Resources/Sample Projects/Simple Calculator.rev"
+		stack "ide:Resources/Sample Projects/Video Capture.rev"
+	into "[[SupportFolder]]/Resources" place
+		file ide:Resources/Sample.mov
+	into "[[SupportFolder]]/Resources/Object Libraries" place
+		stack "ide:Resources/Object Libraries/revObjectLibrary.rev"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_1" place
+		stack	"ide:Resources/Start Center/samples/sample_1/Balls.livecode"
+		file	"ide:Resources/Start Center/samples/sample_1/icon.png"
+		file "ide:Resources/Start Center/samples/sample_1/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_1/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_2" place
+		stack	"ide:Resources/Start Center/samples/sample_2/BookLibrary.livecode"
+		file	"ide:Resources/Start Center/samples/sample_2/icon.png"
+		file "ide:Resources/Start Center/samples/sample_2/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_2/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3" place
+		stack	"ide:Resources/Start Center/samples/sample_3/mobileTemplate.livecode"
+		file	"ide:Resources/Start Center/samples/sample_3/icon.png"
+		file "ide:Resources/Start Center/samples/sample_3/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_3/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_4" place
+		stack	"ide:Resources/Start Center/samples/sample_4/balloon.livecode"
+		file	"ide:Resources/Start Center/samples/sample_4/icon.png"
+		file "ide:Resources/Start Center/samples/sample_4/icon@extra-high.png"
+		file	"ide:Resources/Start Center/samples/sample_4/info.txt"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3/images/app-icons" place
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon29x29.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon29x29@2x.png"
+		file "ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon40x40.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon40x40@2x.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon60x60.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon60x60@2x.png"
+		file "ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon76x76.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/AppIcon76x76@2x.png"
+		file "ide:Resources/Start Center/samples/sample_3/images/app-icons/iTunesArtwork.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/app-icons/iTunesArtwork@2x.png"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3/images/icons" place
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/add.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/battery-low.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/battery-medium.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/battery-zero.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/beaker.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/binoculars.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bird.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bookmark.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/bulb.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calculator.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/calendar.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/camera.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/car.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/card.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cassette.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cctv.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/center.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/chip.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/clipboard-blank.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/clipboard.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/clock.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cloud.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/computer.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/conversation.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/credit-card.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-coffee.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-martini.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-mug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/cup-wine.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/delete.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/diary.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/disk-floppy.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/dislike.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/drive-hard.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/dvd.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/envelope.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/expand.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/eye.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/facebook.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/factory.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/female.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/file-new.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/film.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/flag.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/flower.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/folder.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/food.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/gameboy.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/gamepad.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/gift.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/globe.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/headphones.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/heart.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/id.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/image.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/information.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/international.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/ipod.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/key.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/keyboard.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/laptop.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/letter-open.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lightening.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/like.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/location.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lock-unlock.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lock.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/lolly.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/male.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/memory.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/mobile-phone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/mouse.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/music.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/north-east.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/north-west.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/north.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/old-film.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/outdoors.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/paperclip.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/pencil.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/person.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/petrol.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/pin.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/planet.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/plug.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/printer.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/projector.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/radio.png"		
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/refresh.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/rss.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/satalite.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/scissors.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/search.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/server.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/settings.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/settings2.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/share.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/shield.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/signal.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/signpost.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/smartphone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/snowflake.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/socket.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/sound-on.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/south-east.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/south.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/speech.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/star.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/stopwatch.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/telephone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/trophy.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/tv.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/twitter.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/umbrella.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/usb.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/van.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/wallet.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/waterdroplet.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/west.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/zoom-in.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/icons/zoom-out.png"
+	into "[[SupportFolder]]/Resources/Start Center/samples/sample_3/images/splash-screens" place
+		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone-5.png"
+		file	"ide:Resources/Start Center/samples/sample_3/images/splash-screens/splash-iphone-retina.png"
+
+component Documentation
+	into [[ToolsFolder]]/Documentation place
+		file "ide:Documentation/SearchEngineStandardUrls.txt"
+	into [[ToolsFolder]]/Documentation/rev place
+		file "ide:Documentation/rev/Color Names Reference.rev"
+		file "ide:Documentation/rev/Database Types Reference.rev"
+		file "ide:Documentation/rev/Emacs Key Bindings Referenc.rev"
+		file "ide:Documentation/rev/Image Types Reference.rev"
+		file "ide:Documentation/rev/Memory and Limits Reference.rev"
+		file "ide:Documentation/rev/Operator Precedence Referen.rev"
+		file "ide:Documentation/rev/projects.rev"
+		file "ide:Documentation/rev/Regular Expressions Syntax.rev"
+		file "ide:Documentation/rev/scripts.rev"
+		file "ide:Documentation/rev/Shortcut Reference.rev"
+		file "ide:Documentation/rev/Supported Platforms Referen.rev"
+		file "ide:Documentation/rev/videos.rev"
+
+	into [[ToolsFolder]]/Documentation place
+		rfolder "repo:docs/guides"
+		rfolder "ide:Documentation/guides"
+	
+	into [[ToolsFolder]]/Documentation/html_viewer place
+		file "ide:Documentation/html_viewer/api.html.template"
+		file "ide:Documentation/html_viewer/guide.html.template"
+		rfolder "ide:Documentation/html_viewer/css"
+		rfolder "ide:Documentation/html_viewer/fonts"
+		rfolder "ide:Documentation/html_viewer/js"
+
+	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
+		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
+		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
+
+	into [[ToolsFolder]]/Documentation/guides place
+		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
+	
+	into [[ToolsFolder]]/Documentation/pdf place
+		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
+
+component Extensions
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.browser
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.clock
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.colorSwatch
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.gradientRampEditor
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.lineGraph
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.headerBar
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.iconPicker
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.iconSVG
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.json
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.navbar
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.paletteActions
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.segmented
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.svgpath
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.switchbutton
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.treeView
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.tile
+
+component Toolchain.MacOSX
+	into [[ToolsFolder]]/Toolchain place
+		executable macosx:lc-compile as lc-compile
+		executable macosx:lc-run as lc-run
+		rfolder macosx:modules
+
+component Toolchain.Windows
+	into [[ToolsFolder]]/Toolchain place
+		executable windows:lc-compile.exe as lc-compile.exe
+		executable windows:lc-run.exe as lc-run.exe
+		rfolder windows:modules
+
+component Toolchain.Linux
+	into [[ToolsFolder]]/Toolchain place
+		executable linux-[[TargetArchitecture]]:lc-compile as lc-compile
+		executable linux-[[TargetArchitecture]]:lc-run as lc-run
+		rfolder linux-[[TargetArchitecture]]:modules
+
+////////////////////////////////////////////////////////////////////////////////
+
+component Engine.Linux
+	into [[TargetFolder]] place
+		executable linux-[[TargetArchitecture]]:LiveCode[[EditionTagUpper]] as [[ProductName]].[[TargetArchitecture]]
+		executable linux-[[TargetArchitecture]]:revpdfprinter.so
+		executable linux-[[TargetArchitecture]]:revsecurity.so
+
+component Mobile.Linux
+	into "[[ToolsFolder]]/Externals" place
+		executable linux-[[TargetArchitecture]]:revandroid.so
+
+//////////
+
+component Engine.Windows
+	into [[TargetFolder]] place
+		executable windows:LiveCode[[EditionTagUpper]].exe as [[ProductName]].exe
+		executable windows:revpdfprinter.dll
+		executable windows:revsecurity.dll
+
+component Mobile.Windows
+	into "[[ToolsFolder]]/Externals" place
+		executable windows:revandroid.dll
+
+//////////
+
+component Mobile.MacOSX
+	into "[[ToolsFolder]]/Resources/Mobile Examples" place
+		file "ide:Resources/Mobile Examples/Browser Example.livecode"
+		file "ide:Resources/Mobile Examples/Orientation Example.livecode"
+		file "ide:Resources/Mobile Examples/Scroller Example.livecode"
+		file "ide:Resources/Mobile Examples/Sound Example.livecode"
+	into "[[ToolsFolder]]/Resources/Mobile Examples/Images" place
+		file "ide:Resources/Mobile Examples/Images/Hills.jpg"
+		file "ide:Resources/Mobile Examples/Images/Lillies.jpg"
+		file "ide:Resources/Mobile Examples/Images/Sunset.jpg"
+		file "ide:Resources/Mobile Examples/Images/Winter.jpg"
+	into "[[ToolsFolder]]/Resources/Mobile Examples/Sounds" place
+		file "ide:Resources/Mobile Examples/Sounds/Brook.mp3"
+		file "ide:Resources/Mobile Examples/Sounds/Clap.mp3"
+		file "ide:Resources/Mobile Examples/Sounds/Ocean.mp3"
+		file "ide:Resources/Mobile Examples/Sounds/Ping.mp3"
+		file "ide:Resources/Mobile Examples/Sounds/Pop.mp3"
+		file "ide:Resources/Mobile Examples/Sounds/Rattle.mp3"
+		file "ide:Resources/Mobile Examples/Sounds/Stream.mp3"
+	into "[[ToolsFolder]]/Externals" place
+		executable macosx:reviphone.bundle
+		executable macosx:revandroid.bundle
+
+component Engine.MacOSX
+	executable macosx:LiveCode[[EditionTagUpper]].app as "[[TargetFolder]]"
+	executable macosx:revpdfprinter.bundle as "[[TargetFolder]]/Contents/MacOS/revpdfprinter.bundle"
+	executable macosx:revsecurity.dylib as "[[TargetFolder]]/Contents/MacOS/revsecurity.dylib"
+
+////////////////////////////////////////////////////////////////////////////////
+
+component Runtime.Linux
+	into [[TargetFolder]] place
+		executable linux-[[TargetArchitecture]]:standalone[[BaseEditionTagLower]] as Standalone
+	into [[TargetFolder]]/Support place
+		executable linux-[[TargetArchitecture]]:revpdfprinter.so
+		executable linux-[[TargetArchitecture]]:revsecurity.so
+
+//////////
+
+component Runtime.Windows
+	into [[TargetFolder]] place
+		executable windows:standalone[[BaseEditionTagLower]].exe as Standalone
+		file "windows:w32-manifest-template.xml"
+		file "windows:w32-manifest-template-dpiaware.xml"
+		file "windows:w32-manifest-template-trustinfo.xml"
+	into [[TargetFolder]]/Support place
+		executable windows:revpdfprinter.dll
+		executable windows:revsecurity.dll
+	into "[[TargetFolder]]/Support/Sample Icons" place
+		file "ide:Resources/Sample Icons/genericapp.ico"
+		file "ide:Resources/Sample Icons/genericdoc.ico"
+
+//////////
+
+component Runtime.MacOSX
+	into [[TargetFolder]] place
+		executable macosx:Standalone[[BaseEditionTagUpper]].app as Standalone.app
+	into [[TargetFolder]]/Support place
+		executable macosx:revpdfprinter.bundle
+		executable macosx:revsecurity.dylib
+//////////
+
+component Runtime.Emscripten
+	into "[[ToolsFolder]]/Runtime/Emscripten/js" place
+		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html
+		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html.mem
+		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].js
+		file emscripten:emscripten-startup-template.livecodescript
+		rfolder emscripten:emscripten-standalone-template
+
+//////////
+
+component Runtime.Android
+	into "[[ToolsFolder]]/Runtime/Android" place
+		file android:Classes[[BaseEditionTagUpper]] as Classes
+		file android:Manifest.xml
+		file android:livecode_inputcontrol.xml
+		file android:notify_icon.png
+		executable android:Standalone[[BaseEditionTagUpper]] as Standalone
+		executable android:RevZip
+		executable android:RevXml
+		executable android:RevDb
+		executable android:DbSqlite
+		executable android:DbMysql
+		executable android:RevSecurity
+
+//////////
+
+component Runtime.iOS
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
+		executable ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
+		executable ios:iphonesimulator6.1/revsecurity.ios-extension as RevSecurity
+		executable ios:iphonesimulator6.1/revpdfprinter.ios-extension as RevPdfPrinter
+		executable ios:iphonesimulator6.1/revzip.ios-extension as RevZip
+		executable ios:iphonesimulator6.1/revxml.ios-extension as RevXml
+		executable ios:iphonesimulator6.1/revdb.ios-extension as RevDb
+		executable ios:iphonesimulator6.1/dbsqlite.ios-extension as DbSqlite
+		executable ios:iphonesimulator6.1/dbmysql.ios-extension as DbMysql
+		file ios:iphonesimulator6.1/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator6.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator6.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator6.1/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator6.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator6.1/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
+		executable ios:iphonesimulator7.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator7.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator6.1/revsecurity.dylib
+		executable ios:iphonesimulator7.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator6.1/revpdfprinter.dylib
+		executable ios:iphonesimulator7.1/revzip.ios-extension as RevZip base ios:iphonesimulator6.1/revzip.dylib
+		executable ios:iphonesimulator7.1/revxml.ios-extension as RevXml base ios:iphonesimulator6.1/revxml.dylib
+		executable ios:iphonesimulator7.1/revdb.ios-extension as RevDb base ios:iphonesimulator6.1/revdb.dylib
+		executable ios:iphonesimulator7.1/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator6.1/dbsqlite.dylib
+		executable ios:iphonesimulator7.1/dbmysql.ios-extension as DbMysql base ios:iphonesimulator6.1/dbmysql.dylib
+		file ios:iphonesimulator7.1/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator7.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator7.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator7.1/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator7.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator7.1/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
+		executable ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator8.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator6.1/revsecurity.dylib
+		executable ios:iphonesimulator8.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator6.1/revpdfprinter.dylib
+		executable ios:iphonesimulator8.2/revzip.ios-extension as RevZip base ios:iphonesimulator6.1/revzip.dylib
+		executable ios:iphonesimulator8.2/revxml.ios-extension as RevXml base ios:iphonesimulator6.1/revxml.dylib
+		executable ios:iphonesimulator8.2/revdb.ios-extension as RevDb base ios:iphonesimulator6.1/revdb.dylib
+		executable ios:iphonesimulator8.2/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator6.1/dbsqlite.dylib
+		executable ios:iphonesimulator8.2/dbmysql.ios-extension as DbMysql base ios:iphonesimulator6.1/dbmysql.dylib
+		file ios:iphonesimulator8.2/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator8.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-9_2" place
+		executable ios:iphonesimulator9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator9.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator9.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator9.2/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator9.2/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator9.2/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator9.2/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator9.2/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator9.2/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator9.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator9.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator9.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator9.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator9.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator9.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-9_3" place
+		executable ios:iphonesimulator9.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator9.3/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator9.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator9.3/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator9.3/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator9.3/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator9.3/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator9.3/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator9.3/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator9.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator9.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator9.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator9.3/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator9.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator9.3/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-8_2" place
+		executable ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
+		executable ios:iphoneos8.2/revsecurity.ios-extension as RevSecurity
+		executable ios:iphoneos8.2/revpdfprinter.ios-extension as RevPdfPrinter
+		executable ios:iphoneos8.2/revzip.ios-extension as RevZip
+		executable ios:iphoneos8.2/revxml.ios-extension as RevXml
+		executable ios:iphoneos8.2/revdb.ios-extension as RevDb
+		executable ios:iphoneos8.2/dbsqlite.ios-extension as DbSqlite
+		executable ios:iphoneos8.2/dbmysql.ios-extension as DbMysql
+		file ios:iphoneos8.2/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos8.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos8.2/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos8.2/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos8.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos8.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos8.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos8.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
+		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].lcext
+		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
+		executable ios:iphoneos9.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
+		executable ios:iphoneos9.2/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
+		executable ios:iphoneos9.2/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
+		executable ios:iphoneos9.2/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
+		executable ios:iphoneos9.2/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
+		executable ios:iphoneos9.2/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
+		file ios:iphoneos9.2/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos9.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos9.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos9.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos9.2/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos9.2/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos9.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos9.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos9.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos9.2/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos9.2/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos9.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos9.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-9_3" place
+		executable ios:iphoneos9.3/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos8.2/standalone-mobile[[BaseEditionTagLower]].lcext
+		executable ios:iphoneos9.3/revsecurity.ios-extension as RevSecurity base ios:iphoneos8.2/revsecurity.lcext
+		executable ios:iphoneos9.3/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos8.2/revpdfprinter.lcext
+		executable ios:iphoneos9.3/revzip.ios-extension as RevZip base ios:iphoneos8.2/revzip.lcext
+		executable ios:iphoneos9.3/revxml.ios-extension as RevXml base ios:iphoneos8.2/revxml.lcext
+		executable ios:iphoneos9.3/revdb.ios-extension as RevDb base ios:iphoneos8.2/revdb.lcext
+		executable ios:iphoneos9.3/dbsqlite.ios-extension as DbSqlite base ios:iphoneos8.2/dbsqlite.lcext
+		executable ios:iphoneos9.3/dbmysql.ios-extension as DbMysql base ios:iphoneos8.2/dbmysql.lcext
+		file ios:iphoneos9.3/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos9.3/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos9.3/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos9.3/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos9.3/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos9.3/template-store-entitlements.xcent as "StoreEntitlements.xcent"
+		file ios:iphoneos9.3/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos9.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos9.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos9.3/template-ResourceRules.plist as "ResourceRules.plist"
+		file ios:iphoneos9.3/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos9.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos9.3/fontmap as "fontmap"
+
+////////////////////////////////////////////////////////////////////////////////
+
+component Externals.Linux
+	into [[TargetFolder]]/Externals place
+		executable linux-[[TargetArchitecture]]:revxml.so
+		executable linux-[[TargetArchitecture]]:revzip.so
+		executable linux-[[TargetArchitecture]]:revbrowser.so
+	declare external "XML" using revxml.so
+	declare external "Revolution Zip" using revzip.so
+	declare external "Browser" using revbrowser.so
+
+//////////
+
+component Externals.Windows
+	into [[TargetFolder]]/Externals place
+		executable windows:revspeech.dll
+		executable windows:revvideograbber.dll
+		executable windows:revxml.dll
+		executable windows:revbrowser.dll
+		executable windows:revzip.dll
+		executable windows:revfont.dll
+	declare external "Speech" using revspeech.dll
+	declare external "Video Grabber" using revvideograbber.dll
+	declare external "XML" using revxml.dll
+	declare external "Browser" using revbrowser.dll
+	declare external "Revolution Zip" using revzip.dll
+	declare external "Font Support" using revfont.dll
+
+//////////
+
+component Externals.MacOSX
+	into [[TargetFolder]]/Externals place
+		executable macosx:revspeech.bundle
+		executable macosx:revvideograbber.bundle
+		executable macosx:revxml.bundle
+		executable macosx:revbrowser.bundle
+		executable macosx:revzip.bundle
+		executable macosx:revfont.bundle
+	declare external "Speech" using revspeech.bundle
+	declare external "Video Grabber" using revvideograbber.bundle
+	declare external "XML" using revxml.bundle
+	declare external "Browser" using revbrowser.bundle
+	declare external "Revolution Zip" using revzip.bundle
+	declare external "Font Support" using revfont.bundle
+
+//////////
+
+component Externals.CEF.Linux
+	into [[TargetFolder]]/Externals/CEF place
+		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:CEF/libcef.so
+		executable linux-[[TargetArchitecture]]:CEF/libffmpegsumo.so
+		executable linux-[[TargetArchitecture]]:CEF/libpdf.so
+		rfolder linux-[[TargetArchitecture]]:CEF/locales
+		file linux-[[TargetArchitecture]]:CEF/cef.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
+	// Horrible workaround for a libCEF bug
+	into [[TargetFolder]] place
+		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
+		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
+		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
+
+component Externals.CEF.Windows
+	into [[TargetFolder]]/Externals/CEF place
+		executable windows:libbrowser-cefprocess.exe
+		executable windows:revbrowser-cefprocess.exe
+		executable windows:CEF/libcef.dll
+		executable windows:CEF/d3dcompiler_43.dll
+		executable windows:CEF/d3dcompiler_46.dll
+		executable windows:CEF/d3dcompiler_47.dll
+		executable windows:CEF/ffmpegsumo.dll
+		executable windows:CEF/libEGL.dll
+		executable windows:CEF/libGLESv2.dll
+		executable windows:CEF/pdf.dll
+		rfolder windows:CEF/locales
+		file windows:CEF/cef.pak
+		file windows:CEF/cef_100_percent.pak
+		file windows:CEF/cef_200_percent.pak
+		file windows:CEF/icudtl.dat
+
+////////////////////////////////////////////////////////////////////////////////
+
+component Databases.Linux
+	into "[[TargetFolder]]/Externals" place
+		executable linux-[[TargetArchitecture]]:revdb.so
+	into "[[TargetFolder]]/Externals/Database Drivers" place
+		executable linux-[[TargetArchitecture]]:dbmysql.so
+		executable linux-[[TargetArchitecture]]:dbodbc.so
+		executable linux-[[TargetArchitecture]]:dbpostgresql.so
+		executable linux-[[TargetArchitecture]]:dbsqlite.so
+	declare external "Database" using revdb.so
+	declare dbdriver "MySQL" using dbmysql.so
+	declare dbdriver "ODBC" using dbodbc.so
+	declare dbdriver "PostgreSQL" using dbpostgresql.so
+	declare dbdriver "SqLite" using dbsqlite.so
+	ifnot TargetEdition is "Community" then
+		declare dbdriver "Oracle" using dboracle.so
+
+//////////
+
+component Databases.Windows
+	into "[[TargetFolder]]/Externals" place
+		executable windows:revdb.dll
+	into "[[TargetFolder]]/Externals/Database Drivers" place
+		executable windows:dbmysql.dll
+		executable windows:dbodbc.dll
+		executable windows:dbpostgresql.dll
+		executable windows:dbsqlite.dll
+		ifnot TargetEdition is "Community" then
+			executable private:oracle_libraries/dboracle.dll
+	declare external "Database" using revdb.dll
+	declare dbdriver "MySQL" using dbmysql.dll
+	declare dbdriver "ODBC" using dbodbc.dll
+	declare dbdriver "PostgreSQL" using dbpostgresql.dll
+	declare dbdriver "SqLite" using dbsqlite.dll
+	ifnot TargetEdition is "Community" then
+		declare dbdriver "Oracle" using dboracle.dll
+	
+//////////
+
+component Databases.MacOSX
+	into "[[TargetFolder]]/Externals" place
+		executable macosx:revdb.bundle
+	into "[[TargetFolder]]/Externals/Database Drivers" place
+		executable macosx:dbmysql.bundle
+		executable macosx:dbodbc.bundle
+		executable macosx:dbpostgresql.bundle
+		executable macosx:dbsqlite.bundle
+		ifnot TargetEdition is "Community" then
+			executable private:oracle_libraries/dboracle.bundle
+	declare external "Database" using revdb.bundle
+	declare dbdriver "MySQL" using dbmysql.bundle
+	declare dbdriver "ODBC" using dbodbc.bundle
+	declare dbdriver "PostgreSQL" using dbpostgresql.bundle
+	declare dbdriver "SqLite" using dbsqlite.bundle
+	ifnot TargetEdition is "Community" then
+		declare dbdriver "Oracle" using dboracle.bundle
+
+////////////////////////////////////////////////////////////////////////////////
+
+component Toolset
+	into [[ToolsFolder]] place
+		rfolder ide:Toolset
+	into [[ToolsFolder]]/Toolset/libraries place
+		stack ide-support:revdeploylibraryandroid.livecodescript
+		stack ide-support:revdeploylibraryios.livecodescript
+		stack ide-support:revliburl.livecodescript
+		stack ide-support:revsaveasandroidstandalone.livecodescript
+		stack ide-support:revsaveasemscriptenstandalone.livecodescript
+		stack ide-support:revsaveasiosstandalone.livecodescript
+		stack ide-support:revsaveasstandalone.livecodescript
+		stack ide-support:revsblibrary.livecodescript
+		file ide-support:revdocsparser.livecodescript
+		file ide-support:revliburl.livecodescript
+
+////////////////////////////////////////////////////////////////////////////////

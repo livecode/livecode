@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -387,6 +387,12 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 {
 	QueryMetadata *t_query_metadata;
 	t_query_metadata = (QueryMetadata *)p_context;
+    
+    
+    // SN-2015-06-01: [[ Bug 15416 ]] Make sure that we don't access an out-of-
+    //  bounds placeholder.
+    if (p_placeholder > t_query_metadata -> argument_count)
+        return false;
 
 	DBString t_parameter_value;
 	t_parameter_value = t_query_metadata -> arguments[p_placeholder - 1];

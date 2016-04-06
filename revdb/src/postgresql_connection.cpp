@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "dbpostgresql.h"
+
+extern bool load_ssl_library();
 
 /*DBCONNECTION_POSTGRESQL - CONNECTION OBJECT FOR MYSQL DATABASES CHILD OF DBCONNECTION*/
 
@@ -59,11 +61,115 @@ Bool DBConnection_POSTGRESQL::connect(char **args, int numargs)
 	if (t_delimiter != NULL)
 	{
 		t_port = (t_delimiter + (1 * sizeof(char)));
-		*t_delimiter = NULL;
+		*t_delimiter = '\0';
 	}
-	
-	dbconn = NULL;
-	dbconn = PQsetdbLogin(t_host, t_port, NULL, NULL, t_database, t_user, t_password);
+
+    const char *t_sslmode;
+    t_sslmode = NULL;
+    const char *t_sslcompression;
+    t_sslcompression = NULL;
+    const char *t_sslcert;
+    t_sslcert = NULL;
+    const char *t_sslkey;
+    t_sslkey = NULL;
+    const char *t_sslrootcert;
+    t_sslrootcert = NULL;
+    const char *t_sslcrl;
+    t_sslcrl = NULL;
+
+    // extract any ssl options spcified as key value pairs in the final args to revOpenDatabase
+    // e.g. sslmode=require
+    const char *t_ssl_opt_key;
+    t_ssl_opt_key = NULL;
+    const char *t_ssl_opt_val;
+    t_ssl_opt_val = NULL;
+    for (int i = 4; i < numargs; i++)
+    {
+        t_delimiter = strchr(args[i], '=');
+        if (t_delimiter != NULL)
+        {
+            t_ssl_opt_key = args[i];
+            t_ssl_opt_val = (t_delimiter + sizeof(char));
+
+            size_t t_key_length;
+            t_key_length = (size_t)(t_delimiter - args[i]);
+
+            if (*t_ssl_opt_val != '\0')
+            {
+                if (strncmp(t_ssl_opt_key, "sslmode", t_key_length) == 0)
+                    t_sslmode = t_ssl_opt_val;
+                else if (strncmp(t_ssl_opt_key, "sslcompression", t_key_length) == 0)
+                    t_sslcompression = t_ssl_opt_val;
+                else if (strncmp(t_ssl_opt_key, "sslcert", t_key_length) == 0)
+                    t_sslcert = t_ssl_opt_val;
+                else if (strncmp(t_ssl_opt_key, "sslkey", t_key_length) == 0)
+                    t_sslkey = t_ssl_opt_val;
+                else if (strncmp(t_ssl_opt_key, "sslrootcert", t_key_length) == 0)
+                    t_sslrootcert = t_ssl_opt_val;
+                else if (strncmp(t_ssl_opt_key, "sslcrl", t_key_length) == 0)
+                    t_sslcrl = t_ssl_opt_val;
+            }
+        }
+    }
+
+    bool t_have_ssl;
+    t_have_ssl = load_ssl_library();
+
+    // if an ssl mode (other than disable) has been passed, make sure we can load libopenssl
+    // if no ssl mode has been passed, use prefer if we have libopenssl (try an ssl connection, if that fails try non-ssl)
+    // if we don't have libopenssl, use disable (don't attempt an ssl connection)
+    const char *t_sslmode_prefer = "prefer";
+    const char *t_sslmode_disable = "disable";
+    if (t_sslmode != NULL)
+    {
+        if (strcmp(t_sslmode, "disable") != 0 && !t_have_ssl)
+        {
+            errorMessageSet("revdb,unable to load SSL library");
+            return false;
+        }
+    }
+    else if (t_have_ssl)
+        t_sslmode = t_sslmode_prefer;
+    else
+        t_sslmode = t_sslmode_disable;
+
+    const char *t_connect_keys[] =
+    {
+        "host",
+        "port",
+        "dbname",
+        "user",
+        "password",
+
+        "sslmode",
+        "sslcompression",
+        "sslcert",
+        "sslkey",
+        "sslrootcert",
+        "sslcrl",
+
+        NULL,
+    };
+    const char *t_connect_values[] =
+    {
+        t_host,
+        t_port,
+        t_database,
+        t_user,
+        t_password,
+
+        t_sslmode,
+        t_sslcompression,
+        t_sslcert,
+        t_sslkey,
+        t_sslrootcert,
+        t_sslcrl,
+
+        NULL,
+    };
+
+    dbconn = NULL;
+    dbconn = PQconnectdbParams(t_connect_keys, t_connect_values, 0);
 
 	// OK-2008-05-16 : Bug where failed connections to postgres databases would
 	// not return any error information. According to the postgres docs, dbconn

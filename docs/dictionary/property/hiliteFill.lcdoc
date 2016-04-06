@@ -1,0 +1,30 @@
+Name: hiliteFill
+
+Type: property
+
+Syntax: set the hiliteFill of <button> to {true | false}
+
+Summary: Specifies whether a <button(object)|button's> background is filled with the <hiliteColor> and <hilitePattern> when the <button(keyword)> is <highlight|highlighted>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the hiliteFill of last button to false
+
+Value (bool):The <hiliteFill> of a <button> is true or false.
+By default, the <hiliteFill> of a newly created <button> is set to true.
+
+Description:
+Use the <hiliteFill> <property> to change the appearance a <button(keyword)> has when it is <highlight|highlighted>.
+
+The <hiliteFill> <property> affects only the background of a <button(keyword)>. If a <button(object)|button's> <hiliteFill> <property> is false, its text changes color when <highlight|highlighted>, but its background color or pattern does not change.
+
+References: hilitePattern (property), hilite (property), hiliteColor (property), button (keyword), button (object), property (glossary), highlight (glossary), hilitePattern (glossary), hiliteColor (glossary)
+
+Tags: ui

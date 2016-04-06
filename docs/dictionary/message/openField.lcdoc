@@ -1,0 +1,31 @@
+Name: openField
+
+Type: message
+
+Syntax: openField
+
+Summary: Sent to an <unlock|unlocked> <field> when you click or <select> text in that <field>.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on openField -- when clicking in the field, select all its text
+  select text of the target
+end openField
+
+Description:
+Handle the <openField> <message> if you want to do something when the user enters a <field(keyword)>.
+
+The <openField> <message> is sent to <button|buttons> whose <menuMode> is "comboBox", since the type-in box in a <combo box> behaves like a <field(keyword)>.
+
+The <openField> <message> is not sent to <lock|locked> <field(object)|fields>. When a <lock|locked> <field(keyword)> becomes <active (focused)(glossary)> or when text in it is <select|selected> by a <handler>, the <focusIn> <message> is sent to it.
+
+References: selection (keyword), field (keyword), focusIn (message), exitField (message), closeField (message), select (command), field (object), button (object), select (glossary), handler (glossary), lock (glossary), message (glossary), unlock (glossary), menuMode (glossary), active control (glossary), combo box (glossary)
+
+Tags: ui

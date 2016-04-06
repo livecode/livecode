@@ -1,0 +1,30 @@
+Name: spaceBelow
+
+Type: property
+
+Syntax: set the spaceBelow of <line> of <field> to <pixels> 
+
+Summary: Determines the space below a paragraph in a field.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the spaceBelow of line 1 of field 1 to 20
+
+Parameters:
+pixels (integer): The number of pixels of space below the paragraph.
+
+Value: The <spaceBelow> of a line of text in a field returns an integer.
+
+Description:
+Use the <spaceBelow> property to specify the amount of space below a paragraph of text in a field.
+
+References: leftIndent (property), borderWidth (property), vgrid (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), backgroundColor (property), listBehavior (property), listIndent (property), hidden (property), textSize (property), firstIndent (property), tabstops (property), listStyle (property), rightIndent (property), listDepth (property), hgrid (property), hScrollbar (property), borderColor (property), formattedWidth (property)
+
+Tags: ui

@@ -1,0 +1,76 @@
+Name: decorations
+
+Type: property
+
+Syntax: set the decorations of <stack> to {<controlList> | <WDEF> | default | empty}
+
+Summary: Specifies the window controls and appearance of a <stack window>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the decorations of this stack to "title,minimize"
+
+Example:
+set the decorations of stack "Splash Screen" to empty
+
+Example:
+set the decorations of stack myStack to 127 -- a WDEF resource
+
+Value: The <decorations> of a <stack> is one of the following:
+- "default"
+- empty
+- one or more of "title", "minimize", "maximize", "close", "menu", "system", "noShadow", and "metal", separated by commas
+- a WDEF identifier (on Mac OS or OS X systems)
+
+By default, the <decorations> <property> of newly created <stacks> is set to "default"
+
+The result: >*Important:*  The <decorations> are set all at once, and if you don't include a decoration, it is removed from the stack window. For example, if you set the decorations to "metal", the resulting window won't include a title bar, even if it had one initially. To set a stack to metal appearance while showing a title bar with close, minimize, and maximize box, you need to set all the decorations at once:.
+
+Description:
+Use the <decorations> <property> to change the appearance of windows.
+
+You can specify one or more of the following decorations:
+
+        * title: Shows the window's title bar
+        * minimize: Shows the minimize (iconify) box in the title bar
+        * maximize: Shows the maximize (zoom) box in the title bar
+        * close: Shows the close box in the title bar
+        * menu: Shows the menu bar in the window (<Unix> and <Windows> only)
+        * system: Shows the window as a system window (OS X, Unix, and Windows only)
+        * noShadow: Remove the window's drop shadow (OS X only)
+        * metal: Shows the window with a textured appearance (OS X only)
+
+>*Note:* The "metal" and "system" options are not compatible. If you set a <stack|stack's> <decorations> to a <string> that includes both, its window becomes a non- <metal> <system window>.
+
+>*Cross-platform note:*  On <Mac OS|Mac OS systems>, the "system" option has no effect.
+
+Setting a stack's <decorations> to empty removes the entire <title bar>, along with the window borders.
+
+Setting a stack's <decorations> to "default" gives it appropriate decorations for its <style>. If the <style> is "topLevel", the window includes all the decorations (<title bar>, <menu bar> [on <Unix> and <Windows|Windows systems>], <close box>, <minimize> box, <maximize> box) by <default>. Otherwise, the window includes a <title bar> by <default>.
+
+The <decorations> <property> interacts with the <closeBox>, <minimizeBox>, <metal>, <shadow>, <systemWindow>, and <zoomBox> <properties>. Setting any of these <properties> to true changes the <decorations> <property> to include the corresponding option, and including any of the "close", "minimize", "metal", "noShadow", "system", and "maximize" options in a <stack|stack's> <decorations> sets the corresponding <property> to true.
+
+  set the decorations of stack "Test" to \
+     "metal,title,close,minimize,maximize"
+
+This applies only to the <decorations> property. If you use the individual properties (such as <metal> and <closeBox>) instead, you don't need to reset the other decorations-related properties.
+
+>*Cross-platform note:*  On Mac OS and OS X systems, the "menu" decoration has no effect. On Windows systems, the "menu" decoration must be set along with the "maximize" or "minimize" decorations: you cannot use "maximize" or "minimize" without including "menu". On OS X systems, the minimize, close, and zoom boxes are always visible if the title bar is, and turning off these options disables the boxes instead of removing them, in comformance with user-interface guidelines for this platform.
+
+A WDEF identifier is the number of a Mac OS WDEF resource multiplied by 16, plus a variation code between zero and 15. For example, if you have a WDEF resource whose ID is 124, and you want to use its 14th variation (which is number 13, since the numbers start with zero), set the stack's <decorations> <property> to 1997. This number is 124 (the resource ID) times 16, plus 13 (the variation code). Various <WDEF> resources are included in the operating system--the exact <WDEF|WDEFs> available vary from version to version. <WDEF> routines, like <externals>, can be written in a programming language and compiled.
+
+>*Cross-platform note:*  <WDEF|WDEF resources> can be used only on <Mac OS> and <OS X|OS X systems>. For a <cross-platform> method of changing a window's shape, use the <windowShape> <property>.
+
+Changes:
+The "close", "system", "noShadow", and "metal" options were introduced in version 2.1.
+
+References: default (keyword), minimize (keyword), maximize (keyword), shadow (keyword), title (keyword), string (keyword), metal (property), windowShape (property), fullscreen (property), draggable (property), properties (property), style (property), zoomBox (property), shadow (property), closeBox (property), minimizeBox (property), longWindowTitles (property), decorations (property), systemWindow (property), externals (property), closeStackRequest (message), unIconifyStack (message), stack (object), property (glossary), menu bar (glossary), WDEF (glossary), stack window (glossary), cross-platform (glossary), Windows (glossary), OS X (glossary), close box (glossary), title bar (glossary), Mac OS (glossary), Unix (glossary), system window (glossary), stacks (function)
+
+Tags: windowing

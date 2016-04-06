@@ -1,0 +1,12 @@
+Name: append
+
+Synonyms: appending,appended,append
+
+Type: glossary
+
+Description:
+To add data to the end of a <container> or <file>, without removing its current contents.
+
+References: file (glossary), container (glossary)
+
+Tags: text processing

@@ -1,0 +1,41 @@
+Name: markerPoints
+
+Type: property
+
+Syntax: set the markerPoints of <graphic> to <listOfVertexes> 
+
+Summary: Specifies the shape of markers at each <vertex> of a curve or <polygon> <graphic>.
+
+Associations: graphic
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the markerPoints of the target to savedMarkerShape
+
+Example:
+set the markerPoints of me to 0,0 & return & 0,3 & return & 3,3 \
+   & return & 3,0 & return & 0,0 -- defines a small square marker
+
+Value:
+The <markerPoints> of a <graphic(keyword)> is a list of <points> (two <integer|integers> separated by a comma), one per <line>.
+By default, the <markerPoints> <property> of newly created <graphic(object)|graphics> is set to empty.
+
+Description:
+Use the <markerPoints> <property> to create a small shape to mark the <vertex|vertexes> of a <graphic>.
+
+Curve and irregular polygon graphics can be drawn with a marker at each vertex. The marker itself is in the shape of a polygon, and the <markerPoints> <property> specifies this shape by specifying each <vertex> of the marker. Each <point> consists of the horizontal distance in <pixels> from the left edge of the marker to the marker <vertex>, a comma, and the vertical distance in <pixels> from the top edge of the marker to the marker <vertex>.
+
+The first line in the list is the location of the marker shape's starting point. A blank line in the <markerPoints> indicates that the previous and next <vertex|vertexes> are not connected by a line--that is, the marker is broken into two (or more) pieces.
+
+If the style <property> of the <graphic> is not polygon or curve, the setting of its <markerPoints> <property> has no effect.
+
+If the markerDrawn <property> is false, the <markerPoints> <property> has no effect.
+
+References: relativePoints (property), points (property), pixels (property), markerLineSize (property), polygon (keyword), line (keyword), point (keyword), graphic (keyword), graphic (object), vertex (glossary), property (glossary), integer (glossary)
+
+Tags: ui

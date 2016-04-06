@@ -1,0 +1,74 @@
+Name: mobilePick
+
+Type: command
+
+Syntax: mobilePick <optionList>, <initialIndex> [, <optionList>, <initialIndex>, ...] [, <style> ] [, <button>] [, <view>]
+
+Summary: Presents the user with a native list picker dialog.
+
+Synonyms: iphonePick
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobilePick myOptionList, selectedIndex
+
+Example:
+mobilePick "A" & return & "B" & return & "C", 1, "checkmark"
+
+Example:
+mobilePick "A" & return & "B" & return & "C", 1, "cancelDone"
+
+Example:
+put the weekdayNames into tDays
+put lineoffset("Tuesday", tDays) into tInitialIndex
+mobilePick tDays, tInitialIndex
+
+Example:
+-- iOS only example
+put "Mon" & return & "Tue" into tDays
+put "Jan" & return & "Feb" & return & "Mar" & return & "Apr" into tMonths
+mobilePick tDays, 2, tMonths, 3, "checkmark"
+answer the result with "Okay"
+
+Parameters:
+optionList: A return delimited list of options.
+initialIndex: The (1-based) index of the item to be initially highlighted.
+style: The type of display used. On the iPad if "checkmark" is specified a check-mark (tick) is put against the currently selected item. If not present, the currently selected item is hilited with the (standard) blue background. On Android if "checkmark" is specified then the standard checkmark(radio button) is shown next to the currently selected item.
+button (enum): Specifies if "Cancel" and/or "Done" buttons should be forced to be displayed with the picker dialog. The default behavior is device dependent, exhibiting the most native operation.
+- "cancel": display the Cancel button on the Picker
+- "done": display the Done button on the Picker
+- "cancelDone": display the Cancel and Done buttons on the Picker
+view: The type of view to be displayed when showing a single column of date on an iPad. By default a standard pop-over is displayed with a single column of data. If "picker" is specified, then the single column of data is replaced with a single picker wheel.
+
+The result: If the 'Cancel' button is displayed, then any selection made by the user can be canceled and the result is set to 0. If the 'Done' button is displayed, then the result contains the initial index.
+
+Returns: A comma delimited list giving the line indices of the selected items. If the selection was canceled, then 0 is returned.
+
+Description:
+Use the <mobilePick> command to display a native list picker that allows the user to select from one or multiple (iOS Only) lists of options.
+
+A standard action-sheet pops up on the iPhone, containing the standard picker-wheel user interface element. On the iPad, a standard pop-over is presented to display a single column of data or a picker-wheel to display multiple columns of data. On Android, the default pop-up is presented to display a single option picker.
+
+### iOS Behavior
+There are three modes of operation for <mobilePick>, depending on the values for <initialIndex>.
+
+If all <initialIndex> values are non-zero, the operation acts as a way to change an existing selection. The items specified by the initial index are selected (checked or hilited on iPad if a single column is specified).
+
+If all <initialIndex> values are zero, the operation acts as a way to select from lists of options with no items selected. The user is able to cancel the operation by clicking 'Cancel' (iPhone) or touching outside of the popover (iPad). If the operation is canceled, 0 is returned; otherwise the indexes to the selected items are returned. Any picker-wheels that remain untouched by the user, in a group of picker-wheels are set to 1, indicating that the defaults have been accepted.
+
+If some <initialIndex> values are zero and others are non-zero, the operation acts in the same way as if all values are non-zero on the iPhone. Once the user selects the 'Done' button, all values that were set to 0 and were not updated by the users are automatically set to 1. On the iPad values that were initially set to 0 and were not altered by the  user are automatically set to 1 if at least one picker-wheel was altered. If the user does not alter the state of any picker-wheel on the iPad, then the initial settings are returned without alteration. This includes any zeros that were initially set.
+
+If the 'Cancel' button is displayed, then any selection made by the user can be canceled, returning 0.
+
+If the 'Done' button is displayed, then all 0's are returned if no default values were specified and the user did not make any selections on the pickers.
+
+### Android Behavior
+
+>*Warning:* No support is provided in LiveCode for multi column pickers on Android. This currently a limitation of Android.
+
+References: mobilePickDate (command), mobilePickPhoto (command)

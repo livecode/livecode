@@ -1,0 +1,10 @@
+Name: event
+
+Synonyms: event
+
+Type: glossary
+
+Description:
+An occurrence that causes a program to do something. An event can be a user action (like a mouse click) or a program action (like the completion of a download).
+
+Tags: objects

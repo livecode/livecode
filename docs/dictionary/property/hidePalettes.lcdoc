@@ -1,0 +1,30 @@
+Name: hidePalettes
+
+Type: property
+
+Syntax: set the hidePalettes to {true | false}
+
+Summary: Determines whether <palette|palette windows> are hidden while LiveCode is in the background.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the hidePalettes to false
+
+Value (bool):The <hidePalettes> is true or false.
+By default, the <hidePalettes> <property> is set to true on <Mac OS> and <OS X|OS X systems>, false on <Unix> or <Windows|Windows systems>.
+
+Description:
+Use the <hidePalettes> <property> to change the <behavior> of <palette|palettes>.
+
+If the <hidePalettes> is true, <palette|palette windows>--including <stacks> opened as <palette|palettes>--are hidden when another application comes to the front, and are shown when LiveCode is brought back to the front.
+
+If the <hidePalettes> is false, <palette|palette windows> are always shown, regardless of which application is active.
+
+References: activatePalettes (property), raiseWindows (property), palette (command), stacks (function), property (glossary), palette (glossary), OS X (glossary), Windows (glossary), Mac OS (glossary), Unix (glossary), behavior (glossary)
+
+Tags: windowing

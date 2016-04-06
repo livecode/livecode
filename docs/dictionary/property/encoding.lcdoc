@@ -1,0 +1,36 @@
+Name: encoding
+
+Type: property
+
+Syntax: the encoding of { button | graphic | group }
+
+Syntax: the encoding of [<chunk> of] <field> 
+
+Summary: Returns the encoding of the specified piece of text.
+
+Associations: field,button,graphic
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: mobile
+
+Example:
+get the encoding of button "myButton"
+
+Example:
+put the encoding of word 1 of field "language" into tEncoding
+
+Value: Returns native, unicode or mixed depending on the encoding of the specified object or field chunk.
+
+Description:
+Use the <encoding> property to retrieve the encoding of the specified object or field chunk.
+
+The <encoding> property of a button, graphic or group returns native if the engine is storing the label or text in the native encoding and unicode otherwise.
+
+The <encoding> property of a field, or chunk of a field, returns native if the specified chunk is stored in native encoding, unicode if it is UTF-16, and mixed if it is a combination of the two.
+
+>*Note:* The <encoding> property is read only and cannot be set.
+
+References: label (property), text (property), unicodeText (property), unicodeLabel (property)

@@ -1,0 +1,28 @@
+Name: revZipAddUncompressedItemWithData
+
+Type: command
+
+Syntax: revZipAddUncompressedItemWithData <archivePath>, <itemName>, <variableName> 
+
+Summary: Adds an item to a zip archive and puts the specified data into it without compressing the data.
+
+Introduced: 2.8.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipAddUncompressedItemWithData tArchive, "My Uncompressed Data.txt", "This is my data"
+
+Parameters:
+archivePath: The absolute path to the zip archive to add the file to.
+itemName: The unique name of the item to create in the zip archive.  The variableName is the name of a variable in your LiveCode program containing data to place into the item in the zip archive.  If the revZipAddUncompressedItemWithData command encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+variableName: 
+
+Description:
+Use the <revZipAddUncompressedItemWithData> command to put data from a LiveCode variable into a file in a zip archive without compressing the data. The archive must have first been opened with <revZipOpenArchive>. This command is useful if data is being placed into an archive simply to package it up neatly, rather than to reduce the size of the data. Using <revZipAddUncompressedItemWithData> to add items to archives is generally faster than using the <revZipAddItemWithData command>, which compresses the data.
+
+References: revZipAddItemWithData command (command), revZipAddUncompressedItemWithFile (command), revZipOpenArchive (command), revZipAddItemWithData (command)

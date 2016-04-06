@@ -1,0 +1,10 @@
+Name: function handler
+
+Synonyms: function handler
+
+Type: glossary
+
+Description:
+A <LiveCode> <handler> you write that defines a <custom function>. Function handlers begin with the <function> <control structure>.
+
+References: handler (glossary), LiveCode (glossary), custom function (glossary), function (glossary), control structure (glossary)

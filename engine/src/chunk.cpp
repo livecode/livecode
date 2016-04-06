@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -127,6 +127,7 @@ MCCRef::~MCCRef()
 MCChunk::MCChunk(Boolean isforset)
 {
 	url = stack = background = card = group = object = NULL;
+    element = NULL;
 	cline = item = word = token = character = NULL;
     paragraph = sentence = trueword = NULL;
     codepoint = codeunit = byte = NULL;
@@ -168,6 +169,12 @@ MCChunk::~MCChunk()
 		object = object->next;
 		delete tptr;
 	}
+    while (element != NULL)
+    {
+		MCCRef *tptr = element;
+		element = element->next;
+		delete tptr;
+    }
 	delete cline;
 	delete item;
 	delete word;
@@ -217,8 +224,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			{
 				if (need_target)
 				{
-					if (desttype == DT_ISDEST && stack == NULL && background == NULL
-					        && card == NULL && group == NULL && object == NULL)
+					if (desttype == DT_ISDEST && noobjectchunks())
 					{
 						MCExpression *newfact = NULL;
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
@@ -262,13 +268,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				//   then it should be evaluated as a string. However, if the string chunk
 				//   is of a previously parsed object then we must pass as a dest so the
 				//   object resolves correctly.
-				if (desttype != DT_ISDEST && (cline != NULL || paragraph != NULL || sentence != NULL
-				                              || item != NULL || word != NULL || trueword != NULL
-				                              || token != NULL || character != NULL || codepoint != NULL
-                                              || codeunit != NULL || byte != NULL) &&
-											 (stack == nil && background == nil &&
-											  card == nil && group == nil &&
-											  object == nil))
+				if (desttype != DT_ISDEST && !notextchunks() && noobjectchunks())
 				{
 					sp.backup();
 					if (sp.parseexp(True, False, &source) != PS_NORMAL)
@@ -291,7 +291,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				sp.backup();
 				return PS_NORMAL;
 			case TT_TO:
-				if (curref != NULL && lterm >= CT_LINE)
+				if (curref != NULL && MCChunkTermHasRange(lterm))
 				{
 					if (curref->etype == CT_RANGE)
 					{
@@ -354,7 +354,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				case CT_TYPES:
 					// MW-2011-08-08: [[ Bug ]] Allow control ... of control ...
 					if ((lterm != CT_UNDEFINED && nterm > lterm)
-					    || (nterm == lterm && nterm != CT_GROUP && nterm != CT_LAYER && nterm != CT_STACK))
+					    || (nterm == lterm && !MCChunkTermIsNestable(nterm)))
 					{
 						MCperror->add(PE_CHUNK_BADORDER, sp);
 						return PS_ERROR;
@@ -452,6 +452,12 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						object = curref;
 						break;
 
+                    case CT_ELEMENT:
+                        // Allow a chain of element chunks
+                        curref -> next = element;
+                        element = curref;
+                        break;
+                            
 					case CT_LINE:
 						cline = curref;
                         break;
@@ -489,6 +495,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						fprintf(stderr, "MCChunk: ERROR bad chunk type %d\n", nterm);
 						break;
 					}
+                    // All text chunks and the element chunk need a target
 					if (nterm < CT_LINE)
 						need_target = False;
 					lterm = nterm;
@@ -530,9 +537,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						if (function == F_SELECTED_LINE || function == F_SELECTED_CHUNK)
 						{}
 					}
-					else if (cline != NULL || paragraph != NULL || sentence != NULL || item != NULL
-                             || trueword != NULL || word != NULL || token != NULL || character != NULL
-                             || codepoint != NULL || codeunit != NULL || byte != NULL)
+					else if (!notextchunks())
 					{
 						sp.backup();
 						if (sp.parseexp(True, False, &source) != PS_NORMAL)
@@ -636,8 +641,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 			default: /* factor */
 				if (need_target)
 				{
-					if (stack != NULL || background != NULL || card != NULL
-					        || group != NULL || object != NULL)
+					if (!noobjectchunks())
 					{
 						MCperror->add
 						(PE_CHUNK_NOCHUNK, sp);
@@ -667,8 +671,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 		{ /* token type != ST_ID */
 			if (need_target)
 			{
-				if (stack != NULL || background != NULL || card != NULL
-				        || group != NULL || object != NULL)
+				if (!noobjectchunks())
 				{
 					MCperror->add(PE_CHUNK_NOCHUNK, sp);
 					return PS_ERROR;
@@ -902,10 +905,12 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case DT_ME:
                     //MCEngineEvalMeAsObject(ctxt, t_object);
                     if (ctxt . GetParentScript() == NULL)
+                    {
                         t_object . object = destobj;
+                        t_object . part_id = 0;
+                    }
                     else
-                        t_object . object = ctxt . GetObject();
-                    t_object . part_id = 0;
+                        t_object = ctxt . GetObjectPtr();
                     break;
                 case DT_MENU_OBJECT:
                     MCEngineEvalMenuObjectAsObject(ctxt, t_object);
@@ -1023,7 +1028,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 break;
         }
     }
-    else if (stack == nil && background == nil && card == nil && group == nil && object == nil)
+    else if (noobjectchunks())
     {
         // Optional obj: this doesn't throw an error
         //  but rather leave r_object . object set to nil
@@ -1063,7 +1068,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(stack -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
                     return;
 
                 MCInterfaceEvalStackOfStackById(ctxt, t_object, t_id, t_object);
@@ -1092,7 +1097,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                 case CT_ID:
                 {
                     uint4 t_id;
-                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
+                    if (!ctxt . EvalExprAsStrictUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_id))
                         return;
 
                     MCInterfaceEvalSubstackOfStackById(ctxt, t_object, t_id, t_object);
@@ -1121,7 +1126,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(object -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
                     return;
 
                 if (object -> otype == CT_AUDIO_CLIP)
@@ -1169,7 +1174,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(background -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
                     return;
 
                 if (card == nil)
@@ -1213,7 +1218,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(card -> startpos, EE_CHUNK_BADCARDEXP, t_id))
                     return;
 
                 if (background != nil)
@@ -1267,7 +1272,7 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
             case CT_ID:
             {
                 uint4 t_id;
-                if (!ctxt . EvalExprAsUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
+                if (!ctxt . EvalExprAsStrictUInt(tgptr -> startpos, EE_CHUNK_BADBACKGROUNDEXP, t_id))
                     return;
 
                 // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
@@ -1330,13 +1335,18 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                     //                        if (toptr == object && group == nil)
                     if (t_object . object -> gettype() == CT_CARD)
                         MCInterfaceEvalObjectOfCardByOrdinal(ctxt, t_object, toptr -> otype, toptr -> ptype, toptr -> etype, t_object);
-                    else
+                    else if (t_object . object -> gettype() == CT_GROUP)
                         MCInterfaceEvalObjectOfGroupByOrdinal(ctxt, t_object, toptr -> otype, toptr -> etype, t_object);
+                    else
+                    {
+                        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+                        return;
+                    }
                     break;
                 case CT_ID:
                 {
                     uint4 t_id;
-                    if (!ctxt . EvalExprAsUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
+                    if (!ctxt . EvalExprAsStrictUInt(toptr -> startpos, EE_CHUNK_BADOBJECTEXP, t_id))
                         return;
                     
                     // If we are in stack override mode, then search the stack *after*
@@ -1349,10 +1359,15 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                         else
                             MCInterfaceEvalObjectOfCardById(ctxt, t_object, toptr -> otype, toptr -> ptype, t_id, t_object);
                     }
-                    else
+                    else if (t_object . object -> gettype() == CT_GROUP)
                     {
                         // if we have a group then stack override is irrelevant.
                         MCInterfaceEvalObjectOfGroupById(ctxt, t_object, toptr -> otype, t_id, t_object);
+                    }
+                    else
+                    {
+                        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+                        return;
                     }
                 }
                     break;
@@ -1364,8 +1379,13 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                     
                     if (t_object . object -> gettype() == CT_CARD)
                         MCInterfaceEvalObjectOfCardByName(ctxt, t_object, toptr -> otype, toptr -> ptype, *t_expression, t_object);
-                    else
+                    else if (t_object . object -> gettype() == CT_GROUP)
                         MCInterfaceEvalObjectOfGroupByName(ctxt, t_object, toptr -> otype, *t_expression, t_object);
+                    else
+                    {
+                        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+                        return;
+                    }
                 }
                     break;
                 default:
@@ -2268,6 +2288,191 @@ static void skip_word(const char *&sptr, const char *&eptr)
 }
 #endif
 
+void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark);
+void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_force, bool p_whole_chunk, bool p_further_chunks, MCMarkedText& x_mark);
+
+template
+<
+Chunk_term ChunkType,
+void (*MarkRange)(MCExecContext& ctxt, int4 first, int4 last, MCMarkedText& x_mark)
+>
+static inline bool __MCCRefMarkForEval(MCExecContext& ctxt, MCCRef *self, MCMarkedText& x_mark)
+{
+    int4 t_first, t_last;
+    if (self -> etype == CT_RANGE || self -> etype == CT_EXPRESSION)
+    {
+        if (!ctxt . EvalExprAsInt(self -> startpos, EE_CHUNK_BADRANGESTART, t_first))
+            return false;
+        
+        if (self -> etype != CT_RANGE)
+        {
+            t_last = t_first;
+        }
+        else
+        {
+            if (!ctxt . EvalExprAsInt(self -> endpos, EE_CHUNK_BADRANGEEND, t_last))
+                return false;
+        }
+    }
+    else
+    {
+        switch(self -> etype)
+        {
+            case CT_ANY:
+            case CT_MIDDLE:
+                if (ChunkType != CT_BYTE)
+                    MCStringsMarkTextChunkByOrdinal(ctxt,
+                                                    ChunkType,
+                                                    self -> etype,
+                                                    false,
+                                                    false,
+                                                    false,
+                                                    x_mark);
+                else
+                    MCStringsMarkBytesOfTextByOrdinal(ctxt,
+                                                      self -> etype,
+                                                      x_mark);
+                return true;
+            case CT_LAST:
+                t_first = -1;
+                t_last = -1;
+                break;
+            case CT_FIRST:
+            case CT_SECOND:
+            case CT_THIRD:
+            case CT_FOURTH:
+            case CT_FIFTH:
+            case CT_SIXTH:
+            case CT_SEVENTH:
+            case CT_EIGHTH:
+            case CT_NINTH:
+            case CT_TENTH:
+                t_first = (self -> etype - CT_FIRST) + 1;
+                t_last = t_first;
+                break;
+            default:
+                ctxt . LegacyThrow(EE_CHUNK_BADEXTENTS);
+                return false;
+        }
+    }
+    
+    MarkRange(ctxt, t_first, t_last, x_mark);
+    
+    return true;
+}
+
+template
+<
+Chunk_term ChunkType
+>
+inline void __MCCRefMarkChunkRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    if (ChunkType != CT_BYTE)
+        MCStringsMarkTextChunkByRange(ctxt, ChunkType, p_first, p_last, false, false, false, x_mark);
+    else
+        MCStringsMarkBytesOfTextByRange(ctxt, p_first, p_last, x_mark);
+}
+
+inline void __MCCRefMarkDelimitedChunkRangeForEval(MCExecContext& ctxt,
+                                                          Chunk_term p_chunk_type,
+                                                          MCStringRef p_delimiter,
+                                                          int4 p_first,
+                                                          int4 p_last,
+                                                          MCMarkedText& x_mark)
+{
+    if (p_first < 0 || p_last < 0)
+    {
+        MCStringsMarkTextChunkByRange(ctxt, p_chunk_type, p_first, p_last, false, false, false, x_mark);
+        return;
+    }
+    
+    if (p_first > p_last)
+        p_last = p_first - 1;
+    else if (p_first == 0)
+        p_first = 1;
+    
+    MCRange t_range;
+    MCStringForwardDelimitedRegion((MCStringRef)x_mark . text,
+                                   MCRangeMakeMinMax(x_mark . start, x_mark . finish),
+                                   p_delimiter,
+                                   MCRangeMakeMinMax((uindex_t)(p_first - 1), (uindex_t)p_last),
+                                   ctxt . GetStringComparisonType(),
+                                   t_range);
+    
+    x_mark . start = t_range . offset;
+    x_mark . finish = t_range . offset + t_range . length;
+}
+
+inline void __MCCRefMarkLineRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    __MCCRefMarkDelimitedChunkRangeForEval(ctxt,
+                                           CT_LINE,
+                                           ctxt . GetLineDelimiter(),
+                                           p_first,
+                                           p_last,
+                                           x_mark);
+}
+
+inline void __MCCRefMarkItemRangeForEval(MCExecContext& ctxt, int4 p_first, int4 p_last, MCMarkedText& x_mark)
+{
+    __MCCRefMarkDelimitedChunkRangeForEval(ctxt,
+                                           CT_ITEM,
+                                           ctxt . GetItemDelimiter(),
+                                           p_first,
+                                           p_last,
+                                           x_mark);
+}
+
+#define __MCCRefMarkChunkForEval(chunk, ctxt, cref, x_mark) \
+        __MCCRefMarkForEval< chunk, __MCCRefMarkChunkRangeForEval<chunk> >(ctxt, cref, x_mark)
+
+void MCChunk::mark_for_eval(MCExecContext& ctxt, MCMarkedText& x_mark)
+{
+    if (cline != nil &&
+        !__MCCRefMarkForEval<CT_LINE, __MCCRefMarkLineRangeForEval>(ctxt, cline, x_mark))
+        return;
+    
+    if (paragraph != nil &&
+        !__MCCRefMarkChunkForEval(CT_PARAGRAPH, ctxt, paragraph, x_mark))
+        return;
+    
+    if (sentence != nil &&
+        !__MCCRefMarkChunkForEval(CT_SENTENCE, ctxt, sentence, x_mark))
+        return;
+        
+    if (item != nil &&
+        !__MCCRefMarkForEval<CT_ITEM, __MCCRefMarkItemRangeForEval>(ctxt, item, x_mark))
+        return;
+        
+    if (word != nil &&
+        !__MCCRefMarkChunkForEval(CT_WORD, ctxt, word, x_mark))
+        return;
+    
+    if (trueword != nil &&
+        !__MCCRefMarkChunkForEval(CT_TRUEWORD, ctxt, trueword, x_mark))
+        return;
+        
+    if (token != nil &&
+        !__MCCRefMarkChunkForEval(CT_TOKEN, ctxt, token, x_mark))
+        return;
+        
+    if (character != nil &&
+        !__MCCRefMarkChunkForEval(CT_CHARACTER, ctxt, character, x_mark))
+        return;
+    
+    if (codepoint != nil &&
+        !__MCCRefMarkChunkForEval(CT_CODEPOINT, ctxt, codepoint, x_mark))
+        return;
+    
+    if (codeunit != nil &&
+        !__MCCRefMarkChunkForEval(CT_CODEUNIT, ctxt, codeunit, x_mark))
+        return;
+        
+    if (byte != nil &&
+        !__MCCRefMarkChunkForEval(CT_BYTE, ctxt, byte, x_mark))
+        return;
+}
+
 void MCChunk::mark(MCExecContext &ctxt, bool force, bool wholechunk, MCMarkedText& x_mark, bool includechars)
 {
     int4 t_first, t_last;
@@ -2936,8 +3141,12 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
     MCAutoValueRef t_valueref;
     bool t_exec_expr = false;
 
-    if (source != NULL && url == NULL && stack == NULL && background == NULL && card == NULL
-        && group == NULL && object == NULL)
+    if (iselementchunk())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_OBJECTNOTCONTAINER);
+        return;
+    }
+    else if (source != NULL && url == NULL && noobjectchunks())
     {
         if (desttype != DT_OWNER)
         {
@@ -2983,8 +3192,7 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
 
         if (t_object . object == nil)
         {
-            if (url == NULL || stack != NULL || background != NULL ||
-                card != NULL || group != NULL || object != NULL)
+            if (url == NULL || !noobjectchunks())
             {
                 ctxt . LegacyThrow(EE_CHUNK_CANTFINDOBJECT);
                 return;
@@ -3054,7 +3262,6 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
             MCMarkedText t_new_mark;
             t_new_mark . text = nil;
             t_new_mark . start = 0;
-            t_new_mark . finish = MAXUINT4;
             
             bool t_success = true;
             
@@ -3077,6 +3284,8 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_text_str);
+                // AL-2015-04-23: [[ Bug 15267 ]] Set the correct finish for the mark.
+                t_new_mark . finish = MCStringGetLength(*t_text_str);
             }
             else
             {
@@ -3096,18 +3305,26 @@ void MCChunk::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_text)
                     return;
                 }
                 t_new_mark . text = MCValueRetain(*t_data);
+                // AL-2015-04-23: [[ Bug 15267 ]] Set the correct finish for the mark. 
+                t_new_mark . finish = MCDataGetLength(*t_data);
             }
             
-            mark(ctxt, false, false, t_new_mark);
+            mark_for_eval(ctxt, t_new_mark);
             
             // SN-2014-12-15: [[ Bug 14211 ]] mark() can throw errors
             if (ctxt . HasError())
                 return;
             
             if (!isdatachunk())
-                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value), r_text . type = kMCExecValueTypeStringRef;
+            {
+                MCStringsEvalTextChunk(ctxt, t_new_mark, r_text . stringref_value);
+                r_text . type = kMCExecValueTypeStringRef;
+            }
             else
-                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value), r_text . type = kMCExecValueTypeDataRef;
+            {
+                MCStringsEvalByteChunk(ctxt, t_new_mark, r_text . dataref_value);
+                r_text . type = kMCExecValueTypeDataRef;
+            }
 
             MCValueRelease(t_new_mark . text);
         }
@@ -3323,7 +3540,12 @@ Exec_stat MCChunk::set_legacy(MCExecPoint &ep, Preposition_type ptype)
 
 bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_value, bool p_unicode)
 {
-    if (destvar != nil)
+    if (iselementchunk())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+        return false;
+    }
+    else if (destvar != nil)
     {
         MCVariableChunkPtr t_var_chunk;
         if (!evalvarchunk(ctxt, false, true, t_var_chunk))
@@ -3407,7 +3629,12 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCValueRef p_val
 
 bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_value, bool p_unicode)
 {    
-    if (destvar != nil)
+    if (iselementchunk())
+    {
+        ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+        return false;
+    }
+    else if (destvar != nil)
     {
         MCVariableChunkPtr t_var_chunk;
         if (!evalvarchunk(ctxt, false, true, t_var_chunk))
@@ -4030,9 +4257,7 @@ bool MCChunk::getobjforprop(MCExecContext& ctxt, MCObject*& r_object, uint4& r_p
         && function != F_SELECTED_IMAGE
         && function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
 		tfunction = True;
-	if (!tfunction && cline == nil && paragraph == nil && sentence == nil
-        && item == nil && trueword == nil && word == nil && token == nil
-        && character == nil && codepoint == nil && codeunit == nil && byte == nil)
+	if (!tfunction && notextchunks())
 	{
 		r_object = objptr;
 		r_parid = parid;
@@ -4214,7 +4439,9 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 bool MCChunk::getsetprop(MCExecContext &ctxt, Properties which, MCNameRef index, Boolean effective, bool p_is_get_operation, MCExecValue &r_value)
 {
     MCObjectChunkPtr t_obj_chunk;
-    if (evalobjectchunk(ctxt, false, false, t_obj_chunk) != ES_NORMAL)
+    // SN-2015-05-05: [[ Bug 13314 Reopen ]] We force the chunk delimiter
+    //  existence when setting a string value.
+    if (evalobjectchunk(ctxt, false, !p_is_get_operation, t_obj_chunk) != ES_NORMAL)
         return false;
     
     MCPropertyInfo *t_info;
@@ -4314,6 +4541,61 @@ bool MCChunk::setprop(MCExecContext& ctxt, Properties which, MCNameRef index, Bo
 {
     // SN-2015-02-13: [[ Bug 14467 ]] Object property getting / setting refactored
     return getsetprop(ctxt, which, index, effective, false, p_value);
+}
+
+bool MCChunk::getsetcustomprop(MCExecContext &ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, bool p_is_get_operation, MCExecValue &r_value)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCObject *t_object;
+    uint4 t_parid;
+    if (t_success)
+        t_success = getobjforprop(ctxt, t_object, t_parid);
+    
+    MCAutoProperListRef t_path;
+    if (t_success && iselementchunk())
+        t_success = evalelementchunk(ctxt, &t_path);
+    
+    // MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+    //   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+    // MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+    //   MCChunk::setprop.
+    if (t_success)
+    {
+        if (p_index_name == nil)
+        {
+            if (p_is_get_operation)
+                t_success = t_object -> getcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, *t_path, r_value);
+            else
+                t_success = t_object -> setcustomprop(ctxt, t_object -> getdefaultpropsetname(), p_prop_name, *t_path, r_value);
+        }
+        else
+        {
+            if (p_is_get_operation)
+                t_success = t_object -> getcustomprop(ctxt, p_prop_name, p_index_name, *t_path, r_value);
+            else
+                t_success = t_object -> setcustomprop(ctxt, p_prop_name, p_index_name, *t_path, r_value);
+        }
+    }
+    
+    if (t_success && !p_is_get_operation)
+    {
+        // MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
+        t_object -> signallisteners(P_CUSTOM);
+    }
+    
+    return t_success;
+}
+
+bool MCChunk::getcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue& r_value)
+{
+    return getsetcustomprop(ctxt, p_prop_name, p_index_name, true, r_value);
+}
+
+bool MCChunk::setcustomprop(MCExecContext& ctxt, MCNameRef p_prop_name, MCNameRef p_index_name, MCExecValue p_value)
+{
+    return getsetcustomprop(ctxt, p_prop_name, p_index_name, false, p_value);
 }
 
 Chunk_term MCChunk::getlastchunktype(void)
@@ -4443,6 +4725,48 @@ bool MCChunk::evalobjectchunk(MCExecContext &ctxt, bool p_whole_chunk, bool p_fo
     r_chunk . chunk = !t_function ? getlastchunktype() : CT_CHARACTER;
 
     return true;
+}
+
+bool MCChunk::evalelementchunk(MCExecContext& ctxt, MCProperListRef& r_elements)
+{
+    MCAutoProperListRef t_elements;
+    if (!MCProperListCreateMutable(&t_elements))
+        return false;
+    
+    MCCRef *t_chunk;
+
+    for (t_chunk = element; t_chunk != nil; t_chunk = t_chunk -> next)
+    {
+        MCValueRef t_evaluated;
+        if (!ctxt . EvalExprAsValueRef(t_chunk -> startpos, EE_CHUNK_BADEXPRESSION, t_evaluated))
+            return false;
+    
+        if (MCValueIsArray(t_evaluated))
+        {
+            if (!MCExtensionConvertFromScriptType(ctxt, kMCProperListTypeInfo, t_evaluated))
+            {
+                MCValueRelease(t_evaluated);
+                return false;
+            }
+            
+            if (!MCProperListAppendList(*t_elements, (MCProperListRef)t_evaluated))
+                return false;
+        }
+        else
+        {
+            if (!MCExtensionConvertFromScriptType(ctxt, kMCStringTypeInfo, t_evaluated))
+            {
+                MCValueRelease(t_evaluated);
+                return false;
+            }
+            
+            if (!MCProperListPushElementOntoBack(*t_elements, t_evaluated))
+                return false;
+        }
+        
+    }
+        
+    return MCProperListCopy(*t_elements, r_elements);
 }
 
 #ifdef LEGACY_EXEC
@@ -4703,8 +5027,8 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 				MCeerror->add(EE_CHUNK_CANTDELETEOBJECT, line, pos);
 				return ES_ERROR;
 			}
-			if (objptr->gettype() == CT_STACK)
-				MCtodestroy->remove((MCStack *)objptr); // prevent duplicates
+            if (objptr->gettype() == CT_STACK)
+                MCtodestroy->remove((MCStack *)objptr);
 			objptr->scheduledelete();
 		}
 		else
@@ -5488,6 +5812,25 @@ MCChunkType MCChunkTypeFromChunkTerm(Chunk_term p_chunk_term)
         case CT_BYTE:
             return kMCChunkTypeByte;
         default:
-            assert(false);
+            MCUnreachableReturn(kMCChunkTypeLine);
     }
+}
+
+bool MCChunkTermIsNestable(Chunk_term p_chunk_term)
+{
+    switch (p_chunk_term)
+    {
+        case CT_STACK:
+        case CT_GROUP:
+        case CT_LAYER:
+        case CT_ELEMENT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool MCChunkTermHasRange(Chunk_term p_chunk_term)
+{
+    return p_chunk_term >= CT_LINE && p_chunk_term < CT_ELEMENT;
 }

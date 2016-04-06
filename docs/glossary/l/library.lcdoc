@@ -1,0 +1,12 @@
+Name: library
+
+Synonyms: libraries,library
+
+Type: library
+
+Description:
+A repository of code that is available to be used by other routines. LiveCode includes several <custom libraries> you can include in your applications. 
+ 
+You can make the <script> of any <stack> into a library with the <start using> <command>, or make any <object|object's> <script> into a library using the <insert script> <command>.
+
+References: start using (command), insert script (command), command (glossary), custom libraries (glossary), script (glossary), stack (glossary), object (glossary)

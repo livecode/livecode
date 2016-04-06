@@ -1,0 +1,85 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*  
+This module specifies the syntax definitions and bindings for url operations in modular LiveCode.
+*/
+
+module com.livecode.url
+
+foreign handler FetchUrlTextFile(in Target as string, out Value as string) as undefined binds to "<builtin>"
+foreign handler StoreUrlTextFile(in Value as string, in Target as string) as undefined binds to "<builtin>"
+
+foreign handler FetchUrlBinaryFile(in Target as string, out Value as data) as undefined binds to "<builtin>"
+foreign handler StoreUrlBinaryFile(in Value as data, in Target as string) as undefined binds to "<builtin>"
+
+foreign handler StoreBeforeUrlTextFile(in Value as string, in Target as string) as undefined binds to "<builtin>"
+foreign handler StoreAfterUrlTextFile(in Value as string, in Target as string) as undefined binds to "<builtin>"
+foreign handler StoreBeforeUrlBinaryFile(in Value as data, in Target as string) as undefined binds to "<builtin>"
+foreign handler StoreAfterUrlBinaryFile(in Value as data, in Target as string) as undefined binds to "<builtin>"
+
+--
+
+/*
+Summary:
+
+output:
+input:
+
+*/
+
+syntax UrlTextFile is statement
+    "url" "file" <Target: Expression>
+begin
+    FetchUrlTextFile(Target, output)
+    StoreUrlTextFile(input, Target)
+end syntax
+
+syntax UrlBinaryFile is statement
+    "url" "binfile" <Target: Expression>
+begin
+    FetchUrlBinaryFile(Target, output)
+    StoreUrlBinaryFile(input, Target)
+end syntax
+
+syntax BeforeUrlTextFile is prefix operator with precedence 1
+    "before" "url" "file" <Target: Expression>
+begin
+    StoreBeforeUrlTextFile(input, Target)
+end syntax
+
+syntax AfterUrlTextFile is prefix operator with precedence 1
+    "after" "url" "file" <Target: Expression>
+begin
+    StoreAfterUrlTextFile(input, Target)
+end syntax
+
+syntax BeforeUrlBinaryFile is prefix operator with precedence 1
+    "before" "url" "binfile" <Target: Expression>
+begin
+    StoreBeforeUrlBinaryFile(input, Target)
+end syntax
+
+syntax AfterUrlBinaryFile is prefix operator with precedence 1
+    "after" "url" "binfile" <Target: Expression>
+begin
+    StoreAfterUrlBinaryFile(input, Target)
+end syntax
+
+--
+
+end module

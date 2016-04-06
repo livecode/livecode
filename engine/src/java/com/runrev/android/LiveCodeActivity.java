@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -54,6 +54,11 @@ public class LiveCodeActivity extends Activity
 		// any following methods cause resize and such to be sent!).
 		s_main_view = new Engine(this);
 		s_main_view.doCreate(this, s_main_layout, s_main_view);
+        
+        // PM-2015-06-05: [[ Bug 15110 ]] Prevent black flash when setting the acceleratedRendering to true for the very first time
+        SurfaceView t_empty_view = new SurfaceView(this);
+        s_main_layout . addView(t_empty_view,
+								new FrameLayout.LayoutParams(0,0));
 		
 		// Add the view into the heirarchy
 		s_main_layout . addView(s_main_view,

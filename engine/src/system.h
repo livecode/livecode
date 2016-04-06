@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -73,7 +73,11 @@ struct MCSystemFileHandle
     // Returns true if an attempt has been made to read past the end of the
     // stream.
     virtual bool IsExhausted(void) = 0;
-    
+
+	/* Attempt to read p_length bytes from the file handle.  Returns
+	 * true iff p_length bytes are successfully read.  Partial reads
+	 * may modify p_buffer, r_read and the file handle state, but
+	 * should still return false. */
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
     
 	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
@@ -159,7 +163,7 @@ public:
         //  are asked more than what we have.
         if (p_length > m_length - m_pointer)
         {
-            r_read = m_length - m_pointer;
+            r_read = (uint32_t)(m_length - m_pointer);
             m_is_eof = true;
         }
         else
@@ -198,7 +202,7 @@ public:
 
 		memcpy(m_buffer + m_pointer, p_buffer, p_length);
 		m_pointer += p_length;
-		m_length = MCU_max(m_pointer, m_length);
+		m_length = MCMax(m_pointer, m_length);
         // SN-2015-02-11: [[ Bug 14531 ]] We are no longer at
         //  the EOF position once we have written.
         m_is_eof = false;
@@ -218,7 +222,7 @@ public:
 		
 		int64_t t_new_offset;
 		t_new_offset = p_offset + t_base;
-		if (t_new_offset < 0 || t_new_offset > m_length)
+		if (t_new_offset < 0 || size_t(t_new_offset) > m_length)
 			return false;
 		
         // SN-2015-02-11: [[ Bug 14531 ]] We are no longer at
@@ -278,9 +282,9 @@ public:
 	
 protected:
 	char *m_buffer;
-	uint32_t m_pointer;
-	uint32_t m_length;
-	uint32_t m_capacity;
+	size_t m_pointer;
+	size_t m_length;
+	size_t m_capacity;
     // SN-2015-02-11: [[ Bug 14531 ]] Added a bool.
     //  We don't want m_pointer to go over m_length,
     //  but we need to know when we tried to read
@@ -294,7 +298,7 @@ protected:
 class MCMemoryMappedFileHandle: public MCMemoryFileHandle
 {
 public:
-    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
+    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, size_t p_length)
     : MCMemoryFileHandle(p_buffer, p_length)
     {
         m_fd = p_fd;
@@ -312,7 +316,7 @@ public:
 private:
     int m_fd;
     void *m_buffer;
-    uint32_t m_length;
+    size_t m_length;
 };
 #endif
 
@@ -355,7 +359,7 @@ public:
         
         m_is_eof = false;
         
-		if (!t_stat == IO_NORMAL)
+		if (t_stat != IO_NORMAL)
             return false;
         
         return true;
@@ -536,7 +540,7 @@ struct MCSystemInterface
 	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
 	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context) = 0;
     
     // ST-2014-12-18: [[ Bug 14259 ]] Returns the executable from the system tools, not from argv[0]
 	virtual bool GetExecutablePath(MCStringRef& r_path) = 0;
@@ -574,6 +578,8 @@ struct MCSystemInterface
     virtual bool AlternateLanguages(MCListRef& r_list) = 0;
     
     virtual bool GetDNSservers(MCListRef& r_list) = 0;
+    
+    virtual void ShowMessageDialog(MCStringRef p_title, MCStringRef p_message) = 0;
 };
 
 extern MCSystemInterface *MCsystem;
@@ -589,7 +595,8 @@ enum MCSystemUrlStatus
 	kMCSystemUrlStatusUploading,
 	kMCSystemUrlStatusUploaded,
 	kMCSystemUrlStatusLoading,
-	kMCSystemUrlStatusFinished
+	kMCSystemUrlStatusFinished,
+	kMCSystemUrlStatusLoadingProgress,
 };
 
 typedef bool (*MCSystemUrlCallback)(void *context, MCSystemUrlStatus status, const void *param);

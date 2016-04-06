@@ -1,0 +1,34 @@
+Name: contains
+
+Type: operator
+
+Syntax: <string> contains <substring> 
+
+Summary: Compares two <string|strings> and <evaluate|evaluates> to true if the first contains the second, false if not.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+"ABC" contains "A" -- evaluates to true
+
+Example:
+"123" contains "13" -- evaluates to false
+
+Parameters:
+string (string): The string and substring are both strings of characters, or expressions that evaluate to strings.
+substring (string): 
+
+Description:
+Use the <contains> <operator> to find out whether a <string> contains a substring.
+
+If the <substring> is found in the <string>, the <contains> <operation> evaluates to true.
+
+If each character of the <substring> can be found in the <string>, but the <characters> are separated, the <contains> <operation> <evaluate|evaluates> to false.
+
+References: = (operator), &lt;&gt; (operator), is in (operator), is among (operator), is not among (operator), ends with (operator), is not in (operator), operator (glossary), operation (glossary), evaluate (glossary), string (glossary), string (keyword), characters (keyword)
+
+Tags: text processing

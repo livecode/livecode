@@ -1,0 +1,41 @@
+Name: load extension
+
+Type: command
+
+Syntax: load extension {from file <filePath> | from data <moduleData>} [ with resource path <resourcePath> ]
+
+Summary: Load a LiveCode Builder extension.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+load extension from file "packaged_extensions/com.livecode.widget.navbar/module.lcm"
+if the result is empty then
+	create widget "My Navbar" as "com.livecode.widget.navbar"
+end if
+
+Example:
+local tExtensionData
+put url ("binfile:" & tMyExtensionFolder & slash & "module.lcm") into tExtensionData
+load extension from data tExtensionData with resource path (tMyExtensionFolder & slash & "resources")
+
+Parameters:
+filePath: The path to a compiled <LiveCode Builder extension> file.
+moduleData: Binary data that constitutes a valid compiled <LiveCode Builder extension>.
+resourcePath: The path to use for any operations in the <LiveCode Builder extension|extensions> that use resource files (eg 'image from resource file').
+
+The result:
+If the <load extension> <command> succeeds, the <result> is empty. Otherwise the <result> contains an error message describing why the extension could not be loaded.
+
+Description:
+Use the <load extension> <command> to load a <LiveCode Builder extension>. 
+If the extension is a library, its public handlers will be added to the bottom of the message path.
+If it is a widget, it will be available as a control in the tools palette to drag out, or to create with the <create widget> <command>.
+
+References: unload extension (command), loadedExtensions (function), create widget (command), LiveCode Builder extension (glossary), result (function)
+
+Tags: extensions

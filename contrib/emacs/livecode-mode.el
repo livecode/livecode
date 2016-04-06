@@ -1,4 +1,4 @@
-;; Copyright (C) 2015 Runtime Revolution Ltd.
+;; Copyright (C) 2015 LiveCode Ltd.
 
 ;; This file is part of LiveCode.
 
@@ -16,17 +16,18 @@
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.mlc\\'" . livecode-mode))
+(add-to-list 'auto-mode-alist '("\\.lcb\\'" . livecode-mode))
 
 (defvar livecode-mode-syntax-table
   (let ((st (make-syntax-table)))
     ;; Comments
-    (modify-syntax-entry ?/ ". 14b" st)
+    (modify-syntax-entry ?/ ". 124" st)
     (modify-syntax-entry ?* ". 23b" st)
-    (modify-syntax-entry ?\- "<" st)
+    (modify-syntax-entry ?\- ". 12" st)
     (modify-syntax-entry ?\n ">" st)
     ;; Angle brackets
-    (modify-syntax-entry ?< "(" st)
-    (modify-syntax-entry ?> ")" st)
+    (modify-syntax-entry ?< "(>" st)
+    (modify-syntax-entry ?> ")<" st)
     st)
   "Syntax table for LiveCode mode")
 
@@ -35,13 +36,14 @@
     "foreign" "handler" "prefix" "postfix" "precedence" "statement"
     "undefined" "public" "neutral" "binds to" "optional"
     "any" "private" "if" "else" "then" "repeat" "metadata" "widget" "module"
-    "version" "author" "title" "true" "false" "return" "as" "use" "type"))
+    "version" "author" "title" "true" "false" "return" "use" "type"
+    "exit repeat" "next repeat"))
 
 (defvar livecode-builtins
   '("output" "input"
     "bool" "boolean"
     "int" "number" "real" "double" "float"
-    "string" "data" "list" "map" "pointer" "is" "empty"))
+    "string" "data" "list" "map" "pointer" "is" "empty" "as"))
 
 (defvar livecode-font-lock-defaults
   (let ((symbol-regexp "\\_<\\(\\(?:\\s_\\|\\w\\)*\\)\\_>"))
@@ -53,9 +55,6 @@
        ( ,(regexp-opt livecode-keywords 'symbols) . font-lock-keyword-face)
        ( ,(regexp-opt livecode-builtins 'symbols) . font-lock-builtin-face)
 
-       ;; "as" expressions
-       ("\\_<as\\s-+\\(\\(?:\\s_\\|\\w\\)*\\)\\_>" 1 font-lock-type-face)
-
        ;; handler definitions including parameter names
        ( ,(concat "^\\s-*\\(\\_<\\(public\\|foreign\\)\\_>\\s-+\\)?\\_<handler\\_>\\s-+" symbol-regexp)
 	 (3 font-lock-function-name-face nil)
@@ -63,11 +62,17 @@
 		    "\\s-+" symbol-regexp)
 	   nil nil
 	   (3 font-lock-variable-name-face)
-	   (2 font-lock-keyword-face)))
+	   (2 font-lock-keyword-face))
+	 ("\\_<as\\s-+\\(\\(?:\\s_\\|\\w\\)*\\)\\_>"
+	  nil nil
+	  (1 font-lock-type-face)))
 
        ;; variable names
        ( ,(concat "^\\s-*\\_<variable\\_>\\s-*" symbol-regexp)
-	(1 font-lock-variable-name-face))
+	(1 font-lock-variable-name-face)
+	("\\_<as\\s-+\\(\\(?:\\s_\\|\\w\\)*\\)\\_>"
+	 nil nil
+	 (1 font-lock-type-face)))
 
        ;; syntax definitions
        ( ,(concat "^\\s-*\\_<syntax\\_>\\s-+" symbol-regexp)
@@ -75,7 +80,7 @@
 	 ("\\_<is\\_>" nil nil (0 font-lock-keyword-face t)))
        ))))
 
-(define-derived-mode livecode-mode prog-mode "LiveCode builder source"
+(define-derived-mode livecode-mode prog-mode "LiveCode"
   "Major mode for editing LiveCode builder source files"
   :syntax-table livecode-mode-syntax-table
 

@@ -1,0 +1,36 @@
+Name: hilitedIcon
+
+Type: property
+
+Syntax: set the hilitedIcon of <button> to {<imageID> | <imageName>}
+
+Summary: Specifies an <image> to display in a <button> when the <button> is <highlight|highlighted>.
+
+Synonyms: hiliteIcon
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the hilitedIcon of button "Management" to 343
+
+Value:
+The <hilitedIcon> <property> is the <ID> or <name> of an <image> to use for an icon. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+By default, the <hilitedIcon> <property> of newly created <button|buttons> is set to zero.
+
+Description:
+Use the <hilitedIcon> <property> to change a <button|button's> appearance when it is <highlight|highlighted>.
+
+When the button is highlighted, the <hilitedIcon> is displayed within the button's rectangle.
+
+Changes:
+The hilitedIcon keyword was introduced in version 1.1. In previous versions, the hiliteIcon synonym was used.
+
+References: hilite (property), icon (property), showIcon (property), name (property), ID (property), image (keyword), button (keyword), button (object), highlight (glossary), property (glossary), current stack (glossary), stacks (function)
+
+Tags: ui

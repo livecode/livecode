@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -51,7 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define WM_TITLE_HEIGHT 16
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
-void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable)
 {
 	device_boundrect(rect, title, m);
 }
@@ -370,6 +370,8 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 
 Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 {
+    MCDeletedObjectsEnterWait(dispatch);
+    
 	MCwaitdepth++;
 	real8 curtime = MCS_time();
 	if (duration < 0.0)
@@ -419,9 +421,9 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
             if (HasRunloopActions())
                 t_sleep = MCMin(t_sleep, 0.01);
             
+            gdk_display_sync(dpy);
             done = MCS_poll(donepending ? 0 : t_sleep, x11::XConnectionNumber(x11::gdk_x11_display_get_xdisplay(dpy)));
         }
-        
 		curtime = MCS_time();
 	}
 	while (curtime < exittime && !(anyevent && (done || donepending)));
@@ -433,6 +435,8 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	//   any engine event handling methods need us to.
 	MCRedrawUpdateScreen();
 
+    MCDeletedObjectsLeaveWait(dispatch);
+    
 	return abort;
 }
 

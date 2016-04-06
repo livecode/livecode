@@ -1,2 +1,0 @@
-bundle revandroid	import ../libexternalv1	support-386 10.4.0	define _MACOSX
-	include ../libexternalv1/include	compile-c++ src/revandroid.cpp	compile-plist revandroid-Info.plist	link-library externalv1	output revandroid

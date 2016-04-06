@@ -1,0 +1,14 @@
+Name: stack window
+
+Synonyms: stack window,stack's window
+
+Type: glossary
+
+Description:
+The window that displays a <stack>, in which the <stack|stack's> <current card> is shown. 
+ 
+A <stack> can be displayed as an <editable window>, a <palette>, or a <modal dialog box|modal> or <modeless dialog box>.
+
+References: modal dialog box (glossary), current card (glossary), editable window (glossary), modeless dialog box (glossary), palette (glossary), stack (glossary)
+
+Tags: windowing

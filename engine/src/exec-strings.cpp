@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 #include "variable.h"
 #include "hndlrlst.h"
+#include "osspec.h"
 
 #include "scriptpt.h"
 #include "util.h"
@@ -167,24 +168,26 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 
 void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower)
 {
-	MCAutoStringRef t_string;
-	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringLowercase(*t_string, kMCSystemLocale) &&
-		MCStringCopy(*t_string, r_lower))
-		return;
-
-	ctxt.Throw();
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_string, t_string) ||
+		!MCStringLowercase(t_string, kMCSystemLocale) ||
+		!MCStringCopyAndRelease(t_string, r_lower))
+	{
+		MCValueRelease(t_string);
+		ctxt.Throw();
+	}
 }
 
 void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_upper)
 {
-	MCAutoStringRef t_string;
-	if (MCStringMutableCopy(p_string, &t_string) &&
-		MCStringUppercase(*t_string, kMCSystemLocale) &&
-		MCStringCopy(*t_string, r_upper))
-		return;
-
-	ctxt.Throw();
+	MCStringRef t_string = nil;
+	if (!MCStringMutableCopy(p_string, t_string) ||
+		!MCStringUppercase(t_string, kMCSystemLocale) ||
+		!MCStringCopyAndRelease(t_string, r_upper))
+	{
+		MCValueRelease(t_string);
+		ctxt.Throw();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -859,15 +862,16 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
             t_success = MCStringFormat(r_results[i], "%d", t_compiled->matchinfo[t_match_index].rm_so + 1);
             if (t_success)
                 t_success = MCStringFormat(r_results[i + 1], "%d", t_compiled->matchinfo[t_match_index].rm_eo);
-            
-            if (++t_match_index >= NSUBEXP)
-                t_match_index = 0;
         }
         else
         {
             r_results[i] = MCValueRetain(kMCEmptyString);
             r_results[i + 1] = MCValueRetain(kMCEmptyString);
         }
+        // matchChunk did set empty values of positionVarsList with regex "(a)?(B)" applied on "B"
+        // if an optional capture group didn't match (which is valid), index wasn't updated.
+        if (++t_match_index >= NSUBEXP)
+            t_match_index = 0;
     }
     
     if (t_success)
@@ -1199,6 +1203,12 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 				whichValue = INT_VALUE;
 				break;
 			case 's':
+                // If there is a zero width, then remove it.
+                if (prefix_zero != nil)
+                {
+                    dptr -= 1;
+                    dptr[0] = '\0';
+                }
                 // AL-2014-10-30: [[ Bug 13876 ]] Use internal MCStringRef format specifier (%@) when %s is used
                 //  to preserve non-native chars in string.
                 dptr[-1] = '@';
@@ -1257,7 +1267,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         MCRange t_range;
                         t_range = MCRangeMake(0, t_length);
                         // Find the grapheme length of 
-                        MCStringUnmapGraphemeIndices(*t_string, kMCBasicLocale, t_range, t_range);
+                        MCStringUnmapGraphemeIndices(*t_string, t_range, t_range);
                         
                         // If the width sub-specifier is greater than the grapheme length of the string, then pad appropriately
                         if (width > (integer_t) t_range . length)
@@ -1387,17 +1397,14 @@ bool MCStringsMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& r_st
 				MCerrorlock++;
 				if (t_is_expression)
 				{
-					if (ctxt . GetHandler() != nil)
-						ctxt.GetHandler()->eval(t_ctxt, *t_expression, &t_value);
-					else
-						ctxt.GetHandlerList()->eval(t_ctxt, *t_expression, &t_value);
+                    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::eval refactored
+                    ctxt.eval(t_ctxt, *t_expression, &t_value);
 				}
 				else
-				{
-					if (ctxt . GetHandler() != nil)
-						ctxt.GetHandler()->doscript(t_ctxt, *t_expression);
-					else
-						ctxt.GetHandlerList()->doscript(t_ctxt, *t_expression);
+                {
+                    // SN-2015-06-03: [[ Bug 11277 ]] MCHandler::doscript refactored
+                    ctxt.doscript(t_ctxt, *t_expression, 0, 0);
+
 					t_value = MCresult->getvalueref();
                     // SN-2014-08-11: [[ Bug 13139 ]] The result must be emptied after a doscript()
                     ctxt . SetTheResultToEmpty();
@@ -1441,19 +1448,12 @@ void MCStringsEvalMerge(MCExecContext& ctxt, MCStringRef p_format, MCStringRef& 
 
 bool MCStringsConcatenate(MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
 {
-	MCAutoStringRef t_string;
-	return MCStringMutableCopy(p_left, &t_string) &&
-		MCStringAppend(*t_string, p_right) &&
-		MCStringCopy(*t_string, r_result);
+    return MCStringCreateWithStrings(r_result, p_left, p_right);
 }
 
 bool MCStringsConcatenateWithChar(MCStringRef p_left, MCStringRef p_right, unichar_t p_char, MCStringRef& r_result)
 {
-	MCAutoStringRef t_string;
-	return MCStringMutableCopy(p_left, &t_string) &&
-		MCStringAppendChar(*t_string, p_char) &&
-		MCStringAppend(*t_string, p_right) &&
-		MCStringCopy(*t_string, r_result);
+    return MCStringCreateWithStringsAndSeparator(r_result, p_char, p_left, p_right);
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCStringRef& r_result)
@@ -1469,10 +1469,7 @@ void MCStringsEvalConcatenate(MCExecContext& ctxt, MCStringRef p_left, MCStringR
 
 bool MCDataConcatenate(MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
 {
-	MCAutoDataRef t_string;
-	return MCDataMutableCopy(p_left, &t_string) &&
-    MCDataAppend(*t_string, p_right) &&
-    MCDataCopy(*t_string, r_result);
+    return MCDataCreateWithData(r_result, p_left, p_right);
 }
 
 void MCStringsEvalConcatenate(MCExecContext& ctxt, MCDataRef p_left, MCDataRef p_right, MCDataRef& r_result)
@@ -1512,17 +1509,8 @@ void MCStringsEvalConcatenateWithComma(MCExecContext& ctxt, MCStringRef p_left, 
 
 static bool MCStringsCheckGraphemeBoundaries(MCStringRef p_string, MCRange p_range)
 {
-    MCRange t_grapheme_range;
-    MCStringUnmapGraphemeIndices(p_string, kMCBasicLocale, p_range, t_grapheme_range);
-    
-    MCRange t_grapheme_range_r;
-    MCStringMapGraphemeIndices(p_string, kMCBasicLocale, t_grapheme_range, t_grapheme_range_r);
-    
-    if (t_grapheme_range_r . offset == p_range . offset &&
-        t_grapheme_range_r . length == p_range . length)
-        return true;
-    
-    return false;
+    return MCStringIsGraphemeClusterBoundary(p_string, p_range . offset)
+        && MCStringIsGraphemeClusterBoundary(p_string, p_range . offset + p_range . length);
 }
 
 void MCStringsEvalContains(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef p_part, bool& r_result)
@@ -1561,7 +1549,7 @@ void MCStringsEvalBeginsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringR
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringSharedPrefix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    t_found = MCStringBeginsWith(p_whole, p_part, t_compare_option, &t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1580,7 +1568,7 @@ void MCStringsEvalEndsWith(MCExecContext& ctxt, MCStringRef p_whole, MCStringRef
     
     bool t_found;
     uindex_t t_self_length;
-    t_found = MCStringSharedSuffix(p_whole, MCRangeMake(0, MCStringGetLength(p_whole)), p_part, t_compare_option, t_self_length);
+    t_found = MCStringEndsWith(p_whole, p_part, t_compare_option, &t_self_length);
     if (!t_found)
     {
         r_result = false;
@@ -1740,7 +1728,12 @@ void MCStringsEvalIsNotAmongTheBytesOf(MCExecContext& ctxt, MCDataRef p_chunk, M
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, Chunk_term p_chunk_type)
+static uindex_t
+__MCStringsEvalChunkOffset(MCExecContext& ctxt,
+                           MCStringRef p_chunk,
+                           MCStringRef p_string,
+                           uindex_t p_start_offset,
+                           Chunk_term p_chunk_type)
 {
     MCChunkType t_type;
     t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
@@ -1754,49 +1747,169 @@ uindex_t MCStringsChunkOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCString
     return t_offset;
 }
 
+// This function implements the semantics of the (line|item)Offset functions.
+//
+// If needle is empty, then the result is 0.
+//
+// First, <start_offset> delimiters are skipped - resulting in the result of the
+// operation occuring on haystack starting at the first character after the last
+// skipped delimiter.
+//
+// If needle is not in the revised haystack, then the result is 0.
+//
+// If wholeMatches is false, then the result is the number of delimiters between
+// the start of the revised haystack and the first occurrence of needle.
+//
+// If wholeMatches is true, then if either side of the found needle is bos, eos
+// or delimiter, the result is the same as for wholeMatches false; otherwise, the
+// result is 0.
+//
+static void
+__MCStringEvalDelimitedChunkOffset(MCExecContext& ctxt,
+                                   MCStringRef p_needle,
+                                   MCStringRef p_haystack,
+                                   MCStringRef p_delimiter,
+                                   uindex_t p_start_offset,
+                                   uindex_t& r_result)
+{
+    uindex_t t_index;
+    bool t_present;
+    if (!ctxt . GetWholeMatches())
+    {
+        // If we aren't interested in whole matches, then we just search once.
+        t_present = MCStringDelimitedOffset(p_haystack,
+                                            MCRangeMake(0, MCStringGetLength(p_haystack)),
+                                            p_needle,
+                                            p_delimiter,
+                                            p_start_offset,
+                                            ctxt . GetStringComparisonType(),
+                                            t_index,
+                                            nil,
+                                            nil,
+                                            nil);
+    }
+    else
+    {
+        // If we do want whole matches, we need to make sure that we search until
+        // we exhaust the haystack of occurrances of needle, or a needle is found
+        // with a delimiter either side.
+        
+        // Initialize to search the whole of the haystack.
+        MCRange t_range;
+        t_range = MCRangeMake(0, MCStringGetLength(p_haystack));
+        
+        // As we iterate by searching through a decreasing suffix of the haystack
+        // we must keep a running count of the index.
+        t_index = 0;
+        
+        // The first time through we need to use the start offset.
+        uindex_t t_start_offset;
+        t_start_offset = p_start_offset;
+        
+        for(;;)
+        {
+            MCRange t_found, t_before, t_after;
+            uindex_t t_relative_index;
+            t_present = MCStringDelimitedOffset(p_haystack,
+                                                t_range,
+                                                p_needle,
+                                                p_delimiter,
+                                                t_start_offset,
+                                                ctxt . GetStringComparisonType(),
+                                                t_relative_index,
+                                                &t_found,
+                                                &t_before,
+                                                &t_after);
+        
+            // If there are no more occurrances of needle, then we are done.
+            if (!t_present)
+                break;
+            
+            // Update the running index.
+            t_index += t_relative_index;
+            
+            // If the found string has a delimiter either side, then we are
+            // done.
+            if (t_found . offset == t_before . offset + t_before . length &&
+                t_found . offset + t_found . length == t_after . offset)
+                break;
+            
+            // We must now update the search range to start after the after
+            // delimiter.
+            t_range = MCRangeMakeMinMax(t_after . offset + t_after . length,
+                                        MCStringGetLength(p_haystack));
+            
+            // We have just skipped a delimiter (the 'after' one) so increment
+            // the index.
+            t_index += 1;
+            
+            // We don't want to skip any delimiters next time through.
+            t_start_offset = 0;
+        }
+    }
+    
+    if (!t_present)
+    {
+        r_result = 0;
+        return;
+    }
+    
+    r_result = t_index - p_start_offset + 1;
+}
+
 void MCStringsEvalLineOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_LINE);
+    __MCStringEvalDelimitedChunkOffset(ctxt,
+                                       p_chunk,
+                                       p_string,
+                                       ctxt . GetLineDelimiter(),
+                                       p_start_offset,
+                                       r_result);
 }
 
 void MCStringsEvalParagraphOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_PARAGRAPH);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_PARAGRAPH);
 }
 
 void MCStringsEvalSentenceOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_SENTENCE);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_SENTENCE);
 }
 
 void MCStringsEvalItemOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_ITEM);
+    __MCStringEvalDelimitedChunkOffset(ctxt,
+                                       p_chunk,
+                                       p_string,
+                                       ctxt . GetItemDelimiter(),
+                                       p_start_offset,
+                                       r_result);
 }
 
 void MCStringsEvalWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_WORD);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_WORD);
 }
 
 void MCStringsEvalTrueWordOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TRUEWORD);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TRUEWORD);
 }
 
 void MCStringsEvalTokenOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TOKEN);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_TOKEN);
 }
 
 void MCStringsEvalCodepointOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEPOINT);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEPOINT);
 }
 
 void MCStringsEvalCodeunitOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p_string, uindex_t p_start_offset, uindex_t& r_result)
 {
-    r_result = MCStringsChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
+    r_result = __MCStringsEvalChunkOffset(ctxt, p_chunk, p_string, p_start_offset, CT_CODEUNIT);
 }
 
 void MCStringsEvalByteOffset(MCExecContext& ctxt, MCDataRef p_chunk, MCDataRef p_string, uindex_t p_start_offset, uindex_t& r_result)
@@ -1816,13 +1929,15 @@ void MCStringsEvalOffset(MCExecContext& ctxt, MCStringRef p_chunk, MCStringRef p
 {
 	MCStringOptions t_options = ctxt.GetStringComparisonType();
     uindex_t t_offset;
+    MCRange t_char_range, t_cu_range;
+    // AL-2015-05-07: [[ Bug 15327 ]] Start offset is grapheme offset not codeunit, so map to grapheme offset first.
+    MCStringMapIndices(p_string, kMCCharChunkTypeGrapheme, MCRangeMake(0, p_start_offset), t_cu_range);
     // AL-2014-05-27: [[ Bug 12517 ]] Offset should be 0 for an empty input string
 	if (MCStringIsEmpty(p_chunk) || !MCStringFirstIndexOf(p_string, p_chunk, p_start_offset, t_options, t_offset))
 		r_result = 0;
 	else
     {
         // We want to get the grapheme length, not the codeunit one
-        MCRange t_cu_range, t_char_range;
         t_cu_range . offset = 0;
         t_cu_range . length = t_offset;
         MCStringUnmapIndices(p_string, kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
@@ -2124,12 +2239,28 @@ void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, M
 
 void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_result)
 {
+    // SN-2015-11-26: [[ Bug 16500 ]] Arrays will successfully convert to an
+    // empty string, which is a valid ASCII string. Cut short in this case
+    if (MCValueIsArray(p_value))
+    {
+        r_result = false;
+        return;
+    }
+
     MCAutoStringRef t_string;
 	if (!ctxt . ConvertToString(p_value, &t_string))
     {
         r_result = false;
         return;
     }
+
+    // SN-2015-11-27: [[ Bug 16504 ]] Empty strings are not a valid ascii string
+    if (MCStringIsEmpty(*t_string))
+    {
+        r_result = false;
+        return;
+    }
+
     MCAutoPointer<char> temp;
     /* UNCHECKED */ MCStringConvertToCString(*t_string, &temp);
     const char *t_cstring;
@@ -2352,7 +2483,7 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
 	nitems++;
 }
 
-void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+void MCStringsExecSortOld(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
 {
 	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
 	// this keeps the behavior consistent with previous versions of Revolution.
@@ -2385,6 +2516,369 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
     }
     
     t_sorted . Take(r_sorted_array, r_sorted_count);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef bool (*comparator_t)(void *context, uindex_t left, uindex_t right);
+typedef void (*freer_t)(void *keys, uindex_t count);
+
+static void MCStringsDoSortIndirect(uindex_t *b, uint4 n, uindex_t *t, comparator_t is_less_or_equal, void *context)
+{
+    if (n <= 1)
+		return;
+    
+	uint4 n1 = n / 2;
+	uint4 n2 = n - n1;
+	uindex_t *b1 = b;
+	uindex_t *b2 = b + n1;
+    
+	MCStringsDoSortIndirect(b1, n1, t, is_less_or_equal, context);
+	MCStringsDoSortIndirect(b2, n2, t, is_less_or_equal, context);
+    
+	uindex_t *tmp = t;
+	while (n1 > 0 && n2 > 0)
+	{
+		if (is_less_or_equal(context, *b1, *b2))
+		{
+			*tmp++ = *b1++;
+			n1--;
+		}
+		else
+		{
+			*tmp++ = *b2++;
+			n2--;
+		}
+	}
+    
+	for (uindex_t i = 0; i < n1; i++)
+		tmp[i] = b1[i];
+	for (uindex_t i = 0; i < (n - n2); i++)
+		b[i] = t[i];
+}
+
+static void MCStringsSortIndirect(uindex_t *p_items, uint4 nitems, comparator_t is_less_or_equal, void *context)
+{
+    if (nitems == 0)
+        return;
+    
+    uindex_t *tmp = new uindex_t[nitems];
+    MCStringsDoSortIndirect(p_items, nitems, tmp, is_less_or_equal, context);
+    delete[] tmp;
+}
+
+static bool double_comparator_fwd(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    double *t_keys;
+    t_keys = (double *)p_context;
+    return t_keys[p_left] <= t_keys[p_right];
+}
+
+static bool double_comparator_rev(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    double *t_keys;
+    t_keys = (double *)p_context;
+    return t_keys[p_left] >= t_keys[p_right];
+}
+
+static void double_freer(void *keys, uindex_t count)
+{
+    double *t_doubles;
+    t_doubles = (double *)keys;
+    delete[] t_doubles;
+}
+
+static bool data_comparator_fwd(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCDataRef *t_keys;
+    t_keys = (MCDataRef *)p_context;
+    return MCDataCompareTo(t_keys[p_left], t_keys[p_right]) <= 0;
+}
+
+static bool data_comparator_rev(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCDataRef *t_keys;
+    t_keys = (MCDataRef *)p_context;
+    return MCDataCompareTo(t_keys[p_left], t_keys[p_right]) >= 0;
+}
+
+static bool string_comparator_fwd(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCStringRef *t_keys;
+    t_keys = (MCStringRef *)p_context;
+    return MCStringCompareTo(t_keys[p_left], t_keys[p_right], kMCStringOptionCompareExact) <= 0;
+}
+
+static bool string_comparator_rev(void *p_context, uindex_t p_left, uindex_t p_right)
+{
+    MCStringRef *t_keys;
+    t_keys = (MCStringRef *)p_context;
+    return MCStringCompareTo(t_keys[p_left], t_keys[p_right], kMCStringOptionCompareExact) >= 0;
+}
+
+static void valueref_freer(void *keys, uindex_t count)
+{
+    MCValueRef *t_values;
+    t_values = (MCValueRef *)keys;
+    for(uindex_t i = 0; i < count; i++)
+        MCValueRelease(t_values[i]);
+    delete[] t_values;
+}
+
+static bool MCStringCopyFoldedAndRelease(MCStringRef p_string, MCStringOptions p_options, MCStringRef& r_folded_string)
+{
+    if (p_options == kMCStringOptionCompareExact)
+    {
+        r_folded_string = p_string;
+        return true;
+    }
+    
+    if (!MCStringMutableCopyAndRelease(p_string, p_string))
+        return false;
+    
+    if (!MCStringFold(p_string, p_options))
+        return false;
+    
+    if (!MCStringCopyAndRelease(p_string, p_string))
+        return false;
+    
+    r_folded_string = p_string;
+    
+    return true;
+}
+
+void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_items, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+{
+    // If there are no items to sort, do nothing.
+    if (p_count == 0)
+        return;
+    
+    // Indicates if all items are stringrefs.
+    bool t_all_strings;
+    t_all_strings = true;
+    
+    // Process the items if there is a 'by'.
+    MCValueRef *t_temp_items;
+    MCValueRef *t_items;
+    t_temp_items = nil;
+    if (p_by != nil)
+    {
+        t_temp_items = new MCValueRef[p_count];
+        MCerrorlock++;
+        for(uindex_t i = 0; i < p_count; i++)
+        {
+            MCeach -> set(ctxt, p_items[i]);
+            if (!ctxt . EvalExprAsValueRef(p_by, EE_UNDEFINED, t_temp_items[i]))
+                t_temp_items[i] = MCValueRetain(p_items[i]);
+            if (MCValueGetTypeCode(t_temp_items[i]) != kMCValueTypeCodeString)
+                t_all_strings = false;
+        }
+        MCerrorlock--;
+        t_items = t_temp_items;
+    }
+    else
+        t_items = (MCValueRef *)p_items;
+    
+    // Build the vector of indicies to sort.
+    uindex_t *t_indicies;
+    t_indicies = new uindex_t[p_count];
+    for(uindex_t i = 0; i < p_count; i++)
+        t_indicies[i] = i;
+    
+    // Now generate the sort keys - what type these are will depend on the
+    // type of sort.
+    void *t_sort_keys;
+    comparator_t t_sort_compare;
+    freer_t t_sort_freer;
+    
+    switch(p_form)
+    {
+        case ST_DATETIME:
+        {
+            // DateTime is sorted by seconds.
+            double *t_seconds;
+            t_seconds = new double[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                MCDateTime t_datetime;
+                if (!MCD_convert_to_datetime(ctxt, t_items[i], CF_UNDEFINED, CF_UNDEFINED, t_datetime) ||
+                    !MCS_datetimetoseconds(t_datetime, t_seconds[i]))
+                    t_seconds[i] = -MAXREAL8;
+            }
+            
+            t_sort_keys = t_seconds;
+            t_sort_compare = p_dir == ST_ASCENDING ? double_comparator_fwd : double_comparator_rev;
+            t_sort_freer = double_freer;
+        }
+        break;
+            
+        case ST_NUMERIC:
+        {
+            double *t_numbers;
+            t_numbers = new double[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                if (MCValueIsEmpty(t_items[i]))
+                {
+                    t_numbers[i] = -MAXREAL8;
+                    continue;
+                }
+                
+                if (!ctxt . ConvertToReal(t_items[i], t_numbers[i]))
+                {
+                    MCAutoStringRef t_string;
+                    if (!ctxt . ConvertToString(t_items[i], &t_string))
+                    {
+                        t_numbers[i] = -MAXREAL8;
+                        continue;
+                    }
+                    
+                    uindex_t t_start, t_end, t_length;
+                    t_length = MCStringGetLength(*t_string);
+                    t_start = 0;
+                    
+                    // if there are consecutive spaces at the beginning, skip them
+                    while (t_start < t_length && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(*t_string, t_start)))
+                        t_start++;
+                    
+                    t_end = t_start;
+                    while (t_end < t_length)
+                    {
+                        char_t t_char = MCStringGetNativeCharAtIndex(*t_string, t_end);
+                        if (!isdigit((uint1)t_char) && t_char != '.' && t_char != '-' && t_char != '+')
+                            break;
+                        
+                        t_end++;
+                    }
+                    
+                    MCAutoStringRef t_numeric_part;
+                    if (t_end == t_start ||
+                        !MCStringCopySubstring(*t_string, MCRangeMake(t_start, t_end - t_start), &t_numeric_part) ||
+                        !ctxt . ConvertToReal(*t_numeric_part, t_numbers[i]))
+                    {
+                        t_numbers[i] = -MAXREAL8;
+                        continue;
+                    }
+                }
+            }
+            
+            t_sort_keys = t_numbers;
+            t_sort_compare = p_dir == ST_ASCENDING ? double_comparator_fwd : double_comparator_rev;;
+            t_sort_freer = double_freer;
+        }
+        break;
+            
+        case ST_BINARY:
+        {
+            MCDataRef *t_datas;
+            t_datas = new MCDataRef[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                if (!ctxt . ConvertToData(t_items[i], t_datas[i]))
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+            }
+            
+            t_sort_keys = t_datas;
+            t_sort_compare = p_dir == ST_ASCENDING ? data_comparator_fwd : data_comparator_rev;
+            t_sort_freer = valueref_freer;
+        }
+        break;
+        
+        case ST_TEXT:
+        {
+            MCStringOptions t_options;
+            t_options = ctxt . GetStringComparisonType();
+            if (t_options == kMCStringOptionCompareExact &&
+                t_all_strings)
+            {
+                t_sort_keys = t_items;
+                t_sort_compare = p_dir == ST_ASCENDING ? string_comparator_fwd : string_comparator_rev;
+                t_sort_freer = nil;
+            }
+            else
+            {
+                MCStringRef *t_strings;
+                t_strings = new MCStringRef[p_count];
+                for(uindex_t i = 0; i < p_count; i++)
+                {
+                    if (!ctxt . ConvertToString(t_items[i], t_strings[i]) ||
+                        !MCStringCopyFoldedAndRelease(t_strings[i], t_options, t_strings[i]))
+                        t_strings[i] = MCValueRetain(kMCEmptyString);
+                }
+                
+                t_sort_keys = t_strings;
+                t_sort_compare = p_dir == ST_ASCENDING ? string_comparator_fwd : string_comparator_rev;
+                t_sort_freer = valueref_freer;
+            }
+        }
+        break;
+            
+        case ST_INTERNATIONAL:
+        {
+            MCUnicodeCollateOption t_options;
+            t_options = MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)ctxt . GetStringComparisonType());
+            
+            MCUnicodeCollatorRef t_collator;
+            /* UNCHECKED */ MCUnicodeCreateCollator(kMCSystemLocale, t_options, t_collator);
+            
+            MCDataRef *t_datas;
+            t_datas = new MCDataRef[p_count];
+            for(uindex_t i = 0; i < p_count; i++)
+            {
+                MCAutoStringRef t_string;
+                if (!ctxt . ConvertToString(t_items[i], &t_string))
+                {
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+                    continue;
+                }
+                
+                byte_t *t_key;
+                uindex_t t_key_length;
+                if (!MCUnicodeCreateSortKeyWithCollator(t_collator, MCStringGetCharPtr(*t_string), MCStringGetLength(*t_string), t_key, t_key_length))
+                {
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+                    continue;
+                }
+                
+                if (!MCDataCreateWithBytesAndRelease(t_key, t_key_length, t_datas[i]))
+                {
+                    free(t_key);
+                    t_datas[i] = MCValueRetain(kMCEmptyData);
+                    continue;
+                }
+            }
+            
+            MCUnicodeDestroyCollator(t_collator);
+            
+            t_sort_keys = t_datas;
+            t_sort_compare = p_dir == ST_ASCENDING ? data_comparator_fwd : data_comparator_rev;
+            t_sort_freer = valueref_freer;
+        }
+        break;
+            
+        default:
+            delete[] t_indicies;
+            MCUnreachableReturn();
+    }
+    
+    MCStringsSortIndirect(t_indicies, p_count, t_sort_compare, t_sort_keys);
+    
+    if (t_sort_freer != nil)
+        t_sort_freer(t_sort_keys, p_count);
+    
+    if (t_temp_items != nil)
+    {
+        for(uindex_t i = 0; i < p_count; i++)
+            MCValueRelease(t_temp_items[i]);
+        delete[] t_temp_items;
+    }
+    
+    MCAutoArray<MCStringRef> t_sorted;
+    for (uindex_t i = 0; i < p_count; i++)
+        t_sorted . Push((MCStringRef)p_items[t_indicies[i]]);
+    t_sorted . Take(r_sorted_array, r_sorted_count);
+    
+    delete[] t_indicies;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

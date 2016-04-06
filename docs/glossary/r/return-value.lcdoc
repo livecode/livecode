@@ -1,0 +1,10 @@
+Name: return value
+
+Synonyms: returned value,return value
+
+Type: glossary
+
+Description:
+The result of a <function>; the <value> that a <function> calculates and <return|returns> to the <handler> that <call|called> it.
+
+References: handler (glossary), value (glossary), return (glossary), call (glossary), function (glossary)

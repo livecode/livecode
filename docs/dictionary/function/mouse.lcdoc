@@ -1,0 +1,41 @@
+Name: mouse
+
+Type: function
+
+Syntax: mouse([<buttonNumber>])
+
+Syntax: the mouse
+
+Summary: <return|Returns> the state of a <mouse button>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+the mouse
+
+Example:
+mouse(3)
+
+Example:
+if mouse(defaultButton) is "up" then
+  goBackToStart
+end if
+
+Parameters:
+buttonNumber (enum): The buttonNumber specifies which mouse button to check:
+-  1 is the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+-  2 is the middle button on Unix systems.
+-  3 is the right button on Windows and Unix systems and Control-click on Mac OS systems.
+
+Description:
+Use the <mouse> function to check whether the user is pressing a mouse button.
+
+If you don't specify a <buttonNumber>, the <mouse> function returns the state of mouse button 1.
+
+References: left (constant), mouseDoubleUp (message), mouseStillDown (message), mouseClick (function), mouse button (glossary), return (glossary)
+
+Tags: ui

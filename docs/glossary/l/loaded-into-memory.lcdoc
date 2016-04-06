@@ -1,0 +1,14 @@
+Name: loaded into memory
+
+Synonyms: loaded into memory,loading into memory,loads into memory,load into memory,loaded it into memory,loading it into memory,loads it into memory,load it into memory
+
+Type: glossary
+
+Description:
+Present in memory, able to be referenced and used. 
+ 
+A <stack file> (and all its <object|objects>) is loaded into memory when any of its <stack|stacks> is opened. You can also load a <stack file> into memory by referring to any <property> of its <main stack>. <Stacks(function)> remain loaded into memory until they are deleted from memory or the application quits.
+
+References: stack (glossary), object (glossary), property (glossary), stack file (glossary), main stack (glossary)
+
+Tags: objects

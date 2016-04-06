@@ -1,0 +1,60 @@
+Name: focusColor
+
+Type: property
+
+Syntax: set the focusColor of <object> to {empty | <colorName> | <RGBColor>}
+
+Summary: Specifies the color of the outline around the <active control> or the <field> with the <insertion point>.
+
+Synonyms: eighthColor
+
+Associations: stack,card,field,button,graphic,scrollbar,player,image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the focusColor of me to "black"
+
+Example:
+set the focusColor of button "Help" to 128,128,255
+
+Value:
+The <focusColor> of an <object> is any valid <color reference>.
+The <colorName> is any standard color name.
+
+The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+
+By default, the <focusColor> for all <object|objects> is empty.
+
+Description:
+Use the <focusColor> <property> to specify the outline color of an <object> when it's active.
+
+Setting the <focusColor> of an <object> to empty allows the <focusColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <focusColor> is empty.
+
+If the <focusColor> is not set for any <object> in the <object hierarchy>, the system setting is used.
+
+The setting of the <focusColor> <property> has different effects, depending on the <object type>:
+
+* The <focusColor> of a <stack>, <card>, or <group> determines the <focusColor> of each <object> in the <stack>, <card>, or <group> that does not have its own <focusColor>.
+
+* The <focusColor> of a <button(keyword)> is used to outline the <button(keyword)> when it is <focus|focused>. If the <button(object)|button's> <style> is menu, or if the button's traversalOn <property> is false, the <focusColor> has no effect.
+
+* The <focusColor> of a <field> or <scrollbar> is used to outline the <object> when it is <focus|focused>. If the <object|object's> <traversalOn> <property> is false, the <focusColor> has no effect.
+
+* The <focusColor> of a <graphic>, <player>, <audioClip>, <videoClip>, or <EPS|EPS object> has no effect.
+
+* The <focusColor> of an <image> is the eighth color in the image's <color palette>.
+
+If an object's focusPattern is set, the pattern is shown instead of the color specified by the <focusColor>.
+
+The <focusColor> <property> has no effect on <control|controls> whose <showFocusBorder> <property> is set to false.
+
+If the lookAndFeel is set to "Macintosh" or "Appearance Manager", the <focusColor> affects only fields.
+
+References: effective (keyword), card (keyword), button (keyword), player (keyword), graphic (keyword), scrollbar (keyword), field (keyword), image (keyword), style (property), owner (property), traversalOn (property), showFocusBorder (property), focusColor (property), focus (command), group (command), audioClip (object), button (object), control (object), object (object), stack (object), videoClip (object), property (glossary), color palette (glossary), focus (glossary), active control (glossary), hexadecimal (glossary), integer (glossary), keyword (glossary), object hierarchy (glossary), color reference (glossary), insertion point (glossary), object type (glossary), EPS (glossary)
+
+Tags: ui

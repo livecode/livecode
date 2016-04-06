@@ -1,0 +1,46 @@
+Name: filename of stack
+
+Type: property
+
+Syntax: set the filename of <stack> to <filePath> 
+
+Summary: Reports the <file path> of the <file> a <stack> is stored in.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the filename of this stack into nameToSave
+
+Example:
+if the effective filename of this stack is savedName then beep
+
+Example:
+set the filename of this stack to "Test.rev"
+
+Example:
+set the filename of this stack to "/Volumes/Lizards/Godzilla.rev"
+
+Value:
+The <filename of stack> of a <stack> specifies the <file path|name and location> of the <stack file>. If you specify a name but not a location, LiveCode assumes the <file> is in the <defaultFolder>.
+By default, the <filename of stack> <property> of newly created <stacks> is set to empty.
+
+Description:
+Use the <filename of stack> <property> to specify where a <stack file> is stored on the user's system.
+
+If the <stack> is a <main stack>, its <filename of stack> <property> reports the <file path> of the <file> the <stack> is stored in. If the <stack> is the <main stack> of a <standalone application>, the <filename of stack> <property> reports the <file path|name and location> of the application.
+
+If the <stack> is a <substack>, its <filename of stack> <property> is empty. To find out what <file> a <substack> is stored in, use the form the effective filename of stack. You cannot set the <filename of stack> <property> of a <substack> and attempting to will result in an execution error being thrown.
+
+If the stack has not yet been saved, its <filename of stack> <property> is empty.
+
+>*Cross-platform note:*  On <OS X|OS X systems>, <standalone application|standalone applications> are stored as <application bundle|application bundles>. A <application bundle|bundle> behaves like a <file> but is actually a <folder>, and the <main stack> of a <standalone application> is inside this <folder>. The <filename of stack> <property> reports the location of the application inside the <application bundle|bundle>, not the <application bundle|bundle's> location. For example, if the <application bundle|bundle's> <file path> is "/Volumes/Disk/MyApp.app/", the filename of the application's <main stack> might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
+
+References: effective (keyword), file (keyword), defaultFolder (property), stackFiles (property), saveStackRequest (message), stack (object), property (glossary), OS X (glossary), main stack (glossary), stack file (glossary), substack (glossary), standalone application (glossary), file path (glossary), folder (glossary), application bundle (glossary), stacks (function)
+
+Tags: file system

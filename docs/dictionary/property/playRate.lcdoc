@@ -1,0 +1,35 @@
+Name: playRate
+
+Type: property
+
+Syntax: set the playRate of <player> to <rate> 
+
+Summary: Specifies how fast a <player> plays a movie.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the playRate of player 17 to 0.5 -- half-speed
+
+Value:
+The <playRate> of a <player> is a <real number>.
+By default, the <playRate> <property> of a newly created <player> is set to 1.
+
+Description:
+Use the <playRate> <property> to speed up or slow down playback of a movie or sound.
+
+The <playRate> is the ratio between the desired playback rate and the natural rate of the movie or sound. A <playRate> of 1 plays the movie or sound at normal speed; a <playRate> greater than one speeds up the playback; a <playRate> less than one slows down the playback.
+
+A negative <playRate> plays the movie or sound backward.
+
+If the <playRate> is zero, the movie or sound is paused.
+
+References: callbacks (property), looping (property), startTime (property), player (keyword), play (command), property (glossary), real number (glossary)
+
+Tags: multimedia

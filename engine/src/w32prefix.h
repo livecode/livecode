@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -14,24 +14,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#define _WIN32_WINNT 0x0500
-#define NTDDI_VERSION 0x05000400
-
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
 
 // w32dcw32
 #include <winsock2.h>
-
-// w32ans
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_VISTA
-#include <shobjidl.h>
-#include <shlobj.h>
-#include <shlwapi.h>
-#undef NTDDI_VERSION
-#define NTDDI_VERSION 0x05000400
 
 // w32clipboard
 #include <objidl.h>

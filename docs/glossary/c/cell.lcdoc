@@ -1,0 +1,12 @@
+Name: cell
+
+Synonyms: cell,table cell
+
+Type: glossary
+
+Description:
+In a <table field>, the intersection of a row with a column; one piece of data. You identify a cell with its column number and row number, separated by a comma.
+
+References: table field (glossary)
+
+Tags: ui

@@ -1,0 +1,14 @@
+Name: DTD
+
+Synonyms: DTD,Document Type Definition,Document Type Declaration
+
+Type: glossary
+
+Description:
+Document Type Definition. A collection of <XML> declarations that define the structure of a particular <XML> document. 
+ 
+The DTD defines which tags are permitted, as well as their relationships.
+
+References: XML (glossary)
+
+Tags: text processing

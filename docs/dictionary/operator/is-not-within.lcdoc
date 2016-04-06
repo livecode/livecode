@@ -1,0 +1,29 @@
+Name: is not within
+
+Type: operator
+
+Syntax: <point> is not within <rectangle> 
+
+Summary: <evaluate|Evaluates> to true if a <point> is outside the specified rectangle, false if it is inside.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+"0,0" is not within "300,300,350,350" -- evaluates to true
+
+Parameters:
+point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the current stack, separated by a comma.
+rectangle: Any expression that evaluates to a rectangle--a right, top, left, and bottom edge, separated by commas.
+
+Description:
+Use the <is not within> <operator> to determine whether a <point> is outside a rectangle.
+
+The <is not within> <operator> is the logical inverse of the <is within> <operator>. When one is true, the other is false.
+
+References: point (keyword), is within (operator), within (function), evaluate (glossary), operator (glossary)
+
+Tags: ui

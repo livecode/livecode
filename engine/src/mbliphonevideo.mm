@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -58,7 +58,7 @@ static NSObject *s_movie_player_delegate = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface FullscreenMovieDelegate : NSObject
+@interface com_runrev_livecode_MCFullscreenMovieDelegate : NSObject
 {
 	bool m_running;
 	UIControl *m_overlay;
@@ -78,7 +78,7 @@ static NSObject *s_movie_player_delegate = nil;
 
 @end
 
-@implementation FullscreenMovieDelegate
+@implementation com_runrev_livecode_MCFullscreenMovieDelegate
 
 // AL-2014-09-09: [[ Bug 13354 ]] Replace deprecated MPMoviePlayerContentPreloadDidFinishNotification
 - (id)initWithPlayer: (MPMoviePlayerController *)p_player
@@ -196,7 +196,7 @@ struct play_fullscreen_t
 	bool looping;
 	bool with_controller;
 	MPMoviePlayerController *movie_player;
-	FullscreenMovieDelegate *delegate;
+	com_runrev_livecode_MCFullscreenMovieDelegate *delegate;
 };
 
 static void play_fullscreen_movie_prewait(void *p_context)
@@ -242,7 +242,7 @@ static void play_fullscreen_movie_prewait(void *p_context)
 	
 	configure_playback_range(ctxt -> movie_player);
 	
-	ctxt -> delegate = [[FullscreenMovieDelegate alloc] initWithPlayer:ctxt -> movie_player];
+	ctxt -> delegate = [[com_runrev_livecode_MCFullscreenMovieDelegate alloc] initWithPlayer:ctxt -> movie_player];
 	
 	// Present the view controller and get the delegate to setup its overlay
 	// if needed.

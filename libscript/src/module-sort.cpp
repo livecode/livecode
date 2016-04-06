@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -41,7 +41,7 @@ static compare_t MCSortCompareDateTime(void *context, MCValueRef p_left, MCValue
     return 0;
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortList(MCProperListRef& x_target, bool p_descending)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortList(MCProperListRef& x_target, bool p_descending)
 {
     MCValueTypeCode t_type;
     if (!MCProperListIsHomogeneous(x_target, t_type))
@@ -80,17 +80,17 @@ extern "C" MC_DLLEXPORT void MCSortExecSortList(MCProperListRef& x_target, bool 
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListAscending(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListAscending(MCProperListRef& x_target)
 {
     MCSortExecSortList(x_target, false);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListDescending(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListDescending(MCProperListRef& x_target)
 {
     MCSortExecSortList(x_target, true);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListText(MCProperListRef& x_target, bool p_descending)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListText(MCProperListRef& x_target, bool p_descending)
 {
     if (!MCProperListIsListOfType(x_target, kMCValueTypeCodeString))
     {
@@ -114,17 +114,17 @@ extern "C" MC_DLLEXPORT void MCSortExecSortListText(MCProperListRef& x_target, b
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListAscendingText(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListAscendingText(MCProperListRef& x_target)
 {
     MCSortExecSortListText(x_target, false);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListDescendingText(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListDescendingText(MCProperListRef& x_target)
 {
     MCSortExecSortListText(x_target, true);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListBinary(MCProperListRef& x_target, bool p_descending)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListBinary(MCProperListRef& x_target, bool p_descending)
 {
     if (!MCProperListIsListOfType(x_target, kMCValueTypeCodeData))
     {
@@ -145,17 +145,17 @@ extern "C" MC_DLLEXPORT void MCSortExecSortListBinary(MCProperListRef& x_target,
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListAscendingBinary(MCProperListRef& x_target)
 {
     MCSortExecSortListBinary(x_target, false);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListDescendingBinary(MCProperListRef& x_target)
 {
     MCSortExecSortListBinary(x_target, true);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListNumeric(MCProperListRef& x_target, bool p_descending)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListNumeric(MCProperListRef& x_target, bool p_descending)
 {
     if (!MCProperListIsListOfType(x_target, kMCValueTypeCodeNumber))
     {
@@ -176,12 +176,12 @@ extern "C" MC_DLLEXPORT void MCSortExecSortListNumeric(MCProperListRef& x_target
     MCValueAssign(x_target, *t_sorted_list);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListAscendingNumeric(MCProperListRef& x_target)
 {
     MCSortExecSortListNumeric(x_target, false);
 }
 
-extern "C" MC_DLLEXPORT void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListDescendingNumeric(MCProperListRef& x_target)
 {
     MCSortExecSortListNumeric(x_target, true);
 }
@@ -209,6 +209,52 @@ void MCSortExecSortListAscendingDateTime(MCProperListRef& x_target)
 void MCSortExecSortListDescendingDateTime(MCProperListRef& x_target)
 {
    MCSortExecSortListDateTime(x_target, true);
+}
+
+////////////////////////////////////////////////////////////////
+
+static compare_t MCSortCompareUsingHandler(void *context, MCValueRef p_left, MCValueRef p_right)
+{
+    MCHandlerRef t_handler;
+    t_handler = *(MCHandlerRef *)context;
+    
+    MCAutoValueRefArray t_values;
+    t_values.Push(p_left);
+    t_values.Push(p_right);
+    
+    MCAutoValueRef t_result;
+    MCHandlerInvoke(t_handler, t_values . Ptr(), t_values . Size(), &t_result);
+    
+    if (*t_result != nil && MCValueGetTypeCode(*t_result) == kMCValueTypeCodeNumber)
+        return MCNumberFetchAsInteger((MCNumberRef)*t_result);
+    
+    return 0;
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCSortExecSortListUsingHandler(MCProperListRef& x_target, MCHandlerRef p_handler)
+{
+    MCAutoProperListRef t_mutable_list;
+    if (!MCProperListMutableCopy(x_target, &t_mutable_list))
+        return;
+    
+    MCProperListStableSort(*t_mutable_list, false, MCSortCompareUsingHandler, &p_handler);
+    
+    MCAutoProperListRef t_sorted_list;
+    if (!MCProperListCopy(*t_mutable_list, &t_sorted_list))
+        return;
+    
+    MCValueAssign(x_target, *t_sorted_list);
+}
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_sort_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_sort_Finalize (void)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

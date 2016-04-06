@@ -1,0 +1,34 @@
+Name: moveStack
+
+Type: message
+
+Syntax: moveStack <newStackH>, <newStackV> 
+
+Summary: Sent to the <current card> when the user moves the <stack window>.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on moveStack finalLeft, finalTop
+  set the right of stack Palette to finalLeft - 5
+  set the top of stack Palette to finalTop
+end moveStack
+
+Parameters:
+newStackH: The horizontal distance in pixels from the left of the screen to the left edge of the stack.
+newStackV: The vertical distance in pixels from the top of the screen to the top edge of the stack.
+
+Description:
+Handle the <moveStack> <message> if you want to respond to movement of the <stack window>. 
+
+The <moveStack> <message> is sent only if the user moved the <stack window>. This <message> is not sent when a <handler> moves the window by changing its <location>, <rectangle>, or other <properties>.
+
+References: properties (property), rectangle (property), location (property), moveControl (message), resizeControl (message), resizeStack (message), grab (command), handler (glossary), current card (glossary), message (glossary), stack window (glossary), rectangle (glossary)
+
+Tags: windowing

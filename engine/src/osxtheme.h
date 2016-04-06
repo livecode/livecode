@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -45,11 +45,8 @@ struct MCThemeDrawInfo
 		
 		struct
 		{
-			Rect bounds;
-			ThemeButtonKind kind;
-			ThemeButtonDrawInfo info;
-			CFAbsoluteTime animation_start;
-			CFAbsoluteTime animation_current;
+			HIRect bounds;
+			HIThemeButtonDrawInfo info;
 		} button;
 		
 		struct

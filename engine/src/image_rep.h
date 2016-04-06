@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -17,8 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_IMAGE_REP_H__
 #define __MC_IMAGE_REP_H__
 
-#include "systhreads.h"
-
 typedef enum
 {
 	kMCImageRepUnknown,
@@ -29,6 +27,7 @@ typedef enum
 	kMCImageRepVector,
 	kMCImageRepCompressed,
 	kMCImageRepPixelData,
+	kMCImageRepGImage,
 	
 	kMCImageRepResampled,
 } MCImageRepType;
@@ -69,11 +68,17 @@ public:
 	virtual void UnlockImageFrame(uindex_t p_index, MCGImageFrame& p_frame) = 0;
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
-
+    
 	//////////
 
 	MCImageRep *Retain();
 	void Release();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    virtual bool GetMetadata(MCImageMetadata& r_metadata) = 0;
+    
+protected:
+    MCImageMetadata m_metadata;
 
 private:
 	uindex_t m_reference_count;
@@ -109,7 +114,7 @@ public:
 
 	static void FlushCache();
 	static void FlushCacheToLimit();
-	
+    
 protected:
 	MCCachedImageRep *m_next;
 	MCCachedImageRep *m_prev;
@@ -144,7 +149,10 @@ public:
 
 	virtual uint32_t GetFrameByteCount();
 	virtual void ReleaseFrames();
-	
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
+    
 protected:
 	// IM-2014-11-25: [[ ImageRep ]] Return some basic info readable from the image header.
 	virtual bool LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_t &r_frame_count) = 0;
@@ -178,9 +186,6 @@ private:
 	MCGImageFrame *m_frames;
 	uindex_t m_frame_count;
 	bool m_frames_premultiplied;
-    
-    // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single threrad locks an image frame at a time.
-    MCThreadMutexRef m_frame_lock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,13 +201,13 @@ public:
 	virtual ~MCEncodedImageRep();
 
 	uint32_t GetDataCompression();
-
+    
 protected:
 	// returns the image frames as decoded from the input stream
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
 
-	//////////
+    //////////
 
 	// return the input stream from which the image data will be read
 	virtual bool GetDataStream(IO_handle &r_stream) = 0;
@@ -333,7 +338,7 @@ public:
 	{
 		return m_compressed;
 	}
-
+    
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
 	bool LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32_t &r_frame_count);
@@ -396,6 +401,9 @@ public:
 	bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
 	bool GetFrameDuration(uindex_t p_index, uint32_t &r_duration);
 	
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
+    
 	//////////
 
 	MCStringRef GetSearchKey() { return m_filename; }
@@ -461,6 +469,9 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 // IM-2014-07-23: [[ Bug 12842 ]] Modify resampled image rep to take a target width & height
 // and explicit flip params instead of scale values.
 bool MCImageRepGetResampled(uint32_t p_width, uint32_t p_height, bool p_flip_horizontal, bool p_flip_vertical, MCImageRep *p_source, MCImageRep *&r_rep);
+
+// IM-2015-06-25: [[ GImageRep ]] Create image rep using MCGImageRef as source
+bool MCImageRepCreateWithGImage(MCGImageRef p_image, MCImageRep *&r_image_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

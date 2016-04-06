@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -115,7 +115,7 @@ bool MCPDFPrintingDevice::get_filename(const char* p_utf8_path, char *& r_system
 	if (t_success)
 	{
 		t_shortpath = (LPWSTR)calloc(t_shortpath_length + 1, sizeof(WCHAR));
-		GetShortPathName(t_wstring, t_shortpath, t_shortpath_length);
+		GetShortPathNameW(t_wstring, t_shortpath, t_shortpath_length);
 	}
 
 	if (t_success)
@@ -141,4 +141,4 @@ bool MCPDFPrintingDevice::get_filename(const char* p_utf8_path, char *& r_system
 		r_system_path = (char*)t_system_path;
 
 	return t_success;
-}	
+}

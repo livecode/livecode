@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -25,6 +25,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+
+// MM-2015-06-08: [[ MobileSockets ]] curtime global is required by opensslsocket.cpp
+real8 curtime;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -84,9 +87,11 @@ bool MCAndroidSystem::GetEnv(MCStringRef p_name, MCStringRef& r_value)
 
 real64_t MCAndroidSystem::GetCurrentTime(void)
 {
+    // MM-2015-06-08: [[ MobileSockets ]] Store the current time globally, required by opensslsocket.cpp
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-	return tv . tv_sec + tv . tv_usec / 1000000.0;
+	curtime = tv . tv_sec + tv . tv_usec / 1000000.0;
+    return curtime;
 }
 
 void MCAndroidSystem::Alarm(real64_t p_when)

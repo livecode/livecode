@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	BUTTON_H
 #define	BUTTON_H
 
-#include "control.h"
+#include "mccontrol.h"
 
 
 #define AQUA_FUDGE 8
@@ -95,6 +95,12 @@ struct MCInterfaceButtonIcon;
 #define MENUCONTROL_ITEM 1
 #define MENUCONTROL_SEPARATOR 2
 
+class MCButtonMenuHandler
+{
+public:
+	virtual bool OnMenuPick(MCButton *p_button, MCValueRef p_pick, MCValueRef p_old_pick) = 0;
+};
+
 class ButtonMenuCallback;
 
 class MCButton : public MCControl
@@ -144,6 +150,8 @@ class MCButton : public MCControl
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
     
+	MCButtonMenuHandler *m_menu_handler;
+	
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     bool m_animate_posted : 1;
 
@@ -182,7 +190,7 @@ public:
 #endif
 
 	virtual uint2 gettransient() const;
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
     virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -196,8 +204,8 @@ public:
 	virtual void unlockshape(MCObjectShape& shape);
 
 	// virtual functions from MCControl
-	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	virtual IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 	virtual IO_stat load(IO_handle stream, uint32_t version);
 	virtual IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
 
@@ -287,11 +295,17 @@ public:
 	//   a Mac menu as its assumed its not needed.
 	Boolean findmenu(bool p_just_for_accel = false);
 	
+	void setmenuhandler(MCButtonMenuHandler *p_handler);
+	Exec_stat handlemenupick(MCValueRef p_pick, MCValueRef p_old_pick);
+	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
 	MCRange getmenurange();
 	void docascade(MCStringRef t_pick);
 	void setupmenu();
+	
+	bool menuisopen();
+	
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedtext(MCStringRef& r_string);
@@ -324,6 +338,8 @@ public:
 	void macopenmenu(void);
 	void macfreemenu(void);
     static void getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+    
+    bool macmenuisopen();
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
@@ -485,5 +501,8 @@ protected:
     virtual MCPlatformControlType getcontroltype();
     virtual MCPlatformControlPart getcontrolsubpart();
     virtual MCPlatformControlState getcontrolstate();
+    
+    // Returns the size that check-marks should be drawn at
+    int16_t GetCheckSize() const;
 };
 #endif

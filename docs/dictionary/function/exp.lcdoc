@@ -1,0 +1,35 @@
+Name: exp
+
+Type: function
+
+Syntax: the exp of <number> 
+
+Syntax: exp(<number>)
+
+Summary: <return|Returns> the natural exponential of a number.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+exp(1) -- returns e
+
+Example:
+exp(theReturnedValue)
+
+Parameters:
+number: A real number, or an expression that evaluates to a number.
+
+Returns: The <exp> function <return|returns> a positive number.
+
+Description:
+Use the <exp> function to obtain a power of e, e^ <number>.
+
+The transcendental number e appears in many mathematical formulas.
+
+References: ^ (operator), sqrt (function), exp10 (function), ln (function), exp2 (function), baseConvert (function), exp1 (function), return (glossary)
+
+Tags: math

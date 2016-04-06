@@ -1,0 +1,35 @@
+Name: scrollbarBeginning
+
+Type: message
+
+Syntax: scrollbarBeginning <start> 
+
+Summary: Sent to a <scrollbar> when the user Shift-clicks its decrease arrow.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+on scrollbarBeginning theStartValue
+-- this scroll bar controls what's in a field
+  put theStartValue into field "Count"
+end scrollbarBeginning
+
+Parameters:
+start: The new position of the scrollbar thumb. This is the same as the scrollbar's startValue property.
+
+Description:
+Handle the <scrollbarBeginning> <message> if you want to respond to the use of Shift-click to move the <scrollbar thumb> directly to the beginning (the top or left) of the <scrollbar>.
+
+Dragging the scrollbar thumb to the beginning position, or otherwise moving it to the beginning, does not send a <scrollbarBeginning> <message>.
+
+If the <scrollbarBeginning> <message> is not handled, a <scrollbarDrag> <message> is sent in addition.
+
+References: startValue (property), thumbPosition (property), scrollbar (keyword), scrollbarLineDec (message), mouseDown (message), scrollbarPageDec (message), scrollbarEnd (message), scrollbarDrag (message), shiftKey (function), scrollbar thumb (glossary), message (glossary)
+
+Tags: ui

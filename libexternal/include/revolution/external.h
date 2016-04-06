@@ -1,6 +1,8 @@
 #ifndef __REVOLUTION_EXTERNAL__
 #define __REVOLUTION_EXTERNAL__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -492,9 +494,9 @@ extern void RemoveRunloopAction(MCRunloopActionRef p_action, int *r_success);
 extern void RunloopWait(int *r_success);
 
 // IM-2014-07-09: [[ Bug 12225 ]] Convert stack coords to logical window coords
-extern void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
+extern void StackToWindowRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success);
 // IM-2014-07-09: [[ Bug 12225 ]] Convert logical window coords to stack coords
-extern void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success);
+extern void WindowToStackRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success);
 
 // AL-2015-02-10: [[ SB Inclusions ]] Add wrappers for ExternalV0 module loading callbacks
 // SN-2015-02-24: [[ Broken Win Compilation ]] LoadModule is a Win32 API function...
@@ -511,21 +513,25 @@ extern Bool SecurityCanAccessLibrary(const char *p_library);
 extern Bool SecurityCanAccessFileUTF8(const char *p_file);
 extern Bool SecurityCanAccessHostUTF8(const char *p_host);
 extern Bool SecurityCanAccessLibraryUTF8(const char *p_library);
+    
+
+// SN-2015-03-12: [[ Bug 14413 ]] Added UTF-8 <-> native string conversion
+// The string returned are owned by the engine, and must not be free'd
+extern const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success);
+extern const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success);
 	
 // IM-2014-09-23: [[ RevBrowserCEF ]] Retrieve the Xserver connection info
 extern void GetXDisplayHandle(void **r_display, int *r_success);
 extern void GetXScreenHandle(void **r_screen, int *r_success);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // External declaration macros
 //
-
-#ifdef _MACOSX
 
 #ifdef __cplusplus
 
@@ -546,13 +552,6 @@ extern void GetXScreenHandle(void **r_screen, int *r_success);
 	}
 	
 #endif
-
-#else
-
-#define EXTERNAL_REFERENCE_LIBRARY
-
-#endif
-
 
 #ifdef __cplusplus
 

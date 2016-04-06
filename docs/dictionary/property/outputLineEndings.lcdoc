@@ -1,0 +1,34 @@
+Name: outputLineEndings
+
+Type: property
+
+Syntax: set the outputLineEndings to <lineEnding> 
+
+Summary: The <outputLineEndings> property determines what line ending conversion to perform on text output.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+set the outputLineEndings to "lf"
+
+Example:
+put the outputLineEndings into tLineEnding
+
+Parameters:
+lineEnding (enum): The type of line ending to use.
+- lf: Normally used by Linux and Mac OS X
+- crlf: Normally used by Windows
+- cr: Not normally used on modern systems
+
+Description:
+Use the <outputTextEncoding> property to determine what text conversion to perform when writing text strings to stdout.
+
+<outputTextEncoding> is only available when running in CGI mode (Server).
+
+The quoted literals *must* be used when setting this property - the property expects a name not a sequence of bytes to use as the line-ending. The reason behind this is two-fold - (1) it is more 'correct' from the point of view it is identifying the style of line-ending rather than the sequence of bytes to use (2) 'cr' and 'lf' are defined as the same numToChar(10) constant on all platforms.
+
+References: outputTextEncoding (property)

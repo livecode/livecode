@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -49,6 +49,17 @@ extern "C" double __cdecl fmod(double x, double y);
 #include <math.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifndef _MSC_VER
+
+// Work-around for the Android headers being strict
+#if !defined(va_copy) && defined(__va_copy)
+#  define va_copy __va_copy
+#endif
 
 #endif
 

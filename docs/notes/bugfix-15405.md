@@ -1,0 +1,1 @@
+# LCS: Can't create a widget in a group

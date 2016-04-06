@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -110,7 +110,7 @@ bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
     return t_success;
 }
 
-bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
+bool MCVariable::encode(void *&r_buffer, uindex_t& r_size)
 {
     IO_handle t_stream;
     t_stream = MCS_fakeopenwrite();
@@ -163,10 +163,10 @@ bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
     else
         t_stat = IO_ERROR;
 
-    char *t_buffer;
-    size_t t_length;
     if (t_stat == IO_NORMAL)
     {
+        char *t_buffer;
+        size_t t_length;
         t_stat = MCS_closetakingbuffer(t_stream, (void*&)t_buffer, t_length);
 
         if (t_stat == IO_NORMAL)
@@ -177,7 +177,9 @@ bool MCVariable::encode(void *&r_buffer, uindex_t r_size)
         else
             delete t_buffer;
     }
-
+    else
+        MCS_close(t_stream);
+    
     return t_stat == IO_NORMAL;
 }
 
@@ -221,11 +223,16 @@ bool MCVariable::decode(void *p_buffer, uindex_t p_size)
         case kMCEncodedValueTypeLegacyArray:
         {
             MCAutoArrayRef t_array;
-            t_stat = MCArrayLoadFromHandleLegacy(&t_array, t_stream);
+			if (!MCArrayCreateMutable(&t_array))
+				t_stat = IO_ERROR;
+				
+			if (t_stat == IO_NORMAL)
+            	t_stat = MCArrayLoadFromHandleLegacy(*t_array, t_stream);
 
-            if (t_stat == IO_NORMAL)
-                /* UNCHECKED */ setvalueref(*t_array);
+            if (t_stat == IO_NORMAL && !setvalueref(*t_array))
+                t_stat = IO_ERROR;
         }
+		break;
         default:
             t_stat = IO_ERROR;
         break;
@@ -616,7 +623,8 @@ bool MCVariable::modify_data(MCExecContext& ctxt, MCDataRef p_data, MCNameRef *p
     MCDataRef t_value_as_data;
     t_value_as_data = nil;
     // SN-2014-04-11 [[ FasterVariable ]] now chose between appending or prepending
-	if (MCDataMutableCopy((MCDataRef)t_current_value, t_value_as_data) &&
+	if (ctxt . ConvertToData(t_current_value, t_value_as_data) &&
+	    MCDataMutableCopyAndRelease(t_value_as_data, t_value_as_data) &&
 		((p_setting == kMCVariableSetAfter && MCDataAppend(t_value_as_data, p_data)) ||
          (p_setting == kMCVariableSetBefore && MCDataPrepend(t_value_as_data, p_data))) &&
 		setvalueref(p_path, p_length, ctxt . GetCaseSensitive(), t_value_as_data))
@@ -854,7 +862,7 @@ bool MCVariable::remove(MCExecContext& ctxt, MCNameRef *p_path, uindex_t p_lengt
 		}
 	}
     
-	if (value . type != kMCValueTypeCodeArray)
+	if (value . type != kMCExecValueTypeArrayRef)
 		return true;
     
 	if (!converttomutablearray())
@@ -1208,7 +1216,7 @@ void MCVariable::synchronize(MCExecContext& ctxt, bool p_notify)
 				if (MCwatchedvars[i].expression != nil && !MCStringIsEmpty(MCwatchedvars[i].expression))
 				{
                     MCAutoValueRef t_val;
-					ctxt.GetHandler() -> eval(ctxt, MCwatchedvars[i].expression, &t_val);
+                    ctxt.eval(ctxt, MCwatchedvars[i].expression, &t_val);
                     
 					MCAutoBooleanRef t_bool;
 					if (!ctxt.HasError() && ctxt.ConvertToBoolean(*t_val, &t_bool) && *t_bool == kMCTrue)

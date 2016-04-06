@@ -1,0 +1,32 @@
+Name: centuryCutoff
+
+Type: property
+
+Syntax: set the centuryCutoff to <lastYearOfCentury> 
+
+Summary: Specifies which century two-digit years are assumed to be in.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the centuryCutoff to 45
+
+Value:
+The <centuryCutoff> is a two-digit number.
+By default, the <centuryCutoff> is set to 35.
+
+Description:
+Use the <centuryCutoff> <property> to interpret dates close to the century mark.
+
+The <centuryCutoff> specifies the two-digit year that ends the century. Two-digit years less than or equal to the <centuryCutoff> belong to the next century; two-digit years greater than the <centuryCutoff> belong to the previous century.
+
+For example, if the <centuryCutoff> is set to 50, and the current year is 2000, then the date 4/12/51 is interpreted as being in the year 1951, while the date 4/12/50 is interpreted as being in 2050.
+Since the <centuryCutoff> is a <local property>, its value is <reset> to 35 when the current <handler> finishes <execute|executing>. It retains its value only for the current <handler>, and setting it in one <handler> does not affect its value in other <handler|handlers> it <call|calls>.
+
+References: convert (command), reset (command), date (function), property (glossary), handler (glossary), local property (glossary), execute (glossary), call (glossary)
+
+Tags: math

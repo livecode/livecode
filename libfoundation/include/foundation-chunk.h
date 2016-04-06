@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -36,21 +36,15 @@ enum MCChunkType
     kMCChunkTypeByte,
 };
 
-struct MCChunkCountInRangeState
-{
-    MCValueRef value;
-    MCRange *range;
-};
+typedef uinteger_t (MCChunkCountCallback(void *context, MCRange *range));
 
-typedef uinteger_t (MCChunkCountCallback(void *context));
-
-uinteger_t MCChunkCountByteChunkCallback(void *context);
-uinteger_t MCChunkCountCodepointChunkCallback(void *context);
+uinteger_t MCChunkCountByteChunkCallback(void *context, MCRange *range);
+uinteger_t MCChunkCountCodepointChunkCallback(void *context, MCRange *range);
 
 uindex_t MCChunkCountChunkChunksInRange(MCStringRef p_string, MCStringRef p_delimiter, MCStringOptions p_options, MCRange *p_range);
 
-bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
-bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsByRangeInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, integer_t p_last, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count);
+bool MCChunkGetExtentsByExpressionInRange(bool p_strict, bool p_boundary_start, bool p_boundary_end, integer_t p_first, MCChunkCountCallback p_callback, void *p_context, MCRange *p_range, uindex_t& r_first, uindex_t& r_chunk_count);
 
 bool MCChunkGetExtentsOfByteChunkByRangeInRange(MCDataRef p_data, MCRange *p_range, integer_t p_first, integer_t p_last, bool p_strict, bool p_boundary_start, bool p_boundary_end, uindex_t& r_first, uindex_t& r_chunk_count);
 
@@ -189,6 +183,17 @@ public:
     }
 };
 
+class MCTextChunkIterator_Grapheme : public MCTextChunkIterator
+{
+public:
+    MCTextChunkIterator_Grapheme(MCStringRef p_text, MCChunkType p_chunk_type);
+    MCTextChunkIterator_Grapheme(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction);
+    ~MCTextChunkIterator_Grapheme();
+    
+    virtual bool Next();
+    virtual bool IsAmong(MCStringRef p_needle);
+};
+
 class MCTextChunkIterator_Codepoint : public MCTextChunkIterator
 {
 public:
@@ -212,7 +217,7 @@ public:
     virtual uindex_t CountChunks();
     virtual bool Next();
     virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches);
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches);
 };
 
 class MCTextChunkIterator_Delimited : public MCTextChunkIterator
@@ -235,7 +240,7 @@ public:
     
     virtual bool Next();
     virtual bool IsAmong(MCStringRef p_needle);
-    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, bool p_whole_matches);
+    virtual uindex_t ChunkOffset(MCStringRef p_needle, uindex_t p_start_offset, uindex_t *p_end_offset, bool p_whole_matches);
 };
 
 class MCTextChunkIterator_Word : public MCTextChunkIterator
@@ -284,6 +289,9 @@ public:
     virtual bool Next();
 };
 
-MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_delimiter, MCStringOptions p_options);
+MCTextChunkIterator *MCChunkCreateTextChunkIterator(MCStringRef p_text, MCRange *p_range, MCChunkType p_chunk_type, MCStringRef p_line_delimiter, MCStringRef p_item_delimiter, MCStringOptions p_options);
+
+MCChunkType MCChunkTypeSimplify(MCStringRef p_string, MCChunkType p_type);
+MCChunkType MCChunkTypeFromCharChunkType(MCCharChunkType p_type);
 
 #endif // __MC_FOUNDATION_CHUNK__

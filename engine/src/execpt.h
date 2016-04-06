@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -617,7 +617,13 @@ public:
 	bool appendarrayelement_oldstring(MCArrayRef array, const MCString& key);
 
 	// Perform put ep op src into ep.
-	Exec_stat factorarray(MCExecPoint& src, Operators op);
+    Exec_stat factorarray(MCExecPoint& src, Operators op);
+    
+    // SN-2015-06-03: [[ Bug 11277 ]] Refactor similar functions from MCHandler
+    //  and MCHandlerlist
+    static void deletestatements(MCStatement *p_statements);
+    Exec_stat eval(MCExecPoint &ep);
+    Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
 
 private:
 	void dounicodetomultibyte(bool p_native, bool p_reverse);

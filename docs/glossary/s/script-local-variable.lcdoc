@@ -1,0 +1,12 @@
+Name: script local variable
+
+Synonyms: script local,script local variable
+
+Type: glossary
+
+Description:
+A <variable> that can be used in any <handler> in an <object|object's> <script>, but can't be used by <handler|handlers> in other <script|scripts>. You create a script local <variable> by using the <local variable|local> <command> outside any <handler> in the <script>.
+
+References: handler (glossary), script (glossary), variable (glossary), command (glossary), local variable (glossary), object (glossary)
+
+Tags: properties

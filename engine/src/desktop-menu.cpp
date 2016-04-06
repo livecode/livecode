@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -418,10 +418,19 @@ void MCButton::macopenmenu(void)
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
                 MCStringRef t_menupick;
-                t_menupick = s_popup_menupick;
-                s_popup_menupick = nil;
+                if (s_popup_menupick != NULL)
+                {
+                    t_menupick = s_popup_menupick;
+                    s_popup_menupick = nil;
+                }
+                else
+                {
+                    // SN-2015-10-05: [[ Bug 16069 ]] s_popup_menupick remains
+                    //  NULL if a menu is closed by clicking outside of it
+                    t_menupick = MCValueRetain(kMCEmptyString);
+                }
                 
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = handlemenupick(t_menupick, nil);
                 
 				MCValueRelease(t_menupick);
 				
@@ -444,10 +453,19 @@ void MCButton::macopenmenu(void)
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,
                 //  in case some menus are nested
                 MCStringRef t_menupick;
-                t_menupick = s_popup_menupick;
-                s_popup_menupick = nil;
+                if (s_popup_menupick != NULL)
+                {
+                    t_menupick = s_popup_menupick;
+                    s_popup_menupick = nil;
+                }
+                else
+                {
+                    // SN-2015-10-05: [[ Bug 16069 ]] s_popup_menupick remains
+                    //  NULL if a menu is closed by clicking outside of it
+                    t_menupick = MCValueRetain(kMCEmptyString);
+                }
                 
-				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menupick);
+				Exec_stat es = handlemenupick(t_menupick, nil);
                 
 				MCValueRelease(t_menupick);
 				
@@ -500,6 +518,11 @@ Bool MCButton::macfindmenu(bool p_just_for_accel)
 
 void MCButton::getmacmenuitemtextfromaccelerator(MCPlatformMenuRef menu, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
+}
+
+bool MCButton::macmenuisopen()
+{
+	return m_system_menu != nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -757,6 +780,8 @@ static MCPlatformMenuRef create_menu(MCPlatformMenuRef p_menu, MenuItemDescripto
 		
 		t_index++;
 	}
+    
+    return t_menu;
 }
 
 static void free_menu(MenuItemDescriptor *p_items)
@@ -973,7 +998,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 		if (s_menubar_targets[t_current_menu_index] -> Exists())
 		{
 			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> setmenuhistoryprop(t_last_menu_index + 1);
-			s_menubar_targets[t_current_menu_index] -> Get() -> message_with_valueref_args(MCM_menu_pick, *t_result);
+			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> handlemenupick(*t_result, nil);
 		}
 	}
 	else

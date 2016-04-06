@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -223,7 +223,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 		if (NULL == t_cstream)
 		{
 			int t_save_errno = errno;
-			return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR ("Failed to open file '%{path}': fdopen() failed: %{description"), t_save_errno);
+			return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR ("Failed to open file '%{path}': fdopen() failed: %{description}"), t_save_errno);
 		}
 
 		if (!__MCSFileGetContentsStream (p_native_path, t_cstream,
@@ -344,7 +344,6 @@ __MCSFileSetContents (MCStringRef p_native_path,
 	if (!t_path_sys.Lock(p_native_path))
 		return false;
 
-	bool t_target_exists;
 	struct stat t_target_statbuf;
 	if (0 == lstat (*t_path_sys, &t_target_statbuf) &&
 	    t_target_statbuf.st_size > 0)
@@ -699,4 +698,42 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
  error_cleanup:
 	free (t_raw_entries);
 	return false;
+}
+
+bool
+__MCSFileGetType (MCStringRef p_native_path,
+                  bool p_follow_links,
+                  MCSFileType & r_type)
+{
+	/* Get a system path */
+	MCAutoStringRefAsSysString t_path_sys;
+	if (!t_path_sys.Lock (p_native_path))
+		return false;
+
+	struct stat t_stat_buf;
+	int t_stat_result;
+
+	if (p_follow_links)
+	{
+		t_stat_result = stat (*t_path_sys, &t_stat_buf);
+	}
+	else
+	{
+		t_stat_result = lstat (*t_path_sys, &t_stat_buf);
+	}
+
+	if (0 != t_stat_result)
+	{
+		return __MCSFileThrowIOErrorWithErrno (p_native_path, MCSTR("Failed to stat %{path}: %{description}"), errno);
+	}
+
+	switch (t_stat_buf.st_mode & S_IFMT)
+	{
+	case S_IFREG: r_type = kMCSFileTypeRegular;      break;
+	case S_IFDIR: r_type = kMCSFileTypeDirectory;    break;
+	case S_IFLNK: r_type = kMCSFileTypeSymbolicLink; break;
+	default:      r_type = kMCSFileTypeUnsupported;  break;
+	}
+
+	return true;
 }

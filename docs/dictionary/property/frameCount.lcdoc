@@ -1,0 +1,31 @@
+Name: frameCount
+
+Type: property
+
+Syntax: get the frameCount of <image> 
+
+Summary: Reports the number of <frame|frames> in an <animated GIF> <image>.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the frameCount of image "Welcome Animation" into estNumberOfSecs
+
+Value:
+The <frameCount> of an <image> is a <non-negative> <integer>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <frameCount> <property> to determine the length of a <animated GIF|GIF animation>.
+
+If the image is not an animated GIF, its <frameCount> is zero.
+
+References: currentFrame (property), image (keyword), integer (keyword), play (command), property (glossary), animated GIF (glossary), frame (glossary), non-negative (glossary)
+
+Tags: multimedia

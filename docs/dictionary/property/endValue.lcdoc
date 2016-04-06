@@ -1,0 +1,35 @@
+Name: endValue
+
+Type: property
+
+Syntax: set the endValue of <scrollbar> to <number> 
+
+Summary: Specifies the <value> corresponding to a <scrollbar|scrollbar's> end position.
+
+Associations: scrollbar
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the endValue of last scrollbar to 100
+
+Value:
+The <endValue> of a <scrollbar(keyword)> is an <integer> between zero and 65535.
+By default, the <endValue> <property> of newly created <scrollbar(object)|scrollbars> is set to 65535.
+
+Description:
+Use the startValue and <endValue> <properties> to set the scale of the <scrollbar(keyword)>.
+
+If the style of the <scrollbar(keyword)> is scale, the <endValue> is the <value> of the <thumbPosition> when the <scrollbar thumb> is all the way to the bottom (for a vertical <scrollbar(keyword)>) or right (for a horizontal <scrollbar(keyword)>).
+
+If the style of the <scrollbar(keyword)> is scrollbar or progress, then when the scrollbar thumb is all the way to the end of the <scrollbar(keyword)>, the <thumbPosition> is the <scrollbar(object)|scrollbar's> <endValue> minus the <thumbSize>.
+
+Setting the <endValue> to a <value> less than the <scrollbar(object)|scrollbar's> <thumbSize> <lock|locks> the <scrollbar thumb> to the top (or left) of the <scrollbar(keyword)>, preventing scrolling.
+
+References: showValue (property), properties (property), thumbSize (property), thumbPosition (property), scrollbarLineInc (message), scrollbarFactor (constant), scrollbar (keyword), integer (keyword), value (function), scrollbar (object), scrollbar thumb (glossary), lock (glossary), property (glossary)
+
+Tags: ui

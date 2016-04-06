@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -114,6 +114,10 @@ class MCObjectOutputStream;
 // Returns true if the array is of sequence type (numeric keys starting at one
 // with no holes).
 bool MCArrayIsSequence(MCArrayRef array);
+
+// SN-2015-06-15: [[ Bug 15457 ]] Returns true if the array a dense, numeric
+//  sequence - but does not have to start with 1.
+bool MCArrayIsNumericSequence(MCArrayRef self, index_t &r_start_index);
 
 // Constructs a string containing the list of all keys in the array separated by
 // the given delimiter.

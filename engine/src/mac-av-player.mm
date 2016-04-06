@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -115,6 +115,8 @@ private:
     
 	static void DoSwitch(void *context);
     static void DoUpdateCurrentTime(void *ctxt);
+    void Mirror(void);
+    void Unmirror(void);
     
     NSLock *m_lock;
     
@@ -125,6 +127,7 @@ private:
     uint32_t m_selection_start, m_selection_finish;
     uint32_t m_selection_duration;
     uint32_t m_buffered_time;
+	double m_scale;
     CMTimeScale m_time_scale;
     
     bool m_play_selection_only : 1;
@@ -156,6 +159,8 @@ private:
     bool m_frame_changed_pending : 1;
     bool m_finished : 1;
     bool m_has_invalid_filename : 1;
+    bool m_mirrored : 1;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,6 +240,7 @@ private:
     [t_layer setVideoGravity: AVLayerVideoGravityResize];
     [self setLayer: t_layer];
     [self setWantsLayer: YES];
+    self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 }
 
 @end
@@ -281,9 +287,13 @@ MCAVFoundationPlayer::MCAVFoundationPlayer(void)
     m_selection_start = 0;
     m_selection_finish = 0;
     m_buffered_time = 0;
+	
+	m_scale = 1.0;
     
     m_time_observer_token = nil;
     m_endtime_observer_token = nil;
+
+    m_mirrored = false;
 }
 
 MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
@@ -512,7 +522,17 @@ CVReturn MCAVFoundationPlayer::MyDisplayLinkCallback (CVDisplayLinkRef displayLi
                                 void *displayLinkContext)
 {
     MCAVFoundationPlayer *t_self = (MCAVFoundationPlayer *)displayLinkContext;
-        
+    
+    // PM-2015-06-12: [[ Bug 15495 ]] If the file has no video component, then just update the currentTime (no need to updateCurrentFrame, since there are no frames)
+    bool t_has_video;
+    t_has_video = ( [[[[t_self -> m_player currentItem] asset] tracksWithMediaType:AVMediaTypeVideo] count] != 0);
+    
+    if (!t_has_video)
+    {
+        t_self -> HandleCurrentTimeChanged();
+        return kCVReturnSuccess;
+    }
+    
     CMTime t_output_item_time = [t_self -> m_player_item_video_output itemTimeForCVTimeStamp:*inOutputTime];
     
     if (![t_self -> m_player_item_video_output hasNewPixelBufferForItemTime:t_output_item_time])
@@ -774,6 +794,8 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     // Now set the player of the view.
     [m_view setPlayer: m_player];
 
+    m_view.layer.affineTransform = CGAffineTransformMakeScale(-1, 1);
+    
     m_last_marker = UINT32_MAX;
 
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
@@ -791,6 +813,21 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     m_selection_start = 0;
 }
 
+void MCAVFoundationPlayer::Mirror(void)
+{
+    CGAffineTransform t_transform1 = CGAffineTransformMakeScale(-1, 1);
+    
+    CGAffineTransform t_transform2 = CGAffineTransformMakeTranslation(m_view.bounds.size.width, 0);
+    
+    CGAffineTransform t_flip_horizontally = CGAffineTransformConcat(t_transform1, t_transform2);
+    
+    m_view.layer.affineTransform = t_flip_horizontally;
+}
+
+void MCAVFoundationPlayer::Unmirror(void)
+{
+    m_view.layer.affineTransform = CGAffineTransformMakeScale(1, 1);
+}
 
 void MCAVFoundationPlayer::Synchronize(void)
 {
@@ -800,14 +837,26 @@ void MCAVFoundationPlayer::Synchronize(void)
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)m_window;
     
+	// PM-2015-11-26: [[ Bug 13277 ]] Scale m_rect before mapping
+	MCRectangle t_rect = m_rect;
+	t_rect.x *= m_scale;
+	t_rect.y *= m_scale;
+	t_rect.width *= m_scale;
+	t_rect.height *= m_scale;
+	
 	NSRect t_frame;
-	t_window -> MapMCRectangleToNSRect(m_rect, t_frame);
-    
+	t_window -> MapMCRectangleToNSRect(t_rect, t_frame);
+	
     m_synchronizing = true;
     
 	[m_view setFrame: t_frame];
     
 	[m_view setHidden: !m_visible];
+    
+    if (m_mirrored)
+        Mirror();
+    else
+        Unmirror();
     
     m_synchronizing = false;
 }
@@ -963,8 +1012,13 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
 		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
         
-		CIImage *t_ci_image;
-		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        CIImage *t_old_ci_image;
+		t_old_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
+        CIImage *t_ci_image;
+        if (m_mirrored)
+            t_ci_image = [t_old_ci_image imageByApplyingTransform:CGAffineTransformMakeScale(-1, 1)];
+        else
+            t_ci_image = t_old_ci_image;
         
         NSAutoreleasePool *t_pool;
         t_pool = [[NSAutoreleasePool alloc] init];
@@ -976,7 +1030,7 @@ void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
         
         [t_pool release];
         
-		[t_ci_image release];
+		[t_old_ci_image release];
         
 		CGContextRelease(t_cg_context);
 		CGColorSpaceRelease(t_colorspace);
@@ -1007,6 +1061,10 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
 		case kMCPlatformPlayerPropertyOffscreen:
 			Switch(*(bool *)p_value);
+			break;
+		case kMCPlatformPlayerPropertyScalefactor:
+			m_scale = *(double *)p_value;
+			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyRect:
 			m_rect = *(MCRectangle *)p_value;
@@ -1069,6 +1127,13 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
 		case kMCPlatformPlayerPropertyLoop:
 			m_looping = *(bool *)p_value;
+			break;
+        case kMCPlatformPlayerPropertyMirrored:
+            m_mirrored = *(bool *)p_value;
+            if (m_mirrored)
+                Mirror();
+            else
+                Unmirror();
 			break;
         case kMCPlatformPlayerPropertyMarkers:
         {
@@ -1188,9 +1253,18 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyLoop:
 			*(bool *)r_value = m_looping;
 			break;
+
         // PM-2014-12-17: [[ Bug 14232 ]] Read-only property that indicates if a filename is invalid or if the file is corrupted
         case kMCPlatformPlayerPropertyInvalidFilename:
 			*(bool *)r_value = m_has_invalid_filename;
+			break;
+
+        case kMCPlatformPlayerPropertyMirrored:
+            *(bool *)r_value = m_mirrored;
+			break;
+			
+		case kMCPlatformPlayerPropertyScalefactor:
+            *(double *)r_value = m_scale;
 			break;
 	}
 }
@@ -1222,21 +1296,22 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		return;
     
     NSArray *t_tracks;
-    t_tracks = [[[m_player currentItem] asset] tracks];
+    t_tracks = [[m_player currentItem] tracks];
     
-    // TODO: Fix error LiveCode-Community[20563:303] -[AVAssetTrack setEnabled:]: unrecognized selector sent to instance 0xb281f50
-    /*AVPlayerItemTrack *t_playerItemTrack;
-    t_playerItemTrack = [t_tracks objectAtIndex:p_index];
-    [t_playerItemTrack setEnabled:*(bool *)p_value];*/
+    // PM-2015-03-23: [[ Bug 15052 ]] Make sure we actually set the enabledTracks
+    AVPlayerItemTrack *t_playerItemTrack;
+    t_playerItemTrack = (AVPlayerItemTrack *)[t_tracks objectAtIndex:p_index];
+    [t_playerItemTrack setEnabled:*(bool *)p_value];
 }
 
 void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
-    NSArray *t_tracks;
-    t_tracks = [[[m_player currentItem] asset] tracks];
-    
-    // PM-2014-07-10: [[ Bug 12757 ]] Get the AVAssetTrack from t_tracks 
-    AVAssetTrack *t_asset_track = (AVAssetTrack *)[t_tracks objectAtIndex:p_index];
+    // PM-2015-03-23: [[ Bug 15052 ]] Get the value of the enabledTracks property from the AVPlayerItemTrack
+    NSArray *t_player_item_tracks;
+    t_player_item_tracks = [[m_player currentItem] tracks];
+    AVPlayerItemTrack *t_player_item_track = (AVPlayerItemTrack *)[t_player_item_tracks objectAtIndex:p_index];
+    // PM-2014-07-10: [[ Bug 12757 ]] Get the AVAssetTrack from t_player_item_track
+    AVAssetTrack *t_asset_track = t_player_item_track . assetTrack;
     
 	switch(p_property)
 	{
@@ -1263,7 +1338,8 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
-			*(bool *)r_value = [t_asset_track isEnabled];
+        // PM-2015-03-23: [[ Bug 15052 ]] Get the value of the enabledTracks property from the AVPlayerItemTrack
+			*(bool *)r_value = [t_player_item_track isEnabled];
 			break;
 	}
 }

@@ -1,0 +1,34 @@
+Name: stacksInUse
+
+Type: property
+
+Syntax: get the stacksInUse
+
+Summary: Reports the <stacks> that have been placed in the <message path> by the <start using> <command>.
+
+Synonyms: libraries
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if the short name of this stack is not among the lines \
+   of the stacksInUse then start using this stack
+
+Value:
+The <stacksInUse> <property> reports a list of <stack> names, one per <line>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <stacksInUse> <property> to find out which <stack> <script|scripts> can intercept <message|messages>.
+
+The value reported by the <stacksInUse> <property> is a list of the short names of the <stacks> that have been added to the <message path>, one <stack> per <line>.
+
+Add stacks to the message path with the <start using> <command>; remove them with the <stop using> <command>.
+
+References: line (keyword), releaseStack (message), start using (command), stop using (command), stacks (function), property (glossary), script (glossary), message (glossary), command (glossary), message path (glossary), stack (object)
+
+Tags: objects

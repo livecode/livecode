@@ -1,0 +1,12 @@
+Name: background
+
+Synonyms: background
+
+Type: glossary
+
+Description:
+A set of <card|cards> in a <stack>, all of which contain the same <group>.
+
+References: group (glossary), card (glossary), stack (glossary)
+
+Tags: objects

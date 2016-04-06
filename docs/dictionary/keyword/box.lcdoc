@@ -1,0 +1,31 @@
+Name: box
+
+Type: keyword
+
+Syntax: box
+
+Summary: Used with the <textStyle> <property> to specify that a <chunk> of text in a <field> has a plain box drawn around it.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textStyle of the selectedChunk to box
+
+Description:
+Use the <box> <keyword> to emphasize text by drawing a box around it.
+
+The box is drawn in the object's <borderColor> and <borderPattern>.
+
+If the text crosses more than one screen line, a box is drawn around each line of the text.
+
+If the text has mixed styles, a separate box is drawn around each style run. For example, if three words are boxed and the last is also boldface, a box is drawn around the first two words, and another box is drawn around the boldface word.
+
+An object or chunk of a field may have the <box> or <threeDBox> style, but not both at once.
+
+References: textStyle (property), borderPattern (property), borderColor (property), field (keyword), plain (keyword), threeDBox (keyword), property (glossary), chunk (glossary), keyword (glossary)
+
+Tags: ui

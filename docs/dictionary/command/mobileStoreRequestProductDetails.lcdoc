@@ -1,0 +1,29 @@
+Name: mobileStoreRequestProductDetails
+
+Type: command
+
+Syntax: mobileStoreRequestProductDetails <productID> 
+
+Summary: Request details for a specific in-app purchase.
+
+Introduced: 6.7
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileStoreRequestProductDetails "com.runrev.sampleapp.consumable"
+
+Parameters:
+productID: The identifier of the product for which details are to be requested.
+
+Description:
+Use the <mobileStoreRequestProductDetails> command to request information about a specific product from the store.
+
+The command <mobileStoreRequestProductDetails> is used to request information about a specific product. If the request is successful, the store responds by sending a 
+<productDetailsReceived> message. If the request is not successful,  the store sends a <productRequestError> message.
+
+This command fetches values for various keys, such as price and description, as specified when creating the in-app items in the vendor's developer console. If a value for a key is not specified, empty is returned for that key. The keys can differ depending on the store you are using. For more details on the keys, see <productDetailsReceived> message.
+
+References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreMakePurchase (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command), mobileStoreProductProperty (function), mobileStorePurchasedProducts (function), mobileStorePurchaseError (function), mobileStoreCanMakePurchase (function), purchaseStateUpdate (message), productRequestError (message), productDetailsReceived (message)

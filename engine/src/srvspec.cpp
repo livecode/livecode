@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -350,9 +350,14 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	{
 		// IM-2014-07-28: [[ Bug 12822 ]] Override default ssl certificate loading.
 		if (curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYPEER, 1) != CURLE_OK ||
-			curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYHOST, 2) != CURLE_OK ||
--			curl_easy_setopt(t_url_handle, CURLOPT_CAINFO, nil) != CURLE_OK ||
-			curl_easy_setopt(t_url_handle, CURLOPT_SSL_CTX_FUNCTION, _set_ssl_certificates_callback) != CURLE_OK)
+			curl_easy_setopt(t_url_handle, CURLOPT_SSL_VERIFYHOST, 2) != CURLE_OK
+#if defined(_LINUX) || defined(_WIN32)
+            // These options are not supported when using the OSX system libcurl
+            // as it uses the OS' certificate database and not a cert file.
+			|| curl_easy_setopt(t_url_handle, CURLOPT_CAINFO, nil) != CURLE_OK
+			|| curl_easy_setopt(t_url_handle, CURLOPT_SSL_CTX_FUNCTION, _set_ssl_certificates_callback) != CURLE_OK
+#endif
+            )
 			t_error = "couldn't configure ssl";
 	}
 

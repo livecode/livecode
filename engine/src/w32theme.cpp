@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -278,9 +278,10 @@ Boolean MCNativeTheme::load()
 
         MCAutoStringRef t_type, t_error, t_string_value;
         MCAutoValueRef t_value;
-        if (MCS_query_registry(MCSTR(menucolorsregs[i]), &t_value, &t_type, &t_error) &&
-            ctxt . ConvertToMutableString(*t_value, &t_string_value) &&
-            MCStringFindAndReplaceChar(*t_string_value, ' ', ',', kMCCompareExact))
+        if (MCS_query_registry(MCSTR(menucolorsregs[i]), &t_value, &t_type, &t_error)
+            && *t_value != nil
+            && ctxt . ConvertToMutableString(*t_value, &t_string_value)
+            && MCStringFindAndReplaceChar(*t_string_value, ' ', ',', kMCCompareExact))
 		{
 			/* UNCHECKED */ MCStringCopy(*t_string_value, menucolors[i]);
 		}

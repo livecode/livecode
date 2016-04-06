@@ -1,0 +1,36 @@
+Name: include
+
+Type: command
+
+Syntax: include p <ath> 
+
+Summary: The <include> command executes the given script in the context of the global environment.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+include "includes/foo.lc"
+
+Example:
+include "/home/mark/www/scripts/foo.lc"
+
+Parameters:
+ath: 
+path (enum): The path to the file containing the script to include. .
+- "absolute": An absolute path to the file. For example "/home/user/www/scripts/foo.lc".
+- "relative": A relative path to the file. Relative paths are resolved relative to the current folder. For example "includes/foo.lc" where folder 'includes' is in the current folder.
+
+Description:
+Use the <include> command to load script contained in other files.
+
+<Include> is only available when running in CGI mode (Server).
+
+>*Note:* LiveCode server scripts do not require specific file extensions. Common extensions used include ".irev" and ".lc". 
+
+>*Note:* Upon <include> a script is loaded into memory and parsed. Any variables and handler definitions are added to the global (script) environment. Then, each command/function is executed in order as it was encountered in the file.
+
+>*Note:* The behavior of the include command is identical regardless of where it is run from - e.g. if it is run from a handler in a stack, it only affect the global script environment (home stack).

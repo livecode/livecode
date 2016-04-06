@@ -57,7 +57,7 @@ BEGIN
     DEFPUSHBUTTON   "Log In",IDOK,151,105,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,204,105,50,14
     ICON            IDI_SECURITY_WARNING,IDC_AUTH_USERNAME_LABEL,7,7,21,20
-    LTEXT           "To view this page, you must log into this area on www.runrev.com:80:",IDC_AUTH_REASON,37,7,217,17
+    LTEXT           "To view this page, you must log into this area on www.livecode.com:80:",IDC_AUTH_REASON,37,7,217,17
     LTEXT           "Restricted area for staff",IDC_AUTH_REALM,43,27,211,9
     LTEXT           "Your password will be sent unencrypted. Or your password might be sent encrypted.",IDC_AUTH_SECURE,37,41,217,17
     EDITTEXT        IDC_AUTH_USERNAME,85,66,156,14,ES_AUTOHSCROLL

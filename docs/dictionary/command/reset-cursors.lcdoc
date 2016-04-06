@@ -1,0 +1,32 @@
+Name: reset cursors
+
+Type: command
+
+Syntax: reset cursors
+
+Summary: Reloads the standard set of <cursor|cursors>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+reset cursors
+
+Description:
+Use the <reset cursors> <command> to change the set of <cursor(glossary)|cursors> used by LiveCode without restarting the <application>.
+
+LiveCode's built-in cursors are used whenever the <cursor> <property> has not been set to a custom <cursor(property)>. If you change the set of built-in <cursor(glossary)|cursors>, you must either quit and restart the <application> or use the <reset cursors> <command> to begin using the new <cursor(property)> shapes.
+
+You can force LiveCode to use the system cursors with the following statements:
+
+  delete stack "revCursors"
+  reset cursors
+
+>*Warning:*  If you use the <delete stack> command to remove the "revCursors" <stack>, LiveCode's <cursor(glossary)|cursors> are permanently deleted and you will need to <download> a new cursors <stack> to restore them.
+
+References: cursor (property), choose (command), delete stack (command), reset paint (command), stack (object), property (glossary), application (glossary), cursor (glossary), download (glossary), command (glossary)
+
+Tags: ui

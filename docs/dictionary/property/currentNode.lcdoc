@@ -1,0 +1,34 @@
+Name: currentNode
+
+Type: property
+
+Syntax: set the currentNode of <player> to <nodeID> 
+
+Summary: Specifies the current node in a <QuickTime VR> movie.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the currentNode of player "Arctic" to 3
+
+Example:
+put the currentNode of player myPlayerName into myNode
+
+Value: The <currentNode> is a positive <integer>.
+
+Description:
+Use the <currentNode> <property> to find out where the user is in a <QuickTime VR> movie.
+
+Each node of a QuickTime VR movie is a viewpoint. The movie author sets the nodes during development of the movie. The user can change nodes using the navigational controls in the player; a handler can change nodes by setting the player's <currentNode> <property>.
+
+If the player does not contain a QuickTime VR movie, its <currentNode> <property> is zero.
+
+References: nodes (property), integer (keyword), nodeChanged (message), QuickTime VR (glossary), property (glossary)
+
+Tags: multimedia

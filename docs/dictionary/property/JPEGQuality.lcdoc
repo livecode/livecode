@@ -1,0 +1,36 @@
+Name: JPEGQuality
+
+Type: property
+
+Syntax: set the JPEGQuality to <qualityNumber> 
+
+Summary: Specifies the quality level of <JPEG> <image|images> created by LiveCode.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the JPEGQuality to 40
+
+Example:
+set the JPEGQuality to the JPEGQuality - 10
+
+Value:
+The <JPEGQuality> is an integer between 1 and 100.
+By default, the <JPEGQuality> <property> is set to 100.
+
+Description:
+Use the <JPEGQuality> <property> to control the file size and sharpness of <JPEG> <files> created with the <export> <command>.
+
+JPEG compression is inherently lossy, which means some detail is always lost when an image is compressed using this method. The <JPEGQuality> <property> controls how much detail is lost. If the <JPEGQuality> is 100, as much detail as possible is retained.
+
+In general, the lower the quality setting, the smaller the file size. Photographic images with naturally fuzzy edges generally do not suffer much visible loss of quality with a <JPEGQuality> setting of 50 or higher. Different <image(object)|images> may require different levels of this property to achieve acceptable results.
+
+The <JPEGQuality> setting is used when a <file> is exported in <JPEG> format using the <export> <command>, and when an <image(keyword)> whose <paintCompression> <property> is "jpeg" is changed.
+
+References: paintCompression (property), file (keyword), image (keyword), export (command), import (command), image (object), property (glossary), JPEG (glossary), command (glossary), files (function)
+
+Tags: multimedia

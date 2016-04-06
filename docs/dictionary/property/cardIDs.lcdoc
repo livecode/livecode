@@ -1,0 +1,39 @@
+Name: cardIDs
+
+Type: property
+
+Syntax: get the cardIDs of {group | stack}
+
+Summary: Reports the cards in a stack or the cards that a specified group appears on.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get line 2 to 5 of the cardIDs of this stack
+
+Example:
+repeat with y = 1 to the number of lines of the cardIDs of this stack
+
+Example:
+get the cardIDs of group "navigation"
+
+Value:
+The <cardIDs> of a stack or group reports a list of short ID properties of cards, one per line.
+This property is read-only and cannot be set.
+
+Description:
+Use the <cardIDs> property to find out which cards are in the stack, or to find out which card IDs have already been used.
+
+Each line of the <cardIDs> contains the short id of a card.
+
+The <cardIDs> of a group returns the short ids of all the cards the group is placed on.
+
+References: groupIDs (property), ID (property), cardNames (property)
+
+Tags: objects

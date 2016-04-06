@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "transfer.h"
 //#include "execpt.h"
 #include "image.h"
 #include "globals.h"
@@ -28,8 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 
 #include "w32dc.h"
-#include "w32transfer.h"
 #include "w32dnd.h"
+#include "w32-clipboard.h"
 
 #include "graphics_util.h"
 
@@ -101,7 +100,7 @@ HRESULT DropSource::GiveFeedback(DWORD p_effect)
 }
 
 // SN-2014-07-11: [[ Bug 12769 ]] Update the signature - the non-implemented UIDC dodragdrop was called otherwise
-MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
+MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint* p_image_offset)
 {
 	bool t_success;
 	t_success = true;
@@ -116,21 +115,13 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDrag
 		else
 			t_success = false;
 	}
-
-	TransferData *t_transfer_data;
-	t_transfer_data = NULL;
-	if (t_success)
-	{
-		t_transfer_data = new TransferData;
-		if (t_transfer_data != NULL)
-			t_transfer_data -> AddRef();
-		else
-			t_success = false;
-	}
-
-	if (t_success)
-		t_success = t_transfer_data -> Publish(p_pasteboard);
 	
+	// Get the IDataObject from the dragboard. Because we need one for the
+	// COM drag-and-drop API, we call the method that forces one to be
+	// created if it does not yet exist.
+	MCRawClipboard* t_dragboard = MCdragboard->GetRawClipboard();
+	IDataObject* t_transfer_data = (static_cast<MCWin32RawClipboardItem*>(t_dragboard->GetItemAtIndex(0)))->GetDataObject();
+
 	IDragSourceHelper *t_source_helper;
 	t_source_helper = NULL;
 	if (t_success && p_image != NULL)
@@ -301,20 +292,19 @@ STDMETHODIMP CDropTarget::DragEnter(LPDATAOBJECT pDataObj, DWORD grfKeyState,
 	if (m_helper != NULL)
 		m_helper -> DragEnter((HWND)dropstack -> getw() -> handle . window, pDataObj, (POINT *)&pt, *pdwEffect);
 
-	MCWindowsPasteboard *t_pasteboard;
-	t_pasteboard = new MCWindowsPasteboard(pDataObj);
+	// Place the data object onto the dragboard
+	MCWin32RawClipboardCommon* t_raw_clipboard = static_cast<MCWin32RawClipboardCommon*>(MCdragboard->GetRawClipboard());
+	t_raw_clipboard->SetToIDataObject(pDataObj);
 
 	uint4 t_old_modifierstate;
 	t_old_modifierstate = MCmodifierstate;
 
 	MCmodifierstate = keystate_to_modifierstate(grfKeyState);
 
-	MCdispatcher -> wmdragenter(dropstack -> getw(), t_pasteboard);
+	MCdispatcher -> wmdragenter(dropstack -> getw());
 	*pdwEffect = 0;
 
 	MCmodifierstate = t_old_modifierstate;
-
-	t_pasteboard -> Release();
 
 	return S_OK;
 }
@@ -371,6 +361,10 @@ STDMETHODIMP CDropTarget::DragLeave()
 		m_helper -> DragLeave();
 
 	MCdispatcher -> wmdragleave(dropstack -> getw());
+
+	// Remove the data object from the dragboard
+	MCWin32RawClipboardCommon* t_raw_clipboard = static_cast<MCWin32RawClipboardCommon*>(MCdragboard->GetRawClipboard());
+	t_raw_clipboard->SetToIDataObject(NULL);
 
 	return S_OK;
 }

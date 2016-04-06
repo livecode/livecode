@@ -1,0 +1,35 @@
+Name: armBorder
+
+Type: property
+
+Syntax: set the armBorder of <button> to {true | false}
+
+Summary: Determines whether a <button> is drawn with a border when <armed>.
+
+Associations: button
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the armBorder of button "Styles" to true
+
+Example:
+set the armBorder of button nextButton to false
+
+Example:
+if the armBorder of button ID 3 then add 1 to theCounter
+
+Description:
+Use the <armBorder> <property> to control the appearance of an <armed> <button>.
+
+The color and pattern of the border are specified by the button's borderColor and <borderPattern> <properties>.
+
+If the button's threeD or border <property> is true, the <armBorder> <property> has no effect and the border does not appear.
+
+References: armed (property), borderPattern (property), armFill (property), properties (property), button (keyword), property (glossary)
+
+Tags: ui

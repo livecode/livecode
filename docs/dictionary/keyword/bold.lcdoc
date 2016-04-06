@@ -1,0 +1,37 @@
+Name: bold
+
+Type: keyword
+
+Syntax: bold
+
+Summary: Used with the <textStyle> <property> to indicate boldface text.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textStyle of button "Label" to bold
+
+Example:
+if the textStyle of word 3 of field "Info" is bold then go card 1
+
+Description:
+Use the <bold> <keyword> to emphasize text by presenting it in boldface.
+
+You can boldface an object (which boldfaces all the text displayed by the object) or  a chunk in a field or button.
+
+To add boldfacing to an object without removing other styles (such as italic), add the <bold> <keyword> to the end of the <textStyle>. The following example adds bold to the styles of a <button> :
+
+    if the textStyle of button 1 is empty then
+       set the textStyle of button 1 to bold
+    else
+       set the textStyle of button 1 to \
+             (the textStyle of button 1) & comma & "bold"
+    end if
+
+References: button (keyword), italic (keyword), textStyle (property), property (glossary), keyword (glossary)
+
+Tags: ui

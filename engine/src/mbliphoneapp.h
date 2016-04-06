@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -407,6 +407,7 @@ void MCIPhoneCallSelectorOnMainFiber(id object, SEL selector);
 void MCIPhoneCallSelectorOnMainFiberWithObject(id object, SEL selector, id arg);
 void MCIPhoneRunOnScriptFiber(void (*)(void *), void *);
 void MCIPhoneRunOnMainFiber(void (*)(void *), void *);
+void MCIPhoneRunBlockOnScriptFiber(void (^)(void));
 void MCIPhoneRunBlockOnMainFiber(void (^)(void));
 
 ////////////////////////////////////////////////////////////////////////////////

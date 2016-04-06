@@ -1,0 +1,34 @@
+Name: optionKeyDown
+
+Type: message
+
+Syntax: optionKeyDown <keyName> 
+
+Summary: Sent when the user presses an <Option key>, <Meta key>, or <Alt key|Alt> <key combination>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on optionKeyDown theKey -- strip high bit
+  answer numToChar(charToNum(theKey) - 128)
+end optionKeyDown
+
+Parameters:
+keyName: The actual character typed.
+
+Description:
+Handle the <optionKeyDown> <message> if you want to provide <Option key> shortcuts, or do something special when the user types an <Option key> combination.
+
+The <optionKeyDown> <message> is sent only when the user types a <key combination> that produces a <character>. For example, typing Option-F11 does not send an <optionKeyDown> <message>, because Option-F11 does not produce a <character>.
+
+On MacOS 9, some key codes are not sent if the preceding character is one that produces an international diacritical. In those cases, the key code is held until the second character is typed, which then produces a character with an umlaut or other diacritical. So there is no way to trap these option keys until the user types the second character.
+
+The message is sent to the active (focused) control, or to the current card if no control is focused.
+
+The terminology varies depending on platform. The <optionKeyDown> <message> is sent when the user types a <character> while holding down the <Option key> (<Mac OS|Mac OS systems>), <Meta key> (<Unix|Unix systems>), or <Alt key> (<Windows|Windows systems>).
+
+References: Meta key (glossary), key combination (glossary), Option key (glossary), character (glossary), Windows (glossary), message (glossary), Mac OS (glossary), Unix (glossary), Alt key (glossary), altKey (function), optionKey (function), commandKeyDown (message), keyDown (message), rawKeyDown (message), controlKeyDown (message)

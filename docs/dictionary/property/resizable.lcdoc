@@ -1,0 +1,33 @@
+Name: resizable
+
+Type: property
+
+Syntax: set the resizable of <stack> to {true | false}
+
+Summary: Specifies whether the user can resize a <stack window>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the resizable of this stack to false
+
+Value (bool):The <resizable> of a <stack> is true or false.
+By default, the <resizable> <property> of newly created <stacks> is set to true.
+
+Value:
+The <resizable> <property> <control|controls> only whether the user can change the <stack|stack's> size. Even if the <resizable> is false, you can use the <rectangle> <property> (and related <properties>) to change the <stack|stack's> size in a <handler>.
+
+If the stack's style is "modal", or if is has been opened with the <modal> <command>, the setting of the <resizable> <property> has no effect, and the <stack window> cannot be resized.
+
+Description:
+Use the <resizable> <property> to control whether the user can change a window's size.
+
+References: minHeight (property), liveResizing (property), properties (property), maxWidth (property), resizeStack (message), rectangle (keyword), property (glossary), handler (glossary), command (glossary), stack window (glossary), stacks (function), modal (command), stack (object), control (object)
+
+Tags: windowing

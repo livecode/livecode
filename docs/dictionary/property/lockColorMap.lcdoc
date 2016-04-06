@@ -1,0 +1,32 @@
+Name: lockColorMap
+
+Type: property
+
+Syntax: set the lockColormap to {true | false}
+
+Summary: Specifies whether changes to the <color table> cause the screen to be <redraw|redrawn> with the new <color table>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the lockColormap to true
+
+Value (bool):The <lockColormap> is true or false.
+By default, the <lockColorMap> <property> is set to true on <Mac OS|Mac OS systems> with 8- <bit> displays (the <screenColors> equal to 256), and to false otherwise.
+
+Description:
+Use the <lockColorMap> <property> to trade off between color accuracy and possible screen flashing when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+
+If the <lockColorMap> <property> is set to false, newly-displayed <image(object)|images>, <video clip|videoclips>, and <player(object)|players> can change the <color table> used by LiveCode. This displays the colors in <image(object)|images> and movies more accurately, but can cause screen flashing. (To minimize screen flashing when the <lockColorMap> is false, go to the <card> containing the <image(keyword)> and then set the <lockColorMap> <property> to true.)
+
+If the <lockColorMap> is true, the <color table> cannot be changed. In this case, if an <image(keyword)>, <video clip>, or <player(keyword)> contains a color not in the current <color table>, the closest existing color is substituted. This may cause banding or strange-looking displays in photographs and other <image(object)|images> that contain a smooth gradation of colors.
+
+This property has no effect on systems using 16-bit or 24-bit color.
+
+References: remapColor (property), card (keyword), image (keyword), player (keyword), unlock colorMap (command), image (object), player (object), property (glossary), redraw (glossary), bit (glossary), color table (glossary), Mac OS (glossary), video clip (glossary), bit depth (glossary), screenColors (function)
+
+Tags: ui

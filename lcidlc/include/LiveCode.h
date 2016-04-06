@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -122,6 +122,12 @@ typedef enum LCError
 	
 	// The value argument to object set/get was nil
 	kLCErrorNoObjectPropertyValue = 35,
+    
+    // The query option passed to InterfaceQuery was unknown
+    kLCErrorInvalidInterfaceQuery = 36,
+    
+    // Returned if LicenseCheck fails.
+    kLCErrorUnlicensed = 42,
 	
 	//////////
 	
@@ -418,6 +424,13 @@ enum
 	kLCValueOptionNumberFormatFromContext = 3 << 26,	
 };
 	
+enum
+{
+    kLCLicenseEditionCommunity = 1000,
+    kLCLicenseEditionIndy = 2000,
+    kLCLicenseEditionBusiness = 3000,
+};
+    
 ////////////////////////////////////////////////////////////////////////////////
 	
 typedef struct __LCArray *LCArrayRef;
@@ -1506,6 +1519,32 @@ LCError LCPostBlockOnMainThread(unsigned int options, void (^callback)(void));
 	
 ////////////////////////////////////////////////////////////////////////////////
 
+// Function:
+//   LCLicenseCheckEdition
+// Parameters:
+//   (in) min_edition
+//
+// Errors:
+//   Unlicensed - the license check failed.
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Checks that the engine is licensed with at min_edition edition level.
+//
+//   If the check fails, then an 'unlicensed' error will be returned when control
+//   returns to the engine.
+//
+//   If a license check fails during the external's initialize handler then the
+//   whole external is marked as unlicensed and all further calls to it will cause
+//   an unlicensed error to be raised.
+//
+//   If a license check fails during an external's handler execution then just
+//   that call will fail.
+//
+LCError LCLicenseCheckEdition(unsigned int min_edition);
+    
+////////////////////////////////////////////////////////////////////////////////
+    
 #if defined(__OBJC__) && TARGET_OS_IPHONE
 
 #import <UIKit/UIKit.h>
@@ -1523,6 +1562,21 @@ LCError LCPostBlockOnMainThread(unsigned int options, void (^callback)(void));
 //    view of the application.
 //
 LCError LCInterfaceQueryView(UIView **r_view);
+    
+// Function:
+//   LCInterfaceQueryViewController
+// Parameters:
+//   (out) r_controller - UIViewController *
+// Errors:
+//   (none)
+// Context Safety:
+//    May be called in any context on the main thread.
+// Semantics:
+//    Returns the UIViewController for the currently visible stack that makes up the main
+//    view of the application.
+//
+
+LCError LCInterfaceQueryViewController(UIViewController** r_controller);
 
 // Function:
 //   LCInterfaceQueryViewScale

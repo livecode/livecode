@@ -1,0 +1,29 @@
+Name: traceStack
+
+Type: property
+
+Syntax: set the traceStack to <stackName> 
+
+Summary: Reports the name of the <stack> currently being <debug|debugged>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Example:
+set the traceStack to "My Stack"
+
+Value:
+The <traceStack> <property> is the name of a <stack>.
+If the debugger is not active, the <traceStack> is empty.
+
+Description:
+Use the <traceStack> <property> to set the <stack> being <debug|debugged>.
+
+You can set the stack to be debugged in the Script Debug window.
+
+>*Important:*  This <property> may change or be removed in future releases.
+
+References: debugDo (command), stack (object), debug (glossary), property (glossary)

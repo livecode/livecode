@@ -1,0 +1,35 @@
+Name: floor
+
+Type: function
+
+Syntax: the floor of <number> 
+
+Syntax: floor(<number>)
+
+Summary: <return|Returns> the greatest integer less than or equal to number.
+
+Introduced: 6.7
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+floor(33.567) -- result is 33
+
+Example:
+floor(-6.3) -- result is -7
+
+Parameters:
+number: Any number, or expression that evaluates to a number.
+
+Returns: The <floor> <function> <return|returns> an <integer>.
+
+Description:
+Use the <floor> <function> to return the greatest integer less than or equal to a number.
+
+The <floor> <function> is different from <round> in that floor completely ignores the fractional part of the number. For example, floor(5.1) <return(glossary)|returns> 5, but  floor(4.99) <return(glossary)|returns> 4. This means that the <floor> function does not always <return(constant)> the <integer> closest to the <number>.
+
+References: integer (keyword), return (constant), ceil (function), round (function), abs (function), trunc (function), return (glossary), function (control_st)
+
+Tags: math

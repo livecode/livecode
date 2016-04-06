@@ -1,0 +1,12 @@
+Name: associative array
+
+Synonyms: associative array,hash
+
+Type: glossary
+
+Description:
+An <array> whose <key|keys> can be any <string>, not just <integer|integers>. <associative array|Associative arrays> let you name each <element> rather than numbering it.
+
+References: integer (glossary), array (glossary), element (glossary), key (glossary), string (glossary), associative array (glossary)
+
+Tags: properties

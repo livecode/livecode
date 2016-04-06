@@ -1,0 +1,34 @@
+Name: mobileAdGetTopLeft
+
+Type: function
+
+Syntax: mobileAdGetTopLeft (<adName>)
+
+Summary: Returns the topLeft position of an ad.
+
+Associations: stack
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobileAdGetTopLeft("my ad") into tTopLeft
+
+Parameters:
+adName: The name of ad (as specified in mobileAdCreate).
+
+The result: Before calling this function you must have registered your app's id using <mobileAdRegister>. If not, the result will contain "not registered with service".
+
+Returns:
+Returns the topLeft position of an ad. This is 2 comma separated values giving the left and top coordinates of the ad relative to the topLeft corner of the stack, which is 0,0.
+Returns "ad not found" if the ad does not exist.
+
+Description:
+Use the <mobileAdGetTopLeft> function to retrieve the top left postition of an ad.
+
+The mobileGetTopLeft function returns the topLeft position of an ad.
+
+References: topLeft (property), adLoaded (message), adLoadFailed (message), adClicked (message), mobileAdCreate (command), mobileAdDelete (command), mobileAdSetVisible (command), mobileAdSetTopLeft (command), mobileAdRegister (command), mobileAdGetVisible (function)

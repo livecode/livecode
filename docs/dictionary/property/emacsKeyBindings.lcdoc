@@ -1,0 +1,41 @@
+Name: emacsKeyBindings
+
+Type: property
+
+Syntax: set the emacsKeyBindings to {true | false}
+
+Summary: Switches key actions between standard actions and those used in the <Emacs> text editor.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+set the emacsKeyBindings to true
+
+Value (bool):The <emacsKeyBindings> is true or false.
+By default, the <emacsKeyBindings> <property> is set to false.
+
+Description:
+Use the <emacsKeyBindings> <property> if you're familiar with <Emacs> and prefer to use its standard keystrokes for text editing.
+
+Emacs is a text editor which is popular among Unix users. It uses keystrokes and key combinations different from the standard LiveCode keys. For example:
+
+        * Control-V moves the insertion point down a page
+        * Control-Y pastes the contents of the clipboard
+        * Control-A moves the insertion point to the beginning of the line
+        * Control-F moves the insertion point forward one character
+        * Delete backspaces over the previous character
+
+(For a complete list of supported key bindings, see the Emacs Key Bindings Reference.)
+
+>*Important:*  <keyboard equivalent|Keyboard equivalents> for menu items take precedence over the Emacs <key binding|key bindings>. If one of the <key binding|key bindings> is already in use as a menu item <keyboard equivalent>, it cannot be used for text editing. (For this reason, some of the Emacs key bindings do not function as expected in the <development environment>.)
+
+Changes:
+In versions before 1.1, the emacsKeyBindings property affected Command-key combinations, not Control-key combinations, on Mac OS systems.
+
+References: lookAndFeel (property), keyDown (message), property (glossary), keyboard equivalent (glossary), development environment (glossary), key binding (glossary), Emacs (glossary)
+
+Tags: ui

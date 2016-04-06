@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -181,7 +181,7 @@ Boolean MCEPS::mup(uint2 which, bool p_release)
 	return True;
 }
 
-void MCEPS::setrect(const MCRectangle &nrect)
+void MCEPS::applyrect(const MCRectangle &nrect)
 {
 	if (rect.width != nrect.width || rect.height != nrect.height)
 	{
@@ -433,9 +433,9 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 }
 #endif
 
-IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
+IO_stat MCEPS::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	return defaultextendedsave(p_stream, p_part);
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_length)
@@ -443,13 +443,13 @@ IO_stat MCEPS::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, u
 	return defaultextendedload(p_stream, p_version, p_length);
 }
 
-IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	IO_stat stat;
 
 	if ((stat = IO_write_uint1(OT_MCEPS, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
+	if ((stat = MCObject::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_uint4(size, stream)) != IO_NORMAL)
 		return stat;
@@ -474,7 +474,7 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint2(ey, stream)) != IO_NORMAL)
 		return stat;
 	if (flags & F_RETAIN_IMAGE)
-		if ((stat = image->save(stream, p_part, p_force_ext)) != IO_NORMAL)
+		if ((stat = image->save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
 	if ((stat = IO_write_uint2(curpage, stream)) != IO_NORMAL)
 		return stat;
@@ -484,7 +484,7 @@ IO_stat MCEPS::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	for (i = 0 ; i < pagecount ; i++)
 		if ((stat = IO_write_uint4(pageIndex[i], stream)) != IO_NORMAL)
 			return stat;
-	return savepropsets(stream);
+	return savepropsets(stream, p_version);
 }
 
 MCControl *MCEPS::clone(Boolean attach, Object_pos p, bool invisible)
@@ -565,8 +565,6 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 			drawborder(dc, trect, borderwidth);
 	if (getstate(CS_KFOCUSED))
 		drawfocus(dc, dirty);
-	if (state & CS_SELECTED)
-		drawselected(dc);
 }
 
 IO_stat MCEPS::load(IO_handle stream, uint32_t version)
@@ -574,59 +572,59 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	delete postscript;
 	delete prolog;
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	postscript = new char[size + 1];
 	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	postscript[size] = '\0';
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] EPS is always ASCII so legacy.
 	if ((stat = IO_read_cstring_legacy(prolog, stream, 2)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	int4 i;
 	if ((stat = IO_read_int4(&i, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	xscale = MCU_i4tor8(i);
 	if (flags & F_SCALE_INDEPENDENTLY)
 	{
 		if ((stat = IO_read_int4(&i, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		yscale = MCU_i4tor8(i);
 	}
 	else
 		yscale = xscale;
 	if ((stat = IO_read_int2(&angle, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&tx, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_int2(&ty, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&ex, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&ey, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (flags & F_RETAIN_IMAGE)
 	{
 		image = new MCImage;
 		image->setparent(this);
 		if ((stat = image->load(stream, version)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	}
 	if (version > 1300)
 	{
 		if ((stat = IO_read_uint2(&curpage, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if ((stat = IO_read_uint2(&pagecount, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (pagecount > 0)
 		{
 			pageIndex = new uint4[pagecount];
 			for (i = 0 ; i < pagecount ; i++)
 				if ((stat = IO_read_uint4(&pageIndex[i], stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 		}
 	}
 	return loadpropsets(stream, version);

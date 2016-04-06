@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2014-2015 Runtime Revolution Ltd.
+Copyright (C) 2014-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -34,7 +34,7 @@ This simple library gives access to the LiveCode Builder canvas syntax from Live
    
 Tags: Canvas Library
 */
-library com.livecode.libraries.example.canvas
+library com.livecode.library.canvas
 
 metadata version is "1.0.0"
 metadata author is "LiveCode"
@@ -56,7 +56,7 @@ Description:
 Creates a canvas of the given size for the other handlers to use. 
 */
 
-public handler canvasCreate(in pWidth as Integer, in pHeight as Integer) as undefined
+public handler canvasCreate(in pWidth as Integer, in pHeight as Integer) returns nothing
   -- Create a new canvas, this will release any previous canvas.
   put a new canvas with size [ pWidth, pHeight ] into sCanvas
   -- Set the paint to opaque black and fill the whole area.
@@ -68,11 +68,11 @@ end handler
 Summary: Destroys the canvas 
 
 Description:
-Destroys the canvas by simply assigning undefined to the canvas variable.
+Destroys the canvas by simply assigning nothing to the canvas variable.
 */
 
-public handler canvasDestroy() as undefined
-  put undefined into sCanvas
+public handler canvasDestroy() returns nothing
+  put nothing into sCanvas
 end handler
 
 /*
@@ -85,7 +85,7 @@ pAlpha: The alpha value of the color to set.
 Description:
 Sets the current color of the canvas to the given RGBA value.
 */
-public handler canvasSetColor(in pRed as Real, in pGreen as Real, in pBlue as Real, in pAlpha as Real) as undefined
+public handler canvasSetColor(in pRed as Real, in pGreen as Real, in pBlue as Real, in pAlpha as Real) returns nothing
   set the paint of sCanvas to solid paint with color [pRed, pGreen, pBlue, pRed]
 end handler
 
@@ -97,7 +97,7 @@ pRadius: The radius of the circle.
 Description:
 Fills a circle of the given radius at the given position in the canvas.
 */
-public handler canvasFillCircle(in pX as Real, in pY as Real, in pRadius as Real) as undefined
+public handler canvasFillCircle(in pX as Real, in pY as Real, in pRadius as Real) returns nothing
   fill circle path centered at point [pX, pY] with radius pRadius on sCanvas
 end handler
 
@@ -108,7 +108,7 @@ pObjectId: A string which is an object chunk referring to an image.
 Description:
 This handler copies the current contents of the canvas to the specified image object.
 */
-public handler canvasApplyToImage(in pObjectId as String) as undefined
+public handler canvasApplyToImage(in pObjectId as String) returns nothing
   variable tObject as ScriptObject
 
   -- Resolving the script object gets a weak reference to the specified

@@ -1,0 +1,47 @@
+Name: qtIdleRate
+
+Type: property
+
+Syntax: set the qtIdleRate to <number> 
+
+Syntax: get the qtIdleRate
+
+Summary: The global property <qtIdleRate> specifies how frequently to idle QuickTime movies.
+
+Introduced: 2.7
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+set the qtIdleRate to 50
+
+Example:
+put the qtIdleRate into tQtIdleRate
+
+Value: The <qtIdleRate> is an integer between 1 and 65535.
+
+Description:
+Use the <qtIdleRate> in conjunction with the global <idleRate property> to control updating of QT movies. Increasing the <qtIdleRate> causes less frequent updates, and decreases the amount of CPU time the application uses.
+
+By default, the qtIdleRate property is set to 50 (one-twentieth of a second).
+
+The <qtIdleRate> is the time in milliseconds between one update of a player and the next.
+
+Updating gives the player object time to redraw the video or other media being played. A higher idle rate will result in smoother playback but will also require more cpu time. 
+
+LiveCode uses the following heuristics to determine how frequently to idle QT players:
+
+If the version of QT &lt; 6 then it idles at the <qtIdleRate> at all times.
+
+If the version of QT &gt;=6 then:
+        * If no players are playing and none of the visible players have interactive movies assigned they are idled at the qtIdleRate.
+        * If no players are playing, but one of more of the visible players are interactive then they are idled at the qtIdleRate.
+        * If players are playing then they are idled at the <qtIdleRate>.
+  
+Interactive movies are ones such as QTVR and Flash that need to periodically check for input and update themselves.
+
+>*Note:* The <qtIdleRate> property has no effect on Windows if the <dontUseQT property> is true.
+
+References: dontUseQT property (property), idleRate property (property), QTVersion (function)

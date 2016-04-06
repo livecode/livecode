@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -62,6 +62,8 @@ void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 {
 	MCAutoListRef t_list;
 	MCAutoStringRef t_error;
+
+#ifdef MCSSL
 	if (SSL_ciphernames(&t_list, &t_error))
 	{
 		if (*t_error != nil)
@@ -69,6 +71,7 @@ void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 		if (MCListCopyAsString(*t_list, r_names))
 			return;
 	}
+#endif /* MCSSL */
 
 	ctxt.Throw();
 }

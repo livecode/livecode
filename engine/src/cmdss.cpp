@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -129,6 +129,7 @@ MCGo::~MCGo()
 	delete background;
 	delete card;
 	delete window;
+	delete widget;
 }
 
 Parse_stat MCGo::parse(MCScriptPoint &sp)
@@ -292,6 +293,19 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 					case CT_BACKWARD:
 					case CT_FORWARD:
 						{
+							if (sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
+							{
+								widget = new MCChunk(False);
+								if (widget->parse(sp, False) != PS_NORMAL)
+								{
+									MCperror->add(PE_GO_BADWIDGETEXP, sp);
+									return PS_ERROR;
+								}
+								direction = nterm;
+								
+								break;
+							}
+
 							card = new MCCRef;
 							card->etype = nterm;
 							MCScriptPoint oldsp(sp);
@@ -988,6 +1002,26 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 
     ctxt . SetTheResultToEmpty();
     
+	// go ( forward | backward ) in widget ...
+	if (widget != nil)
+	{
+		MCObject *t_object;
+		uint32_t t_parid;
+
+		if (!widget->getobj(ctxt, t_object, t_parid, True) || t_object->gettype() != CT_WIDGET)
+		{
+			ctxt.LegacyThrow(EE_GO_BADWIDGETEXP);
+			return;
+		}
+		
+		if (direction == CT_BACKWARD)
+			MCInterfaceExecGoBackInWidget(ctxt, (MCWidget*)t_object);
+		else
+			MCInterfaceExecGoForwardInWidget(ctxt, (MCWidget*)t_object);
+		
+		return;
+	}
+	
 	if (stack == NULL && background == NULL && card == NULL)
 	{
         ctxt . LegacyThrow(EE_GO_NODEST);
@@ -1015,7 +1049,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
             else if (stack -> etype == CT_ID)
             {
                 uinteger_t t_stack_id;
-                if (!ctxt . EvalExprAsUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
+                if (!ctxt . EvalExprAsStrictUInt(stack -> startpos, EE_GO_BADSTACKEXP, t_stack_id))
                     return;
 
                 sptr = MCdefaultstackptr->findstackid(t_stack_id);
@@ -1036,7 +1070,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 				case CT_ID:
                 {
                     uinteger_t t_stack_id;
-                    if (!ctxt . EvalExprAsUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
+                    if (!ctxt . EvalExprAsStrictUInt(stack -> next -> startpos, EE_CHUNK_BADSTACKEXP, t_stack_id))
                         return;
 
                     sptr = sptr -> findsubstackid(t_stack_id);
@@ -1216,6 +1250,16 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 
 void MCGo::compile(MCSyntaxFactoryRef ctxt)
 {
+	if (widget != nil)
+	{
+		MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+		widget->compile(ctxt);
+		MCSyntaxFactoryExecMethod(ctxt, direction == CT_BACKWARD ? kMCInterfaceExecGoBackInWidgetMethodInfo : kMCInterfaceExecGoForwardInWidgetMethodInfo);
+		MCSyntaxFactoryEndStatement(ctxt);
+		
+		return;
+	}
+	
     MCSyntaxFactoryBeginStatement(ctxt, line, pos);
     
     bool t_is_home, t_is_relative;
@@ -1567,6 +1611,7 @@ void MCHide::exec_ctxt(MCExecContext &ctxt)
 		MCInterfaceExecHideGroups(ctxt);
 		break;
 	case SO_OBJECT:
+    {
 		MCObjectPtr t_target;
         if (!object->getobj(ctxt, t_target, True))
 		{
@@ -1577,6 +1622,7 @@ void MCHide::exec_ctxt(MCExecContext &ctxt)
 			MCInterfaceExecHideObjectWithEffect(ctxt, t_target, effect);
 		else
 			MCInterfaceExecHideObject(ctxt, t_target);
+    }
 		break;
 	case SO_MENU:
 		MCInterfaceExecHideMenuBar(ctxt);
@@ -1638,6 +1684,7 @@ Parse_stat MCLock::parse(MCScriptPoint &sp)
 	const LT *te;
 
 	initpoint(sp);
+    sp.skip_token(SP_FACTOR, TT_THE);
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add(PE_LOCK_NOTARGET, sp);
@@ -1794,6 +1841,9 @@ void MCLock::exec_ctxt(MCExecContext &ctxt)
 			MCInterfaceExecLockScreenForEffect(ctxt, t_region_ptr);
 		}
 		break;
+    case LC_CLIPBOARD:
+        MCPasteboardExecLockClipboard(ctxt);
+        break;
 	default:
 		break;
     }
@@ -2076,9 +2126,6 @@ MCSave::~MCSave()
 
 Parse_stat MCSave::parse(MCScriptPoint &sp)
 {
-	Symbol_type type;
-	const LT *te;
-
 	initpoint(sp);
 	target = new MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
@@ -2087,19 +2134,44 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 		(PE_SAVE_BADEXP, sp);
 		return PS_ERROR;
 	}
-	if (sp.next(type) != PS_NORMAL)
-		return PS_NORMAL;
-	if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->which != PT_AS)
+
+	/* Parse optional "as _" clause */
+	if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
 	{
-		sp.backup();
-		return PS_NORMAL;
+		if (sp.parseexp(False, True, &filename) != PS_NORMAL)
+		{
+			MCperror->add(PE_SAVE_BADFILEEXP, sp);
+			return PS_ERROR;
+		}
 	}
-	if (sp.parseexp(False, True, &filename) != PS_NORMAL)
+
+	/* Parse optional "with format _" or "with newest format" clauses */
+	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		MCperror->add
-		(PE_SAVE_BADFILEEXP, sp);
-		return PS_ERROR;
+		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_NEWEST) == PS_NORMAL)
+		{
+			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+			newest_format = true;
+		}
+		else
+		{
+			if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_FORMAT) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+			if (sp.parseexp(False, True, &format) != PS_NORMAL)
+			{
+				MCperror->add(PE_SAVE_BADFORMATEXP, sp);
+				return PS_ERROR;
+			}
+		}
 	}
+
 	return PS_NORMAL;
 }
 
@@ -2157,16 +2229,53 @@ void MCSave::exec_ctxt(MCExecContext &ctxt)
         ctxt . LegacyThrow(EE_SAVE_NOTASTACK);
         return;
 	}
+
+	MCStack *t_stack = static_cast<MCStack *>(optr);
+
+	MCAutoStringRef t_filename;
 	if (filename != NULL)
 	{
-		MCAutoStringRef t_filename;
         if (!ctxt . EvalExprAsStringRef(filename, EE_SAVE_BADNOFILEEXP, &t_filename))
             return;
+	}
 
-		MCInterfaceExecSaveStackAs(ctxt, (MCStack *)optr, *t_filename);
+	MCAutoStringRef t_format;
+	if (format != NULL)
+	{
+		if (!ctxt.EvalExprAsStringRef(format, EE_SAVE_BADNOFORMATEXP, &t_format))
+			return;
+	}
+
+	if (NULL != filename)
+	{
+		if (NULL != format)
+		{
+			MCInterfaceExecSaveStackAsWithVersion(ctxt, t_stack, *t_filename, *t_format);
+		}
+		else if (newest_format)
+		{
+			MCInterfaceExecSaveStackAsWithNewestVersion(ctxt, t_stack, *t_filename);
+		}
+		else
+		{
+			MCInterfaceExecSaveStackAs(ctxt, t_stack, *t_filename);
+		}
 	}
 	else
-        MCInterfaceExecSaveStack(ctxt, (MCStack*) optr);
+	{
+		if (NULL != format)
+		{
+			MCInterfaceExecSaveStackWithVersion(ctxt, t_stack, *t_format);
+		}
+		else if (newest_format)
+		{
+			MCInterfaceExecSaveStackWithNewestVersion(ctxt, t_stack);
+		}
+		else
+		{
+			MCInterfaceExecSaveStack(ctxt, t_stack);
+		}
+	}
 }
 
 void MCSave::compile(MCSyntaxFactoryRef ctxt)
@@ -2541,18 +2650,34 @@ MCSubwindow::~MCSubwindow()
 	delete at;
 	delete parent;
 	delete aligned;
+	
+	delete widget;
+	delete properties;
 }
 
 Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	target = new MCChunk(False);
-	if (target->parse(sp, False) != PS_NORMAL)
+	
+	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_WIDGET) == PS_NORMAL)
 	{
-		MCperror->add
-		(PE_SUBWINDOW_BADEXP, sp);
-		return PS_ERROR;
+		if (sp.parseexp(False, True, &widget) != PS_NORMAL)
+		{
+			MCperror->add(PE_SUBWINDOW_BADEXP, sp);
+			return PS_ERROR;
+		}
 	}
+	else
+	{
+		target = new MCChunk(False);
+		if (target->parse(sp, False) != PS_NORMAL)
+		{
+			MCperror->add
+			(PE_SUBWINDOW_BADEXP, sp);
+			return PS_ERROR;
+		}
+	}
+	
 	if (sp.skip_token(SP_FACTOR, TT_PREP, PT_AT) == PS_NORMAL)
 	{
 		if (sp.parseexp(False, True, &at) != PS_NORMAL)
@@ -2593,6 +2718,15 @@ Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 
+	}
+	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+	{
+		sp.skip_token(SP_FACTOR, TT_PROPERTY, P_PROPERTIES);
+		if (sp.parseexp(False, True, &properties) != PS_NORMAL)
+		{
+			MCperror->add(PE_SUBWINDOW_BADEXP, sp);
+			return PS_ERROR;
+		}
 	}
 	return PS_NORMAL;
 }
@@ -2825,6 +2959,26 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 	return ES_NORMAL;
 #endif /* MCSubwindow */
 
+	if (widget != nil)
+	{
+		MCNewAutoNameRef t_kind;
+		if (!ctxt.EvalExprAsNameRef(widget, EE_SUBWINDOW_BADEXP, &t_kind))
+			return;
+		
+		MCPoint t_at;
+		MCPoint *t_at_ptr = &t_at;
+		if (!ctxt.EvalOptionalExprAsPoint(at, nil, EE_SUBWINDOW_BADEXP, t_at_ptr))
+			return;
+		
+		MCAutoArrayRef t_properties;
+		if (!ctxt.EvalOptionalExprAsArrayRef(properties, kMCEmptyArray, EE_SUBWINDOW_BADEXP, &t_properties))
+			return;
+		
+		MCInterfaceExecPopupWidget(ctxt, *t_kind, t_at_ptr, *t_properties);
+		return;
+	}
+	
+	
 	MCObject *optr;
 	MCNewAutoNameRef optr_name;
 	uint4 parid;
@@ -2874,7 +3028,6 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_SHEET:
 		case WM_DRAWER:
 			{
-				MCerrorlock++;
 				MCNewAutoNameRef t_parent_name;
                 if (!ctxt . EvalOptionalExprAsNullableNameRef(parent, EE_SUBWINDOW_BADEXP, &t_parent_name))
                     return;
@@ -2972,6 +3125,26 @@ void MCSubwindow::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
+	if (widget != nil)
+	{
+		widget->compile(ctxt);
+		
+		if (at != nil)
+			at->compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+		
+		if (properties != nil)
+			properties->compile(ctxt);
+		else
+			MCSyntaxFactoryEvalConstantNil(ctxt);
+		
+		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecPopupWidgetMethodInfo, 0, 1, 2);
+		
+		return;
+	}
+	
+	
 	target->compile(ctxt);
 
 	switch (mode)
@@ -3051,6 +3224,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 	const LT *te;
 
 	initpoint(sp);
+    sp.skip_token(SP_FACTOR, TT_THE);
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add
@@ -3156,6 +3330,9 @@ void MCUnlock::exec_ctxt(MCExecContext &ctxt)
 			else
 				MCInterfaceExecUnlockScreen(ctxt);
 			break;
+        case LC_CLIPBOARD:
+            MCPasteboardExecUnlockClipboard(ctxt);
+            break;
 		default:
 			break;
     }

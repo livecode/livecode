@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system-private.h"
 
-bool
+MC_DLLEXPORT_DEF bool
 MCSInitialize(void)
 {
 	return
@@ -26,7 +26,7 @@ MCSInitialize(void)
 		__MCSStreamInitialize();
 }
 
-void
+MC_DLLEXPORT_DEF void
 MCSFinalize(void)
 {
 	__MCSStreamFinalize();

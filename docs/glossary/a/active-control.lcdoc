@@ -1,0 +1,14 @@
+Name: active control
+
+Synonyms: active control,active (focused) control,active (focused),focused control
+
+Type: glossary
+
+Description:
+The <control> that receives any characters the user types. Typically, this <control> is the <field> with the current <insertion point>, but other types of <control> can also be the active control. 
+ 
+When a <control> becomes active, it is said to receive the <focus>.
+
+References: field (glossary), control (glossary), insertion point (glossary), focus (glossary)
+
+Tags: ui

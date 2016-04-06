@@ -1,0 +1,40 @@
+Name: mobilePurchaseState
+
+Type: function
+
+Syntax: mobilePurchaseState(<purchaseID>)
+
+Summary: Returns the status of an active purchase.
+
+Introduced: 5.0.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobilePurchaseState(tPurchaseID) into tPurchaseState
+
+Example:
+if mobilePurchaseState(tPurchaseID) is "initialized" then
+   updateProperties
+end if
+
+Parameters:
+purchaseID: a numeric purchase identifier
+
+Returns (enum):
+   - initialized : the purchase request has been created but not sent. In this state additional properties such as the item quantity can be set.
+   - sendingRequest : the purchase request is being sent to the store/marketplace.
+   - paymentReceived : the requested item has been paid for. The item should now be delivered to the user and confirmed cia the <mobilePurchaseConfirmDelivery> command.
+   - complete : the purchase has now been paid for and delivered.
+   - restored : the purchase has been restored after a call to <mobileRestorePurchases>. The purchase should now be delivered to the user and confirmed via the <mobilePurchaseConfirmDelivery> command.
+   - cancelled : the purchase was cancelled by the user before payment was received.
+   - error : An error occurred during the payment request. More detailed information is available from the <mobilePurchaseError> function
+
+Description:
+Use the <mobilePurchaseState> function to retrieve the status of a purchase.
+
+The <mobilePurchaseState> function returns a string describing the current state of the purchase defined by purchaseID.
+
+References: mobilePurchaseSet (command), mobileDisablePurchaseUpdates (command), mobilePurchaseVerify (command), mobileRestorePurchases (command), mobilePurchaseSendRequest (command), mobilePurchaseConfirmDelivery (command), mobileEnablePurchaseUpdates (command), mobilePurchaseCreate (command), mobilePurchases (function), mobilePurchaseGet (function), mobileCanMakePurchase (function), mobilePurchaseError (function), purchaseStateUpdate (message)

@@ -1,0 +1,12 @@
+Name: poll
+
+Synonyms: poll,polling,polled
+
+Type: glossary
+
+Description:
+To repeatedly check a status (such as whether the <mouse button> is down or whether a process has completed). 
+ 
+(Polling is usually considered a less desirable technique than sending a <message> when the status changes, because it takes more processing time to repeatedly check the status and can slow down other programs on the system.)
+
+References: mouse button (glossary), message (glossary)

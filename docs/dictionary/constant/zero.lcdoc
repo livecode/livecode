@@ -1,0 +1,25 @@
+Name: zero
+
+Type: constant
+
+Syntax: zero
+
+Summary: Equivalent to the number 0.
+
+Synonyms: none
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+if the number of fields is zero then beep
+
+Description:
+Use the <zero> <constant> when it is easier to read than the numeral 0<a/>.
+
+References: constant (command)
+
+Tags: math

@@ -23,6 +23,7 @@ struct MCPattern;
 // access to image and transform now through accessor functions
 typedef MCPattern *MCPatternRef;
 
+class MCImage;
 class MCImageRep;
 
 //////////
@@ -39,6 +40,10 @@ extern MCPatternRef MCPatternRetain(MCPatternRef p_pattern);
 extern void MCPatternRelease(MCPatternRef p_pattern);
 
 extern bool MCPatternIsOpaque(MCPatternRef p_pattern);
+
+extern MCImageRep *MCPatternGetSource(MCPatternRef p_pattern);
+
+extern MCGAffineTransform MCPatternGetTransform(MCPatternRef p_pattern);
 
 // IM-2014-05-13: [[ HiResPatterns ]] Return the logical width + height of the pattern (after transform is applied)
 extern bool MCPatternGetGeometry(MCPatternRef p_pattern, uint32_t &r_width, uint32_t &r_height);

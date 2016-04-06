@@ -1,0 +1,37 @@
+Name: httpHeaders
+
+Type: property
+
+Syntax: set the httpHeaders to <headersList> 
+
+Summary: Specifies custom headers to be sent with each GET, POST or PUT request to an <HTTP> <server>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the httpHeaders to field "Headers" & return & field "Special"
+
+Value:
+The <httpHeaders> is a <string>. 
+By default, the <httpHeaders> <property> is set to empty.
+
+Description:
+Use the <httpHeaders> <property> to supply custom headers when interacting with <HTTP> <server|servers> that require them.  
+
+Whenever LiveCode contacts a web server to download a page (with the load <command> or by using a <URL> in an <expression>) or to post data (with the <post> <command>), the contents of the <httpHeaders> <property> is sent to the <web server> along with the <default> headers.
+
+The custom header lines specified by the <httpHeaders> are sent along with a set of <default> headers. If the <headersList> includes any header lines that are part of the <default> headers, the one in the <headersList> replaces the <default> header. Any new lines are appended to the end of the headers to be sent to the server. 
+
+To replace the default headers instead of adding to them, use the <libURLSetCustomHTTPHeaders> <command> instead. 
+
+>*Important:* If you have used the <libURLSetCustomHTTPHeaders> <command> to set all the headers, the <httpHeaders> setting is ignored and the headers set by <libURLSetCustomHTTPHeaders> are used instead. 
+
+For technical information about the standard headers recognized in the HTTP 1.1 protocol, see [RFC 2616](https://tools.ietf.org/html/rfc2616).
+
+References: URL (keyword), default (keyword), http (keyword), string (keyword), post (command), libURLSetCustomHTTPHeaders (command), URLDecode (function), libURLLastRHHeaders (function), property (glossary), expression (glossary), command (glossary), web server (glossary), server (glossary)
+
+Tags: networking

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "group.h"
 #include "button.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "param.h"
 #include "securemode.h"
 #include "osspec.h"
@@ -2444,31 +2444,19 @@ char *MCS_resolvepath(const char *path)
 	struct stat buf;
 	if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
 		return tildepath;
-	int4 size;
-	char *newname = new char[PATH_MAX + 2];
-	if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
-	{
-		delete tildepath;
-		delete newname;
-		return NULL;
-	}
-	delete tildepath;
-	newname[size] = '\0';
-	if (newname[0] != '/')
-	{
-		char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-		strcpy(fullpath, path);
-		char *sptr = strrchr(fullpath, '/');
-		if (sptr == NULL)
-			sptr = fullpath;
-		else
-			sptr++;
-		strcpy(sptr, newname);
-		delete newname;
-		newname = MCS_resolvepath(fullpath);
-		delete fullpath;
-	}
-	return newname;
+
+    char *newname = new char[PATH_MAX + 2];
+
+    // SN-2015-06-05: [[ Bug 15432 ]] Use realpath to solve the symlink.
+    if (realpath(tildepath, newname) == NULL)
+    {
+        // Clear the memory in case of failure
+        delete newname;
+        newname = NULL;
+    }
+
+    delete tildepath;
+    return newname;
 }
 
 Boolean MCS_rename(const char *oname, const char *nname)

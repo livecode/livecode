@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -213,12 +213,6 @@ void MCStack::setsizehints(void)
         
         gdk_window_set_geometry_hints(window, &t_geo, GdkWindowHints(t_flags));
 	}
-	
-	// Use the window manager to set to full screen.
-	if (getextendedstate(ECS_FULLSCREEN))
-	{
-        gdk_window_fullscreen(window);
-	}
 }
 
 void MCStack::sethints()
@@ -273,7 +267,7 @@ void MCStack::sethints()
     
     gdk_window_set_type_hint(window, t_type_hint);
     
-    if (mode >= WM_PULLDOWN && mode <= WM_LICENSE)
+    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE) || getextendedstate(ECS_FULLSCREEN))
     {
         gdk_window_set_override_redirect(window, TRUE);
     }
@@ -292,25 +286,62 @@ void MCStack::sethints()
     // window creation time. As a result, we have to do it manually.
     x11::XClassHint chints;
 
-	const char * t_res_name = getname_cstring();
-	chints.res_name = (char *) t_res_name;
+	// Use the name of the home stack as the application name for standalones
+	// and the LiveCode name and version for the IDE
+    MCAutoStringRef t_app_name;
+    MCAutoStringRefAsCString t_app_name_cstr;
+	int t_env = MCModeGetEnvironmentType();
+	if (t_env == kMCModeEnvironmentTypeEditor
+		|| t_env == kMCModeEnvironmentTypeInstaller
+		|| t_env == kMCModeEnvironmentTypeServer)
+	{
+		const char *t_edition_name;
+		switch (MClicenseparameters.license_class)
+		{
+		case kMCLicenseClassProfessionalEvaluation:
+		case kMCLicenseClassProfessional:
+			t_edition_name = "business";
+				break;
+		case kMCLicenseClassEvaluation:
+		case kMCLicenseClassCommercial:
+			t_edition_name = "indy";
+			break;
+		case kMCLicenseClassNone:
+		case kMCLicenseClassCommunity:
+		default:
+			t_edition_name = "community";
+			break;
+		}
 
-    // Build the class name
-    MCAutoStringRef t_class_name;
-    MCAutoStringRefAsCString t_class_name_cstr;
-    bool t_community;
-    t_community = MClicenseparameters.license_class == kMCLicenseClassCommunity;
-    
-    /* UNCHECKED */ MCStringCreateMutable(0, &t_class_name);
-    /* UNCHECKED */ MCStringAppendFormat(*t_class_name, "%s%s_%s", MCapplicationstring, t_community ? "community" : "", MC_BUILD_ENGINE_SHORT_VERSION);
-    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '.', '_', kMCStringOptionCompareExact);
-    /* UNCHECKED */ MCStringFindAndReplaceChar(*t_class_name, '-', '_', kMCStringOptionCompareExact);
-    /* UNCHECKED */ t_class_name_cstr.Lock(*t_class_name);
-    
-	chints.res_class = (char*)*t_class_name_cstr;
-    x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
+		if (MCStringCreateMutable(0, &t_app_name))
+		{
+			bool t_success = true;
+			if (t_env == kMCModeEnvironmentTypeEditor)
+				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%s", MCapplicationstring, t_edition_name, MC_BUILD_ENGINE_SHORT_VERSION);
+			else
+				t_success = MCStringAppendFormat(*t_app_name, "%s%s_%@_%s", MCapplicationstring, t_edition_name, MCModeGetEnvironment(), MC_BUILD_ENGINE_SHORT_VERSION);
+				
+			if (t_success)
+			{
+				t_success = MCStringFindAndReplaceChar(*t_app_name, '.', '_', kMCStringOptionCompareExact) 
+					&& MCStringFindAndReplaceChar(*t_app_name, '-', '_', kMCStringOptionCompareExact);
+			}
+			
+			if (!t_success)
+				t_app_name.Reset();
+		}
+	}
+	else
+	{
+		t_app_name = MCNameGetString(MCdispatcher->gethome()->getname());
+	}
 
-	delete t_res_name;
+    if (t_app_name_cstr.Lock(*t_app_name))
+	{
+		chints.res_name = (char*)*t_app_name_cstr;
+		chints.res_class = (char*)*t_app_name_cstr;
+    	x11::XSetClassHint(x11::gdk_x11_display_get_xdisplay(MCdpy), x11::gdk_x11_drawable_get_xid(window), &chints);
+	}
 
     // TODO: is this just another way of ensuring on-top-ness?
 	//if (mode >= WM_PALETTE)
@@ -455,37 +486,9 @@ MCRectangle MCStack::view_platform_getwindowrect(void) const
 
 MCRectangle MCStack::view_device_getwindowrect(void) const
 {
-    x11::Window t_root, t_child, t_parent;
-    x11::Window *t_children;
-	int32_t t_win_x, t_win_y, t_x_offset, t_y_offset;
-	uint32_t t_width, t_height, t_border_width, t_depth, t_child_count;
-
-    x11::Window t_window = x11::gdk_x11_drawable_get_xid(window);
-    
-    x11::Display *t_display = x11::gdk_x11_display_get_xdisplay(MCdpy);
-
-    // We query for the top-level parent using the X11 functions because the GDK
-    // equivalents do not account for re-parenting window managers and will not
-    // return the re-parented parent.
-    x11::XQueryTree(t_display, t_window, &t_root, &t_parent, &t_children, &t_child_count);
-    x11::XFree(t_children);
-	while (t_parent != t_root)
-	{
-		t_window = t_parent;
-        x11::XQueryTree(t_display, t_window, &t_root, &t_parent, &t_children, &t_child_count);
-        x11::XFree(t_children);
-	}
-
-    x11::XGetGeometry(t_display, t_window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
-    x11::XTranslateCoordinates(t_display, t_window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
-
-	MCRectangle t_rect;
-	t_rect.x = t_win_x - t_border_width;
-	t_rect.y = t_win_y - t_border_width;
-	t_rect.width = t_width + t_border_width * 2;
-	t_rect.height = t_height + t_border_width * 2;
-
-	return t_rect;
+    GdkRectangle t_frame;
+    gdk_window_get_frame_extents(window, &t_frame);
+    return MCRectangleMake(t_frame . x, t_frame . y, t_frame . width, t_frame . height);
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
@@ -556,7 +559,14 @@ MCRectangle MCStack::view_device_setgeom(const MCRectangle &p_rect,
         if (t_width != p_rect.width || t_height != p_rect.height)
             gdk_window_resize(window, p_rect.width, p_rect.height);
     }
-
+    
+    // Set the fullscreen-ness of the window appropriately
+    // Use the window manager to set to full screen.
+    if (getextendedstate(ECS_FULLSCREEN))
+        gdk_window_fullscreen(window);
+    else
+        gdk_window_unfullscreen(window);
+    
 	return t_old_rect;
 }
 
@@ -666,6 +676,11 @@ void MCStack::applyscroll(void)
 }
 
 void MCStack::clearscroll(void)
+{
+}
+
+// MERG-2015-10-12: [[ DocumentFilename ]] Stub for documentFilename.
+void MCStack::updatedocumentfilename(void)
 {
 }
 
@@ -978,6 +993,17 @@ void MCStack::onexpose(MCRegionRef p_region)
         
         t_surface.Unlock();
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStack::configure_window_buffer()
+{
+	return true;
+}
+
+void MCStack::release_window_buffer()
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

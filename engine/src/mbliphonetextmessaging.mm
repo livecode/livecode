@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 UIViewController *MCIPhoneGetViewController(void);
 
-@interface MCIPhoneSmsComposerDialog : MFMessageComposeViewController <MFMessageComposeViewControllerDelegate>
+@interface com_runrev_livecode_MCIPhoneSmsComposerDialog : MFMessageComposeViewController <MFMessageComposeViewControllerDelegate>
 {
 	bool m_running;
 }
@@ -48,9 +48,9 @@ UIViewController *MCIPhoneGetViewController(void);
 - (void)postWait;
 @end
 
-static MCIPhoneSmsComposerDialog *s_sms_composer_dialog = nil;
+static com_runrev_livecode_MCIPhoneSmsComposerDialog *s_sms_composer_dialog = nil;
 
-@implementation MCIPhoneSmsComposerDialog
+@implementation com_runrev_livecode_MCIPhoneSmsComposerDialog
 
 - (bool)isRunning
 {
@@ -104,7 +104,7 @@ struct compose_text_message_t
 {
 	MCStringRef recipients;
 	MCStringRef body;
-	MCIPhoneSmsComposerDialog *dialog;
+	com_runrev_livecode_MCIPhoneSmsComposerDialog *dialog;
 	bool success;
 };
 
@@ -120,7 +120,7 @@ static void compose_text_message_prewait(void *p_context)
 		return;
 	}
 	
-	ctxt -> dialog = [[MCIPhoneSmsComposerDialog alloc] init];
+	ctxt -> dialog = [[com_runrev_livecode_MCIPhoneSmsComposerDialog alloc] init];
     [ctxt -> dialog setMessageComposeDelegate: ctxt -> dialog];
     [ctxt -> dialog setRecipients: [[NSString stringWithMCStringRef: ctxt -> recipients] componentsSeparatedByString:@","]];
     [ctxt -> dialog setBody: [NSString stringWithMCStringRef: ctxt -> body]];

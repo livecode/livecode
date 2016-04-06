@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -117,6 +117,7 @@ Parse_stat MCAsk::parse(MCScriptPoint &sp)
 
 		default:
 			sp . backup();
+			mode = AT_QUESTION;
 			t_error = parse_question(sp);
 		break;
 	}
@@ -265,11 +266,21 @@ void MCAsk::exec_ctxt(class MCExecContext& ctxt)
             MCAutoStringRef t_initial_resolved;
             if (*t_initial != nil)
             {
-                // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
-                if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                // We only want to resolve the path if it is relative
+                // (otherwise it will be created where LiveCode is located)
+                if (MCStringContains(*t_initial, MCSTR("/"), kMCStringOptionCompareExact))
                 {
-                    ctxt . LegacyThrow(EE_NO_MEMORY);
-                    return;
+                    // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+                    if (!MCS_resolvepath(*t_initial, &t_initial_resolved))
+                    {
+                        ctxt . LegacyThrow(EE_NO_MEMORY);
+                        return;
+                    }
+                }
+                else
+                {
+                    // We simply take the initial path as it is
+                    t_initial_resolved = *t_initial;
                 }
             }
             
@@ -421,10 +432,20 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 
 	if (!t_error && t_initial != nil)
 	{
-		// IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
-		t_initial_resolved = MCS_get_canonical_path(t_initial);
-		if (nil == t_initial_resolved)
-			t_error == EE_NO_MEMORY;
+        // We only want to resolve the path if the path is relative (otherwise
+        // it will be created at the current folder - which is /Applications)
+        if (strchr(t_initial, '/'))
+        {
+            // IM-2014-08-06: [[ Bug 13096 ]] Allow file dialogs to work with relative paths by resolving to absolute
+            t_initial_resolved = MCS_get_canonical_path(t_initial);
+            if (nil == t_initial_resolved)
+                t_error = EE_NO_MEMORY;
+        }
+        else
+        {
+            // Simply copy the file path
+            t_initial_resolved = strclone(*t_initial);
+        }
 	}
 
 	if (!t_error)
@@ -600,4 +621,4 @@ void MCAsk::compile(MCSyntaxFactoryRef ctxt)
 	}
 
 	MCSyntaxFactoryEndStatement(ctxt);
-}	
+}

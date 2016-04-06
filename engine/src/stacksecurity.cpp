@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -108,5 +108,42 @@ IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_strea
 void MCStackSecurityProcessCapsule(void *p_start, void *p_finish)
 {
 }
+
+///////////
+
+bool MCStackSecurityPreDeploy(uint32_t p_platform, MCDeployParameters& p_params)
+{
+	return true;
+}
+
+void MCStackSecurityExecutionTimeout(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* ================================================================
+ * Emscripten standalone deployment
+ * ================================================================ */
+
+bool
+MCStackSecurityEmscriptenPrepareStartupStack(MCStack *r_stack)
+{
+	return true;
+}
+
+#if defined(__EMSCRIPTEN__)
+
+/* ================================================================
+ * Emscripten standalone startup checks
+ * ================================================================ */
+
+bool
+MCStackSecurityEmscriptenStartupCheck(MCStack *p_stack)
+{
+	return true;
+}
+
+#endif /* __EMSCRIPTEN__ */
 
 ////////////////////////////////////////////////////////////////////////////////

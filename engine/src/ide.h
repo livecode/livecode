@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -246,6 +246,8 @@ private:
 
 		PLATFORM_IOS_EMBEDDED,
 		PLATFORM_ANDROID_EMBEDDED,
+
+		PLATFORM_EMSCRIPTEN,
 		
 		PLATFORM_SERVER,
 	};

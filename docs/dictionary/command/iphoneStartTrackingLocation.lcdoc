@@ -1,0 +1,23 @@
+Name: iphoneStartTrackingLocation
+
+Type: command
+
+Syntax: iphoneStartTrackingLocation
+
+Summary: Starts tracking the location of the device.
+
+Introduced: 4.5.2
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+iphoneStartTrackingLocation
+
+Description:
+Use the <iphoneStartTrackingLocation> command to start tracking the location of the device
+
+The <iphoneStartTrackingLocation> command starts tracking the location of the device using CoreLocation.
+
+References: iphoneStopTrackingLocation (command), mobileCurrentLocation (function), trackingError (message), locationChanged (message)

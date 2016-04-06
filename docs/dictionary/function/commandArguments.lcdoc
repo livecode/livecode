@@ -1,0 +1,48 @@
+Name: commandArguments
+
+Type: function
+
+Syntax: the commandArguments
+
+Syntax: commandArguments(<index>)
+
+Syntax: the commandArguments of <index> 
+
+Summary: If no index is given, returns a 1-based, numeric array containing all the arguments given to the command.
+If an index is given, returns the argument corresponding to the index (1 being the first argument).
+
+Introduced: 7.1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Security: none
+
+Example:
+put the keys of the commandArguments
+
+Example:
+repeat for each element tArgument in the commandArguments
+    if tArgument is "-v" then
+       put true into tVerbose
+    end if
+end repeat
+
+Example:
+put commandArguments(1)
+
+Parameters:
+index (integer): An integer greater than 0. 
+If the index is greater than the number of arguments, then commandArguments returns empty. .
+
+Returns: Returns either a numeric array with all the commandline arguments if no <index> is given, or the argument at the <index> specified.
+
+Description:
+Returns a 1-based numeric array containing the commandline arguments
+
+With no index given, the <commandArguments> function returns an 1-based, numeric array containing the arguments given at the launch of the application.
+With an index given, it returns the commandline argument at this index
+The list only exists on desktop standalones applications and server scripts. On mobile platform or in the IDE, the <commandArguments> returns empty.
+
+References: $ (keyword)

@@ -1,0 +1,12 @@
+Name: tool
+
+Synonyms: tool
+
+Type: glossary
+
+Description:
+A mode that lets you perform specific actions (such as <select|selecting> <object|objects> or drawing lines) when you click in a <stack window>. 
+ 
+Also, the icon (in a palette of tools) you click to select a tool.
+
+References: select (glossary), stack window (glossary), object (glossary)

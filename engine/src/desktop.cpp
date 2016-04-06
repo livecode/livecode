@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -33,13 +33,14 @@
 #include "card.h"
 #include "debug.h"
 #include "dispatch.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "field.h"
 #include "graphics_util.h"
 #include "redraw.h"
 #include "player.h"
 #include "aclip.h"
 #include "stacklst.h"
+#include "clipboard.h"
 
 #include "desktop-dc.h"
 #include "param.h"
@@ -361,7 +362,7 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 				MCdragimageid = 0;
 				MCdragimageoffset . x = 0;
 				MCdragimageoffset . y = 0;
-				MCdragdata -> ResetSource();
+                MCdragboard->Clear();
 			}
 			
 			t_target -> mdown(p_button + 1);
@@ -392,7 +393,11 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 		MCbuttonstate &= ~(1 << p_button);
 		
 		MCeventtime = MCPlatformGetEventTime();
-		
+    
+        // PM-2015-03-30: [[ Bug 15091 ]] When we "go to card X" on mouseDown, MCclickstackptr becomes nil because of MCStack::close().  
+        if (MCclickstackptr == nil)
+            MCclickstackptr = MCmousestackptr;
+        
 		MCObject *t_target;
 		t_target = t_menu != nil ? t_menu : MCclickstackptr;
 		
@@ -516,13 +521,16 @@ static MCPlatformDragOperation dragaction_to_dragoperation(MCDragAction p_action
 	return kMCPlatformDragOperationNone;
 }
 
-void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCPlatformPasteboardRef p_pasteboard, MCPlatformDragOperation& r_operation)
+void MCPlatformHandleDragEnter(MCPlatformWindowRef p_window, MCRawClipboard* p_dragboard, MCPlatformDragOperation& r_operation)
 {
-	MCSystemPasteboard *t_pasteboard;
-	t_pasteboard = new MCSystemPasteboard(p_pasteboard);
-	MCdispatcher -> wmdragenter(p_window, t_pasteboard);
-	t_pasteboard -> Release();
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. If a non-NULL clipboard was
+    // supplied for this operation, tell the engine drag board to re-bind to it.
+    if (p_dragboard != NULL)
+        MCdragboard->Rebind(p_dragboard);
 	
+    MCdispatcher->wmdragenter(p_window);
+    
 	r_operation = dragaction_to_dragoperation(MCdragaction);
 }
 
@@ -535,13 +543,25 @@ void MCPlatformHandleDragMove(MCPlatformWindowRef p_window, MCPoint p_location, 
 
 void MCPlatformHandleDragLeave(MCPlatformWindowRef p_window)
 {
-	MCdispatcher -> wmdragleave(p_window);
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. Reset the drag board back to
+    // the main one after the drag has left.
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
+    
+    MCdispatcher -> wmdragleave(p_window);
 }
 
 void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 {
 	MCdispatcher -> wmdragdrop(p_window);
 	
+    // On some platforms (Mac and iOS), the drag board used for drag-and-drop
+    // operations may not be the main drag board. Reset the drag board back to
+    // the main one after the drag has left.
+    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+    MCdragboard->Rebind(t_dragboard);
+    
 	// PLATFORM-TODO: Should we do more than this? i.e. Should the dragDrop
 	//   message be able to signal refusal?
 	r_accepted = true;
@@ -550,11 +570,14 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef p_window, bool& r_accepted)
 ////////////////////////////////////////////////////////////////////////////////
 
 // SN-2014-09-15: [[ Bug 13423 ]] Added new static variable to keep the last keys pressed
+// SN-2015-06-23: [[ Bug 3537 ]] Sometimes a keyUp key message can be already
+//  mapped (when nativised).
 struct MCKeyMessage
 {
     MCPlatformKeyCode key_code;
     codepoint_t mapped_codepoint;
     codepoint_t unmapped_codepoint;
+    bool needs_mapping;
     struct MCKeyMessage* next;
 };
 
@@ -579,7 +602,9 @@ void MCKeyMessageClear(MCKeyMessage *&p_message_queue)
 }
 
 // SN-2014-11-03: [[ Bug 13832 ]] Added a message queue parameter
-void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint)
+// SN-2015-06-23: [[ Bug 3537 ]] If the input has already been nativised, then
+//  we don't want to map it with map_key_to_engine.
+void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_code, codepoint_t p_mapped_codepoint, codepoint_t p_unmapped_codepoint, bool p_needs_mapping = true)
 {
     MCKeyMessage *t_new;
     t_new = new MCKeyMessage;
@@ -587,6 +612,7 @@ void MCKeyMessageAppend(MCKeyMessage *&p_message_queue, MCPlatformKeyCode p_key_
     t_new -> key_code = p_key_code;
     t_new -> mapped_codepoint = p_mapped_codepoint;
     t_new -> unmapped_codepoint = p_unmapped_codepoint;
+    t_new -> needs_mapping = p_needs_mapping;
     t_new -> next = nil;
     
     if (p_message_queue != nil)
@@ -709,9 +735,20 @@ void MCPlatformHandleKeyUp(MCPlatformWindowRef p_window, MCPlatformKeyCode p_key
     {
         MCPlatformKeyCode t_mapped_key_code;
         MCAutoStringRef t_mapped_char;
-        map_key_to_engine(s_pending_key_up -> key_code, s_pending_key_up -> mapped_codepoint, s_pending_key_up -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
-        
-    MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
+
+        // SN-2015-06-23: [[ Bug 3537 ]] We don't want to map a nativised char -
+        //  but we want to map key strokes like F1 and such
+        //  This is intended to mimic the behaviour of the key down process,
+        //  in which MCDispatcher::wkdown is called with the nativised char
+        if (s_pending_key_up -> needs_mapping)
+            map_key_to_engine(s_pending_key_up -> key_code, s_pending_key_up -> mapped_codepoint, s_pending_key_up -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
+        else
+        {
+            /* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)&(s_pending_key_up -> mapped_codepoint), 1, &t_mapped_char);
+            t_mapped_key_code = s_pending_key_up -> key_code;
+        }
+
+        MCdispatcher -> wkup(p_window, *t_mapped_char, t_mapped_key_code);
         MCKeyMessageNext(s_pending_key_up);
     }
 }
@@ -874,11 +911,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
                     map_key_to_engine(s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint, t_mapped_key_code, &t_mapped_char);
                     
+                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
+                    // PM-2015-05-15: [[ Bug 15372]] call MCKeyMessageAppend before wkdown to prevent a crash if 'wait with messages' is used (since s_pending_key_down might become nil after wkdown
+                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+                    
                     MCdispatcher -> wkdown(p_window, *t_mapped_char, t_mapped_key_code);
                     
-                    // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in the NSApplication's keyDown).
-                    MCKeyMessageAppend(s_pending_key_up, s_pending_key_down -> key_code, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
                     MCKeyMessageNext(s_pending_key_down);
+                
                 }
 				return;
 			}
@@ -909,11 +949,26 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     //    this wrong key is replaced by this new 'combined' char
     // if the key pressed fails to generate a char:
     //    this wrong key is replaced by the dead-key char
-    if (t_was_compositing)
+    // SN-2015-04-10: [[ Bug 14205 ]] When using the dictation, there is no
+    //  pending key down, but the composition was still on though.
+    // SN-2015-06-23: [[ Bug 3537 ]] We should not cast p_char as a uint1 if it
+    //  is not a native char.
+    uint1 t_char[2];
+    bool t_is_native_char;
+    t_is_native_char = MCUnicodeMapToNative(p_chars, 1, t_char[0]);
+    t_char[1] = 0;
+    
+    if (t_was_compositing && s_pending_key_down && t_is_native_char)
     {
-        s_pending_key_down -> key_code = (uint1)*p_chars;
-        s_pending_key_down -> mapped_codepoint = (uint1)*p_chars;
-        s_pending_key_down -> unmapped_codepoint = (uint1)*p_chars;
+        s_pending_key_down -> key_code = (uint1)*t_char;
+        s_pending_key_down -> mapped_codepoint = (uint1)*t_char;
+        s_pending_key_down -> unmapped_codepoint = (uint1)*t_char;
+        
+        // SN-2015-05-18: [[ Bug 15385 ]] Enqueue the first char in the sequence
+        //  here - that will be the same as keyDown.
+        // SN-2015-06-23: [[ Bug 3537 ]] In this only case, we don't want this
+        //  nativised char to be mapped again in MCPlatformHandleKeyUp.
+        MCKeyMessageAppend(s_pending_key_up, (uint1)*t_char, (uint1)*t_char, (uint1)*t_char, false);
     }
     
 	// Set the text.	
@@ -926,20 +981,17 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
     // [Raw]KeyDown/Up and remove the first character from the sequence of keys typed.
     // If the character successfully combined with the dead char before it in a native char, we don't use finsert
     // Otherwise, we have the dead char in p_chars, we need to remove the one stored first in the sequence
-    uint1 t_char[2];
-    t_char[1] = 0;
-
     MCAutoStringRef t_string;
+    
     // SN-2015-01-20: [[ Bug 14406 ]] If we have a series of pending keys, we have two possibilities:
     //   - typing IME characters: the characters are native, so we use the finsertnew
     //   - typing dead characters: the character, if we arrive here, is > 127
-    if (*p_chars > 127 && s_pending_key_down -> next && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+    // SN-2015-04-13: [[ Bug 14205 ]] Ensure that s_pending_key_down is not nil
+    if (*p_chars > 127 && s_pending_key_down && s_pending_key_down -> next
+            && t_is_native_char)
     {
         MCStringCreateWithNativeChars((const char_t *)t_char, 1, &t_string);
         MCdispatcher -> wkdown(p_window, *t_string, *t_char);
-        // SN-2014-11-03: [[ Bug 13832 ]] Enqueue the event, instead of firing it now (we are still in NSApplication's keyDown).
-        //  We use the mapped codepoint of the message to send, instead of t_char.
-        MCKeyMessageAppend(s_pending_key_up, (MCPlatformKeyCode)*t_char, s_pending_key_down -> next -> mapped_codepoint, (codepoint_t)*t_char);
         
         MCKeyMessageNext(s_pending_key_down);
     }
@@ -952,11 +1004,11 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
         uint32_t t_codepoint;
         t_codepoint = MCStringGetCodepointAtIndex(*t_string, 0);
         
-        // SN-2015-01-20: [[ Bug 14406 ]] Same as above: *p_chars > 127 means that we are in IME.
-        //  Use UnicodeMapToNative as well, as it may cause issues with Hiragana, when parts
-        //  of the whole word are individual Kanji as well, and Unicode valid alphanum.
-        //  (they would be appended to the in-process IME string).
-        if (*p_chars > 127 && p_char_count == 1 && MCUnicodeMapToNative(p_chars, 1, t_char[0]))
+        // SN-2015-05-18: [[ Bug 3537 ]] Use p_mark to determine whether we are
+        //  in an IME state
+        // SN-2015-05-05: [[ Bug 15305 ]] Check that s_pending_key_down is not
+        //  nil before trying to use it, and use IME only if p_mark says so.
+        if (s_pending_key_down && !p_mark)
         {
             MCAutoStringRef t_mapped_char;
             MCPlatformKeyCode t_mapped_key_code;
@@ -965,7 +1017,14 @@ void MCPlatformHandleTextInputInsertText(MCPlatformWindowRef p_window, unichar_t
 
             MCdispatcher -> wkdown(p_window, *t_string, *p_chars);
 
-            MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            // SN-2015-05-18: [[ Bug 3537 ]] If we were compositing, then we want
+            //  to send the same message for keyUp and keyDown - which might be
+            //  seeveral character-long
+            if (t_was_compositing)
+                MCdispatcher -> wkup(p_window, *t_string, *p_chars);
+            else
+                MCKeyMessageAppend(s_pending_key_up, *p_chars, s_pending_key_down -> mapped_codepoint, s_pending_key_down -> unmapped_codepoint);
+            
             MCKeyMessageNext(s_pending_key_down);
         }
         else
@@ -1255,23 +1314,6 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef bool (*pasteboard_resolve_callback_t)(MCPlatformPasteboardFlavor flavor, void*& r_data, size_t& r_data_size);
-
-void MCPlatformHandlePasteboardResolve(MCPlatformPasteboardRef p_pasteboard, MCPlatformPasteboardFlavor p_flavor, void *p_handle, void *& r_data, size_t& r_data_size)
-{
-	void *t_data;
-	size_t t_data_size;
-	if (((pasteboard_resolve_callback_t)p_handle)(p_flavor, t_data, t_data_size))
-	{
-		r_data = t_data;
-		r_data_size = t_data_size;
-	}
-	else
-		r_data = nil, r_data_size = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
 	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
@@ -1320,7 +1362,10 @@ void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef p_player)
     t_player = find_player(p_player);
     if (t_player == nil)
         return;
-    
+		
+	// PM-2016-01-18: [[ Bug 16737 ]] Make sure controller is updated and playstopped msg is sent immediately
+    MCPlatformBreakWait();
+	
     t_player -> layer_redrawall();
     t_player -> moviefinished();
 }

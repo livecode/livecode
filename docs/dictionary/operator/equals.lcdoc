@@ -1,0 +1,55 @@
+Name: =
+
+Type: operator
+
+Syntax: <value1> = value2
+
+Summary: Compares two <value|values> and evaluates to true if they are equal, false if they are not equal.
+
+Synonyms: is
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+1 = 0 -- evaluates to false
+
+Example:
+17 + 9 = 26 -- evaluates to true
+
+Example:
+"ABC" = "abc" -- true if and only if caseSensitive is false
+
+Parameters:
+value1: The operands value1 and value2 can be numbers, literal strings of characters (delimited with double quotes), or any sources of value, including arrays.
+
+Description:
+Use the <=> (equality) <operator> to find out whether two <numeric> <expression|expressions> yield the same number or whether two <string|strings> are equivalent.
+
+When comparing strings, the <=> <operator> compares the two <value|values> <character> by <character>. If the <caseSensitive> <property> is true, the comparison between two <string|strings> treats uppercase letters as coming before lowercase letters. If the <caseSensitive> <property> is false, the comparison is not <case-sensitive>, so "a" = "A".
+
+When comparing arrays, the <=> operator first checks if the number of elements in each array is the same, if not the two arrays are different. If the arrays have the same number of elements, they are equal if each element is equal. Specifically this means:
+
+array1 = array2 if (and only if):
+  - the number of elements of array1 = the number of elements of array2 and
+  - for each element e in array1, array1[e] = array2[e].
+
+>*Note:* If an array is compared with a string, the array will first be converted into the empty string, thus any array is always equal to the empty string, and not equal to any other string.
+
+>*Note:* As of version 6.0 onwards expressions such as 'tArray is empty' will return true is and only if tArray contains the empty string. For example
+
+put empty into tArray
+answer tArray is empty -- true
+
+put 100 into tArray["foo"]
+answer tArray is empty -- false (prior to 6.0 this would be true)
+
+Changes:
+The ability to compare two arrays using = was added in version 3.5. Previously, comparing two arrays would have converted both arrays into the empty string, and always returned true.
+
+References: character (keyword), numeric (keyword), &lt;&gt; (operator), contains (operator), caseSensitive (property), property (glossary), operator (glossary), case-sensitive (glossary), value (glossary), string (glossary), expression (glossary)
+
+Tags: math

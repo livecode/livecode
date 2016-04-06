@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -53,7 +53,7 @@ void MCError::add(uint2 id, uint2 line, uint2 pos, uint32_t v)
 
 void MCError::add(uint2 id, uint2 line, uint2 pos, MCValueRef n)
 {
-    if (MCerrorlock != 0 || thrown)
+    if (MCerrorlock || thrown)
 		return;
     
     if (n != nil)
@@ -71,7 +71,7 @@ void MCError::add(uint2 id, uint2 line, uint2 pos, MCValueRef n)
 #ifdef LLEGACY_EXEC
 void MCError::add(uint2 id, uint2 line, uint2 pos, const MCString &token)
 {
-	if (MCerrorlock != 0 || thrown)
+	if (MCerrorlock || thrown)
 		return;
 	doadd(id, line, pos, token);
 }

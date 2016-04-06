@@ -1,0 +1,10 @@
+Name: fat application
+
+Synonyms: fat application
+
+Type: glossary
+
+Description:
+On <Mac OS|Mac OS systems>, an application that includes both 68000 and PowerPC code (and can therefore be run on either PowerMacs or older Macs without loss of performance).
+
+References: Mac OS (glossary)

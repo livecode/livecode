@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -200,12 +200,19 @@ MCNameRef MCN_private;
 MCNameRef MCN_text;
 //MCNameRef MCN_unicode;
 MCNameRef MCN_styles;
+MCNameRef MCN_styledtext;
+MCNameRef MCN_rtftext;
+MCNameRef MCN_htmltext;
+MCNameRef MCN_png;
+MCNameRef MCN_gif;
+MCNameRef MCN_jpeg;
 MCNameRef MCN_rtf;
 MCNameRef MCN_html;
 
 MCNameRef MCN_browser;
 MCNameRef MCN_command_line;
 MCNameRef MCN_development;
+MCNameRef MCN_development_cmdline;
 MCNameRef MCN_helper_application;
 MCNameRef MCN_installer;
 MCNameRef MCN_mobile;
@@ -283,6 +290,7 @@ MCNameRef MCN_desktop;
 MCNameRef MCN_documents;
 MCNameRef MCN_engine;
 MCNameRef MCN_fonts;
+MCNameRef MCN_resources;
 MCNameRef MCN_home;
 MCNameRef MCN_start;
 //MCNameRef MCN_system;
@@ -505,6 +513,10 @@ MCNameRef MCM_unload_url;
 MCNameRef MCM_update_screen;
 MCNameRef MCM_update_var;
 
+#ifdef FEATURE_PLATFORM_URL
+MCNameRef MCM_url_progress;
+#endif
+
 #ifdef _MOBILE
 MCNameRef MCN_firstname;
 MCNameRef MCN_lastname;
@@ -548,7 +560,6 @@ MCNameRef MCM_touch_release;
 MCNameRef MCM_motion_start;
 MCNameRef MCM_motion_end;
 MCNameRef MCM_motion_release;
-MCNameRef MCM_url_progress;
 MCNameRef MCM_acceleration_changed;
 MCNameRef MCM_orientation_changed;
 MCNameRef MCM_location_changed;
@@ -563,6 +574,7 @@ MCNameRef MCM_push_notification_received;
 MCNameRef MCM_push_notification_registered;
 MCNameRef MCM_push_notification_registration_error;
 MCNameRef MCM_url_wake_up;
+MCNameRef MCM_launch_data_changed;
 MCNameRef MCM_browser_started_loading;
 MCNameRef MCM_browser_finished_loading;
 MCNameRef MCM_browser_load_failed;
@@ -611,6 +623,14 @@ MCNameRef MCM_protected_data_unavailable;
 MCNameRef MCM_remote_control_received;
 #endif
 
+MCNameRef MCN_font_default;
+MCNameRef MCN_font_usertext;
+MCNameRef MCN_font_menutext;
+MCNameRef MCN_font_content;
+MCNameRef MCN_font_message;
+MCNameRef MCN_font_tooltip;
+MCNameRef MCN_font_system;
+
 void MCU_initialize_names(void)
 {
 	/* UNCHECKED */ MCNameCreateWithCString("msg", MCN_msg);
@@ -639,12 +659,19 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("text", MCN_text);
 //	/* UNCHECKED */ MCNameCreateWithCString("unicode", MCN_unicode);
 	/* UNCHECKED */ MCNameCreateWithCString("styles", MCN_styles);
+    /* UNCHECKED */ MCNameCreateWithCString("styledtext", MCN_styledtext);
+    /* UNCHECKED */ MCNameCreateWithCString("rtftext", MCN_rtftext);
+    /* UNCHECKED */ MCNameCreateWithCString("htmltext", MCN_htmltext);
+    /* UNCHECKED */ MCNameCreateWithCString("png", MCN_png);
+    /* UNCHECKED */ MCNameCreateWithCString("gif", MCN_gif);
+    /* UNCHECKED */ MCNameCreateWithCString("jpeg", MCN_jpeg);
 	/* UNCHECKED */ MCNameCreateWithCString("rtf", MCN_rtf);
 	/* UNCHECKED */ MCNameCreateWithCString("html", MCN_html);
 
 	/* UNCHECKED */ MCNameCreateWithCString("browser", MCN_browser);
 	/* UNCHECKED */ MCNameCreateWithCString("command line", MCN_command_line);
 	/* UNCHECKED */ MCNameCreateWithCString("development", MCN_development);
+    /* UNCHECKED */ MCNameCreateWithCString("development command line", MCN_development_cmdline);
 	/* UNCHECKED */ MCNameCreateWithCString("helper application", MCN_helper_application);
 	/* UNCHECKED */ MCNameCreateWithCString("installer", MCN_installer);
 	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
@@ -721,6 +748,7 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("desktop", MCN_desktop);
 	/* UNCHECKED */ MCNameCreateWithCString("documents", MCN_documents);
 	/* UNCHECKED */ MCNameCreateWithCString("engine", MCN_engine);
+    /* UNCHECKED */ MCNameCreateWithCString("resources", MCN_resources);
 	/* UNCHECKED */ MCNameCreateWithCString("fonts", MCN_fonts);
 	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("start", MCN_start);
@@ -942,6 +970,10 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("updateScreen", MCM_update_screen);
 	/* UNCHECKED */ MCNameCreateWithCString("updateVariable", MCM_update_var);
 
+#ifdef FEATURE_PLATFORM_URL
+	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
+#endif
+
 #ifdef _MOBILE
 	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
 	/* UNCHECKED */ MCNameCreateWithCString("lastname", MCN_lastname);
@@ -988,7 +1020,6 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("motionStart", MCM_motion_start);
 	/* UNCHECKED */ MCNameCreateWithCString("motionEnd", MCM_motion_end);
 	/* UNCHECKED */ MCNameCreateWithCString("motionRelease", MCM_motion_release);
-	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
 	/* UNCHECKED */ MCNameCreateWithCString("accelerationChanged", MCM_acceleration_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("orientationChanged", MCM_orientation_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("locationChanged", MCM_location_changed);
@@ -1003,6 +1034,7 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistered", MCM_push_notification_registered);
     /* UNCHECKED */ MCNameCreateWithCString("pushNotificationRegistrationError", MCM_push_notification_registration_error);
     /* UNCHECKED */ MCNameCreateWithCString("urlWakeUp", MCM_url_wake_up);
+	/* UNCHECKED */ MCNameCreateWithCString("launchDataChanged", MCM_launch_data_changed);
 	/* UNCHECKED */ MCNameCreateWithCString("browserStartedLoading", MCM_browser_started_loading);
 	/* UNCHECKED */ MCNameCreateWithCString("browserFinishedLoading", MCM_browser_finished_loading);
 	/* UNCHECKED */ MCNameCreateWithCString("browserLoadFailed", MCM_browser_load_failed);
@@ -1047,6 +1079,14 @@ void MCU_initialize_names(void)
 	// MW-2013-05-30: [[ RemoteControl ]] Message sent when a remote control event is received.
 	/* UNCHECKED */ MCNameCreateWithCString("remoteControlReceived", MCM_remote_control_received);
 #endif
+    
+    /* UNCHECKED */ MCNameCreateWithCString("(Default)", MCN_font_default);
+    /* UNCHECKED */ MCNameCreateWithCString("(Styled Text)", MCN_font_usertext);
+    /* UNCHECKED */ MCNameCreateWithCString("(Menu)", MCN_font_menutext);
+    /* UNCHECKED */ MCNameCreateWithCString("(Text)", MCN_font_content);
+    /* UNCHECKED */ MCNameCreateWithCString("(Message)", MCN_font_message);
+    /* UNCHECKED */ MCNameCreateWithCString("(Tooltip)", MCN_font_tooltip);
+    /* UNCHECKED */ MCNameCreateWithCString("(System)", MCN_font_system);
 }
 
 void MCU_finalize_names(void)
@@ -1076,12 +1116,19 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_text);
 //	MCNameDelete(MCN_unicode);
 	MCNameDelete(MCN_styles);
+    MCNameDelete(MCN_styledtext);
+    MCNameDelete(MCN_rtftext);
+    MCNameDelete(MCN_htmltext);
+    MCNameDelete(MCN_png);
+    MCNameDelete(MCN_gif);
+    MCNameDelete(MCN_jpeg);
 	MCNameDelete(MCN_rtf);
 	MCNameDelete(MCN_html);
 
 	MCNameDelete(MCN_browser);
 	MCNameDelete(MCN_command_line);
 	MCNameDelete(MCN_development);
+    MCNameDelete(MCN_development_cmdline);
 	MCNameDelete(MCN_helper_application);
 	MCNameDelete(MCN_installer);
 	MCNameDelete(MCN_mobile);
@@ -1158,6 +1205,7 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_desktop);
 	MCNameDelete(MCN_documents);
 	MCNameDelete(MCN_engine);
+    MCNameDelete(MCN_resources);
 	MCNameDelete(MCN_fonts);
 	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_start);
@@ -1376,6 +1424,10 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_update_screen);
 	MCNameDelete(MCM_update_var);
 
+#ifdef FEATURE_PLATFORM_URL
+	MCNameDelete(MCM_url_progress);
+#endif
+
 #ifdef _MOBILE
 	MCNameDelete(MCN_firstname);
 	MCNameDelete(MCN_lastname);
@@ -1420,7 +1472,6 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_motion_start);
 	MCNameDelete(MCM_motion_end);
 	MCNameDelete(MCM_motion_release);
-	MCNameDelete(MCM_url_progress);
 	MCNameDelete(MCM_acceleration_changed);
 	MCNameDelete(MCM_orientation_changed);
 	MCNameDelete(MCM_location_changed);
@@ -1435,6 +1486,7 @@ void MCU_finalize_names(void)
     MCNameDelete(MCM_push_notification_registered);
     MCNameDelete(MCM_push_notification_registration_error);
     MCNameDelete(MCM_url_wake_up);
+	MCNameDelete(MCM_launch_data_changed);
 	MCNameDelete(MCM_browser_started_loading);
 	MCNameDelete(MCM_browser_finished_loading);
 	MCNameDelete(MCM_browser_load_failed);
@@ -1471,4 +1523,12 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_player_stopped);
 	MCNameDelete(MCM_reachability_changed);
 #endif
+    
+    MCNameDelete(MCN_font_default);
+    MCNameDelete(MCN_font_usertext);
+    MCNameDelete(MCN_font_menutext);
+    MCNameDelete(MCN_font_content);
+    MCNameDelete(MCN_font_message);
+    MCNameDelete(MCN_font_tooltip);
+    MCNameDelete(MCN_font_system);
 }

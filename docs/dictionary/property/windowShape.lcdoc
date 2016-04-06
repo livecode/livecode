@@ -1,0 +1,42 @@
+Name: windowShape
+
+Type: property
+
+Syntax: set the windowShape of stack to {imageID | 0}
+
+Summary: Specifies an <image> whose mask is used as the shape of the window.
+
+Associations: stack
+
+Introduced: 2.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+set the windowShape of this stack to 974
+
+Value:
+The <windowShape> of a <stack> is the <ID> of an <image> whose <mask> will be used as the window shape. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
+By default, the <windowShape> <property> of newly created <stacks> is set to zero.
+
+Description:
+Use the <windowShape> <property> to display a special-purpose window shape.
+
+If the image has a 1-bit transparency mask, the shape of this mask is used to clip the window: the mask is superimposed on the window, and any pixels that fall outside the mask are not displayed. For example, if you set a stack's <windowShape> to an <image> whose <mask> is a rectangle with rounded corners, the window is shown with rounded corners, and the parts of the <stack> in the corners are hidden.
+
+If the image has a full alpha-mask and the running platform supports the feature (currently Windows 2000 and later, and MacOS X) then the alpha-mask of the window will be set to that of the image. This will result in the transparency of each pixel in the window being determined by the corresponding pixel in the alpha-mask of the image. Any pixel more transparent than a system-specific threshold value will be treated as fully transparent with regards to mouse-clicks and other events.
+
+For 1-bit masks, the window needs to be re-created whenever the windowShape property is set making it unsuitable for animation. However, alpha-masked windows suffer no such limitation and it is possible to set the windowShape property successively to such images without any flicker.
+
+>*Important:*  The border and <title bar> of a <stack> are not shown if the <stack's (object)> <windowShape> is set. This means you will need to provide methods of dragging and closing the window if you want the user to be able to do these tasks.
+
+To revert to the normal window shape, set the <windowShape> to zero.
+
+Changes:
+The ability to use images with full (> 1-bit) alpha masks was introduced in version 2.6.
+
+References: ID (property), style (property), maskData (property), decorations (property), iconic (property), image (keyword), stack (object), property (glossary), title bar (glossary), current stack (glossary), mask (glossary), stacks (function)
+
+Tags: windowing

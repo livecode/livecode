@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -261,6 +261,13 @@ uint32_t MCModeGetEnvironmentType(void)
 	return kMCModeEnvironmentTypeServer;
 }
 
+// SN-2015-01-16: [[ Bug 14295 ]] Not implemented for server
+void MCModeGetResourcesFolder(MCStringRef &r_resources_folder)
+{
+    // Not implemented on server
+    r_resources_folder = MCValueRetain(kMCEmptyString);
+}
+
 // In standalone mode, we are never licensed.
 bool MCModeGetLicensed(void)
 {
@@ -269,6 +276,19 @@ bool MCModeGetLicensed(void)
 
 // In standalone mode, the executable is $0 if there is an embedded stack.
 bool MCModeIsExecutableFirstArgument(void)
+{
+	return true;
+}
+
+// In server mode, we have command line name / arguments
+bool MCModeHasCommandLineArguments(void)
+{
+    return true;
+}
+
+// In server mode, we have environment variables
+bool
+MCModeHasEnvironmentVariables()
 {
 	return true;
 }

@@ -1,0 +1,32 @@
+Name: fixedLineHeight
+
+Type: property
+
+Syntax: set the fixedLineHeight of <field> to {true | false}
+
+Summary: Specifies whether the lines in a <field> are all the same height, or vary in height to fit the text on that line.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the fixedLineHeight of the selectedField to false
+
+Value (bool):The <fixedLineHeight> of a <field(keyword)> is true or false.
+By default, the <fixedLineHeight> <property> of newly created <field(object)|fields> is set to true.
+
+Description:
+Use the <fixedLineHeight> <property> to control the appearance of <field(object)|fields> with multiple <font|fonts>, sizes, or styles.
+
+If a field's <fixedLineHeight> <property> is set to true, the height allotted for each line in the <field(keyword)> is equal to the <field(object)|field's> <textHeight>. This means that if some of the text in the <field(keyword)> is taller than the <field(object)|field's> <textHeight>, it may be truncated.
+
+If the <fixedLineHeight> is false, the height of each line depends on the size of the text in that line.
+
+References: showLines (property), formattedHeight (property), textSize (property), height (property), linkText (property), hGrid (property), textShift (property), textHeight (property), field (keyword), field (object), property (glossary), font (glossary)
+
+Tags: ui

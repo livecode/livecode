@@ -1,0 +1,40 @@
+Name: create stack
+
+Type: command
+
+Syntax: create [script only] [invisible] stack [<stackName> [with <background>]]
+
+Summary: Makes a new blank <stack>.
+
+Synonyms: new stack
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,web,mobile
+
+Example:
+create stack "Test"
+
+Example:
+create stack "Resources" with background "Standard Navigation"
+
+Parameters:
+stackName: The name of the newly-created stack. If you don't specify a stackName, the new stack's name is the value of the seconds function at the time of creation.
+background: A reference to any group in the defaultStack. This group, if specified, is included in the new stack.
+
+Description:
+Use the <create stack> command to make a new <stack>.
+
+The newly created stack is not saved to a file until you explicitly save it. If you close it without saving it, the stack disappears.
+
+If you use the create invisible stack form, the stack is created with its visible <property> set to false, so it cannot be seen. Use this form to create a hidden window, change its appearance or position, then make it visible.
+
+If you use the create script only stack form, the stack is created with its scriptOnly <property> set to true and its visible <property> set to false. When saved only the stack name and script will be written to disk.
+
+The stack created when create stack is executed is a clone of the templateStack.
+
+References: stackFileType (property), templateStack (keyword), newStack (message), clone (command), create card (command), save (command), create (command), stack (object), property (glossary), scriptOnly (property),
+
+Tags: objects

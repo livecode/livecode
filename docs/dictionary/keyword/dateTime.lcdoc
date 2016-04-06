@@ -1,0 +1,25 @@
+Name: dateTime
+
+Type: keyword
+
+Syntax: dateTime
+
+Summary: Used with the <sort> and <sort container> <command|commands> to sort by date and/or time.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+sort cards dateTime by field "Last Modified Date"
+
+Description:
+Use the <dateTime> <keyword> when <sort|sorting> by a <field> or portion of a <container> that is a date or time.
+
+Alphabetical sorting does not take the special format of dates and times into account. For example, a normal sort places 11:30 AM after 2:00 AM, because 2 is greater than 1. The <dateTime> <keyword> recognizes all <LiveCode|LiveCode's> date and time <format|formats> and <sort|sorts> them in time order, rather than alphabetical or numeric order.
+
+References: field (keyword), text (keyword), sort (command), sort container (command), keyword (glossary), LiveCode (glossary), command (glossary), container (glossary), format (glossary), sort (glossary)
+
+Tags: math

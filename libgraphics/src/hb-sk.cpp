@@ -147,6 +147,7 @@ hb_sk_get_glyph_extents (hb_font_t *font HB_UNUSED,
     
     hb_position_t advance = 0;
     SkiaGetGlyphWidthAndExtents(&paint, typeface, glyph, 0, extents);
+    return true;
 }
 
 static hb_bool_t

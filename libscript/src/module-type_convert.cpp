@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -30,7 +30,7 @@ static bool MCProperListCombine(void *context, MCValueRef p_value)
     return MCListAppend(t_list, p_value);
 }
 
-extern "C" MC_DLLEXPORT MCProperListRef MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter)
+extern "C" MC_DLLEXPORT_DEF MCProperListRef MCTypeConvertExecSplitStringByDelimiter(MCStringRef p_target, MCStringRef p_delimiter)
 {
     MCAutoProperListRef t_list;
     if (!MCStringSplitByDelimiter(p_target, p_delimiter, kMCStringOptionCompareExact, &t_list))
@@ -39,7 +39,7 @@ extern "C" MC_DLLEXPORT MCProperListRef MCTypeConvertExecSplitStringByDelimiter(
     return MCValueRetain(*t_list);
 }
 
-extern "C" MC_DLLEXPORT MCStringRef MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter)
+extern "C" MC_DLLEXPORT_DEF MCStringRef MCTypeConvertExecCombineListWithDelimiter(MCProperListRef p_target, MCStringRef p_delimiter)
 {
     MCListRef t_list;
     if (!MCListCreateMutable(p_delimiter, t_list))
@@ -60,3 +60,16 @@ extern "C" MC_DLLEXPORT MCStringRef MCTypeConvertExecCombineListWithDelimiter(MC
     
     return MCValueRetain(*t_string);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_typeconvert_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_typeconvert_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

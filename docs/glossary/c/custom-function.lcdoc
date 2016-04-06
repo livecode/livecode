@@ -1,0 +1,10 @@
+Name: custom function
+
+Synonyms: user-defined function,custom function
+
+Type: glossary
+
+Description:
+A <function> whose behavior is defined by a <function handler> that you write, as opposed to a built-in <function>.
+
+References: function handler (glossary), function (glossary)

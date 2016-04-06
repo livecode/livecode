@@ -1,0 +1,49 @@
+Name: focus
+
+Type: command
+
+Syntax: focus [on] <object> 
+
+Syntax: focus on nothing
+
+Summary: Places the <insertion point> in a <field>, makes a <control> active, or removes focus from all controls.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+focus on field 1
+
+Example:
+focus on the mouseControl
+
+Example:
+focus on graphic "Move Me"
+
+Example:
+focus on nothing
+
+Parameters:
+object: Any object on the current card.
+
+Description:
+Use the <focus> <command> to make a <control> active--that is, to make it receive any keystrokes the user types.
+
+If the object's <traversalOn> <property> is false, it cannot receive the <focus>, and the <focus> <command> causes an <error>.
+
+If the <lookAndFeel> is set to "Motif", the <active control|focused control> is outlined, and the <control> receives any keystrokes (and the <message|messages> associated with them).
+
+If the <lookAndFeel> is set to "Appearance Manager" or "Macintosh", an outline is drawn around <field(object)|fields>, <image|images>, and <EPS|EPS objects> whose <showFocusBorder> <property> is set to true. Otherwise, the <appearance> of the <active control|focused control> does not change, but it receives keystroke <message|messages>.
+
+If the <lookAndFeel> is set to "Windows 95", a dotted outline is drawn within <button|buttons> when they receive the <focus>.
+
+If the <object> is an <unlock|unlocked> <field(keyword)>, the <insertion point> is placed after the text in the <field(keyword)>.
+
+Use the focus on nothing command to remove focus from all objects on a card.
+
+References: focusPattern (property), showFocusBorder (property), lockText (property), selected (property), lookAndFeel (property), focusColor (property), traversalOn (property), enterKey (message), focusIn (message), keyUp (message), tabKey (message), mouseLeave (message), mouseWithin (message), keyDown (message), focusOut (message), returnKey (message), field (keyword), control (keyword), property (glossary), EPS (glossary), error (glossary), insertion point (glossary), message (glossary), unlock (glossary), appearance (glossary), active control (glossary), command (glossary), focusedObject (function), mouseStack (function), select (command), focus (command), field (object), image (object), button (object)
+
+Tags: ui

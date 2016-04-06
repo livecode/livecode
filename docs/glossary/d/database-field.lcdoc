@@ -1,0 +1,12 @@
+Name: database field
+
+Synonyms: database field
+
+Type: glossary
+
+Description:
+The smallest part of a <database>. One kind of information is stored in each database field, one value for each <record> in the <database>.
+
+References: database (glossary), record (glossary)
+
+Tags: database

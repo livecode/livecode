@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -434,7 +434,7 @@ void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCS
 	/* UNCHECKED */ t_tooltip_wstr.Lock(p_tooltip);
 
 	if (p_tooltip != nil && !MCStringIsEmpty(p_tooltip))
-		/* UNCHECKED */ StringCchCopy(t_nidata.szTip, 128, *t_tooltip_wstr);
+		/* UNCHECKED */ StringCchCopyW(t_nidata.szTip, 128, *t_tooltip_wstr);
 	else
 		t_nidata . szTip[0] = '\0';
 

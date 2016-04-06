@@ -1,0 +1,7 @@
+integer,123,456
+negativeInteger,-789,-159
+decimal,1.2,5.689
+negativeDecimal,-2.5,-25.24
+hex,0xAB,0x12
+negativeHex,-0x45,-0x98
+exponential,1.00e+10,1.00e-10

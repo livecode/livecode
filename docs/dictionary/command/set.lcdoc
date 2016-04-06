@@ -1,0 +1,36 @@
+Name: set
+
+Type: command
+
+Syntax: set [the] <property> [of <object>] to <value> 
+
+Summary: Assigns a <value> to a <property>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textFont of button "next" to "Arial"
+
+Example:
+set the cursor to watch
+
+Example:
+set the backgroundcolor of graphic "background" to green
+
+Parameters:
+property: A built-in property name or custom property name.
+object: Any object reference. If you don't specify an object, the property must be a global property.
+value (string): 
+
+Description:
+Use the <set> <command> to change the setting of a <property> or <custom property>.
+
+If you specify a property that doesn't exist, LiveCode creates a custom property with that name for the <object>.
+
+References: customPropertySets (property), customPropertySet (property), get (command), value (function), property (glossary), custom property (glossary), command (glossary)
+
+Tags: properties

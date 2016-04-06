@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -92,21 +92,21 @@ static bool
 __MCSFileThrowReadErrorWithErrorCode (MCStringRef p_native_path,
                                       DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to read from file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to read from file '%{path}': %{description}"), p_error_code);
 }
 
 static bool
 __MCSFileThrowWriteErrorWithErrorCode (MCStringRef p_native_path,
                                        DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to write to file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to write to file '%{path}': %{description}"), p_error_code);
 }
 
 static bool
 __MCSFileThrowOpenErrorWithErrorCode (MCStringRef p_native_path,
                                       DWORD p_error_code)
 {
-	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to open file '%{path}': %{description"), p_error_code);
+	return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to open file '%{path}': %{description}"), p_error_code);
 }
 
 /* ================================================================
@@ -184,7 +184,7 @@ __MCSFileGetContents (MCStringRef p_native_path,
 		uint32_t t_bytes_request;
 		DWORD t_bytes_read;
 
-		t_bytes_request = MCMax ((t_file_size - t_total_read), UINT32_MAX);
+		t_bytes_request = MCMin ((t_file_size - t_total_read), UINT32_MAX);
 
 		if (!ReadFile (t_handle, t_buffer,
 		               t_bytes_request, &t_bytes_read, NULL))
@@ -281,7 +281,7 @@ __MCSFileSetContents (MCStringRef p_native_path,
 
 	/* ---------- 3) Move the temporary file into place */
 
-	if (!MoveFileEx (t_temp_path_w32, *t_path_w32, MOVEFILE_REPLACE_EXISTING))
+	if (!MoveFileExW(t_temp_path_w32, *t_path_w32, MOVEFILE_REPLACE_EXISTING))
 	{
 		/* Report rename error */
 		DWORD t_error = GetLastError();
@@ -747,7 +747,7 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
 
 		t_entries[t_num_entries - 1] = t_entry_name;
 	}
-	while (0 != FindNextFile (t_find_handle, &t_find_data));
+	while (0 != FindNextFileW(t_find_handle, &t_find_data));
 
 	/* Clean up and return the list of directory entries */
 	FindClose (t_find_handle);
@@ -756,4 +756,39 @@ __MCSFileGetDirectoryEntries (MCStringRef p_native_path,
  error_cleanup:
 	FindClose (t_find_handle);
 	return false;
+}
+
+bool
+__MCSFileGetType (MCStringRef p_native_path,
+                  bool p_follow_links,
+                  MCSFileType & r_type)
+{
+	/* Get a system path */
+	MCAutoStringRefAsWString t_path_w32;
+	if (!t_path_w32.Lock (p_native_path))
+		return false;
+
+	DWORD t_attributes = GetFileAttributesW(*t_path_w32);
+
+	if (INVALID_FILE_ATTRIBUTES == t_attributes)
+	{
+		return __MCSFileThrowIOErrorWithErrorCode (p_native_path, MCSTR("Failed to get attributes from file '%{path}': %{description}"), GetLastError());
+	}
+
+	/* Symbolic links are indicated by the reparse point flag.  But the other
+	 * relevant attributes are still present. */
+	if ((t_attributes & FILE_ATTRIBUTE_REPARSE_POINT) && !p_follow_links)
+	{
+		r_type = kMCSFileTypeSymbolicLink;
+	}
+	else if (t_attributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		r_type = kMCSFileTypeDirectory;
+	}
+	else
+	{
+		r_type = kMCSFileTypeRegular;
+	}
+
+	return true;
 }

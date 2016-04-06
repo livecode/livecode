@@ -1,0 +1,520 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+This library provides support for generating and parsing JavaScript Object
+Notation (JSON) data.  See also <http://json.org>.
+
+Tags: JSON, Library
+*/
+
+library com.livecode.library.json
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "JSON Library"
+
+--================================================================
+-- JSON error handling
+--================================================================
+
+-- Workaround string formatting issues
+private handler FormatInt(in pNumber as Number) returns String
+	variable tNumberString
+
+	put pNumber formatted as string into tNumberString
+
+	if "." is in tNumberString then
+		variable tDotOffset
+		put the first offset of "." in tNumberString into tDotOffset
+		delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
+	end if
+
+	return tNumberString
+end handler
+
+private handler JsonSyntaxError(in pLine as Number, in pColumn as Number, \
+                        in pMessage as String) returns nothing
+  throw "syntax error:" && FormatInt(pLine) & ":" & FormatInt(pColumn) && pMessage
+end handler
+
+--================================================================
+-- JSON parser
+--================================================================
+
+-- Scanner states
+constant kScanStartToken is 0
+constant kScanEndToken is 1
+constant kScanInString is 10
+constant kScanInStringEscape is 11
+constant kScanInStringUnicode is 12
+constant kScanInLiteral is 20
+constant kScanInNumber is 30
+
+-- Parser states
+constant kParseTop is 0
+constant kParseEndValue is 1
+constant kParseArrayStart is 10
+constant kParseArrayValue is 11
+constant kParseArrayNext is 12
+constant kParseObjectStart is 20
+constant kParseObjectKey is 21
+constant kParseObjectColon is 22
+constant kParseObjectValue is 23
+constant kParseObjectNext is 24
+
+
+/*
+Summary: Parse JSON text into a LiveCode value.
+
+pJson:   String containing JSON text
+
+Returns: The top level value.  The type depends on the JSON content.
+
+Description:
+<JsonImport> is used to convert data encoded in JSON format into a LiveCode
+value.  It parses <pJson> and returns the first top-level value found.  If any
+syntax errors are found in <pJson>, an error is thrown.
+
+The return value may be any of the following types, depending on the content
+of the file:
+
+* Array (for a JSON object)
+* List  (for a JSON array)
+* String (for a JSON string)
+* Number (for any JSON number)
+* Boolean (for JSON `true` or `false`)
+* nothing (for JSON `null`)
+
+Tags: JSON
+*/
+public handler JsonImport(in pJson as String) returns any
+
+  -- These variables track the cursor position
+  variable tLine as Number
+  put 1 into tLine
+  variable tColumn as Number
+  put 0 into tColumn
+
+  -- Scanner state
+  variable tScanState as Number
+  put kScanStartToken into tScanState
+
+  variable tToken as optional String
+  variable tExtraToken as optional String
+  variable tTokenValue as optional String
+
+  variable tStringUniHex as String
+  put "" into tStringUniHex
+
+  -- Parser state
+  variable tParseState as Number
+  put kParseTop into tParseState
+
+  variable tValue as optional any
+
+  variable tValueStack as List
+  put [] into tValueStack
+  variable tStateStack as List
+  put [] into tStateStack
+
+  -- Loop over all the charaters in the JSON input in a single pass
+  variable tChar as String
+  repeat for each char tChar in pJson
+
+    -- Update cursor position
+    if tChar is in "\r\n" then
+      add 1 to tLine
+      put 1 into tColumn
+    else
+      add 1 to tColumn
+    end if
+
+    ---------- TOKEN SCANNER
+
+    if tScanState is kScanStartToken then
+      -- Consume whitespace
+      if tChar is in " \t\r\n" then
+        next repeat
+      end if
+
+      if tChar is in "{}[]:," then
+        put tChar into tToken
+        put nothing into tTokenValue
+        put kScanEndToken into tScanState
+      else if tChar is "\q" then
+        put tChar into tToken
+        put "" into tTokenValue
+        put kScanInString into tScanState
+      else if tChar is in "tfn" then
+        put tChar into tToken
+        put tChar into tTokenValue
+        put kScanInLiteral into tScanState
+      else if tChar is in "-0123456789" then
+        put "0" into tToken
+        put tChar into tTokenValue
+        put kScanInNumber into tScanState
+      else
+        return JsonSyntaxError(tLine, tColumn, \
+                               "Unexpected character '" & tChar & "'")
+      end if
+
+        -- String support is complicated
+    else if tScanState is kScanInString then
+      if tChar is "\q" then
+        put kScanEndToken into tScanState
+      else if tChar is "\\" then
+        put kScanInStringEscape into tScanState
+      else
+        put tChar after tTokenValue
+      end if
+    else if tScanState is kScanInStringEscape then
+      if tChar is in "\q\\/" then
+        put tChar after tTokenValue
+        put kScanInString into tScanState
+      else if tChar is "n" then
+        put "\n" after tTokenValue
+        put kScanInString into tScanState
+      else if tChar is "r" then
+        put "\r" after tTokenValue
+        put kScanInString into tScanState
+      else if tChar is "t" then
+        put "\t" after tTokenValue
+        put kScanInString into tScanState
+      else if tChar is "u" then
+        put "" into tStringUniHex
+        put kScanInStringUnicode into tScanState
+      else if tChar is "b" then
+        put "\u{08}" after tTokenValue
+        put kScanInString into tScanState
+      else if tChar is "f" then
+        put "\u{0c}" after tTokenValue
+        put kScanInString into tScanState
+      else
+        return JsonSyntaxError(tLine, tColumn, \
+                               "illegal escape sequence '\\" & tChar & "'")
+      end if
+    else if tScanState is kScanInStringUnicode then
+      put tChar after tStringUniHex
+      if not (tChar is in "0123456789abcdefABCDEF") then
+        return JsonSyntaxError(tLine, tColumn, \
+                        "illegal escape sequence '\\u" & tStringUniHex & "'")
+      end if
+      if the number of chars in tStringUniHex >= 4 then
+        put the char with code (tStringUniHex converted from base 16) after tTokenValue
+        put kScanInString into tScanState
+      end if
+
+    else if tScanState is kScanInLiteral then
+      put tChar after tTokenValue
+      if tToken is "n" and the number of chars in tTokenValue is 4 then
+        if tTokenValue is not "null" then
+          return JsonSyntaxError(tLine, tColumn, \
+                                 "invalid token '" & tTokenValue & "'")
+        end if
+        put kScanEndToken into tScanState
+      else if tToken is "t" and the number of chars in tTokenValue is 4 then
+        if tTokenValue is not "true" then
+          return JsonSyntaxError(tLine, tColumn, \
+                                 "invalid token '" & tTokenValue & "'")
+        end if
+        put kScanEndToken into tScanState
+      else if tToken is "f" and the number of chars in tTokenValue is 5 then
+        if tTokenValue is not "false" then
+          return JsonSyntaxError(tLine, tColumn, \
+                                 "invalid token '" & tTokenValue & "'")
+        end if
+        put kScanEndToken into tScanState
+      end if
+
+    -- Numbers are a massive pain.  Because you can't tell from examining a
+    -- single character whether it ends the number, you have to wait until the
+    -- character after the *end* of the number -- which might be the start of
+    -- another token.
+    else if tScanState is kScanInNumber then
+      if tChar is in ".+-eE0123456789" then
+        put tChar after tTokenValue
+        next repeat
+      else
+        put kScanEndToken into tScanState
+        if tChar is in "]}," then
+          put tChar into tExtraToken
+        else if not (tChar is in " \t\r\n") then
+          return JsonSyntaxError(tLine, tColumn, "bad number terminal '" & tChar & "'")
+        end if
+      end if
+
+    else
+      return JsonSyntaxError(tLine, tColumn, "bad scan state")
+    end if
+
+    ---------- PARSER
+
+    -- Loop until a whole token is found
+    if tScanState is not kScanEndToken then
+      next repeat
+    end if
+    put kScanStartToken into tScanState
+
+    -- Allow for an extra parsing pass when the end of a number is found
+    variable tNeedPass as Boolean
+    put true into tNeedPass
+
+    repeat while tNeedPass
+      put false into tNeedPass
+
+      -- At this point we know that the next token is in tToken and if it's a
+      -- token that takes a value the value will be in tTokenValue
+
+      put nothing into tValue
+
+      if tToken is "\q" then
+        put tTokenValue into tValue
+
+      else if tToken is "n" then
+        put nothing into tValue
+
+      else if tToken is "t" then
+        put true into tValue
+
+      else if tToken is "f" then
+        put false into tValue
+
+      else if tToken is "0" then
+        put tTokenValue parsed as number into tValue
+
+        -- At the end of a number, there are (potentially) two tokens found
+        -- rather than just one
+        if tExtraToken is not nothing then
+          put tExtraToken into tToken
+          put nothing into tExtraToken
+          put true into tNeedPass
+        end if
+
+        if tValue is nothing then
+          return JsonSyntaxError(tLine, tColumn, \
+                                "unsupported number format '" & tTokenValue & "'")
+        end if
+
+      else if tToken is "[" then
+        if tParseState is in [kParseTop, kParseArrayStart, kParseArrayNext, \
+                              kParseObjectColon, kParseObjectNext] then
+          push [] onto tValueStack
+          push tParseState onto tStateStack
+          put kParseArrayStart into tParseState
+          next repeat
+        else
+          return JsonSyntaxError(tLine, tColumn, "unexpected '['")
+        end if
+
+      else if tToken is "]" then
+        if tParseState is kParseArrayStart or tParseState is kParseArrayValue then
+          pop tValueStack into tValue
+          pop tStateStack into tParseState
+        else
+          return JsonSyntaxError(tLine, tColumn, "unexpected ']'")
+        end if
+
+      else if tToken is "{" then
+        if tParseState is in [kParseTop, kParseArrayStart, kParseArrayNext, \
+                              kParseObjectColon, kParseObjectNext] then
+          push the empty array onto tValueStack
+          push tParseState onto tStateStack
+          put kParseObjectStart into tParseState
+          next repeat
+        else
+          return JsonSyntaxError(tLine, tColumn, "unexpected '{'")
+        end if
+
+      else if tToken is "}" then
+        if tParseState is kParseObjectStart or tParseState is kParseObjectValue then
+          pop tValueStack into tValue
+          pop tStateStack into tParseState
+        else
+          return JsonSyntaxError(tLine, tColumn, "unexpected '}'")
+        end if
+
+      else if tToken is "," then
+        if tParseState is kParseArrayValue then
+          put kParseArrayNext into tParseState
+          next repeat
+        else if tParseState is kParseObjectValue then
+          put kParseObjectNext into tParseState
+          next repeat
+        else
+          return JsonSyntaxError(tLine, tColumn, "unexpected ','")
+        end if
+
+      else if tToken is ":" then
+        if tParseState is kParseObjectKey then
+          put kParseObjectColon into tParseState
+          next repeat
+        else
+          return JsonSyntaxError(tLine, tColumn, "unexpected ':'")
+        end if
+
+      else
+        return JsonSyntaxError(tLine, tColumn, \
+                               "unhandled token '" & tToken & "'")
+        return nothing
+      end if
+
+      -- At this point, we know that tValue contains a complete value that's being
+      -- returned to its enclosing context
+
+      -- Array construction
+      if tParseState is kParseArrayStart or tParseState is kParseArrayNext then
+        push tValue onto tValueStack[-1]
+        put kParseArrayValue into tParseState
+
+      -- Object construction
+      else if tParseState is kParseObjectStart or tParseState is kParseObjectNext then
+        if tValue is a string then
+          push tValue onto tValueStack
+          put kParseObjectKey into tParseState
+        else
+          return JsonSyntaxError(tLine, tColumn, "expected string")
+        end if
+      else if tParseState is kParseObjectColon then
+        variable tKey as String
+        pop tValueStack into tKey
+        put tValue into tValueStack[-1][tKey]
+        put kParseObjectValue into tParseState
+
+      -- Top level
+      else if tParseState is kParseTop then
+        return tValue
+
+      else
+        return JsonSyntaxError(tLine, tColumn, "bad parse state" && FormatInt(tParseState) && "at token '" & tToken & "'")
+      end if
+    end repeat
+  end repeat
+
+  return JsonSyntaxError(tLine, tColumn, "unexpected end of input")
+end handler
+
+--================================================================
+-- JSON generator
+--================================================================
+
+private handler JsonExportString(in pValue as String) returns String
+	replace "\\" with "\\\\" in pValue
+	replace "\n" with "\\n" in pValue
+	replace "\r" with "\\r" in pValue
+	replace "\t" with "\\t" in pValue
+	replace "\q" with "\\\q" in pValue
+	replace "\u{08}" with "\\b" in pValue
+	replace "\u{0c}" with "\\f" in pValue
+	return "\q" & pValue & "\q"
+end handler
+
+private handler JsonExportNumber(in pValue as Number) returns String
+	return pValue formatted as string
+end handler
+
+private handler JsonExportList(in pValue as List) returns String
+	variable tTokens as List
+	put [] into tTokens
+
+	variable tFirst as Boolean
+	put true into tFirst
+
+	push "[" onto tTokens
+
+	variable tElement as optional any
+	repeat for each element tElement in pValue
+		if tFirst then
+			put false into tFirst
+		else
+			push "," onto tTokens
+		end if
+
+		push JsonExport(tElement) onto tTokens
+	end repeat
+
+	push "]" onto tTokens
+
+	variable tResult as String
+	combine tTokens with "" into tResult
+	return tResult
+end handler
+
+private handler JsonExportArray(in pValue as Array) returns String
+	variable tTokens as List
+	put [] into tTokens
+
+	variable tFirst as Boolean
+	put true into tFirst
+
+	push "{" onto tTokens
+
+	variable tKey as String
+	repeat for each key tKey in pValue
+		if tFirst then
+			put false into tFirst
+		else
+			push "," onto tTokens
+		end if
+
+		push JsonExport(tKey) onto tTokens
+		push ": " onto tTokens
+		push JsonExport(pValue[tKey]) onto tTokens
+	end repeat
+
+	push "}" onto tTokens
+
+	variable tResult as String
+	combine tTokens with "" into tResult
+	return tResult
+end handler
+
+/*
+Summary: Format a LiveCode value as JSON text
+
+pValue:  A LiveCode value (Array, List, String, Number, Boolean, or nothing)
+
+Returns: A string containing JSON-formatted text.
+
+Description:
+<JsonExport> is used to convert a LiveCode value into data encoded in JSON
+format.  If <pValue> is of a type that cannot be converted to JSON, an error is
+thrown.
+
+Tags: JSON
+*/
+public handler JsonExport(in pValue as optional any) returns String
+	if pValue is a string then
+		return JsonExportString(pValue)
+	else if pValue is a number then
+		return JsonExportNumber(pValue)
+	else if pValue is a list then
+		return JsonExportList(pValue)
+	else if pValue is an array then
+		return JsonExportArray(pValue)
+	else if pValue is true then
+		return "true"
+	else if pValue is false then
+		return "false"
+	else if pValue is nothing then
+		return "null"
+	else
+		throw "Unsupported value type for JSON"
+	end if
+end handler
+
+end library

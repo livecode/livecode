@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 //#include "execpt.h"
 #include "mcstring.h"
+#include "uidc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -429,6 +430,25 @@ static void export_rtf_emit_char_style_changes(MCStringRef p_buffer, export_rtf_
 		/* UNCHECKED */ MCStringAppendFormat(p_buffer, "\\cb%d\\chcbpat%d ", p_new . background_color_index + 1, p_new . background_color_index + 1);
 }
 
+// Properly close any open style.
+static void close_open_styles(export_rtf_t& ctxt)
+{
+    // We close all the previous styles when a link is over
+    while(ctxt . style_index > 0)
+    {
+        if (ctxt . styles[ctxt . style_index - 1] . metadata != ctxt . styles[ctxt.style_index] . metadata)
+            /* UNCHECKED */ MCStringAppend(ctxt . m_text, MCSTR("}}"));
+        
+        if (ctxt . styles[ctxt . style_index - 1] . link_text != ctxt . styles[ctxt.style_index] . link_text)
+            /* UNCHECKED */ MCStringAppend(ctxt . m_text, MCSTR("}}"));
+        
+        if (ctxt . styles[ctxt . style_index - 1] . background_color_index != ctxt . styles[ctxt.style_index] . background_color_index)
+            /* UNCHECKED */ MCStringAppend(ctxt . m_text, MCSTR("}"));
+        
+        ctxt . style_index -= 1;
+    }
+}
+
 // Emit the paragraph content. This is the second pass of rtf generation, the
 // first pass constructs the necessary tables.
 static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p_event_type, const MCFieldExportEventData& p_event_data)
@@ -455,7 +475,14 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		{
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\colortbl;");
 			for(uint32_t i = 0; i < ctxt . colors . count(); i++)
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", (ctxt . colors[i] >> 16) & 0xff, (ctxt . colors[i] >> 8) & 0xff, (ctxt . colors[i] >> 0) & 0xff);
+            {
+                // SN-2015-11-19: [[ Bug 16451 ]] MCscreen knows better than
+                // us how to unpack a colour pixel.
+                MCColor t_color;
+                t_color . pixel = ctxt . colors[i];
+                MCscreen -> querycolor(t_color);
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", t_color . red, t_color . green, t_color . blue);
+            }
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");
 		}
 		
@@ -483,6 +510,11 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 							t_char = 0x25AA, t_marker = "square";
 						else if (t_list_style == kMCParagraphListStyleCircle)
 							t_char = 0x25E6, t_marker = "circle";
+                        else // kMCParagraphListStyleNone
+                        {
+                            MCAssert(t_list_style == kMCParagraphListStyleNone);
+                            return false;
+                        }
 						/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listlevel\\levelnfc23\\leveljc0\\levelstartat1\\levelfollow0{\\*\\levelmarker \\{%s\\}}{\\leveltext\\'01\\u%d.;}{\\levelnumbers;}",
 													t_marker, t_char);
 					}
@@ -600,7 +632,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\ilvl%d", MCMin(p_event_data.paragraph_style.list_depth, 8U));
 			
 			// Emit the tag prefix and styling.
-			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\listtext\\tab");
+			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{\\listtext\\tab");
 			export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], ctxt . parent_style);
 			
 			// Now fetch the list style of the current paragraph and output the
@@ -668,17 +700,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 	}
 	else if (p_event_type == kMCFieldExportEventEndParagraph)
 	{
-		// Make sure any nested styles are finished.
-		while(ctxt . style_index > 0)
-		{
-            // MW-2014-06-11: [[ Bug 12556 ]] Make sure the metadata field is synced.
-            if (ctxt . styles[ctxt . style_index] . metadata != nil)
-                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-            if (ctxt . styles[ctxt . style_index] . link_text != nil)
-                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-			ctxt . style_index -= 1;
-		}
+        close_open_styles(ctxt);
 		
 		if (ctxt . has_metadata)
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
@@ -693,27 +715,28 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// with tags.
 		export_rtf_char_style_t t_new_style;
 		export_rtf_fetch_char_style(ctxt, t_new_style, p_event_data . character_style);
+
+        // SN-2015-11-17: [[ Bug 16308 ]] Fix RTF export with styles
+        // For any change in either the background colour, the metadata or the
+        // link associated with the text, we want to reset the style and start
+        // with all of them synchronised.
+        // That may not be the most efficient way, but that allows styles to
+        // overlap without any friction.
+        if (t_new_style . link_text != ctxt . styles[ctxt . style_index] . link_text
+                || t_new_style . metadata != ctxt . styles[ctxt . style_index] . metadata
+                || t_new_style . background_color_index != ctxt . styles[ctxt . style_index] . background_color_index)
+            close_open_styles(ctxt);
         
 		// Handle a change in link text.
 		if (t_new_style . link_text != ctxt . styles[ctxt . style_index] . link_text)
-		{
-            // MW-2014-06-11: [[ Bug 12556 ]] Make sure the link_text field is synced.
-			if (ctxt . styles[ctxt . style_index] . link_text != nil)
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}}");
-
-			while(ctxt . style_index > 0)
-			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-				ctxt . style_index -= 1;
-			}
-
+        {
 			if (t_new_style . link_text != nil)
 			{
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text,
 													 "{\\field{\\*\\fldinst %s \"%@\"}{\\fldrslt ",
 													 t_new_style . link_on ? "HYPERLINK" : "LCANCHOR",
 													 t_new_style . link_text);
-				ctxt . styles[ctxt . style_index] = ctxt . styles[ctxt . style_index];
+				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
                 ctxt . styles[ctxt . style_index + 1] . link_text = t_new_style . link_text;
 				ctxt . style_index += 1;
 			}
@@ -722,16 +745,6 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// Handle a change in metadata.
 		if (t_new_style . metadata != ctxt . styles[ctxt . style_index] . metadata)
 		{
-            // MW-2014-06-11: [[ Bug 12556 ]] Make sure the metadata field is synced.
-			if (ctxt . styles[ctxt . style_index] . metadata != nil)
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}}");
-
-			while(ctxt . style_index > 0 && ctxt . styles[ctxt . style_index] . link_text == nil)
-			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-				ctxt . style_index -= 1;
-			}
-
 			if (t_new_style . metadata != nil)
 			{
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, 
@@ -746,14 +759,9 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		// Handle a change in background color.
 		if (t_new_style . background_color_index != ctxt . styles[ctxt . style_index] . background_color_index)
 		{
-			if (t_new_style . background_color_index == -1)
+            if (t_new_style . background_color_index != -1)
 			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
-				ctxt . style_index -= 1;
-			}
-			else if (ctxt . styles[ctxt . style_index] . background_color_index == -1)
-			{
-				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}");
+                /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "{");
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
@@ -763,10 +771,6 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 		export_rtf_emit_char_style_changes(ctxt.m_text, ctxt . styles[ctxt . style_index], t_new_style);
 		ctxt . styles[ctxt . style_index] = t_new_style;
 
-		// Nothing more to do if this isn't a text run
-		if (p_event_type != kMCFieldExportEventNativeRun && p_event_type != kMCFieldExportEventUnicodeRun)
-			return true;
-		
 		// Now emit the text, if native its easy, otherwise we must process.
 		if (MCStringIsNative(p_event_data.m_text))
 			export_rtf_emit_native_text(ctxt.m_text,
@@ -873,7 +877,13 @@ bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t
 	/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\n}");
 
 	// Return the buffer.
-	return MCStringCopyAndRelease(ctxt.m_text, r_string);
+	if (!MCStringCopyAndRelease(ctxt.m_text, r_string))
+    {
+        MCValueRelease(ctxt . m_text);
+        return false;
+    }
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "stacklst.h"
 #include "card.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "objptr.h"
 #include "group.h"
 #include "field.h"
@@ -211,6 +211,10 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 		else
 			t_layer_mode = kMCLayerModeHintStatic;
 	}
+    else
+    {
+        MCUnreachableReturn(m_layer_mode);
+    }
 
 	// Now compute the sprite attribute.
 	bool t_is_sprite;
@@ -268,7 +272,7 @@ void MCControl::layer_redrawall(void)
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -290,7 +294,7 @@ void MCControl::layer_redrawrect(const MCRectangle& p_dirty_rect)
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -319,7 +323,7 @@ void MCControl::layer_transientchangedandredrawall(int32_t p_old_transient)
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -344,7 +348,7 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 	
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 	
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -375,7 +379,7 @@ void MCControl::layer_rectchanged(const MCRectangle& p_old_rect, bool p_redraw_a
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 	
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -410,7 +414,7 @@ void MCControl::layer_effectiverectchangedandredrawall(const MCRectangle& p_old_
 
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 	
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
@@ -432,7 +436,7 @@ void MCControl::layer_visibilitychanged(const MCRectangle& p_old_effective_rect)
 	if (!opened)
 		return;
 
-	if (!parent -> isvisible() && !MCshowinvisibles)
+	if (!parent -> isvisible() && !showinvisible())
 		return;
 
 	// If the control is currently visible, then its old rect must have been
@@ -476,7 +480,7 @@ void MCControl::layer_scrolled(void)
 		
 	// Check the visibility state of the object.
 	bool t_is_visible;
-	t_is_visible = isvisible() || MCshowinvisibles;
+	t_is_visible = isvisible() || showinvisible();
 
 	// If the layer isn't scrolling, we must redraw the whole thing. Otherwise
 	// we just need to invalidate a portion of the card.
@@ -551,12 +555,8 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 			return;
 		}
 		
-		// Otherwise intersect the dirty rect with the parent's rect.
-		t_dirty_rect = MCU_intersect_rect(t_dirty_rect, t_control -> parent -> getrect());
-
-		// Expand due to bitmap effects (if any).
-		if (t_parent_control -> m_bitmap_effects != nil)
-			MCBitmapEffectsComputeBounds(t_parent_control -> m_bitmap_effects, t_dirty_rect, t_dirty_rect);
+		// Otherwise intersect the dirty rect with the parent's effective rect.
+		t_dirty_rect = MCU_intersect_rect(t_dirty_rect, t_parent_control -> geteffectiverect());
 
 		t_control = t_parent_control;
 	}
@@ -617,7 +617,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 {
 	// Compute the 'new' effectiverect based on visibility.
 	MCRectangle t_new_effective_rect;
-	if (getflag(F_VISIBLE) || MCshowinvisibles)
+	if (getflag(F_VISIBLE) || showinvisible())
 		t_new_effective_rect = geteffectiverect();
 	else
 		MCU_set_rect(t_new_effective_rect, 0, 0, 0, 0);
@@ -979,7 +979,7 @@ static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, 
 		return true;
 	
 	// IM-2014-07-03: [[ GraphicsPerformance ]] Context origin is the topleft of the sprite so adjust to card coords.
-	p_target -> setorigin(t_control_rect . x, t_control_rect . y);
+	p_target -> setorigin(-t_control_rect . x, -t_control_rect . y);
 	p_target -> cliprect(t_dirty_rect);
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
@@ -1024,6 +1024,7 @@ bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, c
 	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card foreground
 	t_card -> drawselectionrect(p_target);
 
+    t_card -> drawselectedchildren(p_target);
 	return true;
 }
 
@@ -1074,12 +1075,19 @@ void MCCard::render(void)
 	// IM-2013-12-20: [[ ShowAll ]] Use MCStack::getvisiblerect() to get the visible area
 	MCRectangle t_visible_rect;
 	t_visible_rect = getstack()->getvisiblerect();
-	
-	if (getstate(CS_SIZE))
+    
+    MCRectangle t_foreground_region;
+    t_foreground_region = selrect;
+    
+    // Recursively update the redraw region for selected children
+    bool t_child_selected;
+    t_child_selected = updatechildselectedrect(t_foreground_region);
+    
+	if (getstate(CS_SIZE) || t_child_selected)
 	{
 		MCTileCacheLayer t_fg_layer;
 		t_fg_layer . id = m_fg_layer_id;
-		t_fg_layer . region = MCRectangle32GetTransformedBounds(selrect, t_transform);
+		t_fg_layer . region = MCRectangle32GetTransformedBounds(t_foreground_region, t_transform);
 		t_fg_layer . clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
 		t_fg_layer . is_opaque = false;
 		t_fg_layer . opacity = 255;
@@ -1092,8 +1100,9 @@ void MCCard::render(void)
 	else
 		m_fg_layer_id = 0;
 	
-	MCObjptr *t_objptrs;
-	t_objptrs = getobjptrs();
+    MCObjptr *t_objptrs;
+    t_objptrs = getobjptrs();
+    
 	if (t_objptrs != nil)
 	{
 		MCObjptr *t_objptr;
@@ -1127,7 +1136,7 @@ void MCCard::render(void)
 
 			// Now compute the layer's region/clip.
 			MCRectangle t_layer_region, t_layer_clip;
-			if (!t_control -> getflag(F_VISIBLE) && !MCshowinvisibles)
+			if (!t_control -> getflag(F_VISIBLE) && !showinvisible())
 			{
 				// Invisible layers just have empty region/clip.
 				t_layer_region = MCU_make_rect(0, 0, 0, 0);
@@ -1217,7 +1226,6 @@ void MCCard::render(void)
 
 static bool s_screen_is_dirty = false;
 static bool s_screen_updates_disabled = false;
-bool MCredrawupdatescreenneeded = false;
 
 bool MCRedrawIsScreenLocked(void)
 {
@@ -1233,14 +1241,16 @@ void MCRedrawRestoreLockScreen(uint2 p_lock)
 {
 	MClockscreen = p_lock;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawLockScreen(void)
 {
 	MClockscreen++;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawUnlockScreen(void)
@@ -1250,7 +1260,8 @@ void MCRedrawUnlockScreen(void)
 
 	MClockscreen--;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawUnlockScreenWithEffects(void)
@@ -1268,14 +1279,16 @@ void MCRedrawUnlockScreenWithEffects(void)
 		MCdefaultstackptr -> effectrect(MCcur_effects_rect, t_abort);
 	}
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawForceUnlockScreen(void)
 {
 	MClockscreen = 0;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1308,7 +1321,8 @@ void MCRedrawScheduleUpdateForStack(MCStack *stack)
 {
 	s_screen_is_dirty = true;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 bool MCRedrawIsScreenUpdateEnabled(void)
@@ -1320,14 +1334,16 @@ void MCRedrawDisableScreenUpdates(void)
 {
 	s_screen_updates_disabled = true;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawEnableScreenUpdates(void)
 {
 	s_screen_updates_disabled = false;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 void MCRedrawDoUpdateScreen(void)
@@ -1354,8 +1370,16 @@ void MCRedrawDoUpdateScreen(void)
 		if (sptr->getstate(CS_NEED_RESIZE))
 		{
 			sptr->setgeom();
-			sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
-			MCRedrawUpdateScreen();
+            sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+
+            // SN-2015-08-31: [[ Bug 15705 ]] From 6.7.7, MCRedrawUpdateScreen
+            //  also removes kMCActionUpdateScreen from MCactionsrequired,
+            //  which was not the case beforehand - and the redrawing could nest
+            //  here, and eventually set s_screen_is_dirty to false (l.1383)
+            if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+                MCActionsSchedule(kMCActionsUpdateScreen);
+
+            MCRedrawUpdateScreen();
 			return;
 		}
 
@@ -1367,7 +1391,8 @@ void MCRedrawDoUpdateScreen(void)
 
 	s_screen_is_dirty = false;
 	
-	MCredrawupdatescreenneeded = MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled;
+	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+        MCActionsSchedule(kMCActionsUpdateScreen);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

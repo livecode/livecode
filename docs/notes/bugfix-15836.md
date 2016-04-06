@@ -1,0 +1,1 @@
+# Widgets: OnOpen / OnClosed messages sent when widget is relayered.

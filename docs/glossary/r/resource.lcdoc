@@ -1,0 +1,12 @@
+Name: resource
+
+Synonyms: resource
+
+Type: glossary
+
+Description:
+A type of data stored in the <resource fork> of <Mac OS> <file|files>. Each resource is identified by a four-letter resource type and a resource ID number.
+
+References: Mac OS (glossary), file (glossary), resource fork (glossary)
+
+Tags: file system

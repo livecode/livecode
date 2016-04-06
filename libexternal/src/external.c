@@ -1,13 +1,33 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifndef _WINDOWS
+#include <stdint.h>
+#endif
 
 #include <revolution/external.h>
 
 #ifdef _WINDOWS
 #define LIBRARY_EXPORT __declspec(dllexport)
 #else
-#define LIBRARY_EXPORT
+#define LIBRARY_EXPORT __attribute__((__visibility__("default")))
 #endif
 
 enum
@@ -78,6 +98,9 @@ enum
     // SN-2015-02-25: [[ Merge 6.7.4-rc-1 ]] OPERATION_GET_XDISPLAY_HANDLE is
     //  actually from the version 4 (V3 is Ali's module functions).
     /* V3 */ OPERATION_GET_XDISPLAY_HANDLE,
+    // SN-2015-03-12: [[ Bug 14413 ]] Add new UTF-8 <-> native conversion functions
+    /* V4 */ OPERATION_CONVERT_FROM_NATIVE_TO_UTF8,
+    /* V4 */ OPERATION_CONVERT_TO_NATIVE_FROM_UTF8,
 };
 
 enum
@@ -92,7 +115,7 @@ enum
 	/* V2 */ SECURITY_CHECK_LIBRARY_UTF8
 };
 
-typedef char *(*ExternalOperationCallback)(const char *p_arg_1, const char *p_arg_2, const char *p_arg_3, int *r_success);
+typedef char *(*ExternalOperationCallback)(const void *p_arg_1, const void *p_arg_2, const void *p_arg_3, int *r_success);
 typedef void (*ExternalDeleteCallback)(void *p_block);
 
 typedef Bool (*ExternalSecurityHandler)(const char *p_op);
@@ -108,7 +131,7 @@ static ExternalDeleteCallback s_delete = NULL;
 
 static ExternalSecurityHandler *s_security_handlers = NULL;
 
-#if defined(_LINUX) || defined(__MACOSX) || defined(TARGET_SUBPLATFORM_ANDROID)
+#if !defined(_WIN32)
 void getXtable(ExternalOperationCallback p_operations[], ExternalDeleteCallback p_delete, const char **r_name, ExternalDeclaration **r_table, ExternalDeleteCallback *r_external_delete) __attribute__((visibility("default")));
 void configureSecurity(ExternalSecurityHandler *p_handlers) __attribute__((visibility("default")));
 void setExternalInterfaceVersion(unsigned int p_version) __attribute__((visibility("default")));
@@ -406,13 +429,13 @@ void RunloopWait(int *r_success)
 		return;
 	}
 
-	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, &r_success);
+	t_result = (s_operations[OPERATION_RUNLOOP_WAIT])(NULL, NULL, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
 
 // IM-2014-07-09: [[ Bug 12225 ]] Add coordinate conversion functions
-void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+void StackToWindowRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success)
 {
     char *t_result;
     
@@ -422,12 +445,12 @@ void StackToWindowRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])(p_win_id, x_rect, NULL, &r_success);
+    t_result = (s_operations[OPERATION_STACK_TO_WINDOW_RECT])((const void*)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
 
-void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_success)
+void WindowToStackRect(uintptr_t p_win_id, MCRectangle32 *x_rect, int *r_success)
 {
 	char *t_result;
     
@@ -437,7 +460,7 @@ void WindowToStackRect(unsigned int p_win_id, MCRectangle32 *x_rect, int *r_succ
 		return;
 	}
     
-	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])(p_win_id, x_rect, NULL, &r_success);
+	t_result = (s_operations[OPERATION_WINDOW_TO_STACK_RECT])((const void*)p_win_id, x_rect, NULL, r_success);
 	if (t_result != NULL)
 		s_delete(t_result);
 }
@@ -929,6 +952,38 @@ extern void GetXDisplayHandle(void **r_display, int *r_success)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// V4: UTF-8 <-> native string conversion
+
+const char *ConvertCStringFromNativeToUTF8(const char *p_native, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 4)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return NULL;
+    }
+    
+    t_result = (s_operations[OPERATION_CONVERT_FROM_NATIVE_TO_UTF8])(p_native, NULL, NULL, r_success);
+    
+    return t_result;
+}
+
+const char *ConvertCStringToNativeFromUTF8(const char *p_utf8, int *r_success)
+{
+    char *t_result;
+    
+    if (s_external_interface_version < 4)
+    {
+        *r_success = EXTERNAL_FAILURE;
+        return NULL;
+    }
+    
+    t_result = (s_operations[OPERATION_CONVERT_TO_NATIVE_FROM_UTF8])(p_utf8, NULL, NULL, r_success);
+    
+    return t_result;
+}
 
 #ifdef TARGET_SUBPLATFORM_IPHONE
 struct LibExport

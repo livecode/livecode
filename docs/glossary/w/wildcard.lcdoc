@@ -1,0 +1,14 @@
+Name: wildcard
+
+Synonyms: wild card,wildcard,wildcard expression,glob,globbing,globbed,globular expansion,globular expression
+
+Type: glossary
+
+Description:
+A symbol that stands for one or more <character|characters>. 
+ 
+The process of expanding a wildcard to match all its possible strings is called globbing (after "global").
+
+References: character (glossary)
+
+Tags: text processing

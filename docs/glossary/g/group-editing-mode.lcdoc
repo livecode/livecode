@@ -1,0 +1,12 @@
+Name: group-editing mode
+
+Synonyms: group editing mode,group-editing mode,group edit mode,group-edit mode
+
+Type: glossary
+
+Description:
+A state in which only the <group> being edited is shown, you can select and edit individual <control|controls> in the group, and any new <control|controls> you create are automatically added to the <group>.
+
+References: group (glossary), control (glossary)
+
+Tags: objects

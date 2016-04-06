@@ -1,0 +1,39 @@
+Name: mobileGetLaunchURL
+
+Type: function
+
+Syntax: get mobileGetLaunchURL()
+
+Summary: Returns the URL that was used to launch the application.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+put mobileGetLaunchURL() into tLaunchURL
+
+Example:
+put mobileGetLaunchURL() into tLaunchURL
+if tLauchURL is empty then
+   -- started manually
+else
+   urlLaunchSetup
+end if
+
+Returns:
+Use the <mobileGetLaunchURL> function to get the custom URL scheme that was used to launch the application.
+If the application was not launched using the custom URL scheme then empty is returned.
+
+Description:
+Returns the URL that was used to launch the application.
+
+The <mobileGetLaunchURL> function returns the URL that was used to launch the application. This can be used to extract any parameters that may have been passed as part of the URL. 
+
+>*Note:* Custom URLs allow an application to be woken up when a specific URL is selected on a device. Your application registers any custom URL schemes it wishes to be woken up by with the operating system when first installed. These custom URL schemes can be set up in the standalone applications settings pane of LiveCode.
+
+When one of the URLs is clicked on in either the browser or from within another application installed on the device, your application is woken up and sent a <urlWakeUp> message.
+
+References: urlWakeUp (message), mobileGetLaunchData (function), launchDataChanged (message)

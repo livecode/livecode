@@ -1,0 +1,46 @@
+Name: unmark
+
+Type: command
+
+Syntax: unmark {<card> | all cards | cards where <condition>}
+
+Syntax: unmark cards by finding <findString> [in <field>]
+
+Summary: Sets a <card|card's> <mark> <property> to false.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+unmark this card
+
+Example:
+unmark cards where the label of button "Category Popup" is "None"
+
+Example:
+unmark cards by finding it
+
+Parameters:
+card: Any card reference.
+condition (bool): An expression that evaluates to true or false for each card in the current stack. Any object references within the condition are treated as pertaining to each card being evaluated. For example, a reference to a field is evaluated according to that field's contents on each card.
+findString (string): 
+field: Any field reference.
+
+Description:
+Use the <unmark> <command> in conjunction with the <mark> command to narrow down a list of <card(object)|cards> for printing or for special treatment by the <go> and <sort> <command|commands>.
+
+You can unmark cards either one at a time, by specifying each card to be unmarked, or in batches, by using the where <condition> or by finding forms of the <unmark> command. Unmarking additional <card(object)|cards> does not change the <mark> <property> of <card(object)|cards> that have already been marked or unmarked.
+
+You can use the <mark> and <unmark> <command|commands> in succession to further narrow down the set of <card(object)|cards>. For example, this sequence of <command|commands> selects only the <card(object)|cards> where the user has asked for help and the request has not yet been fulfilled:
+
+  mark cards by finding "Help" in field "History"
+  unmark cards where the hilite of button "Already Helped" is true
+
+When using the by finding form, the search operates the same way the normal form of the <find> <command> does. The <unmark> <command> searches for <card(object)|cards> that contain each <word> in the <findString>. The <words> in the <findString> must be found at the beginning of a <word> on the <card(keyword)>, but the <words> do not need to be found together.
+
+References: marked (keyword), word (keyword), words (keyword), card (keyword), mark (property), go (command), find (command), sort (command), mark (command), card (object), property (glossary), command (glossary)
+
+Tags: database

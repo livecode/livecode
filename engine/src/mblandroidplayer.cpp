@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -78,6 +78,8 @@ public:
     
     void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
     void GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]);
+    // // PM-2015-09-15: [[ Bug 15925 ]] Add "playableDuration" prop to Android native player
+    void GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration);
     
 	// Player-specific actions
 	void ExecPlay(MCExecContext& ctxt);
@@ -104,6 +106,7 @@ MCPropertyInfo MCAndroidPlayerControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_CURRENT_TIME, Int32, MCAndroidPlayerControl, CurrentTime)
     DEFINE_RW_CTRL_PROPERTY(P_LOOPING, Bool, MCAndroidPlayerControl, Looping)
     DEFINE_RO_CTRL_PROPERTY(P_DURATION, Int32, MCAndroidPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(P_PLAYABLE_DURATION, Int32, MCAndroidPlayerControl, PlayableDuration)
     DEFINE_RO_CTRL_PROPERTY(P_NATURAL_SIZE, Int32X2, MCAndroidPlayerControl, NaturalSize)
 };
 
@@ -118,9 +121,9 @@ MCObjectPropertyTable MCAndroidPlayerControl::kPropertyTable =
 
 MCNativeControlActionInfo MCAndroidPlayerControl::kActions[] =
 {
-    DEFINE_CTRL_EXEC_METHOD(Play, MCAndroidPlayerControl, Play)
-    DEFINE_CTRL_EXEC_METHOD(Pause, MCAndroidPlayerControl, Pause)
-    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidPlayerControl, Stop)
+    DEFINE_CTRL_EXEC_METHOD(Play, Void, MCAndroidPlayerControl, Play)
+    DEFINE_CTRL_EXEC_METHOD(Pause, Void, MCAndroidPlayerControl, Pause)
+    DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCAndroidPlayerControl, Stop)
 };
 
 MCNativeControlActionTable MCAndroidPlayerControl::kActionTable =
@@ -243,6 +246,15 @@ void MCAndroidPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_durat
     MCAndroidObjectRemoteCall(t_view, "getDuration", "i", &r_duration);
 }
 
+// PM-2015-09-15: [[ Bug 15925 ]] Allow mobileControlGet(myPlayer, "playableDuration" on Android
+void MCAndroidPlayerControl::GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration)
+{
+    jobject t_view;
+    t_view = GetView();
+
+    MCAndroidObjectRemoteCall(t_view, "getPlayableDuration", "i", &r_duration);
+}
+
 void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2])
 {
     jobject t_view;
@@ -360,7 +372,15 @@ Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExec
             FormatInteger(ep, t_integer);
             return ES_NORMAL;
         }
-            
+		
+		// PM-2015-09-15: [[ Bug 15925 ]] Allow mobileControlGet(myPlayer, "playableDuration" on Android
+		case kMCNativeControlPropertyPlayableDuration:
+		{
+			MCAndroidObjectRemoteCall(t_view, "getPlayableDuration", "i", &t_integer);
+			FormatInteger(ep, t_integer);
+			return ES_NORMAL;
+		}
+			
         case kMCNativeControlPropertyCurrentTime:
         {
             MCAndroidObjectRemoteCall(t_view, "getCurrentTime", "i", &t_integer);

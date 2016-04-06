@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -48,7 +48,7 @@ typedef struct __MCGRegion *MCGRegionRef;
 typedef uint32_t MCGPixelFormat;
 
 // IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX)
+#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE) || defined(_LINUX) || defined(__EMSCRIPTEN__)
 #define kMCGPixelFormatNative kMCGPixelFormatRGBA
 // IM-2013-11-01: [[ Bug 11198 ]] Set PPC pixel format to ARGB
 #elif defined(__ppc__)
@@ -61,9 +61,9 @@ typedef uint32_t MCGPixelFormat;
 static inline uint32_t __MCGPixelPackComponents(uint8_t p_1, uint8_t p_2, uint8_t p_3, uint8_t p_4)
 {
 #ifdef __LITTLE_ENDIAN__
-	return p_1 | (p_2 << 8) | (p_3 << 16) | (p_4 << 24);
+	return p_1 | (uint32_t(p_2) << 8) | (uint32_t(p_3) << 16) | (uint32_t(p_4) << 24);
 #else
-	return (p_1 << 24) | (p_2 << 16) | (p_3 << 8) | p_4;
+	return (uint32_t(p_1) << 24) | (uint32_t(p_2) << 16) | (uint32_t(p_3) << 8) | uint32_t(p_4);
 #endif
 }
 
@@ -82,9 +82,8 @@ static inline uint32_t MCGPixelPack(MCGPixelFormat p_format, uint8_t p_red, uint
 			
 		case kMCGPixelFormatARGB:
 			return __MCGPixelPackComponents(p_alpha, p_red, p_green, p_blue);
-
-		default:
-			MCUnreachable();
+        default:
+            MCUnreachableReturn(0);
 	}
 }
 
@@ -158,12 +157,12 @@ static inline uint32_t MCGPixelSetAlpha(MCGPixelFormat p_format, uint32_t p_pixe
 	if (p_format & kMCGPixelAlphaPositionFirst)
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 #else
 	if ((p_format & kMCGPixelAlphaPositionFirst) == 0)
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 #endif
 }
 
@@ -191,13 +190,13 @@ static inline uint32_t MCGPixelSetNativeAlpha(uint32_t p_pixel, uint8_t p_new_al
 	#if kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	#else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 	#endif
 #else
 	#if (kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 0
 		return (p_pixel & 0xFFFFFF00) | p_new_alpha;
 	#else
-		return (p_pixel & 0x00FFFFFF) | (p_new_alpha << 24);
+		return (p_pixel & 0x00FFFFFF) | (uint32_t(p_new_alpha) << 24);
 	#endif
 #endif
 }
@@ -501,19 +500,21 @@ struct MCGFont
 	void		*fid;
 	uint16_t	size;
 	uint16_t	fixed_advance;
-	int32_t		ascent;
-	int32_t		descent;
+	MCGFloat	m_ascent;
+	MCGFloat	m_descent;
+    MCGFloat    m_leading;
 	bool		ideal : 1;
 };
 
-inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, int32_t ascent, int32_t descent, bool ideal)
+inline MCGFont MCGFontMake(void *fid, uint16_t size, uint16_t fixed_advance, MCGFloat ascent, MCGFloat descent, MCGFloat leading, bool ideal)
 {
     MCGFont t_font;
     t_font . fid = fid;
 	t_font . size = size;
 	t_font . fixed_advance = fixed_advance;
-	t_font . ascent = ascent;
-	t_font . descent = descent;
+	t_font . m_ascent = ascent;
+	t_font . m_descent = descent;
+    t_font . m_leading = leading;
 	t_font . ideal = ideal;
     
     return t_font;
@@ -533,41 +534,54 @@ inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline MCGColor MCGColorComponentFromFloat(MCGFloat p_component)
+{
+    return MCGColor(MCClamp(p_component * UINT8_MAX, 0, UINT8_MAX));
+}
+
+inline MCGFloat MCGColorComponentToFloat(MCGColor p_component)
+{
+    return (p_component & UINT8_MAX) / MCGFloat(UINT8_MAX);
+}
+
 inline MCGColor MCGColorMakeRGBA(MCGFloat p_red, MCGFloat p_green, MCGFloat p_blue, MCGFloat p_alpha)
 {
-	return ((uint8_t)(p_red * 255) << 16) | ((uint8_t)(p_green * 255) << 8) | ((uint8_t)(p_blue * 255) << 0) | ((uint8_t)(p_alpha * 255) << 24);
+    return ((MCGColorComponentFromFloat(p_alpha) << 24) |
+            (MCGColorComponentFromFloat(p_red)   << 16) |
+            (MCGColorComponentFromFloat(p_green) <<  8) |
+            (MCGColorComponentFromFloat(p_blue)  <<  0));
 }
 
 inline void MCGColorSetRed(MCGColor& x_color, MCGFloat p_red) {
-	x_color = (x_color & 0xFF00FFFF) | ((uint8_t)(p_red * 255) << 16);
+    x_color = (x_color & 0xFF00FFFF) | (MCGColorComponentFromFloat(p_red) << 16);
 }
 
 inline void MCGColorSetGreen(MCGColor& x_color, MCGFloat p_green) {
-	x_color = (x_color & 0xFFFF00FF) | ((uint8_t)(p_green * 255) << 8);
+    x_color = (x_color & 0xFFFF00FF) | (MCGColorComponentFromFloat(p_green) << 8);
 }
 
 inline void MCGColorSetBlue(MCGColor& x_color, MCGFloat p_blue) {
-	x_color = (x_color & 0xFFFFFF00) | ((uint8_t)(p_blue * 255) << 0);
+    x_color = (x_color & 0xFFFFFF00) | (MCGColorComponentFromFloat(p_blue) << 0);
 }
 
 inline void MCGColorSetAlpha(MCGColor& x_color, MCGFloat p_alpha) {
-	x_color = (x_color & 0x00FFFFFF) | ((uint8_t)(p_alpha * 255) << 24);
+    x_color = (x_color & 0x00FFFFFF) | (MCGColorComponentFromFloat(p_alpha) << 24);
 }
 
 inline MCGFloat MCGColorGetRed(MCGColor p_color) {
-	return ((p_color >> 16) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 16);
 }
 
 inline MCGFloat MCGColorGetGreen(MCGColor p_color) {
-	return ((p_color >> 8) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 8);
 }
 
 inline MCGFloat MCGColorGetBlue(MCGColor p_color) {
-	return ((p_color >> 0) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 0);
 }
 
 inline MCGFloat MCGColorGetAlpha(MCGColor p_color) {
-	return ((p_color >> 24) & 0xFF) / 255.0f;
+    return MCGColorComponentToFloat(p_color >> 24);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -612,6 +626,7 @@ inline bool MCGRectangleIsEqual(const MCGRectangle &p_a, const MCGRectangle &p_b
 }
 
 MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
+MCGRectangle MCGRectangleUnion(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
 
 inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 {
@@ -634,6 +649,14 @@ inline MCGPoint MCGPointScale(const MCGPoint &p_point, MCGFloat p_h_scale, MCGFl
 inline MCGPoint MCGPointScale(const MCGPoint &p_point, MCGFloat p_scale)
 {
 	return MCGPointScale(p_point, p_scale, p_scale);
+}
+
+inline bool MCGPointInRectangle(MCGPoint p, MCGRectangle r)
+{
+    return p . x >= r . origin . x &&
+            p . y >= r . origin . y &&
+             p . x < (r . origin . x + r . size . width) &&
+              p . y < (r . origin . y + r . size . height);
 }
 
 inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
@@ -676,7 +699,7 @@ inline MCGIntegerRectangle MCGIntegerRectangleMake(int32_t x, int32_t y, uint32_
 // IM-2014-10-22: [[ Bug 13746 ]] Add convenience function to construct rectangle from left, top, right, bottom coords
 inline MCGIntegerRectangle MCGIntegerRectangleMakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b)
 {
-	return MCGIntegerRectangleMake(l, t, r - l, b - t);
+	return MCGIntegerRectangleMake(l, t, uint32_t(r - l), uint32_t(b - t));
 }
 
 inline bool MCGIntegerRectangleIsEmpty(const MCGIntegerRectangle &p_rect)
@@ -688,7 +711,11 @@ MCGIntegerRectangle MCGIntegerRectangleIntersection(const MCGIntegerRectangle &r
 
 inline MCGRectangle MCGIntegerRectangleToMCGRectangle(const MCGIntegerRectangle &p_rect)
 {
-	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+	/* Possible loss of precision */
+	return MCGRectangleMake(MCGFloat(p_rect.origin.x),
+	                        MCGFloat(p_rect.origin.y),
+	                        MCGFloat(p_rect.size.width),
+	                        MCGFloat(p_rect.size.height));
 }
 
 MCGIntegerRectangle MCGRectangleGetBounds(const MCGRectangle &p_rect);
@@ -782,6 +809,8 @@ void MCGPathLineTo(MCGPathRef path, MCGPoint end_point);
 void MCGPathQuadraticTo(MCGPathRef path, MCGPoint control_point, MCGPoint end_point);
 void MCGPathCubicTo(MCGPathRef path, MCGPoint first_control_point, MCGPoint second_control_point, MCGPoint end_point);
 void MCGPathArcTo(MCGPathRef path, MCGSize radii, MCGFloat rotation, bool large_arc, bool sweep, MCGPoint end_point);
+void MCGPathArcToBestFit(MCGPathRef path, MCGSize p_radii, MCGFloat p_rotation, MCGPoint p_end_point);
+void MCGPathArcToTangent(MCGPathRef path, const MCGPoint &p_tangent, const MCGPoint &p_end, MCGFloat p_radius);
 void MCGPathCloseSubpath(MCGPathRef path);
 
 void MCGPathThicken(MCGPathRef path, const MCGStrokeAttr& attr, MCGPathRef& r_thick_path);
@@ -790,7 +819,8 @@ void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 
 bool MCGPathTransform(MCGPathRef path, const MCGAffineTransform &p_transform);
 
-bool MCGPathGetLastPoint(MCGPathRef self, MCGPoint &r_last);
+bool MCGPathGetCurrentPoint(MCGPathRef self, MCGPoint &r_current);
+bool MCGPathGetPreviousPoint(MCGPathRef self, MCGPoint &r_last);
 bool MCGPathGetBoundingBox(MCGPathRef path, MCGRectangle &r_bounds);
 
 typedef bool (*MCGPathIterateCallback)(void *p_context, MCGPathCommand p_command, MCGPoint *p_points, uint32_t p_point_count);
@@ -936,6 +966,7 @@ MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t
 void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font, bool p_rtl);
 // MM-2014-04-16: [[ Bug 11964 ]] Updated prototype to take transform parameter.
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform);
+bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
 ////////////////////////////////////////////////////////////////////////////////
 

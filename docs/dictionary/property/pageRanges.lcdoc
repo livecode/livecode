@@ -1,0 +1,43 @@
+Name: pageRanges
+
+Type: property
+
+Syntax: get the pageRanges of <field> 
+
+Summary: Splits the content of a field into pages based on the height of a field.
+
+Associations: field
+
+Introduced: 6.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the pageRanges of field "chapter" into tPageCount
+
+Parameters:
+field: A reference to a field
+
+Value: Returns a list of char ranges, one per line.
+
+Description:
+Use the <pageRanges> property to split field content into pages based on the height of the field.
+
+The <pageRanges> property (notionally) splits up the field content into pages based on the height of the field, and then returns a return-delimited list of char ranges. Each char range corresponds to an individual page.
+
+For example, for a field capable of displaying two lines of text and containing these lines:
+Line 1
+Line 2
+Line 3
+Line 4
+Line 5
+Line 6
+
+The <pageRanges> would return:
+1,14
+15,28
+29,42
+
+References: height (property), formattedHeight (property)

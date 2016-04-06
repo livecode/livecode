@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -45,7 +45,7 @@ void MCFontFinalize(void);
 
 bool MCFontCreate(MCNameRef name, MCFontStyle style, int32_t size, MCFontRef& r_font);
 bool MCFontCreateWithFontStruct(MCNameRef name, MCFontStyle style, int32_t size, MCFontStruct*, MCFontRef& r_font);
-bool MCFontCreateWithHandle(MCSysFontHandle, MCFontRef& r_font);
+bool MCFontCreateWithHandle(MCSysFontHandle, MCNameRef name, MCFontRef& r_font);
 MCFontRef MCFontRetain(MCFontRef font);
 void MCFontRelease(MCFontRef font);
 
@@ -70,6 +70,9 @@ MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef font, MCStringRef p_text, MCR
 MCGFloat MCFontMeasureTextFloat(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, const MCGAffineTransform &p_transform);
 int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text, const MCGAffineTransform &p_transform);
+
+bool MCFontMeasureTextImageBounds(MCFontRef p_font, MCStringRef p_string, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
+bool MCFontMeasureTextSubstringImageBounds(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds);
 
 void MCFontDrawText(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCFontRef font, bool p_rtl, bool p_can_break);
 void MCFontDrawTextSubstring(MCGContextRef p_gcontext, coord_t x, coord_t y, MCStringRef p_text, MCRange p_range, MCFontRef font, bool p_rtl, bool p_can_break);

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "script.h"
+#include "libscript/script.h"
 #include "script-private.h"
 
 #include "ffi.h"
@@ -44,6 +44,49 @@ extern MCHandlerCallbacks __kMCScriptHandlerCallbacks;
 bool __MCScriptHandlerInvoke(void *context, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value);
 void __MCScriptHandlerRelease(void *context);
 bool __MCScriptHandlerDescribe(void *context, MCStringRef &r_desc);
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename WORD, size_t LENGTH>
+class __MCScriptStackStorage
+{
+public:
+	__MCScriptStackStorage()
+		: m_used(0)
+	{
+	}
+
+	void *Allocate(size_t p_request)
+	{
+		/* Ensure the amount allocated is aligned to the word size */
+		size_t t_amount = (~(sizeof(WORD)-1)) & ((sizeof(WORD)-1) + p_request);
+		MCAssert(t_amount % sizeof(WORD) == 0);
+		MCAssert(t_amount >= p_request);
+
+		/* Ensure there's enough space left in the storage */
+		MCAssert(m_used + t_amount < sizeof(m_storage));
+
+		/* Create and return the pointer, updating the current offset */
+		MCAssert(m_used % sizeof(WORD) == 0);
+		void *t_ptr = &m_storage[m_used / sizeof(WORD)];
+
+		m_used += t_amount;
+
+		return t_ptr;
+	}
+private:
+	WORD m_storage[LENGTH];
+	size_t m_used;
+};
+
+#if defined(__EMSCRIPTEN__)
+/* On emscripten, we require double alignment */
+typedef __MCScriptStackStorage<double,32> MCScriptStackStorage;
+
+#else
+typedef __MCScriptStackStorage<void *,32> MCScriptStackStorage;
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,6 +163,11 @@ void MCScriptDestroyInstance(MCScriptInstanceRef self)
             MCValueRelease(self -> slots[i]);
         MCMemoryDeleteArray(self -> slots);
     }
+    
+    // If the instance has handler-refs, then free them.
+    for(uindex_t i = 0; i < self -> handler_count; i++)
+        MCValueRelease(self -> handlers[i] . value);
+    MCMemoryDeleteArray(self -> handlers);
     
     // If the instance has a module, and this is the shared instance then set
     // the shared instance field to nil.
@@ -231,6 +279,11 @@ bool MCScriptThrowNotABooleanError(MCValueRef p_value)
     return MCErrorCreateAndThrow(kMCScriptNotABooleanValueErrorTypeInfo, "value", p_value, nil);
 }
 
+bool MCScriptThrowNotAStringError(MCValueRef p_value)
+{
+	return MCErrorCreateAndThrow(kMCScriptNotAStringValueErrorTypeInfo, "value", p_value, nil);
+}
+
 bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_provided)
 {
     // TODO: Encode provided / expected.
@@ -249,7 +302,7 @@ bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module,
 
 bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
 {
-    return MCErrorCreateAndThrow(kMCScriptTypeBindingErrorTypeInfo, "type", MCNamedTypeInfoGetName(p_type), nil);
+    return MCErrorThrowUnboundType(p_type);
 }
 
 bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
@@ -273,8 +326,19 @@ bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScrip
         return false;
     
     for(uindex_t i = 0; i < MCProperListGetLength(p_arguments); i++)
-        if (!MCListAppend(*t_types, MCNamedTypeInfoGetName(MCValueGetTypeInfo(MCProperListFetchElementAtIndex(p_arguments, i)))))
+    {
+        MCTypeInfoRef t_type;
+        t_type = MCValueGetTypeInfo(MCProperListFetchElementAtIndex(p_arguments, i));
+        
+        MCNewAutoNameRef t_type_name;
+        if (MCTypeInfoIsNamed(t_type))
+            t_type_name = MCNamedTypeInfoGetName(t_type);
+        else
+            t_type_name = MCNAME("unknown");
+        
+        if (!MCListAppend(*t_types, *t_type_name))
             return false;
+    }
     
     MCAutoStringRef t_handler_list, t_type_list;
     if (!MCListCopyAsString(*t_handlers, &t_handler_list) ||
@@ -292,6 +356,16 @@ bool MCScriptThrowNotAHandlerValueError(MCValueRef p_value)
 bool MCScriptThrowCannotCallContextHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler)
 {
     return MCErrorCreateAndThrow(kMCScriptCannotCallContextHandlerErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), nil);
+}
+
+bool MCScriptThrowHandlerNotFoundError(MCScriptModuleRef p_module, MCNameRef p_handler)
+{
+    return MCErrorCreateAndThrow(kMCScriptHandlerNotFoundErrorTypeInfo, "module", p_module -> name, "handler", p_handler, nil);
+}
+
+bool MCScriptThrowPropertyNotFoundError(MCScriptModuleRef p_module, MCNameRef p_property)
+{
+    return MCErrorCreateAndThrow(kMCScriptPropertyNotFoundErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
 }
 
 ///////////
@@ -333,7 +407,7 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     // Lookup the definition (throws if not found).
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_getter;
     t_getter = t_definition -> getter != 0 ? self -> module -> definitions[t_definition -> getter - 1] : nil;
@@ -386,10 +460,10 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
-    // Lookup the definition (throws if not found).
+    // Lookup the definition.
     MCScriptPropertyDefinition *t_definition;
     if (!MCScriptLookupPropertyDefinitionInModule(self -> module, p_property, t_definition))
-        return false;
+        return MCScriptThrowPropertyNotFoundError(self -> module, p_property);
     
     MCScriptDefinition *t_setter;
     t_setter = t_definition -> setter != 0 ? self -> module -> definitions[t_definition -> setter - 1] : nil;
@@ -517,7 +591,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
     // Lookup the definition (throws if not found).
     MCScriptHandlerDefinition *t_definition;
     if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
-        return MCErrorThrowGeneric(MCSTR("handler not found"));
+        return MCScriptThrowHandlerNotFoundError(self -> module, p_handler);
     
     return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
@@ -606,6 +680,7 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
     self -> instance = MCScriptRetainInstance(p_instance);
     self -> handler = p_handler;
     self -> address = p_handler -> start_address;
+    self -> mapping = nil;
     
     r_frame = self;
     
@@ -882,7 +957,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
 }
 
 // This method resolves the binding string in the foreign function. The format is:
-//   [lang:][library@][class.]function[!calling]
+//   [lang:][library>][class.]function[!calling]
 //
 // lang - one of c, cpp, objc or java. If not present, it is taken to be c.
 // library - the library to load the symbol from. If not present, it is taken to be the
@@ -925,7 +1000,95 @@ static bool __split_binding(MCStringRef& x_string, codepoint_t p_char, MCStringR
     return true;
 }
 
-static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi, bool p_throw, bool& r_bound)
+static bool MCScriptPlatformLoadSharedLibrary(MCStringRef p_path, void*& r_handle)
+{
+#if defined(_WIN32)
+    HMODULE t_module;
+    MCAutoStringRefAsWString t_library_wstr;
+    if (!t_library_wstr.Lock(p_path))
+        return false;
+    t_module = LoadLibraryW(*t_library_wstr);
+    if (t_module == NULL)
+        return false;
+    r_handle = (void *)t_module;
+#else
+    MCAutoStringRefAsUTF8String t_utf8_library;
+    if (!t_utf8_library.Lock(p_path))
+        return false;
+    void *t_module;
+    t_module = dlopen(*t_utf8_library, RTLD_LAZY);
+    if (t_module == NULL)
+        return false;
+    r_handle = (void *)t_module;
+#endif
+    return true;
+}
+
+static bool MCScriptPlatformLoadSharedLibraryFunction(void *p_module, MCStringRef p_function, void*& r_pointer)
+{
+    MCAutoStringRefAsCString t_function_name;
+    if (!t_function_name.Lock(p_function))
+        return false;
+    
+    void *t_pointer;
+#if defined(_WIN32)
+    t_pointer = GetProcAddress((HMODULE)p_module, *t_function_name);
+#else
+    t_pointer = dlsym(p_module, *t_function_name);
+#endif
+    
+    r_pointer = t_pointer;
+    
+    return true;
+}
+
+static bool MCScriptLoadSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_library, void*& r_handle)
+{
+    // If there is no library name then we resolve to the executable module.
+    if (MCStringIsEmpty(p_library))
+    {
+#if defined(_WIN32)
+        r_handle = GetModuleHandle(NULL);
+#elif defined(TARGET_SUBPLATFORM_ANDROID)
+		// IM-2016-03-04: [[ Bug 16917 ]] dlopen can fail if the full path to the library is not
+		//    given, so first resolve the path to the library.
+		extern bool MCAndroidResolveLibraryPath(MCStringRef p_library, MCStringRef &r_path);
+		MCAutoStringRef t_path;
+		if (!MCAndroidResolveLibraryPath(MCSTR("librevandroid.so"), &t_path))
+			return false;
+		
+		MCAutoStringRefAsCString t_cstring;
+		if (!t_cstring.Lock(*t_path))
+			return false;
+		
+        r_handle = dlopen(*t_cstring, 0);
+#else
+        r_handle = dlopen(NULL, 0);
+#endif
+        return true;
+    }
+
+    // If there is no slash in the name, we try to resolve based on the module.
+    uindex_t t_offset;
+    if (!MCStringFirstIndexOfChar(p_library, '/', 0, kMCStringOptionCompareExact, t_offset))
+    {
+        MCAutoStringRef t_mapped_library;
+        if (MCScriptResolveSharedLibrary(p_module, p_library, Out(t_mapped_library)))
+        {
+            if (MCScriptPlatformLoadSharedLibrary(*t_mapped_library, r_handle))
+                return true;
+        }
+    }
+    
+    // If the previous two things failed, then just try to load the library as written.
+    if (MCScriptPlatformLoadSharedLibrary(p_library, r_handle))
+        return true;
+    
+    // Oh dear - no native code library for us!
+    return false;
+}
+
+static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, ffi_abi& r_abi, bool p_throw, bool& r_bound)
 {
     MCStringRef t_rest;
     t_rest = MCValueRetain(p_handler -> binding);
@@ -968,62 +1131,21 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
         if (!MCStringIsEmpty(*t_class))
             return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("class not allowed in c binding string"), nil);
         
+        void *t_module;
+        if (!MCScriptLoadSharedLibrary(MCScriptGetModuleOfInstance(p_instance), *t_library, t_module))
+        {
+            if (p_throw)
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
+            
+            r_bound = false;
+            return true;
+        }
         
-#ifdef _WIN32
-        if (MCStringIsEmpty(*t_library))
-        {
-            p_handler -> function = GetProcAddress(GetModuleHandle(NULL), MCStringGetCString(*t_function));
-        }
-        else
-        {
-            HMODULE t_module;
-			MCAutoStringRefAsWString t_library_wstr;
-			if (!t_library_wstr.Lock(*t_library))
-                return false;
-            t_module = LoadLibraryW(*t_library_wstr);
-            if (t_module == nil)
-            {
-                if (p_throw)
-                    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
-
-                r_bound = false;
-                return true;
-            }
-            p_handler -> function = GetProcAddress(t_module, MCStringGetCString(*t_function));
-        }
-#else
-        if (MCStringIsEmpty(*t_library))
-        {
-            void* t_self;
-#ifdef TARGET_SUBPLATFORM_ANDROID
-            t_self = dlopen("librevandroid.so", 0);
-            if (t_self == NULL)
-            {
-                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("could not bind to engine"), nil);
-            }
-#else
-            t_self = dlopen(NULL, 0);
-#endif
-            p_handler -> function = dlsym(t_self, MCStringGetCString(*t_function));
-        }
-        else
-        {
-            MCAutoStringRefAsUTF8String t_utf8_library;
-            if (!t_utf8_library.Lock(*t_library))
-                return false;
-            void *t_module;
-            t_module = dlopen(*t_utf8_library, RTLD_LAZY);
-            if (t_module == nil)
-            {
-                if (p_throw)
-                    return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("unable to load foreign library"), nil);
-             
-                r_bound = false;
-                return true;
-            }
-            p_handler -> function = dlsym(t_module, MCStringGetCString(*t_function));
-        }
-#endif
+        void *t_pointer;
+        if (!MCScriptPlatformLoadSharedLibraryFunction(t_module, *t_function, t_pointer))
+            return false;
+        
+        p_handler -> function = t_pointer;
     }
     else if (MCStringIsEqualToCString(*t_language, "cpp", kMCStringOptionCompareExact))
     {
@@ -1069,10 +1191,10 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptForeignHandlerDefiniti
 // If p_throw is true, then this function throws an error if resolution fails.
 // If p_throw is false, then this function does not throw errors related to being
 // unable to bind. Instead it returns true, and indicates binding success in r_bound.
-static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, bool p_throw, bool& r_bound)
+static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, bool p_throw, bool& r_bound)
 {
     ffi_abi t_abi;
-    if (!MCScriptResolveForeignFunctionBinding(p_handler, t_abi, p_throw, r_bound))
+    if (!MCScriptResolveForeignFunctionBinding(p_instance, p_handler, t_abi, p_throw, r_bound))
         return false;
     
     if (!p_throw && !r_bound)
@@ -1091,75 +1213,8 @@ static bool MCScriptPrepareForeignFunction(MCScriptFrame *p_frame, MCScriptInsta
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
-    MCTypeInfoRef t_return_type;
-    t_return_type = MCHandlerTypeInfoGetReturnType(t_signature);
-    
-    MCResolvedTypeInfo t_resolved_return_type;
-    if (!MCTypeInfoResolve(t_return_type, t_resolved_return_type))
-        return MCScriptThrowUnableToResolveTypeError(t_return_type);
-    
-    ffi_type *t_ffi_return_type;
-    if (t_return_type != kMCNullTypeInfo)
-    {
-        if (MCTypeInfoIsForeign(t_resolved_return_type . type))
-            t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);
-        else
-            t_ffi_return_type = &ffi_type_pointer;
-    }
-    else
-        t_ffi_return_type = &ffi_type_void;
-    
-    uindex_t t_arity;
-    t_arity = MCHandlerTypeInfoGetParameterCount(t_signature);
-    
-    ffi_type **t_ffi_arg_types;
-    if (!MCMemoryNewArray(t_arity, t_ffi_arg_types))
-        return false;
-    
-    ffi_cif *t_cif;
-    if (!MCMemoryNew(t_cif))
-    {
-        MCMemoryDeleteArray(t_ffi_arg_types);
-        return false;
-    }
-    
-    bool t_success;
-    t_success = true;
-    for(uindex_t i = 0; t_success && i < t_arity; i++)
-    {
-        MCTypeInfoRef t_type;
-        MCHandlerTypeFieldMode t_mode;
-        t_type = MCHandlerTypeInfoGetParameterType(t_signature, i);
-        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
-        
-        MCResolvedTypeInfo t_resolved_type;
-        if (!MCTypeInfoResolve(t_type, t_resolved_type))
-        {
-            t_success = false;
-            break;
-        }
-    
-        if (t_mode == kMCHandlerTypeFieldModeIn)
-        {
-            if (MCTypeInfoIsForeign(t_resolved_type . type))
-                t_ffi_arg_types[i] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_type . type);
-            else
-                t_ffi_arg_types[i] = &ffi_type_pointer;
-        }
-        else
-            t_ffi_arg_types[i] = &ffi_type_pointer;
-    }
-    
-    if (!t_success ||
-        ffi_prep_cif(t_cif, t_abi, t_arity, t_ffi_return_type, t_ffi_arg_types) != FFI_OK)
-    {
-        MCMemoryDeleteArray(t_ffi_arg_types);
-        MCMemoryDelete(t_cif);
+    if (!MCHandlerTypeInfoGetLayoutType(t_signature, t_abi, p_handler -> function_cif))
         return MCErrorThrowGeneric(nil);
-    }
-    
-    p_handler -> function_argtypes = t_ffi_arg_types;
-    p_handler -> function_cif = t_cif;
     
     if (!p_throw)
         r_bound = true;
@@ -1172,7 +1227,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     if (p_handler -> function == nil)
     {
         bool t_bound;
-        if (!MCScriptPrepareForeignFunction(x_frame, p_instance, p_handler, true, t_bound))
+        if (!MCScriptPrepareForeignFunction(p_instance, p_handler, true, t_bound))
             return false;
     }
     
@@ -1190,11 +1245,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     MCHandlerTypeFieldMode t_modes[16];
     MCResolvedTypeInfo t_types[16];
     void *t_args[16];
-    ffi_type *t_arg_types[16];
     bool t_arg_new[16];
-    uint8_t t_storage[256];
-    uindex_t t_storage_index;
-    t_storage_index = 0;
+    MCScriptStackStorage t_invoke_storage;
     
     uindex_t t_arg_index;
     t_arg_index = 0;
@@ -1256,12 +1308,9 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     else
                     {
                         // For inout mode, we need to copy it.
-                        
-                        if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_storage + t_storage_index))
+                        t_argument = t_invoke_storage.Allocate(t_descriptor->size);
+                        if (!t_descriptor -> copy(MCForeignValueGetContentsPtr(t_value), t_argument))
                             break;
-                        
-                        t_argument = t_storage + t_storage_index;
-                        t_storage_index += t_descriptor -> size;
                         
                         // Need to finalize the storage.
                         t_arg_new[t_arg_index] = true;
@@ -1271,31 +1320,30 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 {
                     // The source type is not foreign - it must be the target type's
                     // bridge type or null. Thus we must export the value.
+                    t_argument = t_invoke_storage.Allocate(t_descriptor->size);
                     if (t_value == kMCNull)
                     {
-                        if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                        if (!t_descriptor -> initialize(t_argument))
                             break;
                     }
                     else
                     {
-                        if (!t_descriptor -> doexport(t_value, false, t_storage + t_storage_index))
+                        if (!t_descriptor -> doexport(t_value, false, t_argument))
                             break;
                     }
-                    
-                    t_argument = t_storage + t_storage_index;
-                    t_storage_index += t_descriptor -> size;
                     
                     // Need to finalize the storage.
                     t_arg_new[t_arg_index] = true;
                 }
             }
-            else
+            else if (!MCTypeInfoIsHandler(t_types[t_arg_index] . type) ||
+                     !MCHandlerTypeInfoIsForeign(t_types[t_arg_index] . type))
             {
                 // The target type is not foreign - t_argument will be a valueref ptr.
                 
                 // If the source value is foreign and it has an import method then
                 // we map to the high-level type. Otherwise, we just pass through the
-                // foriegn value direct.
+                // foreign value direct.
                 if (MCTypeInfoIsForeign(t_source . type))
                 {
                     const MCForeignTypeDescriptor *t_src_descriptor;
@@ -1337,6 +1385,20 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     t_arg_new[t_arg_index] = true;
                 }
             }
+            else
+            {
+                // The target type is a foreign handler type. At this point the source
+                // value is a handler-ref which we must map to a C closure if
+                // the target type is of foreign kind.
+                void *t_function_ptr;
+                if (!MCHandlerGetFunctionPtr((MCHandlerRef)t_value, t_function_ptr))
+                    break;
+                
+                t_argument = t_function_ptr;
+                
+                // No need to finalize the storage.
+                t_arg_new[t_arg_index] = false;
+            }
         }
         else
         {
@@ -1344,9 +1406,11 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             if (t_descriptor != nil)
             {
                 // Target is foreign - use the initialize method, if any.
+                t_argument = t_invoke_storage.Allocate(t_descriptor->size);
+
                 if (t_descriptor -> initialize != nil)
                 {
-                    if (!t_descriptor -> initialize(t_storage + t_storage_index))
+                    if (!t_descriptor -> initialize(t_argument))
                         break;
                     
                     // Need to finalize the storage.
@@ -1358,9 +1422,6 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                     // cleanup.
                     t_arg_new[t_arg_index] = false;
                 }
-                
-                t_argument = t_storage + t_storage_index;
-                t_storage_index += t_descriptor -> size;
             }
             else
             {
@@ -1368,6 +1429,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
                 t_argument = nil;
                 
                 // Nothing to free.
+                t_arg_new[t_arg_index] = false;
             }
         }
         
@@ -1381,15 +1443,12 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             {
                 // In mode arguments are the value themselves.
                 t_args[t_arg_index] = t_argument;
-                t_arg_types[t_arg_index] = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_types[t_arg_index] . type);
             }
             else
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void *));
                 *(void **)t_args[t_arg_index] = t_argument;
-                t_arg_types[t_arg_index] = &ffi_type_pointer;
             }
         }
         else
@@ -1397,25 +1456,20 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             // Out mode arguments are the contents for foreign values but
             // marked 'pointer' type. However, for valuerefs we must make storage
             // to put the valueref in.
-            t_arg_types[t_arg_index] = &ffi_type_pointer;
-            
             if (t_descriptor != nil)
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void **));
                 
                 *(void **)t_args[t_arg_index] = t_argument;
             }
             else
             {
                 // Allocate space for the storage pointer
-                t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void ***));
                 
                 // The argument is the storage pointer.
-                *(void **)t_args[t_arg_index] = t_storage + t_storage_index;
-                t_storage_index += sizeof(uintptr_t);
+                *(void **)t_args[t_arg_index] = t_invoke_storage.Allocate(sizeof(void **));
                 
                 **(void ***)t_args[t_arg_index] = t_argument;
             }
@@ -1629,8 +1683,6 @@ static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytec
 {
     x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
     
-    // MCLog("Invoke %@", MCScriptGetNameOfDefinitionInModule(p_instance -> module, p_handler));
-    
 	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
 	{
 		MCScriptHandlerDefinition *t_handler;
@@ -1684,7 +1736,7 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
         MCScriptDefinition *t_definition;
         MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
         
-        uindex_t t_type_index;
+        uindex_t t_type_index = 0;
         if (t_definition -> kind == kMCScriptDefinitionKindHandler)
             t_type_index = static_cast<MCScriptHandlerDefinition *>(t_definition) -> type;
         else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
@@ -2187,11 +2239,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     // If we are a normal handler we use the current frame.
                     // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame;
+                    MCScriptFrame *t_target_frame = nil;
                     if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
                         t_target_frame = t_frame;
                     else if (t_frame -> caller != nil)
                         t_target_frame = t_frame -> caller;
+                    else
+                        __MCScriptUnreachable__("cannot determine context variable target frame");
                     
                     // If there is no context table, or the value of the slot at the given
                     // index is nil then we use the default.
@@ -2205,68 +2259,21 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     t_success = MCScriptCheckedStoreToRegisterInFrame(t_target_frame, t_dst, t_value);
                 }
-                else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+                else if (t_definition -> kind == kMCScriptDefinitionKindHandler ||
+                         t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
                 {
                     MCScriptHandlerDefinition *t_handler_definition;
                     t_handler_definition = static_cast<MCScriptHandlerDefinition *>(t_definition);
                     
-                    MCTypeInfoRef t_signature;
-                    t_signature = t_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
-                    
-                    // The context struct is 'moved' into the handlerref.
-                    __MCScriptHandlerContext t_context;
-                    t_context . instance = MCScriptRetainInstance(t_instance);
-                    t_context . definition = t_handler_definition;
-                    
+                    // Evaluate the value of the handler definition. This will
+                    // create an MCHandlerRef if one doesn't exist, or use the
+                    // previously created one. These MCHandlerRefs are retained
+                    // on a per-instance basis. Unbindable foreign handlers are
+                    // returned as nil.
                     MCHandlerRef t_value;
-                    t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
-                    
+                    t_success = MCScriptEvaluateHandlerOfInstanceInternal(t_instance, t_handler_definition, t_value);
                     if (t_success)
-                    {
-                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
-                        MCValueRelease(t_value);
-                    }
-                }
-                else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
-                {
-                    MCScriptForeignHandlerDefinition *t_handler_definition;
-                    t_handler_definition = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
-                    
-                    MCTypeInfoRef t_signature;
-                    t_signature = t_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
-                    
-                    bool t_bound;
-                    if (t_handler_definition -> function == nil)
-                    {
-                        if (!MCScriptPrepareForeignFunction(t_frame, t_instance, t_handler_definition, false, t_bound))
-	                        t_success = false;
-                    }
-                    else
-                        t_bound = true;
-                    
-                    if (t_success)
-                    {
-	                    if (t_bound)
-	                    {
-		                    // The context struct is 'moved' into the handlerref.
-		                    __MCScriptHandlerContext t_context;
-		                    t_context . instance = MCScriptRetainInstance(t_instance);
-		                    t_context . definition = t_handler_definition;
-                        
-		                    MCHandlerRef t_value;
-		                    t_success = MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value);
-                        
-		                    if (t_success)
-		                    {
-			                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
-			                    MCValueRelease(t_value);
-		                    }
-	                    }
-	                    else
-	                    {
-		                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, kMCNull);
-	                    }
-                    }
+                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value != nil ? (MCValueRef)t_value : kMCNull);
                 }
             }
             break;
@@ -2315,11 +2322,13 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     
                     // If we are a normal handler we use the current frame.
                     // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame;
+                    MCScriptFrame *t_target_frame = nil;
                     if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
                         t_target_frame = t_frame;
                     else if (t_frame -> caller != nil)
                         t_target_frame = t_frame -> caller;
+                    else
+	                    __MCScriptUnreachable__("cannot determine context variable target frame");
                     
                     if (t_success &&
                         (t_target_frame -> context == nil ||
@@ -2368,6 +2377,58 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     MCMemoryDeleteArray(t_values);
             }
             break;
+			case kMCScriptBytecodeOpAssignArray:
+			{
+				int t_dst;
+				t_dst = t_arguments[0];
+
+				MCAutoArrayRef t_array;
+				if (!MCArrayCreateMutable(&t_array))
+				{
+					t_success = false;
+				}
+
+				for (int t_arg_ofs = 1; t_success && t_arg_ofs + 1 < t_arity; t_arg_ofs += 2)
+				{
+					MCValueRef t_raw_key, t_value;
+					MCNewAutoNameRef t_key;
+					if (t_success)
+					{
+						t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[t_arg_ofs], t_raw_key);
+					}
+					if (t_success)
+					{
+						t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arguments[t_arg_ofs + 1], t_value);
+					}
+					if (t_success)
+					{
+						// FIXME allow construction of arrays from
+						// string-bridging foreign values.
+						if (MCValueGetTypeCode(t_raw_key) != kMCValueTypeCodeString)
+						{
+							t_success = MCScriptThrowNotAStringError(t_raw_key);
+						}
+					}
+					if (t_success)
+					{
+						t_success = MCNameCreate(reinterpret_cast<MCStringRef>(t_raw_key), &t_key);
+					}
+					if (t_success)
+					{
+						t_success = MCArrayStoreValue(*t_array, false, *t_key, t_value);
+					}
+				}
+
+				if (t_success)
+				{
+					t_success = t_array.MakeImmutable();
+				}
+				if (t_success)
+				{
+					t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, *t_array);
+				}
+			}
+			break;
         }
         
         // If we failed, then make sure the frame address is up to date.
@@ -2423,6 +2484,112 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     }
     
     return t_success;
+}
+
+static uindex_t MCScriptComputeHandlerIndexOfInstance(MCScriptInstanceRef p_instance, MCScriptCommonHandlerDefinition *p_handler)
+{
+    uindex_t t_min, t_max;
+    t_min = 0;
+    t_max = p_instance -> handler_count;
+    while(t_min < t_max)
+    {
+        uindex_t t_mid;
+        t_mid = (t_min + t_max) / 2;
+        
+        if (p_instance -> handlers[t_mid] . definition < p_handler)
+            t_min = t_mid + 1;
+        else
+            t_max = t_mid;
+    }
+    
+    return t_min;
+}
+
+bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance, MCScriptCommonHandlerDefinition *p_handler, MCHandlerRef& r_handler)
+{
+    // Compute the index in the handler table of p_handler; then, if it is the
+    // definition we are looking for, return its previously computed value.
+    uindex_t t_index;
+    t_index = MCScriptComputeHandlerIndexOfInstance(p_instance, p_handler);
+    if (t_index < p_instance -> handler_count &&
+        p_instance -> handlers[t_index] . definition == p_handler)
+    {
+        r_handler = p_instance -> handlers[t_index] . value;
+        return true;
+    }
+    
+    // Calculate the handlerref value we need.
+    MCHandlerRef t_value = nil;
+    if (p_handler -> kind == kMCScriptDefinitionKindHandler)
+    {
+        // LCB handlers are easy - we just wrap up the instance and handler definition
+        // pair in a handler-ref.
+        
+        MCScriptHandlerDefinition *t_handler_definition;
+        t_handler_definition = static_cast<MCScriptHandlerDefinition *>(p_handler);
+        
+        MCTypeInfoRef t_signature;
+        t_signature = p_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
+        
+        // The context struct is 'moved' into the handlerref.
+        __MCScriptHandlerContext t_context;
+        t_context . instance = p_instance;
+        t_context . definition = t_handler_definition;
+        
+        if (!MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value))
+            return false;
+    }
+    else if (p_handler -> kind == kMCScriptDefinitionKindForeignHandler)
+    {
+        // Foreign handlers are a little trickier - we must first attempt to bind
+        // the function and if that fails we make the handler value nothing.
+        
+        MCScriptForeignHandlerDefinition *t_handler_definition;
+        t_handler_definition = static_cast<MCScriptForeignHandlerDefinition *>(p_handler);
+        
+        MCTypeInfoRef t_signature;
+        t_signature = p_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
+        
+        bool t_bound;
+        if (t_handler_definition -> function == nil)
+        {
+            if (!MCScriptPrepareForeignFunction(p_instance, t_handler_definition, false, t_bound))
+                return false;
+        }
+        else
+            t_bound = true;
+        
+        if (t_bound)
+        {
+            // The context struct is 'moved' into the handlerref.
+            __MCScriptHandlerContext t_context;
+            t_context . instance = p_instance;
+            t_context . definition = t_handler_definition;
+            
+            if (!MCHandlerCreate(t_signature, &__kMCScriptHandlerCallbacks, &t_context, t_value))
+                return false;
+        }
+        else
+            t_value = nil;
+    }
+    
+    // Now put the handler value into the instance's handler list. First we make
+    // space in the array, then insert the value at the index we computed at the
+    // start.
+    if (!MCMemoryResizeArray(p_instance -> handler_count + 1, p_instance -> handlers, p_instance -> handler_count))
+    {
+        MCValueRelease(t_value);
+        return false;
+    }
+    
+    MCMemoryMove(p_instance -> handlers + t_index + 1, p_instance -> handlers + t_index, (p_instance -> handler_count - t_index - 1) * sizeof(MCScriptHandlerValue));
+    
+    p_instance -> handlers[t_index] . definition = p_handler;
+    p_instance -> handlers[t_index] . value = t_value;
+    
+    r_handler = t_value;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2482,7 +2649,7 @@ __MCScriptHandlerDescribe (void *p_context,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
 {
     if (*x_count == 0)
         return false;
@@ -2491,27 +2658,27 @@ extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatCounted(uinteger_t *x_count)
     return true;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToCondition(double p_counter, double p_limit)
 {
     return p_counter <= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatUpToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" bool MC_DLLEXPORT MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
+extern "C" bool MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToCondition(double p_counter, double p_limit)
 {
     return p_counter >= p_limit;
 }
 
-extern "C" double MC_DLLEXPORT MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
+extern "C" double MC_DLLEXPORT_DEF MCScriptBuiltinRepeatDownToIterate(double p_counter, double p_step)
 {
     return p_counter + p_step;
 }
 
-extern "C" void MC_DLLEXPORT MCScriptBuiltinThrow(MCStringRef p_reason)
+extern "C" void MC_DLLEXPORT_DEF MCScriptBuiltinThrow(MCStringRef p_reason)
 {
     MCErrorThrowGeneric(p_reason);
 }

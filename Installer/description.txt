@@ -1,0 +1,7 @@
+LiveCode lets you create apps from one code base that run on every major device and platform.
+
+In a recent survey, our customers told us that LiveCode enabled them to get their projects done in less than half the time, compared to the best alternative.
+
+You can achieve your project goals in a fraction of the time with our compile-free workflow. Make iterative, agile changes in real time. Plus, use LiveCode to write code that makes sense. LiveCode's natural programming language is far easier to learn and use than Java, Objective-C, and other traditional languages. 
+
+LiveCode allows you to write once and deploy everywhere:  iOS, Android, Windows, Mac, Linux, Web and Server.

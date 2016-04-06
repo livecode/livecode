@@ -1,0 +1,12 @@
+Name: sort key
+
+Synonyms: sort key
+
+Type: glossary
+
+Description:
+The part of a <chunk> or <card> that's used to determine the <chunk|chunk's> or <card|card's> position when <sort|sorting>.
+
+References: card (glossary), sort (glossary), chunk (glossary)
+
+Tags: text processing

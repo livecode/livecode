@@ -1,0 +1,30 @@
+Name: cantSelect
+
+Type: property
+
+Syntax: set the cantSelect of <object> to {true | false}
+
+Summary: Specifies whether a <control> can be <selected> with the Pointer <tool>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the cantSelect of field "Background" to true
+
+Value (bool):The <cantSelect> of a <control> is true or false.
+By default, the <cantSelect> of a newly created <control> is false.
+
+Description:
+Use the <cantSelect> <property> to protect a <control> from being changed by the user.
+
+If the <cantSelect> of a <control> is set to true, the user cannot <select> it (and so cannot resize it or move it).  If a group or card has <cantSelect> set to true, all of its children will also act as if they have <cantSelect> set to true (i.e. They will also not be selectable.)  You can use 'the <effective> <cantSelect> ' to determine if the object, or any of its ancestors have <cantSelect> set.
+
+When the user clicks the control with the <Pointer tool>, LiveCode acts as though it has been clicked with the <Browse tool>. If the <cantSelect> is false, the user can click the <control> with the <Pointer tool> to <select> it.
+
+A handler can still select the object, regardless of the setting of the <cantSelect> <property>.
+
+References: control (keyword), effective (keyword), selected (property), modeless (command), disable (command), select (command), tool (function), property (glossary), Pointer tool (glossary), Browse tool (glossary)

@@ -1,0 +1,33 @@
+Name: savingStandalone
+
+Type: message
+
+Syntax: savingStandalone
+
+Summary: Sent to the mainstack when a standalone application is being saved.
+
+Associations: stack
+
+Introduced: 2.2
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+on savingStandalone
+   repeat with X = 1 to the number of cards of this stack
+      repeat with Y = 1 to the number of fields of card X of this stack
+         if not the lockText of field Y of card X of this stack then
+            put empty into field Y of card X of this stack
+         end if
+      end repeat
+   end repeat
+end savingStandalone
+
+Description:
+When a stack is saved as a standalone application it is removed from memory then reopened. This message is sent to the stack after it is reopened and therefore offers the opportunity to do a last modification of the stack before saving the standalone. 
+
+>*Note:* Changes made when you handle this message are not saved in the original stack file. They will only be seen in the standalone application.
+
+References: standaloneSaved (message)

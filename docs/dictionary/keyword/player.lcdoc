@@ -1,0 +1,23 @@
+Name: player
+
+Type: keyword
+
+Syntax: player
+
+Summary: Designates the Player <tool>, which is used to create new player <object|objects> for movies and sounds.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose player tool
+
+Description:
+Use the <player> <keyword> to create <player|players>.
+
+When using the Player tool, the cursor is a crosshairs. This tool is used for creating players by clicking at one corner of the player and dragging to the opposite corner.
+
+References: choose (command), tool (function), object (object), player (object), keyword (glossary)

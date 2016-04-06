@@ -1,0 +1,12 @@
+Name: decimal point
+
+Synonyms: decimal point
+
+Type: glossary
+
+Description:
+The <character> that divides the integer part of a number from the fractional part, usually indicated by a period (.). For example, in the number "22.5", the decimal point is the third <character>.
+
+References: character (glossary)
+
+Tags: math

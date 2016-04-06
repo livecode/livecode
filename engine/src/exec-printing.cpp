@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -654,8 +654,10 @@ void MCPrintingExecPrintRectOfSomeCards(MCExecContext& ctxt, integer_t p_count, 
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_from . x;
 	t_src_rect . y = p_from . y;
-	t_src_rect . width = p_to . x - p_to . x;
-	t_src_rect . height = p_to . y - p_to . y;
+    // SN-2015-03-10: [[ Bug 14814 ]] Same fix as for
+    //  MCPrintingExecPrintRectOfCardIntoRect
+	t_src_rect . width = p_to . x - p_from . x;
+	t_src_rect . height = p_to . y - p_from . y;
 	
 	MCprinter -> LayoutCardSequence(MCdefaultstackptr, p_count, &t_src_rect);
 
@@ -673,8 +675,10 @@ void MCPrintingExecPrintRectOfCardIntoRect(MCExecContext& ctxt, MCCard *p_card, 
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_src_from . x;
 	t_src_rect . y = p_src_from . y;
-	t_src_rect . width = p_src_to . x - p_src_to . x;
-	t_src_rect . height = p_src_to . y - p_src_to . y;
+    // SN-2015-03-10: [[ Bug 14814 ]] Use p_src_to - p_src_from coordinates
+    //  to compute the width and height (not p_src_to - p_src_to).
+	t_src_rect . width = p_src_to . x - p_src_from . x;
+	t_src_rect . height = p_src_to. y - p_src_from . y;
 	
 	MCprinter -> Render(p_card, t_src_rect, p_dst_rect);
 
@@ -698,8 +702,7 @@ void MCPrintingExecPrintCardIntoRect(MCExecContext& ctxt, MCCard *p_card, MCRect
 
 void MCPrintingExecOpenPrintingToDestination(MCExecContext& ctxt, MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options)
 {
-	extern Exec_stat MCCustomPrinterCreate(MCStringRef, MCStringRef, MCArrayRef , MCPrinter*&);
-	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, MCprinter) == ES_NORMAL)
+	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, (MCCustomPrinter*&)MCprinter) == ES_NORMAL)
 		MCPrintingExecOpenPrinting(ctxt);
 }
 
@@ -735,7 +738,7 @@ void MCPrintingExecClosePrinting(MCExecContext& ctxt)
 {
 	MCprinter -> Close();
 	if (MCsystemprinter != MCprinter)	
-	{	
+	{
 		delete MCprinter;
 		MCprinter = MCsystemprinter;
 	}

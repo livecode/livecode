@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,33 +26,3 @@ int32_t MCCustomPrinterComputeFontSize(void *font)
 {
 	return CTFontGetSize((CTFontRef)font);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-char *MCSystemLowercaseInternational(const MCString& p_string)
-{
-	char *t_lc_string;
-	t_lc_string = p_string . clone();
-	for(uindex_t i = 0; t_lc_string[i] != '\0'; i++)
-		t_lc_string[i] = MCS_tolower(t_lc_string[i]);
-	return t_lc_string;
-}
-
-int MCSystemCompareInternational(MCStringRef p_left, MCStringRef p_right)
-{
-	CFStringRef t_left_ref, t_right_ref;
-    /* UNCHECKED */ MCStringConvertToCFStringRef(p_left, t_left_ref);
-    /* UNCHECKED */ MCStringConvertToCFStringRef(p_right, t_right_ref);
-
-	
-	// MW-2013-03-12: [[ Bug 10445 ]] Make sure we compare the string 'localized'.
-	int t_result;
-	t_result = CFStringCompare(t_left_ref, t_right_ref, kCFCompareLocalized);
-	
-	CFRelease(t_left_ref);
-	CFRelease(t_right_ref);
-	
-	return t_result;
-}
-
-////////////////////////////////////////////////////////////////////////////////

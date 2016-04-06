@@ -1,0 +1,12 @@
+Name: command
+
+Synonyms: command
+
+Type: glossary
+
+Description:
+A directive that causes LiveCode to perform an action (such as open a window, put text in a <field>, or beep). 
+ 
+LiveCode has many <built-in command|built-in commands>, which are described in the LiveCode Dictionary. You can also create your own <custom command|custom commands>.
+
+References: field (glossary), built-in command (glossary), custom command (glossary)

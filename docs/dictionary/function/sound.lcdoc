@@ -1,0 +1,36 @@
+Name: sound
+
+Type: function
+
+Syntax: the sound
+
+Syntax: sound()
+
+Summary: Returns the name of the audio clip or sound file that is currently playing.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile,mobile
+
+Example:
+the sound
+
+Example:
+wait until the sound is done
+
+Returns: The sound function returns a string.
+
+Description:
+Use the sound function to synchronize other actions with sounds.
+
+On desktop the sound function returns 'done' if no audio clip is playing. If an audio clip is playing the name of the audio clip is returned.
+
+On iOS the sound function returns 'done' if there is no sound currently playing. If a sound is currently being played its filename is returned.
+
+Sounds played with the <beep> command do not affect the value returned by the sound function.
+
+References: start (command), beep (command), soundChannel (property)
+
+Tags: multimedia

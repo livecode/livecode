@@ -1,0 +1,27 @@
+Name: scrollerBeginDrag
+
+Type: message
+
+Syntax: scrollerBeginDrag
+
+Summary: Sent when a scroll initiating drag is started.
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on scrollerBeginDrag
+   put "Scroll by dragging started" into field "scroller status"
+end scrollerBeginDrag
+
+Description:
+The <scrollerBeginDrag> message is sent when scrolling is initiated by dragging on a scroller control created using the <mobileControlCreate> command.
+
+Handle the <scrollerBeginDrag> message if you want to move LiveCode controls, make changes to the interface or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+
+The <scrollerBeginDrag> message is sent to the object containing the script that created the scroller control.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), scrollerEndDecelerate (message), scrollerBeginDecelerate (message), scrollerEndDrag (message), scrollerDidScroll (message), scrollerScrollToTop (message)

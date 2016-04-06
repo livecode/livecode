@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -186,8 +186,11 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			case F_RADIO:
 			case F_RECTANGLE:
 			case F_STANDARD:
-					if (MCcurtheme == NULL || !getstack() -> ismetal() || (isstdbtn && state & CS_HILITED) ||
-						!MCcurtheme -> drawmetalbackground(dc, dirty, trect, this))
+                    if ((isstdbtn && (state & CS_HILITED))
+                        || MCcurtheme == NULL
+                        || !((getstack()->ismetal() && MCcurtheme->drawmetalbackground(dc, dirty, trect, this))
+                              || (style == F_MENU && menumode == WM_TOP_LEVEL && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE))))
+
 				{
 					if (isstdbtn && noback)
 					{
@@ -299,7 +302,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						}
 					}
 					else if (!(flags & F_SHOW_BORDER) && MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK
-					         && state & (CS_ARMED | CS_KFOCUSED) && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
+                             && (!getcindex(DI_BACK, i) && !getpindex(DI_BACK,i))
 					         && flags & MENU_ITEM_FLAGS && flags & F_AUTO_ARM)
 					{
 						// FG-2014-07-30: [[ Bugfix 9405 ]]
@@ -307,10 +310,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 						setforeground(dc, DI_BACK, False, False);
 						dc->fillrect(shadowrect);
 
-						MCWidgetInfo winfo;
-						winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
-						getwidgetthemeinfo(winfo);
-						MCcurtheme->drawwidget(dc, winfo, shadowrect);
+                        if (state & CS_ARMED)
+                        {
+                            MCWidgetInfo winfo;
+                            winfo.type = WTHEME_TYPE_MENUITEMHIGHLIGHT;
+                            getwidgetthemeinfo(winfo);
+                            MCcurtheme->drawwidget(dc, winfo, shadowrect);
+                        }
 					}
 
 			}
@@ -437,6 +443,13 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
                 sy = centery - (nlines * fheight / 2) + fleading/2 + fascent;
                 theight = nlines * fheight;
             }
+            
+            coord_t starty = sy;
+            uint2 i;
+            coord_t twidth = 0;
+            
+            dc->save();
+            dc->cliprect(t_content_rect);
 
             // MW-2014-06-19: [[ IconGravity ]] Use old method of calculating icon location if gravity is none.
 			if (flags & F_SHOW_ICON && icons != NULL && icons->curicon != NULL && m_icon_gravity == kMCGravityNone)
@@ -464,13 +477,6 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				icons->curicon->drawcentered(dc, centerx + loff, centery + loff, (state & CS_HILITED) != 0);
 				icondrawed = True;
 			}
-
-			coord_t starty = sy;
-			uint2 i;
-			coord_t twidth = 0;
-			
-			dc->save();
-			dc->cliprect(t_content_rect);
 			
 			uindex_t t_totallen = 0;
 			for (i = 0 ; i < nlines ; i++)
@@ -496,7 +502,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					{
 						if (indicator && !(flags & F_SHOW_ICON))
 						{
-							sx += CHECK_SIZE + leftmargin;
+							sx += GetCheckSize() + leftmargin;
 							if (MClook == LF_WIN95)
 							{
 								sy++;
@@ -549,11 +555,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
                 if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
                     && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
                     && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
-                    && rect.height <= 24 && MCappisactive
-                    && !(MCbuttonstate && MCmousestackptr && MCmousestackptr == getstack()
-                        && MCmousestackptr->getcard()->getmfocused() != nil
-                        && MCmousestackptr->getcard()->getmfocused() != this
-                        && MCmousestackptr->getcard()->getmfocused()->gettype() == CT_BUTTON))
+                    && rect.height <= 24 && MCappisactive)
                     setforeground(dc, DI_BACK, False, True);
                 // PM-2014-11-26: [[ Bug 14070 ]] [Removed code] Make sure text color in menuButton inverts when hilited
         
@@ -642,12 +644,9 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	}
 
 	if (!p_isolated)
-	{
+    {
 		dc -> end();
-
-		if (getstate(CS_SELECTED))
-			drawselected(dc);
-	}
+    }
 }
 
 void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic)
@@ -680,19 +679,27 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 		fascent = MCFontGetAscent(m_font);
 		dc->drawline(sx, sy - (fascent >> 1), sx + twidth, sy - (fascent >> 1));
 	}
-	if (!IsMacLF() && mnemonic)
+	if (!IsMacLF() && mnemonic
+        && (gettheme() == kMCInterfaceThemeLegacy || (MCscreen->querymods() & MS_ALT)))
 	{
 		if (p_mnemonic > 0)
 		{
 			MCRange t_before = MCRangeMake(0, mnemonic - 1);
 			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
-
-            // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
+            
+			// MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before, getstack() -> getdevicetransform());
             int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter, getstack() -> getdevicetransform());
 
+#ifdef TARGET_PLATFORM_WINDOWS
+			// No idea why this fudge-factor is required on Windows...
+			// Without it, the mnemonic underlines are drawn too far
+			// to the left, mis-aligning them with the mnemonic letter.
+			mstart -= 1;
+#endif
+
 			sy += mnemonicoffset;
-			dc->drawline(mstart, sy, mstart + mwidth, sy);
+			dc->drawline(mstart, sy, mstart + mwidth - 1, sy);
 		}
 	}
 }
@@ -707,6 +714,17 @@ void MCButton::drawcheck(MCDC *dc, MCRectangle &srect, Boolean white)
 	if (!(flags & F_AUTO_ARM) && MCcurtheme &&
 	        MCcurtheme->iswidgetsupported(WTHEME_TYPE_CHECKBOX))
 	{
+        if (IsNativeGTK())
+        {
+            int32_t t_size, t_spacing;
+            t_size = MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
+            t_spacing = MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSPACING);
+            trect . x = srect . x + leftmargin - t_spacing;
+            trect . y = srect . y;
+            trect . width = t_size + 2*t_spacing;
+            trect . height = srect . height;
+        }
+        
 		MCWidgetInfo widgetinfo;
 		widgetinfo.type = WTHEME_TYPE_CHECKBOX;
 		getwidgetthemeinfo(widgetinfo);
@@ -863,9 +881,9 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 			int32_t t_size, t_spacing;
 			t_size = MCcurtheme -> getmetric(WTHEME_METRIC_RADIOBUTTON_INDICATORSIZE);
 			t_spacing = MCcurtheme -> getmetric(WTHEME_METRIC_RADIOBUTTON_INDICATORSPACING);
-			trect . x = srect . x + leftmargin - 2 + t_spacing;
+			trect . x = srect . x + leftmargin - t_spacing;
 			trect . y = srect . y;
-			trect . width = t_size;
+			trect . width = t_size + 2*t_spacing;
 			trect . height = srect . height;
 		}
 
@@ -1270,15 +1288,13 @@ void MCButton::drawcombo(MCDC *dc, MCRectangle &srect)
 
 void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 {
-	int32_t fascent;
-	fascent = MCFontGetAscent(m_font);
-
 	MCPoint p[10];  //polygon for each tab
 	MCPoint box[6]; //polygon for outline the entire tab box
 	int2 topx = 0;
 	uint2 topwidth = 0;
-	uint2 theight = fascent + 10;
-	uint2 theightfortabpane = theight;
+    uint2 theight = ceilf(MCFontGetAscent(m_font) + MCFontGetDescent(m_font));
+    uint2 t_tab_button_height = theight + 4;      // Magic number for padding
+    uint2 t_pane_y_offset = t_tab_button_height;
 	int2 taboverlap,tabrightmargin,tableftmargin,tabstartoffset;
 	taboverlap = tabrightmargin = tableftmargin = 0;
 	tabstartoffset = 2;
@@ -1289,11 +1305,19 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 		tabrightmargin = MCcurtheme->getmetric(WTHEME_METRIC_TABRIGHTMARGIN);
 		tableftmargin = MCcurtheme->getmetric(WTHEME_METRIC_TABLEFTMARGIN);
 		tabstartoffset = MCcurtheme->getmetric(WTHEME_METRIC_TABSTARTOFFSET);
-		if (MCcurtheme->getthemepropbool(WTHEME_PROP_TABPANEATTEXTBASELINE))
-			theightfortabpane = 20 >> 1;//to-do query tab size
+        
+        // If the theme uses a fixed tab button height, force the height to it
+        uint2 t_fixed_height = MCcurtheme->getmetric(WTHEME_METRIC_TABBUTTON_HEIGHT);
+        if (t_fixed_height != 0)
+            t_tab_button_height = t_fixed_height;
+        
+        // If the theme uses tab buttons that overlap the pane, adjust the
+        // offset at which the pane is drawn.
+        if (MCcurtheme->getthemepropbool(WTHEME_PROP_TABBUTTONSOVERLAPPANE))
+            t_pane_y_offset = t_tab_button_height / 2;
 	}
 	int2 curx = srect.x + tabstartoffset;
-	int2 cury = srect.y + fascent + 4;
+    int2 cury = srect.y + (t_tab_button_height - theight + 1)/2 + ceilf(MCFontGetAscent(m_font) + MCFontGetLeading(m_font));
 	int2 yoffset = 0;
 	uint2 i;
 	uint2 curtab = MAXUINT2;
@@ -1302,7 +1326,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 	t_mousetab = getmousetab(curx);
 	if (state & CS_MFOCUSED && tabselectonmouseup())
 		curtab = t_mousetab == starttab ? starttab : MAXUINT2;
-	if ( IsMacLF())
+	if (IsMacEmulatedLF())
 		theight -= 2;
 	MCWidgetInfo tabwinfo;
 	tabwinfo.type = WTHEME_TYPE_TAB;
@@ -1347,7 +1371,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 			{
 				// MW-2010-04-26: [[ Bug ]] This rect was being computed with an extra pixel width
 				//   and height - 'compute_rect' treats corners as *inclusive*.
-				MCRectangle tabpanelrect = MCU_compute_rect(srect.x, srect.y + theightfortabpane,
+				MCRectangle tabpanelrect = MCU_compute_rect(srect.x, srect.y + t_pane_y_offset,
 				                           srect.x + srect.width - 1, srect.y + srect.height - 1);
 				MCWidgetInfo tabpanelwinfo;
 				tabpanelwinfo.type = WTHEME_TYPE_TABPANE;
@@ -1388,7 +1412,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
             if (i == (t_ntabs - 1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
             
-			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
+			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + t_tab_button_height);
 			if (MCcurtheme->getthemeid() != LF_NATIVEGTK || (srect.x + srect.width > curx + twidth + 5 &&
 			        srect.y + srect.height > (srect.y + theight * 2)))
 				MCcurtheme->drawwidget(dc, tabwinfo, tabrect);
@@ -1595,16 +1619,16 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-                dc -> drawtext(textx, cury + yoffset + 1, t_tab, m_font, false, kMCDrawTextNoBreak);
+                dc -> drawtext_substring(textx, cury + yoffset + 1, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
 		}
 		else
 			if (reversetext)
-				setforeground(dc, DI_BACK, False, True);
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT_SEL, False, True);
 			else
-				setforeground(dc, DI_FORE, False);
+				setforeground(dc, DI_PSEUDO_BUTTON_TEXT, False);
         // AL-2014-09-24: [[ Bug 13528 ]] Don't draw character indicating button is disabled
         dc -> drawtext_substring(textx, cury + yoffset, t_tab, t_range, m_font, false, kMCDrawTextNoBreak);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
@@ -1745,13 +1769,20 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
                     // FG-2014-11-05: [[ Bugfix 13909 ]]
                     // Don't suppress the default on OSX Yosemite if it is this
                     // button being pressed but the mouse is outside the button.
-                    if (!(IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0 && t_control == this)
-                          || (rect.x > MCmousex && MCmousex >= rect.x+rect.width
-                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height))
+                    if (rect.x > MCmousex && MCmousex >= rect.x+rect.width
+                              && rect.y > MCmousey && MCmousey >= rect.y+rect.height)
                         winfo.state |= WTHEME_STATE_SUPPRESSDEFAULT;
                 }
 			}
-			
+	
+            // On Yosemite, the default button theme is only suppressed when the
+            // app is not active.
+            if (getflag(F_DEFAULT) && IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0)
+            {
+                winfo.state &= ~WTHEME_STATE_SUPPRESSDEFAULT;
+                winfo.state |= WTHEME_STATE_HASDEFAULT;
+            }
+            
 #ifdef _MACOSX
 			// MW-2010-12-05: [[ Bug 9210 ]] Make sure we disable the default look when the app is
 			//   in the background.
@@ -1766,13 +1797,11 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
                 // MM-2014-07-31: [[ ThreadedRendering ]] Make sure only a single thread posts the timer message (i.e. the first that gets here)
                 if (!m_animate_posted)
                 {
-                    MCThreadMutexLock(MCanimationmutex);
                     if (!m_animate_posted)
                     {
                         m_animate_posted = true;
                         MCscreen->addtimer(this, MCM_internal, THROB_RATE);
                     }
-                    MCThreadMutexUnlock(MCanimationmutex);
                 }
 			}
 			else
@@ -2003,4 +2032,13 @@ void MCButton::unlockshape(MCObjectShape& p_shape)
 {
 	if (p_shape . type == kMCObjectShapeMask)
 		icons -> curicon -> unlockbitmap(p_shape . mask . bits);
+}
+
+int16_t MCButton::GetCheckSize() const
+{
+    // If we aren't using GTK at the theming engine, return the fixed size
+    if (!IsNativeGTK())
+        return CHECK_SIZE;
+    
+    return MCcurtheme -> getmetric(WTHEME_METRIC_CHECKBUTTON_INDICATORSIZE);
 }

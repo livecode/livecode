@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -133,13 +133,9 @@ public:
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
 #ifdef LEGACY_EXEC
-	bool enumerate(MCExecPoint& ep, bool p_first = true);
+    bool enumerate(MCExecPoint& ep, bool p_first = true);
 #endif
     bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
-
-	// MW-2013-11-15: [[ Bug 11277 ]] Methods for eval/exec in handlerlist context.
-	void eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value);
-	void doscript(MCExecContext& ctxt, MCStringRef p_string, uinteger_t p_line = 0, uinteger_t p_pos = 0);
 	
 	uint2 getnvars(void)
 	{

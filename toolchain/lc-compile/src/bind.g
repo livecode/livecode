@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -31,71 +31,92 @@
 -- the defining id.
 'action' Bind(MODULE, MODULELIST)
 
-    'rule' Bind(Module:module(Position, Kind, Name, Imports, Definitions), ImportedModules):
+    'rule' Bind(Module:module(Position, Kind, Name, Definitions), ImportedModules):
         DefineModuleId(Name)
 
         -- Make sure all the imported modules are bound
-        BindImports(Imports, ImportedModules)
+        BindImports(Definitions, ImportedModules)
+        (|
+            ErrorsDidOccur()
+        ||
+            -- Step 1: Ensure all id's referencing definitions point to the definition.
+            --         and no duplicate definitions have been attempted.
+            EnterScope
 
-        -- Step 1: Ensure all id's referencing definitions point to the definition.
-        --         and no duplicate definitions have been attempted.
-        EnterScope
+            -- Import all the used modules
+            DeclareImports(Definitions, ImportedModules)
+            
+            EnterScope
 
-        -- Import all the used modules
-        DeclareImports(Imports, ImportedModules)
-        
-        EnterScope
+            -- Declare the predefined ids
+            DeclarePredefinedIds
+            -- Assign the defining id to all top-level names.
+            Declare(Definitions)
+            -- Resolve all references to id's.
+            Apply(Definitions)
+            
+            LeaveScope
 
-        -- Declare the predefined ids
-        DeclarePredefinedIds
-        -- Assign the defining id to all top-level names.
-        Declare(Definitions)
-        -- Resolve all references to id's.
-        Apply(Definitions)
-        
-        LeaveScope
+            LeaveScope
+            
+            -- Step 2: Ensure all definitions have their appropriate meaning
+            Define(Name, Definitions)
+            
+            --DumpBindings(Module)
+        |)
 
-        LeaveScope
-        
-        -- Step 2: Ensure all definitions have their appropriate meaning
-        Define(Name, Definitions)
-        
-        --DumpBindings(Module)
-
-'action' BindImports(IMPORT, MODULELIST)
+'action' BindImports(DEFINITION, MODULELIST)
 
     'rule' BindImports(sequence(Left, Right), Imports):
         BindImports(Left, Imports)
         BindImports(Right, Imports)
         
-    'rule' BindImports(import(_, Id), Imports):
+    'rule' BindImports(import(Position, Id), Imports):
         Id'Name -> Name
-        FindModuleInList(Name, Imports -> Module)
-        Module'Name -> ModuleId
         (|
-            QueryId(ModuleId -> module(Info))
+            FindModuleInList(Name, Imports -> Module)
+            Module'Name -> ModuleId
+            (|
+                QueryId(ModuleId -> module(Info))
+            ||
+                DefineModuleId(ModuleId)
+                Bind(Module, Imports)
+            |)
         ||
-            DefineModuleId(ModuleId)
-            Bind(Module, Imports)
+            (|
+                IsBootstrapCompile()
+                Error_DependentModuleNotIncludedWithInputs(Position, Name)
+            ||
+                Error_InterfaceFileNameMismatch(Position, Name)
+            |)
         |)
         
-    'rule' BindImports(nil, _):
+    'rule' BindImports(_, _):
         -- do nothing
 --
 
-'action' DeclareImports(IMPORT, MODULELIST)
+'action' DeclareImports(DEFINITION, MODULELIST)
 
     'rule' DeclareImports(sequence(Left, Right), Imports):
         DeclareImports(Left, Imports)
         DeclareImports(Right, Imports)
         
-    'rule' DeclareImports(import(_, Id), Imports):
+    'rule' DeclareImports(import(Position, Id), Imports):
         Id'Name -> Name
-        FindModuleInList(Name, Imports -> Module)
-        Module'Definitions -> Definitions
-        DeclareImportedDefinitions(Definitions)
+        (|
+            FindModuleInList(Name, Imports -> Module)
+            Module'Definitions -> Definitions
+            DeclareImportedDefinitions(Definitions)
+        ||
+            (|
+                IsBootstrapCompile()
+                Error_DependentModuleNotIncludedWithInputs(Position, Name)
+            ||
+                Error_InterfaceFileNameMismatch(Position, Name)
+            |)
+        |)
         
-    'rule' DeclareImports(nil, _):
+    'rule' DeclareImports(_, _):
         -- do nothing
         
 'action' DeclareImportedDefinitions(DEFINITION)
@@ -128,10 +149,13 @@
     'rule' DeclareImportedDefinitions(event(Position, _, Name, _)):
         DeclareId(Name)
 
-    'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _)):
+    'rule' DeclareImportedDefinitions(syntax(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
 
     'rule' DeclareImportedDefinitions(metadata(_, _, _)):
+        -- do nothing
+
+    'rule' DeclareImportedDefinitions(import(_, _)):
         -- do nothing
 
     'rule' DeclareImportedDefinitions(nil):
@@ -139,17 +163,15 @@
 
 --
 
-'action' FindModuleInList(NAME, MODULELIST -> MODULE)
+'condition' FindModuleInList(NAME, MODULELIST -> MODULE)
 
     'rule' FindModuleInList(Name, modulelist(Head, Rest) -> Head):
         Head'Name -> Id
-        Head'Kind -> import
         Id'Name -> ModName
-        eq(Name, ModName)
+        IsNameEqualToName(Name, ModName)
         
     'rule' FindModuleInList(Name, modulelist(_, Rest) -> Found):
         FindModuleInList(Name, Rest -> Found)
-
 
 'action' QueryId(ID -> MEANING)
 
@@ -190,10 +212,13 @@
     'rule' Declare(event(Position, _, Name, _)):
         DeclareId(Name)
 
-    'rule' Declare(syntax(Position, _, Name, _, _, _)):
+    'rule' Declare(syntax(Position, _, Name, _, _, _, _)):
         DeclareId(Name)
     
     'rule' Declare(metadata(_, _, _)):
+        -- do nothing
+
+    'rule' Declare(import(_, _)):
         -- do nothing
         
     'rule' Declare(nil):
@@ -237,7 +262,7 @@
     'rule' Define(ModuleId, type(Position, Access, Name, Type)):
         DefineSymbolId(Name, ModuleId, Access, type, Type)
         [|
-            where(Type -> handler(_, signature(Parameters, _)))
+            where(Type -> handler(_, _, signature(Parameters, _)))
             DefineParameters(Name, Parameters)
         |]
     
@@ -252,11 +277,11 @@
         DefineSymbolId(Name, ModuleId, Access, context, Type)
     
     'rule' Define(ModuleId, handler(Position, Access, Name, _, Signature:signature(Parameters, _), _, _)):
-        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
     
     'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
-        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, Signature))
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
     'rule' Define(ModuleId, property(Position, Access, Name, Getter, Setter)):
@@ -266,10 +291,13 @@
         DefineSymbolId(Name, ModuleId, Access, event, nil)
         DefineParameters(Name, Parameters)
     
-    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Syntax, Methods)):
+    'rule' Define(ModuleId, syntax(Position, Access, Name, Class, Warnings, Syntax, Methods)):
         DefineSyntaxId(Name, ModuleId, Class, Syntax, Methods)
     
     'rule' Define(_, metadata(_, _, _)):
+        -- do nothing
+
+    'rule' Define(_, import(_, _)):
         -- do nothing
         
     'rule' Define(_, nil):
@@ -288,6 +316,7 @@
     'rule' ComputeTypeOfConstantTermExpression(undefined(Position) -> undefined(Position)):
     'rule' ComputeTypeOfConstantTermExpression(true(Position) -> boolean(Position)):
     'rule' ComputeTypeOfConstantTermExpression(false(Position) -> boolean(Position)):
+    'rule' ComputeTypeOfConstantTermExpression(unsignedinteger(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(integer(Position, _) -> integer(Position)):
     'rule' ComputeTypeOfConstantTermExpression(real(Position, _) -> real(Position)):
     'rule' ComputeTypeOfConstantTermExpression(string(Position, _) -> string(Position)):
@@ -407,7 +436,7 @@
         -- Leave the fields scope
         LeaveScope
         
-    'rule' Apply(TYPE'handler(_, signature(Parameters, Type))):
+    'rule' Apply(TYPE'handler(_, _, signature(Parameters, Type))):
         -- The return type of the handler is resolved in the current scope.
         Apply(Type)
         
@@ -472,7 +501,7 @@
 
     ---------
 
-    'rule' Apply(DEFINITION'syntax(_, _, _, _, Syntax, Methods)):
+    'rule' Apply(DEFINITION'syntax(_, _, _, _, _, Syntax, Methods)):
         -- We index all mark variabless starting at 0.
         LastSyntaxMarkIndexVar <- 0
 
@@ -585,6 +614,7 @@
     'rule' DefineModuleId(Id):
         Info::MODULEINFO
         Info'Index <- -1
+        Info'Generator <- -1
         Id'Meaning <- module(Info)
 
 'action' DefineSymbolId(ID, ID, ACCESS, SYMBOLKIND, TYPE)
@@ -592,6 +622,7 @@
     'rule' DefineSymbolId(Id, ParentId, Access, Kind, Type)
         Info::SYMBOLINFO
         Info'Index <- -1
+        Info'Generator <- -1
         Info'Parent <- ParentId
         Info'Kind <- Kind
         Info'Type <- Type
@@ -689,12 +720,11 @@
 
 'sweep' DumpBindings(ANY)
 
-    'rule' DumpBindings(MODULE'module(_, Kind, Name, Imports, Definitions)):
+    'rule' DumpBindings(MODULE'module(_, Kind, Name, Definitions)):
         DumpId("module", Name)
-        DumpBindings(Imports)
         DumpBindings(Definitions)
         
-    'rule' DumpBindings(IMPORT'import(_, Name)):
+    'rule' DumpBindings(DEFINITION'import(_, Name)):
         DumpId("import", Name)
         
     'rule' DumpBindings(DEFINITION'type(_, _, Name, Type)):
@@ -727,7 +757,7 @@
     'rule' DumpBindings(DEFINITION'event(_, _, Name, Signature)):
         DumpId("event", Name)
         DumpBindings(Signature)
-    'rule' DumpBindings(DEFINITION'syntax(_, _, Name, _, Syntax, Methods)):
+    'rule' DumpBindings(DEFINITION'syntax(_, _, Name, _, _, Syntax, Methods)):
         DumpId("syntax", Name)
         DumpBindings(Syntax)
         DumpBindings(Methods)

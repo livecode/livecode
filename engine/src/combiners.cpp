@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -419,8 +419,7 @@ template<BitwiseOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE
 		r = 0x00ffffff;
 	break;
     default:
-        MCUnreachable();
-    break;
+        MCUnreachableReturn(0);
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -552,8 +551,7 @@ template<ArithmeticOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> INL
 	}
 	break;
     default:
-        MCUnreachable();
-    break;
+        MCUnreachableReturn(0);
 	}
 
 	if (x_src_alpha && x_dst_alpha)
@@ -667,8 +665,7 @@ template<BasicImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha> I
 		r = packed_multiply_bounded(src, packed_inverse(dst)) + dst;
 	break;
     default:
-        MCUnreachable();
-    break;
+        MCUnreachableReturn(0);
 	}
 
 	return r;
@@ -894,8 +891,7 @@ template<AdvancedImagingOperation x_combiner, bool x_dst_alpha, bool x_src_alpha
 		t_alpha = t_src_alpha + t_dst_alpha - downscale(t_src_alpha_dst_alpha);
 	break;
     default:
-        MCUnreachable();
-    break;
+        MCUnreachableReturn(0);
 	}
 
 	if (x_dst_alpha)

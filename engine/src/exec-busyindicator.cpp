@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -41,9 +41,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopActivityIndicator, 0)
 
 static MCExecEnumTypeElementInfo _kMCBusyIndicatorElementInfo[] =
 {
-    { "in line", kMCBusyIndicatorInLine},
-    { "square", kMCBusyIndicatorSquare},
-    { "keyboard", kMCBusyIndicatorKeyboard}
+	{ "in line", kMCBusyIndicatorInLine, false },
+	{ "square", kMCBusyIndicatorSquare, false },
+	{ "keyboard", kMCBusyIndicatorKeyboard, false },
 };
 
 static MCExecEnumTypeInfo _kMCBusyIndicatorTypeInfo =
@@ -57,9 +57,9 @@ MCExecEnumTypeInfo *kMCBusyIndicatorTypeInfo = &_kMCBusyIndicatorTypeInfo;
 
 static MCExecEnumTypeElementInfo _kMCActivityIndicatorElementInfo[] =
 {
-    { "white", kMCActivityIndicatorWhite },
-    { "large white", kMCActivityIndicatorWhiteLarge},
-    { "gray", kMCActivityIndicatorGray}
+	{ "white", kMCActivityIndicatorWhite, false },
+	{ "large white", kMCActivityIndicatorWhiteLarge, false },
+	{ "gray", kMCActivityIndicatorGray, false },
 };
 
 static MCExecEnumTypeInfo _kMCActivityIndicatorTypeInfo =

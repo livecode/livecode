@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -388,6 +388,9 @@ bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *
 				break;
 			}
 		}
+        
+        // PM-2015-05-12: [[ Bug 15359 ]] Update t_ncolours var
+        t_ncolours = t_nlines;
 	}
 
 	if (t_success)

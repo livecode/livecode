@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -90,7 +90,7 @@ static inline void MCGCacheTableDiscardPair(MCGCacheTableRef self, uindex_t p_pa
 {
 	self -> used_buckets--;
 	self -> bytes_used -= self -> pairs[p_pair] . key_length;
-	
+    
 	MCMemoryDelete(self -> pairs[p_pair] . key);
 	
 	self -> pairs[p_pair] . hash = 0;
@@ -215,7 +215,7 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 	{
 		t_target_bucket = t_hash % self -> total_buckets;
 		MCMemoryDelete(self -> pairs[t_target_bucket] . key);
-		
+        
 		self -> bytes_used -= self -> pairs[t_target_bucket] . key_length;
 		
 		self -> pairs[t_target_bucket] . hash = t_hash;
@@ -229,10 +229,10 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		
 		//MCLog("MCGCacheTableSet: Cache table overflow. Hash %d thrown out.", t_target_bucket);
 	}
-	else if (self -> pairs[t_target_bucket] . value != NULL)
+	else if (self -> pairs[t_target_bucket] . key != NULL)
 	{
 		MCMemoryDelete(p_key);
-				
+        
 		self -> pairs[t_target_bucket] . value = NULL;
 		MCMemoryCopy(&self -> pairs[t_target_bucket] . value, p_value, p_value_length);
 		

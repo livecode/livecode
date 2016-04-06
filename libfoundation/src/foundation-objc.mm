@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -51,3 +51,10 @@
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCCFAutorelease(const void *p_object)
+{
+    // CFAutorelease isn't exposed until MacOSX 10.9
+    id t_object = (id)p_object;
+    [t_object autorelease];
+}

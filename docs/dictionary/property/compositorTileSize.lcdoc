@@ -1,0 +1,46 @@
+Name: compositorTileSize
+
+Type: property
+
+Syntax: set the compositorTileSize of <stack> to <tileSize> 
+
+Summary: Specifies the size the fragments of object images it caches should be.
+
+Associations: stack
+
+Introduced: 5.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+set the compositorTileSize of this stack to 128
+
+Example:
+put 256 into tTileSize
+set the compositorTileSize of this stack to tTileSize
+
+Parameters:
+Stack: The name or ID of the stack.
+tileSize: A number specifying the size of tiles the engine uses when caching. It must be a power-of-two between 16 and 256 inclusive (16, 32 (default), 64, 128 or 256). The smaller the number, the more potential for engine optimizations as less is redrawn when layers change. However, there is a higher overhead. Experimentation is required to gain optimal performance.
+
+Description:
+Use the compositorTileSize property to specify the size the fragments of object images it caches should be. It must be a power-of-two between 16 and 256 inclusive (i.e. 16, 32, 64, 128 or 256).
+
+General suggested <tileSize> settings:
+- iOS Retina displays: 64
+- iOS Non-retina: 32
+- Android large screens: 64
+- Android small screens: 32
+- Desktop: 32
+
+>*Note:* Use a large tile size when creating big scrolling layers. The maximum size of a scrolling layer is 256 * the <tileSize>. 
+
+>*Warning:* Using a very small <tileSize> when in openGL mode may decrease performance.
+
+>*Note:* Set the compositor properties in a preOpenStack or preOpenCard handler - they are not persistent (not saved into the stackfile).
+
+References: compositorType (property), compositorCacheLimit (property), layerMode (property)
+
+Tags: windowing

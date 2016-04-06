@@ -1,0 +1,285 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*
+A library of utility handlers for functions commonly needed by widgets.
+*/
+
+module com.livecode.library.widgetutils
+
+use com.livecode.canvas
+use com.livecode.engine
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Widget Utilities"
+
+/*
+Summary: Scales and translates a path to fit within a rectangle
+
+Parameters:
+pTargetRect: The rectangle to fit the path within
+xPath: The path to transform
+
+Example:
+use com.livecode.library.iconSVG
+
+public handler OnPaint() returns nothing
+	-- get the 'shopping cart' icon from the icon library
+	variable tPathString as String
+ 	put iconSVGPathFromName("shopping cart") into tPathString
+	
+	-- create the path
+	variable tPath as Path
+	put path tPathString into tPath
+	
+	-- scale the path to fit within the bounds of the widget
+	constrainPathToRect(my bounds, tPath)
+	
+	-- fill the path
+	fill tPath on this canvas
+end handler
+
+Description:
+Scales and transforms <xPath> so that it fits within <pTargetRect> whilst maintaining its
+aspect ratio.
+*/
+public handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as Path)
+
+	// Scale the icon
+	variable tBounds
+	put the bounding box of xPath into tBounds
+
+	// Scale appropriately
+	variable tXScale as Real
+	variable tYScale as Real
+
+	put the width of pTargetRect / the width of tBounds into tXScale
+	put the height of pTargetRect / the height of tBounds into tYScale
+
+	if tXScale > tYScale then
+		put tYScale into tXScale
+	else
+		put tXScale into tYScale
+	end if
+
+    scale xPath by [tXScale, tYScale]
+
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+
+    put the bounding box of xPath into tBounds
+
+	put the left of pTargetRect - the left of tBounds into tXTranslate
+	put the top of pTargetRect - the top of tBounds into tYTranslate
+
+    variable tXDiff as Real
+    variable tYDiff as Real
+
+    put the width of pTargetRect - the width of tBounds into tXDiff
+    put the height of pTargetRect - the height of tBounds into tYDiff
+
+	// align center
+	divide tXDiff by 2
+	divide tYDiff by 2
+
+	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
+end handler
+
+/*
+Summary: Formats an integer as a string
+
+Parameters:
+pInteger: The integer to format
+
+Example:
+log 5 formatted as string 			-- logs 5.000000
+log intToString(5)						 -- logs 5
+
+Description:
+<intToString> formats an integer as a string, removing the decimal place and any zeros
+thereafter.
+*/
+public handler intToString(in pNumber as Number) returns String
+	variable tFormatted as String
+	put pNumber formatted as string into tFormatted
+	
+	variable tDotIndex as Number
+	put the index of "." in tFormatted into tDotIndex
+	
+	if tDotIndex is 0 then
+		return tFormatted
+	end if
+	
+	return char 1 to tDotIndex - 1 of tFormatted
+end handler 
+
+/*
+Summary: Removes any superfluous zeros and decimal places.
+
+Parameters:
+pString: The string to remove zeros from
+
+Example:
+log stripZeros("5.0000000")			-- logs 5
+log stripZeros("5.432100")			-- logs 5.4321
+
+Description:
+Use <stripZeros> to remove any superfluous zeros and decimal places from <pString>
+which have been added by the 
+
+`tNumber formatted as string`
+
+syntax.
+*/
+public handler stripZeros(in pString as String) returns String
+   if "." is in pString then
+		repeat while ((the last char of pString) is in ".0")
+	      if the last char of pString is "." then
+	         delete the last char of pString
+	         exit repeat
+	      else
+	         delete the last char of pString
+	      end if
+	   end repeat
+	end if
+   
+   return pString
+end handler
+
+private handler colorComponentToString(in pComponent as Number)
+	return intToString(the rounded of (pComponent * 255))	
+end handler
+
+/*
+Summary: Converts a color to a string representing the color
+
+Parameters:
+pColor: A value of type com.livecode.canvas.Color
+pIncludeAlpha: Whether to include the alpha value in the string or not
+
+Example:
+property widgetColor 	get getColor
+metadata widgetColor.editor is "com.livecode.pi.colorwithalpha"
+
+private variable mColor as Color
+
+public handler OnSave(out rProperties as Array)
+	put colorToString(mColor, true) into rProperties["color with alpha"]
+end handler
+
+public handler getColor() returns String
+	-- the editor used for the widgetColor property expects the alpha value to be included
+	return colorToString(mColor, true)
+end handler
+
+Example:
+log colorToString(color [0.4,0.4,0.4,0.4])			-- logs "102,102,102,102"
+
+Description:
+Use the <colorToString> handler when logging colors, returning them to LiveCode script 
+via a property getter, or serialising them in the widget's stored properties array for saving.
+*/
+public handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
+	variable tComponents as List
+	variable tString as String
+	put [] into tComponents
+	push colorComponentToString(the red of pColor) onto tComponents
+	push colorComponentToString(the green of pColor) onto tComponents
+	push colorComponentToString(the blue of pColor) onto tComponents
+	
+	if pIncludeAlpha then
+		push colorComponentToString(the alpha of pColor) onto tComponents
+	end if
+	
+	combine tComponents with "," into tString
+	return tString
+end handler
+
+private handler stringToColorComponent(in pComponent as String)
+	return (pComponent parsed as number) / 255
+end handler
+
+/*
+Summary: Converts a string to a color
+
+Parameters:
+pColor: A comma delimited string representing a color in RGB / RGBA format
+
+Example:
+property widgetColor 	get getColor	set setColor
+metadata widgetColor.editor is "com.livecode.pi.colorwithalpha"
+
+private variable mColor as Color
+
+public handler OnLoad(in pProperties as Array)
+	setColor(pProperties["color"])
+end handler
+
+public handler setColor(in pColor as String)
+	put stringToColor(pColor) into mColor
+	redraw all
+end handler
+
+Description:
+Use the <stringToColor> handler when receiving colors from LiveCode script 
+via a property setter, or from the widget's stored properties array when loading.
+*/
+public handler stringToColor(in pString as String) returns Color
+	variable tComponentList as List
+	split pString by "," into tComponentList
+	
+	variable tColor as List
+	put [] into tColor
+	variable tColorComponent as String
+	repeat for each element tColorComponent in tComponentList
+		push stringToColorComponent(tColorComponent) onto tColor
+	end repeat
+
+	return color tColor
+end handler
+
+/*
+Summary: Get the canonical name of the current "native" mobile theme
+
+Example:
+	variable tNativeTheme as String
+	put getNativeThemeName() into tNativeTheme
+
+	if tNativeTheme is "android" then
+		-- Draw Android themed UI
+	else
+		-- Draw iOS themed UI
+	end if
+
+Description:
+Returns the name of the current theme that should be used when the theme is
+"native".
+
+Currently, this will return either "iOS" or "Android".
+*/
+public handler getNativeThemeName() returns String
+	variable tOS as String
+	put the operating system into tOS
+	if tOS is in ["ios","mac"] then
+		return "iOS"
+	else
+		return "Android"
+	end if
+end handler
+
+end module

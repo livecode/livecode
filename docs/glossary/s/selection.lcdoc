@@ -1,0 +1,12 @@
+Name: selection
+
+Synonyms: selection
+
+Type: glossary
+
+Description:
+The currently <select|selected> text or <object|objects>. <Selected(property)> <object|objects> and text are normally <highlight|highlighted> in some way.
+
+References: highlight (glossary), select (glossary), object (glossary)
+
+Tags: ui

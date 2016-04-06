@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -49,19 +49,6 @@ inline MCColorVector3 MCColorVector3Make(MCGFloat x, MCGFloat y, MCGFloat z)
 	t_vector.y = y;
 	t_vector.z = z;
 	return t_vector;
-}
-
-inline void MCColorMatrix3x3GetElements(const MCColorMatrix3x3 &p_matrix, MCGFloat r_values[9])
-{
-	r_values[0] = p_matrix.m[0][0];
-	r_values[1] = p_matrix.m[1][0];
-	r_values[2] = p_matrix.m[2][0];
-	r_values[3] = p_matrix.m[0][1];
-	r_values[4] = p_matrix.m[1][1];
-	r_values[5] = p_matrix.m[2][1];
-	r_values[6] = p_matrix.m[0][2];
-	r_values[7] = p_matrix.m[1][2];
-	r_values[8] = p_matrix.m[2][2];
 }
 
 //////////

@@ -1,0 +1,37 @@
+Name: rename
+
+Type: command
+
+Syntax: rename [file | folder |directory] <filePath> to <newPath> 
+
+Summary: Gives a <file> or <folder> a new name or moves it to a new location or both.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+rename file "Foo.txt" to "Bar.txt"
+
+Example:
+rename folder "/bin/utilities/help" to "/public/utilities/new-help"
+
+Parameters:
+filePath: The filePath specifies the current name and location of the file or folder you want to rename or move. If you specify a name but not a location, LiveCode assumes the file or folder is in the defaultFolder.
+newPath: The newPath specifies the new name and location of the file or folder.
+
+Description:
+Use the <rename> <command> to change the name or location of a <file(keyword)> or <folder>.
+
+The <rename> <command> can be used to change a <file(glossary)|file's> or <folder|folder's> location only if the old and new locations are both on the same volume.
+
+>*Warning:*  This <command> can be used to rename or move <files> and <folders> your stack did not create. Of course, a <stack> should not rename or move <files> and <folders> it didn't create without obtaining explicit confirmation from the user.
+
+Changes:
+The ability to move a file or folder on Mac OS and Windows systems with the rename command was introduced in version 1.1.1. In previous versions, the rename command could be used only to change the name, not the location.
+
+References: fileType (property), file (keyword), revCopyFile (command), create alias (command), tempName (function), files (function), folders (function), command (glossary), file (glossary), folder (glossary), stack (object)
+
+Tags: file system

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -109,7 +109,8 @@ typedef enum MCError
 	kMCErrorNoObjectProperty = 34,
 	kMCErrorNoObjectPropertyValue = 35,
 	kMCErrorInvalidInterfaceQuery = 36,
-	kMCErrorNotSupported = 37,
+    kMCErrorNotSupported = 37,
+    kMCErrorUnlicensed = 42,
 } MCError;
 
 typedef uint32_t MCValueOptions;
@@ -149,6 +150,8 @@ enum
     kMCOptionAsCFData = 25,
     kMCOptionAsCFArray = 26,
     kMCOptionAsCFDictionary = 27,
+    
+    kMCOptionAsNothing = 28,
     
 	kMCOptionNumberFormatDefault = 0 << 26,
 	kMCOptionNumberFormatDecimal = 1 << 26,
@@ -222,6 +225,8 @@ typedef enum MCExternalContextVar
     kMCExternalContextVarUnicodeLineDelimiter = 16,
     kMCExternalContextVarUnicodeColumnDelimiter = 17,
     kMCExternalContextVarUnicodeRowDelimiter = 18,
+	
+	kMCExternalContextVarHasLicenseCheck = 19,
 } MCExternalContextVar;
 
 typedef enum MCExternalVariableQuery
@@ -291,6 +296,9 @@ typedef struct MCExternalInterface
     
     // SN-2015-01-26: [[ Bug 14057 ]] Added new function in the API v6, to allow the users to choose their return type (for the delimiters)
     MCError (*context_query)(MCExternalContextVar op, MCValueOptions p_options, void *result);
+    
+    // MW-2016-02-17: [[ LicenseCheck ]] Method to check the engine's license
+    MCError (*license_check_edition)(unsigned int options, unsigned int min_edition);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -536,16 +544,12 @@ static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
 	
 	for(unsigned int t_index = 0; t_index < [src count] && t_error == kLCErrorNone; t_index++)
     {
-        // SN-2015-02-17: [[ ExternalsApiV6 ]] Fix issues on index string creation:
-        //   - needs a dynamically allocated t_key,
-        //   - needs to pass the pointer to this key to variable_lookup_key
-        //   - sprintf format should be "%u", not "%ud"
+        // We need to pass a pointer to the buffer variable to the lookup call so
+        // we use an array big enough to store an integer as a string and then
+        // assign that to a ptr var.
         char t_key[12];
         char *t_key_ptr;
         t_key_ptr = t_key;
-        
-        if (t_key == nil)
-            t_error = kLCErrorOutOfMemory;
         
 		if (t_error == kLCErrorNone)
 			sprintf(t_key, "%u", t_index + 1);
@@ -2664,7 +2668,26 @@ LCError LCInterfaceDismissModalViewController(UIViewController *p_controller, bo
 }
 	
 #endif
+    
+/////////
 
+LCError LCLicenseCheckEdition(unsigned int p_min_version)
+{
+    // If the external requires license calls, then abort if the engine is too
+    // old.
+    if (s_interface -> version < 7)
+	{
+        // Make sure we use the legacy context query API as older engines
+        // don't have the new one.
+		bool t_has_license_check;
+		if (s_interface -> context_query_legacy(kMCExternalContextVarHasLicenseCheck, &t_has_license_check) != kMCErrorNone ||
+			t_has_license_check == false)
+			return kLCErrorUnlicensed;
+	}
+	
+    return (LCError)s_interface -> license_check_edition(0, p_min_version);
+}
+    
 END_EXTERN_C
 
 ////////////////////////////////////////////////////////////////////////////////

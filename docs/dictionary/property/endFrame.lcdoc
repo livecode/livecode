@@ -1,0 +1,15 @@
+Name: endFrame
+
+Type: property
+
+Syntax: endFrame
+
+Summary: The <endFrame> <property> is not implemented and is <reserved word|reserved>.
+
+Introduced: 1.0
+
+OS: ios,android
+
+Platforms: desktop,server,web,mobile
+
+References: currentFrame (property), startFrame (property), property (glossary), reserved word (glossary)

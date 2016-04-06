@@ -1,0 +1,1 @@
+# Android fontsize change cause crashes

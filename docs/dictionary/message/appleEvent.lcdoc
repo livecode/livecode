@@ -1,0 +1,38 @@
+Name: appleEvent
+
+Type: message
+
+Syntax: appleEvent <class>, <ID>, <sender> 
+
+Summary: the <current card> whenever the <application> receives an <Apple event>.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac
+
+Platforms: desktop,web
+
+Example:
+on appleEvent theClass,theID -- execute a set of statements in a text file
+  if theClass is "misc" and theID is "dosc" then
+    request appleEvent data -- get the content of the AppleEvent
+    do URL ("file:" & it)
+  end if
+  pass appleEvent
+end appleEvent
+
+Parameters:
+class: The class and ID together identify the exact Apple event that was received.The class parameter is the event class: possible classes include aevt (for required Apple Events such as "open document" and "print"), misc (for miscellaneous events such as "do script"), and others.
+ID: The ID parameter is the name of the specific Apple event.
+sender: The sender parameter is the address of the process that sent the Apple event.
+
+Description:
+Handle the <appleEvent> <message> to respond to a custom <Apple event>, or one that you want to handle specially.
+
+Use the request appleEvent <command> to obtain the data associated with an <Apple event>.
+
+For more information about Apple events, see Apple Computer's technical documentation, Inside Macintosh: Interapplication Communication, located at http://developer.apple.com/documentation/mac/IAC/IAC-2.html.
+
+References: send to program (command), flushEvents (function), application (glossary), current card (glossary), Apple Event (glossary), command (glossary), message (glossary)

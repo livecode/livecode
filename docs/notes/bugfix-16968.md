@@ -1,0 +1,1 @@
+# Check selected widget handles for focus in widget event manager

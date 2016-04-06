@@ -1,0 +1,32 @@
+Name: codeunit
+
+Type: keyword
+
+Syntax: codeunit
+
+Summary: Designates the encoded unit in which a codepoint is stored.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get codeunit 1 of tString
+
+Example:
+get the first codeunit of tString
+
+Description:
+Use the <codeunit> <keyword> to refer to the encoded units in which codepoints are stored.
+
+A <codeunit> is the encoded units in which codepoints are stored (e.g. 16 bit words in UTF-16 or 8-bit bytes in UTF-8). Although the engine currently uses UTF-16 for storage of Unicode text, this should not be relied upon. The byte order of the codeunits depends on the platform and it is not guaranteed that the engine will always use UTF-16 for text storage. 
+
+The hierarchy of the new and altered chunk types is as follows:
+
+byte w of codeunit x of codepoint y of char z of word ...
+
+>*Note:* This chunk type is not of general utility.
+
+References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), codepoints (keyword), bytes (keyword), byte (keyword), keyword (glossary)

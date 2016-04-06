@@ -1,0 +1,14 @@
+Name: shortcut
+
+Synonyms: shortcut,short cut,file shortcut,file short cut
+
+Type: glossary
+
+Description:
+On <Windows|Windows systems>, a special file type that refers to another <file>. Double-clicking the shortcut opens the <file> it refers to. 
+ 
+(The <Mac OS> and <OS X> equivalent is the <alias>. The <Unix> equivalent is the <symbolic link>.)
+
+References: file (glossary), OS X (glossary), alias (glossary), Windows (glossary), symbolic link (glossary), Unix (glossary), Mac OS (glossary)
+
+Tags: file system

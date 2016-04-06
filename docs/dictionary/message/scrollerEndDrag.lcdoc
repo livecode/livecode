@@ -1,0 +1,31 @@
+Name: scrollerEndDrag
+
+Type: message
+
+Syntax: scrollerEndDrag <didDecelerate> 
+
+Summary: Sent when a scroll initiating drag is finished.
+
+Introduced: 4.5.3
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on scrollerEndDrag
+   put "Scroll by dragging finished" into field "scroller status"
+end scrollerEndDrag
+
+Parameters:
+didDecelerate: 
+didDecelerate (iOS Only): Either 'true' or 'false' specifying whether the scroll decelerated or not.
+
+Description:
+The <scrollerEndDrag> message is sent when a scroll that was initiated by dragging on a scroller control created using the <mobileControlCreate> command finishes.
+
+Handle the <scrollerEndDrag> message if you want to move LiveCode controls, make changes to the interface or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+
+The <scrollerEndDrag> message is sent to the object containing the script that created the scroller control.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), scrollerEndDecelerate (message), scrollerBeginDecelerate (message), scrollerBeginDrag (message), scrollerDidScroll (message), scrollerScrollToTop (message)

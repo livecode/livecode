@@ -1,0 +1,12 @@
+Name: constant
+
+Synonyms: constant
+
+Type: glossary
+
+Description:
+A <value> that has a name, like a <variable>, but that doesn't change.
+
+References: value (glossary), variable (glossary)
+
+Tags: properties

@@ -1,0 +1,10 @@
+Name: datagram
+
+Synonyms: datagram
+
+Type: glossary
+
+Description:
+A self-contained clump of data that contains information about the route it should take to the system intended to receive it.
+
+Tags: networking

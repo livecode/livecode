@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -89,9 +89,10 @@ PACKED_INLINE float magic_sqrt (float number)
 {
 	float x = number;
 	float xhalf = 0.5f*x;
-	int i = *(int*) &x;
+	int i;
+	memcpy(&i, &x, sizeof(i));
 	i = 0x5f375a84 - ( i >> 1 );
-	x = *(float*) &i;
+	memcpy(&x, &i, sizeof(x));
 	x = x*(1.5f-xhalf*x*x);
 	return number * x;
 
@@ -101,12 +102,14 @@ PACKED_INLINE float magic_sqrt (float number)
 PACKED_INLINE float inv_sqrt (float x)
 {
 	float xhalf = 0.5f*x;
-	int i = *(int*) &x;
+	int i;
+	memcpy(&i, &x, sizeof(i));
 	i = 0x5f375a84 - ( i >> 1 );
-	x = *(float*) &i;
+	memcpy(&x, &i, sizeof(x));
 	x = x*(1.5f-xhalf*x*x);
 	return x;
 
 }
+
 
 #endif

@@ -1,0 +1,34 @@
+Name: editMenus
+
+Type: property
+
+Syntax: set the editMenus of <stack> to {true | false}
+
+Summary: Specifies that the <menu bar> appears at the top of the <stack window>.
+
+Associations: stack
+
+Introduced: 1.0
+
+OS: mac,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the editMenus of this stack to true
+
+Value (bool):The <editMenus> of a <stack> is true or false.
+By default, the <editMenus> <property> of newly created <stacks> is set to false.
+
+Description:
+Use the <editMenus> <property> to get access to the <menu bar> for editing on <Mac OS|Mac OS systems>.
+
+On Mac OS systems, the menu bar appears at the top of the screen. On Unix and Windows systems, the menu bar appears at the top of the stack window.
+
+If the <editMenus> <property> is set to true, the <group> specified in the <stack|stack's> <menubar> <property> is displayed at the top of the window, and the <stack window> is resized to accommodate it. If the <editMenus> <property> is set to false, the <stack window> is scrolled and resized so that the <menu bar> <group> does not appear in the window. The <vScroll> of a <stack> reports the amount the <stack> has been scrolled down to accommodate a <menu bar>.
+
+If the stack's menubar <property> is empty, the <editMenus> <property> has no effect.
+
+References: defaultMenubar (property), menubar (property), vScroll (property), group (command), stack (object), property (glossary), menu bar (glossary), stack window (glossary), Mac OS (glossary), stacks (function)
+
+Tags: menus

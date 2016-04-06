@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -158,7 +158,8 @@ struct SyntaxRule
     SyntaxNodeRef expr;
     SyntaxMethodRef methods;
     long *mapping;
-
+    const char *deprecation_message;
+    
     SyntaxMethodRef current_method;
 };
 
@@ -175,13 +176,16 @@ static SyntaxRuleRef s_rule = NULL;
 static SyntaxNodeRef s_stack[MAX_NODE_DEPTH];
 static unsigned int s_stack_index = 0;
 
-static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right);
+static long *s_invoke_lists = NULL;
+static long s_invoke_list_size = 0;
+
+static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values);
 
 static FILE* s_output;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void *Allocate(size_t p_size)
+void *Allocate(size_t p_size)
 {
     void *t_ptr;
     t_ptr = calloc(1, p_size);
@@ -190,7 +194,7 @@ static void *Allocate(size_t p_size)
     return t_ptr;
 }
 
-static void *Reallocate(void *p_ptr, size_t p_new_size)
+void *Reallocate(void *p_ptr, size_t p_new_size)
 {
     void *t_new_ptr;
     t_new_ptr = realloc(p_ptr, p_new_size);
@@ -270,10 +274,26 @@ void EndSyntaxRule(void)
     for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
     {
         if (s_rule -> kind != kSyntaxRuleKindPhrase &&
-            IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr) &&
-            s_rule -> kind == t_group -> rules -> kind &&
-            s_rule -> precedence == t_group -> rules -> precedence)
+            IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr, 0) &&
+            s_rule -> kind == t_group -> rules -> kind)
+        {
+            const char *t_rule_name, *t_other_rule_name;
+            GetStringOfNameLiteral(s_rule -> name, &t_rule_name);
+            GetStringOfNameLiteral(t_group -> rules -> name, &t_other_rule_name);
+            if (s_rule -> precedence != t_group -> rules -> precedence)
+            {
+                Error_Bootstrap("Rule '%s' and '%s' have conflicting precedence", t_rule_name, t_other_rule_name);
+                break;
+            }
+            
+            if (!IsSyntaxNodeEqualTo(s_rule -> expr, t_group -> rules -> expr, 1))
+            {
+                Error_Bootstrap("Rule '%s' and '%s' have conflicting methods", t_rule_name, t_other_rule_name);
+                break;
+            }
+            
             break;
+        }
     }
     
     if (t_group == NULL)
@@ -289,6 +309,12 @@ void EndSyntaxRule(void)
     t_group -> rules = s_rule;
     
     s_rule = NULL;
+}
+
+void DeprecateSyntaxRule(const char *p_message)
+{
+	assert(s_rule != NULL);
+    s_rule -> deprecation_message = p_message;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,7 +335,41 @@ static int IsMarkSyntaxNode(SyntaxNodeRef p_node)
     return p_node -> kind >= kSyntaxNodeKindBooleanMark;
 }
 
-static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
+static int IsMarkSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
+{
+    if (p_left -> kind != p_right -> kind)
+        return 0;
+    
+    switch(p_left -> kind)
+    {
+        case kSyntaxNodeKindBooleanMark:
+            if (p_left -> boolean_mark  . value != p_right -> boolean_mark . value)
+                return 0;
+            break;
+            
+        case kSyntaxNodeKindIntegerMark:
+            if (p_left -> integer_mark  . value != p_right -> integer_mark . value)
+                return 0;
+            break;
+            
+        case kSyntaxNodeKindRealMark:
+            if (p_left -> real_mark  . value != p_right -> real_mark . value)
+                return 0;
+            break;
+            
+        case kSyntaxNodeKindStringMark:
+            if (p_left -> string_mark . value != p_right -> string_mark . value)
+                return 0;
+            break;
+            
+        default:
+            return 0;
+    }
+    
+    return 1;
+}
+
+static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values)
 {
     if (p_left -> kind != p_right -> kind)
         return 0;
@@ -335,6 +395,10 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
         case kSyntaxNodeKindStringMark:
             if (p_left -> boolean_mark . index != p_right -> boolean_mark . index)
                 return 0;
+            if (p_with_mark_values == 0)
+                return 1;
+            if (!IsMarkSyntaxNodeEqualTo(p_left, p_right))
+                return 0;
             break;
             
         case kSyntaxNodeKindConcatenate:
@@ -354,7 +418,7 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
                 
                 if (t_left_child != NULL && t_right_child != NULL)
                 {
-                    if (!IsSyntaxNodeEqualTo(t_left_child, t_right_child))
+                    if (!IsSyntaxNodeEqualTo(t_left_child, t_right_child, p_with_mark_values))
                         return 0;
                 }
                 else if (t_left_child != NULL)
@@ -374,30 +438,30 @@ static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right)
 		}
         case kSyntaxNodeKindAlternate:
 		{
-			int i;
+			int i, t_found;
             if (p_left -> alternate . operand_count != p_right -> alternate . operand_count)
                 return 0;
             if (p_left -> alternate . is_nullable != p_right -> alternate . is_nullable)
                 return 0;
+            t_found = 0;
             for(i = 0; i < p_left -> alternate . operand_count; i++)
             {
-                int j, t_found;
-                t_found = 0;
+                int j;
                 for(j = 0; j < p_right -> alternate . operand_count; j++)
-                    if (IsSyntaxNodeEqualTo(p_left -> alternate . operands[i], p_right -> alternate . operands[j]))
+                    if (IsSyntaxNodeEqualTo(p_left -> alternate . operands[i], p_right -> alternate . operands[j], p_with_mark_values))
                     {
-                        t_found = 1;
+                        t_found += 1;
                         break;
                     }
-                if (!t_found)
-                    return 0;
             }
+            if (t_found != p_left -> alternate . operand_count)
+                return 0;
             break;
 		}
         case kSyntaxNodeKindRepeat:
-            if (!IsSyntaxNodeEqualTo(p_left -> repeat . element, p_right -> repeat . element))
+            if (!IsSyntaxNodeEqualTo(p_left -> repeat . element, p_right -> repeat . element, p_with_mark_values))
                 return 0;
-            if (!IsSyntaxNodeEqualTo(p_left -> repeat . delimiter, p_right -> repeat . delimiter))
+            if (!IsSyntaxNodeEqualTo(p_left -> repeat . delimiter, p_right -> repeat . delimiter, p_with_mark_values))
                 return 0;
             break;
     }
@@ -1101,7 +1165,7 @@ static void MergeSyntaxNodes(SyntaxNodeRef p_node, SyntaxNodeRef p_other_node, l
         {
             int j;
 			for(j = 0; j < p_other_node -> alternate . operand_count; j++)
-                if (IsSyntaxNodeEqualTo(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j]))
+                if (IsSyntaxNodeEqualTo(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j], 0))
                     MergeSyntaxNodes(p_node -> alternate . operands[i], p_other_node -> alternate . operands[j], x_next_mark, x_mapping);
         }
     }
@@ -1335,7 +1399,10 @@ static void GenerateSyntaxRuleExplicitAndUnusedMarks(SyntaxNodeRef p_node)
                     fprintf(s_output, "EXPRESSION'%s(UndefinedPosition)", p_node -> marks[i] . value -> boolean_mark . value == 0 ? "false" : "true");
                     break;
                 case kSyntaxNodeKindIntegerMark:
-                    fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    if (p_node -> marks[i] . value -> integer_mark . value < 0)
+                        fprintf(s_output, "EXPRESSION'integer(UndefinedPosition, %ld)", p_node -> marks[i] . value -> integer_mark . value);
+                    else
+                        fprintf(s_output, "EXPRESSION'unsignedinteger(UndefinedPosition, %lu)", (unsigned long)p_node -> marks[i] . value -> integer_mark . value);
                     break;
                 case kSyntaxNodeKindRealMark:
                     fprintf(s_output, "EXPRESSION'real(UndefinedPosition, Mark%ldValue)", p_node -> marks[i] . index);
@@ -1543,49 +1610,74 @@ static void GenerateUmbrellaSyntaxRule(const char *p_name, SyntaxRuleKind p_firs
     }
 }
 
+static const char *s_invoke_modes[] = { "In_Mode", "Out_Mode", "InOut_Mode" };
 static void GenerateInvokeMethodArg(SyntaxArgumentRef p_arg)
 {
-    static const char *s_modes[] = { "in", "out", "inout" };
-	
 	if (p_arg == NULL)
     {
-        fprintf(s_output, "nil");
+        fprintf(s_output, "Signature_Nil");
         return;
     }
     
-    fprintf(s_output, "invokesignature(%s, %ld, ", s_modes[p_arg -> mode], p_arg -> index);
+    fprintf(s_output, "invokesignature(%s, %ld, ", s_invoke_modes[p_arg -> mode], p_arg -> index);
     GenerateInvokeMethodArg(p_arg -> next);
     fprintf(s_output, ")");
 }
 
 static void GenerateInvokeMethodList(int p_index, int p_method_index, SyntaxMethodRef p_method)
 {
-    static const char *s_method_types[] = { "execute", "evaluate", "assign", "iterate" };
+    static const char *s_method_types[] = { "Execute_Type", "Evaluate_Type", "Assign_Type", "Iterate_Type" };
     const char *t_name;
-	
+	int t_arity;
+    SyntaxArgumentRef t_arg;
+    
 	if (p_method == NULL)
     {
-        fprintf(s_output, "    where(INVOKEMETHODLIST'nil -> MethodList_%d_%d)\n", p_index, p_method_index);
+        fprintf(s_output, "    where(MethodList_Nil -> MethodList_%d_%d)\n", p_index, p_method_index);
         return;
     }
-
-    GenerateInvokeMethodList(p_index, p_method_index + 1, p_method -> next);
+    
+    if (p_method -> next != NULL)
+        GenerateInvokeMethodList(p_index, p_method_index + 1, p_method -> next);
+    
+    for(t_arity = 0, t_arg = p_method -> arguments; t_arg != NULL; t_arity += 1, t_arg = t_arg -> next)
+        ;
+    
+    if (t_arity > 0 && t_arity <= 3)
+    {
+        fprintf(s_output, "    MakeCustomInvokeMethodArgs%d(", t_arity);
+        for(t_arg = p_method -> arguments; t_arg != NULL; t_arg = t_arg -> next)
+        {
+            fprintf(s_output, "%s, %ld", s_invoke_modes[t_arg -> mode], t_arg -> index);
+            if (t_arg -> next != NULL)
+                fprintf(s_output, ", ");
+        }
+        fprintf(s_output, " -> MethodListArgs_%d_%d)\n", p_index, p_method_index);
+    }
     
     GetStringOfNameLiteral(p_method -> name, &t_name);
-    fprintf(s_output, "    where(INVOKEMETHODLIST'methodlist(\"%s\", %s, ", t_name, s_method_types[p_method -> type]);
-    
-    GenerateInvokeMethodArg(p_method -> arguments);
-    
-    fprintf(s_output, ", MethodList_%d_%d) -> MethodList_%d_%d)\n", p_index, p_method_index + 1, p_index, p_method_index);
+    fprintf(s_output, "    MakeCustomInvokeMethodList(\"%s\", %s, ", t_name, s_method_types[p_method -> type]);
+    if (t_arity == 0)
+    {
+        fprintf(s_output, " Signature_Nil");
+    }
+    else if (t_arity < 3)
+        fprintf(s_output, "  MethodListArgs_%d_%d", p_index, p_method_index);
+    else
+        GenerateInvokeMethodArg(p_method -> arguments);
+    if (p_method -> next != NULL)
+        fprintf(s_output, ", MethodList_%d_%d -> MethodList_%d_%d)\n", p_index, p_method_index + 1, p_index, p_method_index);
+    else
+        fprintf(s_output, ", MethodList_Nil -> MethodList_%d_%d)\n", p_index, p_method_index);
 }
 
 static void GenerateInvokeLists(void)
 {
     int t_method_index = 1;
 	SyntaxRuleGroupRef t_group;
-	
-	for (t_group = s_groups; t_group != NULL; t_group = t_group -> next)
-        fprintf(s_output, "'var' CustomInvokeList%d: INVOKELIST\n", t_group -> index);
+    
+    int t_entry_count;
+    t_entry_count = 0;
     
     fprintf(s_output, "'action' InitializeCustomInvokeLists()\n");
     fprintf(s_output, "  'rule' InitializeCustomInvokeLists():\n");
@@ -1594,7 +1686,23 @@ static void GenerateInvokeLists(void)
         int t_index = 1;
 		SyntaxRuleRef t_rule;
         
-        fprintf(s_output, "    where(INVOKELIST'nil -> List_%d_0)\n", t_group -> index);
+        if ((t_entry_count % 10) == 0)
+        {
+            fprintf(s_output, "    InitializeCustomInvokeLists_%d\n\n", t_entry_count);
+            fprintf(s_output, "'action' InitializeCustomInvokeLists_%d\n", t_entry_count);
+            fprintf(s_output, "  'rule' InitializeCustomInvokeLists_%d\n", t_entry_count);
+            fprintf(s_output, "    where(INVOKELIST'nil -> List_Nil)\n");
+            fprintf(s_output, "    where(INVOKEMETHODLIST'nil -> MethodList_Nil)\n");
+            fprintf(s_output, "    where(INVOKESIGNATURE'nil -> Signature_Nil)\n");
+            fprintf(s_output, "    where(MODE'in -> In_Mode)\n");
+            fprintf(s_output, "    where(MODE'out -> Out_Mode)\n");
+            fprintf(s_output, "    where(MODE'inout -> InOut_Mode)\n");
+            fprintf(s_output, "    where(INVOKEMETHODTYPE'execute -> Execute_Type)\n");
+            fprintf(s_output, "    where(INVOKEMETHODTYPE'evaluate -> Evaluate_Type)\n");
+            fprintf(s_output, "    where(INVOKEMETHODTYPE'assign -> Assign_Type)\n");
+            fprintf(s_output, "    where(INVOKEMETHODTYPE'iterate -> Iterate_Type)\n");
+        }
+        
         for (t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
         {
             const char *t_module, *t_name;
@@ -1603,100 +1711,21 @@ static void GenerateInvokeLists(void)
             
             GetStringOfNameLiteral(t_rule -> module, &t_module);
             GetStringOfNameLiteral(t_rule -> name, &t_name);
-            fprintf(s_output, "    Info_%d_%d::INVOKEINFO\n", t_group -> index, t_index);
-            fprintf(s_output, "    Info_%d_%d'Index <- -1\n", t_group -> index, t_index);
-            fprintf(s_output, "    Info_%d_%d'ModuleIndex <- -1\n", t_group -> index, t_index);
-            fprintf(s_output, "    Info_%d_%d'Name <- \"%s\"\n", t_group -> index, t_index, t_name);
-            fprintf(s_output, "    Info_%d_%d'ModuleName <- \"%s\"\n", t_group -> index, t_index, t_module);
-            fprintf(s_output, "    Info_%d_%d'Methods <- MethodList_%d_%d\n", t_group -> index, t_index, t_method_index, 0);
+            if (t_index - 1 > 0)
+                fprintf(s_output, "    MakeCustomInvokeList(\"%s\", \"%s\", MethodList_%d_%d, List_%d_%d -> List_%d_%d)\n",
+                    t_name, t_module, t_method_index, 0, t_group -> index, t_index - 1, t_group -> index, t_index);
+            else
+                fprintf(s_output, "    MakeCustomInvokeList(\"%s\", \"%s\", MethodList_%d_%d, List_Nil -> List_%d_%d)\n",
+                        t_name, t_module, t_method_index, 0, t_group -> index, t_index);
             
-            fprintf(s_output, "    where(invokelist(Info_%d_%d, List_%d_%d) -> List_%d_%d)\n", t_group -> index, t_index, t_group -> index, t_index - 1, t_group -> index, t_index);
             t_index += 1;
             t_method_index += 1;
         }
-        fprintf(s_output, "    CustomInvokeList%d <- List_%d_%d\n", t_group -> index, t_group -> index, t_index - 1);
-    }
-    
-    fprintf(s_output, "'action' CustomInvokeLists(INT -> INVOKELIST)\n");
-    for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
-    {
-        fprintf(s_output, "  'rule' CustomInvokeLists(Index -> List):\n");
-        fprintf(s_output, "    eq(Index, %d)\n", t_group -> index);
-        fprintf(s_output, "    CustomInvokeList%d -> List\n", t_group -> index);
+        fprintf(s_output, "    DefineCustomInvokeList(%d, List_%d_%d)\n", t_group -> index, t_group -> index, t_index - 1);
+        
+        t_entry_count += 1;
     }
 }
-
-#if 0
-static void GenerateInvokeLists(void)
-{
-    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
-        fprintf(s_output, "'var' CustomInvokeList%d: INVOKELIST\n", t_group -> index);
-    
-    fprintf(s_output, "'action' InitializeCustomInvokeLists()\n");
-    fprintf(s_output, "  'rule' InitializeCustomInvokeLists():\n");
-    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
-    {
-        static const char *s_modes[] = { "in", "out", "inout" };
-        
-        int t_index;
-        t_index = 1;
-        fprintf(s_output, "    where(INVOKESIGNATURE'nil -> LSig_%d_%d)\n", t_group -> index, 0);
-        fprintf(s_output, "    where(INVOKESIGNATURE'nil -> RSig_%d_%d)\n", t_group -> index, 0);
-        
-        SyntaxNodeRef t_node;
-        t_node = t_group -> rules -> expr;
-        
-        if (t_node -> right_trimmed)
-        {
-            fprintf(s_output, "    where(invokesignature(%s, LSig_%d_%d) -> LSig_%d_%d)\n", s_modes[t_node -> right_lmode], t_group -> index, t_index - 1, t_group -> index, t_index);
-            fprintf(s_output, "    where(invokesignature(%s, RSig_%d_%d) -> RSig_%d_%d)\n", s_modes[t_node -> right_rmode], t_group -> index, t_index - 1, t_group -> index, t_index);
-            t_index += 1;
-        }
-        for(int i = t_group -> rules -> expr -> mark_count; i > 0; i--)
-        {
-            fprintf(s_output, "    where(invokesignature(%s, LSig_%d_%d) -> LSig_%d_%d)\n", s_modes[t_group -> rules -> expr -> marks[i - 1] . lmode], t_group -> index, t_index - 1, t_group -> index, t_index);
-            fprintf(s_output, "    where(invokesignature(%s, RSig_%d_%d) -> RSig_%d_%d)\n", s_modes[t_group -> rules -> expr -> marks[i - 1] . rmode], t_group -> index, t_index - 1, t_group -> index, t_index);
-            t_index += 1;
-        }
-        if (t_node -> left_trimmed)
-        {
-            fprintf(s_output, "    where(invokesignature(%s, LSig_%d_%d) -> LSig_%d_%d)\n", s_modes[t_node -> left_lmode], t_group -> index, t_index - 1, t_group -> index, t_index);
-            fprintf(s_output, "    where(invokesignature(%s, RSig_%d_%d) -> RSig_%d_%d)\n", s_modes[t_node -> left_rmode], t_group -> index, t_index - 1, t_group -> index, t_index);
-            t_index += 1;
-        }
-        fprintf(s_output, "    where(LSig_%d_%d -> LSig_%d)\n", t_group -> index, t_index - 1, t_group -> index);
-        fprintf(s_output, "    where(RSig_%d_%d -> RSig_%d)\n", t_group -> index, t_index - 1, t_group -> index);
-        
-        t_index = 1;
-        fprintf(s_output, "    where(INVOKELIST'nil -> List_%d_0)\n", t_group -> index);
-        for(SyntaxRuleRef t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
-        {
-            const char *t_module, *t_name;
-            GetStringOfNameLiteral(t_rule -> module, &t_module);
-            GetStringOfNameLiteral(t_rule -> name, &t_name);
-            fprintf(s_output, "    Info_%d_%d::INVOKEINFO\n", t_group -> index, t_index);
-            fprintf(s_output, "    Info_%d_%d'Index <- -1\n", t_group -> index, t_index);
-            fprintf(s_output, "    Info_%d_%d'ModuleIndex <- -1\n", t_group -> index, t_index);
-            fprintf(s_output, "    Info_%d_%d'Name <- \"%s\"\n", t_group -> index, t_index, t_name);
-            fprintf(s_output, "    Info_%d_%d'ModuleName <- \"%s\"\n", t_group -> index, t_index, t_module);
-            fprintf(s_output, "    Info_%d_%d'RSignature <- RSig_%d\n", t_group -> index, t_index, t_group -> index);
-            fprintf(s_output, "    Info_%d_%d'LSignature <- LSig_%d\n", t_group -> index, t_index, t_group -> index);
-            
-            fprintf(s_output, "    where(invokelist(Info_%d_%d, List_%d_%d) -> List_%d_%d)\n", t_group -> index, t_index, t_group -> index, t_index - 1, t_group -> index, t_index);
-            t_index += 1;
-        }
-        fprintf(s_output, "    CustomInvokeList%d <- List_%d_%d\n", t_group -> index, t_group -> index, t_index - 1);
-    }
-    
-    fprintf(s_output, "'action' CustomInvokeLists(INT -> INVOKELIST)\n");
-    for(SyntaxRuleGroupRef t_group = s_groups; t_group != NULL; t_group = t_group -> next)
-    {
-        fprintf(s_output, "  'rule' CustomInvokeLists(Index -> List):\n");
-        fprintf(s_output, "    eq(Index, %d)\n", t_group -> index);
-        fprintf(s_output, "    CustomInvokeList%d -> List\n", t_group -> index);
-    }
-}
-#endif
 
 static void GenerateTokenList(void)
 {
@@ -1729,7 +1758,29 @@ static void GenerateTokenList(void)
     }
 }
 
+void DefineCustomInvokeList(long index, long ptr)
+{
+    if (index >= s_invoke_list_size)
+    {
+        while(index >= s_invoke_list_size)
+        {
+            if (s_invoke_list_size == 0)
+                s_invoke_list_size = 1;
+            s_invoke_list_size *= 2;
+        }
+    
+        s_invoke_lists = (long *)Reallocate(s_invoke_lists, s_invoke_list_size * sizeof(long));
+    }
+    s_invoke_lists[index] = ptr;
+}
+
+void LookupCustomInvokeList(long index, long *r_ptr)
+{
+    *r_ptr = s_invoke_lists[index];
+}
+
 extern void DumpSyntaxRules(void);
+extern void DumpSyntaxMethods(void);
 void GenerateSyntaxRules(void)
 {
     FILE *t_template;
@@ -1737,12 +1788,12 @@ void GenerateSyntaxRules(void)
 	int t_index;
 	SyntaxRuleGroupRef t_group;
 
-    t_output = OpenOutputFile(NULL);
+    t_output = OpenOutputGrammarFile(NULL);
     
     if (t_output != NULL)
         s_output = t_output;
     else
-        s_output = t_output = stderr;
+	    return;
     
     t_template = OpenTemplateFile();
     if (t_template != NULL)
@@ -1782,6 +1833,8 @@ void GenerateSyntaxRules(void)
         
         t_group -> index = t_index;
         GenerateSyntaxRule(&t_index, t_rule -> expr, t_rule -> kind, t_rule);
+        if (t_rule -> deprecation_message != NULL)
+            fprintf(s_output, "    Warning_DeprecatedSyntax(Position, \"%s\")\n", t_rule -> deprecation_message);
         
         if (t_rule -> kind == kSyntaxRuleKindPhrase)
         {
@@ -1802,8 +1855,6 @@ void GenerateSyntaxRules(void)
     
     GenerateInvokeLists();
     GenerateTokenList();
-
-    DumpSyntaxRules();
 }
 
 void DumpSyntaxRules(void)
@@ -1823,6 +1874,54 @@ void DumpSyntaxRules(void)
             printf("[%d] ", t_gindex);
             PrintSyntaxNode(t_rule -> expr);
             printf("\n");
+        }
+        t_gindex += 1;
+    }
+}
+
+void PrintSyntaxMethod(SyntaxMethodRef self)
+{
+    const char *t_name;
+    struct SyntaxArgument *t_arg;
+    GetStringOfNameLiteral(self -> name, &t_name);
+    printf("%s(", t_name);
+    for(t_arg = self -> arguments; t_arg != NULL; t_arg = t_arg -> next)
+    {
+        if (t_arg != self -> arguments)
+            printf(", ");
+        printf("%s %ld", t_arg -> mode == 0 ? "in" : t_arg -> mode == 1 ? "out" : "inout", t_arg -> index);
+        
+        {
+            printf(" {");
+        
+            printf("}");
+        }
+    }
+    printf(")");
+}
+
+void DumpSyntaxMethods(void)
+{
+    int t_gindex;
+	SyntaxRuleGroupRef t_group;
+    
+    t_gindex = 0;
+    for (t_group = s_groups; t_group != NULL; t_group = t_group -> next)
+    {
+        SyntaxRuleRef t_rule;
+		
+		for (t_rule = t_group -> rules; t_rule != NULL; t_rule = t_rule -> next)
+        {
+            const char *t_name;
+            SyntaxMethodRef t_method;
+            
+            GetStringOfNameLiteral(t_rule -> name, &t_name);
+            for(t_method = t_rule -> methods; t_method != NULL; t_method = t_method -> next)
+            {
+                printf("[%d] [%s] ", t_gindex, t_name);
+                PrintSyntaxMethod(t_method);
+                printf("\n");
+            }
         }
         t_gindex += 1;
     }

@@ -1,0 +1,32 @@
+Name: looping
+
+Type: property
+
+Syntax: set the looping of <player> to {true | false}
+
+Summary: Specifies whether a movie or sound stops at the end, or restarts from the beginning.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the looping of last player to true
+
+Value (bool):The <looping> of a <player(keyword)> is true or false.
+By default, the <looping> <property> of newly created <player(object)|players> is set to false.
+
+Description:
+Use the <looping> <property> to set a movie or sound to continuous play.
+
+If a player's <looping> <property> is set to true, when the movie or sound is played, it repeats over and over until stopped by the user or a <handler>. If the <looping> is false, the sound or movie plays through only once, then stops.
+
+If the player's playSelection <property> is true, only the <selected> portion of the movie or sound is played.
+
+References: endTime (property), repeatCount (property), selected (property), duration (property), startTime (property), playRate (property), player (keyword), start (command), play (command), player (object), property (glossary), handler (glossary)
+
+Tags: multimedia

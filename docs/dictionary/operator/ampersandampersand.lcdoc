@@ -1,0 +1,35 @@
+Name: &&
+
+Type: operator
+
+Syntax: <string1> && <string2> 
+
+Summary: <concatenate|Concatenates> two <string|strings> and inserts a space between them.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put "my" && "house" -- evaluates to "my house"
+
+Example:
+put field "First" && field "Last" into field "Name"
+
+Example:
+find it && "Card"
+
+Parameters:
+string1 (string): And <string2> are <literal string|literal strings> of characters (<delimit|delimited> with <double quote|double quotes>), or <expression|expressions> that <evaluate> to <string|strings>.
+string2 (string): 
+
+The result: The result of the  <operator> is a <string(keyword)> consisting of <string1>, a space, and <string2>.
+
+Description:
+Use the && <operator> to combine two <string(glossary)|strings> with a space between them, for example, to combine two words or phrases. 
+
+References: split (command), \ (keyword), string (keyword), string (glossary), concatenate (glossary), operator (glossary)
+
+Tags: text processing

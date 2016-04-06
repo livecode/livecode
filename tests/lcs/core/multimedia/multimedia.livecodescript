@@ -1,0 +1,79 @@
+script "CoreMultimedia"
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+
+on TestMultimedia1
+
+
+if the platform is not "win32" then
+	TestAssert "test", mcisendstring("") is "not supported"
+else
+	local tQuantity
+	put mcisendstring("sysinfo all quantity") into tQuantity
+	TestAssert "test", tQuantity is not empty
+	TestAssert "test", tQuantity is an integer
+	
+	get mcisendstring("invalid command")
+	TestAssert "test", the result is not empty
+end if
+
+end TestMultimedia1
+on TestMultimedia2
+
+if the platform is not among the items of "linux,HTML5" and \
+      the qtversion is not "0.0" then
+  TestAssert "test", the qteffects is not empty
+else
+  TestAssert "test", the qteffects is empty
+end if
+
+end TestMultimedia2
+on TestMultimedia3
+
+
+local tVersion
+put the qtversion into tVersion
+
+set the itemdelimiter to "."
+repeat for each item tComponent in tVersion
+   TestAssert "test", tComponent is an integer
+end repeat
+
+end TestMultimedia3
+on TestMultimedia4
+
+if the platform is not "linux" then
+TestAssert "test", the recordloudness is a number
+else
+TestAssert "test", true
+end if
+
+end TestMultimedia4
+
+
+on TestRecordCompressionTypes
+
+  if (the platform is "MacOS" or the platform is "Win32") then
+    if the qtversion is not "0.0" then
+      TestAssert "testRecordCompressionTypesNotEmpty", the recordCompressionTypes is not empty
+    else
+      TestAssert "testRecordCompressionTypesEmpty", the recordCompressionTypes is empty
+    end if
+  end if
+
+end TestRecordCompressionTypes

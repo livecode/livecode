@@ -1,0 +1,44 @@
+Name: sheet
+
+Type: command
+
+Syntax: sheet <stack> [in <parentStack>]
+
+Summary: Displays a <stack> as a <sheet|sheet dialog box>.
+
+Introduced: 2.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+sheet stack "myFilePickerStack"
+
+Example:
+sheet me in stack "project1"
+
+Parameters:
+stack: Any stack reference.
+parentStack: Any open stack that is not being displayed as a sheet.
+
+Description:
+Use the <sheet> <command> to display a <stack> as a custom <sheet(command)>.
+
+The <sheet> <command> opens the <stack> as a <sheet(command)> in the window of the specified <parentStack>. If you don't specify a <parentStack>, the <sheet(command)> is displayed in the window of the <defaultStack>.
+
+The stack's <rectangle> and <location> <properties> are ignored.
+
+While a sheet dialog box is open, nothing else can be done in the stack the sheet is displayed in. Because of this, you should use sheets only when a stack must obtain feedback from the user before it can continue.
+
+If the stack is already open, the <sheet> <command> closes the <stack> and reopens it as a <sheet(command)>, so <closeStack> and <openStack>, <closeCard> and <openCard>, and (if applicable) <closeBackground> and <openBackground> <message|messages> are sent to the parentStack's <current card> as a result of <execute|executing> this <command>. Use the <lock messages> <command> before <execute|executing> modal if you want to prevent the close <message|messages> from being sent; the open <message|messages> are sent regardless of the setting of the <lockMessages> <property>.
+
+The <sheet> <command> pauses the running <handler> until the <sheet(command)> is dismissed (usually by clicking a button in the <sheet(command)>). To <return> information to the <handler> about which <button(keyword)> was clicked, in the <button(object)|button's> <script>, set a <global|global variable> or <custom property>. After the <dialog box> is dismissed, the <handler> can query this <variable> or <property> and act accordingly.
+
+Attempting to open a sheet from within another sheet displays the second <stack> as a <modal dialog box> instead.
+
+>*Cross-platform note:* <sheet(glossary)|Sheets> are only used on <OS X|OS X systems>. If you use the <sheet> <command> on a <Mac OS>, <Unix>, or <Windows|Windows system>, the <stack> is displayed as a <modal dialog box> and the <parentStack> <parameter> is ignored.
+
+References: defaultStack (property), script (property), properties (property), lockMessages (property), openCard (message), closeStack (message), closeCard (message), closeBackground (message), openStack (message), openBackground (message), rectangle (keyword), button (keyword), stack (object), button (object), sheet (glossary), variable (glossary), handler (glossary), property (glossary), location (glossary), modal dialog box (glossary), execute (glossary), dialog box (glossary), command (glossary), Windows (glossary), global (glossary), OS X (glossary), custom property (glossary), Unix (glossary), Mac OS (glossary), message (glossary), parameter (glossary), current card (glossary), sheet (command), lock messages (command), ask (command), modeless (command), return (constant)
+
+Tags: windowing

@@ -1,0 +1,39 @@
+Name: global
+
+Type: command
+
+Syntax: global <variableNameList> 
+
+Summary: Declares a <global> <variable>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+global gUserName
+
+Example:
+global gThisThing,gThatThing,gTheOtherThing
+
+Parameters:
+variableNameList: A list of global variables separated by commas.
+
+Description:
+Use the <global> <command> to define a <variable> that can be used in any <handler>, and which retains its <value> between <handler|handlers>.
+
+You can place the <global> command either in a handler, or in a script but outside any handler in the script:
+
+* If you declare the global in a handler, the <global> <declare|declaration> must appear in each <handler> in which you use the <global>. If you <declare> a <global> in one <handler>, and try to use it in another without first <declare|declaring> it in that <handler>, the second <handler> treats it as a <local variable>, and it does not retain its <value> between <handler|handlers>.
+
+The <global> <command> can appear anywhere in a <handler>, as long as it's before the first <statement> in which the <global|global variable> is used. However, to make them easier to find, all <global> <declare|declarations> are usually placed at the beginning of a <handler> :
+
+* If you declare a <global> <command> in a <script>, but outside any <handler|handlers> in the <script>, the <global> can be used by any <handler> that comes after the <global> <declare|declaration> in that <script>. You don't need to declare such a <global> again in the <handler> itself.
+
+Such <global> <command|commands> are usually placed at the beginning of the <script>, before any <handler|handlers>, to make them easy to find:
+
+References: script (property), global (command), local (command), globalNames (function), value (function), variable (glossary), handler (glossary), global (glossary), statement (glossary), local variable (glossary), declare (glossary), command (glossary)
+
+Tags: properties

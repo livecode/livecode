@@ -1,0 +1,27 @@
+Name: unboundedHScroll
+
+Type: property
+
+Syntax: set the unboundedHScroll of <group> to {true | false}
+
+Summary: Specifies whether automatic clamping of the hScroll offsets of a group is on or off.
+
+Introduced: 4.6
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web
+
+Example:
+set the unboundedHScroll of group "items" to true
+
+Description:
+Use the <unboundedHScroll> property to turn automatic clamping of the <hScroll> offset of a group on or off.
+
+When the <unboundedHScroll> property of a <group> is set to true and the <hScrollbar> is not visible, it is possible to set the <hScroll> property of the <group> to values outside that of the size of the content (both positive and negative).
+
+If the <hScrollbar> of the <group> is made visible or the <unboundedHScroll> property is turned off and the <hScroll> value is outside of the content bounds, the <group> is scrolled to bring the <hScroll> value within the appropriate range.
+
+References: hScrollbar (property), unboundedVScroll (property), hScroll (property), group (object)
+
+Tags: ui

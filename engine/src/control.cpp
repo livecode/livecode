@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "tooltip.h"
 #include "card.h"
-#include "control.h"
+#include "mccontrol.h"
 #include "group.h"
 #include "field.h"
 #include "scrolbar.h"
@@ -217,7 +217,7 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	// SMR 594 do menu stuff before visibility check
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mfocus(x, y);
-	if (!(flags & F_VISIBLE || MCshowinvisibles)
+	if (!(flags & F_VISIBLE || showinvisible())
 	    || (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return False;
 	if (state & CS_GRAB)
@@ -253,11 +253,14 @@ Boolean MCControl::mfocus(int2 x, int2 y)
 	}
 	MCRectangle srect;
 	MCU_set_rect(srect, x, y, 1, 1);
+    
+    mx = x;
+    my = y;
+    
 	Boolean is = maskrect(srect) || (state & CS_SELECTED
-	                                 && MCU_point_in_rect(rect, x, y)
-	                                 && sizehandles() != 0);
-	mx = x;
-	my = y;
+	                                 && MCU_point_in_rect(geteffectiverect(), x, y)
+	                                 && sizehandles(x, y) != 0);
+    
 	if (is || state & CS_MFOCUSED)
 	{
 		if (focused == this || getstack() -> gettool(this) == T_POINTER)
@@ -717,14 +720,14 @@ void MCControl::deselect()
 {
 	if (state & CS_SELECTED)
 	{
-		state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
-
 		// MW-2011-09-23: [[ Layers ]] Mark the layer attrs as having changed - the selection
 		//   setting can influence the layer type.
 		m_layer_attr_changed = true;
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
+        
+        state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
 	}
 }
 
@@ -889,9 +892,9 @@ void MCControl::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p
 	fprintf(stderr, "Control: ERROR tried to draw control id %d\n", obj_id);
 }
 
-IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext)
+IO_stat MCControl::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
-	return MCObject::save(stream, p_part, p_force_ext);
+	return MCObject::save(stream, p_part, p_force_ext, p_version);
 }
 
 Boolean MCControl::kfocusset(MCControl *target)
@@ -944,7 +947,7 @@ Boolean MCControl::count(Chunk_term type, MCObject *stop, uint2 &num)
 
 Boolean MCControl::maskrect(const MCRectangle &srect)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles))
+	if (!(flags & F_VISIBLE || showinvisible()))
 		return False;
 	MCRectangle drect = MCU_intersect_rect(srect, rect);
 	return drect.width != 0 && drect.height != 0;
@@ -1048,7 +1051,7 @@ inline MCRectangle MCGRectangleGetPixelRect(const MCGRectangle &p_rect)
 void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 {
     // SN-2014-11-14: [[ Bug 14028 ]] Use the current control visibility state
-	if (!opened || !(getflag(F_VISIBLE) || MCshowinvisibles))
+	if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
 		return;
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] A control needs to be (partially)
@@ -1076,15 +1079,13 @@ void MCControl::sizerects(MCRectangle *rects)
 	int2 y[3];
 
 	uint2 handlesize = MCsizewidth;
-	if (handlesize > MCU_min(rect.width, rect.height) / 3)
-		handlesize = MCU_max(MCU_min(rect.width, rect.height) / 3, 3);
-
-	x[0] = rect.x;
-	x[1] = rect.x + ((rect.width - handlesize) >> 1);
-	x[2] = rect.x + rect.width - handlesize;
-	y[0] = rect.y;
-	y[1] = rect.y + ((rect.height - handlesize) >> 1);
-	y[2] = rect.y + rect.height - handlesize;
+    
+    x[0] = rect.x - (handlesize >> 1);
+ 	x[1] = rect.x + ((rect.width - handlesize) >> 1);
+    x[2] = rect.x + rect.width - (handlesize >> 1);
+    y[0] = rect.y - (handlesize >> 1);
+ 	y[1] = rect.y + ((rect.height - handlesize) >> 1);
+    y[2] = rect.y + rect.height - (handlesize >> 1);
 
 	uint2 i;
 	uint2 j;
@@ -1102,22 +1103,32 @@ void MCControl::sizerects(MCRectangle *rects)
 
 void MCControl::drawselected(MCDC *dc)
 {
+    if (!opened || !(getflag(F_VISIBLE) || showinvisible()))
+        return;
+    
 	if (MCdragging)
 		return;
 
 	dc -> setopacity(255);
-	dc -> setfunction(GXcopy);
+    dc -> setquality(QUALITY_SMOOTH);
+    dc -> setfunction(GXcopy);
 
-	MCRectangle rects[8];
-	sizerects(rects);
-	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillStippled, nil, 0, 0);
-	else
-		dc->setfillstyle(FillSolid, nil, 0, 0);
-	dc->setforeground(MCselectioncolor);
-	dc->fillrects(rects, 8);
-	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillSolid, nil, 0, 0);
+    drawmarquee(dc, rect);
+    
+    MCRectangle rects[8];
+    sizerects(rects);
+    if (flags & F_LOCK_LOCATION)
+        dc->setfillstyle(FillStippled, nil, 0, 0);
+    else
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+    dc->setforeground(MCselectioncolor);
+
+    for (uint2 i = 0; i < 8; i++)
+        dc->fillarc(rects[i], 0, 360, false);
+    if (flags & F_LOCK_LOCATION)
+        dc->setfillstyle(FillSolid, nil, 0, 0);
+
+    dc->setquality(QUALITY_DEFAULT);
 }
 
 void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
@@ -1321,8 +1332,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		int2 rx = newrect.x + newrect.width;
 		newrect.x = x - xoffset;
 		MCU_snap(newrect.x);
-		if (newrect.x > rx - MCminsize)
-			newrect.x = rx - MCminsize;
+		if (newrect.x > rx)
+			newrect.x = rx;
 		newrect.width = rx - newrect.x;
 	}
 	else
@@ -1330,8 +1341,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		{
 			int2 rx = x + xoffset;
 			MCU_snap(rx);
-			if (rx - newrect.x < MCminsize)
-				newrect.width = MCminsize;
+			if (rx - newrect.x < 0)
+				newrect.width = 0;
 			else
 				newrect.width = rx - newrect.x;
 		}
@@ -1340,8 +1351,8 @@ void MCControl::continuesize(int2 x, int2 y)
 		int2 ly = newrect.y + newrect.height;
 		newrect.y = y - yoffset;
 		MCU_snap(newrect.y);
-		if (newrect.y > ly - MCminsize)
-			newrect.y = ly - MCminsize;
+		if (newrect.y > ly)
+			newrect.y = ly;
 		newrect.height = ly - newrect.y;
 	}
 	else
@@ -1349,15 +1360,16 @@ void MCControl::continuesize(int2 x, int2 y)
 		{
 			int2 ly = y + yoffset;
 			MCU_snap(ly);
-			if (ly - newrect.y < MCminsize)
-				newrect.height = MCminsize;
+			if (ly - newrect.y < 0)
+				newrect.height = 0;
 			else
 				newrect.height = ly - newrect.y;
 		}
 	if (MCmodifierstate & MS_SHIFT)
 	{
-		double newaspect;
-		newaspect = newrect.height / (double)newrect.width;
+		double newaspect, newwidth;
+        newwidth = newrect.width != 0 ? (double)newrect.width : 1;
+        newaspect = newrect.height / newwidth;
 
 		if (aspect < newaspect)
 		{
@@ -1396,7 +1408,6 @@ void MCControl::continuesize(int2 x, int2 y)
 	if (mx < newrect.x && state & CS_SIZER)
 	{
 		state &= ~CS_SIZER;
-		newrect.x -= MCminsize;
 		state |= CS_SIZEL;
 		fliph();
 	}
@@ -1404,14 +1415,12 @@ void MCControl::continuesize(int2 x, int2 y)
 		if (mx > newrect.x + newrect.width && state & CS_SIZEL)
 		{
 			state &= ~CS_SIZEL;
-			newrect.x += MCminsize;
 			state |= CS_SIZER;
 			fliph();
 		}
 	if (my < newrect.y && state & CS_SIZEB)
 	{
 		state &= ~CS_SIZEB;
-		newrect.y -= MCminsize;
 		state |= CS_SIZET;
 		flipv();
 	}
@@ -1419,7 +1428,6 @@ void MCControl::continuesize(int2 x, int2 y)
 		if (my > newrect.y + newrect.height && state & CS_SIZET)
 		{
 			state &= ~CS_SIZET;
-			newrect.y += MCminsize;
 			state |= CS_SIZEB;
 			flipv();
 		}
@@ -1440,7 +1448,9 @@ void MCControl::continuesize(int2 x, int2 y)
 	resizeparent();
 }
 
-uint2 MCControl::sizehandles()
+#define SIZE_HANDLE_HIT_TOLERANCE 1
+
+uint2 MCControl::sizehandles(int2 px, int2 py)
 {
 	uint2 newstate = 0;
 	if (!(flags & F_LOCK_LOCATION))
@@ -1449,32 +1459,36 @@ uint2 MCControl::sizehandles()
 		sizerects(rects);
 		int2 i;
 		for (i = 7 ; i >= 0 ; i--)
-			if (MCU_point_in_rect(rects[i], mx, my))
+        {
+            // Be more forgiving about handle hit detection
+            rects[i] = MCU_reduce_rect(rects[i], -SIZE_HANDLE_HIT_TOLERANCE);
+			if (MCU_point_in_rect(rects[i], px, py))
 			{
 				if (i < 3)
 				{
 					newstate |= CS_SIZET;
-					yoffset = my - rect.y;
+					yoffset = py - rect.y;
 				}
 				else
 					if (i > 4)
 					{
 						newstate |= CS_SIZEB;
-						yoffset = rect.y + rect.height - my;
+						yoffset = rect.y + rect.height - py;
 					}
 				if (i == 0 || i == 3 || i == 5)
 				{
 					newstate |= CS_SIZEL;
-					xoffset = mx - rect.x;
+					xoffset = px - rect.x;
 				}
 				else
 					if (i == 2 || i == 4 || i == 7)
 					{
 						newstate |= CS_SIZER;
-						xoffset = rect.x + rect.width - mx;
+						xoffset = rect.x + rect.width - px;
 					}
 				break;
 			}
+        }
 	}
 	return newstate;
 }
@@ -1487,7 +1501,7 @@ void MCControl::start(Boolean canclone)
 	getstack()->kfocusset(NULL);
 	kunfocus();
 	
-	state |= sizehandles();
+	state |= sizehandles(mx, my);
 	if (!(state & CS_SELECTED))
 	{
 		if (MCmodifierstate & MS_SHIFT)
@@ -1497,7 +1511,7 @@ void MCControl::start(Boolean canclone)
 	}
 	else
 	{
-		if (MCmodifierstate & MS_SHIFT && sizehandles() == 0)
+		if (MCmodifierstate & MS_SHIFT && sizehandles(mx, my) == 0)
 		{
 			MCselected->remove(this);
 			return;
@@ -1620,8 +1634,13 @@ void MCControl::enter()
 	{
 		MCdragaction = DRAG_ACTION_NONE;
 		MCdragdest = this;
+        
+        // Give the script a chance to respond to the drag operation. If it
+        // doesn't complete successfully or passes, attempt an
+        // automatic drag-drop operation (if this is a field object).
 		if (message(MCM_drag_enter) != ES_NORMAL && gettype() == CT_FIELD
-		        && !(flags & F_LOCK_TEXT) && MCdragdata -> HasText())
+		        && !(flags & F_LOCK_TEXT)
+                && MCdragboard->HasTextOrCompatible())
 		{
 			state |= CS_DRAG_TEXT;
 			state &= ~CS_MFOCUSED;
@@ -1849,6 +1868,8 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_HSCROLL when the hscrollBar of a control is set to false
+			    state &= ~CS_HSCROLL;
 				delete hsb;
 				hsb = NULL;
 				if (opened)
@@ -1890,6 +1911,8 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 			}
 			else
 			{
+				// PM-2015-07-16: [[ Bug 11569 ]] Unset CS_VSCROLL when the vscrollBar of a control is set to false
+				state &= ~CS_VSCROLL;
 				delete vsb;
 				vsb = NULL;
 				if (opened)
@@ -1974,6 +1997,9 @@ MCRectangle MCControl::geteffectiverect(void) const
 	MCRectangle t_rect;
 	t_rect = MCU_reduce_rect(rect, -gettransient());
 
+    if (state & CS_SELECTED)
+        t_rect = MCU_reduce_rect(t_rect, -MCsizewidth);
+    
 	if (m_bitmap_effects != nil)
 		MCBitmapEffectsComputeBounds(m_bitmap_effects, t_rect, t_rect);
 
@@ -1992,7 +2018,7 @@ void MCControl::setbitmapeffects(MCBitmapEffectsRef p_effects)
 
 MCObject *MCControl::hittest(int32_t x, int32_t y)
 {
-	if (!(flags & F_VISIBLE || MCshowinvisibles) ||
+	if (!(flags & F_VISIBLE || showinvisible()) ||
 	    (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
 		return nil;
 	

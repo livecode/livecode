@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -93,7 +93,7 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 }
 
 @class MCSystemUrlTimer;
-@interface MCSystemUrlDelegate : NSObject
+@interface com_runrev_livecode_MCSystemUrlDelegate : NSObject
 {
 	MCSystemUrlCallback m_callback;
 	void *m_context;
@@ -124,7 +124,7 @@ bool UrlRequestSetHTTPHeader(MCStringRef p_key, MCStringRef p_value, void *p_con
 
 @end
 
-@implementation MCSystemUrlDelegate
+@implementation com_runrev_livecode_MCSystemUrlDelegate
 
 - initWithCallback:(MCSystemUrlCallback)callback context: (void*)context
 {
@@ -309,11 +309,11 @@ static void do_system_load_url(void *p_ctxt)
 			t_success = MCHTTPParseHeaders(MChttpheaders, UrlRequestSetHTTPHeader, t_request);
 	}
 	
-	MCSystemUrlDelegate *t_delegate;
+	com_runrev_livecode_MCSystemUrlDelegate *t_delegate;
 	t_delegate = nil;
 	if (t_success)
 	{
-		t_delegate = [[MCSystemUrlDelegate alloc] initWithCallback: ctxt -> callback context: ctxt -> context];
+		t_delegate = [[com_runrev_livecode_MCSystemUrlDelegate alloc] initWithCallback: ctxt -> callback context: ctxt -> context];
 		if (t_delegate == nil)
 			t_success = false;
 	}
@@ -350,16 +350,16 @@ bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_
 	return ctxt . success;
 }
 
-@interface PostUrlTimeoutMonitor : NSObject
+@interface com_runrev_livecode_MCPostUrlTimeoutMonitor : NSObject
 {
 	NSURLConnection *m_connection;
 	NSTimer *m_timer;
-	MCSystemUrlDelegate *m_delegate;
+	com_runrev_livecode_MCSystemUrlDelegate *m_delegate;
 }
 @end
 
-@implementation PostUrlTimeoutMonitor
-- (PostUrlTimeoutMonitor*) initWithTimeInterval:(NSTimeInterval)interval withConnection:(NSURLConnection*)connection withDelegate:(MCSystemUrlDelegate*)delegate
+@implementation com_runrev_livecode_MCPostUrlTimeoutMonitor
+- (com_runrev_livecode_MCPostUrlTimeoutMonitor*) initWithTimeInterval:(NSTimeInterval)interval withConnection:(NSURLConnection*)connection withDelegate:(com_runrev_livecode_MCSystemUrlDelegate*)delegate
 {
 	self = [super init];
 	if (self)
@@ -409,8 +409,8 @@ static void do_post_url(void *p_ctxt)
 	NSMutableURLRequest *t_request = nil;
 	NSURLConnection *t_connection = nil;
 	NSData *t_data = nil;
-	MCSystemUrlDelegate *t_delegate = nil;
-	PostUrlTimeoutMonitor *t_timeout_monitor = nil;
+	com_runrev_livecode_MCSystemUrlDelegate *t_delegate = nil;
+	com_runrev_livecode_MCPostUrlTimeoutMonitor *t_timeout_monitor = nil;
 	
 	if (t_success)
 	{
@@ -436,7 +436,7 @@ static void do_post_url(void *p_ctxt)
 	
 	if (t_success)
 	{
-		t_delegate = [[MCSystemUrlDelegate alloc] initWithCallback: ctxt -> callback context: ctxt -> context];
+		t_delegate = [[com_runrev_livecode_MCSystemUrlDelegate alloc] initWithCallback: ctxt -> callback context: ctxt -> context];
 		t_success = (t_delegate != nil);
 	}
 	
@@ -448,7 +448,7 @@ static void do_post_url(void *p_ctxt)
 	
 	if (t_success)
 	{
-		t_timeout_monitor = [[PostUrlTimeoutMonitor alloc] initWithTimeInterval: MCsockettimeout withConnection:t_connection
+		t_timeout_monitor = [[com_runrev_livecode_MCPostUrlTimeoutMonitor alloc] initWithTimeInterval: MCsockettimeout withConnection:t_connection
 																   withDelegate: t_delegate];
 		t_success = t_timeout_monitor != nil;
 	}
@@ -610,7 +610,7 @@ void PutFTPUrlClientCallback(CFWriteStreamRef p_stream, CFStreamEventType p_even
 	}
 }
 
-@interface PutFTPUrlTimeoutMonitor : NSObject
+@interface com_runrev_livecode_MCPutFTPUrlTimeoutMonitor : NSObject
 {
 	CFWriteStreamRef m_stream;
 	NSTimer *m_timer;
@@ -618,8 +618,8 @@ void PutFTPUrlClientCallback(CFWriteStreamRef p_stream, CFStreamEventType p_even
 }
 @end
 
-@implementation PutFTPUrlTimeoutMonitor
-- (PutFTPUrlTimeoutMonitor*) initWithTimeInterval:(NSTimeInterval)interval withStream:(CFWriteStreamRef)stream withContext:(FTPClientCallbackData*)context;
+@implementation com_runrev_livecode_MCPutFTPUrlTimeoutMonitor
+- (com_runrev_livecode_MCPutFTPUrlTimeoutMonitor*) initWithTimeInterval:(NSTimeInterval)interval withStream:(CFWriteStreamRef)stream withContext:(FTPClientCallbackData*)context;
 {
 	self = [super init];
 	if (self)
@@ -649,7 +649,7 @@ bool MCSystemPutFTPUrl(NSURL *p_url, const void *p_data, uint32_t p_length, MCSy
 	
 	CFWriteStreamRef t_ftp_stream = nil;
 	FTPClientCallbackData *t_context = nil;
-	PutFTPUrlTimeoutMonitor *t_monitor = nil;
+	com_runrev_livecode_MCPutFTPUrlTimeoutMonitor *t_monitor = nil;
 	
 	if (t_success)
 	{
@@ -667,7 +667,7 @@ bool MCSystemPutFTPUrl(NSURL *p_url, const void *p_data, uint32_t p_length, MCSy
 		t_context->callback = p_callback;
 		t_context->context = p_context;
 		
-		t_success = nil != (t_monitor = [[PutFTPUrlTimeoutMonitor alloc] initWithTimeInterval:MCsockettimeout withStream:t_ftp_stream withContext:t_context]);
+		t_success = nil != (t_monitor = [[com_runrev_livecode_MCPutFTPUrlTimeoutMonitor alloc] initWithTimeInterval:MCsockettimeout withStream:t_ftp_stream withContext:t_context]);
 	}
 	if (t_success)
 	{

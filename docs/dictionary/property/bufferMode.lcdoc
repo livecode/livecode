@@ -1,0 +1,29 @@
+Name: bufferMode
+
+Type: property
+
+Syntax: get the bufferMode
+
+Summary: Reports the number of colors the screen can display.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the label of button "Color Mode" to the bufferMode
+
+Value:
+The <bufferMode> <property> reports "millions" (for 32-bit or 24-bit color), "thousands" (for 16-bit color), or the number of colors.
+This property is read-only and cannot be set.
+
+Description:
+Use the <bufferMode> <property> to determine the color capacity of the screen. For example, you might display different <image|images> depending on the number of colors available.
+
+If the system has more than one monitor, the <bufferMode> <property> reports the number of colors displayed on the main screen.
+
+The value reported by the <bufferMode> <property> is updated only when you start up the <application>. If you change the screen settings after starting up the <application>, you must quit and restart to update the <bufferMode>.
+
+References: colorWorld (property), property (glossary), application (glossary), image (object)

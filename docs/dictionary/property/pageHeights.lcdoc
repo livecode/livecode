@@ -1,0 +1,35 @@
+Name: pageHeights
+
+Type: property
+
+Syntax: get the pageHeights of <field> 
+
+Summary: Reports the height of each printed page if a <field> is printed.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the height of field 1 to line 1 of the pageHeights of field 1
+
+Value:
+The <pageHeights> of a <field> is a list of <integer|integers>, one per <line>. 
+This property is read-only and cannot be set.
+
+Description:
+Use the <pageHeights> <property> to determine how much to scroll a <field(keyword)> during printing. 
+
+The value reported by the <pageHeights> <property> is a list of numbers separated by returns. Each number is the height in <pixels> of a page full of text. 
+
+You can use the <pageHeights> <property> to print the entire contents of a <field(keyword)> by printing the <field(keyword)>, setting the <field(object)|field's> <scroll> to the first line of the <pageHeights>, printing the <field(keyword)> again, setting the <scroll> to the current <scroll> plus line 2 of the <pageHeights>, and so on. 
+
+The computations used by the <pageHeights> <property> assume the <field(object)|field's> <borderWidth> <property> is set to zero and its <margins> is set to 6.
+
+References: borderWidth (property), formatForPrinting (property), pixels (property), margins (property), scroll (property), field (keyword), line (keyword), textHeightSum (function), field (object), property (glossary), integer (glossary)
+
+Tags: printing

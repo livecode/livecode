@@ -1,0 +1,53 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.compiler.literals.tests
+
+public handler TestLiteralNul()
+	variable tString
+
+	test "single literal nul" when the number of chars in "\u{0}" is 1
+
+	put "a\u{0}b\u{0}c" into tString
+	test diagnostic "literal nuls: actual string length is" && \
+		the number of chars in tString formatted as string
+	test "literal nuls" when the number of chars in tString is 5
+end handler
+
+public handler TestLiteralList()
+	test "empty list constant" when the number of elements in [] is 0
+
+	test "non-empty list constant" when the number of elements in [1] is 1
+
+	variable tValue
+	put "bar" into tValue
+	test "non-empty list expression" when the number of elements in [tValue] is 1
+end handler
+
+public handler TestLiteralArray()
+	test "empty array constant" when the number of elements in {} is 0
+
+	test "non-empty array constant" when the number of elements in {"foo": 1} is 1
+
+	variable tKey
+	put "foo" into tKey
+	variable tValue
+	put {} into tValue
+	test "non-empty array expression" when the number of elements in {tKey: tValue} is 1
+end handler
+
+end module

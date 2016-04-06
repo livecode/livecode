@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -162,10 +162,10 @@ bool MCFontCreateWithFontStruct(MCNameRef p_name, MCFontStyle p_style, int32_t p
 	return true;
 }
 
-bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCFontRef& r_font)
+bool MCFontCreateWithHandle(MCSysFontHandle p_handle, MCNameRef p_name, MCFontRef& r_font)
 {
     MCFontStruct* t_font_struct;
-    t_font_struct = MCdispatcher->loadfontwithhandle(p_handle);
+    t_font_struct = MCdispatcher->loadfontwithhandle(p_handle, p_name);
     if (t_font_struct == nil)
         return false;
     
@@ -228,7 +228,8 @@ int32_t MCFontGetSize(MCFontRef self)
 bool MCFontHasPrinterMetrics(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (self -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (self == nil || self -> fontstruct == nil)
 		return false;
 	
 	return (self -> style & kMCFontStylePrinterMetrics) != 0;
@@ -237,7 +238,8 @@ bool MCFontHasPrinterMetrics(MCFontRef self)
 coord_t MCFontGetAscent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (self -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (self == nil || self -> fontstruct == nil)
 		return 0;
 	
 	return self -> fontstruct -> m_ascent;
@@ -246,7 +248,8 @@ coord_t MCFontGetAscent(MCFontRef self)
 coord_t MCFontGetDescent(MCFontRef self)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (self -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (self == nil || self -> fontstruct == nil)
 		return 0;
 	
 	return self -> fontstruct -> m_descent;
@@ -254,7 +257,8 @@ coord_t MCFontGetDescent(MCFontRef self)
 
 coord_t MCFontGetLeading(MCFontRef self)
 {
-    if (self -> fontstruct == nil)
+    // PM-2015-06-02: [[ Bug 14244 ]] If the font is nil, do nothing
+    if (self == nil || self -> fontstruct == nil)
         return 0;
     
     return self -> fontstruct -> m_leading;
@@ -262,7 +266,8 @@ coord_t MCFontGetLeading(MCFontRef self)
 
 coord_t MCFontGetXHeight(MCFontRef self)
 {
-    if (self -> fontstruct == nil)
+    // PM-2015-06-02: [[ Bug 14244 ]] If the font is nil, do nothing
+    if (self == nil || self -> fontstruct == nil)
         return 0;
     
     return self -> fontstruct -> m_xheight;
@@ -271,7 +276,8 @@ coord_t MCFontGetXHeight(MCFontRef self)
 void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFontBreakTextCallback p_callback, void *p_callback_data, bool p_rtl)
 {
 	// MW-2013-12-19: [[ Bug 11559 ]] If the font has a nil font, do nothing.
-	if (p_font -> fontstruct == nil)
+    // PM-2015-04-16: [[ Bug 14244 ]] If the font is nil, do nothing
+	if (p_font == nil || p_font -> fontstruct == nil)
 		return;
 
     // If the text is small enough, don't bother trying to break it
@@ -394,7 +400,7 @@ void MCFontBreakText(MCFontRef p_font, MCStringRef p_text, MCRange p_range, MCFo
         else
             t_range = MCRangeMake(t_offset, t_break_point);
 
-#if !defined(_WIN32) && !defined(_ANDROID_MOBILE)
+#if !defined(_WIN32) && !defined(_ANDROID_MOBILE) && !defined(__EMSCRIPTEN__)
         // This is a really ugly hack to get LTR/RTL overrides working correctly -
         // ATSUI and Pango think they know better than us and won't let us suppress
         // the BiDi algorithm they uses for text layout. So instead, we need to add
@@ -483,6 +489,54 @@ MCGFloat MCFontMeasureTextSubstringFloat(MCFontRef p_font, MCStringRef p_string,
     MCFontBreakText(p_font, p_string, p_range, (MCFontBreakTextCallback)MCFontMeasureTextCallback, &ctxt, false);
     
     return ctxt . m_width;
+}
+
+struct font_measure_text_image_bounds_context
+{
+	MCGRectangle m_bounds;
+	
+	// MM-2014-04-16: [[ Bug 11964 ]] Store the transform that effects the measurement.
+	MCGAffineTransform m_transform;
+};
+
+static void MCFontMeasureTextImageBoundsCallback(MCFontRef p_font, MCStringRef p_string, MCRange p_range, void *p_ctxt)
+{
+	font_measure_text_image_bounds_context *ctxt;
+	ctxt = static_cast<font_measure_text_image_bounds_context*>(p_ctxt);
+	
+	if (MCStringIsEmpty(p_string) || p_range.length == 0)
+		return;
+	
+	MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font->fontstruct);
+	
+	// MW-2013-12-04: [[ Bug 11535 ]] Pass through the fixed advance.
+	t_font . fixed_advance = p_font -> fixed_advance;
+	
+	MCGRectangle t_bounds;
+	if (MCGContextMeasurePlatformTextImageBounds(NULL, MCStringGetCharPtr(p_string) + p_range.offset, p_range.length*2, t_font, ctxt -> m_transform, t_bounds))
+	{
+		t_bounds.origin.x += ctxt->m_bounds.size.width;
+		ctxt->m_bounds = MCGRectangleUnion(ctxt->m_bounds, t_bounds);
+	}
+}
+
+bool MCFontMeasureTextImageBounds(MCFontRef p_font, MCStringRef p_string, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	return MCFontMeasureTextSubstringImageBounds(p_font, p_string, MCRangeMake(0, MCStringGetLength(p_string)), p_transform, r_bounds);
+}
+
+bool MCFontMeasureTextSubstringImageBounds(MCFontRef p_font, MCStringRef p_string, MCRange p_range, const MCGAffineTransform &p_transform, MCGRectangle &r_bounds)
+{
+	font_measure_text_image_bounds_context ctxt;
+	ctxt.m_transform = p_transform;
+	ctxt.m_bounds = MCGRectangleMake(0, 0, 0, 0);
+	
+	MCFontBreakText(p_font, p_string, p_range, MCFontMeasureTextImageBoundsCallback, &ctxt, false);
+	
+	r_bounds = ctxt.m_bounds;
+	
+	return true;
 }
 
 struct font_draw_text_context

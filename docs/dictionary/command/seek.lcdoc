@@ -1,0 +1,42 @@
+Name: seek
+
+Type: command
+
+Syntax: seek {to | rel[ative]} <byteNumber> in file <filePath> 
+
+Summary: Locates a position in a <file>, to be used by the <read from file> and <write to file> <command|commands>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+seek to 100 in file "test.txt"
+
+Example:
+seek relative -10 in file "test.txt"
+
+Example:
+put specialFolderPath("desktop")  & "/test.txt" into tFile
+open file tFile for write
+write "123456789--" to file tFile
+seek to 9 in file tFile
+write "10" to file tFile
+close file tFile
+
+Parameters:
+byteNumber (integer): An integer representing the position in the file.
+filePath: The filePath specifies the name and location of the file you want to seek in. It must be the same as the path you used with the open file command. The filePath is case-sensitive, even on platforms where file names are not case-sensitive.
+
+Description:
+Use the <seek> <command> to prepare to read from or write to an open <file> at a specific position in the <file>.
+
+The next <read from file> or <write to file> <command> will start reading or writing at the position specified by the <seek> <command>.
+
+Theform sets the file position to <byteNumber> <byte|bytes> from the start of the <file>. Theform sets the file position to <byteNumber> <byte|bytes> from the current position. The position is set by either a previous <seek> <command>, or a <read from file> or <write to file> <command>.
+
+References: close file (command), read from file (command), write to file (command), file (keyword), relative (keyword), command (glossary), byte (glossary)
+
+Tags: file system

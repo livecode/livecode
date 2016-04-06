@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
-#include "script.h"
+#include "libscript/script.h"
 
 #include <msctf.h>
 
@@ -120,6 +120,9 @@ static void CALLBACK LoopFiberRoutine(void *p_parameter)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" bool MCModulesInitialize();
+extern "C" void MCModulesFinalize();
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	// MW-2010-05-09: Elevated process handling - if the cmd line begins with '-elevated-slave'
@@ -205,7 +208,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			++csptr;
 	}
 
-    extern bool MCModulesInitialize();
     if (!MCInitialize() || !MCSInitialize() ||
         !MCModulesInitialize() || !MCScriptInitialize())
 		exit(-1);
@@ -313,16 +315,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	
 	g_mainthread_errno = _errno();
 	int r = X_close();
-
-    extern void MCModulesFinalize();
+    
+    MCValueRelease(MCcmdline);
+    
     MCScriptFinalize();
     MCModulesFinalize();
 	MCFinalize();
 
 	if (t_tsf_mgr != nil)
 		t_tsf_mgr -> Release();
-
-	MCValueRelease(MCcmdline);
 
 	return r;
 }

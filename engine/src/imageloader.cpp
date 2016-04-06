@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -36,6 +36,8 @@ MCImageLoader::MCImageLoader(IO_handle p_stream)
 	m_header_loaded = m_frames_loaded = false;
 	
 	m_frames = nil;
+    
+    MCMemoryClear(&m_metadata, sizeof(m_metadata));
 
     // AL-2014-09-29: [[ Bug 13353 ]] Initialize m_name to the empty string
     m_name = MCValueRetain(kMCEmptyString);
@@ -90,6 +92,19 @@ bool MCImageLoader::GetFrameCount(uint32_t &r_frame_count)
 	return true;
 }
 
+
+// MERG 2014-09-12 [[ ImageMetadata ]] get metadata from loader
+bool MCImageLoader::GetMetadata(MCImageMetadata &r_metadata)
+{
+	if (!EnsureHeader())
+		return false;
+	
+	r_metadata = m_metadata;
+	
+	return true;
+    
+}
+
 bool MCImageLoader::GetFrames(MCBitmapFrame *&r_frames, uint32_t &r_frame_count)
 {
 	if (!EnsureFrames())
@@ -134,7 +149,7 @@ bool MCImageLoader::EnsureHeader()
 	
     // AL-2014-09-29: [[ Bug 13353 ]] We initialize m_name to the empty string, so use MCValueAssign here.
     MCAutoStringRef t_name;
-	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, &t_name, m_frame_count);
+	m_valid = m_header_loaded = LoadHeader(m_width, m_height, m_xhot, m_yhot, &t_name, m_frame_count, m_metadata);
     
     if (m_valid)
         MCValueAssign(m_name, *t_name);

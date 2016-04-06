@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
 
-<dictionary title="Revolution Terminology">
-  <suite name="Revolution Miscellaneous Commands" code="REVO" description="Miscellaneous commands">
-    <command name="do script" code="miscdosc" description="Execute Revolution script">
+<dictionary title="LiveCode Terminology">
+  <suite name="LiveCode Miscellaneous Commands" code="REVO" description="Miscellaneous commands">
+    <command name="do script" code="miscdosc" description="Execute LiveCode script">
       <direct-parameter type="string" description="Script to execute" />
       <result type="string" description="Return value" />
     </command>
-    <command name="evaluate" code="misceval" description="Evaluate Revolution expression">
+    <command name="evaluate" code="misceval" description="Evaluate LiveCode expression">
       <direct-parameter type="string" description="Exprerssion to evaluate" />
       <result type="string" description="Value of expression" />
     </command>

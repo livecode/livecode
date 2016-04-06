@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -167,6 +167,7 @@ static bool get_device_path(MCStringRef p_path, MCStringRef &r_device_path)
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
+HANDLE g_socket_wakeup;
 
 Boolean wsainit()
 {
@@ -1530,7 +1531,9 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				// SN-2014-08-11: [[ Bug 13145 ]] If ReadFile can't read more, but no error is triggered, we should stop here,
 				//  but return true. The new imageLoader reads buffer by buffer, and doesn't expect and error when reading the
 				//  the last buffer (which might ask for more than remaining in the file).
-				if (nread == 0 && GetLastError() == 0)
+				// IM-2015-03-17: [[ Bug 14960 ]] GetLastError is only meaningful if ReadFile fails. A return value of TRUE
+				//  with 0 bytes read is used to indicate EOF for synchronous file handles.
+				if (nread == 0)
 				{
 					r_read = t_offset;
 					m_is_eof = true;
@@ -2534,7 +2537,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 						
 						// What is the length of the path that was retrieved?
 						size_t t_path_len;
-						/* UNCHECKED */ StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_path_len);
+						/* UNCHECKED */ StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_path_len);
 
 						/* UNCHECKED */ MCStringCreateWithChars(t_buffer.Ptr(), t_path_len, &t_retrieved_path);
                     }
@@ -2706,7 +2709,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		//}
         //}
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
-        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless)
+                 // SN-2015-04-20: [[ Bug 14295 ]] If we are here, we are a standalone
+                 // so the resources folder is the engine folder.
+                 || MCNameIsEqualTo(p_type, MCN_engine, kMCCompareCaseless))
         {
             uindex_t t_last_slash;
             
@@ -2737,7 +2743,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				
 				// Get the length of the returned path
 				size_t t_pathlen;
-				if (t_wasfound && StringCchLength(t_buffer.Ptr(), t_buffer.Size(), &t_pathlen) != S_OK)
+				if (t_wasfound && StringCchLengthW(t_buffer.Ptr(), t_buffer.Size(), &t_pathlen) != S_OK)
 					return false;
 
 				// Path was successfully retrieved
@@ -3066,14 +3072,23 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		bool t_device = false;
 		bool t_serial_device = false;
+        // SN-2015-04-13: [[ Bug 14696 ]] Close the file handler in case our
+        //  MCStdioFileHandler could not be created.
+        bool t_close_file_handler = false;
+
+		// SN-2015-02-26: [[ Bug 14612 ]] Also process the device path
+		//  translation when using <open file>
+		MCAutoStringRef t_devicepath;
+		if (!get_device_path(p_path, &t_devicepath))
+			return NULL;
 
 		// Is this a device path?
-		if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
+		if (MCStringBeginsWithCString(*t_devicepath, (const char_t*)"\\\\.\\", kMCStringOptionCompareExact))
 		{
 			t_device = true;
 
 			// Is this a path to a serial port?
-			if (MCStringBeginsWithCString(p_path, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
+			if (MCStringBeginsWithCString(*t_devicepath, (const char_t*)"\\\\.\\COM", kMCStringOptionCompareCaseless))
 				t_serial_device = true;
         }
 
@@ -3110,7 +3125,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 
 		MCAutoStringRefAsWString t_path_wstr;
-		/* UNCHECKED */ t_path_wstr.Lock(p_path);
+		/* UNCHECKED */ t_path_wstr.Lock(*t_devicepath);
 
 		t_file_handle = CreateFileW(*t_path_wstr, omode, sharemode, NULL,
 							 createmode, fa, NULL);
@@ -3161,24 +3176,45 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				char *t_buffer = (char*)MapViewOfFile(t_file_mapped_handle,
 													  FILE_MAP_READ, 0, 0, 0);
 				
+				// SN-2015-03-02: [[ Bug 14696 ]] If the file is too large,
+				//  the file mapping won't work, and a normal file handler
+				//  should be used.
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
+					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                    t_close_file_handler = t_handle == NULL;
 				}
 				else
 				{
 					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
-					CloseHandle(t_file_handle);
+                    // SN-2015-04-13: [[ Bug 14696 ]] We don't want to leave a
+                    //  file handler open in case the memory mapped file could
+                    //  not be allocated. We always close the normal file handle
+                    if (t_handle == NULL)
+                        CloseHandle(t_file_mapped_handle);
+                    t_close_file_handler = true;
 				}
 			}
 			// SN-2014-11-27: [[ Bug 14110 ]] A StdioFileHandle should be created if the file mapping failed
 			// (for empty files for instance).
 			else
+            {
 				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                t_close_file_handler = t_handle == NULL;
+            }
 		}
 		else
+        {
 			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+            t_close_file_handler = t_handle == NULL;
+        }
 
+        // SN-2015-04-13: [[ Bug 14696 ]] We close the Windows file handle in
+        //  case we did not successfully create an MCStdioFileHandle.
+        if (t_close_file_handler)
+            CloseHandle(t_file_handle);
+        
 		return t_handle;
     }
     
@@ -3203,11 +3239,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
 	{
 		// For Windows, the path is used to determine whether a file or a device is being opened
-        MCAutoStringRef t_device_path;        
-		if (get_device_path(p_path, &t_device_path))
-			return OpenFile(*t_device_path, p_mode, True);
-		else
-			return nil;
+		// SN-2015-02-16: [[ Bug 14612 ]] <open file "COM:"> should do the same as
+		//  <open device "COM:">, so no difference in the path
+		//  translation must exist between MCWindowsDesktop::OpenDevice
+		//  and MCWindowsDesktop::OpenFile
+		return OpenFile(p_path, p_mode, True);
 	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
@@ -3351,7 +3387,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return uint32_t(u64);
 	}
 
-	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
+	virtual bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_w32 */ LEGACY_SYSTEM
         p_context . clear();
@@ -3416,20 +3452,23 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         WIN32_FIND_DATAW data;
         HANDLE ffh;            //find file handle
 
-        MCAutoStringRef t_curdir_native;
+        MCAutoStringRef t_dir_native;
         MCAutoStringRef t_search_path;
         
 		// The search is done in the current directory
-		MCS_getcurdir_native(&t_curdir_native);
+		if (p_folder == nil)
+			MCS_getcurdir_native(&t_dir_native);
+		else
+			&t_dir_native = MCValueRetain (p_folder);
 
 		// Search strings need to have a wild-card added
-		if (MCStringGetCharAtIndex(*t_curdir_native, MCStringGetLength(*t_curdir_native) - 1) == '\\')
+		if (MCStringGetCharAtIndex(*t_dir_native, MCStringGetLength(*t_dir_native) - 1) == '\\')
 		{
-			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@*", *t_curdir_native);
+			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@*", *t_dir_native);
 		}
 		else
 		{
-			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@\\*", *t_curdir_native);
+			/* UNCHECKED */ MCStringFormat(&t_search_path, "%@\\*", *t_dir_native);
 		}
 
 		// Iterate through the contents of the directory
@@ -3441,7 +3480,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		do
 		{
 			// Don't list the current directory
-			if (lstrcmpi(data.cFileName, L".") == 0)
+			if (lstrcmpiW(data.cFileName, L".") == 0)
 				continue;
 
 			// Retrieve as many of the file attributes as Windows supports
@@ -3609,13 +3648,137 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return ResolveNativePath(p_path, r_resolved_path);
 	}
     
+	static bool isValidSerialPortPath(MCStringRef p_path)
+    {
+        // All serial port paths end with ":", and are at least 4 chars long
+        uindex_t t_len = MCStringGetLength(p_path);
+		
+        if (t_len < 4 || MCStringGetCharAtIndex(p_path, t_len-1) != ':')
+            return false;
+        
+        typedef struct
+        {
+            const char *m_prefix;
+            bool m_numbered;
+        } SerialPortInfo;
+		
+        SerialPortInfo serialPortNames[]=
+        {
+            {"COM", true},
+            {"LPT", true},
+            {"CON", false},
+            {"PRN", false},
+            {"AUX", false},
+            {"NUL", false},
+        };
+		
+        size_t t_size = sizeof(serialPortNames) / sizeof(serialPortNames[0]);
+        for (int i=0; i<t_size; i++)
+        {
+            /* Must always begin with the correct prefix */
+            if (!MCStringBeginsWithCString(p_path, (const char_t*)serialPortNames[i].m_prefix, kMCStringOptionCompareCaseless))
+            {
+                continue;
+            }
+			
+            // If not numbered, then there should only be prefix + ":"
+            // (and we already checked for the ":" earlier)
+            if (!serialPortNames[i].m_numbered)
+            {
+                return t_len == 4;
+            }
+			
+            /* Check for a numbered part, which must be non-empty */
+            if (t_len <= 4)
+            {
+                return false;
+            }
+			
+            for (int t_offset = 3; t_offset < t_len - 1; ++t_offset)
+            {
+                if (!isdigit(MCStringGetCharAtIndex(p_path, t_offset)))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+	
 	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path)
 	{
 		if (MCStringGetLength(p_path) == 0)
 			return MCS_getcurdir_native(r_resolved_path);
 
-		MCU_fix_path(p_path, r_resolved_path);
-		return true;
+		MCAutoStringRef t_canonised_path;
+		bool t_success;
+		t_success = true;
+		
+		// Taken from LiveCode 6.7's w32spec.cpp MCS_get_canonical_path
+		// The following rules are used to process paths on Windows:
+		// - an absolute UNIX path is mapped to an absolute windows path using the drive of the CWD:
+		// /foo/bar -> CWD-DRIVE:/foo/bar
+		// - an absolute windows path is left as is:
+		// //foo/bar -> //foo/bar
+		// C:/foo/bar -> C:/foo/bar
+		// - a relative path is prefixed by the CWD:
+		// foo/bar -> CWD/foo/bar
+		// Note: / and \ are treated the same, but not changed. 
+		// Note: When adding a path separator \ is used in LiveCode 7.0
+		// since we are suppose to have a native path as input for MCSystem functions
+
+		// We store the first chars in this static to make the if
+		// statements more readable
+		char_t t_first_chars[2];
+        t_first_chars[0] = MCStringGetNativeCharAtIndex(p_path, 0);
+		t_first_chars[1] = MCStringGetNativeCharAtIndex(p_path, 1);
+
+		if ((t_first_chars[0] == '/' && t_first_chars[1] != '/')
+				|| (t_first_chars[0] == '\\' && t_first_chars[1] != '\\'))
+		{
+			// path in root of current drive
+			MCAutoStringRef t_curdir;
+			if (t_success)
+				t_success = MCS_getcurdir_native(&t_curdir);
+		
+			if (t_success)
+			t_success = MCStringFormat(&t_canonised_path, 
+							"%c:%@", 
+							MCStringGetNativeCharAtIndex(*t_curdir, 0),
+							p_path);
+		}
+		else if ((is_legal_drive(t_first_chars[0]) && t_first_chars[1] == ':')
+				|| (t_first_chars[0] == '/' && t_first_chars[1] == '/')
+				|| (t_first_chars[0] == '\\' && t_first_chars[1] == '\\'))
+		{
+			// absolute path
+			t_canonised_path = p_path;
+		}
+		
+		// PM-2016-03-15: [[ Bug 16300 ]] Detect correctly the case of a serial port path
+		else if (isValidSerialPortPath(p_path))
+		{
+			t_canonised_path = p_path;
+		}
+		
+		else
+		{
+			// relative to current folder
+			MCAutoStringRef t_curdir;
+			t_success = MCS_getcurdir_native(&t_curdir);
+
+			if (t_success)
+				t_success = MCStringFormat(&t_canonised_path,
+						   "%@\\%@",
+						   *t_curdir,
+						   p_path);
+		}
+
+		if (t_success)
+			r_resolved_path = MCValueRetain(*t_canonised_path);
+
+		return t_success;
 	}
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -4045,7 +4208,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success = MCS_closetakingbuffer(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
+		t_success = MCS_closetakingbuffer_uint32(MCprocesses[index].ohandle, t_buffer, t_buf_size) == IO_NORMAL;
         MCprocesses[index].ohandle = nil;
         
         IO_cleanprocesses();
@@ -4577,7 +4740,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 // If the launched process vanished before (4) it is treated as failure.
                 
                 unichar_t t_parameters[64];
-                wsprintf(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
+                wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
                 
 				MCAutoStringRefAsWString t_cmd_wstr;
 				/* UNCHECKED */ t_cmd_wstr.Lock(MCcmd);
@@ -4870,7 +5033,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		FD_ZERO(&rmaskfd);
 		FD_ZERO(&wmaskfd);
 		FD_ZERO(&emaskfd);
-		uint4 maxfd = 0;
+		int4 maxfd = 0;
 		if (!MCnoui)
 		{
 			FD_SET(p_fd, &rmaskfd);
@@ -4884,47 +5047,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				i = 0;
 			}
 		}
-		for (i = 0 ; i < MCnsockets ; i++)
-		{
-			if (MCsockets[i]->connected && !MCsockets[i]->closing
-					&& !MCsockets[i]->shared || MCsockets[i]->accepting)
-				FD_SET(MCsockets[i]->fd, &rmaskfd);
-			if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-				FD_SET(MCsockets[i]->fd, &wmaskfd);
-			FD_SET(MCsockets[i]->fd, &emaskfd);
-			if (MCsockets[i]->fd > maxfd)
-				maxfd = MCsockets[i]->fd;
-			if (MCsockets[i]->added)
-			{
-				p_delay = 0.0;
-				MCsockets[i]->added = False;
-				handled = True;
-			}
-		}
+        handled = MCSocketsAddToFileDescriptorSets(maxfd, rmaskfd, wmaskfd, emaskfd);
+        if (handled)
+            p_delay = 0.0;
 		struct timeval timeoutval;
 		timeoutval.tv_sec = (long)p_delay;
 		timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
 		n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
 		if (n <= 0)
 			return handled;
-		for (i = 0 ; i < MCnsockets ; i++)
-		{
-			if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-			{
-				if (!MCsockets[i]->waiting)
-				{
-					MCsockets[i]->error = strclone("select error");
-					MCsockets[i]->doclose();
-				}
-			}
-			else
-			{
-				if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-					MCsockets[i]->writesome();
-				if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-					MCsockets[i]->readsome();
-			}
-		}
+        MCSocketsHandleFileDescriptorSets(rmaskfd, wmaskfd, emaskfd);
 		return n != 0;
 	}
     
@@ -5177,6 +5309,20 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             return MCListCopy(*t_list, r_list);
         
         return dns_servers_from_registry(r_list);
+    }
+    
+    virtual void ShowMessageDialog(MCStringRef p_title,
+                                   MCStringRef p_message)
+    {
+        MCAutoStringRefAsWString t_title_w;
+        if (!t_title_w . Lock(p_title))
+            return;
+        
+        MCAutoStringRefAsWString t_message_w;
+        if (!t_message_w . Lock(p_message))
+            return;
+        
+        MessageBoxW(HWND_DESKTOP, *t_message_w, *t_title_w, MB_APPLMODAL | MB_OK);
     }
 };
 

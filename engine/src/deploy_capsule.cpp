@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -542,7 +542,7 @@ bool MCDeployCapsuleGenerate(MCDeployCapsuleRef self, MCDeployFileRef p_file, MC
 			
 			// This is a section for which data has been supplied so first write
 			// out the header.
-			if (t_section -> length >= 1 << 24 || t_section -> type >= 128)
+			if (t_section -> length >= 1 << 24 || (integer_t)t_section -> type >= 128)
 			{
 				// MW-2009-07-14: Probably best to make sure we fill the *right* indices in the
 				//   header array :o)

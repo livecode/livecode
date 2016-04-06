@@ -1,0 +1,34 @@
+Name: stackFileVersion
+
+Type: property
+
+Syntax: set the stackFileVersion to <version> 
+
+Syntax: the stackFileVersion
+
+Summary: The version of the stack file format to use when saving stacks
+
+Introduced: 2.7
+
+OS: mac,windows,linux,ios,android,html5
+
+Platforms: desktop,server,web,mobile
+
+Value:
+The name of a <stack version>.
+
+Description:
+**Note**: The <stackFileVersion> is deprecated.  Instead, please specify the <stack version> directly, as an optional parameter of the <save> <command>.
+
+Use the <stackFileVersion> to obtain or change the default stack file format version LiveCode uses when saving stacks.
+
+Setting the <stackFileVersion> to something less than the newest <stack version> could result in data being lost when stacks are saved.  For example, setting the <stackFileVersion> to 7.0 will cause any widgets in the stack to be lost, along with their scripts and properties.
+
+Remember to set the <stackFileVersion> back to its previous value after changing it, otherwise LiveCode may save your stacks in unexpected formats.
+
+There is no need to use the <stackFileVersion> when saving a stack using the IDE.  Instead, open the stack in the current version of LiveCode and select "Save As" from the "File" menu, then choose "Legacy LiveCode Stack" from the drop down box for the file type.  If you do not wish to do this every time, there is a setting in the "Files  Memory" section of the preferences that causes LiveCode to preserve the stack file version of legacy stacks.
+
+References: save (command), stack version (glossary)
+
+Changes:
+Deprecated from version 8.0.0.

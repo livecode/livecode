@@ -1,0 +1,38 @@
+Name: marked
+
+Type: keyword
+
+Syntax: marked
+
+Summary: Used in card references and by the <sort> and <print> <command|commands>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+go to marked card 3
+
+Example:
+get the short name of next marked card
+
+Example:
+sort marked cards descending by field "Name"
+
+Example:
+print marked cards
+
+Description:
+Use the <marked> <keyword> to refer to <card(object)|cards> whose <mark> <property> is true.
+
+You use the <mark> <command> to set the <marked> <property> of a subset of <card(object)|cards>. Once marked, the <card(object)|cards> can be treated as a set by the <sort> or <print> <command>. The form sort marked cards sorts only the cards whose <mark> <property> is true. The form print marked cards prints only the cards whose <mark> <property> is true.
+
+In card references, the <marked> <keyword> indicates a card selected from the subset of marked <card(object)|cards>. For example, the following <statement> goes to the first <card(keyword)> in the <current stack> whose <mark> <property> is true:
+
+    go first marked card
+
+References: mark (property), card (keyword), marked (keyword), print (command), unmark (command), sort (command), mark (command), card (object), keyword (glossary), property (glossary), statement (glossary), command (glossary), current stack (glossary)
+
+Tags: ui

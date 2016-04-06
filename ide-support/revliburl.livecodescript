@@ -973,6 +973,10 @@ on ulParseHeaders x
    local tLocLine,tLenLine,tContentLine,tCodeLine,tConnectionLine,ptConnLine
    
    set the lastRhHeaders of me to laRhHeader[laUrl[x]] ##set property
+   // SN-2015-06-04: [[ Bug 15456 ]] Apply fix proposed by Dave Cragg
+   //  see http://runtime-revolution.278305.n4.nabble.com/OT-More-on-false-timeouts-and-headers-td4692465.html
+   filter lines of laRhHeader[laUrl[x]]  without  "*Content-Transfer-Encoding:*"
+   
    put lineOffset("Location:",laRhHeader[laUrl[x]]) into tLocLine
    put lineOffset("Content-Length:",laRhHeader[laUrl[x]]) into tLenLine
    put lineOffset("Content-Type:",laRhHeader[laUrl[x]]) into tContentLine

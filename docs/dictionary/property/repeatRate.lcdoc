@@ -1,0 +1,33 @@
+Name: repeatRate
+
+Type: property
+
+Syntax: set the repeatRate to <milliseconds> 
+
+Summary: Specifies how long a <scrollbar> waits between repeats when the <mouse button> is held down.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the repeatRate to 1000 -- 1 second
+
+Value:
+The <repeatRate> is an <integer>.
+By default, the <repeatRate> <property> is set to 50 (1/20th of a second).
+
+Description:
+Use the <repeatRate> <property> to control auto-scrolling when the <mouse button> is held down.
+
+If the user clicks in the gray region of a scrollbar or on one of its arrows and holds the mouse button down, the scroll action is repeated and the scrollbar is updated repeatedly as long as the mouse is down. The <repeatRate> is the time in <milliseconds> between one update and the next.
+
+If the <repeatRate> is zero, updates are performed as often as possible with no delay.
+
+If the <repeatRate> is <negative>, scrollbar clicks do not repeat at all.
+
+References: pageIncrement (property), scrollbar (keyword), integer (keyword), scrollbarLineInc (message), milliseconds (function), mouse button (glossary), property (glossary), negative (glossary)
+
+Tags: ui

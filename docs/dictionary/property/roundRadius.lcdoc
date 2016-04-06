@@ -1,0 +1,35 @@
+Name: roundRadius
+
+Type: property
+
+Syntax: set the roundRadius [of <graphic>] to <number> 
+
+Summary: Specifies how round the corners of a round rectangle are.
+
+Synonyms: roundHeight,roundWidth
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the roundRadius to 1
+
+Value:
+The <roundRadius> of a <graphic> is a <non-negative> <integer>.
+By default, the <roundRadius> of a newly created <graphic> is set to 15.
+
+Description:
+Use the <roundRadius> <property> to control the appearance of rounded rectangles.
+
+The <roundRadius> determines the diameter of the circle used to draw the corners of a round rectangle. For example, if a round rectangle's <roundRadius> is 15, each corner of the rectangle is an arc of a circle whose diameter is 15 <pixels>.
+
+If the graphic's style <property> is not "roundRect", the setting of this <property> has no effect.
+
+The global setting of the <roundRadius> <property> <control|controls> the appearance of round rectangles drawn with the <roundRect> <paint tool>. Once a paint rounded rectangle is drawn, its appearance cannot be changed by changing the <global> <roundRadius> <property>.
+
+References: roundEnds (property), pixels (property), roundRect (keyword), integer (keyword), graphic (keyword), global (command), control (object), property (glossary), non-negative (glossary), paint tool (glossary)
+
+Tags: ui

@@ -1,0 +1,12 @@
+Name: compile
+
+Synonyms: compiling,compilation,compile,compiled,recompiling,recompilation,recompile,recompiled,compiler,uncompiled
+
+Type: glossary
+
+Description:
+To translate source code--the <statement|statements> you type into a <script> --into executable code that can be understood by the computer. 
+ 
+LiveCode compiles a <script> when you click Apply in the <script editor>, close the <script>, or use the <set> <command> to change the <script>.
+
+References: set (command), script (glossary), statement (glossary), command (glossary), script editor (glossary)

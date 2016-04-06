@@ -1,0 +1,45 @@
+Name: launch document
+
+Type: command
+
+Syntax: launch document <filename> 
+
+Summary: Use the launch command to open a document with the operating system's default program.
+
+Introduced: 2.7.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Security: process
+
+Example:
+launch document "/myProjects/myLiveCodeProject/help.pdf"
+
+Example:
+launch document (the cSampleImage of me)
+
+Parameters:
+filename: 
+
+The result: If launching the document fails, an error message will be placed into the result, otherwise the result will be empty. If non-empty, the message will be one of the following:.
+
+Description:
+<launch document> allows you to open the file  without specifying an application.
+
+The document will be opened using the standard shell association on Windows and Launch Services on Mac OS X.
+
+This means that launch document will have the same result as double clicking the file in Windows Explorer and Mac OS X Finder.
+
+If you want to launch a document with a specific application, use the <launch command> instead, which allows an optional documentName parameter for this purpose.
+
+"can't open file" - the file was not found or is not accessible
+
+"no association" - no application was found to open the document
+
+"request failed" - an attempt was made to launch the appropriate application but it was unable to fulfill the request
+
+"no memory" - the system ran out of resources or memory while trying to fulfill the request
+
+References: launch (command), launch url (command), launch command (command)

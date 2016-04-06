@@ -1,0 +1,12 @@
+Name: PGM
+
+Synonyms: .pgm,PGM
+
+Type: glossary
+
+Description:
+Portable Gray Map. A grayscale picture <format> created for the "pbmplus" image conversion program and usually used on <Unix|Unix systems>.
+
+References: format (glossary), Unix (glossary)
+
+Tags: multimedia

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -96,15 +96,22 @@ enum MCCanvasEffectType
 	kMCCanvasEffectTypeOuterShadow,
 	kMCCanvasEffectTypeInnerGlow,
 	kMCCanvasEffectTypeOuterGlow,
-	
-	_MCCanvasEffectTypeCount
 };
+
+#define _MCCanvasEffectTypeCount (kMCCanvasEffectTypeOuterGlow + 1)
+
+enum MCCanvasEffectSource
+{
+	kMCCanvasEffectSourceEdge,
+	kMCCanvasEffectSourceCenter,
+};
+
+#define _MCCanvasEffectSourceCount (kMCCanvasEffectSourceCenter + 1)
 
 enum MCCanvasEffectProperty
 {
 	kMCCanvasEffectPropertyColor,
 	kMCCanvasEffectPropertyBlendMode,
-	kMCCanvasEffectPropertyOpacity,
 	
 	//	kMCCanvasEffectPropertyFilter,
 	kMCCanvasEffectPropertySize,
@@ -113,14 +120,16 @@ enum MCCanvasEffectProperty
 	kMCCanvasEffectPropertyDistance,
 	kMCCanvasEffectPropertyAngle,
 	
-	_MCCanvasEffectPropertyCount
+	kMCCanvasEffectPropertyKnockOut,
+	kMCCanvasEffectPropertySource,
 };
+
+#define _MCCanvasEffectPropertyCount (kMCCanvasEffectPropertySource + 1)
 
 struct __MCCanvasEffectImpl
 {
 	MCCanvasEffectType type;
 	
-	MCCanvasFloat opacity;
 	MCGBlendMode blend_mode;
 	MCCanvasColorRef color;
 	
@@ -129,6 +138,9 @@ struct __MCCanvasEffectImpl
 	
 	MCCanvasFloat distance;
 	MCCanvasFloat angle;
+	
+	bool knockout;
+	MCCanvasEffectSource source;
 };
 
 __MCCanvasEffectImpl *MCCanvasEffectGet(MCCanvasEffectRef p_effect);

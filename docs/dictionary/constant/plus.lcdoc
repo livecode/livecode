@@ -1,0 +1,32 @@
+Name: plus
+
+Type: constant
+
+Syntax: plus
+
+Summary: Equivalent to the number 13.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the cursor to plus
+
+Description:
+Use the <plus> <constant> to set the <cursor(property)> to a plus sign, suitable for selecting spreadsheet cells.
+
+The following two statements are equivalent:
+
+  set the cursor to plus
+  set the cursor to 12
+
+However, the first is easier to read and understand in LiveCode.
+
+>*Important:*  If you use the <plus> <cursor(property)> or other standard <cursor(glossary)|cursors> in your application, you must include it when you create your <standalone application|standalone>. Make sure the "Cursors" option on the Inclusions section on the General screen of the <Standalone Application Settings> window is checked.
+
+References: cursor (property), cross (constant), constant (command), Standalone Application Settings (glossary), standalone application (glossary), cursor (glossary)
+
+Tags: ui

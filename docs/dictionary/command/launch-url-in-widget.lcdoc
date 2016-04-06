@@ -1,0 +1,29 @@
+Name: launch url in widget
+
+Type: command
+
+Syntax: launch url <url> in <widget>
+
+Summary: Launches a url in a widget.
+
+Introduced: 8.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,mobile
+
+Example:
+launch url "http://www.livecode.com" in widget "myWebBrowser"
+
+Parameters:
+url (string): The URL to launch. The supported url types will vary depending on the capabilities of the widget.
+widget: A widget reference.
+
+Description:
+Use the <launch url> command to open a url within a widget. When <launch url in widget> is called, LiveCode sends a "OnLaunchURL" message to that widget with <url> as the parameter. The widget can then display the url in an appropriate manner.
+
+>*Note:* The <url> must be a standards-compliant URL.  In particular, `file:` urls must be of the form `file://<absolute path>`, and the path should be <URLEncode|URL-encoded>.
+
+References: launch url (command), launch document (command), URLEncode (function), URL (keyword), widget (object)
+
+Tags: widget

@@ -1,0 +1,25 @@
+Name: select
+
+Type: keyword
+
+Syntax: select
+
+Summary: Designates the <paint tool> used to <select> a rectangular area of an <image>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+choose select tool
+
+Description:
+Use the <select> <keyword> to <select> an area of an <image>.
+
+When using the Select tool, the cursor is a crosshairs shape. This tool is used to select a rectangle in an image, by clicking one corner and dragging to the opposite corner.
+
+You can drag a selected rectangle to another location in the image or cut, copy, or delete it.
+
+References: choose (command), select (command), revRotatePoly (command), keyword (glossary), paint tool (glossary), image (keyword)

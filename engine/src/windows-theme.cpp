@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -33,10 +33,57 @@
 #include <windows.h>
 
 
+static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
+{
+    // Get the font used for the non-client areas of Windows. This font
+    // gets used throughout the Windows UI.
+	bool t_found;
+    NONCLIENTMETRICSW ncm;
+    ncm.cbSize = sizeof(ncm);
+    t_found = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    if (t_found)
+    {
+        // Which LOGFONT structure contains the info for this control?
+        LOGFONTW* lf = NULL;
+        switch (p_type)
+        {
+            case kMCPlatformControlTypeTooltip:
+                lf = &ncm.lfStatusFont;
+                break;
+                
+            case kMCPlatformControlTypeMenu:
+            case kMCPlatformControlTypeMenuItem:
+            case kMCPlatformControlTypeOptionMenu:
+            case kMCPlatformControlTypePulldownMenu:
+            case kMCPlatformControlTypePopupMenu:
+                lf = &ncm.lfMenuFont;
+                break;
+                
+            default:
+                lf = &ncm.lfMessageFont;
+                break;
+        }
+        
+        if (lf != NULL)
+        {
+            // Return the LOGFONT structure
+            memcpy(&r_lf, lf, sizeof(LOGFONTW));
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
 {
     return false;
 }
+
+extern bool MCWin32GetScreenDPI(uint32_t&, uint32_t&);
+
+// Density used by default for the Win32 UI
+#define NORMAL_DENSITY  96
 
 bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, int& r_int)
 {
@@ -46,9 +93,29 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
     switch (p_prop)
     {
         case kMCPlatformThemePropertyTextSize:
+        {
+            // Find the LOGFONT structure for the requested control type
             t_found = true;
-            r_int = MCmajorosversion >= 0x0600 ? 12 : 11;
+            LOGFONTW lf;
+            if (!(p_state & kMCPlatformControlStateCompatibility) && logfont_for_control(p_type, lf))
+            {
+                // Scale compared to the "normal" windows scale
+				uint32_t t_x_dpi, t_y_dpi;
+#ifndef _SERVER
+				if (!MCWin32GetScreenDPI(t_x_dpi, t_y_dpi))
+#endif
+					t_x_dpi = t_y_dpi = NORMAL_DENSITY;
+				
+				// Get the size from the LOGFONT structure
+                r_int = MCGFloat(-lf.lfHeight) / (MCGFloat(MCMax(t_x_dpi, t_y_dpi)) / NORMAL_DENSITY);
+            }
+            else
+            {
+                // The default text size depends on the Windows version
+                r_int = MCmajorosversion >= 0x0600 ? 12 : 11;
+            }
             break;
+        }
     }
     
     return t_found;
@@ -190,28 +257,45 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
 
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformControlPart p_part, MCPlatformControlState p_state, MCPlatformThemeProperty p_prop, MCFontRef& r_font)
 {
-    bool t_found;
-    t_found = false;
-    
-    const char* t_fontname;
-    int t_fontsize;
-    
     switch (p_prop)
     {
         case kMCPlatformThemePropertyTextFont:
-            t_found = true;
-            t_fontname = MCmajorosversion >= 0x0600 ? "Segoe UI" : "Tahoma";
-            MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
+        {
+            // Note that we only look up the font outside of compatibility mode
+            LOGFONTW lf;
+            if (!(p_state & kMCPlatformControlStateCompatibility) && logfont_for_control(p_type, lf))
+            {
+                // Get the size of the font we should be using
+				int t_fontsize;
+				MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
+				
+				// Get the font name and size from the LOGFONT structure and
+                // create a font from it.
+                MCAutoStringRef t_font_name_string;
+                MCNewAutoNameRef t_font_name;
+                if (MCStringCreateWithWString(lf.lfFaceName, &t_font_name_string)
+                    && MCNameCreate(*t_font_name_string, &t_font_name))
+                    return MCFontCreate(*t_font_name, 0, t_fontsize, r_font);
+            }
+            else
+            {
+                int t_fontsize;
+                MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
+                if (MCmajorosversion >= 0x0600)
+                {
+                    // Return the Vista+ UI font
+                    return MCFontCreate(MCNAME("Segoe UI"), 0, t_fontsize, r_font);
+                }
+                else
+                {
+                    // Return the Windows XP UI font
+                    return MCFontCreate(MCNAME("Tahoma"), 0, t_fontsize, r_font);
+                }
+                
+            }
             break;
+        }
     }
     
-    if (t_found)
-    {
-        MCNameRef t_name;
-        MCNameCreateWithCString(t_fontname, t_name);
-        MCFontCreate(t_name, 0, t_fontsize, r_font);
-        MCNameDelete(t_name);
-    }
-    
-    return t_found;
+    return false;
 }

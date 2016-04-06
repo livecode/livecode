@@ -1,0 +1,43 @@
+Name: rawDragData
+
+Type: property
+
+Syntax: set the rawDragData[<key>] to <data>
+Syntax: set the rawDragData to empty
+
+Summary: provides low-level access to the contents of the <drag-and-drop clipboard>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+put the keys of the rawDragData
+
+Example:
+set the rawDragData["text/plain;charset=utf-8"] to textEncode("Hello, World!", "UTF-8") -- Linux
+set the rawDragData["CF_UNICODE"] to textEncode("Hello, World!", "UTF-16") -- Windows
+set the rawDragData["public.utf8-plain-text"] to textEncode("Hello, World!", "UTF-8") -- OSX
+
+Value:
+The <rawDragData> pseudo-array provides low-level access to the data on the drag-and-drop clipboard. It can be accessed at any time but may be erased when another program begins a drag-and-drop operation.
+The keys for the <rawDragData> are platform-specific.
+
+Description:
+Use the <rawClipboardData> to gain low-level access to the system drag-and-drop clipboard.. 
+
+This property should only be used if you require low-level access; the <fullDragData> is more appropriate for most uses.
+
+As a low-level feature, platform differences are not hidden. In particular, the form of the keys of the <rawClipboardData> are platform-specific, but can be summarised as:
+ - Windows: arbitrary strings but keys of the form CF_xxx correspond to the clipboard formats defined by Windows itself
+ - OSX: Uniform Type Identifiers (UTIs) with an extension: OSTypes/MIME-types can be used by prefixing the key with com.apple.ostype:/public.mime-type:
+ - Linux: arbitrary strings (X11 atoms) but, by convention, MIME types are used
+
+>*Tip:*		All contents of the <rawDragData> are binary - use the <textEncode>/<textDecode> functions to convert to/from the appropriate encoding.
+
+
+References: dragData (property), fullDragData (property), rawClipboardData (property)
+
+Tags: ui, drag-and-drop

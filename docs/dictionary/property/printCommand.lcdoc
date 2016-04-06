@@ -1,0 +1,36 @@
+Name: printCommand
+
+Type: property
+
+Syntax: set the printCommand to <commandLine> 
+
+Summary: Specifies the <command line> used for printing a <PostScript|PostScript file>.
+
+Introduced: 1.0
+
+OS: linux
+
+Platforms: desktop,server,web
+
+Security: printing
+
+Example:
+set the printCommand to "/usr/bin/printme %s"
+
+Example:
+set the printCommand to "mv %s output.ps" -- puts output in a file
+
+Value:
+The <printCommand> is a string.
+By default, the <printCommand> <property> is set to "lp %s". ("lp" is the standard line-printer command.).
+
+Description:
+Use the <printCommand> <property> to control which program is used to print on <Unix|Unix systems>.
+
+The value of the <printCommand> must be a valid <Unix> <command line>. The <string> "%s" is a placeholder for the print file name LiveCode sends to the printing command.
+
+The setting of this property has no effect on Mac OS or Windows systems.
+
+References: printColors (property), printScale (property), string (keyword), print (command), property (glossary), Unix (glossary), PostScript (glossary), command line (glossary)
+
+Tags: printing

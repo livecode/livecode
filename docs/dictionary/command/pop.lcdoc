@@ -1,0 +1,35 @@
+Name: pop
+
+Type: command
+
+Syntax: pop card [{into | before | after} <container>]
+
+Summary: Retrieves a <card> from the list created with the <push> <command>, and either goes to that <card> or places its <ID> in a <container>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+pop card -- go to the popped card
+
+Example:
+pop card after reverseListOfCards
+
+Parameters:
+container: A field, button, URL, or variable, or the message box.
+
+Description:
+Use the <pop> command to <return> to a <card> whose location you have previously stored.
+
+If you do not specify a container, the <pop> <command> goes to the last <card> you placed on the list with the <push> <command>, and removes that <card> from the list.
+
+If you specify a container, the long <ID> of the <card> is placed in the <container> and removed from the list. The <current card> doe not change.
+
+If the list is empty when you use the <pop> <command>, LiveCode goes to the Home <card>. If you are running in the LiveCode <development environment>, this is the first <card> of the "license.rev" <stack>, which is the splash screen that appears when you start up LiveCode. (Click this card to close the stack.) If you are running in a <standalone application>, the Home <card> is the first <card> of the <standalone application|standalone's> <main stack>.
+
+References: card (keyword), ID (property), return (constant), push (command), stack (object), development environment (glossary), current card (glossary), command (glossary), container (glossary), main stack (glossary), standalone application (glossary)
+
+Tags: navigation

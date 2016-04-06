@@ -1,0 +1,32 @@
+Name: showSelection
+
+Type: property
+
+Syntax: set the showSelection of <player> to {true | false}
+
+Summary: Specifies whether the user can <select> a portion of the movie or sound in a player.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the showSelection of player 3 to true
+
+Value (bool):The <showSelection> of a <player(keyword)> is true or false.
+By default, the <showSelection> <property> of newly created <player(object)|players> is set to false.
+
+Description:
+Use the <showSelection> <property> to play a portion of the movie or sound.
+
+If a player's <showSelection> <property> is set to true, the user can shift-drag the thumb on the <controller bar|player controller> to set the <player|player's> <startTime> and <endTime> <properties>, and the <controller bar> indicates the <selected> section as a dark gray bar.
+
+If the <showController> <property> is false, the setting of the <showSelection> has no effect.
+
+References: showBadge (property), showController (property), endTime (property), startTime (property), playSelection (property), duration (property), properties (property), selected (property), player (keyword), start (command), select (command), play (command), player (object), property (glossary), controller bar (glossary)
+
+Tags: multimedia

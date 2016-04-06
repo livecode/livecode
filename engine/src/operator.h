@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -154,19 +154,12 @@ public:
         MCExecValue t_left, t_right;
         t_left . type = kMCExecValueTypeNone;
         t_right . type = kMCExecValueTypeNone;
-        
-        Boolean t_old_expectation;
-        
-        t_old_expectation = ctxt . GetNumberExpected();
-        
-        ctxt . SetNumberExpected(True);
 
         left -> eval_ctxt(ctxt, t_left);
         if (ctxt . HasError()
                 || ! ctxt . ConvertToNumberOrArray(t_left))
         {
             ctxt . LegacyThrow(EvalLeftError);
-            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 
@@ -177,12 +170,8 @@ public:
             ctxt . LegacyThrow(EvalRightError);
             if (t_left . type == kMCExecValueTypeArrayRef)
                 MCValueRelease(t_left . arrayref_value);
-            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
-        
-        // Set the numiber expectation back to its previous state
-        ctxt . SetNumberExpected(t_old_expectation);
 
         r_value . valueref_value = nil;
         if (t_left . type == kMCExecValueTypeArrayRef)
@@ -242,17 +231,14 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     {
         MCExecValue t_left, t_right;
-        Boolean t_old_expectation;
-        
-        t_old_expectation = ctxt . GetNumberExpected();
-        ctxt . SetNumberExpected(True);
+		t_left . type = kMCExecValueTypeNone;
+		t_right . type = kMCExecValueTypeNone;
 
         // PM-2015-01-15: [[ Bug 14384 ]] Prevent a crash when putting +1 into variable
         if ((left != nil && (left -> eval_ctxt(ctxt, t_left), ctxt . HasError()))
                 || !ctxt . ConvertToNumberOrArray(t_left))
         {
             ctxt . LegacyThrow(EvalLeftError);
-            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 
@@ -262,7 +248,6 @@ public:
             ctxt . LegacyThrow(EvalRightError);
             if (t_left . type == kMCExecValueTypeArrayRef)
                 MCValueRelease(t_left . valueref_value);
-            ctxt . SetNumberExpected(t_old_expectation);
             return;
         }
 
@@ -281,9 +266,6 @@ public:
             else
                 Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
         }
-        
-        // Set the number expectation back to its previous state
-        ctxt . SetNumberExpected(t_old_expectation);
         
         if (ctxt . HasError())
             MCExecTypeRelease(r_value);

@@ -1,0 +1,35 @@
+Name: tabWidths
+
+Type: property
+
+Syntax: set the tabWidths [of line <lineNumber>] of <field> to <tabWidthList> 
+
+Summary: Specifies the width of columns in a field.
+
+Associations: field
+
+Introduced: 5.5 Added
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the tabWidths of field "Comments" to 20,20,20,0
+
+Example:
+set the tabWidths of field 1 to 40,80,120,160,200
+
+Example:
+set the tabWidths of line 2 to -2 of field "list" to tColumnWidths
+
+Value: The <tabWidths> of a field is a list of one or more positive integers, separated by commas.
+
+Description:
+Use the <tabWidths> property to set the widths of columns in a field.
+
+The <tabWidths> consists of one or more integers separated by commas. Each integer is the width in pixels of column. The <tabWidths> returns the relative widths of columns whereas the <tabStops> property returns the absolute positions of tabs.
+
+Setting the <tabWidths> of a field to 20,20,20 will result in tab stops being placed at 20, 40 and 60 pixels.
+
+References: borderWidth (property), tabStops (property), vGrid (property), hGrid (property), tabKey (message)

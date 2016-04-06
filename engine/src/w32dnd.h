@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -17,6 +17,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __W32DND__
 #define __W32DND__
 
+#include <shobjidl.h>
+#include <shlobj.h>
+#include <shlwapi.h>
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Class:
@@ -26,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //    Private platform-specific utility class
 //
 //  Description:
-//    The DropSource class provides the Revolution-specific implementation of
+//    The DropSource class provides the LiveCode-specific implementation of
 //    the OLE IDropSource interface.
 //
 //    It is only intended to be used by the implementation of
@@ -73,7 +77,7 @@ private:
 //    Private platform-specific utility class
 //
 //  Description:
-//    The CDropTarget class is the Revolution-specific implementation of the
+//    The CDropTarget class is the LiveCode-specific implementation of the
 //    OLE IDropTarget interface.
 //
 //    An instance of the object is created for each stack when running on

@@ -1,0 +1,1 @@
+# Can't properly close a stack that is minimised on OS X

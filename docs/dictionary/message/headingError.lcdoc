@@ -1,0 +1,15 @@
+Name: headingError (deprecated 5.5)
+
+Type: message
+
+Syntax: headingError
+
+Summary: Deprecated, use the trackingError message instead.
+
+Introduced: 4.6.1
+
+OS: ios
+
+Platforms: mobile
+
+References: trackingError (message)

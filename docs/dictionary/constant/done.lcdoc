@@ -1,0 +1,26 @@
+Name: done
+
+Type: constant
+
+Syntax: done
+
+Summary: Equivalent to the <string> "done".
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+wait until the sound is done
+
+Example:
+if the sound is done then go next
+
+Description:
+The <done> <constant> is <return|returned> by the <sound> and <movie> <function|functions> to indicate that no <audio clip> or <video clip> is currently playing.
+
+References: string (keyword), constant (command), beep (command), sound (function), movie (function), audio clip (glossary), function (glossary), return (glossary), video clip (glossary)
+
+Tags: multimedia

@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * System identification
  * ================================================================ */
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 {
 	const char t_os[] =
@@ -36,6 +36,8 @@ MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 		"android"
 #elif defined(__LINUX__)
 		"linux"
+#elif defined(__EMSCRIPTEN__)
+		"emscripten"
 #else
 #  error "Unrecognized operating system"
 #endif
@@ -48,14 +50,27 @@ MCSystemExecGetOperatingSystem (MCStringRef & r_string)
  * Command-line information
  * ================================================================ */
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetCommandName (MCStringRef & r_string)
 {
 	/* UNCHECKED */ MCSCommandLineGetName (r_string);
 }
 
-extern "C" MC_DLLEXPORT void
+extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetCommandArguments (MCProperListRef & r_list)
 {
 	/* UNCHECKED */ MCSCommandLineGetArguments (r_list);
 }
+
+////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_system_Initialize (void)
+{
+	return true;
+}
+
+extern "C" void com_livecode_system_Finalize (void)
+{
+}
+
+////////////////////////////////////////////////////////////////

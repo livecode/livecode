@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -90,6 +90,7 @@ class MCDo : public MCStatement
 {
 	MCExpression *source;
 	MCExpression *alternatelang;
+	MCChunk *widget;
 protected:
 	bool browser : 1;
 	Boolean debug : 1;
@@ -102,6 +103,7 @@ public:
 		browser = false;
 		debug = False;
 		caller = false;
+		widget = nil;
 	}
 	virtual ~MCDo();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -688,6 +690,7 @@ class MCLaunch : public MCStatement
 {
 	MCExpression *doc;
 	MCExpression *app;
+	MCChunk *widget;
 	bool as_url;
 
 public:
@@ -695,6 +698,7 @@ public:
 	{
 		doc = app = NULL;
 		as_url = false;
+		widget = nil;
 	}
 	virtual ~MCLaunch();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -708,12 +712,14 @@ class MCLoad : public MCStatement
 	MCExpression *message;
     bool is_extension : 1;
 	bool has_resource_path : 1;
+    bool from_data : 1;
 public:
 	MCLoad()
 	{
 		url = message = NULL;
         is_extension = false;
 		has_resource_path = false;
+        from_data = false;
 	}
 	virtual ~MCLoad();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -838,14 +844,24 @@ public:
 
 class MCReplace : public MCStatement
 {
+	enum Mode
+	{
+		kIgnoreStyles,
+		kReplaceStyles,
+		kPreserveStyles,
+	};
+	
 	MCExpression *pattern;
 	MCExpression *replacement;
 	MCChunk *container;
+	Mode mode;
+	
 public:
 	MCReplace()
 	{
 		pattern = replacement = NULL;
 		container = NULL;
+		mode = kIgnoreStyles;
 	}
 	virtual ~MCReplace();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1547,13 +1563,17 @@ class MCRead : public MCStatement
 	Functions timeunits;
 	MCExpression *at;
 public:
-	MCRead()
+    MCRead() :
+      arg(OA_UNDEFINED),
+      fname(NULL),
+      cond(RF_UNDEFINED),
+      stop(NULL),
+      unit(FU_CHARACTER),
+      maxwait(NULL),
+      timeunits(F_UNDEFINED),
+      at(NULL)
 	{
-		fname = NULL;
-		maxwait = NULL;
-		stop = NULL;
-		unit = FU_CHARACTER;
-		at = NULL;
+        ;
 	}
 	virtual ~MCRead();
 #ifdef LEGACY_EXEC
@@ -1815,15 +1835,24 @@ class MCGo : public MCStatement
 	Boolean marked;
 	Boolean visible;
 	Boolean thisstack;
+	
+	MCChunk *widget;
+	Chunk_term direction;
 public:
-	MCGo()
-	{
-		mode = WM_LAST;
-		stack = background = card = NULL;
-		window = NULL;
-		marked = thisstack = False;
-		visible = True;
-	}
+    MCGo() :
+        background(nil),
+        stack(nil),
+        card(nil),
+		window(nil),
+		mode(WM_LAST),
+        marked(False),
+        visible(True),
+        thisstack(False),
+		widget(nil),
+        direction(CT_BACKWARD)
+    {
+        ;
+    };
 	virtual ~MCGo();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
@@ -1905,12 +1934,10 @@ class MCSave : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *filename;
+	MCExpression *format;
+	bool newest_format;
 public:
-	MCSave()
-	{
-		target = NULL;
-		filename = NULL;
-	}
+	MCSave() : target(NULL), filename(NULL), format(NULL), newest_format(false) {}
 	virtual ~MCSave();
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
@@ -1946,6 +1973,9 @@ class MCSubwindow : public MCStatement
 	MCExpression *parent;
 	MCExpression *at;
 	MCExpression *aligned;
+
+	MCExpression *widget;
+	MCExpression *properties;
 protected:
 	Window_mode mode;
 public:
@@ -1956,6 +1986,9 @@ public:
 		parent = NULL;
 		thisstack = False;
 		aligned = NULL;
+		
+		widget = nil;
+		properties = nil;
 	}
 	virtual ~MCSubwindow();
 	virtual Parse_stat parse(MCScriptPoint &);

@@ -198,6 +198,8 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
    local tResourceList
    local tResult
    
+   put revSBReadLink(pSource) into pSource
+   
    local tOldFolder
    put the defaultfolder into tOldFolder
    if there is no folder pSource then
@@ -559,6 +561,38 @@ function revSBGenerateUUID
   return the result
 end revSBGenerateUUID
 
+private function __readlink pPath
+   if the platform is "Win32" then
+      return empty
+   end if
+   
+   local tLink
+   put shell("readlink " & quote & pPath & quote) into tLink
+   if the last char of tLink is cr then
+      delete the last char of tLink
+   end if
+   return tLink
+end __readlink
+
+// Resolve symbolic links
+private function revSBReadLink pPath
+   repeat forever
+      local tLink
+      put __readlink(pPath) into tLink
+      
+      if tLink is empty then
+         return pPath
+      end if
+      
+      if the first char of tLink is not slash then
+         set the itemdel to slash
+         put revSBCalculateAbsolutePath(item 1 to -2 of pPath, tLink) into tLink
+      end if
+      
+      put tLink into pPath
+   end repeat
+end revSBReadLink
+
 ----------
 
 local sWarnings
@@ -699,6 +733,13 @@ on revDefaultStandaloneSettings pStack
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Only create standalone setting for Intel (for OS X) by default.
    if tStandaloneSettingsA["MacOSX x86-32"] is empty then put true into tStandaloneSettingsA["MacOSX x86-32"]
    
+   -- Auto-remove stack passwords from community stacks
+   if revLicenseType() is "community" then
+      if tStandaloneSettingsA["password"] is not empty then
+         delete variable tStandaloneSettingsA["password"]
+      end if
+   end if
+   
    set the customproperties["cRevStandaloneSettings"] of stack pStack to tStandaloneSettingsA
 end revDefaultStandaloneSettings
 
@@ -771,6 +812,7 @@ function revEngineCheck pEngine
          case "MacOSX"
          case "MacOSX PowerPC-32"
          case "MacOSX x86-32"
+         case "MacOSX x86-64"
             return there is a directory (tPath & "/Mac OS X/x86-32/Standalone.app")
          case "Windows"
             if there is a file (tPath & "/Windows/x86-32/Standalone") then
@@ -792,6 +834,11 @@ function revEngineCheck pEngine
             -- FG-2014-08-19: [[ RPi ]] Check to see if the ARMv6 engine is present
          case "Linux ARMv6-HF"
             if there is a file (tPath & "/Linux/armv6-hf/Standalone") then
+               return true
+            end if
+            break
+         case "Emscripten"
+            if there is a folder (tPath & "/Emscripten/js") then
                return true
             end if
             break
@@ -883,6 +930,7 @@ end revSBResaveScriptOnlyStackAsProperStackFile
 # AL-2015-02-02: [[ Scriptify IDE ]] As we remove buttons from revLIbrary, we'll need to add to
 # this function to return the 'common' name of each of the libraries.
 function revSBScriptLibraryNameFromStackName pStack
+   # AL-2015-03-05: [[ Bug 14813 ]] Internet and Printing are the only script library naming exceptions
    switch pStack
       case "revLibUrl"
          return "Internet"
@@ -903,39 +951,34 @@ function revSBScriptLibraryNameFromStackName pStack
 end revSBScriptLibraryNameFromStackName
 
 function revSBStackNameFromScriptLibraryName pLib
+   # AL-2015-03-05: [[ Bug 14813 ]] Internet and Printing are the only script library naming exceptions
    switch pLib
       case "Internet"
          return "revLibUrl"
       case "Printing"
          return "revPrintLibrary"
-      case "Geometry"
-      case "Animation"
-      case "XMLRPC"
-      case "WidgetTracker"
-      case "Database"
-      case "Table"
-         return "rev" & pLib & "Library"
       default
-         return empty
+         return "rev" & pLib & "Library"
    end switch
    return pLib
 end revSBStackNameFromScriptLibraryName
 
 function revSBLibraryList
-   local tPath,tSave,tLibraries,tBtn,tExternals
+   # AL-2105-03-05: [[ Bug 14813 ]] Use array key method to ignore duplicates
+   local tPath,tSave,tLibrariesA,tBtn,tExternals
    -- rev script libraries
-   local tLoadedLibs
-   put revInternal__ListLoadedLibraries() into tLoadedLibs
-   repeat for each line tLine in tLoadedLibs
-      get revSBScriptLibraryNameFromStackName(tLine) 
-      if it is not empty then put it & CR after tLibraries
+   # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
+   // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
+   repeat for each item tItem in "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
+      put empty into tLibrariesA[tItem]
    end repeat
    
    -- rev externals
    get revExternalsList()
-   if it is not empty then
-      put it & cr after tLibraries
-   end if
+   repeat for each line tLine in it
+      put empty into tLibrariesA[tLine]
+   end repeat
+   
    -- user script libraries
    
    local tEnvironmentScripts
@@ -947,13 +990,12 @@ function revSBLibraryList
    local tFiles
    put revCombineFilePaths(tUserScripts,tEnvironmentScripts) into tFiles
    repeat for each line tLine in tFiles
-      if there is a stack tLine then put the short name of stack tLine & cr after tLibraries
+      if there is a stack tLine then put empty into tLibrariesA[ the short name of stack tLine]
    end repeat
-   put "SSL & Encryption" & cr after tLibraries
-   if "Browser" is among the lines of tLibraries then
-      put "Browser (CEF)" & cr after tLibraries
+   put empty into tLibrariesA["SSL & Encryption"]
+   if "Browser" is among the keys of tLibrariesA then
+      put empty into tLibrariesA["Browser (CEF)"]
    end if
 
-   delete the last char of tLibraries
-   return tLibraries
+   return the keys of tLibrariesA
 end revSBLibraryList

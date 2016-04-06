@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	IMAGE_H
 #define	IMAGE_H
 
-#include "control.h"
+#include "mccontrol.h"
 #include "imagebitmap.h"
 #include "graphics.h"
 #include "exec.h"
@@ -81,6 +81,8 @@ bool MCImageDecodeNetPBM(IO_handle p_stream, MCImageBitmap *&r_bitmap);
 void MCImageBitmapSetAlphaValue(MCImageBitmap *p_bitmap, uint8_t p_alpha);
 
 bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetadata& r_metadata);
+// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
+bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -136,10 +138,14 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict);
 #include "image_rep.h"
 
 // IM-2013-10-30: [[ FullscreenMode ]] Factor out image rep creation & preparation
-bool MCImageGetFileRepForStackContext(MCStringRef p_filename, MCStack *p_stack, MCImageRep *&r_rep);
-void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
+// Retrieve an image rep for the given file path.
+bool MCImageGetRepForFileWithStackContext(MCStringRef p_path, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the given reference, which may be a file path or a url.
+bool MCImageGetRepForReferenceWithStackContext(MCStringRef p_reference, MCStack *p_stack, MCImageRep *&r_rep);
+// Retrieve an image rep for the named resource.
+bool MCImageGetRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep);
 
-bool MCImageGetFileRepForResource(MCStringRef p_resource_file, MCImageRep *&r_rep);
+void MCImagePrepareRepForDisplayAtDensity(MCImageRep *p_rep, MCGFloat p_density);
 
 class MCMutableImageRep : public MCImageRep
 {
@@ -244,6 +250,9 @@ public:
 
 	static void init();
 	static void shutdown();
+    
+    // MERG-2014-09-16: [[ ImageMetadata ]] Support for image metadata property
+    bool GetMetadata(MCImageMetadata& r_metadata);
 
 private:
 	MCImage *m_owner;
@@ -397,7 +406,7 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual void setrect(const MCRectangle &nrect);
+	virtual void applyrect(const MCRectangle &nrect);
 
 #ifdef LEGACY_EXEC
     virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
@@ -419,13 +428,13 @@ public:
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
 	
 	// MW-2012-03-28: [[ Bug 10130 ]] No-op for images as there is no font.
-	virtual bool recomputefonts(MCFontRef parent_font);
+	virtual bool recomputefonts(MCFontRef parent_font, bool force);
 
 	// virtual functions from MCControl
 	IO_stat load(IO_handle stream, uint32_t version);
 	IO_stat extendedload(MCObjectInputStream& p_stream, uint32_t version, uint4 p_length);
-	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
-	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
+	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
 
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual Boolean maskrect(const MCRectangle &srect);
@@ -618,7 +627,6 @@ public:
 
 	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef &r_data);
 	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef p_data);
-    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 	
 	////////// PROPERTY ACCESSORS
 
@@ -668,11 +676,11 @@ public:
     // SN-2014-06-23: [[ IconGravity ]] Getters and setters added
     void SetCenterRectangle(MCExecContext& ctxt, MCRectangle *p_rectangle);
     void GetCenterRectangle(MCExecContext& ctxt, MCRectangle *&r_rectangle);
+    void GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value);
     
     virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
 	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
     virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
 };
 
 extern bool MCU_israwimageformat(Export_format p_format);

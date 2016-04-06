@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -217,7 +217,7 @@ UIWindow *MCIPhoneGetWindow(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCExportImageToAlbumDelegate : NSObject
+@interface com_runrev_livecode_MCExportImageToAlbumDelegate : NSObject
 {
 	bool m_finished;
 	bool m_successful;
@@ -228,7 +228,7 @@ UIWindow *MCIPhoneGetWindow(void);
 - (void)image: (UIImage *)image didFinishSavingWithError: (NSError *)error contextInfo: (void *)contextInfo;
 @end
 
-@implementation MCExportImageToAlbumDelegate
+@implementation com_runrev_livecode_MCExportImageToAlbumDelegate
 
 - (id)init
 {
@@ -281,7 +281,7 @@ UIWindow *MCIPhoneGetWindow(void);
 
 struct export_image_t
 {
-    MCExportImageToAlbumDelegate *delegate;
+    com_runrev_livecode_MCExportImageToAlbumDelegate *delegate;
     MCDataRef raw_data;
     // PM-2014-12-12: [[ Bug 13860 ]] Added support for exporting referenced images to album
     bool is_raw_data;
@@ -377,7 +377,7 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 	export_image_t ctxt;
     ctxt . is_raw_data = t_is_raw_data;
 	ctxt . image_data = t_image_data;
-	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
+	ctxt . delegate = [[com_runrev_livecode_MCExportImageToAlbumDelegate alloc] init];
 	
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
 	
@@ -401,7 +401,7 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
 	export_image_t ctxt;
     ctxt . is_raw_data = p_is_raw_data;
     ctxt . raw_data = p_raw_data;
-	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
+	ctxt . delegate = [[com_runrev_livecode_MCExportImageToAlbumDelegate alloc] init];
 
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
 
@@ -679,6 +679,14 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	return ES_NORMAL;
 }
 #endif /* MCHandleCameraFeaturesIphone */
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemGetLaunchData(MCArrayRef &r_data)
+{
+	// Not implemented on iOS
+	return false;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1118,8 +1126,8 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
 	t_url = nil;
 	t_filename = nil;
     
-	MCExecPoint ep(nil, nil, nil);
-    
+    MCExecPoint ep(nil, nil, nil);
+
 	if (p_parameters != nil)
 	{
 		p_parameters -> eval_argument(ep);
@@ -1312,6 +1320,7 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
 	MCAutoStringRef t_protection_string;
 
 	bool t_success;
+    t_success = true;
 
 	if (t_success)
 		t_success = MCFileGetDataProtection(p_path, t_protection);
@@ -1727,6 +1736,11 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 	MCscreen -> wait(1/25.0, False, False);
 	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
 	MCEventQueueClearTouches();
+
+    // PM-2015-03-16: [[ Bug 14333 ]] Make sure the object that triggered a mouse down msg is not focused, as this stops later mouse downs from working
+    if (MCtargetptr != nil)
+        MCtargetptr -> munfocus();
+
 	return ES_NORMAL;
 }
 #endif /* MCHandleClearTouchesIphone */

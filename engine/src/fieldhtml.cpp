@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1616,7 +1616,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 			{
 				// MW-2012-03-16: [[ Bug ]] LinkText without link style is encoded with a 'name' attr.
-				if (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref)
+				if (p_tag . attrs[i] . value != nil && (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref))
 				{
 					MCValueRelease(t_linktext);
 					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_linktext);
@@ -1643,8 +1643,13 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . type == kImportHtmlAttrSrc)
 				{
-					MCValueRelease(t_src);
-					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
+					// PM-2015-02-05: [[ Bug 16853 ]] Allow spaces between <atribute_name> and "=" sign
+					// Nil-check before passing it to strlen
+					if (p_tag . attrs[i] . value != nil)
+					{
+						MCValueRelease(t_src);
+						/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
+					}
 				}
 			
 			if (t_src != nil)
@@ -1720,6 +1725,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 							}
 						}
 						break;
+					default:
+						break;
 					}
 				}
 			}
@@ -1750,7 +1757,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			MCStringRef t_metadata;
 			t_metadata = nil;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
-				if (p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
+				if (p_tag . attrs[i] . value != nil && p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
 				{
 					MCValueRelease(t_metadata);
 					MCStringCreateWithCString(p_tag . attrs[i] . value, t_metadata);
@@ -1789,6 +1796,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 			break;
 		case kImportHtmlTagThreeDBox:
 			import_html_add_textstyle_to_style(t_style, FA_3D_BOX);
+			break;
+		default:
 			break;
 	}
 	
@@ -1930,6 +1939,8 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			case kImportHtmlAttrHidden:
 				r_style . hidden = true;
 			break;
+			default:
+				break;
 		}
 	}
 }
@@ -2206,6 +2217,9 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                                 case kImportHtmlTagH6:
                                     t_font_size = 10, t_font_style = FA_BOLD;
                                     break;
+								default:
+									MCUnreachable();
+									break;
                             }
                             
                             if (t_font_style != 0)
@@ -2270,6 +2284,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         else
                             import_html_change_style(ctxt, t_tag);
                         break;
+					default:
+						break;
 				}
                 
 				t_saw_start_tag = !t_tag . is_terminator;

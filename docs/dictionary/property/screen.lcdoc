@@ -1,0 +1,27 @@
+Name: screen
+
+Type: property
+
+Syntax: put the screen of <stack> 
+
+Summary: Returns the screen number that the stack is on. The number corresponds to the line of the rect of the screen returned by the screenrects.
+
+Associations: stack
+
+Introduced: ?.?
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+on mouseUp
+  put line (the screen of stack "My Stack") of the screenRects into theRectOfScreenStackIsOn
+end mouseUp
+
+Value (int):The <screen> property of a <stack> is an integer.
+
+Description:
+Use the <screen> property to determine which monitor the stack appears on or the pixel density of the monitor it is on.
+
+References: (property), screenRects (function), screenPixelScales (function), stack (object)

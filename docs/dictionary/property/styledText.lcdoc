@@ -1,0 +1,115 @@
+Name: styledText
+
+Type: property
+
+Syntax: set the styledText of <field> to <styledArray> 
+
+Summary: Specifies the contents of a field, with its text formatting represented as LiveCode styled text array.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the styledText of field "White Paper" to tStyledTextArray
+
+Example:
+set the styledText of field "Dest" to the styledText of field "Source"
+
+Parameters:
+field: The reference to the field.
+styledArray (array): An array containing the styled text. (Must be correctly constructed as a LiveCode styledText array, see comments)
+
+Value: The <styledText> property returns a numerically-indexed array of paragraphs.
+
+The result: The engine flattens any nested numeric arrays within the tree; then iterates through the result ignoring any empty entries. If an array has a 'runs' key it is treated as an independent paragraph; otherwise it is assumed to be a 'run' and the styled text it contains is appended to the current paragraph. Note that the 'text' field of a run can contain newlines the presence of which cause paragraph breaks at the appropriate points - if such a break is made, the paragraph attributes are copied across the break.
+
+Description:
+Use the <styledText> property to access and programatically manipulate the styled contents of a field.
+
+The <styledText> property is similar to rtfText and htmlText in that it provides a script-processable representation of the field's styled content. It differs from these two formats in two ways: 
+
+1) It is a fully faithful representation (set the <styledText> of field to the <styledText> of field results in no change to the field).
+2) It is array-based.
+
+The <styledText> property returns a numerically-indexed array of paragraphs, each index representing each paragraph in the field in order:
+
+tStyledTextArray[1] = &lt;first paragraph array&gt;
+...
+tStyledTextArray[&lt;n&gt;] = &lt;last paragraph array&gt; 
+
+Each paragraph array has up to two keys:
+
+tParagraphArray["style"] = &lt;array containing paragraph-level styles&gt;
+tParagraphArray["runs"] = &lt;paragraph content array&gt;
+
+The style array contains the values for each of the paragraph styles set on that paragraph. The list of styles that are supported are: textAlign, listStyle, listDepth, listIndent, firstIndent, leftIndent, rightIndent, spaceAbove, spaceBelow, tabStops, backgroundColor, borderWidth, borderColor, hGrid, vGrid, dontWrap, padding.
+
+The paragraph content array is a numerically-indexed array of runs, each index representing each run in the paragraph in order:
+
+tParagraphContentArray[1] = &lt;first paragraph run array&gt;
+...
+tParagraphContentArray[&lt;n&gt;] = &lt;last paragraph run array&gt;
+
+Each paragraph run array has up to three keys:
+
+tRunArray["style"] = &lt;array containing character-level styles for the run&gt;
+tRunArray["metadata"] = &lt;metadata of the run (if present)&gt;
+tRunArray["text" (or "unicodeText")] = &lt;text content of run&gt;
+
+The style array contains the values for each of the characters styles set on that run. The list of styles that are supported are: textFont, textSize, textStyle, textShift, textColor, backgroundColor, linkText, imageSource.
+
+If a run has Unicode text in it then the run array has a "unicodeText" key containing its content encoded as UTF-16. Otherwise, the run array has a "text" key containing its content encoded in the native text encoding. 
+
+For example, take the following content consisting of two paragraphs:
+
+Centered Hello World
+
+Left-aligned Hello unicodeString
+
+This would transpire as the following array:
+1 =
+style = { textAlign = center }
+runs =
+1 = { text = Centered  }
+2 =
+style = { textStyle = bold }
+text = Hello
+3 = { text =  World }
+2 =
+runs =
+1 = { text = Left-aligned  }
+2 =
+style = { textColor = 255,0,0 }
+text = Hello
+3 = { unicodeText = unicodeString }
+
+[ For brevity, single element arrays are represented using { ... } notation ]
+
+When setting the styledText property, the engine uses a very permissive algorithm to parse the arrays as follows:
+
+parseStyledTextArray pStyledText
+repeat for each element tEntry of pStyledText
+if tEntry is a sequence then
+parseStyledTextArray tEntry
+else if tEntry has key runs then
+begin paragraph with style tEntry[style]
+parseStyledTextRunArray tEntry[runs]
+end paragraph
+else if tEntry is an array then
+append tEntry[text] with style tEntry[style]
+
+parseStyledTextRunArray pRun
+repeat for each element tRun in pRuns
+if tRun is a sequence then
+parseStyledTextRunArray tRun
+else
+append tRun[text] with style tEntry[style]
+
+References: HTMLText (property), textSize (property), flagged (property), textShift (property), metadata (property), textFont (property), RTFText (property), textStyle (property)
+
+Tags: text processing

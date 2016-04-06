@@ -1,0 +1,675 @@
+/* Copyright (C) 2003-2015 LiveCode Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/*  
+This library consists of the basic arithmetic operations of standard library of LiveCode Builder.
+*/
+
+module com.livecode.arithmetic
+
+use com.livecode.foreign
+
+--
+
+public foreign handler MCArithmeticExecAddIntegerToInteger(in Value as LCInt, inout Target as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecAddRealToReal(in Value as CDouble, inout Target as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecAddNumberToNumber(in Value as Number, inout Target as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecSubtractIntegerFromInteger(in Value as LCInt, inout Target as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecSubtractRealFromReal(in Value as CDouble, inout Target as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecSubtractNumberFromNumber(in Value as Number, inout Target as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyIntegerByInteger(inout Target as LCInt, in Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyRealByReal(inout Target as CDouble, in Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecMultiplyNumberByNumber(inout Target as Number, in Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideIntegerByInteger(inout Target as LCInt, in Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideRealByReal(inout Target as CDouble, in Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecDivideNumberByNumber(inout Target as Number, in Value as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalPlusInteger(in Operand as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalPlusReal(in Operand as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalPlusNumber(in Operand as Number, out Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalMinusInteger(in Operand as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalMinusReal(in Operand as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalMinusNumber(in Operand as Number, out Value as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalIntegerPlusInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealPlusReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberPlusNumber(in Left as Number, in Right as Number, out Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerMinusInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealMinusReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberMinusNumber(in Left as Number, in Right as Number, out Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerTimesInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealTimesReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberTimesNumber(in Left as Number, in Right as Number, out Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerOverInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealOverReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberOverNumber(in Left as Number, in Right as Number, out Value as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalIntegerModInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealModReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberModNumber(in Left as Number, in Right as Number, out Value as Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerWrapInteger(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealWrapReal(in Left as CDouble, in Right as CDouble, out Value as CDouble) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberWrapNumber(in Left as Number, in Right as Number, out Value as Number) returns nothing binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalIntegerIsGreaterThanInteger(in Left as LCInt, in Right as LCInt, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealIsGreaterThanReal(in Left as CDouble, in Right as CDouble, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsGreaterThanNumber(in Left as Number, in Right as Number, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerIsGreaterThanOrEqualToInteger(in Left as LCInt, in Right as LCInt, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealIsGreaterThanOrEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerIsLessThanInteger(in Left as LCInt, in Right as LCInt, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealIsLessThanReal(in Left as CDouble, in Right as CDouble, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsLessThanNumber(in Left as Number, in Right as Number, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalIntegerIsLessThanOrEqualToInteger(in Left as LCInt, in Right as LCInt, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalRealIsLessThanOrEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNumberIsLessThanOrEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalEqualToInteger(in Left as LCInt, in Right as LCInt, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToInteger(in Left as LCInt, in Right as LCInt, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToReal(in Left as CDouble, in Right as CDouble, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalNotEqualToNumber(in Left as Number, in Right as Number, out Value as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalNumberFormattedAsString(in Target as Number, out Value as String) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticEvalStringParsedAsNumber(in Target as String, out Value as optional Number) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecFormatNumberAsString(in Target as Number) returns String binds to "<builtin>"
+public foreign handler MCArithmeticExecParseStringAsNumber(in Target as String) returns optional Number binds to "<builtin>"
+
+public foreign handler MCArithmeticEvalListOfStringParsedAsListOfNumber(in Target as List, out Value as optional List) returns nothing binds to "<builtin>"
+public foreign handler MCArithmeticExecParseListOfStringAsListOfNumber(in Target as List) returns optional List binds to "<builtin>"
+
+--
+
+/*
+Summary:    Adds <Value> to <Target>.
+Target:     An expression that evaluates to a numeric container.
+Value:      An expression that evaluates to a number.   
+
+Example:
+    variable tVar as Number
+    put 2 into tVar
+    add 10 to tVar -- tVar contains 12
+
+Description:
+Adds the number <Value> to <Target>.
+
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
+
+Tags: Math
+*/
+
+syntax AddNumberTo is statement
+    "add" <Value: Expression> "to" <Target: Expression>
+begin
+    MCArithmeticExecAddNumberToNumber(Value, Target)
+end syntax
+
+
+/*
+Summary:    Subtracts <Value> from <Target>.
+Target:     An expression that evaluates to a numeric variable.
+Value:      An expression that evaluates to a number.   
+
+Example:
+	variable tVar as real
+	put 10 into tVar
+	subtract 2.5 from tVar -- tVar contains 7.5
+
+Description:
+Subtracts the number <Value> from <Target>.
+
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
+
+Tags: Math
+*/
+
+syntax SubtractNumberFrom is statement
+    "subtract" <Value: Expression> "from" <Target: Expression>
+begin
+    MCArithmeticExecSubtractNumberFromNumber(Value, Target)
+end syntax
+
+/*
+Summary:    Multiplies <Target> by <Value>.
+Target:     An expression that evaluates to a numeric variable.
+Value:      An expression that evaluates to a number.   
+
+Example:
+	variable tVar as Number
+	put 2 into tVar
+	multiply tVar by 2 -- tVar contains 4
+
+Description:
+Multiplies the number <Target> by <Value>.
+
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
+
+Tags: Math
+*/
+
+syntax MultiplyNumberBy is statement
+    "multiply" <Target: Expression> "by" <Value: Expression>
+begin
+    MCArithmeticExecMultiplyNumberByNumber(Target, Value)
+end syntax
+
+/*
+Summary:    Divides <Target> by <Value>.
+Target:     An expression that evaluates to a numeric variable.
+Value:      An expression that evaluates to a number.   
+
+Example:
+	variable tVar
+	put 3 into tVar
+	divide tVar by 2 -- tVar contains 1.5
+
+Description:
+Divides the number <Target> by <Value>.
+
+>*Note:* It is a syntax error if <Target> does not evaluate to a variable.
+
+Tags: Math
+*/
+
+syntax DivideNumberBy is statement
+    "divide" <Target: Expression> "by" <Value: Expression>
+begin
+    MCArithmeticExecDivideNumberByNumber(Target, Value)
+end syntax
+
+--
+
+/*
+Summary:    Unary plus operator.
+Operand:    An expression that evaluates to a number.
+
+Returns: 	The result of evaluating <Operand>.
+
+Example:
+	variable tVar as Number
+	put +5 into tVar -- tVar contains 5
+
+Description: 
+The unary plus operator is a no-op on the predefined numeric types.
+
+Tags: Math
+*/
+
+syntax PlusUnaryOperator is prefix operator with modifier precedence
+    "+" <Operand: Expression>
+begin
+    MCArithmeticEvalPlusNumber(Operand, output)
+end syntax
+
+/*
+Summary:    Unary minus operator.
+Operand:    An expression that evaluates to a number.
+
+Returns: 	The negated result of evaluating <Operand>.
+
+Example:
+	variable tVar as Number
+	put -(5 + 4) into tVar -- tVar contains -9
+
+Tags: Math
+*/
+
+syntax MinusUnaryOperator is prefix operator with modifier precedence
+    "-" <Operand: Expression>
+begin
+    MCArithmeticEvalMinusNumber(Operand, output)
+end syntax
+
+--
+
+/*
+Summary:    Binary plus operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The result of adding the numbers <Left> and <Right>.
+
+Example:
+	variable tVar as Number
+	put 5 + 4 + 3 into tVar -- tVar contains 12
+
+Tags: Math
+*/
+
+syntax PlusOperator is left binary operator with addition precedence
+    <Left: Expression> "+" <Right: Expression>
+begin
+    MCArithmeticEvalNumberPlusNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Binary minus operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The result of subtracting the number <Right> from <Left>.
+
+Example:
+	variable tVar as Number
+	put 5 - 3 - 1 into tVar -- tVar contains 1
+	
+Tags: Math
+*/
+
+syntax MinusOperator is left binary operator with addition precedence
+    <Left: Expression> "-" <Right: Expression>
+begin
+    MCArithmeticEvalNumberMinusNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Binary multiplication operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The result of multiplying the numbers <Left> and <Right>.
+
+Example:
+	variable tVar as Number
+	put 3 * 5 into tVar -- tVar contains 15
+	
+Tags: Math
+
+*/
+
+syntax TimesOperator is left binary operator with multiplication precedence
+    <Left: Expression> "*" <Right: Expression>
+begin
+    MCArithmeticEvalNumberTimesNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Binary division operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	The result of dividing the number <Left> by <Right>.
+
+Example:
+	variable tVar as Number
+	put 3 / 5 into tVar -- tVar contains 0.6
+	
+Tags: Math
+*/
+
+syntax OverOperator is left binary operator with multiplication precedence
+    <Left: Expression> "/" <Right: Expression>
+begin
+    MCArithmeticEvalNumberOverNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Mod operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: <Left> mod <Right>.
+
+Example:
+	variable tVar as Number
+	put 4^((7 - 1)/2) mod 7 into tVar -- tVar contains 1
+	
+Description:
+Returns the remainder on dividing <Left> by <Right>
+
+*/
+
+syntax ModOperator is neutral binary operator with multiplication precedence
+    <Left: Expression> "mod" <Right: Expression>
+begin
+    MCArithmeticEvalNumberModNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Wrap operator.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns:		If x >= 0, then x wrap y returns ((x-1) mod abs(y)) + 1.
+			If x < 0, then x wrap y returns -((x-1) mod abs(y)) + 1.
+			
+Example:
+	variable tVar as Number
+	put 5 wrap 3 into tVar -- tVar contains 2
+
+Example:
+	variable tVar as Number
+	put -3 wrap 3 into tVar -- tVar contains -3
+
+Description:
+Use wrap to ensure the value of a variable stays within a specified range. For x,y > 0, 
+successive values of x wrap y cycle through the sequence 1, 2, ..., y.
+
+*/
+
+syntax WrapOperator is neutral binary operator with multiplication precedence
+    <Left: Expression> "wrap" <Right: Expression>
+begin
+    MCArithmeticEvalNumberWrapNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Greater than relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is greater than <Right>, and false otherwise.
+*/
+
+syntax NumberIsGreaterThanNumber is neutral binary operator with comparison precedence
+    <Left: Expression> ">" <Right: Expression>
+begin
+    MCArithmeticEvalNumberIsGreaterThanNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Greater than or equal to relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is greater than or equal to <Right>, and false otherwise.
+*/
+
+syntax NumberIsGreaterThanOrEqualToNumber is neutral binary operator with comparison precedence
+    <Left: Expression> ">=" <Right: Expression>
+begin
+    MCArithmeticEvalNumberIsGreaterThanOrEqualToNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Less than relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is less than <Right>, and false otherwise.
+
+Description:
+
+Tags: Math
+*/
+
+syntax NumberIsLessThanNumber is neutral binary operator with comparison precedence
+    <Left: Expression> "<" <Right: Expression>
+begin
+    MCArithmeticEvalNumberIsLessThanNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Less than or equal to relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is less than or equal to <Right>, and false otherwise.
+
+Description:
+
+Tags: Math
+*/
+
+
+syntax NumberIsLessThanOrEqualToNumber is neutral binary operator with comparison precedence
+    <Left: Expression> "<=" <Right: Expression>
+begin
+    MCArithmeticEvalNumberIsLessThanOrEqualToNumber(Left, Right, output)
+end syntax
+
+--
+
+/*
+Summary:    Equal to relation.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is equal to <Right>, and false otherwise.
+
+Description:
+
+Tags: Math
+*/
+
+syntax NumberIsEqualToNumber is neutral binary operator with comparison precedence
+    <Left: Expression> "=" <Right: Expression>
+begin
+    MCArithmeticEvalEqualToNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Determines if <Left> is <Right>.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is equal to <Right>, and false otherwise.
+
+Description:
+Identical to the <NumberIsEqualToNumber> operator.
+
+References: NumberIsEqualToNumber (operator)
+
+Tags: Math
+*/
+
+syntax NumberIsNumber is neutral binary operator with comparison precedence
+    <Left: Expression> "is" <Right: Expression>
+begin
+    MCArithmeticEvalEqualToNumber(Left, Right, output)
+end syntax
+
+/*
+Summary:    Determines if <Left> is not <Right>.
+Left:       An expression that evaluates to a number.
+Right:      An expression that evaluates to a number.
+
+Returns: 	True if <Left> is not equal to <Right>, and false otherwise.
+
+Description:
+Returns the opposite of the <NumberIsNumber> operator.
+
+References: NumberIsNumber (operator)
+
+Tags: Math
+*/
+
+
+syntax NumberIsNotNumber is neutral binary operator with comparison precedence
+    <Left: Expression> "is not" <Right: Expression>
+begin
+    MCArithmeticEvalNotEqualToNumber(Left, Right, output)
+end syntax
+
+
+/*
+Summary:	Formats a numeric value as a string
+
+Operand:	An expression that evaluates to a number.
+
+Returns:	<Operand> formatted as a string.
+
+Example:
+	variable tString as String
+	variable tNum as Number
+	put 5 into tNum
+	put tNum formatted as string into tString -- tString contains "5"
+
+Description:
+Use <NumberFormattedAsString> when you want to manipulate a numeric value as text.
+*/
+
+syntax NumberFormattedAsString is postfix operator with conversion precedence
+    <Operand: Expression> "formatted" "as" "string"
+begin
+    MCArithmeticEvalNumberFormattedAsString(Operand, output)
+end syntax
+
+/*
+Summary:	Formats a numeric value as a string
+
+Operand:	An expression that evaluates to a number.
+
+The result:	<Operand> formatted as a string.
+
+Example:
+	variable tNum as Number
+	put 5 into tNum
+	format tNum as string -- the result contains "5"
+
+Description:
+Use <FormatNumberAsString> when you want to manipulate a numeric value as text.
+*/
+
+syntax FormatNumberAsString is statement
+    "format" <Operand: Expression> "as" "string"
+begin
+    MCArithmeticExecFormatNumberAsString(Operand)
+end syntax
+
+/*
+Summary:	Parses a string as an number
+
+Operand:	An expression that evaluates to a string.
+
+Returns:	<Operand> parsed as a number, or nothing.
+
+Example:
+	variable tString as String
+	variable tNum as optional Number
+	put "5.6" into tString
+	put tString parsed as number into tNum -- tNum contains 5.6
+
+Example:
+	variable tNum as optional Number
+	put "aaaa" parsed as number into tNum
+	
+	if tNum is nothing then
+		put 0 into tNum
+	end if
+	
+	// tNum contains 0
+	
+Description:
+Use <StringParsedAsNumber> when you want to interpret text numerically. nothing is returned if parsing was not possible.
+*/
+
+syntax StringParsedAsNumber is postfix operator with conversion precedence
+    <Operand: Expression> "parsed" "as" "number"
+begin
+    MCArithmeticEvalStringParsedAsNumber(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a string as an number
+
+Operand:	An expression that evaluates to a string.
+
+The result:	<Operand> parsed as a number, or nothing.
+
+Example:
+	variable tString as String
+	put "5.6" into tString
+	parse tString as Number -- the result is 5.6
+
+Example:
+	variable tResult as String
+	variable tNum as optional Number
+	parse "aaaa" as Number
+	
+	if the result is nothing then
+		put "unable to parse string" into tResult
+	end if
+
+Description:
+Use <ParseStringAsNumber> when you want to interpret text numerically. The result is nothing if parsing was not possible.
+*/
+
+syntax ParseStringAsNumber is statement
+    "parse" <Operand: Expression> "as" "number"
+begin
+    MCArithmeticExecParseStringAsNumber(Operand)
+end syntax
+
+/*
+Summary:	Parses a list of strings as a list of numbers
+
+Operand:	An expression that evaluates to a list of strings.
+
+Returns:	<Operand> parsed as a list of numbers.
+
+Example:
+	variable tListOfString as List
+	variable tListOfNum as List
+	split "1,2,3,4" by "," into tListOfString
+	put tListOfString parsed as list of number into tNum -- tListOfNum contains [ 1, 2, 3, 4 ]
+
+Example: 
+	variable tList as List
+	put ["1", "b", "3"] parsed as list of number into tList
+	
+	variable tElt as Number
+	repeat with tElt from 1 up to the number of elements in tList
+		if tList[tElt] is nothing then
+			put 0 into element tElt of tList
+		end if
+	end repeat
+
+	// tList contains [ 1, 0, 3 ]
+
+Description:
+Use <ListOfStringParsedAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be nothing.
+
+*Note:* It is an error if any element of <Operand> is not a string.
+*/
+
+syntax ListOfStringParsedAsListOfNumber is postfix operator with conversion precedence
+    <Operand: Expression> "parsed" "as" "list" "of" "number"
+begin
+    MCArithmeticEvalListOfStringParsedAsListOfNumber(Operand, output)
+end syntax
+
+/*
+Summary:	Parses a list of strings as a list of numbers
+
+Operand:	An expression that evaluates to a list of strings.
+
+The result:	<Operand> parsed as a list of numbers.
+
+Example:
+	variable tListOfString as List
+	variable tListOfNum as List
+	split "1,2,3,4" by "," into tListOfString
+	parse tListOfString as list of number -- the result contains [ 1, 2, 3, 4 ]
+
+Description:
+Use <ParseListOfStringAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be nothing.
+
+*Note:* It is an error if any element of <Operand> is not a string.
+*/
+
+syntax ParseListOfStringAsListOfNumber is statement
+    "parse" <Operand: Expression> "as" "list" "of" "number"
+begin
+    MCArithmeticExecParseListOfStringAsListOfNumber(Operand)
+end syntax
+
+end module

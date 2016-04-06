@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -729,7 +729,7 @@ static bool enumerate_handlers(MCExecContext& ctxt, const char *p_type, MCHandle
 		if (p_first && p_object != nil)
         {
             t_format = "%s%s %@ %d %d %@";
-            p_object -> GetLongId(ctxt, &t_long_id);
+            p_object -> GetLongId(ctxt, 0, &t_long_id);
         }
         else
             t_format = "%s%s %@ %d %d";
@@ -774,18 +774,6 @@ bool MCHandlerlist::enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_cou
     
     t_handlers . Take(r_handlers, r_count);
 	return p_first;
-}
-
-void MCHandlerlist::eval(MCExecContext &ctxt, MCStringRef p_expression, MCValueRef &r_value)
-{
-	// TODO: Implement execution outside of a handler.
-	ctxt. Unimplemented();
-}
-
-void MCHandlerlist::doscript(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
-{
-	// TODO: Implement execution outside of a handler.
-	ctxt. Unimplemented();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

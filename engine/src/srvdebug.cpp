@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -443,7 +443,7 @@ void MCServerDebugGet(MCStringRef p_property, MCStringRef& r_result)
         /* UNCHECKED */ MCeerror -> copyasstringref(t_error);
 	else if (MCStringIsEqualToCString(p_property, "parse error", kMCCompareExact))
         MCperror -> copyasstringref(t_error);
-	else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
+    else if (MCStringIsEqualToCString(p_property, "files", kMCCompareExact))
         t_error = MCValueRetain(kMCEmptyString);
 	else
 		t_error = MCValueRetain(kMCEmptyString);

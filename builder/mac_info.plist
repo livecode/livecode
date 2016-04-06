@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>Installer</string>
+	<key>CFBundleIconFile</key>
+	<string>Installer.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.runrev.livecode.installer</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>livecodeinstaller</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>Revo</string>
+	<key>CSResourcesFileMapped</key>
+	<false/>
+	<key>LFPrefersCarbon</key>
+	<true/>
+	<key>LSGetAppDiedEvents</key>
+	<true/>
+	<key>NSAppleScriptEnabled</key>
+	<string>YES</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2000-2015, LiveCode Ltd., All Rights Reserved.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>LSBackgroundOnly</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>com_runrev_livecode_MCApplication</string>
+</dict>
+</plist>

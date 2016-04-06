@@ -1,0 +1,55 @@
+Name: mark
+
+Type: command
+
+Syntax: mark {<card>  |all cards | cards} where {<condition>}
+
+Syntax: mark cards by finding [<form>] <findString> [in <field>]
+
+Summary: Sets the <mark> <property> of one or more <card|cards> to true.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+mark card "Good & Plenty"
+
+Example:
+mark cards where field "Intro" is empty
+
+Example:
+mark cards where the short name of this card is not "Template"
+
+Example:
+mark cards by finding "?" in field "Nationality"
+
+Parameters:
+card: Any card reference.
+condition (bool): An expression that evaluates to true or false for each card in the current stack. Any object references within the condition are treated as pertaining to each card being evaluated, so for example, a reference to a field is evaluated for each card.
+form (enum): See the <find> <command> for more information. If no <form> is specified, the normal is used.
+-  normal :
+-  characters, character, chars, char :
+-  words, word :
+-  string :
+-  whole :
+findString (string): 
+field: Any field reference.
+
+Description:
+Use the <mark> <command> to specify certain <card|cards> for printing or for special treatment by the <go> and <sort> <command|commands>.
+
+You can mark cards either one at a time, by specifying each card to be marked, or in groups, by using the where <condition> or by finding forms of the <mark> <command>. Marking additional <card|cards> does not change the <mark> <property> of <card|cards> that have already been marked.
+
+You use the <mark> and <unmark> <command|commands> in succession to further narrow down the set of <card|cards>. For example, this sequence of <command|commands> <select|selects> only the <card|cards> where the user has asked for help and the request has not yet been fulfilled:
+
+  mark cards by finding "Help" in field "History"
+  unmark cards where the hilite of button "Already Helped" is true
+
+When using the by finding form, the search operates the same way the normal form of the <find> <command> does. The <mark> <command> searches for <card|cards> that contain each <word> in the <findString>. The <words> in the <findString> must be found at the beginning of a <word> on the card, but the <words> do not need to be found together.
+
+References: word (keyword), marked (keyword), words (keyword), go (command), find (command), unmark (command), sort (command), card (object), property (glossary), command (glossary), select (glossary)
+
+Tags: database

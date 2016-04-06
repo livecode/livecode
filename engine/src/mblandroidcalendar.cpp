@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -64,6 +64,8 @@ bool MCAndroidCalendarInitialize(void)
 {
 	s_calendar_event_selected = MCValueRetain(kMCEmptyString);
 	s_calendar_events_selected = MCValueRetain(kMCEmptyString);
+
+    return true;
 }
 
 void MCAndroidCalendarFinalize(void)
@@ -209,6 +211,7 @@ bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringR
 bool MCSystemGetCalendarsEvent(MCStringRef& r_result)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
+    return false;
 }
 
 // Get data from Java and assign the values to class values that are then returned to the

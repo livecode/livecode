@@ -1,0 +1,36 @@
+Name: explicitVariables
+
+Type: property
+
+Syntax: set the explicitVariables to {true | false}
+
+Summary: Specifies that <local variable|local variables> must be explicitly <declare|declared> with the <local> <command>.
+
+Synonyms: explicitVars
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the explicitVariables to true
+
+Value (bool):The <explicitVariables> is true or false.
+By default, the <explicitVariables> is set to false.
+
+Description:
+Set the <explicitVariables> <property> to aid in <debug|debugging> your code.
+
+Setting the <explicitVariables> <property> to true can help you <debug> certain problems with <variable|variables>.
+
+If the <explicitVariables> is true, using a <local variable> without <declare|declaring> it first causes a <compile error>. This <behavior> can be useful in tracking down certain subtle problems such as misspelling a <variable> name.
+
+If the <explicitVariables> <property> is true, using a <literal string> without enclosing it in quotes causes a <compile error>.
+
+>*Note:* ExplicitVariables only come into effect when script is compiled, such as in do, value and setting the script. Its value should be preserved outside of user handlers, only setting it around syntax to which it applies.
+
+References: local (command), property (glossary), compile error (glossary), variable (glossary), literal string (glossary), local variable (glossary), declare (glossary), debug (glossary), command (glossary), behavior (glossary)
+
+Tags: properties

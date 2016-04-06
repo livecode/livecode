@@ -1,0 +1,12 @@
+Name: element
+
+Synonyms: element
+
+Type: glossary
+
+Description:
+A single member of an <array>. You refer to an element by the array name and the element's <key> in the <array>.
+
+References: array (glossary), key (glossary)
+
+Tags: properties

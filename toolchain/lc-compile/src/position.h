@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -26,6 +26,14 @@ extern "C" {
 typedef long PositionRef;
 typedef struct File *FileRef;
 
+enum DependencyModeType
+{
+    kDependencyModeNone,
+    kDependencyModeOrder,
+    kDependencyModeChangedOrder,
+    kDependencyModeMake
+};
+    
 void InitializePosition(void);
 void FinalizePosition(void);
 
@@ -36,6 +44,7 @@ void AdvanceCurrentPositionToFile(FileRef file);
 void GetColumnOfPosition(PositionRef position, long *r_column);
 void GetRowOfPosition(PositionRef position, long *r_row);
 void GetFileOfPosition(PositionRef position, FileRef *r_file);
+void GetFilenameOfPosition(PositionRef position, const char **r_filename);
 
 void GetCurrentPosition(PositionRef *r_result);
 void yyGetPos(PositionRef *r_result);
@@ -54,13 +63,20 @@ void GetFileIndex(FileRef file, long *r_index);
 int GetFileWithIndex(long index, FileRef *r_file);
 int GetCurrentFile(FileRef *r_file);
 
-void SetOutputFile(const char *filename);
+void SetOutputBytecodeFile(const char *filename);
+void SetOutputCodeFile(const char *filename);
+void SetOutputGrammarFile(const char *filename);
 void SetManifestOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
-FILE *OpenOutputFile(const char **r_filename);
+void GetOutputFile(const char **r_filename);
+    
+FILE *OpenOutputBytecodeFile(const char **r_filename);
+FILE *OpenOutputGrammarFile(const char **r_filename);
+FILE *OpenOutputCodeFile(const char **r_filename);
 FILE *OpenManifestOutputFile(void);
 FILE *OpenTemplateFile(void);
 FILE *OpenImportedModuleFile(const char *module, char **r_filename);
+    void FindImportedModuleFile(const char *p_name, char** r_module_file);
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,36 @@
+Name: character
+
+Type: keyword
+
+Syntax: character
+
+Summary: Designates a single <character> as part of a <chunk expression>.
+
+Synonyms: char
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get char 1 of field "Answers"
+
+Example:
+put char 12 to 14 of it into oldAnswer
+
+Description:
+Use the <character> keyword to refer to a specific character or characters in a container.
+
+A character refers to what would naturally be thought of as a single graphical character, even if it is composed of multiple sub-units, as in some accented text or Korean ideographs. 
+
+The hierarchy of the new and altered chunk types is as follows:
+
+byte w of codeunit x of codepoint y of char z of word ...
+
+>*Note:*  In versions prior to 7.0 the byte chunk was identical in functionality to the character chunk. In 7.0 and later a character is not an 8-bit unit and it is therefore not appropriate to use this type of chunk expression on binary data, to refer to 8-bit units in binary data use the <byte> keyword.
+
+References: imageSource (property), characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), line (keyword), word (keyword), codepoints (keyword), bytes (keyword), byte (keyword), codeunit (keyword), chunk expression (glossary)
+
+Tags: text processing

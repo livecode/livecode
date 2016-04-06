@@ -1,0 +1,12 @@
+Name: substack
+
+Synonyms: substack
+
+Type: glossary
+
+Description:
+A <stack> contained in a main stack. Each LiveCode <file> contains one <main stack>, and may optionally contain one or more substacks.
+
+References: file (glossary), main stack (glossary), stack (glossary)
+
+Tags: objects

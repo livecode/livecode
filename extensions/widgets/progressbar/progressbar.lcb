@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015 Runtime Revolution Ltd.
+Copyright (C) 2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -16,13 +16,14 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 -- declaring extension as widget, followed by identifier
-widget com.livecode.extensions.livecode.progressBar
+widget com.livecode.widget.progressBar
 --
 
 -- adding metadata to ensure extension displays correctly in livecode
 metadata title is "Progress Bar"
 metadata author is "LiveCode"
 metadata version is "1.0.5"
+metadata svgicon is "M0,0v29.5h101.5V0H0z M97.5,25.5H4v-2.9h66.5V6.9H4V4h93.5V25.5z"
 --
 
 -- dependency declarations
@@ -31,9 +32,9 @@ use com.livecode.widget
 --
 
 -- property declarations
-property theme					get mTheme				set setTheme
+property progressTheme					get mTheme				set setTheme
 property thumbPosition			get mThumbPosition		set setThumbPosition
-property progress				get mProgress			set setProgress
+property progressAmount				get mProgress			set setProgress
 --
 
 -- private instance variables
@@ -58,8 +59,6 @@ public handler OnSave(out rProperties as Array)
 	put mTheme into rProperties["theme"]
 	put mThumbPosition into rProperties["thumbPosition"]
 	put mProgress into rProperties["progress"]
-	
-	return rProperties
 end handler
 
 public handler OnLoad(in pProperties as Array)
@@ -142,7 +141,7 @@ private handler getBarPath()
 	
 end handler
 
-private handler getProgressPath() as Path
+private handler getProgressPath() returns Path
 
 	if mTheme is "macos-10.0" then
 		return rounded rectangle path of rectangle [0, 0, mThumbPosition, kBarHeight] with radius 2.5
@@ -156,7 +155,7 @@ private handler getProgressPath() as Path
 	end if
 end handler
 
-private handler getBarPaint() as Paint
+private handler getBarPaint() returns Paint
 
 	variable tPaint as Paint
 	
@@ -183,7 +182,7 @@ private handler getBarPaint() as Paint
 	return tPaint
 end handler
 
-private handler getProgressPaint() as Paint
+private handler getProgressPaint() returns Paint
 
 	variable tPaint as Paint
 	
@@ -215,7 +214,7 @@ private handler getProgressPaint() as Paint
 	return tPaint
 end handler
 
-private handler getStrokeColor() as Color
+private handler getStrokeColor() returns Color
 	if mTheme is "macos-10.0" then
 		return color [128/255, 128/255, 128/255]
 	else if mTheme is "macos-yosemite" then
@@ -225,7 +224,7 @@ private handler getStrokeColor() as Color
 	end if
 end handler
 
-private handler getStrokeWidth() as Real
+private handler getStrokeWidth() returns Real
 	if mTheme is "macos-10.0" then
 		return 0.5
 	else if mTheme is "macos-yosemite" then
@@ -233,7 +232,7 @@ private handler getStrokeWidth() as Real
 	end if 
 end handler
 
-private handler getProgressStrokeColor() as Color
+private handler getProgressStrokeColor() returns Color
 	if mTheme is "macos-10.0" then
 		return color [128/255, 128/255, 128/255]
 	else if mTheme is "macos-yosemite" then
@@ -241,7 +240,7 @@ private handler getProgressStrokeColor() as Color
 	end if 
 end handler
 
-private handler getStrokePath() as Path
+private handler getStrokePath() returns Path
 	if mTheme is "macos-10.0" then
 		return line path from point [mThumbPosition, 0] to point [mThumbPosition, kBarHeight]
 	else if mTheme is "macos-yosemite" then
@@ -249,11 +248,11 @@ private handler getStrokePath() as Path
 	end if
 end handler
 
-private handler getYosemiteProgressPath() as Path
+private handler getYosemiteProgressPath() returns Path
 	return rounded rectangle path of rectangle [2, kBarHeight/2 - kProgressHeight/2, mThumbPosition, kBarHeight/2 + kProgressHeight/2] with radius 10	
 end handler
 
-private handler getYosemiteProgressPaint() as Paint
+private handler getYosemiteProgressPaint() returns Paint
 	return solid paint with color [51/255, 153/255, 1.0]
 end handler
 
@@ -262,7 +261,7 @@ public handler setTheme(in pTheme as String)
 	redraw all
 end handler
 
-public handler setThumbPosition(in pProgress as Real) as undefined
+public handler setThumbPosition(in pProgress as Real) returns nothing
 	
 	variable tProgress as Real
 	if pProgress > 100 then
@@ -282,12 +281,12 @@ public handler setThumbPosition(in pProgress as Real) as undefined
 	redraw all
 end handler
 
-public handler setProgress(in pProgress as Real) as undefined
+public handler setProgress(in pProgress as Real) returns nothing
 	put pProgress into mProgress
 	redraw all
 end handler
 
-private handler updateThumbPosition() as undefined
+private handler updateThumbPosition() returns nothing
 	if mTheme is "macos-yosemite" then
 		put (mProgress/100)*(my width - 4) + 2 into mThumbPosition
 	else

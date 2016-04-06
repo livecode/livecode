@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -45,8 +45,10 @@ MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Split, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByRow, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitByColumn, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Arrays, SplitAsSet, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Union, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Intersect, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Union, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, Intersect, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, UnionRecursive, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Arrays, IntersectRecursive, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayEncode, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayDecode, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, MatrixMultiply, 3)
@@ -560,106 +562,173 @@ void MCArraysExecSplitAsSet(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCArraysDoUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array, bool p_recursive)
+//
+// Semantics of 'union tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tRight
+//    if tKey is not among the keys of tLeft then
+//        put tRight[tKey] into tLeft[tKey]
+//    else if tRecursive then
+//        union tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
+void MCArraysDoUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
-	MCNameRef t_key;
-	MCValueRef t_src_value;
+    if (!MCValueIsArray(p_src))
+    {
+        r_result = MCValueRetain(p_dst);
+        return;
+    }
+    
+    if (!MCValueIsArray(p_dst))
+    {
+        r_result = MCValueRetain(p_src);
+        return;
+        
+    }
+    
+    MCArrayRef t_src_array;
+    t_src_array = (MCArrayRef)p_src;
+    
+    MCArrayRef t_dst_array;
+    t_dst_array = (MCArrayRef)p_dst;
+    
+    MCAutoArrayRef t_result;
+    if (!MCArrayMutableCopy(t_dst_array, &t_result))
+        return;
+    
+    MCNameRef t_key;
+    MCValueRef t_src_value;
     MCValueRef t_dst_value;
-	uintptr_t t_iterator;
-	t_iterator = 0;
+    uintptr_t t_iterator;
+    t_iterator = 0;
     
-    bool t_is_array;
-    
-	while(MCArrayIterate(p_src_array, t_iterator, t_key, t_src_value))
+	while(MCArrayIterate(t_src_array, t_iterator, t_key, t_src_value))
 	{
-		if (MCArrayFetchValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value))
+        bool t_key_exists;
+        t_key_exists = MCArrayFetchValue(t_dst_array, ctxt . GetCaseSensitive(), t_key, t_dst_value);
+        
+        if (t_key_exists && !p_recursive)
+            continue;
+        
+        MCAutoValueRef t_recursive_result;
+        if (!t_key_exists)
         {
-            if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
-            {
-                // AL-2015-02-23: [[ Bug 14658 ]] Ensure recursive set operations are
-                //  performed on mutable copies of sub-arrays.
-                MCAutoArrayRef t_dst_subarray;
-                if (!MCArrayMutableCopy((MCArrayRef)t_dst_value, &t_dst_subarray))
-                    return;
-                
-                MCArraysExecUnionRecursive(ctxt, *t_dst_subarray, (MCArrayRef)t_src_value);
-                
-                if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, *t_dst_subarray))
-                    return;
-                
-                if (ctxt . HasError())
-                    return;
-            }
-			continue;
+            t_recursive_result = t_src_value;
+        }
+        else if (p_recursive)
+        {
+            MCArraysDoUnion(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
+            
+            if (ctxt . HasError())
+                return;
         }
         
-		if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, MCValueRetain(t_src_value)))
-		{
-			ctxt . Throw();
-			return;
-		}
-	}
-}
-
-void MCArraysDoIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array, bool p_recursive)
-{
-	MCNameRef t_key;
-	MCValueRef t_src_value;
-    MCValueRef t_dst_value;
-	uintptr_t t_iterator;
-	t_iterator = 0;
-    
-    bool t_is_array;
-    
-	while(MCArrayIterate(p_dst_array, t_iterator, t_key, t_dst_value))
-	{
-		if (MCArrayFetchValue(p_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value))
+        if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, *t_recursive_result))
         {
-            if (p_recursive && MCValueIsArray(t_dst_value) && MCValueIsArray(t_src_value))
-            {
-                // AL-2015-02-23: [[ Bug 14658 ]] Ensure recursive set operations are
-                //  performed on mutable copies of sub-arrays.
-                MCAutoArrayRef t_dst_subarray;
-                if (!MCArrayMutableCopy((MCArrayRef)t_dst_value, &t_dst_subarray))
-                    return;
-                
-                MCArraysExecIntersectRecursive(ctxt, *t_dst_subarray, (MCArrayRef)t_src_value);
-                
-                if (!MCArrayStoreValue(p_dst_array, ctxt . GetCaseSensitive(), t_key, *t_dst_subarray))
-                    return;
-                
-                if (ctxt . HasError())
-                    return;
-            }
-			continue;
+            ctxt . Throw();
+            return;
         }
-        
-		if (!MCArrayRemoveValue(p_dst_array, ctxt . GetCaseSensitive(), t_key))
-		{
-			ctxt . Throw();
-			return;
-		}
 	}
+    
+    r_result = MCValueRetain(*t_result);
 }
 
-void MCArraysExecUnion(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+//
+// Semantics of 'intersect tLeft with tRight [recursively]'
+// 
+// repeat for each key tKey in tLeft
+//    if tKey is not among the keys of tRight then
+//        delete variable tLeft[tKey]
+//    else if tRecursive then
+//        intersect tLeft[tKey] with tRight[tKey] recursively
+//    end if
+// end repeat
+//
+
+void MCArraysDoIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, bool p_recursive, MCValueRef& r_result)
 {
-    MCArraysDoUnion(ctxt, p_dst_array, p_src_array, false);
+    if (!MCValueIsArray(p_dst))
+    {
+        r_result = MCValueRetain(p_dst);
+        return;
+        
+    }
+    
+    if (!MCValueIsArray(p_src))
+    {
+        r_result = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    MCArrayRef t_dst_array;
+    t_dst_array = (MCArrayRef)p_dst;
+    
+    MCArrayRef t_src_array;
+    t_src_array = (MCArrayRef)p_src;
+    
+    MCAutoArrayRef t_result;
+    if (!MCArrayMutableCopy(t_dst_array, &t_result))
+        return;
+    
+    MCNameRef t_key;
+    MCValueRef t_src_value;
+    MCValueRef t_dst_value;
+    uintptr_t t_iterator;
+    t_iterator = 0;
+    
+    while(MCArrayIterate(t_dst_array, t_iterator, t_key, t_dst_value))
+    {
+        bool t_key_exists;
+        t_key_exists = MCArrayFetchValue(t_src_array, ctxt . GetCaseSensitive(), t_key, t_src_value);
+        
+        if (t_key_exists && !p_recursive)
+            continue;
+        
+        if (!t_key_exists)
+        {
+            if (!MCArrayRemoveValue(*t_result, ctxt . GetCaseSensitive(), t_key))
+            {
+                ctxt . Throw();
+                return;
+            }
+        }
+        else if (p_recursive)
+        {
+            MCAutoValueRef t_recursive_result;
+            MCArraysDoIntersect(ctxt, t_dst_value, t_src_value, true, &t_recursive_result);
+            
+            if (ctxt . HasError())
+                return;
+            
+            if (!MCArrayStoreValue(*t_result, ctxt . GetCaseSensitive(), t_key, *t_recursive_result))
+                return;
+        }
+    }
+    
+    r_result = MCValueRetain(*t_result);
 }
 
-void MCArraysExecIntersect(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+void MCArraysExecUnion(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst_array, p_src_array, false);
+    MCArraysDoUnion(ctxt, p_dst, p_src, false, r_result);
 }
 
-void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+void MCArraysExecIntersect(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoUnion(ctxt, p_dst_array, p_src_array, true);
+    MCArraysDoIntersect(ctxt, p_dst, p_src, false, r_result);
 }
 
-void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCArrayRef p_dst_array, MCArrayRef p_src_array)
+void MCArraysExecUnionRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
 {
-    MCArraysDoIntersect(ctxt, p_dst_array, p_src_array, true);
+    MCArraysDoUnion(ctxt, p_dst, p_src, true, r_result);
+}
+
+void MCArraysExecIntersectRecursive(MCExecContext& ctxt, MCValueRef p_dst, MCValueRef p_src, MCValueRef& r_result)
+{
+    MCArraysDoIntersect(ctxt, p_dst, p_src, true, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

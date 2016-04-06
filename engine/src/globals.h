@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,13 +20,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_GLOBALS__
 #define __MC_GLOBALS__
 
+#include "clipboard.h"
 #include "mcstring.h"
 #include "imagelist.h"
+#include "parsedef.h"
+#include "sysdefs.h"
+#include "mcsemaphore.h"
 
 #include "foundation-locale.h"
 
 typedef struct _Streamnode Streamnode;
 typedef struct _Linkatts Linkatts;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  GLOBAL VARIABLES
+//
 
 extern Bool MCquit;
 
@@ -36,7 +45,6 @@ extern Bool MCquit;
 extern Bool MCquitisexplicit;
 
 extern int MCidleRate;
-
 
 extern Boolean MCaqua;
 extern MCStringRef MCcmd;
@@ -75,7 +83,6 @@ extern Boolean MCproportionalthumbs;
 extern Boolean MCdontuseNS;
 extern Boolean MCdontuseQT;
 extern Boolean MCdontuseQTeffects;
-extern Boolean MCfreescripts;
 extern uint4 MCeventtime;
 extern uint2 MCbuttonstate;
 extern uint2 MCmodifierstate;
@@ -128,7 +135,7 @@ extern Boolean MCselectgrouped;
 extern Boolean MCselectintersect;
 extern MCRectangle MCwbr;
 extern uint2 MCjpegquality;
-extern uint2 MCpaintcompression;
+extern Export_format MCpaintcompression;
 extern uint2 MCrecordformat;
 extern uint2 MCsoundchannel;
 extern uint2 MCrecordsamplesize;
@@ -155,7 +162,7 @@ extern uint2 MCnsockets;
 extern MCStack **MCusing;
 extern uint2 MCnusing;
 extern uint2 MCiconicstacks;
-extern uint2 MCwaitdepth;
+extern MCSemaphore MCwaitdepth;
 extern uint4 MCrecursionlimit;
 
 
@@ -164,7 +171,6 @@ extern MCUndolist *MCundos;
 extern MCSellist *MCselected;
 extern MCStacklist *MCstacks;
 extern MCStacklist *MCtodestroy;
-extern MCObject *MCtodelete;
 extern MCCardlist *MCrecent;
 extern MCCardlist *MCcstack;
 extern MCDispatch *MCdispatcher;
@@ -174,7 +180,7 @@ extern MCStack *MCstaticdefaultstackptr;
 extern MCStack *MCmousestackptr;
 extern MCStack *MCclickstackptr;
 extern MCStack *MCfocusedstackptr;
-extern MCObject *MCtargetptr;
+extern MCObjectPtr MCtargetptr;
 extern MCObject *MCmenuobjectptr;
 extern MCCard *MCdynamiccard;
 extern Boolean MCdynamicpath;
@@ -299,8 +305,8 @@ extern uint2 MClook;
 extern MCStringRef MCttbgcolor;
 extern MCStringRef MCttfont;
 extern uint2 MCttsize;
-extern uint2 MCtrylock;
-extern uint2 MCerrorlock;
+extern MCSemaphore MCtrylock;
+extern MCSemaphore MCerrorlock;
 extern Boolean MCwatchcursor;
 extern Boolean MClockcursor;
 extern MCCursorRef MCcursor;
@@ -360,6 +366,11 @@ extern uint4 MCmajorosversion;
 extern Boolean MCignorevoiceoversensitivity;
 extern uint4 MCqtidlerate;
 
+extern MCStringRef MCcommandname;
+extern MCArrayRef MCcommandarguments;
+
+extern MCArrayRef MCenvironmentvariables;
+
 #ifdef _LINUX_DESKTOP
 extern Window MCgtkthemewindow;
 #endif
@@ -369,15 +380,16 @@ extern Window MCgtkthemewindow;
 #define RTB_NO_UNICODE_WINDOWS (1 << 2)
 extern uint4 MCruntimebehaviour;
 
-extern MCDragData *MCdragdata;
 extern MCDragAction MCdragaction;
 extern MCObject *MCdragtargetptr;
 extern MCDragActionSet MCallowabledragactions;
 extern uint4 MCdragimageid;
 extern MCPoint MCdragimageoffset;
 
-extern MCClipboardData *MCclipboarddata;
-extern MCSelectionData *MCselectiondata;
+extern MCClipboard* MCclipboard;
+extern MCClipboard* MCselection;
+extern MCClipboard* MCdragboard;
+extern uindex_t MCclipboardlockcount;
 
 extern uint4 MCsecuremode;
 
@@ -411,13 +423,100 @@ extern char *MCsysencoding;
 extern MCLocaleRef kMCBasicLocale;
 extern MCLocaleRef kMCSystemLocale;
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure only a single animation message is sent per redraw
-extern MCThreadMutexRef MCanimationmutex;
-extern MCThreadMutexRef MCpatternmutex;
-extern MCThreadMutexRef MCimagerepmutex;
-extern MCThreadMutexRef MCfieldmutex;
-extern MCThreadMutexRef MCthememutex;
-extern MCThreadMutexRef MCgraphicmutex;
+////////////////////////////////////////////////////////////////////////////////
+//
+//  HOOK REGISTRATION
+//
+
+struct MCHookGlobalHandlersDescriptor
+{
+    bool (*can_handle)(MCNameRef message_name);
+    bool (*handle)(MCNameRef message, MCParameter *parameters, Exec_stat& r_result);
+};
+
+struct MCHookNativeControlsDescriptor
+{
+    bool (*lookup_type)(MCStringRef name, intenum_t& r_type);
+    bool (*lookup_property)(MCStringRef name, intenum_t& r_type);
+    bool (*lookup_action)(MCStringRef name, intenum_t& r_type);
+    bool (*create)(intenum_t type, void*& r_control);
+    bool (*action)(intenum_t action, void *control, MCValueRef *arguments, uindex_t argument_count);
+};
+
+enum MCHookType
+{
+    kMCHookGlobalHandlers,
+    kMCHookNativeControls,
+};
+
+struct MCHook;
+extern MCHook *MChooks;
+
+typedef bool (*MCHookForEachCallback)(void *context, void *descriptor);
+
+bool MCHookRegister(MCHookType type, void *descriptor);
+void MCHookUnregister(MCHookType type, void *descriptor);
+bool MCHookForEach(MCHookType type, MCHookForEachCallback callback, void *context);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  GLOBAL HANDLERS
+//
+
+bool MCIsGlobalHandler(MCNameRef name);
+bool MCRunGlobalHandler(MCNameRef message, MCParameter *parameters, Exec_stat& r_result);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  NATIVE CONTROLS
+//
+
+bool MCLookupNativeControlType(MCStringRef p_type_name, intenum_t& r_type);
+bool MCLookupNativeControlProperty(MCStringRef p_name, intenum_t& r_prop);
+bool MCLookupNativeControlAction(MCStringRef p_name, intenum_t& r_action);
+bool MCCreateNativeControl(intenum_t type, void*& r_control);
+bool MCPerformNativeControlAction(intenum_t action, void *control, MCValueRef *arguments, uindex_t argument_count);
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  POST EXECUTION ACTIONS
+//
+
+enum
+{
+    kMCActionsUpdateScreen = 1 << 0,
+    kMCActionsDrainDeletedObjects = 1 << 2,
+};
+
+extern uint32_t MCactionsrequired;
+extern void MCActionsDoRunSome(uint32_t mask);
+
+inline void MCActionsSchedule(uint32_t mask)
+{
+    MCactionsrequired |= mask;
+}
+
+inline void MCActionsRunAll(void)
+{
+    if (MCactionsrequired != 0)
+        MCActionsDoRunSome(UINT32_MAX);
+}
+
+inline void MCActionsRunSome(uint32_t mask)
+{
+    if ((MCactionsrequired & mask) != 0)
+        MCActionsDoRunSome(mask);
+}
+
+inline void MCRedrawUpdateScreen(void)
+{
+    MCActionsRunSome(kMCActionsUpdateScreen);
+}
+
+inline void MCDeletedObjectsDrain(void)
+{
+    MCActionsRunSome(kMCActionsDrainDeletedObjects);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

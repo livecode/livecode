@@ -1,0 +1,32 @@
+Name: item
+
+Type: keyword
+
+Syntax: item
+
+Summary: Designates a comma-<delimit|delimited> <string> as part of a <chunk expression>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+get item 2 of field "Name"
+
+Example:
+put it into item 3 of line thisRecord of myNamesDB
+
+Description:
+Use the <item> <keyword> to refer to a specific <chunk> of data in a <container>.
+
+By default, an item is delimited by commas (,). However, you can set the <itemDelimiter> <property> to any <character> in order to directly address <chunk|chunks> <delimit|delimited> by that character. For example, you can set the <itemDelimiter> to <tab> in order to handle a database file whose fields are tab-<delimit|delimited>.
+
+An item is a string of characters delimited by a single comma (or a single one of the <itemDelimiter> <character>). A single <item> can contain multiple <characters>, multiple <words>, and multiple <lines>.
+
+>*Note:* In LiveCode, if the last character of a string is the itemDelimiter, then this character is ignored by the <item> keyword. For example the last item of  the string "1,2,3," is "3" (assuming comma is the itemDelimiter)
+
+References: characters (keyword), string (keyword), item (keyword), character (keyword), lines (keyword), element (keyword), word (keyword), words (keyword), itemDelimiter (property), tab (constant), itemOffset (function), keyword (glossary), property (glossary), delimit (glossary), container (glossary), chunk expression (glossary), chunk (glossary)
+
+Tags: text processing

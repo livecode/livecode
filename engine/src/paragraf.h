@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -190,8 +190,10 @@ public:
 	findex_t IncrementIndex(findex_t p_in)
 	{
 		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in);
+        // SN-2015-09-08: [[ Bug 15895 ]] A field can end with half of a
+        //  surrogate pair - in which case the index only increments by 1.
 		if (0xD800 <= t_char && t_char < 0xDC00)
-			return p_in + 2;
+            return (findex_t)MCU_min((uindex_t)(p_in + 2), MCStringGetLength(m_text));
 		return p_in + 1;
 	}
 	
@@ -277,7 +279,7 @@ public:
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this paragraph
 	//   has an attribute extension.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);
-	IO_stat save(IO_handle stream, uint4 p_part);
+	IO_stat save(IO_handle stream, uint4 p_part, uint32_t p_version);
 	
 	// MW-2012-02-14: [[ FontRefs ]] Now takes the parent fontref so it can compute
 	//   block's fontrefs.
@@ -306,12 +308,9 @@ public:
 	// paragraph after which a word-break can occur.
 	findex_t findwordbreakafter(MCBlock *p_block, findex_t p_index);
 
-	// Make sure there are no empty blocks in the paragraph:
-	//   - called by MCField::deleteselection
-	//   - called by MCField::fdel
-	//   - called by MCField::freturn
-	//   - called by methods in MCParagraph
-	Boolean clearzeros();
+	// Remove all empty blocks in the paragraph starting at
+	// the specified block (inclusive).
+	Boolean clearzeros(MCBlock *start_from = nil);
 	
 	// Return the list of blocks:
 	//   - called by MCField::getparagraphmacstyles
@@ -369,10 +368,15 @@ public:
     void replacetextwithparagraphs(findex_t p_start, findex_t p_finish, MCParagraph *p_pglist);
 
 	// Delete the text from si to ei in the paragraph.
-	// Called by:
-	//   MCField::deletecomposition
-	//   MCField::settextindex
-	void deletestring(findex_t si, findex_t ei);
+	// The 'styling_mode' determines what block is left at si.
+	// If it is 'frombefore' then no block is left so any text inserted at si will
+	// take styles from the preceeding block.
+	// If it is 'fromafter' then a zero length block with the same style as the first
+	// char in the deleted string is left so any text inserted at si will take
+	// styles from the first char in the deleted string.
+	// If it is 'none' then a zero length block with no styles is left so any text
+	// inserted at si will have no style.
+	void deletestring(findex_t si, findex_t ei, MCFieldStylingMode p_preserve_first_style = kMCFieldStylingFromBefore);
 
 	// Delete the current selection in the paragraph.
 	// Called by:
@@ -641,7 +645,7 @@ public:
 	// Unserializes the paragraph attributes from stream.
 	IO_stat loadattrs(IO_handle stream, uint32_t version);
 	// Serializes the paragraph attributes into stream.
-	IO_stat saveattrs(IO_handle stream);
+	IO_stat saveattrs(IO_handle stream, uint32_t p_version);
 	// MW-2012-02-21: [[ FieldExport ]] Fills in the appropriate members of the
 	//   field export struct.
 	void exportattrs(MCFieldParagraphStyle& x_style);
@@ -649,7 +653,9 @@ public:
 	//  by the style.
 	void importattrs(const MCFieldParagraphStyle& x_style);
 	// MW-2012-03-03: [[ StackFile5500 ]] Computes the size of the attrs when serialized.
-	uint32_t measureattrs(void);
+	uint32_t measureattrs(uint32_t p_version);
+    // SN-2015-05-01: [[ Bug 15175 ]] Make easier to find out whether we need an extra flag
+    bool hasextraflag(void);
 
 	// MW-2012-03-05: [[ HiddenText ]] Get whether the paragraph is hidden or not.
 	bool gethidden(void) const;
@@ -832,7 +838,7 @@ public:
 #endif
 
 	void restricttoline(findex_t& si, findex_t& ei);
-	findex_t heightoflinewithindex(findex_t si, uint2 fixedheight);
+	uint2 heightoflinewithindex(findex_t si, uint2 fixedheight);
 	
 	uint2 getopened()
 	{

@@ -1,0 +1,36 @@
+Name: textShift
+
+Type: property
+
+Syntax: set the textShift of <chunk> of <field> to <pixels> 
+
+Summary: Specifies how far text is shifted up or down from its baseline.
+
+Associations: field
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the textShift of last char of word 2 of field 1 to 3 -- subscript
+
+Example:
+set the textShift of char 12 of the selectedField to -1 -- superscript
+
+Value:
+The <textShift> of a chunk of a <field(keyword)> is an <integer>.
+By default, the <textShift> <property> of newly created <field(object)|fields> is set to zero.
+
+Description:
+Use the <textShift> <property> to subscript and superscript <chunk|chunks> of text in a <field(keyword)>.
+
+The <textShift> is the number of <pixels> to shift the text down from the baseline, creating a subscript. If the <textShift> is <negative>, the text is shifted up (superscripted). If the <textShift> is zero, the text is placed in normal position, not shifted up or down.
+
+>*Note:* If the <field(object)|field's> <fixedLineHeight> <property> is true, you may need to increase the <field(object)|field's> <textHeight> to make room for subscripts and superscripts.
+
+References: fixedLineHeight (property), pixels (property), textHeight (property), field (keyword), integer (keyword), field (object), property (glossary), chunk (glossary), negative (glossary)
+
+Tags: ui

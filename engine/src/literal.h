@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,25 +38,6 @@ public:
     virtual Parse_stat parse(MCScriptPoint &, Boolean the);
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 	virtual void compile(MCSyntaxFactoryRef ctxt);
-};
-
-class MCLiteralNumber : public MCExpression
-{
-	MCValueRef value;
-	double nvalue;
-public:
-	MCLiteralNumber(MCValueRef v, double n)
-	{
-		/* UNCHECKED */ value = MCValueRetain(v);
-		nvalue = n;
-	}
-	~MCLiteralNumber(void)
-	{
-		MCValueRelease(value);
-	}
-
-    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
 #endif

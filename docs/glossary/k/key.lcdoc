@@ -1,0 +1,12 @@
+Name: key
+
+Synonyms: index,indexes,indices,key
+
+Type: glossary
+
+Description:
+A number or word that can be used to select one <element> of an <array>.  Each <element> of the <array> has a key, and you use the key to specify the corresponding <element>.
+
+References: array (glossary), element (glossary)
+
+Tags: properties

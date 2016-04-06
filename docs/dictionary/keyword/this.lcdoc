@@ -1,0 +1,33 @@
+Name: this
+
+Type: keyword
+
+Syntax: this
+
+Summary: Indicates the <current stack>, or the <current card> of the <current stack>.
+
+Synonyms: current
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put the name of this card into currentName
+
+Example:
+sort cards by the mark of this card
+
+Example:
+send preOpenStack to this stack
+
+Description:
+Use the <this> <keyword> to indicate the <current card> or <current stack> in an <expression>.
+
+When used in a sort <command>, the <this> <keyword> indicates each <card(keyword)> to be sorted. You can use the <this> <keyword> to sort <card(object)|cards> by a <card(keyword)> <property>.
+
+References: card (keyword), the (keyword), keyword (glossary), current stack (glossary), current card (glossary), command (glossary), property (glossary), expression (glossary), card (object)
+
+Tags: objects

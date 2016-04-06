@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -231,6 +231,8 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 	// if(argc!=4) errx(1,"usage: %s oldfile newfile patchfile\n",argv[0]);
 	bool t_success;
 	t_success = true;
+    
+    V = NULL;
 
 	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
@@ -258,11 +260,11 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 	if (t_success)
 		t_success = MCMemoryNewArray(oldsize + 1, V);
 
-
-	qsufsort(I,V,old,oldsize);
+    if (t_success)
+        qsufsort(I,V,old,oldsize);
 
 	/*free(V);*/
-	MCMemoryDeleteArray(V);
+    MCMemoryDeleteArray(V);
 
 	/* Allocate newsize+1 bytes instead of newsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
@@ -329,7 +331,7 @@ static bool bsdiffmain(MCBsDiffInputStream *p_old_file, MCBsDiffInputStream *p_n
 		errx(1, "BZ2_bzWriteOpen, bz2err = %d", bz2err);*/
 	scan=0;len=0;
 	lastscan=0;lastpos=0;lastoffset=0;
-	while(scan<newsize && t_success) {
+	while(t_success && scan<newsize) {
 		oldscore=0;
 
 		for(scsc=scan+=len;scan<newsize;scan++) {

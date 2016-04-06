@@ -1,4 +1,4 @@
-/* Copyright (C) 2013 Runtime Revolution Ltd.
+/* Copyright (C) 2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -935,22 +935,30 @@ int32_t MCUnicodeCompare(const void *p_first, uindex_t p_first_length, bool p_fi
 
 bool MCUnicodeBeginsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                          const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared prefix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedPrefix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeEndsWith(const void *p_first, uindex_t p_first_length, bool p_first_native,
                        const void *p_second, uindex_t p_second_length, bool p_second_native,
-                         MCUnicodeCompareOption p_option)
+                         MCUnicodeCompareOption p_option, uindex_t *r_first_match_length)
 {
     // Check for a shared suffix
     uindex_t t_first_match_length, t_second_match_length;
     MCUnicodeSharedSuffix(p_first, p_first_length, p_first_native, p_second, p_second_length, p_second_native, p_option, t_first_match_length, t_second_match_length);
-    return t_second_match_length == p_second_length;
+    if (t_second_match_length != p_second_length)
+        return false;
+    if (r_first_match_length != nil)
+        *r_first_match_length = t_first_match_length;
+    return true;
 }
 
 bool MCUnicodeContains(const void *p_string, uindex_t p_string_length, bool p_string_native,
@@ -970,12 +978,28 @@ bool MCUnicodeFirstIndexOf(const void *p_string, uindex_t p_string_length, bool 
         return false;
     
     // Shortcut for native char - for which we are sure to have only one char to compare, and no composing characters
-    if (p_needle_length == 1 && *(codepoint_t *)p_needle < 0x10)
-    {
-        // if we got here, the string should not have been native.
-        MCAssert(!p_string_native);
-        return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, *(codepoint_t *)p_needle, p_option, r_index);
-    }
+	if (p_needle_length == 1)
+	{
+		codepoint_t t_needle;
+		bool t_ok_fast;
+		if (p_needle_native)
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const char_t *>(p_needle));
+			t_ok_fast = t_needle < 0x80; /* Needle is one ASCII char */
+		}
+		else
+		{
+			t_needle = codepoint_t(*reinterpret_cast<const unichar_t *>(p_needle));
+			t_ok_fast = t_needle < 0xd800; /* Needle is in BMP */
+		}
+
+		if (t_ok_fast)
+		{
+			// if we got here, the string should not have been native.
+			MCAssert(!p_string_native);
+			return MCUnicodeFirstIndexOfChar((const unichar_t *)p_string, p_string_length, t_needle, p_option, r_index);
+		}
+	}
     
     // Create filter chains for the strings being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, p_string_native ? kMCStringEncodingNative : kMCStringEncodingUTF16, p_option);
@@ -1328,9 +1352,7 @@ MCUnicodeCollateOption MCUnicodeCollateOptionFromCompareOption(MCUnicodeCompareO
     return (MCUnicodeCollateOption)t_option;
 }
 
-int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
-                         const unichar_t *p_first, uindex_t p_first_length,
-                         const unichar_t *p_second, uindex_t p_second_length)
+bool MCUnicodeCreateCollator(MCLocaleRef p_locale, MCUnicodeCollateOption p_options, MCUnicodeCollatorRef& r_collator)
 {
     // Create a collation object for the given locale
     UErrorCode t_error = U_ZERO_ERROR;
@@ -1342,6 +1364,8 @@ int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
     {
         t_error = U_ZERO_ERROR;
         t_collator = icu::Collator::createInstance(t_error);
+        if (t_collator == NULL)
+            return false;
     }
     
     // Set the collation options
@@ -1381,100 +1405,92 @@ int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
     
     if (p_options & kMCUnicodeCollateOptionIgnorePunctuation)
         t_collator->setAttribute(UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, t_error);
+ 
+    r_collator = t_collator;
     
-    // Do the comparison
-    UCollationResult t_result;
-    t_result = t_collator->compare(p_first, p_first_length, p_second, p_second_length, t_error);
-    
-    // Dispose of the collator
+    return true;
+}
+
+void MCUnicodeDestroyCollator(MCUnicodeCollatorRef p_collator)
+{
+    icu::Collator* t_collator;
+    t_collator = (icu::Collator *)p_collator;
     delete t_collator;
+}
+
+int32_t MCUnicodeCollate(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
+                         const unichar_t *p_first, uindex_t p_first_length,
+                         const unichar_t *p_second, uindex_t p_second_length)
+{
+    MCUnicodeCollatorRef t_collator_ref;
+    if (!MCUnicodeCreateCollator(p_locale, p_options, t_collator_ref))
+        return 0;
     
-    // The UCollationResult type maps UCOL_{GREATER,EQUAL,LESS} to +1,0,-1
-    return int32_t(t_result);
+    int32_t t_result;
+    t_result = MCUnicodeCollateWithCollator(t_collator_ref, p_first, p_first_length, p_second, p_second_length);
+    
+    MCUnicodeDestroyCollator(t_collator_ref);
+    
+    return t_result;
 }
 
 bool MCUnicodeCreateSortKey(MCLocaleRef p_locale, MCUnicodeCollateOption p_options,
                             const unichar_t *p_string, uindex_t p_string_length,
                             byte_t *&r_key, uindex_t &r_key_length)
 {
-    // Create a collation object for the given locale
-    UErrorCode t_error = U_ZERO_ERROR;
+    MCUnicodeCollatorRef t_collator;
+    if (!MCUnicodeCreateCollator(p_locale, p_options, t_collator))
+        return false;
+    
+    bool t_success;
+    t_success = MCUnicodeCreateSortKeyWithCollator(t_collator, p_string, p_string_length, r_key, r_key_length);
+    
+    MCUnicodeDestroyCollator(t_collator);
+    
+    return t_success;
+}
+
+bool MCUnicodeCreateSortKeyWithCollator(MCUnicodeCollatorRef p_collator,
+                                        const unichar_t *p_string, uindex_t p_string_length,
+                                        byte_t *&r_key, uindex_t &r_key_length)
+{
     icu::Collator* t_collator;
-    t_collator = icu::Collator::createInstance(MCLocaleGetICULocale(p_locale), t_error);
-    
-    // Ensure the collator was created properly
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Set the collation options
-    // Note that the enumerated strengths have the same values as the ICU enum
-    switch (p_options & kMCUnicodeCollateOptionStrengthMask)
-    {
-        case kMCUnicodeCollateOptionStrengthPrimary:
-            t_collator->setStrength(icu::Collator::PRIMARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthSecondary:
-            t_collator->setStrength(icu::Collator::SECONDARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthTertiary:
-            t_collator->setStrength(icu::Collator::TERTIARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthQuaternary:
-            t_collator->setStrength(icu::Collator::QUATERNARY);
-            break;
-            
-        case kMCUnicodeCollateOptionStrengthIdentical:
-            t_collator->setStrength(icu::Collator::IDENTICAL);
-            break;
-            
-        default:
-            // Use the default strength
-            break;
-    }
-    
-    if (p_options & kMCUnicodeCollateOptionAutoNormalise)
-        t_collator->setAttribute(UCOL_NORMALIZATION_MODE, UCOL_ON, t_error);
-    
-    if (p_options & kMCUnicodeCollateOptionNumeric)
-        t_collator->setAttribute(UCOL_NUMERIC_COLLATION, UCOL_ON, t_error);
-    
-    if (p_options & kMCUnicodeCollateOptionIgnorePunctuation)
-        t_collator->setAttribute(UCOL_ALTERNATE_HANDLING, UCOL_SHIFTED, t_error);
-    
-    // If an error occurred when setting attributes, abort
-    if (U_FAILURE(t_error))
-    {
-        delete t_collator;
-        return false;
-    }
+    t_collator = (icu::Collator *)p_collator;
     
     // Find the length of the sort key that will be generated
     uindex_t t_key_length;
-    t_key_length = t_collator->getSortKey(p_string, p_string_length, NULL, 0);
+    t_key_length = (unsigned)t_collator->getSortKey(p_string, (signed)p_string_length, NULL, 0);
     
     // Allocate memory for the sort key
     MCAutoArray<byte_t> t_key;
     if (!t_key.New(t_key_length))
-    {
-        delete t_collator;
         return false;
-    }
     
     // Generate the sort key
-    t_collator->getSortKey(p_string, p_string_length, t_key.Ptr(), t_key.Size());
+    t_collator->getSortKey(p_string, (signed)p_string_length, t_key.Ptr(), (signed)t_key.Size());
     
-    // Clean up and return
-    delete t_collator;
     t_key.Take(r_key, r_key_length);
+    
     return true;
 }
 
-// SN-2014-04-16:
-// Relocating the function from engine/src/unicode.h here since some are needed in foundation-bidi
-
+int32_t MCUnicodeCollateWithCollator(MCUnicodeCollatorRef p_collator,
+                                  const unichar_t *p_first, uindex_t p_first_length,
+                                  const unichar_t *p_second, uindex_t p_second_length)
+{
+    
+    UErrorCode t_error = U_ZERO_ERROR;
+    
+    icu::Collator* t_collator;
+    t_collator = (icu::Collator *)p_collator;
+    
+    // Do the comparison
+    UCollationResult t_result;
+    t_result = t_collator->compare(p_first, (signed)p_first_length, p_second, (signed)p_second_length, t_error);
+    
+    // The UCollationResult type maps UCOL_{GREATER,EQUAL,LESS} to +1,0,-1
+    return int32_t(t_result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2283,7 +2299,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
 							{
                                 // we're still ok if the current source grapheme falls within the appropriate range.
                                 // If not, there may be other options within this pair of brackets
-								if (t_source_cp >= t_lower_limit || t_source_cp <= t_pattern_cp)
+								if (t_source_cp >= t_lower_limit && t_source_cp <= t_pattern_cp)
 									ok = true;
 							}
 						}
@@ -2331,8 +2347,6 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                 // try and match the rest of the source string recursively.
                 while (t_source_filter -> HasData())
                 {
-                    t_source_cp = t_source_filter -> GetNextCodepoint();
-                    
                     uindex_t t_sindex, t_pindex;
                     // if this is a candidate for a match, recurse.
                     if (t_source_cp == t_pattern_cp)
@@ -2364,6 +2378,7 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
                     
                     // if we don't find a match, eat the source codepoint and continue.
                     t_source_filter -> AdvanceCursor();
+                    t_source_cp = t_source_filter -> GetNextCodepoint();
                 }
             }
                 return false;
@@ -2392,3 +2407,97 @@ bool MCUnicodeWildcardMatch(const void *source_chars, uindex_t source_length, bo
     
     return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+// Implement rules GB 6 - 8 based on Hangul syllable type
+static bool __MCUnicodeIsHangulClusterBoundary(int32_t p_left, int32_t p_right)
+{
+    switch (p_left)
+    {
+        case U_GCB_L:
+            return p_right == U_GCB_T;
+        case U_GCB_LV:
+        case U_GCB_V:
+            return p_right != U_GCB_V && p_right != U_GCB_T;
+        case U_GCB_LVT:
+        case U_GCB_T:
+            return p_right != U_GCB_T;
+        default:
+            MCUnreachableReturn(true);
+    }
+}
+
+static bool __MCUnicodeIsControl(int32_t p_gcb)
+{
+    return p_gcb == U_GCB_CR || p_gcb == U_GCB_LF || p_gcb == U_GCB_CONTROL;
+}
+
+static bool __MCUnicodeIsHangulSyllable(int32_t p_gcb)
+{
+    switch (p_gcb)
+    {
+        case U_GCB_L:
+        case U_GCB_LV:
+        case U_GCB_LVT:
+        case U_GCB_T:
+        case U_GCB_V:
+            return true;
+        default:
+            break;
+    }
+    
+    return false;
+}
+
+bool MCUnicodeIsGraphemeClusterBoundary(codepoint_t p_left, codepoint_t p_right)
+{
+    int32_t t_left_gcb;
+    t_left_gcb = MCUnicodeGetIntegerProperty(p_left, kMCUnicodePropertyGraphemeClusterBreak);
+    
+    int32_t t_right_gcb;
+    t_right_gcb = MCUnicodeGetIntegerProperty(p_right, kMCUnicodePropertyGraphemeClusterBreak);
+    
+    // We treat CR LF as 2 graphemes, contrary to GB 3
+    /*
+    if (t_left_gcb == U_GCB_CR && t_right_gcb == U_GCB_LF)
+        return false;
+    */
+    
+    // GB 4: Break after controls
+    if (__MCUnicodeIsControl(t_left_gcb))
+        return true;
+    
+    // GB 5: Break before controls
+    if (__MCUnicodeIsControl(t_right_gcb))
+        return true;
+    
+    // GB 6 - 8: Do not break Hangul syllable sequences.
+    if (__MCUnicodeIsHangulSyllable(t_left_gcb) && __MCUnicodeIsHangulSyllable(t_right_gcb))
+    {
+        if (!__MCUnicodeIsHangulClusterBoundary(t_left_gcb, t_right_gcb))
+            return false;
+    }
+    
+    // GB 8a: Do not break between regional indicator symbols.
+    if (t_left_gcb == U_GCB_REGIONAL_INDICATOR && t_right_gcb == U_GCB_REGIONAL_INDICATOR)
+        return false;
+    
+    // GB 9: Do not break before extending characters.
+    if (t_right_gcb == U_GCB_EXTEND)
+        return false;
+
+    // GB 9a: Do not break before SpacingMarks
+    if (t_right_gcb == U_GCB_SPACING_MARK)
+        return false;
+
+    // GB 9b: Do not break after Prepend characters
+    if (t_left_gcb == U_GCB_PREPEND)
+        return false;
+    
+    // GB 10: Otherwise, break everywhere.
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

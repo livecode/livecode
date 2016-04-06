@@ -1,0 +1,29 @@
+Name: write to process
+
+Type: command
+
+Syntax: write <value> to process <processName> 
+
+Summary: Sends input to a <process> that was opened with the <open process> <command>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: process
+
+Example:
+write "test" to process "/bin/logall"
+
+Parameters:
+value (string): 
+processName: Case-sensitive: uppercase and lowercase characters must be exactly as they were entered in the open process command. The process must have been opened previously with the open process command; otherwise, an error message is returned in the result.
+
+The result: The process to write to must be opened first with the <open process command>, and the mode the <process> was opened in must be write or update. If the process is not running or is read-only, the <result> function is set to "Process is not open for write.". If there is an error writing to the process, the <result> function <return|returns> the error message.
+
+Description:
+Use the <write to process> <command> to send input to another program.
+
+References: stdout (keyword), open process (command), read from process (command), write to driver (command), open process command (command), result (function), command (glossary), process (glossary), return (glossary)

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -182,7 +182,9 @@ extern "C" void *resolve_symbol(void *, const char *);
 DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 {
 	char *t_filename;
-	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 4);
+    // SN-2015-05-12: [[ Bug 14972 ]] We don't want to write somewhere we don't
+    //  own the memory
+	t_filename = (char *)malloc((sizeof(char) * strlen(p_path)) + 7);
 	sprintf(t_filename, "%s.dylib", p_path);
 
 #if defined(__i386__) || defined(__x86_64__)
@@ -203,6 +205,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)dlsym(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)dlsym(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)dlsym(t_driver_handle, "releasedbconnectionref");
+    t_result -> setcallbacksptr = (set_callbacksrefptr)dlsym(t_driver_handle, "setcallbacksref");
 	free(t_filename);
 	return t_result;
 #else
@@ -223,6 +226,7 @@ DATABASEREC *DoLoadDatabaseDriver(const char *p_path)
 	t_result -> idcounterptr = (idcounterrefptr)resolve_symbol(t_driver_handle, "setidcounterref");
 	t_result -> newconnectionptr = (new_connectionrefptr)resolve_symbol(t_driver_handle, "newdbconnectionref");
 	t_result -> releaseconnectionptr = (release_connectionrefptr)resolve_symbol(t_driver_handle, "releasedbconnectionref");
+    t_result -> setcallbacksptr = (set_callbacksrefptr)resolve_symbol(t_driver_handle, "setcallbacksref");
 	free(t_filename);
 	return t_result;
 #endif

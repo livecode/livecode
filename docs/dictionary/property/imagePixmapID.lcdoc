@@ -1,0 +1,36 @@
+Name: imagePixmapID
+
+Type: property
+
+Syntax: get the imagePixmapID of <image> 
+
+Summary: Specifies the internal window ID of the <pixmap> used to <redraw> an <image>.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+put the imagePixmapID of image "Flower" into myStoredID
+
+Example:
+if the imagePixmapID of image 6 is not the storedID of me then beep
+
+Value:
+The <imagePixmapID> of a stack is an <integer>.
+This property is read-only and cannot be set.
+
+Description:
+Use the <imagePixmapID> <property> to pass the window ID to an <external> that needs to manipulate the window.
+
+The pixmap ID is provided by the operating system.
+
+Some externals need to manipulate the contents of the image directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+
+References: maskPixmapID (property), pixmapID (property), windowID (property), externals (property), constantMask (property), image (keyword), integer (keyword), property (glossary), pixmap (glossary), redraw (glossary), external (glossary)
+
+Tags: multimedia

@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -34,7 +34,7 @@ public:
 	MCCdata(const MCCdata &fref);
 	~MCCdata();
 	IO_stat load(IO_handle stream, MCObject *parent, uint32_t version);
-	IO_stat save(IO_handle stream, Object_type type, uint4 p_part);
+	IO_stat save(IO_handle stream, Object_type type, uint4 p_part, uint32_t p_version);
 	uint4 getid();
 	void setid(uint4 newid);
 	MCParagraph *getparagraphs();

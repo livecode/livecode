@@ -1,0 +1,10 @@
+Name: list field
+
+Synonyms: list field,clickable list
+
+Type: glossary
+
+Description:
+A clickable list, where clicking anywhere in a line selects the entire line.
+
+Tags: ui

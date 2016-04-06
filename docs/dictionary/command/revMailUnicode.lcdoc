@@ -1,0 +1,35 @@
+Name: revMailUnicode
+
+Type: command
+
+Syntax: revMailUnicode <address> [, <ccAddress> [, <mailSubject> [, <messageBody>]]]
+
+Summary: Opens a new unicode email message in the user's email program
+
+Introduced: 3.5
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Example:
+revMailUnicode "help@example.com", the cUnicodeHelpSubject of me, the text of field "Message body" of me
+
+Parameters:
+address (string): A string consisting of one or more email addresses, separated by commas. These addresses will appear in the To: header of the email message
+ccAddress (string): A string consisting of one or more email addresses separated by commas. These addresses will appear in the CC: header of the email message.
+mailSubject: A unicode string consisting of a single line. This will appear in the Subject: header of the email message.
+messageBody: A unicode string. This text will appear in the body of the email message.
+
+Description:
+Use the <revMailUnicode> command to create an email message from within a stack.
+
+When LiveCode executes the <revMailUnicode> command, the user's email program is opened (if necessary) and a new email message with the specified parameters is created. The user can change any of the settings before sending the message, and the message is not sent automatically: the user must explicitly send it (for example by clicking the "Send" button in the email program).
+
+On Mac OS X systems, the email message is opened in the application the user has set for the "mailto:" protocol in the system preferences.
+
+For some older email programs, it may not be possible to specify a <ccAddress>, <mailSubject> or <messageBody>. Generally the <revMailUnicode> command will still work with such programs, but only the To: header will be set.
+
+>*Note:* When included in a <standalone application>, the <Common library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <revMailUnicode> <command> is not yet available. This may affect attempts to use this <command> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <revMailUnicode> <command> can be used in any <handler>.
+
+References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), revMail (command), main stack (glossary), handler (glossary), message (glossary), group (glossary), standalone application (glossary), command (glossary), application (glossary), Common library (library), library (library)

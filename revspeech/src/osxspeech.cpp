@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -134,8 +134,10 @@ bool OSXSpeechNarrator::ListVoices(NarratorGender p_gender, NarratorListVoicesCa
             &&(GetVoiceDescription(&tVoice, &myInfo, sizeof(myInfo)) == noErr))
         {
             if ((t_gender != -1) && (myInfo.gender != t_gender)) continue;
-            char cvoice[255];
-            CopyPascalStringToC(myInfo.name, cvoice);
+            char cvoice[256];
+            strncpy(cvoice, (const char*)&myInfo.name[1], myInfo.name[0]);
+			// PM-2016-02-15: [[ Bug 16929 ]] Make sure the copied strings are null-terminated
+			cvoice[myInfo.name[0]]='\0';
 			p_callback(p_context, p_gender, cvoice);
 		}
 	}
@@ -256,8 +258,14 @@ bool OSXSpeechNarrator::SpeechStop(bool ReleaseInit)
 	StopSpeech(spchannel);
 	do
 	{
-		EventRecord t_record;
-		WaitNextEvent(0, &t_record, 1, NULL);
+        // Run an inner main loop until the speech has finished processing
+        EventRef t_event;
+        OSStatus t_status = ReceiveNextEvent(0, NULL, 1, true, &t_event);
+        if (t_status == noErr)
+        {
+            SendEventToEventTarget(t_event, GetEventDispatcherTarget());
+            ReleaseEvent(t_event);
+        }
 	}
 	while(SpeechBusy() > 0);
 	
@@ -276,7 +284,7 @@ void OSXSpeechNarrator::FindAndSelect()
 {
     VoiceSpec *FoundVoice = nil;
     VoiceSpec tVoice;
-    char cvoice[255];
+    char cvoice[256];
     short NumVoices;
     if (CountVoices(&NumVoices) == noErr) {
         for (short count = 1;count<=NumVoices;count++)
@@ -285,7 +293,9 @@ void OSXSpeechNarrator::FindAndSelect()
             {
                 VoiceDescription myInfo;
                 if (GetVoiceDescription(&tVoice, &myInfo, sizeof(myInfo)) == noErr) {
-                    CopyPascalStringToC(myInfo.name,cvoice);
+                    strncpy(cvoice, (const char*)&myInfo.name[1], myInfo.name[0]);
+					// PM-2016-02-15: [[ Bug 16929 ]] Make sure the copied strings are null-terminated
+					cvoice[myInfo.name[0]]='\0';
                     if (strcmp(cvoice,speechvoice) == 0)
                     {
                         FoundVoice = &tVoice;

@@ -1,3 +1,19 @@
+/* Copyright (C) 2009-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Private Header File:
@@ -122,9 +138,15 @@ typedef char *va_list;
 typedef __builtin_va_list va_list;
 #elif defined(_LINUX)
 typedef __builtin_va_list va_list;
+#elif defined(__EMSCRIPTEN__)
+typedef __builtin_va_list va_list;
 #endif
 
 #if defined(_MOBILE) && defined(TARGET_SUBPLATFORM_ANDROID)
+typedef uint32_t size_t;
+#endif
+
+#if defined(__EMSCRIPTEN__)
 typedef uint32_t size_t;
 #endif
 

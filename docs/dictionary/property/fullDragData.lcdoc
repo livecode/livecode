@@ -1,0 +1,57 @@
+Name: fullDragData
+
+Type: property
+
+Syntax: set the fullDragData[<key>] to <data>
+Syntax: set the fullDragData to empty
+
+Summary: provides access to the contents of the <drag-and-drop clipboard>.
+
+Introduced: 8.0
+
+OS: mac,windows,linux
+
+Platforms: desktop
+
+Example:
+put the keys of the fullDragData
+
+Example:
+lock the clipboard
+set the fullDragData["text"] to "Hello, World!"
+set the fullDragData["html"] to "&lt;p&gt;Hello, World!&lt;/p&gt;"
+set the fullDragData["private"] to "MyCustomData"
+unlock the clipboard
+
+Value:
+The <fullDragData> pseudo-array provides access to the data on the drag-and-drop clipboard. It should only be accessed during drag-and-drop operations.
+The keys for the <fullDragData> are:
+  - "text": plain text
+  - "rtftext": LiveCode rich text format data
+  - "htmltext": LiveCode HTML text
+  - "styledtext": array of LiveCode styled text
+  - "image": any of PNG, GIF or JPEG image
+  - "png": PNG image
+  - "gif": GIF image
+  - "jpeg": JPEG image
+  - "rtf": Rich Text Format data
+  - "html": HTML
+  - "styles": LiveCode styled text data
+  - "objects": LiveCode objects
+  - "files": List of newline-separated file paths
+  - "private": available for in-app use
+  
+>*Note:* More keys and data types may be added in the future
+
+Description:
+Use the <fullDragData> to gain access to the system drag-and-drop clipboard. 
+
+If the contents of the drag-and-drop clipboard were placed there by another app, the clipboard will be automatically cleared when written to. If you want to do this explicitly, use ``set the fullDragData to empty``.
+
+The ``text``, ``rtftext``, ``htmltext``, ``styles`` and ``styledtext`` properties are handled specially by LiveCode: adding any one of them will cause the rest to be automatically generated and added.
+
+If you require lower-level access to the drag-and-drop clipboard, see the <rawDragData> <property>.
+
+References: dragData (property), rawDragData (property)
+
+Tags: ui, drag-and-drop

@@ -1,0 +1,14 @@
+Name: default button
+
+Synonyms: default button
+
+Type: glossary
+
+Description:
+The <button> in a <dialog box> that is automatically clicked if the user presses the Return or Enter key. 
+ 
+The default button is typically indicated by a different color or a thicker outline.
+
+References: button (glossary), dialog box (glossary)
+
+Tags: windowing

@@ -1,0 +1,14 @@
+Name: referenced control
+
+Synonyms: referenced control,referenced player,referenced image
+
+Type: glossary
+
+Description:
+A <control> (<image> or <player>) whose contents are located in a separate <file>, instead of being stored in the <stack>. 
+ 
+The <control|control's> <filename> <property> determines where the contents are located.
+
+References: filename (property), property (glossary), file (glossary), player (glossary), image (glossary), stack (glossary), control (glossary)
+
+Tags: file system

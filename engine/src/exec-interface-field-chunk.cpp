@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -1512,7 +1512,7 @@ void MCField::SetStyledTextOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, 
     MCParagraph *stpgptr = styledtexttoparagraphs(value);
 
     if (stpgptr == nil)
-        stpgptr = texttoparagraphs(MCnullmcstring, false);
+        stpgptr = texttoparagraphs(kMCEmptyString);
         
     setparagraphs(stpgptr, p_part_id, p_start, p_finish);
     
@@ -1775,7 +1775,13 @@ void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
 void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_value)
 {
     bool t_mixed;
-    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, si, &MCBlock::GetVisited, false, false, t_mixed, r_value);
+    GetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, p_part_id, si, ei, &MCBlock::GetVisited, false, false, t_mixed, r_value);
+}
+
+// PM-2015-07-06: [[ Bug 15577 ]] Allow setting of the "visited" property of a block
+void MCField::SetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool p_value)
+{
+    SetCharPropOfCharChunk< PodFieldPropType<bool> >(ctxt, this, false, p_part_id, si, ei, &MCBlock::SetVisited,p_value);
 }
 
 void MCField::GetEncodingOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, intenum_t &r_encoding)
@@ -1814,6 +1820,8 @@ void MCField::GetFlaggedRangesOfCharChunk(MCExecContext& ctxt, uint32_t p_part_i
     {
         MCInterfaceFieldRanges t_paragraphRanges;
         sptr -> getflaggedranges(p_part_id, si, ei, t_index_offset, t_paragraphRanges);
+		// PM-2016-01-08: [[ Bug 16666 ]] Update the offset to be relative to the beginning of the text
+		t_index_offset += sptr -> gettextlengthcr();
 
         for (uindex_t i = 0; i < t_paragraphRanges . count; ++i)
             t_ranges . Push(t_paragraphRanges . ranges[i]);
@@ -2105,17 +2113,27 @@ void MCField::GetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, in
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabStops, r_mixed, t_vector);
 
-    r_count = t_vector . count;
-    r_values = t_vector . elements;
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector . count;
+        r_values = t_vector . elements;
+    }
 }
 
 void MCField::GetEffectiveTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabStops, r_mixed, t_vector);
-
-    r_count = t_vector.count;
-    r_values = t_vector.elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector.count;
+        r_values = t_vector.elements;
+    }
 }
 
 void MCField::SetTabStopsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
@@ -2131,18 +2149,28 @@ void MCField::GetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, i
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetTabWidths, r_mixed, t_vector);
-
-    r_count = t_vector . count;
-    r_values = t_vector . elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector . count;
+        r_values = t_vector . elements;
+    }
 }
 
 void MCField::GetEffectiveTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uindex_t& r_count, uinteger_t*& r_values)
 {
     vector_t<uinteger_t> t_vector;
     GetParagraphPropOfCharChunk< VectorFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveTabWidths, r_mixed, t_vector);
-
-    r_count = t_vector.count;
-    r_values = t_vector.elements;
+    
+    // SN-2015-04-22: [[ Bug 15243 ]] Do not use t_vector if the result is mixed
+    //  as it will be uninitialised.
+    if (!r_mixed)
+    {
+        r_count = t_vector.count;
+        r_values = t_vector.elements;
+    }
 }
 
 void MCField::SetTabWidthsOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uindex_t count, uinteger_t *values)
@@ -2441,8 +2469,10 @@ void MCField::GetTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_in
 
 void MCField::GetEffectiveTextStyleElementOfCharChunk(MCExecContext& ctxt, MCNameRef p_index, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, bool& r_value)
 {
-    bool t_default;
-    bool *t_value_ptr;
+    // SN-2015-03-25: [[ Bug 15030 ]] Initialise t_value_ptr to a value, since
+    //  it will be dereferenced in MCBlock::GetTextStyleElement
+    bool t_default, t_value;
+    bool *t_value_ptr = &t_value;
     GetTextStyleElement(ctxt, p_index, t_default);
     GetArrayCharPropOfCharChunk< OptionalFieldArrayPropType< PodFieldArrayPropType<bool> > >(ctxt, this, p_part_id, si, ei, p_index, &MCBlock::GetTextStyleElement, true, t_default, r_mixed, t_value_ptr);
     
@@ -2524,7 +2554,8 @@ void MCParagraph::GetListDepth(MCExecContext& ctxt, uinteger_t*& r_depth)
     if (attrs == nil || (attrs -> flags & PA_HAS_LIST_STYLE) == 0)
         r_depth = nil;
     else
-        *r_depth = getlistdepth();
+		// PM-2016-01-19: [[ Bug 16742 ]] Default listDepth should be 1 (to match the LC 6.x behavior)
+        *r_depth = getlistdepth() + 1;
 }
 
 void MCParagraph::GetEffectiveListDepth(MCExecContext& ctxt, uinteger_t& r_depth)
@@ -3176,6 +3207,14 @@ void MCBlock::SetImageSource(MCExecContext& ctxt, MCStringRef p_image_source)
 void MCBlock::GetVisited(MCExecContext& ctxt, bool& r_value)
 {
     r_value = getvisited() == True;
+}
+
+void MCBlock::SetVisited(MCExecContext& ctxt, bool p_value)
+{
+    if (p_value)
+		setvisited();
+	else
+		clearvisited();
 }
 
 void MCBlock::GetFlagged(MCExecContext& ctxt, bool &r_value)

@@ -1,0 +1,1 @@
+# Property inspector does not update when graphics are being created using tools 

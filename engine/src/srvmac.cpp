@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -571,14 +571,20 @@ struct MCMacSystem: public MCSystemInterface
 	}
 	
 #define CATALOG_MAX_ENTRIES 16
-	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+	bool ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 	{
 		OSStatus t_os_status;
 		
 		Boolean t_is_folder;
 		FSRef t_current_fsref;
-		
-		t_os_status = FSPathMakeRef((const UInt8 *)".", &t_current_fsref, &t_is_folder);
+
+		MCAutoStringRefAsUTF8String t_path;
+		if (p_folder == nil)
+			/* UNCHECKED */ t_path . Lock(MCSTR("."));
+		else
+			/* UNCHECKED */ t_path . Lock(p_folder);
+
+		t_os_status = FSPathMakeRef((const UInt8 *) *t_path, &t_current_fsref, &t_is_folder
 		if (t_os_status != noErr || !t_is_folder)
 			return false;
 		

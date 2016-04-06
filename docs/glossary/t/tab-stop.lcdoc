@@ -1,0 +1,12 @@
+Name: tab stop
+
+Synonyms: tabstop,tab stop
+
+Type: glossary
+
+Description:
+Distance from the left edge of a <field> to the position of the <insertion point> when you press Tab.
+
+References: field (glossary), insertion point (glossary)
+
+Tags: ui

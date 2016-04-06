@@ -1,0 +1,31 @@
+Name: $_SESSION
+
+Type: keyword
+
+Syntax: $_SESSION
+
+Summary: <$_SESSION> is an array variable that contains the data for the current active session.
+
+Introduced: 5.0
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+put $_SESSION into tSessionArray
+
+Example:
+put "ben" into $_SESSION["user_name"]
+
+Example:
+put $_SESSION["id"] into tSessionID
+
+Description:
+Use the <$_SESSION> keyword to access the array containing the data for the current active session.
+
+<$_SESSION> is only available when running in CGI mode (Server).
+
+References: stop session (command), start session (command), delete session (command), sessionSavePath (property), sessionLifetime (property), sessionId (property), sessionName (property)
+
+Tags: multimedia

@@ -1,0 +1,55 @@
+Name: sort
+
+Type: command
+
+Syntax: sort [marked] cards [of <stack>] [<direction>] [<sortType>] by <sortKey> 
+
+Summary: Sorts the cards of a stack into a new order.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+sort cards by field "name"
+
+Example:
+sort cards of this stack by random(the number of cards)
+
+Example:
+sort marked cards of stack "project1" numeric by the number of buttons
+
+Example:
+sort cards numeric by the short ID of this card
+
+Example:
+sort cards of stack "Manson" descending dateTime by item 1 of field "Date"
+
+Parameters:
+stack: A reference to any open stack. If you don't specify a stack, the cards of the current stack are sorted.
+direction (enum): If you don't specify a <direction>, the sort is `ascending`.
+- ascending: sorts in ascending order
+- descending: sorts in descending order
+sortType (enum): If you don't specify a <sortType>, the <sortType> is `text`.
+- international: sorts by collation according to the system locale
+- numeric: sorts by number. (Use this form if the sortKey consists of numbers)
+- datetime: treats the sortKey as a date and/or time
+- text: sorts using a codepoint by codepoint comparison
+- binary: sorts using a byte by byte comparison
+sortKey: An expression that evaluates to a value for each card in the stack. Any object references within the sortKey are treated as pertaining to each card being evaluated, so for example, a reference to a field is evaluated according to that field's contents on each card.
+
+Description:
+Use the sort command to shuffle the cards in a stack into a new order, or to shuffle a subset of the cards in a stack.
+
+The sort command is a stable sort. This means that if the sortKey for two cards is the same, sorting does not change their order, so you can do two successive sorts to create subcategories within the major sort categories. For example, to sort the cards of a stack by ZIP code and sort within each ZIP code by last names, use these two statements:
+
+sort cards by field "Last Name"
+sort cards numeric by field "ZIP code"
+
+The 'text' and 'international' forms are affected by the caseSensitive and formSensitive properties.
+
+References: find (command), sort container (command), filter (command), mark (property), dateTime (keyword), numeric (keyword), text (keyword)
+
+Tags: database

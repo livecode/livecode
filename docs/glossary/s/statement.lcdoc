@@ -1,0 +1,10 @@
+Name: statement
+
+Synonyms: statement list,statement
+
+Type: glossary
+
+Description:
+A single programming instruction. A single line of <LiveCode> code that starts with a <command>.
+
+References: command (glossary), LiveCode (glossary)

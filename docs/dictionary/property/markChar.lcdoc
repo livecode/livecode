@@ -1,0 +1,20 @@
+Name: markChar
+
+Type: property
+
+Syntax: set the markChar of <menuItem> to <character> 
+
+Summary: Has no effect and is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+
+Introduced: 1.0
+
+OS: ios,android
+
+Platforms: desktop,server,web,mobile
+
+Description:
+In HyperCard, the <markChar> <property> places a <character> (such as a checkmark) next to a <menu item>.
+
+A handler can set the <markChar> to any <value> without causing a <error|script error>, but the actual appearance of the <menu item> is not changed.
+
+References: commandChar (property), character (keyword), value (function), property (glossary), LiveCode (glossary), HyperCard (glossary), menu item (glossary), error (glossary)

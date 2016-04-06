@@ -1,0 +1,34 @@
+Name: is not in
+
+Type: operator
+
+Syntax: <subString> is not in <string> 
+
+Summary: Compares two <string|strings> and <evaluate|evaluates> to true if the second does not contain the first, false if it does.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+"S" is not in "BSD" -- evaluates to false
+
+Parameters:
+substring (string): The substring and string are both strings, or expressions that evaluate to strings.
+string (string): 
+
+Description:
+Use the <is not in> <operator> to find out whether a <string> does not contain a substring.
+
+The expression
+firstString is not in secondString
+is equivalent to
+  not (secondString contains firstString)
+
+The <is not in> <operator> is the logical inverse of the <is in> <operator>. When one is true, the other is false.
+
+References: contains (operator), is in (operator), evaluate (glossary), string (glossary), operator (glossary), string (keyword)
+
+Tags: text processing

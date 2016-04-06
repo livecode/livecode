@@ -1,0 +1,39 @@
+Name: brushColor
+
+Type: property
+
+Syntax: set the brushColor to {<colorName> | <RGBColor>}
+
+Summary: Specifies the color used to paint and to fill shapes in an <image>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the brushColor to "blue"
+
+Example:
+set the brushColor to "#FFCC99"
+
+Example:
+set the brushColor to 127,127,255
+
+Value:
+The <brushColor> is a <color reference>.
+The <colorName> is any standard color name.
+
+The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+
+By default, the <brushColor> is black.
+
+Description:
+Use the <brushColor> <property> to change the color used with the <bucket>, <spray can>, and <brush> <paint tool|paint tools>, and for the interior of filled shapes.
+
+If the <brushPattern> has been set since the last time the <brushColor> was set, the pattern is used instead of the color specified by <brushColor>. In other words, the last-set <property> takes priority.
+
+References: image (keyword), rectangle (keyword), roundRect (keyword), polygon (keyword), spray can (keyword), bucket (keyword), brush (keyword), oval (keyword), regular (keyword), backgroundColor (property), filled (property), lineSize (property), penColor (property), brushPattern (property), property (glossary), hexadecimal (glossary), paint tool (glossary), integer (glossary), color reference (glossary)
+
+Tags: ui

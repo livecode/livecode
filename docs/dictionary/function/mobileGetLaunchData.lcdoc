@@ -1,0 +1,52 @@
+Name: mobileGetLaunchData
+
+Type: function
+
+Syntax: get mobileGetLaunchData()
+
+Summary: Returns an array containing information set by the launcher of the application.
+
+Introduced: 7.0
+
+OS: android
+
+Platforms: mobile
+
+Example:
+put mobileGetLaunchData() into tLaunchData
+
+Example:
+constant kActionView = "android.intent.action.VIEW"
+
+put mobileGetLaunchData() into tLaunchData
+
+if tLaunchData is an array and tLaunchData["action"] is kActionView then
+
+   -- view content specified in tLaunchData["data"]
+
+else
+
+   -- launched as main application
+
+end if
+
+Parameters:
+ (enum): <name/> Launch Data - The application launch data is stored as an array and has the following keys:
+- "action": The general action the app was launched to perform.
+- "data": The data to operate on.
+- "type": The MIME type of the data provided.
+- "categories": Additional information about the action to perform.
+
+Returns:
+Use the <mobileGetLaunchData> function to get the application launch parameters.
+The returned array will contain the information that is set by the launching application.
+
+Description:
+>Returns an array containing information set by the launcher of the application.
+
+The <mobileGetLaunchData> function returns the information that was set by the launching application. This can be used to perform specific actions supported by an application on the provided data. 
+ 
+ >*Note:*  On Android, custom Intent filters can be specified in the manifest to allow an application to perform actions for other applications
+When the application is launched to handle one of these actions, its launch Intent can be queried to determine what action was requested, and the data to use to fulfil that request.
+
+References: launchDataChanged (message), mobileGetLaunchURL (function)

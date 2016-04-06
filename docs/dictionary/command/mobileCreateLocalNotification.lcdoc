@@ -1,0 +1,35 @@
+Name: mobileCreateLocalNotification
+
+Type: command
+
+Syntax: mobileCreateLocalNotification <alertBody>, <alertButtonMessage>, <alertPayload>, <alertTime>, <playSound> [, <badgeValue>]
+
+Summary: Schedules a new Local Notification with the operating system.
+
+Introduced: 5.5
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileCreateLocalNotification "The Alert Body", "Show Me", "It is time to do some Exercise", the seconds + 10, true, "1"
+
+Parameters:
+alertBody: The text that is to be displayed on the notification dialog that is raised when the application is not running.
+alertButtonMessage: The button text on the notification dialog that is to appear on the button that launches the application, when the application is not running.
+alertPayload: A text payload that can be sent with the notification request. This payload is presented to the user via the <localNotificationReceived> message.
+alertTime: The time at which the alert is to be sent to the application. This parameter needs to be set in seconds and is the number of seconds since the UNIX Epoch, at which the notification should be triggered.
+playSound (boolean): A boolean to indicate if a sound is to be played when the alert is received.
+badgeValue: The number value to which the badge of the application logo is to be set. 0 hides the badge. &gt;0 displays the value on the badge.
+
+The result: The id of the local notification that is created is returned by the <result> function.
+
+Description:
+Use the <mobileCreateLocalNotification> <command> to schedule a Local Notification with the operating system from within a <stack on iOS or Android>. 
+
+This command schedules Local Notifications with the iOS or Android operating sytem and delivers the <alertPayload> to the application. The <alertPayload> is delivered using the <localNotificationReceived> message.
+
+References: localNotificationReceived (message), mobileCancelAllLocalNotifications (command), mobileCancelLocalNotification (command), stack on iOS or Android (object), command (glossary), result (function)
+
+Tags: networking

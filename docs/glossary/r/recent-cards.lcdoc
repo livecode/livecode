@@ -1,0 +1,12 @@
+Name: recent cards
+
+Synonyms: recent cards list,recent-cards list,recent list,recent card,recently visited card,recently-visited card
+
+Type: glossary
+
+Description:
+<card|Cards> the user has visited between starting up the application and going to the <current card>.
+
+References: card (glossary), current card (glossary)
+
+Tags: navigation

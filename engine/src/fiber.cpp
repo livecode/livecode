@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -27,6 +27,7 @@ struct MCFiber
 {
 	MCFiber *next;
 	pthread_t thread;
+	bool have_thread; /* True if thread is live */
 	bool owns_thread;
 	bool finished;
 	uindex_t depth;
@@ -141,6 +142,7 @@ bool MCFiberConvert(MCFiberRef& r_fiber)
 	
 	// Get the thread id of the fiber and link it into the fiber chain.
 	self -> thread = pthread_self();
+	self -> have_thread = true;
 	self -> next = s_fibers;
 	s_fibers = self;
 	
@@ -161,8 +163,12 @@ bool MCFiberCreate(size_t p_stack_size, MCFiberRef& r_fiber)
 	
 	if (s_fibers == nil)
 		MCFiberInitialize();
-	
-	self -> thread = nil;
+
+	/* N.b. We can't initialise self->thread because pthread_t is an
+	 * implementation-dependent type that could be anything, and the
+	 * specification doesn't make an initialisation constant
+	 * available */
+	self -> have_thread = false;
 	self -> next = s_fibers;
 	s_fibers = self;
 
@@ -170,6 +176,11 @@ bool MCFiberCreate(size_t p_stack_size, MCFiberRef& r_fiber)
 	{
 		MCFiberDestroy(self);
 		return false;
+	}
+	else
+	{
+		/* Thread is now live */
+		self -> have_thread = true;
 	}
 	
 	r_fiber = self;
@@ -183,7 +194,7 @@ void MCFiberDestroy(MCFiberRef self)
 	MCAssert(self -> depth == 0);
 	
 	// If the thread is owned by the fiber then wait on it to finish.
-	if (self -> owns_thread && self -> thread != nil)
+	if (self -> owns_thread && self -> have_thread)
 	{
 		// A fiber that owns its thread cannot destroy itself.
 		MCAssert(self != s_fiber_current);
@@ -196,7 +207,7 @@ void MCFiberDestroy(MCFiberRef self)
 		pthread_join(self -> thread, nil);
 
 		// The thread is now gone.
-		self -> thread = nil;
+		self -> have_thread = false;
 	}
 	
 	// Remove the fiber record from the list.
@@ -260,7 +271,7 @@ void MCFiberCall(MCFiberRef p_target, MCFiberCallback p_callback, void *p_contex
 
 bool MCFiberIsCurrentThread(MCFiberRef self)
 {
-	return pthread_self() == self -> thread;
+	return pthread_equal(pthread_self(), self -> thread);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

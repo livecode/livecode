@@ -1,0 +1,40 @@
+Name: pan
+
+Type: property
+
+Syntax: set the pan of <player> to <degrees> 
+
+Summary: Specifies the current horizontal view angle of a <QuickTime VR> movie.
+
+Associations: player
+
+Introduced: 1.0
+
+OS: mac,windows
+
+Platforms: desktop,server,web
+
+Example:
+set the pan of player "Arctic" to 90.5
+
+Example:
+put the pan of player myPlayerName into myLocation
+
+Value: The <pan> is a number between zero and 360.
+
+Description:
+Use the <pan> <property> to find out where the user is in a <QuickTime VR> movie.
+
+The user can move the view of a QuickTime VR movie using the navigational controls in the player; a handler can change the view by setting the player's <pan> and <tilt> <properties>.
+
+The <pan> specifies the amount of rotation in the horizontal plane, in <degree|degrees>. (Think of a person standing in the middle of a scene and turning from side to side. The point where the person is standing is the <currentNode>, and the amount of turning is the <pan>.) A <pan> of zero corresponds to the straight-ahead view of the scene. As the viewer turns clockwise, the <pan> increases.
+
+If you set the <pan> of a player to a number outside the range zero to 360, no <error> results, but the <pan> is set tonumber mod 360. For example, if you attempt to set the <pan> of a <player(keyword)> to -20, its <pan> is actually set to 340.
+
+The <pan> is limited by the <player(object)|player's> <constraints> <property>. If you specify a <pan> greater than the <range> permitted by the <constraints>, the <pan> is set to the highest permitted <value>. If you specify a <pan> less than the <range> permitted by the <constraints>, the <pan> is set to the lowest permitted <value>.
+
+If the player does not contain a QuickTime VR movie, its <pan> <property> is zero.
+
+References: currentNode (property), properties (property), tilt (property), constraints (property), player (keyword), player (object), property (glossary), QuickTime VR (glossary), error (glossary), range (glossary), degree (glossary), value (function)
+
+Tags: multimedia

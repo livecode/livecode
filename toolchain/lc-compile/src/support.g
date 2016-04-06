@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -31,6 +31,7 @@
     GetColumnOfCurrentPosition
     GetUndefinedPosition
     AddImportedModuleFile
+    GetFilenameOfPosition
 
     InitializeLiterals
     FinalizeLiterals
@@ -40,8 +41,13 @@
     UnescapeStringLiteral
     MakeNameLiteral
     GetStringOfNameLiteral
+    IsNameEqualToName
+    IsNameNotEqualToName
     IsNameEqualToString
     IsStringEqualToString
+
+    IsNameSuitableForDefinition
+    IsStringSuitableForKeyword
 
     InitializeScopes
     FinalizeScopes
@@ -84,6 +90,7 @@
     BeginRightBinaryOperatorSyntaxRule
     BeginNeutralBinaryOperatorSyntaxRule
     EndSyntaxRule
+    DeprecateSyntaxRule
     BeginSyntaxGrammar
     EndSyntaxGrammar
     ConcatenateSyntaxGrammar
@@ -116,6 +123,14 @@
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
 
+    IsDependencyCompile
+    DependStart
+    DependFinish
+    DependDefineMapping
+    DependDefineDependency
+
+    EmitStart
+    EmitFinish
     EmitBeginModule
     EmitBeginLibraryModule
     EmitBeginWidgetModule
@@ -181,6 +196,7 @@
     EmitRecordTypeField
     EmitEndRecordType
     EmitBeginHandlerType
+    EmitBeginForeignHandlerType
     EmitHandlerTypeInParameter
     EmitHandlerTypeOutParameter
     EmitHandlerTypeInOutParameter
@@ -207,14 +223,21 @@
     EmitTrueConstant
     EmitFalseConstant
     EmitIntegerConstant
+    EmitUnsignedIntegerConstant
     EmitRealConstant
     EmitStringConstant
     EmitBeginListConstant
     EmitContinueListConstant
     EmitEndListConstant
+    EmitBeginArrayConstant
+    EmitContinueArrayConstant
+    EmitEndArrayConstant
     EmitBeginAssignList
     EmitContinueAssignList
     EmitEndAssignList
+    EmitBeginAssignArray
+    EmitContinueAssignArray
+    EmitEndAssignArray
     EmitFetch
     EmitStore
     EmitReturn
@@ -293,9 +316,22 @@
     Error_NonHandlerTypeVariablesCannotBeCalled
     Error_HandlerNotSuitableForPropertyGetter
     Error_HandlerNotSuitableForPropertySetter
+    Error_UnsuitableStringForKeyword
+    Error_IntegerLiteralOutOfRange
+    Error_NextRepeatOutOfContext
+    Error_ExitRepeatOutOfContext
+    Error_DependentModuleNotIncludedWithInputs
+    Error_InterfaceFileNameMismatch
+    Error_NoReturnTypeSpecifiedForForeignHandler
+    Error_NoTypeSpecifiedForForeignHandlerParameter
+    Error_ConstantArrayKeyIsNotStringLiteral
+    Error_ListExpressionTooLong
+    Error_ArrayExpressionTooLong
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
-
+    Warning_UnsuitableNameForDefinition
+    Warning_UndefinedConstantDeprecated
+    Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
 
@@ -319,12 +355,14 @@
 
 'condition' AddImportedModuleFile(Name: STRING)
 
+'action' GetFilenameOfPosition(Position: POS -> Filename: STRING)
+
 --------------------------------------------------------------------------------
 
 'action' InitializeLiterals()
 'action' FinalizeLiterals()
 
-'action' MakeIntegerLiteral(Token: STRING -> Literal: INT)
+'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
 'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
@@ -333,6 +371,11 @@
 'action' GetStringOfNameLiteral(Name: NAME -> String: STRING)
 'condition' IsNameEqualToString(NAME, STRING)
 'condition' IsStringEqualToString(STRING, STRING)
+'condition' IsNameEqualToName(NAME, NAME)
+'condition' IsNameNotEqualToName(NAME, NAME)
+
+'condition' IsNameSuitableForDefinition(NAME)
+'condition' IsStringSuitableForKeyword(STRING)
 
 --------------------------------------------------------------------------------
 
@@ -390,6 +433,8 @@
 'action' BeginNeutralBinaryOperatorSyntaxRule(NAME, NAME, INT)
 'action' EndSyntaxRule()
 
+'action' DeprecateSyntaxRule(Message: STRING)
+
 'action' BeginSyntaxGrammar()
 'action' EndSyntaxGrammar()
 
@@ -435,6 +480,17 @@
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
 --------------------------------------------------------------------------------
+
+'condition' IsDependencyCompile()
+'action' DependStart()
+'action' DependFinish()
+'action' DependDefineMapping(ModuleName: NAME, SourceFile: STRING)
+'action' DependDefineDependency(ModuleName: NAME, RequiredModuleName: NAME)
+
+--------------------------------------------------------------------------------
+
+'action' EmitStart()
+'action' EmitFinish()
 
 'action' EmitBeginModule(Name: NAME -> ModuleIndex: INT)
 'action' EmitBeginWidgetModule(Name: NAME -> ModuleIndex: INT)
@@ -513,6 +569,7 @@
 'action' EmitEndRecordType(-> INT)
 
 'action' EmitBeginHandlerType(ReturnType: INT)
+'action' EmitBeginForeignHandlerType(ReturnType: INT)
 'action' EmitHandlerTypeInParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeOutParameter(Name: NAME, Type: INT)
 'action' EmitHandlerTypeInOutParameter(Name: NAME, Type: INT)
@@ -540,14 +597,21 @@
 'action' EmitTrueConstant(-> ConstIndex: INT)
 'action' EmitFalseConstant(-> ConstIndex: INT)
 'action' EmitIntegerConstant(Value: INT -> ConstIndex: INT)
+'action' EmitUnsignedIntegerConstant(Value: INT -> ConstIndex: INT)
 'action' EmitRealConstant(Value: DOUBLE -> ConstIndex: INT)
 'action' EmitStringConstant(Value: STRING -> ConstIndex: INT)
 'action' EmitBeginListConstant()
 'action' EmitContinueListConstant(ConstIndex: INT)
 'action' EmitEndListConstant(-> ConstIndex: INT)
+'action' EmitBeginArrayConstant()
+'action' EmitContinueArrayConstant(ConstKeyIndex: INT, ConstValueIndex: INT)
+'action' EmitEndArrayConstant(-> ConstIndex: INT)
 'action' EmitBeginAssignList(Register: INT)
 'action' EmitContinueAssignList(Register: INT)
 'action' EmitEndAssignList()
+'action' EmitBeginAssignArray(Register: INT)
+'action' EmitContinueAssignArray(Register: INT)
+'action' EmitEndAssignArray()
 'action' EmitFetch(Register: INT, Var: INT, Level: INT)
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
@@ -642,7 +706,26 @@
 'action' Error_HandlerNotSuitableForPropertyGetter(Position: POS, Identifier: NAME)
 'action' Error_HandlerNotSuitableForPropertySetter(Position: POS, Identifier: NAME)
 
+'action' Error_UnsuitableStringForKeyword(Position: POS, Token: STRING)
+
+'action' Error_IntegerLiteralOutOfRange(Position: POS)
+'action' Error_NextRepeatOutOfContext(Position: POS)
+'action' Error_ExitRepeatOutOfContext(Position: POS)
+
+'action' Error_DependentModuleNotIncludedWithInputs(Position: POS, Module: NAME)
+'action' Error_InterfaceFileNameMismatch(Position: POS, Module: NAME)
+
+'action' Error_NoReturnTypeSpecifiedForForeignHandler(Position: POS)
+'action' Error_NoTypeSpecifiedForForeignHandlerParameter(Position: POS)
+
+'action' Error_ConstantArrayKeyIsNotStringLiteral(Position: POS)
+'action' Error_ListExpressionTooLong(Position: POS)
+'action' Error_ArrayExpressionTooLong(Position: POS)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
+'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
+'action' Warning_UndefinedConstantDeprecated(Position: POS)
+'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

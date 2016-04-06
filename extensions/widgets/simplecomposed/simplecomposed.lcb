@@ -1,0 +1,94 @@
+/*
+Copyright (C) 2014-2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+widget com.livecode.widget.simplecomposed
+
+use com.livecode.canvas
+use com.livecode.widget
+
+metadata title is "Simple Composed Widget"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+
+private variable mInsideChild as String
+private variable mInside as Boolean
+
+private variable mSelector as Widget
+private variable mClock as Widget
+
+public handler onCreate()
+    put false into mInside
+    put the empty string into mInsideChild
+
+    put a new widget "com.livecode.widget.selector" into mSelector
+    set property "totalOptions" of mSelector to 6
+    set annotation "Name" of mSelector to "Selector"
+
+    put a new widget "com.livecode.widget.clock" into mClock
+    set annotation "Name" of mClock to "Clock"
+
+    place mSelector
+    place mClock
+end handler
+
+public handler OnPaint()
+    set the paint of this canvas to solid paint with color [0.75, 0.75, 0.75]
+    fill rectangle path of my bounds on this canvas
+    
+    if mInside then
+        set the paint of this canvas to solid paint with color [1.0, 0.0, 0.0]
+        set the stroke width of this canvas to 4.0
+        stroke rectangle path of my bounds on this canvas
+    end if
+    
+    if mInsideChild is not the empty string then
+        set the paint of this canvas to solid paint with color [0.0, 0.0, 0.0]
+        fill text mInsideChild at top of my bounds on this canvas
+    end if
+end handler
+
+public handler OnGeometryChanged()
+    set the rectangle of mSelector to rectangle [ 0, 20, my width, 50 ]
+    set the rectangle of mClock to rectangle [ 0, 50, my width, my height ]
+end handler
+
+public handler OnMouseEnter()
+    put true into mInside
+    
+    if the target is not nothing then
+        put annotation "Name" of the target into mInsideChild
+    end if
+
+    redraw all
+end handler
+
+public handler OnMouseLeave()
+    if the target is not nothing then
+        put the empty string into mInsideChild
+    end if
+
+    put false into mInside
+
+    redraw all
+end handler
+
+-- optionChanged comes from selector
+public handler OnOptionChanged(in pIndex)
+    set property "timeZone" of mClock to pIndex - 1
+end handler
+	
+end widget

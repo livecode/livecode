@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -144,25 +144,29 @@ unsigned long SSLError(MCStringRef& errbuf)
 {
 	if (!InitSSLCrypt())
 	{
-		errbuf = MCSTR("ssl library not found");
+        // SN-2015-07-02: [[ Bug 15568 ]] Create a StringRef - avoid over-release
+        /* UNCHECKED */ MCStringCreateWithCString("ssl library not found", errbuf);
 		return 0;
 	}
 #ifdef MCSSL
 	unsigned long ecode = ERR_get_error();
-	if (!MCStringIsEmpty(errbuf))
-	{
-		if (ecode)
-        {
-            MCAutoPointer<char> t_errbuf;
-            t_errbuf = new char[256];
-            ERR_error_string_n(ecode,&t_errbuf,255);
-            /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
-        }
-		else
-			errbuf = MCValueRetain(kMCEmptyString);
-	}
+
+    // SN-2015-07-02: [[ Bug 15568 ]] Mis-translation to StringRef from 6.7:
+    //  errbuf won't be nil, but will always be empty though.
+    if (ecode)
+    {
+        MCAutoPointer<char> t_errbuf;
+        t_errbuf = new char[256];
+        ERR_error_string_n(ecode,&t_errbuf,255);
+        /* UNCHECKED */ MCStringCreateWithCString(*t_errbuf, errbuf);
+    }
+    else
+        errbuf = MCValueRetain(kMCEmptyString);
+
 	return ecode;
 #else
+    // SN-2015-07-02: [[ Bug 15568 ]] We don't let errbuf unset.
+    errbuf = MCValueRetain(kMCEmptyString);
 	return 0;
 #endif
 }
@@ -760,7 +764,7 @@ bool load_ssl_ctx_certs_from_folder(SSL_CTX *p_ssl_ctx, const char *p_path)
 	
 	t_context.ssl_context = p_ssl_ctx;
 	
-	t_success = MCsystem -> ListFolderEntries((MCSystemListFolderEntriesCallback)cert_dir_list_callback, &t_context);
+	t_success = MCsystem -> ListFolderEntries(nil, (MCSystemListFolderEntriesCallback)cert_dir_list_callback, &t_context);
 	
 	return t_success;
 }
@@ -770,7 +774,7 @@ bool load_ssl_ctx_certs_from_file(SSL_CTX *p_ssl_ctx, const char *p_path)
 	return SSL_CTX_load_verify_locations(p_ssl_ctx, p_path, NULL) != 0;
 }
 
-#if defined(TARGET_PLATFORM_MACOS_X) || defined(TARGET_PLATFORM_WINDOWS)
+#if defined(TARGET_PLATFORM_MACOS_X) || defined(_WIN32)
 
 void free_x509_stack(STACK_OF(X509) *p_stack)
 {
@@ -902,6 +906,7 @@ bool ssl_set_default_certificates(SSL_CTX *p_ssl_ctx)
 #ifdef TARGET_PLATFORM_MACOS_X
 bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
 	bool t_success = true;
 	
 	CFArrayRef t_anchors = NULL;
@@ -942,6 +947,9 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_x509_stack)
 		free_x509_stack(t_stack);
 
 	return t_success;
+#else
+    return false;
+#endif
 }
 
 bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
@@ -950,7 +958,7 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 	return true;
 }
 
-#elif defined(TARGET_PLATFORM_WINDOWS)
+#elif defined(_WIN32)
 
 bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
 {
@@ -963,7 +971,7 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
 	t_success = NULL != (t_cert_stack = sk_X509_new(NULL));
 
 	if (t_success)
-		t_success = NULL != (t_cert_store = CertOpenSystemStore(NULL, L"ROOT"));
+		t_success = NULL != (t_cert_store = CertOpenSystemStoreW(NULL, L"ROOT"));
 
 	while (t_success && NULL != (t_cert_enum = CertEnumCertificatesInStore(t_cert_store, t_cert_enum)))
 	{
@@ -973,11 +981,7 @@ bool export_system_root_cert_stack(STACK_OF(X509) *&r_cert_stack)
 		if (t_valid)
 		{
 			X509 *t_x509 = NULL;
-#if defined(TARGET_PLATFORM_WINDOWS)
 			const unsigned char *t_data = (const unsigned char*) t_cert_enum->pbCertEncoded;
-#else
-			unsigned char *t_data = t_cert_enum->pbCertEncoded;
-#endif
 			long t_len = t_cert_enum->cbCertEncoded;
 
 			t_success = NULL != (t_x509 = d2i_X509(NULL, &t_data, t_len));
@@ -1009,7 +1013,7 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 	t_success = NULL != (t_crl_stack = sk_X509_CRL_new(NULL));
 
 	if (t_success)
-		t_success = NULL != (t_cert_store = CertOpenSystemStore(NULL, L"ROOT"));
+		t_success = NULL != (t_cert_store = CertOpenSystemStoreW(NULL, L"ROOT"));
 
 	while (t_success && NULL != (t_crl_enum = CertEnumCRLsInStore(t_cert_store, t_crl_enum)))
 	{
@@ -1019,11 +1023,7 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 		if (t_valid)
 		{
 			X509_CRL *t_crl = NULL;
-#if defined(TARGET_PLATFORM_WINDOWS)
 			const unsigned char *t_data = (const unsigned char*)t_crl_enum->pbCrlEncoded;
-#else
-			unsigned char *t_data = t_crl_enum->pbCrlEncoded;
-#endif
 			long t_len = t_crl_enum->cbCrlEncoded;
 
 			t_success = NULL != (t_crl = d2i_X509_CRL(NULL, &t_data, t_len));
@@ -1059,3 +1059,291 @@ bool export_system_crl_stack(STACK_OF(X509_CRL) *&r_crls)
 }
 
 #endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(TARGET_SUBPLATFORM_IPHONE)
+
+#include <Security/Security.h>
+
+static SecCertificateRef x509_to_SecCertificateRef(X509 *p_cert)
+{
+    bool t_success;
+    t_success = true;
+    
+    size_t t_cert_size;
+    byte_t *t_cert_data;
+    t_cert_data = NULL;
+    if (t_success)
+    {
+        t_cert_size = i2d_X509(p_cert, &t_cert_data);
+        t_success = t_cert_size > 0;
+    }
+    
+    CFDataRef t_cf_cert_data;
+    t_cf_cert_data = NULL;
+    if (t_success)
+    {
+        t_cf_cert_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, t_cert_data, t_cert_size, kCFAllocatorNull);
+        t_success = t_cf_cert_data != NULL;
+    }
+    
+    SecCertificateRef t_sec_cert;
+    t_sec_cert = NULL;
+    if (t_success)
+    {
+        t_sec_cert = SecCertificateCreateWithData(kCFAllocatorDefault, t_cf_cert_data);
+        t_success = t_sec_cert != NULL;
+    }
+    
+    if (t_cert_data != NULL)
+        MCMemoryDeallocate(t_cert_data);
+    if (t_cf_cert_data != NULL)
+        CFRelease(t_cf_cert_data);
+
+    if (t_success)
+        return t_sec_cert;
+    else
+        return NULL;
+}
+
+// MM-2015-06-04: [[ MobileSockets ]] Return true if we should trust the
+//   certificates in the given SSL connection, false otherwise.
+//
+//   iOS doesn't directly expose the system's root certificates, meaning we
+//   cannot pass those certificates on to OpenSSL and use its verification
+//   routines.
+//
+//   Instead we must verify each certificate using the iOS APIs which allows us
+//   access to the root certificates indirectly.
+//
+bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_error)
+{
+#ifdef MCSSL
+    bool t_success;
+    t_success = true;
+    
+    MCStringRef t_error;
+    t_error = NULL;
+    
+    STACK_OF(X509) *t_cert_stack;
+    t_cert_stack = NULL;
+    if (t_success)
+    {
+        t_cert_stack = SSL_get_peer_cert_chain(ssl);
+        t_success = t_cert_stack != NULL;
+    }
+
+    CFMutableArrayRef t_certs;
+    t_certs = NULL;
+    if (t_success)
+    {
+        t_certs = CFArrayCreateMutable(kCFAllocatorDefault, sk_X509_num(t_cert_stack), NULL);
+        t_success = t_certs != NULL;
+    }
+    
+    if (t_success)
+    {
+        for (uint32_t i = 0; i < sk_X509_num(t_cert_stack) && t_success; i++)
+        {
+            X509 *t_cert;
+            t_cert = NULL;
+            if (t_success)
+            {
+                t_cert = sk_X509_value(t_cert_stack, i);
+                t_success = t_cert != NULL;
+            }
+            
+            SecCertificateRef t_sec_cert;
+            t_sec_cert = NULL;
+            if (t_success)
+            {
+                t_sec_cert = x509_to_SecCertificateRef(t_cert);
+                t_success = t_sec_cert != NULL;
+            }
+            
+            if (t_success)
+                CFArrayAppendValue(t_certs, t_sec_cert);
+        }
+    }
+    
+    CFStringRef t_host_name;
+    t_host_name = NULL;
+    if (t_success)
+        t_success = MCStringConvertToCFStringRef(p_host_name, t_host_name);
+    
+    SecPolicyRef t_policies;
+    t_policies = NULL;
+    if (t_success)
+    {
+        t_policies = SecPolicyCreateSSL(true, t_host_name);
+        t_success = t_policies != NULL;
+    }
+    
+    SecTrustRef t_trust;
+    t_trust = NULL;
+    if (t_success)
+        t_success = SecTrustCreateWithCertificates(t_certs, t_policies, &t_trust) == noErr;
+    
+    SecTrustResultType t_verification_result;
+    if (t_success)
+        t_success = SecTrustEvaluate(t_trust, &t_verification_result) == noErr;
+    
+    if (t_success)
+    {
+        switch (t_verification_result)
+        {
+            case kSecTrustResultUnspecified:
+            case kSecTrustResultProceed:
+                break;
+            case kSecTrustResultDeny:
+                t_error = MCSTR("The user has chosen not to trust this certificate");
+                t_success = false;
+                break;
+            case kSecTrustResultRecoverableTrustFailure:
+            case kSecTrustResultFatalTrustFailure:
+                t_error = MCSTR("A certificate in the chain is defective");
+                t_success = false;
+                break;
+            default:
+                t_success = false;
+                break;
+        }
+    }
+    
+    MCStringRef t_formatted_error;
+    t_formatted_error = NULL;
+    if (!t_success)
+    {
+        /* UNCHECKED */ MCStringCreateMutable(0, t_formatted_error);
+        /* UNCHECKED */ MCStringAppendFormat(t_formatted_error, "-Error with certificate: \n");
+        
+        // We don't know the exact certificate in the chain which caused the verification to fail so just report the details of the first.
+        // Also, since we can't use the iOS APIs to get the cert info, use OpenSSL routines instead.
+        X509 *t_cert;
+        t_cert = NULL;
+        if (t_cert_stack != NULL)
+            t_cert = sk_X509_value(t_cert_stack, 0);
+        
+        if (t_cert != NULL)
+        {
+            char t_cstring_error[256];
+            
+            X509_NAME_oneline(X509_get_issuer_name(t_cert), t_cstring_error, 256);
+            /* UNCHECKED */ MCStringAppendFormat(t_formatted_error, "  issuer   = %s\n", t_cstring_error);
+            
+            X509_NAME_oneline(X509_get_subject_name(t_cert), t_cstring_error, 256);
+            /* UNCHECKED */ MCStringAppendFormat(t_formatted_error, "  subject  = %s\n", t_cstring_error);
+        }
+        
+        if (t_error != NULL)
+            /* UNCHECKED */ MCStringAppendFormat(t_formatted_error, "  err: %@\n", t_error);
+    }
+    
+    if (t_error != NULL)
+        MCValueRelease(t_error);
+    if (t_certs != NULL)
+    {
+        for (uint32_t i = 0; i < CFArrayGetCount(t_certs); i++)
+        {
+            CFTypeRef t_value;
+            t_value = CFArrayGetValueAtIndex(t_certs, i);
+            if (t_value != NULL)
+                CFRelease(t_value);
+        }
+        CFRelease(t_certs);
+    }
+    if (t_host_name != NULL)
+        CFRelease(t_host_name);
+    if (t_policies != NULL)
+        CFRelease(t_policies);
+    if (t_trust != NULL)
+        CFRelease(t_trust);
+    
+    if (t_formatted_error != NULL)
+        /* UNCHECKED */ MCStringCopyAndRelease(t_formatted_error, r_error);
+    
+    return t_success;
+#else
+    return false;
+#endif /* MCSSL */
+}
+
+#endif /* TARGET_SUBPLATFORM_IPHONE */
+
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+
+#include "mblandroidutil.h"
+
+// MM-2015-06-11: [[ MobileSockets ]] Return true if we should trust the
+//   certificates in the given SSL connection, false otherwise.
+//
+// Similar to iOS, on Android we must use the OS routines to verify SSL certs.
+// Extract the certs from the connection and check they can be trusted.
+// Most of the work here is done on the Java side of things.
+//
+bool MCSSLVerifyCertificate(SSL *ssl, MCStringRef p_host_name, MCStringRef &r_error)
+{
+#ifdef MCSSL
+    bool t_success;
+    t_success = true;
+    
+    STACK_OF(X509) *t_cert_stack;
+    t_cert_stack = NULL;
+    if (t_success)
+    {
+        t_cert_stack = SSL_get_peer_cert_chain(ssl);
+        t_success = t_cert_stack != NULL;
+    }
+
+    MCAutoArrayRef t_cert_array;
+    if (t_success)
+        t_success = MCArrayCreateMutable(&t_cert_array);
+    
+    if (t_success)
+    {
+        for (uint32_t i = 0; i < sk_X509_num(t_cert_stack) && t_success; i++)
+        {
+            X509 *t_cert;
+            t_cert = NULL;
+            if (t_success)
+            {
+                t_cert = sk_X509_value(t_cert_stack, i);
+                t_success = t_cert != NULL;
+            }
+            
+            uindex_t t_cert_size;
+            byte_t *t_cert_data;
+            t_cert_data = NULL;
+            if (t_success)
+            {
+                t_cert_size = i2d_X509(t_cert, &t_cert_data);
+                t_success = t_cert_size > 0;
+            }
+            
+            MCAutoDataRef t_cert_data_ref;
+            if (t_success)
+                t_success = MCDataCreateWithBytesAndRelease(t_cert_data, t_cert_size, &t_cert_data_ref);
+            
+            if (t_success)
+                t_success = MCArrayStoreValueAtIndex(*t_cert_array, i + 1, *t_cert_data_ref);
+        }
+    }
+
+    if (t_success)
+    {
+        MCAndroidEngineCall("verifyCertificateChainIsTrusted", "b@@", &t_success, *t_cert_array, p_host_name);
+        if (!t_success)
+            MCAndroidEngineCall("getLastCertificateVerificationError", "x", &r_error);
+    }
+    
+    return t_success;
+#else
+    return false;
+#endif /* MCSSL */
+}
+
+#endif /* TARGET_SUBPLATFORM_ANDROID */
+
+////////////////////////////////////////////////////////////////////////////////

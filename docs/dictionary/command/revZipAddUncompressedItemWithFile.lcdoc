@@ -1,0 +1,33 @@
+Name: revZipAddUncompressedItemWithFile
+
+Type: command
+
+Syntax: revZipAddUncompressedItemWithFile <archiveName>, <itemName>, <variableName> 
+
+Summary: Adds a file to an open zip archive without compressing the data.
+
+Introduced: 2.8.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Security: disk,network
+
+Example:
+revZipAddUncompressedItemWithFile tArchive, "myUncompressedItem", "/myFolder/myStack.rev"
+
+Example:
+revZipAddUncompressedItemWithFile the cArchive of me, tFile, (tFolder & slash & tFile)
+
+Parameters:
+archiveName: 
+itemName: The unique name of the file in the zip archive. This could for example just be the file name.
+variableName: 
+archivePath: The absolute path to the zip archive to add the file to
+filePath: The absolute path to the file to add to the archive. If the revZipAddUncompressedItemWithFile command encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+
+Description:
+Use the <revZipAddUncompressedItemWithFile> command to place a file from disk into a currently open zip archive with compressing it. The archive must have first been opened with <revZipOpenArchive>.  Adding a file to an archive using <revZipAddUncompressedItemWithFile> is generally faster than using <revZipAddItemWithFile>.
+
+References: revZipAddUncompressedItemWithData (command), revZipOpenArchive (command), revZipAddItemWithFile (command), revZipAddItemWithData (command)

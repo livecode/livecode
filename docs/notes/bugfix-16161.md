@@ -1,0 +1,1 @@
+# Word chunk is erroneously delimited by item delimiter

@@ -1,0 +1,36 @@
+Name: penColor
+
+Type: property
+
+Syntax: set the penColor to {<colorName> | <RGBColor>}
+
+Summary: Specifies the color used for drawing with the <paint tool|paint tools>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the penColor to "blue"
+
+Example:
+set the penColor to 255,255,255 -- white
+
+Value:
+The <penColor> is a <color reference>.
+The <colorName> is any standard color name.
+
+The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
+
+By default, the <penColor> is "0,0,0" (black).
+
+Description:
+Use the <penColor> <property> to change the color used with the <pencil>, <line>, and <curve> <paint tool|paint tools>, and for the borders of shapes.
+
+If the <penPattern> has been set since the last time the <penColor> was set, the pattern is used instead of the color specified by <penColor>. In other words, the last-set <property> takes priority.
+
+References: penPattern (property), brushColor (property), pencil (keyword), curve (keyword), line (keyword), choose (command), property (glossary), hexadecimal (glossary), paint tool (glossary), integer (glossary), color reference (glossary)
+
+Tags: ui

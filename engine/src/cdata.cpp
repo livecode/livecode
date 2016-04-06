@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -88,13 +88,13 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 	IO_stat stat;
 
 	if ((stat = IO_read_uint4(&id, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if (parent->gettype() == CT_BUTTON)
 	{
 		uint1 set;
 		stat = IO_read_uint1(&set, stream);
 		data = reinterpret_cast<void *>(set ? 1 : 0);
-		return stat;
+		return checkloadstat(stat);
 	}
 	else
 	{
@@ -104,7 +104,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 			//   so is just legacy.
 			char *string;
 			if ((stat = IO_read_cstring_legacy(string, stream, sizeof(uint1))) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			data = string;
 		}
 		else
@@ -114,7 +114,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 			{
 				uint1 type;
 				if ((stat = IO_read_uint1(&type, stream)) != IO_NORMAL)
-					return stat;
+					return checkloadstat(stat);
 				switch (type)
 				{
 				// MW-2012-03-04: [[ StackFile5500 ]] Handle either the paragraph or extended
@@ -130,7 +130,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 						if ((stat = newpar->load(stream, version, type == OT_PARAGRAPH_EXT)) != IO_NORMAL)
 						{
 							delete newpar;
-							return stat;
+							return checkloadstat(stat);
 						}
 						newpar->appendto(paragraphs);
 					}
@@ -146,7 +146,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 	return IO_NORMAL;
 }
 
-IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part)
+IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part, uint32_t p_version)
 {
 	IO_stat stat;
 
@@ -177,7 +177,7 @@ IO_stat MCCdata::save(IO_handle stream, Object_type type, uint4 p_part)
 			if (tptr != NULL)
 				do
 				{
-					if ((stat = tptr->save(stream, p_part)) != IO_NORMAL)
+					if ((stat = tptr->save(stream, p_part, p_version)) != IO_NORMAL)
 						return stat;
 					tptr = (MCParagraph *)tptr->next();
 				}

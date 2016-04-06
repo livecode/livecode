@@ -1,0 +1,14 @@
+Name: SQL query
+
+Synonyms: SQL query,SQL queries,query,queries,database query,database queries
+
+Type: glossary
+
+Description:
+A request for information from a <database>, written in <SQL> (<SQL|Structured Query Language>). 
+ 
+You use a SQL query to specify one or more conditions, and the result of the query is the set of <record|records> in the <database> that match those conditions.
+
+References: database (glossary), SQL (glossary), record (glossary)
+
+Tags: database

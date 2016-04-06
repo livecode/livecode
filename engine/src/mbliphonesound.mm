@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -82,7 +82,7 @@ void MCIHandleFinishedPlayingSound(MCStringRef p_payload)
 }
 
 // HC-2011-10-20 [[ Media Picker ]] Added functionality to access iPod by accessing the AVFoundation.
-@interface MCSoundPlayerDelegate: NSObject
+@interface com_runrev_livecode_MCSoundPlayerDelegate: NSObject
 {
     AVAsset *m_asset;
 	AVPlayer *m_player;
@@ -99,7 +99,7 @@ void MCIHandleFinishedPlayingSound(MCStringRef p_payload)
 - (void)dealloc;
 @end
 
-static MCSoundPlayerDelegate *s_sound_player_delegate = nil;
+static com_runrev_livecode_MCSoundPlayerDelegate *s_sound_player_delegate = nil;
 static float s_sound_loudness = 1.0;
 static MCStringRef s_sound_file = nil;
 
@@ -115,14 +115,19 @@ bool MCSystemSoundFinalize()
 	return true;
 }
 
-@implementation MCSoundPlayerDelegate
+@implementation com_runrev_livecode_MCSoundPlayerDelegate
 
 -(id)init
 {
-    m_asset = nil;
-	m_player = nil;
-	m_player_item = nil;
-    m_looping = false;
+    if (self = [super init])
+    {
+        m_asset = nil;
+        m_player = nil;
+        m_player_item = nil;
+        m_looping = false;
+    }
+    
+    return self;
 }
 
 -(void)cleanUp
@@ -329,7 +334,7 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
     if (t_success)
     { 
 		MCIPhoneRunBlockOnMainFiber(^(void) {
-			s_sound_player_delegate = [MCSoundPlayerDelegate alloc];
+			s_sound_player_delegate = [com_runrev_livecode_MCSoundPlayerDelegate alloc];
 			[s_sound_player_delegate init];
 			*t_success_ptr = [s_sound_player_delegate playSound:t_url looping: p_looping];
 		});
@@ -356,7 +361,7 @@ void MCSystemGetPlayingSound(MCStringRef &r_sound)
 
 struct MCSystemSoundChannel;
 
-@interface MCSystemSoundChannelDelegate : NSObject <AVAudioPlayerDelegate>
+@interface com_runrev_livecode_MCSystemSoundChannelDelegate : NSObject <AVAudioPlayerDelegate>
 {
 	MCSystemSoundChannel *m_channel;
 }
@@ -377,7 +382,7 @@ struct MCSystemSoundChannel
 {
 	MCSystemSoundChannel *next;
 	MCStringRef name;
-	MCSystemSoundChannelDelegate *delegate;
+	com_runrev_livecode_MCSystemSoundChannelDelegate *delegate;
 	MCSystemSoundPlayer current_player;
 	MCSystemSoundPlayer next_player;
 	bool paused;
@@ -427,7 +432,7 @@ static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_ch
 	
 	if (t_success)
 	{
-		t_channel -> delegate = [[MCSystemSoundChannelDelegate alloc] initWithSoundChannel: t_channel];
+		t_channel -> delegate = [[com_runrev_livecode_MCSystemSoundChannelDelegate alloc] initWithSoundChannel: t_channel];
 		if (t_channel -> delegate == nil)
 			t_success = false;
 	}
@@ -716,7 +721,7 @@ bool MCSystemListSoundChannels(MCStringRef& r_channels)
 
 extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object);
 
-@implementation MCSystemSoundChannelDelegate
+@implementation com_runrev_livecode_MCSystemSoundChannelDelegate
 
 - (id)initWithSoundChannel: (MCSystemSoundChannel *)channel
 {

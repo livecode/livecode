@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include "script.h"
+#include "libscript/script.h"
 #include "script-private.h"
 
 #include "foundation-auto.h"
@@ -28,6 +28,7 @@ MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotABooleanValueErrorTypeInfo;
+MCTypeInfoRef kMCScriptNotAStringValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptWrongNumberOfArgumentsErrorTypeInfo;
 MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
@@ -37,6 +38,8 @@ MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
+MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
+MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,6 +53,9 @@ struct MCBuiltinModule
 static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptModuleRef *s_builtin_modules = nil;
 static uindex_t s_builtin_module_count = 0;
+
+static MCScriptResolveSharedLibraryCallback s_resolve_shared_library_callback = nil;
+
 static bool MCFetchBuiltinModuleSection(MCBuiltinModule**& r_modules, unsigned int& r_count);
 
 bool MCScriptInitialize(void)
@@ -86,44 +92,44 @@ bool MCScriptInitialize(void)
         uindex_t t_def_index, t_type_index;
             
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCAnyTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCAnyTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("any"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_null_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_null_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNullTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCNullTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("undefined"), t_type_index, t_null_type_index);
         MCScriptAddExportToModule(t_builder, t_null_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBooleanTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCBooleanTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("boolean"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCNumberTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCNumberTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("number"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_string_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_string_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCStringTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCStringTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("string"), t_type_index, t_string_type_index);
         MCScriptAddExportToModule(t_builder, t_string_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDataTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCDataTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("data"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCArrayTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCArrayTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("array"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCProperListTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCProperListTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("list"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
@@ -131,34 +137,34 @@ bool MCScriptInitialize(void)
         
         uindex_t t_bool_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_bool_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCBoolTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignBoolTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("bool"), t_type_index, t_bool_type_index);
         MCScriptAddExportToModule(t_builder, t_bool_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCIntTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignIntTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("int"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_uint_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_uint_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCUIntTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignUIntTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("uint"), t_type_index, t_uint_type_index);
         MCScriptAddExportToModule(t_builder, t_uint_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCFloatTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignFloatTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("float"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         uindex_t t_double_type_index;
         MCScriptAddDefinitionToModule(t_builder, t_double_type_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCDoubleTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignDoubleTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("double"), t_type_index, t_double_type_index);
         MCScriptAddExportToModule(t_builder, t_double_type_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
-        MCScriptAddForeignTypeToModule(t_builder, MCSTR("kMCPointerTypeInfo"), t_type_index);
+        MCScriptAddForeignTypeToModule(t_builder, MCSTR("MCForeignPointerTypeInfo"), t_type_index);
         MCScriptAddTypeToModule(t_builder, MCNAME("pointer"), t_type_index, t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
@@ -199,7 +205,7 @@ bool MCScriptInitialize(void)
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("counter"), t_double_type_def);
         MCScriptContinueHandlerTypeInModule(t_builder, kMCScriptHandlerTypeParameterModeIn, MCNAME("limit"), t_double_type_def);
         MCScriptEndHandlerTypeInModule(t_builder, t_type_index);
-        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToCondition"), t_type_index, MCSTR("MCScriptBuiltinRepeatUpToCondition"), t_def_index);
+        MCScriptAddForeignHandlerToModule(t_builder, MCNAME("RepeatDownToCondition"), t_type_index, MCSTR("MCScriptBuiltinRepeatDownToCondition"), t_def_index);
         MCScriptAddExportToModule(t_builder, t_def_index);
         
         MCScriptAddDefinitionToModule(t_builder, t_def_index);
@@ -228,7 +234,8 @@ bool MCScriptInitialize(void)
         MCMemoryOutputStreamFinish(t_stream, t_buffer, t_size);
         MCValueRelease(t_stream);
         
-        MCMemoryInputStreamCreate(t_buffer, t_size, t_stream);
+		if (!MCMemoryInputStreamCreate(t_buffer, t_size, t_stream))
+			return false;
         if (!MCScriptCreateModuleFromStream(t_stream, s_builtin_module))
             return false;
         
@@ -251,13 +258,13 @@ bool MCScriptInitialize(void)
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotABooleanValueError"), MCNAME("runtime"), MCSTR("Value is not a boolean"), kMCScriptNotABooleanValueErrorTypeInfo))
 			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NotAStringValueError"), MCNAME("runtime"), MCSTR("Value is not a string"), kMCScriptNotAStringValueErrorTypeInfo))
+			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.WrongNumberOfArgumentsError"), MCNAME("runtime"), MCSTR("Wrong number of arguments passed to handler %{module}.%{handler}"), kMCScriptWrongNumberOfArgumentsErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.ForeignHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind foreign handler %{module}.%{handler}"), kMCScriptForeignHandlerBindingErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PolymorphicHandlerBindingError"), MCNAME("runtime"), MCSTR("Unable to bind appropriate handler"), kMCScriptMultiInvokeBindingErrorTypeInfo))
-			return false;
-		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.TypeBindingError"), MCNAME("runtime"), MCSTR("Attempt to use unbound named type %{type}"), kMCScriptTypeBindingErrorTypeInfo))
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.NoMatchingHandlerError"), MCNAME("runtime"), MCSTR("No matching handler for arguments with types (%{types}) - possible handlers (%{handlers})"), kMCScriptNoMatchingHandlerErrorTypeInfo))
 			return false;
@@ -269,8 +276,14 @@ bool MCScriptInitialize(void)
 			return false;
 		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.CannotCallContextHandlerError"), MCNAME("runtime"), MCSTR("Cannot call context handler"), kMCScriptCannotCallContextHandlerErrorTypeInfo))
 			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.HandlerNotFoundError"), MCNAME("runtime"), MCSTR("No handler %{handler} in module %{module}"), kMCScriptHandlerNotFoundErrorTypeInfo))
+			return false;
+		if (!MCNamedErrorTypeInfoCreate(MCNAME("livecode.lang.PropertyNotFoundError"), MCNAME("runtime"), MCSTR("No property %{property} in module %{module}"), kMCScriptPropertyNotFoundErrorTypeInfo))
+			return false;
     }
 
+    s_resolve_shared_library_callback = nil;
+    
     return true;
 }
 
@@ -280,6 +293,19 @@ void MCScriptFinalize(void)
         MCScriptReleaseModule(s_builtin_modules[i]);
     MCMemoryDeleteArray(s_builtin_modules);
     MCValueRelease(s_builtin_module);
+}
+
+void MCScriptSetResolveSharedLibraryCallback(MCScriptResolveSharedLibraryCallback p_callback)
+{
+    s_resolve_shared_library_callback = p_callback;
+}
+
+bool MCScriptResolveSharedLibrary(MCScriptModuleRef p_module, MCStringRef p_name, MCStringRef& r_path)
+{
+    if (s_resolve_shared_library_callback == nil)
+        return false;
+    
+    return s_resolve_shared_library_callback(p_module, p_name, r_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,6 +373,13 @@ void MCScriptReleaseObject(MCScriptObject *self)
     
     if (self -> references == 0)
         MCScriptDestroyObject(self);
+}
+
+uint32_t MCScriptGetRetainCountOfObject(MCScriptObject *self)
+{
+	__MCScriptValidateObject__(self);
+	
+	return self -> references;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

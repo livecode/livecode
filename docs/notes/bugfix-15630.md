@@ -1,0 +1,1 @@
+# get property tVar of my script object not working in develop branch

@@ -1,0 +1,33 @@
+Name: start using font
+
+Type: command
+
+Syntax: start using font file <fontFile> [globally]
+
+Summary: Loads a font from a font file into memory.
+
+Introduced: 6.5
+
+OS: mac,windows
+
+Platforms: desktop
+
+Security: disk
+
+Example:
+start using font file "C:/myFontFolder/myCustomFont.ttf"
+
+Example:
+start using font file "C:/myFontFolder/myCustomFont.ttf" globally
+
+Parameters:
+fontFile: 
+
+The result: If the font was loaded successfully, the <start using font> command puts empty into the <result>. If the font failed to load, the <result> will contain an error string.  This will be 'can't load font file' if the specifed file could not be loaded as a font.
+
+Description:
+The <start using font> command loads a font from a font file into memory.
+The <fontFile> is the path to the font file. Use the globally adverb to indicate that the font should be available to all applications on the system rather than private to the current application.
+>*Note:* The <fontNames function> will return the name of all available fonts and the <fontFilesInUse property> will return the fill paths of the loaded font files. To determine the name of the newly loaded font, compare the value of the <fontNames> before and after loading the font.</no
+
+References: stop using font (command), fontNames function (function), result (function), fontNames (function), fontFilesInUse property (property), fontFilesInUse (property)

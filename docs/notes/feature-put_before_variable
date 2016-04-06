@@ -1,0 +1,10 @@
+#  Allow 'put "x" before aVar' without replacing the contents of aVar with "x"
+
+It is now possible to use 'put "someString" before someVariable' to prepend a (string) value to an existing (string) value of a variable:
+
+put "x" into tOutput
+put "y" before tOutput
+put "z" before tOutput
+put tOutput
+
+Previously, tOutput would be "z". Now, it will be "zyx".

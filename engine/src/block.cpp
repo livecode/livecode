@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#define IMAGE_BLOCK_LEADING  2
 static MCRectangle
 MCBlockMakeRectangle(double x, double y,
                      double width, double height)
@@ -163,7 +164,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	}
 
 	if ((stat = IO_read_uint4(&flags, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If this isn't an extended block, then strip the
 	//   metadata flag.
@@ -184,7 +185,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-17: [[ LogFonts ]] Map the font index we have to the font attrs.
 			//   Note that we ignore the 'unicode' tag since that is encoded in flags.
@@ -208,11 +209,11 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This path only happens sfv < 1300
 			//   so is legacy.
 			if ((stat = IO_read_nameref_legacy(atts->fontname, stream, false)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&atts->fontsize, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			if ((stat = IO_read_uint2(&atts->fontstyle, stream)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 
 			// MW-2012-02-17; [[ SplitTextAttrs ]] All the font attrs are set.
 			flags |= F_FATTR_MASK;
@@ -222,7 +223,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		atts->color = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->color, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (flags & F_HAS_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the color name
@@ -231,7 +232,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so is legacy,
 			char *colorname;
 			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			delete colorname;
 			flags &= ~F_HAS_COLOR_NAME;
 		}
@@ -240,7 +241,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
@@ -249,14 +250,14 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so is legacy,
 			char *backcolorname;
 			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
-				return stat;
+				return checkloadstat(stat);
 			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
 		}
 	}
 	if (flags & F_HAS_SHIFT)
 		if ((stat = IO_read_int2(&atts->shift, stream)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
@@ -264,7 +265,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
 
@@ -272,7 +273,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
 
@@ -282,7 +283,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
 
@@ -290,7 +291,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//   to the end of the attrs record.
 	if (is_ext)
 		if ((stat = MCS_seek_set(stream, t_attr_end)) != IO_NORMAL)
-			return stat;
+			return checkloadstat(stat);
 	
 	// ***** IMPORTANT *****
 	// The "index" and "size" values loaded below are byte indices into the
@@ -304,9 +305,9 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	// the block of the correct offsets as soon as it knows them.
 	uint2 index, size;
 	if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
-		return stat;
+		return checkloadstat(stat);
 	m_index = index;
 	m_size = size;
 
@@ -332,14 +333,14 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	return IO_NORMAL;
 }
 
-IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
+IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 {
 	IO_stat stat;
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If the block has metadata and 5.5 stackfile
 	//   format has been requested then this is an extended block.
 	bool t_is_ext;
-	if (MCstackfileversion >= 5500 && getflag(F_HAS_METADATA))
+	if (p_version >= 5500 && getflag(F_HAS_METADATA))
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -352,7 +353,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then write out
 	//   the length of the attrs.
 	if (t_is_ext)
-		if ((stat = IO_write_uint2or4(measureattrs(), stream)) != IO_NORMAL)
+		if ((stat = IO_write_uint2or4(measureattrs(p_version), stream)) != IO_NORMAL)
 			return stat;
 
 	uint4 oldflags = flags;
@@ -368,7 +369,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	
     // The "has unicode" flag depends on whether the paragraph is native
 	bool t_is_unicode;
-    if (MCstackfileversion < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
+    if (p_version < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
 	{
 		t_is_unicode = false;
         flags &= ~F_HAS_UNICODE;
@@ -380,7 +381,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	}
 
     // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
-    if (MCstackfileversion < 7000)
+    if (p_version < 7000)
     {
         if (segment && segment != segment -> next())
             flags |= F_HAS_TAB;
@@ -437,11 +438,11 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	//   strings.
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_LINK)
-        if ((stat = IO_write_stringref_new(atts->linktext, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->linktext, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_IMAGE)
-        if ((stat = IO_write_stringref_new(atts->imagesource, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->imagesource, stream, p_version >= 7000)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -450,7 +451,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if (flags & F_HAS_METADATA)
-            if ((stat = IO_write_stringref_new(atts -> metadata, stream, MCstackfileversion >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(atts -> metadata, stream, p_version >= 7000)) != IO_NORMAL)
 				return stat;
 	}
 	
@@ -758,27 +759,41 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 		codepoint_t t_this_char;
         bool t_end_of_block;
         t_end_of_block = false;
-		while(i < m_index + m_size)
-		{
-			t_this_char = t_next_char;
-			
-			i = parent->IncrementIndex(i);
-		
-			if (i < m_index + m_size)
-				t_next_char = parent->GetCodepointAtIndex(i);
-			else
+        
+        // If this is the first block of a segment that was created by a tab,
+        // we can use the first position in the block as a break position,
+        // unless this is the first segment on a line.
+        if (!t_can_fit
+            && this == segment->GetFirstBlock()
+            && i == m_index
+            && segment->GetParent()->GetFirstSegment() != segment
+            && parent->GetCodepointAtIndex(i - 1) == '\t')
+        {
+            t_can_fit = t_can_break = true;
+        }
+        else
+        {
+            while(i < m_index + m_size)
             {
-                t_next_char = t_next_block_char;
-                t_end_of_block = true;
+                t_this_char = t_next_char;
+                
+                i = parent->IncrementIndex(i);
+            
+                if (i < m_index + m_size)
+                    t_next_char = parent->GetCodepointAtIndex(i);
+                else
+                {
+                    t_next_char = t_next_block_char;
+                    t_end_of_block = true;
+                }
+                
+                if (t_next_char == -1 ||
+                    MCUnicodeCanBreakBetween(t_this_char, t_next_char))
+                {
+                    t_can_break = true;
+                    break;
+                }
             }
-			
-			if (t_this_char == '\t' ||
-				t_next_char == CODEPOINT_NONE ||
-				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
-			{
-				t_can_break = true;
-				break;
-			}
 		}
 
 		// MW-2013-11-07: [[ Bug 11393 ]] Previous per-platform implementations all fold into the optimized
@@ -1019,7 +1034,8 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
 
 			// MW-2012-02-09: [[ ParaStyles ]] Compute the cell clip, taking into account padding.
             // SN-2014-08-14: [[ Bug 13106 ]] Fix for the cell clipping and update to GetInnerWidth
-            t_cell_clip . x = p_cell_left - 1;
+            // SN-2015-09-07: [[ Bug 15273 ]] We clip from the origin of the block
+            t_cell_clip . x = p_cell_left + origin - 1;
             // AL-2014-07-29: [[ Bug 12952 ]] Clip to segment boundaries
 			t_cell_clip . width = MCU_max(segment -> GetInnerWidth() - origin, 0.0f);
 
@@ -1322,8 +1338,8 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 				MCPatternRef t_pattern;
 				int2 x, y;
 				MCColor fc, hc;
-				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, f);
-				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, f);
+				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), f);
+				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), f);
 				if (hc.pixel == fc.pixel)
 					f->setforeground(dc, DI_BACK, False, True);
                 else
@@ -1917,25 +1933,6 @@ void MCBlock::reset()
 	width = 0;
 }
 
-uint2 MCBlock::getascent(void)
-{
-	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
-	// MW-2007-07-05: [[ Bug 1943 ]] - Images do not have correct ascent height *MIGHT NEED REVERSION*
-	if (flags & F_HAS_IMAGE && atts->image != NULL)
-		return MCU_max(0, atts->image->getrect().height - shift + 2);
-	else
-		return MCU_max(0, heightfromsize(ceilf(MCFontGetAscent(m_font))) - uint2(ceilf(MCFontGetDescent(m_font))) - shift);
-}
-
-uint2 MCBlock::getdescent(void)
-{
-	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
-	if (flags & F_HAS_IMAGE && atts->image != NULL)
-		return MCU_max(0, shift);
-	else
-		return MCU_max(0, uint2(ceilf(MCFontGetDescent(m_font))) + shift);
-}
-
 coord_t MCBlock::GetAscent() const
 {
    	int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
@@ -1957,9 +1954,9 @@ coord_t MCBlock::GetDescent() const
 
 coord_t MCBlock::GetLeading() const
 {
-    int2 shift = flags & F_HAS_SHIFT ? atts->shift : 0;
+	// PM-2016-02-15: [[ Bug 16754 ]] Use same value for leading as in pre-LC 8 when an image is present 
     if (flags & F_HAS_IMAGE && atts->image != NULL)
-        return GetAscent()+GetDescent();
+        return IMAGE_BLOCK_LEADING;
     else
         return MCFontGetLeading(m_font);
 }
@@ -2250,13 +2247,13 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 }
 
 // SN-2014-10-31: [[ Bug 13879 ]] Update the way the string is measured.
-uint32_t measure_stringref(MCStringRef p_string)
+uint32_t measure_stringref(MCStringRef p_string, uint32_t p_version)
 {
     MCStringEncoding t_encoding;
     uint32_t t_additional_bytes = 0;
     
 
-    if (MCstackfileversion < 7000)
+    if (p_version < 7000)
         t_encoding = kMCStringEncodingNative;
     else
         t_encoding = kMCStringEncodingUTF8;
@@ -2267,7 +2264,7 @@ uint32_t measure_stringref(MCStringRef p_string)
     uint32_t t_length;
     t_length = MCDataGetLength(*t_data);
     
-    if (MCstackfileversion < 7000)
+    if (p_version < 7000)
     {
         // Full string is written in 5.5 format:
         //  - length is written as a uint2
@@ -2288,14 +2285,14 @@ uint32_t measure_stringref(MCStringRef p_string)
 
 // MW-2012-03-04: [[ StackFile5500 ]] Utility routine for computing the length of
 //   a nameref when serialized to disk.
-uint32_t measure_nameref(MCNameRef p_name)
+uint32_t measure_nameref(MCNameRef p_name, uint32_t p_version)
 {
-	return measure_stringref(MCNameGetString(p_name));
+	return measure_stringref(MCNameGetString(p_name), p_version);
 }
 
 // MW-2012-03-04: [[ StackFile5500 ]] Compute the number of bytes the attributes will
 //   take up when serialized.
-uint32_t MCBlock::measureattrs(void)
+uint32_t MCBlock::measureattrs(uint32_t p_version)
 {
 	// If there are no attrs, then the size is 0.
 	if (!hasatts())
@@ -2320,11 +2317,11 @@ uint32_t MCBlock::measureattrs(void)
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
 	if ((flags & F_HAS_LINK) != 0)
-		t_size += measure_stringref(atts -> linktext);
+		t_size += measure_stringref(atts -> linktext, p_version);
 	if ((flags & F_HAS_IMAGE) != 0)
-		t_size += measure_stringref(atts -> imagesource);
+		t_size += measure_stringref(atts -> imagesource, p_version);
 	if ((flags & F_HAS_METADATA) != 0)
-		t_size += measure_stringref((MCStringRef)atts -> metadata);
+		t_size += measure_stringref((MCStringRef)atts -> metadata, p_version);
 
 	return t_size;
 }

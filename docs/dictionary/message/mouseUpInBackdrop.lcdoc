@@ -1,0 +1,37 @@
+Name: mouseUpInBackdrop
+
+Type: message
+
+Syntax: mouseUpInBackdrop <mouseButtonNumber> 
+
+Summary: Sent when the user releases the <mouse button>. while the <mouse pointer> is in the backdrop.
+
+Associations: card
+
+Introduced: 1.1
+
+OS: mac,windows,linux
+
+Platforms: desktop,server
+
+Example:
+on mouseUpInBackdrop
+  go to stack "Main" -- brings to front, if already open
+end mouseUpInBackdrop
+
+Parameters:
+mouseButtonNumber (enum): The mouseButtonNumber specifies which mouse button was pressed:
+-  1 is the mouse button on Mac OS systems and the left button on Windows and Unix systems.
+-  2 is the middle button on Unix systems.
+-  3 is the right button on Windows and Unix systems and Control-click on Mac OS systems.
+
+Description:
+Handle the <mouseUpInBackdrop> <message> to perform an action when the user releases the <mouse button> after clicking in the backdrop.
+
+The <mouseUpInBackdrop> <message> is sent to the <current card>.
+
+If the <backdrop> <property> is set to "none", the <mouseUpInBackdrop> <message> is not sent.
+
+References: backdrop (property), mouseUp (message), mouseDownInBackdrop (message), property (glossary), mouse button (glossary), mouse pointer (glossary), message (glossary), current card (glossary)
+
+Tags: ui

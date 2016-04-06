@@ -1,0 +1,32 @@
+Name: useSystemDate
+
+Type: property
+
+Syntax: set the useSystemDate to {true | false}
+
+Summary: Specifies whether the <date> and <time> <function|functions> should be formatted in accordance with the user's system preferences, or in the standard <format> used in the United States.
+
+Introduced: 1.1
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the useSystemDate to true
+
+Value (bool):The <useSystemDate> is true or false.
+By default, the <useSystemDate> <property> is set to false.
+
+Description:
+Use the <useSystemDate> <property> to correctly format dates and times that will be viewed by the user (for example, dates and times that are displayed in a <field>).
+
+Setting the <useSystemDate> <property> to true does the same thing as using the <system> <keyword> with the <date> or <time> <function|functions>. If the <useSystemDate> is set to true, the <date> and <time> <function|functions> <return> the same value as the system date and the system time, respectively. If the <useSystemDate> is set to false, the <date> and <time> <function|functions> <return> the same value as the english date and the english time, respectively.
+
+The system format is set by the Date & Time control panel (on Mac OS systems), the Date control panel (on <Windows|Windows systems>), or the LANG <environment variable> (on <Unix|Unix systems>).
+
+Since the <useSystemDate> is a <local property>, its <value> is <reset> to false when the current <handler> finishes <execute|executing>. It retains its <value> only for the current <handler>, and setting it in one <handler> does not affect its value in other <handler|handlers> it <call|calls>.
+
+References: field (keyword), system (keyword), return (constant), reset (command), time (function), dateFormat (function), format (function), date (function), value (function), property (glossary), call (glossary), handler (glossary), environment variable (glossary), Windows (glossary), execute (glossary), keyword (glossary), Unix (glossary), function (glossary), local property (glossary)
+
+Tags: math

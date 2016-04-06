@@ -1,0 +1,57 @@
+Name: open printing
+
+Type: command
+
+Syntax: open printing [with dialog [as sheet]]
+
+Summary: Begins a batch <print job>, which allows more than one <card> to be printed on a page.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,web
+
+Security: printing
+
+Example:
+open printing
+
+Example:
+open printing with dialog
+
+Example:
+open printing with dialog as sheet
+
+Example:
+open printing
+repeat with x = 1 to the number of cards
+   print card
+end repeat
+close printing
+
+The result: If the open printing with dialog form is used, and the user cancels the print dialog box, the result is set to "Cancel".     if the result is "Cancel" then exit printSomeCards.
+
+Description:
+Use the <open printing> <command> to print multiple <card(object)|cards>.
+
+Normally, the print <command> prints each <card(keyword)> on a separate page. If you use the <open printing> <command> before issuing the <print> <command|commands> for the <card(object)|cards> you want to print, the printing is delayed until all the <card(object)|cards> have been specified. This causes the <card(object)|cards> to be printed as one batch.
+
+The open printing with dialog form opens the print dialog box on Mac OS systems. On Unix or Windows systems, this form acts like the open printing form, and no dialog box appears. If the as sheet form is used, the dialog box appears as a sheet on OS X systems.
+
+The following handler prints cards that have been collected in a global variable:
+
+  on printSomeCards
+    global cardsToPrint
+    open printing with dialog
+    repeat with x = 1 to the number of lines of cardsToPrint
+      print card (line x of cardsToPrint)
+    end repeat
+    close printing -- send group of cards to printer
+  end printSomeCards
+
+>*Note:* On Linux, the printing commands use revpdfprinter to generate a PDF to send to the system printing system. If building a standalone, make sure you have selected 'revpdfprinter' in the inclusion options.
+
+References: printTitle (property), printRowsFirst (property), card (keyword), cancel printing (command), print (command), close printing (command), revBrowserPrint (command), answer printer (command), answer page setup (command), card (object), print job (glossary), command (glossary)
+
+Tags: printing

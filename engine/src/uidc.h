@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,20 +20,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	UIDC_H
 #define	UIDC_H
 
-#ifndef DLLST_H
 #include "dllst.h"
-#endif
-
-#ifndef FILEDEFS_H
 #include "filedefs.h"
-#endif
-
-#ifndef __MC_TRANSFER__
-#include "transfer.h"
-#endif
-
 #include "graphics.h"
 #include "imagebitmap.h"
+
+enum
+{
+    DRAG_ACTION_MOVE_BIT = 0,
+    DRAG_ACTION_COPY_BIT,
+    DRAG_ACTION_LINK_BIT,
+    
+    DRAG_ACTION_NONE = 0,
+    DRAG_ACTION_MOVE = 1 << DRAG_ACTION_MOVE_BIT,
+    DRAG_ACTION_COPY = 1 << DRAG_ACTION_COPY_BIT,
+    DRAG_ACTION_LINK = 1 << DRAG_ACTION_LINK_BIT,
+};
 
 enum Flush_events {
     FE_ALL,
@@ -218,6 +220,8 @@ typedef struct _MCRunloopAction
 {
 	MCRunloopActionCallback callback;
 	void *context;
+	
+	uint32_t references;
 
 	_MCRunloopAction *next;
 } MCRunloopAction, *MCRunloopActionRef;
@@ -255,6 +259,17 @@ enum MCPlatformFeature
 
 class MCUIDC
 {
+public:
+    
+    typedef void (*modal_break_callback_fn)(void *);
+    struct modal_loop
+    {
+        modal_break_callback_fn break_function;
+        void* context;
+        modal_loop* chain;
+        bool broken;
+    };
+    
 protected:
 	MCMessageList *messages;
 	MCMovingList *moving;
@@ -278,6 +293,8 @@ protected:
 	uint2 bluebits;
 	const char *  m_sound_internal ;
 	
+    modal_loop* m_modal_loops;
+    
 	// IM-2014-01-24: [[ HiDPI ]] Cache displays array returned from platform-specific methods
 	static MCDisplay *s_displays;
 	static uint4 s_display_count;
@@ -363,7 +380,7 @@ public:
 	
 	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
-	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	void querymouse(int2 &x, int2 &y);
 	void setmouse(int2 x, int2 y);
 
@@ -378,7 +395,7 @@ public:
 	virtual uint16_t platform_getheight(void);
 	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
-	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void platform_setmouse(int16_t p_x, int16_t p_y);
 
@@ -429,6 +446,8 @@ public:
 
 	virtual uintptr_t dtouint(Drawable d);
 	virtual Boolean uinttowindow(uintptr_t, Window &w);
+	
+	virtual void *GetNativeWindowHandle(Window p_window);
 
 	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
@@ -461,6 +480,19 @@ public:
     virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
     virtual void delaymessage(MCObject *optr, MCNameRef name, MCStringRef p1 = nil, MCStringRef p2 = nil);
 	
+    // When called, all modal loops should be exited and control should return
+    // to the main event loop. The intended use of this method is to prevent UI
+    // lockups when a script error occurs during a modal loop (e.g during
+    // the drag-and-drop loop)
+    void breakModalLoops();
+    
+    // Indicates that a modal event loop is being entered. A callback function
+    // should be passed in order to allow the breaking of the loop.
+    void modalLoopStart(modal_loop& info);
+    
+    // Indicates that the innermost modal loop is being exited
+    void modalLoopEnd();
+    
 	// Wait for at most 'duration' seconds. If 'dispatch' is true then event
 	// dispatch will occur. If 'anyevent' is true then the call will return
 	// as soon as something notable happens. If an abort/quit occurs while the
@@ -472,6 +504,7 @@ public:
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
 
+	bool FindRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Add action to runloop
 	bool AddRunloopAction(MCRunloopActionCallback p_callback, void *p_context, MCRunloopActionRef &r_action);
 	// IM-2014-03-06: [[ revBrowserCEF ]] Remove action from runloop
@@ -515,63 +548,6 @@ public:
 
 	//
 
-	// Returns true if this application currently owns the transient selection.
-	//
-	virtual bool ownsselection(void);
-
-	// Attempt to grab the transient selection with the given list of data types.
-	// Upon success, true should be returned.
-	//
-	// If p_pasteboard is NULL, then the selection is ungrabbed if this application
-	// is the current owner.
-	//
-	// The pasteboard object is passed with get semantics, the callee must retain
-	// the object if it wishes to keep a reference.
-	//
-	virtual bool setselection(MCPasteboard *p_pasteboard);
-
-	// Return an object allowing access to the current transient selection. See
-	// the definition of MCPasteboard for more information.
-	//
-	// The pasteboard object is returned with copy semantics - the caller must
-	// release the object when it is finished with it.
-	//
-	virtual MCPasteboard *getselection(void);
-
-	//
-
-	// Flush the contents of the current clipboard to the OS if we are the current
-	// owner. This method is called before final shutdown to ensure that the
-	// clipboard isn't lost when a Revolution application quits.
-	virtual void flushclipboard(void);
-
-	// Returns true if this application currently owns the clipboard.
-	//
-	virtual bool ownsclipboard(void);
-
-	// Attempt to grab the clipboard and place the given list of data types
-	// upon it.
-	//
-	// If p_pasteboard is NULL and this application is the current owner of the
-	// clipboard, ownersup should be relinquished.
-	// 
-	// The pasteboard object is passed with get semantics, the callee must retain
-	// the object if it wishes to keep a reference.
-	//
-	virtual bool setclipboard(MCPasteboard *p_pasteboard);
-
-	// Return an object allowing access to the current clipboard. See
-	// the definition of MCPasteboard for more information.
-	//
-	// The returned object has copy semantics, the caller should release it when
-	// it is finished with it.
-	//
-	// Note that the system clipboard should be considered locked by this method
-	// and will remain so until the object is released. Therefore, the object 
-	// should not be held for 'too long'.
-	//
-	virtual MCPasteboard *getclipboard(void);
-
 	// Begin a drag-drop operation with this application as source and with the
 	// given list of data-types.
 	//
@@ -586,15 +562,17 @@ public:
 	// The method returns the actual result of the drag-drop operation - DRAG_ACTION_NONE meaning
 	// that no drop occured.
 	//
-	virtual MCDragAction dodragdrop(Window w, MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
+	virtual MCDragAction dodragdrop(Window w, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 	
 	//
 
 	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
-
-	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+    
+    // Show an answer dialog using the native APIs. If 'blocking' is true
+    // then messages will not be dispatched until the dialog is closed.
+	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
 	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	//
@@ -619,11 +597,14 @@ public:
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
-	void cancelmessageobject(MCObject *optr, MCNameRef name);
+	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
-    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params);
+    void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
     int doshiftmessage(int index, real8 newtime);
     
+    void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
+    void cancelsubtimer(MCObject *target, MCNameRef name, MCValueRef subtarget);
+
     // MW-2014-05-28: [[ Bug 12463 ]] This is used by 'send in time' - separating user sent messages from
     //   engine sent messages. The former are subject to a limit to stop pending message queue overflow.
     bool addusermessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
@@ -684,6 +665,11 @@ public:
 	{
 		return gray_pixel;
 	}
+    
+    const MCColor& getbg(void) const
+    {
+        return background_pixel;
+    }
 };
 
 #endif

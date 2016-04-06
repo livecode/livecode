@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -123,6 +123,10 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	
+	kMCPlatformPropertyTypePointer,
+    
+    kMCPlatformPropertyType_Last,
 };
 
 // The lower 21-bits hold a codepoint, the upper bits hold modifiers. Some
@@ -558,7 +562,7 @@ void MCPlatformWindowMaskRelease(MCPlatformWindowMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct MCPlatformMenu *MCPlatformMenuRef;
+typedef class MCPlatformMenu *MCPlatformMenuRef;
 
 enum MCPlatformMenuItemProperty
 {
@@ -636,10 +640,12 @@ void MCPlatformGetMenubar(MCPlatformMenuRef menu);
 
 typedef class MCPlatformCursor *MCPlatformCursorRef;
 
+// SN-2015-06-16: [[ Bug 14056 ]] Add hidden cursor as part of the standard ones
 enum MCPlatformStandardCursor
 {
 	kMCPlatformStandardCursorUnknown,
-	
+    
+    kMCPlatformStandardCursorNone,
 	kMCPlatformStandardCursorArrow,
 	kMCPlatformStandardCursorWatch,
 	kMCPlatformStandardCursorCross,
@@ -651,8 +657,7 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *image, MCPoint hot_spot, MCPlat
 void MCPlatformRetainCursor(MCPlatformCursorRef cursor);
 void MCPlatformReleaseCursor(MCPlatformCursorRef cursor);
 
-void MCPlatformShowCursor(MCPlatformCursorRef cursor);
-void MCPlatformHideCursor(void);
+void MCPlatformSetCursor(MCPlatformCursorRef cursor);
 void MCPlatformHideCursorUntilMouseMoves(void);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -671,46 +676,9 @@ enum MCPlatformDragOperation
 	// COCOA-TODO: Add other drag operation types.
 };
 
-// The flavors expoted by the platform layer are currently only the ones which
-// the LiveCode engine can handle on a platform-independent basis - the platform
-// layer will do any internal conversions (for example, on Mac TIFF is a typical
-// image format - the platform layer will recode as PNG for the engine).
-enum MCPlatformPasteboardFlavor
-{
-	kMCPlatformPasteboardFlavorNone,
-	
-	kMCPlatformPasteboardFlavorUTF8,
-	kMCPlatformPasteboardFlavorRTF,
-	kMCPlatformPasteboardFlavorHTML,
-	kMCPlatformPasteboardFlavorPNG,
-	kMCPlatformPasteboardFlavorJPEG,
-	kMCPlatformPasteboardFlavorGIF,
-	kMCPlatformPasteboardFlavorFiles,
-	
-	// PLATFORM-TODO: This needs a better mechanism for extending recognised formats
-	kMCPlatformPasteboardFlavorObjects,
-	kMCPlatformPasteboardFlavorStyledText,
-};
-
-void MCPlatformPasteboardRetain(MCPlatformPasteboardRef pasteboard);
-void MCPlatformPasteboardRelease(MCPlatformPasteboardRef pasteboard);
-
-uindex_t MCPlatformPasteboardGetGeneration(MCPlatformPasteboardRef pasteboard);
-
-bool MCPlatformPasteboardQuery(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor*& r_flavors, uindex_t& r_count);
-bool MCPlatformPasteboardFetch(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor flavor, void*& r_bytes, uindex_t& r_byte_count);
-
-void MCPlatformPasteboardClear(MCPlatformPasteboardRef pasteboard);
-bool MCPlatformPasteboardStore(MCPlatformPasteboardRef pasteboard, MCPlatformPasteboardFlavor *flavor, uindex_t flavor_count, void *handle);
-
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlatformGetDragboard(MCPlatformPasteboardRef& r_pasteboard);
 void MCPlatformDoDragDrop(MCPlatformWindowRef window, MCPlatformAllowedDragOperations allowed_operations, MCImageBitmap *image, const MCPoint *image_loc, MCPlatformDragOperation& r_operation);
-
-////////////////////////////////////////////////////////////////////////////////
-
-void MCPlatformGetClipboard(MCPlatformPasteboardRef& r_pasteboard);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -771,6 +739,7 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyMask,
 	kMCPlatformWindowPropertyFrameRect,
 	kMCPlatformWindowPropertyContentRect,
+	kMCPlatformWindowPropertyIsOpaque,
 	
 	kMCPlatformWindowPropertyHasTitleWidget,
 	kMCPlatformWindowPropertyHasCloseWidget,
@@ -785,12 +754,15 @@ enum MCPlatformWindowProperty
 	kMCPlatformWindowPropertyUseLiveResizing,
 	
 	kMCPlatformWindowPropertySystemId,
+	kMCPlatformWindowPropertySystemHandle,
 	
 	kMCPlatformWindowPropertyCursor,
     
     kMCPlatformWindowPropertyHideOnSuspend,
     
     kMCPlatformWindowPropertyIgnoreMouseEvents,
+    
+    kMCPlatformWindowPropertyDocumentFilename,
 };
 
 void MCPlatformSetWindowProperty(MCPlatformWindowRef window, MCPlatformWindowProperty property, MCPlatformPropertyType type, const void *value);
@@ -988,7 +960,9 @@ enum MCPlatformPlayerProperty
 	kMCPlatformPlayerPropertyOnlyPlaySelection,
 	
 	kMCPlatformPlayerPropertyLoop,
-	
+    kMCPlatformPlayerPropertyMirrored,
+	kMCPlatformPlayerPropertyScalefactor,
+    	
 	kMCPlatformPlayerPropertyQTVRNode,
 	kMCPlatformPlayerPropertyQTVRPan,
 	kMCPlatformPlayerPropertyQTVRTilt,
@@ -1033,7 +1007,7 @@ struct MCPlatformPlayerQTVRConstraints
 	double z_min, z_max;
 };
 
-void MCPlatformCreatePlayer(MCPlatformPlayerRef& r_player);
+void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);
@@ -1138,7 +1112,7 @@ void MCPlatformSoundGetProperty(MCPlatformSoundRef sound, MCPlatformSoundPropert
 // what is currently required).
 //
 
-typedef struct MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
+typedef class MCPlatformSoundRecorder *MCPlatformSoundRecorderRef;
 
 enum MCPlatformSoundRecorderProperty
 {
@@ -1218,7 +1192,7 @@ void MCPlatformSwitchFocusToView(MCPlatformWindowRef window, uint32_t id);
 
 enum MCPlatformControlType
 {
-    kMCPlatformControlTypeGlobal = 0,   // Global theming (i.e the theme inherited by all controls)
+    kMCPlatformControlTypeGeneric = 0,  // Global theming (i.e the theme inherited by all controls)
     kMCPlatformControlTypeButton,       // Buttons not covered more specifically
     kMCPlatformControlTypeCheckbox,     // On-off tick box
     kMCPlatformControlTypeRadioButton,  // One-of-many selection button
@@ -1234,9 +1208,11 @@ enum MCPlatformControlType
     kMCPlatformControlTypeComboBox,     // Input field/option menu combination
     kMCPlatformControlTypePopupMenu,    // Menu as appears when right-clicking
     kMCPlatformControlTypeProgressBar,  // Visual indicator of progress
+    kMCPlatformControlTypeRichText,     // Text editing with user formatting control
     kMCPlatformControlTypeScrollBar,    // For scrolling, apparently
     kMCPlatformControlTypeSlider,       // Selects a value between two extremes
     kMCPlatformControlTypeSpinArrows,   // Up-down arrows for value adjustment
+    kMCPlatformControlTypeTooltip,      // Tooltip popups
     kMCPlatformControlTypeWindow,       // Windows can have theming props too
     kMCPlatformControlTypeMessageBox    // Pop-up alert dialogue
 };
@@ -1256,7 +1232,7 @@ enum
     
     kMCPlatformControlStateCompatibility    = (1<<31),   // Use backwards-compatible theming
     
-    kMCPlatformControlStateNormal           = kMCPlatformControlStateCompatibility
+    kMCPlatformControlStateNormal           = 0
 };
 
 enum MCPlatformControlPart
@@ -1292,6 +1268,7 @@ bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlP
 bool MCPlatformGetControlThemePropInteger(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, int&);
 bool MCPlatformGetControlThemePropColor(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCColor&);
 bool MCPlatformGetControlThemePropFont(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCFontRef&);
+bool MCPlatformGetControlThemePropString(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, MCStringRef&);
 
 ////////////////////////////////////////////////////////////////////////////////
 

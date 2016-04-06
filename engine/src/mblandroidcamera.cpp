@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -108,7 +108,10 @@ static const char *MCPhotoSourceTypeToCString(MCPhotoSourceType p_source)
         case kMCPhotoSourceTypeFrontCamera:
         case kMCPhotoSourceTypeRearCamera:
             return "camera";
+        default:
+            MCUnreachableReturn("unknown");
     }
+
 }
 
 bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result)

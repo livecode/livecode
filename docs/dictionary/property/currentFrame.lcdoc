@@ -1,0 +1,31 @@
+Name: currentFrame
+
+Type: property
+
+Syntax: set the currentFrame of <image> to <frameNumber> 
+
+Summary: Specifies the current <frame> of an <animated GIF>.
+
+Associations: image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the currentFrame of image "Process" to 1 -- back to the beginning
+
+Value:
+The <currentFrame> of an <image(keyword)> is a positive <integer>.
+By default, the <currentFrame> <property> of newly created <image(object)|images> is set to 1.
+
+Description:
+Use the <currentFrame> <property> to check where an <animated GIF> <image> is in its sequence. Set this <property> in order to change the current <frame> of an <animated GIF>: for example, to examine the animation <frame> by <frame>.
+
+If the image is not a GIF, the <currentFrame> <property> always reports 1, and setting it has no effect.
+
+References: repeatCount (property), frameCount (property), endFrame (property), startFrame (property), currentTime (property), palindromeFrames (property), image (keyword), integer (keyword), image (object), frame (glossary), animated GIF (glossary), property (glossary)
+
+Tags: multimedia

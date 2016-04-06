@@ -1,0 +1,30 @@
+Name: before
+
+Type: keyword
+
+Syntax: before
+
+Summary: Used with the <put> <command> to place a <value> at the start of a <container> or <chunk>.
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put return before myVariable
+
+Example:
+put thisValue before line 17 of field "Results"
+
+Description:
+Use the <before> <keyword> to position the <insertion point> at a <selected> location in a <field>, or to add text at a specific location in a <container>.
+
+You can specify either a container, or a chunk within a container. If you don't specify a chunk, the <before> <keyword> specifies the start of the <container>.
+
+When you use the <before> <keyword>, the current contents of the <container> or <chunk> is not affected. The text is added to the <container> or <chunk>, instead of replacing it.
+
+References: after (keyword), field (keyword), selected (property), put (command), value (function), keyword (glossary), insertion point (glossary), command (glossary), container (glossary), chunk (glossary)
+
+Tags: text processing

@@ -1,11 +1,15 @@
 #!/usr/bin/env perl
 
 use warnings;
+use File::Basename;
 
 # Incoming arguments
 my $sourceFile	= $ARGV[0];
 my $destFile	= $ARGV[1];
-my $varName		= $ARGV[2];
+
+# Work around gyp issue on windows where it is
+# sometimes too eager in relativising paths
+my $varName	= basename($ARGV[2]);
 
 #! /usr/bin/revolution -ui
 

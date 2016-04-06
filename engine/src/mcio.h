@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define IO_UPDATE_MODE 	"r+b"
 #define IO_CREATE_MODE "wb+"
 #define ENV_SEPARATOR 	':'
-#elif defined(_LINUX_DESKTOP) || defined(_SERVER) || defined(_MOBILE)
+#elif defined(_LINUX_DESKTOP) || defined(_SERVER) || defined(_MOBILE) || defined(__EMSCRIPTEN__)
 #define IO_APPEND_MODE "a"
 #define IO_READ_MODE "r"
 #define IO_WRITE_MODE "w"
@@ -182,6 +182,7 @@ extern IO_handle MCS_fakeopen(const void *p_data, uindex_t p_size);
 extern IO_handle MCS_fakeopenwrite(void);
 ///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
 extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);
+extern IO_stat MCS_closetakingbuffer_uint32(IO_handle& p_stream, void*& r_buffer, uint32_t& r_length);
 
 extern IO_handle MCS_deploy_open(MCStringRef path, intenum_t p_mode);
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);

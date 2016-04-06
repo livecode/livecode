@@ -1,0 +1,29 @@
+Name: scriptExecutionError
+
+Type: message
+
+Syntax: scriptExecutionError <pErrorStack>, <pFIlesList> 
+
+Summary: The <scriptExecutionError> message is sent to the global script (home stack) when an uncaught error is encountered.
+
+Introduced: 4.6.3
+
+OS: mac,windows,linux
+
+Platforms: server
+
+Example:
+on scriptExecutionError pErrorStack, pFilesList
+   put pErrorStack & return & pFilesList
+end scriptExecutionError
+
+Parameters:
+pErrorStack: The standard engine error stack listing, detailing the errors that occurred at each stage of the stack being unwound.
+pFIlesList: The list of all files that have been 'included' / 'required' which the error stack references if an error occurred in the context of a file script rather then an object script.
+
+Description:
+The <scriptExecutionError> message is sent to the global script (home stack) when an uncaught error is encountered.
+
+<ScriptExecutionError> is only available when running in CGI mode (Server).
+
+References: errorMode (property)

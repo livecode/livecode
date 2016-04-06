@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -323,27 +323,25 @@ void gdi_do_arc(HDC p_dc, HDC p_mask_dc, bool p_fill, int4 p_left, int4 p_top, i
 	}
 }
 
-// MM-2014-07-31: [[ ThreadedRendering ]] Updated to make theme drawing thread safe, by using TLS to ensure we have seperate DCs for each thread.
-//  This should probably be moved to a central thread library at some point, which will also help with clean up.
-static __declspec( thread ) bool s_initialized_on_thread = false;
-static __declspec( thread ) HDC s_theme_dc = NULL;
+static bool s_theme_dc_initialized = false;
+static HDC s_theme_dc = NULL;
 
 static void MCThemeDCIntialize()
 {
-	if (s_initialized_on_thread)
+	if (s_theme_dc_initialized)
 		return;
 
-	s_initialized_on_thread = true;
+	s_theme_dc_initialized = true;
 	s_theme_dc = CreateCompatibleDC(NULL);
 }
 
 static void MCThemeDCFinalize()
 {
-	if (!s_initialized_on_thread)
+	if (!s_theme_dc_initialized)
 		return;
 
 	DeleteDC(s_theme_dc);
-	s_initialized_on_thread = false;
+	s_theme_dc_initialized = false;
 }
 
 typedef void (*MCGDIDrawFunc)(HDC p_hdc, void *p_context);
@@ -355,8 +353,6 @@ bool MCGDIDrawAlpha(uint32_t p_width, uint32_t p_height, MCGDIDrawFunc p_draw, v
 	MCThemeDCIntialize();
 
 	HDC t_dc;
-	//t_dc = CreateCompatibleDC(NULL);
-	//t_dc = ((MCScreenDC*)MCscreen)->getdsthdc();
 	t_dc = s_theme_dc;
 	t_success = t_dc != nil;
 

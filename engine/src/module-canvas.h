@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2014 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -84,8 +84,8 @@ struct MCCArray
 bool MCCanvasModuleInitialize();
 void MCCanvasModuleFinalize();
 
-void MCCanvasPush(MCGContextRef gcontext);
-void MCCanvasPop(void);
+void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
+void MCCanvasPop(uintptr_t p_cookie);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Type Definitions
@@ -155,6 +155,10 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopOrderErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientTypeErrorTypeInfo;
+
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectInvalidPropertyErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectPropertyNotAvailableErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasEffectPropertyInvalidValueErrorTypeInfo;
 
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasPathPointListFormatErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasSVGPathParseErrorTypeInfo;
@@ -295,6 +299,7 @@ extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCan
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixelsWithSizeAsList(MCProperListRef p_size, MCDataRef p_pixels, MCCanvasImageRef &x_image);
+extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image);
 
 // Properties
 extern "C" MC_DLLEXPORT void MCCanvasImageGetWidth(MCCanvasImageRef p_image, uint32_t &r_width);
@@ -441,6 +446,10 @@ extern "C" MC_DLLEXPORT void MCCanvasPathCurveThroughPoint(MCCanvasPointRef p_th
 extern "C" MC_DLLEXPORT void MCCanvasPathCurveThroughPoints(MCCanvasPointRef p_through_a, MCCanvasPointRef p_through_b, MCCanvasPointRef p_to, MCCanvasPathRef &x_path);
 extern "C" MC_DLLEXPORT void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 
+extern "C" MC_DLLEXPORT void MCCanvasPathArcTo(MCCanvasPointRef p_tangent, MCCanvasPointRef p_to, MCCanvasFloat p_radius, MCCanvasPathRef &x_path);
+extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithFlagsWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, bool p_largest, bool p_clockwise, MCCanvasPathRef &x_path);
+extern "C" MC_DLLEXPORT void MCCanvasPathEllipticArcToWithRadiiAsList(MCCanvasPointRef p_to, MCProperListRef p_radii, MCCanvasFloat p_rotation, MCCanvasPathRef &x_path);
+
 //////////
 
 // Effect
@@ -448,6 +457,7 @@ extern "C" MC_DLLEXPORT void MCCanvasPathClosePath(MCCanvasPathRef &x_path);
 extern "C" MC_DLLEXPORT void MCCanvasEffectEvaluateType(integer_t p_type, integer_t &r_type);
 
 // Constructors
+extern "C" MC_DLLEXPORT void MCCanvasEffectMake(integer_t p_type, MCCanvasEffectRef &r_effect);
 extern "C" MC_DLLEXPORT void MCCanvasEffectMakeWithPropertyArray(integer_t p_type, MCArrayRef p_properties, MCCanvasEffectRef &r_effect);
 
 // Properties
@@ -466,6 +476,10 @@ extern "C" MC_DLLEXPORT void MCCanvasEffectGetDistance(MCCanvasEffectRef p_effec
 extern "C" MC_DLLEXPORT void MCCanvasEffectSetDistance(MCCanvasFloat p_distance, MCCanvasEffectRef &x_effect);
 extern "C" MC_DLLEXPORT void MCCanvasEffectGetAngle(MCCanvasEffectRef p_effect, MCCanvasFloat &r_angle);
 extern "C" MC_DLLEXPORT void MCCanvasEffectSetAngle(MCCanvasFloat p_angle, MCCanvasEffectRef &x_effect);
+extern "C" MC_DLLEXPORT void MCCanvasEffectGetKnockOut(MCCanvasEffectRef p_effect, bool &r_knockout);
+extern "C" MC_DLLEXPORT void MCCanvasEffectSetKnockOut(bool p_knockout, MCCanvasEffectRef &x_effect);
+extern "C" MC_DLLEXPORT void MCCanvasEffectGetSourceAsString(MCCanvasEffectRef p_effect, MCStringRef &r_source);
+extern "C" MC_DLLEXPORT void MCCanvasEffectSetSourceAsString(MCStringRef p_source, MCCanvasEffectRef &x_effect);
 
 //////////
 
@@ -487,7 +501,10 @@ extern "C" MC_DLLEXPORT void MCCanvasFontGetSize(MCCanvasFontRef p_font, uintege
 extern "C" MC_DLLEXPORT void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font);
 
 // Operations
-extern "C" MC_DLLEXPORT void MCCanvasFontMeasureText(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextTypographicBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextTypographicBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextImageBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);
+extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextImageBoundsOnCanvas(MCStringRef p_text, MCCanvasRef p_canvas, MCCanvasRectangleRef& r_rect);
 
 //////////
 
@@ -528,6 +545,7 @@ extern "C" MC_DLLEXPORT void MCCanvasGetDashes(MCCanvasRef p_canvas, MCProperLis
 extern "C" MC_DLLEXPORT void MCCanvasSetDashes(MCProperListRef p_dashes, MCCanvasRef p_canvas);
 extern "C" MC_DLLEXPORT void MCCanvasGetDashPhase(MCCanvasRef p_canvas, MCCanvasFloat &r_phase);
 extern "C" MC_DLLEXPORT void MCCanvasSetDashPhase(MCCanvasFloat p_phase, MCCanvasRef p_canvas);
+extern "C" MC_DLLEXPORT void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasTransform(MCCanvasRef p_canvas, MCCanvasTransformRef p_transform);

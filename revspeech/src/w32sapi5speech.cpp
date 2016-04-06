@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -122,7 +122,7 @@ bool WindowsSAPI5Narrator::Initialize(void)
 	if(IsInited())
 		return true;
 
-	Error(TEXT(""));	
+	Error(L"");	
 	
 	//sapi init
 	HRESULT hr = S_OK;		

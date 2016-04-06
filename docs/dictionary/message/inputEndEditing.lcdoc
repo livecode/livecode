@@ -1,0 +1,27 @@
+Name: inputEndEditing
+
+Type: message
+
+Syntax: inputEndEditing
+
+Summary: Sent when a mobile text input control has lost focus and editing has ceased.
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+on inputEndEditing -- enable the next button while editing is finished
+   enable button "next"
+end inputEndEditing
+
+Description:
+The <inputEndEditing> message is sent when a mobile text input control has lost focus and editing has ceased.
+
+Handle the <inputEndEditing> message if you want to move LiveCode controls, make changes to the interface or perform an action when the user stops editing text in an iosTextInput, iosMultiline, androidTextInput or androidMultiline control.
+
+The <inputEndEditing> message is sent to the object containing the script that created the text input control.
+
+References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), inputReturnKey (message), inputTextChanged (message), inputBeginEditing (message)

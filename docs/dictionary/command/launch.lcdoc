@@ -1,0 +1,48 @@
+Name: launch
+
+Type: command
+
+Syntax: launch [<documentPath> with] <applicationPath> 
+
+Summary: Starts up an application, optionally opening a document in the application.
+
+Introduced: 1.0
+
+OS: mac,windows,linux
+
+Platforms: desktop,server,web
+
+Security: process
+
+Example:
+launch "SimpleText"
+
+Example:
+launch "/Documents/Projects/test.txt" with myApp
+
+Example:
+launch it with (field "Application")
+
+Parameters:
+documentPath: The location and name of a file to open with the specified application. If no path is specified, the launch command assumes that the file is in the defaultFolder.
+applicationPath: The location and name of the application to start up. If no path is specified, the launch command assumes that the application is in the defaultFolder.
+
+The result: >*Note:*  On Mac OS systems, if the application is already running, the <launch> command does nothing, and "Process is already open." is placed in the result function. On Windows and Linux, an additional instance of the application will start.
+
+Description:
+Use the <launch> <command> to start an application for the user to use.
+
+When the <launch> command executes, the application being launched comes to the foreground. When the user quits, LiveCode comes to the foreground.
+
+If no <documentPath> is specified, the following two statements are equivalent:
+
+launch application
+open process application for neither
+
+>*Note:*  On OS X systems, you can use the <launch> command to start up an application, but not a Unix process. To work with a Unix process, use the shell function instead.
+
+>*Tip:*  On Windows systems, you can also start up an application by using the shell function with the Windows "start" command:
+
+get shell("start MyProgram.exe")
+
+References: hideConsoleWindows (property), secureMode (property), launch url (command), kill (command), launch document (command), shell (function), command (glossary)

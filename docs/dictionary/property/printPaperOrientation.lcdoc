@@ -1,0 +1,39 @@
+Name: printPaperOrientation
+
+Type: property
+
+Syntax: set the printPaperOrientation to {"portrait" | "landscape" | "reverse portrait" | "reverse landscape"}
+
+Syntax: get the printPaperOrientation
+
+Summary: Reports the rotation of a printed page.
+
+Introduced: 2.9
+
+OS: mac,windows,linux,ios
+
+Platforms: desktop,server,web,mobile
+
+Security: printing
+
+Example:
+set the printPaperOrientation to "portrait"
+
+Value (enum): The <printPaperOrientation> is one of the following values.The default value is determined by the default settings of the current printer
+  - portrait: rotated 0 degrees.
+  - landscape: rotated 90 degrees clockwise.
+  - reverse portrait: rotated 180 degrees clockwise.
+  - reverse landscape: 270 degrees clockwise.
+
+Description:
+Use the <printPaperOrientation> to rotate the printed output to the desired orientation on the page.
+
+Attempting to set the <printPaperOrientation> to an invalid value will result in a script execution error.
+
+To have an effect, this property must be set before calling <open printing>.
+
+>*Cross-platform note:*  The reverse options are not supported on Windows.  When used Windows will revert these options to their non-reverse counterparts.
+
+References: open printing (command), answer printer (command), printRowsFirst (property)
+
+Tags: printing

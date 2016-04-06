@@ -1,0 +1,1 @@
+# Prevent crash on exit related to recent cards and card stack

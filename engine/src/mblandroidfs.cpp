@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+
+#include "mcstring.h"
 
 #include <sys/stat.h>
 #include <dirent.h>
@@ -115,16 +117,12 @@ bool apk_set_current_folder(MCStringRef p_apk_path)
 	return true;
 }
 
-bool apk_list_folder_entries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 	MCAutoStringRef t_list;
-    MCAutoStringRef t_current_folder;
-    
-    if (!apk_get_current_folder(&t_current_folder))
-        return false;
-    
-	MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_list), *t_current_folder);
+
+	MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_list), p_apk_folder);
 
 	t_success = *t_list != nil;
 
@@ -421,7 +419,10 @@ bool MCAndroidSystem::GetTemporaryFileName(MCStringRef &r_tmp_name)
 
 Boolean MCAndroidSystem::GetStandardFolder(MCNameRef p_folder, MCStringRef &r_folder)
 {
-	if (MCNameIsEqualToCString(p_folder, "engine", kMCCompareExact))
+    // SN-2015-04-16: [[ Bug 14295 ]] The resources folder on Mobile is the same
+    //   as the engine folder.
+    if (MCNameIsEqualTo(p_folder, MCN_engine, kMCCompareCaseless)
+            || MCNameIsEqualTo(p_folder, MCN_resources, kMCCompareCaseless))
     {
         MCLog("GetStandardFolder(\"%@\") -> \"%@\"", MCNameGetString(p_folder), MCcmd);
 		return MCStringCopy(MCcmd, r_folder);
@@ -505,20 +506,40 @@ bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
+bool MCAndroidSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
-    MCAutoStringRef t_folder;
-	if (apk_get_current_folder(&t_folder))
-		return apk_list_folder_entries(p_callback, p_context);
+	MCAutoStringRef t_apk_folder;
+	if ((p_folder == nil && apk_get_current_folder (&t_apk_folder)) ||
+		path_to_apk_path (p_folder, &t_apk_folder))
+		return apk_list_folder_entries (*t_apk_folder, p_callback, p_context);
+
+	MCAutoStringRefAsUTF8String t_path;
+	if (p_folder == nil)
+		/* UNCHECKED */ t_path . Lock(MCSTR("."));
+	else
+		/* UNCHECKED */ t_path . Lock(p_folder);
 
 	DIR *t_dir;
-	t_dir = opendir(".");
+	t_dir = opendir(*t_path);
 	if (t_dir == NULL)
 		return false;
 	
 	MCSystemFolderEntry t_entry;
 	memset(&t_entry, 0, sizeof(MCSystemFolderEntry));
 	
+	/* For each directory entry, we need to construct a path that can
+	 * be passed to stat(2).  Allocate a buffer large enough for the
+	 * path, a path separator character, and any possible filename. */
+	size_t t_path_len = strlen(*t_path);
+	size_t t_entry_path_len = t_path_len + 1 + NAME_MAX;
+	char *t_entry_path = new char[t_entry_path_len + 1];
+	strcpy (t_entry_path, *t_path);
+	if ((*t_path)[t_path_len - 1] != '/')
+	{
+		strcat (t_entry_path, "/");
+		++t_path_len;
+	}
+
 	bool t_success;
 	t_success = true;
 	while(t_success)
@@ -531,8 +552,13 @@ bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_call
 		if (strcmp(t_dir_entry -> d_name, ".") == 0)
 			continue;
 		
+		/* Truncate the directory entry path buffer to the path
+		 * separator. */
+		t_entry_path[t_path_len] = 0;
+		strcat (t_entry_path, t_dir_entry->d_name);
+
 		struct stat t_stat;
-		stat(t_dir_entry -> d_name, &t_stat);
+		stat(t_entry_path, &t_stat);
         
         MCStringRef t_unicode_str;
         MCStringCreateWithBytes((byte_t*)t_dir_entry -> d_name, strlen(t_dir_entry -> d_name), kMCStringEncodingUTF8, false, t_unicode_str);        
@@ -551,6 +577,7 @@ bool MCAndroidSystem::ListFolderEntries(MCSystemListFolderEntriesCallback p_call
         MCValueRelease(t_unicode_str);
 	}
 	
+	delete t_entry_path;
 	closedir(t_dir);
 	
 	return t_success;
@@ -563,3 +590,51 @@ real8 MCAndroidSystem::GetFreeDiskSpace()
     return 0.0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2016-03-04: [[ Bug 16917 ]] Return location of installed libraries.
+bool MCAndroidGetLibraryPath(MCStringRef &r_path)
+{
+	MCStringRef t_path;
+	t_path = nil;
+	
+	MCAndroidEngineCall("getLibraryPath", "x", &t_path);
+	
+	if (t_path == nil)
+		return false;
+	
+	r_path = t_path;
+	return true;
+}
+
+// IM-2016-03-04: [[ Bug 16917 ]] Return full path to the given library
+bool MCAndroidResolveLibraryPath(MCStringRef p_library, MCStringRef &r_path)
+{
+	// if the path is absolute then just return a copy.
+	if (MCStringBeginsWithCString(p_library, (const char_t*)"/", kMCStringOptionCompareExact))
+		return MCStringCopy(p_library, r_path);
+	
+	MCAutoStringRef t_path;
+	if (!MCAndroidGetLibraryPath(&t_path))
+		return false;
+	
+	if (!t_path.MakeMutable())
+		return false;
+	
+	if (!MCStringEndsWithCString(*t_path, (const char_t*)"/", kMCStringOptionCompareExact))
+	{
+		if (!MCStringAppendNativeChar(*t_path, '/'))
+			return false;
+	}
+	
+	if (!MCStringAppend(*t_path, p_library))
+		return false;
+	
+	if (!t_path.MakeImmutable())
+		return false;
+	
+	r_path = t_path.Take();
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////

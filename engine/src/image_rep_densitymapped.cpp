@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -129,6 +129,19 @@ bool MCDensityMappedImageRep::GetGeometry(uindex_t &r_width, uindex_t &r_height)
 	r_width /= m_source_densities[t_match];
 	r_height /= m_source_densities[t_match];
 	
+	return true;
+}
+
+bool MCDensityMappedImageRep::GetMetadata(MCImageMetadata &r_metadata)
+{
+	uindex_t t_match;
+	// IM-2014-08-01: [[ Bug 13021 ]] Make the 1.0 density source (or nearest match) the basis for the image geometry
+	if (!GetBestMatch(1.0, t_match))
+		return false;
+	
+	if (!m_sources[t_match]->GetMetadata(r_metadata))
+		return false;
+    
 	return true;
 }
 
@@ -486,6 +499,10 @@ bool MCImageGetScaledFiles(MCStringRef p_base, MCStringRef p_extension, MCImageS
 		}
 	}
 	
+	// Fail if we don't find any matching files.
+	if (t_success)
+		t_success = t_count > 0;
+	
 	if (t_success)
 	{
 		r_list = t_list;
@@ -558,7 +575,6 @@ bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep)
 		
 		if (MCCachedImageRep::FindWithKey(p_filename, t_cached_rep))
 		{
-			MCLog("image rep cache hit for file %@", p_filename);
 			t_rep = t_cached_rep->Retain();
 		}
 		else

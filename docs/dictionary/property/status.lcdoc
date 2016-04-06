@@ -1,0 +1,39 @@
+Name: status
+
+Type: property
+
+Syntax: put the status of player "myPlayer" into tStatus
+
+Summary: Specifies the current status of a player object
+
+Associations: player
+
+Introduced: 6.7
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+put the status of player "myPlayer" into tStatus
+if tStatus is "loading" then
+   put "Loading" && CR after fld "myField"
+else if tStatus is "playing" then 
+   put "Playing" && CR after fld "myField"
+else
+   put "Paused" && CR after fld "myField"
+end if
+
+Value (enum):
+- loading: for remote multimedia files only
+- playing:
+- paused:
+
+This property is read-only and cannot be set.
+
+Description:
+Use the <status> <property> to find out the current status of a player object.
+
+References: looping (property), showSelection (property), callbacks (property), startTime (property), duration (property), property (glossary), player (keyword)
+
+Tags: multimedia

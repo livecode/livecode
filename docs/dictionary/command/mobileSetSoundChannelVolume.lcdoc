@@ -1,0 +1,34 @@
+Name: mobileSetSoundChannelVolume
+
+Type: command
+
+Syntax: mobileSetSoundChannelVolume <channel>, <volume> 
+
+Summary: Sets the volume of a sound channel.
+
+Synonyms: iphoneSetSoundChannelVolume
+
+Introduced: 4.6
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+mobileSetSoundChannelVolume theChannel, theVolume
+
+Example:
+mobileSetSoundChannelVolume "current", 50
+
+Parameters:
+channel: The name of the channel.
+volume (integer): An integer between 1 and 100 where 0 is no volume and 100 is full volume.
+
+Description:
+Use the <mobileSetSoundChannelVolume> command to control the volume of the given channel.
+
+Changing the volume of a channel affects the currently playing sound and any sounds played subsequently on the channel.
+
+Setting the volume of a non-existent channel results in it being created. This allows the volume to be set before any sounds are played.
+
+References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)

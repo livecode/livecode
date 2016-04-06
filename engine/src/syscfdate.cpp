@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -370,8 +370,9 @@ static bool osx_cf_fetch_format(CFLocaleRef p_locale, CFDateFormatterStyle p_dat
 		CFRelease(t_formatter);
 	
 	if (t_success)
-        MCStringCopyAndRelease(t_format, r_string);
-    else
+        t_success = MCStringCopyAndRelease(t_format, r_string);
+    
+    if (!t_success)
         MCValueRelease(t_format);
     
     return t_success;
@@ -397,12 +398,6 @@ static bool osx_cf_cache_locale(MCDateTimeLocale *p_info)
 {
 	bool t_success;
 	t_success = true;
-	
-	if (t_success)
-	{
-		if (CFDateFormatterCreate == NULL)
-			t_success = false;
-	}
 	
 	CFLocaleRef t_locale;
 	t_locale = NULL;

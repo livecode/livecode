@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2015 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -17,7 +17,7 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-extern "C" MC_DLLEXPORT void MCMathFoundationExecRoundRealToNearest(double& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationExecRoundRealToNearest(double& x_target)
 {
 	if (x_target < 0.0)
         x_target = ceil(x_target - 0.5);
@@ -25,7 +25,7 @@ extern "C" MC_DLLEXPORT void MCMathFoundationExecRoundRealToNearest(double& x_ta
         x_target = floor(x_target + 0.5);
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationExecRoundNumberToNearest(MCNumberRef& x_target)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationExecRoundNumberToNearest(MCNumberRef& x_target)
 {
     double t_target = MCNumberFetchAsReal(x_target);
     MCMathFoundationExecRoundRealToNearest(t_target);
@@ -37,13 +37,13 @@ extern "C" MC_DLLEXPORT void MCMathFoundationExecRoundNumberToNearest(MCNumberRe
     MCValueAssign(x_target, *t_new_number);
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalRoundedRealToNearest(double p_target, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalRoundedRealToNearest(double p_target, double& r_output)
 {
     MCMathFoundationExecRoundRealToNearest(p_target);
     r_output = p_target;
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalRoundedNumberToNearest(MCNumberRef p_target, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalRoundedNumberToNearest(MCNumberRef p_target, MCNumberRef& r_output)
 {
     double t_target = MCNumberFetchAsReal(p_target);
     MCMathFoundationExecRoundRealToNearest(t_target);
@@ -52,17 +52,17 @@ extern "C" MC_DLLEXPORT void MCMathFoundationEvalRoundedNumberToNearest(MCNumber
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalFloorReal(double p_target, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalFloorReal(double p_target, double& r_output)
 {
     r_output = floor(p_target);
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalCeilingReal(double p_target, double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalCeilingReal(double p_target, double& r_output)
 {
     r_output = ceil(p_target);
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalFloorNumber(MCNumberRef p_target, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalFloorNumber(MCNumberRef p_target, MCNumberRef& r_output)
 {
     double t_target = MCNumberFetchAsReal(p_target);
     MCMathFoundationEvalFloorReal(t_target, t_target);
@@ -71,7 +71,7 @@ extern "C" MC_DLLEXPORT void MCMathFoundationEvalFloorNumber(MCNumberRef p_targe
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalCeilingNumber(MCNumberRef p_target, MCNumberRef& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalCeilingNumber(MCNumberRef p_target, MCNumberRef& r_output)
 {
     double t_target = MCNumberFetchAsReal(p_target);
     MCMathFoundationEvalCeilingReal(t_target, t_target);
@@ -80,7 +80,20 @@ extern "C" MC_DLLEXPORT void MCMathFoundationEvalCeilingNumber(MCNumberRef p_tar
         return;
 }
 
-extern "C" MC_DLLEXPORT void MCMathFoundationEvalPi(double& r_output)
+extern "C" MC_DLLEXPORT_DEF void MCMathFoundationEvalPi(double& r_output)
 {
     r_output = 3.141592653589793238462643;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool com_livecode_mathfoundation_Initialize(void)
+{
+    return true;
+}
+
+extern "C" void com_livecode_mathfoundation_Finalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,35 @@
+Name: shadowPixel
+
+Type: property
+
+Syntax: set the shadowPixel of <object> to <colorNumber> 
+
+Summary: Specifies which entry in the <color table> is used for the color of an <object|object's> drop shadow or the <background> of a <scrollbar>.
+
+Synonyms: seventhPixel
+
+Associations: stack,card,field,button,graphic,scrollbar,player,image
+
+Introduced: 1.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+set the shadowPixel of this card to the short number of this card
+
+Value:
+The <shadowPixel> of an <object> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
+By default, the <shadowPixel> for all <object|objects> is empty.
+
+Description:
+Use the <shadowPixel> <property> to change the shadow color of an <object> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+
+The <shadowPixel> <property> specifies which entry in the <color table> is used for an <object|object's> shadow color. It is similar to the <shadowColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+
+The color table can be set by changing the colorMap <property>.
+
+References: borderPixel (property), shadowColor (property), scrollbar (keyword), integer (keyword), object (object), property (glossary), bit depth (glossary), background (glossary), bit (glossary), color reference (glossary), color table (glossary)
+
+Tags: ui

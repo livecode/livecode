@@ -1,0 +1,35 @@
+Name: numToCodepoint
+
+Type: function
+
+Syntax: numToCodepoint(<number>)
+
+Summary: Converts an integer to a Unicode codepoint.
+
+Introduced: 7.0
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+numToCodepoint(0x41) -- returns "A"
+
+Example:
+put numToCodepoint(0x20) is space -- returns true
+
+Parameters:
+number (integer): An integer in the range 0x000000 to 0x10FFFF. The number can be given in hex or decimal form.
+
+Returns: The <numToCodepoint> function returns a single Unicode codepoint.
+
+Description:
+Use the <numToCodepoint> function to translate numbers into their Unicode character equivalents, or to interpret a character (such as a control character) that can't be displayed.
+
+The <numToCodepoint> function takes the numerical identifier of a Unicode character and returns its textual form. 
+
+Integers in the range 0x000000 to 0x10FFFF can be used to  identify Unicode characters. For example, the space character is 0x20 and A is 0x41.
+
+The <numToCodepoint> function raises an exception if the given integer is out of range for Unicode codepoints (i.e if it is negative or if it is greater than 0x10FFFF). Codepoints that are not currently assigned to characters by the latest Unicode standard are not considered to be invalid in order to ensure compatibility with future standards.
+
+References: nativeCharToNum (function), numToNativeChar (function), normalizeText (function), codepointToNum (function), codepointProperty (function)

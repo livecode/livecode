@@ -1,0 +1,680 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+This widget is displays a gradient according to the value of its *gradientStops* property.
+
+Name: gradientStopsChanged
+Type: message
+Syntax: on gradientStopsChanged
+
+Example:
+    on gradientStopsChanged
+        set the fillGradient["ramp"] of graphic 1 to the gradientStops of the target
+    end gradientStopsChanged
+
+Description:
+Handle the <gradientStopsChanged> message to perform an operation when the gradientStops property of a gradient ramp editor widget changes.
+
+Name: selectedStopChanged pIndex
+Type: message
+Syntax: on selectedStopChanged
+
+Parameters:
+pIndex: The new selected stop index, or 0 if no stop is selected.
+
+Example:
+    on selectedStopChanged pIndex
+        if pIndex is 0 then
+            exit selectedStopChanged
+        end if
+
+        answer color
+        if the result is not "cancel" then
+            local tStops
+            put the gradientStops of the target into tStops
+            put it into item 2 to 4 of line pIndex of tStops
+            set the gradientStops of the target to tStops
+        end if
+
+    end selectedStopChanged
+
+Description:
+Handle the <selectedStopChanged> message to perform an operation when the selectedStop property of a gradient ramp editor widget changes.
+
+**/
+
+widget com.livecode.widget.gradientRampEditor
+
+metadata title is "Gradient Ramp Editor"
+metadata author is "LiveCode"
+metadata version is "0.0.1"
+metadata svgicon is "M65.4,8.5v-7C65.4,0.6,64.8,0,64,0h-5.7c-0.8,0-1.4,0.6-1.4,1.4v7c0,0.6,0.2,1.1,0.6,1.5l3.3,3.5H34.6l3.3-3.5c0.4-0.4,0.6-0.9,0.6-1.5v-7c0-0.8-0.6-1.4-1.4-1.4h-5.7C30.6,0,30,0.6,30,1.4v7c0,0.6,0.2,1.1,0.6,1.5l3.3,3.5h-29L8.2,10C8.6,9.6,8.8,9,8.8,8.5v-7C8.8,0.6,8.2,0,7.4,0H1.6C0.8,0,0.2,0.6,0.2,1.4v7C0.2,9,0.4,9.6,0.8,10l3.3,3.5H0v15.3h4l-3.2,3.4c-0.4,0.4-0.6,0.9-0.6,1.5v7c0,0.8,0.6,1.4,1.4,1.4h5.7c0.8,0,1.4-0.6,1.4-1.4v-7c0-0.6-0.2-1.1-0.6-1.5L5,28.8h28.9l-3.2,3.4c-0.4,0.4-0.6,0.9-0.6,1.5v7c0,0.8,0.6,1.4,1.4,1.4h5.7c0.8,0,1.4-0.6,1.4-1.4v-7c0-0.6-0.2-1.1-0.6-1.5l-3.2-3.4h25.8l-3.2,3.4c-0.4,0.4-0.6,0.9-0.6,1.5v7c0,0.8,0.6,1.4,1.4,1.4H64c0.8,0,1.4-0.6,1.4-1.4v-7c0-0.6-0.2-1.1-0.6-1.5l-3.2-3.4h3.8V13.4h-3.9l3.3-3.5C65.2,9.6,65.4,9,65.4,8.5z M31.5,7.2V1.7H37v5.6H31.5z M1.7,7.2V1.7h5.6v5.6H1.7z M7.3,34.8v5.6H1.7v-5.6H7.3z M19,25.6v-9h3.1v9H19z M37.2,34.8v5.6h-5.6v-5.6H37.2z M33.4,25.6v-9h3.2v9H33.4z M44.1,25.6v-9h3.2v9H44.1z M52,25.6v-9h2.9v9H52z M57.3,25.6v-9h2.1v9H57.3z M63.9,34.8v5.6h-5.6v-5.6H63.9z M62.5,16.6v9h-2v-9H62.5z M63.9,7.2h-5.6V1.7h5.6V7.2z"
+metadata preferredSize is "275,115"
+metadata userVisible is "false"
+
+use com.livecode.widget
+use com.livecode.canvas
+use com.livecode.engine
+
+----------------------------------------------------------------------------------------------------
+-- Variables defining the layout of the editor
+----------------------------------------------------------------------------------------------------
+
+private variable mMarginLeft as Integer
+private variable mMarginRight as Integer
+private variable mMarginTop as Integer
+private variable mMarginBottom as Integer
+
+private variable mRulerSpacing as Real
+private variable mRulerLineIncrement as Integer
+private variable mRulerLineHeight as Integer
+private variable mRulerTextIncrement as Integer
+private variable mRulerTextSize as Integer
+private variable mRulerColor as Color
+
+private variable mGradientRectangle as Rectangle
+private variable mGradientHandleSize as Integer
+private variable mGradientHandleBorderColor as Color
+private variable mGradientRamp as List
+
+private variable mCheckerBoardSquareSize as Integer
+private variable mCheckerBoardColor as Color
+
+private variable mShowNumbers as Boolean
+
+private variable mCurrentlySelectedStopIndex as Integer
+
+private handler configureDimensions() returns nothing
+   put 10 into mMarginLeft
+   put 10 into mMarginRight
+   put 10 into mMarginTop
+   put 10 into mMarginBottom
+
+   put (my width - (mMarginLeft + mMarginRight)) / 100 into mRulerSpacing
+
+   put true into mShowNumbers
+   if my width < 50 then
+      put false into mShowNumbers
+   else if my width < 100 then
+      put 10 into mRulerLineIncrement
+      put 50 into mRulerTextIncrement
+      put 4 into mRulerLineHeight
+   else if my width < 200 then
+      put 5 into mRulerLineIncrement
+      put 20 into mRulerTextIncrement
+      put 6 into mRulerLineHeight
+   else if my width < 300 then
+      put 2 into mRulerLineIncrement
+      put 10 into mRulerTextIncrement
+      put 8 into mRulerLineHeight
+   else
+      put 1 into mRulerLineIncrement
+      put 5 into mRulerTextIncrement
+      put 10 into mRulerLineHeight
+   end if
+
+   put 10 into mRulerTextSize
+   put color [0.5, 0.5, 0.5] into mRulerColor
+
+   put rectangle [mMarginLeft - 1, mMarginTop + mRulerTextSize + mRulerLineHeight, my width - mMarginRight + 1, my height - (mMarginBottom + mRulerTextSize + mRulerLineHeight)] into mGradientRectangle
+   put 10 into mGradientHandleSize
+   put color [0, 0, 0] into mGradientHandleBorderColor
+
+   put 8 into mCheckerBoardSquareSize
+   put color [0.8, 0.8, 0.8] into mCheckerBoardColor
+end handler
+
+----------------------------------------------------------------------------------------------------
+-- Property getting and setting
+----------------------------------------------------------------------------------------------------
+
+/**
+Syntax: set the gradientStops of <widget> to <pGradientStops>
+Syntax: get the gradientStops of <widget>
+
+Summary: The <gradientStops> property controls the offset and color of each division of the gradient.
+
+pGradientStops: A list, one per line, of comma-delimited strings consisting of the offset of the gradient stop, followed by the color and alpha.
+
+Example:
+    -- Create 10 equally spaced stops with random color values
+    local tGradientStops, tStop
+    repeat with x = 1 to 10
+        put x/10 & comma & random(255) & comma & random(255) & comma & random(255) & comma & random(255) into tStop
+        if tGradientStops is empty then
+            put tStop into tGradientStops
+        else
+            put return & tStop after tGradientStops
+        end if
+    end repeat
+    set the gradientStops of widget "Gradient Ramp Editor" to tGradientStops
+
+Description:
+Color gradients are smooth transitions between the colors defined at consecutive offsets. The <gradientStops> property represents the offset and color of each of these stops.
+
+**/
+property gradientStops get getGradientStops set setGradientStops
+
+public handler getGradientStops() returns String
+   variable tStops as String
+   put the empty string into tStops
+
+   variable tStop as GradientStop
+   repeat for each element tStop in mGradientRamp
+      if tStops is not empty then
+         put newline after tStops
+      end if
+
+      put (the offset of tStop) formatted as string & "," after tStops
+      put numberToString((the red of the color of tStop) * 255) & "," after tStops
+      put numberToString((the green of the color of tStop) * 255) & "," after tStops
+      put numberToString((the blue of the color of tStop) * 255) & "," after tStops
+      put numberToString((the alpha of the color of tStop) * 255)  after tStops
+   end repeat
+
+   return tStops
+end handler
+
+public handler setGradientStops(in pStops as String) returns nothing
+   put the empty list into mGradientRamp
+
+   variable tStops as List
+   split pStops by newline
+   put the result into tStops
+
+   variable tStop as String
+   repeat for each element tStop in tStops
+      variable tStopItems as List
+      split tStop by ","
+      put the result into tStopItems
+
+      -- Add ramp stop with 4 (RGB) or 5 (RGBA) elements, otherwise ignore
+      if the number of elements in tStopItems is 5 then
+         push gradient stop at (tStopItems[1] parsed as number) with color [(tStopItems[2] parsed as number / 255), (tStopItems[3] parsed as number / 255), (tStopItems[4] parsed as number / 255),(tStopItems[5] parsed as number / 255)] onto mGradientRamp
+      else if the number of elements in tStopItems is 4 then
+         push gradient stop at (tStopItems[1] parsed as number) with color [(tStopItems[2] parsed as number / 255), (tStopItems[3] parsed as number / 255), (tStopItems[4] parsed as number / 255),1] onto mGradientRamp
+      end if
+   end repeat
+
+   reorderGradientRamp()
+   redraw all
+end handler
+
+/**
+Syntax: set the selectedStop of <widget> to <pIndex>
+Syntax: get the selectedStop of <widget>
+
+Summary: The <selectedStop> property controls which gradient stop (if any) is selected.
+
+pIndex: An integer between 0 and the current number of gradient stops
+
+Example:
+    -- Create 10 equally spaced stops with random color values
+    local tGradientStops, tStop
+    repeat with x = 1 to 10
+        put x/10 & comma & random(255) & comma & random(255) & comma & random(255) & comma & random(255) into tStop
+        if tGradientStops is empty then
+            put tStop into tGradientStops
+        else
+            put return & tStop after tGradientStops
+        end if
+    end repeat
+    set the gradientStops of widget "Gradient Ramp Editor" to tGradientStops
+
+    -- if no stop is selected, select the first one
+    if the selectedStop of widget "Gradient Ramp Editor" is 0 then
+        set the selectedStop of widget "Gradient Ramp Editor" to 1
+    end if
+
+
+Description:
+If any gradient stop is selected, its index is returned by the <selectedStop>
+property. Otherwise the property returns 0. Setting the <selectedStop> property
+to 0 causes the currently selected gradient stop to be deselected.
+
+**/
+property selectedStop get mCurrentlySelectedStopIndex set setSelectedStop
+
+public handler setSelectedStop(in pIndex as Integer) returns nothing
+   if pIndex < 0 or pIndex > the number of elements in mGradientRamp then
+      throw "Invalid selection index"
+      return
+    end if
+
+   if pIndex is not mCurrentlySelectedStopIndex then
+      put pIndex into mCurrentlySelectedStopIndex
+      post "selectedStopChanged" with [pIndex]
+      redraw all
+   end if
+end handler
+
+----------------------------------------------------------------------------------------------------
+-- System On* Messages
+----------------------------------------------------------------------------------------------------
+
+private variable mIsDraggingStop as Boolean
+
+public handler OnCreate() returns nothing
+   put false into mIsDraggingStop
+   put 0 into mCurrentlySelectedStopIndex
+
+   put the empty list into mGradientRamp
+   push gradient stop at 0 with color [1, 0, 0] onto mGradientRamp
+   push gradient stop at 0.5 with color [0, 1, 0, 0.5] onto mGradientRamp
+   push gradient stop at 1 with color [0, 0, 1] onto mGradientRamp
+
+   configureDimensions()
+end handler
+
+public handler OnGeometryChanged() returns nothing
+   configureDimensions()
+end handler
+
+public handler OnMouseDown() returns nothing
+   setSelectedStop(xCoordToStopNumber(the x of the mouse position))
+   put mCurrentlySelectedStopIndex is not 0 into mIsDraggingStop
+   redraw all
+end handler
+
+public handler OnMouseMove() returns nothing
+   if mIsDraggingStop then
+      variable tOffset as Number
+      put clampToRange(xCoordToGradientOffset(the x of the mouse position) / 100, 0, 1) into tOffset
+      if tOffset is not the offset of mGradientRamp[mCurrentlySelectedStopIndex] then
+         set the offset of mGradientRamp[mCurrentlySelectedStopIndex] to tOffset
+         -- Dragging the stops around can potentially mean that the ramp is no longer ordered (by offset).
+         -- Reorder the ramp to put things back into line (required for gradient rendering).
+         reorderGradientRamp()
+         redraw all
+         gradientStopsChanged()
+      end if 
+   end if
+end handler
+
+public handler OnMouseUp() returns nothing
+   if the click count is 2 then
+      OnMouseDoubleUp()
+   else
+      put false into mIsDraggingStop
+      gradientStopsChanged()
+   end if
+end handler
+
+public handler OnMouseDoubleUp() returns nothing
+   put false into mIsDraggingStop
+   setSelectedStop(xCoordToStopNumber(the x of the mouse position))
+
+   if mCurrentlySelectedStopIndex is 0 then
+      -- Create a new stop if we MouseDoubleUp in a blank area
+      --
+      variable tOffset as Number
+      put xCoordToGradientOffset(the x of the mouse position) into tOffset
+      if tOffset >= 0 and tOffset <= 100 then
+         push gradient stop at (tOffset / 100) with color [0.0, 0.0, 0.0] onto mGradientRamp
+         setSelectedStop(the number of elements in mGradientRamp)
+         -- We initially place the new stop at the end of the ramp. Calling reorder will make
+         -- sure the new stop is correctly positioned within the ramp.
+         reorderGradientRamp()
+      end if
+   else if the click button is 3 then
+      -- Delete the stop if we right MouseDoubleUp on an exisiting stop
+      --
+      delete element mCurrentlySelectedStopIndex of mGradientRamp
+      setSelectedStop(0)
+   else
+      -- Edit the stop's color if we (left) MouseDoubleUp on an existing stop
+      --
+      variable tColor as String
+      put the empty string into tColor
+      put numberToString((the red of the color of mGradientRamp[mCurrentlySelectedStopIndex]) * 255) & "," after tColor
+      put numberToString((the green of the color of mGradientRamp[mCurrentlySelectedStopIndex]) * 255) & "," after tColor
+      put numberToString((the blue of the color of mGradientRamp[mCurrentlySelectedStopIndex]) * 255) after tColor
+
+      execute script "answer color with" && tColor & "; return it"
+      put the result into tColor
+
+      if tColor is not the empty string then
+         variable tColorItems as List
+         split tColor by ","
+         put the result into tColorItems
+
+         variable tNewColor as Color
+         put color [0.0, 0.0, 0.0, the alpha of the color  of mGradientRamp[mCurrentlySelectedStopIndex]] into tNewColor
+         set the red of tNewColor to tColorItems[1] parsed as number / 255
+         set the green of tNewColor to tColorItems[2] parsed as number / 255
+         set the blue of tNewColor to tColorItems[3] parsed as number / 255
+         set the color of mGradientRamp[mCurrentlySelectedStopIndex] to tNewColor
+      end if
+   end if
+
+   redraw all
+   gradientStopsChanged()
+end handler
+
+public handler onMouseCancel() returns nothing
+   put false into mIsDraggingStop
+   setSelectedStop(xCoordToStopNumber(the x of the mouse position))
+   redraw all
+   gradientStopsChanged()
+end handler
+
+public handler OnKeyPress(in pKey as String) returns nothing
+   if not mIsDraggingStop and mCurrentlySelectedStopIndex is not 0 then
+      delete element mCurrentlySelectedStopIndex of mGradientRamp
+      setSelectedStop(0)
+      reorderGradientRamp()
+      redraw all
+   end if
+end handler
+
+public handler OnPaint() returns nothing
+   -- Draw the checker board that we place behind the gradient.
+   paintCheckerboard()
+
+   -- Draw the gradient on top of the checkerboard.
+   paintGradient()
+
+   -- Draw the ruler above and below the gradient.
+   paintRulerBottom()
+
+   -- Draw the ramp points on top of the ruler.
+   paintRampEditors()
+end handler
+
+----------------------------------------------------------------------------------------------------
+-- Private handlers
+----------------------------------------------------------------------------------------------------
+private handler paintCheckerboard() returns nothing
+   -- Fill the entire widget canvas with the checkerboard then clip to the gradient region.
+   variable tY as Real
+   variable tX as Real
+
+   begin layer on this canvas
+      variable tStartAtZero as Boolean
+      put true into tStartAtZero
+      put 0 into tY
+
+      repeat while tY < my height
+         if tStartAtZero then
+            put 0 into tX
+         else
+            put mCheckerBoardSquareSize into tX
+         end if
+
+         repeat while tX < my width
+            add rectangle path of rectangle [tX , tY, tX + mCheckerBoardSquareSize, tY + mCheckerBoardSquareSize] to this canvas
+            add 2 *  mCheckerBoardSquareSize to tX
+         end repeat
+
+         put not tStartAtZero into tStartAtZero
+         add mCheckerBoardSquareSize to tY
+      end repeat
+
+      set the paint of this canvas to solid paint with mCheckerBoardColor
+      clip to mGradientRectangle on this canvas
+      fill this canvas
+   end layer on this canvas
+end handler
+
+private handler paintGradient() returns nothing
+   if mGradientRamp is not empty then
+      variable tGradient as Gradient
+      put linear gradient with ramp mGradientRamp into tGradient
+      set the from of tGradient to point [the left of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
+      set the to of tGradient to point [the right of mGradientRectangle, (the top of mGradientRectangle + the bottom of mGradientRectangle) / 2]
+      set the via of tGradient to point [the left of mGradientRectangle, the bottom of mGradientRectangle]
+      add rectangle path of mGradientRectangle to this canvas
+      set the paint of this canvas to tGradient
+      fill this canvas
+   end if
+end handler
+
+private handler paintRulerBottom() returns nothing
+   variable tY as Real
+   variable tX as Real
+
+   set the font of this canvas to font (the name of my font) at size mRulerTextSize
+   set the paint of this canvas to solid paint with mRulerColor
+   put mMarginLeft into tX
+
+   variable tRulerPos as Integer
+   put 0 into tRulerPos
+   repeat while tRulerPos <= 100
+      if tRulerPos mod mRulerTextIncrement is 0 then
+         put mMarginTop into tY
+         fill text numberToString(tRulerPos) at center of rectangle [tX - 5, tY, tX + 5, tY + mRulerTextSize] on this canvas
+         move to point [tX, tY + mRulerTextSize] on this canvas
+         line to point [tX, tY + mRulerTextSize + mRulerLineHeight] on this canvas
+
+         put my height - mMarginBottom into tY
+         fill text numberToString(tRulerPos) at center of rectangle [tX - 5, tY - mRulerTextSize + 1, tX + 5, tY] on this canvas
+         move to point [tX, tY - mRulerTextSize - mRulerLineHeight] on this canvas
+         line to point [tX, tY - mRulerTextSize] on this canvas
+
+         set the stroke width of this canvas to 2
+         stroke this canvas
+      else
+         put mMarginTop into tY
+         move to point [tX, tY + mRulerTextSize + 0.5 * mRulerLineHeight] on this canvas
+         line to point [tX, tY + mRulerTextSize + mRulerLineHeight] on this canvas
+
+         put my height - mMarginBottom into tY
+         move to point [tX, tY - mRulerTextSize - mRulerLineHeight] on this canvas
+         line to point [tX, tY - mRulerTextSize - mRulerLineHeight * 0.5] on this canvas
+
+         set the stroke width of this canvas to 0
+         stroke this canvas
+      end if
+
+      add mRulerLineIncrement to tRulerPos
+      add mRulerSpacing * mRulerLineIncrement to tX
+   end repeat
+end handler
+
+private handler paintRampEditors() returns nothing
+   variable tY as Real
+   variable tX as Real
+   variable tHasSelected as Boolean
+   put false into tHasSelected
+   variable tStopIndex as Integer
+   put 1 into tStopIndex
+
+   variable tStop as GradientStop
+   repeat for each element tStop in mGradientRamp
+      put xCoordFromGradientOffset((the offset of tStop) * 100) into tX
+      put the bottom of mGradientRectangle into tY
+
+      if tStopIndex = mCurrentlySelectedStopIndex then
+         variable tSelStop as GradientStop
+         put true into tHasSelected
+         put  tStop into tSelStop
+         add 1 to tStopIndex
+         next repeat
+      end if
+
+      drawStop (tX, tY, tStop) -- BN
+
+      add 1 to tStopIndex
+
+   end repeat
+
+   if tHasSelected then
+      put xCoordFromGradientOffset((the offset of tSelStop) * 100) into tX
+      put the bottom of mGradientRectangle into tY
+
+      drawStop (tX, tY, tSelStop) -- BN
+
+      -- If this is the selected stop then draw an extra ramp point above the gradient and a line linking it.
+      put the top of mGradientRectangle into tY
+      move to point [tX, tY] on this canvas
+      line to point [tX, tY - mRulerLineHeight] on this canvas
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+
+      set the stroke width of this canvas to 2
+      stroke this canvas
+      variable tPath as Path
+      put the empty path into tPath
+
+      move to point [tX, tY - mRulerLineHeight] on tPath
+      line to point [tX - 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] on tPath
+      line to point [tX + 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] on tPath
+      line to point [tX, tY - mRulerLineHeight] on tPath
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+      set the stroke width of this canvas to 2
+      stroke tPath on this canvas
+      set the paint of this canvas to solid paint with color [1.0, 1.0, 1.0]
+      fill tPath on this canvas
+      put the empty path into tPath
+      put rectangle path of rectangle [tX - 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 1.5 * mGradientHandleSize, tX + 0.5 * mGradientHandleSize, tY - mRulerLineHeight - 0.5 * mGradientHandleSize] into tPath
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+      set the stroke width of this canvas to 2
+      stroke tPath on this canvas
+      set the paint of this canvas to solid paint with the color of tSelStop
+      fill tPath on this canvas
+
+      move to point [tX, the top of mGradientRectangle] on this canvas
+      line to point [tX, the bottom of mGradientRectangle] on this canvas
+      set the stroke width of this canvas to 2
+      set the paint of this canvas to solid paint with mGradientHandleBorderColor
+      stroke this canvas
+      end if
+
+end handler
+
+private handler DrawStop (in tX as Real, tY as Real, tStop as GradientStop) returns nothing
+   move to point [tX, tY] on this canvas
+   line to point [tX, tY + mRulerLineHeight] on this canvas
+   set the paint of this canvas to solid paint with mGradientHandleBorderColor
+   set the stroke width of this canvas to 2
+   stroke this canvas
+
+   variable tPath as Path
+   put the empty path into tPath
+   move to point [tX, tY + mRulerLineHeight] on tPath
+   line to point [tX - 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize] on tPath
+   line to point [tX + 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize] on tPath
+   line to point [tX, tY + mRulerLineHeight] on tPath
+   set the paint of this canvas to solid paint with mGradientHandleBorderColor
+   set the stroke width of this canvas to 2
+   stroke tPath on this canvas
+
+   set the paint of this canvas to solid paint with color [1, 1, 1]
+   fill tPath on this canvas
+   put the empty path into tPath
+   put rectangle path of rectangle [tX - 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 0.5 * mGradientHandleSize, tX + 0.5 * mGradientHandleSize, tY + mRulerLineHeight + 1.5 * mGradientHandleSize] into tPath
+   set the paint of this canvas to solid paint with mGradientHandleBorderColor
+   set the stroke width of this canvas to 2
+   stroke tPath on this canvas
+   set the paint of this canvas to solid paint with the color of tStop
+   fill tPath on this canvas
+end handler
+
+private handler gradientStopsChanged() returns nothing
+   post "gradientStopsChanged" to my script object
+end handler
+
+private handler reorderGradientRamp() returns nothing
+   variable tRampIsInOrder as Boolean
+   put true into tRampIsInOrder
+
+   variable tLastOffset as Real
+   put 0.0 into tLastOffset
+
+   variable tStopIndex as Integer
+   put 1 into tStopIndex
+
+   variable tStop as GradientStop
+   repeat for each element tStop in mGradientRamp
+      if the offset of tStop < tLastOffset then
+         put mGradientRamp[tStopIndex - 1] into mGradientRamp[tStopIndex]
+         put tStop into mGradientRamp[tStopIndex - 1]
+         put false into tRampIsInOrder
+
+         if mCurrentlySelectedStopIndex is tStopIndex then
+            setSelectedStop(tStopIndex - 1)
+         else if mCurrentlySelectedStopIndex is tStopIndex - 1 then
+            setSelectedStop(tStopIndex)
+         end if
+      else
+         put the offset of tStop into tLastOffset
+      end if
+
+      add 1 to tStopIndex
+   end repeat
+
+   if not tRampIsInOrder then
+      reorderGradientRamp()
+   end if
+end handler
+
+private handler xCoordToGradientOffset(in pX as Number) returns Number
+   return the rounded of ((pX - mMarginLeft) / mRulerSpacing)
+end handler
+
+private handler xCoordFromGradientOffset(in pOffset as Number) returns Number
+   return mMarginLeft + pOffset * mRulerSpacing
+end handler
+
+private handler xCoordToStopNumber(in pX as Number) returns Integer
+   variable tRampNumber as Integer
+   put 1 into tRampNumber
+   variable tHits as List
+   put the empty list into tHits
+
+   variable tStop as GradientStop
+   repeat for each element tStop in mGradientRamp
+      variable tStopX as Number
+      put xCoordFromGradientOffset((the offset of tStop) * 100 ) into tStopX
+      if pX >= (tStopX - mGradientHandleSize * 0.5) and pX <= (tStopX + mGradientHandleSize * 0.5) then
+         push tRampNumber onto tHits
+      end if
+      add 1 to tRampNumber
+   end repeat
+
+   if the number of elements in tHits = 0 then
+      return 0
+   end if
+
+   variable tAHit as Number
+
+   repeat for each element tAHit in tHits
+      if tAHit = mCurrentlySelectedStopIndex then
+         return mCurrentlySelectedStopIndex
+      end if
+   end repeat
+
+   return element 1 of tHits
+end handler
+
+----------------------------------------------------------------------------------------------------
+-- Utility handlers
+----------------------------------------------------------------------------------------------------
+
+private handler numberToString(in pNumber as Number) returns String
+   variable tString as String
+   put (the rounded of pNumber) formatted as string into tString
+   return char 1 to (the offset of "."  in tString - 1) of tString
+end handler
+
+private handler clampToRange(in pValue as Number, pMin as Number, pMax as Number) returns Number
+   return the minimum of (the maximum of pValue and pMin) and pMax
+end handler
+
+----------------------------------------------------------------------------------------------------
+
+end widget

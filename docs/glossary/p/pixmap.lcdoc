@@ -1,0 +1,14 @@
+Name: pixmap
+
+Synonyms: pixmapped,pixmap,pix-mapped,pix-map
+
+Type: glossary
+
+Description:
+A picture consisting of rows and columns of <pixel|pixels>, with a color assigned to each <pixel>. 
+ 
+Also, a data structure in memory that holds such a picture.
+
+References: pixel (glossary)
+
+Tags: multimedia

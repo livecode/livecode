@@ -1,0 +1,12 @@
+Name: arm
+
+Synonyms: armed,arming,arm
+
+Type: glossary
+
+Description:
+To change the appearance of a <control> (such as a <button>) when the <mouse pointer> moves into it.
+
+References: control (glossary), button (glossary), mouse pointer (glossary)
+
+Tags: ui
