@@ -134,8 +134,9 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
 	{
         if (s_pick_photo_err != nil)
         {
-            /* UNCHECKED */ MCStringCreateWithCString(s_pick_photo_err, r_result);
-            delete s_pick_photo_err;
+			/* UNCHECKED */ MCStringCreateWithCString(s_pick_photo_err, r_result);
+			MCCStringFree(s_pick_photo_err);
+			s_pick_photo_err = nil;
         }
         else
         /* UNCHECKED */MCStringCreateWithCString("cancel", r_result);
