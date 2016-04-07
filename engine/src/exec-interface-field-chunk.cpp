@@ -383,7 +383,7 @@ template<typename T> struct VectorFieldPropType
 
     static bool equal(const stack_type& a, const stack_type& b)
     {
-        if (a . list . count == 0 && b . list . count == 0)
+        if (a . list . count == 0 && a . list . count == 0)
             return true;
         else if (a . list . count != b . list . count)
             return false;
