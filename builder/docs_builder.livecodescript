@@ -1987,6 +1987,8 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
       put RepoBusinessDocsFolder() & slash & "guides" into tBusinessGuides
       addFolderToListIfExists tBusinessGuides, false, xFolders
    end if
+
+   addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
 end docsBuilderGetGuideFolders
 
 private command docsBuilderAddMergExtFolders pEdition, @xFolders
