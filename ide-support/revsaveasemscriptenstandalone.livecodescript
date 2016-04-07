@@ -472,7 +472,7 @@ end getAssetFilesFromPath
 -- and then returns the modified stack file's contents as data. 
 -- <pStackFile> is not modified.
 private function getPreparedStackAsData pStackFile, pBuildFolder
-   local tStack, tError, tResult
+   local tStack, tDefaultStack, tError, tResult
    local tTempFile, tCleanTempFile
    local tStandaloneSettings
    local tStackData
@@ -505,8 +505,7 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
             set the customProperties["cRevStandaloneSettings"] of tStack to tStandaloneSettings
          end if
          
-         -- Save the modified stack to the temporary file, and
-         -- destroy it
+         -- Save the modified stack to the temporary file
          lock messages
          lock screen
          
@@ -515,10 +514,13 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          if tResult is not empty then
             throw tTempFile & ":" && tResult
          end if
-         
          set the filename of tStack to pStackFile
-         set the cantDelete of tStack to false
-         delete tStack
+         
+         -- Revert to unmodified state
+         put the defaultStack into tDefaultStack
+         set the defaultStack to tStack
+         revert
+         set the defaultStack to tDefaultStack
          
          unlock screen
          unlock messages
