@@ -31,7 +31,7 @@ put the effective htmlText of field "description"
 Description:
 Use the <HTMLText> <property> to display text from a web page in a <field(keyword)>, or copy or export a <field(object)|field's> contents with the text <format|formatting> intact.
 The <HTMLText> of a <field(keyword)> or <chunk> is a <string>.
-If the effective keyword is specified the <htmlText> property retuns the html of the field with explicit formatting. For example if the <textFont> of the stack is set this is not included in the <htmlText> but is inlcuded in the effective <htmlText>.
+If the effective keyword is specified the <HTMLText> property retuns the html of the field with explicit formatting. For example if the <textFont> of the stack is set this is not included in the <HTMLText> but is inlcuded in the effective <HTMLText>.
 
 The <HTMLText> <property> is a representation of the styled text of the <field(keyword)>. LiveCode uses a subset of <HTML> tags that includes font, size, style, and text color information.
 
