@@ -48,15 +48,11 @@ Use the <URL> <keyword> to access the contents of a local <file> or a <file> acc
 A <URL> is a method of designating a file or other resource. You can use a <URL> like any other container.
 You can get the contents of a <URL> or use its contents in any expression. LiveCode supports the following <URL> schemes: 
 
-http: a page from a web server
-
-ftp: a directory or file on an FTP server
-
-<file>: a text file on the local disk (not on a server)
-
-binfile: a binary file
-
-resfile: on Mac OS and OS X systems, the resource fork of a file
+* http: a page from a web server
+* ftp: a directory or file on an FTP server
+* file: a text file on the local disk (not on a server)
+* binfile: a binary file
+* resfile: on Mac OS and OS X systems, the resource fork of a file
 
 All actions that refer to a <URL> container are blocking: that is, the handler pauses until LiveCode is finished accessing the <URL>. Since fetching a web page may take some time due to network lag, accessing URLs may take long enough to be noticeable to the user. To avoid this delay, use the load command (which is non-blocking) to cache web pages before you need them.
 
