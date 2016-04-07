@@ -2039,8 +2039,13 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          // make sure we only copy the required helper process executable
          put revListFiles(tCEFResources) into tCEFFiles
          filter lines of tCEFFiles not matching "*-cefprocess"
-         // icudtl.dat needs to be placed alongside the executable
-         filter lines of tCEFFiles not matching "icudtl.dat"
+
+         // The following files need to be placed alongside the executable
+         local tCefTopLevelFiles = "icudtl.dat,natives_blob.bin,snapshot_blob.bin"
+         replace comma with return in tCefTopLevelFiles
+         repeat for each line tFile in tCefTopLevelFiles
+            filter lines of tCEFFiles not matching tFile
+         end repeat
 
          // Copy files to CEF resource folder.
          repeat for each line tCEFFile in tCEFFiles
@@ -2056,7 +2061,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          end if
 
          // Copy files to standalone folder
-         put "icudtl.dat" & return into tCEFFiles
+         put tCefTopLevelFiles & return into tCEFFiles
          if pCopyRevBrowserResources then
             put "revbrowser-cefprocess" & return after tCEFFiles
          end if

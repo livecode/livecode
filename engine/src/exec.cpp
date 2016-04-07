@@ -1777,6 +1777,8 @@ static bool MCPropertyParsePointList(MCStringRef p_input, char_t p_delimiter, ui
 
 void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCExecValue& r_value)
 {
+    MCAssert(prop -> getter != nil);
+    
     switch(prop -> type)
     {
         case kMCPropertyTypeAny:
@@ -2596,6 +2598,8 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
 
 void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *mark, MCExecValue p_value)
 {
+    MCAssert(prop -> setter != nil);
+    
     switch(prop -> type)
     {
         case kMCPropertyTypeAny:

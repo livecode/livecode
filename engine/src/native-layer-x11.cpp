@@ -222,6 +222,8 @@ void MCNativeLayerX11::doSetVisible(bool p_visible)
 
 	if (p_visible)
 		doSetGeometry(m_object->getrect());
+		
+	updateInputShape();
 }
 
 void MCNativeLayerX11::doRelayer()
