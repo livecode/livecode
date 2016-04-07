@@ -2043,7 +2043,7 @@ void MCIs::compile(MCSyntaxFactoryRef ctxt)
 				t_method = form == IT_NORMAL ? kMCMathEvalIsAnIntegerMethodInfo : kMCMathEvalIsNotAnIntegerMethodInfo;
 				break;
 			case IV_NUMBER:
-				t_method = form == IT_NORMAL ? kMCMathEvalIsANumberMethodInfo : kMCMathEvalIsANumberMethodInfo;
+				t_method = form == IT_NORMAL ? kMCMathEvalIsANumberMethodInfo : kMCMathEvalIsNotANumberMethodInfo;
 				break;
 			case IV_LOGICAL:
 				t_method = form == IT_NORMAL ? kMCLogicEvalIsABooleanMethodInfo : kMCLogicEvalIsNotABooleanMethodInfo;
