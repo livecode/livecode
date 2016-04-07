@@ -76,6 +76,41 @@ end toolsBuilderRunBundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
+private command toolsBuilderPrepareMergExt pMergExtVersion, pEdition, pPlatform
+   -- Ensure that the MergExt bundle is downloaded and unpacked
+   builderMergExtUnpack pMergExtVersion, (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
+   
+   -- Remove un-needed files from the unpacked MergExt collection
+   local tOldFolder
+   local tCollectionFolder
+   put builderMergExtFolder() & "/" & "MergExt" into tCollectionFolder
+   put the defaultFolder into tOldFolder
+   set the defaultFolder to tCollectionFolder
+   repeat for each line tExtension in the folders
+      -- Skip special names
+      if tExtension is empty or tExtension is "." or tExtension is ".." then next repeat
+      
+      -- Enter the extension directory
+      set the defaultFolder to tCollectionFolder & "/" & tExtension
+      
+      -- Remove any iOS code if we're not building the OSX installer
+      if pPlatform is not "macosx" then
+         get shell("rm -rf *.lcext")
+      end if
+      
+      -- If the directory contains no code any more, remove it
+      local tFiles
+      put the files & return & the folders into tFiles
+      filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
+      if tFiles is empty then
+         set the defaultFolder to tCollectionFolder
+         get shell(merge("rm -rf '[[tExtension]]'"))
+      end if
+   end repeat
+end toolsBuilderPrepareMergExt
+
+////////////////////////////////////////////////////////////////////////////////
+
 private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFolders, pIdeFolder, pDocsFolder
    local tPackageFile
    
@@ -106,6 +141,9 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
    builderEnsureFolderForFile tPackageFile
    
+   -- Ensure that MergExt is available for inclusion
+   toolsBuilderPrepareMergExt "2016-4-1", pEdition, pPlatform
+   
    --return tPackageFile
    
    -- Configure the package compiler appropriately
@@ -131,6 +169,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
+   packageCompilerConfigureSource tPackager, "mergext", builderMergExtFolder()
    if tEditionType is among the items of "indy,business" then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
@@ -237,6 +276,7 @@ on toolsBuilderPackageReport pType, pMessage, pLine
    end if
    builderLog pType, pMessage
 end toolsBuilderPackageReport
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
