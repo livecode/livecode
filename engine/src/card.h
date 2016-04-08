@@ -108,6 +108,8 @@ public:
 	virtual void relayercontrol_remove(MCControl *control);
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
+	virtual void geometrychanged(const MCRectangle &p_rect);
+
     virtual void scheduledelete(bool p_is_child);
     
 	void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);

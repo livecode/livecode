@@ -2027,6 +2027,35 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	return ES_NORMAL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+struct ViewportChangedVisitor: public MCObjectVisitor
+{
+	MCRectangle m_viewport_rect;
+
+	ViewportChangedVisitor(const MCRectangle &p_viewport_rect)
+		: m_viewport_rect(p_viewport_rect)
+	{
+	}
+
+	bool OnObject(MCObject *p_object)
+	{
+		p_object->viewportgeometrychanged(m_viewport_rect);
+		return true;
+	}
+};
+
+void MCCard::geometrychanged(const MCRectangle &p_rect)
+{
+	MCObject::geometrychanged(p_rect);
+
+	// notify children of viewport change
+	ViewportChangedVisitor t_visitor(p_rect);
+	visit_children(kMCObjectVisitorHeirarchical, 0, &t_visitor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
    // MCNewAutoNameRef t_name;
@@ -2826,6 +2855,8 @@ void MCCard::resize(uint2 width, uint2 height)
 	rect.x = rect.y = 0;
 	rect.width = width;
 	rect.height = height;
+
+	geometrychanged(rect);
 }
 
 MCImage *MCCard::createimage()
