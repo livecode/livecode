@@ -404,6 +404,8 @@ private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
 
+private variable mOldTooltip as optional String
+
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
 constant kStrokeWidth is 1
@@ -762,6 +764,7 @@ public handler OnMouseMove() returns nothing
                 put tHoverIcon into mHoverIcon
                 put true into tRedraw
             end if
+            setHoverTooltip(tHoverIcon)
         end if
         
         if tRedraw then
@@ -842,7 +845,15 @@ public handler OnClick() returns nothing
 	
 	// Check if the delete icon was clicked
 	if mHoverIcon is "delete" then
-		removePath(tData["path"])
+        variable tPrompt as String
+        variable tPath
+        put tData["path"] into tPath
+        combine tPath with ","
+        put "Really delete array key" && the result & "?" into tPrompt
+        execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
+        if the result is "OK" then
+            removePath(tData["path"])
+        end if
 		return
 	end if
 	
@@ -960,6 +971,22 @@ public handler OnGeometryChanged()
 		put true into mRecalculate
 		put true into mRecalculateFit
 	end if
+end handler
+
+private handler SetHoverTooltip(in pIconString as String) returns nothing
+    if mOldTooltip is nothing then
+        put property "tooltip" of my script object into mOldTooltip
+    end if
+
+    variable tTooltip as String
+    if pIconString is "delete" then
+        put "Delete array key" into tTooltip
+    else if pIconString is "add" then
+        put "Add new array key" into tTooltip
+    else
+        put mOldTooltip into tTooltip
+    end if
+    set property "tooltip" of my script object to tTooltip
 end handler
 
 --------------------------------------------------------------------------------
