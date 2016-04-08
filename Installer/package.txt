@@ -360,6 +360,7 @@ component Documentation
 	into [[ToolsFolder]]/Documentation place
 		rfolder "repo:docs/guides"
 		rfolder "ide:Documentation/guides"
+		rfolder "docs:guides"
 	
 	into [[ToolsFolder]]/Documentation/html_viewer place
 		file "ide:Documentation/html_viewer/api.html.template"
@@ -371,9 +372,6 @@ component Documentation
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
-
-	into [[ToolsFolder]]/Documentation/guides place
-		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
@@ -751,9 +749,13 @@ component Externals.CEF.Linux
 		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
 		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
 		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
+		file linux-[[TargetArchitecture]]:CEF/natives_blob.bin
+		file linux-[[TargetArchitecture]]:CEF/snapshot_blob.bin
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
 		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
+		file linux-[[TargetArchitecture]]:CEF/natives_blob.bin
+		file linux-[[TargetArchitecture]]:CEF/snapshot_blob.bin
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
@@ -774,6 +776,8 @@ component Externals.CEF.Windows
 		file windows:CEF/cef_100_percent.pak
 		file windows:CEF/cef_200_percent.pak
 		file windows:CEF/icudtl.dat
+		file windows:CEF/natives_blob.bin
+		file windows:CEF/snapshot_blob.bin
 
 ////////////////////////////////////////////////////////////////////////////////
 

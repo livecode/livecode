@@ -319,6 +319,12 @@ function builderMergExtFolder
    return builderRepoFolder() & slash & "MergExt-Unpacked"
 end builderMergExtFolder
 
+-- Folder for storing guide Markdown files that are generated as part
+-- of the build process.
+function builderBuiltGuidesFolder
+   return builderBuiltDocsFolder() & slash & "guides"
+end builderBuiltGuidesFolder
+
 function builderCommercialFolder
    set the itemDel to slash
    return item 1 to -4 of the filename of me

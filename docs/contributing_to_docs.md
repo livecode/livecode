@@ -306,15 +306,15 @@ which shows all your outstanding pull requests).
 
 **Click on the 'Files Changed' tab**
 
-![](pull-request.png)
+![](images/pull-request.png)
 
 **Click on the pencil again to make further changes**
 
-![](edit-file-again.png)
+![](images/edit-file-again.png)
 
 **Commit your changes to the same branch**
 
-![](commit-new-changes.png)
+![](images/commit-new-changes.png)
 
 The pull request will be automatically updated.
 
@@ -445,7 +445,7 @@ Push the changes to your fork of the repo
 
 `git push`
 
-Navigate to your fork on the Git website, https://github.com/"<your user name>"/livecode/
+Navigate to your fork on the Git website, `https://github.com/<your user name>/livecode/`
 
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 

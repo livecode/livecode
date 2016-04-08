@@ -158,6 +158,16 @@ on TestAssertBroken pDescription, pExpectTrue, pReasonBroken
    _TestOutput pExpectTrue, pDescription, "TODO", pReasonBroken
 end TestAssertBroken
 
+on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode
+   local tError
+   try
+      dispatch pHandler to pTarget
+    catch tError
+    end try
+    
+    TestAssert pDescription, pErrorCode is item 1 of line 1 of tError
+end TestAssertThrow
+
 on ErrorDialog executionError, parseError
    write executionError & return to stderr
    quit 1

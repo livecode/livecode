@@ -237,7 +237,7 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
                exit repeat
             end if
             if the platform is "macos" then -- stat it and set some flags
-               local tUser, tGroup, tPermissions
+               local tUser, tGroup
                set the itemDelimiter to "/"
                set the defaultFolder to pSource & "/" & item 1 to -2 of tResource
                get the detailed folders
@@ -245,12 +245,8 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
                set the itemDelimiter to ","
                put item 8 of it into tUser
                put item 9 of it into tGroup
-               put item 10 of it into tPermissions
                if tUser is not empty or tGroup is not empty then
                   get shell("chown" && tUser & ":" & tGroup && quote & pTarget & "/" & char 1 to -2 of tResource & quote)
-               end if
-               if tPermissions is not empty and tPermissions is a number then
-                  get shell("chmod" && tPermissions && quote & pTarget & "/" & char 1 to -2 of tResource & quote)
                end if
             end if
             # Creating a folder takes no time, so do not send a callback.

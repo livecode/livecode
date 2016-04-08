@@ -78,6 +78,11 @@ private function OutputGetUpdatesFilename tSuffix, pVersion
    return sOutputPath & slash & tBasename & "." & tSuffix
 end OutputGetUpdatesFilename
 
+private function OutputGetGuideFilename
+   builderEnsureFolder builderBuiltGuidesFolder()
+   return builderBuiltGuidesFolder() & slash & "Release Notes.md"
+end OutputGetGuideFilename
+
 private function OutputGetNotesUrl tSuffix, pVersion
    put replaceText(pVersion, "[-,\.]", "_") into pVersion
    
@@ -93,6 +98,8 @@ private command OutputNotes
    OutputNotesMarkdown
    OutputNotesHtml
    OutputNotesPdf
+
+   OutputNotesGuide
 end OutputNotes
 
 private command OutputNotesMarkdown
@@ -101,6 +108,13 @@ private command OutputNotesMarkdown
    builderLog "report", merge("Writing [[tPath]]")
    FileSetUTF8Contents tPath, sMarkdownText["notes"]
 end OutputNotesMarkdown
+
+private command OutputNotesGuide
+   local tPath
+   put OutputGetGuideFilename() into tPath
+   builderLog "report", merge("Writing [[tPath]]")
+   FileSetUTF8Contents tPath, sMarkdownText["notes"]
+end OutputNotesGuide
 
 private command OutputNotesHtml
    -- Try to do the minimum possible escaping to be able to insert the
@@ -268,7 +282,7 @@ Single-line files are added to the table of bugfixes.  Multi-line
 files get their own section in the release notes.
 */
 private command V1NotesCreate pType, pReadableType, pTitle
-   builderLog "report", merge("Creating [[pType]] release notes")
+   builderLog "report", merge("Creating [[pReadableType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
    MarkdownAppend "updates", merge("# [[pTitle]]")
@@ -547,7 +561,7 @@ end V1NotesGenerateBlock
 ----------------------------------------------------------------
 
 private command V2NotesCreate pType, pReadableType, pTitle
-   builderLog "report", merge("Creating [[pType]] release notes")
+   builderLog "report", merge("Creating [[pReadableType]] release notes")
    
    MarkdownAppend "notes", merge("# [[pTitle]]")
    MarkdownAppend "updates", merge("# [[pTitle]]")

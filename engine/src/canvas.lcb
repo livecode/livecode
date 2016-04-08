@@ -2839,10 +2839,10 @@ Example:
 	move to point [25, 50] on tPath
 
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on tPath
+	curve through point [25,100] to point [50,100] on tPath
 
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
-	curve through [50,75] then [50,50] to [25,50] on tPath
+	curve through point [50,75] then point [50,50] to point [25,50] on tPath
 
 Tags:	Canvas
 */
@@ -4721,10 +4721,10 @@ Example:
 	move to point [25, 50] on this canvas
 
 	// Continue path with a curve through 25,100 to 50,100
-	curve through [25,100] to [50,100] on this canvas
+	curve through point [25,100] to point [50,100] on this canvas
 
 	// Continue path with a curve through 50,75 then 50,50 to 50,100
-	curve through [50,75] then [50,50] to [25,50] on this canvas
+	curve through point [50,75] then point [50,50] to point [25,50] on this canvas
 
 	// stroke the canvas path
 	stroke this canvas
