@@ -18,7 +18,7 @@ Example:
 get URL "http://www.xworlds.com/index.html"
 
 Example:
-put URL "binfile:/Mac HD/Files/example.gif" into image "Example Logo"
+put URL "binfile:/Users/myuser/Files/example.gif" into image "Example Logo"
 
 Example:
 post field "Results" to URL "http://www.example.org/current.txt"
@@ -26,16 +26,33 @@ post field "Results" to URL "http://www.example.org/current.txt"
 Example:
 get URL "http://www.xworlds.com/index.html"
 
+Example:
+put "Hello World" into URL "file:/Users/myuser/Documents/sample.txt"
+
+Example:
+# Writing the contents of a field to an external file, preserving text encoding
+on textSave
+   put "всем привет" into field "russiantext"
+   put textEncode(field "russiantext","UTF-8") into "binfile:/Users/myuser/Documents/russtext.txt"
+end textSave
+# Reading contents of a file into LiveCode, preserving text encoding
+on textRead
+   local tText
+   put URL "binfile:/Users/myuser/Documents/russtext.txt" into tText
+   put textDecode(tText,"UTF-8") into field "russiantext"
+end textRead
+
 Description:
 Use the <URL> <keyword> to access the contents of a local <file> or a <file> accessible on the Web.
 
-A <URL> is a method of designating a file or other resource. You can use a <URL> like any other container. You can get the contents of a <URL> or use its contents in any expression. LiveCode supports the following <URL> schemes:
+A <URL> is a method of designating a file or other resource. You can use a <URL> like any other container.
+You can get the contents of a <URL> or use its contents in any expression. LiveCode supports the following <URL> schemes: 
 
-http: a page from a web server
-ftp: a directory or file on an FTP server
-<file> : a text file on the local disk (not on a server)
-binfile: a binary file
-resfile: on Mac OS and OS X systems, the resource fork of a file
+* http: a page from a web server
+* ftp: a directory or file on an FTP server
+* file: a text file on the local disk (not on a server)
+* binfile: a binary file
+* resfile: on Mac OS and OS X systems, the resource fork of a file
 
 All actions that refer to a <URL> container are blocking: that is, the handler pauses until LiveCode is finished accessing the <URL>. Since fetching a web page may take some time due to network lag, accessing URLs may take long enough to be noticeable to the user. To avoid this delay, use the load command (which is non-blocking) to cache web pages before you need them.
 
@@ -49,4 +66,4 @@ From LiveCode 7.0.0, URL keyword has been upgraded to understand Unicode files w
 
 References: HTMLText (property), URL (keyword), file (keyword), libURLSetAuthCallback (command), launch url (command), libURLSetExpect100 (command), load (command), container (glossary), keyword (glossary), resource (glossary)
 
-Tags: networking
+Tags: networking,file system
