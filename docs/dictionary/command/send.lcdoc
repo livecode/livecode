@@ -55,4 +55,6 @@ When the send command is used the stack containing the target handler temporaril
 
 >*Note:*  Using the <send> <command> is slower than directly <execute|executing> the <command|commands> using the normal <message path>. For best efficiency, use the <send> <command> only when you want to delay the <message> or when the <handler> you want to execute is not in the <message path>.
 
+>*Note:*  LiveCode will not interrupt other handlers when <time> arrives.  It will only check the pendingMessages queue after <time> when it is idle.
+
 References: callbacks (property), backgroundBehavior (property), function (control_st), mouseUp (message), word (keyword), object (object), literal string (glossary), return (glossary), evaluate (glossary), execute (glossary), command (glossary), LiveCode (glossary), double quote (glossary), trigger (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary), debugDo (command), dispatch (command), call (command), cancel (command), result (function), pendingMessages (function)
