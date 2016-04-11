@@ -1,4 +1,6 @@
 ﻿script "BuilderUtilities"
+constant kMergExtVersion = "2016-4-1"
+
 local sEngineDir
 local sWorkDir
 local sOutputDir
@@ -315,6 +317,14 @@ function builderBuiltNotesFolder
    return builderRepoFolder()
 end builderBuiltNotesFolder
 
+function builderMergExtVersion
+   return kMergExtVersion
+end builderMergExtVersion
+
+function builderMergExtFolder
+   return builderRepoFolder() & slash & "MergExt-Unpacked"
+end builderMergExtFolder
+
 -- Folder for storing guide Markdown files that are generated as part
 -- of the build process.
 function builderBuiltGuidesFolder
@@ -534,3 +544,53 @@ end windowsManifest
 function macPList
    return url ("file:" & builderSystemFolder() & slash & "mac_info.plist")
 end macPList
+
+////////////////////////////////////////////////////////////////////////////////
+
+private function builderMergExtUrl pMergExtVersion, pEdition
+   return "https://downloads.livecode.com/mergext/mergExt_" & pEdition & "_" & pMergExtVersion & ".zip"
+end builderMergExtUrl
+
+private function builderMergExtDownloadedFilePath pMergExtVersion, pEdition
+   return builderRepoFolder() & slash & "MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
+end builderMergExtDownloadedFilePath
+
+command builderMergExtEnsureZip pMergExtVersion, pEdition
+   local tZipPath
+   put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tZipPath
+   if there is not a file tZipPath then
+      local tUrl
+      put builderMergExtUrl(pMergExtVersion, pEdition) into tUrl
+      builderLog "message", "Downloading MergExt to" && tZipPath
+      get shell(merge("curl -o '[[tZipPath]]' '[[tUrl]]'"))
+      if the result is not zero then
+         builderLog "error", "Failed to download MergExt zip:" && it
+         throw "failure"
+      end if
+   end if
+end builderMergExtEnsureZip
+
+command builderMergExtUnpack pMergExtVersion, pEdition
+   builderMergExtEnsureZip pMergExtVersion, pEdition
+   
+   local tMergExtFolder
+   local tMergExtZip
+   put builderMergExtFolder() into tMergExtFolder
+   put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tMergExtZip
+   
+   if there is a folder tMergExtFolder then
+      get shell(merge("rm -r '[[tMergExtFolder]]'"))
+   end if
+   
+   get shell(merge("mkdir -p '[[tMergExtFolder]]/MergExt'"))
+   if the result is not zero then
+      builderLog "error", "Failed to create MergExt folder:" && it
+      throw "failure"
+   end if
+   
+   get shell(merge("cd '[[tMergExtFolder]]/MergExt' && unzip '[[tMergExtZip]]'"))
+   if the result is not zero then
+      builderLog "error", "Failed to unzip MergExt bundle:" && it
+      throw "failure"
+   end if
+end builderMergExtUnpack
