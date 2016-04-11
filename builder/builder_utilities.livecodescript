@@ -1,4 +1,6 @@
 ﻿script "BuilderUtilities"
+constant kMergExtVersion = "2016-4-1"
+
 local sEngineDir
 local sWorkDir
 local sOutputDir
@@ -314,6 +316,10 @@ end builderBuiltDocsFolder
 function builderBuiltNotesFolder
    return builderRepoFolder()
 end builderBuiltNotesFolder
+
+function builderMergExtVersion
+   return kMergExtVersion
+end builderMergExtVersion
 
 function builderMergExtFolder
    return builderRepoFolder() & slash & "MergExt-Unpacked"

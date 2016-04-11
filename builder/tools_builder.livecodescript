@@ -142,7 +142,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    builderEnsureFolderForFile tPackageFile
    
    -- Ensure that MergExt is available for inclusion
-   toolsBuilderPrepareMergExt "2016-4-1", pEdition, pPlatform
+   toolsBuilderPrepareMergExt builderMergExtVersion(), pEdition, pPlatform
    
    --return tPackageFile
    
