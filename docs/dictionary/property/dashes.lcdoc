@@ -30,9 +30,9 @@ By default, the <dashes> <property> of a newly created <graphic> is set to empty
 Description:
 Use the <dashes> <property> to change the <appearance> of lines.
 
-The odd-numbered items in the <dashes> <property> represent the number of <pixels> in a dash, and the even-numbered <items> represent 
-the number of <pixels> in the blank space after the dash. The list is repeated for the length of the line.  An odd number of pixel 
-lengths will cause the dash and space pixel lengths to alternate between repeats. For example, if the <dashes> is set to 20,10,5 the 
+The odd-numbered items in the <dashes> <property> represent the number of <pixel|pixels> in a dash, and the even-numbered <items> represent 
+the number of <pixel|pixels> in the blank space after the dash. The list is repeated for the length of the line.  An odd number of pixel 
+lengths will cause the dash and space <pixel> lengths to alternate between repeats. For example, if the <dashes> is set to 20,10,5 the 
 line will contain the following: 20 pixel dash, 10 pixel space, 5 pixel dash, 20 pixel space, 10 pixel dash, 5 pixel space etc.
 
 If the <dashes> <property> contains a single <integer> the dashes and spaces will both be given this pixel value. 
