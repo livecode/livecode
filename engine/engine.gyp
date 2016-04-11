@@ -212,14 +212,14 @@
 						
 						'sources':
 						[
-							'engine/standalone-armv6-hf.link',
+							'engine/standalone-android.link',
 						],
 						
 						'ldflags':
 						[
 							# Helpful for catching build problems
 							'-Wl,-no-undefined',
-							'-Wl,-T,$(abs_srcdir)/engine/standalone-armv6-hf.link',
+							'-Wl,-T,$(abs_srcdir)/engine/standalone-android.link',
 						],
 
 						'actions':
