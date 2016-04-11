@@ -1463,9 +1463,17 @@ void MCDispatch::wmdrag(Window w)
 		//   correct from the point of view of the field.
 		if (MCdragtargetptr->gettype() > CT_CARD)
 		{
-			MCControl *cptr = (MCControl *)MCdragtargetptr;
-			cptr->munfocus();
-			cptr->getcard()->ungrab();
+			/* FIXME This is horrible */
+			if (MCdragtargetptr->gettype() != CT_WIDGET)
+			{
+				static_cast<MCControl *>(MCdragtargetptr)->munfocus();
+			}
+			else
+			{
+				MCwidgeteventmanager ->
+					event_munfocus(static_cast<MCWidget *>(MCdragtargetptr));
+			}
+			MCdragtargetptr->getcard()->ungrab();
 		}
 		MCdragtargetptr->getstack()->resetcursor(True);
 		MCdragtargetptr -> getstack() -> munfocus();
