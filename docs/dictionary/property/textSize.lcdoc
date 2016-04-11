@@ -35,4 +35,4 @@ The textSize of an object defines the height of the text and is specified in poi
 
 References: textAlign (property), textHeight (property), owner (property), HTMLText (property), fixedLineHeight (property), printTextSize (property), point (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), appearance (glossary), chunk (glossary)
 
-Tags: ui
+Tags: ui, text processing
