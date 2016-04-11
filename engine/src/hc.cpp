@@ -162,6 +162,7 @@ void hcstat_append(const char *msg, ...)
 	va_start(t_args, msg);
 	MCAutoStringRef t_new_line;
 	/* UNCHECKED */ MCStringFormatV(&t_new_line, msg, t_args);
+	va_end(t_args);
 	
 	// Turn the current MChcstat stringref into a mutable stringref
 	MCAutoStringRef t_mutable_hcstat;
