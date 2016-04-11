@@ -672,7 +672,7 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 			}
 
 		if (t_is_zero)
-			memcpy(d, d + 1, strlen(d));
+			memmove(d, d + 1, strlen(d));
 	}
 
 	return strlen(d);

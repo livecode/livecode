@@ -50,7 +50,7 @@ public:
 	MCRegexMatcher(MCStringRef p, MCStringRef s, MCStringOptions o) : MCPatternMatcher(p, s, o)
 	{
         // if appropriate, normalize the pattern string.
-        if (options == kMCStringOptionCompareNonliteral || kMCStringOptionCompareCaseless)
+		if (options & kMCStringOptionNormalizeBit)
         {
             MCAutoStringRef normalized_pattern;
             MCStringNormalizedCopyNFC(pattern, &normalized_pattern);

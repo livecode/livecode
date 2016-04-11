@@ -439,7 +439,8 @@ IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, IO_handl
 	if (t_bytes != 0)
 	{
 		t_length = p_includes_null ? t_bytes - 1 : t_bytes;
-		/* UNCHECKED */ t_string = new char[t_bytes];
+		if (!MCMemoryAllocate(t_bytes, t_string))
+			return IO_ERROR;
 		stat = MCStackSecurityRead(t_string, t_length, p_stream);
 		if (stat == IO_NORMAL && p_includes_null)
 			stat = IO_read_uint1((uint1*)t_string + t_length, p_stream);
