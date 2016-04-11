@@ -569,6 +569,13 @@ class MCCefRenderApp : public CefApp, CefRenderProcessHandler
 public:
 	virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
 	
+	virtual void OnBeforeCommandLineProcessing(const CefString &p_process_type, CefRefPtr<CefCommandLine> p_command_line) OVERRIDE
+	{
+		// Turn on hi-dpi support if enabled by command-line switch
+		if (p_command_line->HasSwitch(MC_CEF_HIDPI_SWITCH))
+			MCCefPlatformEnableHiDPI();
+	}
+
 	// RenderProcessHandler interface
 	virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> p_browser, CefProcessId p_source_process, CefRefPtr<CefProcessMessage> p_message) OVERRIDE
 	{
