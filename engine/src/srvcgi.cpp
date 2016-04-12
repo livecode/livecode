@@ -1498,17 +1498,14 @@ bool cgi_initialize()
 
 	
 	// Set the current folder to be that containing the CGI file.
-	char *t_server_script_folder;
-    t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
+	MCAutoStringRef t_server_script_folder_string;
 
 	// Windows paths have been fixed - no backslashes in the environment variables
-	strrchr(t_server_script_folder, '/')[0] = '\0';
-
-    MCAutoStringRef t_server_script_folder_string;
-    /* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
+	uindex_t t_last_separator;
+	/* UNCHECKED */ MCStringLastIndexOfChar(MCserverinitialscript, '/', MCStringGetLength(MCserverinitialscript), kMCStringOptionCompareExact, t_last_separator);
+	/* UNCHECKED */ MCStringCopySubstring(MCserverinitialscript, MCRangeMake(0, t_last_separator), &t_server_script_folder_string);
 
 	MCsystem -> SetCurrentFolder(*t_server_script_folder_string);
-	delete t_server_script_folder;
 	
 	// Initialize the headers.
 	MCservercgiheaders = NULL;
