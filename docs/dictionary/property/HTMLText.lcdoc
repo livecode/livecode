@@ -180,7 +180,7 @@ about the text <properties> of the <field(object)> itself. If you use the <HTMLT
 the settings of the source field, if you want the text in both <field(object)|fields> to look identical.
 
 >*Important:* The <HTMLText> <property> uses a tag structure that is HTML-like, but is not completely standard <HTML>, 
-in order to accommodate the full <range> of text styling available in LiveCode. Specifically:
+in order to accommodate the full range of text styling available in LiveCode. Specifically:
 * The link, box and threedbox tags, as well as the bgColor attribute of the font tag, have been added to accommodate styles that don't 
 exist in standard HTML.
 * The size attribute of the font tag can encode the font's point size, in addition to the standard 7 HTML sizes.
@@ -205,7 +205,7 @@ effective (keyword), encode (glossary), field (keyword), field (object), firstIn
 fontLanguage (property), foregroundColor (property), format (function), format (glossary), get (command), hexadecimal (glossary), 
 hGrid (property), hidden (property), HTML (glossary), HTMLText (property), imageSource (property), integer (glossary), 
 leftIndent (property), linkText (property), listStyle (property), metadata (property), mimeText (property), negative (glossary), 
-numToChar (function), property (glossary), range (glossary), rightIndent (property), RTFText (property), set (command), 
+numToChar (function), property (glossary), rightIndent (property), RTFText (property), set (command), 
 spaceAbove (property), spaceBelow (property), string (glossary), tabStops (property), textAlign (property), textFont (property), 
 textShift (property), textSize (property), textStyle (property), unicodeText (property), URL (keyword), vGrid (property), 
 Windows (glossary), 
