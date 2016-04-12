@@ -73,7 +73,7 @@ These properties are represented as attributes of the &lt;p&gt; tag:
 * hidden="true|false" if the <hidden> property has been set for the line.
 * bgcolor="#NNNNNN" if a <backgroundColor> has been set for the line.
 * bordercolor="#NNNNNN" if a <borderColor> has been set for the line.
->*Note*: An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, 
+>*Note:* An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, 
 one each for red, green, and blue.
 
 &lt;sub&gt; &lt;/sub&gt;
