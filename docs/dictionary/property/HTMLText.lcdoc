@@ -89,7 +89,7 @@ it appears once for a run of superscripted text, regardless of the value of the 
 
 &lt;i&gt; &lt;/i&gt;
 Encloses text whose <textStyle> is "italic".
->If a field is set to <HTML> text that includes text wrapped in a &lt;em&gt; &lt;/em&gt;, 
+>*Note:* If a field is set to <HTML> text that includes text wrapped in a &lt;em&gt; &lt;/em&gt;, 
 the tag will be converted to &lt;i&gt; &lt;/i&gt;.
 
 &lt;b&gt; &lt;/b&gt;
