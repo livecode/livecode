@@ -94,7 +94,7 @@ the tag will be converted to &lt;i&gt; &lt;/i&gt;.
 
 &lt;b&gt; &lt;/b&gt;
 Encloses text whose <textStyle> is "bold".
->If a field is set to <HTML> text that includes text wrapped in a &lt;strong&gt; &lt;/strong&gt;, 
+>*Note:* If a field is set to <HTML> text that includes text wrapped in a &lt;strong&gt; &lt;/strong&gt;, 
 the tag will be converted to &lt;b&gt; &lt;/b&gt;.
 
 &lt;strike&gt; &lt;/strike&gt;
@@ -117,7 +117,7 @@ Encloses text whose <textFont>, <textSize>, <foregroundColor>, or <backgroundCol
 * lang="languageName" appears if the <textFont> includes a <fontLanguage|language> specification.
 * color="#NNNNNN" appears if the <foregroundColor> is not the <default>.
 * bgcolor="#NNNNNN" appears if the <backgroundColor> is not the <default>.
->*Note*: An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, one each for red, green, 
+>*Note:* An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, one each for red, green, 
 and blue.
 
 &lt;ol type="lower latin|upper latin|lower roman|upper roman"&gt; &lt;/ol&gt;
