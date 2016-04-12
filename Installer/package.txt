@@ -355,6 +355,7 @@ component Documentation
 	into [[ToolsFolder]]/Documentation place
 		rfolder "repo:docs/guides"
 		rfolder "ide:Documentation/guides"
+		rfolder "docs:guides"
 	
 	into [[ToolsFolder]]/Documentation/html_viewer place
 		file "ide:Documentation/html_viewer/api.html.template"
@@ -366,9 +367,6 @@ component Documentation
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
-
-	into [[ToolsFolder]]/Documentation/guides place
-		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"
