@@ -184,7 +184,7 @@ bool MCCapsuleOpen(MCCapsuleCallback p_callback, void *p_callback_state, MCCapsu
 		self -> decompress . next_out = self  -> output_buffer;
 		self -> decompress . avail_out = 0;
 		if (inflateInit2(&self -> decompress, -15) != Z_OK)
-			return false; //MCThrow(kMCErrorCapsuleInflateFailed);
+			t_success = false; //MCThrow(kMCErrorCapsuleInflateFailed);
 	}
 
 	// If successful, initialize as appropriate
