@@ -330,13 +330,13 @@ Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCExecPoint &ep,
 }
 #endif
 
-static void MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_gradient, MCGradientFillProperty p_property, MCExecValue& r_value)
+static bool MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_gradient, MCGradientFillProperty p_property, MCExecValue& r_value)
 {
 	if (p_gradient == nil)
 	{
 		r_value . stringref_value = MCValueRetain(kMCEmptyString);
         r_value . type = kMCExecValueTypeStringRef;
-        return;
+        return true;
 	}
     
 	switch (p_property)
@@ -347,12 +347,16 @@ static void MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_g
             t_gradient_kind = p_gradient->kind;
             
             MCExecFormatEnum(ctxt, kMCInterfaceGradientFillKindTypeInfo, (intenum_t)t_gradient_kind, r_value);
+			if (ctxt.HasError())
+				return false;
         }
             break;
         case P_GRADIENT_FILL_RAMP:
         {
             MCAutoStringRef t_data;
-            /* UNCHECKED */ MCGradientFillRampUnparse(p_gradient->ramp,p_gradient->ramp_length, &t_data);
+			if (!MCGradientFillRampUnparse(p_gradient->ramp,p_gradient->ramp_length, &t_data))
+				return false;
+			
             r_value . stringref_value = MCValueRetain(*t_data);
             r_value . type = kMCExecValueTypeStringRef;
         }
@@ -384,6 +388,8 @@ static void MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_g
             t_gradient_quality = p_gradient->quality;
                 
             MCExecFormatEnum(ctxt, kMCInterfaceGradientFillQualityTypeInfo, (intenum_t)t_gradient_quality, r_value);
+			if (ctxt.HasError())
+				return false;
 		}
             break;
         case P_GRADIENT_FILL_MIRROR:
@@ -399,6 +405,8 @@ static void MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_g
             r_value . type = kMCExecValueTypeBool;
             break;
 	}
+	
+	return true;
 }
 
 bool MCGradientFillGetElement(MCExecContext& ctxt, MCGradientFill* p_gradient, MCNameRef p_prop, MCExecValue& r_value)
@@ -407,8 +415,7 @@ bool MCGradientFillGetElement(MCExecContext& ctxt, MCGradientFill* p_gradient, M
     if (MCGradientFillLookupProperty(p_prop, t_property) != ES_NORMAL)
         return false;
     
-    MCGradientFillFetchProperty(ctxt, p_gradient, t_property, r_value);
-    return true;
+    return MCGradientFillFetchProperty(ctxt, p_gradient, t_property, r_value);
 }
 
 bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient, MCExecValue& r_value)
@@ -440,9 +447,12 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
         if (t_success)
         {
             MCExecValue t_value;
-            MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
-            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
-            t_success = !ctxt . HasError();
+            t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
+			if (t_success)
+			{
+				MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
+				t_success = !ctxt . HasError();
+			}
         }
         if (t_success)
             t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
