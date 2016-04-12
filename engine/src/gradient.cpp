@@ -352,7 +352,7 @@ static void MCGradientFillFetchProperty(MCExecContext& ctxt, MCGradientFill* p_g
         case P_GRADIENT_FILL_RAMP:
         {
             MCAutoStringRef t_data;
-            MCGradientFillRampUnparse(p_gradient->ramp,p_gradient->ramp_length, &t_data);
+            /* UNCHECKED */ MCGradientFillRampUnparse(p_gradient->ramp,p_gradient->ramp_length, &t_data);
             r_value . stringref_value = MCValueRetain(*t_data);
             r_value . type = kMCExecValueTypeStringRef;
         }
@@ -1079,7 +1079,7 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 	return allvalid;
 }
 
-void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, MCStringRef& r_data)
+bool MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, MCStringRef& r_data)
 {
 	uint4 i;
 
@@ -1089,7 +1089,6 @@ void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, 
 	for (i=0; i<p_stop_count; i++)
 	{
         MCAutoStringRef t_string;
-		uint1 t_strlen;
 		uint1 r, g, b, a;
 		
 		a = (p_stops[i].color >> 24) & 0xFF;
@@ -1101,11 +1100,14 @@ void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, 
 		//   which therefore need no more than 100000 decimal values.
         const char *t_format;
         t_format = a == 255 ? "%.5f,%d,%d,%d" : "%.5f,%d,%d,%d,%d";
-        MCStringFormat(&t_string, t_format, (p_stops[i].offset * (1.0 / STOP_INT_MAX) + GRADIENT_ROUND_EPSILON), r, g, b, a);
-        MCListAppend(*t_ramp, *t_string);
+		if (!MCStringFormat(&t_string, t_format, (p_stops[i].offset * (1.0 / STOP_INT_MAX) + GRADIENT_ROUND_EPSILON), r, g, b, a))
+			return false;
+		
+		if (!MCListAppend(*t_ramp, *t_string))
+			return false;
 	}
 
-    MCListCopyAsString(*t_ramp, r_data);
+	return MCListCopyAsString(*t_ramp, r_data);
 }
 
 static void gradient_combiner_begin(MCCombiner *_self, int4 y)
