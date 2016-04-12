@@ -41,7 +41,7 @@ using HTML-style tags and attributes.
 
 The <HTMLText> of a <field(object)> or <chunk> is a <string>.
 If the <effective> keyword is specified the <htmlText> property returns the <HTML> of the field with explicit formatting. 
-For example if the <textFont> of the stack is set this is not included in the <HTMLText> but is inlcuded in the <effective> <HTMLText>.
+For example if the <textFont> of the stack is set this is not included in the <HTMLText> but is included in the <effective> <HTMLText>.
 
 The <HTMLText> <property> is a representation of the styled text and paragraph formatting of the <field(object)>. 
 LiveCode uses a subset of <HTML> tags that includes font, size, style, and text color information, along with paragraph alignment, 
