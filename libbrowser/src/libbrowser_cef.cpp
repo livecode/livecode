@@ -285,6 +285,20 @@ void MCCefBrowserRunloopAction(void *p_context)
 	CefDoMessageLoopWork();
 }
 
+class MCCefBrowserApp : public CefApp, CefBrowserProcessHandler
+{
+public:
+	virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
+
+	virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> p_command_line) OVERRIDE
+	{
+		if (MCCefPlatformGetHiDPIEnabled())
+			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
+	}
+
+	IMPLEMENT_REFCOUNTING(MCCefBrowserApp)
+};
+
 extern "C" int initialise_weak_link_cef(void);
 extern "C" int initialise_weak_link_cef_with_path(const char *p_path);
 
@@ -318,7 +332,7 @@ bool MCCefInitialise(void)
 			t_success = MCCefStringFromUtf8String(t_resource_path, &t_settings.resources_dir_path);
 	}
 	
-	CefRefPtr<CefApp> t_app = nil;
+	CefRefPtr<CefApp> t_app = new MCCefBrowserApp();
 	
 	if (t_success)
 		t_success = -1 == CefExecuteProcess(t_args, t_app, nil);

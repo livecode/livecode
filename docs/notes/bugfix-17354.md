@@ -1,0 +1,1 @@
+# Browser: fix browser widget redraw issues on Windows when system text scale set larger than 100%

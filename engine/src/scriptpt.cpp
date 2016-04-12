@@ -1571,16 +1571,18 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 		{
 		case ST_NUM:
         {
-			real8 nvalue;
-            MCAutoNumberRef t_number;
-
-            if (!MCNumberParse(gettoken_stringref(), &t_number))
+            // It is absolutely *vital* that we use the same method here for
+            // parsing numbers as MCExecContext::ConvertToNumber. If we don't,
+            // very strange inconsistencies occur depending on whether the
+            // number is used in an arithmetic context or not (for an example,
+            // see bug #17338 in Bugzilla).
+            real8 nvalue;
+            if (!MCTypeConvertStringToReal(gettoken_stringref(), nvalue, false))
 			{
 				MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
 				return PS_ERROR;
             }
 
-            nvalue = MCNumberFetchAsReal(*t_number);
             MCStringSetNumericValue(MCNameGetString(gettoken_nameref()), nvalue);
 
 			newfact = insertfactor(new MCLiteral(gettoken_nameref()), curfact, top);

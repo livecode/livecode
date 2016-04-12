@@ -24,6 +24,38 @@ extern bool MCCefCreateApp(CefRefPtr<CefApp> &r_app);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-08-08: [[ Bug 12372 ]] Weak-linked SetProcessDPIAware function
+typedef BOOL (WINAPI *SetProcessDPIAwarePtr)(VOID);
+bool MCCefWin32SetProcessDPIAware(BOOL &r_result)
+{
+	static SetProcessDPIAwarePtr s_SetProcessDPIAware = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_SetProcessDPIAware = (SetProcessDPIAwarePtr)GetProcAddress(GetModuleHandleA("user32.dll"), "SetProcessDPIAware");
+		s_init = false;
+	}
+
+	if (s_SetProcessDPIAware == NULL)
+		return false;
+
+	r_result = s_SetProcessDPIAware();
+
+	return true;
+}
+
+bool MCCefPlatformEnableHiDPI()
+{
+	BOOL t_result;
+	if (!MCCefWin32SetProcessDPIAware(t_result))
+		return false;
+
+	return t_result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" int initialise_weak_link_cef(void);
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)

@@ -377,7 +377,12 @@ void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
 {
     // If a widget is currently grabbed, do nothing.
     if (m_mouse_grab != nil)
-        return;
+    {
+        if (MCWidgetGetHost(m_mouse_grab) == p_widget)
+        {
+            mouseCancel(m_mouse_grab, 0);
+        }
+    }
     
     // If the unfocused widget is the currently focused widget, then
     // leave it.
