@@ -20,6 +20,6 @@ Use the <stop session> command to end the session explicitly and save the conten
 
 The location where the $_SESSION array is stored is configured using the <sessionSavePath property>.
 
-References: start session (command), delete session (command), sessionSavePath (property), sessionLifetime (property), sessionId (property), sessionSavePath property (property), sessionName (property)
+References: start session (command), delete session (command), sessionSavePath (property), sessionLifetime (property), sessionId (property), sessionName (property)
 
 Tags: multimedia
