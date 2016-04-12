@@ -107,6 +107,7 @@ private command toolsBuilderPrepareMergExt pMergExtVersion, pEdition, pPlatform
          get shell(merge("rm -rf '[[tExtension]]'"))
       end if
    end repeat
+   set the defaultFolder to tOldFolder
 end toolsBuilderPrepareMergExt
 
 ////////////////////////////////////////////////////////////////////////////////
