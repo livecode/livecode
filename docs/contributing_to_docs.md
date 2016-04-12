@@ -144,6 +144,21 @@ website, without having to download any software or use the command line.
 For example, the accept command is at:
 https://github.com/livecode/livecode/blob/community-docs/docs/dictionary/command/accept.lcdoc
 
+Either go directly to the community docs branch URL
+(https://github.com/livecode/livecode/tree/community-docs) or if you are 
+on the main LiveCode repository page, select 'community-docs' from the 
+branch dropdown menu:
+
+![](images/branch-dropdown.png)
+
+You should see that the community-docs branch is selected both in the 
+label of the dropdown and the url of your browser.
+
+![](images/community-docs-branch.png)
+
+Now use the file system browser to find the file you want to modify, and
+click on it.
+
 ![](images/livecode-repo-filesystem.png)
 
 **Click the pencil icon to the right of Raw|Blame|History buttons**
