@@ -752,8 +752,13 @@ void MCDialogGetColorDialogColors(MCExecContext& ctxt, uindex_t& r_count, MCStri
     
     for (uindex_t i = 0; t_success && i < t_count; i++)
     {
-		MCStringRef t_color;
-		t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
+		if (t_list[i].red != 0 || t_list[i].green != 0 || t_list[i].blue != 0)
+		{
+			MCStringRef t_color;
+			t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
+		}
+		else
+			t_success = t_colors.Push(kMCEmptyString);
     }
     
     t_colors . Take(r_color_list, r_count);
