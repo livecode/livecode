@@ -366,7 +366,6 @@ void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInte
 	}
 	
 	r_output . color = t_color;
-    r_output . color . flags = DoRed | DoGreen | DoBlue;
 	r_output . name = t_color_name;
 }
 

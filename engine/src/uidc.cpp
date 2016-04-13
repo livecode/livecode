@@ -1666,7 +1666,6 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 			}
 			shiftbits -= goodbits;
 		}
-		color->flags = DoRed | DoGreen | DoBlue;
 		return True;
 	}
 	char *tptr = sptr;
@@ -1692,7 +1691,6 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 				color->red = (color_table[mid].red << 8) + color_table[mid].red;
 				color->green = (color_table[mid].green << 8) + color_table[mid].green;
 				color->blue = (color_table[mid].blue << 8) + color_table[mid].blue;
-				color->flags = DoRed | DoGreen | DoBlue;
 				return True;
 			}
 	}

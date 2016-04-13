@@ -2385,33 +2385,25 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 				}
 				if (!getcindex(index, i))
 				{
-					if (t_color . color . flags)
-					{
-						i = createcindex(index);
-						colors[i] = t_color . color;
-						if (opened)
-							MCscreen->alloccolor(colors[i]);
-						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
-					}
+					i = createcindex(index);
+					colors[i] = t_color . color;
+					if (opened)
+						MCscreen->alloccolor(colors[i]);
+					colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 				}
 				else
 				{
-					if (t_color . color . flags)
+					if (colornames[i] != nil)
 					{
-						if (colornames[i] != nil)
-						{
-							MCValueRelease(colornames[i]);
-							colornames[i] = nil;
-						}
-						if (opened)
-						{
-							colors[i] = t_color . color;
-							MCscreen->alloccolor(colors[i]);
-						}
-						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
+						MCValueRelease(colornames[i]);
+						colornames[i] = nil;
 					}
-					else
-						destroycindex(index, i);
+					if (opened)
+					{
+						colors[i] = t_color . color;
+						MCscreen->alloccolor(colors[i]);
+					}
+					colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 				}
 				MCInterfaceNamedColorFree(ctxt, t_color);
 			}

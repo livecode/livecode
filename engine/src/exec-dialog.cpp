@@ -752,13 +752,8 @@ void MCDialogGetColorDialogColors(MCExecContext& ctxt, uindex_t& r_count, MCStri
     
     for (uindex_t i = 0; t_success && i < t_count; i++)
     {
-        if (t_list[i] . flags != 0)
-        {
-            MCStringRef t_color;
-            t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
-        }
-        else
-            t_colors . Push(kMCEmptyString);
+		MCStringRef t_color;
+		t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
     }
     
     t_colors . Take(r_color_list, r_count);
@@ -775,12 +770,11 @@ void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStrin
         MCColor t_color;
         if (i >= p_count || MCStringIsEmpty(p_color_list[i]))
         {
-            t_color . flags = 0;
+			t_color = MCzerocolor;
             t_success = t_list . Push(t_color);
         }
         else
         {
-            t_color . flags = DoRed | DoGreen | DoBlue;
             t_success = MCscreen -> parsecolor(p_color_list[i], t_color) && t_list . Push(t_color);
         }
     }

@@ -1075,20 +1075,12 @@ void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
     
 	for(int i = 0; i < 16; i++)
 	{
-        MCColor t_color;
-        if (s_colordialogcolors[i] != 0)
-        {
-            t_color . red = GetRValue(s_colordialogcolors[i]);
-            t_color . green = GetGValue(s_colordialogcolors[i]);
-            t_color . blue = GetBValue(s_colordialogcolors[i]);
-            t_color . flags = DoRed | DoGreen | DoBlue;
-            t_list . Push(t_color);
-        }
-		else
-        {
-            t_color . flags = 0;
-			t_list . Push(t_color);
-        }
+		MCColor t_color;
+		t_color . red = GetRValue(s_colordialogcolors[i]);
+		t_color . green = GetGValue(s_colordialogcolors[i]);
+		t_color . blue = GetBValue(s_colordialogcolors[i]);
+		t_color . flags = DoRed | DoGreen | DoBlue;
+		t_list . Push(t_color);
 	}
     
     t_list . Take(r_colors, r_count);
