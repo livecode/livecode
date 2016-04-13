@@ -1,4 +1,4 @@
-script "InstallerUtilities"
+﻿script "InstallerUtilities"
 # This is the back-end installer, updater and uninstaller code. 
 # This code doesn't know anything about the product it is installing, and should be capable
 # of being re-used for products other than LiveCode. It reads a "manifest" file, which contains
@@ -1522,7 +1522,12 @@ command log pMessage
       local tFile
       switch the platform
          case "linux"
-            put $HOME & "/.runrev/logs/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" into tFile
+            if $EUID is zero then
+               put "~root/.runrev/logs" into tFile
+            else
+               put $HOME & "/.runrev/logs" into tFile
+            end if
+            put "/" & toLower(the uProduct of stack "Installer") & "_installer_log.txt" after tFile
             break
          case "macos"
             put specialFolderPath("cusr") & "/Library/Logs/RunRev/" & the uProduct of stack "Installer" & "InstallerLog.txt"  into tFile
