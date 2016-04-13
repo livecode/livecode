@@ -1095,12 +1095,22 @@ bool MCUnicodeFirstIndexOfChar(const unichar_t *p_string, uindex_t p_string_leng
 {
     // Create filter chain for the string being searched
     MCTextFilter* t_string_filter = MCTextFilterCreate(p_string, p_string_length, kMCStringEncodingUTF16, p_option);
-    
+	
+	// Process the needle codepoint according to the string options.
+	// We use NFC for normalization, so all single char unicode strings
+	// are already normalized. Therefore we just need to fold if
+	// caseless or folded.
+	codepoint_t t_processed_needle;
+	if (p_option == kMCUnicodeCompareOptionFolded || p_option == kMCUnicodeCompareOptionCaseless)
+		t_processed_needle = MCUnicodeGetCharacterProperty(p_needle, kMCUnicodePropertySimpleCaseFolding);
+	else
+		t_processed_needle = p_needle;
+		
     // Loop until we find the character
     while (t_string_filter->HasData())
     {
         codepoint_t t_cp = t_string_filter->GetNextCodepoint();
-        if (t_cp == p_needle)
+        if (t_cp == t_processed_needle)
         {
             t_string_filter->MarkText();
             r_index = t_string_filter->GetMarkedLength() - 1;
