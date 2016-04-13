@@ -611,10 +611,7 @@ void *operator new[] (size_t size) throw();
 
 struct MCColor
 {
-	uint4 pixel;
 	uint2 red, green, blue;
-	uint1 flags;
-	uint1 pad;
 };
 
 //////////////////////////////////////////////////////////////////////

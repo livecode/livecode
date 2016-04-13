@@ -202,13 +202,13 @@ MCPatternRef MCbackdroppattern;
 MCImageList *MCpatternlist;
 MCColor MCaccentcolor;
 MCStringRef MCaccentcolorname;
-MCColor MChilitecolor = { 0, 0, 0, 0x8080, 0, 0 };
+MCColor MChilitecolor = { 0, 0, 0x8080 };
 MCStringRef MChilitecolorname;
 MCColor MCselectioncolor;
 MCStringRef MCselectioncolorname;
-Linkatts MClinkatts = { { 0, 0, 0, 0xEFBE, 0, 0 }, NULL,
-                        { 0, 0xFFFF, 0, 0, 0, 0 }, NULL,
-                        { 0, 0x5144, 0x1861, 0x8038, 0, 0 }, NULL, True };
+Linkatts MClinkatts = { { 0, 0, 0xEFBE }, NULL,
+                        { 0xFFFF, 0, 0 }, NULL,
+                        { 0x5144, 0x1861, 0x8038 }, NULL, True };
 Boolean MCrelayergrouped;
 Boolean MCselectgrouped;
 Boolean MCselectintersect = True;
