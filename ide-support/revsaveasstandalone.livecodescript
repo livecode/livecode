@@ -989,8 +989,8 @@ private command revCopyResources pStack, pStackFileList
    put "" into tCopyfiles
    -- error reporting
    if sStandaloneSettingsA["errorDialog"] then
-      set the cErrorsList of stack "revErrorReport" to the cErrorsList of cd 1 of stack "revErrorDisplay"
-      set the cScriptErrors of stack "revErrorReport" to the cScriptErrors of cd 1 of stack "revErrorDisplay"
+      set the cErrorsList of stack "revErrorReport" to the scriptExecutionErrors
+      set the cScriptErrors of stack "revErrorReport" to the scriptParsingErrors
       set the htmltext of fld "info" of stack "revErrorReport" to sStandaloneSettingsA["errorDialog,htmltext"]
       if sStandaloneSettingsA["errorDialog,icon"] is not "" then
          set the icon of btn "icon" of stack "revErrorReport" to sStandaloneSettingsA["errorDialog,icon"]
