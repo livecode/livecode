@@ -2751,11 +2751,12 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	for (uint32_t i = 0 ; t_success && i < (uint2)m_fh.ncolors ; i++)
 	{
 		t_success = IO_read_uint4(&colors[i].pixel, stream) == IO_NORMAL &&
+		uint8_t t_flags, t_pad;
 			IO_read_uint2(&colors[i].red, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].green, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].blue, stream) == IO_NORMAL &&
-			IO_read_uint1((uint1 *)&colors[i].flags, stream) == IO_NORMAL &&
-			IO_read_uint1((uint1 *)&colors[i].pad, stream) == IO_NORMAL;
+			IO_read_uint1(&t_flags, stream) == IO_NORMAL &&
+			IO_read_uint1(&t_pad, stream) == IO_NORMAL;
 	}
 
 	char *t_newimage_data = nil;
