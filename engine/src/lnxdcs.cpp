@@ -460,9 +460,7 @@ Boolean MCScreenDC::open()
     gdk_gc_set_background(gc, &t_color);
 
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
-	black_pixel.pixel = 0xff000000;
 	white_pixel.red = white_pixel.green = white_pixel.blue = MAXUINT2;
-	white_pixel.pixel = 0xffffffff;
 
 	MCdpy = dpy;
 
@@ -1555,7 +1553,6 @@ void MCScreenDC::destroybackdrop()
 		gdk_window_hide(backdrop);
         gdk_window_destroy(backdrop);
 		backdrop = DNULL;
-		backdropcolor.pixel = 0;
 	}
 	
 	freepixmap(m_backdrop_pixmap);
