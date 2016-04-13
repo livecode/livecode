@@ -984,7 +984,6 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_color . green = (p_block -> foreground_color & 0xff00) | ((p_block -> foreground_color & 0xff00) >> 8);
 			t_color . blue = ((p_block -> foreground_color & 0xff0000) >> 8) | ((p_block -> foreground_color & 0xff0000) >> 16);
 			t_color . flags = 0xff;
-			t_color . pad = 0;
 			t_block -> setcolor(&t_color);
 		}
 
@@ -996,7 +995,6 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 			t_color . green = (p_block -> background_color & 0xff00) | ((p_block -> background_color & 0xff00) >> 8);
 			t_color . blue = ((p_block -> background_color & 0xff0000) >> 8) | ((p_block -> background_color & 0xff0000) >> 16);
 			t_color . flags = 0xff;
-			t_color . pad = 0;
 			t_block -> setbackcolor(&t_color);
 		}
 
