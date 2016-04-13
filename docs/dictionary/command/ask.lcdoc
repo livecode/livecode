@@ -75,7 +75,6 @@ Changes:
 The ability to specify an <iconType> was added in version 2.0. In previous versions, no icon was displayed.
 
 References: dialogData (property), gRevAppIcon (keyword), it (keyword), gRevProfileReadOnly (keyword), gRevSmallAppIcon (keyword), 
-gRevAppIcon keyword (keyword), gRevSmallAppIcon keyword (keyword), answer (command), ask file (command), ask password (command), 
-modal (command), sheet (command), ask file with type (command), result (function), return (glossary), OS X (glossary), 
-variable (glossary), handler (glossary), modal dialog box (glossary), dialog box (glossary), command (glossary), function (control_st), 
-HTML (glossary), HTMLText (property)
+answer (command), ask file (command), ask password (command), modal (command), sheet (command), ask file with type (command), 
+result (function), return (glossary), OS X (glossary), variable (glossary), handler (glossary), modal dialog box (glossary), 
+dialog box (glossary), command (glossary), function (control_st), HTML (glossary), HTMLText (property)
