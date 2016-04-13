@@ -62,8 +62,8 @@ stack as a <modal dialog box> instead.
 You can format the prompt text using <HTML>-style tags as described in the <HTMLText> property.
 
 >*Cross-platform note:* On <OS X|OS X systems>, there is no image for the question icon. 
-Therefore, the information icon appears instead. In addition, the image specified by the <gRevAppIcon keyword> appears 
-if you do not specify an <iconType>. If you specify an iconType, the image specified by the <gRevSmallAppIcon keyword> appears instead, 
+Therefore, the information icon appears instead. In addition, the image specified by the <gRevAppIcon> appears 
+if you do not specify an <iconType>. If you specify an iconType, the image specified by the <gRevSmallAppIcon> appears instead, 
 along with the standard icon specified by the <iconType>. 
 
 >*Cross-platform note:* Mobile does not support <iconType> and 'as sheet'.
