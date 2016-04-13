@@ -974,7 +974,6 @@ void MCInterfaceSetBrushColor(MCExecContext& ctxt, const MCInterfaceNamedColor& 
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCbrushpattern);
 	set_interface_color(MCbrushcolor, MCbrushcolorname, p_color);
-	MCscreen -> alloccolor(MCbrushcolor);
 }
 
 void MCInterfaceGetPenColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -987,7 +986,6 @@ void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCpenpattern);
 	set_interface_color(MCpencolor, MCpencolorname, p_color);
-	MCscreen -> alloccolor(MCpencolor);
 }
 
 void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern)

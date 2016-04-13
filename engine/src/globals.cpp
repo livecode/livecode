@@ -1191,10 +1191,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 				
 		if (!MCscreen->open())
 			return false;
-
-		MCscreen->alloccolor(MClinkatts.color);
-		MCscreen->alloccolor(MClinkatts.hilitecolor);
-		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
 
     MCExecContext ctxt(nil, nil, nil);

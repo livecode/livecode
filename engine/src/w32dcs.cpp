@@ -173,18 +173,12 @@ Boolean MCScreenDC::open()
 
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
-		black_pixel.pixel = 0;
-		white_pixel.pixel = 0xFFFFFF;
 
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	
 	MConecolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 	
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
@@ -205,10 +199,8 @@ Boolean MCScreenDC::open()
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
 		/* UNCHECKED */ parsecolor(*t_string_mutable, MChilitecolor);
 	}
-	alloccolor(MChilitecolor);
 	
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
     MCStringRef t_key2;
@@ -231,7 +223,6 @@ Boolean MCScreenDC::open()
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
 		/* UNCHECKED */ parsecolor(*t_string_mutable, background_pixel);
 	}
-	alloccolor(background_pixel);
 
 	SetBkMode(f_dst_dc, OPAQUE);
 	SetBkColor(f_dst_dc, black_pixel . pixel);
@@ -1325,8 +1316,6 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 		backdrop_badge = p_badge;
 		backdrop_pattern = p_pattern;
 		backdrop_colour = p_colour;
-	
-		alloccolor(backdrop_colour);
 	
 		if (backdrop_active || backdrop_hard)
 			InvalidateRect(backdrop_window, NULL, TRUE);

@@ -228,28 +228,19 @@ MCUIDC::MCUIDC()
 	
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
-	black_pixel.pixel = 0;
-	white_pixel.pixel = 0xFFFFFF;
 	
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	
 	MConecolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 	
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
-	alloccolor(MChilitecolor);
 	
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
-	alloccolor(background_pixel);
 
 	m_sound_internal = NULL ;
 
@@ -804,32 +795,12 @@ void MCUIDC::showtaskbar()
 
 void MCUIDC::getpaletteentry(uint4 n, MCColor &c)
 {
+	uint32_t t_pixel;
 	if (n < 256)
-		c.pixel = stdcmap[n];
+		t_pixel = stdcmap[n];
 	else
-		c.pixel = 0;
-	querycolor(c);
-}
-
-void MCUIDC::alloccolor(MCColor &color)
-{
-	color.pixel = MCGPixelPackNative(
-							   color.red >> 8,
-							   color.green >> 8,
-							   color.blue >> 8,
-							   255);
-}
-
-void MCUIDC::querycolor(MCColor &color)
-{
-	uint8_t t_r, t_g, t_b, t_a;
-	MCGPixelUnpackNative(color.pixel, t_r, t_g, t_b, t_a);
-	color.red = t_r;
-	color.green = t_g;
-	color.blue = t_b;
-	color.red |= color.red << 8;
-	color.green |= color.green << 8;
-	color.blue |= color.blue << 8;
+		t_pixel = 0;
+	MCColorSetPixel(c, t_pixel);
 }
 
 MCColor *MCUIDC::getaccentcolors()
@@ -1728,14 +1699,12 @@ void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 		return;
 	}
 
-	newcolor.pixel = MCImageBitmapGetPixel(image, 0, 0);
+	MCColorSetPixel(newcolor, MCImageBitmapGetPixel(image, 0, 0));
 	MCImageFreeBitmap(image);
-	querycolor(newcolor);
 	if (cptr != NULL)
 		*cptr = newcolor;
 	else
 	{
-		alloccolor(newcolor);
 		if (MCmodifierstate & MS_CONTROL)
 		{
 			if (MCbrushpattern != nil)

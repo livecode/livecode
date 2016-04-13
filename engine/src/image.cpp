@@ -2091,7 +2091,7 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 					if ((ncolors == 16 || ncolors == 256) && noblack())
 						flags |= F_NEED_FIXING;
 					MCU_realloc((char **)&colors, ncolors, ncolors + 1, sizeof(MCColor));
-					colors[ncolors].pixel = 0;
+					MCColorSetPixel(colors[ncolors], 0);
 				}
 			}
 			else

@@ -436,12 +436,6 @@ void MCStack::extraopen(bool p_force)
 	{
 		setextendedstate(true, ECS_ISEXTRAOPENED);
 		MCObject::open();
-		if (linkatts != NULL)
-		{
-			MCscreen->alloccolor(linkatts->color);
-			MCscreen->alloccolor(linkatts->hilitecolor);
-			MCscreen->alloccolor(linkatts->visitedcolor);
-		}
 		opened--;
 	}
 }
@@ -2242,12 +2236,6 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	else
 	{
 		MCObject::open();
-		if (linkatts != NULL)
-		{
-			MCscreen->alloccolor(linkatts->color);
-			MCscreen->alloccolor(linkatts->hilitecolor);
-			MCscreen->alloccolor(linkatts->visitedcolor);
-		}
 	}
 
 	MCRectangle trect;

@@ -1496,8 +1496,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 	if (attrs != nil && (attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
 	{
 		MCColor t_color;
-		t_color . pixel = attrs -> background_color;
-		MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, attrs -> background_color);
 		dc -> setforeground(t_color);
 		dc -> fillrect(t_inner_border_rect);
 		parent->setforeground(dc, DI_FORE, False, True);
@@ -1576,7 +1575,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 						MCColor fc, hc;
 						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), parent);
 						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), parent);
-						if (hc.pixel == fc.pixel)
+						if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
 					else
@@ -1617,8 +1616,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 		if (attrs != nil && (attrs -> flags & PA_HAS_BORDER_COLOR) != 0)
 		{
 			MCColor t_color;
-			t_color . pixel = attrs -> border_color;
-			MCscreen -> querycolor(t_color);
+			MCColorSetPixel(t_color, attrs -> border_color);
 			dc -> setforeground(t_color);
 		}
 		else

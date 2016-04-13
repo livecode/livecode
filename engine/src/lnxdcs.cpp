@@ -484,20 +484,12 @@ Boolean MCScreenDC::open()
     //g_object_unref(cmask);
     
 	MConecolor.red = MConecolor.green = MConecolor.blue = 0xFFFF;
-	MConecolor.pixel = 1;
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
-	alloccolor(MChilitecolor);
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xdcdc;
-	alloccolor(background_pixel);
 	if (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEGTK)
 		MCcurtheme->load();
 	opened = True;
@@ -1477,10 +1469,9 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
     if (m_backdrop_pixmap == nil)
     {
         backdropcolor = p_colour;
-		alloccolor(backdropcolor);
     }
 	else
-		backdropcolor.pixel = 0;
+		MCColorSetPixel(backdropcolor, 0);
 	
     if (backdrop == DNULL)
         return;
