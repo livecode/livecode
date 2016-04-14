@@ -72,8 +72,8 @@ private function linkingIsValid pLinkingOutput
    repeat for each line tLine in pLinkingOutput
       // Discard Xcode 7 new warnings like:
       // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
-      // On the first use of Xcode 7.0 for deployment, 'ld: warning: ' is duplicated...
-      if not matchtext(tLine, "(ld: warning: )+object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
+      // ld: warning: ignoring linker optimzation..
+      if not (tLine begins with "ld: warning:") then
          return false
       end if
    end repeat
@@ -689,7 +689,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
       delete file tEntitlementsFile
-      if not (tResult contains "signed bundle") then
+      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
       --      finally
