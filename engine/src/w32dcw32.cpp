@@ -1309,8 +1309,19 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 	case WM_MOVE:
-		MCdispatcher->configure(dw);
-		curinfo->handled = True;
+		// IM-2016-04-14: [[ Bug 16749 ]] WM_MOVE can arrive before WM_SIZE when minimized.
+		//   - check if window is minimized before reconfiguring the stack
+		if (IsIconic(hwnd))
+		{
+			MCStack *target = MCdispatcher->findstackd(dw);
+			if (target != NULL)
+				target->iconify();
+		}
+		else
+		{
+			MCdispatcher->configure(dw);
+			curinfo->handled = True;
+		}
 		break;
 	case WM_CLOSE:
 		MCdispatcher->wclose(dw);
