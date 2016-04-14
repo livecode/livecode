@@ -689,7 +689,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
       delete file tEntitlementsFile
-      if not (tResult contains "signed bundle") then
+      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
       --      finally
