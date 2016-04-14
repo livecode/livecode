@@ -144,6 +144,8 @@ void MCNativeLayer::UpdateVisibility()
 		{
 			doSetViewportGeometry(m_deferred_viewport_rect);
 			doSetGeometry(m_deferred_rect);
+			m_viewport_rect = m_deferred_viewport_rect;
+			m_rect = m_deferred_rect;
 		}
 		m_defer_geometry_changes = false;
 	}
