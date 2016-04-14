@@ -884,6 +884,10 @@ private command installDesktopIcon pRecord, pName, pSource, pAllUsers
    payloadExtractItemToFile pSource, empty, tTargetPath & slash & pName & ".png"
    get shell("touch" && tTargetPath)
    
+   -- Regenerate the icon cache
+   -- Errors are ignored as the utility may not be present
+   get shell("gtk-update-icon-cache" && xdgDataPath(pAllUsers) & "/icons/hicolor")
+   
    installRecord pRecord, "file", tTargetPath & slash & pName & ".png"
 end installDesktopIcon
 
