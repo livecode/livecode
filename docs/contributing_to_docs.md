@@ -90,12 +90,12 @@ assume that strict compilation mode is on (i.e. always declare your variables)
 
 ```
 /*
-Returns the number at 1-based index pIndex in the Fibonacci sequence
+Returns the number at 1-based index pIndex >= 2 in the Fibonacci sequence
 */
 function fibonacciNumber pIndex
   local tFirst = 1, tSecond = 1
   local tCounter, tSum
-  repeat with tCounter = 3 to x
+  repeat with tCounter = 3 to pIndex
      put tFirst + tSecond into tSum
      put tSecond into tFirst
      put tSum into tSecond
