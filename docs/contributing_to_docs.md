@@ -125,6 +125,21 @@ the tag you want to add doesn't exist already in a slightly different
 form, and consider starting a dialogue about a new tag and what entries 
 could be most usefully tagged with it.
 
+## References
+
+One thing to look out for when auditing a dictionary entry's references
+is ambiguity of entry type. For example, there are two entries for URL:
+one is for URL as a keyword, and one is a general description of the 
+concept of a URL in the glossary. Sometimes two different references
+should be used in the same sentence, for example:
+
+	Use the <URL(keyword)> keyword to fetch the contents of a file 
+	located at the given <URL(glossary)>
+	
+If there are many references in a given entry, consider sorting them
+alphabetically - this helps prevent duplication and makes it easier to
+spot potential ambiguities.
+
 # Community Documentation Contribution Process
 
 After creating an account on GitHub at https://github.com/join, there 
