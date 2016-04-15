@@ -1470,7 +1470,7 @@ static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engi
 		return MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
 
 	// Allocate memory for the load commands
-	MCAutoArray<load_command*> t_commands;
+	MCAutoCustomPointerArray<load_command*, MCMemoryDelete> t_commands;
 	if (!t_commands.New(r_header . ncmds))
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
