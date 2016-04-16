@@ -582,7 +582,8 @@ void MCCard::munfocus()
 	{
 		if (MCdispatcher -> isdragtarget())
 			message(MCM_drag_leave);
-		else
+		// PM-2015-07-29: [[ Bug 3178 ]] Make sure the Browse tool is active before sending a mouseLeave msg
+		else if (getstack()->gettool(this) == T_BROWSE)
 			message(MCM_mouse_leave);
 	}
 }
