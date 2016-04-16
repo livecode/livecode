@@ -236,6 +236,15 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
 
+/* Generate a NULL-terminated array of UTF-8 strings containing
+ * environment variable names and values in a "NAME=VALUE" format.
+ * The result array is owned by the caller.  The r_envc is the number
+ * of strings (and doesn't include the NULL custodian). */
+extern bool MCU_environmentarray (MCStringEncoding p_encoding, char **&r_env, uindex_t &r_envc);
+
+/* Free a environment array created with MCU_environmentarray() */
+extern void MCU_environmentarray_release (char **&r_env, uindex_t r_envc);
+
 #ifdef LEGACY_EXEC
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 #endif

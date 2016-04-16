@@ -1000,80 +1000,6 @@ static void handle_signal(int sig)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// The external list of environment vars (terminated by NULL).
-extern char **environ;
-
-// Check to see if two environment var definitions are for the same variable.
-static bool same_var(const char *p_left, const char *p_right)
-{
-    const char *t_left_sep, *t_right_sep;
-    t_left_sep = strchr(p_left, '=');
-    if (t_left_sep == NULL)
-        t_left_sep = p_left + strlen(p_left);
-    t_right_sep = strchr(p_right, '=');
-    if (t_right_sep == NULL)
-        t_right_sep = p_right + strlen(p_right);
-    
-    if (t_left_sep - p_left != t_right_sep - p_right)
-        return false;
-    
-    if (strncmp(p_left, p_right, t_left_sep - p_left) != 0)
-        return false;
-    
-    return true;
-}
-
-// [[ Bug 13622 ]] On Yosemite, there can be duplicate environment variable
-//    entries in the environ global list of vars. This is what is passed through
-//    to child processes and it seems default behavior is for the second value
-//    in the list to be taken - however, the most recently set value by this process
-//    will be first in the list (it seems). Therefore we just remove any duplicates
-//    before passing on to execle.
-static char **fix_environ(void)
-{
-    char **t_new_environ;
-    if (MCmajorosversion > 0x1090)
-    {
-        // Build a new environ, making sure that each var only takes the
-        // first definition in the list. We don't have to care about memory
-        // in particular, as this process is being wholesale replaced by an
-        // exec.
-        int t_new_length;
-        t_new_environ = NULL;
-        t_new_length = 0;
-        for(int i = 0; environ[i] != NULL; i++)
-        {
-            bool t_found;
-            t_found = false;
-            for(int j = 0; j < t_new_length; j++)
-            {
-                if (same_var(t_new_environ[j], environ[i]))
-                {
-                    t_found = true;
-                    break;
-                }
-            }
-            
-            if (!t_found)
-            {
-                t_new_environ = (char **)realloc(t_new_environ, (t_new_length + 2) * sizeof(char *));
-                if (t_new_environ == NULL)
-                    _exit(-1);
-                t_new_environ[t_new_length++] = environ[i];
-            }
-        }
-        
-        // Terminate the new environment list.
-        t_new_environ[t_new_length] = NULL;
-        
-        return t_new_environ;
-    }
-    
-    return environ;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
 // MW-2005-08-15: We have two types of process starting in MacOS X it seems:
 //   MCS_startprocess is called by MCLaunch with a docname
 //   MCS_startprocess is called by MCOpen without a docname
@@ -7087,10 +7013,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 MCprocesses[MCnprocesses].ihandle = NULL;
                 if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
                 {
-                    // [[ Bug 13622 ]] Make sure environ is appropriate (on Yosemite it can
-                    //    be borked).
-                    environ = fix_environ();
-                    
                     close(tochild[1]);
                     close(0);
                     dup(tochild[0]);
@@ -7104,8 +7026,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     MCAutoStringRefAsUTF8String t_shellcmd;
                     /* UNCHECKED */ t_shellcmd . Lock(MCshellcmd);
                     
-                    // Use execl and pass our new environ through to it.
-                    execl(*t_shellcmd, *t_shellcmd, "-s", NULL);
+                    char **t_env = { NULL };
+                    uindex_t t_envc = 0;
+                    /* UNCHECKED */ MCU_environmentarray(kMCStringEncodingUTF8, t_env, t_envc);
+                    
+                    execle(*t_shellcmd, *t_shellcmd, "-s", NULL, t_env);
                     _exit(-1);
                 }
                 CheckProcesses();
@@ -8789,10 +8714,6 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 			// Fork
 			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
 			{
-                // [[ Bug 13622 ]] Make sure environ is appropriate (on Yosemite it can
-                //    be borked).
-                environ = fix_environ();
-                
 				MCAutoStringRefAsUTF8String t_utf8_string;
                 /* UNCHECKED */ t_utf8_string . Lock(MCNameGetString(name));
 				
@@ -8839,6 +8760,16 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				}
 				else // not writing, so close stdin
 					close(0);
+                
+                /* Construct the environment for the new process */
+                char **t_env = { NULL };
+                uindex_t t_envc = 0;
+                /* UNCHECKED */ MCU_environmentarray(kMCStringEncodingUTF8, t_env, t_envc);
+                /* Ideally, we'd pass the environment using execvpe().
+                 * Unfortunately, OS X doesn't have execvpe().  So just nuke
+                 * environ instead. */
+                extern char **environ;
+                environ = t_env;
                 
 				// Execute a new process in a new process image.
 				execvp(argv[0], argv);

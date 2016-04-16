@@ -749,8 +749,13 @@ struct MCMacSystem: public MCSystemInterface
 					dup(t_to_parent[1]);
 					close(t_to_parent[1]);
 					
+					/* Construct array of environment variables */
+					char **t_env = { NULL };
+					uindex_t t_envc = 0;
+					/* UNCHECKED */ MCU_environmentarray (kMCStringEncodingUTF8, t_env, t_envc);
+
 					// Launch the standard 'sh' shell processor
-					execl("/bin/sh", "/bin/sh", "-s", NULL);
+					execle("/bin/sh", "/bin/sh", "-s", NULL, t_env);
 					_exit(-1);
 				}
 				

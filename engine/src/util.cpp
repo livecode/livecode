@@ -2980,6 +2980,62 @@ bool MCString::split(char p_char, MCString& r_head, MCString& r_tail)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+bool
+MCU_environmentarray (MCStringEncoding p_encoding, char **&r_env, uindex_t &r_envc)
+{
+	MCAutoArray<char *> t_env;
+	/* UNCHECKED */ t_env.New(0);
+
+	/* Loop over the global variables, checking for environment
+	 * variables.  If one is found, format it into a "NAME=value"
+	 * string. */
+	bool t_success = true;
+	MCVariable *t_var;
+	MCRange t_truncate_range = MCRangeMake(1, -1);
+	for (t_var = MCglobals; t_var != NULL; t_var = t_var->getnext())
+	{
+		if (!t_var->isenv() || t_var->isclear()) continue;
+
+		MCAutoStringRef t_env_desc;
+		/* UNCHECKED */ MCStringFormat (&t_env_desc, "%*@=%@", &t_truncate_range,
+										t_var->getname(), t_var->getvalueref());
+
+		/* Copy the formatted environment variable */
+		byte_t *t_env_desc_encoded = NULL;
+		uindex_t t_env_desc_encoded_len;
+		/* UNCHECKED */ MCStringConvertToBytes (*t_env_desc, p_encoding, false,
+												t_env_desc_encoded,
+												t_env_desc_encoded_len);
+
+		/* UNCHECKED */ t_env.Push ((char *) t_env_desc_encoded);
+	}
+
+	/* Add a trailing NULL to the array, so that it can be used
+	 * directly as input to POSIX exec* functions. */
+	t_env.Push (NULL);
+
+	t_env.Take (r_env, r_envc);
+	--r_envc; /* Shouldn't include trailing NULL */
+
+	return true;
+}
+
+void
+MCU_environmentarray_release (char **&r_env)
+{
+	/* Loop through, freeing strings */
+	char **tmp;
+	for (tmp = r_env; *tmp != NULL; ++tmp)
+	{
+		delete *tmp;
+	}
+
+	MCMemoryDeleteArray (r_env);
+	r_env = nil;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 MCDictionary::MCDictionary(void)
 {
 	m_nodes = NULL;

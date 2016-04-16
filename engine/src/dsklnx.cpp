@@ -2362,7 +2362,11 @@ public:
                     MCAutoStringRefAsSysString t_shellcmd_sys;
                     /* UNCHECKED */ t_shellcmd_sys.Lock(MCshellcmd);
 
-                    execl(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL);
+					char **t_env = { NULL };
+					uindex_t t_envc = 0;
+					/* UNCHECKED */ MCU_environmentarray (kMCStringEncodingUTF8, t_env, t_envc);
+
+                    execle(*t_shellcmd_sys, *t_shellcmd_sys, "-s", NULL, t_env);
                     _exit(-1);
                 }
                 if (MCprocesses[index].pid == -1)
@@ -2852,7 +2856,12 @@ public:
                     }
                     else
                         close(0);
-                    execvp(name, argv);
+
+					char **t_env = { NULL };
+					uindex_t t_envc = 0;
+					/* UNCHECKED */ MCU_environmentarray (kMCStringEncodingUTF8, t_env, t_envc);
+
+                    execvpe(name, argv, t_env);
                     _exit(-1);
                 }
                 MCS_checkprocesses();

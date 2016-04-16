@@ -815,6 +815,13 @@ public:
 
 	//////////
 
+	bool isenv(void)
+	{
+		return is_env;
+	}
+
+	//////////
+
 	// Mark the variable as being the message box
 	void setmsg(void) { is_msg = true; }
 
