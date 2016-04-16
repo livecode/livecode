@@ -27,6 +27,48 @@ class MCExpression;
 class MCVarref;
 class MCHandler;
 
+#ifdef FEATURE_PROFILE
+typedef void (*MCProfilingReportCallback)(uint2 line, uint64_t count);
+
+class MCProfilingTimer
+{
+public:
+    MCProfilingTimer(void)
+    {
+        m_total_count = 0;
+        m_start_count = 0;
+    }
+    
+    void Start(void)
+    {
+        m_start_count = ReadCount();
+    }
+    
+    void Stop(void)
+    {
+        uint64_t t_finish_count;
+        t_finish_count = ReadCount();
+        m_total_count += t_finish_count - m_start_count;
+    }
+    
+    uint64_t Total(void) const
+    {
+        return m_total_count;
+    }
+    
+private:
+    uint64_t ReadCount(void)
+    {
+        uint32_t high, low;
+        asm volatile ("rdtsc" : "=a" (low), "=d" (high) : : "memory");
+        return (((uint64_t)high) << 32) | low;
+    }
+    
+    uint64_t m_total_count;
+    uint64_t m_start_count;
+};
+#endif
+
 class MCStatement
 {
 protected:
@@ -43,7 +85,6 @@ public:
 #endif
 	virtual void exec_ctxt(MCExecContext&);
 	virtual void compile(MCSyntaxFactoryRef factory);
-	
 	virtual uint4 linecount();
 	
 	void setnext(MCStatement *n)
@@ -70,6 +111,29 @@ public:
 	{
 		return pos;
 	}
+    
+#ifdef FEATURE_PROFILE
+    void execute(MCExecContext& ctxt)
+    {
+        starttiming();
+        exec_ctxt(ctxt);
+        finishtiming();
+    }
+    
+    virtual void starttiming(void);
+    virtual void finishtiming(void);
+    virtual void reporttiming(MCProfilingReportCallback report);
+#else
+    void execute(MCExecContext& ctxt)
+    {
+        exec_ctxt(ctxt);
+    }
+#endif
+
+protected:
+#ifdef FEATURE_PROFILE
+    MCProfilingTimer timer;
+#endif
 };
 
 class MCComref : public MCStatement

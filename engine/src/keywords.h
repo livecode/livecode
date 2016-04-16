@@ -87,6 +87,12 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &ctxt);
 	virtual uint4 linecount();
+    
+#ifdef FEATURE_PROFILE
+    virtual void starttiming(void);
+    virtual void finishtiming(void);
+    virtual void reporttiming(MCProfilingReportCallback report);
+#endif
 };
 
 class MCRepeat : public MCStatement
@@ -105,6 +111,12 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
+    
+#ifdef FEATURE_PROFILE
+    virtual void starttiming(void);
+    virtual void finishtiming(void);
+    virtual void reporttiming(MCProfilingReportCallback report);
+#endif
 };
 
 class MCExit : public MCStatement
@@ -166,6 +178,12 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &sp);
 	virtual void exec_ctxt(MCExecContext &);
 	virtual uint4 linecount();
+    
+#ifdef FEATURE_PROFILE
+    virtual void starttiming(void);
+    virtual void finishtiming(void);
+    virtual void reporttiming(MCProfilingReportCallback report);
+#endif
 };
 
 class MCThrowKeyword : public MCStatement
@@ -198,6 +216,12 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
+    
+#ifdef FEATURE_PROFILE
+    virtual void starttiming(void);
+    virtual void finishtiming(void);
+    virtual void reporttiming(MCProfilingReportCallback report);
+#endif
 };
 
 ////////////////////////////////////////////////////////////////////////////////

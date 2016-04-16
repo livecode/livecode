@@ -526,7 +526,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 				m_ctxt -> SetLineAndPos(t_statement -> getline(), t_statement -> getpos());
 				
 				Exec_stat t_exec_stat;
-				t_statement -> exec_ctxt(*m_ctxt);
+				t_statement -> execute(*m_ctxt);
 				t_exec_stat = m_ctxt -> GetExecStat();
 				m_ctxt -> IgnoreLastError();
 				
@@ -539,7 +539,7 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 							if (!MCB_error(*m_ctxt, t_statement->getline(), t_statement->getpos(), EE_HANDLER_BADSTATEMENT))
 								break;
 							m_ctxt -> IgnoreLastError();
-							t_statement -> exec_ctxt(*m_ctxt);
+							t_statement -> execute(*m_ctxt);
 						}
 						while (MCtrace && (t_exec_stat = m_ctxt -> GetExecStat()) != ES_NORMAL);
 
@@ -552,7 +552,20 @@ bool MCServerScript::Include(MCExecContext& ctxt, MCStringRef p_filename, bool p
 
 			t_statement = t_statement -> getnext();
 		}
-
+        
+#ifdef FEATURE_PROFILE
+        if (t_stat == ES_NORMAL)
+        {
+            extern void X_report_timing(uint2 line, uint64_t count);
+            t_statement = t_statements;
+            while(t_statement != nil)
+            {
+                t_statement -> reporttiming(X_report_timing);
+                t_statement = t_statement -> getnext();
+            }
+        }
+#endif
+        
 		t_statements -> deletestatements(t_statements);
 	}
 	

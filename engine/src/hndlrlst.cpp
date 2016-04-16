@@ -799,3 +799,18 @@ void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#ifdef FEATURE_PROFILE
+void MCHandlerlist::reporttiming(MCProfilingReportCallback report)
+{
+    for(int i = 0; i < 6; i++)
+    {
+        for(int j = 0; j < handlers[i] . count(); j++)
+        {
+            handlers[i] . get()[j] -> reporttiming(report);
+        }
+    }
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////

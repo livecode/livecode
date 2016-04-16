@@ -1279,6 +1279,10 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 
 void MCRepeat::exec_ctxt(MCExecContext& ctxt)
 {
+#ifdef FEATURE_PROFILE
+    extern MCStatement *MCprofilingkeyword;
+    MCprofilingkeyword = this;
+#endif
     switch (form)
 	{
         case RF_FOR:
@@ -2038,5 +2042,77 @@ uint4 MCTry::linecount()
 	return countlines(trystatements) + countlines(catchstatements)
 	       + countlines(finallystatements);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef FEATURE_PROFILE
+static void reportstatements(MCStatement *stmts, MCProfilingReportCallback report)
+{
+    while(stmts != nil)
+    {
+        stmts -> reporttiming(report);
+        stmts = stmts -> getnext();
+    }
+}
+
+void MCIf::starttiming(void)
+{
+}
+
+void MCIf::finishtiming(void)
+{
+}
+
+void MCIf::reporttiming(MCProfilingReportCallback report)
+{
+    MCStatement::reporttiming(report);
+    reportstatements(thenstatements, report);
+    reportstatements(elsestatements, report);
+}
+
+void MCRepeat::starttiming(void)
+{
+}
+
+void MCRepeat::finishtiming(void)
+{
+}
+
+void MCRepeat::reporttiming(MCProfilingReportCallback report)
+{
+    MCStatement::reporttiming(report);
+    reportstatements(statements, report);
+}
+
+void MCSwitch::starttiming(void)
+{
+}
+
+void MCSwitch::finishtiming(void)
+{
+}
+
+void MCSwitch::reporttiming(MCProfilingReportCallback report)
+{
+    MCStatement::reporttiming(report);
+    reportstatements(statements, report);
+}
+
+void MCTry::starttiming(void)
+{
+}
+
+void MCTry::finishtiming(void)
+{
+}
+
+void MCTry::reporttiming(MCProfilingReportCallback report)
+{
+    MCStatement::reporttiming(report);
+    reportstatements(trystatements, report);
+    reportstatements(catchstatements, report);
+    reportstatements(finallystatements, report);
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

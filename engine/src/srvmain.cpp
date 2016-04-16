@@ -501,6 +501,11 @@ static void X_load_extensions(MCServerScript *p_script)
 	
 }
 
+void X_report_timing(uint2 line, uint64_t count)
+{
+    fprintf(stderr, "%08d %llu\n", line, count);
+}
+
 void X_main_loop(void)
 {
 	int i;
@@ -556,6 +561,13 @@ void X_main_loop(void)
 		return;
 #endif
 	
+#ifdef FEATURE_PROFILE
+    double t_profile_start_time;
+    MCProfilingTimer t_profile_timer;
+    t_profile_start_time = MCS_time();
+    t_profile_timer . Start();
+#endif
+    
 	MCExecContext ctxt;
 	if (!MCserverscript -> Include(ctxt, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
@@ -597,6 +609,15 @@ void X_main_loop(void)
 		}
 	}
 	
+#ifdef FEATURE_PROFILE
+    double t_profile_finish_time;
+    t_profile_timer . Stop();
+    t_profile_finish_time = MCS_time();
+    
+    MCserverscript -> gethandlers() -> reporttiming(X_report_timing);
+    fprintf(stderr, "XXXXXXXX %llu %lf\n", t_profile_timer . Total(), t_profile_finish_time - t_profile_start_time);
+#endif
+    
 	if (s_server_cgi)
 		cgi_finalize();
 #ifdef _IREVIAM

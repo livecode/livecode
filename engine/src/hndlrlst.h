@@ -161,5 +161,9 @@ public:
 		return vars != NULL;
 	}
 	uint4 linecount();
+    
+#ifdef FEATURE_PROFILE
+    void reporttiming(MCProfilingReportCallback report);
+#endif
 };
 #endif
