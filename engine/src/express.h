@@ -26,6 +26,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #endif
 
+enum MCExpressionClass
+{
+    // Any expression.
+    kMCExpressionClassGeneral,
+    
+    // A non indexed variable.
+    kMCExpressionClassVariable,
+    
+    // An indexed variable.
+    kMCExpressionClassIndexedVariable,
+    
+    // A singleton byte chunk.
+    kMCExpressionClassSingletonByteChunkOfVariable,
+};
+
 class MCExpression
 {
 protected:
@@ -40,6 +55,8 @@ public:
 	MCExpression();
 	virtual ~MCExpression();
 	
+    virtual MCExpressionClass classify(void) const;
+    
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 
 #ifdef LEGACY_EXEC

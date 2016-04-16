@@ -55,6 +55,11 @@ MCExpression::~MCExpression()
 	delete right;
 }
 
+MCExpressionClass MCExpression::classify(void) const
+{
+    return kMCExpressionClassGeneral;
+}
+
 MCVarref *MCExpression::getrootvarref(void)
 {
 	return NULL;

@@ -1256,6 +1256,25 @@ MCVarref *MCVariable::newvarref(void)
 	return new MCDeferredVarref(this);
 }
 
+//////////
+
+bool MCVariable::peep_isarray(void) const
+{
+    return value.type == kMCExecValueTypeArrayRef ||
+            (value.type == kMCExecValueTypeValueRef &&
+             MCValueGetTypeCode(value.valueref_value) == kMCValueTypeCodeArray);
+}
+
+bool MCVariable::peep_converttomutablenumber(MCExecContext& ctxt)
+{
+    return ctxt . ConvertToNumberOrArray(value);
+}
+
+double& MCVariable::peep_getmutablenumber(void)
+{
+    return value . double_value;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCContainer::~MCContainer(void)
@@ -1404,6 +1423,14 @@ MCVarref::~MCVarref()
             delete exps[i];
         delete exps;
     }
+}
+
+MCExpressionClass MCVarref::classify(void) const
+{
+    if (isparam || dimensions > 0)
+        return kMCExpressionClassIndexedVariable;
+    
+    return kMCExpressionClassVariable;
 }
 
 #ifdef LEGACY_EXEC

@@ -1166,7 +1166,7 @@ MCPut::~MCPut()
 	delete path;
 	delete expires;
 }
-		
+
 // put [ unicode | binary ] <expr>
 // put [ unicode ] ( content | markup ) <expr>
 // put [ new ] header <expr>
@@ -1311,6 +1311,9 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 		sp.skip_token(SP_SHOW, TT_UNDEFINED, SO_MESSAGE); // "box"
 		return PS_NORMAL;
 	}
+    
+    // If we get here then we are parsing 'put x into y'.
+    
 	dest = new MCChunk(True);
 	if (dest->parse(sp, False) != PS_NORMAL)
 	{
@@ -1323,6 +1326,22 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	t_dst_ref = dest -> getrootvarref();
 	overlap = t_src_ref != NULL && t_dst_ref != NULL && t_src_ref -> rootmatches(t_dst_ref);
 
+    // Optimized forms:
+    //   put <expr> into <var>
+    //   put <expr> into <var>[<index_1>]...[<index_n>]
+    //   put <expr> into byte <index> of <var>
+
+    if (prep == PT_INTO)
+    {
+        MCExpressionClass t_dest_class;
+        t_dest_class = dest -> classify();
+        
+        if (t_dest_class == kMCExpressionClassVariable)
+            form = kMCPutFormIntoVariable;
+        else if (t_dest_class == kMCExpressionClassSingletonByteChunkOfVariable)
+            form = kMCPutFormIntoByteOfVariable;
+    }
+    
 	return PS_NORMAL;
 }
 
@@ -1402,18 +1421,60 @@ void MCPut::exec_ctxt(MCExecContext& ctxt)
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
-
     
     MCExecValue t_value;
     if (!ctxt . EvaluateExpression(source, EE_PUT_BADEXP, t_value))
         return;
-	
+    
     if (dest != nil)
     {
-//        MCAutoValueRef t_valueref;
-//        MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeValueRef, &(&t_valueref));
-//        dest -> set(ctxt, prep, *t_valueref, is_unicode);
-        dest -> set(ctxt, prep, t_value, is_unicode);
+        switch(form)
+        {
+            case kMCPutFormGeneral:
+                dest -> set(ctxt, prep, t_value, is_unicode);
+                break;
+            case kMCPutFormIntoVariable:
+                dest -> classify_getvariable() -> evalvar(ctxt) -> give_value(ctxt, t_value);
+                break;
+            case kMCPutFormIntoByteOfVariable:
+            {
+                integer_t t_index;
+                if (!ctxt . EvalExprAsInt(dest -> classify_getsingletonexpr(), EE_CHUNK_BADRANGESTART, t_index))
+                    return;
+                
+                MCAutoDataRef t_value_data;
+                MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeDataRef, &(&t_value_data));
+                if (ctxt . HasError())
+                    return;
+                
+                MCVariable *t_var;
+                t_var = dest -> classify_getvariable() -> evalvar(ctxt);
+                
+                t_var -> clearuql();
+                
+                if (!t_var -> converttomutabledata(ctxt))
+                    return;
+                
+                MCDataRef t_data;
+                t_data = (MCDataRef)t_var -> getvalueref();
+            
+                index_t t_offset;
+                uindex_t t_length;
+                if (t_index >= 0)
+                    t_offset = t_index - 1, t_length = 1;
+                else
+                    t_offset = (signed)MCDataGetLength(t_data) + t_index, t_length = 1;
+                
+                if (t_offset < 0)
+                    t_offset = 0, t_length = 0;
+                    
+                if (!MCDataReplace((MCDataRef)t_var -> getvalueref(), MCRangeMake((unsigned)t_offset, t_length), *t_value_data))
+                    return;
+                
+                t_var -> synchronize(ctxt, true);
+            }
+            break;
+        }
 	}
     else
 	{        

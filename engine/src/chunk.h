@@ -81,6 +81,17 @@ public:
 	MCChunk(Boolean isdest);
 	~MCChunk();
 
+    // Classify the chunk expression.
+    MCExpressionClass classify(void) const;
+    
+    // Return the target varref of the chunk expression - if classified as
+    // variable type.
+    MCVarref *classify_getvariable(void) const;
+    
+    // Return the singleton index of the chunk expression - if classified as
+    // singleton chunk type.
+    MCExpression *classify_getsingletonexpr(void) const;
+    
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
     //Exec_stat eval(MCExecPoint &);
     void eval_ctxt(MCExecContext &ctxt, MCExecValue& r_value);

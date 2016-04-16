@@ -104,6 +104,10 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
+    if (destvar != nil &&
+        destvar -> classify() == kMCExpressionClassVariable)
+        form = kMCAddFormAddToVariable;
+    
 	return PS_NORMAL;
 }
 
@@ -192,11 +196,33 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     {
         return;
     }
-	
-	MCExecValue t_dst;
+
+	if (form == kMCAddFormAddToVariable &&
+        t_src . type == kMCExecValueTypeDouble)
+    {
+        MCVariable *t_var;
+        t_var = destvar -> evalvar(ctxt);
+        if (!t_var -> peep_isarray())
+        {
+            if (!t_var -> peep_converttomutablenumber(ctxt))
+            {
+                ctxt . SetNumberExpected(t_old_expectation);
+                return;
+            }
+        
+            MCMathExecAddNumberToNumber(ctxt, t_var -> peep_getmutablenumber(), t_src . double_value, t_var -> peep_getmutablenumber());
+            
+            t_var -> synchronize(ctxt, true);
+            
+            ctxt . SetNumberExpected(t_old_expectation);
+            return;
+        }
+    }
+    
+    MCExecValue t_dst;
     MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != nil)
-	{
+    if (destvar != nil)
+    {
         bool t_success;
         if (destvar -> needsContainer())
             t_success = destvar -> evalcontainer(ctxt, &t_dst_container)
@@ -214,8 +240,8 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
             return;
         }
             
-	}
-	else
+    }
+    else
     {
         if (!ctxt . EvaluateExpression(dest, EE_ADD_BADDEST, t_dst))
         {
@@ -231,33 +257,33 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
         return;
     }
 
-	MCExecValue t_result;
+    MCExecValue t_result;
     t_result . type = t_dst . type;
     if (t_src . type == kMCExecValueTypeArrayRef)
-	{
+    {
         if (t_dst . type == kMCExecValueTypeArrayRef)
             MCMathExecAddArrayToArray(ctxt, t_src . arrayref_value, t_dst . arrayref_value, t_result . arrayref_value);
-		else
-		{
+        else
+        {
             ctxt . LegacyThrow(EE_ADD_MISMATCH);
             return;
-		}
-	}
-	else
-	{
+        }
+    }
+    else
+    {
         if (t_dst . type == kMCExecValueTypeArrayRef)
             MCMathExecAddNumberToArray(ctxt, t_src . double_value, t_dst . arrayref_value, t_result . arrayref_value);
-		else
+        else
             MCMathExecAddNumberToNumber(ctxt, t_src . double_value, t_dst . double_value, t_result . double_value);
-	}
+    }
     
     MCExecTypeRelease(t_src);
     MCExecTypeRelease(t_dst);
-	
-	if (!ctxt . HasError())
-	{
-		if (destvar != nil)
-		{
+    
+    if (!ctxt . HasError())
+    {
+        if (destvar != nil)
+        {
             bool t_success;
             if (destvar -> needsContainer())
                 t_success = t_dst_container -> give_value(ctxt, t_result);
@@ -266,14 +292,14 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
             
             if (!t_success)
                 ctxt . Throw();
-		}
-		else
-		{
-			if (dest->set(ctxt, PT_INTO, t_result))
-				return;
-			ctxt . LegacyThrow(EE_ADD_CANTSET);
-		}
-	}
+        }
+        else
+        {
+            if (dest->set(ctxt, PT_INTO, t_result))
+                return;
+            ctxt . LegacyThrow(EE_ADD_CANTSET);
+        }
+    }
 }
 
 void MCAdd::compile(MCSyntaxFactoryRef ctxt)

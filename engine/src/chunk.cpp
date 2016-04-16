@@ -190,6 +190,48 @@ MCChunk::~MCChunk()
 	delete destvar;
 }
 
+MCExpressionClass MCChunk::classify(void) const
+{
+    if (url == NULL &&
+        stack == NULL &&
+        background == NULL &&
+        card == NULL &&
+        group == NULL &&
+        object == NULL &&
+        cline == NULL &&
+        token == NULL &&
+        item == NULL &&
+        word == NULL &&
+        character == NULL &&
+        codepoint == NULL &&
+        codeunit == NULL &&
+        paragraph == NULL &&
+        sentence == NULL &&
+        trueword == NULL &&
+        destvar != NULL)
+    {
+        if (byte != NULL)
+        {
+            if (byte -> endpos == NULL)
+                return kMCExpressionClassSingletonByteChunkOfVariable;
+        }
+        else
+            return destvar -> classify();
+    }
+    
+    return kMCExpressionClassGeneral;
+}
+
+MCVarref *MCChunk::classify_getvariable(void) const
+{
+    return destvar;
+}
+
+MCExpression *MCChunk::classify_getsingletonexpr(void) const
+{
+    return byte -> startpos;
+}
+
 Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 {
 	Symbol_type type;

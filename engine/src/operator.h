@@ -252,19 +252,24 @@ public:
         }
 
         r_value . valueref_value = nil;
-        if (t_left . type == kMCExecValueTypeArrayRef)
+        if (t_left . type != kMCExecValueTypeArrayRef)
         {
-            if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, r_value . arrayref_value);
+            if (t_right . type != kMCExecValueTypeArrayRef)
+            {
+                Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
+                r_value . type = kMCExecValueTypeDouble;
+                ctxt . SetNumberExpected(t_old_expectation);
+                return;
+            }
             else
-                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, r_value . arrayref_value);
+                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, r_value . arrayref_value);
         }
         else
         {
-            if (t_right . type == kMCExecValueTypeArrayRef)
-                EvalArrayByNumber(ctxt, t_right . arrayref_value, t_left . double_value, r_value . arrayref_value);
+            if (t_right . type != kMCExecValueTypeArrayRef)
+                EvalArrayByNumber(ctxt, t_left . arrayref_value, t_right . double_value, r_value . arrayref_value);
             else
-                Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
+                EvalArrayByArray(ctxt, t_left . arrayref_value, t_right . arrayref_value, r_value . arrayref_value);
         }
         
         if (ctxt . HasError())
