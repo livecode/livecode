@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "chunk.h"
 #include "object.h"
 #include "field.h"
+#include "scrolbar.h"
 #include "image.h"
 #include "button.h"
 #include "card.h"
@@ -3791,6 +3792,46 @@ Exec_stat MCMouse::eval(MCExecPoint &ep)
 #endif /* MCMouse */
 }
 
+// Helper method that detects if the mouse is on the square area whose sides are the ends of the horizontal and vertical scrollbars
+static bool isMouseOnScrollbarRectsIntersection(MCField *p_fld)
+{
+	bool t_has_vsb = (p_fld-> getflags() & F_VSCROLLBAR);
+	bool t_has_hsb = (p_fld-> getflags() & F_HSCROLLBAR);
+	
+	if (t_has_hsb && t_has_vsb)
+	{
+		MCRectangle t_fld_rect = p_fld -> getfrect();
+		
+		int t_bottom = t_fld_rect.y + t_fld_rect.height;
+		int t_right = t_fld_rect.x + t_fld_rect.width;
+		
+		uint t_width = p_fld-> getvscrollbar()->getrect().width;
+		uint t_height = p_fld-> gethscrollbar()->getrect().height;
+		
+		MCRectangle t_intersection_rect = MCRectangleMake(t_right, t_bottom, t_width, t_height);
+		if (MCU_point_in_rect(t_intersection_rect, MCmousex, MCmousey))
+			return true;
+	}
+		
+	return false;
+}
+
+// PM-2015-09-21: [[ Bug 11344 ]] mouseCharChunk/mouseChar/mouseChunk should return empty when the mouse is on a scrollbar
+static bool isMouseOnScrollbarRect(MCField *p_fld)
+{
+	// Success cases separated for improved readability
+	if ((p_fld-> getflags() & F_VSCROLLBAR && MCU_point_in_rect(p_fld-> getvscrollbar()->getrect(), MCmousex, MCmousey)))
+		return true;
+	else if ((p_fld-> getflags() & F_HSCROLLBAR && MCU_point_in_rect(p_fld-> gethscrollbar()->getrect(), MCmousex, MCmousey)))
+		return true;
+	else if (isMouseOnScrollbarRectsIntersection(p_fld))
+		return true;
+		
+	return false;
+}
+
+
+
 Exec_stat MCMouseChar::eval(MCExecPoint &ep)
 {
 #ifdef /* MCMouseChar */ LEGACY_EXEC
@@ -3801,7 +3842,8 @@ Exec_stat MCMouseChar::eval(MCExecPoint &ep)
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
 		{
 			MCField *fptr = (MCField *)mfocused;
-			fptr->locchar(ep, False);
+			if (!isMouseOnScrollbarRect(fptr))
+				fptr->locchar(ep, False);
 		}
 	}
 	return ES_NORMAL;
@@ -3818,7 +3860,8 @@ Exec_stat MCMouseCharChunk::eval(MCExecPoint &ep)
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
 		{
 			MCField *fptr = (MCField *)mfocused;
-			fptr->loccharchunk(ep, False);
+			if (!isMouseOnScrollbarRect(fptr))
+				fptr->loccharchunk(ep, False);
 		}
 	}
 	return ES_NORMAL;
@@ -3835,7 +3878,8 @@ Exec_stat MCMouseChunk::eval(MCExecPoint &ep)
 		if (mfocused != NULL && mfocused->gettype() == CT_FIELD)
 		{
 			MCField *fptr = (MCField *)mfocused;
-			fptr->locchunk(ep, False);
+			if (!isMouseOnScrollbarRect(fptr))
+				fptr->locchunk(ep, False);
 		}
 	}
 	return ES_NORMAL;
