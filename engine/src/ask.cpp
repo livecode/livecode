@@ -253,6 +253,10 @@ Exec_stat MCAsk::exec(class MCExecPoint& ep)
 		it -> set(ep);
 	else
 		MCeerror -> add(t_error, line, pos);
+	
+	// PM-2015-07-23: [[ Bug 3412 ]] Send resumeStack msg when closing ask dialogs
+	if (MCdefaultstackptr != nil && MCdefaultstackptr -> getopened())
+		MCdefaultstackptr -> getcurcard() -> message(MCM_resume_stack);
 
 	return t_error ? ES_ERROR : ES_NORMAL;
 }
