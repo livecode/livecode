@@ -1321,7 +1321,7 @@ void MCS_close(IO_handle &x_stream)
 }
 
 // Inspects the BOM of a text file to retrieve its encoding
-MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
+MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream, uindex_t &r_BOM_size)
 {
     uint1 t_BOM[4];
     int64_t t_size;
@@ -1333,7 +1333,10 @@ MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
     t_size = x_stream -> GetFileSize();
 
     t_position = x_stream -> Tell();
-    x_stream -> Seek(0, 1);    
+    x_stream -> Seek(0, 1);
+    
+    uindex_t t_BOM_size;
+    t_BOM_size = 0;
     
     // Reading to find a UTF-32 BOM
     if (t_size > 3)
@@ -1344,12 +1347,18 @@ MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
                     && t_BOM[1] == 0xFE
                     && t_BOM[2] == 0x0
                     && t_BOM[3] == 0x0)
+            {
+                t_BOM_size = 4;
                 t_encoding = kMCFileEncodingUTF32LE;
+            }
             else if (t_BOM[0] == 0x0
                      && t_BOM[1] == 0x0
                      && t_BOM[2] == 0xFE
                      && t_BOM[3] == 0xFF)
+            {
+                t_BOM_size = 4;
                 t_encoding = kMCFileEncodingUTF32BE;
+            }
             else
                 x_stream -> Seek(0,1);
         }
@@ -1360,9 +1369,15 @@ MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
         if (x_stream -> Read(t_BOM, 2, t_size_read))
         {
             if (t_BOM[0] == 0xFE && t_BOM[1] == 0xFF)
+            {
+                t_BOM_size = 2;
                 t_encoding = kMCFileEncodingUTF16BE;
+            }
             else if (t_BOM[0] == 0xFF && t_BOM[1] == 0xFE)
+            {
+                t_BOM_size = 2;
                 t_encoding = kMCFileEncodingUTF16LE;
+            }
             else
                 x_stream -> Seek(0, 1);
         }
@@ -1375,9 +1390,13 @@ MCFileEncodingType MCS_resolve_BOM(IO_handle x_stream)
                 && t_BOM[0] == 0xEF
                 && t_BOM[1] == 0xBB
                 && t_BOM[2] == 0xBF)
+        {
+            t_BOM_size = 3;
             t_encoding = kMCFileEncodingUTF8;
+        }
     }
 
+    r_BOM_size = t_BOM_size;
     x_stream -> Seek(t_position, 1);
     return t_encoding;
 }
@@ -1452,14 +1471,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         t_bom_size = 0;
         t_buffer . Shrink(t_size);
 
-        t_file_encoding = MCS_resolve_BOM(t_file);
-        
-        if (t_file_encoding == kMCFileEncodingUTF16
-                || t_file_encoding == kMCFileEncodingUTF16BE
-                || t_file_encoding == kMCFileEncodingUTF16LE)
-            t_bom_size = 2;
-        else if (t_file_encoding == kMCFileEncodingUTF8)
-            t_bom_size = 3;
+        t_file_encoding = MCS_resolve_BOM(t_file, t_bom_size);
 
         if (t_success)
             t_success =  MCStringCreateWithBytes((byte_t*)t_buffer.Chars() + t_bom_size, t_buffer.CharCount() - t_bom_size, MCS_file_to_string_encoding(t_file_encoding), false, &t_text);

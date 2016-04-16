@@ -1763,9 +1763,8 @@ public:
             t_fptr = fopen(*t_path_sys, IO_CREATE_MODE);
 
         if (t_fptr != NULL)
-        {
-            t_handle = new MCStdioFileHandle(t_fptr);
-        }
+            // Use a buffered file handle, to allow the use of PutBack
+            t_handle = new MCBufferedFileHandle(new MCStdioFileHandle(t_fptr));
 
         return t_handle;
     }
@@ -1798,7 +1797,8 @@ public:
             setbuf(t_fptr, NULL);
 
         if (t_fptr != NULL)
-            t_handle = new MCStdioFileHandle(t_fptr);
+            // Use a buffered file handle, to allow the use of PutBack
+            t_handle = new MCBufferedFileHandle(new MCStdioFileHandle(t_fptr));
 
         return t_handle;
     }
@@ -1826,7 +1826,8 @@ public:
         configureSerialPort((short)fileno(t_fptr));
 
         if (t_fptr != NULL)
-            t_handle = new MCStdioFileHandle(t_fptr);
+            // Use a buffered file handle, to allow the use of PutBack
+            t_handle = new MCBufferedFileHandle(new MCStdioFileHandle(t_fptr));
 
         return t_handle;
     }

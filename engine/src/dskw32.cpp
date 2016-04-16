@@ -3182,7 +3182,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				if (t_buffer == NULL)
 				{
 					CloseHandle(t_file_mapped_handle);
-					t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                    t_handle = new MCBufferedFileHandle(new MCStdioFileHandle((MCWinSysHandle)t_file_handle));
                     t_close_file_handler = t_handle == NULL;
 				}
 				else
@@ -3200,13 +3200,13 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			// (for empty files for instance).
 			else
             {
-				t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+                t_handle = new MCBufferefFileHandle(new MCStdioFileHandle((MCWinSysHandle)t_file_handle));
                 t_close_file_handler = t_handle == NULL;
             }
 		}
 		else
         {
-			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+            t_handle = new MCBufferFileHandle(new MCStdioFileHandle((MCWinSysHandle)t_file_handle));
             t_close_file_handler = t_handle == NULL;
         }
 
@@ -3231,7 +3231,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			return nil;
 
 		// Since we can only have an STD fd, we know we have a pipe.
-		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle, true);
+		t_stdio_handle = new MCBufferedFileHandle(new MCStdioFileHandle((MCWinSysHandle)t_handle, true));
 
 		return t_stdio_handle;
 	}

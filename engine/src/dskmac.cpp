@@ -6656,8 +6656,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (fptr != NULL && created)
             MCS_mac_setfiletype(p_path);
         
-		if (fptr != NULL)
-            t_handle = new MCStdioFileHandle(fptr);
+        if (fptr != NULL)
+            // Use a buffered file handle, to allow the use of PutBack
+            t_handle = new MCBufferedFileHandle(new MCStdioFileHandle(fptr));
         
         return t_handle;
     }
@@ -6706,8 +6707,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (p_mode == kMCOpenFileModeWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
-		IO_handle t_handle;
-		t_handle = new MCStdioFileHandle(t_stream);
+        IO_handle t_handle;
+        // Use a buffered file handle, to allow the use of PutBack
+        t_handle = new MCBufferedFileHandle(new MCStdioFileHandle(t_stream));
 		
 		return t_handle;
     }
@@ -6759,7 +6761,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             // SN-2014-05-02 [[ Bug 12246 ]] Serial I/O fails on write
             // The serial port number is never used in the 6.X engine... and switching to an STDIO file
             // is enough to have the serial devices working perfectly.
-            t_handle = new MCStdioFileHandle(fptr, true);
+            // Use a buffered file handle, to allow the use of PutBack
+            t_handle = new MCBufferedFileHandle(new MCStdioFileHandle(fptr));
         }
         
         return t_handle;

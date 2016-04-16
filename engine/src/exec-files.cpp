@@ -882,41 +882,56 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, i
 
 	// Attempt to open the file to find out its current encoding
     // FG-2014-05-21: [[ Bugfix 12246 ]] Don't open devices for BOM read
-	Encoding_type t_encoding = (Encoding_type)p_encoding;
-    if (p_encoding == kMCFileEncodingText && !p_is_driver)
+    Encoding_type t_encoding;
+    uindex_t t_BOM_size;
+    
+    // SN-2015-11-10: [[ Bug 16333 ]] We need to offset the BOM when reading
+    // from the file, if there is any, even if we know what the file encoding is
+    if (p_is_driver)
     {
+        if (p_encoding == kMCFileEncodingText)
+            t_encoding = (Encoding_type)kMCFileEncodingNative;
+        else
+            t_encoding = (Encoding_type)p_encoding;
+        
+        t_BOM_size = 0;
+    }
+    else
+    {
+        t_encoding = (Encoding_type)p_encoding;
+        t_BOM_size = 0;
         IO_handle t_BOM_stream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
 		if (t_BOM_stream != NULL)
-		{
-			t_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream);
+        {
+            Encoding_type t_bom_encoding;
+            t_bom_encoding = (Encoding_type)MCS_resolve_BOM(t_BOM_stream, t_BOM_size);
 			MCS_close(t_BOM_stream);
+            
+            // Only use the encoding found is case it wasn't provided
+            if (p_encoding == kMCFileEncodingText)
+                t_encoding = t_bom_encoding;
 		}
 		else
 		{
 			t_encoding = (Encoding_type)kMCFileEncodingNative;
 		}
     }
-    // FG-2014-09-23: [[ Bugfix 12545 ]] "text" is not valid when performing I/O
-    else if (p_encoding == kMCFileEncodingText && p_is_driver)
-        t_encoding = (Encoding_type)kMCFileEncodingNative;
-    else
-        t_encoding = (Encoding_type)p_encoding;
 
 	switch (p_mode)
 	{
 	case OM_APPEND:
-        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeAppend, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeAppend, False, p_is_driver, t_BOM_size);
 		break;
 	case OM_NEITHER:
 		break;
 	case OM_READ:
-        istream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, 0);
+        istream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeRead, True, p_is_driver, t_BOM_size);
 		break;
 	case OM_WRITE:
-        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeWrite, False, p_is_driver, 0);
+        ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeWrite, False, p_is_driver, t_BOM_size);
 		break;
 	case OM_UPDATE:
-        istream = ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeUpdate, False, p_is_driver, 0);
+        istream = ostream = MCS_open(MCNameGetString(p_name), kMCOpenFileModeUpdate, False, p_is_driver, t_BOM_size);
 		break;
 	default:
 		break;
@@ -1301,6 +1316,30 @@ void MCFilesExecPerformWait(MCExecContext &ctxt, int4 p_index, real8 &x_duration
     }
 }
 
+bool MCFilesExecPerformPutBackString(MCExecContext &ctxt, intenum_t p_encoding, IO_handle p_stream, MCStringRef p_string)
+{
+    if (MCStringIsEmpty(p_string))
+        return true;
+
+    MCStringEncoding t_encoding;
+    t_encoding = MCS_file_to_string_encoding((MCFileEncodingType)p_encoding);
+    
+    byte_t* t_bytes;
+    uindex_t t_byte_count;
+    
+    if (!MCStringConvertToBytes(p_string, t_encoding, false, t_bytes, t_byte_count))
+        return false;
+    
+    // We need to put them back in the reversed order, as the last char which is
+    // put back is the first one to come at the next read.
+    for (index_t i = (index_t)t_byte_count - 1; i >= 0; --i)
+        MCS_putback((char)t_bytes[i], p_stream);
+    
+    return true;
+}
+
+            
+
 // Reads from the stream a codeunit and put it back in the end of the mutable buffer x_buffer
 // For a UTF-8 character, it might read more than one codepoint, the number of codeunit read is returned
 // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
@@ -1362,10 +1401,9 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
             
             if (t_bytes_read == 4 || r_stat == IO_EOF)
             {
-                uint32_t t_codeunit;
                 MCAutoStringRef t_string;
                 
-                /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)&t_codeunit, t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
+                /* UNCHECKED */ MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, MCS_file_to_string_encoding((MCFileEncodingType)p_encoding), false, &t_string);
                 /* UNCHECKED */ MCStringAppend(x_buffer, *t_string);
                 
                 t_codeunit_added = MCStringGetLength(*t_string);
@@ -1412,7 +1450,7 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 					// Read all the expected bytes from the lead one
 					for (uint4 i = 1; i < t_to_read + 1 && t_sequence_correct; )
 					{
-						t_bytes . Extend(1);
+						t_bytes . Extend(1 + i);
 						r_stat = MCS_readall(t_bytes . Bytes() + i, 1, p_stream, t_rsize);
 						if (t_rsize != 1)
 						{
@@ -1436,6 +1474,7 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 				if (t_sequence_correct)
 				{
 					MCAutoStringRef t_codepoints;
+                    
 					MCStringCreateWithBytes(t_bytes . Bytes(), t_bytes_read, kMCStringEncodingUTF8, false, &t_codepoints);
 					t_codeunit_added = MCStringGetLength(*t_codepoints);
 					MCStringAppend(x_buffer, *t_codepoints);
@@ -1470,83 +1509,58 @@ uint4 MCFilesExecPerformReadCodeUnit(MCExecContext& ctxt, int4 p_index, intenum_
 
 /*
  * Read the appropriate chunk from the stream.
- * p_last_char_boundary is the starting index of the next char - it's the length of the string if the last char full
- * Returns
- *      - on CODEUNIT, 0
- *      - on success, the end boundary of the last char loaded
- *      - on error, the one passed as parameter
+ * If a CHARACTER needs to be read, the function needs to read more (in order to
+ * find the character boundary).
+ * It will take care to put back the codeunit that it had to read over the char.
  */
 // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
 // Added p_empty_allowed, to allow a read to fail in case we read 'until empty'
-bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_encoding, bool p_empty_allowed, intenum_t p_file_unit, uint4 p_last_boundary, real8 &x_duration, IO_handle x_stream, MCStringRef x_buffer, uint4 &r_new_boundary, IO_stat &r_stat)
+bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_encoding, bool p_empty_allowed, intenum_t p_file_unit, real8 &x_duration, IO_handle x_stream, MCStringRef x_buffer, IO_stat &r_stat)
 {
     switch (p_file_unit)
     {
     case FU_CODEUNIT:
         if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
             return false;
-
-        r_new_boundary = MCStringGetLength(x_buffer);
         break;
 
     case FU_CODEPOINT:
-        if (MCStringGetLength(x_buffer) == p_last_boundary
-                || MCStringIsEmpty(x_buffer))
+        // We are at the beginning of a char
+        if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
+            return false;
+            
+        if (MCUnicodeCodepointIsHighSurrogate(MCStringGetCharAtIndex(x_buffer, MCStringGetLength(x_buffer) - 1)))
         {
-            // We are at the beginning of a char
+            // Having a lead surrogate in the end, we need to read the next codeunit of the codepoint
             if (!MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
                 return false;
         }
-        if (MCUnicodeCodepointIsHighSurrogate(MCStringGetCharAtIndex(x_buffer, p_last_boundary)))
-        {
-            if (MCStringGetLength(x_buffer) - p_last_boundary == 1)
-            {
-                // Having a lead surrogate in the end, we need to read the next codeunit of the codepoint
-                if (MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, x_buffer, r_stat))
-                    // We failed at reading, so we just add a single codeunit codepoint.
-                    r_new_boundary = p_last_boundary + 1;
-                else
-                    // We have successfully got the trail surrogate
-                    r_new_boundary = p_last_boundary + 2;
-
-                break;
-            }
-        }
-        else
-            // No lead/trail surrogate pair loaded - but up to 2 codeunit from UTF-8
-            r_new_boundary = MCStringGetLength(x_buffer);
 
         break;
     case FU_CHARACTER:
     {
-        // In order to make the reading of 1 char faster, we use a temporary,
-        // small buffer.
-        // We copy the codeunit(s) we read over the last character boundary at
-        //  the previous reading, and put it into our reading buffer.
         MCAutoStringRef t_read_buffer;
-        uindex_t t_initial_length;
         
-        if (!MCStringMutableCopySubstring(x_buffer, MCRangeMake(p_last_boundary, UINDEX_MAX), &t_read_buffer))
+        if (!MCStringCreateMutable(0, &t_read_buffer))
             return false;
-        
-        // We keep track of the number of codeunit that we have copied for the
-        //  main buffer.
-        t_initial_length = MCStringGetLength(*t_read_buffer);
         
         while(true)
         {
             uint4 t_codeunit_read = MCFilesExecPerformReadCodeUnit(ctxt, p_index, p_encoding, p_empty_allowed, x_duration, x_stream, *t_read_buffer, r_stat);
 
+            uint4 t_buffer_length = MCStringGetLength(*t_read_buffer);
+            
             if (!t_codeunit_read)
             {
-                r_new_boundary = MCStringGetLength(x_buffer);
-
-                // In case we came across EOF before the char is finished, we want to had the codepoints that have been read
-                if (r_new_boundary != p_last_boundary)
+                // In case we came across EOF before the char is finished, we want to have the codepoints that have been read
+                if (t_buffer_length != 0)
                 {
                     // EOF is actually not encountered.
                     if (r_stat == IO_EOF)
                         r_stat = IO_NORMAL;
+                    
+                    // Append the buffer that we read until the end of stream
+                    return MCStringAppend(x_buffer, *t_read_buffer);
                     break;
                 }
                 else
@@ -1559,16 +1573,19 @@ bool MCFilesExecPerformReadChunk(MCExecContext &ctxt, int4 p_index, intenum_t p_
 
             if (t_char_range . length > 1)
             {
-                // We append the reading buffer MINUS the initial codeunits
+                // We append the reading buffer without the last codeunits read,
+                // which belong to the next char.
                 MCAutoStringRef t_new_codeunits;
-                if (!MCStringCopySubstring(*t_read_buffer, MCRangeMake(t_initial_length, UINDEX_MAX), &t_new_codeunits)
-                        || !MCStringAppend(x_buffer, *t_new_codeunits))
+                MCAutoStringRef t_next_char_codeunits;
+                
+                if (!MCStringCopySubstring(*t_read_buffer, MCRangeMake(0, t_buffer_length - t_codeunit_read), &t_new_codeunits)
+                     ||!MCStringCopySubstring(*t_read_buffer, MCRangeMake(t_buffer_length - t_codeunit_read, t_buffer_length), &t_next_char_codeunits))
                     return false;
                 
-                // The last codeunit is now on part of a new character:
-                //  we can end here the loop, and appendmust end now the loop and mark the position
-                r_new_boundary = MCStringGetLength(x_buffer) - t_codeunit_read;
-                break;
+                MCFilesExecPerformPutBackString(ctxt, p_encoding, x_stream, *t_next_char_codeunits);
+
+                // We add the codeunits of the char that we read
+                return MCStringAppend(x_buffer, *t_new_codeunits);
             }
         }
     }
@@ -1611,25 +1628,21 @@ void MCFilesExecPerformReadUnicodeFor(MCExecContext& ctxt, IO_handle p_stream, i
     MCAutoStringRef t_output;
     MCStringCreateMutable(0, &t_output);
 
-    uint4 t_last_char_boundary = 0;
     uint4 t_progress = 0;
     IO_stat t_stat;
 
     while (t_progress < p_count)
     {
-        uint4 t_new_boundary;
         // SN-2014-06-18 [[ Bug 12538 ]] Read from process until empty
         // We need to allow a reading to return nothing, without being stuck in a waiting loop for data
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, false, p_unit_type, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_boundary,t_stat))
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, false, p_unit_type, t_duration, p_stream, *t_output, t_stat))
             // An error occurred during the reading
             break;
 
-        // Update the position of the last char boundary
-        t_last_char_boundary = t_new_boundary;
         ++t_progress;
     }
 
-    if (!MCStringCopySubstring(*t_output, MCRangeMake(0, t_last_char_boundary), r_output))
+    if (!MCStringCopy(*t_output, r_output))
         r_stat = IO_ERROR;
     else
         r_stat = t_stat;
@@ -1677,11 +1690,14 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
 
     while (p_count)
     {
-        uint4 t_new_char_boundary;
-        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CODEPOINT, t_last_char_boundary, t_duration, p_stream, *t_output, t_new_char_boundary, t_stat))
+        uindex_t t_new_char_boundary;
+        
+        if (!MCFilesExecPerformReadChunk(ctxt, p_index, p_encoding, t_empty_allowed, FU_CHARACTER, t_duration, p_stream, *t_output, t_stat))
             // error occurred while reading a codepoint
             break;
-
+        
+        t_new_char_boundary = MCStringGetLength(*t_output);
+        
         if (words)
         {
             if (doingspace)
@@ -1727,37 +1743,27 @@ void MCFilesExecPerformReadTextUntil(MCExecContext& ctxt, IO_handle p_stream, in
                 //   to retreat, which *doesn't* work for process p_streams.
                 if (MCStringGetLength(*t_norm_sent) == 1)
                 {
-                    if (t_new_char_boundary != MCStringGetLength(*t_output))
+                    // We need to read the next char
+                    uint1 term;
+                    uint4 nread = 1;
+                    if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
                     {
-                        // We already have the next char loaded
-                        // If it's a '\n', we remove it
-                        if (MCStringGetCharAtIndex(*t_output, t_new_char_boundary) == '\n')
-                            /* UNCHECKED */ MCStringRemove(*t_output, MCRangeMake(t_new_char_boundary, 1));
-                    }
-                    else
-                    {
-                        // We need to read the next char
-                        uint1 term;
-                        uint4 nread = 1;
-                        if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
-                        {
-                            if (term != '\n')
-                                MCS_putback(term, p_stream);
-                            else
-                                // Reaching that point, we want to change the last char of the buffer (being a lone, byte-wide <CR>) to an LF
-                                /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(t_last_char_boundary, 1), MCSTR("\n"));
-                        }
+                        if (term != '\n')
+                            MCS_putback(term, p_stream);
+                        else
+                            // Reaching that point, we want to change the last char of the buffer (being a lone, byte-wide <CR>) to an LF
+                        /* UNCHECKED */ MCStringReplace(*t_output, MCRangeMake(t_last_char_boundary, 1), MCSTR("\n"));
                     }
                 }
                 --p_count;
             }
         }
-        // Update the position of the last char boundary
+        
         t_last_char_boundary = t_new_char_boundary;
     }
 
     // We need to discard any char read over the actual amount needed
-    MCStringCopySubstring(*t_output, MCRangeMake(0, t_last_char_boundary), r_output);
+    MCStringCopy(*t_output, r_output);
     r_stat = t_stat;
 }
 
