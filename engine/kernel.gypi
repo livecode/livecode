@@ -145,6 +145,7 @@
 								'$(SDKROOT)/System/Library/Frameworks/QuartzCore.framework',
 								'$(SDKROOT)/System/Library/Frameworks/StoreKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/UIKit.framework',
+								'$(SDKROOT)/System/Library/Frameworks/CoreTelephony.framework',
 							],	
 						},
 					],
