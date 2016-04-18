@@ -2412,7 +2412,7 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 
 			t_success = t_name != nil && t_width != 0 && t_height != 0;
 
-			if (MCCStringFirstIndexOf(x_line, t_name, t_colors_index))
+			if (t_success && MCCStringFirstIndexOf(x_line, t_name, t_colors_index))
 			{
 				t_colors_index += MCCStringLength(t_name);
 				// may be a monochrome table, in which case we keep looking
@@ -2424,7 +2424,8 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 			}
 		}
 
-		t_success = IO_NORMAL == IO_fgets(x_line, XPM_MAX_LINE, p_stream);
+		if (t_success)
+			t_success = IO_NORMAL == IO_fgets(x_line, XPM_MAX_LINE, p_stream);
 	}
 
 	if (t_success)
