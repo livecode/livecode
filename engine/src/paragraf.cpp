@@ -1602,7 +1602,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				drawcomposition(dc, lptr, t_current_x, t_current_y, ceilf(linespace), compstart, compend, compconvstart, compconvend);
 		}
 
-		t_current_y += linespace;
+		t_current_y += ceilf(linespace);
 
 		lptr = lptr->next();
 	}
