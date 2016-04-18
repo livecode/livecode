@@ -251,10 +251,33 @@ void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef p_module_name)
     for(MCLoadedExtension *t_previous = nil, *t_ext = MCextensions; t_ext != nil; t_previous = t_ext, t_ext = t_ext -> next)
         if (MCNameIsEqualTo(t_ext -> module_name, *t_name))
         {
-			// If the retain count of the module is not 1, then it can't be
-			// unloaded.
-			if (MCScriptGetRetainCountOfModule(t_ext -> module) != 1)
+            bool t_in_use = false;
+            
+            if (MCScriptIsModuleALibrary(t_ext -> module))
+            {
+                // If the module is a library module, then if it is not in
+                // use by another module it will have a reference count of
+                // 2 - one for the module ref in the loaded extensions list
+                // and one for the singleton instance.
+                if (2 != MCScriptGetRetainCountOfModule(t_ext -> module))
+                {
+                    t_in_use = true;
+                }
+            }
+            else
+            {
+                // If the module is a widget or non-public module then it
+                // can only be unloaded if it is not in use in a widget
+                // instance, or used by an instance.
+                if (1 != MCScriptGetRetainCountOfModule(t_ext -> module))
+                {
+                    t_in_use = true;
+                }
+            }
+                
+            if (t_in_use)
 			{
+                
 				ctxt . SetTheResultToCString("module in use");
 				return;
 			}
