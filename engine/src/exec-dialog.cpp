@@ -352,11 +352,22 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	MCAutoListRef t_button_list;
 	MCAutoStringRef t_buttons_string;
 
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_button_list);
-	for (uindex_t i = 0; i < p_button_count; i++)
-		/* UNCHECKED */ MCListAppend(*t_button_list, p_buttons[i]);
-	/* UNCHECKED */ MCListCopyAsString(*t_button_list, &t_buttons_string);
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_button_list);
+	for (uindex_t i = 0; t_success && i < p_button_count; i++)
+		t_success = MCListAppend(*t_button_list, p_buttons[i]);
+	if (t_success)
+		t_success = MCListCopyAsString(*t_button_list, &t_buttons_string);
 
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;
