@@ -639,6 +639,12 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 			t_success = t_types.Append(t_split);
 	}
 	
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	bool t_cancelled;
 	MCAutoStringRef t_value, t_result;
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
@@ -658,10 +664,17 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 		MCAutoListRef t_type_list;
 		MCAutoStringRef t_types_string;
 		
-		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
-		for (uindex_t i = 0; i < t_types.Count(); i++)
-			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
-		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
+		t_success = MCListCreateMutable('\n', &t_type_list);
+		for (uindex_t i = 0; t_success && i < t_types.Count(); i++)
+			t_success = MCListAppend(*t_type_list, t_types[i]);
+		if (t_success)
+			t_success = MCListCopyAsString(*t_type_list, &t_types_string);
+		
+		if (!t_success)
+		{
+			ctxt.Throw();
+			return;
+		}
 		
 		MCStringRef t_args[5];
 		uindex_t t_arg_count = 5;
