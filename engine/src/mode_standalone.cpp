@@ -182,7 +182,7 @@ bool MCStandaloneCapsuleReadString(IO_handle p_stream, uint32_t p_length, MCStri
 		t_success = IO_read(t_cstring, p_length, p_stream) == IO_NORMAL;
 	
 	if (t_success)
-		t_success = MCStringCreateWithCStringA(t_cstring, &r_string);
+		t_success = MCStringCreateWithCString(t_cstring, r_string);
 	
 	if (t_cstring != nil)
 		MCMemoryDeallocate(t_cstring);
@@ -314,8 +314,6 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		// Execute the startup script at this point since we have loaded
 		// all stacks.
 		self -> stack -> domess(*t_script_str);
-		
-		delete t_script;
 	}
 	break;
 			
