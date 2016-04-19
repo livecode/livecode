@@ -37,4 +37,4 @@ On Unix systems, the <machine> <function> uses the uname() system function.
 
 On Android devices, the <machine> <function> returns the manufacturer's name for the device. For example, if running on a Google Nexus One, the string is "Nexus One".
 
-References: string (keyword), function (control_st), processor (function), application (glossary), return (glossary)
+References: string (keyword), function (control structure), processor (function), application (glossary), return (glossary)

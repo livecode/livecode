@@ -36,4 +36,4 @@ The process takes a short time to exit after you issue the <close process> <comm
 
 If a process was opened with the access mode neither, it exits automatically when it finishes running, and does not need to be closed.
 
-References: wait (command), kill (command), read from process (command), quit (command), open process (command), openProcesses (function), command (glossary), standard input (glossary), Mac OS (glossary), process (glossary), exit (control_st)
+References: wait (command), kill (command), read from process (command), quit (command), open process (command), openProcesses (function), command (glossary), standard input (glossary), Mac OS (glossary), process (glossary), exit (control structure)

@@ -38,6 +38,6 @@ The <there is no> <operator> is the logical inverse of the <there is a> <operato
 
 >*Note:* The <there is no> <operator> is implemented internally as a <function>, and therefore has lower <precedence> than other <operator|operators>.
 
-References: file (keyword), there is a (operator), function (control_st), openProcesses (function), exists (function), folder (glossary), operator (glossary), evaluate (glossary), precedence (glossary), process (glossary), object (object)
+References: file (keyword), there is a (operator), function (control structure), openProcesses (function), exists (function), folder (glossary), operator (glossary), evaluate (glossary), precedence (glossary), process (glossary), object (object)
 
 Tags: file system

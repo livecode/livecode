@@ -26,6 +26,6 @@ The <resumeStack> <message> is sent whenever a <stack> window becomes the <activ
 
 The actual window activation process is not triggered by the <resumeStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack window> from becoming the <active window>.
 
-References: pass (control_st), resume (message), unIconifyStack (message), suspendStack (message), flushEvents (function), trap (glossary), current card (glossary), message (glossary), active window (glossary), stack window (glossary), stack (object)
+References: pass (control structure), resume (message), unIconifyStack (message), suspendStack (message), flushEvents (function), trap (glossary), current card (glossary), message (glossary), active window (glossary), stack window (glossary), stack (object)
 
 Tags: windowing

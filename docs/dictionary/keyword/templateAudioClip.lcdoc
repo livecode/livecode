@@ -31,4 +31,4 @@ You can refer to the <templateAudioClip> using any of the following forms:
 
 >*Note:* The <templateAudioClip> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), audioClip (object), object (object), keyword (glossary), audio clip (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), audioClip (object), object (object), keyword (glossary), audio clip (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control structure)

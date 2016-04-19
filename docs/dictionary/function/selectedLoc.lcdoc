@@ -29,6 +29,6 @@ When text is selected, a box around it is filled with the hiliteColor or <hilite
 
 If the text selection is in a scrolling field and the selection is not in the visible portion of the field, the <selectedLoc> <function> is adjusted by the amount of scroll.
 
-References: topLeft (property), pixels (property), hilitePattern (property), stack (object), selection (keyword), item (keyword), integer (glossary), return value (glossary), return (glossary), stack window (glossary), selectedLine (function), selectedField (function), localLoc (function), clickLoc (function), mouseLoc (function), selectedText (function), selectedChunk (function), foundLoc (function), select (command), function (control_st)
+References: topLeft (property), pixels (property), hilitePattern (property), stack (object), selection (keyword), item (keyword), integer (glossary), return value (glossary), return (glossary), stack window (glossary), selectedLine (function), selectedField (function), localLoc (function), clickLoc (function), mouseLoc (function), selectedText (function), selectedChunk (function), foundLoc (function), select (command), function (control structure)
 
 Tags: ui

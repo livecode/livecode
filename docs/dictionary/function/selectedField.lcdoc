@@ -27,6 +27,6 @@ Use the <selectedField> <function> to determine which <field> the <selection> is
 
 If there is no insertion point or text selection, the <selectedField> function <return|returns> empty. Otherwise, the <selectedField> is the same <object> as the one specified by the <focusedObject> <function>.
 
-References: field (keyword), selection (keyword), function (control_st), selectedLoc (function), selectedChunk (function), focusedObject (function), number (function), insertion point (glossary), return (glossary), object (object)
+References: field (keyword), selection (keyword), function (control structure), selectedLoc (function), selectedChunk (function), focusedObject (function), number (function), insertion point (glossary), return (glossary), object (object)
 
 Tags: ui

@@ -31,4 +31,4 @@ You can refer to the <templateImage> using any of the following forms:
 
 >*Note:* The <templateImage> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), image (keyword), image (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), image (keyword), image (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control structure)

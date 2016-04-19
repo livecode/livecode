@@ -35,6 +35,6 @@ The value returned for one <dataString> is mathematically unlikely to be identic
 
 For technical information about the MD5 digest algorithm, see [RFC 1321](https://tools.ietf.org/html/rfc1321).
 
-References: string (keyword), characters (keyword), base64Decode (function), base64Encode (function), charToNum (function), value (function), return (glossary), bit (glossary), function (control_st)
+References: string (keyword), characters (keyword), base64Decode (function), base64Encode (function), charToNum (function), value (function), return (glossary), bit (glossary), function (control structure)
 
 Tags: text processing

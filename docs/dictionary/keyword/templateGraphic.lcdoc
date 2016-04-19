@@ -31,4 +31,4 @@ You can refer to the <templateGraphic> using any of the following forms:
 
 >*Note:* The <templateGraphic> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), graphic (keyword), object (object), graphic (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), graphic (keyword), object (object), graphic (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control structure)

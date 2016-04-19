@@ -32,6 +32,6 @@ Use the <screenMouseLoc> <property> to find out where the <mouse pointer> is, or
 Changes:
 Support for using the screenMouseLoc with OS X systems was added in version 2.0.
 
-References: defaultStack (property), mouseLoc (function), mouseV (function), property (glossary), integer (glossary), mouse pointer (glossary), user interface (glossary), absolute coordinates (glossary), function (control_st)
+References: defaultStack (property), mouseLoc (function), mouseV (function), property (glossary), integer (glossary), mouse pointer (glossary), user interface (glossary), absolute coordinates (glossary), function (control structure)
 
 Tags: ui

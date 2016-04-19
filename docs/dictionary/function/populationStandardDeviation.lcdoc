@@ -31,6 +31,6 @@ Use the <populationStandardDeviation> <function> to analyze the amount of spread
 The <populationStandardDeviation> <function> was added in version 6.1 to complement the <standardDeviation> <function>.
 The population standard deviation is a measure of how widely distributed the numbers in the <numbersList> are.
 
-References: function (control_st), median (function), standardDeviation (function), sum (function), averageDeviation (function), average (function), return (glossary)
+References: function (control structure), median (function), standardDeviation (function), sum (function), averageDeviation (function), average (function), return (glossary)
 
 Tags: math

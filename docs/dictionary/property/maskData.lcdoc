@@ -28,6 +28,6 @@ Since each pixel is represented by 8 bits (1 byte or 1 character), you can obtai
 
 A value of zero means the pixel is fully transparent; any other value means the pixel is fully opaque. Unlike the <alphaData> <property>, the <maskData> stores only complete transparency or complete opacity, and does not support partial transparency.
 
-References: pixels (property), windowShape (property), alphaData (property), image (keyword), function (control_st), property (glossary), pixel (glossary), binary (glossary), mask (glossary), expression (glossary)
+References: pixels (property), windowShape (property), alphaData (property), image (keyword), function (control structure), property (glossary), pixel (glossary), binary (glossary), mask (glossary), expression (glossary)
 
 Tags: multimedia

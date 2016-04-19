@@ -56,4 +56,4 @@ passed through the message path, this is incorrect and can make the code
 harder to understand. Please see the <on> control structure entry for 
 more details.
 
-References: command (glossary), function (glossary), pass (control_st), on (control_st), function (control_st)
+References: command (glossary), function (glossary), pass (control structure), on (control structure), function (control structure)

@@ -42,6 +42,6 @@ The until <string> form reads data until the specified string is encountered. Th
 
 If you specify a <callbackMessage>, the <message> is sent to the <object> whose <script> contains the <read from socket> <command>, as soon as the read is finished. This message has two <parameter|parameters>: the <socketID> and the data received from the <socket>.
 
-References: socketTimeoutInterval (property), script (property), object (object), socketTimeout (message), character (keyword), it (keyword), function (control_st), property (glossary), binary file (glossary), variable (glossary), handler (glossary), message (glossary), socket (glossary), parameter (glossary), TCP (glossary), command (glossary), accept (command), post (command), result (function)
+References: socketTimeoutInterval (property), script (property), object (object), socketTimeout (message), character (keyword), it (keyword), function (control structure), property (glossary), binary file (glossary), variable (glossary), handler (glossary), message (glossary), socket (glossary), parameter (glossary), TCP (glossary), command (glossary), accept (command), post (command), result (function)
 
 Tags: networking

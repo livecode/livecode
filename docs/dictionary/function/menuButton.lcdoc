@@ -31,6 +31,6 @@ For example, suppose you create a stack menu listing all your mailboxes, and dis
 Description:
 Use the <menuButton> <function> within a <handler> in a <stack menu> to determine which <button> opened the <menu>.
 
-References: me (keyword), menu (keyword), button (keyword), menuHistory (property), menuMouseButton (property), name (property), menuName (property), option (command), function (control_st), handler (glossary), stack menu (glossary), property (glossary), trigger (glossary), return (glossary), stack (object)
+References: me (keyword), menu (keyword), button (keyword), menuHistory (property), menuMouseButton (property), name (property), menuName (property), option (command), function (control structure), handler (glossary), stack menu (glossary), property (glossary), trigger (glossary), return (glossary), stack (object)
 
 Tags: menus

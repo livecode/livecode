@@ -94,6 +94,6 @@ If any of the following C escape sequences are present in the <baseString>, the 
 \nnncharacter whose ASCII value is the octal number represented bynnn 
 \xnncharacter whose ASCII value is the hex number represented by*Note:* Transformation of values in <valuesList> uses the standard LiveCode conversion rules. For example, if empty is passed for a numeric incantation it will be taken as the value 0.
 
-References: HTMLText (property), numberFormat (property), string (keyword), character (keyword), characters (keyword), binaryEncode (function), charToNum (function), baseConvert (function), numToChar (function), format (glossary), string (glossary), decimal point (glossary), function (control_st)
+References: HTMLText (property), numberFormat (property), string (keyword), character (keyword), characters (keyword), binaryEncode (function), charToNum (function), baseConvert (function), numToChar (function), format (glossary), string (glossary), decimal point (glossary), function (control structure)
 
 Tags: text processing

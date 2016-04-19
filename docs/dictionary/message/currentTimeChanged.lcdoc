@@ -34,6 +34,6 @@ The actual process of changing the player's current time is not triggered by the
 Changes:
 The newTime parameter was introduced in version 2.0. In previous versions, the currentTimeChanged message did not have a parameter.
 
-References: callbacks (property), duration (property), player (keyword), playStarted (message), playPaused (message), selectionChanged (message), player (object), property (glossary), player (glossary), message (glossary), frame (glossary), trap (glossary), pass (control_st)
+References: callbacks (property), duration (property), player (keyword), playStarted (message), playPaused (message), selectionChanged (message), player (object), property (glossary), player (glossary), message (glossary), frame (glossary), trap (glossary), pass (control structure)
 
 Tags: multimedia

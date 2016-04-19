@@ -39,6 +39,6 @@ If the <frameWidth> and <frameHeight> are not the same as the width and height o
 
 >*Important:*  The <revVideoFrameImage> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
 
-References: pixels (property), imageData (property), image (object), Video library (library), LiveCode custom library (library), image (keyword), function (control_st), property (glossary), binary file (glossary), variable (glossary), frame (glossary), return (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), command (glossary), revPreviewVideo (command), revRecordVideo (command), format (function), value (function)
+References: pixels (property), imageData (property), image (object), Video library (library), LiveCode custom library (library), image (keyword), function (control structure), property (glossary), binary file (glossary), variable (glossary), frame (glossary), return (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), command (glossary), revPreviewVideo (command), revRecordVideo (command), format (function), value (function)
 
 Tags: multimedia

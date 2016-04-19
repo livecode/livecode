@@ -43,6 +43,6 @@ is equivalent to
   within(<object>, <point>)
 unless the <object> <a/> is a graphic or image, or a tabbed button.
 
-References: filled (property), menuMode (property), pixels (property), selected (property), is not within (operator), is within (operator), button (keyword), image (keyword), rectangle (keyword), point (keyword), graphic (keyword), property (glossary), return (glossary), title bar (glossary), intersect (function), mouseControl (function), button (object), image (object), object (object), stack (object), graphic (object), function (control_st)
+References: filled (property), menuMode (property), pixels (property), selected (property), is not within (operator), is within (operator), button (keyword), image (keyword), rectangle (keyword), point (keyword), graphic (keyword), property (glossary), return (glossary), title bar (glossary), intersect (function), mouseControl (function), button (object), image (object), object (object), stack (object), graphic (object), function (control structure)
 
 Tags: ui
