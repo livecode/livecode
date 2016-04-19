@@ -20,26 +20,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 struct MCShape;
 struct MCStrokeStyle;
 
-struct MCCombiner
-{
-	void (*begin)(MCCombiner *self, int4 y);
-	void (*advance)(MCCombiner *self, int4 y);
-	void (*blend)(MCCombiner *self, int4 fx, int4 tx, uint1 value);
-	void (*combine)(MCCombiner *self, int4 fx, int4 tx, uint1 *mask);
-	void (*end)(MCCombiner *self);
-};
-
 class MCPath
 {
 public:
 	void retain(void);
 	void release(void);
-
-	void fill(MCCombiner *p_combiner, const MCRectangle& clip, bool p_even_odd);
-	void stroke(MCCombiner *p_combiner, const MCRectangle& clip, MCStrokeStyle *p_stroke);
-
-	static void fill(uint1 *p_commands, int4 *p_data, MCCombiner *p_combiner, const MCRectangle& p_clip, bool p_even_odd);
-	static void stroke(uint1 *p_commands, int4 *p_data, MCCombiner *p_combiner, const MCRectangle& p_clip, MCStrokeStyle *p_stroke);
 
 	static MCPath *create_path(uint1 *commands, uint32_t command_count, int4 *ordinates, uint32_t ordinate_count);
 	static MCPath *create_line(int2 fx, int2 fy, int2 tx, int2 ty, bool adjust);
