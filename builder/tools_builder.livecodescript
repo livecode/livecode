@@ -559,7 +559,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    end if
 
    -- One last permission change (but a non-signature-breaking one) to prevent accidental IDE modifications
-   get shell ("chmod -Rvv -w" && escapeArg(tAppBundle))
+   get shell ("chmod -Rvv -w" && escapeArg(tAppBundle & slash & "Contents"))
    if the result is not zero then
       builderLog "error", "Failed to make app bundle read-only:" && it
       throw "failure"
