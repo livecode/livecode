@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the sorting operations provided by the standard library of LiveCode Builder.
 */
 
@@ -34,8 +34,7 @@ public foreign handler MCSortExecSortListDescendingDateTime(inout Target as List
 
 --
 
-/* 
-
+/**
 Summary:        Sorts <Target> in ascending order.
 Target:         An expression that evaluates to a list.
 
@@ -58,8 +57,7 @@ begin
     MCSortExecSortListAscending(Target)
 end syntax
 
-/* 
-
+/**
 Summary:        Sorts <Target> in descending text order.
 Target:         An expression that evaluates to a list of strings.
 
@@ -84,8 +82,7 @@ end syntax
 
 --
 
-/* 
-
+/**
 Summary:        Sorts <Target> in ascending text order.
 Target:         An expression that evaluates to a list of strings.
 
@@ -114,8 +111,7 @@ begin
     MCSortExecSortListAscendingText(Target)
 end syntax
 
-/* 
-
+/**
 Summary:        Sorts <Target> in descending text order.
 Target:         An expression that evaluates to a list of strings.
 
@@ -143,8 +139,7 @@ end syntax
 
 --
 
-/* 
-
+/**
 Summary:        Sorts <Target> in ascending binary order.
 Target:         An expression that evaluates to a list of binary data.
 
@@ -161,8 +156,7 @@ begin
     MCSortExecSortListAscendingBinary(Target)
 end syntax
 
-/* 
-
+/**
 Summary:        Sorts <Target> in descending binary order.
 Target:         An expression that evaluates to a list of binary data.
 
@@ -181,8 +175,7 @@ end syntax
 
 --
 
-/* 
-
+/**
 Summary:        Sorts <Target> in ascending numeric order.
 Target:         An expression that evaluates to a list of numbers.
 
@@ -205,8 +198,7 @@ begin
     MCSortExecSortListAscendingNumeric(Target)
 end syntax
 
-/* 
-
+/**
 Summary:        Sorts <Target> in descending numeric order.
 Target:         An expression that evaluates to a list of numbers.
 
@@ -245,7 +237,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary: A handler type that can be used in the <SortListUsingHandler> command.
 
 Parameters:
@@ -267,7 +259,7 @@ public handler type SortCompare(in pLeft as any, in pRight as any) returns Integ
 
 public foreign handler MCSortExecSortListUsingHandler(inout Target as List, in Handler as SortCompare) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:        Sorts <Target> using <Handler> as a comparison function.
 Target:         An expression that evaluates to a list.
 Handler: 		A handler of type <SortCompare>
