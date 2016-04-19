@@ -322,9 +322,14 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             
     case kMCCapsuleSectionTypeModule:
     {
-        char *t_module_data;
-        t_module_data = new char[p_length];
-        if (IO_read(t_module_data, p_length, p_stream) != IO_NORMAL)
+		MCAutoByteArray t_module_data;
+		if (!t_module_data.New(p_length))
+		{
+			MCresult -> sets("out of memory");
+			return false;
+		}
+		
+        if (IO_read(t_module_data.Bytes(), p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read module");
             return false;
@@ -336,7 +341,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         MCStreamRef t_stream;
         t_stream = nil;
         if (t_success)
-            t_success = MCMemoryInputStreamCreate(t_module_data, p_length, t_stream);
+            t_success = MCMemoryInputStreamCreate(t_module_data.Bytes(), p_length, t_stream);
         
         MCScriptModuleRef t_module;
         if (t_success)
@@ -344,7 +349,6 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         
         if (t_stream != nil)
             MCValueRelease(t_stream);
-        free(t_module_data);
         
         if (!t_success)
         {
