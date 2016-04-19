@@ -24,6 +24,9 @@ end revLoadLibrary
 -- Helper functions
 ----------------------------------------------------------------
 
+local sOutputToVariable
+local sOutput
+
 private function _TestValidateCount pCount
    if pCount is not an integer or pCount <= 0 then
       throw "Bad test count '" & pCount & "': must be positive integer"
@@ -104,7 +107,11 @@ end _TestOutput
 private command _TestWriteOutput pMessage
    -- As stdout is considered to be a 'native' stream, we encode to UTF-8 first
    -- then will unencode in the test runner.
-   write textEncode(pMessage, "UTF8") to stdout
+   if sOutputToVariable then
+      put pMessage after sOutput
+   else
+      write textEncode(pMessage, "UTF8") to stdout
+   end if
 end _TestWriteOutput
 
 private function _TestGetBuiltExtensionsFolder
@@ -134,6 +141,21 @@ end _TestLoadExtension
 ----------------------------------------------------------------
 -- Unit test library functions
 ----------------------------------------------------------------
+
+on TestOutputToVariable
+   put true into sOutputToVariable
+end TestOutputToVariable
+
+function TestFetchAndClearOutput
+   if not sOutputToVariable then
+      return empty
+   end if
+   
+   local tOutput
+   put sOutput into tOutput
+   put empty into sOutput
+   return tOutput
+end TestFetchAndClearOutput
 
 on TestPlan pCount
    _TestWriteOutput "1.." & _TestValidateCount(pCount) & return
