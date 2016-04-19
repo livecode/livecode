@@ -44,7 +44,7 @@ This operator is useful for checking whether the user has entered data correctly
 to a handler to avoid a script error caused by feeding data of one type to an operator or function that requires a different type.
 
 A <value> is a(n):
-* <array(keyword> if its <keys> function is not empty.
+* <array(keyword)> if its <keys> function is not empty.
 * <boolean> or <logical> if it is one of the two constants true or false
 * color if it is a valid <color reference>
 * date if it is in one of the formats produced by the <date> or <time> functions
