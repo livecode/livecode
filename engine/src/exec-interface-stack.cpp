@@ -1811,7 +1811,11 @@ void MCStack::GetScreen(MCExecContext& ctxt, integer_t& r_screen)
 {
 	const MCDisplay *t_display;
 	t_display = MCscreen -> getnearestdisplay(rect);
-	r_screen = t_display -> index + 1;
+    
+    if (t_display != nil)
+        r_screen = t_display -> index + 1;
+    else
+        r_screen = 0;
 }
 
 void MCStack::GetCurrentCard(MCExecContext& ctxt, MCStringRef& r_card)
