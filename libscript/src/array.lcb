@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This library consists of the operations on arrays included in the standard library of LiveCode Builder.
 */
 
@@ -44,7 +44,7 @@ public foreign handler MCArrayDeleteElementOfCaseless(inout Target as Array, in 
 
 --
 
-/* 
+/**
 Summary:        Returns the keys of an array.
 Target:         An expression which evaluates to an array.
 
@@ -79,7 +79,7 @@ begin
     MCArrayEvalKeysOf(Target, output)
 end syntax
 
-/* 
+/**
 Summary:        Returns the elements of an array.
 Target:         An expression which evaluates to an array.
 
@@ -114,7 +114,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:        Returns the number of elements in <Target>
 Target:         An expression which evaluates to an array.
 
@@ -142,7 +142,7 @@ end syntax
 
 --
 
-/* 
+/**
 Summary:        Determines if an array has a given key
 Needle:         An expression which evaluates to an integer, string, or list of integers.
 Target:         An expression which evaluates to an array.
@@ -177,7 +177,7 @@ begin
     //MCArrayEvalIsAmongTheKeysOfMatrix(Needle, IsNot, Target, output)
 end syntax
 
-/* 
+/**
 Summary:        Determines if an array contains a given element
 Needle:         Any expression.
 Target:         An expression which evaluates to an array.
@@ -208,7 +208,7 @@ end syntax
 
 --
 
-/*
+/**
 
 Summary:            Designates the element with key <Key> in <Target>.
 Index: 				An expression which evaluates to a string.
@@ -237,7 +237,7 @@ end syntax
 
 --
 
-/*
+/**
 
 Summary:            Deletes the element with key <Key> in <Target>.
 Index: 				An expression which evaluates to a string.
@@ -264,7 +264,7 @@ end syntax
 
 --
 
-/* 
+/**
 
 Summary: 		Designates the array with no elements.
 
@@ -288,7 +288,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:        Repeat over the elements of an array.
 Iterand:        Any variable of appropriate type.
 
@@ -323,7 +323,7 @@ begin
     MCArrayRepeatForEachElement(iterator, Iterand, container)
 end syntax
 
-/*
+/**
 Summary:        Repeat over the keys of an array.
 Iterand:        A string container.
 

@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 -- Library modules add public handlers to the bottom of the message path.
 --
-/* 
+/**
 This simple library gives access to the LiveCode Builder canvas syntax from LiveCode Script by wrapping in a few simple handlers.
 
 	Example usage:
@@ -47,7 +47,7 @@ use com.livecode.engine
 -- We store the current canvas in a module-scope variable.
 variable sCanvas as optional Canvas
 
-/*
+/**
 Summary: Creates a canvas of the given size for the other handlers to use.
 pWidth:  The width of the created canvas.
 pHeight:  The height of the created canvas.
@@ -64,7 +64,7 @@ public handler canvasCreate(in pWidth as Integer, in pHeight as Integer) returns
   fill rectangle path of rectangle [ 0, 0, pWidth, pHeight ] on sCanvas
 end handler
 
-/*
+/**
 Summary: Destroys the canvas 
 
 Description:
@@ -75,7 +75,7 @@ public handler canvasDestroy() returns nothing
   put nothing into sCanvas
 end handler
 
-/*
+/**
 Summary: Sets the current color of the canvas to the given RGBA value.
 pRed: The red component of the color to set.
 pGreen: The green component of the color to set.
@@ -89,7 +89,7 @@ public handler canvasSetColor(in pRed as Real, in pGreen as Real, in pBlue as Re
   set the paint of sCanvas to solid paint with color [pRed, pGreen, pBlue, pAlpha]
 end handler
 
-/*
+/**
 Summary: Draws a filled circle.
 pX: The x-coordinate of the centre of the circle.
 pY: The y-coordinate of the centre of the circle.
@@ -101,7 +101,7 @@ public handler canvasFillCircle(in pX as Real, in pY as Real, in pRadius as Real
   fill circle path centered at point [pX, pY] with radius pRadius on sCanvas
 end handler
 
-/*
+/**
 Summary: Copies the current contents of the canvas to the specified image object.
 pObjectId: A string which is an object chunk referring to an image.
 

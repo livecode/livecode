@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 A library of utility handlers for functions commonly needed by widgets.
 */
 
@@ -28,7 +28,7 @@ metadata version is "1.0.0"
 metadata author is "LiveCode"
 metadata title is "Widget Utilities"
 
-/*
+/**
 Summary: Scales and translates a path to fit within a rectangle
 
 Parameters:
@@ -100,7 +100,7 @@ public handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as P
 	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
 end handler
 
-/*
+/**
 Summary: Formats an integer as a string
 
 Parameters:
@@ -128,7 +128,7 @@ public handler intToString(in pNumber as Number) returns String
 	return char 1 to tDotIndex - 1 of tFormatted
 end handler 
 
-/*
+/**
 Summary: Removes any superfluous zeros and decimal places.
 
 Parameters:
@@ -165,7 +165,7 @@ private handler colorComponentToString(in pComponent as Number)
 	return intToString(the rounded of (pComponent * 255))	
 end handler
 
-/*
+/**
 Summary: Converts a color to a string representing the color
 
 Parameters:
@@ -214,7 +214,7 @@ private handler stringToColorComponent(in pComponent as String)
 	return (pComponent parsed as number) / 255
 end handler
 
-/*
+/**
 Summary: Converts a string to a color
 
 Parameters:
@@ -253,7 +253,7 @@ public handler stringToColor(in pString as String) returns Color
 	return color tColor
 end handler
 
-/*
+/**
 Summary: Get the canonical name of the current "native" mobile theme
 
 Example:

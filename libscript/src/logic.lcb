@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the logical operations included in the standard library of LiveCode Builder.
 */
 
@@ -35,7 +35,7 @@ public foreign handler MCLogicExecParseStringAsBool(in Target as String) returns
 
 --
 
-/*
+/**
 Summary:    Returns the boolean-logical value of the expression '<Left> and <Right>'
 
 Left:       An expression that evaluates to a boolean value
@@ -52,7 +52,7 @@ Returns: 	If the left hand expression evaluates to false, the value of the expre
 //    EvalOr(Left, Right, output)
 //end syntax
 
-/*
+/**
 Summary:    Returns the boolean-logical value of the expression '<Left> or <Right>'
 
 Left:       An expression that evaluates to a boolean value
@@ -69,7 +69,7 @@ Returns: 	If the left hand expression evaluates to true, the value of the expres
 //    EvalAnd(Left, Right, output)
 //end syntax
 
-/*
+/**
 Summary:    Returns the boolean-logical value of the expression 'not <Operand>'
 
 Operand:    An expression that evaluates to a boolean value
@@ -93,7 +93,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a boolean value.
@@ -115,7 +115,7 @@ begin
     MCLogicEvalIsEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a boolean value.
@@ -137,7 +137,7 @@ begin
     MCLogicEvalIsNotEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:	Formats a boolean value as a string
 
 Operand:	An expression that evaluates to a boolean value.
@@ -160,7 +160,7 @@ begin
     MCLogicEvalBoolFormattedAsString(Operand, output)
 end syntax
 
-/*
+/**
 Summary:	Formats a boolean value as a string
 
 Operand:	An expression that evaluates to a boolean value.
@@ -183,7 +183,7 @@ begin
     MCLogicExecFormatBoolAsString(Operand)
 end syntax
 
-/*
+/**
 Summary:	Parses a string as a boolean value
 
 Operand:	An expression that evaluates to a string.
@@ -210,7 +210,7 @@ begin
     MCLogicEvalStringParsedAsBool(Operand, output)
 end syntax
 
-/*
+/**
 Summary:	Parses a string as a boolean value
 
 Operand:	An expression that evaluates to a string.
