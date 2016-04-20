@@ -31,7 +31,7 @@ bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 ########## LiveCode Script test parameters
 
 guess_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
-guess_dev_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community,$(bin_dir)/livecode-community)
+guess_dev_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community,$(bin_dir)/LiveCode-Community)
 
 # When running on headless Linux, run tests in -ui mode.
 guess_engine_flags_script := \
