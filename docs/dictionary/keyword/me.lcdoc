@@ -35,6 +35,6 @@ However, if the mouseDown <handler> is in the <card(object)|card's> <script> ins
 
 The <me> <keyword> can be used anywhere an <object reference> is used.
 
-References: script (property), behavior (property), name (property), function (control_st), mouseDown (message), card (object), object (object), button (object), return (glossary), handler (glossary), button (glossary), execute (glossary), message (glossary), keyword (glossary), object reference (glossary), menuButton (function), target (function), dispatch (command), card (keyword)
+References: script (property), behavior (property), name (property), function (control structure), mouseDown (message), card (object), object (object), button (object), return (glossary), handler (glossary), button (glossary), execute (glossary), message (glossary), keyword (glossary), object reference (glossary), menuButton (function), target (function), dispatch (command), card (keyword)
 
 Tags: objects

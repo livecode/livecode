@@ -31,6 +31,6 @@ The <milliseconds> <function> <return|returns> the total number of <milliseconds
 
 A millisecond is one-thousandth of a second. If you don't need to time events with this much precision, use the <seconds> function or the <ticks> <function>.
 
-References: integer (keyword), milliseconds (keyword), convert (command), seconds (function), milliseconds (function), date (function), ticks (function), event (glossary), return (glossary), eon (glossary), function (control_st)
+References: integer (keyword), milliseconds (keyword), convert (command), seconds (function), milliseconds (function), date (function), ticks (function), event (glossary), return (glossary), eon (glossary), function (control structure)
 
 Tags: math

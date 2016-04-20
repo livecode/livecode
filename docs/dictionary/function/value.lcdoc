@@ -44,6 +44,6 @@ If you specify an <object>, references to <me> in the <expression> are treated a
 
 If the <expression> is a single <string>, then even if it is enclosed in quotes, LiveCode attempts to <evaluate> its contents instead of treating it as a <literal string|string literal>. This means that you must be careful about <literal string|string literals> that contain <operator|operators> such as "and".
 
-References: script (property), object (object), () (operator), me (keyword), numeric (keyword), string (keyword), card (keyword), current card (glossary), return (glossary), handler (glossary), operator (glossary), logical (glossary), statement (glossary), literal string (glossary), expression (glossary), evaluate (glossary), object reference (glossary), value (function), merge (function), call (command), function (control_st)
+References: script (property), object (object), () (operator), me (keyword), numeric (keyword), string (keyword), card (keyword), current card (glossary), return (glossary), handler (glossary), operator (glossary), logical (glossary), statement (glossary), literal string (glossary), expression (glossary), evaluate (glossary), object reference (glossary), value (function), merge (function), call (command), function (control structure)
 
 Tags: properties

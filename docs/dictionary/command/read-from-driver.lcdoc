@@ -38,6 +38,6 @@ The until <string> form reads data until the specified string is encountered. Th
 Changes:
 Support for using serial drivers with OS X systems was added in version 2.0.
 
-References: it (keyword), open driver (command), write to driver (command), read from process (command), function (control_st), binary file (glossary), variable (glossary), command (glossary), peripheral device (glossary), result (function)
+References: it (keyword), open driver (command), write to driver (command), read from process (command), function (control structure), binary file (glossary), variable (glossary), command (glossary), peripheral device (glossary), result (function)
 
 Tags: networking

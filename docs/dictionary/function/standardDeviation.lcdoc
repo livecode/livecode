@@ -30,6 +30,6 @@ Use the <standardDeviation> <function> to analyze the amount of spread in a list
 
 The sample standard deviation is a measure of how widely distributed the numbers in the <numbersList> are.
 
-References: function (control_st), populationVariance (function), averageDeviation (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
+References: function (control structure), populationVariance (function), averageDeviation (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
 
 Tags: math

@@ -36,6 +36,6 @@ It is common to need to cancel a number of messages when leaving a card or stack
     end repeat
   end closeCard
 
-References: item (keyword), send (command), flushEvents (function), pendingMessages (function), command (glossary), message (glossary), loop (glossary), function (control_st), repeat (control_st)
+References: item (keyword), send (command), flushEvents (function), pendingMessages (function), command (glossary), message (glossary), loop (glossary), function (control structure), repeat (control structure)
 
 Tags: objects

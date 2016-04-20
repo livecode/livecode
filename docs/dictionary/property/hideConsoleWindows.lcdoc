@@ -29,4 +29,4 @@ The setting of this property affects Windows applications with a GUI as well as 
 
 The setting of this property has no effect on Mac OS or Unix systems.
 
-References: shellCommand (property), open process (command), launch (command), write to process (command), read from process (command), shell (function), property (glossary), Windows (glossary), console (glossary), command (glossary), command line (glossary), function (control_st)
+References: shellCommand (property), open process (command), launch (command), write to process (command), read from process (command), shell (function), property (glossary), Windows (glossary), console (glossary), command (glossary), command line (glossary), function (control structure)

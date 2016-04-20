@@ -43,6 +43,6 @@ The binary data format produced by <binaryEncode> is similar to the <format> pro
 
 If you don't specify a number with the a, A, b, B, h, or H dataTypes, one <character> is <encode|encoded>. If the dataType normally takes more than one <character>, trailing zeroes are added to make up the required number of <characters>. For example, H requires two characters, so binaryEncode("H","3") <encode|Encodes> the <hexadecimal> number 30, adding a zero to the end to make the dataString two <characters> long.
 
-References: string (keyword), character (keyword), characters (keyword), numToChar (function), format (function), return (glossary), binary file (glossary), value (glossary), null (glossary), encode (glossary), binaryvalue (glossary), hexadecimal (glossary), function (control_st)
+References: string (keyword), character (keyword), characters (keyword), numToChar (function), format (function), return (glossary), binary file (glossary), value (glossary), null (glossary), encode (glossary), binaryvalue (glossary), hexadecimal (glossary), function (control structure)
 
 Tags: text processing

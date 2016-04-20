@@ -31,4 +31,4 @@ You can refer to the <templateVideoClip> using any of the following forms:
 
 >*Note:* The <templateVideoClip> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), dontRefresh (property), functionNames (function), templateScrollbar (keyword), default (keyword), videoClip (object), object (object), keyword (glossary), property (glossary), command (glossary), video clip (glossary), expression (glossary), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), dontRefresh (property), functionNames (function), templateScrollbar (keyword), default (keyword), videoClip (object), object (object), keyword (glossary), property (glossary), command (glossary), video clip (glossary), expression (glossary), reset (command), set (command), function (control structure)

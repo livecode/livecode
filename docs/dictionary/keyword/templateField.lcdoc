@@ -31,4 +31,4 @@ You can refer to the <templateField> using any of the following forms:
 
 >*Note:* The <templateField> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), field (keyword), field (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), field (keyword), field (object), object (object), keyword (glossary), property (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control structure)

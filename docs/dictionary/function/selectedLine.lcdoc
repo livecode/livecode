@@ -38,6 +38,6 @@ If there is no insertion point or text selection, the <selectedLine> <function> 
 
 To get a chunk expression describing the location of the selection, use the <selectedChunk> <function>. To get the <selected> <lines> in a <list field> that allows <contiguous|non-contiguous> selections, use the <hilitedLine> <property>.
 
-References: selected (property), hilitedLine (property), selection (keyword), line (keyword), lines (keyword), selectedLoc (function), selectedChunk (function), mouseLine (function), property (glossary), insertion point (glossary), list field (glossary), contiguous (glossary), return (glossary), chunk expression (glossary), function (control_st)
+References: selected (property), hilitedLine (property), selection (keyword), line (keyword), lines (keyword), selectedLoc (function), selectedChunk (function), mouseLine (function), property (glossary), insertion point (glossary), list field (glossary), contiguous (glossary), return (glossary), chunk expression (glossary), function (control structure)
 
 Tags: ui

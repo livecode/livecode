@@ -40,6 +40,6 @@ You can set the <ID> of an <image> to any positive <integer>. Be careful not to 
 
 The actual change is not triggered by the <IDChanged> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <ID> from being changed.
 
-References: altID (property), ID (property), nameChanged (message), image (keyword), integer (keyword), stack (object), image (object), object (object), property (glossary), trap (glossary), message (glossary), image (glossary), stacks (function), pass (control_st)
+References: altID (property), ID (property), nameChanged (message), image (keyword), integer (keyword), stack (object), image (object), object (object), property (glossary), trap (glossary), message (glossary), image (glossary), stacks (function), pass (control structure)
 
 Tags: objects

@@ -39,6 +39,6 @@ If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sen
 
 To get the text of the word or text group clicked, use the <clickText> <function>.
 
-References: character (keyword), characters (keyword), word (keyword), field (keyword), textStyle (property), mouseDown (message), mouseUp (message), selectionChanged (message), clickText (function), selectedChunk (function), dropChunk (function), clickStack (function), clickChar (function), return (glossary), chunk expression (glossary), handler (glossary), return value (glossary), trigger (glossary), message (glossary), unlock (glossary), grouped text (glossary), hypertext (glossary), function (control_st)
+References: character (keyword), characters (keyword), word (keyword), field (keyword), textStyle (property), mouseDown (message), mouseUp (message), selectionChanged (message), clickText (function), selectedChunk (function), dropChunk (function), clickStack (function), clickChar (function), return (glossary), chunk expression (glossary), handler (glossary), return value (glossary), trigger (glossary), message (glossary), unlock (glossary), grouped text (glossary), hypertext (glossary), function (control structure)
 
 Tags: ui

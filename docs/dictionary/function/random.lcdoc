@@ -39,6 +39,6 @@ To generate a random number between two integers, use a handler like this:
     return random(upperLimit - lowerLimit + 1) + lowerLimit - 1
   end randomInRange
 
-References: any (keyword), integer (keyword), randomSeed (property), round (function), random (function), return (glossary), function (control_st)
+References: any (keyword), integer (keyword), randomSeed (property), round (function), random (function), return (glossary), function (control structure)
 
 Tags: math

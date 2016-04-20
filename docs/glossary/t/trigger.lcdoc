@@ -9,6 +9,6 @@ To cause an action to happen. In particular, to cause an <on> or <setProp> <hand
  
 Also, the <set> instruction sent to an <object> that triggers a <setProp> <handler>.
 
-References: set (command), on (control_st), setProp (control_st), execute (glossary), handler (glossary), object (glossary)
+References: set (command), on (control structure), setProp (control structure), execute (glossary), handler (glossary), object (glossary)
 
 Tags: objects

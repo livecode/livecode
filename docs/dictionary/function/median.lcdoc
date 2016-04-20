@@ -30,6 +30,6 @@ If the number of items in the <numbersList> is odd, the <median> <function> retu
 
 If the list consists of fewer than three numbers, or if the numbers are evenly distributed, the <median> is equal to the <average>.
 
-References: function (control_st), average (function), standardDeviation (function), value (function), return (glossary), value (glossary)
+References: function (control structure), average (function), standardDeviation (function), value (function), return (glossary), value (glossary)
 
 Tags: math

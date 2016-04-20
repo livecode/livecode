@@ -41,6 +41,6 @@ To refer to a custom property set that is not the current <customPropertySet>, u
 
   get the customProperties["MyProps"] of this card
 
-References: properties (property), object (object), set command (command), propertyNames (function), setProp (control_st), property (glossary), key (glossary), value (glossary), custom property (glossary), statement (glossary), customPropertySet (glossary), custom property set (glossary), array (glossary)
+References: properties (property), object (object), set command (command), propertyNames (function), setProp (control structure), property (glossary), key (glossary), value (glossary), custom property (glossary), statement (glossary), customPropertySet (glossary), custom property set (glossary), array (glossary)
 
 Tags: properties

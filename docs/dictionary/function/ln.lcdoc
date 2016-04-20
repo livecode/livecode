@@ -41,6 +41,6 @@ To find the logarithm of a number in any base, use the following function:
     return ln(theNumber)/ln(theBase)
   end logarithm
 
-References: function (control_st), ln1 (function), exp (function), return (glossary)
+References: function (control structure), ln1 (function), exp (function), return (glossary)
 
 Tags: math

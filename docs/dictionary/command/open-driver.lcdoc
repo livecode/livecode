@@ -48,6 +48,6 @@ On Windows systems, the <open driver> <command> is equivalent to the <open file>
 
 If the device is a serial port, you can set the serialControlString <property> to specify the speed, parity, and other settings. Set the <serialControlString> before using the <open driver> <command>.
 
-References: serialControlString (property), recordInput (property), COM1: (keyword), COM2: (keyword), write to driver (command), open file (command), function (control_st), property (glossary), Unix (glossary), statement (glossary), command (glossary), peripheral device (glossary), OS X (glossary)
+References: serialControlString (property), recordInput (property), COM1: (keyword), COM2: (keyword), write to driver (command), open file (command), function (control structure), property (glossary), Unix (glossary), statement (glossary), command (glossary), peripheral device (glossary), OS X (glossary)
 
 Tags: networking

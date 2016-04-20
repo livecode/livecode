@@ -35,6 +35,6 @@ The point returned by the <localLoc> <function> is relative to the top left of t
 
 The first item of the returned value is the horizontal distance in pixels from the left edge of the current stack to the location given by <point>.  The second <item> of the <return value|returned value> is the vertical distance from the top edge of the <current stack> to the location given by <point>.
 
-References: item (keyword), point (keyword), relative (keyword), selectedLoc (function), relative coordinates (glossary), current stack (glossary), absolute coordinates (glossary), return (glossary), return value (glossary), integer (glossary), function (control_st)
+References: item (keyword), point (keyword), relative (keyword), selectedLoc (function), relative coordinates (glossary), current stack (glossary), absolute coordinates (glossary), return (glossary), return value (glossary), integer (glossary), function (control structure)
 
 Tags: ui

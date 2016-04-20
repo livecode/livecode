@@ -29,6 +29,6 @@ In standalones, some care is needed to ensure you receive the <shutdown> message
 
 >*Note:* Applications will not receive this message when running in the IDE.
 
-References: defaultStack (property), closeStack (message), closeCard (message), closeBackground (message), suspend (message), quit (command), pass (control_st), application (glossary), trap (glossary), message (glossary), current card of the defaultStack (glossary)
+References: defaultStack (property), closeStack (message), closeCard (message), closeBackground (message), suspend (message), quit (command), pass (control structure), application (glossary), trap (glossary), message (glossary), current card of the defaultStack (glossary)
 
 Tags: windowing

@@ -22,6 +22,6 @@ By default, a line is delimited by return (ASCII 10). However, you can set the <
 
 A line is a string of characters delimited by a single return character (or a single one of the <lineDelimiter> <character>). A single <line> can contain multiple <characters>, multiple <words>, and multiple <items>.
 
-References: properties (property), lineDelimiter (property), is among (operator), is not among (operator), characters (keyword), string (keyword), character (keyword), lines (keyword), line (keyword), words (keyword), items (keyword), function (control_st), keyword (glossary), property (glossary), command (glossary), delimit (glossary), chunk (glossary), number (function), sort (command), select (command)
+References: properties (property), lineDelimiter (property), is among (operator), is not among (operator), characters (keyword), string (keyword), character (keyword), lines (keyword), line (keyword), words (keyword), items (keyword), function (control structure), keyword (glossary), property (glossary), command (glossary), delimit (glossary), chunk (glossary), number (function), sort (command), select (command)
 
 Tags: text processing

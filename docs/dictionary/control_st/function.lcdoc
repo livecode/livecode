@@ -21,7 +21,7 @@ functionName (string): A string up to 65,535 characters in length.
 parametersList: The parametersList consists of one or more parameter names, separated by commas.
 statementList: The statementList consists of one or more LiveCode statements.
 
-The result: >*Note:* As the <result> is a global property, if you do not explicitly <return(control_st)> a value, then <the result> will not change, but reflect the last engine command, engine function or command or function handler that did return a value.
+The result: >*Note:* As the <result> is a global property, if you do not explicitly <return(control structure)> a value, then <the result> will not change, but reflect the last engine command, engine function or command or function handler that did return a value.
 
 Description:
 Use the <function> <control structure> to implement a custom function.
@@ -62,4 +62,4 @@ end factorial
 
 >*Note:* To declare a function that is local to the script it is contained in, prefix the declaration with <private>. For more information about this see the dictionary entry for the <private keyword>.
 
-References: private keyword (keyword), end (keyword), $ (keyword), private (keyword), string (keyword), param (function), functionNames (function), result (function), paramCount (function), the result (function), exit (control_st), return (control_st), return (glossary), handler (glossary), execute (glossary), statement (glossary), control structure (glossary), parameter (glossary), caller (glossary)
+References: private keyword (keyword), end (keyword), $ (keyword), private (keyword), string (keyword), param (function), functionNames (function), result (function), paramCount (function), the result (function), exit (control structure), return (control structure), return (glossary), handler (glossary), execute (glossary), statement (glossary), control structure (glossary), parameter (glossary), caller (glossary)

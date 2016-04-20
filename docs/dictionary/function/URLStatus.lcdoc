@@ -57,6 +57,6 @@ If an error occurs during downloading, the <URLStatus> <function> returns "error
 Changes:
 The URLStatus function became part of the Internet library in version 1.1. In previous versions, it was not a library function.
 
-References: URL (keyword), function (control_st), post (command), libURLftpUploadFile (command), libURLftpUpload (command), libURLDownloadToFile (command), load (command), libURLSetStatusCallback (command), libURLLastRHHeaders (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), FTP (glossary), return (glossary), standalone application (glossary), cache (glossary), command (glossary), callback (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), message (glossary), server (glossary), handler (glossary), Internet library (library), LiveCode custom library (library)
+References: URL (keyword), function (control structure), post (command), libURLftpUploadFile (command), libURLftpUpload (command), libURLDownloadToFile (command), load (command), libURLSetStatusCallback (command), libURLLastRHHeaders (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), FTP (glossary), return (glossary), standalone application (glossary), cache (glossary), command (glossary), callback (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), message (glossary), server (glossary), handler (glossary), Internet library (library), LiveCode custom library (library)
 
 Tags: networking

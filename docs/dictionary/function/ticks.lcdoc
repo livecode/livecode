@@ -31,6 +31,6 @@ Unlike HyperTalk's "ticks" function, the <ticks> function <return|returns> the t
 
 A tick is one-sixtieth of a second. If you don't need to time events with this much precision, use the seconds <function>. If you need to time <event|events> with greater <precision>, use the <milliseconds> <function>.
 
-References: ticks (keyword), integer (keyword), idleTicks (property), wait (command), time (function), milliseconds (function), date (function), ticks (function), precision (glossary), eon (glossary), return (glossary), event (glossary), function (control_st)
+References: ticks (keyword), integer (keyword), idleTicks (property), wait (command), time (function), milliseconds (function), date (function), ticks (function), precision (glossary), eon (glossary), return (glossary), event (glossary), function (control structure)
 
 Tags: math

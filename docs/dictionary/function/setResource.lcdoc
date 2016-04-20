@@ -45,6 +45,6 @@ The <setResource> <function> is most useful when used with the <getResource> <fu
 
 >*Warning:*  Resource data must be in the specific format appropriate to the resource type. If you set a <resource> to data that is incompatible with its resource type, you may damage the <resource> or the entire <resource fork> of the file. For information on the format of standard resource types, see Apple Computer's technical documentation, Inside Macintosh, located at http://developer.apple.com/techpubs/macos8/mac8.html.
 
-References: resfile (keyword), file (keyword), copyResource (function), getResource (function), getResources (function), result (function), deleteResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: resfile (keyword), file (keyword), copyResource (function), getResource (function), getResources (function), result (function), deleteResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control structure)
 
 Tags: file system

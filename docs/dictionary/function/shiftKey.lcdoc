@@ -25,6 +25,6 @@ Returns: The <shiftKey> <function> <return|returns> down if the key is pressed a
 Description:
 Use the <shiftKey> <function> to check whether the user is pressing the Shift key.
 
-References: left (constant), scrollbarBeginning (message), keysDown (function), return (glossary), function (control_st)
+References: left (constant), scrollbarBeginning (message), keysDown (function), return (glossary), function (control structure)
 
 Tags: ui

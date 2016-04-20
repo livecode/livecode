@@ -35,6 +35,6 @@ Since each pixel is represented by 8 bits (1 byte or 1 character), you can obtai
 
 >*Important:*  When changing the <alphaData> property, make sure the new data is the correct size: 1 byte per pixel in the image. If you set an image's <alphaData> property to data whose total length is incorrect, the <a/>image appearance may be distorted.
 
-References: maskData (property), blendLevel (property), pixels (property), imageData (property), field (keyword), image (keyword), function (control_st), property (glossary), binary file (glossary), pixel (glossary), expression (glossary), binary (glossary), alpha channel (glossary)
+References: maskData (property), blendLevel (property), pixels (property), imageData (property), field (keyword), image (keyword), function (control structure), property (glossary), binary file (glossary), pixel (glossary), expression (glossary), binary (glossary), alpha channel (glossary)
 
 Tags: multimedia

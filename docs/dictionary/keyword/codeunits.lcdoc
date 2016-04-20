@@ -28,4 +28,4 @@ the number of codeunits of tString
 
 to find out how many codeunits make up a Unicode string.
 
-References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), codeunit (keyword), bytes (keyword), byte (keyword), number (function), function to designate (control_st)
+References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), codeunit (keyword), bytes (keyword), byte (keyword), number (function), function to designate (control structure)

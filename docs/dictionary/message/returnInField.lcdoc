@@ -30,6 +30,6 @@ The <returnInField> <message> is sent to <button|buttons> whose <menuMode> is "c
 
 If there is no selection or insertion point in any field and the user presses Return, the returnKey <message> is sent instead of <returnInField>.
 
-References: field (keyword), selection (keyword), menuMode (property), enterInField (message), pass (control_st), handler (glossary), pass (glossary), message (glossary), combo box (glossary), message path (glossary), object (object), button (object)
+References: field (keyword), selection (keyword), menuMode (property), enterInField (message), pass (control structure), handler (glossary), pass (glossary), message (glossary), combo box (glossary), message path (glossary), object (object), button (object)
 
 Tags: ui

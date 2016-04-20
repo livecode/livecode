@@ -26,4 +26,4 @@ the number of codepoints of tString
 
 to find out how many codepoints make up a Unicode string.
 
-References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), string (keyword), codeunit (keyword), bytes (keyword), byte (keyword), number (function), function to designate (control_st)
+References: characters (keyword), codepoint (keyword), codeunits (keyword), character (keyword), string (keyword), codeunit (keyword), bytes (keyword), byte (keyword), number (function), function to designate (control structure)

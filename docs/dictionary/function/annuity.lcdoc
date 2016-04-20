@@ -39,6 +39,6 @@ You can use the <annuity> <function> to calculate the amount of loan payments as
 
 For example, if the loan is for $2500 at an interest rate of 2% per month and is to be repaid in a year, the monthly payment is 2500/annuity(.02,12) or $236.40.
 
-References: return (glossary), compound (function), value (function), function (control_st)
+References: return (glossary), compound (function), value (function), function (control structure)
 
 Tags: math

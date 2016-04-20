@@ -40,6 +40,6 @@ The actual navigation is not triggered by the <openBackground> <message>, so <tr
 
 >*Note:*  A group is only considered a background group if its backgroundBehavior property is set to true.
 
-References: backgroundBehavior (property), card (keyword), preOpenBackground (message), openCard (message), startup (message), newBackground (message), closeBackground (message), openStack (message), group (command), pass (control_st), message (glossary), trap (glossary)
+References: backgroundBehavior (property), card (keyword), preOpenBackground (message), openCard (message), startup (message), newBackground (message), closeBackground (message), openStack (message), group (command), pass (control structure), message (glossary), trap (glossary)
 
 Tags: navigation

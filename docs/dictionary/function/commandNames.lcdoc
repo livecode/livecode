@@ -27,4 +27,4 @@ Use the <commandNames> <function> to check whether a particular <command> alread
 
 The <commandNames> <function> <return|returns> all the <command|commands> that can be used in <LiveCode>, including synonyms.
 
-References: line (keyword), propertyNames (function), functionNames (function), handler (glossary), LiveCode (glossary), command (glossary), return (glossary), reserved word (glossary), on (control_st), function (control_st)
+References: line (keyword), propertyNames (function), functionNames (function), handler (glossary), LiveCode (glossary), command (glossary), return (glossary), reserved word (glossary), on (control structure), function (control structure)

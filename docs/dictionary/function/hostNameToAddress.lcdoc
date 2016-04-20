@@ -36,6 +36,6 @@ Use the <hostNameToAddress> <function> to find the <numeric> <IP address> of the
 
 If the <callback> parameter is specified then the call will return immediately and upon completion of the lookup, the callback will be invoked with the resolved address as a parameter.
 
-References: numeric (keyword), accept (command), result (function), DNSServers (function), DNS (glossary), domain name (glossary), IP address (glossary), function (control_st)
+References: numeric (keyword), accept (command), result (function), DNSServers (function), DNS (glossary), domain name (glossary), IP address (glossary), function (control structure)
 
 Tags: networking
