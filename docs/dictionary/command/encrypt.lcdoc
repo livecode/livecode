@@ -34,4 +34,22 @@ The password and salt value are combined and scrambled to form the key and IV wh
 
 Some modes of block ciphers will pad data to be a multiple of block size. The padding method is that used by the openSSL utility and is a minimum of one byte.
 
+Examples:
+
+local myData, myPassword
+encrypt myData using ciphername with password myPassword 
+
+To obtain a list of cipher names type the following into the message box: put the cipherNames
+
+/* the following example copies a file from disk, stores it in a variable (myData), encrypts the result, 
+then copies the file back to disk. */
+
+local path2input, myData, path2output
+/* put the file paths to your input and output files into path2input and path2output */
+put URL ("binfile:" & path2input) into myData 
+encrypt myData using "aes-256-cbc" with password “@&^2fy” 
+put it into URL ("binfile:" & path2output) 
+
+Or you can write the result back to the input file if you prefer. 
+
 References: decrypt (command), cipherNames (function), sslcertificates (property)
