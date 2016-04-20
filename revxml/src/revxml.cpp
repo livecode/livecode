@@ -574,7 +574,7 @@ void XML_NewDocumentFromFile(char *args[], int nargs, char **retstring,
 			sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADXML],newdoc->GetError());
 			delete newdoc;
 		}
-		delete tfile;
+		free(tfile);
 		free(t_native_path);
 		free(t_resolved_path);
 		

@@ -358,13 +358,6 @@ bool MCHandlerlist::getlocalnames(MCListRef& r_list)
 	return MCListCopy(*t_list, r_list);
 }
 
-void MCHandlerlist::appendlocalnames(MCStringRef& r_string)
-{
-	MCAutoListRef t_list;
-	/* UNCHECKED */ getlocalnames(&t_list);
-	/* UNCHECKED */ MCListCopyAsString(*t_list, r_string);
-}
-
 bool MCHandlerlist::getglobalnames(MCListRef& r_list)
 {
 	MCAutoListRef t_list;

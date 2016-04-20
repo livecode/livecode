@@ -132,10 +132,9 @@ bool MCEncodedImageRep::LoadHeader(uindex_t &r_width, uindex_t &r_height, uint32
     
     if (t_success)
     {
-        t_success = m_loader->GetMetadata(m_metadata);
-    }
-	else
+		t_success = m_loader->GetMetadata(m_metadata);
 		ClearImageLoader();
+    }
 	
 	return t_success;
 }

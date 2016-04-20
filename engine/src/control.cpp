@@ -1613,15 +1613,20 @@ Boolean MCControl::moveable()
 
 void MCControl::newmessage()
 {
-	char *messptr = new char[strlen(gettypestring()) + 4];
-	strcpy(messptr, "new");
-	strcpy(&messptr[3], gettypestring());
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_message_str;
+	if (t_success)
+		t_success = MCStringFormat(&t_message_str, "new%s", gettypestring());
+	
+	MCNewAutoNameRef t_message;
+	if (t_success)
+		t_success = MCNameCreate(*t_message_str, &t_message);
+	
+	if (t_success)
+		message(*t_message);
 
-	MCAutoNameRef t_message;
-	/* UNCHECKED */ t_message . CreateWithCString(messptr);
-	message(t_message);
-
-	delete messptr;
 	if (gettype() == CT_GROUP)
 		message(MCM_new_background);
 }

@@ -1126,6 +1126,141 @@ private:
 	uindex_t m_size;
 };
 
+// Version of MCAutoArray that applies the provided deallocator to each element of the array when freed
+template <typename T, void (*FREE)(T)> class MCAutoCustomPointerArray
+{
+public:
+	MCAutoCustomPointerArray(void)
+	{
+		m_ptr = nil;
+		m_size = 0;
+	}
+	
+	~MCAutoCustomPointerArray(void)
+	{
+		FreeElements(MCRangeMake(0, m_size));
+		
+		MCMemoryDeleteArray(m_ptr);
+	}
+	
+	//////////
+	
+	T* Ptr()
+	{
+		return m_ptr;
+	}
+	
+	uindex_t Size() const
+	{
+		return m_size;
+	}
+	
+	//////////
+	
+	bool New(uindex_t p_size)
+	{
+		MCAssert(m_ptr == nil);
+		return MCMemoryNewArray(p_size, m_ptr, m_size);
+	}
+	
+	void Delete(void)
+	{
+		FreeElements(MCRangeMake(0, m_size));
+		
+		MCMemoryDeleteArray(m_ptr);
+		m_ptr = nil;
+		m_size = 0;
+	}
+	
+	//////////
+	
+	bool Resize(uindex_t p_new_size)
+	{
+		if (p_new_size < m_size)
+			FreeElements(MCRangeMake(p_new_size, m_size - p_new_size));
+		
+		return MCMemoryResizeArray(p_new_size, m_ptr, m_size);
+	}
+	
+	bool Extend(uindex_t p_new_size)
+	{
+		MCAssert(p_new_size >= m_size);
+		return Resize(p_new_size);
+	}
+	
+	void Shrink(uindex_t p_new_size)
+	{
+		MCAssert(p_new_size <= m_size);
+		Resize(p_new_size);
+	}
+	
+	//////////
+	
+	bool Push(T p_value)
+	{
+		if (!Extend(m_size + 1))
+			return false;
+		m_ptr[m_size - 1] = p_value;
+		return true;
+	}
+	
+	//////////
+	
+	T*& PtrRef()
+	{
+		MCAssert(m_ptr == nil);
+		return m_ptr;
+	}
+	
+	uindex_t& SizeRef()
+	{
+		MCAssert(m_size == 0);
+		return m_size;
+	}
+	
+	//////////
+	
+	void Take(T*& r_array, uindex_t& r_count)
+	{
+		r_array = m_ptr;
+		r_count = m_size;
+		
+		m_ptr = nil;
+		m_size = 0;
+	}
+	
+	//////////
+	
+	T& operator [] (uindex_t p_index)
+	{
+		return m_ptr[p_index];
+	}
+	
+	const T& operator [] (uindex_t p_index) const
+	{
+		return m_ptr[p_index];
+	}
+	
+private:
+	T *m_ptr;
+	uindex_t m_size;
+	
+	void FreeElements(const MCRange &p_elements)
+	{
+		uindex_t t_end;
+		t_end = (uindex_t)MCMin(m_size, p_elements.offset + p_elements.length);
+		
+		for (uindex_t i = p_elements.offset; i < t_end; i++)
+		{
+			if (m_ptr[i] != nil)
+			{
+				FREE(m_ptr[i]);
+				m_ptr[i] = nil;
+			}
+		}
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCAutoNativeCharArray
