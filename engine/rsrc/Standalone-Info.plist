@@ -30,7 +30,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Standalone.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.runrev.livecode</string>
+	<string>com.runrev.revolution</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
