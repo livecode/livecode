@@ -1016,7 +1016,7 @@ void MCWidget::SetFocused(bool p_setting)
 {
     if (p_setting)
         focused = this;
-    else
+    else if (focused == this)
         focused = nil;
 }
 
