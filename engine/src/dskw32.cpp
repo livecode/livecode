@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
+#include <AclAPI.h>
 
 #ifdef DeleteFile
 #undef DeleteFile
@@ -4727,107 +4728,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             }
             else
             {
-                // Unfortunately, one cannot use any 'CreateProcess' type calls to
-                // elevate a process - one must use ShellExecuteEx. This unfortunately
-                // means we have no way of *directly* passing things like env vars and
-                // std handles to it. Instead, we do the following:
-                //   1) Launch ourselves with the parameter '-elevated-slave'
-                //   2) Wait until either the target process vanishes, or we get
-                //      a thread message posted to us with a pair of pipe handles.
-                //   3) Write the command line and env strings to the pipe
-                //   4) Wait for a further message with process handle and id
-                //   5) Carry on with the handles we were given to start with
-                // If the launched process vanished before (4) it is treated as failure.
-                
-                unichar_t t_parameters[64];
-                wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
-                
-				MCAutoStringRefAsWString t_cmd_wstr;
-				/* UNCHECKED */ t_cmd_wstr.Lock(MCcmd);
-
-                SHELLEXECUTEINFOW t_info;
-                memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
-                t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
-                t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
-                t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
-                t_info . lpVerb = L"runas";
-                t_info . lpFile = *t_cmd_wstr;
-                t_info . lpParameters = t_parameters;
-                t_info . nShow = SW_HIDE;
-                if (ShellExecuteExW(&t_info) && (uintptr_t)t_info . hInstApp > 32)
-                {
-                    MSG t_msg;
-                    t_msg . message = WM_QUIT;
-                    while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
-                        if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
-                        {
-                            created = False;
-                            break;
-                        }
-                    
-                    if (created && t_msg . message == WM_USER + 10)
-                    {
-                        HANDLE t_output_pipe, t_input_pipe;
-                        t_input_pipe = (HANDLE)t_msg . wParam;
-                        t_output_pipe = (HANDLE)t_msg . lParam;
-                        
-                        // Get the environment strings to send across
-						LPWCH lpEnvStrings;
-						lpEnvStrings = GetEnvironmentStringsW();
-						size_t t_env_length = 0;
-                        if (lpEnvStrings != nil)
-						{
-							// The environment block is terminated with a double-null                           
-							t_env_length = 0;
-                            while(lpEnvStrings[t_env_length] != '\0' || lpEnvStrings[t_env_length + 1] != '\0')
-                                t_env_length += 1;
-                            t_env_length += 2;
-                        }
-                        
-                        // Write out the cmd line and env strings
-                        MCAutoStringRefAsWString t_cmdline_wstr;
-                        t_cmdline_wstr.Lock(*t_cmdline);
-                        if (write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(*t_cmdline) + 1), *t_cmdline_wstr) &&
-                            write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, lpEnvStrings))
-                        {
-                            // Now we should have a process id and handle waiting for us.
-                            MSG t_msg;
-                            t_msg . message = WM_QUIT;
-                            while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
-                                if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
-                                {
-                                    created = False;
-                                    break;
-                                }
-                            
-                            if (created && t_msg . message == WM_USER + 10 && t_msg . lParam != NULL)
-                            {
-                                t_process_id = (DWORD)t_msg . wParam;
-                                t_process_handle = (HANDLE)t_msg . lParam;
-                            }
-                            else
-                                created = False;
-                        }
-                        else
-                            created = False;
-                        
-                        FreeEnvironmentStringsW(lpEnvStrings);
-                        
-                        hChildStdinWr = t_output_pipe;
-                        hChildStdoutRd = t_input_pipe;
-                    }
-                    else
-                        created = False;
-                    
-                    CloseHandle(t_info . hProcess);
-                }
-                else
-                {
-                    if ((uintptr_t)t_info . hInstApp == SE_ERR_ACCESSDENIED)
-                        t_error = "access denied";
-                    created = False;
-                }
-            }
+				bool t_access_denied = false;
+				created = StartElevatedProcess(*t_cmdline, hChildStdinWr, hChildStdoutRd, t_process_handle, t_process_id, t_access_denied);
+				if (!created &&
+					t_access_denied)
+					t_error = "access denied";
+			}
         }
         if (created)
         {
@@ -4860,6 +4766,307 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 		return True;
     }
+
+	BOOL StartElevatedProcess(MCStringRef p_cmd_line, HANDLE& r_child_stdin_wr, HANDLE& r_child_stdout_rd, HANDLE& r_child_process, DWORD& r_child_id, bool& r_access_denied)
+	{
+		// Unfortunately, one cannot use any 'CreateProcess' type calls to
+        // elevate a process - one must use ShellExecuteEx. This unfortunately
+        // means we have no way of *directly* passing things like env vars and
+        // std handles to it. Instead, we do the following:
+        //   1) Launch ourselves with the parameter '-elevated-slave'
+        //   2) Wait until either the target process vanishes, or we get
+        //      a thread message posted to us with a pair of pipe handles.
+        //   3) Write the command line and env strings to the pipe
+        //   4) Wait for a further message with process handle and id
+        //   5) Carry on with the handles we were given to start with
+        // If the launched process vanished before (4) it is treated as failure.
+
+		// This is true if the slave died at some point during the transaction.
+		// Generally meaning that an error occurred which means it can't launch
+		// the process we want.
+		BOOL t_slave_died = FALSE;
+		BOOL t_slave_deaf = FALSE;
+
+		// The slave (mediating) process we run has a specific command-line
+		// which encodes the current thread id of this process.
+        unichar_t t_parameters[64];
+        wsprintfW(t_parameters, L"-elevated-slave%08x", GetCurrentThreadId());
+
+		// We need the command line of the running engine as a wstring.
+		MCAutoStringRefAsWString t_slave_wstr;
+		// We need the command line of the requested process as a wstring.
+		MCAutoStringRefAsWString t_cmd_line_wstr;
+		if (!t_slave_wstr.Lock(MCcmd) ||
+			!t_cmd_line_wstr.Lock(p_cmd_line))
+		{
+			t_slave_died = TRUE;
+			goto cleanup;
+		}
+
+		// This records the Win32 error code if one of the API calls fails.
+		DWORD t_error = ERROR_SUCCESS;
+		// This is the handle of the slave process used to launch the requested process.
+		HANDLE t_slave_process = NULL;
+		// This is the thread id of the main thread in the slave process.
+		DWORD t_slave_thread_id = 0;
+		// This is the slave's security descriptor containing it's sid.
+		PSECURITY_DESCRIPTOR t_slave_security_descriptor = NULL;
+		PSID t_slave_sid = NULL;
+		// This is our security descriptor containing our original DACL.
+		PSECURITY_DESCRIPTOR t_master_security_descriptor = NULL;
+		PACL t_master_dacl = NULL;
+		// This is our augmented DACL.
+		PACL t_augmented_master_dacl = NULL;
+		// These are the pipes used to communicate first with the slave, and then
+		// with the requested process.
+		HANDLE t_output_pipe = NULL;
+		HANDLE t_input_pipe = NULL;
+		// These are our environment strings.
+		LPWCH t_env_strings = NULL;
+		size_t t_env_length = 0;
+		// These are the requested process handle and id.
+		HANDLE t_process_handle = NULL;
+		DWORD t_process_id = 0;
+
+		// First we run the engine itself as administrator, passing to it our
+		// thread-id as part of the command-line arguments.
+        SHELLEXECUTEINFOW t_info;
+        memset(&t_info, 0, sizeof(SHELLEXECUTEINFOW));
+        t_info . cbSize = sizeof(SHELLEXECUTEINFOW);
+        t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
+        t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
+        t_info . lpVerb = L"runas";
+        t_info . lpFile = *t_slave_wstr;
+        t_info . lpParameters = t_parameters;
+        t_info . nShow = SW_HIDE;
+        if (!ShellExecuteExW(&t_info) ||
+			(uintptr_t)t_info . hInstApp < 32)
+        {
+            if ((uintptr_t)t_info . hInstApp == SE_ERR_ACCESSDENIED)
+				r_access_denied = true;
+
+			t_error = GetLastError();
+			t_slave_died = TRUE;
+			goto cleanup;
+		}
+
+		t_slave_process = t_info.hProcess;
+
+		// We now have a process handle, but we need a thread id so that
+		// we can notify the slave when to continue. The slave sends us
+		// the thread id immediately after launch as a thread message.
+        MSG t_msg;
+        t_msg . message = WM_QUIT;
+        while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+            if (MsgWaitForMultipleObjects(1, &t_slave_process, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+            {
+				t_slave_died = TRUE;
+                goto cleanup;
+            }
+			
+		if (t_msg.message != WM_USER + 10)
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+		t_slave_thread_id = t_msg.wParam;
+
+		// Now we have a process handle, we must allow that process's user to
+		// open our process handle with PROCESS_DUP_HANDLE right. This is a
+		// multi-step process:
+		//   1) First we get the SID of the slave process.
+		//   2) Get the current DACL of this process.
+		//   3) Add an explicit access right to PROCESS_DUP_HANDLE for the SID
+		//      of the slave process to the fetched DACL
+		//   4) Set the DACL of our process to the augmented one.
+
+		// Step 1
+		if (ERROR_SUCCESS != GetSecurityInfo(
+								t_info.hProcess,
+								SE_KERNEL_OBJECT,
+								OWNER_SECURITY_INFORMATION,
+								&t_slave_sid,
+								NULL,
+								NULL,
+								NULL,
+								&t_slave_security_descriptor))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+		
+		// Step 2
+		if (ERROR_SUCCESS != GetSecurityInfo(
+								GetCurrentProcess(),
+								SE_KERNEL_OBJECT,
+								DACL_SECURITY_INFORMATION,
+								NULL,
+								NULL,
+								&t_master_dacl,
+								NULL,
+								&t_master_security_descriptor) != ERROR_SUCCESS)
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// Step 3
+		EXPLICIT_ACCESS t_explicit_access;
+		ZeroMemory(&t_explicit_access, sizeof(EXPLICIT_ACCESS));
+		t_explicit_access.grfAccessPermissions = PROCESS_DUP_HANDLE;
+		t_explicit_access.grfAccessMode = GRANT_ACCESS;
+		t_explicit_access.grfInheritance = NO_INHERITANCE;
+		t_explicit_access.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+		t_explicit_access.Trustee.TrusteeType = TRUSTEE_IS_UNKNOWN;
+		t_explicit_access.Trustee.ptstrName = (LPSTR)t_slave_sid;
+		if (ERROR_SUCCESS != SetEntriesInAcl(
+								1,
+								&t_explicit_access,
+								t_master_dacl, &t_augmented_master_dacl))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// Step 4
+		if (ERROR_SUCCESS != SetSecurityInfo(
+								GetCurrentProcess(),
+								SE_KERNEL_OBJECT,
+								DACL_SECURITY_INFORMATION,
+								NULL,
+								NULL,
+								t_augmented_master_dacl,
+								NULL))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// It should now be possible for the slave process to open our process
+		// with DUP_HANDLE privilege so we notify it to continue to do so.
+		if (!PostThreadMessageA(t_slave_thread_id, WM_NULL, 0, 0))
+		{
+			t_error = GetLastError();
+			goto cleanup;
+		}
+
+		// Once the slave has opened us, it will send us some pipe handles which
+		// we use (initially) to send the actual command line and environment
+		// variables across so the slave can do the appropriate CreateProcess call.
+        t_msg . message = WM_QUIT;
+        while(!PeekMessageW(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+            if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+            {
+                t_slave_died = TRUE;
+                goto cleanup;
+            }
+
+		if (t_msg.message != WM_USER + 10)
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+        t_input_pipe = (HANDLE)t_msg . wParam;
+        t_output_pipe = (HANDLE)t_msg . lParam;
+
+		// At this point, the next thing to do is to fetch the environment var
+		// strings and then pipe them to the slave.
+		t_env_strings = GetEnvironmentStringsW();
+        if (t_env_strings != nil)
+		{
+			// The environment block is terminated with a double-null                           
+			t_env_length = 0;
+            while(t_env_strings[t_env_length] != '\0' || t_env_strings[t_env_length + 1] != '\0')
+                t_env_length += 1;
+            t_env_length += 2;
+        }
+
+		// We write the requested command line and the current env vars
+		// to the slave process next.
+		if (!write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * (MCStringGetLength(p_cmd_line) + 1), *t_cmd_line_wstr) ||
+            !write_blob_to_pipe(t_output_pipe, sizeof(wchar_t) * t_env_length, t_env_strings))
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+		// Now we wait again for the slave to tell us whether it succeeded
+		// in opening the requested process or not.
+		t_msg . message = WM_QUIT;
+		while(!PeekMessageA(&t_msg, (HWND)-1, WM_USER + 10, WM_USER + 10, PM_REMOVE))
+			if (MsgWaitForMultipleObjects(1, &t_info . hProcess, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+			{
+				t_slave_died = TRUE;
+				break;
+			}
+
+		if (t_msg.message != WM_USER + 10)
+		{
+			t_slave_deaf = TRUE;
+			goto cleanup;
+		}
+
+		t_process_id = (DWORD)t_msg.wParam;
+		t_process_handle = (HANDLE)t_msg.lParam;
+
+cleanup:
+		// If we have an augmented dacl, make sure we reset our dcl to the
+		// original.
+		if (t_augmented_master_dacl != NULL)
+		{
+			SetSecurityInfo(GetCurrentProcess(),
+							SE_KERNEL_OBJECT,
+							DACL_SECURITY_INFORMATION,
+							NULL,
+							NULL,
+							t_master_dacl,
+							NULL);
+			LocalFree(t_augmented_master_dacl);
+		}
+
+		if (t_slave_security_descriptor != NULL)
+		{
+			LocalFree(t_slave_security_descriptor);
+		}
+		
+		if (t_master_security_descriptor != NULL)
+		{
+			LocalFree(t_master_security_descriptor);
+		}
+
+		// If we have env vars, free them
+		if (t_env_strings != NULL)
+		{
+			FreeEnvironmentStringsW(t_env_strings);
+		}
+
+		// If there was an error but the slave did not die we must
+		// get it to terminate.
+		if (!t_slave_died)
+		{
+			if (t_error != ERROR_SUCCESS || t_slave_deaf)
+			{
+				PostThreadMessage(t_slave_thread_id, WM_NULL, 1, 0);
+			}
+			CloseHandle(t_slave_process);
+		}
+
+		if (t_slave_died ||
+			t_error != ERROR_SUCCESS ||
+			t_slave_deaf)
+		{
+			return FALSE;
+		}
+
+		r_child_stdin_wr = t_output_pipe;
+		r_child_stdout_rd = t_input_pipe;
+		r_child_process = t_process_handle;
+		r_child_id = t_process_id;
+
+		return TRUE;
+	}
     
     virtual void CloseProcess(uint2 p_index)
     {
@@ -5343,6 +5550,13 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 			t_success = false;
 	}
 
+	// Post our thread id back to the master.
+	if (t_success)
+	{
+		if (!PostThreadMessageA(t_parent_thread_id, WM_USER + 10, GetCurrentThreadId(), 0))
+			t_success = false;
+	}
+
 	// Open the parent's thread
 	HANDLE t_parent_thread;
 	t_parent_thread = nil;
@@ -5352,8 +5566,27 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 		if (t_parent_thread == nil)
 			t_success = false;
 	}
+	
+	// Now we have the thread handle, we wait for a message from the master
+	// to tell us to continue after it has allowed this process to open the
+	// master process.
+    MSG t_msg;
+    t_msg . message = WM_QUIT;
+    while(!PeekMessageW(&t_msg, (HWND)-1, WM_NULL, WM_NULL, PM_REMOVE))
+        if (MsgWaitForMultipleObjects(1, &t_parent_thread, FALSE, INFINITE, QS_POSTMESSAGE) == WAIT_OBJECT_0)
+        {
+			t_success = false;
+			break;
+        }
 
-	// Open the parent's process
+	// If we didn't get a WM_NULL message or get one with wParam == 1
+	// then we failed.
+	if (t_msg.message != WM_NULL ||
+		t_msg.wParam == 1)
+		t_success = false;
+
+	// Open the parent's process - this should now be allowed with PROCESS_DUP_HANDLE
+	// right due to the fettling in the master process which occurred previously.
 	HANDLE t_parent_process;
 	t_parent_process = nil;
 	if (t_success)
