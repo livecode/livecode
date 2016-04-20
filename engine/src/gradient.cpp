@@ -1696,8 +1696,10 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGradientFill *p_gradient, MCR
 		{
 			s_gradient_affine_combiner.end = gradient_bilinear_affine_combiner_end;
 			s_gradient_affine_combiner.buffer_width = GRADIENT_AA_SCALE * r_clip.width;
-			s_gradient_affine_combiner.buffer = new uint4[GRADIENT_AA_SCALE * s_gradient_affine_combiner.buffer_width];
-
+			
+			if (!MCMemoryNewArray(GRADIENT_AA_SCALE * s_gradient_affine_combiner.buffer_width, s_gradient_affine_combiner.buffer))
+				return NULL;
+			
 			s_gradient_affine_combiner.x_inc += (s_gradient_affine_combiner.x_coef_a + s_gradient_affine_combiner.x_coef_b) >> 2;
 			s_gradient_affine_combiner.y_inc += (s_gradient_affine_combiner.y_coef_a + s_gradient_affine_combiner.y_coef_b) >> 2;
 			switch (t_kind)
@@ -1724,7 +1726,7 @@ MCGradientCombiner *MCGradientFillCreateCombiner(MCGradientFill *p_gradient, MCR
 				s_gradient_affine_combiner.combine = MCGradientFillBilinearCombine<kMCGradientKindSqrtXY>;
 				return &s_gradient_affine_combiner;
 			default:
-				delete s_gradient_affine_combiner.buffer;
+				MCMemoryDeleteArray(s_gradient_affine_combiner.buffer);
 				return NULL;
 			}
 		}
