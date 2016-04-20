@@ -184,6 +184,12 @@ bool MCCefDictionaryToBrowserDictionary(CefRefPtr<CefDictionaryValue> p_dict, MC
 
 //////////
 
+#define MC_CEF_HIDPI_SWITCH "lc-enable-hi-dpi"
+bool MCCefPlatformEnableHiDPI();
+bool MCCefPlatformGetHiDPIEnabled();
+
+//////////
+
 #define MC_CEFMSG_EXECUTE_SCRIPT "cefbrowser_request_execute_script"
 #define MC_CEFMSG_CALL_SCRIPT "cefbrowser_request_call_script"
 #define MC_CEFMSG_GET_SELECTED_TEXT "cefbrowser_request_get_seleted_text"

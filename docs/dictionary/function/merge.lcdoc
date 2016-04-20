@@ -31,4 +31,4 @@ The <merge> <function> <evaluate|Evaluates> any <expression|expressions> in doub
 
 It also executes any <return> <statement|statements> enclosed in "&lt;?" and "?&gt;", and replaces them by the value returned.
 
-References: string (keyword), value (function), return (control_st), function (control_st), statement (glossary), evaluate (glossary), return (glossary), expression (glossary)
+References: string (keyword), value (function), return (control structure), function (control structure), statement (glossary), evaluate (glossary), return (glossary), expression (glossary)

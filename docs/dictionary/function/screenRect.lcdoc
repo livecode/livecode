@@ -37,4 +37,4 @@ Adding the effective adjective to either form returns the area of the screen the
 
 >*Note:* The co-ordinates returned by the screenRect family of functions can be anywhere in the virtual desktop defined by the OS - their values will depend on the user's local configuration. In particular, they can take both positive and negative values.
 
-References: fullscreen (property), export snapshot (command), screenType (function), screenLoc (function), return (glossary), integer (glossary), function (control_st)
+References: fullscreen (property), export snapshot (command), screenType (function), screenLoc (function), return (glossary), integer (glossary), function (control structure)

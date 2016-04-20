@@ -939,7 +939,7 @@ void MCInterfaceEvalSelectedChunk(MCExecContext& ctxt, MCStringRef& r_string)
     //   then return the chunk of the button, not the embedded field.
     if (MCactivefield -> getparent() -> gettype() == CT_BUTTON)
     {
-        if (static_cast<MCButton *>(MCactivefield -> getparent()) -> selectedchunk(r_string));
+        if (static_cast<MCButton *>(MCactivefield -> getparent()) -> selectedchunk(r_string))
             return;
     }
     else if (MCactivefield->selectedchunk(r_string))

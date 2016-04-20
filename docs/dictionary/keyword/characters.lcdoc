@@ -30,6 +30,6 @@ A character is a single letter, digit, punctuation mark, or control character. S
 
 When used with the <find> <command>, the <characters> <keyword> finds <card|cards> that contain the specified <string> of <characters>, wherever that <string> appears in a <word>.
 
-References: card (object), is among (operator), is not among (operator), whole (keyword), characters (keyword), string (keyword), character (keyword), lines (keyword), word (keyword), items (keyword), command (glossary), operator (glossary), keyword (glossary), number (function), find (command), sort (command), select (command), function (control_st)
+References: card (object), is among (operator), is not among (operator), whole (keyword), characters (keyword), string (keyword), character (keyword), lines (keyword), word (keyword), items (keyword), command (glossary), operator (glossary), keyword (glossary), number (function), find (command), sort (command), select (command), function (control structure)
 
 Tags: database

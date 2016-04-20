@@ -25,6 +25,6 @@ By default, an item is delimited by commas (,). However, you can set the <itemDe
 
 An item is a string of characters delimited by commas (or the <itemDelimiter> <character>). A single <item> can contain multiple <characters>, multiple <words>, and multiple <lines>.
 
-References: properties (property), itemDelimiter (property), tab (constant), is among (operator), is not among (operator), characters (keyword), string (keyword), item (keyword), character (keyword), lines (keyword), words (keyword), items (keyword), function (control_st), number (function), itemOffset (function), property (glossary), keyword (glossary), command (glossary), delimit (glossary), chunk (glossary), sort (command), select (command)
+References: properties (property), itemDelimiter (property), tab (constant), is among (operator), is not among (operator), characters (keyword), string (keyword), item (keyword), character (keyword), lines (keyword), words (keyword), items (keyword), function (control structure), number (function), itemOffset (function), property (glossary), keyword (glossary), command (glossary), delimit (glossary), chunk (glossary), sort (command), select (command)
 
 Tags: text processing

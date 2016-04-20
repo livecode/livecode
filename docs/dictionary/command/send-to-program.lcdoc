@@ -39,6 +39,6 @@ If you specify theform, the handler pauses until the application sends back a re
 
 For more information about Apple events, see Apple Computer's technical documentation, Inside Macintosh: Interapplication Communication, located at <a href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>.
 
-References: address (property), without (keyword), appleEvent (message), request (command), reply (command), request appleEvent (command), function (control_st), dialog box (glossary), Apple Event (glossary), statement (glossary), command (glossary)
+References: address (property), without (keyword), appleEvent (message), request (command), reply (command), request appleEvent (command), function (control structure), dialog box (glossary), Apple Event (glossary), statement (glossary), command (glossary)
 
 Tags: networking

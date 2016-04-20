@@ -518,13 +518,13 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	ol = 0;
 
 	//allocate memory to hold encrypted/decrypted data + an extra block + null terminator for block ciphers.
-	unsigned char *outdata = (unsigned char *)malloc(inlen + EVP_CIPHER_CTX_block_size(&ctx) + 1 + sizeof(magic) + sizeof(saltbuf));
-	//do encryption/decryption
-	if (outdata == NULL)
+	unsigned char *outdata = nil;
+	if (!MCMemoryAllocate(inlen + EVP_CIPHER_CTX_block_size(&ctx) + 1 + sizeof(magic) + sizeof(saltbuf), outdata))
 	{
 		outlen = 791;
 		return NULL;
 	}
+	//do encryption/decryption
 
 	// MW-2004-12-02: Only prepend the salt if we generated the key (i.e. password mode)
 	if (!isdecrypt && ispassword)
@@ -541,7 +541,7 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	{
 		if (EVP_CipherUpdate(&ctx,&outdata[ol],&tmp,(unsigned char *)data,tend-data) == 0)
 		{
-			delete outdata;
+			MCMemoryDeallocate(outdata);
 			return NULL;
 		}
 		ol += tmp;
@@ -550,7 +550,7 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	//for padding
 	if (EVP_CipherFinal(&ctx,&outdata[ol],&tmp) == 0)
 	{
-		delete outdata;
+		MCMemoryDeallocate(outdata);
 		return NULL;
 	}
 	outlen = ol + tmp;

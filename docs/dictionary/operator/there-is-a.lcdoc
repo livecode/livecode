@@ -40,6 +40,6 @@ The expression there is a stack stackName <evaluate|evaluates> to true if the <s
 
 >*Note:* The <there is a> <operator> is implemented internally as a <function>, and therefore has lower <precedence> than other <operator|operators>.
 
-References: stackFiles (property), mode (property), there is no (operator), file (keyword), property (glossary), loaded into memory (glossary), operator (glossary), precedence (glossary), folder (glossary), evaluate (glossary), process (glossary), exists (function), stack (object), object (object), function (control_st)
+References: stackFiles (property), mode (property), there is no (operator), file (keyword), property (glossary), loaded into memory (glossary), operator (glossary), precedence (glossary), folder (glossary), evaluate (glossary), process (glossary), exists (function), stack (object), object (object), function (control structure)
 
 Tags: file system

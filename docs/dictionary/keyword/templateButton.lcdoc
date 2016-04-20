@@ -39,4 +39,4 @@ You can refer to the <templateButton> using any of the following forms:
 
 >*Note:* The <templateButton> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), button (keyword), object (object), button (object), keyword (glossary), property (glossary), radio button (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), button (keyword), object (object), button (object), keyword (glossary), property (glossary), radio button (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control structure)

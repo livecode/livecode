@@ -34,6 +34,6 @@ The <shortFilePath> <function> transforms the <filePath> without looking for the
 
 On Mac OS, OS X, or Unix systems, the <shortFilePath> simply returns the <filePath> without changing it.
 
-References: filename (property), file (keyword), longFilePath (function), Windows (glossary), file path (glossary), return (glossary), function (control_st)
+References: filename (property), file (keyword), longFilePath (function), Windows (glossary), file path (glossary), return (glossary), function (control structure)
 
 Tags: file system

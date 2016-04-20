@@ -33,6 +33,7 @@ installer LiveCode
 	include Documentation
 	include Toolchain.[[TargetPlatform]]
 	include Extensions
+	include MergExt
 	codesign
 		include Engine.[[TargetPlatform]]
 		with TargetFolder as [[ToolsFolder]] do
@@ -104,6 +105,10 @@ component Externals
 		include Externals.CEF.Windows
 	emit externals to "[[TargetFolder]]/Externals/Externals.txt"
 	emit dbdrivers to "[[TargetFolder]]/Externals/Database Drivers/Database Drivers.txt"
+
+component MergExt
+	into [[ToolsFolder]] place
+		rfolder "mergext:MergExt"
 
 component Uninstaller
 	if TargetPlatform is "Windows" then
@@ -355,6 +360,7 @@ component Documentation
 	into [[ToolsFolder]]/Documentation place
 		rfolder "repo:docs/guides"
 		rfolder "ide:Documentation/guides"
+		rfolder "docs:guides"
 	
 	into [[ToolsFolder]]/Documentation/html_viewer place
 		file "ide:Documentation/html_viewer/api.html.template"
@@ -366,9 +372,6 @@ component Documentation
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
-
-	into [[ToolsFolder]]/Documentation/guides place
-		file "repo:LiveCodeNotes-[[EscapedVersionTag]].md" as "Release Notes.md"
 	
 	into [[ToolsFolder]]/Documentation/pdf place
 		file "repo:LiveCode[[TargetEdition]]UserGuide-[[EscapedVersionTag]].pdf" as "LiveCode User Guide.pdf"

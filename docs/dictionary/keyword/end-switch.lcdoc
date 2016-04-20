@@ -20,4 +20,4 @@ Use the <end switch> <keyword> to mark the end of a <switch> <control structure>
 
 The <end switch> <keyword> occurs on a line by itself.
 
-References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), switch (control_st)
+References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), switch (control structure)

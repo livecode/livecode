@@ -30,6 +30,6 @@ Ungrouping a group does not cause a <deleteGroup> <message> to be sent.
 
 A deleteBackground <message> is sent after the <deleteGroup> <message>.
 
-References: cantDelete (property), delete (command), group (command), stack (object), message (glossary), trap (glossary), pass (control_st)
+References: cantDelete (property), delete (command), group (command), stack (object), message (glossary), trap (glossary), pass (control structure)
 
 Tags: objects

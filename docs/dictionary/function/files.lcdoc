@@ -61,6 +61,6 @@ The creator and file type returned in the detailed files form is an eight-charac
 Changes: 
 The detailed files form was introduced in version 1.1. In previous versions, the <files> function provided only a list of file names.
 
-References: fileType (property), umask (property), defaultFolder (property), file (keyword), line (keyword), sort (command), answer file (command), folders (function), files (function), volumes (function), URLDecode (function), current folder (glossary), folder (glossary), function (control_st)
+References: fileType (property), umask (property), defaultFolder (property), file (keyword), line (keyword), sort (command), answer file (command), folders (function), files (function), volumes (function), URLDecode (function), current folder (glossary), folder (glossary), function (control structure)
 
 Tags: file system

@@ -609,6 +609,38 @@ LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2014-01-28: [[ HiDPI ]] Weak-linked IsProcessDPIAware function
+typedef BOOL (WINAPI *IsProcessDPIAwarePtr)(VOID);
+bool MCCefWin32IsProcessDPIAware(BOOL &r_result)
+{
+	static IsProcessDPIAwarePtr s_IsProcessDPIAware = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_IsProcessDPIAware = (IsProcessDPIAwarePtr)GetProcAddress(GetModuleHandleA("user32.dll"), "IsProcessDPIAware");
+		s_init = false;
+	}
+
+	if (s_IsProcessDPIAware == NULL)
+		return false;
+
+	r_result = s_IsProcessDPIAware();
+
+	return true;
+}
+
+bool MCCefPlatformGetHiDPIEnabled()
+{
+	BOOL t_result;
+	if (!MCCefWin32IsProcessDPIAware(t_result))
+		return false;
+
+	return t_result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct MCBrowserAuthDialogStrings
 {
 	char *title;

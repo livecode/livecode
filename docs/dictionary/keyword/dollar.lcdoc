@@ -39,6 +39,6 @@ You can access existing environment variables by prepending the <$> character to
 
   get $LOGNAME
 
-References: @ (keyword), relaunch (message), open process (command), paramCount (function), shell (function), function (control_st), setProp (control_st), application (glossary), variable (glossary), command line (glossary), argument (glossary), command (glossary), Windows (glossary), environment variable (glossary), OS X (glossary), keyword (glossary), Unix (glossary), statement (glossary), process (glossary)
+References: @ (keyword), relaunch (message), open process (command), paramCount (function), shell (function), function (control structure), setProp (control structure), application (glossary), variable (glossary), command line (glossary), argument (glossary), command (glossary), Windows (glossary), environment variable (glossary), OS X (glossary), keyword (glossary), Unix (glossary), statement (glossary), process (glossary)
 
 Tags: properties

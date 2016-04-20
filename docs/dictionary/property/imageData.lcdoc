@@ -43,6 +43,6 @@ The <imageData>, unlike the contents of the <image> <container>, is based on the
 
 >*Important:*  Since the <imageData> of an <image> is <binary file|binary data> rather than text, trying to display the data in a <field> may cause unexpected behavior.
 
-References: alphaData (property), height (property), width (property), imageData (property), format (function), field (keyword), image (keyword), image (object), object (object), property (glossary), binary file (glossary), pixel (glossary), statement (glossary), container (glossary), binary (glossary), byte (glossary), channel (glossary), crop (command), revVideoFrameImage (command), function (control_st)
+References: alphaData (property), height (property), width (property), imageData (property), format (function), field (keyword), image (keyword), image (object), object (object), property (glossary), binary file (glossary), pixel (glossary), statement (glossary), container (glossary), binary (glossary), byte (glossary), channel (glossary), crop (command), revVideoFrameImage (command), function (control structure)
 
 Tags: multimedia

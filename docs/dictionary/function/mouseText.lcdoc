@@ -33,6 +33,6 @@ To get the location of the word or text group clicked, use the mouseChunk <funct
 
 >*Important:*  Words are defined a little differently by the <mouseText> <function> than the way they are used in <chunk expression|chunk expressions>. A word, for purposes of the <mouseText>, is any text delimited by spaces, tabs, returns, or punctuation. If the mouse pointer is over a punctuation <character>, only that <character> is returned.
 
-References: character (keyword), words (keyword), word (keyword), field (keyword), clickText (function), mouseCharChunk (function), handler (glossary), grouped text (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), return value (glossary), function (control_st)
+References: character (keyword), words (keyword), word (keyword), field (keyword), clickText (function), mouseCharChunk (function), handler (glossary), grouped text (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), return value (glossary), function (control structure)
 
 Tags: ui

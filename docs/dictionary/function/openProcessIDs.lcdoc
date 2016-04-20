@@ -38,4 +38,4 @@ The list of process IDs is in the same order used by openProcesses <function>, w
 
 Programs that were not started by LiveCode are not included in the list returned by the <openProcessIDs> <function>.
 
-References: line (keyword), launch (command), kill (command), open process (command), function (control_st), exit (glossary), integer (glossary), command (glossary), return (glossary), process (glossary)
+References: line (keyword), launch (command), kill (command), open process (command), function (control structure), exit (glossary), integer (glossary), command (glossary), return (glossary), process (glossary)

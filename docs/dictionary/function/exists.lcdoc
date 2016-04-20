@@ -34,6 +34,6 @@ You can also specify a chunk of a container, but in this case the <exists> <func
 
 >*Tip:*  To find out whether a <file> or <folder> exists, or whether a <process> is running, use the <there is a operator>.
 
-References: owner (property), there is a operator (operator), there is a (operator), there is no (operator), file (keyword), folder (glossary), current card (glossary), return (glossary), process (glossary), isNumber (function), object (object), image (object), function (control_st)
+References: owner (property), there is a operator (operator), there is a (operator), there is no (operator), file (keyword), folder (glossary), current card (glossary), return (glossary), process (glossary), isNumber (function), object (object), image (object), function (control structure)
 
 Tags: objects

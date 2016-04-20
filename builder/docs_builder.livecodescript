@@ -1913,7 +1913,9 @@ command docsBuilderGenerateDocsNew pEdition, pVersion
    
    -- Ensure we have downloaded and extracted all the mergExt data 
    -- needed to build the docs for this edition
-   docsBuilderEnsureMergExt pEdition
+   local tEditionCased
+   put (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition)) into tEditionCased
+   builderMergExtUnpack builderMergExtVersion(), tEditionCased
    
    builderLog "report", "Building guide into" && builderGuideFolder(pEdition) & slash & "distributed_guide.js"
    pathEnsure (builderGuideFolder(pEdition))
@@ -1926,19 +1928,6 @@ command docsBuilderGenerateDocsNew pEdition, pVersion
 
    builderLog "report", "Built docs"
 end docsBuilderGenerateDocsNew
-
-private function escape pString, pConvertLineEndings
-   replace "\" with "\\" in pString
-   replace quote with ("\" & quote) in pString
-   
-   if pConvertLineEndings is true then
-      replace (numToChar(13) & CR) with (CR & numToChar(13)) in pString
-      replace (CR & numToChar(13)) with CR in pString
-   end if
-   replace CR with "\n" in pString
-   replace tab with "\t" in pString
-   return (quote & pString & quote)
-end escape
 
 private command addToList pElement, @xArray
    local tCount
@@ -1987,6 +1976,8 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
       put RepoBusinessDocsFolder() & slash & "guides" into tBusinessGuides
       addFolderToListIfExists tBusinessGuides, false, xFolders
    end if
+
+   addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
 end docsBuilderGetGuideFolders
 
 private command docsBuilderAddMergExtFolders pEdition, @xFolders
@@ -1994,7 +1985,7 @@ private command docsBuilderAddMergExtFolders pEdition, @xFolders
    put the defaultFolder into tDefaultFolder
    
    local tTargetFolder
-   put docsBuilderMergExtExtractedDocsFolder(pEdition) into tTargetFolder
+   put builderMergExtFolder() & "/" & "MergExt" into tTargetFolder
    set the defaultFolder to tTargetFolder
    
    repeat for each line tFolder in the folders
@@ -2006,7 +1997,6 @@ private command docsBuilderAddMergExtFolders pEdition, @xFolders
 end docsBuilderAddMergExtFolders
 
 private command docsBuilderGetAdditionalDictionaryFolders pEdition, @xFolders
-   docsBuilderEnsureMergExt pEdition
    docsBuilderAddMergExtFolders pEdition, xFolders
 end docsBuilderGetAdditionalDictionaryFolders
 
@@ -2275,97 +2265,6 @@ private command docsBuilderGenerateZip pEdition, pVersion
 
    builderLog "message", merge("Generated [[tZipPath]]")
 end docsBuilderGenerateZip
-
-function docsBuilderMergExtZipPath pEdition
-   -- Ensure edition has upper case first letter
-   put toUpper(char 1 of pEdition) & char 2 to -1 of pEdition into pEdition
-   return "https://downloads.livecode.com/mergext/mergExt_" & pEdition & ".zip"
-end docsBuilderMergExtZipPath
-
-function docsBuilderMergExtUnzipFolder
-   local tUnzipDirectory
-   put builderWorkFolder() & slash & "mergext" into tUnzipDirectory
-   pathEnsure tUnzipDirectory
-   return tUnzipDirectory
-end docsBuilderMergExtUnzipFolder
-
-function docsBuilderMergExtUnzipPath pEdition
-   put toUpper(char 1 of pEdition) & char 2 to -1 of pEdition into pEdition
-   return docsBuilderMergExtUnzipFolder() & slash & "mergExt_" & pEdition & ".zip"
-end docsBuilderMergExtUnzipPath
-
-function docsBuilderMergExtExtractedDocsFolder pEdition
-   local tExtractFolder
-   put docsBuilderMergExtUnzipFolder() & slash & pEdition into tExtractFolder
-   return tExtractFolder
-end docsBuilderMergExtExtractedDocsFolder
-
-command docsBuilderEnsureMergExt pEdition
-   local tDownloaded
-   put docsBuilderMergExtUnzipPath(pEdition) into tDownloaded
-   
-   if there is not a file tDownloaded then
-      docsBuilderDownloadMergExt pEdition
-   end if
-   
-   local tExtracted
-   put docsBuilderMergExtExtractedDocsFolder(pEdition) into tExtracted
-   if there is not a folder tExtracted then
-      docsBuilderExtractMergExt pEdition
-   end if
-end docsBuilderEnsureMergExt
-
-command docsBuilderDownloadMergExt pEdition
-   local tSource, tArchive, tCommand
-   put docsBuilderMergExtZipPath(pEdition) into tSource
-   put docsBuilderMergExtUnzipPath(pEdition) into tArchive
-   builderLog "message", "downloading mergext from" && tSource && "to" && tArchive
-   
-   -- Shell out to curl because LiveCode server has some issues with
-   -- making HTTPS on Linux (see bug 16940)
-   put merge("curl -o '[[tArchive]]' '[[tSource]]'") into tCommand
-   get shell(tCommand)
-      
-   if the result is not empty or there is not a file tArchive then
-      builderLog "error", "failed to download from" && tSource
-      exit docsBuilderDownloadMergExt
-   end if
-end docsBuilderDownloadMergExt
-
-command docsBuilderExtractMergExt pEdition
-   local tArchive
-   put docsBuilderMergExtUnzipPath(pEdition) into tArchive
-
-   -- open the archive   
-   revZipOpenArchive tArchive, "read"
-   if the result begins with "ziperr" then
-      builderLog "error", "failed to open archive" && tArchive & return & the result
-      exit docsBuilderExtractMergExt
-   end if
-   	
-   -- enumerate all lcdoc files
-   local tItems
-   put revZipEnumerateItems(tArchive) into tItems
-   filter tItems with "*.lcdoc"
-   
-   local tTargetFolder, tBaseFolder
-   put docsBuilderMergExtExtractedDocsFolder(pEdition) into tBaseFolder
-   pathEnsure tBaseFolder
-   set the itemDelimiter to slash
-   
-   -- Extract all lcdoc files to the edition-specific folder
-   repeat for each line tDoc in tItems
-      put item 1 to -2 of (tBaseFolder & slash & tDoc) into tTargetFolder
-      pathEnsure tTargetFolder
-      builderLog "message", "extracting mergext docs to" && tTargetFolder
-      revZipExtractItemToFile tArchive, tDoc, tBaseFolder & slash & tDoc
-      if the result begins with "ziperr" then
-         builderLog "error", "failed to extract docs to" && tTargetFolder & return & the result
-         exit docsBuilderExtractMergExt
-      end if
-   end repeat
-end docsBuilderExtractMergExt
-
 
 --- LEGACY
 

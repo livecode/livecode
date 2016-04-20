@@ -39,6 +39,6 @@ The arc sine of <number> is an angle whose sine is equal to <number>. In other w
     return asin(theMagnitude) * 180 / pi
   end asinInDegrees
 
-References: inverse (keyword), pi (constant), sin (function), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+References: inverse (keyword), pi (constant), sin (function), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control structure)
 
 Tags: math

@@ -32,6 +32,6 @@ Setting the <allowInterrupts> <property> to false is functionally equivalent to 
 
 >*Warning:*  Before setting the <allowInterrupts> <property> to false, make sure all <handler|handlers> that may be affected have been thoroughly tested. If <allowInterrupts> is set to false, you cannot interrupt a runaway <handler> with the standard <key combination>.
 
-References: cantAbort (property), exit (control_st), unlock error dialogs (command), interrupt (function), property (glossary), return (glossary), key combination (glossary), handler (glossary), Windows (glossary), exit (glossary), interrupt (glossary), Mac OS (glossary), Unix (glossary), stack (object)
+References: cantAbort (property), exit (control structure), unlock error dialogs (command), interrupt (function), property (glossary), return (glossary), key combination (glossary), handler (glossary), Windows (glossary), exit (glossary), interrupt (glossary), Mac OS (glossary), Unix (glossary), stack (object)
 
 Tags: ui

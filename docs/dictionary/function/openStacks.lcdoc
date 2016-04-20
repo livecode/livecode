@@ -33,6 +33,6 @@ The list also includes open stacks that cannot be seen because their visible <pr
 
 The order of the list is determined by the order of the windows on the screen. The frontmost window is first.
 
-References: name (property), line (keyword), stack (object), function (control_st), stacks (function), mainStacks (function), property (glossary), return (glossary)
+References: name (property), line (keyword), stack (object), function (control structure), stacks (function), mainStacks (function), property (glossary), return (glossary)
 
 Tags: windowing

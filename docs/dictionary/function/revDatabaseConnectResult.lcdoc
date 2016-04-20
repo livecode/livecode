@@ -37,6 +37,6 @@ If there were no errors on the specified database connection, the <revDatabaseCo
 Changes:
 The revDatabaseConnectResult synonym was added in version 2.0.
 
-References: function (control_st), string (keyword), revCloseDatabase (command), revQueryResult (function), revOpenDatabase (function), revOpenDatabases (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), return (glossary), Database library (library), LiveCode custom library (library)
+References: function (control structure), string (keyword), revCloseDatabase (command), revQueryResult (function), revOpenDatabase (function), revOpenDatabases (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), return (glossary), Database library (library), LiveCode custom library (library)
 
 Tags: database

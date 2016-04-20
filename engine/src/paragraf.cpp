@@ -1602,7 +1602,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				drawcomposition(dc, lptr, t_current_x, t_current_y, ceilf(linespace), compstart, compend, compconvstart, compconvend);
 		}
 
-		t_current_y += linespace;
+		t_current_y += ceilf(linespace);
 
 		lptr = lptr->next();
 	}
@@ -2288,9 +2288,19 @@ void MCParagraph::split(findex_t p_position)
     MCBlock *bptr = indextoblock(p_position, False);
 	findex_t skip = 0;
 	
-    if (p_position < MCStringGetLength(m_text) && TextIsLineBreak(GetCodepointAtIndex(p_position)))
+    // Reinstate original check for the presence of '\n' after the split.
+    // We believe this check was there as previously when importing text
+    // into a field, it would be set in a paragraph and then the paragraph
+    // would be iteratively split - which entailed removing the \n's.
+    // The 'm_text' field of a paragraph should never contain '\n' now so
+    // whilst we leave this check in (to be on the safe side) it should never
+    // trigger - hence the assert.
+    if (p_position < MCStringGetLength(m_text) && GetCodepointAtIndex(p_position) == '\n')
+    {
+        MCAssert(false);
         skip = IncrementIndex(p_position) - p_position;
-	
+    }
+    
 	MCParagraph *pgptr = new MCParagraph;
 	pgptr->parent = parent;
 

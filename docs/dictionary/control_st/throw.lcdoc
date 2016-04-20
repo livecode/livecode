@@ -34,4 +34,4 @@ If a <throw> <control structure> is <execute|executed> in a <handler> that was n
 
 >*Note:* The <throw> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
 
-References: string (keyword), catch (keyword), commandNames (function), errorDialog (message), return (control_st), try (control_st), return (glossary), call (glossary), handler (glossary), execute (glossary), statement (glossary), message (glossary), negative (glossary), control structure (glossary), parameter (glossary), command (glossary), object (object)
+References: string (keyword), catch (keyword), commandNames (function), errorDialog (message), return (control structure), try (control structure), return (glossary), call (glossary), handler (glossary), execute (glossary), statement (glossary), message (glossary), negative (glossary), control structure (glossary), parameter (glossary), command (glossary), object (object)

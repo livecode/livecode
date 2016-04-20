@@ -22,7 +22,7 @@ Example:
 put word 12 of it after field "Go On"
 
 Description:
-Use the <of> <keyword> to designate an attribute of an <object> or <chunk>, or to designate a <parameter> of a built-in <function(control_st)>.
+Use the <of> <keyword> to designate an attribute of an <object> or <chunk>, or to designate a <parameter> of a built-in <function(control structure)>.
 
 When designating a property, use the <of> <keyword> between the <property> name and the <object reference>. (The <of> <keyword> is not used when referring to <global|global properties>, only <properties> of <object|objects>.)
 
@@ -41,6 +41,6 @@ When designating the number of chunks in a string, use the <of> <keyword> after 
 
   the number of lines of string
 
-References: string (keyword), character (keyword), lines (keyword), the (keyword), in (keyword), word (keyword), line (keyword), properties (property), object (object), function (control_st), property (glossary), custom function (glossary), chunk expression (glossary), global (glossary), chunk (glossary), keyword (glossary), expression (glossary), parameter (glossary), function (glossary), object reference (glossary)
+References: string (keyword), character (keyword), lines (keyword), the (keyword), in (keyword), word (keyword), line (keyword), properties (property), object (object), function (control structure), property (glossary), custom function (glossary), chunk expression (glossary), global (glossary), chunk (glossary), keyword (glossary), expression (glossary), parameter (glossary), function (glossary), object reference (glossary)
 
 Tags: text processing

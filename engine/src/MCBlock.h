@@ -381,6 +381,12 @@ public:
 		return flags & F_HAS_UNICODE;
 	}
     
+    // Returns true if the block has a trailing tab character.
+    bool HasTrailingTab(void) const
+    {
+        return m_size != 0 && GetCodepointAtIndex(m_size - 1) == '\t';
+    }
+    
     //////////
 
     void GetLinkText(MCExecContext& ctxt, MCStringRef& r_linktext);

@@ -620,9 +620,15 @@ private handler menuItemToString(in pMenuItem as Array, in pLevel as Integer) re
 		put "/|" & pMenuItem["name"] after tMenuString
 	end if
 
+	repeat pLevel times
+		put "\t" before tMenuString
+	end repeat
+
 	if "checked" is among the keys of pMenuItem then
 		if pMenuItem["checked"] parsed as boolean then
 			put "!c" before tMenuString
+		else
+			put "!n" before tMenuString
 		end if
 	else if "menu" is among the keys of pMenuItem then
 		put "\n" & menuArrayToString(pMenuItem["menu"], pLevel + 1) after tMenuString
@@ -639,19 +645,13 @@ private handler menuArrayToString(in pArray as Array, in pLevel as Integer) retu
 	variable tMenu as String
 	put "" into tMenu
 
-	variable tPrefix as String
-	put "" into tPrefix
-	repeat pLevel times
-		put "\t" after tPrefix
-	end repeat
-
 	variable tKey as String
 	variable tData as Array
 	repeat for each element tKey in tKeys
 		if tMenu is empty then
-			put tPrefix into tMenu
+			put "" into tMenu
 		else
-			put "\n" & tPrefix after tMenu
+			put "\n" after tMenu
 		end if
 		put pArray[tKey] into tData
 		put menuItemToString(tData, pLevel) after tMenu

@@ -20,4 +20,4 @@ Use the <end repeat> <keyword> to mark the end of a <repeat> <control structure>
 
 The <end repeat> <keyword> occurs on a line by itself.
 
-References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), next repeat (control_st), repeat (control_st)
+References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), next repeat (control structure), repeat (control structure)

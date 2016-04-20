@@ -32,6 +32,6 @@ This function exists for compatibility with imported SuperCard projects. You can
 
 If the <object> is a <button(keyword)> or <field(keyword)>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the text at the <field(object)|field's> current width. If the <object> is a <card> or <group>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the <object|objects> in the <card> or <group>.
 
-References: formattedWidth (property), textHeight (property), formattedHeight (property), pixels (property), pageHeights (property), button (keyword), integer (keyword), field (keyword), card (keyword), group (command), field (object), object (object), button (object), property (glossary), return (glossary), function (control_st)
+References: formattedWidth (property), textHeight (property), formattedHeight (property), pixels (property), pageHeights (property), button (keyword), integer (keyword), field (keyword), card (keyword), group (command), field (object), object (object), button (object), property (glossary), return (glossary), function (control structure)
 
 Tags: ui
