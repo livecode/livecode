@@ -41,7 +41,5 @@ If the <graphic|graphic's> <lineSize> <property> is 1, the setting of the <capSt
 >*Note:* Setting the <roundEnds> of a <graphic> to true sets the <capStyle> of the <graphic> to "round". 
 Setting the <roundEnds> of a <graphic> to false sets the <capStyle> of the <graphic> to "butt".
 
-Tag: properties
-
 References: antialiased (property), curve (keyword), dashes (property), graphic (object), line (keyword), lineSize (property), 
 polygon (keyword), property (glossary), roundEnds (property)
