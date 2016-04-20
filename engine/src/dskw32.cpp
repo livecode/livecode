@@ -4905,7 +4905,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 								NULL,
 								&t_master_dacl,
 								NULL,
-								&t_master_security_descriptor) != ERROR_SUCCESS)
+								&t_master_security_descriptor))
 		{
 			t_error = GetLastError();
 			goto cleanup;
