@@ -30,13 +30,13 @@
 	<key>CFBundleIconFile</key>
 	<string>Standalone.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.runrev.revolution</string>
+	<string>com.runrev.livecode</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
 	<string>$(BUILD_LONG_VERSION), Copyright 2000-2015 LiveCode Ltd.</string>
 	<key>CFBundleName</key>
-	<string>Revolution</string>
+	<string>LiveCode</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
