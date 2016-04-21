@@ -174,7 +174,7 @@ public:
 		return m_delegate -> GetFilePointer();
 	}
 	
-	int64_t GetFileSize(void)
+	uint64_t GetFileSize(void)
 	{
 		return m_delegate -> GetFileSize();
 	}
@@ -494,7 +494,7 @@ public:
 		return NULL;
 	}
 	
-	int64_t GetFileSize()
+	uint64_t GetFileSize()
 	{
 		return 0;
     }
