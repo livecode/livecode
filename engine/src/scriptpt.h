@@ -135,8 +135,12 @@ public:
     
     uindex_t getindex(void)
     {
-        // AL-2014-07-28: [[ Bug 12729 ]] Fix the initial index of a token with quotation marks.
-        return (const unichar_t *)token . getstring() + length - endptr;
+        // Warning: explicitly truncated to a uindex_t
+        // This imposes a limit of 4GB on scripts
+        size_t index = (const unichar_t *)token . getstring() + length - endptr;
+        MCAssert(uindex_t(index) == index);
+        
+        return uindex_t(index);
     }
 
 	Parse_stat skip_space();
