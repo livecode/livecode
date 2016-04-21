@@ -234,6 +234,10 @@ public:
 		t_left . type = kMCExecValueTypeNone;
 		t_right . type = kMCExecValueTypeNone;
 
+		// If the operator is unary, make sure that the LHS is initialised
+        if (rank == FR_UNARY)
+            MCExecValueTraits<double>::set(t_left, 0.0);
+
         // PM-2015-01-15: [[ Bug 14384 ]] Prevent a crash when putting +1 into variable
         if ((left != nil && (left -> eval_ctxt(ctxt, t_left), ctxt . HasError()))
                 || !ctxt . ConvertToNumberOrArray(t_left))

@@ -233,7 +233,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			char *colorname;
 			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
 				return checkloadstat(stat);
-			delete colorname;
+			MCCStringFree(colorname);
 			flags &= ~F_HAS_COLOR_NAME;
 		}
 	}

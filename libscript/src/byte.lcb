@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This library consists of the operations on bytes included in the standard library of LiveCode Builder.
 */
 
@@ -61,7 +61,7 @@ public foreign handler MCByteEvalCodeOfByte(in Target as Data, out Result as LCU
 
 --
 
-/*
+/**
 Summary:            Counts the number of bytes in <Target>.
 
 Target: 			An expression which evaluates to binary data.
@@ -81,8 +81,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> within <Target>
 
 Needle: 			An expression which evaluates to binary data.
@@ -107,8 +106,7 @@ begin
     MCByteEvalOffsetOfBytes(IsLast, Needle, Target, output)
 end syntax
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> after a specified index in <Target>
 
 Needle: 			An expression which evaluates to binary data.
@@ -133,8 +131,7 @@ begin
 	MCByteEvalOffsetOfBytesAfter(IsLast, Needle, After, Target, output)
 end syntax
 
-/*
-
+/**
 Summary:            Finds the first or last occurrence of <Needle> before a specified index in <Target>.
 
 Needle: 			An expression which evaluates to binary data.
@@ -159,7 +156,7 @@ begin
     MCByteEvalOffsetOfBytesBefore(IsFirst, Needle, Before, Target, output)
 end syntax
 
-/*
+/**
 Summary:            Determines whether <Needle> is in <Target>.
 Needle: 			An expression which evaluates to a single byte of binary data.
 Target: 			An expression which evaluates to binary data.
@@ -180,7 +177,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Determines whether <Needle> contains <Target>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
@@ -199,7 +196,7 @@ begin
     MCByteEvalContainsBytes(Target, Needle, output)
 end syntax
 
-/*
+/**
 Summary:            Determines whether <Target> begins with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
@@ -218,7 +215,7 @@ begin
     MCByteEvalBeginsWithBytes(Target, Needle, output)
 end syntax
 
-/*
+/**
 Summary:            Determines whether <Target> ends with <Needle>.
 Needle: 			An expression which evaluates to binary data.
 Target: 			An expression which evaluates to binary data.
@@ -239,8 +236,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Designates the byte of data at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				An expression which evaluates to binary data.
@@ -260,8 +256,7 @@ begin
 	MCByteStoreByteOf(input, Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the bytes of data between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -283,8 +278,7 @@ begin
 	MCByteStoreByteRangeOf(input, Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the first byte of data in <Target>.
 Target:				An expression which evaluates to binary data.
 
@@ -303,8 +297,7 @@ begin
 	MCByteStoreFirstByteOf(input, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Designates the first byte of data in <Target>.
 Target:				An expression which evaluates to binary data.
 
@@ -325,8 +318,7 @@ end syntax
 
 --
 
-/*
-
+/**
 Summary:            Deletes the byte of data at index <Index> in <Target>.
 Index: 				An expression which evaluates to a valid integer index of <Target>.
 Target:				A container of binary data.
@@ -345,8 +337,7 @@ begin
 	MCByteExecDeleteByteOf(Index, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the bytes of data between indices <Start> and <Finish> in <Target>.
 
 Start:              An expression which evaluates to a valid integer index of <Target>.
@@ -367,8 +358,7 @@ begin
 	MCByteExecDeleteByteRangeOf(Start, Finish, Target)
 end syntax
 
-/*
-
+/**
 Summary:            Deletes the first byte in <Target>.
 Target:				A binary data container.
 
@@ -387,8 +377,7 @@ begin
 end syntax
 
 
-/*
-
+/**
 Summary:            Deletes the last byte in <Target>.
 Target:				A binary data container.
 
@@ -408,7 +397,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:        Repeat over the bytes of some data
 Iterand:        A container of binary data.
 
@@ -426,7 +415,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:	Generate random data
 Count:		Expression evaluating to the number of bytes to generate
 
@@ -447,7 +436,7 @@ end syntax
 -- Conversion between bytes and numbers
 ----------------------------------------------------------------
 
-/*
+/**
 Summary:	Create a 1-byte data value from a number
 
 Value:		The value for the new data value
@@ -464,7 +453,7 @@ begin
 	MCByteEvalByteWithCode(Value, output)
 end syntax
 
-/*
+/**
 Summary:	Get the numeric value of a single byte.
 
 Target:	A 1-byte binary data value.

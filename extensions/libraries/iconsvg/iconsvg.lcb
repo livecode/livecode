@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This is an SVG icon path library.
 */
 
@@ -1369,7 +1369,7 @@ private handler initialiseIcons() returns nothing
 	end repeat
 end handler
 
-/*
+/**
 Returns the available icons in the default icon family.
 
 Returns: The names of the icons for which SVG paths are available, one per line.
@@ -1450,7 +1450,7 @@ private handler resolveIconName(in pName as String) returns optional List
 	return [tFamily, tName]
 end handler
 
-/*
+/**
 Returns the SVG path for the given icon.
 
 pName: The name of the icon
@@ -1474,7 +1474,7 @@ public handler iconSVGPathFromName(in pName as String) returns String
 	return sFontArray[tResolved[1]][tResolved[2]]["svg"]
 end handler
 
-/*
+/**
 Returns the codepoint corresponding to the given icon in the fontawesome font.
 
 pName: The name of the icon

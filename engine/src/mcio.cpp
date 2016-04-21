@@ -675,7 +675,7 @@ IO_stat IO_read_stringref_legacy(MCStringRef& r_string, IO_handle p_stream, bool
 	
 	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
 	{
-		delete t_bytes;
+		MCMemoryDeallocate(t_bytes);
 		return IO_ERROR;
 	}
 	

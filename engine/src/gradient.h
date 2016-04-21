@@ -104,7 +104,7 @@ bool MCGradientFillGetElement(MCExecContext& ctxt, MCGradientFill* p_gradient, M
 bool MCGradientFillSetElement(MCExecContext& ctxt, MCGradientFill* &x_gradient, MCNameRef p_prop, MCRectangle rect, MCExecValue p_value, bool& r_dirty);
 
 Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, MCStringRef p_data);
-void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, MCStringRef &r_data);
+bool MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, MCStringRef &r_data);
 
 MCGradientCombiner *MCGradientFillCreateCombiner(MCGradientFill *p_gradient, MCRectangle &p_clip);
 uint1 *MCGradientFillSerialize(MCGradientFill *p_gradient, uint4 &r_length);

@@ -1542,16 +1542,9 @@ void MCObject::GetScript(MCExecContext& ctxt, MCStringRef& r_script)
 		return;
 	}
 
-	bool t_success = true;
-	
 	getstack() -> unsecurescript(this);
 	r_script = MCValueRetain(_script);
 	getstack() -> securescript(this);
-	
-	if (t_success)
-		return;
-
-	ctxt . Throw();
 }
 
 void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
