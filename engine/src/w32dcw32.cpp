@@ -209,7 +209,24 @@ KeySym MCScreenDC::getkeysym(WPARAM wParam, LPARAM lParam)
 		}
 	}
 	KeySym keysym;
-	setmods();
+
+	// We need to update the modifier state here. If the current event being
+	// processed is not live then we must rely on the state of MCmodifierstate
+	// as it is. Otherwise, we must fetch the synchronous key state.
+	if (curinfo -> live)
+	{
+		uint2 t_state = 0;
+		if (GetKeyState(VK_CONTROL) & 0x8000)
+			t_state |= MS_CONTROL;
+		if (GetKeyState(VK_MENU) & 0x8000)
+			t_state |= MS_MOD1;
+		if (GetKeyState(VK_SHIFT) & 0x8000)
+			t_state |= MS_SHIFT;
+		if (GetKeyState(VK_CAPITAL) & 0x0001)
+			t_state |= MS_CAPS_LOCK;
+		MCmodifierstate = t_state;
+	}
+
 	if (curks == KS_ALTGR)
 		if (MCmodifierstate & MS_CONTROL && MCmodifierstate & MS_MOD1)
 			MCmodifierstate &= ~(MS_CONTROL| MS_MOD1);
@@ -287,8 +304,8 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 	{
 		if (dispatch && pendingevents != NULL)
 		{
+			MCEventnode *tptr = pendingevents->remove(pendingevents);;
 			curinfo->live = False;
-			MCEventnode *tptr = (MCEventnode *)pendingevents->remove(pendingevents);
 			MCmodifierstate = tptr->modifier;
 			msg.hwnd = tptr->hwnd;
 			msg.message = tptr->msg;
@@ -721,6 +738,16 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			pms->appendevent(tptr);
 			break;
 		}
+		
+		// If the repeat count > 1 then we only process one event right now
+		// and push a pending event onto the queue for the rest. This means that
+		// 'flushEvents' can purge any repeated key messages.
+		if (LOWORD(lParam) > 1)
+		{
+			MCEventnode *tptr = new MCEventnode(hwnd, msg, wParam, MAKELPARAM(LOWORD(lParam) - 1, HIWORD(lParam)), 0, MCmodifierstate, MCeventtime);
+			pms->appendevent(tptr);
+			lParam = MAKELPARAM(1, HIWORD(lParam));
+		}
 
 		// SN-2014-09-10: [[ Bug 13348 ]] The keysym is got as for the WM_KEYDOWN case
 		if (curinfo->keysym == 0) // event came from some other dispatch
@@ -803,34 +830,28 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 
 		if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
 		{
-			// Submit the character as both text and a key stroke
-			uint16_t count = LOWORD(lParam);
-
-			while (count--)
+			// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
+			//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
+			//   a dead-key started sequence
+			// SN-2015-05-18: [[ Bug 15040 ]] We must send the char resulting
+			//  from an Alt+<number> sequence.
+			if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
 			{
-				// SN-2014-09-05: [[ Bug 13348 ]] Call the appropriate message
-				//	 [[ MERGE-6_7_RC_2 ]] and add the KeyDown/Up in case we follow
-				//   a dead-key started sequence
-				// SN-2015-05-18: [[ Bug 15040 ]] We must send the char resulting
-				//  from an Alt+<number> sequence.
-				if (curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
-				{
-					// Pressing Alt and the key "+" starts a number-typing sequence.
-					//  Otherwise, we are not in such a sequence - be it because a normal
-					//  char has been typed, or because the sequence is terminated.
-					isInAltPlusSequence = (t_keysym == '+' && MCmodifierstate == MS_ALT);
+				// Pressing Alt and the key "+" starts a number-typing sequence.
+				//  Otherwise, we are not in such a sequence - be it because a normal
+				//  char has been typed, or because the sequence is terminated.
+				isInAltPlusSequence = (t_keysym == '+' && MCmodifierstate == MS_ALT);
 
-					// We don't want to send any Key message for the "+" pressed
-					//  to start the Alt+<number> sequence
-					if (isInAltPlusSequence
-							|| (!MCdispatcher->wkdown(dw, *t_input, t_keysym)
-								&& msg == WM_SYSCHAR))
-						return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
-				}
-				
-				if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
-  					MCdispatcher->wkup(dw, *t_input, t_keysym);
+				// We don't want to send any Key message for the "+" pressed
+				//  to start the Alt+<number> sequence
+				if (isInAltPlusSequence
+						|| (!MCdispatcher->wkdown(dw, *t_input, t_keysym)
+							&& msg == WM_SYSCHAR))
+					return IsWindowUnicode(hwnd) ? DefWindowProcW(hwnd, msg, wParam, lParam) : DefWindowProcA(hwnd, msg, wParam, lParam);
 			}
+				
+			if (curinfo->keymove == KM_KEY_UP || deadcharfollower)
+  				MCdispatcher->wkup(dw, *t_input, t_keysym);
 
 			curinfo->handled = curinfo->reset = true;
 		}
