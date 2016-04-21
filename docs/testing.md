@@ -64,6 +64,12 @@ Before running each test command, the test framework inserts a test library stac
 * `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
 * `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension. 
 * `TestLoadAllExtensions`: Attempt to load all available extensions. 
+* `TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray`: Repeatedly check the result of a handler for a test. The test is recorded as a success if the result is ever true before the given time runs out, or a failure otherwise.
+	- `pHandlerName` is the name of the handler which returns a result.
+	- `pTarget` is the object to which `pHandlerName` should be dispatched.
+	- `pTimeOut` is the amount of milliseconds to continue testing the result of the handler.
+	- `pParamsArray` is an array of parameters, keyed by the 1-based index of the required parameter to be passed to the handler.
+	
 Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
 ````
 on TestSetup
