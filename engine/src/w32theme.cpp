@@ -32,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32dc.h"
 #include "w32theme.h"
-#include "w32context.h"
 
 #include "exec.h"
 #include "graphics_util.h"
