@@ -188,7 +188,7 @@ public:
 		// If there isn't enough room, extend
 		if (m_pointer + p_length > m_capacity)
 		{
-			uint32_t t_new_capacity;
+			size_t t_new_capacity;
 			t_new_capacity = (m_pointer + p_length + 4096) & ~4095;
 			
 			void *t_new_buffer;
