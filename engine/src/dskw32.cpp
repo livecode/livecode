@@ -1769,7 +1769,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return m_handle;
 	}
 
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 #ifdef /* MCS_fsize_dsk_w32 */ LEGACY_SYSTEM
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
