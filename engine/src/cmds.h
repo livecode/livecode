@@ -1321,7 +1321,6 @@ class MCClose : public MCStatement
 	Open_argument arg;
 	MCExpression *fname;
 	MCChunk *stack;
-	Boolean immediate;
 public:
 	MCClose()
 	{
@@ -1950,7 +1949,6 @@ class MCShow : public MCStatement
 	Boolean card;
 	MCChunk *ton;
 	MCExpression *location;
-	Boolean all;
 	MCVisualEffect *effect;
 public:
 	MCShow()

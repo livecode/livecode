@@ -56,7 +56,7 @@ public:
 class simple_string
 {
 	const char *f_data;
-	unsigned int f_length;
+	size_t f_length;
 
 public:
 	simple_string(void)
