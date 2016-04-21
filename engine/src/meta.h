@@ -79,7 +79,7 @@ public:
 	{
 	}
 
-	simple_string(const char *p_string, unsigned int p_length)
+	simple_string(const char *p_string, size_t p_length)
 		: f_data(p_string), f_length(p_length)
 	{
 	}
@@ -107,7 +107,7 @@ public:
 		return f_length == p_other . f_length && strncmp(f_data, p_other . f_data, f_length) == 0;
 	}
 
-	unsigned int length(void) const
+	size_t length(void) const
 	{
 		return f_length;
 	}
@@ -119,11 +119,11 @@ public:
 
 	operator MCString(void) const
 	{
-		return MCString(f_data, f_length);
+		return MCString(f_data, uint4(f_length));
 	}
 
 private:
-	void assign(const char *p_data, unsigned int p_length)
+	void assign(const char *p_data, size_t p_length)
 	{
 		f_data = p_data;
 		f_length = p_length;
@@ -237,7 +237,7 @@ public:
 	}
 
 private:
-	void initialise(const char *p_string, unsigned int p_length, char p_delimiter, bool p_quoted)
+	void initialise(const char *p_string, size_t p_length, char p_delimiter, bool p_quoted)
 	{
 		unsigned int t_count;
 		unsigned int *t_items;

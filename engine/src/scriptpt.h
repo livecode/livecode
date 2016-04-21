@@ -98,7 +98,7 @@ public:
 	{
 		line = l;
 	}
-	uint2 getpos()
+	ptrdiff_t getpos()
 	{
 		return pos > (curptr - backupptr)
 		       ?  pos - (curptr - backupptr) : 1;
