@@ -763,14 +763,16 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : b; }
+// TODO: re-write when we adopt C++11
+template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : T(b); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MAXIMUM FUNCTIONS
 //
 
-template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : b; }
+// TODO: re-write when we adopt C++11
+template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : T(b); }
 
 ////////////////////////////////////////////////////////////////////////////////
 //
