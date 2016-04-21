@@ -232,7 +232,6 @@ public:
 
 class MCBase64Encode : public MCUnaryFunctionCtxt<MCDataRef, MCStringRef, MCFiltersEvalBase64Encode, EE_BASE64ENCODE_BADSOURCE, PE_BASE64ENCODE_BADPARAM, kMCFiltersEvalBase64EncodeMethodInfo>
 {
-	MCExpression *source;
 public:
     MCBase64Encode(){}
     virtual ~MCBase64Encode(){}

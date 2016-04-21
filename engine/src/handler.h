@@ -46,7 +46,6 @@ class MCHandler
 	MCVariable **vars;
 	MCVariable **globals;
 	MCContainer **params;
-	MCParameter *paramlist;
 	MCHandlerVarInfo *vinfo;
 	MCHandlerParamInfo *pinfo;
 	MCHandlerConstantInfo *cinfo;

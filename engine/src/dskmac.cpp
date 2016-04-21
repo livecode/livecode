@@ -2040,7 +2040,7 @@ public:
 		return ftello(m_stream);
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 #ifdef /* MCS_fsize_dsk_mac */ LEGACY_SYSTEM
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
