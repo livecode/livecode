@@ -753,12 +753,14 @@ begin
     MCWidgetGetMouseButtonState(Index, output)
 end syntax*/
 
+-- FIXME not actually implemented
+/*
 syntax TheModifierKeys is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
 begin
     MCWidgetGetModifierKeys(IsCurrent, output)
 end syntax
-
+*/
 
 // ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
 
