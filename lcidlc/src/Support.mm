@@ -1863,10 +1863,8 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			case 'N': // NSNumber*
 			{
 				NSNumber* t_number;
-				t_number = va_arg(p_args, NSNumber *);
-				double t_real;
-				t_real = [t_number doubleValue];
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsReal, &t_real);
+                t_number = va_arg(p_args, NSNumber *);
+                t_error = MCVariableStore(t_argv[i], kMCOptionAsObjcNumber, &t_number);
 			}
 			break;
 				
@@ -1874,11 +1872,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				NSString *t_string;
 				t_string = va_arg(p_args, NSString *);
-				const char *t_cstring;
-				t_cstring = [t_string cStringUsingEncoding: NSMacOSRomanStringEncoding];
-				if (t_cstring == nil)
-					t_error = (MCError)kLCErrorCannotEncodeCString;
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsCString, &t_cstring);
+				t_error = MCVariableStore(t_argv[i], kMCOptionAsObjcString, &t_string);
 			}
 			break;
 				
@@ -1886,12 +1880,25 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				NSData *t_data;
 				t_data = va_arg(p_args, NSData *);
-				LCBytes t_string;
-				t_string . buffer = (char *)[t_data bytes];
-				t_string . length = [t_data length];
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_string);
+				t_error = MCVariableStore(t_argv[i], kMCOptionAsObjcData, &t_data);
 			}
 			break;
+                
+            case 'A': // NSArray *
+            {
+                NSArray * t_array;
+                t_array = va_arg(p_args, NSArray *);
+                t_error = MCVariableStore(t_argv[i], kMCOptionAsObjcArray, &t_array);
+            }
+                break;
+                
+            case 'H': // NSDictionary *
+            {
+                NSDictionary * t_dictionary;
+                t_dictionary = va_arg(p_args, NSDictionary *);
+                t_error = MCVariableStore(t_argv[i], kMCOptionAsObjcDictionary, &t_dictionary);
+            }
+                break;
 #endif
 		}
 	}
