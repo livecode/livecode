@@ -1269,7 +1269,7 @@ end syntax
 
 //
 
-/**
+/*
 Summary:	Take a snapshot of an widget into an image
 
 Parameters:
@@ -1287,12 +1287,15 @@ of the snapshot image in pixels.
 
 Tags: Widget
 */
+-- FIXME not implemented
+/*
 syntax SnapshotWidget is statement
     "snapshot" <Widget: Expression> [ "at" "size" <Size: Expression> ]
 begin
     MCWidgetSnapshotWidget(Widget)
     MCWidgetSnapshotWidgetAtSizeAsList(Widget, Size)
 end syntax
+*/
 
 //
 
