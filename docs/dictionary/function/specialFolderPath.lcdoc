@@ -49,8 +49,6 @@ The result: If the <folderIdentifier> is either not supported on the current
 
 Returns: The <specialFolderPath> function <return|returns> a folder name and location.
 
-Tags: file system
-
 Description:
 Use the <specialFolderPath> function to place preferences in the
 Preferences <folder>, save files to the Documents folder, find out which
@@ -197,3 +195,5 @@ defaultFolder (property), engine (glossary), files (function), folder (glossary)
 folders (function), platform (glossary), return (glossary),
 revSetDatabaseDriverPath (command), special folder (glossary),
 standalone application (glossary), tempName (function), the resut (function)
+
+Tags: file system
