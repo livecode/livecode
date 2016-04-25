@@ -17,36 +17,58 @@ Platforms: desktop,server,web,mobile
 Security: disk
 
 Example:
-specialFolderPath("Preferences")
+local tPrefsFolder
+put specialFolderPath("Preferences") into tPrefsFolder
 
 Example:
 set the defaultFolder to specialFolderPath("desktop")
 
 Example:
+local appSupportFolder
 put specialFolderPath("asup") into appSupportFolder
 
 Example:
+local tFileContents
 put url ("file:" & specialFolderPath("engine") & slash & "foo.txt") into tFileContents
 
 Example:
-set the folder to specialFolderPath("engine") & slash & "myimages"
-put the files into tMyImages
+# get file listing of files in a given folder
+on mouseUp
+	local tMyImages
+	set the defaultFolder to specialFolderPath("resources") & "/myimages"
+	put the files into tMyImages
+end mouseUp
 
 Parameters:
-folderIdentifier (enum): A string naming the special folder to locate (e.g. "home") or (on Windows only) a CSIDL value.
+folderIdentifier (enum): A string naming the special folder to locate 
+(e.g. "home") or (on Windows only) a CSIDL value.
 
-The result: If the <folderIdentifier> is either not supported on the current <platform> or doesn't exist on the current system, the result is set to "folder not found".
+The result: If the <folderIdentifier> is either not supported on the current 
+<platform> or doesn't exist on the current system, <the result> is set to 
+"folder not found".
 
-Returns: The <specialFolderPath> function returns a folder name and location.
+Returns: The <specialFolderPath> function <return|returns> a folder name and location.
 
 Description:
-Use the <specialFolderPath> function to place preferences in the Preferences <folder>, save files to the Documents folder, find out which files are installed in the System or Fonts folders, and so on.
+Use the <specialFolderPath> function to place preferences in the
+Preferences <folder>, save files to the Documents folder, find out which
+files are installed in the System or Fonts <folder|folders>, and so on.
 
-If the folder is not found, the <specialFolderPath> function returns empty. If the <folderIdentifier> is either not supported on the current <platform> or doesn't exist on the current system, the result is set to "folder not found".
+If the folder is not found, the <specialFolderPath> function <return|returns>
+empty. If the <folderIdentifier> is either not supported on the current
+<platform> or doesn't exist on the current system, <the result> is set to
+"folder not found".
 
-Some of the special folders you can specify with the <specialFolderPath> function need not have the standard names. (For example, the System Folder on Mac OS systems is not necessarily named "System Folder".) For this reason, the <specialFolderPath> function returns the full path to the folder, including the name of the folder.
+Some of the <special folder|special folders> you can specify with the 
+<specialFolderPath> function need not have the standard names. 
+(For example, the System Folder on Mac OS systems is not necessarily 
+named "System Folder".) For this reason, the <specialFolderPath> function 
+<return|returns> the full path to the <folder>, including the name of the folder.
 
-**On Windows systems**, the <folderIdentifier> can alternatively be a Constant Special Item ID List (CSIDL) value that identifies a special folder.  Note that not all CSIDL values work on all versions of Windows.  The following <folderIdentifier> values are supported:
+**On Windows systems**, the <folderIdentifier> can alternatively be a
+Constant Special Item ID List (CSIDL) value that identifies a <special folder>. 
+Note that not all CSIDL values work on all versions of Windows.
+ The following <folderIdentifier> values are supported:
 
 * Windows folder names:
   * "home": The current user's profile folder
@@ -57,8 +79,10 @@ Some of the special folders you can specify with the <specialFolderPath> functio
   * "start": The folder that contains Start Menu items
   * "fonts": The folder that contains fonts
   * "temporary": The folder where temporary files can be placed
-  * "engine": The folder containing the LiveCode engine and the executable files copied in the standalone application
-  * "resources": In development mode, the current stack's folder.  In a standalone, the resources folder where files or folders specified in the Standalone Builder are located.
+  * "engine": The folder containing the LiveCode engine and the executable files 
+  copied in the standalone application
+  * "resources": In development mode, the current stack's folder.  In a standalone, 
+  the resources folder where files or folders specified in the Standalone Builder are located.
 * Examples of common Windows CSIDL numbers:
   * 0x001a: Same as "support"
   * 0x0023: The application-specific data folder shared by all users
@@ -77,34 +101,61 @@ Some of the special folders you can specify with the <specialFolderPath> functio
 * "system": The System Folder (usually `/System`)
 * "fonts": The folder that contains fonts
 * "temporary": The folder where temporary files can be placed
-* "engine": The folder containing the LiveCode engine and the executable files copied in the standalone application
-* "resources": In development mode, the current stack's folder.  In a standalone, the resources folder where files or folders specified in the Standalone Builder are located.
+* "engine": The folder containing the LiveCode engine and the executable files copied 
+in the <standalone application>
+* "resources": In development mode, the current stack's folder. In a 
+<standalone application|standalone>, the resources folder where files or folders 
+specified in the Standalone Builder are located.
 
-**On iOS systems**, only create files in the "documents", "cache" and "temporary" folders.  Be careful not to change or add any files within the application bundle.  The application bundle is digitally signed when it is built, and any changes after this point will invalidate the signature and prevent it from launching.
+**On iOS systems**, only create files in the "documents", "cache" and "temporary" 
+folders.  Be careful not to change or add any files within the <application bundle>. 
+The <application bundle> is digitally signed when it is built, and any changes after 
+this point will invalidate the signature and prevent it from launching.
 
-iOS imposes strict controls over what you can and cannot access.  Each application in iOS is stored in its own "sandbox" folder (`specialFolderPath("home")`).  An application is free to read and write files anywhere beneath this folder, but it is not allowed to access anything outside of the "sandbox".
+iOS imposes strict controls over what you can and cannot access.  Each application 
+in iOS is stored in its own "sandbox" <folder> (`specialFolderPath("home")`).  
+An <application> is free to read and write files anywhere beneath this <folder>, 
+but it is not allowed to access anything outside of the "sandbox".
 
-Note that iOS devices have case-sensitive filesystems, but the iOS simulator's filesystem has the same case-sensitivity as the host system (i.e. usually case-insensitive).
+Note that iOS devices have <case-sensitive> file systems, but the iOS simulator's 
+file system has the same <case-sensitive|case-sensitivity> as the host system 
+(i.e. usually <case-insensitive>).
 
 The following <folderIdentifier> values are supported:
 
-* "home": The (unique) folder containing the application bundle and its associated data and folders
-* "documents": The folder in which document data should be stored (backed up by iTunes on sync)
-* "library": The folder in which to store data of various types (backed up by iTunes on sync).  In particular, data private to the application should be stored in a folder named with the app's bundle identifier inside the "library" folder
-* "cache": The folder where transient data that needs to be preserved between launches should be stored (*not* backed up by iTunes)
-* "temporary": The folder where temporary data that is *not* preserved between launches should be stored (*not* backed up by iTunes)
-* "engine": The folder containing the built standalone engine (i.e. the bundle).  This is useful for constructing paths to resources that have been copied into the bundle at build time
+* "home": The (unique) folder containing the <application bundle> and its 
+associated data and folders
+* "documents": The folder in which document data should be stored 
+(backed up by iTunes on sync)
+* "library": The folder in which to store data of various types 
+(backed up by iTunes on sync).  In particular, data private to the application 
+should be stored in a folder named with the <application bundle|app's bundle> 
+identifier inside the "library" folder
+* "cache": The folder where transient data that needs to be preserved between 
+launches should be stored (*not* backed up by iTunes)
+* "temporary": The folder where temporary data that is *not* preserved between 
+launches should be stored (*not* backed up by iTunes)
+* "engine": The folder containing the built <standalone application|standalone> 
+<engine> (i.e. the <application bundle|bundle>). This is useful for constructing 
+paths to resources that have been copied into the <application bundle|bundle> at build time
 * "resources": Same as "engine".
 
-**On Android systems**, note that the filesystem is case-sensitive.
+**On Android systems**, note that the file system is <case-sensitive>.
 
-An Android application is installed on the device as a ZIP package.  This means that any assets that are included are not available as separate files in the device's native filesystem.  In order to manage this, LiveCode "virtualizes" the a sset files you include, allowing read-only access with all the standard LiveCode file and folder handling commands and functions.  To access the assets you have included with your application, use filenames relative to `specialFolderPath("engine")`.
+An Android application is installed on the device as a ZIP package.  
+This means that any assets that are included are not available as separate files 
+in the device's native file system.  In order to manage this, LiveCode "virtualizes" 
+the asset files you include, allowing read-only access with all the standard 
+LiveCode file and folder handling commands and functions. To access the assets you 
+have included with your application, use file names relative to `specialFolderPath("engine")`.
 
 The following <folderIdentifier> values are supported:
 
 * "documents": The folder where application-specific data can be placed (typically valuable)
-* "cache": The folder where transient application-specific data can be placed (typically not valuable)
-* "engine": The (virtual) folder containing the application's LiveCode engine and other resources that were copied into the application at build time
+* "cache": The folder where transient application-specific data can be 
+placed (typically not valuable)
+* "engine": The (virtual) folder containing the <application|application's> LiveCode <engine>
+ and other resources that were copied into the <application> at build time
 * "resources": Same as "engine".
 
 **On Linux systems**, the following <folderIdentifier> values are supported:
@@ -112,22 +163,37 @@ The following <folderIdentifier> values are supported:
 * "home": The current user's home folder
 * "desktop": The current user's desktop folder
 * "temporary": The folder where temporary files can be placed
-* "engine": The folder containing the LiveCode engine and the executable files copied in the standalone application
-* "resources": In development mode, the current stack's folder.  In a standalone, the resources folder where files or folders specified in the Standalone Builder are located.
+* "engine": The folder containing the LiveCode engine and the executable files 
+copied in the <standalone application>
+* "resources": In development mode, the current stack's folder.  
+In a <standalone application|standalone>, the resources folder where files or 
+folders specified in the Standalone Builder are located.
 
-**In HTML5 standalones**, you can read and write files from anywhere, since the whole filesystem is virtual and temporary.  For compatibility purposes, the following <folderIdentifier> values are supported:
+**In HTML5 standalones**, you can read and write files from anywhere, since 
+the whole file system is virtual and temporary. For compatibility purposes, 
+the following <folderIdentifier> values are supported:
 
 * "home": Always `/livecode`
 * "fonts": The folder that contains fonts
 * "temporary": A folder where temporary files can be placed
-* "engine": The folder where the standalone initial filesystem is extracted
-* "resources": The resources folder where files or folders specified in the Standalone Builder are located.
+* "engine": The folder where the standalone initial file system is extracted
+* "resources": The resources folder where files or folders specified in the 
+Standalone Builder are located.
 
 Changes:
-Support for special folder constants (on Mac OS and OS X) and CSIDL numbers (on Windows) was added in version 2.0.
-Support for using the <specialFolderPath> function on Unix systems was added in version 2.9.
-Support for using the <specialFolderPath> function on iOS systems was added in version 4.5.2.
-Support for using the <specialFolderPath> function on Android systems was added in version 4.6.2.
-Support for using the <specialFolderPath> function on HTML5 systems was added in version 8.0.0.
+- Support for special folder <constant|constants> (on Mac OS and OS X) and CSIDL numbers 
+(on Windows) was added in version 2.0.
+- Support for using the <specialFolderPath> function on Unix systems was added in version 2.9.
+- Support for using the <specialFolderPath> function on iOS systems was added in version 4.5.2.
+- Support for using the <specialFolderPath> function on Android systems was added in version 4.6.2.
+- The "resources" <folderIdentifier> was added in version 6.7.5.
+- Support for using the <specialFolderPath> function on HTML5 systems was added in version 8.0.0.
 
-References: revSetDatabaseDriverPath (command), tempName (function), folders (function), platform (function), folder (glossary)
+References: application (glossary), application bundle (glossary), 
+case-insensitive (glossary), case-sensitive (glossary), constant (glossary),
+defaultFolder (property), engine (glossary), files (function), folder (glossary), 
+folders (function), platform (glossary), return (glossary),
+revSetDatabaseDriverPath (command), special folder (glossary),
+standalone application (glossary), tempName (function), the resut (function)
+
+Tags: file system
