@@ -2408,15 +2408,10 @@ MCRectangle MCPlayer::getpreferredrect()
     MCRectangle t_bounds;
 	MCU_set_rect(t_bounds, 0, 0, 0, 0);
 	if (m_platform_player != nil)
-    {
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
-        // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
-        if (flags & F_SHOW_CONTROLLER)
-            t_bounds.height += CONTROLLER_HEIGHT;
-    }
-    
-    // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
-    return t_bounds;
+	
+	// IM-2016-04-22: [[ WindowsPlayer ]] Return player rect required to display video at preferred size
+	return getplayerrectforvideorect(t_bounds);
 }
 
 uint2 MCPlayer::getloudness()
@@ -2571,7 +2566,6 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 
 MCRectangle MCPlayer::resize(MCRectangle movieRect)
 {
-	int2 x, y;
 	MCRectangle trect = rect;
 	
 	// MW-2011-10-24: [[ Bug 9800 ]] Store the current rect for layer notification.
@@ -2591,20 +2585,10 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 		}
 		else
 		{
-			x = trect.x + (trect.width >> 1);
-			y = trect.y + (trect.height >> 1);
-			trect.width = (uint2)(formattedwidth * scale);
-			trect.height = (uint2)(formattedheight * scale);
-            
-            if (flags & F_SHOW_CONTROLLER)
-                trect.height += CONTROLLER_HEIGHT;
-            
-			trect.x = x - (trect.width >> 1);
-			trect.y = y - (trect.height >> 1);
-			if (flags & F_SHOW_BORDER)
-				rect = MCU_reduce_rect(trect, -borderwidth);
-			else
-				rect = trect;
+			// IM-2016-04-22: [[ WindowsPlayer ]] Use convenience method to get required player rect,
+			//   centered on the current rect.
+			trect = MCU_center_rect(trect, getplayerrectforvideorect(movieRect));
+			rect = trect;
 		}
 	}
 	else
@@ -3050,8 +3034,10 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		
 		if (t_offscreen)
 		{
-			MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
-            
+			// IM-2016-04-22: [[ WindowsPlayer ]] Get rect in which to display video content.
+			MCRectangle trect;
+			trect = getvideorect(rect);
+			
 			MCImageDescriptor t_image;
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
@@ -3582,6 +3568,34 @@ void MCPlayer::drawcontrollerbutton(MCDC *dc, const MCRectangle& p_rect)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     
     dc -> drawrect(p_rect, true);
+}
+
+MCRectangle MCPlayer::getvideorect(const MCRectangle &p_player_rect)
+{
+	MCRectangle t_rect;
+	t_rect = p_player_rect;
+	
+	if (getflag(F_SHOW_CONTROLLER))
+		t_rect.height -= CONTROLLER_HEIGHT;
+	
+	if (getflag(F_SHOW_BORDER))
+		t_rect = MCU_reduce_rect(t_rect, borderwidth);
+	
+	return t_rect;
+}
+
+MCRectangle MCPlayer::getplayerrectforvideorect(const MCRectangle &p_video_rect)
+{
+	MCRectangle t_rect;
+	t_rect = p_video_rect;
+	
+	if (getflag(F_SHOW_CONTROLLER))
+		t_rect.height += CONTROLLER_HEIGHT;
+	
+	if (getflag(F_SHOW_BORDER))
+		t_rect = MCU_reduce_rect(t_rect, -borderwidth);
+	
+	return t_rect;
 }
 
 MCRectangle MCPlayer::getcontrollerrect(void)

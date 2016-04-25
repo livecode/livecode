@@ -384,6 +384,11 @@ public:
     void currenttimechanged(void);
 	void moviefinished(void);
     
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the area in which the video will display for a player with the given rect.
+	MCRectangle getvideorect(const MCRectangle &p_player_rect);
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the player rect required to display video content in the given area.
+	MCRectangle getplayerrectforvideorect(const MCRectangle &p_video_rect);
+	
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 
