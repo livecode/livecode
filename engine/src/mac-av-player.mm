@@ -70,7 +70,7 @@ public:
 	virtual void Stop(void);
 	virtual void Step(int amount);
     
-	virtual void LockBitmap(MCImageBitmap*& r_bitmap);
+	virtual bool LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap);
 	virtual void UnlockBitmap(MCImageBitmap *bitmap);
     
 	virtual void SetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
@@ -980,69 +980,105 @@ void MCAVFoundationPlayer::Step(int amount)
     [[m_player currentItem] stepByCount:amount];
 }
 
-void MCAVFoundationPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
+bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap)
 {
-	// First get the image from the view - this will have black where the movie
-	// should be.
+	bool t_success = true;
+	
+	// If we don't have an image buffer then exit
+	t_success = p_imagebuffer != nil;
+	
+	// Create the bitmap to draw the composited frame onto.
 	MCImageBitmap *t_bitmap;
-	t_bitmap = new MCImageBitmap;
-	t_bitmap -> width = m_rect . width;
-	t_bitmap -> height = m_rect . height;
-	t_bitmap -> stride = m_rect . width * sizeof(uint32_t);
-	t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> stride * t_bitmap -> height);
-    memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
-	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
-    
-    // If we remove the video source from the property inspector
-    if (m_player_item_video_output == nil)
-    {
-        r_bitmap = t_bitmap;
-        return;
-    }
-    
-	// Now if we have a current frame, then composite at the appropriate size into
-	// the movie portion of the buffer.
-	if (m_current_frame != nil)
+	t_bitmap = nil;
+	if (t_success)
+		t_success = MCImageBitmapCreate(p_width, p_height, t_bitmap);
+	
+	if (t_success)
+		MCImageBitmapClear(t_bitmap);
+	
+	extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+	
+	CGColorSpaceRef t_colorspace;
+	t_colorspace = nil;
+	
+	if (t_success)
+		t_success = MCMacPlatformGetImageColorSpace(t_colorspace);
+	
+	CGContextRef t_cg_context;
+	t_cg_context = nil;
+	if (t_success)
 	{
-		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-        
-		CGColorSpaceRef t_colorspace;
-		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
-        
-		CGContextRef t_cg_context;
 		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
-        
-        CIImage *t_old_ci_image;
-		t_old_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
-        CIImage *t_ci_image;
-        if (m_mirrored)
-            t_ci_image = [t_old_ci_image imageByApplyingTransform:CGAffineTransformMakeScale(-1, 1)];
-        else
-            t_ci_image = t_old_ci_image;
-        
-        NSAutoreleasePool *t_pool;
-        t_pool = [[NSAutoreleasePool alloc] init];
-        
-		CIContext *t_ci_context;
-		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
-        
-		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, m_rect . width, m_rect . height) fromRect: [t_ci_image extent]];
-        
-        [t_pool release];
-        
-		[t_old_ci_image release];
-        
-		CGContextRelease(t_cg_context);
-		CGColorSpaceRelease(t_colorspace);
+		t_success = t_cg_context != nil;;
 	}
-    
-	r_bitmap = t_bitmap;
+	
+	if (t_success && p_mirror)
+	{
+		// flip context transform
+		CGContextTranslateCTM(t_cg_context, p_width, p_height);
+		CGContextScaleCTM(t_cg_context, -1, 1);
+	}
+	
+	CIImage *t_ci_image;
+	t_ci_image = nil;
+	if (t_success)
+	{
+		t_ci_image = [[CIImage alloc] initWithCVImageBuffer: p_imagebuffer];
+		t_success = t_ci_image != nil;
+	}
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = nil;
+	if (t_success)
+	{
+		t_pool = [[NSAutoreleasePool alloc] init];
+		t_success = t_pool != nil;
+	}
+	
+	CIContext *t_ci_context;
+	t_ci_context = nil;
+	if (t_success)
+	{
+		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
+		t_success = t_ci_context != nil;
+	}
+	
+	// Composite frame at the appropriate size into the buffer.
+	if (t_success)
+		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, p_width, p_height) fromRect: [t_ci_image extent]];
+	
+	if (t_pool != nil)
+		[t_pool release];
+	
+	if (t_ci_image != nil)
+		[t_ci_image release];
+	
+	if (t_cg_context != nil)
+		CGContextRelease(t_cg_context);
+	
+	if (t_colorspace != nil)
+		CGColorSpaceRelease(t_colorspace);
+	
+	if (t_success)
+		r_bitmap = t_bitmap;
+	else
+		MCImageFreeBitmap(t_bitmap);
+	
+	return t_success;
+}
+
+bool MCAVFoundationPlayer::LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap)
+{
+	// If we don't have a video source or a captured frame then exit
+	if (m_player_item_video_output == nil || m_current_frame == nil)
+		return false;
+	
+	return MCMacPlayerSnapshotCVImageBuffer(m_current_frame, p_width, p_height, m_mirrored, r_bitmap);
 }
 
 void MCAVFoundationPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
-    free(bitmap -> data);
-	delete bitmap;
+	MCImageFreeBitmap(bitmap);
 }
 
 void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *p_value)

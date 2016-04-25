@@ -3042,21 +3042,32 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
             
+			MCRectangle t_transformed_rect;
+			t_transformed_rect = MCRectangleGetTransformedBounds(trect, dc->getdevicetransform());
+			
 			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
 			MCImageBitmap *t_bitmap = nil;
-			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
-            
-			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
-            
-            // SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
-            if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
-                MCGImageCreateWithRaster(t_raster, t_image.image);
-            else
-                MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
-			if (t_image . image != nil)
-				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
-			MCGImageRelease(t_image.image);
-			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
+			
+			if (MCPlatformLockPlayerBitmap(m_platform_player, t_transformed_rect.width, t_transformed_rect.height, t_bitmap))
+			{
+				MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+				
+				// SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
+				if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+					MCGImageCreateWithRaster(t_raster, t_image.image);
+				else
+					MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+				if (t_image . image != nil)
+					dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+				
+				MCGImageRelease(t_image.image);
+				MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
+			}
+			else
+			{
+				dc->setbackground(MCzerocolor);
+				dc->fillrect(trect);
+			}
 		}
 	}
  
