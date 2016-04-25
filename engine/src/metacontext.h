@@ -202,6 +202,8 @@ public:
 
 	bool lockgcontext(MCGContextRef& r_ctxt);
 	void unlockgcontext(MCGContextRef ctxt);
+	
+	MCGAffineTransform getdevicetransform(void) { return MCGAffineTransformMakeIdentity(); }
 
 	void clear(const MCRectangle *rect);
 	MCRegionRef computemaskregion(void);
