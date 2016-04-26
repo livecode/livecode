@@ -71,6 +71,8 @@ public:
     MCQTKitPlayer(void);
     virtual ~MCQTKitPlayer(void);
     
+	virtual bool GetNativeView(void *& r_view);
+	
     virtual bool IsPlaying(void);
     // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
     virtual void Start(double rate);
@@ -273,6 +275,15 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
     MCMemoryDeleteArray(m_markers);
 }
 
+bool MCQTKitPlayer::GetNativeView(void *& r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view;
+	return true;
+}
+
 void MCQTKitPlayer::MovieIsLoading(QTTimeRange p_timerange)
 {
     QTTime t_buffered_time;
@@ -396,37 +407,11 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 
 void MCQTKitPlayer::Realize(void)
 {
-	if (m_window == nil)
-		return;
-	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
-	
-	if (!m_offscreen)
-	{
-		MCWindowView *t_parent_view;
-		t_parent_view = t_window -> GetView();
-		[t_parent_view addSubview: m_view];
-	}
-	
 	Synchronize();
 }
 
 void MCQTKitPlayer::Unrealize(void)
 {
-	if (m_offscreen || m_window == nil)
-		return;
-    
-	if (!m_offscreen)
-	{
-		MCMacPlatformWindow *t_window;
-		t_window = (MCMacPlatformWindow *)m_window;
-        
-		MCWindowView *t_parent_view;
-		t_parent_view = t_window -> GetView();
-        
-		[m_view removeFromSuperview];
-	}
 }
 
 Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void *params, long refcon)
@@ -609,27 +594,7 @@ void MCQTKitPlayer::Unmirror(void)
 
 void MCQTKitPlayer::Synchronize(void)
 {
-	if (m_window == nil)
-		return;
-	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
-	
-	// PM-2015-11-26: [[ Bug 13277 ]] Scale m_rect before mapping
-	MCRectangle t_rect = m_rect;
-	t_rect.x *= m_scale;
-	t_rect.y *= m_scale;
-	t_rect.width *= m_scale;
-	t_rect.height *= m_scale;
-	
-	NSRect t_frame;
-	t_window -> MapMCRectangleToNSRect(t_rect, t_frame);
-
     m_synchronizing = true;
-    
-	[m_view setFrame: t_frame];
-	
-	[m_view setHidden: !m_visible];
     
     [m_view setEditable: m_show_selection];
 	[m_view setControllerVisible: m_show_controller];

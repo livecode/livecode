@@ -65,6 +65,8 @@ public:
 	MCAVFoundationPlayer(void);
 	virtual ~MCAVFoundationPlayer(void);
     
+	virtual bool GetNativeView(void *&r_view);
+	
 	virtual bool IsPlaying(void);
 	virtual void Start(double rate);
 	virtual void Stop(void);
@@ -334,6 +336,15 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     MCMemoryDeleteArray(m_markers);
     
     [m_lock release];
+}
+
+bool MCAVFoundationPlayer::GetNativeView(void *& r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view;
+	return true;
 }
 
 void MCAVFoundationPlayer::TimeJumped(void)
@@ -648,37 +659,11 @@ void MCAVFoundationPlayer::DoSwitch(void *ctxt)
 
 void MCAVFoundationPlayer::Realize(void)
 {
-	if (m_window == nil)
-		return;
-    
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
-    
-	if (!m_offscreen)
-	{
-		MCWindowView *t_parent_view;
-		t_parent_view = t_window -> GetView();
-		[t_parent_view addSubview: m_view];
-	}
-    
 	Synchronize();
 }
 
 void MCAVFoundationPlayer::Unrealize(void)
 {
-	if (m_offscreen || m_window == nil)
-		return;
-    
-	if (!m_offscreen)
-	{
-		MCMacPlatformWindow *t_window;
-		t_window = (MCMacPlatformWindow *)m_window;
-        
-		MCWindowView *t_parent_view;
-		t_parent_view = t_window -> GetView();
-        
-		[m_view removeFromSuperview];
-	}
 }
 
 void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
@@ -831,27 +816,7 @@ void MCAVFoundationPlayer::Unmirror(void)
 
 void MCAVFoundationPlayer::Synchronize(void)
 {
-	if (m_window == nil)
-		return;
-    
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
-    
-	// PM-2015-11-26: [[ Bug 13277 ]] Scale m_rect before mapping
-	MCRectangle t_rect = m_rect;
-	t_rect.x *= m_scale;
-	t_rect.y *= m_scale;
-	t_rect.width *= m_scale;
-	t_rect.height *= m_scale;
-	
-	NSRect t_frame;
-	t_window -> MapMCRectangleToNSRect(t_rect, t_frame);
-	
     m_synchronizing = true;
-    
-	[m_view setFrame: t_frame];
-    
-	[m_view setHidden: !m_visible];
     
     if (m_mirrored)
         Mirror();

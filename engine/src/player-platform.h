@@ -77,9 +77,6 @@ class MCPlayer : public MCControl, public MCPlayerInterface
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
 
-    bool m_is_attached : 1;
-    bool m_should_attach : 1;
-
     bool m_should_recreate : 1;
 
 	static MCPropertyInfo kProperties[];
@@ -111,7 +108,6 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
 #ifdef LEGACY_EXEC
@@ -204,12 +200,7 @@ public:
 	{
 		return disposable;
 	}
-	void setscale(real8 &s)
-	{
-		scale = s;
-    }
 
-	void scale_native_rect(void);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();

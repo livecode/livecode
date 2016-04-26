@@ -850,8 +850,6 @@ MCPlayer::MCPlayer()
     MCplayers = this;
     
     // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
-    m_is_attached = false;
-    m_should_attach = false;
     m_should_recreate = false;
 }
 
@@ -943,15 +941,7 @@ void MCPlayer::open()
 {
     MCControl::open();
     prepare(kMCEmptyString);
-    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
-    
-    if (m_platform_player != nil && !m_is_attached && m_should_attach)
-    {
-        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-        m_is_attached = true;
-        m_should_attach = false;
-    }
+	attachplayer();
 }
 
 void MCPlayer::close()
@@ -966,14 +956,9 @@ void MCPlayer::close()
     
     if (s_volume_popup != nil)
         s_volume_popup -> close();
-    
-    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
-    if (m_platform_player != nil && m_is_attached)
-    {
-        MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
-    }
+	
+	detachplayer();
+
     // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
     // PM-2015-03-13: [[ Bug 14821 ]] Use a bool to decide whether to recreate a player, since assigning nil to m_platform_player caused player to become unresponsive when switching between cards
     if (m_platform_player != nil)
@@ -1135,24 +1120,6 @@ Boolean MCPlayer::doubleup(uint2 which)
     return True;
 }
 
-
-void MCPlayer::applyrect(const MCRectangle &nrect)
-{
-	rect = nrect;
-	
-	if (m_platform_player != nil)
-	{
-		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
-        
-        if (getflag(F_SHOW_CONTROLLER))
-            trect . height -= CONTROLLER_HEIGHT;
-        
-        // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
-        //   (backscale factor handled in platform layer).
-		trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
-	}
-}
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
@@ -2078,15 +2045,6 @@ void MCPlayer::showcontroller(Boolean show)
 	}
 }
 
-void MCPlayer::scale_native_rect(void)
-{
-	if (m_platform_player != nil)
-	{
-		double t_scale_factor = getstack() -> view_get_content_scale();
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyScalefactor, kMCPlatformPropertyTypeDouble, &t_scale_factor);
-	}
-}
-
 Boolean MCPlayer::prepare(MCStringRef options)
 {
     // For osversion < 10.8 we have to have QT initialized.
@@ -2098,7 +2056,6 @@ Boolean MCPlayer::prepare(MCStringRef options)
     }
 
 	Boolean ok = False;
-    m_should_attach = false;
     
     if (state & CS_PREPARED)
         return True;
@@ -2149,18 +2106,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
         return False;
     }
 	
-	MCRectangle trect = resize(t_movie_rect);
-	
-    // Adjust so that the controller isn't included in the movie rect.
-    if (getflag(F_SHOW_CONTROLLER))
-        trect . height -= CONTROLLER_HEIGHT;
-    
-	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
-    // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
-    //   (backscale factor handled in platform layer).
-	trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
-	
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
+	resize(t_movie_rect);
 	
 	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
 	
@@ -2185,19 +2131,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	t_offscreen = getflag(F_ALWAYS_BUFFER);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
 	
-	bool t_visible;
-	t_visible = getflag(F_VISIBLE);
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-    if (m_is_attached)
-    {
-        MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
-        m_should_attach = true;
-    }
-    else
-        m_should_attach = true;
-    	
 	layer_redrawall();
 	
 	setloudness();
@@ -2219,14 +2153,14 @@ void MCPlayer::attachplayer()
 {
     if (m_platform_player == nil)
         return;
-    
-    // Make sure we attach the player only if it was previously detached by detachplayer().
-    if (!m_is_attached && m_should_attach)
-    {
-        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-        m_is_attached = true;
-        m_should_attach = false;
-    }
+	
+	if (getflag(F_ALWAYS_BUFFER))
+		return;
+	
+	if (getNativeLayer() != nil)
+		return;
+	
+	SetNativeView(MCPlatformPlayerGetNativeView(m_platform_player));
 }
 
 // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
@@ -2234,13 +2168,8 @@ void MCPlayer::detachplayer()
 {
     if (m_platform_player == nil)
         return;
-    
-    if (m_is_attached)
-    {
-        MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
-        m_should_attach = true;
-    }
+	
+	SetNativeView(nil);
 }
 
 Boolean MCPlayer::playstart(MCStringRef options)
@@ -2249,11 +2178,7 @@ Boolean MCPlayer::playstart(MCStringRef options)
 		return False;
     
     // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
-    if (m_platform_player != nil && !m_is_attached)
-    {
-        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-        m_is_attached = true;
-    }
+	attachplayer();
 	playpause(False);
 	return True;
 }
@@ -2334,14 +2259,12 @@ Boolean MCPlayer::playstop()
     m_modify_selection_while_playing = false;
 	
     // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
-	if (m_platform_player != nil && m_is_attached)
+	if (m_platform_player != nil)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
 		needmessage = getduration() > getmoviecurtime();
-		
-		MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
+		detachplayer();
 	}
     
     redrawcontroller();
@@ -2790,12 +2713,6 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
 
 void MCPlayer::updatevisibility()
 {
-    if (m_platform_player != nil)
-    {
-        bool t_visible;
-        t_visible = getflag(F_VISIBLE);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
-    }
 }
 
 void MCPlayer::updatetraversal()

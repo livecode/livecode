@@ -30,7 +30,6 @@
 MCPlatformPlayer::MCPlatformPlayer(void)
 {
 	m_references = 1;
-	m_window = nil;
 }
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
@@ -47,50 +46,7 @@ void MCPlatformPlayer::Release(void)
 {
 	m_references -= 1;
 	if (m_references == 0)
-    {
-        // PM-2014-08-11: [[ Bug 13109 ]] Fixes issue of abort due to a pure virtual call
-        if (m_window != nil)
-            Detach();
 		delete this;
-    }
-}
-
-void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
-{
-	if (m_window == p_window)
-		return;
-    
-	if (m_window != nil)
-		Detach();
-    
-	m_window = p_window;
-	MCPlatformRetainWindow(m_window);
-    
-	m_window -> AttachObject(this, DoWindowStateChanged);
-    // PM-2014-11-20: [[ Bug 14035 ]] When closing and reopening a stack with a player object, video does not show
-    m_window -> RealizeAndNotify();
-}
-
-void MCPlatformPlayer::Detach(void)
-{
-	if (m_window == nil)
-		return;
-    
-	m_window -> DetachObject(this);
-    
-	MCPlatformReleaseWindow(m_window);
-	m_window = nil;
-}
-
-void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
-{
-	MCPlatformPlayer *t_player;
-	t_player = (MCPlatformPlayer *)p_ctxt;
-    
-	if (p_realized)
-		t_player -> Realize();
-	else
-		t_player -> Unrealize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,14 +84,13 @@ void MCPlatformPlayerRelease(MCPlatformPlayerRef player)
 	player -> Release();
 }
 
-void MCPlatformAttachPlayer(MCPlatformPlayerRef player, MCPlatformWindowRef window)
+void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player)
 {
-	player -> Attach(window);
-}
-
-void MCPlatformDetachPlayer(MCPlatformPlayerRef player)
-{
-	player -> Detach();
+	void *t_view;
+	if (!player -> GetNativeView(t_view))
+		return nil;
+	
+	return t_view;
 }
 
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player)

@@ -1012,8 +1012,7 @@ void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);
 
-void MCPlatformAttachPlayer(MCPlatformPlayerRef player, MCPlatformWindowRef window);
-void MCPlatformDetachPlayer(MCPlatformPlayerRef player);
+void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player);
 
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 
