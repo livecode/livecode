@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: intersect
 
-Summary: Used with the <selectionMode> <property> to cause <object|objects> to be <selected> when any part of the <object> is within the rectangle you drag.
+Summary: Used with the <selectionMode> <property> to cause <object|objects> to be <selected> when any part of the <object(glossary)> is within the rectangle you drag.
 
 Introduced: 1.0
 
@@ -20,4 +20,4 @@ Use the <intersect> <keyword> to change the way <select|selecting> behaves.
 
 The <intersect> <keyword> applies only to <selection|selections> made with the <Pointer tool>. It does not affect text <selection|selections> in a <field>.
 
-References: selection (keyword), surround (keyword), field (keyword), selectionMode (property), selected (property), select (command), object (object), property (glossary), keyword (glossary), selection (glossary), select (glossary), Pointer tool (glossary)
+References: selection (keyword), surround (keyword), field (keyword), selectionMode (property), selected (property), select (command), object (glossary), property (glossary), keyword (glossary), selection (glossary), select (glossary), Pointer tool (glossary)

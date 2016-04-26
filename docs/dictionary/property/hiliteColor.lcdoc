@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the hiliteColor [of <object>] to {empty | <colorName> | <RGBColor>}
 
-Summary: Specifies the color of the background when an <object>, or text in an <object>, is <highlight|highlighted>.
+Summary: Specifies the color of the background when an <object(glossary)>, or text in an <object(glossary)>, is <highlight|highlighted>.
 
 Synonyms: markerColor,thirdColor
 
@@ -24,7 +24,7 @@ Example:
 set the hiliteColor to 255,255,0
 
 Value:
-The <hiliteColor> of an <object> is a <color reference>.
+The <hiliteColor> of an <object(glossary)> is a <color reference>.
 The <colorName> is any standard color name.
 
 The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
@@ -34,13 +34,13 @@ By default, the <hiliteColor> for all <object|objects> is empty.
 By default, the global <hiliteColor> <property> is set to the system highlight color.
 
 Description:
-Use the <hiliteColor> <property> to specify the background color of the <select|selected> text in a <field(keyword)>, or the <highlight|highlighted> color of a clicked <object>.
+Use the <hiliteColor> <property> to specify the background color of the <select|selected> text in a <field(keyword)>, or the <highlight|highlighted> color of a clicked <object(glossary)>.
 
-Setting the <hiliteColor> of an <object> to empty allows the <hiliteColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <hiliteColor> is empty.
+Setting the <hiliteColor> of an <object(glossary)> to empty allows the <hiliteColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object(glossary)>, even if its own <hiliteColor> is empty.
 
 The setting of the <hiliteColor> <property> has different effects, depending on the <object type>:
 
-* The <hiliteColor> of a <stack>, <card>, or <group> determines the <hiliteColor> of any <object> in the <stack>, <card>, or <group> that does not have its own <hiliteColor>.
+* The <hiliteColor> of a <stack>, <card>, or <group> determines the <hiliteColor> of any <object(glossary)> in the <stack>, <card>, or <group> that does not have its own <hiliteColor>.
 
 * The <hiliteColor> of a <button(keyword)> is used for the background of the <button(keyword)> when it is <highlight|highlighted>. If the <button(keyword)> is a <menu>, the <hiliteColor> is used to <highlight> the <button(keyword)>, but not the active menu choice. The <hiliteColor> has no effect if the <button(keyword)> is a <tabbed button>. The <hiliteColor> has no effect until the button is <highlight|highlighted>.
 
@@ -63,6 +63,6 @@ The global <hiliteColor> <property> specifies the background color of <select|se
 Changes:
 The ability of an object to inherit its hiliteColor from the object's owner was introduced in version 1.1. In previous versions, if an object's hiliteColor was empty, the setting of the global hiliteColor property was used instead.
 
-References: hiliteFill (property), topColor (property), armFill (property), markerLineSize (property), effective (keyword), field (keyword), button (keyword), menu (keyword), card (keyword), player (keyword), scrollbar (keyword), graphic (keyword), image (keyword), global (command), group (command), button (object), image (object), field (object), object (object), stack (object), graphic (object), selection (glossary), backgroundPattern (glossary), property (glossary), select (glossary), tabbed button (glossary), highlight (glossary), menuMode (glossary), backgroundColor (glossary), object type (glossary), style (glossary), color reference (glossary), integer (glossary), color palette (glossary), button menu (glossary), keyword (glossary), hexadecimal (glossary), EPS (glossary), owner (glossary), lookAndFeel (glossary), markerDrawn (glossary)
+References: hiliteFill (property), topColor (property), armFill (property), markerLineSize (property), effective (keyword), field (keyword), button (keyword), menu (keyword), card (keyword), player (keyword), scrollbar (keyword), graphic (keyword), image (keyword), global (command), group (command), button (object), image (object), field (object), object (glossary), stack (object), graphic (object), selection (glossary), backgroundPattern (glossary), property (glossary), select (glossary), tabbed button (glossary), highlight (glossary), menuMode (glossary), backgroundColor (glossary), object type (glossary), style (glossary), color reference (glossary), integer (glossary), color palette (glossary), button menu (glossary), keyword (glossary), hexadecimal (glossary), EPS (glossary), owner (glossary), lookAndFeel (glossary), markerDrawn (glossary)
 
 Tags: ui

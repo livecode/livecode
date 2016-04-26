@@ -2,7 +2,7 @@ Name: focus
 
 Type: command
 
-Syntax: focus [on] <object> 
+Syntax: focus [on] <object>
 
 Syntax: focus on nothing
 
@@ -40,7 +40,7 @@ If the <lookAndFeel> is set to "Appearance Manager" or "Macintosh", an outline i
 
 If the <lookAndFeel> is set to "Windows 95", a dotted outline is drawn within <button|buttons> when they receive the <focus>.
 
-If the <object> is an <unlock|unlocked> <field(keyword)>, the <insertion point> is placed after the text in the <field(keyword)>.
+If the <object(glossary)> is an <unlock|unlocked> <field(keyword)>, the <insertion point> is placed after the text in the <field(keyword)>.
 
 Use the focus on nothing command to remove focus from all objects on a card.
 

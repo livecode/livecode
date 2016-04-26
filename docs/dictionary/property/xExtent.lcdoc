@@ -15,7 +15,7 @@ Platforms: desktop,web
 Example:
 set the xExtent of EPS "Logo" to 108 -- 1.5 inches
 
-Value: The <xExtent> of an <EPS> <object> is a positive <integer>.
+Value: The <xExtent> of an <EPS> <object(glossary)> is a positive <integer>.
 
 Description:
 Use the <xExtent> <property> to control the appearance of an <EPS|EPS object>.
@@ -26,6 +26,6 @@ The <xExtent> of an <EPS|EPS object> is equal to the third <item> in the <object
 
 This property is supported only on Unix systems with Display PostScript installed.
 
-References: boundingBox (property), scaleIndependently (property), points (property), postScript (property), item (keyword), integer (keyword), EPS (object), object (object), EPS (glossary), property (glossary)
+References: boundingBox (property), scaleIndependently (property), points (property), postScript (property), item (keyword), integer (keyword), EPS (object), object (glossary), EPS (glossary), property (glossary)
 
 Tags: multimedia

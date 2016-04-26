@@ -4,7 +4,7 @@ Type: command
 
 Syntax: show <object> [with visual [effect] <effectName> [<speed>] [to <finalImage>]]
 
-Summary: Makes an <object> visible.
+Summary: Makes an <object(glossary)> visible.
 
 Introduced: 1.0
 
@@ -33,6 +33,6 @@ You can show a card without causing a script error, but doing so has no effect.
 
 Showing a group shows all the controls in the group whose visible <property> is true.
 
-References: showPict (property), toolTip (property), imageSource (property), showInvisibles (property), visible (property), black (keyword), hide (command), answer effect (command), show groups (command), show cards (command), show taskbar (command), object (object), command (glossary), property (glossary)
+References: showPict (property), toolTip (property), imageSource (property), showInvisibles (property), visible (property), black (keyword), hide (command), answer effect (command), show groups (command), show cards (command), show taskbar (command), object (glossary), command (glossary), property (glossary)
 
 Tags: ui

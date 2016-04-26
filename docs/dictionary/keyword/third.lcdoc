@@ -21,10 +21,10 @@ repeat until third line of keysPressed is "Control"
 Description:
 Use the <third> <keyword> in an <object reference> or <chunk expression>.
 
-The <third> <keyword> can be used to specify any <object> whose <number> <property> is 3. It can also be used to designate the third <chunk> in a <chunk expression>.
+The <third> <keyword> can be used to specify any <object(glossary)> whose <number> <property> is 3. It can also be used to designate the third <chunk> in a <chunk expression>.
 
 The word the is optional when using the <third> <keyword>.
 
-References: three (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: three (constant), object (glossary), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
 
 Tags: math

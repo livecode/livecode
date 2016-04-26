@@ -2,7 +2,7 @@ Name: intersect
 
 Type: function
 
-Syntax: intersect(<object>, <object> [, <threshold>] )
+Syntax: intersect(<object(glossary)>, <object> [, <threshold>] )
 
 Summary: <return|Returns> true if two <object|objects> overlap, false otherwise.
 
@@ -35,12 +35,12 @@ threshold (enum): The amount of transparency that pixels in the objects must hav
 Returns (bool): The <intersect> <function> <return|returns> true or false.
 
 Description:
-Use the <intersect> <function> to determine whether one <object> obscures part of another <object>, or whether one <object> is over another <object>.
+Use the <intersect> <function> to determine whether one <object(glossary)> obscures part of another <object(glossary)>, or whether one <object(glossary)> is over another <object(glossary)>.
 
 If both objects are <stacks> or <card(object)|cards>, the <intersect> <function> <return(glossary)|returns> true if the <stack window|stack windows> overlap.
 
-The <intersect> <function> uses screen coordinates for <stacks> and <card(object)|cards>, and <relative coordinates|window coordinates> for <control(object)|controls>. This means that if one <object> is a <stack> or <card(keyword)> and the other is a <control(keyword)>, the <intersect> <function> does not <return(constant)> a reliable result.
+The <intersect> <function> uses screen coordinates for <stacks> and <card(object)|cards>, and <relative coordinates|window coordinates> for <control(object)|controls>. This means that if one <object(glossary)> is a <stack> or <card(keyword)> and the other is a <control(keyword)>, the <intersect> <function> does not <return(constant)> a reliable result.
 
-References: layer (property), function (control_st), card (keyword), control (keyword), return (constant), within (function), stacks (function), relative coordinates (glossary), return (glossary), stack window (glossary), card (object), object (object), stack (object), control (object)
+References: layer (property), function (control_st), card (keyword), control (keyword), return (constant), within (function), stacks (function), relative coordinates (glossary), return (glossary), stack window (glossary), card (object), object (glossary), stack (object), control (object)
 
 Tags: ui

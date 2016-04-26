@@ -33,4 +33,4 @@ You can view and change a script directly by selecting the object and choosing O
 
 LiveCode compiles the script immediately after it is set. This means that it is not possible to write a self-modifying handler, because the currently-executing handler would have to be changed and re-compiled while it was running.
 
-References: remove script (command), edit (command), script (property), object (object)
+References: remove script (command), edit (command), script (property), object (glossary)

@@ -6,7 +6,7 @@ Syntax: the selectedObject
 
 Syntax: selectedObject()
 
-Summary: <return|Returns> the name of the <selected> <object> or <object|objects>.
+Summary: <return|Returns> the name of the <selected> <object(glossary)> or <object|objects>.
 
 Synonyms: selectedObjects,selObj,selObjs,selectedGraphic
 
@@ -30,4 +30,4 @@ Returns: The <selectedObject> <function> <return|returns> a list with the long <
 Description:
 Use the <selectedObject> <function> to perform an action on all the <selected> <object|objects>.
 
-References: ID (property), selectGroupedControls (property),  (property), selected (property), function (control_st), group (command), target (function), property (glossary), return (glossary), object (object)
+References: ID (property), selectGroupedControls (property),  (property), selected (property), function (control_st), group (command), target (function), property (glossary), return (glossary), object (glossary)

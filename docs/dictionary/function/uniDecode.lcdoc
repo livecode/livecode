@@ -60,7 +60,7 @@ The <uniDecode> function is the <inverse> of the <uniEncode> function and remove
 
 If the <stringToDecode> contains an odd number of <byte|bytes>, the last <byte> is ignored.
 
->*Note:* You can use the UTF8 encoding only with the <uniDecode> and <uniEncode> <function(glossary)|functions>. You cannot set an <object|object's> <textFont> <property> to use UTF-8. To display Unicode text in an <object>, use either "Unicode" or a language name as the second item of the <object|object's> <textFont>.
+>*Note:* You can use the UTF8 encoding only with the <uniDecode> and <uniEncode> <function(glossary)|functions>. You cannot set an <object|object's> <textFont> <property> to use UTF-8. To display Unicode text in an <object(glossary)>, use either "Unicode" or a language name as the second item of the <object|object's> <textFont>.
 
 >*Important:* The <format> expected by the <uniDecode> <function(control_st)> is processor-dependent. On "little-endian" processors, where the first <byte> is least significant (such as Intel and Alpha processors), the <uniDecode> <function(control_st)> removes the second byte of each <character>. On "big-endian" processors, where the last <byte> is least significant (such as PowerPC processors), the <uniDecode> <function(control_st)> removes the first <byte> of each <character>.
 
@@ -71,6 +71,6 @@ The ability to convert Unicode text into language-specific encodings was added i
 Changes:
 The ability to encode text in Polish was added in version 2.1.1.
 
-References: textFont (property), unicodeText (property), object (object), inverse (keyword), characters (keyword), character (keyword), null (constant), format (function), uniEncode (function), uniDecode (function), platform (function), property (glossary), Unicode (glossary), function (glossary), byte (glossary), return (glossary), function (control_st)
+References: textFont (property), unicodeText (property), object (glossary), inverse (keyword), characters (keyword), character (keyword), null (constant), format (function), uniEncode (function), uniDecode (function), platform (function), property (glossary), Unicode (glossary), function (glossary), byte (glossary), return (glossary), function (control_st)
 
 Tags: text processing

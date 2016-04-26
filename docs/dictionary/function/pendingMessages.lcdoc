@@ -26,7 +26,7 @@ Returns: The <pendingMessages> <function> <return|returns> a list of <message|me
 1. the message ID
 2. the time the message is scheduled for (in seconds, Unix epoch time)
 3. the message name
-4. the long ID <property> of the <object> that the <message> will be sent to
+4. the long ID <property> of the <object(glossary)> that the <message> will be sent to
 
 Description:
 Use the <pendingMessages> <function> to check whether a <message> has been sent yet, or to perform some action on each pending <message>.
@@ -35,6 +35,6 @@ The time the message is scheduled for is in the same format as the long seconds 
 
 Once scheduled, a message cannot be changed. You can cancel a pending message with the <cancel> <command>, and re-send it with the <send> <command>.
 
-References: items (keyword), cancel (command), send (command), function (control_st), property (glossary), message (glossary), command (glossary), return (glossary), object (object)
+References: items (keyword), cancel (command), send (command), function (control_st), property (glossary), message (glossary), command (glossary), return (glossary), object (glossary)
 
 Tags: objects

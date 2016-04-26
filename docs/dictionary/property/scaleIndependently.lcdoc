@@ -18,7 +18,7 @@ set the scaleIndependently of EPS 2 to false
 Value (bool): The <scaleIndependently> of an <EPS|EPS object> is true or false.
 
 Description:
-Use the <scaleIndependently> <property> to control the screen appearance of an <EPS> <object>.
+Use the <scaleIndependently> <property> to control the screen appearance of an <EPS> <object(glossary)>.
 
 If the <scaleIndependently> is true, the <PostScript> image is scaled vertically to fit the full height of the <EPS|EPS object> and horizontally to fit the full width, even if this causes the image to be distorted.
 
@@ -26,6 +26,6 @@ If the <scaleIndependently> is false, the <PostScript> image is scaled proportio
 
 This property is supported only on Unix systems with Display PostScript installed.
 
-References: postScript (property), yExtent (property), yScale (property), xExtent (property), xScale (property), scale (property), boundingBox (property), EPS (glossary), property (glossary), EPS (object), object (object)
+References: postScript (property), yExtent (property), yScale (property), xExtent (property), xScale (property), scale (property), boundingBox (property), EPS (glossary), property (glossary), EPS (object), object (glossary)
 
 Tags: multimedia

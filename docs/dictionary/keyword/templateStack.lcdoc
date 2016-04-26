@@ -18,7 +18,7 @@ set the ID of the templateStack to 2000
 Description:
 Use the <templateStack> <keyword> to set up <default> <properties> to be used for any new <stacks> you create.
 
-The <templateStack> can be thought of as a special, abstract <object>. It is not an actual <stack>, but it has all the <properties> of a <stack>. The <ID> <property> of the <templateStack> is 1001.
+The <templateStack> can be thought of as a special, abstract <object(glossary)>. It is not an actual <stack>, but it has all the <properties> of a <stack>. The <ID> <property> of the <templateStack> is 1001.
 
 You can use the <set> <command> to set the <properties> of the <templateStack> before creating a <stack>. The new <stack> has the <properties> of the <templateStack>, by <default>. Changing the <properties> of the <templateStack> does not affect existing <stacks>.
 
@@ -31,4 +31,4 @@ You can refer to the <templateStack> using any of the following forms:
 
 >*Note:* The <templateStack> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), function (control_st), templateScrollbar (keyword), default (keyword), stack (object), object (object), stacks (function), functionNames (function), create stack (command), reset (command), set (command), keyword (glossary), property (glossary), command (glossary), expression (glossary)
+References: properties (property), ID (property), function (control_st), templateScrollbar (keyword), default (keyword), stack (object), object (glossary), stacks (function), functionNames (function), create stack (command), reset (command), set (command), keyword (glossary), property (glossary), command (glossary), expression (glossary)

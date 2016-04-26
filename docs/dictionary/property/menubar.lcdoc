@@ -30,6 +30,6 @@ The <menubar> is the <group(command)> that contains the <button|buttons> used to
 
 On Mac OS systems, when a stack's <menubar> <property> is set, the <stack> is scrolled and resized on <Mac OS|Mac OS systems> so that the <group(command)> is not visible in the <stack window>. (On <Unix> and <Windows|Windows systems>, this is not necessary, since the <menu bar> is normally displayed in the window.) To scroll the <stack window> back down so you can see and select the <group(glossary)|group's> <object|objects>, set the <editMenus> <property> to true.
 
-References: raiseMenus (property), editMenus (property), defaultMenubar (property), menuName (property), group (command), stacks (function), menus (function), property (glossary), stack window (glossary), active window (glossary), Windows (glossary), menu bar (glossary), group (glossary), Mac OS (glossary), Unix (glossary), stack (object), object (object), button (object)
+References: raiseMenus (property), editMenus (property), defaultMenubar (property), menuName (property), group (command), stacks (function), menus (function), property (glossary), stack window (glossary), active window (glossary), Windows (glossary), menu bar (glossary), group (glossary), Mac OS (glossary), Unix (glossary), stack (object), object (glossary), button (object)
 
 Tags: menus

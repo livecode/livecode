@@ -5,7 +5,7 @@ Synonyms: virtual property,virtual properties,virtual custom property,virtual cu
 Type: glossary
 
 Description:
-A <custom property> for which an <object> has a <getProp> or <setProp> <handler>, but which is never attached to the <object>.
+A <custom property> for which an <object(glossary)> has a <getProp> or <setProp> <handler>, but which is never attached to the <object(glossary)>.
 
 References: getProp (control_st), setProp (control_st), object (glossary), custom property (glossary), handler (glossary)
 

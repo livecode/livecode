@@ -24,10 +24,10 @@ By default, the <hScroll> <property> of newly created <object|objects> is set to
 Description:
 Use the <hScroll> <property> to scroll a <field> or <group> horizontally, or to check how far it's been scrolled.
 
-The <hScroll> is the amount in <pixels> the <object> has been scrolled to the right. If the <hScroll> is zero, the <object> has not been scrolled.
+The <hScroll> is the amount in <pixels> the <object(glossary)> has been scrolled to the right. If the <hScroll> is zero, the <object(glossary)> has not been scrolled.
 
 Setting the <hScroll> of a <field> or <group> causes a <scrollbarDrag> <message> to be sent.
 
-References: hScrollbar (property), pixels (property), formattedWidth (property), scrollbarDrag (message), scrollbarFactor (constant), field (keyword), integer (keyword), stack (object), object (object), field (object), group (command), property (glossary), message (glossary), group (glossary)
+References: hScrollbar (property), pixels (property), formattedWidth (property), scrollbarDrag (message), scrollbarFactor (constant), field (keyword), integer (keyword), stack (object), object (glossary), field (object), group (command), property (glossary), message (glossary), group (glossary)
 
 Tags: ui

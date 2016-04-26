@@ -21,10 +21,10 @@ select fifth line of field "Address Info"
 Description:
 Use the <fifth> <keyword> in an <object reference> or <chunk expression>.
 
-The <fifth> <keyword> can be used to specify any <object> whose <number> <property> is 5. It can also be used to designate the fifth <chunk> in a <chunk expression>.
+The <fifth> <keyword> can be used to specify any <object(glossary)> whose <number> <property> is 5. It can also be used to designate the fifth <chunk> in a <chunk expression>.
 
 The word "the" is optional when using the <fifth> <keyword>.
 
-References: five (constant), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: five (constant), object (glossary), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
 
 Tags: math

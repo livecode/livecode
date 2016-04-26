@@ -40,6 +40,6 @@ If the object's showBorder <property> is false, the <borderWidth> <property> has
 
 The border's appearance and color is affected by the setting of the object's threeD <property>.
 
-References: borderPattern (property), object (object), property (glossary)
+References: borderPattern (property), object (glossary), property (glossary)
 
 Tags: ui

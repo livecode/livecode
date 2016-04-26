@@ -22,8 +22,8 @@ By default, the <doubleClickDelta> is set to 4 pixels.
 Description:
 Use the <doubleClickDelta> <property> to fine-tune <double-click|double-clicking>.
 
-If the mouse moves more than the specified number of pixels in any direction between the first and second click, no <mouseDoubleDown> or <mouseDoubleUp> <message> is sent to the clicked <object>. If the <doubleClickDelta> is set to zero, the mouse may not move at all during a <double-click|double click>.
+If the mouse moves more than the specified number of pixels in any direction between the first and second click, no <mouseDoubleDown> or <mouseDoubleUp> <message> is sent to the clicked <object(glossary)>. If the <doubleClickDelta> is set to zero, the mouse may not move at all during a <double-click|double click>.
 
-References: integer (keyword), mouseDoubleUp (message), mouseDoubleDown (message), object (object), property (glossary), double-click (glossary), message (glossary)
+References: integer (keyword), mouseDoubleUp (message), mouseDoubleDown (message), object (glossary), property (glossary), double-click (glossary), message (glossary)
 
 Tags: ui

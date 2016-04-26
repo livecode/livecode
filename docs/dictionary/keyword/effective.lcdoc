@@ -16,7 +16,7 @@ Example:
 put the effective textColor of me into myColor
 
 Description:
-Use the <effective> <keyword> to get the displayed color or <font> of an <object>, regardless of whether the <object> itself has that <property> set. The <effective> <keyword> can also be used to get the <filename> of a <substack> or the current <rectangle> of an <object>.
+Use the <effective> <keyword> to get the displayed color or <font> of an <object(glossary)>, regardless of whether the <object(glossary)> itself has that <property> set. The <effective> <keyword> can also be used to get the <filename> of a <substack> or the current <rectangle> of an <object(glossary)>.
 
 If one of an object's text, color, or pattern properties is set to empty, the owner's setting is used instead. (If the owner's setting is empty, the setting of that object's <owner> is used.)
 
@@ -58,6 +58,6 @@ The <effective> <keyword> can be used with the following inherited <properties> 
 
 >*Note:* The <effective> keyword is implemented internally as a property and appears in the propertyNames. However, it cannot be used as a prop in an expression, nor with the set com.
 
-References: borderPattern (property), foregroundColor (property), threeDHilite (property), bottomPattern (property), focusColor (property), properties (property), focusPattern (property), filename (property), label (property), backgroundColor (property), owner (property), layerMode (property), topColor (property), card (keyword), rectangle (keyword), button (keyword), object (object), button (object), property (glossary), keyword (glossary), substack (glossary), layerMode (glossary), font (glossary), inheritance (glossary)
+References: borderPattern (property), foregroundColor (property), threeDHilite (property), bottomPattern (property), focusColor (property), properties (property), focusPattern (property), filename (property), label (property), backgroundColor (property), owner (property), layerMode (property), topColor (property), card (keyword), rectangle (keyword), button (keyword), object (glossary), button (object), property (glossary), keyword (glossary), substack (glossary), layerMode (glossary), font (glossary), inheritance (glossary)
 
 Tags: file system

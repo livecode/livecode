@@ -17,4 +17,4 @@ In HyperCard, the <printTextFont> <property> specifies the <font|font face> of p
 
 A handler can set the property, but the new setting has no effect.
 
-References: textFont (property), scriptTextFont (property), card (keyword), print (command), stacks (function), property (glossary), LiveCode (glossary), HyperCard (glossary), font (glossary), card (object), object (object)
+References: textFont (property), scriptTextFont (property), card (keyword), print (command), stacks (function), property (glossary), LiveCode (glossary), HyperCard (glossary), font (glossary), card (object), object (glossary)

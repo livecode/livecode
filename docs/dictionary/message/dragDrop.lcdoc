@@ -4,7 +4,7 @@ Type: message
 
 Syntax: dragDrop
 
-Summary: Sent to the <object> where data was dropped when a <drag and drop> finishes.
+Summary: Sent to the <object(glossary)> where data was dropped when a <drag and drop> finishes.
 
 Introduced: 2.0
 
@@ -40,8 +40,8 @@ On the other hand, if you want to perform some action when text is dropped into 
     pass dragDrop -- needed for drop to occur
   end dragDrop
 
-To accept drops to a locked field or a control other than a field, handle the <dragDrop> message, using the <dragData> <property> to determine what data is being dragged. For these objects, your <dragDrop> <handler> must get the dragged data and put it into the <object> (or perform whatever action you want to do on a drop); the behavior is not automated as it is for <unlock|unlocked> <field(object)|fields>.
+To accept drops to a locked field or a control other than a field, handle the <dragDrop> message, using the <dragData> <property> to determine what data is being dragged. For these objects, your <dragDrop> <handler> must get the dragged data and put it into the <object(glossary)> (or perform whatever action you want to do on a drop); the behavior is not automated as it is for <unlock|unlocked> <field(object)|fields>.
 
-References: dragData (property), acceptDrop (property), dragImageOffset (property), dragAction (property), dragEnd (message), field (keyword), field (object), object (object), dropChunk (function), dragSource (function), property (glossary), handler (glossary), message (glossary), unlock (glossary), control structure (glossary), drag and drop (glossary), control (glossary), trap (glossary), pass (control_st)
+References: dragData (property), acceptDrop (property), dragImageOffset (property), dragAction (property), dragEnd (message), field (keyword), field (object), object (glossary), dropChunk (function), dragSource (function), property (glossary), handler (glossary), message (glossary), unlock (glossary), control structure (glossary), drag and drop (glossary), control (glossary), trap (glossary), pass (control_st)
 
 Tags: ui

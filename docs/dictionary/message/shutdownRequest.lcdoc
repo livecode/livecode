@@ -23,7 +23,7 @@ end shutdownRequest
 Description:
 Handle the <shutdownRequest> <message> if you want to prevent the user from quitting the <application>.
 
-If the <shutdownRequest> <handler> does not <pass> the <message> or send it to a further <object> in the <message path>, the <application> does not exit. <pass|Passing> the <message> allows the <application> to quit.
+If the <shutdownRequest> <handler> does not <pass> the <message> or send it to a further <object(glossary)> in the <message path>, the <application> does not exit. <pass|Passing> the <message> allows the <application> to quit.
 
 In standalones, some care is needed to ensure you receive the <shutdownRequest> message if your application uses multiple stacks. The most reliable approach is to install a library stack or backscript to handle the message when your application starts up.
 
@@ -34,6 +34,6 @@ On OS X and Unix systems, if the operating system sends a SIGTERM signal to the 
 Changes:
 Handling of the SIGTERM signal was introduced in version 2.0. In previous versions, the SIGTERM signal did not cause a message to be sent.
 
-References: quit (command), pass (control_st), application (glossary), current card of the defaultStack (glossary), current stack (glossary), handler (glossary), message path (glossary), pass (glossary), message (glossary), trap (glossary), object (object)
+References: quit (command), pass (control_st), application (glossary), current card of the defaultStack (glossary), current stack (glossary), handler (glossary), message path (glossary), pass (glossary), message (glossary), trap (glossary), object (glossary)
 
 Tags: windowing

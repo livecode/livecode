@@ -30,8 +30,8 @@ The <throw> <statement> appears on a line by itself, anywhere inside a <handler>
 
 If LiveCode generates the error (for example, an execution error from a built-in command), it returns a positive number to the <try> <control structure>. To avoid confusion, therefore, a <throw> <control structure> should return a <negative> number, or a non-numeric <string>.
 
-If a <throw> <control structure> is <execute|executed> in a <handler> that was not <call|called> from within a <try> <control structure>, an <errorDialog> <message> is sent to the <object>, and the <errorString> is passed as a <parameter>.
+If a <throw> <control structure> is <execute|executed> in a <handler> that was not <call|called> from within a <try> <control structure>, an <errorDialog> <message> is sent to the <object(glossary)>, and the <errorString> is passed as a <parameter>.
 
 >*Note:* The <throw> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
 
-References: string (keyword), catch (keyword), commandNames (function), errorDialog (message), return (control_st), try (control_st), return (glossary), call (glossary), handler (glossary), execute (glossary), statement (glossary), message (glossary), negative (glossary), control structure (glossary), parameter (glossary), command (glossary), object (object)
+References: string (keyword), catch (keyword), commandNames (function), errorDialog (message), return (control_st), try (control_st), return (glossary), call (glossary), handler (glossary), execute (glossary), statement (glossary), message (glossary), negative (glossary), control structure (glossary), parameter (glossary), command (glossary), object (glossary)

@@ -21,6 +21,6 @@ The <acceptDrop> property is deprecated as of version 2.9. Setting the <acceptDr
 
 In previous versions, setting the <acceptDrop> <property> in an <object|object's> <dragEnter> <handler> allowed it to accept drops.
 
-References: object (object), dragEnter (message), dragEnd (message), property (glossary), handler (glossary), drag and drop (glossary)
+References: object (glossary), dragEnter (message), dragEnd (message), property (glossary), handler (glossary), drag and drop (glossary)
 
 Tags: ui

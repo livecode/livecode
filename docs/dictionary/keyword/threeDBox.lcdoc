@@ -24,6 +24,6 @@ If the text crosses more than one screen line, a box is drawn around each line o
 
 An object or chunk of a field may have the style <box> or <threeDBox>, but not both at once.
 
-References: field (keyword), box (keyword), bottomColor (property), bottomPattern (property), textStyle (property), topColor (property), topPattern (property), object (object), property (glossary), chunk (glossary), keyword (glossary)
+References: field (keyword), box (keyword), bottomColor (property), bottomPattern (property), textStyle (property), topColor (property), topPattern (property), object (glossary), property (glossary), chunk (glossary), keyword (glossary)
 
 Tags: ui

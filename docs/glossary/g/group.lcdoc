@@ -5,7 +5,7 @@ Synonyms: group,grouping,grouped
 Type: glossary
 
 Description:
-An <object> that contains one or more <button|buttons>, <field|fields>, <scrollbar|scrollbars>, <image|images>, <player|players>, <EPS|EPS objects>, or <graphic|graphics>, or other groups. 
+An <object(glossary)> that contains one or more <button|buttons>, <field|fields>, <scrollbar|scrollbars>, <image|images>, <player|players>, <EPS|EPS objects>, or <graphic|graphics>, or other groups. 
  
 A group can be placed on any <card> in a <stack, and can optionally have borders or scrollbars(glossary)>.
 

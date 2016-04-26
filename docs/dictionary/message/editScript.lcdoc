@@ -29,4 +29,4 @@ Handle the <editScript> <message> if you want to intercept attempts to edit a <s
 
 The <editScript> <message> is sent when you use the <edit> command in a <handler>. However, it is not sent when the <development environment> is active.
 
-References: script (property), message box (keyword), edit (command), object (object), handler (glossary), current card (glossary), message (glossary), command (glossary), development environment (glossary)
+References: script (property), message box (keyword), edit (command), object (glossary), handler (glossary), current card (glossary), message (glossary), command (glossary), development environment (glossary)

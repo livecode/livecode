@@ -4,7 +4,7 @@ Type: message
 
 Syntax: nameChanged <oldName>, <newName> 
 
-Summary: Sent to an <object> when its <name> is changed.
+Summary: Sent to an <object(glossary)> when its <name> is changed.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -29,6 +29,6 @@ Handle the <nameChanged> <message> if you want to make updates when an <object|o
 
 The actual change is not triggered by the <nameChanged> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the name from being changed.
 
-References: showName (property), groupNames (property), cardNames (property), name (property), number (property), trap (glossary), message (glossary), popup menu (glossary), menu (glossary), IDChanged (message), stack (object), object (object), stacks (function), pass (control_st)
+References: showName (property), groupNames (property), cardNames (property), name (property), number (property), trap (glossary), message (glossary), popup menu (glossary), menu (glossary), IDChanged (message), stack (object), object (glossary), stacks (function), pass (control_st)
 
 Tags: objects
