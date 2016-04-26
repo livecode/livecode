@@ -1121,6 +1121,11 @@ Boolean MCPlayer::doubleup(uint2 which)
 }
 
 
+MCRectangle MCPlayer::GetNativeViewRect(const MCRectangle &p_object_rect)
+{
+	return getvideorect(p_object_rect);
+}
+
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 {
     if (MCNameIsEqualTo(mptr, MCM_play_started, kMCCompareCaseless))
