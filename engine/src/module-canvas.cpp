@@ -36,7 +36,6 @@ enum MCSVGPathCommand
 {
 	kMCSVGPathMoveTo,
 	kMCSVGPathRelativeMoveTo,
-	kMCSVGPathClose,
 	kMCSVGPathLineTo,
 	kMCSVGPathRelativeLineTo,
 	kMCSVGPathHorizontalLineTo,
@@ -53,9 +52,10 @@ enum MCSVGPathCommand
 	kMCSVGPathRelativeShorthandQuadraticCurveTo,
 	kMCSVGPathEllipticalCurveTo,
 	kMCSVGPathRelativeEllipticalCurveTo,
+    kMCSVGPathClose,
 };
 
-#define kMCSVGPathCommandCount (kMCSVGPathRelativeEllipticalCurveTo + 1)
+#define kMCSVGPathCommandCount (kMCSVGPathClose + 1)
 
 typedef bool (*MCSVGParseCallback)(void *p_context, MCSVGPathCommand p_command, float32_t *p_args, uint32_t p_arg_count);
 
