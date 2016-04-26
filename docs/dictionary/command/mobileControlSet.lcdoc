@@ -444,3 +444,5 @@ References: backgroundColor (property), boolean (glossary), integer (glossary),
 mobileControlCreate (command), mobileControlDelete (command), 
 mobileControlDo (command), mobileControlGet (function), mobileControlTarget (function), 
 mobileControls (function), property (glossary), string (glossary)
+
+Tags: properties
