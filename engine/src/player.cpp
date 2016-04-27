@@ -24,12 +24,6 @@
 #include "player.h"
 #include "exec.h"
 
-#ifdef FEATURE_PLATFORM_PLAYER
-#include "player-platform.cpp"
-#else
-#include "player-legacy.cpp"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCPlayer::kProperties[] =

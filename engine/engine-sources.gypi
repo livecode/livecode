@@ -275,6 +275,7 @@
 			'src/paragrafattr.cpp',
 			'src/parentscript.cpp',
 			'src/pickle.cpp',
+			'src/player-legacy.cpp',
 			'src/player-platform.cpp',
 			'src/player.cpp',
 			'src/props.cpp',
@@ -1109,11 +1110,11 @@
 				{
 					'sources!':
 					[
-						'src/tilecachegl.cpp',
-						'src/player-platform.cpp',
+						'src/player-legacy.cpp',
+						'src/sysunxdate.cpp',
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
-						'src/sysunxdate.cpp',
+						'src/tilecachegl.cpp',
 						
 						'src/srvflst.cpp',
 					],
@@ -1180,6 +1181,7 @@
 				{
 					'sources!':
 					[
+						'src/player-platform.cpp',
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
 						'src/sysunxrandom.cpp',
@@ -1203,9 +1205,10 @@
 				{
 					'sources!':
 					[
-						'src/tilecachegl.cpp',
 						'src/mcssl.cpp',
 						'src/notify.cpp',
+						'src/player-platform.cpp',
+						'src/tilecachegl.cpp',
 					],
 				},
 			],
@@ -1214,8 +1217,6 @@
 				{
 					'sources/':
 					[
-						# Note that this does *not* exclude player.cpp
-						['exclude', '^src/player.+\\.(cpp|mm)$'],
 						['exclude', '^src/dsk.*\\.(cpp|mm)$'],
 					],
 				},
