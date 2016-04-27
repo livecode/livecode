@@ -612,6 +612,7 @@
 			'src/platform.h',
 			'src/platform.cpp',
 			'src/platform-internal.h',
+			'src/platform-player.cpp',
 			'src/platform-recorder.cpp',
 			'src/platform-surface.cpp',
 			'src/platform-window.cpp',
@@ -665,7 +666,6 @@
 			
 			# Group "Desktop - Mac"
 			'src/mac-internal.h',
-			'src/mac-player.h',
 			'src/osxflst.h',
 			'src/osxprefix.h',
 			'src/osxprinter.h',
@@ -681,7 +681,6 @@
 			'src/mac-font.mm',
 			'src/mac-menu.mm',
 			'src/mac-pasteboard.mm',
-			'src/mac-player.mm',
 			'src/mac-printer.mm',
 			'src/mac-qt-player.mm',
 			'src/mac-qt-recorder.mm',

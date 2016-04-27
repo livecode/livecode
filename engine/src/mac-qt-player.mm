@@ -26,7 +26,6 @@
 
 #include "mac-internal.h"
 
-#include "mac-player.h"
 #include "graphics_util.h"
 #include <objc/objc-runtime.h>
 
