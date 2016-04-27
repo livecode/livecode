@@ -21,7 +21,7 @@ Example:
 set the shadowPattern of last button to 409
 
 Value:
-The <shadowPattern> of an <object> is a pattern specifier.
+The <shadowPattern> of an <object(glossary)> is a pattern specifier.
 A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
 
 An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
@@ -37,11 +37,11 @@ Pattern images can be color or black-and-white.
 
 The <shadowPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper right corner: if the <control(keyword)> is moved, the pattern does not shift.
 
-Setting the <shadowPattern> of an <object> to empty allows the <shadowPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <shadowPattern> is empty.
+Setting the <shadowPattern> of an <object(glossary)> to empty allows the <shadowPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object(glossary)>, even if its own <shadowPattern> is empty.
 
 The setting of the <shadowPattern> <property> has different effects, depending on the <object type>:
 
-* The <shadowPattern> of a <stack>, <card>, or <group> determines the <shadowPattern> of each <object> in the <stack>, <card>, or <group> that does not have its own <shadowPattern>.
+* The <shadowPattern> of a <stack>, <card>, or <group> determines the <shadowPattern> of each <object(glossary)> in the <stack>, <card>, or <group> that does not have its own <shadowPattern>.
 
 * The <shadowPattern> of a <button(keyword)> is used for the <button(object)|button's> drop shadow. If the <button(object)|button's> <style> is menu (unless the menuMode is tabbed), the <shadowPattern> has no effect. If the <button(keyword)> is a <tabbed button>, the <shadowPattern> is always used for the inactive tabs; otherwise, if the <button(object)|button's> <shadow> <property> is false, the <shadowPattern> has no effect.
 
@@ -53,6 +53,6 @@ The setting of the <shadowPattern> <property> has different effects, depending o
 
 If an object's <shadowPattern> is set, the pattern is shown instead of the color specified by the <shadowColor>.
 
-References: pixels (property), backgroundPattern (property), height (property), style (property), shadow (property), owner (property), borderPattern (property), width (property), shadowColor (property), bottomPattern (property), effective (keyword), field (keyword), image (keyword), button (keyword), shadow (keyword), player (keyword), control (keyword), card (keyword), scrollbar (keyword), graphic (keyword), group (command), button (object), field (object), object (object), stack (object), control (object), property (glossary), EPS (glossary), audio clip (glossary), tabbed button (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), video clip (glossary), current stack (glossary), stacks (function)
+References: pixels (property), backgroundPattern (property), height (property), style (property), shadow (property), owner (property), borderPattern (property), width (property), shadowColor (property), bottomPattern (property), effective (keyword), field (keyword), image (keyword), button (keyword), shadow (keyword), player (keyword), control (keyword), card (keyword), scrollbar (keyword), graphic (keyword), group (command), button (object), field (object), object (glossary), stack (object), control (object), property (glossary), EPS (glossary), audio clip (glossary), tabbed button (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), video clip (glossary), current stack (glossary), stacks (function)
 
 Tags: ui

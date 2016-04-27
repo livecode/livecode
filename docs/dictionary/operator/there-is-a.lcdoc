@@ -4,7 +4,7 @@ Type: operator
 
 Syntax: there is a {<object> | file <filePath> | folder <folderPath> | process <procName>}
 
-Summary: <evaluate|Evaluates> to  true if the specified <object>, <file>, <folder>, or <process> exists, false otherwise.
+Summary: <evaluate|Evaluates> to  true if the specified <object(glossary)>, <file>, <folder>, or <process> exists, false otherwise.
 
 Synonyms: there is an
 
@@ -30,7 +30,7 @@ folderPath: The folderPath specifies the name and location of a folder you want 
 procName: The name of any process that LiveCode started.
 
 Description:
-Use the <there is a> <operator> to make sure an <object> or <file> exists before working with it, or to find out whether there are any objects of a specified type.
+Use the <there is a> <operator> to make sure an <object(glossary)> or <file> exists before working with it, or to find out whether there are any objects of a specified type.
 
 The <there is a> <operator> is the logical inverse of the <there is no> <operator>. When one is true, the other is false.
 
@@ -40,6 +40,6 @@ The expression there is a stack stackName <evaluate|evaluates> to true if the <s
 
 >*Note:* The <there is a> <operator> is implemented internally as a <function>, and therefore has lower <precedence> than other <operator|operators>.
 
-References: stackFiles (property), mode (property), there is no (operator), file (keyword), property (glossary), loaded into memory (glossary), operator (glossary), precedence (glossary), folder (glossary), evaluate (glossary), process (glossary), exists (function), stack (object), object (object), function (control_st)
+References: stackFiles (property), mode (property), there is no (operator), file (keyword), property (glossary), loaded into memory (glossary), operator (glossary), precedence (glossary), folder (glossary), evaluate (glossary), process (glossary), exists (function), stack (object), object (glossary), function (control_st)
 
 Tags: file system

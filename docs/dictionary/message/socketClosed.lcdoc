@@ -27,10 +27,10 @@ socketID: The identifier (set when you opened the socket) of the socket that's j
 Description:
 Handle the <socketClosed> <message> to perform cleanup after the remote system closes a <socket>.
 
-The <socketClosed> <message> is sent to the <object> that opened the <socket>.
+The <socketClosed> <message> is sent to the <object(glossary)> that opened the <socket>.
 
 If the socket closed due to an error, the socketError <message> is sent instead of <socketClosed>.
 
-References: object (object), socketTimeout (message), message (glossary), socket (glossary)
+References: object (glossary), socketTimeout (message), message (glossary), socket (glossary)
 
 Tags: networking

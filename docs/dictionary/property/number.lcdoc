@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the number of <card> to <number> 
 
-Syntax: get the number of <object> 
+Syntax: get the number of <object>
 
 Summary: Specifies an <object|object's> position within a <file>, a <card(object)|card's> position within a <stack>, or a <control|control's> <layer> on a <card(keyword)>.
 
@@ -28,11 +28,11 @@ Example:
 put the number of the last button into numberOfButtons
 
 Value:
-The <number> of an <object> is a non-negative <integer>.   
+The <number> of an <object(glossary)> is a non-negative <integer>.   
 For all objects except cards, the <number> <property> is read-only and cannot be set.
 
 Description:
-Use the <number> <property> to find out what <layer> a <card(keyword)> is on, to find or change a <card(object)|card's> position, or to refer to an <object>.  
+Use the <number> <property> to find out what <layer> a <card(keyword)> is on, to find or change a <card(object)|card's> position, or to refer to an <object(glossary)>.  
 
 The <number> of a <control(keyword)> is its <layer> on the <card(keyword)>. Lower numbers are further back; higher numbers are farther forward. If you create several <control(object)|controls> and don't change their <layer> order, the first <control(keyword)> you created has the <number> 1 and the rest of the <control(object)|controls> are numbered in the order of creation. 
 
@@ -42,6 +42,6 @@ The <number> of a <main stack> is always zero. The <number> of a <substack> is i
 
 You can refer to any object by specifying its <number>.
 
-References: substacks (property), layer (property), nameChanged (message), file (keyword), ninth (keyword), seconds (keyword), card (keyword), control (keyword), integer (keyword), home (keyword), control (object), object (object), stack (object), card (object), length (function), move (command), property (glossary), substack (glossary), main stack (glossary)
+References: substacks (property), layer (property), nameChanged (message), file (keyword), ninth (keyword), seconds (keyword), card (keyword), control (keyword), integer (keyword), home (keyword), control (object), object (glossary), stack (object), card (object), length (function), move (command), property (glossary), substack (glossary), main stack (glossary)
 
 Tags: ui

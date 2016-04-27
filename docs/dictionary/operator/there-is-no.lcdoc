@@ -4,7 +4,7 @@ Type: operator
 
 Syntax: there is no {<object> | file <filePath> | folder <folderPath> | process <procName>}
 
-Summary: <evaluate|Evaluates> to false if the specified <object>, <file>, or <folder>, or <process> exists, true otherwise.
+Summary: <evaluate|Evaluates> to false if the specified <object(glossary)>, <file>, or <folder>, or <process> exists, true otherwise.
 
 Synonyms: there is not a,there is not an
 
@@ -32,12 +32,12 @@ folderPath: The folderPath specifies the name and location of a folder you want 
 procName: The name of any process that LiveCode started.
 
 Description:
-Use the <there is no> <operator> to make sure an <object> or <file> does not yet exist before creating it, or that a program is not already running before launching it.
+Use the <there is no> <operator> to make sure an <object(glossary)> or <file> does not yet exist before creating it, or that a program is not already running before launching it.
 
 The <there is no> <operator> is the logical inverse of the <there is a> <operator>. When one is true, the other is false.
 
 >*Note:* The <there is no> <operator> is implemented internally as a <function>, and therefore has lower <precedence> than other <operator|operators>.
 
-References: file (keyword), there is a (operator), function (control_st), openProcesses (function), exists (function), folder (glossary), operator (glossary), evaluate (glossary), precedence (glossary), process (glossary), object (object)
+References: file (keyword), there is a (operator), function (control_st), openProcesses (function), exists (function), folder (glossary), operator (glossary), evaluate (glossary), precedence (glossary), process (glossary), object (glossary)
 
 Tags: file system

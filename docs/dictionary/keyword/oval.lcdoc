@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: oval
 
-Summary: Designates the <paint tool> used to draw ovals and circles. It also specifies, through the <style> <property>, that a <graphic> <object> is an oval shape.
+Summary: Designates the <paint tool> used to draw ovals and circles. It also specifies, through the <style> <property>, that a <graphic> <object(glossary)> is an oval shape.
 
 Introduced: 1.0
 
@@ -27,4 +27,4 @@ If you try to paint with the Oval tool on a card that has no images, an image th
 
 Setting the <style> of a <graphic(keyword)> to oval makes the graphic into an oval. Oval <graphic(object)|graphics>, unlike painted ovals, can be changed and reshaped: use the <height> and <width> <properties> to change the shape and size of the oval.
 
-References: brushColor (property), height (property), style (property), brushPattern (property), penColor (property), width (property), properties (property), graphic (keyword), choose (command), object (object), graphic (object), property (glossary), keyword (glossary), paint tool (glossary)
+References: brushColor (property), height (property), style (property), brushPattern (property), penColor (property), width (property), properties (property), graphic (keyword), choose (command), object (glossary), graphic (object), property (glossary), keyword (glossary), paint tool (glossary)

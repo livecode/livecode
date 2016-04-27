@@ -4,7 +4,7 @@ Type: command
 
 Syntax: send <message> [ to <object> [in <time> [seconds | ticks | milliseconds]] ]
 
-Summary: Sends a <message> to an <object>.
+Summary: Sends a <message> to an <object(glossary)>.
 
 Introduced: 1.0
 
@@ -38,7 +38,7 @@ message: An expression that evaluates to a message name, possibly including para
 object: Any object reference. If you don't specify an object, the message is set to the object whose handler contains the send command. If you specify a time, you must also specify an object.
 time (integer): If you don't specify a unit of time, the default of ticks is used.
 
-The result: If you specify a <time>, the <message> is sent to the <object> after the specified time has elapsed. The <message> is added to the <pendingMessages> <function>. The ID of the <message> is <return|returned> by the <result> <function>. To cancel the <message>, use the <cancel> <command> with this ID.
+The result: If you specify a <time>, the <message> is sent to the <object(glossary)> after the specified time has elapsed. The <message> is added to the <pendingMessages> <function>. The ID of the <message> is <return|returned> by the <result> <function>. To cancel the <message>, use the <cancel> <command> with this ID.
 
 Description:
 Use the <send> <command> to override the normal <message path>, or to delay a <command> until a specified time. 
@@ -55,4 +55,4 @@ When the send command is used the stack containing the target handler temporaril
 
 >*Note:*  Using the <send> <command> is slower than directly <execute|executing> the <command|commands> using the normal <message path>. For best efficiency, use the <send> <command> only when you want to delay the <message> or when the <handler> you want to execute is not in the <message path>.
 
-References: callbacks (property), backgroundBehavior (property), function (control_st), mouseUp (message), word (keyword), object (object), literal string (glossary), return (glossary), evaluate (glossary), execute (glossary), command (glossary), LiveCode (glossary), double quote (glossary), trigger (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary), debugDo (command), dispatch (command), call (command), cancel (command), result (function), pendingMessages (function)
+References: callbacks (property), backgroundBehavior (property), function (control_st), mouseUp (message), word (keyword), object (glossary), literal string (glossary), return (glossary), evaluate (glossary), execute (glossary), command (glossary), LiveCode (glossary), double quote (glossary), trigger (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary), debugDo (command), dispatch (command), call (command), cancel (command), result (function), pendingMessages (function)

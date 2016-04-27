@@ -40,10 +40,10 @@ socketID: The identifier (set when you opened the socket) of the socket you want
 Description:
 Use the <write to socket> <command> to send data to another system via a <TCP> <socket>.
 
-If you specify a <callbackMessage>, as soon as the write is finished, the specified <message> is sent to the <object> whose <script> contains the <write to socket> <command>. The <callbackMessage> is sent with one <parameter>, which is the <socketID>.
+If you specify a <callbackMessage>, as soon as the write is finished, the specified <message> is sent to the <object(glossary)> whose <script> contains the <write to socket> <command>. The <callbackMessage> is sent with one <parameter>, which is the <socketID>.
 
 If you don't specify a <callbackMessage>, the <handler> pauses until the write has been completed, or until the time set in the <socketTimeoutInterval> <property> has passed.
 
-References: socketTimeoutInterval (property), script (property), socketTimeout (message), accept (command), write to driver (command), post (command), arrayEncode (function), property (glossary), handler (glossary), message (glossary), socket (glossary), parameter (glossary), command (glossary), TCP (glossary), object (object)
+References: socketTimeoutInterval (property), script (property), socketTimeout (message), accept (command), write to driver (command), post (command), arrayEncode (function), property (glossary), handler (glossary), message (glossary), socket (glossary), parameter (glossary), command (glossary), TCP (glossary), object (glossary)
 
 Tags: networking

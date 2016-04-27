@@ -23,10 +23,10 @@ end closeStackRequest
 Description:
 Handle the <closeStackRequest> <message> if you want to prevent a <stack> from being closed.
 
-If the <closeStackRequest> <handler> does not <pass> the <message> or send it to a further <object> in the <message path>, the <stack> does not close. <pass|Passing> the <message> allows the <stack> to close. 
+If the <closeStackRequest> <handler> does not <pass> the <message> or send it to a further <object(glossary)> in the <message path>, the <stack> does not close. <pass|Passing> the <message> allows the <stack> to close. 
 
 The <closeStackRequest> message is only sent if the request to close a stack is initiated by the user (eg by clicking file -&gt; close in the LiveCode menu). If the request is initiated from a script (eg "close this stack") then the <closeStackRequest> message is  not sent.
 
-References: decorations (property), closeStack (message), close (command), stack (object), object (object), handler (glossary), current card (glossary), pass (glossary), message (glossary), message path (glossary), pass (control_st)
+References: decorations (property), closeStack (message), close (command), stack (object), object (glossary), handler (glossary), current card (glossary), pass (glossary), message (glossary), message path (glossary), pass (control_st)
 
 Tags: ui

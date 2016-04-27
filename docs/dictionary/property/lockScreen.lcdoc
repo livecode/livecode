@@ -21,7 +21,7 @@ By default, the <lockScreen> <property> is set to false. It is <reset> to false 
 Description:
 Use the <lockScreen> <property> to control when changes to the appearance of <object|objects> appear to the user, or to speed up actions that change several <object|objects>.
 
-If the <lockScreen> <property> is set to true, <statement|statements> that affect the appearance of the <stack window|stack windows>--such as opening or closing a <stack>, going to another <card(keyword)>, or changing <properties> of an <object> --are not shown on the screen until the <lockScreen> is set back to false.
+If the <lockScreen> <property> is set to true, <statement|statements> that affect the appearance of the <stack window|stack windows>--such as opening or closing a <stack>, going to another <card(keyword)>, or changing <properties> of an <object(glossary)> --are not shown on the screen until the <lockScreen> is set back to false.
 
 If the <lockScreen> is false, all changes are displayed immediately.
 
@@ -48,6 +48,6 @@ LiveCode keeps count of how many times the screen has been locked. You must bala
 
 >*Note:* When using <script debug mode>, the screen cannot be locked and the setting of the <lockScreen> <property> has no effect.
 
-References: properties (property), lockCursor (property), card (keyword), unlock screen (command), topLevel (command), palette (command), modal (command), reset (command), go (command), show cards (command), modeless (command), stack (object), object (object), card (object), property (glossary), stack window (glossary), handler (glossary), execute (glossary), statement (glossary), redraw (glossary), script debug mode (glossary), command (glossary), stacks (function)
+References: properties (property), lockCursor (property), card (keyword), unlock screen (command), topLevel (command), palette (command), modal (command), reset (command), go (command), show cards (command), modeless (command), stack (object), object (glossary), card (object), property (glossary), stack window (glossary), handler (glossary), execute (glossary), statement (glossary), redraw (glossary), script debug mode (glossary), command (glossary), stacks (function)
 
 Tags: ui

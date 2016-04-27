@@ -35,12 +35,12 @@ key: One of,,, or. You can specify up to three keys, separated by commas. (On Wi
 Description:
 Use the <click> <command> to simulate the action of a click, instead of sending a <mouseDown> or <mouseUp> message--for example, to create a <graphic> or <image> with a <handler>.
 
-The <click> <command> sends a <mouseDown> and <mouseUp> <message> to the <object> at the clicked location. If two <object|objects> both occupy the clicked location--one overlapping the other--the <message|messages> are sent to the <object> on top.
+The <click> <command> sends a <mouseDown> and <mouseUp> <message> to the <object(glossary)> at the clicked location. If two <object|objects> both occupy the clicked location--one overlapping the other--the <message|messages> are sent to the <object(glossary)> on top.
 
 If the object under the <point> is a <button> whose <autoHilite> is true, the <click> <command> causes the <button> to <highlight> and unhighlight, just as though the user had clicked.
 
 If the <point> is not within one of the <application|application's> windows, the <click> <command> has no effect. This means that you cannot use the <click> <command> to switch to another application.
 
-References: autoHilite (property), dragSpeed (property), linkClicked (message), mouseUp (message), mouseDown (message), mouseStillDown (message), mouseDoubleUp (message), dragStart (message), button (keyword), object (object), clickLoc (function), mouseClick (function), grab (command), choose (command), type (command), highlight (glossary), application (glossary), handler (glossary), message (glossary), graphic (glossary), command (glossary), image (glossary)
+References: autoHilite (property), dragSpeed (property), linkClicked (message), mouseUp (message), mouseDown (message), mouseStillDown (message), mouseDoubleUp (message), dragStart (message), button (keyword), object (glossary), clickLoc (function), mouseClick (function), grab (command), choose (command), type (command), highlight (glossary), application (glossary), handler (glossary), message (glossary), graphic (glossary), command (glossary), image (glossary)
 
 Tags: ui

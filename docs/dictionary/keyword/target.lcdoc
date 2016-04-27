@@ -20,8 +20,8 @@ Use the <target> <keyword> to access the contents of the <field> named in the <t
 
 The only semantic difference between the <target> <function> and the <target> <keyword> is that the <target> <keyword> is not preceded by the word "the".
 
-If the target object is not a field, the <target> <keyword> reports the name of the <object>, just like the <target> <function>.
+If the target object is not a field, the <target> <keyword> reports the name of the <object(glossary)>, just like the <target> <function>.
 
-References: field (keyword), function (control_st), target (function), handle (glossary), message (glossary), keyword (glossary), object (object)
+References: field (keyword), function (control_st), target (function), handle (glossary), message (glossary), keyword (glossary), object (glossary)
 
 Tags: objects

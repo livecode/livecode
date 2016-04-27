@@ -2,7 +2,7 @@ Name: textHeightSum
 
 Type: function
 
-Syntax: the textHeightSum of <object> 
+Syntax: the textHeightSum of <object>
 
 Syntax: textHeightSum(<object>)
 
@@ -30,8 +30,8 @@ Use the <textHeightSum> <function> to determine how much vertical space a <field
 
 This function exists for compatibility with imported SuperCard projects. You can use the <formattedHeight> <property> to find the height of the text in a <field(keyword)> or <button(keyword)>.
 
-If the <object> is a <button(keyword)> or <field(keyword)>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the text at the <field(object)|field's> current width. If the <object> is a <card> or <group>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the <object|objects> in the <card> or <group>.
+If the <object(glossary)> is a <button(keyword)> or <field(keyword)>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the text at the <field(object)|field's> current width. If the <object(glossary)> is a <card> or <group>, the <textHeightSum> <return|returns> the number of vertical <pixels> needed to display all the <object|objects> in the <card> or <group>.
 
-References: formattedWidth (property), textHeight (property), formattedHeight (property), pixels (property), pageHeights (property), button (keyword), integer (keyword), field (keyword), card (keyword), group (command), field (object), object (object), button (object), property (glossary), return (glossary), function (control_st)
+References: formattedWidth (property), textHeight (property), formattedHeight (property), pixels (property), pageHeights (property), button (keyword), integer (keyword), field (keyword), card (keyword), group (command), field (object), object (glossary), button (object), property (glossary), return (glossary), function (control_st)
 
 Tags: ui

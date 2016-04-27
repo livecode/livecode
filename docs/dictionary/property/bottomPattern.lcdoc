@@ -21,7 +21,7 @@ Example:
 set the bottomPattern of button "OK" to savedPattern
 
 Value:
-The <bottomPattern> of an <object> is a pattern specifier.
+The <bottomPattern> of an <object(glossary)> is a pattern specifier.
 A patternNumber is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
 
 An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
@@ -29,7 +29,7 @@ An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for th
 By default, the <bottomPattern> for all <object|objects> is empty.
 
 Description:
-Objects whose threeD <property> is set to true appear to stick out of or recede into the screen. Use the <bottomPattern> <property> to specify the color of the shadowed edge of the <object>.
+Objects whose threeD <property> is set to true appear to stick out of or recede into the screen. Use the <bottomPattern> <property> to specify the color of the shadowed edge of the <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
@@ -37,15 +37,15 @@ Pattern images can be color or black-and-white.
 
 The <bottomPattern> of <control(object)|controls> is drawn starting at the <control(object)|control's> upper right corner: if the <control(keyword)> is moved, the pattern does not shift.
 
-Setting the <bottomPattern> of an <object> to empty allows the <bottomPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what pattern is used for the <object>, even if its own <bottomPattern> is empty.
+Setting the <bottomPattern> of an <object(glossary)> to empty allows the <bottomPattern> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what pattern is used for the <object(glossary)>, even if its own <bottomPattern> is empty.
 
 If the object's showBorder <property> is false, the <bottomPattern> has no effect.
 
 The setting of the <bottomPattern> <property> has different effects, depending on the <object type>:
 
-* The <bottomPattern> of a <stack> determines the <bottomPattern> of each <object> in the <stack> that does not have its own <bottomPattern>.
+* The <bottomPattern> of a <stack> determines the <bottomPattern> of each <object(glossary)> in the <stack> that does not have its own <bottomPattern>.
 
-* The <bottomPattern> of a <card> or <group> determines the pattern of the border around the <card> or <group>, as well as determining the <bottomPattern> of each <object> in the <card> or <group> that does not have its own <bottomPattern>.
+* The <bottomPattern> of a <card> or <group> determines the pattern of the border around the <card> or <group>, as well as determining the <bottomPattern> of each <object(glossary)> in the <card> or <group> that does not have its own <bottomPattern>.
 
 * The <bottomPattern> of a <button> forms a border on the bottom and right edges of the <button>. If the button"s <threeD> <property> is false, the <bottomPattern> has no effect.
 
@@ -55,10 +55,10 @@ The setting of the <bottomPattern> <property> has different effects, depending o
 
 * The <bottomPattern> of a <graphic>, <audio clip>, <video clip>, or <image> has no effect.
 
-* The <bottomPattern> of a <player> or <EPS> <object> forms a border on the top and left edges of the <object>. If the <object|object's> <threeD> <property> is false, the <bottomPattern> has no effect.
+* The <bottomPattern> of a <player> or <EPS> <object(glossary)> forms a border on the top and left edges of the <object(glossary)>. If the <object|object's> <threeD> <property> is false, the <bottomPattern> has no effect.
 
 If an object's <bottomPattern> is set, the pattern is shown instead of the color specified by the <bottomColor>.
 
-References: effective (keyword), field (keyword), image (keyword), button (keyword), card (keyword), scrollbar (keyword), player (keyword), graphic (keyword), control (keyword), textStyle (property), pixels (property), hiliteBorder (property), threeDHilite (property), patterns (property), width (property), topPattern (property), height (property), threeD (property), hilitePattern (property), foregroundPattern (property), owner (property), shadowPattern (property), bottomColor (property), group (command), EPS (object), field (object), object (object), stack (object), control (object), property (glossary), audio clip (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), video clip (glossary), current stack (glossary), stacks (function)
+References: effective (keyword), field (keyword), image (keyword), button (keyword), card (keyword), scrollbar (keyword), player (keyword), graphic (keyword), control (keyword), textStyle (property), pixels (property), hiliteBorder (property), threeDHilite (property), patterns (property), width (property), topPattern (property), height (property), threeD (property), hilitePattern (property), foregroundPattern (property), owner (property), shadowPattern (property), bottomColor (property), group (command), EPS (object), field (object), object (glossary), stack (object), control (object), property (glossary), audio clip (glossary), Windows (glossary), object type (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary), video clip (glossary), current stack (glossary), stacks (function)
 
 Tags: ui

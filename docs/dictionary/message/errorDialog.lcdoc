@@ -4,7 +4,7 @@ Type: message
 
 Syntax: errorDialog <executionError>, <parseError> 
 
-Summary: Sent to an <object> when one of its <handler|handlers> cannot be run due to an <execution error>.
+Summary: Sent to an <object(glossary)> when one of its <handler|handlers> cannot be run due to an <execution error>.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -35,11 +35,11 @@ answer line (item 1 of line 1 of pExecutionError) of the cErrorsList of card 1 o
 
 >*Note:* The exact <format> of the <executionError> may change from release to release.
 
-If the lockErrorDialogs <property> is true, the <errorDialog> <message> is sent to the <object> that set the <lockErrorDialogs>., rather than to the <object> whose <script> contained the error. (The <lockErrorDialogs> can be set to true either by setting the <property> directly, or with the <lock error dialogs> <command>.)
+If the lockErrorDialogs <property> is true, the <errorDialog> <message> is sent to the <object(glossary)> that set the <lockErrorDialogs>., rather than to the <object(glossary)> whose <script> contained the error. (The <lockErrorDialogs> can be set to true either by setting the <property> directly, or with the <lock error dialogs> <command>.)
 
 >*Note:* The <errorDialog> message is only sent while Script Debug mode is turned off. To toggle Script Debug mode, click on the Development menu of LiveCode's menubar.
 
 Changes:
 The executionError parameter was introduced in version 1.1. In previous versions, this information was stored in the executionError property.
 
-References: executionContexts (property), lockErrorDialogs (property), script (property), scriptParsingError (message), lock error dialogs (command), unlock error dialogs (command), interrupt (function), format (function), errorObject (function), object (object), property (glossary), handle (glossary), handler (glossary), error (glossary), message (glossary), execution error (glossary), command (glossary)
+References: executionContexts (property), lockErrorDialogs (property), script (property), scriptParsingError (message), lock error dialogs (command), unlock error dialogs (command), interrupt (function), format (function), errorObject (function), object (glossary), property (glossary), handle (glossary), handler (glossary), error (glossary), message (glossary), execution error (glossary), command (glossary)

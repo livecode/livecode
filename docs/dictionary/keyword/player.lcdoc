@@ -20,4 +20,4 @@ Use the <player> <keyword> to create <player|players>.
 
 When using the Player tool, the cursor is a crosshairs. This tool is used for creating players by clicking at one corner of the player and dragging to the opposite corner.
 
-References: choose (command), tool (function), object (object), player (object), keyword (glossary)
+References: choose (command), tool (function), object (glossary), player (object), keyword (glossary)

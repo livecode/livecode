@@ -18,7 +18,7 @@ set the lockLoc of the templateGroup to true
 Description:
 Use the <templateGroup> <keyword> to set up <default> <properties> to be used for any new <group(glossary)|groups> you create.
 
-The <templateGroup> can be thought of as a special, abstract <object>. It is not an actual <group(command)>, but it has all the <properties> of a <group(command)>. The <ID> <property> of the <templateGroup> is zero.
+The <templateGroup> can be thought of as a special, abstract <object(glossary)>. It is not an actual <group(command)>, but it has all the <properties> of a <group(command)>. The <ID> <property> of the <templateGroup> is zero.
 
 You can use the <set> <command> to set the <properties> of the <templateGroup> before creating a <group(command)>. The new <group(command)> has the <properties> of the <templateGroup>, by <default>. Changing the <properties> of the <templateGroup> does not affect existing <group(glossary)|groups>.
 
@@ -31,4 +31,4 @@ You can refer to the <templateGroup> using any of the following forms:
 
 >*Note:* The <templateGroup> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), object (object), group (object), keyword (glossary), property (glossary), command (glossary), group (glossary), expression (glossary), group (command), reset (command), set (command), function (control_st)
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), object (glossary), group (object), keyword (glossary), property (glossary), command (glossary), group (glossary), expression (glossary), group (command), reset (command), set (command), function (control_st)

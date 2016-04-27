@@ -27,4 +27,4 @@ Handle the <saveStackRequest> <message> if you need to do cleanup or other actio
 
 The save action is triggered by the <saveStackRequest> <message>. This means that <trap|trapping> the <saveStackRequest> <message> and not <pass|passing> it prevents the <stack> from being saved. The LiveCode IDE locks messages when Save or Save As... are chosen from the File menu to ensure that the save occurs.
 
-References: filename (property), filename of stack (property), closeStack (message), stack (object), object (object), handler (glossary), current card (glossary), pass (glossary), message (glossary), trap (glossary)
+References: filename (property), filename of stack (property), closeStack (message), stack (object), object (glossary), handler (glossary), current card (glossary), pass (glossary), message (glossary), trap (glossary)

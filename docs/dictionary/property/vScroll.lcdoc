@@ -30,12 +30,12 @@ By default, the vScroll property of newly created objects is set to zero.
 
 For stacks, the vScroll property is read-only and cannot be set.
 
-The <vScroll> is the amount in <pixels> the <object> has been scrolled down. If the <vScroll> is zero, the <object> has not been scrolled.
+The <vScroll> is the amount in <pixels> the <object(glossary)> has been scrolled down. If the <vScroll> is zero, the <object(glossary)> has not been scrolled.
 
 Setting the <vScroll> of a <field> or <group> causes a <scrollbarDrag> <message> to be sent to the <field> or <group>.
 
 >*Cross-platform note:* On <Mac OS> and <OS X|OS X systems>, the <menu bar> appears at the top of the screen, rather than inside the stack window. If a <stack|stack's> <editMenus> <property> is set to false and the <stack> contains a <menu bar>, the window is scrolled down and resized so that the <menu bar> <group> is not visible in the window. Because of this, on <Mac OS> and <OS X|OS X systems>, the <vScroll> of a <stack> reports the amount the <stack> has been scrolled down to hide a <menu bar> <group>.
 
-References: pixels (property), scrollbarWidth (property), editMenus (property), field (keyword), integer (keyword), scrollbarDrag (message), group (command), stack (object), object (object), property (glossary), message (glossary), Mac OS (glossary), menu bar (glossary), OS X (glossary)
+References: pixels (property), scrollbarWidth (property), editMenus (property), field (keyword), integer (keyword), scrollbarDrag (message), group (command), stack (object), object (glossary), property (glossary), message (glossary), Mac OS (glossary), menu bar (glossary), OS X (glossary)
 
 Tags: ui

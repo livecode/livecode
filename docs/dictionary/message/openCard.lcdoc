@@ -26,6 +26,6 @@ The <openCard> <message> is sent after the destination <card(keyword)> is visibl
 
 The actual navigation is not triggered by the <openCard> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card(keyword)> from appearing.
 
-References: card (keyword), openBackground (message), openControl (message), preOpenCard (message), card (object), object (object), message (glossary), trap (glossary), pass (control_st)
+References: card (keyword), openBackground (message), openControl (message), preOpenCard (message), card (object), object (glossary), message (glossary), trap (glossary), pass (control_st)
 
 Tags: navigation

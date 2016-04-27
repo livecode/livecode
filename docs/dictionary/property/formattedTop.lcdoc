@@ -6,7 +6,7 @@ Syntax: get the formattedTop of {<card> | <group>}
 
 Syntax: get the formattedTop of <chunk> of <field> 
 
-Summary: Reports the distance between the top edge of the <stack window> and the topmost <object> in a <card> or <group>.
+Summary: Reports the distance between the top edge of the <stack window> and the topmost <object(glossary)> in a <card> or <group>.
 
 Associations: field
 
@@ -29,12 +29,12 @@ This property is read-only and cannot be set.
 Description:
 Use the <formattedTop> <property> to find the boundary of a <group> or <chunk>, or to determine how far to scroll vertically to bring a <chunk> of text into the viewable area of a <field>.
 
-If you specify a card or group, the <formattedTop> reports the distance in <pixels> between the top edge of the <stack window> and the top edge of the uppermost <object> in the <card> or <group>. (<object|Objects> whose <visible> <property> is false are ignored.)
+If you specify a card or group, the <formattedTop> reports the distance in <pixels> between the top edge of the <stack window> and the top edge of the uppermost <object(glossary)> in the <card> or <group>. (<object|Objects> whose <visible> <property> is false are ignored.)
 
 If the uppermost object is above the top of the stack window, the <formattedTop> is a <negative> number.
 
 The <formattedTop> of a <chunk> in a <field> is the distance from the top of the <stack> to the top of an imaginary box containing the text in the <chunk>.
 
-References: formattedHeight (property), pixels (property), visible (property), formattedLeft (property), card (keyword), field (keyword), group (command), stack (object), object (object), property (glossary), negative (glossary), stack window (glossary), chunk (glossary)
+References: formattedHeight (property), pixels (property), visible (property), formattedLeft (property), card (keyword), field (keyword), group (command), stack (object), object (glossary), property (glossary), negative (glossary), stack window (glossary), chunk (glossary)
 
 Tags: ui
