@@ -30,6 +30,6 @@ Use the <hostAddressToName> function to find the <domain name> of the computer a
 
 The <hostAddressToName> <function> does a reverse <DNS> lookup on the <IP address> in order to find the <domain name>. This means that the computer must be connected to the Internet in order to use this <function>. If a connection to the Internet is not available, the <hostAddressToName> <function> <return|returns> an error message.
 
-References: accept (command), peerAddress (function), hostAddress (function), domain name (glossary), IP address (glossary), return (glossary), DNS (glossary), function (control_st)
+References: accept (command), peerAddress (function), hostAddress (function), domain name (glossary), IP address (glossary), return (glossary), DNS (glossary), function (control structure)
 
 Tags: networking

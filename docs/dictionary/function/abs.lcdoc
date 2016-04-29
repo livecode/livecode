@@ -36,6 +36,6 @@ Use the <abs> <function> if you need to know the magnitude of the number and are
   
 The absolute value of a <number> is that number's distance from zero. If the <number> is positive, its absolute value is just the number; if the <number> is <negative>, its absolute value is the <negative> of the number. Because of this, the absolute value of a number is always positive.
 
-References: function (control_st), trunc (function), round (function), negative (glossary), return (glossary)
+References: function (control structure), trunc (function), round (function), negative (glossary), return (glossary)
 
 Tags: math

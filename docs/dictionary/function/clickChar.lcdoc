@@ -33,6 +33,6 @@ If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sen
 
 To find the position of the <clickChar>, use the <clickChunk> <function>.
 
-References: field (keyword), character (keyword), characters (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), clickCharChunk (function), mouseChar (function), charToNum (function), clickChunk (function), clickText (function), handler (glossary), unlock (glossary), message (glossary), trigger (glossary), return (glossary), hypertext (glossary), function (control_st)
+References: field (keyword), character (keyword), characters (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), clickCharChunk (function), mouseChar (function), charToNum (function), clickChunk (function), clickText (function), handler (glossary), unlock (glossary), message (glossary), trigger (glossary), return (glossary), hypertext (glossary), function (control structure)
 
 Tags: ui

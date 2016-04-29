@@ -22,4 +22,4 @@ The <end if> <keyword> is used only with certain forms of the <if> <control stru
 
 The <end if> <keyword> occurs on a line by itself.
 
-References: then (keyword), end (keyword), else (keyword), control (keyword), keyword (glossary), control structure (glossary), if (control_st), break (control_st)
+References: then (keyword), end (keyword), else (keyword), control (keyword), keyword (glossary), control structure (glossary), if (control structure), break (control structure)

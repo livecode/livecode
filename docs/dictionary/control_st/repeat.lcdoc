@@ -145,4 +145,4 @@ The ability to iterate through the keys of an array using repeat for each key wa
 Changes:
 The ability to specify an increment for the repeat with counter = startValue to endValue form was added in version 2.0. In previous versions, this form of the repeat control structure always incremented or decremented the counter by 1 each time through the loop.
 
-References: end repeat (keyword), forever (keyword), until (keyword), element (keyword), card (keyword), each (keyword), for (keyword), line (keyword), while (keyword), wait (command), next repeat (control_st), keyword (glossary), statement (glossary), variable (glossary), execute (glossary), control structure (glossary), stack (object)
+References: end repeat (keyword), forever (keyword), until (keyword), element (keyword), card (keyword), each (keyword), for (keyword), line (keyword), while (keyword), wait (command), next repeat (control structure), keyword (glossary), statement (glossary), variable (glossary), execute (glossary), control structure (glossary), stack (object)

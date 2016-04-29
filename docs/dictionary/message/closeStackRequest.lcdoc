@@ -27,6 +27,6 @@ If the <closeStackRequest> <handler> does not <pass> the <message> or send it to
 
 The <closeStackRequest> message is only sent if the request to close a stack is initiated by the user (eg by clicking file -&gt; close in the LiveCode menu). If the request is initiated from a script (eg "close this stack") then the <closeStackRequest> message is  not sent.
 
-References: decorations (property), closeStack (message), close (command), stack (object), object (glossary), handler (glossary), current card (glossary), pass (glossary), message (glossary), message path (glossary), pass (control_st)
+References: decorations (property), closeStack (message), close (command), stack (object), object (glossary), handler (glossary), current card (glossary), pass (glossary), message (glossary), message path (glossary), pass (control structure)
 
 Tags: ui

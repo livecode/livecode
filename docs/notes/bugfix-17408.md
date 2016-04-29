@@ -1,0 +1,1 @@
+# Fix links to docs entries of type control structure

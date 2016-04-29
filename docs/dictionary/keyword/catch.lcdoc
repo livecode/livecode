@@ -25,4 +25,4 @@ When one of the statements in a <try> <control structure> causes an <execution e
 
 The statements after the <catch> <keyword> are only <execute|executed> if there is an <error>. These <statement|statements> can refer to the <value> of the <errorParameter>. For example, the <catch> section might contain an <if> or <switch> <control structure>, which does different things depending on the value of the <errorParameter>.
 
-References: return (glossary), handle (glossary), handler (glossary), execute (glossary), error (glossary), statement (glossary), execution error (glossary), keyword (glossary), control structure (glossary), command (glossary), result (function), value (function), if (control_st), switch (control_st), try (control_st), throw (control_st)
+References: return (glossary), handle (glossary), handler (glossary), execute (glossary), error (glossary), statement (glossary), execution error (glossary), keyword (glossary), control structure (glossary), command (glossary), result (function), value (function), if (control structure), switch (control structure), try (control structure), throw (control structure)

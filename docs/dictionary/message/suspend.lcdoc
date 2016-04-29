@@ -26,4 +26,4 @@ The <suspend> <message> is sent whenever the user switches to another program.
 
 The actual switch is not triggered by the <suspend> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the user from switching out of the <application>.
 
-References: pass (control_st), resume (message), shutdown (message), suspendStack (message), application (glossary), current card (glossary), message (glossary), trap (glossary)
+References: pass (control structure), resume (message), shutdown (message), suspendStack (message), application (glossary), current card (glossary), message (glossary), trap (glossary)

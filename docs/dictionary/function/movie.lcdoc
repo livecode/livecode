@@ -29,6 +29,6 @@ Use the <movie> <function> to <synchronize> other actions with sounds.
 
 If no video clip is playing, the <movie> <function> <return|returns> <done>.
 
-References: done (constant), start (command), prepare (command), function (control_st), synchronize (glossary), video clip (glossary), return (glossary)
+References: done (constant), start (command), prepare (command), function (control structure), synchronize (glossary), video clip (glossary), return (glossary)
 
 Tags: multimedia

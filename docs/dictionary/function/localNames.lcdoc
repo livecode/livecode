@@ -31,4 +31,4 @@ Use the <localNames> <function> to determine which <local variable|local variabl
 
 Local variables are created either implicitly, by putting a value into them, or explicitly with the <local> <command>. They can be deleted with the <delete variable> <command>.
 
-References: delete variable (command), local (command), globalNames (function), value (function), handler (glossary), declare (glossary), command (glossary), return (glossary), local variable (glossary), function (control_st)
+References: delete variable (command), local (command), globalNames (function), value (function), handler (glossary), declare (glossary), command (glossary), return (glossary), local variable (glossary), function (control structure)

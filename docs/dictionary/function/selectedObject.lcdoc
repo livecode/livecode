@@ -30,4 +30,5 @@ Returns: The <selectedObject> <function> <return|returns> a list with the long <
 Description:
 Use the <selectedObject> <function> to perform an action on all the <selected> <object|objects>.
 
-References: ID (property), selectGroupedControls (property),  (property), selected (property), function (control_st), group (command), target (function), property (glossary), return (glossary), object (glossary)
+
+References: ID (property), selectGroupedControls (property),  (property), selected (property), function (control structure), group (command), target (function), property (glossary), return (glossary), object (glossary)

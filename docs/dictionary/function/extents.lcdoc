@@ -32,6 +32,6 @@ Use the <extents> <function> to find the minimum and maximum row and column numb
 
 If any of the keys of the <array> is non-numeric, the <extents> <function> returns empty.
 
-References: line (keyword), combine (command), split (command), keys (function), round (function), matrixMultiply (function), sum (function), max (function), min (function), array (glossary), integer (glossary), function (control_st)
+References: line (keyword), combine (command), split (command), keys (function), round (function), matrixMultiply (function), sum (function), max (function), min (function), array (glossary), integer (glossary), function (control structure)
 
 Tags: properties

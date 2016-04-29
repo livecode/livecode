@@ -1,0 +1,1 @@
+# Don't overrun restricted string range with chunk range start

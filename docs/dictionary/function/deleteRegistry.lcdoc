@@ -34,4 +34,4 @@ On Mac OS and Unix systems, the <deleteRegistry> <function> <return|returns> "no
 
 >*Warning:*  Be careful to use only carefully debugged entries with the <deleteRegistry> <function>., and be very certain you know all the ramifications of the entry you're removing. Removing entries from the <registry|Windows registry> can cause the system to behave unexpectedly or stop functioning altogether.
 
-References: function (control_st), setRegistry (function), queryRegistry (function), platform (function), registry (glossary), return (glossary)
+References: function (control structure), setRegistry (function), queryRegistry (function), platform (function), registry (glossary), return (glossary)

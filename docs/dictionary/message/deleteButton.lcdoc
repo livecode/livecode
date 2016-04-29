@@ -27,6 +27,6 @@ The actual deletion is not triggered by the <deleteButton> <message>, so <trap|t
 
 However, the undo <command> will restore a <button(object)> after it is deleted by the user.
 
-References: button (object), delete (command), stack (object), trap (glossary), button (glossary), message (glossary), command (glossary), pass (control_st)
+References: button (object), delete (command), stack (object), trap (glossary), button (glossary), message (glossary), command (glossary), pass (control structure)
 
 Tags: objects

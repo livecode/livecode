@@ -28,6 +28,6 @@ The <mainStackChanged> message is sent right after the stack is moved to the new
 
 The <mainStackChanged> <message> is used by the LiveCode <development environment>, so if you <handle> this <message>, be sure to <pass> it at the end of the <handler>.
 
-References: mainStack (property), stack (object), substack (glossary), stack file (glossary), message (glossary), handler (glossary), handle (glossary), development environment (glossary), pass (control_st)
+References: mainStack (property), stack (object), substack (glossary), stack file (glossary), message (glossary), handler (glossary), handle (glossary), development environment (glossary), pass (control structure)
 
 Tags: objects

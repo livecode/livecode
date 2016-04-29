@@ -24,4 +24,4 @@ The <finally> section is always <execute|executed> even if the <try> <control st
 
 The <finally> section is optional in a <try> <control structure>.
 
-References: else (keyword), keyword (glossary), statement (glossary), variable (glossary), error (glossary), execute (glossary), control structure (glossary), pass (control_st), exit (control_st), try (control_st)
+References: else (keyword), keyword (glossary), statement (glossary), variable (glossary), error (glossary), execute (glossary), control structure (glossary), pass (control structure), exit (control structure), try (control structure)

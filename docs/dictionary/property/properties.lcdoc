@@ -59,6 +59,6 @@ On storing the properties are set in the correct order to ensure correct recreat
 Changes:
 As of version 6.1 the <properties> property has been revised. On fetching it returns the minimal set of properties of an object to allow it to be recreated exactly, it also returns unicode variants of properties if, and only if, they are needed.
 
-References: properties (property), customProperties (property), value (glossary), keys (function), propertyNames (function), setProp (control_st), object (glossary)
+References: properties (property), customProperties (property), value (glossary), keys (function), propertyNames (function), setProp (control structure), object (glossary)
 
 Tags: properties

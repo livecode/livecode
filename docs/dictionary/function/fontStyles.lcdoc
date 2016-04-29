@@ -35,6 +35,6 @@ The font styles are returned in a return delimited list, such as the following o
     italic
     bold-italic
 
-References: textStyle (property), printTextStyle (property), fontSizes (function), fontNames (function), font (glossary), return (glossary), function (control_st)
+References: textStyle (property), printTextStyle (property), fontSizes (function), fontNames (function), font (glossary), return (glossary), function (control structure)
 
 Tags: ui

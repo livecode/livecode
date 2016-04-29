@@ -29,6 +29,6 @@ Stacks that have not yet been saved are included in the list.
 
 The list includes stacks that are part of the LiveCode development environment (such as the message box and menu bar).
 
-References: defaultStack (property), substacks (property), mainStack (property), stackFiles (property), name (property), reloadStack (message), line (keyword), property (glossary), main stack (glossary), return (glossary), loaded into memory (glossary), stacks (function), openStacks (function), revLoadedStacks (function), topStack (function), function (control_st), stack (object)
+References: defaultStack (property), substacks (property), mainStack (property), stackFiles (property), name (property), reloadStack (message), line (keyword), property (glossary), main stack (glossary), return (glossary), loaded into memory (glossary), stacks (function), openStacks (function), revLoadedStacks (function), topStack (function), function (control structure), stack (object)
 
 Tags: objects

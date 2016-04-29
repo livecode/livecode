@@ -31,4 +31,4 @@ The <buildNumber> of two copies of LiveCode or a <standalone application> may be
 
 When reporting a problem with LiveCode, please include the <buildNumber> and <version> of the <application>.
 
-References: function (control_st), revAppVersion (function), version (function), environment (function), platform (function), systemVersion (function), QTVersion (function), application (glossary), LiveCode (glossary), standalone application (glossary), return (glossary), engine (glossary)
+References: function (control structure), revAppVersion (function), version (function), environment (function), platform (function), systemVersion (function), QTVersion (function), application (glossary), LiveCode (glossary), standalone application (glossary), return (glossary), engine (glossary)

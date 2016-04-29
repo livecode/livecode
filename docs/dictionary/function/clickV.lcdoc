@@ -31,6 +31,6 @@ The click location is the position of the mouse pointer when the user pressed th
 
 This function is equal to item 2 of the clickLoc <function>.
 
-References: function (control_st), integer (keyword), stack (object), mouseV (function), clickH (function), return (glossary)
+References: function (control structure), integer (keyword), stack (object), mouseV (function), clickH (function), return (glossary)
 
 Tags: ui

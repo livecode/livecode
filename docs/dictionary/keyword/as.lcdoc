@@ -29,4 +29,4 @@ Use the <as> <keyword> to modify the <do>, <export>, <go>, or <save> <command|co
 
 Use the alternateLanguages <function> to find out which languages can be used with the <do> command on <Mac OS> and <OS X|OS X systems>.
 
-References: file (keyword), function (control_st), export (command), go (command), do (command), save (command), format (function), keyword (glossary), file path (glossary), command (glossary), Mac OS (glossary), OS X (glossary), stack (object)
+References: file (keyword), function (control structure), export (command), go (command), do (command), save (command), format (function), keyword (glossary), file path (glossary), command (glossary), Mac OS (glossary), OS X (glossary), stack (object)

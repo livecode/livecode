@@ -29,6 +29,6 @@ If the mouse is not over any LiveCode window, the <mouseStack> <return|returns> 
 
 If the mouse is over a stack's title bar or border, the  <mouseStack> <return|returns> empty.
 
-References: property (glossary), mouse pointer (glossary), return (glossary), name (property), field (keyword), function (control_st), mouseCharChunk (function), mouseColor (function), mouseV (function), mouseChunk (function), clickStack (function), mouseControl (function), mouseLine (function), focus (command), stack (object)
+References: property (glossary), mouse pointer (glossary), return (glossary), name (property), field (keyword), function (control structure), mouseCharChunk (function), mouseColor (function), mouseV (function), mouseChunk (function), clickStack (function), mouseControl (function), mouseLine (function), focus (command), stack (object)
 
 Tags: ui

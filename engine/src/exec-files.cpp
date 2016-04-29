@@ -1284,10 +1284,11 @@ void MCFilesExecPerformReadFixedFor(MCExecContext& ctxt, IO_handle p_stream, int
         t_success = MCStringCopyAndRelease(t_buffer, (MCStringRef&)r_output);
     else
         MCValueRelease(t_buffer);
-    
-    if (t_success)
-        r_stat = IO_NORMAL;
-    else
+	
+	// If creating the buffer from the read data failed, then treat it as an IO error.
+	// Otherwise leave 'stat' as it is - as it could be EOF (which isn't stricly a
+	// failure).
+    if (!t_success)
         r_stat = IO_ERROR;
 }
 
