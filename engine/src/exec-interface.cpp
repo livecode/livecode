@@ -2809,16 +2809,10 @@ void MCInterfaceExecShowTaskBar(MCExecContext& ctxt)
 
 void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *p_at, MCArrayRef p_properties)
 {
-	extern bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at, MCArrayRef p_properties, MCValueRef &r_result);
-	
-	MCPoint t_at;
-	if (p_at != nil)
-		t_at = *p_at;
-	else
-		t_at = MCPointMake(MCmousex, MCmousey);
+	extern bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, MCPoint *p_at, MCArrayRef p_properties, MCValueRef &r_result);
 	
 	MCAutoValueRef t_result;
-	if (!MCWidgetPopupAtLocationWithProperties(p_kind, t_at, p_properties, &t_result) || MCValueIsEmpty(*t_result))
+	if (!MCWidgetPopupAtLocationWithProperties(p_kind, p_at, p_properties, &t_result) || MCValueIsEmpty(*t_result))
 	{
 		if (MCErrorIsPending())
 			MCExtensionCatchError(ctxt);
