@@ -303,10 +303,14 @@ MCRectangle MCGradientEditTool::minrect()
 	return rect;
 }
 
-MCPolygonEditTool::MCPolygonEditTool(MCGraphic *p_graphic)
+MCPolygonEditTool::MCPolygonEditTool(MCGraphic *p_graphic) :
+    graphic(p_graphic),
+    m_polygon_edit_point(-1),
+    m_path_start_point(0),
+    xoffset(0),
+    yoffset(0)
 {
-	graphic = p_graphic;
-	m_polygon_edit_point = -1;
+    ;
 }
 
 MCEditMode MCPolygonEditTool::type()
