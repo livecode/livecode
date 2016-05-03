@@ -39,12 +39,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "edittool.h"
 
 
-MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic, MCGradientFill *p_gradient, MCEditMode p_mode)
+MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic,
+                                       MCGradientFill *p_gradient,
+                                       MCEditMode p_mode) :
+    mode(p_mode),
+    graphic(p_graphic),
+    gradient(p_gradient),
+    m_gradient_edit_point(-1),
+    xoffset(0),
+    yoffset(0)
+
 {
-	graphic = p_graphic;
-	mode = p_mode;
-	gradient = p_gradient;
-	m_gradient_edit_point = -1;
+    ;
 }
 
 MCEditMode MCGradientEditTool::type()
