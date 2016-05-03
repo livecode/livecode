@@ -1597,11 +1597,6 @@ void MCModePreMain(void)
 	}
 }
 
-bool MCPlayer::mode_avi_closewindowonplaystop()
-{
-	return true;
-}
-
 // IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled
 // on startup depending on the usePixelScaling registry value
 bool MCModeGetPixelScalingEnabled()

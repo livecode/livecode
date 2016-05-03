@@ -1353,25 +1353,6 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 			MCdispatcher->wmfocus(dw, MCmousex, MCmousey);
 		}
 		break;
-	case MM_MCINOTIFY:
-		if (wParam == MCI_NOTIFY_SUCCESSFUL)
-		{
-			MCPlayer *tptr = MCplayers;
-			while (tptr != NULL)
-			{
-				if (lParam == (LPARAM)tptr->getDeviceID())
-				{
-					if (tptr->isdisposable())
-						tptr->playstop();
-					else
-						tptr->message_with_valueref_args(MCM_play_stopped, tptr->getname());
-					break;
-				}
-				tptr = tptr->getnextplayer();
-			}
-			curinfo->handled = True;
-		}
-		break;
 	case WM_USER:
 		{
 			uint2 i;
