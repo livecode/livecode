@@ -275,9 +275,9 @@
 			'src/paragrafattr.cpp',
 			'src/parentscript.cpp',
 			'src/pickle.cpp',
+			'src/player.cpp',
 			'src/player-legacy.cpp',
 			'src/player-platform.cpp',
-			'src/player.cpp',
 			'src/props.cpp',
 			'src/rtf.cpp',
 			'src/rtfsupport.cpp',
@@ -722,6 +722,7 @@
 			'src/w32icon.cpp',
 			'src/w32image.cpp',
 			'src/w32misc.cpp',
+			'src/w32-ds-player.cpp',
 			'src/w32prefix.cpp',
 			'src/w32printer.cpp',
 			'src/w32relaunch.cpp',
@@ -731,6 +732,7 @@
 			'src/w32text.cpp',
 			'src/w32textlayout.cpp',
 			'src/w32theme.cpp',
+			'src/w32-core-compat.cpp',
 
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
@@ -856,6 +858,7 @@
 			'src/srvspec.cpp',
 			'src/srvstack.cpp',
 			'src/native-layer-srv.cpp',
+			'src/player-srv-stubs.cpp',
 		],
 		
 		# Java sources for Android
@@ -935,6 +938,7 @@
 		'engine_server_exclude_files':
 		[
 			'src/player-platform.cpp',
+			'src/player-legacy.cpp',
 			'src/stacke.cpp',
 		],
 		
@@ -1099,8 +1103,17 @@
 					'sources!':
 					[
 						'src/fiber.cpp',
-						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/player-legacy.cpp',
+						
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
 					],
 				},
 			],
@@ -1117,22 +1130,6 @@
 						'src/tilecachegl.cpp',
 						
 						'src/srvflst.cpp',
-					],
-				},
-				{
-					'sources!':
-					[
-						
-						'src/desktop.cpp',
-						'src/desktop-ans.cpp',
-						'src/desktop-dc.cpp',
-						'src/desktop-image.cpp',
-						'src/desktop-menu.cpp',
-						'src/desktop-stack.cpp',
-						'src/platform.cpp',
-						'src/platform-recorder.cpp',
-						'src/platform-surface.cpp',
-						'src/platform-window.cpp',
 					],
 				},
 			],
@@ -1163,7 +1160,18 @@
 					[
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
-					]
+						
+						'src/desktop.cpp',
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
+					],
 				},
 			],
 			[
@@ -1209,6 +1217,17 @@
 						'src/notify.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						
+						'src/desktop.cpp',
+						'src/desktop-ans.cpp',
+						'src/desktop-dc.cpp',
+						'src/desktop-image.cpp',
+						'src/desktop-menu.cpp',
+						'src/desktop-stack.cpp',
+						'src/platform.cpp',
+						'src/platform-recorder.cpp',
+						'src/platform-surface.cpp',
+						'src/platform-window.cpp',
 					],
 				},
 			],
