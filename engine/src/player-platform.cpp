@@ -2052,9 +2052,9 @@ Boolean MCPlayer::prepare(MCStringRef options)
             || MCStringBeginsWithCString(resolved_filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(resolved_filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(resolved_filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeMCString, &resolved_filename);
 	else
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeMCString, &resolved_filename);
 	
     if (!hasfilename())
         return True;
