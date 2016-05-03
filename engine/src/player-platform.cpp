@@ -53,26 +53,6 @@
 
 #include "platform.h"
 
-static MCPlatformPlayerMediaType ppmediatypes[] =
-{
-	kMCPlatformPlayerMediaTypeVideo,
-	kMCPlatformPlayerMediaTypeAudio,
-	kMCPlatformPlayerMediaTypeText,
-	kMCPlatformPlayerMediaTypeQTVR,
-	kMCPlatformPlayerMediaTypeSprite,
-	kMCPlatformPlayerMediaTypeFlash,
-};
-
-static const char *ppmediastrings[] =
-{
-	"video",
-	"audio",
-	"text",
-	"qtvr",
-	"sprite",
-	"flash"
-};
-
 #define CONTROLLER_HEIGHT 26
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
 // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
@@ -83,11 +63,6 @@ static const char *ppmediastrings[] =
 #define DARKGRAY 4
 #define MIN_RATE -3
 #define MAX_RATE 3
-
-extern "C" int initialise_weak_link_QuickTime(void);
-extern "C" int initialise_weak_link_QTKit(void);
-extern "C" int initialise_weak_link_QuickDraw(void);
-
 
 static MCColor controllercolors[] = {
     
@@ -1923,19 +1898,9 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 }
 
-// SN-2015-09-30: Make specific implementation for the platformplayer, which
-//  ensures that QT is weak-linked.
 void MCPlayer::setdontuseqt(bool noqt)
 {
 	dontuseqt = noqt;
-	
-	// Weak link QT when setting a player's dontuseqt to false, if it is not already linked
-	if (!noqt && MCdontuseQT)
-	{
-		initialise_weak_link_QuickTime();
-		initialise_weak_link_QTKit() ;
-		initialise_weak_link_QuickDraw() ;
-	}
 }
 
 real8 MCPlayer::getplayrate()
@@ -2052,14 +2017,6 @@ void MCPlayer::showcontroller(Boolean show)
 
 Boolean MCPlayer::prepare(MCStringRef options)
 {
-    // For osversion < 10.8 we have to have QT initialized.
-    if (MCmajorosversion < 0x1080)
-    {
-        extern bool MCQTInit(void);
-        if (!MCQTInit())
-            return False;
-    }
-
 	Boolean ok = False;
     
     if (state & CS_PREPARED)
@@ -2074,8 +2031,10 @@ Boolean MCPlayer::prepare(MCStringRef options)
             MCPlatformPlayerRelease(m_platform_player);
         MCPlatformCreatePlayer(dontuseqt, m_platform_player);
     }
+
+	if (m_platform_player == nil)
+		return False;
 		
-    
     // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder
     //  to the filename property. Use resolved_filename to set the "internal" absolute path
     MCAutoStringRef t_resolved_filename;

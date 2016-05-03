@@ -45,9 +45,6 @@
 #include <ImageCodec.h>
 
 #define PIXEL_FORMAT_32 k32BGRAPixelFormat
-// SN-2014-06-26 [[ PlatformPlayer ]]
-// Function used in both quicktime.cpp and player.cpp
-extern OSErr MCS_path2FSSpec(MCStringRef fname, FSSpec *fspec);
 
 #elif defined(_MAC_DESKTOP)
 #include <QuickTime/QuickTime.h>
@@ -110,11 +107,8 @@ extern "C" int initialise_weak_link_QuickDraw(void);
 
 /////////
 
-bool MCQTInit(void)
+bool MCQTInitialize(void)
 {
-	if (MCdontuseQT)
-		return false;
-	
 	if (s_qt_initted)
 		return true;
 	
@@ -143,6 +137,14 @@ bool MCQTInit(void)
 #endif
 	
 	return s_qt_initted;
+}
+
+bool MCQTInit(void)
+{
+	if (MCdontuseQT)
+		return false;
+	
+	return MCQTInitialize();
 }
 
 void MCQTFinit(void)
@@ -234,6 +236,52 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 	CFRelease(t_cf_path);
 	return t_success;
 }
+
+#ifdef _WINDOWS
+// SN-2014-06-26 [[ PlatformPlayer ]]
+// Function used in both quicktime.cpp and player-legacy.cpp
+#define PATH_MAX 260
+OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
+{ //For QT movie only
+	MCAutoStringRef t_filename;
+	char *nativepath;
+	char *temp;
+    
+	/* UNCHECKED */ MCS_resolvepath(p_filename, &t_filename);
+    
+	if (MCStringGetNativeCharAtIndex(*t_filename, 1) != ':' &&
+		MCStringGetNativeCharAtIndex(*t_filename, 0) != '/')
+	{//not c:/mc/xxx, not /mc/xxx
+		MCAutoStringRef t_native;
+		MCAutoStringRef t_path;
+		MCAutoStringRef t_curdir;
+		
+		/* UNCHECKED */ MCS_getcurdir(&t_curdir);
+		/* UNCHECKED */ MCStringMutableCopy(*t_curdir, &t_path);
+		if (MCStringGetLength(p_filename) + MCStringGetLength(*t_curdir) < PATH_MAX)
+		{
+			// MW-2005-01-25: If the current directory is the root of a volume then it *does*
+			//   have a path separator so we don't need to add one
+			if (MCStringGetNativeCharAtIndex(*t_path, MCStringGetLength(*t_path) - 1) != '/')
+            /* UNCHECKED */ MCStringAppendChar(*t_path, '/');
+            
+			/* UNCHECKED */ MCStringAppend(*t_path, *t_filename);
+			/* UNCHECKED */ MCS_pathtonative(*t_path, &t_native);
+			/* UNCHECKED */ MCStringConvertToCString(*t_native, temp);
+			nativepath = strclone(temp);
+		}
+	}
+	else
+	{
+		/* UNCHECKED */ MCStringConvertToCString(*t_filename, temp);
+		nativepath = strclone(temp);
+	}
+    
+	OSErr err = NativePathNameToFSSpec(nativepath, fspec, 0);
+	delete nativepath;
+	return err;
+}
+#endif
 
 static void exportToSoundFile(MCStringRef sourcefile, MCStringRef destfile)
 {
@@ -1154,6 +1202,11 @@ void MCQTEffectEnd(void)
 }
 
 #else    // if not FEATURE_QUICKTIME_EFFECTS
+
+bool MCQTInitialize()
+{
+	return false;
+}
 
 bool MCQTInit()
 {

@@ -136,12 +136,6 @@ Boolean MCScreenDC::open()
 	if (RegisterClassA(&wc) == 0)
 		return FALSE;
 
-	// Define the QT VIDEO CLIP window
-	wc.style         = 0/*CS_OWNDC | CS_VREDRAW | CS_HREDRAW*/;
-	wc.lpfnWndProc   = (WNDPROC)MCQTPlayerWindowProc;
-	wc.lpszClassName = MC_QTVIDEO_WIN_CLASS_NAME;  //video class
-	if (RegisterClassA(&wc) == 0)
-		return FALSE;
 
 	// Define Snapshot window. Has its own window proc
 	wc.style         = CS_DBLCLKS | CS_CLASSDC;

@@ -963,8 +963,12 @@ void MCQTKitPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProp
 
 ////////////////////////////////////////////////////////
 
+extern bool MCQTInitialize();
 MCQTKitPlayer *MCQTKitPlayerCreate(void)
 {
+	if (!MCQTInitialize())
+		return nil;
+
     return new MCQTKitPlayer;
 }
 
