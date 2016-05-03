@@ -47,6 +47,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(FEATURE_PLATFORM_APPLICATION)
+
 bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
 void X_main_loop_iteration();
 int X_close();
@@ -120,6 +122,8 @@ void MCPlatformHandleApplicationRun(bool& r_continue)
     r_continue = !MCquit;
 }
 
+#endif // FEATURE_PLATFORM_APPLICATION
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPlatformHandleScreenParametersChanged(void)
@@ -135,6 +139,7 @@ void MCPlatformHandleScreenParametersChanged(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined (FEATURE_PLATFORM_WINDOW)
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef p_window)
 {
 	MCdispatcher -> wclose(p_window);
@@ -1312,7 +1317,11 @@ void MCPlatformHandleTextInputAction(MCPlatformWindowRef p_window, MCPlatformTex
 	};
 }
 
+#endif // FEATURE_PLATFORM_WINDOW
+
 ////////////////////////////////////////////////////////////////////////////////
+
+#if defined(FEATURE_PLATFORM_PLAYER)
 
 static MCPlayer *find_player(MCPlatformPlayerRef p_player)
 {
@@ -1384,7 +1393,11 @@ void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef p_player)
     t_player -> layer_redrawall();
 }
 
+#endif // FEATURE_PLATFORM_PLAYER
+
 ////////////////////////////////////////////////////////////////////////////////
+
+#if defined(FEATURE_PLATFORM_AUDIO)
 
 void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
 {
@@ -1397,5 +1410,7 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef p_sound)
         MCacptr = NULL;
     }
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
