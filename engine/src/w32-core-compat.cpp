@@ -28,4 +28,10 @@ void MCPlatformBreakWait(void)
 	MCscreen->pingwait();
 }
 
+bool MCPlatformWaitForEvent(double duration, bool blocking)
+{
+	bool t_dispatch = !blocking;
+	return MCscreen->wait(duration, t_dispatch, false);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
