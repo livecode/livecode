@@ -91,7 +91,7 @@ repeat` <keyword>.
 How many times the <statementList> is <execute|executed> depends on the
 <loopForm> you use. Here are the possible forms:
 
-#####<Forever> 
+#####<forever|Forever> 
 The `forever` form continues repeating the statements in the
 <statementList> until an `exit`, `exit repeat`, `pass`, or `return`
 statement is executed. Usually, one of these <control structure|control
@@ -110,7 +110,7 @@ following example, the `go` command is executed at least once, since
 
 If no <loopForm> is specified, the `forever` form is used.
 
-#####<Until> and <while>
+#####<until|Until> and <while>
 The `until` <conditional|condition> and `while` <conditional|condition>
 forms repeat the <statementList> as long as the <conditional|condition>
 is false or as long as it is true, respectively. LiveCode re-evaluates
