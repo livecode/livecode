@@ -327,7 +327,16 @@ void MCStack::setopacity(uint1 p_level)
 			MCPlayer *t_player;
 			for(t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
 				if (t_player -> getstack() == this)
-					t_player -> changewindow((MCSysWindowHandle)t_old_window);
+				{
+					MCNativeLayer *t_layer;
+					t_layer = t_player->getNativeLayer();
+					if (t_layer != nil && t_layer->isAttached())
+					{
+						// reattach native layer view to new window
+						t_layer->OnDetach();
+						t_layer->OnAttach();
+					}
+				}
 		}
 
 		if (p_level < 255)
@@ -626,13 +635,11 @@ void MCStack::stop_externals()
 	MCPlayer *tptr = MCplayers;
 	while (tptr != NULL)
 	{
+		MCPlayer *t_next = tptr->getnextplayer();
 		if (tptr->getstack() == this)
-		{
-			if (tptr->playstop())
-				tptr = MCplayers; // was removed, start search over
-		}
-		else
-			tptr = tptr->getnextplayer();
+			tptr->playstop();
+
+		tptr = t_next;
 	}
 
 	if (!MCnoui && window != DNULL)
