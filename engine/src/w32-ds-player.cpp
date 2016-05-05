@@ -60,6 +60,8 @@ public:
 	
 	bool Initialize();
 	bool HandleGraphEvent();
+	bool SetVideoWindow(HWND hwnd);
+	bool SetVideoWindowSize(uint32_t p_width, uint32_t p_height);
 
 protected:
 	virtual void Realize(void);
@@ -84,13 +86,13 @@ private:
 	bool Pause();
 	bool SeekRelative(int32_t p_amount);
 
-	bool SetVideoWindow(HWND hwnd);
 	bool SetEventWindow(HWND hwnd);
 	bool SetFilterGraph(IGraphBuilder *p_graph);
 	bool SetVisible(bool p_visible);
 	bool GetFormattedSize(uint32_t &r_width, uint32_t &r_height);
 
 	bool OpenFile(MCStringRef p_filename);
+	void CloseFile();
 
 	MCWin32DSPlayerState m_state;
 	bool m_is_valid;
@@ -131,7 +133,7 @@ long FAR PASCAL DSHiddenWindowProc (HWND hWnd, UINT message, UINT wParam, LONG l
 bool RegisterEventWindowClass()
 {
 	WNDCLASS	wc={0};
-	static bool windowclassregistered = true;
+	static bool windowclassregistered = false;
 	if (!windowclassregistered) 
 	{
 		// Register the Monitor child window class
@@ -151,6 +153,43 @@ bool RegisterEventWindowClass()
 	return windowclassregistered;
 }
 
+long FAR PASCAL DSVideoWindowProc(HWND hWnd, UINT message, UINT wParam, LONG lParam)
+{
+	switch(message)
+	{
+	case WM_CREATE:
+		CREATESTRUCT *t_create;
+		t_create = (CREATESTRUCT*)lParam;
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)t_create->lpCreateParams);
+		break;
+
+	case WM_SHOWWINDOW:
+		{
+			MCWin32DSPlayer *t_player;
+			t_player = (MCWin32DSPlayer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+			if (t_player != nil)
+			{
+				if (wParam)
+					t_player->SetVideoWindow(hWnd);
+				else
+					t_player->SetVideoWindow(nil);
+			}
+			break;
+		}
+
+	case WM_SIZE:
+		{
+			MCWin32DSPlayer *t_player;
+			t_player = (MCWin32DSPlayer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+			if (t_player != nil)
+				t_player->SetVideoWindowSize(LOWORD(lParam), HIWORD(lParam));
+			break;
+		}
+	}
+	return DefWindowProc (hWnd, message, wParam, lParam);
+	
+}
+
 bool RegisterVideoWindowClass()
 {
 	static bool s_registered = false;
@@ -161,7 +200,7 @@ bool RegisterVideoWindowClass()
 		MCMemoryClear(t_class);
 
 		t_class.cbSize = sizeof(WNDCLASSEX);
-		t_class.lpfnWndProc = DefWindowProc;
+		t_class.lpfnWndProc = DSVideoWindowProc;
 		t_class.hInstance = MChInst;
 		t_class.lpszClassName = kMCDSVideoWindowClass;
 
@@ -187,13 +226,13 @@ bool CreateEventWindow(HWND &r_window)
 	return true;
 }
 
-bool CreateVideoWindow(HWND &r_window)
+bool CreateVideoWindow(MCWin32DSPlayer *p_player, HWND &r_window)
 {
 	if (!RegisterVideoWindowClass())
 		return false;
 
 	HWND t_window;
-	t_window = CreateWindow(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, nil);
+	t_window = CreateWindow(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, p_player);
 
 	if (t_window == nil)
 		return false;
@@ -240,13 +279,16 @@ HWND MCWin32DSPlayer::g_event_window = nil;
 
 MCWin32DSPlayer::MCWin32DSPlayer()
 {
+	m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
 	m_is_valid = false;
 }
 
 MCWin32DSPlayer::~MCWin32DSPlayer()
 {
-	// TODO
+	CloseFile();
+	if (m_video_window != nil)
+		DestroyWindow(m_video_window);
 }
 
 bool MCWin32DSPlayer::Initialize()
@@ -258,7 +300,7 @@ bool MCWin32DSPlayer::Initialize()
 	}
 
 	HWND t_video_window;
-	if (!CreateVideoWindow(t_video_window))
+	if (!CreateVideoWindow(this, t_video_window))
 		return false;
 
 	m_video_window = t_video_window;
@@ -313,21 +355,41 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 //tell ds  where to position video window
 bool MCWin32DSPlayer::SetVideoWindow(HWND p_hwnd)
 {
-    HRESULT hr = E_FAIL;
     CComQIPtr<IVideoWindow> t_video(m_graph);
 
-    if (t_video)
-    {
-        RECT grc;
-        hr = t_video->put_Owner((OAHWND)p_hwnd); 
-        hr = t_video->put_WindowStyle(WS_CHILD | WS_CLIPSIBLINGS);
+    if (t_video == nil)
+		return false;
+
+	if (S_OK != t_video->put_Owner((OAHWND)p_hwnd))
+		return false;
+
+	if (S_OK != t_video->put_WindowStyle(WS_CHILD | WS_CLIPSIBLINGS))
+		return false;
 	
+	if (p_hwnd != nil)
+	{
+	    RECT grc;
+	    if (!GetClientRect(p_hwnd, &grc))
+			return false;
 
-        GetClientRect(p_hwnd, &grc);
-        hr = t_video->SetWindowPosition(0, 0, grc.right, grc.bottom);
-    }
+		if (S_OK != t_video->SetWindowPosition(0, 0, grc.right - grc.left, grc.bottom - grc.top))
+			return false;
 
-    return hr == S_OK;
+		if (S_OK != t_video->put_Visible(TRUE))
+			return false;
+	}
+
+    return true;
+}
+
+bool MCWin32DSPlayer::SetVideoWindowSize(uint32_t p_width, uint32_t p_height)
+{
+    CComQIPtr<IVideoWindow> t_video(m_graph);
+
+	if (t_video == nil)
+		return false;
+
+	return S_OK == t_video->SetWindowPosition(0, 0, p_width, p_height);
 }
 
 //tell ds which window will get wm_graphnotify events
@@ -379,17 +441,16 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 	if (t_success)
 		t_success = SetFilterGraph(t_graph);
 
-	if (t_success)
-	{
-		m_is_valid = true;
-	}
-	else
-	{
-		m_is_valid = false;
-		SetFilterGraph(nil);
-	}
+	m_is_valid = t_success;
 
 	return t_success;
+}
+
+void MCWin32DSPlayer::CloseFile()
+{
+	SetEventWindow(nil);
+	SetVideoWindow(nil);
+	SetFilterGraph(nil);
 }
 
 bool MCWin32DSPlayer::GetFormattedSize(uint32_t &r_width, uint32_t &r_height)
@@ -415,6 +476,8 @@ bool MCWin32DSPlayer::SetUrl(MCStringRef p_url)
 	bool t_success;
 	t_success = true;
 
+	CloseFile();
+
 	if (t_success)
 		t_success = OpenFile(p_url);
 
@@ -426,6 +489,9 @@ bool MCWin32DSPlayer::SetUrl(MCStringRef p_url)
 
 	if (t_success)
 		t_success = SetVisible(true);
+
+	if (!t_success)
+		CloseFile();
 
 	//InvalidateRect(m_video_window, NULL, FALSE);
 	//UpdateWindow(m_video_window);
@@ -827,7 +893,19 @@ void MCWin32DSPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 
 MCWin32DSPlayer *MCWin32DSPlayerCreate()
 {
-	return new MCWin32DSPlayer();
+	MCWin32DSPlayer *t_player;
+	t_player = new MCWin32DSPlayer();
+
+	if (t_player == nil)
+		return nil;
+
+	if (!t_player->Initialize())
+	{
+		delete t_player;
+		return nil;
+	}
+
+	return t_player;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
