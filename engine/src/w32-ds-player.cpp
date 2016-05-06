@@ -75,12 +75,20 @@ private:
 	bool SetPlayRate(double p_play_rate);
 	bool GetCurrentPosition(uint32_t &r_position);
 	bool SetCurrentPosition(uint32_t p_position);
+	bool GetStartPosition(uint32_t &r_position);
+	bool SetStartPosition(uint32_t p_position);
 	bool GetFinishPosition(uint32_t &r_position);
 	bool SetFinishPosition(uint32_t p_position);
+	bool GetLoop(bool &r_loop);
+	bool SetLoop(bool p_loop);
 	bool GetDuration(uint32_t &r_duration);
 	bool GetTimeScale(uint32_t &r_time_scale);
 	bool GetVolume(uint16_t &r_volume);
 	bool SetVolume(uint16_t p_volume);
+	bool GetOffscreen(bool &r_offscreen);
+	bool SetOffscreen(bool p_offscreen);
+	bool GetMirrored(bool &r_mirrored);
+	bool SetMirrored(bool p_mirrored);
 
 	bool Play();
 	bool Pause();
@@ -163,20 +171,6 @@ long FAR PASCAL DSVideoWindowProc(HWND hWnd, UINT message, UINT wParam, LONG lPa
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)t_create->lpCreateParams);
 		break;
 
-	case WM_SHOWWINDOW:
-		{
-			MCWin32DSPlayer *t_player;
-			t_player = (MCWin32DSPlayer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-			if (t_player != nil)
-			{
-				if (wParam)
-					t_player->SetVideoWindow(hWnd);
-				else
-					t_player->SetVideoWindow(nil);
-			}
-			break;
-		}
-
 	case WM_SIZE:
 		{
 			MCWin32DSPlayer *t_player;
@@ -200,6 +194,7 @@ bool RegisterVideoWindowClass()
 		MCMemoryClear(t_class);
 
 		t_class.cbSize = sizeof(WNDCLASSEX);
+		t_class.style = CS_HREDRAW|CS_VREDRAW|CS_OWNDC|CS_SAVEBITS;
 		t_class.lpfnWndProc = DSVideoWindowProc;
 		t_class.hInstance = MChInst;
 		t_class.lpszClassName = kMCDSVideoWindowClass;
@@ -373,9 +368,6 @@ bool MCWin32DSPlayer::SetVideoWindow(HWND p_hwnd)
 			return false;
 
 		if (S_OK != t_video->SetWindowPosition(0, 0, grc.right - grc.left, grc.bottom - grc.top))
-			return false;
-
-		if (S_OK != t_video->put_Visible(TRUE))
 			return false;
 	}
 
@@ -571,6 +563,18 @@ bool MCWin32DSPlayer::SetCurrentPosition(uint32_t p_position)
 	return S_OK == m_seeking->SetPositions(&t_current, AM_SEEKING_AbsolutePositioning, NULL, AM_SEEKING_NoPositioning);
 }
 
+// TODO - implement start position property
+bool MCWin32DSPlayer::GetStartPosition(uint32_t &r_position)
+{
+	r_position = 0;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetStartPosition(uint32_t p_position)
+{
+	return false;
+}
+
 bool MCWin32DSPlayer::GetFinishPosition(uint32_t &r_position)
 {
 	if (m_seeking == nil)
@@ -613,6 +617,42 @@ bool MCWin32DSPlayer::SetVolume(uint16_t p_volume)
 		return false;
 
 	return S_OK == t_audio->put_Volume(p_volume * 100);
+}
+
+// TODO - implement loop property
+bool MCWin32DSPlayer::GetLoop(bool &r_loop)
+{
+	r_loop = false;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetLoop(bool p_loop)
+{
+	return false;
+}
+
+// TODO - implement offscreen property
+bool MCWin32DSPlayer::GetOffscreen(bool &r_offscreen)
+{
+	r_offscreen = false;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetOffscreen(bool p_offscreen)
+{
+	return false;
+}
+
+// TODO - implement mirror property
+bool MCWin32DSPlayer::GetMirrored(bool &r_mirrored)
+{
+	r_mirrored = false;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetMirrored(bool p_mirrored)
+{
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,12 +791,30 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
+	case kMCPlatformPlayerPropertyStartTime:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
+			uint32_t t_position;
+			if (GetStartPosition(t_position))
+				*((uint32_t*)r_value) = t_position;
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyFinishTime:
 		{
 			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
 			uint32_t t_position;
 			if (GetFinishPosition(t_position))
 				*((uint32_t*)r_value) = t_position;
+			break;
+		}
+
+	case kMCPlatformPlayerPropertyLoop:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_loop;
+			if (GetLoop(t_loop))
+				*((bool*)r_value) = t_loop;
 			break;
 		}
 
@@ -794,15 +852,32 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
-	case kMCPlatformPlayerPropertyLoop:
-	case kMCPlatformPlayerPropertyMediaTypes:
-	case kMCPlatformPlayerPropertyMirrored:
 	case kMCPlatformPlayerPropertyOffscreen:
-	case kMCPlatformPlayerPropertyOnlyPlaySelection:
-	case kMCPlatformPlayerPropertyShowSelection:
-	case kMCPlatformPlayerPropertyStartTime:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_offscreen;
+			if (GetOffscreen(t_offscreen))
+				*((bool*)r_value) = t_offscreen;
+			break;
+		}
+
+	case kMCPlatformPlayerPropertyMirrored:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_mirrored;
+			if (GetMirrored(t_mirrored))
+				*((bool*)r_value) = t_mirrored;
+			break;
+		}
+
+	case kMCPlatformPlayerPropertyMediaTypes:
 	case kMCPlatformPlayerPropertyURL:
 		MCLog("UNIMPLEMENTED");
+		break;
+
+	// Can safely ignore these
+	case kMCPlatformPlayerPropertyOnlyPlaySelection:
+	case kMCPlatformPlayerPropertyShowSelection:
 		break;
 	}
 }
@@ -830,11 +905,29 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
+	case kMCPlatformPlayerPropertyStartTime:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
+			uint32_t t_start = *((uint32_t*)p_value);
+			SetStartPosition(t_start);
+
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyFinishTime:
 		{
 			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
 			uint32_t t_finish = *((uint32_t*)p_value);
 			SetFinishPosition(t_finish);
+
+			break;
+		}
+
+	case kMCPlatformPlayerPropertyLoop:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_loop = *((bool*)p_value);
+			SetLoop(t_loop);
 
 			break;
 		}
@@ -857,21 +950,36 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
-	case kMCPlatformPlayerPropertyStartTime:
-
 	case kMCPlatformPlayerPropertyOffscreen:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_offscreen = *((bool*)p_value);
+			SetOffscreen(t_offscreen);
+
+			break;
+		}
+
+	case kMCPlatformPlayerPropertyMirrored:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_mirrored = *((bool*)p_value);
+			SetMirrored(t_mirrored);
+
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyMediaTypes:
 	
 	case kMCPlatformPlayerPropertyMarkers:
 	case kMCPlatformPlayerPropertyLoadedTime:
     
-	case kMCPlatformPlayerPropertyShowSelection:
-	case kMCPlatformPlayerPropertyOnlyPlaySelection:
-	
-	case kMCPlatformPlayerPropertyLoop:
-	case kMCPlatformPlayerPropertyMirrored:
 	case kMCPlatformPlayerPropertyScalefactor:
 		MCLog("UNIMPLEMENTED");
+		break;
+
+	// Can safely ignore these
+	case kMCPlatformPlayerPropertyShowSelection:
+	case kMCPlatformPlayerPropertyOnlyPlaySelection:
 		break;
 	}
 }
