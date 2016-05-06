@@ -560,7 +560,14 @@ bool MCWin32DSPlayer::SetCurrentPosition(uint32_t p_position)
 		return false;
 
 	LONGLONG t_current = p_position;
-	return S_OK == m_seeking->SetPositions(&t_current, AM_SEEKING_AbsolutePositioning, NULL, AM_SEEKING_NoPositioning);
+
+	HRESULT t_result;
+	t_result = m_seeking->SetPositions(&t_current, AM_SEEKING_AbsolutePositioning, NULL, AM_SEEKING_NoPositioning);
+
+	if (t_result == S_OK || t_result == S_FALSE) // S_FALSE -> no change
+		return true;
+
+	return false;
 }
 
 // TODO - implement start position property
@@ -594,7 +601,12 @@ bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
 		return false;
 
 	LONGLONG t_finish = p_position;
-	return S_OK == m_seeking->SetPositions(nil, AM_SEEKING_NoPositioning, &t_finish, AM_SEEKING_AbsolutePositioning);
+	HRESULT t_result = m_seeking->SetPositions(nil, AM_SEEKING_NoPositioning, &t_finish, AM_SEEKING_AbsolutePositioning);
+
+	if (t_result != S_OK && t_result != S_FALSE) // S_FALSE -> no change
+		return false;
+
+	return true;
 }
 
 bool MCWin32DSPlayer::GetVolume(uint16_t &r_volume)
@@ -663,7 +675,9 @@ bool MCWin32DSPlayer::Play()
 	if (m_control == nil)
 		return false;
 
-	if (S_OK != m_control->Run())
+	HRESULT t_result;
+	t_result = m_control->Run();
+	if (t_result != S_OK && t_result != S_FALSE)
 		return false;
 
 	m_state = kMCWin32DSPlayerRunning;
