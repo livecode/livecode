@@ -59,8 +59,12 @@ MCNativeLayerWin32::MCNativeLayerWin32(MCObject *p_object, HWND p_view) :
 
 MCNativeLayerWin32::~MCNativeLayerWin32()
 {
-	if (m_hwnd != NULL)
-		DestroyWindow(m_hwnd);
+	if (m_viewport_hwnd != NULL)
+	{
+		if (m_hwnd != nil)
+			doDetach();
+		DestroyWindow(m_viewport_hwnd);
+	}
 	if (m_cached != NULL)
 		DeleteObject(m_cached);
 }
