@@ -1186,7 +1186,7 @@ public handler setNavSelectedItemName(in pName as String) returns nothing
 	put 0 into tCount
 	repeat for each element tItem in mNavData
 		add 1 to tCount
-		if mNavData["name"] is pName then
+		if tItem["name"] is pName then
 			setNavSelectedItem(tCount)
 			exit repeat
 		end if
