@@ -1991,7 +1991,8 @@ void MCInterfaceSetRelayerGroupedControls(MCExecContext& ctxt, bool p_value)
 void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_value)
 {
 	uint4 t_newbrush = p_value;
-	if (t_newbrush < PI_PATTERNS)
+	// MDW-2016-05-06 [[ bugfix_17553 ]] safer to compare against PI_BRUSHES than PI_PATTERNS
+	if (t_newbrush < PI_BRUSHES)
 		t_newbrush += PI_BRUSHES;
 
 	// MW-2009-02-02: [[ Improved image search ]]
