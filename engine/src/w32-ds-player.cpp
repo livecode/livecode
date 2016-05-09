@@ -110,6 +110,8 @@ private:
 	uint32_t m_start_position;
 	uint32_t m_finish_position;
 
+	bool m_looping;
+
 	static HWND g_event_window;
     CComPtr<IGraphBuilder>  m_graph;
     CComPtr<IMediaEventEx>  m_event;
@@ -261,7 +263,13 @@ bool MCWin32DSPlayer::HandleGraphEvent()
 		case EC_ERRORABORT:
 		case EC_USERABORT:
 			m_state = kMCWin32DSPlayerStopped;
-			MCPlatformCallbackSendPlayerFinished(this);
+			if (m_looping)
+				Play();
+			else
+			{
+				m_control->StopWhenReady();
+				MCPlatformCallbackSendPlayerFinished(this);
+			}
 			break;
 		}
 
@@ -669,13 +677,14 @@ bool MCWin32DSPlayer::SetVolume(uint16_t p_volume)
 // TODO - implement loop property
 bool MCWin32DSPlayer::GetLoop(bool &r_loop)
 {
-	r_loop = false;
+	r_loop = m_looping;
 	return true;
 }
 
 bool MCWin32DSPlayer::SetLoop(bool p_loop)
 {
-	return false;
+	m_looping = p_loop;
+	return true;
 }
 
 // TODO - implement offscreen property
