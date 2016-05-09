@@ -47,6 +47,6 @@ You can use the <revDatabaseType> <function> to distinguish between different <d
 Changes:
 The revDatabaseType synonym was added in version 2.0.
 
-References: function (control_st), revDatabaseColumnTypes (function), revOpenDatabases (function), Database library (library), LiveCode custom library (library), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), return (glossary), SQL query (glossary)
+References: function (control structure), revDatabaseColumnTypes (function), revOpenDatabases (function), Database library (library), LiveCode custom library (library), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), return (glossary), SQL query (glossary)
 
 Tags: database

@@ -28,6 +28,6 @@ If the <enterInField> <handler> does not <pass> the <message> or send it to a fu
 
 If there is no selection or insertion point in any field and the user presses Enter, the <enterKey> <message> is sent instead of <enterInField>.
 
-References: default (property), allowKeyInField (property), field (keyword), selection (keyword), keyDown (message), returnInField (message), enterKey (message), pass (control_st), handler (glossary), pass (glossary), message (glossary), message path (glossary), object (glossary)
+References: default (property), allowKeyInField (property), field (keyword), selection (keyword), keyDown (message), returnInField (message), enterKey (message), pass (control structure), handler (glossary), pass (glossary), message (glossary), message path (glossary), object (glossary)
 
 Tags: ui

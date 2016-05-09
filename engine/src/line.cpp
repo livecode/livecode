@@ -778,8 +778,10 @@ MCLine *MCLine::DoLayout(bool p_flow, int16_t p_linewidth)
         
         // The last segment of the line should be no larger than its contents
         // (because it doesn't contain the whitespace of another tab) unless it
-        // is to be right aligned in LTR text or left-aligned in RTL text
-        if (!t_fixed_tabs && sgptr == lastsegment
+        // is to be right aligned in LTR text or left-aligned in RTL text or it
+        // terminates with a tab character.
+        if (!t_fixed_tabs
+            && (sgptr == lastsegment && !sgptr->GetLastBlock()->HasTrailingTab())
             && ((parent->getbasetextdirection() != kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignRight)
             ||  (parent->getbasetextdirection() == kMCTextDirectionRTL && sgptr->GetHorizontalAlignment() != kMCSegmentTextHAlignLeft)))
         {

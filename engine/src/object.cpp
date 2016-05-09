@@ -1998,15 +1998,26 @@ uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		}
 
         MCFontRef t_default_font;
-        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, t_default_font);
-        
-        MCFontStruct* t_font_struct;
-        t_font_struct = MCFontGetFontStruct(t_default_font);
-        
         Boolean t_printer;
         MCNameRef t_fname;
         uint2 t_size, t_style;
-        MCdispatcher->getfontlist()->getfontstructinfo(t_fname, t_size, t_style, t_printer, t_font_struct);
+        
+        MCFontStruct* t_font_struct = nil;
+        
+        if (MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, t_default_font))
+            t_font_struct = MCFontGetFontStruct(t_default_font);
+
+        if (t_font_struct != nil)
+        {
+            MCdispatcher->getfontlist()->getfontstructinfo(t_fname, t_size, t_style, t_printer, t_font_struct);
+        }
+        else
+        {
+            t_fname = MCNAME(DEFAULT_TEXT_FONT);
+            t_size = DEFAULT_TEXT_SIZE;
+            t_style = 0;
+            t_printer = false;
+        }
         
         if ((t_explicit_flags & FF_HAS_TEXTFONT) == 0)
             fname = t_fname;

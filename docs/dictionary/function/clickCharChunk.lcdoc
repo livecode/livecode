@@ -39,6 +39,6 @@ If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sen
 
 To get the actual character clicked, use the <clickChar> <function>.
 
-References: field (keyword), character (keyword), characters (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), value (function), mouseCharChunk (function), clickText (function), clickStack (function), clickChar (function), return (glossary), chunk expression (glossary), handler (glossary), mouse button (glossary), trigger (glossary), message (glossary), unlock (glossary), hypertext (glossary), mouse pointer (glossary), function (control_st)
+References: field (keyword), character (keyword), characters (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), value (function), mouseCharChunk (function), clickText (function), clickStack (function), clickChar (function), return (glossary), chunk expression (glossary), handler (glossary), mouse button (glossary), trigger (glossary), message (glossary), unlock (glossary), hypertext (glossary), mouse pointer (glossary), function (control structure)
 
 Tags: ui

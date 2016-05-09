@@ -31,6 +31,6 @@ If the focused control is part of a group, and the group's tabGroupBehavior <pro
 
 >*Note:* Sending an <arrowKey> message does nothing unless there is an <arrowKey> <handler> in the <message path>. This is a difference from <HyperCard|HyperTalk's> handling of the <arrowKey> <message>.
 
-References: navigationArrows (property), textArrows (property), selected (property), functionKey (message), selectionChanged (message), control (keyword), pass (control_st), property (glossary), current card (glossary), handler (glossary), focus (glossary), message path (glossary), pass (glossary), insertion point (glossary), message (glossary), HyperCard (glossary), active control (glossary), send (command), object (glossary)
+References: navigationArrows (property), textArrows (property), selected (property), functionKey (message), selectionChanged (message), control (keyword), pass (control structure), property (glossary), current card (glossary), handler (glossary), focus (glossary), message path (glossary), pass (glossary), insertion point (glossary), message (glossary), HyperCard (glossary), active control (glossary), send (command), object (glossary)
 
 Tags: ui

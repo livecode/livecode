@@ -25,10 +25,10 @@ if the commandKey is down then edit script of me
 Returns: The <commandKey> <function> <return|returns> "down" if the key is pressed and "up" if it's not.
 
 Description:
-Use the <commandKey> <function(control_st)> to check whether the <Command key> is being pressed.
+Use the <commandKey> <function(control structure)> to check whether the <Command key> is being pressed.
 
-On Unix and Windows systems, the <commandKey> function <return|returns> the same <value> as the <controlKey> <function(control_st)>: the two <function(glossary)|functions> are synonyms.
+On Unix and Windows systems, the <commandKey> function <return|returns> the same <value> as the <controlKey> <function(control structure)>: the two <function(glossary)|functions> are synonyms.
 
-References: left (constant), up (constant), commandKeyDown (message), controlKey (function), value (function), keysDown (function), function (glossary), return (glossary), Command key (glossary), function (control_st)
+References: left (constant), up (constant), commandKeyDown (message), controlKey (function), value (function), keysDown (function), function (glossary), return (glossary), Command key (glossary), function (control structure)
 
 Tags: ui

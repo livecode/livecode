@@ -32,6 +32,6 @@ However, the undo <command> will restore a <player> after it is deleted by the u
     send "undo" to this card in 5 milliseconds
   end deletePlayer
 
-References: card (keyword), player (keyword), script (property), delete (command), stack (object), handler (glossary), player (glossary), message (glossary), command (glossary), trap (glossary), pass (control_st)
+References: card (keyword), player (keyword), script (property), delete (command), stack (object), handler (glossary), player (glossary), message (glossary), command (glossary), trap (glossary), pass (control structure)
 
 Tags: objects

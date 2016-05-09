@@ -29,6 +29,6 @@ The <mouseColor> is the color of the single <pixel> under the <mouse pointer|mou
 
 The value returned by the <mouseColor> consists of three comma-separated numbers between zero and 255, specifying the level of each of red, green, and blue.
 
-References: hotSpot (property), colors (property), cursor (property), foregroundColor (property), object (glossary), selection (keyword), point (keyword), pixel (glossary), mouse pointer (glossary), integer (glossary), return (glossary), color reference (glossary), mouseLoc (function), mouseStack (function), select (command), function (control_st)
+References: hotSpot (property), colors (property), cursor (property), foregroundColor (property), object (glossary), selection (keyword), point (keyword), pixel (glossary), mouse pointer (glossary), integer (glossary), return (glossary), color reference (glossary), mouseLoc (function), mouseStack (function), select (command), function (control structure)
 
 Tags: ui

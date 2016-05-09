@@ -29,6 +29,6 @@ Ungrouping a group does not cause a <deleteBackground> <message> to be sent.
 
 A deleteGroup <message> is sent before the <deleteBackground> <message>. (The <deleteBackground> <message> is included for compatibility with HyperCard.)
 
-References: delete (command), group (command), stack (object), message (glossary), trap (glossary), pass (control_st)
+References: delete (command), group (command), stack (object), message (glossary), trap (glossary), pass (control structure)
 
 Tags: objects

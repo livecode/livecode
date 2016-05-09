@@ -31,4 +31,4 @@ The list of process names is in the same order used by openProcessIDs <function>
 
 Programs that were not started by LiveCode are not included in the list returned by the <openProcesses> <function>.
 
-References: there is no (operator), open process (command), kill (command), read from process (command), function (control_st), exit (glossary), command (glossary), return (glossary), process (glossary)
+References: there is no (operator), open process (command), kill (command), read from process (command), function (control structure), exit (glossary), command (glossary), return (glossary), process (glossary)

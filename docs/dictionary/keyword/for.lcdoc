@@ -27,4 +27,4 @@ The number may be a literal number, or an expression that evaluates to a number.
 
 then this number is evaluated as of the start of the loop, and the number does not change even if the statements in the loop create or delete cards. For this reason, use caution when using the <for> <keyword> with an <expression> : do not assume the <expression> will have its current <value> when the <statement|statements> inside the <loop> are <execute|executing>.
 
-References: until (keyword), while (keyword), repeat (control_st), loop (glossary), iteration (glossary), execute (glossary), statement (glossary), keyword (glossary), control structure (glossary), evaluate (glossary), expression (glossary), value (function)
+References: until (keyword), while (keyword), repeat (control structure), loop (glossary), iteration (glossary), execute (glossary), statement (glossary), keyword (glossary), control structure (glossary), evaluate (glossary), expression (glossary), value (function)

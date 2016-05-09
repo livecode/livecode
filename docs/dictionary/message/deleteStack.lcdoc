@@ -31,6 +31,6 @@ The actual deletion is not triggered by the <deleteStack> <message>, so <trap|tr
 
 If a stack's file is deleted with the delete file <command> (or by the user), and the stack itself is not open, no <deleteStack> <message> is sent.
 
-References: destroyWindow (property), cantDelete (property), newStack (message), delete stack (command), stack (object), trap (glossary), stack file (glossary), current card (glossary), message (glossary), command (glossary), pass (control_st)
+References: destroyWindow (property), cantDelete (property), newStack (message), delete stack (command), stack (object), trap (glossary), stack file (glossary), current card (glossary), message (glossary), command (glossary), pass (control structure)
 
 Tags: objects

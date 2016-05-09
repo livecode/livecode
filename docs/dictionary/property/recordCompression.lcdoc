@@ -33,4 +33,4 @@ The codecs are installed by <QuickTime>. You can obtain a list of available <cod
 
 >*Note:* The <answer record> <command> sets the <recordCompression> <property> according to what the user chose in the <answer record> <dialog box>.
 
-References: recordFormat (property), recordSampleSize (property), default (keyword), answer record (command), record sound (command), compress (function), format (function), recordCompressionTypes (function), property (glossary), dialog box (glossary), command (glossary), QuickTime (glossary), codec (glossary), compress (glossary), function (control_st)
+References: recordFormat (property), recordSampleSize (property), default (keyword), answer record (command), record sound (command), compress (function), format (function), recordCompressionTypes (function), property (glossary), dialog box (glossary), command (glossary), QuickTime (glossary), codec (glossary), compress (glossary), function (control structure)

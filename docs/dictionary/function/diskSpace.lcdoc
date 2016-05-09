@@ -50,4 +50,4 @@ The value returned by the <diskSpace> <function> is in <byte|bytes>. To convert 
     end switch
   end humanReadableDiskSpace
 
-References: freeSize (property), size (property), defaultFolder (property), integer (keyword), hasMemory (function), volumes (function), stackSpace (function), download (glossary), return value (glossary), return (glossary), byte (glossary), function (control_st)
+References: freeSize (property), size (property), defaultFolder (property), integer (keyword), hasMemory (function), volumes (function), stackSpace (function), download (glossary), return value (glossary), return (glossary), byte (glossary), function (control structure)

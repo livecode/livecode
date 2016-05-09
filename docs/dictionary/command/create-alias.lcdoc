@@ -40,6 +40,6 @@ To find out which file an alias refers to, use the <aliasReference> <function>.
 
 >*Important:*  When creating an <alias> on <Windows|Windows systems>, make sure the <alias|alias's> name ends with the <extension> ".lnk" to ensure that it behaves properly when the user double-clicks it.
 
-References: defaultFolder (property), file (keyword), revCopyFolder (command), create folder (command), revCopyFile (command), rename (command), revMoveFolder (command), aliasReference (function), symbolic link (glossary), shortcut (glossary), Windows (glossary), command (glossary), alias (glossary), extension (glossary), function (control_st)
+References: defaultFolder (property), file (keyword), revCopyFolder (command), create folder (command), revCopyFile (command), rename (command), revMoveFolder (command), aliasReference (function), symbolic link (glossary), shortcut (glossary), Windows (glossary), command (glossary), alias (glossary), extension (glossary), function (control structure)
 
 Tags: file system

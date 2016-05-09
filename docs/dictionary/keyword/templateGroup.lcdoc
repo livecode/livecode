@@ -31,4 +31,5 @@ You can refer to the <templateGroup> using any of the following forms:
 
 >*Note:* The <templateGroup> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), object (glossary), group (object), keyword (glossary), property (glossary), command (glossary), group (glossary), expression (glossary), group (command), reset (command), set (command), function (control_st)
+
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), object (glossary), group (object), keyword (glossary), property (glossary), command (glossary), group (glossary), expression (glossary), group (command), reset (command), set (command), function (control structure)

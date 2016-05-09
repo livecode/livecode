@@ -20,6 +20,6 @@ Use the <next> <keyword> to move forward in the <stack> or to <object reference|
 
 If you are already on the last card, the <next> <card> is the first <card> in the <stack>.
 
-References: previous (keyword), card (keyword), next repeat (control_st), keyword (glossary), current card (glossary), object reference (glossary), stack (object)
+References: previous (keyword), card (keyword), next repeat (control structure), keyword (glossary), current card (glossary), object reference (glossary), stack (object)
 
 Tags: navigation

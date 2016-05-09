@@ -20,4 +20,4 @@ Use the <end> <keyword> to end an <on>, <function>, <getProp>, or <setProp> <con
 
 The last line of a handler of any kind always begins with the <end> <keyword>, followed by the name of the <handler>.
 
-References: end switch (keyword), end try (keyword), end if (keyword), end repeat (keyword), EOF (constant), pass (control_st), on (control_st), setProp (control_st), getProp (control_st), function (control_st), keyword (glossary), handler (glossary), control structure (glossary)
+References: end switch (keyword), end try (keyword), end if (keyword), end repeat (keyword), EOF (constant), pass (control structure), on (control structure), setProp (control structure), getProp (control structure), function (control structure), keyword (glossary), handler (glossary), control structure (glossary)

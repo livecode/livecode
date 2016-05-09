@@ -30,4 +30,4 @@ Usually, <exit repeat> is used within an <if> <control structure>, so that the <
     if the mouse is down then exit repeat -- bail out
   end repeat
 
-References: end repeat (keyword), handler (glossary), resume (glossary), statement (glossary), loop (glossary), execute (glossary), control structure (glossary), exit (control_st), next repeat (control_st), repeat (control_st), if (control_st)
+References: end repeat (keyword), handler (glossary), resume (glossary), statement (glossary), loop (glossary), execute (glossary), control structure (glossary), exit (control structure), next repeat (control structure), repeat (control structure), if (control structure)

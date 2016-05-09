@@ -35,6 +35,6 @@ The time the message is scheduled for is in the same format as the long seconds 
 
 Once scheduled, a message cannot be changed. You can cancel a pending message with the <cancel> <command>, and re-send it with the <send> <command>.
 
-References: items (keyword), cancel (command), send (command), function (control_st), property (glossary), message (glossary), command (glossary), return (glossary), object (glossary)
+References: items (keyword), cancel (command), send (command), function (control structure), property (glossary), message (glossary), command (glossary), return (glossary), object (glossary)
 
 Tags: objects

@@ -58,4 +58,4 @@ There is no limit to the number of <case> sections you can include in a <switch>
 
 >*Note:* The <switch> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
 
-References: default (keyword), case (keyword), card (keyword), end switch (keyword), switch (control_st), if (control_st), break (control_st), current card (glossary), value (glossary), execute (glossary), statement (glossary), keyword (glossary), expression (glossary), control structure (glossary), evaluate (glossary), command (glossary), value (function), commandNames (function)
+References: default (keyword), case (keyword), card (keyword), end switch (keyword), switch (control structure), if (control structure), break (control structure), current card (glossary), value (glossary), execute (glossary), statement (glossary), keyword (glossary), expression (glossary), control structure (glossary), evaluate (glossary), command (glossary), value (function), commandNames (function)

@@ -61,4 +61,4 @@ On Mac OS and Unix systems, the <setRegistry> <function> <return|returns> "not s
 Changes:
 The type parameter was added in version 2.0. In previous versions, the type information could not be set.
 
-References: default (keyword), string (keyword), deleteRegistry (function), MCISendString (function), file (glossary), error message (glossary), binaryEncode (glossary), return (glossary), Windows (glossary), binary file (glossary), registry (glossary), binary (glossary), command (glossary), behavior (glossary), function (control_st)
+References: default (keyword), string (keyword), deleteRegistry (function), MCISendString (function), file (glossary), error message (glossary), binaryEncode (glossary), return (glossary), Windows (glossary), binary file (glossary), registry (glossary), binary (glossary), command (glossary), behavior (glossary), function (control structure)
