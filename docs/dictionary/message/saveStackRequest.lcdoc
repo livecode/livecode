@@ -18,7 +18,7 @@ Example:
 on saveStackRequest -- delete all cards but the first
   repeat with x = the number of cards down to 2
     delete card x
-  end if
+  end repeat
   pass saveStackRequest -- or the stack won't be saved
 end saveStackRequest
 
