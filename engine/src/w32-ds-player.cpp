@@ -437,9 +437,9 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 	if (t_success)
 		t_success = S_OK == t_graph.CoCreateInstance(CLSID_FilterGraph);
 
-	MCAutoStringRefAsCustom<BSTR, MCStringConvertToBSTR, MCWin32BSTRFree> t_filename;
+	MCAutoCustomPointer<OLECHAR, MCWin32BSTRFree> t_filename;
 	if (t_success)
-		t_success = t_filename.Lock(p_filename);
+		t_success = MCStringConvertToBSTR(p_filename, &t_filename);
 
 	if (t_success)
 		t_success = S_OK == t_graph->RenderFile(*t_filename, nil);
