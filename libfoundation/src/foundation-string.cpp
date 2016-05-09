@@ -2773,7 +2773,6 @@ bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
 }
 #endif
 
-#if 0
 #ifdef __WINDOWS__
 MC_DLLEXPORT_DEF
 bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
@@ -2795,7 +2794,6 @@ bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
     
     return true;
 }
-#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
