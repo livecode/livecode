@@ -93,6 +93,7 @@ private:
 	bool Play();
 	bool Pause();
 	bool SeekRelative(int32_t p_amount);
+	bool SetPositions(uint32_t p_start, uint32_t p_finish);
 
 	bool SetEventWindow(HWND hwnd);
 	bool SetFilterGraph(IGraphBuilder *p_graph);
@@ -105,6 +106,9 @@ private:
 	MCWin32DSPlayerState m_state;
 	bool m_is_valid;
 	HWND m_video_window;
+
+	uint32_t m_start_position;
+	uint32_t m_finish_position;
 
 	static HWND g_event_window;
     CComPtr<IGraphBuilder>  m_graph;
@@ -277,6 +281,8 @@ MCWin32DSPlayer::MCWin32DSPlayer()
 	m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
 	m_is_valid = false;
+
+	m_start_position = m_finish_position = 0;
 }
 
 MCWin32DSPlayer::~MCWin32DSPlayer()
@@ -564,49 +570,78 @@ bool MCWin32DSPlayer::SetCurrentPosition(uint32_t p_position)
 	HRESULT t_result;
 	t_result = m_seeking->SetPositions(&t_current, AM_SEEKING_AbsolutePositioning, NULL, AM_SEEKING_NoPositioning);
 
-	if (t_result == S_OK || t_result == S_FALSE) // S_FALSE -> no change
-		return true;
+	if (t_result != S_OK && t_result != S_FALSE) // S_FALSE -> no change
+		return false;
 
-	return false;
-}
+	// Enter paused state if not currently playing
+	if (m_state == kMCWin32DSPlayerStopped)
+		return Pause();
 
-// TODO - implement start position property
-bool MCWin32DSPlayer::GetStartPosition(uint32_t &r_position)
-{
-	r_position = 0;
 	return true;
 }
 
-bool MCWin32DSPlayer::SetStartPosition(uint32_t p_position)
-{
-	return false;
-}
-
-bool MCWin32DSPlayer::GetFinishPosition(uint32_t &r_position)
+bool MCWin32DSPlayer::SetPositions(uint32_t p_start, uint32_t p_finish)
 {
 	if (m_seeking == nil)
 		return false;
 
-	LONGLONG t_finish;
-	if (S_OK != m_seeking->GetStopPosition(&t_finish))
+	uint32_t t_current, t_duration;
+	if (!GetCurrentPosition(t_current))
+		return false;
+	if (!GetDuration(t_duration))
 		return false;
 
-	r_position = t_finish;
-	return true;
-}
+	uint32_t t_start, t_finish;
+	t_finish = MCMin(t_duration, m_finish_position);
+	t_start = MCMin(t_finish, m_start_position);
 
-bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
-{
-	if (m_seeking == nil)
-		return false;
+	// don't allow span <= 0
+	if (t_finish - t_start == 0)
+	{
+		t_start = 0;
+		t_finish = t_duration;
+	}
 
-	LONGLONG t_finish = p_position;
-	HRESULT t_result = m_seeking->SetPositions(nil, AM_SEEKING_NoPositioning, &t_finish, AM_SEEKING_AbsolutePositioning);
+	DWORD t_current_pos_flags;
+	if (t_start > t_current)
+		t_current_pos_flags = AM_SEEKING_AbsolutePositioning;
+	else
+		t_current_pos_flags = AM_SEEKING_NoPositioning;
+
+	LONGLONG t_c, t_f;
+	t_c = t_start;
+	t_f = t_finish;
+
+	HRESULT t_result = m_seeking->SetPositions(&t_c, t_current_pos_flags, &t_f, AM_SEEKING_AbsolutePositioning);
 
 	if (t_result != S_OK && t_result != S_FALSE) // S_FALSE -> no change
 		return false;
 
 	return true;
+}
+
+bool MCWin32DSPlayer::GetStartPosition(uint32_t &r_position)
+{
+	r_position = m_start_position;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetStartPosition(uint32_t p_position)
+{
+	m_start_position = p_position;
+	return SetPositions(m_start_position, m_finish_position);
+}
+
+bool MCWin32DSPlayer::GetFinishPosition(uint32_t &r_position)
+{
+	r_position = m_finish_position;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
+{
+	m_finish_position = p_position;
+	return SetPositions(m_start_position, m_finish_position);
 }
 
 bool MCWin32DSPlayer::GetVolume(uint16_t &r_volume)
@@ -675,6 +710,17 @@ bool MCWin32DSPlayer::Play()
 	if (m_control == nil)
 		return false;
 
+	if (m_state == kMCWin32DSPlayerStopped)
+	{
+		// if play has stopped, then reset stream to the beginning
+		uint32_t t_start_position = 0;
+		if (m_start_position < m_finish_position)
+			t_start_position = m_start_position;
+
+		if (!SetCurrentPosition(t_start_position))
+			return false;
+	}
+
 	HRESULT t_result;
 	t_result = m_control->Run();
 	if (t_result != S_OK && t_result != S_FALSE)
@@ -691,7 +737,9 @@ bool MCWin32DSPlayer::Pause()
 	if (m_control == nil)
 		return false;
 
-	if (S_OK != m_control->Pause())
+	HRESULT t_result;
+	t_result = m_control->Pause();
+	if (t_result != S_OK && t_result != S_FALSE)
 		return false;
 
     m_state = kMCWin32DSPlayerPaused;
