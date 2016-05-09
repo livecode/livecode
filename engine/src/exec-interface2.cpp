@@ -366,7 +366,6 @@ void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInte
 	}
 	
 	r_output . color = t_color;
-    r_output . color . flags = DoRed | DoGreen | DoBlue;
 	r_output . name = t_color_name;
 }
 
@@ -975,7 +974,6 @@ void MCInterfaceSetBrushColor(MCExecContext& ctxt, const MCInterfaceNamedColor& 
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCbrushpattern);
 	set_interface_color(MCbrushcolor, MCbrushcolorname, p_color);
-	MCscreen -> alloccolor(MCbrushcolor);
 }
 
 void MCInterfaceGetPenColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -988,7 +986,6 @@ void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCpenpattern);
 	set_interface_color(MCpencolor, MCpencolorname, p_color);
-	MCscreen -> alloccolor(MCpencolor);
 }
 
 void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern)

@@ -754,9 +754,7 @@ MCCursorRef MCImage::createcursor()
 		{
 			t_colors = t_palette;
 			t_palette[0] . red = t_palette[0] . green = t_palette[0] . blue = 0;
-			t_palette[0] . pixel = 0;
 			t_palette[1] . red = t_palette[1] . green = t_palette[1] . blue = 0xffff;
-			t_palette[1] . pixel = 0xffffff;
 		}
 
 		MCImageIndexedBitmap *t_indexed = nil;

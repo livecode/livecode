@@ -1611,9 +1611,6 @@ bool MCNativeTheme::settooltiptextcolor(MCContext *p_context)
 	t_color . red = 64;
 	t_color . green = 64;
 	t_color . blue = 64;
-	t_color . pad = 0;
-	t_color . pixel = (64 << 16) | (64 << 8) | (64);
-	t_color . flags = 8;
 	p_context -> setforeground(t_color);
 
 	return true;

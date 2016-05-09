@@ -2646,9 +2646,6 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 					linkatts->colorname = strclone(MClinkatts.colorname);
 					linkatts->hilitecolorname = strclone(MClinkatts.hilitecolorname);
 					linkatts->visitedcolorname = strclone(MClinkatts.visitedcolorname);
-					MCscreen->alloccolor(linkatts->color);
-					MCscreen->alloccolor(linkatts->hilitecolor);
-					MCscreen->alloccolor(linkatts->visitedcolor);
 				}
 				switch (which)
 				{

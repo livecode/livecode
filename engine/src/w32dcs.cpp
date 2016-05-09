@@ -62,14 +62,22 @@ uint4 MCScreenDC::image_inks[] =
 
 static MCColor vgapalette[16] =
     {
-        {0, 0x0000, 0x0000, 0x0000, 0, 0}, {1, 0x8080, 0x0000, 0x0000, 0, 0},
-        {2, 0x0000, 0x8080, 0x0000, 0, 0}, {3, 0x0000, 0x0000, 0x8080, 0, 0},
-        {4, 0x8080, 0x8080, 0x0000, 0, 0}, {5, 0x8080, 0x0000, 0x8080, 0, 0},
-        {6, 0x0000, 0x8080, 0x8080, 0, 0}, {7, 0x8080, 0x8080, 0x8080, 0, 0},
-        {8, 0xC0C0, 0xC0C0, 0xC0C0, 0, 0}, {9, 0xFFFF, 0x0000, 0x0000, 0, 0},
-        {10, 0x0000, 0xFFFF, 0x0000, 0, 0}, {11, 0x0000, 0x0000, 0xFFFF, 0, 0},
-        {12, 0xFFFF, 0xFFFF, 0x0000, 0, 0}, {13, 0xFFFF, 0x0000, 0xFFFF, 0, 0},
-        {14, 0x0000, 0xFFFF, 0xFFFF, 0, 0}, {15, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},
+        {0x0000, 0x0000, 0x0000},
+		{0x8080, 0x0000, 0x0000},
+        {0x0000, 0x8080, 0x0000},
+		{0x0000, 0x0000, 0x8080},
+        {0x8080, 0x8080, 0x0000},
+		{0x8080, 0x0000, 0x8080},
+        {0x0000, 0x8080, 0x8080},
+		{0x8080, 0x8080, 0x8080},
+        {0xC0C0, 0xC0C0, 0xC0C0},
+		{0xFFFF, 0x0000, 0x0000},
+        {0x0000, 0xFFFF, 0x0000},
+		{0x0000, 0x0000, 0xFFFF},
+        {0xFFFF, 0xFFFF, 0x0000},
+		{0xFFFF, 0x0000, 0xFFFF},
+        {0x0000, 0xFFFF, 0xFFFF},
+		{0xFFFF, 0xFFFF, 0xFFFF},
     };
 
 void MCScreenDC::setstatus(MCStringRef status)
@@ -173,18 +181,12 @@ Boolean MCScreenDC::open()
 
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
-		black_pixel.pixel = 0;
-		white_pixel.pixel = 0xFFFFFF;
 
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	
 	MConecolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 	
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
@@ -205,10 +207,8 @@ Boolean MCScreenDC::open()
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
 		/* UNCHECKED */ parsecolor(*t_string_mutable, MChilitecolor);
 	}
-	alloccolor(MChilitecolor);
 	
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
     MCStringRef t_key2;
@@ -231,14 +231,13 @@ Boolean MCScreenDC::open()
 		/* UNCHECKED */ MCStringFindAndReplaceChar(*t_string_mutable, ' ', ',', kMCCompareExact);
 		/* UNCHECKED */ parsecolor(*t_string_mutable, background_pixel);
 	}
-	alloccolor(background_pixel);
 
 	SetBkMode(f_dst_dc, OPAQUE);
-	SetBkColor(f_dst_dc, black_pixel . pixel);
-	SetTextColor(f_dst_dc, white_pixel . pixel);
+	SetBkColor(f_dst_dc, MCColorGetPixel(black_pixel));
+	SetTextColor(f_dst_dc, MCColorGetPixel(white_pixel));
 	SetBkMode(f_src_dc, OPAQUE);
-	SetBkColor(f_src_dc, black_pixel . pixel);
-	SetTextColor(f_src_dc, white_pixel . pixel);
+	SetBkColor(f_src_dc, MCColorGetPixel(black_pixel));
+	SetTextColor(f_src_dc, MCColorGetPixel(white_pixel));
 
 	mousetimer = 0;
 	grabbed = False;
@@ -1325,8 +1324,6 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 		backdrop_badge = p_badge;
 		backdrop_pattern = p_pattern;
 		backdrop_colour = p_colour;
-	
-		alloccolor(backdrop_colour);
 	
 		if (backdrop_active || backdrop_hard)
 			InvalidateRect(backdrop_window, NULL, TRUE);
