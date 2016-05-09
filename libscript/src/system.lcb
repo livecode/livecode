@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library provides low-level system functionality for modular
 LiveCode programs.
 */
@@ -30,7 +30,7 @@ use com.livecode.foreign
 
 public foreign handler MCSystemExecGetOperatingSystem(out Platform as String) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The operating system
 
 Example:
@@ -70,7 +70,7 @@ public handler MCSystemExecQuitWithStatus(in Status as Number)
 	__exit(Status)
 end handler
 
-/*
+/**
 Summary:	Quit the application
 
 Example:
@@ -101,7 +101,7 @@ end syntax
 public foreign handler MCSystemExecGetCommandName (out CommandName as String) returns nothing binds to "<builtin>"
 public foreign handler MCSystemExecGetCommandArguments (out CommandArguments as List) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:	The command name
 
 Example:
@@ -125,7 +125,7 @@ begin
 	MCSystemExecGetCommandName(output)
 end syntax
 
-/*
+/**
 Summary:	The command arguments
 
 Example:

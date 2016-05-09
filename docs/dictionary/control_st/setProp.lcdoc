@@ -4,7 +4,7 @@ Type: control structure
 
 Syntax: setProp <propertyName <newValue> <statementList> end <propertyName> 
 
-Summary: <handle|Handles> the <trigger> sent to an <object> when you change one of its <custom property|custom properties>.
+Summary: <handle|Handles> the <trigger> sent to an <object(glossary)> when you change one of its <custom property|custom properties>.
 
 Introduced: 1.0
 
@@ -31,13 +31,13 @@ The <propertyName> is the name of the <custom property> whose <value> is being c
 
 >*Note:* You cannot use a <setProp> <handler> to intercept a built-in <property>. The <setProp> <control structure> can be used only for <custom property|custom properties>.
 
-The <setProp> <trigger> passes through the <message path>, the same as any other <message>, so a <setProp> <handler> for an <object> can be located in the <object|object's> <script> or in the <script> of any <object> further in the <message path>. For example, a <setProp> <handler> for a card <property> may be located in the <script> of the <stack> that the <card> belongs to.
+The <setProp> <trigger> passes through the <message path>, the same as any other <message>, so a <setProp> <handler> for an <object(glossary)> can be located in the <object|object's> <script> or in the <script> of any <object(glossary)> further in the <message path>. For example, a <setProp> <handler> for a card <property> may be located in the <script> of the <stack> that the <card> belongs to.
 
-If you use the set <command> within a <setProp> <control structure> to set the same <custom property> for the current <object>, no <setProp> <trigger> is sent to the <object>. (This is to avoid runaway <recursion>, where the <setProp> <handler> <trigger|triggers> itself.)
+If you use the set <command> within a <setProp> <control structure> to set the same <custom property> for the current <object(glossary)>, no <setProp> <trigger> is sent to the <object(glossary)>. (This is to avoid runaway <recursion>, where the <setProp> <handler> <trigger|triggers> itself.)
 
-This is only the case for the custom property that the current <setProp> <handler> applies to. Setting a different <custom property> sends a <setProp> <trigger>. So does setting the <handler|handler's> <custom property> for an <object> other than the one whose script contains the <setProp> <handler>.
+This is only the case for the custom property that the current <setProp> <handler> applies to. Setting a different <custom property> sends a <setProp> <trigger>. So does setting the <handler|handler's> <custom property> for an <object(glossary)> other than the one whose script contains the <setProp> <handler>.
 
->*Warning:*  If a <setProp> <handler> in one <object|object's> <script> sets the <custom property> for a different <object>, and the first <object> is in the second <object|object's> <message path>, a runaway <recursion> will result. For example, if the following <handler> is in a <card> <script>, and you set the "myCustomProperty" of a <button(object)> on the <card>, runaway <recursion> will result:
+>*Warning:*  If a <setProp> <handler> in one <object|object's> <script> sets the <custom property> for a different <object(glossary)>, and the first <object(glossary)> is in the second <object|object's> <message path>, a runaway <recursion> will result. For example, if the following <handler> is in a <card> <script>, and you set the "myCustomProperty" of a <button(object)> on the <card>, runaway <recursion> will result:
 
   setProp myCustomProperty newValue
     set the myCustomProperty of the target to newValue + 1
@@ -63,4 +63,5 @@ The above <setProp> <handler> responds to changes in the <custom property> named
 Changes:
 In version 2.0 and later, setting a custom property (other than the one that the current setProp handler applies to) inside a setProp handler sends a setProp trigger. In previous versions, setting a custom property within a setProp handler never sent a setProp trigger, regardless of which custom property you set.
 
-References: properties (property), customPropertySets (property), customProperties (property), call (command), set (command), card (keyword), $ (keyword), stack (object), object (object), propertyNames (function), paramCount (function), value (function), pass (control structure), exit (control structure), setProp (control structure), statement (glossary), handler (glossary), property (glossary), recursion (glossary), command (glossary), LiveCode (glossary), control structure (glossary), custom property set (glossary), trigger (glossary), custom property (glossary), handle (glossary), message path (glossary), trap (glossary), message (glossary), parameter (glossary), script (glossary), button (object)
+
+References: properties (property), customPropertySets (property), customProperties (property), call (command), set (command), card (keyword), $ (keyword), stack (object), object (glossary), propertyNames (function), paramCount (function), value (function), pass (control structure), exit (control structure), setProp (control structure), statement (glossary), handler (glossary), property (glossary), recursion (glossary), command (glossary), LiveCode (glossary), control structure (glossary), custom property set (glossary), trigger (glossary), custom property (glossary), handle (glossary), message path (glossary), trap (glossary), message (glossary), parameter (glossary), script (glossary), button (object)

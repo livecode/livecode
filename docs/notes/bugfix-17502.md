@@ -1,0 +1,1 @@
+# Allow references in library-level docs

@@ -26,7 +26,7 @@ select the middle line of field 22
 Description:
 Use the <middle> <keyword> in an <object reference> or <chunk expression>.
 
-The <middle> <keyword> can be used to specify any <object>. It can also be used in a <chunk expression> to designate the middle <chunk> of the specified type.
+The <middle> <keyword> can be used to specify any <object(glossary)>. It can also be used in a <chunk expression> to designate the middle <chunk> of the specified type.
 
 If the set has an odd number of members, the <middle> <keyword> specifies the member halfway between beginning and end. For example,
   the middle char of "abc"
@@ -40,6 +40,6 @@ The word the is optional when using the <middle> <keyword>.
 
 A reference to the <middle> of a <string>, with no <chunk> type specified, yields the entire <string>.
 
-References: seventh (keyword), home (keyword), ninth (keyword), string (keyword), keyword (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), object (object)
+References: seventh (keyword), home (keyword), ninth (keyword), string (keyword), keyword (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), object (glossary)
 
 Tags: math

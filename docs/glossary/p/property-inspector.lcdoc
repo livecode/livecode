@@ -5,8 +5,8 @@ Synonyms: property inspector,Properties palette,Properties window
 Type: glossary
 
 Description:
-Part of the LiveCode <development environment>, a <palette> window that displays the <property|properties> of an <object>. 
+Part of the LiveCode <development environment>, a <palette> window that displays the <property|properties> of an <object(glossary)>. 
  
-To display an <object|object's> property inspector, <select> the <object> and choose <a> </a>Object menu<img src="202656"></img>Object Inspector>*Important:* .
+To display an <object|object's> property inspector, <select> the <object(glossary)> and choose <a> </a>Object menu<img src="202656"></img>Object Inspector>*Important:* .
 
 References: property (glossary), select (glossary), palette (glossary), development environment (glossary), object (glossary)

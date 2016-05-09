@@ -4,7 +4,7 @@ Type: message
 
 Syntax: deleteEPS
 
-Summary: Sent to an <EPS> <object> just before it is removed from the <stack>.
+Summary: Sent to an <EPS> <object(glossary)> just before it is removed from the <stack>.
 
 Introduced: 1.0
 
@@ -25,6 +25,6 @@ The actual deletion is not triggered by the <deleteEPS> <message>, so <trap|trap
 
 However, the undo <command> will restore an <EPS|EPS object> after it is deleted by the user.
 
-References: delete (command), EPS (object), object (object), stack (object), trap (glossary), EPS (glossary), message (glossary), command (glossary), pass (control structure)
+References: delete (command), EPS (object), object (glossary), stack (object), trap (glossary), EPS (glossary), message (glossary), command (glossary), pass (control structure)
 
 Tags: objects

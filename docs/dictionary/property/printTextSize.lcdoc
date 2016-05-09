@@ -17,4 +17,4 @@ In HyperCard, the <printTextSize> <property> specifies the font size of printed 
 
 By default, the value of <printTextSize> is 14. A <handler> can set the <property>, but the new setting has no effect.
 
-References: scriptTextSize (property), textSize (property), card (keyword), print (command), card (object), object (object), property (glossary), handler (glossary), LiveCode (glossary), HyperCard (glossary)
+References: scriptTextSize (property), textSize (property), card (keyword), print (command), card (object), object (glossary), property (glossary), handler (glossary), LiveCode (glossary), HyperCard (glossary)

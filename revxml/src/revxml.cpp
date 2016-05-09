@@ -574,7 +574,7 @@ void XML_NewDocumentFromFile(char *args[], int nargs, char **retstring,
 			sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADXML],newdoc->GetError());
 			delete newdoc;
 		}
-		delete tfile;
+		free(tfile);
 		free(t_native_path);
 		free(t_resolved_path);
 		
@@ -2177,14 +2177,14 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 							t_comparison_result = util_strncmp(attvalue, tvalue, strlen(tvalue));
 						else
 							t_comparison_result = util_strnicmp(attvalue, tvalue, strlen(tvalue));
-
-						if (t_comparison_result == 0)
-						{
-							result = curelement -> GetPath();
-							break;
-						}
                         
                         delete tvalue;
+                        
+                        if (t_comparison_result == 0)
+                        {
+                            result = curelement -> GetPath();
+                            break;
+                        }
 					}
 
 				}

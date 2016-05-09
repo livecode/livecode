@@ -260,7 +260,6 @@ private:
 	MCImageBitmap *m_locked_bitmap;
 
 	MCImageBitmap *m_bitmap;
-	MCImageBitmap *m_unpre_bitmap;
 	MCImageBitmap *m_selection_image;
 	MCImageBitmap *m_undo_image;
 	MCImageBitmap *m_rub_image;

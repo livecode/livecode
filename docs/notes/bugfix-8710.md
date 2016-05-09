@@ -1,1 +1,1 @@
-Relation between roundends and capStyle is not documented
+# Relation between roundends and capStyle is not documented

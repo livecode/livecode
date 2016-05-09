@@ -29,7 +29,7 @@ The result: If the <rawKeyDown> <message> is sent as the result of a keypress, t
 Description:
 Handle the <rawKeyDown> <message> if you want to intercept raw <event|events> from the keyboard, or from a mouse wheel, or if you want to handle keys that aren't mapped to any <character>.
 
-If the <rawKeyDown> <handler> does not <pass> the <message> or send it to a further <object> in the <message path>, the keypress has no effect. <pass|Passing> the <message> allows the keypress to have its normal effect.
+If the <rawKeyDown> <handler> does not <pass> the <message> or send it to a further <object(glossary)> in the <message path>, the keypress has no effect. <pass|Passing> the <message> allows the keypress to have its normal effect.
 
 A <rawKeyDown> <message> is also sent when the user moves the mouse wheel on a scrolling mouse; in this case, the <message> is sent to the <control> under the <mouse pointer>.
 
@@ -37,6 +37,6 @@ If the insertion point is in a field, the entry of typed characters is triggered
 
 >*Cross-platform note:*  On <Mac OS|Mac OS systems>, no <message> is sent when a <modifier key> (Shift, Option, Control, or Command) is pressed, unless another key is pressed along with the <modifier key>. Mouse wheels do not send a <rawKeyDown> <message> on <Mac OS|Mac OS systems>.
 
-References: character (keyword), object (object), optionKeyDown (message), keysDown (function), pass (control structure), pass (glossary), control (glossary), focus (glossary), active control (glossary), event (glossary), mouse pointer (glossary), field (glossary), message path (glossary), trap (glossary), Mac OS (glossary), current card (glossary), message (glossary), modifier key (glossary), handler (glossary)
+References: character (keyword), object (glossary), optionKeyDown (message), keysDown (function), pass (control structure), pass (glossary), control (glossary), focus (glossary), active control (glossary), event (glossary), mouse pointer (glossary), field (glossary), message path (glossary), trap (glossary), Mac OS (glossary), current card (glossary), message (glossary), modifier key (glossary), handler (glossary)
 
 Tags: ui

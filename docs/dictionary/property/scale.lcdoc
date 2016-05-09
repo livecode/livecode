@@ -26,6 +26,6 @@ The <scale> is the natural size of the <object|object's> content divided by the 
 
 For EPS objects, this property is supported only on Unix systems with Display PostScript installed.
 
-References: scaleIndependently (property), height (property), property (glossary), EPS (glossary), factor (glossary), video clip (glossary), object (object)
+References: scaleIndependently (property), height (property), property (glossary), EPS (glossary), factor (glossary), video clip (glossary), object (glossary)
 
 Tags: multimedia

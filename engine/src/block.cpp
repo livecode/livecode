@@ -233,7 +233,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			char *colorname;
 			if ((stat = IO_read_cstring_legacy(colorname, stream, 2)) != IO_NORMAL)
 				return checkloadstat(stat);
-			delete colorname;
+			MCCStringFree(colorname);
 			flags &= ~F_HAS_COLOR_NAME;
 		}
 	}
@@ -474,10 +474,6 @@ void MCBlock::open(MCFontRef p_parent_font)
 	// MW-2012-02-14: [[ FontRefs ]] Map the font for the block.
 	mapfont(p_parent_font);
 
-	if (flags & F_HAS_COLOR)
-		MCscreen->alloccolor(*atts->color);
-	if (flags & F_HAS_BACK_COLOR)
-		MCscreen->alloccolor(*atts->backcolor);
 	openimage();
 	width = 0;
 }
@@ -1340,7 +1336,7 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 				MCColor fc, hc;
 				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), f);
 				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), f);
-				if (hc.pixel == fc.pixel)
+				if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 					f->setforeground(dc, DI_BACK, False, True);
                 else
                     setcolorforselectedtext(dc, nil);
@@ -2151,19 +2147,13 @@ void MCBlock::exportattrs(MCFieldCharacterStyle& x_style)
 {
 	if (getflag(F_HAS_COLOR))
 	{
-		if (!opened)
-			MCscreen -> alloccolor(*atts -> color);
-
 		x_style . has_text_color = true;
-		x_style . text_color = atts -> color -> pixel;
+		x_style . text_color = MCColorGetPixel(*(atts -> color));
 	}
 	if (getflag(F_HAS_BACK_COLOR))
 	{
-		if (!opened)
-			MCscreen -> alloccolor(*atts -> backcolor);
-
 		x_style . has_background_color = true;
-		x_style . background_color = atts -> backcolor -> pixel;
+		x_style . background_color = MCColorGetPixel(*(atts -> backcolor));
 	}
 	if (getflag(F_HAS_LINK))
 	{
@@ -2210,15 +2200,13 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 	if (p_style . has_text_color)
 	{
 		MCColor t_color;
-		t_color . pixel = p_style . text_color;
-		MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, p_style . text_color);
 		setcolor(&t_color);
 	}
 	if (p_style . has_background_color)
 	{
 		MCColor t_color;
-		t_color . pixel = p_style . background_color;
-		MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, p_style . background_color);
 		setbackcolor(&t_color);
 	}
 	if (p_style . has_link_text)

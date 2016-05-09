@@ -2412,19 +2412,20 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 
 			t_success = t_name != nil && t_width != 0 && t_height != 0;
 
-			if (MCCStringFirstIndexOf(x_line, t_name, t_colors_index))
+			if (t_success && MCCStringFirstIndexOf(x_line, t_name, t_colors_index))
 			{
 				t_colors_index += MCCStringLength(t_name);
 				// may be a monochrome table, in which case we keep looking
 				if (MCCStringEqualSubstring(x_line + t_colors_index, "_colors[] = {", 13))
 				{
-					bool t_at_color_table = true;
+					t_at_color_table = true;
 					break;
 				}
 			}
 		}
 
-		t_success = IO_NORMAL == IO_fgets(x_line, XPM_MAX_LINE, p_stream);
+		if (t_success)
+			t_success = IO_NORMAL == IO_fgets(x_line, XPM_MAX_LINE, p_stream);
 	}
 
 	if (t_success)
@@ -2750,12 +2751,14 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 
 	for (uint32_t i = 0 ; t_success && i < (uint2)m_fh.ncolors ; i++)
 	{
-		t_success = IO_read_uint4(&colors[i].pixel, stream) == IO_NORMAL &&
+		uint32_t t_pixel;
+		uint8_t t_flags, t_pad;
+		t_success = IO_read_uint4(&t_pixel, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].red, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].green, stream) == IO_NORMAL &&
 			IO_read_uint2(&colors[i].blue, stream) == IO_NORMAL &&
-			IO_read_uint1((uint1 *)&colors[i].flags, stream) == IO_NORMAL &&
-			IO_read_uint1((uint1 *)&colors[i].pad, stream) == IO_NORMAL;
+			IO_read_uint1(&t_flags, stream) == IO_NORMAL &&
+			IO_read_uint1(&t_pad, stream) == IO_NORMAL;
 	}
 
 	char *t_newimage_data = nil;
@@ -2819,13 +2822,11 @@ bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 					break;
 				case 4:
 					pixel = oneptr[x >> 1] >> 4 * (x & 1) & 0x0F;
-					*dptr++ = MCGPixelPackNative(colors[pixel].red >> 8, colors[pixel].green >> 8,
-										   colors[pixel].blue >> 8, 255);
+					*dptr++ = MCColorGetPixel(colors[pixel]);
 					break;
 				case 8:
 					pixel = oneptr[x];
-					*dptr++ = MCGPixelPackNative(colors[pixel].red >> 8, colors[pixel].green >> 8,
-										   colors[pixel].blue >> 8, 255);
+					*dptr++ = MCColorGetPixel(colors[pixel]);
 					break;
 				case 16:
 					pixel = twoptr[x];

@@ -352,11 +352,22 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	MCAutoListRef t_button_list;
 	MCAutoStringRef t_buttons_string;
 
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_button_list);
-	for (uindex_t i = 0; i < p_button_count; i++)
-		/* UNCHECKED */ MCListAppend(*t_button_list, p_buttons[i]);
-	/* UNCHECKED */ MCListCopyAsString(*t_button_list, &t_buttons_string);
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_button_list);
+	for (uindex_t i = 0; t_success && i < p_button_count; i++)
+		t_success = MCListAppend(*t_button_list, p_buttons[i]);
+	if (t_success)
+		t_success = MCListCopyAsString(*t_button_list, &t_buttons_string);
 
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	MCStringRef t_args[4];
 	t_args[0] = p_title;
 	t_args[1] = p_prompt;
@@ -628,6 +639,12 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 			t_success = t_types.Append(t_split);
 	}
 	
+	if (!t_success)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
 	bool t_cancelled;
 	MCAutoStringRef t_value, t_result;
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
@@ -647,10 +664,17 @@ void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCS
 		MCAutoListRef t_type_list;
 		MCAutoStringRef t_types_string;
 		
-		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
-		for (uindex_t i = 0; i < t_types.Count(); i++)
-			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
-		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
+		t_success = MCListCreateMutable('\n', &t_type_list);
+		for (uindex_t i = 0; t_success && i < t_types.Count(); i++)
+			t_success = MCListAppend(*t_type_list, t_types[i]);
+		if (t_success)
+			t_success = MCListCopyAsString(*t_type_list, &t_types_string);
+		
+		if (!t_success)
+		{
+			ctxt.Throw();
+			return;
+		}
 		
 		MCStringRef t_args[5];
 		uindex_t t_arg_count = 5;
@@ -752,13 +776,13 @@ void MCDialogGetColorDialogColors(MCExecContext& ctxt, uindex_t& r_count, MCStri
     
     for (uindex_t i = 0; t_success && i < t_count; i++)
     {
-        if (t_list[i] . flags != 0)
-        {
-            MCStringRef t_color;
-            t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
-        }
-        else
-            t_colors . Push(kMCEmptyString);
+		if (t_list[i].red != 0 || t_list[i].green != 0 || t_list[i].blue != 0)
+		{
+			MCStringRef t_color;
+			t_success = MCStringFormat(t_color, "%d,%d,%d", t_list[i] . red, t_list[i] . green, t_list[i] . blue) && t_colors . Push(t_color);
+		}
+		else
+			t_success = t_colors.Push(kMCEmptyString);
     }
     
     t_colors . Take(r_color_list, r_count);
@@ -775,12 +799,11 @@ void MCDialogSetColorDialogColors(MCExecContext& ctxt, uindex_t p_count, MCStrin
         MCColor t_color;
         if (i >= p_count || MCStringIsEmpty(p_color_list[i]))
         {
-            t_color . flags = 0;
+			t_color = MCzerocolor;
             t_success = t_list . Push(t_color);
         }
         else
         {
-            t_color . flags = DoRed | DoGreen | DoBlue;
             t_success = MCscreen -> parsecolor(p_color_list[i], t_color) && t_list . Push(t_color);
         }
     }

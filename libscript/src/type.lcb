@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
   This library consists of the general operations on types provided by the standard library of LiveCode Builder.
 */
 
@@ -38,7 +38,7 @@ public foreign handler MCNothingEvalIsNothingEqualTo(in Left as nothing, in Righ
 public foreign handler MCNothingEvalIsNotEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCNothingEvalIsNothingNotEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
 
-/*
+/**
 Summary:    Determines whether <Target> is empty or not.
 
 Target:     Any expression
@@ -52,7 +52,7 @@ begin
     MCTypeEvalIsEmpty(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is empty or not.
 
 Target:     Any expression
@@ -68,7 +68,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Target> is defined or not.
 
 Target:     Any expression
@@ -87,7 +87,7 @@ begin
 	MCTypeEvalIsDefined(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is defined or not.
 
 Target:     Any expression
@@ -107,7 +107,7 @@ begin
 	MCTypeEvalIsNotDefined(Target, output)
 end syntax
 
-/*
+/**
 Summary:	Determines whether <Target> is defined or not.
 
 Target:	Any expression
@@ -126,7 +126,7 @@ begin
 	MCTypeEvalIsNotDefined(Target, output)
 end syntax
 
-/*
+/**
 Summary:	Determines whether <Target> is defined or not.
 Target:	Any expression
 Output:	Returns true if the given expression <Target> is defined, and false otherwise.
@@ -146,7 +146,7 @@ end syntax
 
 --
 
-/*
+/**
 Name: IsNothing
 Type: operator
 Syntax: <Target> is nothing
@@ -166,7 +166,7 @@ begin
     MCNothingEvalIsNothingEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Name: IsNotNothing
 Type: operator
 Syntax: <Target> is not nothing
@@ -194,7 +194,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Target> is a boolean or not.
 
 Target:     Any expression
@@ -208,7 +208,7 @@ begin
 	MCTypeEvalIsABoolean(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is a number or not.
 
 Target:     Any expression
@@ -222,7 +222,7 @@ begin
 	MCTypeEvalIsANumber(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is a string or not.
 
 Target:     Any expression
@@ -236,7 +236,7 @@ begin
 	MCTypeEvalIsAString(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is data or not.
 
 Target:     Any expression
@@ -250,7 +250,7 @@ begin
 	MCTypeEvalIsAData(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is an array or not.
 
 Target:     Any expression
@@ -264,7 +264,7 @@ begin
 	MCTypeEvalIsAnArray(Target, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Target> is a list or not.
 
 Target:     Any expression

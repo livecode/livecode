@@ -29,6 +29,6 @@ When you start using a stack, the <libraryStack> <message> is sent to the <stack
 
 When a standalone application is running, it can insert up to fifty stacks into the <stacksInUse>. This limit is set by line 3 of the <scriptLimits> <function>. When using the <development environment>, you can insert any number of <stacks> into the <message path>.
 
-References: script (property), stacksInUse (property), releaseStack (message), libraryStack (message), library (library), stack (object), object (object), handler (glossary), current stack (glossary), message (glossary), command (glossary), development environment (glossary), message path (glossary), scriptLimits (function), backScripts (function), stacks (function), call (command), stop using (command), insert script (command), function (control structure)
+References: script (property), stacksInUse (property), releaseStack (message), libraryStack (message), library (library), stack (object), object (glossary), handler (glossary), current stack (glossary), message (glossary), command (glossary), development environment (glossary), message path (glossary), scriptLimits (function), backScripts (function), stacks (function), call (command), stop using (command), insert script (command), function (control structure)
 
 Tags: objects

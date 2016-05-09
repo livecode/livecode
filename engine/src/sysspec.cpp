@@ -952,8 +952,9 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
     // We never list '..', if the OS / filesystem lets us get it
     if (MCStringIsEqualToCString(p_entry -> name, "..", kMCStringOptionCompareExact))
         return true;
-    
-    if (!t_state -> files != p_entry -> is_folder)
+	
+	// If we're looking for files and entry is a folder (or vice versa) then skip to next entry.
+    if (t_state -> files == p_entry -> is_folder)
         return true;
 	
 	if (t_state -> details)

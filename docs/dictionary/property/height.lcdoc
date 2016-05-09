@@ -20,10 +20,10 @@ put the height of button 1 + the height of button 2 into requiredHeight
 Example:
 set the height of field thisField to the textHeight of thisField
 
-Value: The <height> of an <object> is a positive integer.
+Value: The <height> of an <object(glossary)> is a positive integer.
 
 Description:
-Use the <height> <property> to determine how much vertical space an <object> needs, or to make it taller or shorter.
+Use the <height> <property> to determine how much vertical space an <object(glossary)> needs, or to make it taller or shorter.
 
 If an object's lockLocation <property> is false, when you change its <height>, it shrinks or grows from the center. The <object|object's> top and bottom edges both shift, while the <object|object's> <location> <property> stays the same. If the object's <lockLocation> <property> is true, it shrinks or grows from the top left corner: the <object|object's> top edge stays in the same place, and the bottom edge moves.
 
@@ -37,6 +37,6 @@ You can set the <height> of a <card(keyword)>, but doing so has no effect and do
 
 >*Note:* The current architecture uses 16-bit signed integers for all co-ordinates, which means that the value range is -32768 to 32767.
 
-References: backSize (property), location (property), orientation (property), fixedLineHeight (property), minHeight (property), scale (property), bottom (property), editMenus (property), lockLocation (property), vScroll (property), card (keyword), revChangeWindowSize (command), group (command), stack (object), object (object), card (object), property (glossary), Mac OS (glossary), menu bar (glossary), stack window (glossary), OS X (glossary)
+References: backSize (property), location (property), orientation (property), fixedLineHeight (property), minHeight (property), scale (property), bottom (property), editMenus (property), lockLocation (property), vScroll (property), card (keyword), revChangeWindowSize (command), group (command), stack (object), object (glossary), card (object), property (glossary), Mac OS (glossary), menu bar (glossary), stack window (glossary), OS X (glossary)
 
 Tags: ui

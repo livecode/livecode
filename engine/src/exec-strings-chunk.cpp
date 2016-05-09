@@ -1157,6 +1157,8 @@ bool MCTextChunkIterator_Tokenized::Next()
     if (ps == PS_ERROR || ps == PS_EOF)
         t_found = false;
     
+    MCerrorlock--;
+    
     if (t_found)
     {
         m_range . offset = m_sp -> getindex();

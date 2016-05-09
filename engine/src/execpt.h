@@ -109,15 +109,15 @@ public:
 	{
         return m_ec . GetHandler();
 	}
-	uint2 getnffw() const
+	uinteger_t getnffw() const
 	{
         return m_ec . GetNumberFormatWidth();
 	}
-	uint2 getnftrailing() const
+	uinteger_t getnftrailing() const
 	{
         return m_ec . GetNumberFormatTrailing();
 	}
-	uint2 getnfforce() const
+	uinteger_t getnfforce() const
 	{
         return m_ec . GetNumberFormatForce();
 	}

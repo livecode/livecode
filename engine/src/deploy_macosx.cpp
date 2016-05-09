@@ -1470,10 +1470,9 @@ static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engi
 		return MCDeployThrow(kMCDeployErrorMacOSXBadHeader);
 
 	// Allocate memory for the load commands
-	r_commands = new load_command *[r_header . ncmds];
-	if (r_commands == NULL)
+	MCAutoCustomPointerArray<load_command*, MCMemoryDelete> t_commands;
+	if (!t_commands.New(r_header . ncmds))
 		return MCDeployThrow(kMCDeployErrorNoMemory);
-	memset(r_commands, 0, sizeof(load_command *) * r_header . ncmds);
 
 	// And read them in
 	uint32_t t_offset;
@@ -1491,23 +1490,24 @@ static bool MCDeployToMacOSXReadHeader(bool p_big_endian, MCDeployFileRef p_engi
             swap_load_command_hdr(p_big_endian, t_command);
 
 		// Now allocate memory for the full command record
-		r_commands[i] = (load_command *)malloc(t_command . cmdsize);
-		if (r_commands[i] == NULL)
+		if (!MCMemoryAllocate(t_command . cmdsize, t_commands[i]))
 			return MCDeployThrow(kMCDeployErrorNoMemory);
 
 		// Read in all of it
-		if (!MCDeployFileReadAt(p_engine, r_commands[i], t_command . cmdsize, t_offset))
+		if (!MCDeployFileReadAt(p_engine, t_commands[i], t_command . cmdsize, t_offset))
 			return MCDeployThrow(kMCDeployErrorMacOSXBadCommand);
 
 		// And swap if we are actually interested in the contents otherwise
 		// just swap the header.
         if (p_big_endian)
-            swap_load_command(p_big_endian, t_command . cmd, r_commands[i]);
+            swap_load_command(p_big_endian, t_command . cmd, t_commands[i]);
 
 		// Move to the next command
 		t_offset += t_command . cmdsize;
 	}
 
+	uindex_t t_command_count;
+	t_commands.Take(r_commands, t_command_count);
 	return true;
 }
 

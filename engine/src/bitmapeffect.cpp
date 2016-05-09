@@ -209,23 +209,13 @@ static void MCBitmapEffectColorFromMCColor(MCColor &, uint32_t &) ATTRIBUTE_UNUS
 // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 static void MCBitmapEffectColorToMCColor(uint32_t p_color, MCColor &r_color)
 {
-	uint8_t r, g, b, a;
-	MCGPixelUnpack(kMCGPixelFormatBGRA, p_color, r, g, b, a);
-	r_color . pixel = MCGPixelPackNative(r, g, b, a);
-	r_color . red = r;
-	r_color . green = g;
-	r_color . blue = b;
-	r_color . red |= r_color . red << 8;
-	r_color . green |= r_color . green << 8;
-	r_color . blue |= r_color . blue << 8;	
+	MCColorSetPixel(r_color, p_color, kMCGPixelFormatBGRA);
 }
 
 // MM-2013-12-10: [[ Bug  11568 ]] Store colors as BGRA instead of native since never directly rasterized.
 static void MCBitmapEffectColorFromMCColor(MCColor &p_color, uint32_t &r_color)
 {
-	uint8_t r, g, b, a;
-	MCGPixelUnpackNative(p_color . pixel, r, g, b, a);
-	r_color = MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, a);
+	r_color = MCColorGetPixel(p_color, kMCGPixelFormatBGRA);
 }
 
 // Set the given effect to default values for its type.

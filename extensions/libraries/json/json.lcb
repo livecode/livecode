@@ -15,7 +15,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library provides support for generating and parsing JavaScript Object
 Notation (JSON) data.  See also <http://json.org>.
 
@@ -78,7 +78,7 @@ constant kParseObjectValue is 23
 constant kParseObjectNext is 24
 
 
-/*
+/**
 Summary: Parse JSON text into a LiveCode value.
 
 pJson:   String containing JSON text
@@ -483,7 +483,7 @@ private handler JsonExportArray(in pValue as Array) returns String
 	return tResult
 end handler
 
-/*
+/**
 Summary: Format a LiveCode value as JSON text
 
 pValue:  A LiveCode value (Array, List, String, Number, Boolean, or nothing)

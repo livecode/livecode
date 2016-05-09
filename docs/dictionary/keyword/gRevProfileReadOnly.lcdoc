@@ -33,6 +33,6 @@ The <gRevProfileReadOnly> <global|global variable> can also be changed in the Pr
 
 3. Click "Don't save changes in profile".
 
-References: properties (property), answer (command), ask (command), object (object), property (glossary), variable (glossary), property profile (glossary), global (glossary)
+References: properties (property), answer (command), ask (command), object (glossary), property (glossary), variable (glossary), property profile (glossary), global (glossary)
 
 Tags: windowing

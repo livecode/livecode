@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*
+/**
 This library consists of the operations on strings included in the standard library of LiveCode Builder.
 */
 
@@ -55,7 +55,7 @@ public foreign handler MCStringEvalEmpty(out Value as String) returns nothing bi
 
 --
 
-/*
+/**
 Summary:            Prepends <Source> to <Target>.
 
 Source: 			An expression which evaluates to a string.
@@ -80,7 +80,7 @@ begin
     MCStringExecPutStringBefore(Source, Target)
 end syntax
 
-/*
+/**
 Summary:            Appends <Source> to <Target>.
 
 Source: 			An expression which evaluates to a string.
@@ -106,7 +106,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Replaces occurrences of <Pattern> within <Target> in <Replacement>
 
 Source: 			An expression which evaluates to a string.
@@ -132,7 +132,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Concatenates <Left> and <Right>.
 
 Left: 				An expression which evaluates to a string.
@@ -156,7 +156,7 @@ begin
     MCStringEvalConcatenate(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:            Concatenates <Left> and <Right> with a space between.
 
 Left: 				An expression which evaluates to a string.
@@ -182,7 +182,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:            Uppercases <Source>.
 Source: 			An expression which evaluates to a string.
 
@@ -201,7 +201,7 @@ begin
     MCStringEvalUppercaseOf(Source, output)
 end syntax
 
-/*
+/**
 Summary:            Lowercases <Source>.
 Source: 			An expression which evaluates to a string.
 
@@ -222,7 +222,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a string.
@@ -243,7 +243,7 @@ begin
     MCStringEvalIsEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> and <Right> are equal or not.
 
 Left:       An expression which evaluates to a string.
@@ -264,7 +264,7 @@ begin
     MCStringEvalIsNotEqualTo(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> is less than <Right> under a char by char comparison
 
 Left:       An expression which evaluates to a string.
@@ -285,7 +285,7 @@ begin
     MCStringEvalIsLessThan(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:    Determines whether <Left> is greater than <Right> under a char by char comparison
 
 Left:       An expression which evaluates to a string.
@@ -307,8 +307,7 @@ end syntax
 
 --
 
-/* 
-
+/**
 Summary: 		Designates the string of length zero.
 
 Example:

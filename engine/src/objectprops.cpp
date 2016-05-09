@@ -631,9 +631,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		uint2 i;
 		if (getcindex(which - P_FORE_PIXEL, i))
 		{
-			if (!opened)
-				MCscreen->alloccolor(colors[i]);
-			ep.setint(colors[i].pixel & 0xFFFFFF);
+			ep.setint(MCColorGetPixel(colors[i]) & 0xFFFFFF);
 		}
 		else if (effective && parent != NULL)
 			t_stat = parent->getprop(parid, which, ep, effective, true);
@@ -1781,8 +1779,7 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 			MCeerror->add(EE_OBJECT_PIXELNAN, 0, 0, data);
 			return ES_ERROR;
 		}
-		colors[i].pixel = pvalue;
-		MCscreen->querycolor(colors[i]);
+		MCColorSetPixel(colors[i], pvalue);
 		delete colornames[i];
 		colornames[i] = NULL;
 		break;

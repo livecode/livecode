@@ -61,7 +61,7 @@ Use the <uniEncode> <function(control structure)> to convert single-byte charact
 
 The <uniEncode> <function(control structure)> is the <inverse> of the <uniDecode> <function(control structure)> and inserts <null> bytes for <Unicode> compatibility. In other words, it turns single-byte characters into their double-byte equivalent.
 
->*Note:*  You can use the UTF8 encoding only with the <uniDecode> and <uniEncode> <function(glossary)|functions>. You cannot set an <object|object's> <textFont> <property> to use UTF-8. To display Unicode text in an <object>, use either "Unicode" or a language name as the second item of the <object|object's> <textFont>.
+>*Note:*  You can use the UTF8 encoding only with the <uniDecode> and <uniEncode> <function(glossary)|functions>. You cannot set an <object|object's> <textFont> <property> to use UTF-8. To display Unicode text in an <object(glossary)>, use either "Unicode" or a language name as the second item of the <object|object's> <textFont>.
 
 >*Important:* The <format> produced by the <uniEncode> <function(control structure)> is processor-dependent. On "big-endian" processors, where the first <byte> is least significant (such as Intel and Alpha processors), the <uniEncode> <function(control structure)> adds the <null> <byte> after each <character>. On "little-endian" processors, where the last <byte> is least significant (such as PowerPC processors), the <uniEncode> <function(control structure)> adds the <null> <byte> before each <character>.
 
@@ -72,4 +72,5 @@ The ability to convert language-specific encodings into Unicode text was added i
 Changes:
 The ability to encode text in Polish was added in version 2.1.1.
 
-References: textFont (property), unicodeTitle (property), object (object), string (keyword), inverse (keyword), character (keyword), null (constant), uniDecode (function), format (function), platform (function), property (glossary), Unicode (glossary), function (glossary), byte (glossary), return (glossary), function (control structure)
+
+References: textFont (property), unicodeTitle (property), object (glossary), string (keyword), inverse (keyword), character (keyword), null (constant), uniDecode (function), format (function), platform (function), property (glossary), Unicode (glossary), function (glossary), byte (glossary), return (glossary), function (control structure)

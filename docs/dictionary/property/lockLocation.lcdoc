@@ -27,7 +27,7 @@ The result: Use the <lockLocation> <property> to protect a <control(keyword)> fr
 
 Description:
 
-If the <lockLocation> <property> of an <object> is false, the user can drag its handles with the <Pointer tool> to move or resize the <object>. If the <object|object's> <lockLocation> is true, the user cannot move it or resize it.
+If the <lockLocation> <property> of an <object(glossary)> is false, the user can drag its handles with the <Pointer tool> to move or resize the <object(glossary)>. If the <object|object's> <lockLocation> is true, the user cannot move it or resize it.
 
 If the <lockLocation> of a <player> or <image> that references an external <file> is false, the <image> or <player> is resized to fit its contents whenever the <card> opens. If the <lockLocation> is true, the <image> retains whatever size you set, even if it's not the same size as the <object|object's> contents.
 
@@ -37,8 +37,8 @@ If a control's <lockLocation> <property> is false, when you change its height, i
 
 >*Note:* Changing a control's <width> or <height> in the property inspector always preserves its location, regardless of the <lockLocation> setting. 
 
-The setting of the <lockLocation> <property> does not prevent a <handler> from moving or resizing an <object>.
+The setting of the <lockLocation> <property> does not prevent a <handler> from moving or resizing an <object(glossary)>.
 
-References: height (property), lockCursor (property), lockLocation (property), width (property), location (property), file (keyword), player (keyword), image (keyword), scrollbar (keyword), card (keyword), control (keyword), revChangeWindowSize (command), group (command), object (object), control (object), property (glossary), handler (glossary), Pointer tool (glossary), group (glossary)
+References: height (property), lockCursor (property), lockLocation (property), width (property), location (property), file (keyword), player (keyword), image (keyword), scrollbar (keyword), card (keyword), control (keyword), revChangeWindowSize (command), group (command), object (glossary), control (object), property (glossary), handler (glossary), Pointer tool (glossary), group (glossary)
 
 Tags: ui

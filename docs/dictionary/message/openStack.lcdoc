@@ -28,6 +28,6 @@ To make changes that take effect before the stack becomes visible on the screen,
 
 The actual opening is not triggered by the <openStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from opening.
 
-References: card (keyword), openBackground (message), resume (message), stack (object), object (object), trap (glossary), handler (glossary), message (glossary), pass (control structure)
+References: card (keyword), openBackground (message), resume (message), stack (object), object (glossary), trap (glossary), handler (glossary), message (glossary), pass (control structure)
 
 Tags: navigation

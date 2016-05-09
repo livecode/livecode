@@ -17,4 +17,4 @@ In HyperCard, the <printTextAlign> <property> specifies the alignment of printed
 
 By default, the value of <printTextAlign> is center. A handler can set the <property>, but the new setting has no effect.
 
-References: properties (property), textAlign (property), card (keyword), print (command), card (object), object (object), property (glossary), LiveCode (glossary), HyperCard (glossary)
+References: properties (property), textAlign (property), card (keyword), print (command), card (object), object (glossary), property (glossary), LiveCode (glossary), HyperCard (glossary)

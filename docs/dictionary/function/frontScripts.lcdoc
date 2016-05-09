@@ -6,7 +6,7 @@ Syntax: the frontScripts
 
 Syntax: frontScripts()
 
-Summary: <return|Returns> a list of <object|objects> that have been inserted into the <message path> before the target <object>.
+Summary: <return|Returns> a list of <object|objects> that have been inserted into the <message path> before the target <object(glossary)>.
 
 Introduced: 1.0
 
@@ -31,6 +31,6 @@ This includes messages sent with the <send> command, so if you send a message to
 
 If more than one object is in the <frontScripts>, their order in the message path is the same as their order in the list. For example, the first object in the <frontScripts> receives messages before the second object. This order is the reverse of the order in which the objects were added with the <insert script> command.
 
-References: remove script (command), insert script (command), send (command), object (object), message path (glossary), return (glossary), pass (control structure)
+References: remove script (command), insert script (command), send (command), object (glossary), message path (glossary), return (glossary), pass (control structure)
 
 Tags: objects

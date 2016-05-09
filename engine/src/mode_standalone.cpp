@@ -167,6 +167,29 @@ struct MCStandaloneCapsuleInfo
 	bool done;
 };
 
+bool MCStandaloneCapsuleReadString(IO_handle p_stream, uint32_t p_length, MCStringRef &r_string)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_cstring;
+	t_cstring = nil;
+	
+	if (t_success)
+		t_success = MCMemoryAllocate(p_length, t_cstring);
+	
+	if (t_success)
+		t_success = IO_read(t_cstring, p_length, p_stream) == IO_NORMAL;
+	
+	if (t_success)
+		t_success = MCStringCreateWithCString(t_cstring, r_string);
+	
+	if (t_cstring != nil)
+		MCMemoryDeallocate(t_cstring);
+	
+	return t_success;
+}
+
 bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsuleSectionType p_type, uint32_t p_length, IO_handle p_stream)
 {
 	MCStandaloneCapsuleInfo *self;
@@ -250,50 +273,39 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 			
 	case kMCCapsuleSectionTypeExternal:
 	{
-		char *t_external;
-		t_external = new char[p_length];
-		if (IO_read(t_external, p_length, p_stream) != IO_NORMAL)
+		MCAutoStringRef t_external_str;
+		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_external_str))
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
 		}
 		
-		MCAutoStringRef t_external_str;
-		/* UNCHECKED */ MCStringCreateWithCString(t_external, &t_external_str);
 		if (!MCdispatcher -> loadexternal(*t_external_str))
 		{
-			delete t_external;
 			MCresult -> sets("failed to load external");
 			return false;
 		}
-		
-		delete t_external;
 	}
 	break;
 
     // AL-2015-02-10: [[ Standalone Inclusions ]] Fetch a resource mapping and add it to the array stored in MCdispatcher.
     case kMCCapsuleSectionTypeLibrary:
     {
-        char *t_mapping;
-        t_mapping = new char[p_length];
-        if (IO_read(t_mapping, p_length, p_stream) != IO_NORMAL)
+		MCAutoStringRef t_mapping_str;
+		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_mapping_str))
         {
             MCresult -> sets("failed to read library mapping");
             return false;
         }
         
-        MCAutoStringRef t_mapping_str;
-        /* UNCHECKED */ MCStringCreateWithCString(t_mapping, &t_mapping_str);
         MCdispatcher -> addlibrarymapping(*t_mapping_str);
-        delete t_mapping;
     }
         break;
             
 	case kMCCapsuleSectionTypeStartupScript:
 	{
-		char *t_script;
-		t_script = new char[p_length];
-		if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
+		MCAutoStringRef t_script_str;
+		if (!MCStandaloneCapsuleReadString(p_stream, p_length, &t_script_str))
 		{
 			MCresult -> sets("failed to read startup script");
 			return false;
@@ -301,11 +313,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 		// Execute the startup script at this point since we have loaded
 		// all stacks.
-        MCAutoStringRef t_script_str;
-        /* UNCHECKED */ MCStringCreateWithCString(t_script, &t_script_str);
 		self -> stack -> domess(*t_script_str);
-		
-		delete t_script;
 	}
 	break;
 			
@@ -322,9 +330,14 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             
     case kMCCapsuleSectionTypeModule:
     {
-        char *t_module_data;
-        t_module_data = new char[p_length];
-        if (IO_read(t_module_data, p_length, p_stream) != IO_NORMAL)
+		MCAutoByteArray t_module_data;
+		if (!t_module_data.New(p_length))
+		{
+			MCresult -> sets("out of memory");
+			return false;
+		}
+		
+        if (IO_read(t_module_data.Bytes(), p_length, p_stream) != IO_NORMAL)
         {
             MCresult -> sets("failed to read module");
             return false;
@@ -336,7 +349,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         MCStreamRef t_stream;
         t_stream = nil;
         if (t_success)
-            t_success = MCMemoryInputStreamCreate(t_module_data, p_length, t_stream);
+            t_success = MCMemoryInputStreamCreate(t_module_data.Bytes(), p_length, t_stream);
         
         MCScriptModuleRef t_module;
         if (t_success)
@@ -344,7 +357,6 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
         
         if (t_stream != nil)
             MCValueRelease(t_stream);
-        free(t_module_data);
         
         if (!t_success)
         {

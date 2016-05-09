@@ -1602,9 +1602,6 @@ void MCStack::SetLinkAtt(MCExecContext& ctxt, Properties which, MCInterfaceNamed
 			linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
 			linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
 			linkatts->visitedcolorname = MClinkatts.visitedcolorname == nil ? nil : MCValueRetain(MClinkatts.visitedcolorname);
-			MCscreen->alloccolor(linkatts->color);
-			MCscreen->alloccolor(linkatts->hilitecolor);
-			MCscreen->alloccolor(linkatts->visitedcolor);
 		}
 		switch (which)
 		{
@@ -1731,9 +1728,6 @@ void MCStack::SetUnderlineLinks(MCExecContext& ctxt, bool* p_value)
             linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
             linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
             linkatts->visitedcolorname = MClinkatts.visitedcolorname == nil ? nil : MCValueRetain(MClinkatts.visitedcolorname);
-            MCscreen->alloccolor(linkatts->color);
-            MCscreen->alloccolor(linkatts->hilitecolor);
-            MCscreen->alloccolor(linkatts->visitedcolor);
         }
 
         linkatts->underline = *p_value;
@@ -1811,7 +1805,11 @@ void MCStack::GetScreen(MCExecContext& ctxt, integer_t& r_screen)
 {
 	const MCDisplay *t_display;
 	t_display = MCscreen -> getnearestdisplay(rect);
-	r_screen = t_display -> index + 1;
+    
+    if (t_display != nil)
+        r_screen = t_display -> index + 1;
+    else
+        r_screen = 0;
 }
 
 void MCStack::GetCurrentCard(MCExecContext& ctxt, MCStringRef& r_card)

@@ -119,7 +119,6 @@ public:
 	Parse_stat newconstant(MCNameRef name, MCValueRef value);
 	bool getlocalnames(MCListRef& r_list);
 	bool getglobalnames(MCListRef& r_list);
-	void appendlocalnames(MCStringRef& r_string);
 	void appendglobalnames(MCStringRef& r_string, bool first);
 	void newglobal(MCNameRef name);
 	

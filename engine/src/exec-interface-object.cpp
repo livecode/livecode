@@ -1542,16 +1542,9 @@ void MCObject::GetScript(MCExecContext& ctxt, MCStringRef& r_script)
 		return;
 	}
 
-	bool t_success = true;
-	
 	getstack() -> unsecurescript(this);
 	r_script = MCValueRetain(_script);
 	getstack() -> securescript(this);
-	
-	if (t_success)
-		return;
-
-	ctxt . Throw();
 }
 
 void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
@@ -1859,7 +1852,7 @@ bool MCObject::GetPixel(MCExecContext& ctxt, Properties which, bool effective, u
     
     if (GetColor(ctxt, t_which, effective, t_color))
     {
-        r_pixel = t_color.color.pixel & 0x00FFFFFF;
+        r_pixel = MCColorGetPixel(t_color.color) & 0x00FFFFFF;
         
         MCInterfaceNamedColorFree(ctxt, t_color);
         return true;
@@ -1874,8 +1867,7 @@ void MCObject::SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel)
 	if (!getcindex(which - P_FORE_PIXEL, i))
 		i = createcindex(which - P_FORE_PIXEL);
 
-	colors[i] . pixel = pixel;
-	MCscreen -> querycolor(colors[i]);
+	MCColorSetPixel(colors[i], pixel);
 	if (colornames[i] != nil)
 	{
 		MCValueRelease(colornames[i]);
@@ -2072,8 +2064,6 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 		{
 			i = createcindex(index);
 			colors[i].red = colors[i].green = colors[i].blue = 0;
-			if (opened)
-				MCscreen->alloccolor(colors[i]);
 		}
 		set_interface_color(colors[i], colornames[i], p_color);
 
@@ -2084,8 +2074,6 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
-		if (opened)
-			MCscreen->alloccolor(colors[i]);
 	}
 }
 
@@ -2096,12 +2084,7 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	{
 		get_interface_color(colors[i], colornames[i], r_color);
         
-        // AL-2015-05-20: [[ Bug 15378 ]] Reinstate fix for bug 9419:
-        //  If the object isn't already open, then alloc the color first.
-        if (!opened)
-            MCscreen -> alloccolor(r_color . color);
-        
-		return true;	
+		return true;
 	}
 	else if (effective)
     {
@@ -2125,7 +2108,6 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
                 if (MCPlatformGetControlThemePropColor(t_control_type, t_control_part, t_control_state, t_control_prop, t_color))
                 {
                     t_found = true;
-                    MCscreen->alloccolor(t_color);
                     r_color.color = t_color;
                     r_color.name = nil;
                 }
@@ -2385,33 +2367,22 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 				}
 				if (!getcindex(index, i))
 				{
-					if (t_color . color . flags)
-					{
-						i = createcindex(index);
-						colors[i] = t_color . color;
-						if (opened)
-							MCscreen->alloccolor(colors[i]);
-						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
-					}
+					i = createcindex(index);
+					colors[i] = t_color . color;
+					colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 				}
 				else
 				{
-					if (t_color . color . flags)
+					if (colornames[i] != nil)
 					{
-						if (colornames[i] != nil)
-						{
-							MCValueRelease(colornames[i]);
-							colornames[i] = nil;
-						}
-						if (opened)
-						{
-							colors[i] = t_color . color;
-							MCscreen->alloccolor(colors[i]);
-						}
-						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
+						MCValueRelease(colornames[i]);
+						colornames[i] = nil;
 					}
-					else
-						destroycindex(index, i);
+					if (opened)
+					{
+						colors[i] = t_color . color;
+					}
+					colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 				}
 				MCInterfaceNamedColorFree(ctxt, t_color);
 			}

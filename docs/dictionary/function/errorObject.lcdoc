@@ -21,8 +21,9 @@ Example:
 edit script of the errorObject
 
 Description:
-The <errorObject> <function> <return|returned> the name of the <object> whose <script> had the most recent <execution error>.
+The <errorObject> <function> <return|returned> the name of the <object(glossary)> whose <script> had the most recent <execution error>.
 
-For the information formerly returned by the <errorObject> <function>, use the <target> <function> inside an <errorDialog> <handler>. The <errorDialog> message is sent to the object whose <script> caused the <error>, so checking the <target> <function> will <return> the name of that <object>.
+For the information formerly returned by the <errorObject> <function>, use the <target> <function> inside an <errorDialog> <handler>. The <errorDialog> message is sent to the object whose <script> caused the <error>, so checking the <target> <function> will <return> the name of that <object(glossary)>.
 
-References: lockErrorDialogs (property), script (property), errorDialog (message), handler (glossary), error (glossary), return (glossary), execution error (glossary), function (control structure), object (object), target (function), return (constant)
+
+References: lockErrorDialogs (property), script (property), errorDialog (message), handler (glossary), error (glossary), return (glossary), execution error (glossary), function (control structure), object (glossary), target (function), return (constant)

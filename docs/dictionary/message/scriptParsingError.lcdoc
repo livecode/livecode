@@ -4,7 +4,7 @@ Type: message
 
 Syntax: scriptParsingError <errorContents> 
 
-Summary: Sent to an <object> when its <script> cannot be <compile|compiled>.
+Summary: Sent to an <object(glossary)> when its <script> cannot be <compile|compiled>.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -34,4 +34,4 @@ A list of possible compile errors is contained in the "cScriptErrors" property o
 Changes:
 The errorContents parameter was introduced in version 1.1. In previous versions, this information was stored in the scriptError property.
 
-References: lockErrorDialogs (property), script (property), errorDialog (message), object (object), handle (glossary), handler (glossary), error (glossary), message (glossary), execution error (glossary), compile (glossary), compile error (glossary), format (function)
+References: lockErrorDialogs (property), script (property), errorDialog (message), object (glossary), handle (glossary), handler (glossary), error (glossary), message (glossary), execution error (glossary), compile (glossary), compile error (glossary), format (function)

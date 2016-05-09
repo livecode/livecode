@@ -28,6 +28,6 @@ Normally, the <newCard> <message> is handled at a higher level of the <message p
 
 The actual creation is not triggered by the <newCard> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card> from being created.
 
-References: script (property), newBackground (message), card (keyword), object (object), trap (glossary), message (glossary), templateCard (glossary), tool (glossary), message path (glossary), create card (command), paste (command), copy (command), clone (command), pass (control structure)
+References: script (property), newBackground (message), card (keyword), object (glossary), trap (glossary), message (glossary), templateCard (glossary), tool (glossary), message path (glossary), create card (command), paste (command), copy (command), clone (command), pass (control structure)
 
 Tags: objects

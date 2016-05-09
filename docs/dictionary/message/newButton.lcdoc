@@ -28,6 +28,6 @@ Normally, the <newButton> <message> is handled at a higher level of the <message
 
 The actual creation is not triggered by the <newButton> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <button(object)> from being created.
 
-References: templateButton (keyword), script (property), copy (command), clone (command), paste (command), object (object), trap (glossary), button (object), message (glossary), tool (glossary), message path (glossary), pass (control structure)
+References: templateButton (keyword), script (property), copy (command), clone (command), paste (command), object (glossary), trap (glossary), button (object), message (glossary), tool (glossary), message path (glossary), pass (control structure)
 
 Tags: objects

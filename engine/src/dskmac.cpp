@@ -2040,7 +2040,7 @@ public:
 		return ftello(m_stream);
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 #ifdef /* MCS_fsize_dsk_mac */ LEGACY_SYSTEM
 	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
@@ -4534,7 +4534,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	return getenv(name); //always returns NULL under CodeWarrier env.
 #endif /* MCS_getenv_dsk_mac */
         MCAutoStringRefAsUTF8String t_name;
-        /* UNCHECKED */ t_name . Lock(p_name);
+        if (!t_name . Lock(p_name))
+			return false;
         
         const char* t_env;
         t_env = getenv(*t_name);

@@ -169,11 +169,6 @@ char * get_filter_masks (const char * p_type )
     const char *t_ptr ;
 	uint4 a ;
 
-	// MW-2010-10-14: Make sure we have enough room to do this.
-	char *ret;
-	ret = strdup(p_type);
-	memset(ret, 0, strlen(p_type));
-
 	a = 0 ;
 	t_ptr = p_type ;
 	
@@ -185,6 +180,11 @@ char * get_filter_masks (const char * p_type )
 		return (NULL);	// Something went wrong!
 	t_ptr++; // Move over the breaking char
 	
+    // MW-2010-10-14: Make sure we have enough room to do this.
+    char *ret;
+    ret = strdup(p_type);
+    memset(ret, 0, strlen(p_type));
+    
 	while ( *t_ptr != '|' && *t_ptr != '\0' )
 		ret[a++] = *t_ptr++;
 	

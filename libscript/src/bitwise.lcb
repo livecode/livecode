@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-/*  
+/**
 This module specifies the bitwise operations on integers included in the standard library of LiveCode Builder.
 */
 
@@ -32,7 +32,7 @@ public foreign handler MCBitwiseEvalBitwiseShiftRight(in Target as LCInt, in Shi
 
 --
 
-/*
+/**
 Summary:        Performs a bitwise AND operation on the binary representations of <Left> and <Right>.
 
 Left:           An expression which evaluates to an integer.
@@ -57,7 +57,7 @@ begin
     MCBitwiseEvalBitwiseAnd(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:        Performs a bitwise OR operation on the binary representations of <Left> and <Right>.
 
 Left:           An expression which evaluates to an integer.
@@ -82,7 +82,7 @@ begin
     MCBitwiseEvalBitwiseOr(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:        Performs a bitwise XOR operation on the binary representations of <Left> and <Right>.
 
 Left:           An expression which evaluates to an integer.
@@ -106,7 +106,7 @@ begin
     MCBitwiseEvalBitwiseXor(Left, Right, output)
 end syntax
 
-/*
+/**
 Summary:        Performs a bitwise NOT operation on the binary representation of <Operand>.
 
 Operand:        An expression which evaluates to an integer.
@@ -132,7 +132,7 @@ end syntax
 
 --
 
-/*
+/**
 Summary:	Shifts the bits of <Operand> left.
 
 Operand:        An expression which evaluates to an integer.
@@ -157,7 +157,7 @@ begin
     MCBitwiseEvalBitwiseShiftLeft(Operand, Shift, output)
 end syntax
 
-/*
+/**
 Summary:	Shifts the bits of <Operand> right.
 
 Operand:        An expression which evaluates to an integer.

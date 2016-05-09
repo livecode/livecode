@@ -36,8 +36,6 @@ enum MCSVGPathCommand
 {
 	kMCSVGPathMoveTo,
 	kMCSVGPathRelativeMoveTo,
-	kMCSVGPathClose,
-	kMCSVGPathRelativeClose,
 	kMCSVGPathLineTo,
 	kMCSVGPathRelativeLineTo,
 	kMCSVGPathHorizontalLineTo,
@@ -54,9 +52,10 @@ enum MCSVGPathCommand
 	kMCSVGPathRelativeShorthandQuadraticCurveTo,
 	kMCSVGPathEllipticalCurveTo,
 	kMCSVGPathRelativeEllipticalCurveTo,
+    kMCSVGPathClose,
 };
 
-#define kMCSVGPathCommandCount (kMCSVGPathRelativeEllipticalCurveTo + 1)
+#define kMCSVGPathCommandCount (kMCSVGPathClose + 1)
 
 typedef bool (*MCSVGParseCallback)(void *p_context, MCSVGPathCommand p_command, float32_t *p_args, uint32_t p_arg_count);
 
@@ -3171,7 +3170,6 @@ bool MCCanvasPathSVGParseCallback(void *p_context, MCSVGPathCommand p_command, f
 		}
 			
 		case kMCSVGPathClose:
-		case kMCSVGPathRelativeClose:
 			MCGPathCloseSubpath(t_context->path);
 			t_context->last_point = t_context->first_point;
 			break;
@@ -6700,7 +6698,7 @@ static MCSVGPathCommandMap s_svg_command_map[] = {
 	{'M', kMCSVGPathMoveTo},
 	{'m', kMCSVGPathRelativeMoveTo},
 	{'Z', kMCSVGPathClose},
-	{'z', kMCSVGPathRelativeClose},
+	{'z', kMCSVGPathClose},
 	{'L', kMCSVGPathLineTo},
 	{'l', kMCSVGPathRelativeLineTo},
 	{'H', kMCSVGPathHorizontalLineTo},
@@ -6826,7 +6824,6 @@ bool MCSVGParseParams(const char *p_string, MCRange &x_range, MCSVGPathCommand p
 			break;
 			
 		case kMCSVGPathClose:
-		case kMCSVGPathRelativeClose:
 			t_param_count = 0;
 			break;
 			

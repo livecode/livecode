@@ -1361,6 +1361,7 @@ function revDocsParseDocText pText, pFilename
          case "Tags"
             // Library entries can have examples
          case "Example"
+         case "References"
             put tElementsA[tStartNum]["content"] into tParsedA[it]
             add 1 to tStartNum
             break
@@ -1440,7 +1441,7 @@ function revDocsParseDocText pText, pFilename
    put 1 into tCount
    add 1 to tEntryCount
    
-   repeat for each item tItem in "name,description,author,type,example"
+   repeat for each item tItem in "name,description,author,type,example,references"
       if tParsedA[tItem] is not empty then
          put tItem into tEntriesA[tEntryCount]["elements"][tCount]["name"]
          put tParsedA[tItem] into tEntriesA[tEntryCount]["elements"][tCount]["content"]
