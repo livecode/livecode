@@ -17,7 +17,8 @@ Platforms: desktop,server,web,mobile
 Example:
 set the patterns of button 1 to the patterns of card "Template"
 
-Example:
+Example
+local storedPatternsList
 set the patterns of me to storedPatternsList
 
 Value:
@@ -35,14 +36,14 @@ You can set all these patterns individually; the <patterns> <property> simply pr
 method of dealing with all of them at once. Each <line> of the <patterns> corresponds to one of the 
 following pattern <properties> :
 
- * Line 1: the foregroundPattern
- * Line 2: the <backgroundPattern> 
- * Line 3: the hilitePattern
- * Line 4: the <borderPattern> 
- * Line 5: the topPattern
- * Line 6: the <bottomPattern> 
- * Line 7: the shadowPattern
- * Line 8: the focusPattern
+* Line 1: the <foregroundPattern>
+* Line 2: the <backgroundPattern>
+* Line 3: the <hilitePattern>
+* Line 4: the <borderPattern>
+* Line 5: the <topPattern> 
+* Line 6: the <bottomPattern>
+* Line 7: the <shadowPattern>
+* Line 8: the <focusPattern>
 
 If you leave a line blank when setting the <patterns>, the pattern <property> corresponding to that 
 <line> is left unchanged.
@@ -54,8 +55,10 @@ set for the <object> or <inheritance|inherited>.
 
 If a pattern is set for an object, that pattern is used instead of the corresponding color for that object.
 
-References: borderPattern (property), bottomPattern (property), colors (property), properties (property), owner (property), 
-backgroundPattern (property), ID (property), lines (keyword), image (keyword), line (keyword), object (glossary), 
-property (glossary), current stack (glossary), inheritance (glossary), stacks (function)
+References: foregroundPattern (property), backgroundPattern (property), hilitePattern (property), 
+borderPattern (property), topPattern (property), bottomPattern (property), shadowPattern (property), 
+focusPattern (property), colors (property), properties (property), owner (property), ID (property), 
+lines (keyword), image (keyword), line (keyword), object (glossary), property (glossary), 
+current stack (glossary), inheritance (glossary), stacks (function)
 
 Tags: ui
