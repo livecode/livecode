@@ -20,6 +20,9 @@ void MCWin32BSTRFree(BSTR p_str) { SysFreeString(p_str); }
 #define kMCDSEventWindowClass "DSEVENTWINDOWCLASS"
 #define kMCDSVideoWindowClass "DSVIDEOWINDOWCLASS"
 
+#define kMCDSTimerID (1)
+#define kMCDSTimerInterval (100) // 100 ms, 10x per second
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCWin32DSPlayerState
@@ -60,8 +63,12 @@ public:
 	
 	bool Initialize();
 	bool HandleGraphEvent();
+	bool HandleTimer();
 	bool SetVideoWindow(HWND hwnd);
 	bool SetVideoWindowSize(uint32_t p_width, uint32_t p_height);
+
+	bool StartTimer();
+	void StopTimer();
 
 protected:
 	virtual void Realize(void);
@@ -106,13 +113,13 @@ private:
 	MCWin32DSPlayerState m_state;
 	bool m_is_valid;
 	HWND m_video_window;
+	HWND m_event_window;
 
 	uint32_t m_start_position;
 	uint32_t m_finish_position;
 
 	bool m_looping;
 
-	static HWND g_event_window;
     CComPtr<IGraphBuilder>  m_graph;
     CComPtr<IMediaEventEx>  m_event;
     CComPtr<IMediaControl>  m_control;
@@ -126,6 +133,12 @@ long FAR PASCAL DSHiddenWindowProc (HWND hWnd, UINT message, UINT wParam, LONG l
 {
 	switch(message)
 	{
+	case WM_CREATE:
+		CREATESTRUCT *t_create;
+		t_create = (CREATESTRUCT*)lParam;
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)t_create->lpCreateParams);
+		break;
+
 	//case WM_LBUTTONUP:
 	//	DispatchMetaCardMessage("XMediaPlayer_LMouseUp","");
 	//	break;
@@ -136,10 +149,23 @@ long FAR PASCAL DSHiddenWindowProc (HWND hWnd, UINT message, UINT wParam, LONG l
 	//	DispatchMetaCardMessage("XMediaPlayer_MouseMove","");
 	//	break;
 	case WM_GRAPHNOTIFY:
-		MCWin32DSPlayer *whichplayer = (MCWin32DSPlayer *)lParam;
-		whichplayer->HandleGraphEvent();
+		{
+			MCWin32DSPlayer *whichplayer = (MCWin32DSPlayer *)lParam;
+			whichplayer->HandleGraphEvent();
+		}
+		break;
+
+	case WM_TIMER:
+		if (wParam == kMCDSTimerID)
+		{
+			MCWin32DSPlayer *t_player;
+			t_player = (MCWin32DSPlayer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+			if (t_player != nil)
+				t_player->HandleTimer();
+		}
 		break;
 	}
+
 	return DefWindowProc (hWnd, message, wParam, lParam);
 	
 }
@@ -212,13 +238,13 @@ bool RegisterVideoWindowClass()
 	return s_registered;
 }
 
-bool CreateEventWindow(HWND &r_window)
+bool CreateEventWindow(MCWin32DSPlayer *p_player, HWND &r_window)
 {
 	if (!RegisterEventWindowClass())
 		return false;
 
 	HWND t_window;
-	t_window = CreateWindow(kMCDSEventWindowClass, "EventWindow", 0, 0, 0, 2, 3, HWND_MESSAGE, nil, MChInst, 0);
+	t_window = CreateWindow(kMCDSEventWindowClass, "EventWindow", 0, 0, 0, 2, 3, HWND_MESSAGE, nil, MChInst, p_player);
 
 	if (t_window == nil)
 		return false;
@@ -280,9 +306,15 @@ bool MCWin32DSPlayer::HandleGraphEvent()
     return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+bool MCWin32DSPlayer::HandleTimer()
+{
+	if (IsPlaying())
+		MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
 
-HWND MCWin32DSPlayer::g_event_window = nil;
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCWin32DSPlayer::MCWin32DSPlayer()
 {
@@ -296,23 +328,40 @@ MCWin32DSPlayer::MCWin32DSPlayer()
 MCWin32DSPlayer::~MCWin32DSPlayer()
 {
 	CloseFile();
+
+	if (m_event_window != nil)
+		DestroyWindow(m_event_window);
+
 	if (m_video_window != nil)
 		DestroyWindow(m_video_window);
 }
 
 bool MCWin32DSPlayer::Initialize()
 {
-	if (g_event_window == nil)
+	bool t_success;
+	t_success = true;
+
+	HWND t_event_window = nil;
+	if (t_success)
+		t_success = CreateEventWindow(this, t_event_window);
+
+	HWND t_video_window = nil;
+	if (t_success)
+		t_success = CreateVideoWindow(this, t_video_window);
+
+	if (t_success)
 	{
-		if (!CreateEventWindow(g_event_window))
-			return false;
+		m_event_window = t_event_window;
+		m_video_window = t_video_window;
+	}
+	else
+	{
+		if (t_event_window != nil)
+			DestroyWindow(t_event_window);
+		if (t_video_window != nil)
+			DestroyWindow(t_video_window);
 	}
 
-	HWND t_video_window;
-	if (!CreateVideoWindow(this, t_video_window))
-		return false;
-
-	m_video_window = t_video_window;
 	return true;
 }
 
@@ -459,6 +508,17 @@ void MCWin32DSPlayer::CloseFile()
 	SetFilterGraph(nil);
 }
 
+bool MCWin32DSPlayer::StartTimer()
+{
+	UINT t_elapse;
+	return 0 != SetTimer(m_event_window, kMCDSTimerID, kMCDSTimerInterval, nil);
+}
+
+void MCWin32DSPlayer::StopTimer()
+{
+	KillTimer(m_event_window, kMCDSTimerID);
+}
+
 bool MCWin32DSPlayer::GetFormattedSize(uint32_t &r_width, uint32_t &r_height)
 {
     CComQIPtr<IBasicVideo> pVideo(m_graph);
@@ -491,7 +551,7 @@ bool MCWin32DSPlayer::SetUrl(MCStringRef p_url)
 		t_success = SetVideoWindow(m_video_window);
 
 	if (t_success)
-		t_success = SetEventWindow(g_event_window);
+		t_success = SetEventWindow(m_event_window);
 
 	if (t_success)
 		t_success = SetVisible(true);
@@ -735,6 +795,8 @@ bool MCWin32DSPlayer::Play()
 	if (t_result != S_OK && t_result != S_FALSE)
 		return false;
 
+	StartTimer();
+
 	m_state = kMCWin32DSPlayerRunning;
 
 	return true;
@@ -750,6 +812,8 @@ bool MCWin32DSPlayer::Pause()
 	t_result = m_control->Pause();
 	if (t_result != S_OK && t_result != S_FALSE)
 		return false;
+
+	StopTimer();
 
     m_state = kMCWin32DSPlayerPaused;
 
