@@ -19,7 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
    TestLoadExtension "com.livecode.library.widgetutils"
    TestLoadExtension "com.livecode.library.iconSVG"
-   TestLoadExtension "com.livecode.widget.navBar"
+   TestLoadExtension "com.livecode.widget.navbar"
    create widget "testNavBar" as "com.livecode.widget.navbar"
 end TestSetup
 
