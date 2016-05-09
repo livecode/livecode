@@ -28,7 +28,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bitmapeffect.h"
 #include "globals.h"
 //#include "execpt.h"
-#include "paint.h"
+#include "path.h"
+#include "gradient.h"
 
 #include "graphicscontext.h"
 #include "graphics.h"
