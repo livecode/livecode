@@ -779,11 +779,16 @@ bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, ui
 {
 	__MCAssertIsData(p_data);
 	__MCAssertIsData(p_chunk);
+	
+	if (MCDataGetLength(p_data) == 0)
+		return false;
 
     __MCDataClampRange(p_data, t_range);
     
     uindex_t t_limit, t_chunk_byte_count;
     t_chunk_byte_count = MCDataGetLength(p_chunk);
+	if (t_chunk_byte_count == 0)
+		return false;
     t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
     
     const byte_t *t_bytes = MCDataGetBytePtr(p_data);
