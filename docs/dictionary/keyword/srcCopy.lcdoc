@@ -18,10 +18,10 @@ set the ink of button "Move" to srcCopy
 Description:
 Use the <srcCopy> <keyword> to make an object opaque.
 
-The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object> to determine how the <object|object's> color is displayed.
+The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object(glossary)> to determine how the <object|object's> color is displayed.
 
-When the <srcCopy> mode is used, each pixel of the <object> is drawn over the <pixels> underneath, blocking them completely. The color of the <pixel> underneath does not affect the final color.
+When the <srcCopy> mode is used, each pixel of the <object(glossary)> is drawn over the <pixels> underneath, blocking them completely. The color of the <pixel> underneath does not affect the final color.
 
-References: notSrcCopy (keyword), ink (property), pixels (property), object (object), property (glossary), keyword (glossary), pixel (glossary), transfer mode (glossary)
+References: notSrcCopy (keyword), ink (property), pixels (property), object (glossary), property (glossary), keyword (glossary), pixel (glossary), transfer mode (glossary)
 
 Tags: ui

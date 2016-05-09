@@ -29,10 +29,10 @@ errorString (string): A description of the socket error.
 Description:
 Handle the <socketError> <message> to perform cleanup after a <socket> closes due to a problem receiving or sending data.
 
-The <socketError> <message> is sent to the <object> that opened the <socket>.
+The <socketError> <message> is sent to the <object(glossary)> that opened the <socket>.
 
 If the socket is closed by the remote host normally, rather than due to an error, the socketClosed <message> is sent instead of <socketError>.
 
-References: socketTimeout (message), resetAll (command), object (object), error (glossary), message (glossary), socket (glossary)
+References: socketTimeout (message), resetAll (command), object (glossary), error (glossary), message (glossary), socket (glossary)
 
 Tags: networking

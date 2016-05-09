@@ -2400,7 +2400,6 @@ Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
 		return ES_ERROR;
 	}
 
-	MCscreen->alloccolor(color);
 	c = color;
 	if (n != nil)
 		MCValueRelease(n);

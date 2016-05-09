@@ -25,6 +25,6 @@ When used with the go <command>, the <back> <keyword> designates the <card> the 
 
 When used with the insert script or <remove script> <command>, the <back> <keyword> designates a <backScript> which is to be placed in the <message path> after the <stack>.
 
-References: card (keyword), front (keyword), return (constant), remove script (command), backScripts (function), return (glossary), message path (glossary), recent cards (glossary), statement (glossary), backScript (glossary), keyword (glossary), command (glossary), stack (object), object (object)
+References: card (keyword), front (keyword), return (constant), remove script (command), backScripts (function), return (glossary), message path (glossary), recent cards (glossary), statement (glossary), backScript (glossary), keyword (glossary), command (glossary), stack (object), object (glossary)
 
 Tags: navigation

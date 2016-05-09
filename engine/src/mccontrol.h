@@ -269,17 +269,17 @@ public:
 		return focused;
 	}
 
-	uint2 getstyle()
+	uint32_t getstyle()
 	{
 		return getstyleint(flags);
 	}
 
-	uint2 getleftmargin() const
+	int16_t getleftmargin() const
 	{
 		return leftmargin;
 	}
 
-	uint2 getrightmargin() const
+	int16_t getrightmargin() const
 	{
 		return rightmargin;
 	}

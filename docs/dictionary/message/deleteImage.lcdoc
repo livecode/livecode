@@ -32,6 +32,6 @@ However, the undo <command> will restore an <image> after it is deleted by the u
     send "undo" to this card in 5 milliseconds
   end deleteImage
 
-References: card (keyword), image (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), pass (control_st)
+References: card (keyword), image (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), pass (control structure)
 
 Tags: objects

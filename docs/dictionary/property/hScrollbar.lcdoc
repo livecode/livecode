@@ -29,6 +29,6 @@ Changing the <hScrollbar> does not change the <object|object's> <rectangle> <pro
 
 If a field's <dontWrap> <property> is set to true, the <field> does not scroll horizontally; the scrollbar appears but is always disabled.
 
-References: hScroll (property), dontWrap (property), width (property), vScrollbar (property), field (keyword), rectangle (keyword), group (command), field (object), object (object), property (glossary), group (glossary)
+References: hScroll (property), dontWrap (property), width (property), vScrollbar (property), field (keyword), rectangle (keyword), group (command), field (object), object (glossary), property (glossary), group (glossary)
 
 Tags: ui

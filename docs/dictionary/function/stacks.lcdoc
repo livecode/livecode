@@ -28,6 +28,6 @@ The file paths of substacks are included, but the stack names themselves are not
 
 The list includes any open LiveCode windows (such as the message box and menu bar). It also includes stacks that have been opened during the current session and then closed, unless the stack's destroyStack <property> is set to true.
 
-References: function (control_st), line (keyword), stack (object), stacks (function), mainStacks (function), property (glossary), stack file (glossary), file path (glossary), return (glossary)
+References: function (control structure), line (keyword), stack (object), stacks (function), mainStacks (function), property (glossary), stack file (glossary), file path (glossary), return (glossary)
 
 Tags: file system

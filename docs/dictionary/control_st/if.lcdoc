@@ -64,4 +64,4 @@ The <if> <control structure> is most suitable when you want to check a single <c
 
 >*Note:* The <if> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
 
-References: then (keyword), else (keyword), end if (keyword), word (keyword), switch (control_st), statement (glossary), command (glossary), evaluate (glossary), execute (glossary), control structure (glossary), commandNames (function)
+References: then (keyword), else (keyword), end if (keyword), word (keyword), switch (control structure), statement (glossary), command (glossary), evaluate (glossary), execute (glossary), control structure (glossary), commandNames (function)

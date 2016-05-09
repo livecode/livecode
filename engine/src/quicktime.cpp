@@ -32,7 +32,6 @@
 #ifdef _WINDOWS_DESKTOP
 #include "w32prefix.h"
 #include "w32dc.h"
-#include "w32context.h"
 
 #include "digitalv.h"
 #include "QTML.h"

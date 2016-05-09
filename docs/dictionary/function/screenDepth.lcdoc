@@ -36,4 +36,4 @@ The value returned by the <screenDepth> <function> is updated only when you star
 
 When the <environment> is "command line", the <screenDepth> is 0.
 
-References: colorWorld (property), dontDither (property), function (control_st), unlock colorMap (command), environment (function), screenType (function), bit depth (glossary), return (glossary), application (glossary), image (object)
+References: colorWorld (property), dontDither (property), function (control structure), unlock colorMap (command), environment (function), screenType (function), bit depth (glossary), return (glossary), application (glossary), image (object)

@@ -44,6 +44,6 @@ If the <revXMLTree> <function> encounters an error, it <return|returns> an error
 
 >*Important:*  The <revXMLTree> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: nodes (property), XML library (library), LiveCode custom library (library), tab (constant), Standalone Application Settings (glossary), node (glossary), standalone application (glossary), XML tree (glossary), return (glossary), revXMLText (function), revXMLMatchingNode (function), function (control_st), string (keyword)
+References: nodes (property), XML library (library), LiveCode custom library (library), tab (constant), Standalone Application Settings (glossary), node (glossary), standalone application (glossary), XML tree (glossary), return (glossary), revXMLText (function), revXMLMatchingNode (function), function (control structure), string (keyword)
 
 Tags: text processing

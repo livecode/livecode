@@ -27,6 +27,6 @@ The actual deletion is not triggered by the <deleteScrollbar> <message>, so <tra
 
 However, the undo <command> will restore a <scrollbar> after it is deleted by the user.
 
-References: scrollbar (keyword), delete (command), stack (object), command (glossary), message (glossary), trap (glossary), pass (control_st)
+References: scrollbar (keyword), delete (command), stack (object), command (glossary), message (glossary), trap (glossary), pass (control structure)
 
 Tags: objects

@@ -29,6 +29,6 @@ The <dropChunk> <function> only <return|returns> a value while a <dragDrop> <han
 
 The <dropChunk> <function> designates an <insertion point> rather than a run of characters. For example, if you drop text between <characters> 3 and 4 of <field> number 1, the <dropChunk> <function> <return|returns> "char 4 to 3 of field 1".
 
-References: field (keyword), characters (keyword), dragDrop (message), dragDestination (function), mouseChunk (function), clickChunk (function), dropChunk (function), handler (glossary), insertion point (glossary), return (glossary), chunk expression (glossary), execute (glossary), function (control_st)
+References: field (keyword), characters (keyword), dragDrop (message), dragDestination (function), mouseChunk (function), clickChunk (function), dropChunk (function), handler (glossary), insertion point (glossary), return (glossary), chunk expression (glossary), execute (glossary), function (control structure)
 
 Tags: text processing

@@ -95,7 +95,7 @@ public:
 		return ftell(m_stream);
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 		struct stat t_info;
 		if (fstat(fileno(m_stream), &t_info) != 0)
@@ -218,7 +218,7 @@ public:
 		return m_position;
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 		return m_size;
 	}

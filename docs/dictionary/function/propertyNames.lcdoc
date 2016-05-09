@@ -27,6 +27,6 @@ Use the <propertyNames> <function> to check whether a particular <property> alre
 
 The <propertyNames> <function> <return|returns> all the <property|properties> that can be used in <LiveCode>, including synonyms.
 
-References: properties (property), customProperties (property), line (keyword), constantNames (function), functionNames (function), commandNames (function), colorNames (function), setProp (control_st), function (control_st), property (glossary), custom property (glossary), LiveCode (glossary), return (glossary), reserved word (glossary)
+References: properties (property), customProperties (property), line (keyword), constantNames (function), functionNames (function), commandNames (function), colorNames (function), setProp (control structure), function (control structure), property (glossary), custom property (glossary), LiveCode (glossary), return (glossary), reserved word (glossary)
 
 Tags: properties

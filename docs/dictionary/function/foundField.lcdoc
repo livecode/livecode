@@ -30,6 +30,6 @@ Use the <foundField> <function> after a <find> command to determine where the te
 
 The <foundField> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> command draws around the found text disappears. If there is no box, the <foundField> <function> <return|returns> empty.
 
-References: field (keyword), selection (keyword), find (command), function (control_st), property (glossary), current card (glossary), command (glossary), return (glossary), number (function)
+References: field (keyword), selection (keyword), find (command), function (control structure), property (glossary), current card (glossary), command (glossary), return (glossary), number (function)
 
 Tags: database

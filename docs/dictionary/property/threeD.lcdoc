@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the threeD of <object> to {true | false}
 
-Summary: Specifies whether an <object> appears to stick out of or recede into the screen.
+Summary: Specifies whether an <object(glossary)> appears to stick out of or recede into the screen.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -21,9 +21,9 @@ Value (bool):An object's <threeD> <property> is true or false.
 By default, the <threeD> <property> of newly created <object|objects> is true.
 
 Description:
-Use the <threeD> <property> to determine whether an <object> appears flat or three-dimensional.
+Use the <threeD> <property> to determine whether an <object(glossary)> appears flat or three-dimensional.
 
-If the <threeD> of an <object> is true, the <object> appears to stick up out of the screen (if it is a <button>) or be pressed a few <pixels> below the level of the screen. If the <threeD> is false, the <object> appears flat.
+If the <threeD> of an <object(glossary)> is true, the <object(glossary)> appears to stick up out of the screen (if it is a <button>) or be pressed a few <pixels> below the level of the screen. If the <threeD> is false, the <object(glossary)> appears flat.
 
 The borders of objects whose <threeD> is true are drawn with the <topColor> and bottomC to simulate depth. The borders of <object|objects> whose <threeD> is false are drawn with the <borderColor>.
 
@@ -31,6 +31,6 @@ If the object's borderWidth <property> is zero, or its <showBorder> is false, th
 
 You can set the <threeD> <property> of a <stack>, but the <property> has no effect.
 
-References: pixels (property), showBorder (property), shadow (property), style (property), topColor (property), borderPattern (property), hiliteBorder (property), threeDHilite (property), borderColor (property), button (keyword), stack (object), object (object), property (glossary)
+References: pixels (property), showBorder (property), shadow (property), style (property), topColor (property), borderPattern (property), hiliteBorder (property), threeDHilite (property), borderColor (property), button (keyword), stack (object), object (glossary), property (glossary)
 
 Tags: ui

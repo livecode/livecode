@@ -2633,17 +2633,17 @@ void MCDispatch::GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height)
 
 void MCDispatch::GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel)
 {
-    r_pixel = MCscreen->black_pixel.pixel & 0xFFFFFF;
+    r_pixel = MCColorGetPixel(MCscreen->black_pixel) & 0xFFFFFF;
 }
 
 void MCDispatch::GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
 {
-    r_pixel = MCscreen->background_pixel.pixel & 0xFFFFFF;
+    r_pixel = MCColorGetPixel(MCscreen->background_pixel) & 0xFFFFFF;
 }
 
 void MCDispatch::GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
 {
-    r_pixel = MCscreen->white_pixel.pixel & 0xFFFFFF;
+    r_pixel = MCColorGetPixel(MCscreen->white_pixel) & 0xFFFFFF;
 }
 
 void MCDispatch::GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)

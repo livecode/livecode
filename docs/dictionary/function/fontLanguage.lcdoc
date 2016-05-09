@@ -44,6 +44,6 @@ For a list of all fonts installed on the current system, use the fontNames funct
 
 >*Cross-platform note:*  On <Unix|Unix systems>, the <fontLanguage> always returns "English".
 
-References: function (control_st), uniDecode (function), Unix (glossary), Unicode (glossary)
+References: function (control structure), uniDecode (function), Unix (glossary), Unicode (glossary)
 
 Tags: text processing

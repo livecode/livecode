@@ -4,7 +4,7 @@ Type: message
 
 Syntax: dragEnd
 
-Summary: Sent to the <object> a <drag and drop> started from, when the data is dropped.
+Summary: Sent to the <object(glossary)> a <drag and drop> started from, when the data is dropped.
 
 Introduced: 2.0
 
@@ -37,8 +37,8 @@ On the other hand, if you want to perform some action when text is dragged from 
     pass dragEnd -- needed for text removal to occur
   end dragEnd
 
-To make changes to the original data in a locked field or a control other than a field when a drop is completed, handle the <dragEnd> message. For these objects, if you want the dragged data to be removed (or changed), your <dragEnd> <handler> must delete the dragged text from the source <object> (or perform whatever action you want to do on a drop); the behavior is not automated as it is for <unlock|unlocked> <field(object)|fields>.
+To make changes to the original data in a locked field or a control other than a field when a drop is completed, handle the <dragEnd> message. For these objects, if you want the dragged data to be removed (or changed), your <dragEnd> <handler> must delete the dragged text from the source <object(glossary)> (or perform whatever action you want to do on a drop); the behavior is not automated as it is for <unlock|unlocked> <field(object)|fields>.
 
-References: dragImage (property), acceptDrop (property), dragEnd (message), dragDrop (message), mouseRelease (message), field (keyword), field (object), object (object), dragSource (function), dragDestination (function), handler (glossary), message (glossary), unlock (glossary), control structure (glossary), drag and drop (glossary), control (glossary), trap (glossary), pass (control_st)
+References: dragImage (property), acceptDrop (property), dragEnd (message), dragDrop (message), mouseRelease (message), field (keyword), field (object), object (glossary), dragSource (function), dragDestination (function), handler (glossary), message (glossary), unlock (glossary), control structure (glossary), drag and drop (glossary), control (glossary), trap (glossary), pass (control structure)
 
 Tags: ui

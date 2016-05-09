@@ -50,7 +50,7 @@ public:
 	virtual bool Flush(void);
 
 	virtual void *GetFilePointer(void);
-	virtual int64_t GetFileSize(void);
+	virtual uint64_t GetFileSize(void);
 
 	virtual bool TakeBuffer(void *& r_buffer, size_t & r_length);
 

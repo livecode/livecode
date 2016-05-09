@@ -5,7 +5,7 @@ Synonyms: owner,owned,owning,own,parent
 Type: glossary
 
 Description:
-The <object> that contains another <object>; the next <object> in the <object hierarchy>. A <card control> is owned by the <card> it's on; a <grouped control> is owned by its <group>; a <card> is owned by the <stack> it's in; and <substack|substacks> are owned by their <main stack>. 
+The <object(glossary)> that contains another <object(glossary)>; the next <object(glossary)> in the <object hierarchy>. A <card control> is owned by the <card> it's on; a <grouped control> is owned by its <group>; a <card> is owned by the <stack> it's in; and <substack|substacks> are owned by their <main stack>. 
  
 Also, the application that will open a <file> when the <file> is double-clicked. 
  

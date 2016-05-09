@@ -33,6 +33,6 @@ If the mouse button is down, the <mouseControl> <function> <return|returns> the 
 
 If the mouse is over a graphic that is not selected, its interior is considered to be within the graphic only if the graphic's filled <property> is true. If the <graphic(object)|graphic's> <filled> is false and the <graphic(keyword)> is not selected, the <mouseControl> <return|returns> the <graphic(object)|graphic's> number only if the mouse is over the <graphic(object)|graphic's> border.
 
-References: filled (property), layer (property), mouseEnter (message), mouseLeave (message), string (keyword), control (keyword), graphic (keyword), property (glossary), mouse pointer (glossary), return (glossary), within (function), mouseCharChunk (function), stack (object), control (object), graphic (object), function (control_st)
+References: filled (property), layer (property), mouseEnter (message), mouseLeave (message), string (keyword), control (keyword), graphic (keyword), property (glossary), mouse pointer (glossary), return (glossary), within (function), mouseCharChunk (function), stack (object), control (object), graphic (object), function (control structure)
 
 Tags: ui

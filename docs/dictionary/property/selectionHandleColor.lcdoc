@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the selectionHandleColor to {colorName | RGBColor}
 
-Summary: The selectionHandlerColor <property> specifies the color of the handle boxes used to resize a <selected> <object>.
+Summary: The selectionHandlerColor <property> specifies the color of the handle boxes used to resize a <selected> <object(glossary)>.
 
 Introduced: 1.0
 
@@ -32,6 +32,6 @@ By default, the <selectionHandleColor> is "0,0,0" (black).
 Description:
 Use the <selectionHandleColor> <property> to change the appearance of <selected> <object|objects>.
 
-References: selected (property), borderColor (property), colorNames (function), property (glossary), hexadecimal (glossary), integer (glossary), color reference (glossary), object (object)
+References: selected (property), borderColor (property), colorNames (function), property (glossary), hexadecimal (glossary), integer (glossary), color reference (glossary), object (glossary)
 
 Tags: ui

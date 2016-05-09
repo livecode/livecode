@@ -23,8 +23,8 @@ Use the <lock error dialogs> <command> to <handle> <execution error|execution er
 
 The <lock error dialogs> <command> sets the <lockErrorDialogs> <property> to true.
 
-If an execution error occurs while the <lockErrorDialogs> <property> is set to true, an <errorDialog> <message> is sent to the <object> whose <handler> set the <lockErrorDialogs> to true.
+If an execution error occurs while the <lockErrorDialogs> <property> is set to true, an <errorDialog> <message> is sent to the <object(glossary)> whose <handler> set the <lockErrorDialogs> to true.
 
 When all pending handlers are finished executing, the <lockErrorDialogs> <property> is set back to false, undoing the <lock error dialogs> <command|command's> action.
 
-References: lockErrorDialogs (property), errorDialog (message), lock messages (command), unlock error dialogs (command), object (object), property (glossary), handler (glossary), message (glossary), command (glossary), handle (glossary), execution error (glossary)
+References: lockErrorDialogs (property), errorDialog (message), lock messages (command), unlock error dialogs (command), object (glossary), property (glossary), handler (glossary), message (glossary), command (glossary), handle (glossary), execution error (glossary)

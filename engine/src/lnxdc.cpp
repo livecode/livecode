@@ -75,7 +75,6 @@ MCScreenDC::MCScreenDC()
 	ownselection = False;
 	pendingevents = NULL;
 	backdrop = DNULL;
-	backdropcolor.pixel = 0;
 
 	m_backdrop_pixmap = nil;
 	

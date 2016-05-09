@@ -41,6 +41,6 @@ To force a quit without sending a <shutdownRequest message> use:
   lock messages 
   quit
 
-References: shutdownRequest (message), shutdownRequest message (message), shutdown (message), kill (command), close process (command), if (control_st), application (glossary), command (glossary), standalone application (glossary), control structure (glossary)
+References: shutdownRequest (message), shutdownRequest message (message), shutdown (message), kill (command), close process (command), if (control structure), application (glossary), command (glossary), standalone application (glossary), control structure (glossary)
 
 Tags: windowing

@@ -133,28 +133,19 @@ void MCScreenDC::common_open(void)
 	
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0;
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF;
-	black_pixel.pixel = 0;
-	white_pixel.pixel = 0xFFFFFF;
 	
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	
 	MConecolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8080;
-	alloccolor(gray_pixel);
 	
 	MChilitecolor.red = MChilitecolor.green = 0x0000;
 	MChilitecolor.blue = 0x8080;
-	alloccolor(MChilitecolor);
 	
 	MCaccentcolor = MChilitecolor;
-	alloccolor(MCaccentcolor);
 	
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
-	alloccolor(background_pixel);
 	
 	// Initialize the common vars.
 	m_window_left = 0;

@@ -31,6 +31,6 @@ You use the Pointer tool to select entire objects (including images), but you us
 
 To find out which objects are selected with the Pointer tool, use the selectedObject <function> instead.
 
-References: selected (property), number (function), image (keyword), function (control_st), Pointer tool (glossary), choose (command), image (object)
+References: selected (property), number (function), image (keyword), function (control structure), Pointer tool (glossary), choose (command), image (object)
 
 Tags: multimedia

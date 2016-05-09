@@ -20,9 +20,9 @@ The result: Each component of the resulting color is equal to the result of this
 Description:
 Use the <srcAnd> <keyword> to make the light-colored parts of an object transparent.
 
-The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object> to determine how the <object|object's> color is displayed.
+The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object(glossary)> to determine how the <object|object's> color is displayed.
 
-When the <srcAnd> <transfer mode> is used, LiveCode performs a <bitAnd> operation on each component of the <object> color with the corresponding component of the color under the <object>.
+When the <srcAnd> <transfer mode> is used, LiveCode performs a <bitAnd> operation on each component of the <object(glossary)> color with the corresponding component of the color under the <object(glossary)>.
 
 object component bitAnd background component
 
@@ -32,6 +32,6 @@ For example, suppose an object's color is 45,0,255, and the color of the pixels 
 
 The <srcAnd> mode can be used only on <Unix> and <Windows|Windows systems>. On <Mac OS|Mac OS systems>, <object|objects> whose <ink> <property> is set to this mode appear as though their <ink> were set to <noOp>.
 
-References: noOp (keyword), notSrcCopy (keyword), ink (property), pixels (property), bitAnd (operator), object (object), property (glossary), keyword (glossary), Unix (glossary), Windows (glossary), Mac OS (glossary), transfer mode (glossary)
+References: noOp (keyword), notSrcCopy (keyword), ink (property), pixels (property), bitAnd (operator), object (glossary), property (glossary), keyword (glossary), Unix (glossary), Windows (glossary), Mac OS (glossary), transfer mode (glossary)
 
 Tags: ui

@@ -51,6 +51,6 @@ If the operation is not successful, the <revDatabaseColumnNames> <function> retu
 Changes:
 The ability to obtain the list of fields for a table without obtaining a record set first was added in version 2.9
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnCount (function), revDatabaseColumnNamed (function), revDatabaseColumnTypes (function), revDatabaseColumnIsNull (function), database field (glossary), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL query (glossary), function (control_st)
+References: string (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnCount (function), revDatabaseColumnNamed (function), revDatabaseColumnTypes (function), revDatabaseColumnIsNull (function), database field (glossary), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL query (glossary), function (control structure)
 
 Tags: database

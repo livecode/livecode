@@ -32,6 +32,6 @@ However, the undo <command> will restore a <graphic> after it is deleted by the 
     send "undo" to this card in 5 milliseconds
   end deleteGraphic
 
-References: card (keyword), graphic (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), graphic (glossary), pass (control_st)
+References: card (keyword), graphic (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), graphic (glossary), pass (control structure)
 
 Tags: objects

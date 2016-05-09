@@ -25,4 +25,4 @@ Use the <listRegistry> <function> to lists the sub-keys of a key in the <registr
 
 The <listRegistry> function returns a return-delimited list of sub-keys, i.e. those keys which are direct children of the given parentKey. The specified key should be in the same format as the other registry functions.
 
-References: function (control_st), deleteRegistry (function), MCISendString (function), setRegistry (function), registry (glossary)
+References: function (control structure), deleteRegistry (function), MCISendString (function), setRegistry (function), registry (glossary)

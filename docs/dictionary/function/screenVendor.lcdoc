@@ -27,4 +27,4 @@ Use the <screenVendor> <function> to get information about the XWindows software
 
 The return value usually includes the company or organization that produced the screen driver, along with version information.
 
-References: string (keyword), function (control_st), screenName (function), return (glossary)
+References: string (keyword), function (control structure), screenName (function), return (glossary)

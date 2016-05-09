@@ -33,6 +33,6 @@ If the field is locked, the <clickField> function is most useful within a <handl
 
 If the field is unlocked, mouseDown and <mouseUp> <message|messages> are not sent when the user clicks in the <field> (unless the user right-clicks or holds down the Control key while clicking). Use the <clickField> function within a <selectionChanged> <handler> to determine what <field> the user is editing.
 
-References: field (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), clickStack (function), number (function), handler (glossary), message (glossary), trigger (glossary), return (glossary), hypertext (glossary), function (control_st)
+References: field (keyword), mouseDown (message), mouseUp (message), selectionChanged (message), clickStack (function), number (function), handler (glossary), message (glossary), trigger (glossary), return (glossary), hypertext (glossary), function (control structure)
 
 Tags: ui

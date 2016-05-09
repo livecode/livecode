@@ -67,7 +67,7 @@ To import a snapshot of an object that has graphic effects applied to it, use th
 Where chunk is any chunk expression resolving to a control, or any expression evaluating to a control reference.
 
 To import a snapshot of an object in iOS use the form:
-<import snapshot> from [ rectangle rect of ] <object> 
+<import snapshot> from [ rectangle rect of ] <object(glossary)> 
 
 To import a snapshot of the screen in iOS use the form:
 <import snapshot> from rectangle rect

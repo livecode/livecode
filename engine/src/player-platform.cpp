@@ -91,8 +91,8 @@ extern "C" int initialise_weak_link_QuickDraw(void);
 
 static MCColor controllercolors[] = {
     
-            {0, 0x2222, 0x2222, 0x2222, 0, 0},         /* dark gray */
-            {0, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},         /* white */
+            {0x2222, 0x2222, 0x2222},         /* dark gray */
+            {0xFFFF, 0xFFFF, 0xFFFF},         /* white */
 };
 
 inline void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)

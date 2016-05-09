@@ -26,6 +26,11 @@ public:
 	{
 		m_object = p_object -> gethandle();
 	}
+    
+    virtual ~MCMovieTouchedEvent()
+    {
+        ;
+    }
 	
 	void Destroy(void)
 	{

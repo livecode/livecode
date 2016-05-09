@@ -93,7 +93,7 @@ struct MCSystemFileHandle
 	virtual int64_t Tell(void) = 0;
 	
 	virtual void *GetFilePointer(void) = 0;
-	virtual int64_t GetFileSize(void) = 0;
+	virtual uint64_t GetFileSize(void) = 0;
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
 
@@ -188,7 +188,7 @@ public:
 		// If there isn't enough room, extend
 		if (m_pointer + p_length > m_capacity)
 		{
-			uint32_t t_new_capacity;
+			size_t t_new_capacity;
 			t_new_capacity = (m_pointer + p_length + 4096) & ~4095;
 			
 			void *t_new_buffer;
@@ -249,7 +249,7 @@ public:
 		return m_pointer;
 	}
 	
-	int64_t GetFileSize(void)
+	uint64_t GetFileSize(void)
 	{
 		return m_length;
 	}
@@ -394,7 +394,7 @@ public:
 		return m_callbacks -> tell(m_state);
 	}
 	
-	int64_t GetFileSize(void)
+	uint64_t GetFileSize(void)
 	{
 		return 0;
 	}

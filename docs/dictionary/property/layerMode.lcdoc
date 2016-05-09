@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the layerMode of <object> to <mode> 
 
-Syntax: get the [effective] layerMode of <object> 
+Syntax: get the [effective] layerMode of <object>
 
 Summary: Specifies whether an object is dynamic or static.
 

@@ -39,20 +39,20 @@ colorName: Any standard color name.
 rgbColor: Consists of three comma-separated integers between zero and 255, specifying the level of each of red, green, and blue; or an HTML-style color consisting of a hash mark (#) followed by three hexadecimal numbers, one for each of red, green, and blue.
 
 Description:
-Use the <backgroundColor> <property> to change the background of a window, or the color that fills an <object>, or to change the background color of text for a <highlight|highlighted> effect.
+Use the <backgroundColor> <property> to change the background of a window, or the color that fills an <object(glossary)>, or to change the background color of text for a <highlight|highlighted> effect.
 
 By default, the <backgroundColor> for all <object|objects> is empty.
 
-Setting the <backgroundColor> of an <object> to empty allows the <backgroundColor> of the <object|object's> <owner(property)> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <backgroundColor> is empty.
+Setting the <backgroundColor> of an <object(glossary)> to empty allows the <backgroundColor> of the <object|object's> <owner(property)> to show through. Use the <effective> <keyword> to find out what color is used for the <object(glossary)>, even if its own <backgroundColor> is empty.
 
 If an object's backgroundPattern is set, the pattern is shown instead of the color specified by <backgroundColor>.
 The setting of the <backgroundColor> <property> has different effects, depending on the <object type>:
 
-* The <backgroundColor> of a <stack> or <card> fills the entire <stack window>, as well as determining the <backgroundColor> of each <object> in the <stack> or <card> that does not have its own <backgroundColor>.
+* The <backgroundColor> of a <stack> or <card> fills the entire <stack window>, as well as determining the <backgroundColor> of each <object(glossary)> in the <stack> or <card> that does not have its own <backgroundColor>.
 
 >*Cross-platform note:* On <Mac OS>, <OS X>, and <Windows|Windows systems>, if the <backgroundColor> of all <object|objects> in the <object hierarchy> is empty, the background color set by the system is used.
 
-* The <backgroundColor> of a group determines the <backgroundColor> of each <object> in the <group> that does not have its own <backgroundColor>.
+* The <backgroundColor> of a group determines the <backgroundColor> of each <object(glossary)> in the <group> that does not have its own <backgroundColor>.
 
 * The <backgroundColor> of a button fills the area inside the <button(object)|button's> outline. If the button's <style> is "checkbox", the <backgroundColor> fills the checkbox. If the <button(object)|button's> style is "radioButton", the <backgroundColor> has no effect. If the <button(keyword)> is a <tabbed button>, the <backgroundColor> fills the tab area and the frontmost tab, but does not affect the other tabs.
 
@@ -77,6 +77,6 @@ The ability to use the system background color was introduced in version 1.1. In
 Changes:
 The ability of standard buttons to have a <backgroundColor> under Appearance Manager was introduced in version 2.0. In previous versions, if the <lookAndFeel> was set to "Appearance Manager", the setting of the <backgroundColor> had no effect on standard <button|buttons>.
 
-References: leftIndent (property), topColor (property), borderWidth (property), vgrid (property), backgroundPattern (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), menuMode (property), brushColor (property), listBehavior (property), listIndent (property), linkColor (property), hidden (property), textSize (property), firstIndent (property), tabstops (property), spaceBelow (property), listStyle (property), style (property), rightIndent (property), listDepth (property), hgrid (property), foregroundColor (property), linkHiliteColor (property), hScrollbar (property), owner (property), lookAndFeel (property), borderColor (property), formattedWidth (property), image (keyword), effective (keyword), field (keyword), button (keyword), word (keyword), player (keyword), card (keyword), scrollbar (keyword), graphic (keyword), colorPalette (keyword), answer color (command), group (command), button (object), image (object), field (object), object (object), stack (object), graphic (object), video clip (glossary), property (glossary), foregroundPattern (glossary), tabbed button (glossary), highlight (glossary), stack window (glossary), object type (glossary), Mac OS (glossary), OS X (glossary), chunk (glossary), object hierarchy (glossary), color palette (glossary), button menu (glossary), keyword (glossary), audio clip (glossary), EPS (glossary), owner (glossary), lookAndFeel (glossary), Windows (glossary), word (glossary)
+References: leftIndent (property), topColor (property), borderWidth (property), vgrid (property), backgroundPattern (property), textAlign (property), dontWrap (property), formattedText (property), spaceAbove (property), menuMode (property), brushColor (property), listBehavior (property), listIndent (property), linkColor (property), hidden (property), textSize (property), firstIndent (property), tabstops (property), spaceBelow (property), listStyle (property), style (property), rightIndent (property), listDepth (property), hgrid (property), foregroundColor (property), linkHiliteColor (property), hScrollbar (property), owner (property), lookAndFeel (property), borderColor (property), formattedWidth (property), image (keyword), effective (keyword), field (keyword), button (keyword), word (keyword), player (keyword), card (keyword), scrollbar (keyword), graphic (keyword), colorPalette (keyword), answer color (command), group (command), button (object), image (object), field (object), object (glossary), stack (object), graphic (object), video clip (glossary), property (glossary), foregroundPattern (glossary), tabbed button (glossary), highlight (glossary), stack window (glossary), object type (glossary), Mac OS (glossary), OS X (glossary), chunk (glossary), object hierarchy (glossary), color palette (glossary), button menu (glossary), keyword (glossary), audio clip (glossary), EPS (glossary), owner (glossary), lookAndFeel (glossary), Windows (glossary), word (glossary)
 
 Tags: ui

@@ -580,7 +580,6 @@ bool MCImageIndexedBitmapAddTransparency(MCImageIndexedBitmap *p_bitmap)
 	p_bitmap->palette[p_bitmap->transparent_index].red = 0xFFFF;
 	p_bitmap->palette[p_bitmap->transparent_index].green = 0xFFFF;
 	p_bitmap->palette[p_bitmap->transparent_index].blue = 0xFFFF;
-	p_bitmap->palette[p_bitmap->transparent_index].pixel = MCGPixelPackNative(255, 255, 255, 0);
 
 	return true;
 }
@@ -680,7 +679,6 @@ bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transp
 						if (t_success)
 						{
 							hashentry->pixel = t_pixel;
-							t_indexed->palette[t_indexed->palette_size].pixel = t_pixel;
 
 							uint16_t t_component;
 							t_component = t_r;

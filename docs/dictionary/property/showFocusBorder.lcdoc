@@ -20,7 +20,7 @@ set the showFocusBorder of field "Answer" to false
 Example:
 set the showFocusBorder of myControl to (the platform is not "MacOS")
 
-Value (bool):The <showFocusBorder> of an <object> is true or false.
+Value (bool):The <showFocusBorder> of an <object(glossary)> is true or false.
 By default, the <showFocusBorder> <property> of newly created <object|objects> is set to true.
 
 Description:
@@ -36,6 +36,6 @@ If the lookAndFeel is set to "Windows 95", the <showFocusBorder> <property> has 
 
 The focusBorder of <card|cards> and <stacks> has no effect.
 
-References: field (keyword), focusPattern (property), properties (property), modeless (command), focus (command), modal (command), card (object), image (object), field (object), object (object), control (object), property (glossary), EPS (glossary), insertion point (glossary), dialog box (glossary), Unix (glossary), active control (glossary), stacks (function)
+References: field (keyword), focusPattern (property), properties (property), modeless (command), focus (command), modal (command), card (object), image (object), field (object), object (glossary), control (object), property (glossary), EPS (glossary), insertion point (glossary), dialog box (glossary), Unix (glossary), active control (glossary), stacks (function)
 
 Tags: ui

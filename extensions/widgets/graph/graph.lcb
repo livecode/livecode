@@ -16,7 +16,16 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 /**
-This widget displays information as a configurable line graph.
+A configurable line graph widget.
+
+The graph has labelled axes and allows multiple lines to be displayed.
+
+- Load comma-delimited data into the graph with the <graphData> property
+- Set the <graphColors> to control the color of each line in the graph
+- Call out a specific point on the graph by setting the
+  <hilitedCoordinates>
+
+References: graphData(property), graphColors(property), hilitedCoordinates(property)
 */
 
 widget com.livecode.widget.lineGraph
@@ -45,8 +54,7 @@ get the graphData of <widget>
 
 Summary: The data displayed by the graph.
 
-Parameters:
-pData(string): A line delimited list of the data for each point on the x-axis.
+Value(String): A line delimited list of the data for each point on the x-axis.
 
 Example:
     local tVar
@@ -56,8 +64,11 @@ Example:
 
 Description:
 The <graphData> is the data to be displayed by the graph widget.
-Each line of <pData> consists of a comma delimited list whose first element is the label for that point on the x-axis,
-and whose subsequent items give the values corresponding to that label for each line to be displayed on the graph.
+
+Each line of the <graphData> should be a a comma delimited list.  The
+first item of each line is the label for that point on the x-axis.
+The second and following items are the values corresponding to that
+label for one of the graph's lines.
 */
 property graphData get getData set setData
 metadata graphData.editor is "com.livecode.pi.text"
@@ -69,10 +80,9 @@ Syntax:
 set the graphColors of <widget> to <pColors>
 get the graphColors of <widget>
 
-Summary: The colors of the lines on the graph.
+Summary: The colors for drawing lines on the graph
 
-Parameters:
-pColors(string): A line-delimited list of the colors for each line on the graph
+Value(String): A line-delimited list of the colors for each line on the graph
 
 Example:
 local tVar
@@ -82,6 +92,10 @@ set the graphColors of widget "My Graph" to tVar
 
 Description:
 The <graphColors> are the colors of each line in the graph widget.
+
+Each line of the <graphColors> should be a comma delimited list with
+four items.  The items are the red, green, blue, and alpha (opacity)
+components of the line color.
 */
 property graphColors get getColors set setColors
 metadata graphColors.editor is "com.livecode.pi.editorList"
@@ -92,71 +106,81 @@ metadata graphColors.label is "Line colors"
 metadata graphColors.section is "Colors"
 
 /**
-Summary: Controls whether the horizontal lines on the graph are shown.
+Summary: Whether horizontal grid lines are displayed
 
 Syntax:
-set the graphXLines of <widget> to <pLines>
+set the graphXLines of <widget> to ( true | false )
 get the graphXLines of <widget>
 
-Parameters:
-pLines(boolean): True or false.
+Value (boolean): True if grid lines should be shown; false otherwise
 
 Description:
-Controls whether the horizontal lines on the graph are shown.
+If true, the graph widget will draw horizontal grid lines on the
+graph.  The number and spacing of the grid lines is determined
+automatically.
+
+Related: graphYLines (property)
 */
 property graphXLines get mGridHShow set setXLinesVisibility
 metadata graphXLines.default is "true"
 metadata graphXLines.label is "Horizontal grid lines "
 
 /**
-Summary: Controls whether the vertical lines on the graph are shown.
+Summary: Whether vertical grid lines are displayed
 
 Syntax:
-set the graphYLines of <widget> to <pLines>
+set the graphYLines of <widget> to { true | false }
 get the graphYLines of <widget>
 
-Parameters:
-pLines(boolean): True or false.
+Value (boolean): True if grid lines should be shown; false otherwise
 
 Description:
-Controls whether the vertical lines on the graph are shown.
+If true, the graph widget will draw vertical grid lines on the graph.
+The number and spacing of the grid lines is determined automatically.
+
+Related: graphXLines (property)
 */
 property graphYLines get mGridVShow set setYLinesVisibility
 metadata graphYLines.default is "true"
 metadata graphYLines.label is "Vertical grid lines"
 
 /**
-Summary: Controls which point on the graph is highlighted.
+Summary: The coordinates of a highlighted point on the graph
 
 Syntax:
-set the hilitedCoordinates of <widget> to { <pPoint> | empty }
+set the hilitedCoordinates of <widget> to { <point> | empty }
 get the hilitedCoordinates of <widget>
 
-Parameters:
-pPoint(point): A string consisting of two comma-dellimited numeric values
+Value(String): The comma-delimited coordinates of a point, or empty.
 
 Description:
-If the <hilitedCoordinates> of a graph widget is not empty, then the widget will highlight the
-coordinates using dotted lines from both the axes.
+If the <hilitedCoordinates> of the graph widget is not empty, then the
+widget will highlight the specified coordinates with a dot and dashed
+horizontal and vertical lines.
+
+Related: hilitedCoordinatesColor (property)
 */
 property hilitedCoordinates get GetHilitedCoordinates set SetHilitedCoordinates
 metadata hilitedCoordinates.default is ""
 metadata hilitedCoordinates.label is "Hilited coordinates"
 
 /**
-Summary: Controls the color of the hilited coordinates
+Summary: The color for drawing the highlighted point
 
-Syntax: 
-set the hilitedCoordinatesColor of <widget> to <pColor> 
+Syntax:
+set the hilitedCoordinatesColor of <widget> to <color>
 get the hilitedCoordinatesColor of <widget>
 
-Parameters:
-pColor: Any string which is a valid color, including RGBA values.
+Value(String): Any string which is a valid color, including RGBA values.
 
-Description: 
-Use the <hilitedCoordinatesColor> to control the color of the lines and point associated
-with the current <hilitedCoordinates>
+Description:
+If the widget currently has some <hilitedCoordinates|highlighted
+coordinates> set, the <hilitedCoordinatesColor> determines the color
+used to draw the highlighting dot and lines.
+
+Related: hilitedCoordinates (property)
 */
+
 property hilitedCoordinatesColor get mHilitedCoordinatesColor set SetHilitedCoordinatesColor
 metadata hilitedCoordinatesColor.default is "0,0,0,255"
 metadata hilitedCoordinatesColor.label is "Hilited coordinates color"

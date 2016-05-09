@@ -30,6 +30,6 @@ If the stack's <destroyStack> <property> is set to false, or there are other <st
 
 If the handler that closes the stack is in the script of the stack (or in the script of an object in the stack) and the stack's <destroyStack> <property> is true, the <stack window> is closed immediately, but the stack is not removed from memory until after the <handler> completes.
 
-References: destroyStack (property), closeStackRequest (message), close file (command), close printing (command), revCloseVideoGrabber (command), stack (object), object (object), property (glossary), handler (glossary), script (glossary), command (glossary), stack window (glossary), stacks (function)
+References: destroyStack (property), closeStackRequest (message), close file (command), close printing (command), revCloseVideoGrabber (command), stack (object), object (glossary), property (glossary), handler (glossary), script (glossary), command (glossary), stack window (glossary), stacks (function)
 
 Tags: windowing

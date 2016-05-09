@@ -38,4 +38,4 @@ If no <break> appears, LiveCode <execute|executes> each set of <statement|statem
 
 The <break> <command> should not be used outside a <switch> structure: such use is nonstandard, so it may not be apparent to whoever reads the code that the use is intentional. If it appears outside a <switch> <control structure|structure>, it has the same effect as the <exit> <control structure>.
 
-References: case (keyword), end if (keyword), end switch (keyword), exit (control_st), switch (control_st), statement (glossary), command (glossary), control structure (glossary), execute (glossary), commandNames (function)
+References: case (keyword), end if (keyword), end switch (keyword), exit (control structure), switch (control structure), statement (glossary), command (glossary), control structure (glossary), execute (glossary), commandNames (function)

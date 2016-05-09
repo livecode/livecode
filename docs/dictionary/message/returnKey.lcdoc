@@ -4,7 +4,7 @@ Type: message
 
 Syntax: returnKey
 
-Summary: Sent to the active <object> when there is no text <selection> and the user presses the Return key.
+Summary: Sent to the active <object(glossary)> when there is no text <selection> and the user presses the Return key.
 
 Introduced: 1.0
 
@@ -24,6 +24,6 @@ The Return key (confusingly labeled "Enter" on some keyboards) is usually locate
 
 The message is sent to the active (focused) control, or to the current card if no control is focused. If there is a text selection or insertion point in a field (or a button whose menuMode is "comboBox") and the user presses Return, the <returnInField> <message> is sent instead of <returnKey>.
 
-References: selection (keyword), returnInField (message), focus (command), object (object), message (glossary)
+References: selection (keyword), returnInField (message), focus (command), object (glossary), message (glossary)
 
 Tags: ui

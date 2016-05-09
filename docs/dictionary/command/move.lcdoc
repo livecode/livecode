@@ -4,7 +4,7 @@ Type: command
 
 Syntax: move <object> {[from <startLoc>] to <endLoc> |to <pointList> |rel[ative] <motion>} \  [in <time>] [without {messages | waiting}]
 
-Summary: Moves an <object> from one location to another.
+Summary: Moves an <object(glossary)> from one location to another.
 
 Introduced: 1.0
 
@@ -35,20 +35,20 @@ time: The time specifies a total time for the move to take from start to end, in
 Description:
 Use the <move> <command> to animate <control|controls> or windows by moving them smoothly across the screen.
 
-Use the move...relative form of the <move> <command> to move an <object> in a straight line a certain distance from its current location. Use the move...from <startLoc> to <endLoc> form to move an object in a straight line from one location to another, without regard to where the <object> started. Use the move...to <pointList> form to move an object along a set of defined <points>.
+Use the move...relative form of the <move> <command> to move an <object(glossary)> in a straight line a certain distance from its current location. Use the move...from <startLoc> to <endLoc> form to move an object in a straight line from one location to another, without regard to where the <object(glossary)> started. Use the move...to <pointList> form to move an object along a set of defined <points>.
 
 If you specify without messages, built-in messages are not delivered during the move.
 
-If you specify without waiting, the current handler continues immediately, and a <moveStopped> <message> is sent when the move is completed. Otherwise, the <handler> pauses until the move is complete. If you issue another <move> <command> while a previous <move> <command> for the same <object> is still <execute|executing>, the previous <move> <command> is halted, and the second <move> <command> starts up at the <object|object's> current location.
+If you specify without waiting, the current handler continues immediately, and a <moveStopped> <message> is sent when the move is completed. Otherwise, the <handler> pauses until the move is complete. If you issue another <move> <command> while a previous <move> <command> for the same <object(glossary)> is still <execute|executing>, the previous <move> <command> is halted, and the second <move> <command> starts up at the <object|object's> current location.
 
 To move multiple objects at the same time, set the <lockMoves> <property> to true before issuing the <move> <command|commands>. When you set the <lockMoves> back to false, all the pending moves begin at once.
 
->*Tip:*  To easily move an <object> along a curved path, create a <curve> <graphic> using the freehand Curve tool, then use a <statement> like the following to move the <object> :
+>*Tip:*  To easily move an <object(glossary)> along a curved path, create a <curve> <graphic> using the freehand Curve tool, then use a <statement> like the following to move the <object(glossary)> :
 
   move button "My Button" to the points of graphic "My Curve"
 
 If you like, you can hide the graphic so that the object follows the invisible curve, but its path is not visible on screen.
 
-References: lockMoves (property), syncRate (property), moveSpeed (property), location (property), points (property), number (property), lowResolutionTimers (property), moveStopped (message), without (keyword), graphic (keyword), relative (keyword), object (object), control (object), movingControls (function), drag (command), grab (command), lock moves (command), stop moving (command), unlock moves (command), property (glossary), handler (glossary), execute (glossary), message (glossary), statement (glossary), curve (glossary), command (glossary)
+References: lockMoves (property), syncRate (property), moveSpeed (property), location (property), points (property), number (property), lowResolutionTimers (property), moveStopped (message), without (keyword), graphic (keyword), relative (keyword), object (glossary), control (object), movingControls (function), drag (command), grab (command), lock moves (command), stop moving (command), unlock moves (command), property (glossary), handler (glossary), execute (glossary), message (glossary), statement (glossary), curve (glossary), command (glossary)
 
 Tags: multimedia

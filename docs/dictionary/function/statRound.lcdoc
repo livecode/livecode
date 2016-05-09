@@ -41,6 +41,6 @@ A positive <precision> indicates a place to the right of the <decimal point>, an
 
 >*Note:* The <statRound> <function> is equivalent to <HyperCard|HyperTalk's> "round" <function>.
 
-References: integer (keyword), average (function), round (function), function (control_st), negative (glossary), HyperCard (glossary), return (glossary), decimal point (glossary)
+References: integer (keyword), average (function), round (function), function (control structure), negative (glossary), HyperCard (glossary), return (glossary), decimal point (glossary)
 
 Tags: math

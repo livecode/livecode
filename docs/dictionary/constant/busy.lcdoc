@@ -34,6 +34,6 @@ However, the first is easier to read and understand in LiveCode.
 
 >*Important:*  If you use the <busy> <cursor(property)> or other standard <cursor(glossary)|cursors> in your application, you must include it when you create your <standalone application|standalone>. Make sure the "Cursors" option on the Inclusions section on the General screen of the <Standalone Application Settings> window is checked.
 
-References: cursor (property), watch (constant), six (constant), constant (command), repeat (control_st), Standalone Application Settings (glossary), cursor (glossary), standalone application (glossary), loop (glossary)
+References: cursor (property), watch (constant), six (constant), constant (command), repeat (control structure), Standalone Application Settings (glossary), cursor (glossary), standalone application (glossary), loop (glossary)
 
 Tags: ui

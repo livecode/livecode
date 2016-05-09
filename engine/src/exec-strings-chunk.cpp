@@ -909,7 +909,7 @@ void MCStringsEvalTextChunk(MCExecContext& ctxt, MCMarkedText p_source, MCString
 
     // The incoming indices are for codeunits
     MCRange t_cu_range;
-    t_cu_range = MCRangeMake(p_source . start, p_source . finish - p_source . start);
+    t_cu_range = MCRangeMakeMinMax(p_source . start, p_source . finish);
     
     if (MCStringCopySubstring((MCStringRef)p_source . text, t_cu_range, r_string))
         return;
@@ -924,7 +924,7 @@ void MCStringsEvalByteChunk(MCExecContext& ctxt, MCMarkedText p_source, MCDataRe
 
     // MW-2014-04-11: [[ Bug 12179 ]] Use a subrange copy - previously clamping wasn't being
     //   performed.
-    if (MCDataCopyRange((MCDataRef)p_source . text, MCRangeMake(p_source . start, p_source . finish - p_source. start), r_bytes))
+    if (MCDataCopyRange((MCDataRef)p_source . text, MCRangeMakeMinMax(p_source . start, p_source . finish), r_bytes))
         return;
     
     ctxt . Throw();

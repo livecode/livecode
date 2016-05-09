@@ -6,7 +6,7 @@ Syntax: set the customProperties of <object> to <propertiesArray>
 
 Syntax: set the customProperties[<propertySet>] of <object> to <propertiesArray> 
 
-Summary: Specifies all the <custom property|custom properties> of an <object> that are in the current <customPropertySet>, along with their settings.
+Summary: Specifies all the <custom property|custom properties> of an <object(glossary)> that are in the current <customPropertySet>, along with their settings.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -22,12 +22,12 @@ set the customProperties of this card to myPropertiesArray
 Example:
 put the customProperties["mySet"] of me into myArray
 
-Value: The <customProperties> of an <object> is an <array> of <custom property|custom properties> and their <value|values>. The name of each <custom property> is the <array> <key>.
+Value: The <customProperties> of an <object(glossary)> is an <array> of <custom property|custom properties> and their <value|values>. The name of each <custom property> is the <array> <key>.
 
 Description:
-Use the <customProperties> <property> to set or retrieve all the <custom property|custom properties> of an <object> at once.
+Use the <customProperties> <property> to set or retrieve all the <custom property|custom properties> of an <object(glossary)> at once.
 
-The <customProperties> specifies the <property|properties> in the <object|object's> current <customPropertySet>. (The <object> can have other <custom property|custom properties>, which are accessed by switching to another <customPropertySet>.)
+The <customProperties> specifies the <property|properties> in the <object|object's> current <customPropertySet>. (The <object(glossary)> can have other <custom property|custom properties>, which are accessed by switching to another <customPropertySet>.)
 
 You can get or change the value of a single custom property using array notation. For example, the following statement copies the entire set of custom properties from one card to another, changing only the custom property named "changedDate":
 
@@ -41,6 +41,6 @@ To refer to a custom property set that is not the current <customPropertySet>, u
 
   get the customProperties["MyProps"] of this card
 
-References: properties (property), object (object), set command (command), propertyNames (function), setProp (control_st), property (glossary), key (glossary), value (glossary), custom property (glossary), statement (glossary), customPropertySet (glossary), custom property set (glossary), array (glossary)
+References: properties (property), object (glossary), set command (command), propertyNames (function), setProp (control structure), property (glossary), key (glossary), value (glossary), custom property (glossary), statement (glossary), customPropertySet (glossary), custom property set (glossary), array (glossary)
 
 Tags: properties
