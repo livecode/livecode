@@ -115,7 +115,7 @@ A comma-delimited list specifying which platforms the API entry is available for
 * mobile
 
 #### Example
-Example elements should show how API entries are used in context. Each example with be displayed in the documentation viewer as a multiline code block. Where possible, an example should be entirely self contained, so that it is runnable as a block of code without any additions.
+Example elements should show how API entries are used in context. Each example will be displayed in the documentation viewer as a multiline code block. Where possible, an example should be entirely self contained, so that it is runnable as a block of code without any additions.
 
 An API entry can have any number of Example elements. 
 
