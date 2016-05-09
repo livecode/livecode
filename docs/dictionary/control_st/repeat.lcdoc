@@ -56,7 +56,7 @@ repeat with tVarNum = 1 to 20
   do "put empty into "  tVarNameend repeat
 
 Parameters:
-loopForm (enum): 
+loopForm: 
 The <loopForm> is one of the following forms:
 
   - `forever`
