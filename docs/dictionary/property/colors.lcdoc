@@ -18,7 +18,15 @@ Example:
 put the colors of this stack into field "Colors"
 
 Example:
-set the colors of last button to field "Colors"
+put "blue" & return & \
+  "#EE98AA" & return & \
+  line 5 of the colorNames & return & \
+  220,180,200 & return & \
+  "yellow" & return & \
+  200,200,60 & return & \
+  "#334433" & return & \
+  "pink" into field "colors"
+set the colors of button "mybtn" to field "colors"
 
 Example:
 set the colors of this stack to the colors of stack "Home"
@@ -40,14 +48,14 @@ For objects other than images, you can set all these colors individually; the <c
 simply provides a shorter method of dealing with all of them at once. Each <line> of the <colors> 
 corresponds to one of the following color <properties> :
 
-* Line 1: the foregroundColor
-* Line 2: the backgroundColor
-* Line 3: the hiliteColor
-* Line 4: the borderColor
+* Line 1: the <foregroundColor>
+* Line 2: the <backgroundColor>
+* Line 3: the <hiliteColor>
+* Line 4: the <borderColor>
 * Line 5: the <topColor> 
-* Line 6: the bottomColor
-* Line 7: the shadowColor
-* Line 8: the focusColor
+* Line 6: the <bottomColor>
+* Line 7: the <shadowColor>
+* Line 8: the <focusColor>
 
 If you leave a line blank when setting the <colors>, the color <property> corresponding to that <line> is left unchanged.
 
@@ -57,9 +65,10 @@ to obtain the colors used for the object, whether set for the <object> or <inher
 
 If a pattern is set for an <object>, that pattern is used instead of the corresponding color for that <object>.
 
-References: line (keyword), image (keyword), colorPalette (keyword), linkHiliteColor (property), 
-topColor (property), linkColor (property), properties (property), owner (property), 
-answer color (command), mouseColor (function), object (glossary), property (glossary), 
-color reference (glossary), inheritance (glossary), patterns (property)
+References: answer color (command), color reference (glossary), colorPalette (keyword), foregroundColor (property), 
+backgroundColor (property), hiliteColor (property), borderColor (property), topColor (property), 
+bottomColor (property), shadowColor (property), focusColor (property), image (keyword), 
+inheritance (glossary), line (keyword), linkColor (property), linkHiliteColor (property), mouseColor (function), 
+object (glossary), owner (property), patterns (property), properties (property), property (glossary)
 
 Tags: ui
