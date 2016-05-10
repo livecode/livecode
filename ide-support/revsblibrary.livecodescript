@@ -1573,3 +1573,87 @@ function revSBAvailableInclusions
    return tInclusions
 end revSBAvailableInclusions
 
+private command inclusionKeyAndIdentifier pElement, @rKey, @rId
+   switch pElement["type"]
+      case "widget"
+      case "library"
+         put "extensions" into rKey
+         put pElement["id"] into rId
+         break
+      case "script library"
+         put "scriptLibraries" into rKey
+         put pElement["title"] into rId
+         break
+      case "external"
+         put "externals" into rKey
+         put pElement["id"] into rId
+         break
+      case "database driver"
+         put "databaseDrivers" into rKey
+         put pElement["id"] into rId
+         break
+      case "resource"
+         put pElement["id"] into rKey
+         put true into rId
+         break
+         -- at the moment all other inclusions go through the scriptLibraries key
+      case "inclusion"
+         put "scriptLibraries" into rKey
+         put pElement["id"] into rId
+         break
+   end switch
+end inclusionKeyAndIdentifier
+
+command revSBUpdateInclusions pInclusions, pExclusions, pStackName
+   local tSettingsKey, tIdentifier, tNewSettings
+   
+   -- first remove all exclusions
+   repeat for each element tElement in pExclusions
+      inclusionKeyAndIdentifier tElement, tSettingsKey, tIdentifier
+      set the cRevStandaloneSettings[tSettingsKey] of stack pStackName to empty
+   end repeat
+   
+   -- now add all inclusions
+   repeat for each element tElement in pInclusions
+      inclusionKeyAndIdentifier tElement, tSettingsKey, tIdentifier
+      
+      if tNewSettings[tSettingsKey] is empty then
+         put tIdentifier into tNewSettings[tSettingsKey]
+      else
+         put return & tIdentifier after tNewSettings[tSettingsKey]
+      end if
+   end repeat
+   
+   repeat for each key tKey in tNewSettings
+      set the cRevStandaloneSettings[tKey] of stack pStackName to tNewSettings[tKey]
+   end repeat
+end revSBUpdateInclusions
+
+command revSBInclusionIconFromType pType, pID, @rIconName, @rIconPath
+   switch pType
+      case "widget"
+         put revIDEExtensionProperty(pID, "svgIcon") into rIconPath
+         put "wrench" into rIconName
+         break
+      case "library"
+         put "book" into rIconName
+         break
+      case "external"
+         put "external link" into rIconName
+         break
+      case "inclusion"
+      case "resource"
+         put "puzzle piece" into rIconName
+         break
+      case "database driver"
+         put "database" into rIconName
+         break
+      case "script library"
+         put "file text alt" into rIconName
+         break
+      default
+         put "circle" into rIconName
+         break
+   end switch
+end revSBInclusionIconFromType
+
