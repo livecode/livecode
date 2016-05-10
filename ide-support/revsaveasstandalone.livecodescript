@@ -2193,6 +2193,20 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    unlock screen; unlock screen
    wait 0 ticks with messages -- allow for progress update
    
+   -- sanitise raw list of externals from inclusions pane
+   local tAvailableExternals, tValidExternals
+   put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
+   repeat for each line tAddedExternal in sStandaloneSettingsA["externals"]
+      if tAddedExternal is among the lines of tAvailableExternals then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into sStandaloneSettingsA["externals"]
+   
    if there is not a folder (tCurrentLocation & slash & "Externals") then 
       create folder (tCurrentLocation & slash & "Externals")
    end if

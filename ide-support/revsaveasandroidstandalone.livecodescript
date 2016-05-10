@@ -84,6 +84,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    local tSettings
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform tSettings, "android"
+   
    -- Compute the base folder
    local tBaseFolder
    set the itemDelimiter to slash
@@ -256,6 +260,16 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end if
       set the itemDelimiter to "."
       repeat for each line tFile in tFiles
+         -- Added to support mergExt inclusion for android
+         if tFile begins with "!" then
+            local tExtPath
+            put revSBGetExternalPath("android", char 2 to -1 of tFile) into tExtPath
+            -- if the file prefixed with ! was not a named external, treat normally
+            if tExtPath is not empty then
+               put tExtPath into tFile
+            end if
+         end if
+         
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          

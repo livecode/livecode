@@ -93,6 +93,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    local tSettings
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform tSettings, "ios"
+   
    -- Get the development root for device builds
    -- MM-2012-09-18: Rejiged the SDKs we use.  Things are now split up into sim, armv7, armv7, 
    -- since we now potentially need to use different SDKs for each.

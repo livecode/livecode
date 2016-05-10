@@ -1657,3 +1657,42 @@ command revSBInclusionIconFromType pType, pID, @rIconName, @rIconPath
    end switch
 end revSBInclusionIconFromType
 
+-- Mobile standalone builders need to use this to convert from new inclusion settings
+command revSBConvertSettingsForPlatform @xSettings, pPlatform
+   -- Sanitise the list of externals and route through copy files mechanism
+   local tAvailableExternals
+   put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
+   repeat for each line tLine in xSettings["externals"]
+      if tLine is among the lines of tAvailableExternals then
+         if xSettings["files"] is empty then
+            put "!" & tLine into xSettings["files"]
+         else
+            put return & "!" & tLine after xSettings["files"]
+         end if
+      end if
+   end repeat
+   
+   -- Convert from desktop specific keys to mobile
+   if xSettings["pdfPrinter"] then
+      put "true" into xSettings[pPlatform & ",include revpdfprinter"]
+   end if
+   
+   if "SSL & Encryption" is among the lines of xSettings["scriptLibraries"] then
+      put "true" into xSettings[pPlatform & ",include revsecurity"]
+   end if
+   
+   repeat for each line tLine in xSettings["databaseDrivers"]
+      put "true" into xSettings[pPlatform & ",include db" & toLower(tLine)]
+   end repeat
+   
+   local tExternalsMapping, tExternal
+   put revIDEExternalsMapping() into tExternalsMapping
+   repeat for each item tExternalMapping in tExternalsMapping
+      put word 1 of tExternalMapping into tExternal
+      if tExternal is among the items of "revzip,revxml" then
+         if word 2 to -1 of tExternalMapping is among the lines of xSettings["scriptLibraries"] then
+            put "true" into xSettings[pPlatform & ",include" && tExternal]
+         end if
+      end if
+   end repeat
+end revSBConvertSettingsForPlatform
