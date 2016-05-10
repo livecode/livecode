@@ -930,8 +930,10 @@ private command DictionaryCreate
    sort lines of tAdded ascending text
    sort lines of tModified ascending text
    
-   MarkdownAppend "notes", "# Dictionary additions"
-   MarkdownAppend "notes", tAdded
+   if tAdded is not empty then
+      MarkdownAppend "notes", "# Dictionary additions"
+      MarkdownAppend "notes", tAdded
+   end if
    --MarkdownAppend "notes", "# Dictionary changes"
    --MarkdownAppend "notes", tModified
 end DictionaryCreate
