@@ -969,13 +969,17 @@ private command DictionaryScanFile pFile, @xAdded, @xModified
    local tEntry
    put merge("**[[tName]]** (*[[tType]]*)") into tEntry
    
-   -- Check if the "Introduced" version matches the current version
+   -- Check if the "Introduced" version matches the current version.
+   -- N.b. new dictionary entries are shown for all subsequent point
+   -- releases within the same minor release, so dictionary entries
+   -- added in 8.0.1 are listed in release notes for all subsequent
+   -- 8.0.x releases but not in 8.1.x releases.
    local tSourceVer, tTargetVer, tOffset, tMatch, tA, tB
    get matchText(tVersion, "^([0-9.]*)", tSourceVer)
    get matchText(sVersion, "^([0-9.]*)", tTargetVer)
    set the itemdelimiter to "."
    put true into tMatch
-   repeat with tOffset = 1 to the number of items in tTargetVer
+   repeat with tOffset = 1 to min(2, the number of items in tTargetVer)
       put item tOffset of tSourceVer into tA
       put item tOffset of tTargetVer into tB
       if tA is empty then
