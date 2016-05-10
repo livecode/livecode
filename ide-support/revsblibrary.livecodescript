@@ -1048,7 +1048,7 @@ local sExternalsLocationA
 function revSBExternalsList pPlatform
    if sExternalsLocationA is empty then
       local tMergExtFolder
-      put specialFolderPath("engine") & "/Tools/MergExt" into tMergExtFolder
+      put revEnvironmentToolsPath() & "/MergExt" into tMergExtFolder
       
       local tContents
       put __revSBEnumerateFolder(tMergExtFolder, tMergExtFolder & slash) into tContents
