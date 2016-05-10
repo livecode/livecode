@@ -16,21 +16,41 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-on TestByteOffsetEmptyHaystack
+on TestByteOffsetNonEmptyNeedleEmptyHaystack
    local tNeedle, tHaystack
    put "DEF" into tNeedle
    put empty into tHaystack
 
-   TestAssert "byteoffset of needle in empty haystack", byteoffset(tNeedle, tHaystack) is 0
+   TestAssert "byteoffset of non-empty needle in empty haystack", byteoffset(tNeedle, tHaystack) is 0
 
-end TestByteOffsetEmptyHaystack
+end TestByteOffsetNonEmptyNeedleEmptyHaystack
 
 
-on TestByteOffsetNonEmptyHaystack
+on TestByteOffsetNonEmptyNeedleNonEmptyHaystack
    local tNeedle, tHaystack
    put "DEF" into tNeedle
    put "ABCDEF" into tHaystack
 
-   TestAssert "byteoffset of needle in non-empty haystack", byteoffset(tNeedle, tHaystack) is 4
+   TestAssert "byteoffset of non-empty needle in non-empty haystack", byteoffset(tNeedle, tHaystack) is 4
 
-end TestByteOffsetNonEmptyHaystack
+end TestByteOffsetNonEmptyNeedleNonEmptyHaystack
+
+
+on TestByteOffsetEmptyNeedleEmptyHaystack
+   local tNeedle, tHaystack
+   put empty into tNeedle
+   put empty into tHaystack
+
+   TestAssert "byteoffset of empty needle in empty haystack", byteoffset(tNeedle, tHaystack) is 0
+
+end TestByteOffsetEmptyNeedleEmptyHaystack
+
+
+on TestByteOffsetEmptyNeedleNonEmptyHaystack
+   local tNeedle, tHaystack
+   put empty into tNeedle
+   put "ABCDEF" into tHaystack
+
+   TestAssert "byteoffset of empty needle in non-empty haystack", byteoffset(tNeedle, tHaystack) is 0
+
+end TestByteOffsetEmptyNeedleNonEmptyHaystack
