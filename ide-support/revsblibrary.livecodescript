@@ -959,24 +959,16 @@ function revSBStackNameFromScriptLibraryName pLib
    return pLib
 end revSBStackNameFromScriptLibraryName
 
-function revSBLibraryList
-   # AL-2105-03-05: [[ Bug 14813 ]] Use array key method to ignore duplicates
-   local tPath,tSave,tLibrariesA,tBtn,tExternals
+constant kScriptLibraries = "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
+private function revSBScriptLibraries
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
    // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
-   repeat for each item tItem in "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
-      put empty into tLibrariesA[tItem]
-   end repeat
-   
-   -- rev externals
-   get revExternalsList()
-   repeat for each line tLine in it
-      put empty into tLibrariesA[tLine]
-   end repeat
+   local tLibs
+   put kScriptLibraries into tLibs
+   replace comma with return in tLibs
    
    -- user script libraries
-   
    local tEnvironmentScripts
    put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentScripts
    
@@ -986,15 +978,297 @@ function revSBLibraryList
    local tFiles
    put revCombineFilePaths(tUserScripts,tEnvironmentScripts) into tFiles
    repeat for each line tLine in tFiles
-      if there is a stack tLine then put empty into tLibrariesA[ the short name of stack tLine]
+      if there is a stack tLine then 
+         put return & the short name of stack tLine after tLibs
+      end if
    end repeat
+   
+   return tLibs
+end revSBScriptLibraries
+
+private function revSBPlatformToRuntimeFolderName pPlatform
+   -- Ensure folder casing is correct
+   switch pPlatform
+      case "MacOSX"
+         return "Mac OS X"
+      case "iOS"
+         return "iOS"
+      case "Windows"
+         return "Windows"
+      case "Linux"
+         return "Linux"
+      case "Android"
+         return "Android"
+      case "Emscripten"
+         return "Emscripten"
+   end switch
+   
+   return empty
+end revSBPlatformToRuntimeFolderName
+
+-- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
+--   list by hand.
+private function revSBExternalsBuildList pPlatform
+   -- For now, only allow externals for the current build platform
+   local tExpectedPlatform
+   switch the platform
+      case "MacOS"
+         put "MacOSX" into tExpectedPlatform
+         break
+      case "Win32" 
+         put "Windows" into tExpectedPlatform
+         break
+      case "Linux"
+         put "Linux" into tExpectedPlatform
+         break
+      default
+         break
+   end switch
+   if tExpectedPlatform is not pPlatform then
+      return empty
+   end if
+   
+   return revExternalsList()
+end revSBExternalsBuildList
+
+private function revSBDesktopExternalsFromFolder pFolder
+   -- Find all relevant Externals.txt files
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   filter tFilesList with "*/Externals.txt"
+   
+   local tExternalsInfo, tListA
+   repeat for each line tLine in tFilesList
+      put url("file:" & pFolder & slash & tLine) into tExternalsInfo
+      repeat for each line tLine in tExternalsInfo
+         put true into tListA[item 1 of tLine]
+      end repeat
+   end repeat
+   
+   return tListA
+end revSBDesktopExternalsFromFolder
+
+private function revSBDesktopExternalsList pPlatform
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopExternalsFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopExternalsFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBDesktopExternalsList
+
+private function revSBMobileExternalsFromFolder pFolder
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   
+   -- Trim down to the actual files
+   local tFilesA
+   set the itemdelimiter to slash
+   repeat for each line tLine in tFilesList
+      put true into tFilesA[item -1 of tLine]
+   end repeat
+   
+   local tFixedExternals
+   put revIDEExternalsMapping() into tFixedExternals
+   
+   local tListA
+   repeat for each item tItem in tFixedExternals
+      if tFilesA[word 1 of tItem] then
+         put true into tListA[word 2 to -1 of tItem]
+      end if
+   end repeat
+
+   return tListA
+end revSBMobileExternalsFromFolder
+
+private function revSBMobileExternalsList pPlatform
+   -- Since the mobile Runtime folders don't have Externals.txt, 
+   -- just check which externals are available from the fixed list
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileExternalsFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileExternalsFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBMobileExternalsList
+
+-- Check in the IDE and user-defined externals locations for 
+-- Externals.txt files
+function revSBExternalsList pPlatform
+   if not revEnvironmentIsInstalled() then
+      return revSBExternalsBuildList(pPlatform)
+   end if
+   
+   switch pPlatform
+      case "MacOSX"
+      case "Linux"
+      case "Windows"
+         return revSBDesktopExternalsList(pPlatform)
+      case "iOS"
+      case "Android"
+         return revSBMobileExternalsList(pPlatform)
+      default 
+         return empty
+   end switch
+end revSBExternalsList
+
+-- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
+--   list by hand.
+private function revSBDatabaseDriversBuildList pPlatform
+   -- For now, only allow externals for the current build platform
+   local tExpectedPlatform
+   switch the platform
+      case "MacOS"
+         put "MacOSX" into tExpectedPlatform
+         break
+      case "Win32" 
+         put "Windows" into tExpectedPlatform
+         break
+      case "Linux"
+         put "Linux" into tExpectedPlatform
+         break
+      default
+         break
+   end switch
+   if tExpectedPlatform is not pPlatform then
+      return empty
+   end if
+   
+   return revDatabaseDriverList()
+end revSBDatabaseDriversBuildList
+
+private function revSBDesktopDatabaseDriversFromFolder pFolder
+   -- Find all relevant Database Drivers.txt files
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   filter tFilesList with "*/Database Drivers.txt"
+   
+   local tDriversInfo, tListA
+   repeat for each line tLine in tFilesList
+      put url("file:" & pFolder & slash & tLine) into tDriversInfo
+      repeat for each line tLine in tDriversInfo
+         put true into tListA[item 1 of tLine]
+      end repeat
+   end repeat
+   
+   return tListA
+end revSBDesktopDatabaseDriversFromFolder
+
+-- Check in the IDE and user-defined DB driver locations for 
+-- Database Drivers.txt files
+private function revSBDesktopDatabaseDriversList pPlatform
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopDatabaseDriversFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopDatabaseDriversFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBDesktopDatabaseDriversList
+
+private function revSBMobileDatabaseDriversFromFolder pFolder
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   
+   -- Trim down to the actual files
+   local tFilesA
+   set the itemdelimiter to slash
+   repeat for each line tLine in tFilesList
+      put true into tFilesA[item -1 of tLine]
+   end repeat
+   
+   local tFixedDrivers
+   put revIDEDatabaseDriversMapping() into tFixedDrivers
+   
+   local tListA
+   set the itemdelimiter to comma
+   repeat for each item tItem in tFixedDrivers
+      if tFilesA["Db" & word 1 of tItem] then
+         put true into tListA[word 2 to -1 of tItem]
+      end if
+   end repeat
+
+   return tListA
+end revSBMobileDatabaseDriversFromFolder
+
+private function revSBMobileDatabaseDriversList pPlatform
+   -- Since the mobile Runtime folders don't have Externals.txt, 
+   -- just check which DB drivers are available from the fixed list
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileDatabaseDriversFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileDatabaseDriversFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBMobileDatabaseDriversList
+
+function revSBDatabaseDriversList pPlatform
+   if not revEnvironmentIsInstalled() then
+      return revSBDatabaseDriversBuildList(pPlatform)
+   end if
+   
+   switch pPlatform
+      case "MacOSX"
+      case "Linux"
+      case "Windows"
+         return revSBDesktopDatabaseDriversList(pPlatform)
+      case "iOS"
+      case "Android"
+         return revSBMobileDatabaseDriversList(pPlatform)
+      default 
+         return empty
+   end switch
+end revSBDatabaseDriversList
+
+-- Inclusions that are or require binary blobs from the 
+-- Runtime folder
+function revSBBuiltinInclusions pPlatform
+   # AL-2105-03-05: [[ Bug 14813 ]] Use array key method to ignore duplicates
+   local tPath,tSave,tLibrariesA,tBtn,tExternals
+   -- rev externals
+   get revSBExternalsList(pPlatform)
+   repeat for each line tLine in it
+      put empty into tLibrariesA[tLine]
+   end repeat
+
+   if pPlatform is not "emscripten" then
    put empty into tLibrariesA["SSL & Encryption"]
+      put empty into tLibrariesA["Revolution Zip"]
+   end if
+   
    if "Browser" is among the keys of tLibrariesA then
       put empty into tLibrariesA["Browser (CEF)"]
    end if
 
    return the keys of tLibrariesA
-end revSBLibraryList
+end revSBBuiltinInclusions
 
 function revSBLcextFileIsZipArchive pFile, @rError
    open file pFile for binary read
