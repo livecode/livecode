@@ -921,9 +921,6 @@ end ExtensionsGetManifestPath
 -- Dictionary change generation
 ----------------------------------------------------------------
 
--- N.b. we currently only look at lcdoc dictionary entries
-constant kDictionaryCommitBase = "f9fb4130b570fd7df3b8e1526bbfe6074e798098"
-
 private command DictionaryCreate
    builderLog "report", "Creating dictionary release notes"
    
@@ -945,15 +942,13 @@ private command DictionaryScan @xAdded, @xModified
    
    put GitGetRelevantTags("dictionary") into tTags
    
-   put GitGetChangedFiles("dictionary", kDictionaryCommitBase, \
-         the last line of tTags) into tPermittedFiles
    put GitGetChangedFiles("dictionary", the first line of tTags, \
          the last line of tTags) into tChangedFiles
    
    -- Check whether each entry was added or just modified
    local tFile
    repeat for each line tFile in tChangedFiles
-      if tFile is among the lines of tPermittedFiles then
+      if tFile ends with ".lcdoc" then
          DictionaryScanFile tFile, xAdded, xModified
       end if
    end repeat
