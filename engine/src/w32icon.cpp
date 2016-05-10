@@ -466,16 +466,14 @@ bool build_pick_string(HMENU p_menu, UINT32 p_command, MCStringRef x_mutable)
 		{
 			if (t_info . hSubMenu != NULL && build_pick_string(t_info . hSubMenu, p_command, x_mutable))
 			{
-				/* UNCHECKED */ MCStringPrependChar(x_mutable, '|');
-				t_success = true;
+				t_success = MCStringPrependChar(x_mutable, '|');
 			}
 		}
 		
 		if (t_success)
 		{
 			// SN-2014-80-28: [[ Bug 13289 ]] dwItemData contains what has been selected (the tag, if not the name).
-			/* UNCHECKED */ MCStringPrependChars(x_mutable, (unichar_t*)t_info . dwItemData, lstrlenW((unichar_t*)t_info . dwItemData));
-			return true;
+			return MCStringPrependChars(x_mutable, (unichar_t*)t_info . dwItemData, lstrlenW((unichar_t*)t_info . dwItemData));
 		}
 	}
 	
