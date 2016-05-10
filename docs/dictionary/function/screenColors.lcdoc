@@ -34,4 +34,4 @@ is equal to
 
 The value returned by the <screenColors> <function> is updated only when you start up the <application>. If you change the screen settings after starting up the <application>, you must quit and restart to update the <screenColors>.
 
-References: colorWorld (property), colorMap (property), borderPixel (property), dontRefresh (property), remapColor (property), integer (keyword), function (control_st), return (glossary), application (glossary), screenType (function), unlock colorMap (command), image (object)
+References: colorWorld (property), colorMap (property), borderPixel (property), dontRefresh (property), remapColor (property), integer (keyword), function (control structure), return (glossary), application (glossary), screenType (function), unlock colorMap (command), image (object)

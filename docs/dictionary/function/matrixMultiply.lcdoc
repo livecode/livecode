@@ -30,6 +30,6 @@ A two-dimensional array is an array whose elements have a two-part key to descri
 
 The number of rows in the <firstArray> must be the same as the number of columns in the <secondArray>, and the number of rows in the <secondArray> must match the number of columns in the <firstArray>. However, the number of rows in the <firstArray> and <secondArray> need not be the same.
 
-References: element (keyword), multiply (command), extents (function), transpose (function), array (glossary), return (glossary), function (control_st)
+References: element (keyword), multiply (command), extents (function), transpose (function), array (glossary), return (glossary), function (control structure)
 
 Tags: math

@@ -27,4 +27,4 @@ Use the <constantNames> <function> to check whether a particular <constant(comma
 
 The <constantNames> <function> <return|returns> all the <constant(glossary)|constants> that are predefined in <LiveCode>, including synonyms.
 
-References: line (keyword), constant (command), propertyNames (function), functionNames (function), constant (glossary), LiveCode (glossary), variable (glossary), return (glossary), reserved word (glossary), function (control_st)
+References: line (keyword), constant (command), propertyNames (function), functionNames (function), constant (glossary), LiveCode (glossary), variable (glossary), return (glossary), reserved word (glossary), function (control structure)

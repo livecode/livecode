@@ -917,6 +917,11 @@ public:
 		r_ptr = m_ptr;
 		m_ptr = nil;
 	}
+    
+    T& operator [] (size_t x)
+    {
+        return m_ptr[x];
+    }
 	
 private:
 	T *m_ptr;

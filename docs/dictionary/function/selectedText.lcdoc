@@ -41,6 +41,6 @@ To get the location of the selected text, use the selectedChunk <function>.
 
 To change the contents of the selection, use the <selection> <keyword>.
 
-References: hilitedLine (property), listBehavior (property), menuHistory (property), selected (property), selection (keyword), field (keyword), lines (keyword), string (keyword), menu (keyword), field (object), selectedLoc (function), clickText (function), property (glossary), keyword (glossary), return (glossary), menu item (glossary), function (control_st)
+References: hilitedLine (property), listBehavior (property), menuHistory (property), selected (property), selection (keyword), field (keyword), lines (keyword), string (keyword), menu (keyword), field (object), selectedLoc (function), clickText (function), property (glossary), keyword (glossary), return (glossary), menu item (glossary), function (control structure)
 
 Tags: ui

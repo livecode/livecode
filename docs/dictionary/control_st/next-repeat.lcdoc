@@ -28,4 +28,4 @@ The <next repeat> <control structure> skips the rest of the current <iteration>,
 
 Usually, <next repeat> is used within an <if> <control structure>, so that the current <iteration> is skipped if a condition is true and continues if the condition is false.
 
-References: end repeat (keyword), next (keyword), current card (glossary), iteration (glossary), statement (glossary), control structure (glossary), if (control_st), exit repeat (control_st), repeat (control_st)
+References: end repeat (keyword), next (keyword), current card (glossary), iteration (glossary), statement (glossary), control structure (glossary), if (control structure), exit repeat (control structure), repeat (control structure)

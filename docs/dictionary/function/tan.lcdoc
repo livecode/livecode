@@ -39,6 +39,6 @@ The <tan> <function> requires its input to be in <radian|radians>. To provide an
     return tan(angleInDegrees * pi / 180)
   end tanInDegrees
 
-References: pi (constant), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+References: pi (constant), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control structure)
 
 Tags: math

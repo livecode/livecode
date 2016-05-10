@@ -32,6 +32,6 @@ Description:
 
 Lowercase letters, including special characters with diacritical marks, are converted to the uppercase equivalents. All other characters, including uppercase letters, numbers, punctuation, and special characters with no upper or lower case, are left unchanged by the <toUpper> <function>.
 
-References: string (keyword), numToChar (function), toLower (function), return (glossary), function (control_st)
+References: string (keyword), numToChar (function), toLower (function), return (glossary), function (control structure)
 
 Tags: text processing

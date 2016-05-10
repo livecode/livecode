@@ -40,6 +40,6 @@ Use the <copyResource> function to copy <resource|resources> (such as icons, ext
 
 If you don't specify a <newID>, the new <resource> has the same ID as the original <resource>. Specifying a <newID> does not change the resource ID of the original <resource> in the <file>; it only affects the copy in the <destinationFile>.
 
-References: file (keyword), copy (command), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: file (keyword), copy (command), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control structure)
 
 Tags: file system

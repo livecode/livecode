@@ -19,7 +19,7 @@ Example:
 set the style of last graphic to curve
 
 Description:
-Use the <curve> <keyword> to paint a curved line with the <penColor> or to change a <graphic(keyword)> <object> to a curved <line>.
+Use the <curve> <keyword> to paint a curved line with the <penColor> or to change a <graphic(keyword)> <object(glossary)> to a curved <line>.
 
 When using the Curve tool, the cursor is a crosshairs shape (over stack windows) or an arrow (anywhere else). This tool is used to draw a freehand line in the penColor (or <penPattern>).
 
@@ -27,4 +27,4 @@ If you try to paint with the Curve tool on a card that has no images, an image t
 
 Setting the <style> of a <graphic(keyword)> to curve makes the graphic into a curved line. Curve <graphic(object)|graphics>, unlike painted curves, can be changed and reshaped: use the <points> <property> to change the shape of the curve.
 
-References: graphic (keyword), line (keyword), lines (keyword), style (property), points (property), penPattern (property), penColor (property), choose (command), object (object), graphic (object), property (glossary), keyword (glossary), paint tool (glossary)
+References: graphic (keyword), line (keyword), lines (keyword), style (property), points (property), penPattern (property), penColor (property), choose (command), object (glossary), graphic (object), property (glossary), keyword (glossary), paint tool (glossary)

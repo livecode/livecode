@@ -28,4 +28,4 @@ When you use the <shell> <function>, the <command line> you specify is sent to t
 
 On OS X and Unix systems, the <shellCommand> is the <file path|path> to an executable <file>. On <Windows|Windows systems>, the <shellCommand> is a DOS command.
 
-References: hideConsoleWindows (property), videoClipPlayer (property), file (keyword), shell (function), function (control_st), property (glossary), Windows (glossary), execute (glossary), file path (glossary), command line (glossary), command (glossary), Unix (glossary)
+References: hideConsoleWindows (property), videoClipPlayer (property), file (keyword), shell (function), function (control structure), property (glossary), Windows (glossary), execute (glossary), file path (glossary), command line (glossary), command (glossary), Unix (glossary)

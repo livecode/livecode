@@ -479,8 +479,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
                 // SN-2015-11-19: [[ Bug 16451 ]] MCscreen knows better than
                 // us how to unpack a colour pixel.
                 MCColor t_color;
-                t_color . pixel = ctxt . colors[i];
-                MCscreen -> querycolor(t_color);
+				MCColorSetPixel(t_color, ctxt . colors[i]);
                 /* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "\\red%d\\green%d\\blue%d;", t_color . red, t_color . green, t_color . blue);
             }
 			/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, "}\n");

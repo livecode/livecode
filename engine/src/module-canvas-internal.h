@@ -212,12 +212,12 @@ bool MCCanvasThrowError(MCTypeInfoRef p_error_type);
 
 inline MCCanvasFloat MCCanvasDegreesToRadians(MCCanvasFloat p_degrees)
 {
-	return p_degrees * M_PI / 180;
+	return MCCanvasFloat(p_degrees * M_PI / 180.0);
 }
 
 inline MCCanvasFloat MCCanvasRadiansToDegrees(MCCanvasFloat p_radians)
 {
-	return p_radians * 180 / M_PI;
+	return MCCanvasFloat(p_radians * 180.0 / M_PI);
 }
 
 #if CANVAS_ANGLE_TYPE == CANVAS_ANGLE_DEGREES

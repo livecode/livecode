@@ -26,6 +26,6 @@ The <suspendStack> <message> is sent whenever a <stack window> is no longer the 
 
 The actual window deactivation process is not triggered by the <suspendStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack window> from becoming inactive.
 
-References: pass (control_st), focusOut (message), closeStack (message), iconifyStack (message), suspend (message), resumeStack (message), flushEvents (function), trap (glossary), current card (glossary), active window (glossary), message (glossary), stack window (glossary), stack (object)
+References: pass (control structure), focusOut (message), closeStack (message), iconifyStack (message), suspend (message), resumeStack (message), flushEvents (function), trap (glossary), current card (glossary), active window (glossary), message (glossary), stack window (glossary), stack (object)
 
 Tags: windowing

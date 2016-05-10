@@ -33,6 +33,6 @@ The <foundText> <function> is cleared when the text <selection> moves into the <
 
 To get the location of the text that was found, use the foundChunk <function>.
 
-References: word (keyword), string (keyword), selection (keyword), find (command), clickText (function), foundField (function), command (glossary), return (glossary), current card (glossary), function (control_st)
+References: word (keyword), string (keyword), selection (keyword), find (command), clickText (function), foundField (function), command (glossary), return (glossary), current card (glossary), function (control structure)
 
 Tags: database

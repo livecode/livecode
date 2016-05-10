@@ -34,6 +34,6 @@ If you don't want to allow dragging text from a particular field, you should pla
     -- do nothing, but trap the message
   end dragStart
 
-References: dragData (property), dragData property (property), dragImageOffset (property), dragAction (property), dragDelta (property), dragEnter (message), click (command), pass (control_st), control structure (glossary), handler (glossary), message (glossary)
+References: dragData (property), dragData property (property), dragImageOffset (property), dragAction (property), dragDelta (property), dragEnter (message), click (command), pass (control structure), control structure (glossary), handler (glossary), message (glossary)
 
 Tags: ui

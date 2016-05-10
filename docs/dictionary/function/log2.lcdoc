@@ -30,6 +30,6 @@ Use the <log2> <function> to obtain a base-2 logarithm.
 
 The base-2 logarithm of a <number> is the power to which 2 must be raised to obtain the <number> : 2^log2(<number>) is equal to number.
 
-References: function (control_st), ln1 (function), return (glossary)
+References: function (control structure), ln1 (function), return (glossary)
 
 Tags: math

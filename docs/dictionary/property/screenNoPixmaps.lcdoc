@@ -27,6 +27,6 @@ If the <screenNoPixmaps> <property> is true, no offscreen images are created, an
 
 If the application is started from a Unix command line, this property can be set to true on startup by using the -nopixmaps option.
 
-References: screenSharedMemory (property), property (glossary), pixmap (glossary), redraw (glossary), control structure (glossary), object (object)
+References: screenSharedMemory (property), property (glossary), pixmap (glossary), redraw (glossary), control structure (glossary), object (glossary)
 
 Tags: ui

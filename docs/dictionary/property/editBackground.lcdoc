@@ -33,6 +33,6 @@ You can use the <start editing> <command> to edit a specific <group>. Setting th
 
 By default, the <editBackground> is set to false.  This property is not preserved when the stack is saved, the property will always be false upon opening a stack.
 
-References: relayerGroupedControls (property), groupIDs (property), stop editing (command), group (command), start editing (command), stack (object), control (object), object (object), property (glossary), current card (glossary), command (glossary), card control (glossary), object (glossary), background (glossary), group-editing mode (glossary), stacks (function)
+References: relayerGroupedControls (property), groupIDs (property), stop editing (command), group (command), start editing (command), stack (object), control (object), object (glossary), property (glossary), current card (glossary), command (glossary), card control (glossary), object (glossary), background (glossary), group-editing mode (glossary), stacks (function)
 
 Tags: objects

@@ -1304,14 +1304,11 @@ static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, si
     else // name null: must interpret the MCColor
         t_color = p_color . color;
 
-    // Make sure the pixel attribute has been generated
-    MCscreen -> alloccolor(t_color);
-
     if (attrs == nil)
         attrs = new MCParagraphAttrs;
 
     attrs -> flags |= p_flag;
-    ((uint32_t *)((char *)attrs + p_field_offset))[0] = t_color . pixel;
+    ((uint32_t *)((char *)attrs + p_field_offset))[0] = MCColorGetPixel(t_color);
 }
 
 static void setparagraphattr_bool(MCParagraphAttrs*& attrs, uint32_t p_flag, bool *p_value, bool &r_new_value)
@@ -2875,8 +2872,7 @@ void MCParagraph::GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_col
     else
     {
         MCColor t_color;
-        t_color . pixel = attrs -> background_color;
-        MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, attrs -> background_color);
         get_interface_color(t_color, nil, r_color);
     }
 }
@@ -2886,8 +2882,7 @@ void MCParagraph::GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedCol
     if (attrs != nil && (attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
     {
         MCColor t_color;
-        t_color . pixel = attrs -> background_color;
-        MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, attrs -> background_color);
         get_interface_color(t_color, nil, r_color);
     }
 }
@@ -2904,8 +2899,7 @@ void MCParagraph::GetBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_c
     else
     {
         MCColor t_color;
-        t_color . pixel = attrs -> background_color;
-        MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, attrs -> background_color);
         get_interface_color(t_color, nil, r_color);
     }
 }
@@ -2915,8 +2909,7 @@ void MCParagraph::GetEffectiveBorderColor(MCExecContext& ctxt, MCInterfaceNamedC
     if (attrs != nil && (attrs -> flags & PA_HAS_BORDER_COLOR) != 0)
     {
         MCColor t_color;
-        t_color . pixel = attrs -> background_color;
-        MCscreen -> querycolor(t_color);
+		MCColorSetPixel(t_color, attrs -> background_color);
         get_interface_color(t_color, nil, r_color);
     }
 }

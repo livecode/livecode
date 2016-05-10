@@ -27,4 +27,4 @@ Use the <tool> <function> to find out which <tool> is currently selected.
 
 The tool names are the same as the names used with the <choose> <command> to select a <tool> for use.
 
-References: choose (command), tool (function), command (glossary), return (glossary), function (control_st)
+References: choose (command), tool (function), command (glossary), return (glossary), function (control structure)

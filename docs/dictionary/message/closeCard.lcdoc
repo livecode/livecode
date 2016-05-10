@@ -28,6 +28,6 @@ A card is closed when the user either goes to another card in the same stack, or
 
 The actual navigation is not triggered by the <closeCard> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <card> from closing.
 
-References: card (keyword), closeStack (message), shutdown (message), closeBackground (message), preOpenCard (message), pass (control_st), trap (glossary), current card (glossary), message (glossary)
+References: card (keyword), closeStack (message), shutdown (message), closeBackground (message), preOpenCard (message), pass (control structure), trap (glossary), current card (glossary), message (glossary)
 
 Tags: navigation

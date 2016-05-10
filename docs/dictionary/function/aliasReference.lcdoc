@@ -32,6 +32,6 @@ Returns: The <aliasReference> <function> <return|returns> the name and location 
 Description:
 Use the <aliasReference> <function> to perform an operation on a <file> after the user has selected an <alias>, <symbolic link>, or <shortcut> to the <file>.
 
-References: file (keyword), empty (constant), create alias (command), function (control_st), symbolic link (glossary), shortcut (glossary), return (glossary), alias (glossary), folder (glossary), result (function), aliasReference (function)
+References: file (keyword), empty (constant), create alias (command), function (control structure), symbolic link (glossary), shortcut (glossary), return (glossary), alias (glossary), folder (glossary), result (function), aliasReference (function)
 
 Tags: file system

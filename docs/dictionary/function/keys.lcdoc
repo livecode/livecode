@@ -40,6 +40,6 @@ The <keys> <function> returns a list of <keys>, one per <line>.
 Description:
 Use the <keys> function to manage the elements of an <array>, or to perform some action on each <element> in an <array>.
 
-References: properties (property), is among the keys of (operator), line (keyword), element (keyword), array variable (glossary), array (glossary), arrayEncode (function), transpose (function), extents (function), keys (function), combine (command), split (command), sort command (command), function (control_st)
+References: properties (property), is among the keys of (operator), line (keyword), element (keyword), array variable (glossary), array (glossary), arrayEncode (function), transpose (function), extents (function), keys (function), combine (command), split (command), sort command (command), function (control structure)
 
 Tags: properties

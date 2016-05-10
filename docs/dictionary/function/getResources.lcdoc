@@ -48,6 +48,6 @@ Use the <getResources> <function> to find out whether a <resource> already exist
 Changes:
 The order of items returned by the getResources function was changed in version 1.1. In previous versions, the getResources function returned these items for each resource:
 
-References: items (keyword), file (keyword), line (keyword), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: items (keyword), file (keyword), line (keyword), result (function), setResource (function), resource fork (glossary), resource (glossary), Mac OS (glossary), return (glossary), function (control structure)
 
 Tags: file system

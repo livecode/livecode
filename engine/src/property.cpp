@@ -3119,7 +3119,6 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
 						return ES_ERROR;
 					}
 					delete cstring;
-					MCscreen->alloccolor(color);
 
 					MCeditingimage = nil;
 

@@ -31,4 +31,4 @@ The <to> <keyword> is used with the <add>, <convert>, <copy>, <create alias>, <d
 
 It is also used to designate the final color in visual effects, and with the set <command> to designate the new <property> setting.
 
-References: from (keyword), send to program (command), convert (command), write to file (command), move (command), send (command), seek (command), copy (command), write to driver (command), create alias (command), drag (command), write to process (command), open socket (command), export (command), go (command), post (command), rename (command), add (command), write to socket (command), exit to top (control_st), command (glossary), keyword (glossary), property (glossary)
+References: from (keyword), send to program (command), convert (command), write to file (command), move (command), send (command), seek (command), copy (command), write to driver (command), create alias (command), drag (command), write to process (command), open socket (command), export (command), go (command), post (command), rename (command), add (command), write to socket (command), exit to top (control structure), command (glossary), keyword (glossary), property (glossary)

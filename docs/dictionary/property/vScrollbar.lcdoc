@@ -29,6 +29,6 @@ Changing the <vScrollbar> does not change the <object|object's> <rectangle> <pro
 
 Setting the <vScrollbar> of a <field> to true is equivalent to setting the <style> <property> of the <field> to "scrolling".
 
-References: hScrollbar (property), style (property), field (keyword), scrollbar (keyword), rectangle (keyword), group (command), field (object), object (object), property (glossary), group (glossary)
+References: hScrollbar (property), style (property), field (keyword), scrollbar (keyword), rectangle (keyword), group (command), field (object), object (glossary), property (glossary), group (glossary)
 
 Tags: ui

@@ -26,6 +26,6 @@ The <yExtent> of an <EPS|EPS object> is equal to the fourth <item> in the <objec
 
 This property is supported only on Unix systems with Display PostScript installed.
 
-References: boundingBox (property), scaleIndependently (property), points (property), yOffset (property), postScript (property), item (keyword), integer (keyword), object (object), EPS (glossary), property (glossary)
+References: boundingBox (property), scaleIndependently (property), points (property), yOffset (property), postScript (property), item (keyword), integer (keyword), object (glossary), EPS (glossary), property (glossary)
 
 Tags: multimedia

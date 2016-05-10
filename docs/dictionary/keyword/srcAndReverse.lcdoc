@@ -20,13 +20,13 @@ The result: Each component of the resulting color is equal to the result of this
 Description:
 Use the <srcAndReverse> <keyword> to invert the color underneath the light-colored parts of an object.
 
-The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object> to determine how the <object|object's> color is displayed.
+The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object(glossary)> to determine how the <object|object's> color is displayed.
 
 The <srcAndReverse> <transfer mode> performs the following steps to compute the color of each <pixel> :
 
 1. Each component of the color underneath the object--the number indicating the amount of red, green, or blue--is changed to its inverse. (If the color is expressed as three integers between zero and 255--one for each of red, green, and blue--then the inverse of each component is equal to 255 minus the component's value.)
 
-2. LiveCode performs a bitAnd <operation> on each component of the inverted object color with the corresponding component of the color under the <object>.
+2. LiveCode performs a bitAnd <operation> on each component of the inverted object color with the corresponding component of the color under the <object(glossary)>.
 
 object component bitAnd (255 - background component)
 
@@ -36,6 +36,6 @@ For example, suppose an object's color is 45,0,255, and the color of the pixels 
 
 The <srcAndReverse> mode can be used only on <Unix> and <Windows|Windows systems>. On <Mac OS|Mac OS systems>, <object|objects> whose <ink> <property> is set to this mode appear as though their <ink> were set to <srcCopy>.
 
-References: srcCopy (keyword), notSrcCopy (keyword), ink (property), pixels (property), object (object), property (glossary), pixel (glossary), operation (glossary), Windows (glossary), transfer mode (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary)
+References: srcCopy (keyword), notSrcCopy (keyword), ink (property), pixels (property), object (glossary), property (glossary), pixel (glossary), operation (glossary), Windows (glossary), transfer mode (glossary), Mac OS (glossary), keyword (glossary), Unix (glossary)
 
 Tags: ui

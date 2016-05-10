@@ -29,4 +29,4 @@ On Unix systems, the <screenName> function <return|returns> the <string> provide
 
 This function does not return a useful value on Mac OS and Windows systems.
 
-References: string (keyword), open process (command), shell (function), value (function), screenVendor (function), function call (glossary), argument (glossary), return (glossary), command (glossary), process (glossary), function (control_st)
+References: string (keyword), open process (command), shell (function), value (function), screenVendor (function), function call (glossary), argument (glossary), return (glossary), command (glossary), process (glossary), function (control structure)

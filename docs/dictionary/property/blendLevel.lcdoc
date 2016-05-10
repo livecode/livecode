@@ -33,6 +33,6 @@ If an object's <blendLevel> is zero, the object is fully opaque. If the <blendLe
 
 >*Important:*  Setting the <blendLevel> of a stack is only supported on systems which support alpha-blended windows. This is currently MacOS X, Windows 2000 or later and Linux (with a composite window manager (such as Beryl))
 
-References: integer (keyword), blend (keyword), transparent (keyword), colorOverlay (property), innerGlow (property), ink (property), opaque (property), innerShadow (property), outerGlow (property), alphaData (property), dropShadow (property), object (object), property (glossary)
+References: integer (keyword), blend (keyword), transparent (keyword), colorOverlay (property), innerGlow (property), ink (property), opaque (property), innerShadow (property), outerGlow (property), alphaData (property), dropShadow (property), object (glossary), property (glossary)
 
 Tags: multimedia

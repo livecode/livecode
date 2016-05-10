@@ -25,6 +25,6 @@ You can change the individual items, then use the <group> <command> or the "Grou
 
 If you go to another card while the objects are ungrouped, the ungrouping becomes permanent and the objects are removed from all other cards the group was on.
 
-References: selected (property), layer (property), card (keyword), menu (keyword), group (command), delete (command), start editing (command), object (object), grouped control (glossary), card control (glossary), command (glossary), group (glossary), menu item (glossary)
+References: selected (property), layer (property), card (keyword), menu (keyword), group (command), delete (command), start editing (command), object (glossary), grouped control (glossary), card control (glossary), command (glossary), group (glossary), menu item (glossary)
 
 Tags: objects

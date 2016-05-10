@@ -43,6 +43,6 @@ This property is of limited usefulness on Mac OS systems, since they normally us
 
 On Windows, if this property is true then the setting of a player's <alwaysBuffer property> will have no effect.
 
-References: alwaysBuffer property (property), function (control_st), answer record (command), answer effect (command), show (command), hide (command), recordCompressionTypes (function), qtEffects (function), QTVersion (function), property (glossary), Windows (glossary), command (glossary), QuickTime (glossary), loaded into memory (glossary), Mac OS (glossary), stack (object)
+References: alwaysBuffer property (property), function (control structure), answer record (command), answer effect (command), show (command), hide (command), recordCompressionTypes (function), qtEffects (function), QTVersion (function), property (glossary), Windows (glossary), command (glossary), QuickTime (glossary), loaded into memory (glossary), Mac OS (glossary), stack (object)
 
 Tags: multimedia

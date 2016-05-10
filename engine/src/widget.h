@@ -176,6 +176,9 @@ public:
     virtual void visibilitychanged(bool p_visible);
     virtual void layerchanged();
 	virtual void geometrychanged(const MCRectangle &p_rect);
+    
+    virtual Boolean del(void);
+    
 	virtual void OnOpen();
 	virtual void OnClose();
 	

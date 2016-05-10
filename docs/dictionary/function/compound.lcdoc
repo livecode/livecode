@@ -36,6 +36,6 @@ The <compound> <function> calculates this value.
 
 The <numberOfPeriods> and the <interestRate> must use the same unit of time. For example, if the periods are months, the interest rate is the interest per month.
 
-References: function (control_st), annuity (function), round (function), return (glossary)
+References: function (control structure), annuity (function), round (function), return (glossary)
 
 Tags: math

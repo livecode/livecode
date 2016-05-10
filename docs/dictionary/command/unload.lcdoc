@@ -39,6 +39,6 @@ The <unload> <command> removes the <cachedURL> from the <URLStatus> <function>. 
 
 >*Note:* You can use a <URL(keyword)> with the <URL(keyword)> <keyword> even after it has been unloaded from the <cache>, but <cache|caching> speeds up access to the <URL(keyword)>.
 
-References: URL (keyword), file (keyword), ftp (keyword), http (keyword), revUnloadSpeech (command), libURLftpUpload (command), libURLDownloadToFile (command), get (command), load (command), result (function), cachedURLs (function), URLStatus (function), non-blocking (glossary), upload (glossary), download (glossary), cache (glossary), container (glossary), expression (glossary), URL (glossary), command (glossary), keyword (glossary), function (control_st)
+References: URL (keyword), file (keyword), ftp (keyword), http (keyword), revUnloadSpeech (command), libURLftpUpload (command), libURLDownloadToFile (command), get (command), load (command), result (function), cachedURLs (function), URLStatus (function), non-blocking (glossary), upload (glossary), download (glossary), cache (glossary), container (glossary), expression (glossary), URL (glossary), command (glossary), keyword (glossary), function (control structure)
 
 Tags: networking

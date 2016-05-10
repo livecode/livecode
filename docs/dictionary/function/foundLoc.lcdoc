@@ -29,6 +29,6 @@ When the <find> command finds text, it surrounds the text with a box. The first 
 
 The <foundLoc> <function> is cleared when the text <selection> moves into the <foundField> or when the <current card> is closed. At the same time, the box the <find> <command> draws around the found text disappears. If there is no box, the <foundLoc> <function> <return|returns> empty.
 
-References: pixels (property), function (control_st), item (keyword), selection (keyword), current card (glossary), integer (glossary), command (glossary), return (glossary), return value (glossary), stack window (glossary), selectedLoc (function), foundField (function), find (command), stack (object)
+References: pixels (property), function (control structure), item (keyword), selection (keyword), current card (glossary), integer (glossary), command (glossary), return (glossary), return value (glossary), stack window (glossary), selectedLoc (function), foundField (function), find (command), stack (object)
 
 Tags: database

@@ -20,4 +20,4 @@ Use the <end try> <keyword> to mark the end of a <try> <control structure>.
 
 The <end try> <keyword> occurs on a line by itself.
 
-References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), try (control_st)
+References: end (keyword), control (keyword), keyword (glossary), control structure (glossary), try (control structure)

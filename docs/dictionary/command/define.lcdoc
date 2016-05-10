@@ -2,7 +2,7 @@ Name: define
 
 Type: command
 
-Syntax: define <property> of <object> 
+Syntax: define <property> of <object>
 
 Summary: Has no effect and is included in <LiveCode> for compatibility with imported <SuperCard> projects.
 

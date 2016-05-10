@@ -21,10 +21,10 @@ get first item of ninth line of field "Expressions"
 Description:
 Use the <ninth> <keyword> in an <object reference> or <chunk expression>.
 
-The <ninth> <keyword> can be used to specify any <object> whose <number> <property> is 9. It can also be used to designate the ninth <chunk> in a <chunk expression>.
+The <ninth> <keyword> can be used to specify any <object(glossary)> whose <number> <property> is 9. It can also be used to designate the ninth <chunk> in a <chunk expression>.
 
 The word the is optional when using the <ninth> <keyword>.
 
-References: middle (keyword), ninth (keyword), last (keyword), number (property), object (object), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: middle (keyword), ninth (keyword), last (keyword), number (property), object (glossary), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
 
 Tags: math

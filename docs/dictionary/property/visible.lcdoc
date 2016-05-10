@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the [effective] visible of <object> to {true | false}
 
-Summary: Specifies whether an <object> can be seen or is hidden.
+Summary: Specifies whether an <object(glossary)> can be seen or is hidden.
 
 Synonyms: vis
 
@@ -25,10 +25,10 @@ set the visible of me to (not the visible of me)
 Example:
 put the effective visible of button "save"
 
-Value (bool): The <visible> of an <object> is true or false.
+Value (bool): The <visible> of an <object(glossary)> is true or false.
 
 Description:
-Use the <visible> <property> to determine whether an <object> is hidden or not, or to hide or show an <object>.
+Use the <visible> <property> to determine whether an <object(glossary)> is hidden or not, or to hide or show an <object(glossary)>.
 
 A hidden object is still present and still takes up memory, and a handler can access its properties and contents, but the user cannot see or or interact with it. 
 
@@ -42,6 +42,6 @@ You can set the <visible> <property> of a <card(keyword)>, but doing so has no e
 
 The <visible> <property> is the logical inverse of the <invisible> <property>. When an <object|object's> <visible> is true, its <invisible> is false, and vice versa.
 
-References: showInvisibles (property), invisible (property), card (keyword), show (command), group (command), hide (command), card (object), object (object), control (object), property (glossary), grouped control (glossary), group (glossary)
+References: showInvisibles (property), invisible (property), card (keyword), show (command), group (command), hide (command), card (object), object (glossary), control (object), property (glossary), grouped control (glossary), group (glossary)
 
 Tags: ui

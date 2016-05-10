@@ -44,4 +44,4 @@ To prevent a console window from appearing when the shell command is executed, s
 Changes:
 Support for using the shell command on OS X systems was added in version 2.0.
 
-References: hideConsoleWindows (property), defaultFolder (property), shellCommand (property), string (keyword), stderr (keyword), stdout (keyword), launch (command), screenName (function), shell (function), property (glossary), error message (glossary), return value (glossary), handler (glossary), execute (glossary), OS X (glossary), return (glossary), file path (glossary), debug (glossary), Unix (glossary), command line (glossary), function (control_st)
+References: hideConsoleWindows (property), defaultFolder (property), shellCommand (property), string (keyword), stderr (keyword), stdout (keyword), launch (command), screenName (function), shell (function), property (glossary), error message (glossary), return value (glossary), handler (glossary), execute (glossary), OS X (glossary), return (glossary), file path (glossary), debug (glossary), Unix (glossary), command line (glossary), function (control structure)

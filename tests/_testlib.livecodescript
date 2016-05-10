@@ -24,6 +24,9 @@ end revLoadLibrary
 -- Helper functions
 ----------------------------------------------------------------
 
+local sOutputToVariable
+local sOutput
+
 private function _TestValidateCount pCount
    if pCount is not an integer or pCount <= 0 then
       throw "Bad test count '" & pCount & "': must be positive integer"
@@ -104,7 +107,11 @@ end _TestOutput
 private command _TestWriteOutput pMessage
    -- As stdout is considered to be a 'native' stream, we encode to UTF-8 first
    -- then will unencode in the test runner.
-   write textEncode(pMessage, "UTF8") to stdout
+   if sOutputToVariable then
+      put pMessage after sOutput
+   else
+      write textEncode(pMessage, "UTF8") to stdout
+   end if
 end _TestWriteOutput
 
 private function _TestGetBuiltExtensionsFolder
@@ -134,6 +141,21 @@ end _TestLoadExtension
 ----------------------------------------------------------------
 -- Unit test library functions
 ----------------------------------------------------------------
+
+on TestOutputToVariable
+   put true into sOutputToVariable
+end TestOutputToVariable
+
+function TestFetchAndClearOutput
+   if not sOutputToVariable then
+      return empty
+   end if
+   
+   local tOutput
+   put sOutput into tOutput
+   put empty into sOutput
+   return tOutput
+end TestFetchAndClearOutput
 
 on TestPlan pCount
    _TestWriteOutput "1.." & _TestValidateCount(pCount) & return
@@ -277,3 +299,40 @@ on TestLoadAllExtensions
       _TestLoadExtension tAllExtensionsA[tExtFile], tExtFile
    end repeat
 end TestLoadAllExtensions
+
+on TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray
+	# Construct a dispatch command with all the desired parameters
+	local tDoString, tParams, tResult
+	put "dispatch pHandler to pTarget" into tDoString
+
+	repeat with tParam = 1 to the number of elements in pParamsArray
+		if tParams is empty then
+        	put " with pParamsArray[" & tParam & "]" into tParams
+        else
+        	put ", pParamsArray[" & tParam & "]" after tParams
+        end if
+    end repeat
+    
+    put tParams after tDoString
+    put "; put the result into tResult" after tDoString
+    
+    put false into tResult
+    
+    local tTimer, tTimeout
+    put false into tTimeout
+    put the millisecs into tTimerStart
+    
+    repeat while tResult is false and not tTimeout
+       wait 1 millisecs with messages
+	   do tDoString
+       if the millisecs - tTimerStart > pTimeOut then
+          put true into tTimeOut
+       end if
+	end repeat
+	
+    TestAssert pDesc, tResult
+    
+    if (not tResult) and tTimeOut then
+		TestDiagnostic pDesc & "- timed out"
+	end if
+end TestRepeat

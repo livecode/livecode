@@ -22,12 +22,12 @@ Example:
 select any button
 
 Description:
-Use the <any> <keyword> to specify a <random> <object> of a specified type, or to designate a <random> <chunk> in a <chunk expression>.
+Use the <any> <keyword> to specify a <random> <object(glossary)> of a specified type, or to designate a <random> <chunk> in a <chunk expression>.
 
 The <any> <keyword> does not examine every member of a set; it specifies just one member of the set, randomly chosen. For example, the expression
   if myString is in any field
 checks whether myString is in a randomly chosen field, not whether myString is somewhere in one of the fields on the card.
 
-References: first (keyword), random (function), keyword (glossary), random (glossary), chunk expression (glossary), chunk (glossary), object (object)
+References: first (keyword), random (function), keyword (glossary), random (glossary), chunk expression (glossary), chunk (glossary), object (glossary)
 
 Tags: database

@@ -33,8 +33,8 @@ If a tool other than the Browse tool is being used, no <mouseDoubleUp> <message>
 
 The <doubleClickInterval> and <doubleClickDelta> <properties> determine what LiveCode accepts as a <double-click|double click>.
 
->*Important:*  If the user clicks a transparent <pixel> in an <image>, the <mouseDoubleUp> <message> is sent to the <object> behind the <image>, not to the <image>.
+>*Important:*  If the user clicks a transparent <pixel> in an <image>, the <mouseDoubleUp> <message> is sent to the <object(glossary)> behind the <image>, not to the <image>.
 
-References: properties (property), doubleClickDelta (property), doubleClickInterval (property), mouseDoubleDown (message), control (keyword), double-click (glossary), mouse pointer (glossary), pixel (glossary), mouse button (glossary), message (glossary), unlock (glossary), card (glossary), field (glossary), image (glossary), clickLoc (function), mouse (function), click (command), object (object)
+References: properties (property), doubleClickDelta (property), doubleClickInterval (property), mouseDoubleDown (message), control (keyword), double-click (glossary), mouse pointer (glossary), pixel (glossary), mouse button (glossary), message (glossary), unlock (glossary), card (glossary), field (glossary), image (glossary), clickLoc (function), mouse (function), click (command), object (glossary)
 
 Tags: ui

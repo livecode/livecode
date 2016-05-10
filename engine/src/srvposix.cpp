@@ -201,7 +201,7 @@ public:
 		return ftello64(m_stream);
 	}
 	
-	virtual int64_t GetFileSize(void)
+	virtual uint64_t GetFileSize(void)
 	{
 		struct stat64 t_info;
 		if (fstat64(fileno(m_stream), &t_info) != 0)

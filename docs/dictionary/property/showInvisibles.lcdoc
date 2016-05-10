@@ -25,4 +25,4 @@ Showing all invisible objects can make it easier to find a lost control, but can
 
 Invisible objects that are temporarily shown with the <showInvisibles> <property> respond to mouse clicks and key presses as though they were visible.
 
-References: visible (property), invisible (property), card (keyword), show (command), hide (command), object (object), property (glossary)
+References: visible (property), invisible (property), card (keyword), show (command), hide (command), object (glossary), property (glossary)

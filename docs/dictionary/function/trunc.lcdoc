@@ -30,6 +30,6 @@ Use the <trunc> <function> to round a number down.
 
 The <trunc> <function> is different from <round> in that truncation completely ignores the fractional part of the number. For example, round(4.9) <return(glossary)|returns> 5, but trunc(4.9) <return(glossary)|returns> 4. This means that the <trunc> function does not always <return(constant)> the <integer> closest to the <number>.
 
-References: integer (keyword), return (constant), abs (function), round (function), return (glossary), function (control_st)
+References: integer (keyword), return (constant), abs (function), round (function), return (glossary), function (control structure)
 
 Tags: math

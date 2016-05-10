@@ -2177,14 +2177,14 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 							t_comparison_result = util_strncmp(attvalue, tvalue, strlen(tvalue));
 						else
 							t_comparison_result = util_strnicmp(attvalue, tvalue, strlen(tvalue));
-
-						if (t_comparison_result == 0)
-						{
-							result = curelement -> GetPath();
-							break;
-						}
                         
                         delete tvalue;
+                        
+                        if (t_comparison_result == 0)
+                        {
+                            result = curelement -> GetPath();
+                            break;
+                        }
 					}
 
 				}
