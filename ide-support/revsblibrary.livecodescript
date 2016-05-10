@@ -995,3 +995,88 @@ function revSBLibraryList
 
    return the keys of tLibrariesA
 end revSBLibraryList
+
+function revSBLcextFileIsZipArchive pFile, @rError
+   open file pFile for binary read
+   if the result is empty then
+      read from file pFile for 4 bytes
+      close file pFile
+   end if
+   if it is empty then
+      put "could not open external -" && pFile into rError
+      return false
+   end if
+   
+   return byte 1 of it is "P" and byte 2 of it is "K" and byte 3 of it is numToChar(3) and byte 4 of it is numToChar(4)
+end revSBLcextFileIsZipArchive
+
+function revSBLcextExternalHasiOSFolder pExternal
+   local tContents
+   revZipOpenArchive pExternal, "read"
+   if the result is empty then
+      put revZipEnumerateItems(pExternal) into tContents
+      filter tContents with "iOS/*"
+   end if
+   return tContents is not empty
+end revSBLcextExternalHasiOSFolder
+
+function revSBLcextFileIsIOSExternal pFile
+   local tError
+   return revSBLcextFileIsZipArchive(pFile, tError) and \
+         revSBLcextExternalHasiOSFolder(pFile)
+end revSBLcextFileIsIOSExternal
+
+private function __filterExternalsForIOS pList
+   filter pList with "*.lcext"
+   
+   local tList, tError
+   repeat for each line tLine in pList
+      if revSBLcextFileIsIOSExternal(tLine) then
+         if tList is empty then
+            put tLine into tList
+         else
+            put return & tLine after tList
+         end if
+      end if
+   end repeat
+   return tList
+end __filterExternalsForIOS
+
+-- This is currently just used for iOS externals that are present in the
+-- 'mergExt' folder in the app bundle or equivalent
+local sExternalsLocationA
+function revSBExternalsList pPlatform
+   if sExternalsLocationA is empty then
+      local tMergExtFolder
+      put revEnvironmentToolsPath() & "/MergExt" into tMergExtFolder
+      
+      local tContents
+      put __revSBEnumerateFolder(tMergExtFolder, tMergExtFolder & slash) into tContents
+      
+      local tRawList
+      switch pPlatform
+         case "ios"
+            put __filterExternalsForIOS(tContents) into tRawList
+            break
+         default
+            put empty into tRawList
+            break
+      end switch
+      
+      split tRawList by return
+      set the itemdelimiter to "."
+      set the linedelimiter to slash
+      repeat for each element tExtPath in tRawList
+         put tExtPath into sExternalsLocationA[pPlatform][item 1 of line -1 of tExtPath]
+      end repeat
+   end if
+   return the keys of sExternalsLocationA[pPlatform]
+end revSBExternalsList
+
+function revSBGetExternalPath pPlatform, pName
+   if sExternalsLocationA is empty then
+      get revSBExternalsList(pPlatform)
+   end if
+   
+   return sExternalsLocationA[pPlatform][pName] into tExtPath
+end revSBGetExternalPath
