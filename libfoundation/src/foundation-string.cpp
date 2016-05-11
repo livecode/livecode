@@ -5636,29 +5636,31 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 		strchar_t *t_output;
 		uindex_t t_output_length;
 		uindex_t t_output_capacity;
-		uindex_t t_offset;
-
 		t_output = nil;
 		t_output_length = 0;
 		t_output_capacity = 0;
-		t_offset = 0;
+		
+		MCRange t_range;
+		t_range . offset = 0;
+		t_range . length = self -> char_count;
 
 		for(;;)
 		{
+			MCRange t_found_range;
+			
 			// Search for the next occurence of from in whole.
-			uindex_t t_next_offset;
 			bool t_found;
-			t_found = MCStringFirstIndexOf(self, p_pattern, t_offset, p_options, t_next_offset);
+			t_found = MCStringFind(self, t_range, p_pattern, p_options, &t_found_range);
 			
 			// If we found an instance of from, then we need space for to; otherwise,
 			// we update the offset, and need just room up to it.
 			uindex_t t_space_needed;
 			if (t_found)
-				t_space_needed = (t_next_offset - t_offset) + p_replacement -> char_count;
+				t_space_needed = (t_found_range.offset - t_range.offset) + p_replacement -> char_count;
 			else
 			{
-				t_next_offset = self -> char_count;
-				t_space_needed = t_next_offset - t_offset;
+				t_found_range.offset = self -> char_count;
+				t_space_needed = t_found_range.offset - t_range.offset;
 			}
 
 			// Expand the buffer as necessary.
@@ -5678,8 +5680,8 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 				}
 			}
 			// Copy in self, up to the offset.
-			memcpy(t_output + t_output_length, self -> chars + t_offset, (t_next_offset - t_offset) * sizeof(strchar_t));
-			t_output_length += t_next_offset - t_offset;
+			memcpy(t_output + t_output_length, self -> chars + t_range.offset, (t_found_range.offset - t_range.offset) * sizeof(strchar_t));
+			t_output_length += t_found_range.offset - t_range.offset;
 
 			// No more occurences were found, so we are done.
 			if (!t_found)
@@ -5693,8 +5695,8 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
 			t_output_length += p_replacement -> char_count;
 
 			// Update offset
-			t_offset = t_next_offset + MCStringGetLength(p_pattern);
-            if (t_offset >= self -> char_count)
+			t_range.offset = t_found_range.offset + t_found_range.length;
+            if (t_range.offset >= self -> char_count)
                 break;
 		}
 	
