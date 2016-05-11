@@ -86,6 +86,8 @@ private:
 	bool SetStartPosition(uint32_t p_position);
 	bool GetFinishPosition(uint32_t &r_position);
 	bool SetFinishPosition(uint32_t p_position);
+	bool GetPlaySelection(bool &r_play_selection);
+	bool SetPlaySelection(bool p_play_selection);
 	bool GetLoop(bool &r_loop);
 	bool SetLoop(bool p_loop);
 	bool GetDuration(uint32_t &r_duration);
@@ -115,6 +117,7 @@ private:
 	HWND m_video_window;
 	HWND m_event_window;
 
+	bool m_play_selection;
 	uint32_t m_start_position;
 	uint32_t m_finish_position;
 
@@ -322,6 +325,7 @@ MCWin32DSPlayer::MCWin32DSPlayer()
 	m_state = kMCWin32DSPlayerStopped;
 	m_is_valid = false;
 
+	m_play_selection = false;
 	m_start_position = m_finish_position = 0;
 }
 
@@ -660,14 +664,20 @@ bool MCWin32DSPlayer::SetPositions(uint32_t p_start, uint32_t p_finish)
 		return false;
 
 	uint32_t t_start, t_finish;
-	t_finish = MCMin(t_duration, m_finish_position);
-	t_start = MCMin(t_finish, m_start_position);
+	t_start = 0;
+	t_finish = t_duration;
 
-	// don't allow span <= 0
-	if (t_finish - t_start == 0)
+	if (m_play_selection)
 	{
-		t_start = 0;
-		t_finish = t_duration;
+		t_finish = MCMin(t_duration, m_finish_position);
+		t_start = MCMin(t_finish, m_start_position);
+
+		// don't allow span <= 0
+		if (t_finish - t_start == 0)
+		{
+			t_start = 0;
+			t_finish = t_duration;
+		}
 	}
 
 	DWORD t_current_pos_flags;
@@ -709,6 +719,19 @@ bool MCWin32DSPlayer::GetFinishPosition(uint32_t &r_position)
 bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
 {
 	m_finish_position = p_position;
+	return SetPositions(m_start_position, m_finish_position);
+}
+
+bool MCWin32DSPlayer::GetPlaySelection(bool &r_play_selection)
+{
+	r_play_selection = m_play_selection;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetPlaySelection(bool p_play_selection)
+{
+	m_play_selection = p_play_selection;
+	// Update configured start / finish positions.
 	return SetPositions(m_start_position, m_finish_position);
 }
 
@@ -799,7 +822,7 @@ bool MCWin32DSPlayer::Play()
 	{
 		// if play has stopped, then reset stream to the beginning
 		uint32_t t_start_position = 0;
-		if (m_start_position < m_finish_position)
+		if (m_play_selection && m_start_position < m_finish_position)
 			t_start_position = m_start_position;
 
 		if (!SetCurrentPosition(t_start_position))
@@ -1021,13 +1044,21 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
+	case kMCPlatformPlayerPropertyOnlyPlaySelection:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_play_selection;
+			if (GetPlaySelection(t_play_selection))
+				*((bool*)r_value) = t_play_selection;
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyMediaTypes:
 	case kMCPlatformPlayerPropertyURL:
 		MCLog("UNIMPLEMENTED");
 		break;
 
 	// Can safely ignore these
-	case kMCPlatformPlayerPropertyOnlyPlaySelection:
 	case kMCPlatformPlayerPropertyShowSelection:
 		break;
 	}
@@ -1119,6 +1150,15 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
+	case kMCPlatformPlayerPropertyOnlyPlaySelection:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeBool);
+			bool t_play_selection = *((bool*)p_value);
+			SetPlaySelection(t_play_selection);
+
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyMediaTypes:
 	
 	case kMCPlatformPlayerPropertyMarkers:
@@ -1130,7 +1170,6 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	// Can safely ignore these
 	case kMCPlatformPlayerPropertyShowSelection:
-	case kMCPlatformPlayerPropertyOnlyPlaySelection:
 		break;
 	}
 }
