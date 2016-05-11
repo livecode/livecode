@@ -712,6 +712,22 @@ bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
 	return SetPositions(m_start_position, m_finish_position);
 }
 
+#define VOLUME_MAX     0L
+#define VOLUME_MIN  -7000L
+
+#define VOLUME_RANGE (VOLUME_MAX - VOLUME_MIN)
+
+
+long percentToVolume(int percent)
+{
+	return MCClamp(VOLUME_MIN + (percent * VOLUME_RANGE) / 100, VOLUME_MIN, VOLUME_MAX);
+}
+
+long volumeToPercent(int volume)
+{
+	return MCClamp((100 * (volume - VOLUME_MIN)) / VOLUME_RANGE, 0, 100);
+}
+
 bool MCWin32DSPlayer::GetVolume(uint16_t &r_volume)
 {
 	CComQIPtr<IBasicAudio> t_audio(m_graph);
@@ -722,7 +738,7 @@ bool MCWin32DSPlayer::GetVolume(uint16_t &r_volume)
 	if (S_OK != t_audio->get_Volume(&t_volume))
 		return false;
 
-	r_volume = t_volume / 100;
+	r_volume = volumeToPercent(t_volume);
 }
 
 bool MCWin32DSPlayer::SetVolume(uint16_t p_volume)
@@ -731,7 +747,7 @@ bool MCWin32DSPlayer::SetVolume(uint16_t p_volume)
 	if (t_audio == nil)
 		return false;
 
-	return S_OK == t_audio->put_Volume(p_volume * 100);
+	return S_OK == t_audio->put_Volume(percentToVolume(p_volume));
 }
 
 // TODO - implement loop property
