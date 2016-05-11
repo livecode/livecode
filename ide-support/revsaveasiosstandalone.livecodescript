@@ -893,8 +893,15 @@ end revModifyMobileImageFile
 ################################################################################
 
 private command addToManifest pFile, pName, pAppBundle, @xManifest, @xRedirects
+   if pName contains "//" or pName contains tab then
+      local tWarning
+      put "File/folder to include in standalone contains invalid chars (tab or //):" into tWarning
+      revStandaloneAddWarning tWarning && quote & pFile & quote
+      exit addToManifest
+   end if
+   
    if there is a file pFile then
-      put pAppBundle & slash & tName & tab & pFile & return after xManifest
+      put pAppBundle & slash & pName & tab & pFile & return after xManifest
       put pName & "//" & pFile & return after xRedirects
    else if there is a folder pFile then
       revCopyMobileFilesComputeFolderManifest xManifest, pFile, pAppBundle & slash & pName
@@ -945,7 +952,8 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
             put tExtPath into tFile
          end if
          
-         -- if there is a resources folder, add everything in it to the 
+         -- if there is a resources folder, add everything in it to the top level
+         -- of the app bundle
          local tResources
          put item 1 to -2 of tExtPath & slash & "resources" into tResources
          if there is a folder tResources then
