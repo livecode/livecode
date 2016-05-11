@@ -89,15 +89,51 @@ metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8
 
 -- property declarations
 /**
-Syntax: set the arrayData of <widget> to <pArray>
-Syntax: get the arrayData of <widget>
-Summary: The array being displayed by the widget
+Syntax: set the arrayData of [element <pIndex> of [element <pIndex> of ...]] <widget> to <pValue>
+Syntax: get the arrayData of [element <pIndex> of [element <pIndex> of ...]] <widget>
+
+Summary: The data from the array being displayed by the widget
 
 Parameters:
-pArray (array): The array data.
+pValue: Any value to insert at the specified location in the array.
+pIndex: Either a string, or a numerically indexed array, giving the list of keys for the target array element.
+
+Example:
+local tArray
+put "a" into tArray["x"]["y"]
+
+local tTreeView
+create widget "Tree View" as "com.livecode.widget.treeView"
+put it into tTreeView
+
+set the arrayData of tTreeView to tArray
+
+put the arrayData of element "y" of element "x" of tTreeView -- puts "a"
+
+Example:
+local tArray
+put "a" into tArray["x"]["y"]["z"]
+
+local tTreeView
+create widget "Tree View" as "com.livecode.widget.treeView"
+put it into tTreeView
+
+set the arrayData of tTreeView to tArray
+
+local tPath
+put "x" into tPath[1]
+put "y" into tPath[2]
+put "z" into tPath[3]
+
+set the arrayData of element tPath of tTreeView to "b"
+
+put the arrayData of tTreeView into tArray
+put tArray["x"]["y"]["z"] -- puts "b"
+
 
 Description:
-The arrayData is the data currently being displayed by the tree view widget.
+The <arrayData> is the data currently being displayed by the tree view widget. Using the `of element` form allows
+access to the individual nodes of the tree view via the path to its elements.
 **/
 
 property arrayData 					get getArrayData 				set setArrayData
@@ -464,6 +500,8 @@ public handler OnCreate() returns nothing
 	
 	put the empty array into mFoldState
 	put the empty array into mData	
+    put [] into mDataList
+    push the empty array onto mDataList
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -1246,19 +1284,15 @@ end handler
 // 	the value of xArray[element 1 of pPath][element 2 of pPath]... is pValue
 // 	creating the keys if necessary
 private handler setValueOnPath(in pPath as List, in pValue as any, inout xArray as Array)
-	if the number of elements in pPath is 1 then
+    if (element 1 of pPath) is not among the keys of xArray then
+        put the empty array into xArray[element 1 of pPath]
+    end if
+    
+    if the number of elements in pPath is 1 then
 		put pValue into xArray[element 1 of pPath]
 	else
-		if (element 1 of pPath) is not among the keys of xArray then
-			put the empty array into xArray[element 1 of pPath]
-		end if
 		setValueOnPath(element 2 to -1 of pPath, pValue, xArray[element 1 of pPath])
 	end if
-end handler
-
-// Return the whole stored array
-private handler getArrayData() returns Array
-	return mData
 end handler
 
 -- Sorts numerically, converting strings to numbers where possible
@@ -1305,15 +1339,30 @@ private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns In
 	end if
 end handler
 
-// Taken from the MCStringEncoding enum
-constant kUTF8Encoding is 4
-
-foreign handler MCStringDecode(in BinaryData as Data, in Encoding as LCUInt, in ExternalRep as CBool, out Value as String) returns CBool binds to "<builtin>"
-
-// Temporary wrapper to allow conversion of data to string until it is implemented in the LCB stdlib
-private handler ConvertToString(in pData as Data, out rString as optional String) returns Boolean
-    return MCStringDecode(pData, kUTF8Encoding, false, rString)
-end handler
+private handler CompareKeys(in pLeft as String, in pRight as String) returns Integer
+	if mSortNumeric then
+		return CompareKeysNumeric(pLeft, pRight)
+	end if
+	
+	if pLeft is pRight then
+		return 0
+	end if
+	
+	if pLeft < pRight then
+		if mSortAscending then
+			return -1
+		else
+			return 1
+		end if
+	end if
+	
+	if mSortAscending then
+		return 1
+	else
+		return -1
+	end if
+		
+end handler 
 
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected
 //  parameters, mDataList should always be the result of calling this on mData
@@ -1340,49 +1389,60 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 	end if
 	
 	variable tKey as String
-	variable tElement as Array
-	
 	repeat for each element tKey in tKeys
-		put the empty array into tElement
-		put tKey into tElement["key"]
-		put pLevel into tElement["indent"]
-		put false into tElement["selected"]
-		
-		variable tPath as List
-		put pPath into tPath
-		push tKey onto tPath
-		
-		put tPath into tElement["path"]	
-		if pArray[tKey] is an array then
-			put false into tElement["leaf"]
-			put true into tElement["folded"]
-			push tElement onto tList
-		else
-			put true into tElement["leaf"]
-			put pArray[tKey] into tElement["value"]
-			variable tString as optional String			
-			if pArray[tKey] is nothing then
-				put "" into tString
-			else if pArray[tKey] is a string then
-				put pArray[tKey] into tString
-			else if pArray[tKey] is a boolean then
-				format pArray[tKey] as string into tString
-			else if pArray[tKey] is a number then
-				format pArray[tKey] as string into tString
-			else if pArray[tKey] is a data then
-                if not ConvertToString(pArray[tKey], tString) then
-                    put "Can't display value" into tString
-                end if
-            else
-
-				put "Can't display value" into tString
-			end if	
-			put tString into tElement["string_value"]
-			push tElement onto tList
-		end if	
+		push elementForList(tKey, pPath, pLevel, pArray) onto tList
 	end repeat
 	
 	return tList
+end handler
+
+// Taken from the MCStringEncoding enum
+constant kUTF8Encoding is 4
+
+foreign handler MCStringDecode(in BinaryData as Data, in Encoding as LCUInt, in ExternalRep as CBool, out Value as String) returns CBool binds to "<builtin>"
+
+// Temporary wrapper to allow conversion of data to string until it is implemented in the LCB stdlib
+private handler ConvertToString(in pData as Data, out rString as optional String) returns Boolean
+    return MCStringDecode(pData, kUTF8Encoding, false, rString)
+end handler
+
+private handler elementForList(in pKey as String, pPath as List, in pLevel as Integer, in pArray as Array) returns Array
+	variable tElement as Array
+	put the empty array into tElement
+	put pKey into tElement["key"]
+	put pLevel into tElement["indent"]
+	put false into tElement["selected"]
+		
+	variable tPath as List
+	put pPath into tPath
+	push pKey onto tPath
+		
+	put tPath into tElement["path"]	
+	if pArray[pKey] is an array then
+		put false into tElement["leaf"]
+		put true into tElement["folded"]
+	else
+		put true into tElement["leaf"]
+		put pArray[pKey] into tElement["value"]
+		variable tString as optional String			
+		if pArray[pKey] is nothing then
+			put "" into tString
+		else if pArray[pKey] is a string then
+			put pArray[pKey] into tString
+		else if pArray[pKey] is a boolean then
+			format pArray[pKey] as string into tString
+		else if pArray[pKey] is a number then
+			format pArray[pKey] as string into tString
+		else if pArray[pKey] is a data then
+            if not ConvertToString(pArray[pKey], tString) then
+                put "Can't display value" into tString
+            end if
+        else
+			put "Can't display value" into tString
+		end if	
+		put tString into tElement["string_value"]
+	end if
+	return tElement
 end handler
 
 // A handler type for passing into 'applyToNode'
@@ -1646,80 +1706,76 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 
 end handler
 
-// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
-// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
-private handler setDataOnPath(in pPath as List) returns nothing
-	
-	// pPath having 1 element is an error, as that means mData is just a string rather than an array
-	if the number of elements in pPath is 1 then
-		return
-	end if
-	
-	// The last element of pPath is the actual value, the rest of it is the keys.
-	variable tActualPath as List
-	put element 1 to -2 of pPath into tActualPath
-	
-	variable tValue as String
-	put element -1 of pPath into tValue
-	
-	// Simultaneously adjust the backing list and array to reflect the added value.
-	setDataListOnPath(tActualPath, tValue, 0, mDataList, mData)
-
-end handler
-
 private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) returns nothing
 	put pShowAlternateBackgrounds into mAlternateRowBackgrounds
 	redraw all
 end handler
 
 // Recursive implementation of setting data on a given path. 
-// Acts on a list (in the format used by this widget) and an array simultaneously.
-private handler setDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, inout xList as List, inout xArray as Array) returns nothing
-
+// Acts on the list in the format used by this widget.
+private handler setValueOfDataListOnPath(in pPath as List, in pValue as any, in pLevel as Integer, in pStart as Integer, in pArray as Array, inout xList as List) returns nothing
 	variable tElement as Array
 	variable tCount as Integer
-	variable tNewElement as Array
-	put the empty array into tNewElement
-	
-	repeat with tCount from 1 up to the number of elements in xList
-		put element tCount of xList into tElement
-		
-		// The easy case - just insert the new element
-		if tElement["key"] > element pLevel + 1 of pPath then
-		
-			// update the backing array
-			setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-			put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-			
-			// update the list
-			splice convertArrayToList(tNewElement, pLevel, pPath) before element tCount of xList
-			return
-			
-		// We already have a key for the start of this path
-		else if tElement["key"] is element pLevel + 1 of pPath then
-			// The new element replaces the old one if the new one is just a string...
-			if the number of elements in pPath is pLevel + 1 then
-				put pValue into xArray[element pLevel + 1 of pPath]
-				put pValue into tElement["value"]
-				
-			// ...or if the old one was just as string.
-			else if tElement["leaf"] then
-				setValueOnPath(element pLevel + 2 to -1 of pPath, pValue, tNewElement)
-				put tNewElement into xArray[element pLevel + 1 of pPath]
-				splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList 
 
-			// Otherwise, go one step further into the path and set
-			else
-				setDataListOnPath(pPath, pValue, pLevel + 1, element tCount + 1 to -1 of xList, xArray[element pLevel + 1 of pPath])
-			end if
+	variable tPath as List
+	if pLevel is 0 then
+		put [] into tPath
+	else
+		put element 1 to pLevel of pPath into tPath
+	end if
+		
+	// If we're past the end of the list, we just need to add the current key 
+	if pStart >= the number of elements in xList then
+		splice convertArrayToList(pArray, pLevel, tPath) after element -1 of xList
+		return
+	end if	
+	
+	// Go through the list looking for the key at the appropriate level
+	repeat with tCount from pStart + 1 up to the number of elements in xList
+		put element tCount of xList into tElement
+
+		// Skip any elements of the list that are children at the level we're looking
+		if tElement["indent"] > pLevel then
+			next repeat
+		end if
+		
+		// if the next indent is less that where we're looking, we know this key is
+		// new and can be added below the current one.
+		if tElement["indent"] < pLevel then
+			splice convertArrayToList(pArray, pLevel, tPath) before element tCount of xList
+			return
+		end if	
+
+		// Otherwise the level is correct and we compare keys to find where to put the value
+		variable tComparison as Integer
+		put CompareKeys(element pLevel + 1 of pPath, tElement["key"]) into tComparison
+		
+		// If this is greater than the key at the current row, go to the next row
+		if tComparison is 1 then
+			next repeat
+		end if
+		
+		// If it is less, then add the key before the current row
+		if tComparison is -1 then
+			splice convertArrayToList(pArray, pLevel, tPath) before element tCount of xList
 			return
 		end if
+		
+		// If we get here, the key already exists and we're either replacing it or recursing
+		if tElement["leaf"] or tElement["folded"] then
+			// If the old element was a leaf or was folded then just replace it - we don't have to
+			//  deal with potentially removing subelements
+			splice convertArrayToList(pArray, pLevel, tPath) into element tCount to tCount of xList
+		else if the number of elements in pPath is pLevel + 1 then
+			// We have a previously unfolded subelement, so remove its subelements and re-unfold
+			deleteSubElements(tCount, tElement["indent"], xList)
+			splice convertArrayToList(pArray, pLevel, tPath) into element tCount to tCount of xList
+		else
+			setValueOfDataListOnPath(pPath, pValue, pLevel + 1, tCount, pArray[element pLevel + 1 of pPath], xList)
+		end if		
+		
+		exit repeat
 	end repeat
-	
-	// If we reached the end of the list then append this to the end
-	setValueOnPath(element pLevel + 1 to -1 of pPath, pValue, tNewElement)
-	put tNewElement[element pLevel + 1 of pPath] into xArray[element pLevel + 1 of pPath] 
-	splice convertArrayToList(tNewElement, pLevel, pPath) after element tCount of xList
 end handler
 
 --------------------------------------------------------------------------------
@@ -1728,10 +1784,48 @@ end handler
 --
 --------------------------------------------------------------------------------
 
+// Return the whole stored array
+private handler getArrayData() returns Array
+	return mData
+end handler
+
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
 	put true into mUpdateDataList
+	redraw all
+end handler
+
+public handler getArrayDataOfElement(in pPath as List) returns optional any
+    variable tValue
+    put mData into tValue
+
+    variable tElement as String
+	repeat for each element tElement in pPath
+        if tValue is an array and tElement is among the keys of tValue then
+            put tValue[tElement] into tValue
+        else
+            return nothing
+        end if
+    end repeat
+
+    return tValue
+end handler
+
+// Given a 'path' of array keys as a list, and a value, adjust the mDataList and mData variables
+// 	to reflect the action of putting pValue into mData[element 1 of pPath][element 2 of pPath]...
+public handler setArrayDataOfElement(in pPath as List, in pValue as any) returns nothing
+	// Update the array
+	setValueOnPath(pPath, pValue, mData)
+	
+	// Update the display list
+	setValueOfDataListOnPath(pPath, pValue, 0, 1, mData, mDataList)
+	
+	post "dataChanged"
+	
+	// The data count may have changed.
+	put true into mRecalculate
+	put true into mUpdateSeparator
 	redraw all
 end handler
 
