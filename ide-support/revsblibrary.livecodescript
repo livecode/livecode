@@ -431,11 +431,15 @@ private command __revSBEnsureFolder pFolder
   end if
 end __revSBEnsureFolder
 
-function revSBEnumerateFolder pFolder
-  return __revSBEnumerateFolder(pFolder)
+function revSBEnumerateFolder pFolder, pRecursive
+  return __revSBEnumerateFolder(pFolder, "", pRecursive)
 end revSBEnumerateFolder
 
-private function __revSBEnumerateFolder pFolder, pPrefix
+private function __revSBEnumerateFolder pFolder, pPrefix, pRecursive
+   local tRecursive
+   -- recursive by default
+   put pRecursive is not false into tRecursive
+   
    local tOldFolder, tResult
    put the folder into tOldFolder
    set the folder to pFolder
@@ -452,9 +456,11 @@ private function __revSBEnumerateFolder pFolder, pPrefix
       end if
       # For our purposes we need the folder first, so it can be created ahead of file creation..
       put pPrefix & tSubFolder & "/" & return after tResult
-      get __revSBEnumerateFolder(pFolder & "/" & tSubFolder, pPrefix & tSubFolder & "/")
-      if it is not empty then
-         put it & return after tResult
+      if tRecursive then
+         get __revSBEnumerateFolder(pFolder & "/" & tSubFolder, pPrefix & tSubFolder & "/")
+         if it is not empty then
+            put it & return after tResult
+         end if
       end if
    end repeat
    local tFileSize
