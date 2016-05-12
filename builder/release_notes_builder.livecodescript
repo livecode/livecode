@@ -921,9 +921,6 @@ end ExtensionsGetManifestPath
 -- Dictionary change generation
 ----------------------------------------------------------------
 
--- N.b. we currently only look at lcdoc dictionary entries
-constant kDictionaryCommitBase = "f9fb4130b570fd7df3b8e1526bbfe6074e798098"
-
 private command DictionaryCreate
    builderLog "report", "Creating dictionary release notes"
    
@@ -933,8 +930,10 @@ private command DictionaryCreate
    sort lines of tAdded ascending text
    sort lines of tModified ascending text
    
-   MarkdownAppend "notes", "# Dictionary additions"
-   MarkdownAppend "notes", tAdded
+   if tAdded is not empty then
+      MarkdownAppend "notes", "# Dictionary additions"
+      MarkdownAppend "notes", tAdded
+   end if
    --MarkdownAppend "notes", "# Dictionary changes"
    --MarkdownAppend "notes", tModified
 end DictionaryCreate
@@ -945,15 +944,13 @@ private command DictionaryScan @xAdded, @xModified
    
    put GitGetRelevantTags("dictionary") into tTags
    
-   put GitGetChangedFiles("dictionary", kDictionaryCommitBase, \
-         the last line of tTags) into tPermittedFiles
    put GitGetChangedFiles("dictionary", the first line of tTags, \
          the last line of tTags) into tChangedFiles
    
    -- Check whether each entry was added or just modified
    local tFile
    repeat for each line tFile in tChangedFiles
-      if tFile is among the lines of tPermittedFiles then
+      if tFile ends with ".lcdoc" then
          DictionaryScanFile tFile, xAdded, xModified
       end if
    end repeat
@@ -972,13 +969,17 @@ private command DictionaryScanFile pFile, @xAdded, @xModified
    local tEntry
    put merge("**[[tName]]** (*[[tType]]*)") into tEntry
    
-   -- Check if the "Introduced" version matches the current version
+   -- Check if the "Introduced" version matches the current version.
+   -- N.b. new dictionary entries are shown for all subsequent point
+   -- releases within the same minor release, so dictionary entries
+   -- added in 8.0.1 are listed in release notes for all subsequent
+   -- 8.0.x releases but not in 8.1.x releases.
    local tSourceVer, tTargetVer, tOffset, tMatch, tA, tB
    get matchText(tVersion, "^([0-9.]*)", tSourceVer)
    get matchText(sVersion, "^([0-9.]*)", tTargetVer)
    set the itemdelimiter to "."
    put true into tMatch
-   repeat with tOffset = 1 to the number of items in tTargetVer
+   repeat with tOffset = 1 to min(2, the number of items in tTargetVer)
       put item tOffset of tSourceVer into tA
       put item tOffset of tTargetVer into tB
       if tA is empty then
