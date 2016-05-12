@@ -1812,7 +1812,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				bool t_boolean;
 				t_boolean = va_arg(p_args, int) != 0;
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsBoolean, &t_boolean);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsBoolean, &t_boolean);
 			}
 			break;
 
@@ -1820,7 +1820,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				int t_integer;
 				t_integer = va_arg(p_args, int);
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsInteger, &t_integer);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsInteger, &t_integer);
 			}
 			break;
 				
@@ -1828,18 +1828,15 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				double t_real;
 				t_real = va_arg(p_args, double);
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsReal, &t_real);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsReal, &t_real);
 			}
 			break;
 				
 			case 'c': // char
 			{
 				char t_char;
-				LCBytes t_bytes;
-				t_bytes . buffer = &t_char;
-				t_bytes . length = 1;
 				t_char = (char)va_arg(p_args, int);
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsCChar, &t_char);
 			}
 			break;
 				
@@ -1847,26 +1844,54 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				const char *t_cstring;
 				t_cstring = va_arg(p_args, const char *);
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsCString, &t_cstring);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsCString, &t_cstring);
 			}
 			break;
 				
-			case 'y': // bytes
+            case 'u': // utf8 cstring
+            {
+                const char *t_cstring;
+                t_cstring = va_arg(p_args, const char *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsUTF8CString, &t_cstring);
+            }
+            break;
+                
+            case 'w': // utf16 cstring
+            {
+                const uint16_t *t_cstring;
+                t_cstring = va_arg(p_args, const uint16_t *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsUTF16CString, &t_cstring);
+            }
+            break;
+                
+            case 'y': // bytes
 			{
 				const LCBytes *t_bytes;
 				t_bytes = va_arg(p_args, const LCBytes *);
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsCData, &t_bytes);
 			}
 			break;
+                
+            case 't': // utf8 bytes
+            {
+                const LCBytes *t_bytes;
+                t_bytes = va_arg(p_args, const LCBytes *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsUTF8CData, &t_bytes);
+            }
+                
+            case 'v': // utf16 bytes
+            {
+                const LCBytes *t_bytes;
+                t_bytes = va_arg(p_args, const LCBytes *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsUTF16CData, &t_bytes);
+            }
 				
 #ifdef __OBJC__
 			case 'N': // NSNumber*
 			{
 				NSNumber* t_number;
-				t_number = va_arg(p_args, NSNumber *);
-				double t_real;
-				t_real = [t_number doubleValue];
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsReal, &t_real);
+                t_number = va_arg(p_args, NSNumber *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsObjcNumber, &t_number);
 			}
 			break;
 				
@@ -1874,11 +1899,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				NSString *t_string;
 				t_string = va_arg(p_args, NSString *);
-				const char *t_cstring;
-				t_cstring = [t_string cStringUsingEncoding: NSMacOSRomanStringEncoding];
-				if (t_cstring == nil)
-					t_error = (MCError)kLCErrorCannotEncodeCString;
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsCString, &t_cstring);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsObjcString, &t_string);
 			}
 			break;
 				
@@ -1886,12 +1907,25 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				NSData *t_data;
 				t_data = va_arg(p_args, NSData *);
-				LCBytes t_string;
-				t_string . buffer = (char *)[t_data bytes];
-				t_string . length = [t_data length];
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_string);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsObjcData, &t_data);
 			}
 			break;
+                
+            case 'A': // NSArray *
+            {
+                NSArray * t_array;
+                t_array = va_arg(p_args, NSArray *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsObjcArray, &t_array);
+            }
+                break;
+                
+            case 'M': // NSDictionary *
+            {
+                NSDictionary * t_dictionary;
+                t_dictionary = va_arg(p_args, NSDictionary *);
+                t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsObjcDictionary, &t_dictionary);
+            }
+                break;
 #endif
 		}
 	}
