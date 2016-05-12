@@ -370,6 +370,8 @@ public:
                 break;
                 
             default:
+				// click outside control area - close popup
+				close();
                 break;
         }
         return True;
