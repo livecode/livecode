@@ -86,6 +86,7 @@ private:
 	bool SetStartPosition(uint32_t p_position);
 	bool GetFinishPosition(uint32_t &r_position);
 	bool SetFinishPosition(uint32_t p_position);
+	bool GetLoadedPosition(uint32_t &r_position);
 	bool GetPlaySelection(bool &r_play_selection);
 	bool SetPlaySelection(bool p_play_selection);
 	bool GetLoop(bool &r_loop);
@@ -722,6 +723,20 @@ bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
 	return SetPositions(m_start_position, m_finish_position);
 }
 
+bool MCWin32DSPlayer::GetLoadedPosition(uint32_t &r_loaded)
+{
+	if (m_seeking == nil)
+		return false;
+
+	LONGLONG t_start, t_end;
+	if (S_OK != m_seeking->GetAvailable(&t_start, &t_end))
+		return false;
+
+	r_loaded = t_end;
+
+	return true;
+}
+
 bool MCWin32DSPlayer::GetPlaySelection(bool &r_play_selection)
 {
 	r_play_selection = m_play_selection;
@@ -773,7 +788,6 @@ bool MCWin32DSPlayer::SetVolume(uint16_t p_volume)
 	return S_OK == t_audio->put_Volume(percentToVolume(p_volume));
 }
 
-// TODO - implement loop property
 bool MCWin32DSPlayer::GetLoop(bool &r_loop)
 {
 	r_loop = m_looping;
@@ -979,6 +993,15 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
 			uint32_t t_position;
 			if (GetFinishPosition(t_position))
+				*((uint32_t*)r_value) = t_position;
+			break;
+		}
+
+	case kMCPlatformPlayerPropertyLoadedTime:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
+			uint32_t t_position;
+			if (GetLoadedPosition(t_position))
 				*((uint32_t*)r_value) = t_position;
 			break;
 		}
