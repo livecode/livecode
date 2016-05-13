@@ -30,6 +30,8 @@ Each hot spot of a QuickTime VR movie is a clickable link, usually from one node
 
 If the player does not contain a QuickTime VR movie, its <hotspots> <property> is empty.
 
+Deprecated: In order to support 64-bit on Mac we have been required to switch to using AVFoundation on Mac, which does not support QTVR. In addition, the Windows player object is now based on DirectShow, as Apple have dropped support for the QuickTime libraries previously used.
+
 References: items (keyword), hotspotClicked (message), QuickTime VR (glossary), property (glossary), read-only (glossary)
 
 Tags: multimedia
