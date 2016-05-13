@@ -84,6 +84,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    local tSettings
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform tSettings, "android"
+   
    -- Compute the base folder
    local tBaseFolder
    set the itemDelimiter to slash
@@ -256,6 +260,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end if
       set the itemDelimiter to "."
       repeat for each line tFile in tFiles
+         revSBResolveIncludedExternal "android", tFile
+         
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          

@@ -93,6 +93,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    local tSettings
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform tSettings, "ios"
+   
    -- Get the development root for device builds
    -- MM-2012-09-18: Rejiged the SDKs we use.  Things are now split up into sim, armv7, armv7, 
    -- since we now potentially need to use different SDKs for each.
@@ -408,6 +412,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
+         local tArchSpecificEngineList, tArchSpecificEngineFile
          put empty into tArchSpecificEngineList
          repeat for each word tArch in tArchs
             -- Make a temporary file for link options and execute it
@@ -924,15 +929,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    local tManifest
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      -- Added to support mergExt inclusion for iOS
-      if tFile begins with "!" then
-         local tExtPath
-         put revSBGetExternalPath("ios", char 2 to -1 of tFile) into tExtPath
-         -- if the file prefixed with ! was not a named external, treat normally
-         if tExtPath is not empty then
-            put tExtPath into tFile
-         end if
-      end if
+      revSBResolveIncludedExternal "ios", tFile
       
       local tIsAbsolute, tName
       put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute

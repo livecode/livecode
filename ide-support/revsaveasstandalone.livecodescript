@@ -45,77 +45,87 @@ private function revListFiles pPath
    return tFiles   
 end revListFiles
 
-local sDirectoryList        -- the list of build directories
-local sPlatformList         -- the list of build platforms
+local sDirectoryList        -- the list of desktop build directories
+local sPlatformList         -- the list of desktop build platforms
 local sResetA               -- stored info for resetting to the pre-build state
 local sGenericNumber        -- a simple counter for the generic file naming
 local sStandaloneSettingsA  -- a copy of the cRevStandaloneSettings of stack pFolder
 local sIconA                -- array for icons
 
+local sPlatformCount    -- the total number of platforms to build for
+
 # OK-2007-08-09 : Temporary storage for list of user script libraries. This is required to support building for ialiMac OS Classic
 local sUserScriptLibraries
-
--- MW-2013-11-06: [[ LinuxX64 ]] Add Linux x64 to the list of supported platforms.
--- MM-2014-03-21: [[ PPC Support Dropped ]] Remove Mac PPC and Mac Universal from supported platforms.
--- FG-2014-08-19: [[ RPi ]] Add Linux ARMv6-HF to the list of supported platforms
-constant kPlatforms = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf,Emscripten"
 
 -- list of info fields for the windows engine
 constant kVersionFlds = "Comments,CompanyName,FileDescription,FileVersion,InternalName,LegalCopyright,LegalTrademarks,OriginalFilename,PrivateBuild,ProductName,ProductVersion,SpecialBuild"
 
 # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Initialise script locals here to replace custom props of stack
 local sPatternsA, sWindowsMaxLengthsA, sInitialised
-on initialiseLibrary
+on initialiseSearchForInclusions
    if sInitialised is true then
-      exit initialiseLibrary
+      exit initialiseSearchForInclusions
    end if
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] The library autodetection uses various patterns to find library handlers being used.
    # Geometry
    put "cRevGeometry" into sPatternsA["Geometry"]["Property"]
+   put "scriptLibraries" into sPatternsA["Geometry"]["Key"]
    
    # Animation
    put "cRevAnimation" into sPatternsA["Animation"]["Property"]
+   put "scriptLibraries" into sPatternsA["Animation"]["Key"]
    
    # Table
    put "cRevTable" into sPatternsA["Table"]["Property"]
+   put "scriptLibraries" into sPatternsA["Table"]["Key"]
    
    # Database
    put "cRevDatabase" into sPatternsA["Database"]["Property"]
    put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
    put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
+   put "scriptLibraries" into sPatternsA["Database"]["Key"]
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
    put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "scriptLibraries" into sPatternsA["Internet"]["Key"]
    
    # XML
    put "revXML" into sPatternsA["XMLRPC"]["Root"]
    put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
+   put "scriptLibraries" into sPatternsA["XMLRPC"]["Key"]
    
    # Speech
    put "revIsSpeaking,revSetSpeechPitch,revSetSpeechSpeed,revSetSpeechVoice,revSpeak,revSpeechVoices,revStopSpeech,revUnloadSpeech" into sPatternsA["Speech"]["Script"]
+   put "scriptLibraries" into sPatternsA["Speech"]["Key"]
    
    # Video Grabber
    put "revCloseVideoGrabber,revInitializeVideoGrabber,revPreviewVideo,revRecordVideo,revSetVideoGrabberRect,revSetVideoGrabSettings,revStopPreviewingVideo,revStopRecordingVideo,revVideoFrameImage,revVideoGrabDialog,revVideoGrabIdle,revVideoGrabSettings" into sPatternsA["Video Grabber"]["Script"]
+   put "scriptLibraries" into sPatternsA["Video Grabber"]["Key"]
    
    # SSL & Encryption 
    // AL-2015-04-28: [[ Bug 15288 ]] 'https' requires revsecurity.
    put "secure,encrypt,decrypt,cipherNames,randomBytes,https" into sPatternsA["SSL & Encryption"]["Script"]
+   put "scriptLibraries" into sPatternsA["SSL & Encryption"]["Key"]
    
    # Printing
    put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
+   put "scriptLibraries" into sPatternsA["Printing"]["Key"]
    
    # Browser
    put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
+   put "scriptLibraries" into sPatternsA["Browser"]["Key"]
    
    # revFont
    put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
+   put "scriptLibraries" into sPatternsA["Font Support"]["Key"]
    
    # revZip
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
+   put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
    
    put true into sInitialised
-end initialiseLibrary
+end initialiseSearchForInclusions
 
 function getWindowsMaxLength pField
    return sWindowsMaxLengthsA[pField]
@@ -182,8 +192,6 @@ private function getBuildFolder pStack, pFolder, pSettings
 end getBuildFolder
 
 on revSaveAsStandalone pStack, pFolder, pPreview
-   initialiseLibrary
-   
    global gREVStackStatus
    
    start using stack "revSBLibrary"
@@ -200,6 +208,9 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end if
    
    set the defaultStack to pStack
+   
+   # Set empty values to defaults
+   revDefaultStandaloneSettings pStack
    
    # The following line used to be in revCreateStandalone, however, if we check below we see that pStack would always be the mainstack
    # as that is the stack that has its cRevStandaloneSettings custom property set. This explains the line "the mainstack of pStack" here.
@@ -222,7 +233,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    
    local tMessage 
    put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
-   repeat for each item tPlatform in kPlatforms
+   repeat for each item tPlatform in revSBDesktopTargets()
       put tCanBuild or sStandaloneSettingsA[tPlatform] into tCanBuild
    end repeat
    put tCanBuild or sStandaloneSettingsA["ios"] into tCanBuild
@@ -285,51 +296,85 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put tFolder into pFolder
    put tFolder into sStandaloneSettingsA["defaultBuildFolder"]
    
+   -- Ensure the custom prop is set before we possible search for inclusions
+   set the customProperties["cRevStandaloneSettings"] of stack pStack to sStandaloneSettingsA
+   
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
       revStandaloneProgress "Preparing to build standalone..."
       
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
+      
+      -- If we're searching for inclusions, do it here 
+      if sStandaloneSettingsA["inclusions"] = "search" then 
+         revSearchForInclusions pStack
+      end if
+      
       try
-         if sStandaloneSettingsA["ios"] or sStandaloneSettingsA["android"] or sStandaloneSettingsA["emscripten"] then
-            local tOutputMobileFolder
-            revOutputDirectories tFolder & slash
-            put the result into tOutputMobileFolder
-            if there is no folder tOutputMobileFolder then
-               create folder tOutputMobileFolder
-            end if
-            
-            ## [[ Bug 12014 ]]
-            ## On Window if iOS and Android are selected iOS could not be deselected ut Android building was never reached
-            ## previously IF sSandaloneSettingsA["ios"] then ELSE if sStandaloneSettingsA["android"] THEN
-            ## meant Android building was not being reached/built
-            
-            if sStandaloneSettingsA["ios"] then
-               --revIDEDeployBuild "ios", pStack, tOutputMobileFolder
-               ## Bug 10868
-               ## If windows and iOS checked (copied from Mac) then ignore
-               if the platform is "Win32" then
-                  ## Do nothing
-               else
-                  dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                        pStack, tOutputMobileFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device"
-               end if
-            end if
-            
-            if sStandaloneSettingsA["android"] then
-               --revIDEDeployBuild "android", pStack, tOutputMobileFolder
-               dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-                     pStack, tOutputMobileFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
-            end if
-            
-            if sStandaloneSettingsA["emscripten"] then
-               dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                     pStack, tOutputMobileFolder, "Build"
-            end if
-         else
-            revCreateStandalone pStack,pFolder
+         -- Clear left over state information from previous build
+         put empty into sDirectoryList
+         put empty into sPlatformList
+         put 0 into sPlatformCount
+         
+         -- Create an appropriate output dir
+         local tOutputFolder
+         revOutputDirectories tFolder & slash
+         put the result into tOutputFolder
+         if there is no folder tOutputFolder then
+            create folder tOutputFolder
          end if
+         
+         -- Check to see if we're building for any desktop platforms
+         local tDesktopTarget
+         put false into tDesktopTarget
+         repeat for each item tPlatform in revSBDesktopTargets()
+            if sStandaloneSettingsA[tPlatform] then
+               put true into tDesktopTarget
+            end if
+         end repeat
+         
+         if tDesktopTarget then
+            revCreateStandalone pStack, tOutputFolder
+         end if
+         
+         -- build for all selected additional platforms
+         repeat for each item tPlatform in revSBAdditionalTargets()
+            wait 0 millisecs with messages
+            if not sStandaloneSettingsA[tPlatform] then
+               next repeat
+            end if
+            
+            local tTargetFolder
+            -- If we are building for multiple platforms, then build in a platform-specific subfolder
+            if sPlatformCount > 1 then
+               put tOutputFolder & slash & tPlatform into tTargetFolder
+            else
+               put tOutputFolder into tTargetFolder
+            end if
+            -- Make sure folder exists
+            revSBEnsureFolder tTargetFolder
+            
+            switch tPlatform
+               case "iOS"
+                  if not (the platform begins with "MacOS") then
+                     next repeat
+                  end if
+                  dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
+                        pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device"
+                  break
+               case "Android"
+                  dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
+                        pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+                  break
+               case "Emscripten"
+                  dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
+                        pStack, tTargetFolder, "Build"
+                  break
+               default
+                  throw "invalid platform:" && tPlatform
+            end switch
+         end repeat
       catch tError
          revAbort
          if word 1 of tError = "Standalone:" then 
@@ -444,9 +489,6 @@ private command revCreateStandalone pStack, pFolder
    
    revStandaloneProgress "Loading settings..."
    
-   # Set empty values to defaults
-   revDefaultStandaloneSettings pStack
-   
    if there is a file (pFolder & "/" & sStandaloneSettingsA["name"]) then
       put " Standalone" after sStandaloneSettingsA["name"]
       put empty into tCount
@@ -455,10 +497,6 @@ private command revCreateStandalone pStack, pFolder
       end repeat
       put sStandaloneSettingsA["name"] & tCount into sStandaloneSettingsA["name"]
    end if
-   
-   -- Clear left over state information from previous build
-   put empty into sDirectoryList
-   put empty into sPlatformList
    
    # OK-2007-08-09
    put empty into sUserScriptLibraries
@@ -486,10 +524,6 @@ private command revCreateStandalone pStack, pFolder
    
    -- get all the stackfiles
    put revRelativeStackFilesList(pStack) into tStackFileList
-   
-   if sStandaloneSettingsA["inclusions"] = "search" then 
-      revSmartChecking tStackFileList, (sStandaloneSettingsA["inclusions"] is "search"), false
-   end if
    
    put the effective filename of stack pStack into tStackFileName
    put item 1 to -2 of the effective filename of stack pStack into tStackPath
@@ -537,7 +571,6 @@ private command revCreateStandalone pStack, pFolder
       put tStackPath & "/" before sStandaloneSettingsA["OSX,plist"]
    end if
    
-   put empty into sDirectoryList
    put the directory into sResetA["Directory"]
    
    -- close the open stacks (ask to save if need be)
@@ -552,20 +585,10 @@ private command revCreateStandalone pStack, pFolder
    try
       dispatch "savingStandalone" to stack tStackFileName
    end try
-   
-   --build a list of output directories
-   if last char of pFolder is not slash then 
-      put slash after pFolder
-   end if
-   
-   local tOutDir
-   revOutputDirectories pFolder
-   put the result into tOutDir
-   
+
    --so now we have a list of output directories in sDirectoryList
    put the fileType into sResetA["FileType"]
    put 1 into tCount
-   
    repeat for each line tPlatform in sPlatformList
       put line tCount of sDirectoryList into tDirectory
       -- copy files to each directory
@@ -706,7 +729,6 @@ private command revCreateStandalone pStack, pFolder
    try
       dispatch "standaloneSaved" to stack tStackFileName with pFolder
    end try
-   return tOutDir
 end revCreateStandalone
 
 #####################################################################
@@ -845,7 +867,9 @@ private command revOutputDirectories pFolder
       end repeat
    end if
    put 0 into tPlatforms
-   repeat for each item tPlatform in kPlatforms
+   local tTargets
+   put revSBDesktopTargets() into tTargets
+   repeat for each item tPlatform in tTargets & comma & revSBAdditionalTargets()
       if sStandaloneSettingsA[tPlatform] = true then
          if tPlatform contains "MacOSX" then
             add 1 to tOSXCount
@@ -855,7 +879,7 @@ private command revOutputDirectories pFolder
       end if
    end repeat
    if tOSXCount > 0 then add 1 to tPlatforms
-   repeat for each item tPlatform in kPlatforms
+   repeat for each item tPlatform in tTargets
       if sStandaloneSettingsA[tPlatform] = true then
          if not revDownloadEngine(tPlatform) then
             revStandaloneAddWarning "Could not build for " & tPlatform & " because required files are missing."
@@ -890,15 +914,20 @@ private command revOutputDirectories pFolder
    end repeat
    delete last char of sDirectoryList 
    delete last char of sPlatformList
+   put tPlatforms into sPlatformCount
    # Marcus: I need the root directory for U3, so return it here, nothing else uses a return
    return (pFolder & sStandaloneSettingsA["name"] & tCount)
 end revOutputDirectories
+
+private function revPlatformCount
+   return sPlatformCount
+end revPlatformCount
 
 # OK-2007-08-09 Copies the appropriate script libraries (i.e. group revLibraries of the appropriate revLibrary.rev)
 # to the stack being built. Will remove any existing group called revLibraries from card 1 of the stack.
 private command revCopyScriptLibraries pStack, pPlatform
    # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
-   revAddLibrary "Common"
+   revAddInclusion "Common", "scriptLibraries", sStandaloneSettingsA
    
    -- data grid
    // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
@@ -910,7 +939,7 @@ private command revCopyScriptLibraries pStack, pPlatform
    
    // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
    if sStandaloneSettingsA["includeProfiles"] is not empty then 
-      revAddLibrary "Profiles"
+      revAddInclusion "Profiles", "scriptLibraries", sStandaloneSettingsA
    end if
    
    /*
@@ -1818,7 +1847,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    end if
    
    # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   revAddLibrary "Database"
+   revAddInclusion "Database", "scriptLibraries", sStandaloneSettingsA
    
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
@@ -2192,6 +2221,20 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    -- hack
    unlock screen; unlock screen
    wait 0 ticks with messages -- allow for progress update
+   
+   -- sanitise raw list of externals from inclusions pane
+   local tAvailableExternals, tValidExternals
+   put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
+   repeat for each line tAddedExternal in sStandaloneSettingsA["externals"]
+      if tAddedExternal is among the lines of tAvailableExternals then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into sStandaloneSettingsA["externals"]
    
    if there is not a folder (tCurrentLocation & slash & "Externals") then 
       create folder (tCurrentLocation & slash & "Externals")
@@ -2569,27 +2612,51 @@ function revRedirectMacOSResourcesIsExecutable pFile
    return tIsExecutable
 end revRedirectMacOSResourcesIsExecutable
 
+private command revAddInclusion pInclusion, pKey, @xSettings
+   if pInclusion is among the lines of xSettings[pKey]  then
+      exit revAddInclusion
+   end if
+   
+   if xSettings[pKey] is not empty then put return after xSettings[pKey]
+   put pInclusion after xSettings[pKey]
+end revAddInclusion
+
 ------------------- SMART CHECKING --------------------
 
-private command revSmartChecking pStackFilesList, pSearchForInclusions
+command revSearchForInclusions pStack
+   -- Ensure all properties and patterns are initialised
+   initialiseSearchForInclusions
+   -- ensure revSBLibrary is in use
+   start using stack "revSBLibrary"
+   --fetch and update the custom prop set
+   local tSettings
+   put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
+   revSmartChecking revRelativeStackFilesList(pStack), tSettings
+   set the customProperties["cRevStandaloneSettings"] of stack pStack to tSettings
+end revSearchForInclusions
+
+private command revSmartChecking pStackFilesList, @xSettings
+   local tNewSettings
+   put xSettings into tNewSettings
    local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
    local tFiles
    revStandaloneProgress "Auto detecting library inclusions..."
    lock screen
    lock messages
    
-   if pSearchForInclusions then
-      put empty into sStandaloneSettingsA["scriptLibraries"]
-      put true into sStandaloneSettingsA["cursors"]
-      put false into sStandaloneSettingsA["answerDialog"]
-      put false into sStandaloneSettingsA["askDialog"]
-      put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
-      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
-      put false into sStandaloneSettingsA["pdfPrinter"]
-      
-      # OK-2007-11-13 : Support for LiveCode print dialogs
-      put false into sStandaloneSettingsA["revolutionPrintDialogs"]
-   end if
+   put empty into tNewSettings["scriptLibraries"]
+   put true into tNewSettings["cursors"]
+   put false into tNewSettings["answerDialog"]
+   put false into tNewSettings["askDialog"]
+   put false into tNewSettings["brushes"]   --LG-2007-12-13: Bug 4370
+   put false into tNewSettings["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
+   put false into tNewSettings["pdfPrinter"]
+   
+   # OK-2007-11-13 : Support for LiveCode print dialogs
+   put false into tNewSettings["revolutionPrintDialogs"]
+   
+   put empty into tNewSettings["databaseDrivers"]
+   put empty into tNewSettings["externals"]
    
    put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
    put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
@@ -2603,126 +2670,109 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
             exit revSmartChecking
          end if
          
-         revCheckObject the long name of stack tStack, tUserLibs, pSearchForInclusions
+         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings
          put the number of cards of stack tStack into tCardNum
          repeat with tCard=1 to tCardNum
-            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, pSearchForInclusions
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings
             put the number of controls of cd tCard of stack tStack into tControlNum
             repeat with tControl = 1 to tControlNum
-               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, pSearchForInclusions
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings
             end repeat
          end repeat
          repeat for each line tBg in the backgroundIDs of stack tStack
-            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, pSearchForInclusions
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings
          end repeat
       end repeat
    end repeat
    
-   if pSearchForInclusions then
-      put lineOffset("database", sStandaloneSettingsA["scriptLibraries"]) into tDB
-      if tDB is not 0 then
-         -- import all drivers because we don't know which they are using
-         put revDatabaseDriverList() into sStandaloneSettingsA["databaseDrivers"]
-         delete line tDB of sStandaloneSettingsA["scriptLibraries"]
-      end if
-   end if
+   -- Update the output settings
+   put tNewSettings into xSettings
 end revSmartChecking
 
-private command revAddLibrary pLibrary
-   if pLibrary is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-      exit revAddLibrary
-   end if
-   
-   if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
-   put pLibrary after sStandaloneSettingsA["scriptLibraries"]
-end revAddLibrary
-
-private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
-   # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
-   if pSearchForInclusions then
-      local tProps, tLib, tProperty
-      put the customPropertySets of pObject into tProps
-      repeat for each key tLib in sPatternsA
-         # AL-2015-01-29: Don't search the script for handlers if this lib is already included
-         if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-            next repeat
-         end if
-         
-         repeat for each item tProperty in sPatternsA[tLib]["Property"]
-            if lineOffset(tProperty, tProps) is not 0 then
-               revAddLibrary tLib
-               # AL-2015-01-29: If we are including this lib then go on to the next one
-               exit repeat
-            end if
-         end repeat
-      end repeat
-   end if
-   
-   # OK-2009-09-07 : Ensure script is never accessed without first checking for password or
-   # standalone building will fail.
+private command revCheckObject pObject,pUserLibraries, @xSettings
+   -- Should never get here if the stack is password protected
    if the password of stack (revTargetStack(pObject)) then
       exit revCheckObject
    end if
    
+   # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
+   local tProps, tLib, tProperty
+   put the customPropertySets of pObject into tProps
+   repeat for each key tLib in sPatternsA
+      local tSettingsKey
+      put sPatternsA[tLib]["Key"] into tSettingsKey
+      
+      # AL-2015-01-29: Don't search the script for handlers if this lib is already included
+      if tLib is among the lines of xSettings[tSettingsKey]  then
+         next repeat
+      end if
+      
+      repeat for each item tProperty in sPatternsA[tLib]["Property"]
+         if lineOffset(tProperty, tProps) is not 0 then
+            revAddInclusion tLib, tSettingsKey, xSettings
+            # AL-2015-01-29: If we are including this lib then go on to the next one
+            exit repeat
+         end if
+      end repeat
+   end repeat
+   
    local tScript
    put the script of pObject into tScript
    
-   if pSearchForInclusions then
-      if tScript is not empty then
+   if tScript is not empty then
+      
+      repeat for each key tLib in sPatternsA
+         put sPatternsA[tLib]["Key"] into tSettingsKey
          
-         repeat for each key tLib in sPatternsA
-            # AL-2015-01-29: Don't search the script for handlers if this lib is already included
-            if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-               next repeat
+         # AL-2015-01-29: Don't search the script for handlers if this lib is already included
+         if tLib is among the lines of xSettings[tSettingsKey]  then
+            next repeat
+         end if
+         
+         local tHandler
+         repeat for each item tHandler in sPatternsA[tLib]["Script"]
+            if lineOffset(tHandler,tScript) is not 0 then
+               revAddInclusion tLib, tSettingsKey, xSettings
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
             end if
-            
-            local tHandler
-            repeat for each item tHandler in sPatternsA[tLib]["Script"]
-               if lineOffset(tHandler,tScript) is not 0 then
-                  revAddLibrary tLib
-                  # AL-2015-01-29: If we are including this lib then go on to the next one
-                  exit repeat
-               end if
-            end repeat
-            
-            # AL-2015-01-29: Don't search the script for roots if this lib is already included
-            if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-               next repeat
-            end if
-            
-            local tRoot
-            repeat for each item tRoot in sPatternsA[tLib]["Root"]
-               if lineOffset(tRoot,tScript) is not 0 then
-                  revAddLibrary tLib
-                  # AL-2015-01-29: If we are including this lib then go on to the next one
-                  exit repeat
-               end if
-            end repeat
-            
          end repeat
          
-      end if
+         # AL-2015-01-29: Don't search the script for roots if this lib is already included
+         if tLib is among the lines of xSettings[tSettingsKey]  then
+            next repeat
+         end if
+         
+         local tRoot
+         repeat for each item tRoot in sPatternsA[tLib]["Root"]
+            if lineOffset(tRoot,tScript) is not 0 then
+               revAddInclusion tLib, tSettingsKey, xSettings
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
+            end if
+         end repeat
+         
+      end repeat
+      
    end if
    
-   if pSearchForInclusions then
-      -- answer dialog
-      if lineOffset("answer",tScript) is not 0 then
-         put true into sStandaloneSettingsA["answerDialog"]
-      end if
-      -- ask dialog
-      if lineOffset("ask",tScript) is not 0 then
-         put true into sStandaloneSettingsA["askDialog"]
-      end if
-      -- pdf printer
-      if lineOffset("open printing to pdf", tScript) is not 0 then
-         put true into sStandaloneSettingsA["pdfPrinter"]
-      end if
-      
-      # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
-      # or if we are building for linux. (This might include the files more often than they are required).
-      if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
-         put true into sStandaloneSettingsA["revolutionPrintDialogs"]
-      end if
+   -- answer dialog
+   if lineOffset("answer",tScript) is not 0 then
+      put true into xSettings["answerDialog"]
+   end if
+   -- ask dialog
+   if lineOffset("ask",tScript) is not 0 then
+      put true into xSettings["askDialog"]
+   end if
+   -- pdf printer
+   if lineOffset("open printing to pdf", tScript) is not 0 then
+      put true into xSettings["pdfPrinter"]
+   end if
+   
+   # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
+   # or if we are building for linux. (This might include the files more often than they are required).
+   if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
+      put true into xSettings["revolutionPrintDialogs"]
    end if
 end revCheckObject
 

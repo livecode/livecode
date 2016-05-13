@@ -655,6 +655,17 @@ end revFolderNameMakeLegal
 // SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
 constant kPlatforms = "Windows,MacOSX x86-32,Linux"
 
+// List of all desktop target platforms + architecture
+constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
+function revSBDesktopTargets
+   return kDesktopTargets
+end revSBDesktopTargets
+
+constant kAdditionalTargets = "iOS,Android,Emscripten"
+function revSBAdditionalTargets
+   return kAdditionalTargets
+end revSBAdditionalTargets
+
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
 constant kDefaultDocumentExtension   = ""
@@ -664,7 +675,7 @@ constant kDefaultPreferredSize       = 15000
 constant kDefaultRegion              = 1
 constant kDefaultRelease             = "Final"
 constant kDefaultVersionNumber       = "1.0.0.0"
-constant kDefaultScriptLibraries     = "Internet,Geometry,Printing"
+constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
@@ -959,24 +970,16 @@ function revSBStackNameFromScriptLibraryName pLib
    return pLib
 end revSBStackNameFromScriptLibraryName
 
-function revSBLibraryList
-   # AL-2105-03-05: [[ Bug 14813 ]] Use array key method to ignore duplicates
-   local tPath,tSave,tLibrariesA,tBtn,tExternals
+constant kScriptLibraries = "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
+private function revSBScriptLibraries
    -- rev script libraries
    # AL-2105-03-05: [[ Bug 14813 ]] Use static list of libs rather than generate from loaded libs list
    // SN-2015-10-19: [[ Bug 16238 ]] Add DataGrid library amongst the libraries
-   repeat for each item tItem in "Animation,DataGrid,Geometry,Internet,Printing,Table,XMLRPC"
-      put empty into tLibrariesA[tItem]
-   end repeat
-   
-   -- rev externals
-   get revExternalsList()
-   repeat for each line tLine in it
-      put empty into tLibrariesA[tLine]
-   end repeat
+   local tLibs
+   put kScriptLibraries into tLibs
+   replace comma with return in tLibs
    
    -- user script libraries
-   
    local tEnvironmentScripts
    put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentScripts
    
@@ -986,15 +989,297 @@ function revSBLibraryList
    local tFiles
    put revCombineFilePaths(tUserScripts,tEnvironmentScripts) into tFiles
    repeat for each line tLine in tFiles
-      if there is a stack tLine then put empty into tLibrariesA[ the short name of stack tLine]
+      if there is a stack tLine then 
+         put return & the short name of stack tLine after tLibs
+      end if
    end repeat
+   
+   return tLibs
+end revSBScriptLibraries
+
+private function revSBPlatformToRuntimeFolderName pPlatform
+   -- Ensure folder casing is correct
+   switch pPlatform
+      case "MacOSX"
+         return "Mac OS X"
+      case "iOS"
+         return "iOS"
+      case "Windows"
+         return "Windows"
+      case "Linux"
+         return "Linux"
+      case "Android"
+         return "Android"
+      case "Emscripten"
+         return "Emscripten"
+   end switch
+   
+   return empty
+end revSBPlatformToRuntimeFolderName
+
+-- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
+--   list by hand.
+private function revSBExternalsBuildList pPlatform
+   -- For now, only allow externals for the current build platform
+   local tExpectedPlatform
+   switch the platform
+      case "MacOS"
+         put "MacOSX" into tExpectedPlatform
+         break
+      case "Win32" 
+         put "Windows" into tExpectedPlatform
+         break
+      case "Linux"
+         put "Linux" into tExpectedPlatform
+         break
+      default
+         break
+   end switch
+   if tExpectedPlatform is not pPlatform then
+      return empty
+   end if
+   
+   return revExternalsList()
+end revSBExternalsBuildList
+
+private function revSBDesktopExternalsFromFolder pFolder
+   -- Find all relevant Externals.txt files
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   filter tFilesList with "*/Externals.txt"
+   
+   local tExternalsInfo, tListA
+   repeat for each line tLine in tFilesList
+      put url("file:" & pFolder & slash & tLine) into tExternalsInfo
+      repeat for each line tLine in tExternalsInfo
+         put true into tListA[item 1 of tLine]
+      end repeat
+   end repeat
+   
+   return tListA
+end revSBDesktopExternalsFromFolder
+
+private function revSBDesktopExternalsList pPlatform
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopExternalsFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopExternalsFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBDesktopExternalsList
+
+private function revSBMobileExternalsFromFolder pFolder
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   
+   -- Trim down to the actual files
+   local tFilesA
+   set the itemdelimiter to slash
+   repeat for each line tLine in tFilesList
+      put true into tFilesA[item -1 of tLine]
+   end repeat
+   
+   local tFixedExternals
+   put revIDEExternalsMapping() into tFixedExternals
+   
+   local tListA
+   repeat for each item tItem in tFixedExternals
+      if tFilesA[word 1 of tItem] then
+         put true into tListA[word 2 to -1 of tItem]
+      end if
+   end repeat
+
+   return tListA
+end revSBMobileExternalsFromFolder
+
+private function revSBMobileExternalsList pPlatform
+   -- Since the mobile Runtime folders don't have Externals.txt, 
+   -- just check which externals are available from the fixed list
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileExternalsFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileExternalsFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBMobileExternalsList
+
+-- Check in the IDE and user-defined externals locations for 
+-- Externals.txt files
+function revSBExternalsList pPlatform
+   if not revEnvironmentIsInstalled() then
+      return revSBExternalsBuildList(pPlatform)
+   end if
+   
+   switch pPlatform
+      case "MacOSX"
+      case "Linux"
+      case "Windows"
+         return revSBDesktopExternalsList(pPlatform)
+      case "iOS"
+      case "Android"
+         return revSBMobileExternalsList(pPlatform)
+      default 
+         return empty
+   end switch
+end revSBExternalsList
+
+-- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
+--   list by hand.
+private function revSBDatabaseDriversBuildList pPlatform
+   -- For now, only allow externals for the current build platform
+   local tExpectedPlatform
+   switch the platform
+      case "MacOS"
+         put "MacOSX" into tExpectedPlatform
+         break
+      case "Win32" 
+         put "Windows" into tExpectedPlatform
+         break
+      case "Linux"
+         put "Linux" into tExpectedPlatform
+         break
+      default
+         break
+   end switch
+   if tExpectedPlatform is not pPlatform then
+      return empty
+   end if
+   
+   return revDatabaseDriverList()
+end revSBDatabaseDriversBuildList
+
+private function revSBDesktopDatabaseDriversFromFolder pFolder
+   -- Find all relevant Database Drivers.txt files
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   filter tFilesList with "*/Database Drivers.txt"
+   
+   local tDriversInfo, tListA
+   repeat for each line tLine in tFilesList
+      put url("file:" & pFolder & slash & tLine) into tDriversInfo
+      repeat for each line tLine in tDriversInfo
+         put true into tListA[item 1 of tLine]
+      end repeat
+   end repeat
+   
+   return tListA
+end revSBDesktopDatabaseDriversFromFolder
+
+-- Check in the IDE and user-defined DB driver locations for 
+-- Database Drivers.txt files
+private function revSBDesktopDatabaseDriversList pPlatform
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopDatabaseDriversFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBDesktopDatabaseDriversFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBDesktopDatabaseDriversList
+
+private function revSBMobileDatabaseDriversFromFolder pFolder
+   local tFilesList
+   put revSBEnumerateFolder(pFolder) into tFilesList
+   
+   -- Trim down to the actual files
+   local tFilesA
+   set the itemdelimiter to slash
+   repeat for each line tLine in tFilesList
+      put true into tFilesA[item -1 of tLine]
+   end repeat
+   
+   local tFixedDrivers
+   put revIDEDatabaseDriversMapping() into tFixedDrivers
+   
+   local tListA
+   set the itemdelimiter to comma
+   repeat for each item tItem in tFixedDrivers
+      if tFilesA["Db" & word 1 of tItem] then
+         put true into tListA[word 2 to -1 of tItem]
+      end if
+   end repeat
+
+   return tListA
+end revSBMobileDatabaseDriversFromFolder
+
+private function revSBMobileDatabaseDriversList pPlatform
+   -- Since the mobile Runtime folders don't have Externals.txt, 
+   -- just check which DB drivers are available from the fixed list
+   local tPlatformFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tPlatformFolder
+   
+   local tListA
+   
+   local tTargetFolder
+   put revEnvironmentRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileDatabaseDriversFromFolder(tTargetFolder)
+   
+   put revEnvironmentUserRuntimePath() & slash & tPlatformFolder into tTargetFolder
+   union tListA with revSBMobileDatabaseDriversFromFolder(tTargetFolder)
+   
+   return the keys of tListA
+end revSBMobileDatabaseDriversList
+
+function revSBDatabaseDriversList pPlatform
+   if not revEnvironmentIsInstalled() then
+      return revSBDatabaseDriversBuildList(pPlatform)
+   end if
+   
+   switch pPlatform
+      case "MacOSX"
+      case "Linux"
+      case "Windows"
+         return revSBDesktopDatabaseDriversList(pPlatform)
+      case "iOS"
+      case "Android"
+         return revSBMobileDatabaseDriversList(pPlatform)
+      default 
+         return empty
+   end switch
+end revSBDatabaseDriversList
+
+-- Inclusions that are or require binary blobs from the 
+-- Runtime folder
+function revSBBuiltinInclusions pPlatform
+   # AL-2105-03-05: [[ Bug 14813 ]] Use array key method to ignore duplicates
+   local tPath,tSave,tLibrariesA,tBtn,tExternals
+   -- rev externals
+   get revSBExternalsList(pPlatform)
+   repeat for each line tLine in it
+      put empty into tLibrariesA[tLine]
+   end repeat
+
+   if pPlatform is not "emscripten" then
    put empty into tLibrariesA["SSL & Encryption"]
+      put empty into tLibrariesA["Revolution Zip"]
+   end if
+   
    if "Browser" is among the keys of tLibrariesA then
       put empty into tLibrariesA["Browser (CEF)"]
    end if
 
    return the keys of tLibrariesA
-end revSBLibraryList
+end revSBBuiltinInclusions
 
 function revSBLcextFileIsZipArchive pFile, @rError
    open file pFile for binary read
@@ -1007,31 +1292,35 @@ function revSBLcextFileIsZipArchive pFile, @rError
       return false
    end if
    
-   return byte 1 of it is "P" and byte 2 of it is "K" and byte 3 of it is numToChar(3) and byte 4 of it is numToChar(4)
+   return byte 1 of it is "P" and byte 2 of it is "K" and \ 
+         byte 3 of it is numToByte(3) and byte 4 of it is numToByte(4)
 end revSBLcextFileIsZipArchive
 
-function revSBLcextExternalHasiOSFolder pExternal
-   local tContents
+function revSBLcextExternalHasFolder pExternal, pPlatform
+   local tContents, tFolder
+   put revSBPlatformToRuntimeFolderName(pPlatform) into tFolder
+   
    revZipOpenArchive pExternal, "read"
    if the result is empty then
       put revZipEnumerateItems(pExternal) into tContents
-      filter tContents with "iOS/*"
+      filter tContents with tFolder & "/*"
    end if
    return tContents is not empty
-end revSBLcextExternalHasiOSFolder
+end revSBLcextExternalHasFolder
 
-function revSBLcextFileIsIOSExternal pFile
+function revSBLcextFileIsMobileExternal pFile, pPlatform
    local tError
    return revSBLcextFileIsZipArchive(pFile, tError) and \
-         revSBLcextExternalHasiOSFolder(pFile)
-end revSBLcextFileIsIOSExternal
+         revSBLcextExternalHasFolder(pFile, pPlatform)
+end revSBLcextFileIsMobileExternal
 
-private function __filterExternalsForIOS pList
+private function revSBFilterExternalsForMobile pList, pPlatform
    filter pList with "*.lcext"
    
    local tList, tError
    repeat for each line tLine in pList
-      if revSBLcextFileIsIOSExternal(tLine) then
+      -- look inside the lcext zip to see if the platform is supported (in any architecture)
+      if revSBLcextFileIsMobileExternal(tLine, pPlatform) then
          if tList is empty then
             put tLine into tList
          else
@@ -1040,43 +1329,394 @@ private function __filterExternalsForIOS pList
       end if
    end repeat
    return tList
-end __filterExternalsForIOS
+end revSBFilterExternalsForMobile
 
--- This is currently just used for iOS externals that are present in the
+-- filter file (and folder!) list by expected file extension
+private function revSBFilterExternalsForDesktop pList, pPlatform
+   local tExtension
+   switch pPlatform
+      case "MacOSX" 
+         -- .bundles are folders
+         put "bundle/" into tExtension
+         break
+      case "Windows"
+         put "dll" into tExtension
+         break
+      case "Linux"
+         put "so" into tExtension
+         break
+   end switch
+   filter pList with "*." & tExtension
+   
+   return pList
+end revSBFilterExternalsForDesktop
+
+-- This is currently just used for externals that are present in the
 -- 'mergExt' folder in the app bundle or equivalent
 local sExternalsLocationA
-function revSBExternalsList pPlatform
-   if sExternalsLocationA is empty then
-      local tMergExtFolder
-      put revEnvironmentToolsPath() & "/MergExt" into tMergExtFolder
+function revSBAdditionalExternalsList pPlatform
+   if sExternalsLocationA[pPlatform] is empty then
+      local tFolders
+      put revSBAdditionalExternalFolders() into tFolders
       
-      local tContents
-      put __revSBEnumerateFolder(tMergExtFolder, tMergExtFolder & slash) into tContents
-      
-      local tRawList
-      switch pPlatform
-         case "ios"
-            put __filterExternalsForIOS(tContents) into tRawList
-            break
-         default
-            put empty into tRawList
-            break
-      end switch
-      
-      split tRawList by return
-      set the itemdelimiter to "."
-      set the linedelimiter to slash
-      repeat for each element tExtPath in tRawList
-         put tExtPath into sExternalsLocationA[pPlatform][item 1 of line -1 of tExtPath]
+      -- For these externals we have to go by the file extensions that exist
+      -- to check if the platform is supported
+      repeat for each line tFolder in tFolders
+         local tContents
+         put __revSBEnumerateFolder(tFolder, tFolder & slash) into tContents
+         
+         local tRawList
+         switch pPlatform
+            case "ios"
+            case "android"
+               put revSBFilterExternalsForMobile(tContents, pPlatform) into tRawList
+               break
+            case "windows"
+            case "macosx"
+            case "linux"
+               put revSBFilterExternalsForDesktop(tContents, pPlatform) into tRawList
+               break
+            default
+               put empty into tRawList
+               break
+         end switch
+         
+         split tRawList by return
+         set the itemdelimiter to "."
+         set the linedelimiter to slash
+         repeat for each element tExtPath in tRawList
+            put tExtPath into sExternalsLocationA[pPlatform][item 1 of line -1 of tExtPath]
+         end repeat
       end repeat
    end if
    return the keys of sExternalsLocationA[pPlatform]
-end revSBExternalsList
+end revSBAdditionalExternalsList
 
+-- Instead of resolving the path to an included external each time
+-- fetch the stored path from a script local array
 function revSBGetExternalPath pPlatform, pName
    if sExternalsLocationA is empty then
       get revSBExternalsList(pPlatform)
    end if
    
-   return sExternalsLocationA[pPlatform][pName] into tExtPath
+   return sExternalsLocationA[pPlatform][pName]
 end revSBGetExternalPath
+
+-- Ensure the name used for platforms is consistent
+constant kMacPlatform = "MacOSX"
+constant kWindowsPlatform = "Windows"
+constant kLinuxPlatform = "Linux"
+constant kiOSPlatform = "iOS"
+constant kAndroidPlatform = "Android"
+constant kEmscriptenPlatform = "Emscripten"
+
+function revSBAllPlatforms
+   return kMacPlatform & comma & \
+         kWindowsPlatform & comma & \
+         kLinuxPlatform & comma & \
+         kiOSPlatform & comma & \
+         kAndroidPlatform & comma & \
+         kEmscriptenPlatform
+end revSBAllPlatforms
+
+function revSBAllDesktopPlatforms
+   return kMacPlatform & comma & \
+         kWindowsPlatform & comma & \
+         kLinuxPlatform
+end revSBAllDesktopPlatforms
+
+function revSBAllMobilePlatforms
+   return kiOSPlatform & comma & \
+         kAndroidPlatform
+end revSBAllMobilePlatforms
+
+private command addToList pElement, @xArray
+   put pElement into xArray[the number of elements in xArray + 1]
+end addToList
+
+private function revSBAvailableWidgets
+   return revSBAvailableExtensions("widget")
+end revSBAvailableWidgets
+
+private function revSBAvailableLibraries
+   return revSBAvailableExtensions("library")
+end revSBAvailableLibraries
+
+-- LCB Extensions
+private function revSBAvailableExtensions pType
+   local tExtensions, tInclusions
+   put revIDEExtensions(pType, "installed") into tExtensions
+   repeat for each key tID in tExtensions
+      local tExtension
+      -- LCB extensions are available on all platforms
+      put revSBAllPlatforms() into tExtension["platforms"]
+      put pType into tExtension["type"]
+      put tExtensions[tID]["title"] into tExtension["title"]
+      put tID into tExtension["id"]
+      addToList tExtension, tInclusions
+   end repeat
+   return tInclusions
+end revSBAvailableExtensions
+
+private function revSBAvailableScriptLibraries
+   local tLibraries, tInclusions
+   put revSBScriptLibraries() into tLibraries
+   repeat for each line tLine in tLibraries
+      local tLibrary
+      put tLine into tLibrary["id"]
+      put tLine into tLibrary["title"]
+      put "script library" into tLibrary["type"]
+      put revSBAllDesktopPlatforms() into tLibrary["platforms"]
+      addToList tLibrary, tInclusions
+   end repeat
+   return tInclusions
+end revSBAvailableScriptLibraries
+
+constant kResources = "Cursors|cursors,Answer Dialog|answerDialog,Ask Dialog|askDialog,Brushes|brushes,Magnify|magnify,PDF Printer|pdfPrinter,Print Dialogs|revolutionPrintDialogs"
+private function revSBAvailableResources
+   local tInclusions, tResources
+   put kResources into tResources
+   split tResources by "," and "|"
+   
+   repeat for each key tTitle in tResources
+      local tInclusion
+      put tResources[tTitle] into tInclusion["id"]
+      put tTitle into tInclusion["title"]
+      put "resource" into tInclusion["type"]
+      put revSBAllDesktopPlatforms() into tInclusion["platforms"]
+      if tTitle is "PDF Printer" then
+         put comma & kiOSPlatform after tInclusion["platforms"]
+      end if
+      addToList tInclusion, tInclusions
+   end repeat
+   return tInclusions
+end revSBAvailableResources
+
+-- Additional in-IDE external paths can be added here
+private function revSBAdditionalExternalFolders
+   return revEnvironmentToolsPath() & "/MergExt"
+end revSBAdditionalExternalFolders
+
+-- Use the specified getter to fetch all the data about the inclusions
+-- of the given type for each platform.
+-- pGetter must take the platform as an argument.
+private function revSBAvailablePerPlatformInclusions pGetter, pType
+   local tList, tInclusions
+   repeat for each item tPlatform in revSBAllPlatforms()
+      local tPlatformList
+      dispatch function pGetter to me with tPlatform 
+      put the result into tPlatformList
+      
+      repeat for each line tTitle in tPlatformList
+         if tList[tTitle] is empty then
+            local tInclusion
+            put tTitle into tInclusion["id"]
+            put tTitle into tInclusion["title"]
+            put pType into tInclusion["type"]
+            put tPlatform into tInclusion["platforms"]
+            put tInclusion into tList[tTitle]
+         else
+            put comma & tPlatform after tList[tTitle]["platforms"]
+         end if
+      end repeat
+   end repeat
+   
+   repeat for each element tInclusion in tList
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   return tInclusions
+end revSBAvailablePerPlatformInclusions
+
+private function revSBAdditionalExternals
+   return revSBAvailablePerPlatformInclusions("revSBAdditionalExternalsList", "external")
+end revSBAdditionalExternals
+
+private function revSBAvailableBuiltinInclusions
+   return revSBAvailablePerPlatformInclusions("revSBBuiltinInclusions", "inclusion")
+end revSBAvailableBuiltinInclusions
+
+private function revSBAvailableDatabaseDrivers
+   return revSBAvailablePerPlatformInclusions("revSBDatabaseDriversList", "database driver")
+end revSBAvailableDatabaseDrivers
+
+/**
+Summary: Returns an array of available inclusions
+
+Returns: A numerically keyed array.
+Each element is an array with the following keys:
+- "title" : The display name of the extension
+- "type" : One of "widget", "library", "external", "script library", "inclusion", "database driver"
+- "platforms" : A comma-delimited list of the available platforms
+- "id" : A unique identifier for the inclusion. This is used to actually find the resource
+when including in a standalone. Where the id is the same as the title, it is expected
+that the mapping is resolved later on.
+*/
+function revSBAvailableInclusions
+   local tInclusions
+   repeat for each element tInclusion in revSBAvailableWidgets()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   repeat for each element tInclusion in revSBAvailableLibraries()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   repeat for each element tInclusion in revSBAvailableScriptLibraries()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   repeat for each element tInclusion in revSBAvailableDatabaseDrivers()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   repeat for each element tInclusion in revSBAvailableBuiltinInclusions()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   repeat for each element tInclusion in revSBAvailableResources()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   repeat for each element tInclusion in revSBAdditionalExternals()
+      addToList tInclusion, tInclusions
+   end repeat
+   
+   return tInclusions
+end revSBAvailableInclusions
+
+private command inclusionKeyAndIdentifier pElement, @rKey, @rId
+   switch pElement["type"]
+      case "widget"
+      case "library"
+         put "extensions" into rKey
+         put pElement["id"] into rId
+         break
+      case "script library"
+         put "scriptLibraries" into rKey
+         put pElement["title"] into rId
+         break
+      case "external"
+         put "externals" into rKey
+         put pElement["id"] into rId
+         break
+      case "database driver"
+         put "databaseDrivers" into rKey
+         put pElement["id"] into rId
+         break
+      case "resource"
+         put pElement["id"] into rKey
+         put true into rId
+         break
+         -- at the moment all other inclusions go through the scriptLibraries key
+      case "inclusion"
+         put "scriptLibraries" into rKey
+         put pElement["id"] into rId
+         break
+   end switch
+end inclusionKeyAndIdentifier
+
+command revSBUpdateInclusions pInclusions, pExclusions, pStackName
+   local tSettingsKey, tIdentifier, tNewSettings
+   
+   -- first remove all exclusions
+   repeat for each element tElement in pExclusions
+      inclusionKeyAndIdentifier tElement, tSettingsKey, tIdentifier
+      set the cRevStandaloneSettings[tSettingsKey] of stack pStackName to empty
+   end repeat
+   
+   -- now add all inclusions
+   repeat for each element tElement in pInclusions
+      inclusionKeyAndIdentifier tElement, tSettingsKey, tIdentifier
+      
+      if tNewSettings[tSettingsKey] is empty then
+         put tIdentifier into tNewSettings[tSettingsKey]
+      else
+         put return & tIdentifier after tNewSettings[tSettingsKey]
+      end if
+   end repeat
+   
+   repeat for each key tKey in tNewSettings
+      set the cRevStandaloneSettings[tKey] of stack pStackName to tNewSettings[tKey]
+   end repeat
+end revSBUpdateInclusions
+
+command revSBInclusionIconFromType pType, pID, @rIconName, @rIconPath
+   switch pType
+      case "widget"
+         put revIDEExtensionProperty(pID, "svgIcon") into rIconPath
+         put "wrench" into rIconName
+         break
+      case "library"
+         put "book" into rIconName
+         break
+      case "external"
+         put "external link" into rIconName
+         break
+      case "inclusion"
+      case "resource"
+         put "puzzle piece" into rIconName
+         break
+      case "database driver"
+         put "database" into rIconName
+         break
+      case "script library"
+         put "file text alt" into rIconName
+         break
+      default
+         put "circle" into rIconName
+         break
+   end switch
+end revSBInclusionIconFromType
+
+-- Mobile standalone builders need to use this to convert from new inclusion settings
+command revSBConvertSettingsForPlatform @xSettings, pPlatform
+   -- Sanitise the list of externals and route through copy files mechanism
+   local tAvailableExternals
+   put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
+   repeat for each line tLine in xSettings["externals"]
+      if tLine is among the lines of tAvailableExternals then
+         if xSettings["files"] is empty then
+            put "!" & tLine into xSettings["files"]
+         else
+            put return & "!" & tLine after xSettings["files"]
+         end if
+      end if
+   end repeat
+   
+   -- Convert from desktop specific keys to mobile
+   if xSettings["pdfPrinter"] then
+      put "true" into xSettings[pPlatform & ",include revpdfprinter"]
+   end if
+   
+   if "SSL & Encryption" is among the lines of xSettings["scriptLibraries"] then
+      put "true" into xSettings[pPlatform & ",include revsecurity"]
+   end if
+   
+   repeat for each line tLine in xSettings["databaseDrivers"]
+      put "true" into xSettings[pPlatform & ",include db" & toLower(tLine)]
+   end repeat
+   
+   local tExternalsMapping, tExternal
+   put revIDEExternalsMapping() into tExternalsMapping
+   repeat for each item tExternalMapping in tExternalsMapping
+      put word 1 of tExternalMapping into tExternal
+      if tExternal is among the items of "revzip,revxml" then
+         if word 2 to -1 of tExternalMapping is among the lines of xSettings["scriptLibraries"] then
+            put "true" into xSettings[pPlatform & ",include" && tExternal]
+         end if
+      end if
+   end repeat
+end revSBConvertSettingsForPlatform
+
+command revSBResolveIncludedExternal pPlatform, @xFile
+   -- Added to support mergExt inclusion
+   if xFile begins with "!" then
+      local tExtPath
+      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      -- if the file prefixed with ! was not a named external, treat normally
+      if tExtPath is not empty then
+         put tExtPath into xFile
+      end if
+   end if
+end revSBResolveIncludedExternal
