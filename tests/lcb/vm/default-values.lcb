@@ -32,4 +32,9 @@ public handler TestDefaultValueOfOptional()
 	test "default value (optional)" when tOptional is nothing
 end handler
 
+public handler TestDefaultValueOfUntyped()
+	variable tVar
+	test "default value (untyped)" when tVar is nothing
+end handler
+
 end module
