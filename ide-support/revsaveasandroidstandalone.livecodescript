@@ -632,16 +632,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       revStandaloneProgress "Building executable..."
       
       local tDeploy
-      # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in android standalone
-      repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
-         local tExtensionFile
-         put revIDEExtensionModuleFile(tExtension) into tExtensionFile
-         if tDeploy["modules"] is empty then
-            put tExtensionFile into tDeploy["modules"]
-         else
-            put return & tExtensionFile after tDeploy["modules"]
-         end if
-      end repeat
+      -- Update the deploy params with script library and extension inclusions
+      revSBUpdateDeployParams pStack, tSettings, tDeploy
       
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
@@ -651,11 +643,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
-      
-      -- If the datagrid is used, then include the library as an aux stack
-      if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-         put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
-      end if
       
       -- Externals to reference (on Android we include drivers in this list)
       repeat for each line tEntry in tExternals
