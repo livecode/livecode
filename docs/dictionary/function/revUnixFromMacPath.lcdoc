@@ -45,6 +45,6 @@ LiveCode always uses the Unix pathname standard for cross-platform compatibility
 Changes:
 The convertOSX parameter was introduced in version 2.1.1. In previous versions, the revUnixFromMacPath function did not attempt to convert between the Mac OS and OS X conventions described above.
 
-References: string (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), answer file (command), function (control_st), application (glossary), standalone application (glossary), file path (glossary), main stack (glossary), OS X (glossary), relative file path (glossary), group (glossary), absolute file path (glossary), Mac OS (glossary), message (glossary), Unix (glossary), delimiter (glossary), handler (glossary), Common library (library), library (library)
+References: string (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), answer file (command), function (control structure), application (glossary), standalone application (glossary), file path (glossary), main stack (glossary), OS X (glossary), relative file path (glossary), group (glossary), absolute file path (glossary), Mac OS (glossary), message (glossary), Unix (glossary), delimiter (glossary), handler (glossary), Common library (library), library (library)
 
 Tags: file system

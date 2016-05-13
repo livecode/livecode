@@ -33,6 +33,6 @@ The first item of the <mouseLoc> is equal to the <mouseH>. The second <item> is 
 
 >*Tip:* The <mouseMove> <message> sends the current mouse position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseLoc> <function>.
 
-References: function (control_st), dragEnter (message), mouseMove (message), item (keyword), property (glossary), return (glossary), handler (glossary), message (glossary), integer (glossary), parameter (glossary), mouse pointer (glossary), mouseV (function), mouseColor (function), mouseClick (function), mouseH (function), clickLoc (function), mouseLoc (function), selectedLoc (function), mouseCharChunk (function), grab (command), stack (object)
+References: function (control structure), dragEnter (message), mouseMove (message), item (keyword), property (glossary), return (glossary), handler (glossary), message (glossary), integer (glossary), parameter (glossary), mouse pointer (glossary), mouseV (function), mouseColor (function), mouseClick (function), mouseH (function), clickLoc (function), mouseLoc (function), selectedLoc (function), mouseCharChunk (function), grab (command), stack (object)
 
 Tags: ui

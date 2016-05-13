@@ -1772,11 +1772,9 @@ void MCReset::exec_ctxt(MCExecContext& ctxt)
 
 		MCpatternlist->freepat(MCpenpattern);
 		MCpencolor.red = MCpencolor.green = MCpencolor.blue = 0x0;
-		MCscreen->alloccolor(MCpencolor);
 
 		MCpatternlist->freepat(MCbrushpattern);
 		MCbrushcolor.red = MCbrushcolor.green = MCbrushcolor.blue = 0xFFFF;
-		MCscreen->alloccolor(MCbrushcolor);
 		break;
 	case RT_PRINTING:
 		MCprinter -> Reset();

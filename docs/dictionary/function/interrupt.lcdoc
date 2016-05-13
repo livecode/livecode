@@ -26,6 +26,6 @@ Normally, pressing one of the key combinations stops any running handlers. If th
 
 To let the user interrupt a handler when the <allowInterrupts> is false, check the <interrupt> <function> periodically. If it <return|returns> true, the user has attempted to stop the handler. You can then perform any needed cleanup tasks before <exit|exiting> the <handler>.
 
-References: allowInterrupts (property), lockErrorDialogs (property), errorDialog (message), function (control_st), property (glossary), return (glossary), key combination (glossary), handler (glossary), Windows (glossary), exit (glossary), Mac OS (glossary), Unix (glossary)
+References: allowInterrupts (property), lockErrorDialogs (property), errorDialog (message), function (control structure), property (glossary), return (glossary), key combination (glossary), handler (glossary), Windows (glossary), exit (glossary), Mac OS (glossary), Unix (glossary)
 
 Tags: ui

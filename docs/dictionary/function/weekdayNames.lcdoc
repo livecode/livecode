@@ -37,6 +37,6 @@ Use the <weekdayNames> <function> to let the user choose from a list of weekday 
 
 For each form of the <weekdayNames>, if the <useSystemDate> <property> is set to true, or if you specify the system weekdayNames, the list of names is provided in the language specified by the user's system preferences. If the useSystemDate is false or you specify the english weekdayNames, the list of names is provided in English.
 
-References: useSystemDate (property), dateFormat (function), date function (function), property (glossary), return (glossary), function (control_st)
+References: useSystemDate (property), dateFormat (function), date function (function), property (glossary), return (glossary), function (control structure)
 
 Tags: math

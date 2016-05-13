@@ -37,4 +37,4 @@ Executing a <dispatch> command causes the <message> to be sent to the target obj
 
 If no <target> is specified, the <message> is sent to ' <me> '. In the context of a <behavior>, this is typically the child that is executing rather than the <behavior> object itself.
 
-References: behavior (property), me (keyword), it (keyword), closeControl (message), preOpenControl (message), send (command), on (control_st)
+References: behavior (property), me (keyword), it (keyword), closeControl (message), preOpenControl (message), send (command), on (control structure)

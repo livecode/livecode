@@ -31,6 +31,6 @@ The click location is the position of the mouse pointer when the user pressed th
 
 The first item of the <clickLoc> is equal to the <clickH>. The second <item> is equal to the <clickV>.
 
-References: stack (object), linkClicked (message), mouseDoubleUp (message), mouseStillDown (message), item (keyword), integer (glossary), mouse pointer (glossary), return value (glossary), return (glossary), mouseClick (function), selectedLoc (function), clickH (function), clickV (function), clickStack (function), popup (command), click (command), function (control_st)
+References: stack (object), linkClicked (message), mouseDoubleUp (message), mouseStillDown (message), item (keyword), integer (glossary), mouse pointer (glossary), return value (glossary), return (glossary), mouseClick (function), selectedLoc (function), clickH (function), clickV (function), clickStack (function), popup (command), click (command), function (control structure)
 
 Tags: ui

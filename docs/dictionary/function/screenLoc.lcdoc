@@ -29,4 +29,4 @@ The first item in the value returned by the <screenLoc> is the distance from the
 
 If the system has more than one monitor, the <screenLoc> <function> <return|returns> the <rectangle> of the main screen.
 
-References: pixels (property), location (property), item (keyword), rectangle (keyword), screenRect (function), return (glossary), function (control_st)
+References: pixels (property), location (property), item (keyword), rectangle (keyword), screenRect (function), return (glossary), function (control structure)

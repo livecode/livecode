@@ -36,6 +36,6 @@ The <replace> <command> is faster than the <replaceText> <function>, but does no
 
 >*Important:*  You can use the <replace> <command> on a <field(keyword)>, but doing so removes any formatting (fonts, styles, colors, and sizes) in the field. To preserve existing styling in fields use the <replace in field> command.
 
-References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st), replace in field (command)
+References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control structure), replace in field (command)
 
 Tags: text processing

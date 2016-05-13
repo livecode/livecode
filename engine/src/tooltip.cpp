@@ -160,7 +160,8 @@ void MCTooltip::opentip()
     if (MCPlatformGetControlThemePropColor(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyBackgroundColor, t_bg_color))
     {
         MCExecContext ctxt(this, nil, nil);
-        SetBackPixel(ctxt, &t_bg_color.pixel);
+		uint32_t t_pixel = MCColorGetPixel(t_bg_color);
+        SetBackPixel(ctxt, &t_pixel);
     }
     else
         setsprop(P_BACK_COLOR, MCttbgcolor);

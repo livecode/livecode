@@ -37,6 +37,6 @@ The arc tangent of <number> is an angle whose tangent is equal to <number>. In o
     return atan(theMagnitude) * 180 / pi
   end atanInDegrees
 
-References: inverse (keyword), pi (constant), tan (function), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control_st)
+References: inverse (keyword), pi (constant), tan (function), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control structure)
 
 Tags: math

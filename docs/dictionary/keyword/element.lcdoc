@@ -35,6 +35,6 @@ is equivalent to
 
 However, the first form, using the <element> <keyword>, is much faster.
 
-References: each (keyword), item (keyword), element (keyword), array (glossary), keyword (glossary), control structure (glossary), repeat (control_st)
+References: each (keyword), item (keyword), element (keyword), array (glossary), keyword (glossary), control structure (glossary), repeat (control structure)
 
 Tags: properties

@@ -53,4 +53,4 @@ If the <formatsList> specifies fewer <byte|bytes> than are in the <data>, the <b
     if convertResult &lt; 3 then return "Error: data was corrupted"
   end convertStuff
 
-References: put (command), numToChar (function), format (function), value (function), return (glossary), binary file (glossary), variable (glossary), handler (glossary), local variable (glossary), Decodesbinary data (glossary), byte (glossary), command (glossary), function (control_st)
+References: put (command), numToChar (function), format (function), value (function), return (glossary), binary file (glossary), variable (glossary), handler (glossary), local variable (glossary), Decodesbinary data (glossary), byte (glossary), command (glossary), function (control structure)

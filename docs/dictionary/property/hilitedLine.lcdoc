@@ -31,6 +31,6 @@ Each item of the <hilitedLine> <property> is a line number. For example, if the 
 
 If the field's <listBehavior> <property> is false, this <property> has no effect.
 
-References: selected (property), listBehavior (property), toggleHilites (property), threeDHilite (property), noncontiguousHilites (property), multipleLines (property), field (keyword), line (keyword), lines (keyword), select (command), selectedText (function), selectedLine (function), property (glossary), integer (glossary), list field (glossary), chunk expression (glossary), function (control_st)
+References: selected (property), listBehavior (property), toggleHilites (property), threeDHilite (property), noncontiguousHilites (property), multipleLines (property), field (keyword), line (keyword), lines (keyword), select (command), selectedText (function), selectedLine (function), property (glossary), integer (glossary), list field (glossary), chunk expression (glossary), function (control structure)
 
 Tags: ui

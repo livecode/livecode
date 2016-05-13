@@ -33,6 +33,6 @@ Use the <isNumber> <function> to determine whether a <value> is a number. For ex
 
 This function exists for compatibility with imported SuperCard projects. You can use the <is a> <operator> to <validate> numbers, as well as other data types.
 
-References: is a (operator), value (function), exists (function), operation (glossary), operator (glossary), validate (glossary), return (glossary), error (glossary), function (control_st)
+References: is a (operator), value (function), exists (function), operation (glossary), operator (glossary), validate (glossary), return (glossary), error (glossary), function (control structure)
 
 Tags: math

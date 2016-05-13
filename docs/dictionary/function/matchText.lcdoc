@@ -29,11 +29,11 @@ foundTextVarsList: The optional foundTextVarsList consists of one or more names 
 Returns (bool): The <matchText> <function> returns true or false.
 
 Description:
-Use the <matchText> <function(control_st)> to check whether a <string> contains a specified pattern.
+Use the <matchText> <function(control structure)> to check whether a <string> contains a specified pattern.
 
 If the <regularExpression> includes a pair of parentheses, the substring matching the part of the <regular expression> inside the parentheses is placed in the first <variable> in the <foundTextVarsList>. Additional substrings, matching additional parenthetical expressions within the <regularExpression>, are placed in additional <variable|variables> in the <foundTextVarsList>. The number of parenthetical expressions in the <regularExpression> should match the number of <variable|variables> in the <foundTextVarsList>.
 
-If the <matchText> <function(control_st)> returns false, the <value(glossary)|values> of the <variable|variables> in the <foundTextVarsList> are not changed.
+If the <matchText> <function(control structure)> returns false, the <value(glossary)|values> of the <variable|variables> in the <foundTextVarsList> are not changed.
 
 For example, the following <matchText> <function call> extracts the user name and email address from a typical email "From" line:
 
@@ -45,11 +45,11 @@ The <string> and <regularExpression> are always <case-sensitive>, regardless of 
 
 >*Important:*  It is no longer necessary to create the variables in the foundTextVarsList before the <matchText> function is called. These are now created by the compiler, and will appear in the <localNames> of the handler or function in which the <matchText> was called from.
 
-The <matchText> and <matchChunk> <function(glossary)|functions> return the same <value(function)>, given the same <string> and <regularExpression>. The difference between the two is that the <matchText> <function(control_st)> records the text of matched substrings in the optional <foundTextVarsList>, which the <matchChunk> <function(control_st)> records the character positions of the matched substrings.
+The <matchText> and <matchChunk> <function(glossary)|functions> return the same <value(function)>, given the same <string> and <regularExpression>. The difference between the two is that the <matchText> <function(control structure)> records the text of matched substrings in the optional <foundTextVarsList>, which the <matchChunk> <function(control structure)> records the character positions of the matched substrings.
 
->*Tip:*  LiveCode implements <regular expression|regular expressions> compatible with the PCRE library. For detailed information about <regular expression> elements you can use with this <function(control_st)>, see the PCRE manual at http://www.pcre.org/man.txt.
+>*Tip:*  LiveCode implements <regular expression|regular expressions> compatible with the PCRE library. For detailed information about <regular expression> elements you can use with this <function(control structure)>, see the PCRE manual at http://www.pcre.org/man.txt.
 
 Changes:
 The regular expression format changed in version 2.0 to use PCRE compatible syntax.
 
-References: string (keyword), caseSensitive (property), find (command), filter (command), function (control_st), property (glossary), return (glossary), variable (glossary), value (glossary), function call (glossary), regular expression (glossary), case-sensitive (glossary), case-insensitive (glossary), function (glossary), matchChunk (function), value (function), localNames (function)
+References: string (keyword), caseSensitive (property), find (command), filter (command), function (control structure), property (glossary), return (glossary), variable (glossary), value (glossary), function call (glossary), regular expression (glossary), case-sensitive (glossary), case-insensitive (glossary), function (glossary), matchChunk (function), value (function), localNames (function)

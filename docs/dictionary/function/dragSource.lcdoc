@@ -29,6 +29,6 @@ Use the <dragSource> <function> to find out which <object(glossary)>, and which 
 
 The <dragSource> <function> only <return|returns> a value while a <drag and drop> is in progress. Otherwise, the <dragSource> <function> <return|returns> empty.
 
-References: function (control_st), ID (property), dragEnd (message), dragDrop (message), target (function), property (glossary), return (glossary), object type (glossary), drag and drop (glossary), object (glossary)
+References: function (control structure), ID (property), dragEnd (message), dragDrop (message), target (function), property (glossary), return (glossary), object type (glossary), drag and drop (glossary), object (glossary)
 
 Tags: ui

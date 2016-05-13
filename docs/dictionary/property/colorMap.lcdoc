@@ -37,6 +37,6 @@ If you leave a line blank when setting the <colorMap>, the color corresponding t
 
 On Unix systems, setting the <colorMap> <property> sets the <privateColors> <property> to true.
 
-References: colorWorld (property), borderPixel (property), dontDither (property), privateColors (property), remapColor (property), line (keyword), screenColors (function), property (glossary), application (glossary), return (glossary), color reference (glossary), Windows (glossary), bit (glossary), color table (glossary), bit depth (glossary), function (control_st)
+References: colorWorld (property), borderPixel (property), dontDither (property), privateColors (property), remapColor (property), line (keyword), screenColors (function), property (glossary), application (glossary), return (glossary), color reference (glossary), Windows (glossary), bit (glossary), color table (glossary), bit depth (glossary), function (control structure)
 
 Tags: ui

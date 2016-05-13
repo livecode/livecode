@@ -42,6 +42,6 @@ If the attempt to get the data is not successful, the <revDatabaseColumnNamed> <
 Changes:
 The ability to specify array elements as holder variables was added in version 2.9
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseColumnNumbered (function), return (glossary), variable (glossary), database (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), database field (glossary), function (control_st)
+References: string (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseColumnNumbered (function), return (glossary), variable (glossary), database (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), database field (glossary), function (control structure)
 
 Tags: database

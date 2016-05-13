@@ -31,6 +31,6 @@ Use the <request> <command> to obtain data from another application via the eval
 
 For more information about Apple events, see Apple Computer's technical documentation, Inside Macintosh: Interapplication Communication, located at <a href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>.
 
-References: it (keyword), send to program (command), function (control_st), command (glossary), variable (glossary), Apple Event (glossary)
+References: it (keyword), send to program (command), function (control structure), command (glossary), variable (glossary), Apple Event (glossary)
 
 Tags: networking

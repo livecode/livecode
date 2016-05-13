@@ -42,4 +42,4 @@ On Mac OS, OS X, and Unix systems, the <queryRegistry> function <return|returns>
 Changes:
 The typeVariable parameter was added in version 2.0. In previous versions, the type information was not available.
 
-References: default (keyword), string (keyword), function (control_st), deleteRegistry (function), value (function), binaryDecode (function), MCISendString (function), binary file (glossary), variable (glossary), Windows (glossary), return (glossary), registry (glossary), value (glossary)
+References: default (keyword), string (keyword), function (control structure), deleteRegistry (function), value (function), binaryDecode (function), MCISendString (function), binary file (glossary), variable (glossary), Windows (glossary), return (glossary), registry (glossary), value (glossary)

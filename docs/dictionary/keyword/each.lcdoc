@@ -28,6 +28,6 @@ If a chunk is nonexistent for a particular line or item--for example, if "by cha
 Changes:
 The ability to specify each element of an array in a repeat control structure was introduced in version 1.1. In previous versions, you could use the each keyword to iterate over all chunks in a string, but not over all elements in an array.
 
-References: item (keyword), element (keyword), for (keyword), line (keyword), string (keyword), sort (command), sort container (command), repeat (control_st), sort (glossary), loop (glossary), chunk expression (glossary), iteration (glossary), container (glossary), chunk (glossary), keyword (glossary), control structure (glossary), array (glossary), command (glossary), sort key (glossary)
+References: item (keyword), element (keyword), for (keyword), line (keyword), string (keyword), sort (command), sort container (command), repeat (control structure), sort (glossary), loop (glossary), chunk expression (glossary), iteration (glossary), container (glossary), chunk (glossary), keyword (glossary), control structure (glossary), array (glossary), command (glossary), sort key (glossary)
 
 Tags: text processing

@@ -30,7 +30,7 @@ form (enum): If no <form> is specified, the normal form is used.
 textToFind (string): 
 field: Any expression that evaluates to a field reference. If the field is not specified, the find command searches all the fields in the current stack (except fields whose dontSearch property is set to true).
 
-The result: When the search is successful, the card containing the text appears and a box is drawn around the found text. If the text is not found in the stack, the result <function(control_st)> <return(glossary)|returns> "Not found".
+The result: When the search is successful, the card containing the text appears and a box is drawn around the found text. If the text is not found in the stack, the result <function(control structure)> <return(glossary)|returns> "Not found".
 
 Description:
 Use the <find> <command> to search for text.
@@ -61,6 +61,6 @@ Usually, the <offset> and <matchText> <function(glossary)|functions> are faster 
 
 >*Tip:*  To perform a batch search, set the <mark> <property> of all <card(object)|cards> where a match is found by using the mark cards by finding form of the <mark> <command>.
 
-References: caseSensitive (property), dontSearch (property), mark (property), return (constant), function (control_st), normal (keyword), whole (keyword), characters (keyword), string (keyword), character (keyword), the (keyword), words (keyword), word (keyword), card (keyword), field (keyword), field (object), stack (object), card (object), foundChunk (function), foundField (function), offset (function), matchText (function), foundText (function), foundLine (function), foundLoc (function), replace (command), unmark (command), sort (command), mark (command), property (glossary), current card (glossary), reset (glossary), return (glossary), container (glossary), function (glossary), command (glossary), current stack (glossary)
+References: caseSensitive (property), dontSearch (property), mark (property), return (constant), function (control structure), normal (keyword), whole (keyword), characters (keyword), string (keyword), character (keyword), the (keyword), words (keyword), word (keyword), card (keyword), field (keyword), field (object), stack (object), card (object), foundChunk (function), foundField (function), offset (function), matchText (function), foundText (function), foundLine (function), foundLoc (function), replace (command), unmark (command), sort (command), mark (command), property (glossary), current card (glossary), reset (glossary), return (glossary), container (glossary), function (glossary), command (glossary), current stack (glossary)
 
 Tags: database

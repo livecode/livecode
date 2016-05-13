@@ -34,4 +34,4 @@ Only signal 1 (SIGUSR1) and signal 2 (SIGUSR2) are supported. Other signals sent
 Changes:
 Support for the signal message on OS X systems was added in version 2.0.
 
-References: kill (command), application (glossary), current card (glossary), message (glossary), process (glossary), exit (control_st)
+References: kill (command), application (glossary), current card (glossary), message (glossary), process (glossary), exit (control structure)

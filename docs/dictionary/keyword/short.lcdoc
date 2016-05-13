@@ -37,6 +37,6 @@ A short object <ID> looks like this: 2238
 Changes:
 The form the short owner was introduced in version 2.0. In previous versions, the form of the owner property could not be specified and reported only the abbreviated owner.
 
-References: owner (property), properties (property), name (property), ID (property), card (keyword), long (keyword), abbreviated (keyword), convert (command), set (command), time (function), functionNames (function), dateFormat (function), format (function), date (function), propertyNames (function), keyword (glossary), property (glossary), command (glossary), function (glossary), expression (glossary), function (control_st)
+References: owner (property), properties (property), name (property), ID (property), card (keyword), long (keyword), abbreviated (keyword), convert (command), set (command), time (function), functionNames (function), dateFormat (function), format (function), date (function), propertyNames (function), keyword (glossary), property (glossary), command (glossary), function (glossary), expression (glossary), function (control structure)
 
 Tags: math

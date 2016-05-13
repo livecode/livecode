@@ -27,7 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "text.h"
 
 #include "w32dc.h"
-#include "w32context.h"
 #include "w32theme.h"
 
 ////////////////////////////////////////////////////////////////////////////////

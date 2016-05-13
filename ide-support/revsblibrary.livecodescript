@@ -675,7 +675,7 @@ constant kDefaultPreferredSize       = 15000
 constant kDefaultRegion              = 1
 constant kDefaultRelease             = "Final"
 constant kDefaultVersionNumber       = "1.0.0.0"
-constant kDefaultScriptLibraries     = "Internet,Geometry,Printing"
+constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
@@ -1292,7 +1292,8 @@ function revSBLcextFileIsZipArchive pFile, @rError
       return false
    end if
    
-   return byte 1 of it is "P" and byte 2 of it is "K" and byte 3 of it is numToChar(3) and byte 4 of it is numToChar(4)
+   return byte 1 of it is "P" and byte 2 of it is "K" and \ 
+         byte 3 of it is numToByte(3) and byte 4 of it is numToByte(4)
 end revSBLcextFileIsZipArchive
 
 function revSBLcextExternalHasFolder pExternal, pPlatform

@@ -26,6 +26,6 @@ If two controls overlap, a <dragEnter> <message> is sent whenever the <mouse poi
 
 >*Tip:*  Use the <mouseLoc> function to determine where the <mouse pointer> is. Use the <target> <function> to determine which <control> the <mouse pointer> has entered.
 
-References: allowableDragActions (property), acceptDrop (property), function (control_st), dragMove (message), mouseEnter (message), dragLeave (message), dragStart (message), mouseLoc (function), target (function), property (glossary), control (glossary), mouse pointer (glossary), message (glossary), drag and drop (glossary), object (glossary)
+References: allowableDragActions (property), acceptDrop (property), function (control structure), dragMove (message), mouseEnter (message), dragLeave (message), dragStart (message), mouseLoc (function), target (function), property (glossary), control (glossary), mouse pointer (glossary), message (glossary), drag and drop (glossary), object (glossary)
 
 Tags: ui

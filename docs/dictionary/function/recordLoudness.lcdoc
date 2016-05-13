@@ -27,6 +27,6 @@ Use the <recordLoudness> function to determine whether a sound is currently bein
 
 The <recordLoudness> <function> returns zero if no recording is currently taking place (that is, if the <recording> <property> is false).
 
-References: playLoudness (property), recording (property), beepLoudness (property), record sound (command), function (control_st), property (glossary), return (glossary)
+References: playLoudness (property), recording (property), beepLoudness (property), record sound (command), function (control structure), property (glossary), return (glossary)
 
 Tags: multimedia

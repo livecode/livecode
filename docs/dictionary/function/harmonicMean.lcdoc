@@ -30,6 +30,6 @@ The <harmonicMean> <function> was added in version 6.1 to complement the <averag
 
 If the <numbersList> is empty, the <harmonicMean> <function> returns zero.
 
-References: function (control_st), min (function), geometricMean (function), statRound (function), variance (function), round (function), average (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
+References: function (control structure), min (function), geometricMean (function), statRound (function), variance (function), round (function), average (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
 
 Tags: math

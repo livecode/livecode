@@ -624,8 +624,6 @@ public:
 	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
-	void alloccolor(MCColor &color);
-	void querycolor(MCColor &color);
 #ifdef LEGACY_EXEC
 	Boolean getcolors(MCExecPoint &);
 #endif
@@ -671,5 +669,22 @@ public:
         return background_pixel;
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// MCColor Utility functions
+static inline uint32_t MCColorGetPixel(const MCColor &p_color, MCGPixelFormat p_format = kMCGPixelFormatNative)
+{
+	return MCGPixelPack(p_format, p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8, 0xFF);
+}
+
+static inline void MCColorSetPixel(MCColor &x_color, uint32_t p_pixel, MCGPixelFormat p_format = kMCGPixelFormatNative)
+{
+	uint8_t r, g, b, a;
+	MCGPixelUnpack(p_format, p_pixel, r, g, b, a);
+	x_color.red = (uint16_t)((r << 8) | r);
+	x_color.green = (uint16_t)((g << 8) | g);
+	x_color.blue = (uint16_t)((b << 8) | b);
+}
 
 #endif

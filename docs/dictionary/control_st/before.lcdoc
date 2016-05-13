@@ -37,4 +37,4 @@ For example, consider a mouseDown message moving through the message path. It ge
 
 A <before> handler allows developers to produce behavior scripts which can handle messages sent to a control without having any effect on the message path, unlike front and back scripts.
 
-References: end (keyword), private (keyword), dispatch (command), result (function), commandNames (function), paramCount (function), after (control_st), on (control_st), exit (control_st), message handler (glossary)
+References: end (keyword), private (keyword), dispatch (command), result (function), commandNames (function), paramCount (function), after (control structure), on (control structure), exit (control structure), message handler (glossary)

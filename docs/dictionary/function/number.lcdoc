@@ -51,6 +51,6 @@ The expression the number of backgrounds of <stack> <return|returns> the number 
 
 >*Note:* The <number> is implemented as a <read-only> <global> <property>, but can be more conveniently thought of as a <function>.
 
-References: backgroundBehavior (property), layer (property), function (control_st), string (keyword), control (keyword), integer (keyword), property (glossary), current card (glossary), return (glossary), group (glossary), nest (glossary), chunk (glossary), read-only (glossary), expression (glossary), non-negative (glossary), length (function), global (command), group (command), object (glossary), control (object)
+References: backgroundBehavior (property), layer (property), function (control structure), string (keyword), control (keyword), integer (keyword), property (glossary), current card (glossary), return (glossary), group (glossary), nest (glossary), chunk (glossary), read-only (glossary), expression (glossary), non-negative (glossary), length (function), global (command), group (command), object (glossary), control (object)
 
 Tags: text processing

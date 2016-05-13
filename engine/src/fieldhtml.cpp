@@ -1704,10 +1704,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
 							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
-								MCscreen -> alloccolor(t_color);
-								
 								t_style . has_text_color = true;
-								t_style . text_color = t_color . pixel;
+								t_style . text_color = MCColorGetPixel(t_color);
 							}
 						}
 						break;
@@ -1718,10 +1716,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 							MCColor t_color;
 							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
-								MCscreen -> alloccolor(t_color);
-								
 								t_style . has_background_color = true;
-								t_style . background_color = t_color . pixel;
+								t_style . background_color = MCColorGetPixel(t_color);
 							}
 						}
 						break;
@@ -1893,9 +1889,8 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				MCColor t_color;
 				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
-					MCscreen -> alloccolor(t_color);
 					r_style . has_background_color = true;
-					r_style . background_color = t_color . pixel;
+					r_style . background_color = MCColorGetPixel(t_color);
 				}
             }
 			break;
@@ -1911,9 +1906,8 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				MCColor t_color;
 				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
-					MCscreen -> alloccolor(t_color);
 					r_style . has_border_color = true;
-					r_style . border_color = t_color . pixel;
+					r_style . border_color = MCColorGetPixel(t_color);
 				}
             }
 			break;

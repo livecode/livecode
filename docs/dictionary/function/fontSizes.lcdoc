@@ -27,6 +27,6 @@ Use the <fontSizes> <function> to determine which font sizes can be displayed or
 
 If zero appears in the list returned by the <fontSizes> <function>, the <font> is scalable, meaning that it can be displayed at any size supported by the operating system.
 
-References: line (keyword), function (control_st), fontStyles (function), font (glossary), return (glossary)
+References: line (keyword), function (control structure), fontStyles (function), font (glossary), return (glossary)
 
 Tags: ui

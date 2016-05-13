@@ -1114,15 +1114,17 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 	if (!datagram)
 		listen(sock, SOMAXCONN);
 #endif
-
-	char *portname = new char[U2L];
     
     // AL-2015-01-05: [[ Bug 14287 ]] Create name using the number of chars written to the string.
     uindex_t t_length;
-    t_length = sprintf(portname, "%d", port);
+    MCAutoPointer<char_t[]> t_port_chars;
+    t_port_chars = new char_t[U2L];
+    t_length = sprintf((char *)(*t_port_chars), "%d", port);
 
 	MCNewAutoNameRef t_portname;
-	MCNameCreateWithNativeChars((char_t*)portname, t_length, &t_portname);
+	if (!MCNameCreateWithNativeChars(*t_port_chars, t_length, &t_portname))
+        return nil;
+    
 	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 

@@ -27,6 +27,6 @@ The <preOpenStack> <message> is sent before the <openStack> <message>. Unlike <o
 
 The actual navigation is not triggered by the <preOpenStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from opening.
 
-References: card (keyword), openStack (message), closeStack (message), preOpenCard (message), stack (object), object (glossary), card (object), handler (glossary), trap (glossary), message (glossary), stack window (glossary), execute (glossary), pass (control_st)
+References: card (keyword), openStack (message), closeStack (message), preOpenCard (message), stack (object), object (glossary), card (object), handler (glossary), trap (glossary), message (glossary), stack window (glossary), execute (glossary), pass (control structure)
 
 Tags: navigation

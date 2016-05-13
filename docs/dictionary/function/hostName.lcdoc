@@ -24,6 +24,6 @@ Use the <hostName> <function> to find the <domain name> of the computer that Liv
 
 The <hostName> <function> does a reverse <DNS> lookup on the <hostAddress> in order to find the <domain name>. This means that the computer must be connected to the Internet in order to use this <function>. If a connection to the Internet is not available, the <hostName> <function> <return|returns> an <error message>.
 
-References: accept (command), hostAddress (function), DNSServers (function), domain name (glossary), error message (glossary), return (glossary), DNS (glossary), function (control_st)
+References: accept (command), hostAddress (function), DNSServers (function), domain name (glossary), error message (glossary), return (glossary), DNS (glossary), function (control structure)
 
 Tags: networking
