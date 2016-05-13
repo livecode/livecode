@@ -2332,32 +2332,7 @@ private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePa
    put pStandalonePath into tDeployInfo["output"]
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
-   repeat for each line tLibrary in sStandaloneSettingsA["scriptLibraries"]
-      # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
-      local tLibraryStack
-      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
-      if there is a stack tLibraryStack then
-         if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then put return after sStandaloneSettingsA["auxiliary_stackfiles"]
-         put the effective filename of stack tLibraryStack after sStandaloneSettingsA["auxiliary_stackfiles"]
-         if sStandaloneSettingsA["startup_script"] is not empty then put return after sStandaloneSettingsA["startup_script"]
-         put "revInternal__LoadLibrary" && tLibraryStack after sStandaloneSettingsA["startup_script"]
-      end if
-   end repeat
-   if sStandaloneSettingsA["auxiliary_stackfiles"] is not empty then
-      local tRevInitialisationLibrary
-      put the effective filename of stack "revInitialisationLibrary" into tRevInitialisationLibrary
-      if tRevInitialisationLibrary is not among the lines of sStandaloneSettingsA["auxiliary_stackfiles"] then
-         put tRevInitialisationLibrary & cr before sStandaloneSettingsA["auxiliary_stackfiles"]
-         put "insert the script of stack" && quote & "revInitialisationLibrary" & quote && "into back" & cr before sStandaloneSettingsA["startup_script"]
-      end if
-      repeat for each line tStackFile in sStandaloneSettingsA["auxiliary_stackfiles"]
-         local tTempStackFile
-         put the tempname into tTempStackFile
-         revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
-         put tTempStackFile & return after tDeployInfo["auxiliary_stackfiles"]
-      end repeat
-      delete the last char of tDeployInfo["auxiliary_stackfiles"]
-   end if
+   revSBUpdateDeployParams pStackFilePath, sStandaloneSettingsA, tDeployInfo
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
    -- PM-2015-12-07: [[ Bug 15706 ]] Put double quotes around the stack name to avoid confusing the 
@@ -2369,17 +2344,12 @@ private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePa
    # AL-2015-01-29: [[ Scriptify IDE ]] Add OSX App icons to deploy parameters
    if tPlatformDetailsA["platform"] is "MacOSX" then
       if sStandaloneSettingsA["OSX,appicon"]  is not empty then
-         put return & "revInternal__SetAppIcon" && sStandaloneSettingsA["OSX,appicon"] after sStandaloneSettingsA["startup_script"]
+         put return & "revInternal__SetAppIcon" && sStandaloneSettingsA["OSX,appicon"] after tDeployInfo["startup_script"]
       end if
       if sStandaloneSettingsA["OSX,smallappicon"]  is not empty then
-         put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after sStandaloneSettingsA["startup_script"]
+         put return & "revInternal__SetSmallAppIcon" && sStandaloneSettingsA["OSX,smallappicon"] after tDeployInfo["startup_script"]
       end if
    end if   
-   
-   # AL-2015-01-29: [[ Scriptify IDE ]] Add the startup script to the deploy parameters
-   if sStandaloneSettingsA["startup_script"] is not empty then
-      put sStandaloneSettingsA["startup_script"] into tDeployInfo["startup_script"]
-   end if
    
    # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names and resource mappings to the deploy parameters
    if sStandaloneSettingsA["externals"] is not empty then
@@ -2388,18 +2358,6 @@ private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePa
    if sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] is not empty then
       put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
    end if
-   
-   # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
-   # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
-   repeat for each line tExtension in revIDEExtensionsOrderByDependency(sStandaloneSettingsA["extensions"])
-      local tExtensionFile
-      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
-      if tDeployInfo["modules"] is empty then
-         put tExtensionFile into tDeployInfo["modules"]
-      else
-         put return & tExtensionFile after tDeployInfo["modules"]
-      end if
-   end repeat
    
    if tPlatformDetailsA["platform"] is "MacOSX" then
       put pEnginePath into tDeployInfo["engine"]
