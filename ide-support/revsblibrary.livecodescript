@@ -1398,7 +1398,7 @@ function revSBGetExternalPath pPlatform, pName
       get revSBExternalsList(pPlatform)
    end if
    
-   return sExternalsLocationA[pPlatform][pName] into tExtPath
+   return sExternalsLocationA[pPlatform][pName]
 end revSBGetExternalPath
 
 -- Ensure the name used for platforms is consistent
@@ -1493,7 +1493,7 @@ end revSBAvailableResources
 
 -- Additional in-IDE external paths can be added here
 private function revSBAdditionalExternalFolders
-   return revEnvironmentToolsPath() & "/MergExt" into tMergExtFolder
+   return revEnvironmentToolsPath() & "/MergExt"
 end revSBAdditionalExternalFolders
 
 -- Use the specified getter to fetch all the data about the inclusions

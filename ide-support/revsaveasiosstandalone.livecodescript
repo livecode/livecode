@@ -412,6 +412,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
+         local tArchSpecificEngineList, tArchSpecificEngineFile
          put empty into tArchSpecificEngineList
          repeat for each word tArch in tArchs
             -- Make a temporary file for link options and execute it
