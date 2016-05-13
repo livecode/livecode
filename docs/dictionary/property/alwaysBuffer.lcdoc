@@ -10,7 +10,7 @@ Associations: image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,linux,ios,android
 
 Platforms: desktop,server,web,mobile
 
@@ -38,8 +38,6 @@ If a player's movie contains only sound with no visual track, the setting of its
 If a player's <alwaysBuffer> is false, the movie it contains is drawn in front of all <object|objects>. The <visual effect> <command> does not affect the screen area inside the <rectangle> of a <player(keyword)> whose <alwaysBuffer> is false. If a player's <alwaysBuffer> is true, it cannot be controlled with the <controller bar> and must be operated by <script> <control>.
 
 >*Note:* Setting a <player(object)|player's> <alwaysBuffer> to true always increases memory usage, and may make movie playing more jerky.
-
->*Note:* The <alwaysBuffer> property has no effect on Windows if the global <dontUseQT property> is set to true.
 
 References: screenSharedMemory (property), dontUseQT property (property), script (property), constantMask (property), bufferHiddenImages (property), card (keyword), player (keyword), image (keyword), default (keyword), rectangle (keyword), control (keyword), visual effect (command), show (command), lock screen (command), global (command), heapSpace (function), stacks (function), hasMemory (function), button (object), image (object), player (object), object (object), stack (object), property (glossary), uncompress (glossary), controller bar (glossary), buffer (glossary), command (glossary), redraw (glossary)
 

@@ -10,7 +10,7 @@ Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,linux,ios,android
 
 Platforms: desktop,server,web,mobile
 
