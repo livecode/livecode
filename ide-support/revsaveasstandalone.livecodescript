@@ -263,7 +263,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put false into tEdited
    
    # Find out if the stack or any substack has been edited
-   global gREVStackStatus
    if gREVStackStatus[the short name of stack pStack] is "edited" then
       put true into tEdited
    else
@@ -284,7 +283,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # working.
    if folderNameIsIllegal(sStandaloneSettingsA["name"]) then
       put folderNameMakeLegal(sStandaloneSettingsA["name"]) into sStandaloneSettingsA["name"]
-      set the cRevStandaloneSettings["name"] of stack pStack to sStandaloneSettingsA["name"]
       put true into tEdited
       revStandaloneAddWarning "Standalone name was changed because it contained illegal characters"
    end if
@@ -471,6 +469,7 @@ private function revStandalonePlatformDetails pPlatform
    end switch
 
    -- SN-2015-03-04: [[ CloneAndRun ]] Refactor the setting of externals / support location
+   local tRuntimeFolder
    if revEnvironmentIsInstalled() then
       put revEnvironmentRuntimePath() & slash & tArchFolder into tRuntimeFolder
       put tRuntimeFolder & slash & "Support" into tDetailsA["support_folder"]
