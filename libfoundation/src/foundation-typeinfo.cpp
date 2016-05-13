@@ -114,6 +114,59 @@ bool MCTypeInfoIsCustom(MCTypeInfoRef self)
 }
 
 MC_DLLEXPORT_DEF
+MCValueRef MCTypeInfoGetDefault(MCTypeInfoRef self)
+{
+    __MCAssertIsTypeInfo(self);
+    switch(__MCTypeInfoGetExtendedTypeCode(self))
+    {
+        case kMCValueTypeCodeNull:
+            return kMCNull;
+        case kMCValueTypeCodeBoolean:
+            return kMCFalse;
+        case kMCValueTypeCodeNumber:
+            return kMCZero;
+        case kMCValueTypeCodeName:
+            return kMCEmptyName;
+        case kMCValueTypeCodeString:
+            return kMCEmptyString;
+        case kMCValueTypeCodeData:
+            return kMCEmptyData;
+        case kMCValueTypeCodeArray:
+            return kMCEmptyArray;
+        case kMCValueTypeCodeList:
+            return kMCEmptyList;
+        case kMCValueTypeCodeSet:
+            return kMCEmptySet;
+        case kMCValueTypeCodeProperList:
+            return kMCEmptyProperList;
+        case kMCValueTypeCodeCustom:
+            return nil;
+        case kMCValueTypeCodeRecord:
+            return nil;
+        case kMCValueTypeCodeHandler:
+            return nil;
+        case kMCValueTypeCodeTypeInfo:
+            return nil;
+        case kMCValueTypeCodeError:
+            return nil;
+        case kMCValueTypeCodeForeignValue:
+            return nil;
+        
+        case kMCTypeInfoTypeIsOptional:
+            return kMCNull;
+            
+        case kMCTypeInfoTypeIsAlias:
+            return MCTypeInfoGetDefault(self -> alias . typeinfo);
+            
+        case kMCTypeInfoTypeIsNamed:
+            return MCTypeInfoGetDefault(self -> named . typeinfo);
+            
+        default:
+            return nil;
+    }
+}
+
+MC_DLLEXPORT_DEF
 bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 {
 	__MCAssertIsTypeInfo(self);
