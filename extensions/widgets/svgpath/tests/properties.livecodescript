@@ -58,11 +58,8 @@ on TestScaledSizing
 	set the maintainAspectRatio of widget "testSvgPath" to true
 
 	set the rect of widget "testSvgPath" to "0,0,90,100"
-	TestAssert "scaledWidth with maintainAspectRatio = true", (the scaledWidth of widget "testSvgPath" is 90 and the scaledHeight of widget "testSvgPath" is 90)
-
-	set the rect of widget "testSvgPath" to "0,0,100,90"
-	TestAssert "scaledWidth with maintainAspectRatio = true", (the scaledWidth of widget "testSvgPath" is 90 and the scaledHeight of widget "testSvgPath" is 90)
+	TestAssert "scaled sizing with maintainAspectRatio = true", (round(the scaledWidth of widget "testSvgPath") is 90 and round(the scaledHeight of widget "testSvgPath") is 90)
 
 	set the maintainAspectRatio of widget "testSvgPath" to false
-	TestAssert "scaledHeight with maintainAspectRatio = false", (the scaledHeight of widget "testSvgPath" is not the scaledWidth of widget "testSvgPath")
+	TestAssert "scaled sizing with maintainAspectRatio = false", (round(the scaledHeight of widget "testSvgPath") is not round(the scaledWidth of widget "testSvgPath"))
 end TestScaledSizing
