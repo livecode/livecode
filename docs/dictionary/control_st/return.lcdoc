@@ -32,8 +32,9 @@ which is called in the following statement:
 
 then 1, the value returned by "simpleFunction", is placed in the field.
 
-When a message handler executes a <return> <statement>, the <message> stops and is not <pass|passed> to the next <object> in the <message path>. To halt the current <message handler> and <pass> the <message> on through the <message path>, use the <pass> <control structure> instead. To halt the current <handler> without returning a result, use the <exit> <control structure> instead.
+When a message handler executes a <return> <statement>, the <message> stops and is not <pass|passed> to the next <object(glossary)> in the <message path>. To halt the current <message handler> and <pass> the <message> on through the <message path>, use the <pass> <control structure> instead. To halt the current <handler> without returning a result, use the <exit> <control structure> instead.
 
 >*Note:* The <return> <control structure> is implemented internally as a <command> and appears in the <commandNames>.
 
-References: object (object), return (constant), result (function), commandNames (function), value (function), merge (function), the result (function), message handler (glossary), return (glossary), call (glossary), property (glossary), pass (glossary), execute (glossary), command (glossary), control structure (glossary), message path (glossary), caller (glossary), message (glossary), statement (glossary), handler (glossary), setProp (control_st), getProp (control_st), throw (control_st), if (control_st), pass (control_st), exit (control_st), on (control_st), function (control_st)
+
+References: object (glossary), return (constant), result (function), commandNames (function), value (function), merge (function), the result (function), message handler (glossary), return (glossary), call (glossary), property (glossary), pass (glossary), execute (glossary), command (glossary), control structure (glossary), message path (glossary), caller (glossary), message (glossary), statement (glossary), handler (glossary), setProp (control structure), getProp (control structure), throw (control structure), if (control structure), pass (control structure), exit (control structure), on (control structure), function (control structure)

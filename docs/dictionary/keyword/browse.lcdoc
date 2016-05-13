@@ -22,6 +22,6 @@ When using the Browse tool, the cursor is a pointing hand (or, over editable fie
 
 The Browse tool is always in effect for stacks whose cantModify <property> is true and for a <stack> being displayed as a <palette>, <modeless dialog box|modeless dialog>, or <modal dialog box|modal dialog>, regardless of which <tool> is currently chosen.
 
-References: palette (command), choose (command), stack (object), object (object), keyword (glossary), Browse tool (glossary), property (glossary), modeless dialog box (glossary), modal dialog box (glossary), tool (function)
+References: palette (command), choose (command), stack (object), object (glossary), keyword (glossary), Browse tool (glossary), property (glossary), modeless dialog box (glossary), modal dialog box (glossary), tool (function)
 
 Tags: ui

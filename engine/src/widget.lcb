@@ -753,12 +753,14 @@ begin
     MCWidgetGetMouseButtonState(Index, output)
 end syntax*/
 
+-- FIXME not actually implemented
+/*
 syntax TheModifierKeys is expression
   "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "modifier" "keys"
 begin
     MCWidgetGetModifierKeys(IsCurrent, output)
 end syntax
-
+*/
 
 // ---------- Syntactic sugar for "is [not] [currently] pressed" ---------- //
 
@@ -1267,12 +1269,33 @@ end syntax
 
 //
 
+/*
+Summary:	Take a snapshot of an widget into an image
+
+Parameters:
+Widget(Widget):	The widget to capture
+Size(List):	A list containing a width and height for the snapshot
+
+Returns(Image):	A snapshot of the widget
+
+Description:
+Return a new canvas image containing a snapshot of the current
+appearance of <Widget>.
+
+The <Size> is a list of two numbers, specifying the desired width and height
+of the snapshot image in pixels.
+
+Tags: Widget
+*/
+-- FIXME not implemented
+/*
 syntax SnapshotWidget is statement
-    "snapshot" <mWidget: Expression> [ "at" "size" <mSize: Expression> ]
+    "snapshot" <Widget: Expression> [ "at" "size" <Size: Expression> ]
 begin
-    MCWidgetSnapshotWidget(mWidget)
-    MCWidgetSnapshotWidgetAtSizeAsList(mWidget, mSize)
+    MCWidgetSnapshotWidget(Widget)
+    MCWidgetSnapshotWidgetAtSizeAsList(Widget, Size)
 end syntax
+*/
 
 //
 
@@ -1489,11 +1512,25 @@ begin
 	MCWidgetSetDisabledOfWidget(input, mWidget)
 end syntax
 
+/**
+Summary:    The font of a widget
+
+Parameters:
+Widget (Widget):	The widget to examine
+
+Returns (Font):	A font handle for the widget's effective font
+
+Description:
+Return a font which reflects the current (effective) settings of
+<Widget>'s LiveCode `textFont`, `textSize` and `textStyle` properties.
+
+References: MyFont (expression)
+*/
 syntax WidgetFontProperty is prefix operator with property precedence
-	"the" "font" "of" <mWidget: Expression>
+	"the" "font" "of" <Widget: Expression>
 begin
-	MCWidgetGetFontOfWidget(mWidget, output)
-	MCWidgetSetFontOfWidget(input, mWidget)
+	MCWidgetGetFontOfWidget(Widget, output)
+	MCWidgetSetFontOfWidget(input, Widget)
 end syntax
 
 //
@@ -1542,14 +1579,23 @@ public foreign handler MCWidgetSetNativeLayerOfWidget(in pNativeLayer as optiona
 public foreign handler MCWidgetGetStackNativeViewOfWidget(in pWidget as Widget, out rNativeView as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetStackNativeDisplayOfWidget(in pWidget as Widget, out rDisplay as Pointer) returns nothing binds to "<builtin>"
 
-/*
-TODO - docs
+/**
+Summary: Get a widget's native layer pointer
+
+Parameters:
+Widget (Widget): The widget to examine
+
+Returns (Pointer): A platform-specific native layer pointer
+
+References: MyNativeLayer (expression)
+
+Tags: Native layer
 */
 syntax NativeLayerOfWidget is prefix operator with property precedence
-	"native" "layer" "of" <mWidget: Expression>
+	"native" "layer" "of" <Widget: Expression>
 begin
-	MCWidgetGetNativeLayerOfWidget(mWidget, output)
-	MCWidgetSetNativeLayerOfWidget(input, mWidget)
+	MCWidgetGetNativeLayerOfWidget(Widget, output)
+	MCWidgetSetNativeLayerOfWidget(input, Widget)
 end syntax
 
 public foreign handler MCWidgetGetMyNativeLayer(out rNativeLayer as Pointer) returns nothing binds to "<builtin>"
@@ -1557,6 +1603,15 @@ public foreign handler MCWidgetSetMyNativeLayer(in pNativeLayer as optional Poin
 public foreign handler MCWidgetGetMyStackNativeView(out rNativeView as Pointer) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyStackNativeDisplay(out rDisplay as Pointer) returns nothing binds to "<builtin>"
 
+/**
+Summary: Get the current widget's native layer pointer
+
+Returns (Pointer): A platform-specific native layer pointer
+
+References: NativeLayerOfWidget (operator)
+
+Tags: Native layer
+*/
 syntax MyNativeLayer is expression
 	"my" "native" "layer"
 begin

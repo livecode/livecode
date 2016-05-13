@@ -23,8 +23,8 @@ Use the <lockErrorDialogs> <property> to <handle> <execution error|execution err
 
 If an execution error occurs while the <lockErrorDialogs> <property> is set to false, the error window appears. This is the <default> <behavior>.
 
-If an execution error occurs while the <lockErrorDialogs> <property> is set to true, an <errorDialog> <message> is sent to the <object> whose <handler> set the <lockErrorDialogs> to true.
+If an execution error occurs while the <lockErrorDialogs> <property> is set to true, an <errorDialog> <message> is sent to the <object(glossary)> whose <handler> set the <lockErrorDialogs> to true.
 
 If you set the <lockErrorDialogs> to true, you should provide an <errorDialog> <handler> to notify the user of the <error> and perform any necessary cleanup.
 
-References: lockErrorDialogs (property), errorDialog (message), scriptParsingError (message), default (keyword), property (glossary), handle (glossary), handler (glossary), error (glossary), execute (glossary), message (glossary), execution error (glossary), behavior (glossary), interrupt (function), errorObject (function), reset (command), unlock error dialogs (command), object (object)
+References: lockErrorDialogs (property), errorDialog (message), scriptParsingError (message), default (keyword), property (glossary), handle (glossary), handler (glossary), error (glossary), execute (glossary), message (glossary), execution error (glossary), behavior (glossary), interrupt (function), errorObject (function), reset (command), unlock error dialogs (command), object (glossary)

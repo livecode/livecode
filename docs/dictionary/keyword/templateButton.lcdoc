@@ -21,7 +21,7 @@ set the textFont of the templateButton to "Arial"
 Description:
 Use the <templateButton> <keyword> to set up <default> <properties> to be used for any new <button(object)|buttons> you create.
 
-The <templateButton> can be thought of as a special, abstract <object>. It is not an actual <button(keyword)>, but it has all the <properties> of a <button(keyword)>. The <ID> <property> of the <templateButton> is zero.
+The <templateButton> can be thought of as a special, abstract <object(glossary)>. It is not an actual <button(keyword)>, but it has all the <properties> of a <button(keyword)>. The <ID> <property> of the <templateButton> is zero.
 
 You can use the <set> <command> to set the <properties> of the <templateButton> before creating a <button(keyword)>. The new <button(keyword)> has the <properties> of the <templateButton>, by <default>. This example creates a <radio button>:
 
@@ -39,4 +39,5 @@ You can refer to the <templateButton> using any of the following forms:
 
 >*Note:* The <templateButton> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), button (keyword), object (object), button (object), keyword (glossary), property (glossary), radio button (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control_st)
+
+References: properties (property), ID (property), functionNames (function), templateScrollbar (keyword), default (keyword), button (keyword), object (glossary), button (object), keyword (glossary), property (glossary), radio button (glossary), command (glossary), expression (glossary), reset (command), set (command), function (control structure)

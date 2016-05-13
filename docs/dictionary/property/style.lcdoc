@@ -17,13 +17,13 @@ Platforms: desktop,server,web,mobile
 Example:
 set the style of card button 3 to rectangle
 
-Value: The <style> of an <object> is a string.
+Value: The <style> of an <object(glossary)> is a string.
 
 Description:
 Use the <style> <property> to set an object's specific type.
 
 The possible settings of an object's <style> <property> depend on the 
-kind of <object>.
+kind of <object(glossary)>.
 
 The <style> of a <button(object)> is one of the following:
 * "standard" : the standard button for the current <lookAndFeel> setting
@@ -72,6 +72,6 @@ The <style> of a <stack> determines its behavior and is one of the following:
 * "modal": modal dialog box, can use only Browse tool
 * "palette": palette window, cannot be resized or edited, can use only Browse tool
 
-References: standard (keyword), opaque (keyword), popup (keyword), shadow (keyword), roundEnds (property), properties (property), shadow (property), dontResize (property), style (property), windowShape (property), menuMode (property), threeD (property), backgroundColor (property), lookAndFeel (property), modeless (command), pulldown (command), object (object), scrollbar (object), property (glossary), behavior (glossary), opaque (glossary), graphic (object), regular polygon (glossary), checkbox (glossary), Motif (glossary), field (object), appearance (glossary), background (glossary), stack (object)
+References: standard (keyword), opaque (keyword), popup (keyword), shadow (keyword), roundEnds (property), properties (property), shadow (property), dontResize (property), style (property), windowShape (property), menuMode (property), threeD (property), backgroundColor (property), lookAndFeel (property), modeless (command), pulldown (command), object (glossary), scrollbar (object), property (glossary), behavior (glossary), opaque (glossary), graphic (object), regular polygon (glossary), checkbox (glossary), Motif (glossary), field (object), appearance (glossary), background (glossary), stack (object)
 
 Tags: ui

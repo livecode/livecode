@@ -31,4 +31,4 @@ On Unix systems, the <sysError> function <return|returns> the <value> of the "er
 
 On Windows systems, the <sysError> function <return|returns> the <value> returned by the "GetLastError()" <function>.
 
-References: integer (keyword), close file (command), kill (command), result (function), sysError (function), value (function), error message (glossary), command (glossary), return (glossary), variable (glossary), function (control_st)
+References: integer (keyword), close file (command), kill (command), result (function), sysError (function), value (function), error message (glossary), command (glossary), return (glossary), variable (glossary), function (control structure)

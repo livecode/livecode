@@ -27,6 +27,6 @@ A stack is closed when the user or a handler closes the stack window.
 
 The actual closing is not triggered by the <closeStack> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <stack> from closing. To prevent a <stack> from closing, <trap> the <closeStackRequest> <message>.
 
-References: closeBox (property), closeStackRequest (message), unIconifyStack (message), closeBackground (message), preOpenStack (message), shutdown (message), suspendStack (message), saveStackRequest (message), closeCard (message), stack (object), trap (glossary), current card (glossary), message (glossary), pass (control_st)
+References: closeBox (property), closeStackRequest (message), unIconifyStack (message), closeBackground (message), preOpenStack (message), shutdown (message), suspendStack (message), saveStackRequest (message), closeCard (message), stack (object), trap (glossary), current card (glossary), message (glossary), pass (control structure)
 
 Tags: ui

@@ -783,6 +783,7 @@ void MCA_setcolordialogcolors(MCColor* p_list, uindex_t p_count)
 
 void MCA_getcolordialogcolors(MCColor*& r_colors, uindex_t& r_count)
 {
+    r_count = 0;
 }
 
 

@@ -45,4 +45,4 @@ Android 2.3.1 installed, this property will return "2.3.1".
 
 On HTML5 the <systemVersion> is empty.
 
-References: string (keyword), function (control_st), environment (function), buildNumber (function), libURLVersion (function), QTVersion (function), return (glossary)
+References: string (keyword), function (control structure), environment (function), buildNumber (function), libURLVersion (function), QTVersion (function), return (glossary)

@@ -51,6 +51,6 @@ To change the selection in an option menu or combo box use the  property instead
 
 To select text in a field, the field's traversalOn <property> must be set to true.
 
-References: selectGroupedControls (property), openField (message), selectionChanged (message), intersect (keyword), field (keyword), select (glossary), insertion point (glossary), property (glossary), command (glossary), selectedLoc (function), selectedChunk (function), hilite (command), focus (command), select (command), delete (command), copy (command), object (object)
+References: selectGroupedControls (property), openField (message), selectionChanged (message), intersect (keyword), field (keyword), select (glossary), insertion point (glossary), property (glossary), command (glossary), selectedLoc (function), selectedChunk (function), hilite (command), focus (command), select (command), delete (command), copy (command), object (glossary)
 
 Tags: ui

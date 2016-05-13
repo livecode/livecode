@@ -98,24 +98,14 @@ Boolean MCScreenDC::open()
 {
 	black_pixel.red = black_pixel.green = black_pixel.blue = 0; //black pixel
 	white_pixel.red = white_pixel.green = white_pixel.blue = 0xFFFF; //white pixel
-	black_pixel.pixel = 0;
-	white_pixel.pixel = 0xFFFFFF;
 	
 	MCzerocolor = MCbrushcolor = white_pixel;
-	alloccolor(MCbrushcolor);
 	MCselectioncolor = MCpencolor = black_pixel;
-	alloccolor(MCselectioncolor);
-	alloccolor(MCpencolor);
 	gray_pixel.red = gray_pixel.green = gray_pixel.blue = 0x8888;
-	alloccolor(gray_pixel);
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xffff;
-	alloccolor(background_pixel);
 
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyHiliteColor, kMCPlatformPropertyTypeColor, &MChilitecolor);
-	alloccolor(MChilitecolor);
-	
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyAccentColor, kMCPlatformPropertyTypeColor, &MCaccentcolor);
-	alloccolor(MCaccentcolor);
 	
 	MCPlatformGetSystemProperty(kMCPlatformSystemPropertyDoubleClickInterval, kMCPlatformPropertyTypeUInt16, &MCdoubletime);
 	
@@ -561,8 +551,6 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_patte
 {
 	backdrop_pattern = p_pattern;
 	backdrop_colour = p_colour;
-	
-	alloccolor(backdrop_colour);
 	
 	MCPlatformInvalidateWindow(backdrop_window, nil);
     MCPlatformUpdateWindow(backdrop_window);

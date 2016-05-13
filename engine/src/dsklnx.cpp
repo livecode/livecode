@@ -853,7 +853,7 @@ public:
         return (void*)m_fptr;
     }
     
-    virtual int64_t GetFileSize(void)
+    virtual uint64_t GetFileSize(void)
     {
 #ifdef /* MCS_fsize_dsk_lnx */ LEGACY_SYSTEM
         if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)

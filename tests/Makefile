@@ -31,6 +31,7 @@ bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 ########## LiveCode Script test parameters
 
 guess_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
+guess_dev_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community,$(bin_dir)/LiveCode-Community)
 
 # When running on headless Linux, run tests in -ui mode.
 guess_engine_flags_script := \
@@ -44,7 +45,13 @@ LCS_ENGINE ?= $(guess_engine)
 LCS_ENGINE_FLAGS ?= $(guess_engine_flags)
 
 LCS_LOG = _lcs_test_suite.log
-LCS_TESTRUNNER = $(top_srcdir)/tests/_testrunner.livecodescript
+LCS_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.livecodescript
+
+ifeq ($(LCS_TESTENGINE),development)
+LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
+else
+LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run
+endif
 
 ########## LiveCode Builder test parameters
 
@@ -129,7 +136,7 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 
 lcs-check: $(LCS_ENGINE)
 	@rm -f $(LCS_LOG)
-	@cmd="$(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run"; \
+	@cmd="$(LCS_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 

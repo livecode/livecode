@@ -120,7 +120,6 @@ private:
 	void init(MCGContextRef p_context);
 
 	MCGContextRef m_gcontext;
-	MCRectangle m_clip;
 	MCColor m_background;
 	uint8_t m_function;
 	uint8_t m_opacity;

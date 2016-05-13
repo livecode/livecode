@@ -6,7 +6,7 @@ Syntax: set the foregroundColor of <object> to {empty | <colorName> | <RGBColor>
 
 Syntax: set the foregroundColor of [<chunk> of] <field> to {empty| <colorName> | <RGBColor>}
 
-Summary: Specifies the color of <object> text and borders.
+Summary: Specifies the color of <object(glossary)> text and borders.
 
 Synonyms: foreColor,firstColor,textColor,thumbColor,fillFore,penFore
 
@@ -28,7 +28,7 @@ Example:
 set the foregroundColor of the mouseChunk to 0,255,0
 
 Value:
-The <foregroundColor> of an <object> is a <color reference>.
+The <foregroundColor> of an <object(glossary)> is a <color reference>.
 The <colorName> is any standard color name.
 
 The <RGBColor> consists of three comma-separated <integer|integers> between zero and 255, specifying the level of each of red, green, and blue; or an <HTML> -style color consisting of a hash mark (#) followed by three <hexadecimal> numbers, one for each of red, green, and blue.
@@ -36,13 +36,13 @@ The <RGBColor> consists of three comma-separated <integer|integers> between zero
 By default, the <foregroundColor> for all <object|objects> is empty.
 
 Description:
-Use the <foregroundColor> <property> to change the color of text or the color that fills an <object>.
+Use the <foregroundColor> <property> to change the color of text or the color that fills an <object(glossary)>.
 
-Setting the <foregroundColor> of an <object> to empty allows the <foregroundColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object>, even if its own <foregroundColor> is empty.
+Setting the <foregroundColor> of an <object(glossary)> to empty allows the <foregroundColor> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what color is used for the <object(glossary)>, even if its own <foregroundColor> is empty.
 
 The setting of the <foregroundColor> <property> has different effects, depending on the <object type>:
 
-* The <foregroundColor> of a <stack>, <card>, or <group> determines the <foregroundColor> of each <object> in the <stack>, <card>, or <group> that does not have its own <foregroundColor>.
+* The <foregroundColor> of a <stack>, <card>, or <group> determines the <foregroundColor> of each <object(glossary)> in the <stack>, <card>, or <group> that does not have its own <foregroundColor>.
 
 * The <foregroundColor> of a <button(keyword)> is used for the text of the <button(keyword)>. If the <button(object)|button's> <showName> <property> is false, the <foregroundColor> has no effect.
 
@@ -60,6 +60,6 @@ The <foregroundColor> also determines the color of the blinking <insertion point
 
 If an object's <foregroundPattern> is set, the pattern is shown instead of the color specified by <foregroundColor>.
 
-References: image (keyword), effective (keyword), default (keyword), button (keyword), field (keyword), player (keyword), card (keyword), scrollbar (keyword), graphic (keyword), colorPalette (keyword), linkColor (property), HTMLText (property), owner (property), showBorder (property), showName (property), showValue (property), linkHiliteColor (property), foregroundPattern (property), RTFText (property), answer color (command), group (command), mouseColor (function), value (function), graphic (object), button (object), scrollbar (object), object (object), stack (object), field (object), image (object), property (glossary), color palette (glossary), HTML (glossary), hexadecimal (glossary), video clip (glossary), integer (glossary), keyword (glossary), audio clip (glossary), chunk (glossary), color reference (glossary), insertion point (glossary), object type (glossary), EPS (glossary)
+References: image (keyword), effective (keyword), default (keyword), button (keyword), field (keyword), player (keyword), card (keyword), scrollbar (keyword), graphic (keyword), colorPalette (keyword), linkColor (property), HTMLText (property), owner (property), showBorder (property), showName (property), showValue (property), linkHiliteColor (property), foregroundPattern (property), RTFText (property), answer color (command), group (command), mouseColor (function), value (function), graphic (object), button (object), scrollbar (object), object (glossary), stack (object), field (object), image (object), property (glossary), color palette (glossary), HTML (glossary), hexadecimal (glossary), video clip (glossary), integer (glossary), keyword (glossary), audio clip (glossary), chunk (glossary), color reference (glossary), insertion point (glossary), object type (glossary), EPS (glossary)
 
 Tags: ui

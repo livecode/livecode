@@ -39,6 +39,6 @@ If the <revXMLChildNames> <function> encounters an error, it <return|returns> an
 
 >*Important:* The <revXMLChildNames> <function> is part of the <XML library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
 
-References: function (control_st), revXMLNumberOfChildren (function), revXMLText (function), revXMLMatchingNode (function), revXMLFirstChild (function), XML library (library), LiveCode custom library (library), return (glossary), XML tree (glossary), child node (glossary), Standalone Application Settings (glossary), standalone application (glossary), node (glossary), parent node (glossary)
+References: function (control structure), revXMLNumberOfChildren (function), revXMLText (function), revXMLMatchingNode (function), revXMLFirstChild (function), XML library (library), LiveCode custom library (library), return (glossary), XML tree (glossary), child node (glossary), Standalone Application Settings (glossary), standalone application (glossary), node (glossary), parent node (glossary)
 
 Tags: text processing

@@ -34,6 +34,6 @@ The <recordCompressionTypes> <function> requires <QuickTime> to be installed. If
 
 >*Tip:*  It can take LiveCode a second or two to load the code needed to use <QuickTime>, depending on the machine speed. Since this code is only <loaded into memory> once per session, you can speed up the first occurrence of a QuickTime-related action by calling the <QTVersion> <function> during otherwise dead time--for example, during startup of your application--to preload the code.
 
-References: dontUseQT (property), recordCompression (property), items (keyword), character (keyword), line (keyword), answer record (command), record sound (command), function (control_st), property (glossary), loaded into memory (glossary), return (glossary), compress (glossary), QuickTime (glossary), command (glossary), codec (glossary), compress (function), qtVersion (function)
+References: dontUseQT (property), recordCompression (property), items (keyword), character (keyword), line (keyword), answer record (command), record sound (command), function (control structure), property (glossary), loaded into memory (glossary), return (glossary), compress (glossary), QuickTime (glossary), command (glossary), codec (glossary), compress (function), qtVersion (function)
 
 Tags: multimedia

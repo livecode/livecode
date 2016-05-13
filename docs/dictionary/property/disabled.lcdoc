@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the disabled of <object> to {true | false}
 
-Summary: Specifies that an <object> is dimmed and does not respond to user action.
+Summary: Specifies that an <object(glossary)> is dimmed and does not respond to user action.
 
 Introduced: 1.0
 
@@ -32,8 +32,8 @@ Setting a group's <disabled> <property> sets the <disabled> of each <control> in
 
 You can set the <disabled> <property> of a <menu(keyword)> by specifying the <menu(glossary)|menu's> name or number. <menu item|Menu items> in disabled <menus> are drawn in gray text and cannot be chosen.
 
-The <disabled> <property> of an <object> is the logical inverse of that <object|object's> <enabled> <property>. When the <enabled> is true, the disabled is false, and vice versa.
+The <disabled> <property> of an <object(glossary)> is the logical inverse of that <object|object's> <enabled> <property>. When the <enabled> is true, the disabled is false, and vice versa.
 
-References: enabled (property), mouseUp (message), mouseEnter (message), control (keyword), menu (keyword), object (object), control (object), property (glossary), message (glossary), trigger (glossary), command (glossary), menu item (glossary), menu (glossary), disable (command), group (command), enable menu (command), send (command), menus (function)
+References: enabled (property), mouseUp (message), mouseEnter (message), control (keyword), menu (keyword), object (glossary), control (object), property (glossary), message (glossary), trigger (glossary), command (glossary), menu item (glossary), menu (glossary), disable (command), group (command), enable menu (command), send (command), menus (function)
 
 Tags: ui

@@ -34,6 +34,6 @@ The list of file paths is in the same order that the files were opened.
 
 Open files that were not opened by LiveCode are not included in the list returned by the <openFiles> <function>.
 
-References: file (keyword), close file (command), open file (command), files (function), command (glossary), return (glossary), file path (glossary), function (control_st)
+References: file (keyword), close file (command), open file (command), files (function), command (glossary), return (glossary), file path (glossary), function (control structure)
 
 Tags: file system

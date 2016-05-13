@@ -29,6 +29,6 @@ The <mouseLine> <function> only <return|returns> locations in a <field>. If the 
 
 To get  a chunk expression describing the exact word or text group that the mouse is over, use the mouseChunk <function>.
 
-References: field (keyword), line (keyword), mouseCharChunk (function), mouseChar (function), clickLine (function), foundLine (function), selectedLine (function), handler (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), function (control_st)
+References: field (keyword), line (keyword), mouseCharChunk (function), mouseChar (function), clickLine (function), foundLine (function), selectedLine (function), handler (glossary), mouse pointer (glossary), return (glossary), chunk expression (glossary), function (control structure)
 
 Tags: ui

@@ -28,6 +28,6 @@ When an application requests contact with a system specified by its domain name,
 
 Since the <DNSServers> <function> reads the value set in the network configuration, it is available even if the system is not currently connected to the <Internet>.
 
-References: internet (keyword), hostName (function), hostAddress (function), hostNameToAddress (function), peerAddress (function), return (glossary), IP address (glossary), Mac OS (glossary), DNS (glossary), TCP (glossary), domain name (glossary), server (glossary), function (control_st)
+References: internet (keyword), hostName (function), hostAddress (function), hostNameToAddress (function), peerAddress (function), return (glossary), IP address (glossary), Mac OS (glossary), DNS (glossary), TCP (glossary), domain name (glossary), server (glossary), function (control structure)
 
 Tags: networking

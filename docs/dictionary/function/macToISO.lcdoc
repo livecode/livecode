@@ -32,6 +32,6 @@ LiveCode automatically translates text in fields and scripts, as well as the nam
 
 Characters whose ASCII value is less than 128 are the same in the Mac OS character set and Windows Latin 1, so they are not changed by the <macToISO> <function>. These characters include uppercase and lowercase letters, numbers, and most punctuation.
 
-References: string (keyword), characters (keyword), numToChar (function), uniDecode (function), URLDecode (function), Unix (glossary), Windows (glossary), Mac OS (glossary), return (glossary), character set (glossary), ASCII (glossary), function (control_st)
+References: string (keyword), characters (keyword), numToChar (function), uniDecode (function), URLDecode (function), Unix (glossary), Windows (glossary), Mac OS (glossary), return (glossary), character set (glossary), ASCII (glossary), function (control structure)
 
 Tags: text processing

@@ -2218,8 +2218,22 @@ void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
     MCAutoStringRef t_info;
     t_success = MCStringCreateMutable(0, &t_info);
     
+    MCStringRef t_license_name;
+    t_license_name = MClicenseparameters . license_name;
+    if (t_license_name == nil)
+        t_license_name = kMCEmptyString;
+
+    MCStringRef t_license_org;
+    t_license_org = MClicenseparameters . license_organization;
+    if (t_license_org == nil)
+        t_license_org = kMCEmptyString;
+
+    
     if (t_success)
-        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%s\n%u\n", MClicenseparameters . license_name, MClicenseparameters . license_organization, s_class_types[MClicenseparameters . license_class], MClicenseparameters . license_multiplicity);
+        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%s\n%u\n",
+                                         t_license_name, t_license_org,
+                                         s_class_types[MClicenseparameters . license_class],
+                                         MClicenseparameters . license_multiplicity);
     
     if (MClicenseparameters . deploy_targets != 0)
     {

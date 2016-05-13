@@ -49,4 +49,4 @@ The tool names are the same as the names used with the <choose> <command> to sel
 
 Setting the <tool> is equivalent to choosing the <tool> with the <choose> <command>. When setting the <tool> <property>, you can omit the word "tool".
 
-References: powerKeys (property), choose (command), tool (function), property (glossary), command (glossary), return (glossary), function (control_st)
+References: powerKeys (property), choose (command), tool (function), property (glossary), command (glossary), return (glossary), function (control structure)

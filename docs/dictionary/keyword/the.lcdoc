@@ -21,13 +21,13 @@ put the date into field "Current Date"
 Description:
 Use the <the> <keyword> to unambiguously indicate how an <expression> should be parsed.
 
-The <the> <keyword> is mandatory before the names of built-in <function(glossary)|functions>, unless the parentheses form of the <function(control_st)> is used:
+The <the> <keyword> is mandatory before the names of built-in <function(glossary)|functions>, unless the parentheses form of the <function(control structure)> is used:
 
   get the time -- must use "the" if () are not used
   get time()   -- cannot use "the" if () are used
 
 The <the> <keyword> is optional before the names of <properties>, but it is good style to include it.
 
-References: this (keyword), of (keyword), properties (property), function (control_st), keyword (glossary), function (glossary), expression (glossary)
+References: this (keyword), of (keyword), properties (property), function (control structure), keyword (glossary), function (glossary), expression (glossary)
 
 Tags: properties

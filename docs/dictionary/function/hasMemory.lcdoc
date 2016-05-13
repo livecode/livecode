@@ -30,4 +30,4 @@ This function is only partially implemented, and may not return useful values on
 
 >*Cross-platform note:*  On <Mac OS|Mac OS systems>, the <value> <return|returned> depends on the amount of free memory in the application heap and does not take available temporary memory into account. This means that even if the <hasMemory> <function> <return|returns> false, there may be enough system memory available for the task, since LiveCode uses temporary memory when necessary.
 
-References: size (property), destroyStack (property), alwaysBuffer (property), freeSize (property), graphic (keyword), revUnloadSpeech (command), heapSpace (function), stackSpace (function), value (function), diskSpace (function), Mac OS (glossary), return (glossary), function (control_st)
+References: size (property), destroyStack (property), alwaysBuffer (property), freeSize (property), graphic (keyword), revUnloadSpeech (command), heapSpace (function), stackSpace (function), value (function), diskSpace (function), Mac OS (glossary), return (glossary), function (control structure)

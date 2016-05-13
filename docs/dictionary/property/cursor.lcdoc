@@ -77,6 +77,6 @@ Caution! If you use the <delete stack> command to remove the "revCursors" <stack
 
 If you change the set of built-in LiveCode cursors in the "revCursors" stack, you must either quit and restart the application or use the reset cursors <command> to begin using the new <cursor(property)> shapes.
 
-References: cursor (property), yHot (property), lockCursor (property),  (property), ID (property), image (keyword), field (keyword), items (keyword), point (keyword), lock cursor (command), delete stack (command), repeat (control_st), property (glossary), select (glossary), loop (glossary), handler (glossary), execute (glossary), download (glossary), cursor (glossary), hypertext (glossary), mouse pointer (glossary), command (glossary), stack (object), image (object)
+References: cursor (property), yHot (property), lockCursor (property),  (property), ID (property), image (keyword), field (keyword), items (keyword), point (keyword), lock cursor (command), delete stack (command), repeat (control structure), property (glossary), select (glossary), loop (glossary), handler (glossary), execute (glossary), download (glossary), cursor (glossary), hypertext (glossary), mouse pointer (glossary), command (glossary), stack (object), image (object)
 
 Tags: ui

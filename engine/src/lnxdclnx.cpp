@@ -63,8 +63,6 @@ void MCScreenDC::setupcolors()
 	int2 i;
 	for (i = 0 ; i < ncolors ; i++)
 	{
-		colors[i].flags = DoRed | DoGreen | DoBlue;
-		colors[i].pixel = i;
         colornames[i] = MCValueRetain(kMCEmptyString);
 		allocs[i] = 0;
 	}

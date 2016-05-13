@@ -32,6 +32,6 @@ If the user clicks a stack's title bar or border to bring it to the front, the v
 
 If the user clicks the backdrop, the <clickStack> <return|returns> empty.
 
-References: backdrop (property), name (property), defaultStack (property), field (keyword), function (control_st), mouseStack (function), value (function), clickField (function), clickLoc (function), clickCharChunk (function), clickLine (function), clickChunk (function), property (glossary), return (glossary), stack window (glossary), stack (object)
+References: backdrop (property), name (property), defaultStack (property), field (keyword), function (control structure), mouseStack (function), value (function), clickField (function), clickLoc (function), clickCharChunk (function), clickLine (function), clickChunk (function), property (glossary), return (glossary), stack window (glossary), stack (object)
 
 Tags: ui

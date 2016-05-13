@@ -42,6 +42,6 @@ This means that if the data value of the database field is empty or zero, the <r
 Changes:
 The revDatabaseColumnIsNull synonym was added in version 2.0.
 
-References: function (control_st), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseColumnNumbered (function), Database library (library), LiveCode custom library (library), Standalone Application Settings (glossary), database field (glossary), record (glossary), return (glossary), standalone application (glossary)
+References: function (control structure), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseColumnNumbered (function), Database library (library), LiveCode custom library (library), Standalone Application Settings (glossary), database field (glossary), record (glossary), return (glossary), standalone application (glossary)
 
 Tags: database

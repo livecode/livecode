@@ -126,7 +126,7 @@ Boolean MCColors::mdown(uint2 which)
 			getcells(xcells, ycells);
 			MCscreen->getpaletteentry((my - rect.y) * ycells / rect.height * xcells
 			                          + (mx - rect.x) * xcells / rect.width, color);
-			selectedcolor = color.pixel;
+			selectedcolor = MCColorGetPixel(color);
 			// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 			layer_redrawall();
 			message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
@@ -182,8 +182,7 @@ Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 #ifdef /* MCColors::getprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
 		MCColor color;
-		color.pixel = selectedcolor;
-		MCscreen->querycolor(color);
+		MCColorSetPixel(color, selectedcolor);
 		ep.setcolor(color);
 		break;
 #endif /* MCColors::getprop */ 
@@ -213,7 +212,6 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		}
 		if (colorname != NULL)
 			delete colorname;
-		MCscreen->alloccolor(color);
 		selectedcolor = color.pixel;
 	}
         break;
@@ -274,7 +272,7 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 			MCscreen->getpaletteentry(i * xcells + j, c);
 			dc->setforeground(c);
 			dc->fillrect(trect);
-			if (c.pixel == selectedcolor)
+			if (MCColorGetPixel(c) == selectedcolor)
 				draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 		}
 	if (flags & F_SHOW_BORDER)

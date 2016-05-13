@@ -55,7 +55,6 @@ action (enum): The action to perform. Browser Specific Actions Scroller Specific
 	- "maxWidth (optional)": If maxWidth and maxHeight are specified, the snapshot is scaled to fit within a rectangle	of that size but preserving the frame's aspect ratio.
 	- "maxHeight (optional)": If maxWidth and maxHeight are specified, the snapshot is scaled to fit within a rectangle of that size but preserving the frame's aspect ratio.
 - "focus": Focus on the control. On iOS this will also display the keyboard.
-- "focus": Focus on the control. On iOS this will also display the keyboard.
 - "scrollRangeToVisible rangeStart, rangeLength": Ensures the given text range is visible in the view by changing the scroll of the field.
 	- "rangeStart": The start index of the text that is to be made visible.
 	- "rangeLength": The length of the text that is to be made visible.

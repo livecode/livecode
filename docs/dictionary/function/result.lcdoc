@@ -64,4 +64,4 @@ finishes <execute|executing>.
 > ensures that the result you are checking is the correct one, not a 
 > value set by a later <statement>.
 
-References: string (keyword), catch (keyword), find (command), sysError (function), value (function), on (control_st), return (control_st), function (control_st), return (glossary), variable (glossary), handler (glossary), return value (glossary), execute (glossary), statement (glossary), error (glossary), control structure (glossary), command (glossary)
+References: string (keyword), catch (keyword), find (command), sysError (function), value (function), on (control structure), return (control structure), function (control structure), return (glossary), variable (glossary), handler (glossary), return value (glossary), execute (glossary), statement (glossary), error (glossary), control structure (glossary), command (glossary)

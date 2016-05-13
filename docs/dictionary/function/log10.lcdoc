@@ -33,6 +33,6 @@ Use the <log10> <function> to obtain a logarithm.
 
 The logarithm of a <number> is the power to which 10 must be raised to obtain the <number> : 10^log10(<number>) is equal to number.
 
-References: function (control_st), ln1 (function), return (glossary)
+References: function (control structure), ln1 (function), return (glossary)
 
 Tags: math

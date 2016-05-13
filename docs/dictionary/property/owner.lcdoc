@@ -2,9 +2,9 @@ Name: owner
 
 Type: property
 
-Syntax: get the [{ long | abbr[ev[iated]] | short }] owner of <object> 
+Syntax: get the [{ long | abbr[ev[iated]] | short }] owner of <object>
 
-Summary: Reports which <object> is next in the <object hierarchy>.
+Summary: Reports which <object(glossary)> is next in the <object hierarchy>.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -18,11 +18,11 @@ Example:
 if the owner of me is not the name of card 1 then go to previous card
 
 Value:
-The <owner> of an <object> is a <string>, which is the <name> <property> of the owning <object>.
+The <owner> of an <object(glossary)> is a <string>, which is the <name> <property> of the owning <object(glossary)>.
 The <owner> <property> is <read-only> and cannot be set.
 
 Description:
-Use the <owner> <property> to find out which <object> another <object> belongs to in the <object hierarchy>.
+Use the <owner> <property> to find out which <object(glossary)> another <object(glossary)> belongs to in the <object hierarchy>.
 
 If the owner's name is empty, the <ID> is reported instead of the <name>.
 
@@ -43,6 +43,6 @@ The <owner> of an <audio clip> or <video clip> is the <stack> it resides in.
 Changes:
 The ability to specify the long owner, short owner, and abbreviated owner forms was introduced in version 2.0. In previous versions, the abbreviated owner form was always used.
 
-References: abbreviated (keyword), string (keyword), effective (keyword), short (keyword), card (keyword), properties (property), ID (property), name (property), group (command), exists (function), stack (object), object (object), property (glossary), audio clip (glossary), main stack (glossary), object hierarchy (glossary), substack (glossary), card control (glossary), read-only (glossary), video clip (glossary), grouped control (glossary)
+References: abbreviated (keyword), string (keyword), effective (keyword), short (keyword), card (keyword), properties (property), ID (property), name (property), group (command), exists (function), stack (object), object (glossary), property (glossary), audio clip (glossary), main stack (glossary), object hierarchy (glossary), substack (glossary), card control (glossary), read-only (glossary), video clip (glossary), grouped control (glossary)
 
 Tags: objects

@@ -36,4 +36,4 @@ If the <numbersList> is empty, the <sum> <function> returns zero.
 Changes:
 The ability to use an array was introduced in version 1.1. In previous versions, only lists of numbers could be used with the sum function.
 
-References: + (operator), add (command), group (command), standardDeviation (function), min (function), max (function), extents (function), statement (glossary), return (glossary), value (glossary), function (control_st)
+References: + (operator), add (command), group (command), standardDeviation (function), min (function), max (function), extents (function), statement (glossary), return (glossary), value (glossary), function (control structure)

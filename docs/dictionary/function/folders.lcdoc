@@ -60,6 +60,6 @@ The access permissions returned in the detailed <files> form consist of three oc
 Changes:
 The detailed <folders> form was introduced in version 1.1. In previous versions, the <folders> <function> provided only a list of <folder> names.
 
-References: defaultFolder (property), umask (property), file (keyword), line (keyword), revDeleteFolder (command), folders (function), files (function), volumes (function), URLDecode (function), subfolder (glossary), command (glossary), current folder (glossary), folder (glossary), function (control_st)
+References: defaultFolder (property), umask (property), file (keyword), line (keyword), revDeleteFolder (command), folders (function), files (function), volumes (function), URLDecode (function), subfolder (glossary), command (glossary), current folder (glossary), folder (glossary), function (control structure)
 
 Tags: file system

@@ -4,7 +4,7 @@ Type: message
 
 Syntax: mouseLeave
 
-Summary: Sent when the <mouse pointer> moves out of an <object>.
+Summary: Sent when the <mouse pointer> moves out of an <object(glossary)>.
 
 Introduced: 1.0
 
@@ -28,6 +28,6 @@ If the mouse button is down when the mouse pointer leaves the control, the <mous
 
 If a control is hidden (by changing its visible <property> to false or using the <hide> <command>), and the <mouse pointer> is over the <control> when it is hidden, LiveCode sends a <mouseLeave> <message> to the <control>.
 
-References: mouseWithin (message), focus (command), hide (command), mouseControl (function), property (glossary), Browse tool (glossary), mouse pointer (glossary), message (glossary), command (glossary), control (glossary), object (object)
+References: mouseWithin (message), focus (command), hide (command), mouseControl (function), property (glossary), Browse tool (glossary), mouse pointer (glossary), message (glossary), command (glossary), control (glossary), object (glossary)
 
 Tags: ui
