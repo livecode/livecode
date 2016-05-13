@@ -138,8 +138,6 @@ component Misc
 		if TargetEdition is "Community" then
 			textfile "ide:License Agreement.txt"
 			textfile "ide:about.txt"
-			textfile "ide:IDE License.txt"
-			textfile "ide:Engine License.txt"
 		if TargetEdition is "Indy" then
 			textfile "private:License Agreement.txt"
 			textfile "private:about.txt"
