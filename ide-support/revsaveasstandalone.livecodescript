@@ -124,6 +124,15 @@ on initialiseSearchForInclusions
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
    put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
    
+   repeat for each item tDBDriver in revIDEDatabaseDriversMapping()
+      local tDBName, tDB
+      put word 1 of tDBDriver into tDB
+      put word 2 to -1 of tDBDriver into tDBName
+      put "revOpenDatabase.*\(.*" & quote & tDB & quote & comma \
+            & "revdb_connect.*\(.*" & quote & tDB & quote into sPatternsA[tDBName]["Regex"]
+      put "databaseDrivers" into sPatternsA[tDBName]["Key"]
+   end repeat
+   
    put true into sInitialised
 end initialiseSearchForInclusions
 
