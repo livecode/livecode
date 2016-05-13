@@ -161,6 +161,11 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       if pAppBundle is empty then
          put tTempFolder & slash & the cREVStandaloneSettings["name"] of stack pTargetStack & ".app" into tTempAppBundle
          try
+            -- If we're searching for inclusions, do it here 
+            if the cRevStandaloneSettings["inclusions"] of stack pTargetStack is "search" then 
+               dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pTargetStack
+            end if
+            
             dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
                   pTargetStack, tTempAppBundle, "Simulator" && tVersion
          catch tException

@@ -55,6 +55,11 @@ command deployDo pTargetStack, pTargetDevice
       // SN-2014-10-27: [[ Bug 13800 ]] The APK must be "specified as a full path to an .apk file"
       put tempName() & ".apk" into tTempApkFIle
       try
+         -- If we're searching for inclusions, do it here 
+         if the cRevStandaloneSettings["inclusions"] of stack pTargetStack is "search" then 
+            dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pTargetStack
+         end if
+         
          dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
                pTargetStack, tTempApkFile, "Test"
       catch tException
