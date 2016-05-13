@@ -2599,27 +2599,37 @@ function revRedirectMacOSResourcesIsExecutable pFile
    return tIsExecutable
 end revRedirectMacOSResourcesIsExecutable
 
+private command revAddLibrary pLibrary
+   if pLibrary is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+      exit revAddLibrary
+   end if
+   
+   if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
+   put pLibrary after sStandaloneSettingsA["scriptLibraries"]
+end revAddLibrary
+
 ------------------- SMART CHECKING --------------------
 
-private command revSmartChecking pStackFilesList, pSearchForInclusions
+private command revSmartChecking pStackFilesList
    local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
    local tFiles
    revStandaloneProgress "Auto detecting library inclusions..."
    lock screen
    lock messages
    
-   if pSearchForInclusions then
-      put empty into sStandaloneSettingsA["scriptLibraries"]
-      put true into sStandaloneSettingsA["cursors"]
-      put false into sStandaloneSettingsA["answerDialog"]
-      put false into sStandaloneSettingsA["askDialog"]
-      put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
-      put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
-      put false into sStandaloneSettingsA["pdfPrinter"]
-      
-      # OK-2007-11-13 : Support for LiveCode print dialogs
-      put false into sStandaloneSettingsA["revolutionPrintDialogs"]
-   end if
+   put empty into sStandaloneSettingsA["scriptLibraries"]
+   put true into sStandaloneSettingsA["cursors"]
+   put false into sStandaloneSettingsA["answerDialog"]
+   put false into sStandaloneSettingsA["askDialog"]
+   put false into sStandaloneSettingsA["brushes"]   --LG-2007-12-13: Bug 4370
+   put false into sStandaloneSettingsA["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
+   put false into sStandaloneSettingsA["pdfPrinter"]
+   
+   # OK-2007-11-13 : Support for LiveCode print dialogs
+   put false into sStandaloneSettingsA["revolutionPrintDialogs"]
+   
+   put empty into sStandaloneSettingsA["databaseDrivers"]
+   put empty into sStandaloneSettingsA["externals"]
    
    put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
    put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
@@ -2633,60 +2643,47 @@ private command revSmartChecking pStackFilesList, pSearchForInclusions
             exit revSmartChecking
          end if
          
-         revCheckObject the long name of stack tStack, tUserLibs, pSearchForInclusions
+         revCheckObject the long name of stack tStack, tUserLibs
          put the number of cards of stack tStack into tCardNum
          repeat with tCard=1 to tCardNum
-            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, pSearchForInclusions
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs
             put the number of controls of cd tCard of stack tStack into tControlNum
             repeat with tControl = 1 to tControlNum
-               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, pSearchForInclusions
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs
             end repeat
          end repeat
          repeat for each line tBg in the backgroundIDs of stack tStack
-            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, pSearchForInclusions
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs
          end repeat
       end repeat
    end repeat
    
-   if pSearchForInclusions then
-      put lineOffset("database", sStandaloneSettingsA["scriptLibraries"]) into tDB
-      if tDB is not 0 then
-         -- import all drivers because we don't know which they are using
-         put revDatabaseDriverList() into sStandaloneSettingsA["databaseDrivers"]
-         delete line tDB of sStandaloneSettingsA["scriptLibraries"]
-      end if
+   put lineOffset("database", sStandaloneSettingsA["scriptLibraries"]) into tDB
+   if tDB is not 0 then
+      -- import all drivers because we don't know which they are using
+      put revDatabaseDriverList() into sStandaloneSettingsA["databaseDrivers"]
+      delete line tDB of sStandaloneSettingsA["scriptLibraries"]
    end if
 end revSmartChecking
 
-private command revAddLibrary pLibrary
-   if pLibrary is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-      exit revAddLibrary
-   end if
-   
-   if sStandaloneSettingsA["scriptLibraries"] is not empty then put return after sStandaloneSettingsA["scriptLibraries"]
-   put pLibrary after sStandaloneSettingsA["scriptLibraries"]
-end revAddLibrary
-
-private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
+private command revCheckObject pObject,pUserLibraries
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
-   if pSearchForInclusions then
-      local tProps, tLib, tProperty
-      put the customPropertySets of pObject into tProps
-      repeat for each key tLib in sPatternsA
-         # AL-2015-01-29: Don't search the script for handlers if this lib is already included
-         if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-            next repeat
+   local tProps, tLib, tProperty
+   put the customPropertySets of pObject into tProps
+   repeat for each key tLib in sPatternsA
+      # AL-2015-01-29: Don't search the script for handlers if this lib is already included
+      if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+         next repeat
+      end if
+      
+      repeat for each item tProperty in sPatternsA[tLib]["Property"]
+         if lineOffset(tProperty, tProps) is not 0 then
+            revAddLibrary tLib
+            # AL-2015-01-29: If we are including this lib then go on to the next one
+            exit repeat
          end if
-         
-         repeat for each item tProperty in sPatternsA[tLib]["Property"]
-            if lineOffset(tProperty, tProps) is not 0 then
-               revAddLibrary tLib
-               # AL-2015-01-29: If we are including this lib then go on to the next one
-               exit repeat
-            end if
-         end repeat
       end repeat
-   end if
+   end repeat
    
    # OK-2009-09-07 : Ensure script is never accessed without first checking for password or
    # standalone building will fail.
@@ -2697,62 +2694,58 @@ private command revCheckObject pObject,pUserLibraries, pSearchForInclusions
    local tScript
    put the script of pObject into tScript
    
-   if pSearchForInclusions then
-      if tScript is not empty then
+   if tScript is not empty then
+      
+      repeat for each key tLib in sPatternsA
+         # AL-2015-01-29: Don't search the script for handlers if this lib is already included
+         if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+            next repeat
+         end if
          
-         repeat for each key tLib in sPatternsA
-            # AL-2015-01-29: Don't search the script for handlers if this lib is already included
-            if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-               next repeat
+         local tHandler
+         repeat for each item tHandler in sPatternsA[tLib]["Script"]
+            if lineOffset(tHandler,tScript) is not 0 then
+               revAddLibrary tLib
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
             end if
-            
-            local tHandler
-            repeat for each item tHandler in sPatternsA[tLib]["Script"]
-               if lineOffset(tHandler,tScript) is not 0 then
-                  revAddLibrary tLib
-                  # AL-2015-01-29: If we are including this lib then go on to the next one
-                  exit repeat
-               end if
-            end repeat
-            
-            # AL-2015-01-29: Don't search the script for roots if this lib is already included
-            if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
-               next repeat
-            end if
-            
-            local tRoot
-            repeat for each item tRoot in sPatternsA[tLib]["Root"]
-               if lineOffset(tRoot,tScript) is not 0 then
-                  revAddLibrary tLib
-                  # AL-2015-01-29: If we are including this lib then go on to the next one
-                  exit repeat
-               end if
-            end repeat
-            
          end repeat
          
-      end if
+         # AL-2015-01-29: Don't search the script for roots if this lib is already included
+         if tLib is among the lines of sStandaloneSettingsA["scriptLibraries"]  then
+            next repeat
+         end if
+         
+         local tRoot
+         repeat for each item tRoot in sPatternsA[tLib]["Root"]
+            if lineOffset(tRoot,tScript) is not 0 then
+               revAddLibrary tLib
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
+            end if
+         end repeat
+         
+      end repeat
+      
    end if
    
-   if pSearchForInclusions then
-      -- answer dialog
-      if lineOffset("answer",tScript) is not 0 then
-         put true into sStandaloneSettingsA["answerDialog"]
-      end if
-      -- ask dialog
-      if lineOffset("ask",tScript) is not 0 then
-         put true into sStandaloneSettingsA["askDialog"]
-      end if
-      -- pdf printer
-      if lineOffset("open printing to pdf", tScript) is not 0 then
-         put true into sStandaloneSettingsA["pdfPrinter"]
-      end if
-      
-      # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
-      # or if we are building for linux. (This might include the files more often than they are required).
-      if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
-         put true into sStandaloneSettingsA["revolutionPrintDialogs"]
-      end if
+   -- answer dialog
+   if lineOffset("answer",tScript) is not 0 then
+      put true into sStandaloneSettingsA["answerDialog"]
+   end if
+   -- ask dialog
+   if lineOffset("ask",tScript) is not 0 then
+      put true into sStandaloneSettingsA["askDialog"]
+   end if
+   -- pdf printer
+   if lineOffset("open printing to pdf", tScript) is not 0 then
+      put true into sStandaloneSettingsA["pdfPrinter"]
+   end if
+   
+   # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
+   # or if we are building for linux. (This might include the files more often than they are required).
+   if offset("systemPrintSelector", tScript) is not 0 or "Linux" is among the lines of sPlatformList then
+      put true into sStandaloneSettingsA["revolutionPrintDialogs"]
    end if
 end revCheckObject
 
