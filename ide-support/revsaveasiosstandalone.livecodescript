@@ -928,15 +928,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    local tManifest
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      -- Added to support mergExt inclusion for iOS
-      if tFile begins with "!" then
-         local tExtPath
-         put revSBGetExternalPath("ios", char 2 to -1 of tFile) into tExtPath
-         -- if the file prefixed with ! was not a named external, treat normally
-         if tExtPath is not empty then
-            put tExtPath into tFile
-         end if
-      end if
+      revSBResolveIncludedExternal "ios", tFile
       
       local tIsAbsolute, tName
       put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute

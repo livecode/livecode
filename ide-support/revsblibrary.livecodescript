@@ -1707,3 +1707,15 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
       end if
    end repeat
 end revSBConvertSettingsForPlatform
+
+command revSBResolveIncludedExternal pPlatform, @xFile
+   -- Added to support mergExt inclusion
+   if xFile begins with "!" then
+      local tExtPath
+      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      -- if the file prefixed with ! was not a named external, treat normally
+      if tExtPath is not empty then
+         put tExtPath into xFile
+      end if
+   end if
+end revSBResolveIncludedExternal
