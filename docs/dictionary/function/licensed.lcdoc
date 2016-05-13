@@ -29,4 +29,4 @@ If the <licensed> <function> is false, the current application is a standalone, 
 
 >*Note:* If the user has the Evaluation Edition, the <licensed> <function> returns true.
 
-References: edit (command), mcLicense (function), revLicenseType (function), scriptLimits (function), development environment (glossary), return (glossary), standalone application (glossary), function (control_st)
+References: edit (command), mcLicense (function), revLicenseType (function), scriptLimits (function), development environment (glossary), return (glossary), standalone application (glossary), function (control structure)

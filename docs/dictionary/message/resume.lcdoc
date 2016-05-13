@@ -26,4 +26,4 @@ The <resume> <message> is sent whenever the user switches back to the <applicati
 
 The actual switch is not triggered by the <resume> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the user from switching into the <application>.
 
-References: pass (control_st), focusIn (message), suspend (message), startup (message), openStack (message), resumeStack (message), application (glossary), current card (glossary), message (glossary), trap (glossary)
+References: pass (control structure), focusIn (message), suspend (message), startup (message), openStack (message), resumeStack (message), application (glossary), current card (glossary), message (glossary), trap (glossary)

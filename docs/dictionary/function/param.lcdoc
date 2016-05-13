@@ -48,6 +48,6 @@ LiveCode evaluates the parameters before passing them. So if you call myHandler 
   myHandler 1+1,"A","Hello" && "world"
 the parameters returned by the <param> <function> are 2<a/>, A, and "Hello World".
 
-References: pass (glossary), handler (glossary), parameter (glossary), return (glossary), paramCount (function), function (control_st)
+References: pass (glossary), handler (glossary), parameter (glossary), return (glossary), paramCount (function), function (control structure)
 
 Tags: properties

@@ -52,6 +52,6 @@ The <save> command can save the <stack> in several different versions of the Liv
 
 **Warning:** If you save in an older <stack version> that doesn't support all of the features used in the stack, then some of contents of the stack may be lost.  In general, you are recommended to use the `with newest format` form of the <save> command.
 
-References: substacks (property), stack (object), as (keyword), file (keyword), substack (glossary), stack file (glossary), command (glossary), standalone application (glossary), main stack (glossary), stacks (function), create stack (command), function (control_st), stack version (glossary), defaultFolder (property), stackFileFormat (property)
+References: substacks (property), stack (object), as (keyword), file (keyword), substack (glossary), stack file (glossary), command (glossary), standalone application (glossary), main stack (glossary), stacks (function), create stack (command), function (control structure), stack version (glossary), defaultFolder (property), stackFileFormat (property)
 
 Tags: file system

@@ -51,6 +51,6 @@ Day of the week:  A number between 1 and 7
 
 >*Note:* The <dateFormat> differs from other date/time functionality in that the default is to return information relative to the system locale. i.e. the dateFormat is equivalent to the system dateFormat
 
-References: string (keyword), long (keyword), english (keyword), short (keyword), system (keyword), abbreviated (keyword), useSystemDate (property), convert (command), monthNames (function), format (function), date (function), weekdayNames (function), return (glossary), function (control_st)
+References: string (keyword), long (keyword), english (keyword), short (keyword), system (keyword), abbreviated (keyword), useSystemDate (property), convert (command), monthNames (function), format (function), date (function), weekdayNames (function), return (glossary), function (control structure)
 
 Tags: math

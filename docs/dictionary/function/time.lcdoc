@@ -44,6 +44,6 @@ The format of the system time forms is set by the Date & Time control panel (on 
 Changes:
 The ability to use the time format preferred by the user was introduced in version 1.1. In previous versions, the time function, along with the date function, consistently used the standard U.S. format, even if the operating system's settings specified another language or time format.
 
-References: system (keyword), english (keyword), abbreviated (keyword), useSystemDate (property), convert (command), ticks (function), format (function), property (glossary), Windows (glossary), Unix (glossary), format (glossary), return (glossary), function (control_st)
+References: system (keyword), english (keyword), abbreviated (keyword), useSystemDate (property), convert (command), ticks (function), format (function), property (glossary), Windows (glossary), Unix (glossary), format (glossary), return (glossary), function (control structure)
 
 Tags: math

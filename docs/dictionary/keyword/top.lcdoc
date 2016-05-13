@@ -22,4 +22,4 @@ Use the <top> <keyword> to stop <execute|executing> the current <handler> and al
 
 The synonyms metacard, hypercard, and supercard are included for compatibility with imported <MetaCard> stacks, <HyperCard> stacks, and <SuperCard> projects.
 
-References: handler (glossary), execute (glossary), MetaCard (glossary), HyperCard (glossary), keyword (glossary), SuperCard (glossary), control structure (glossary), exit to top (control_st)
+References: handler (glossary), execute (glossary), MetaCard (glossary), HyperCard (glossary), keyword (glossary), SuperCard (glossary), control structure (glossary), exit to top (control structure)

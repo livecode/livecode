@@ -37,4 +37,4 @@ On Unix systems, the <kill> command sends the specified signal to the <process>.
 
 If possible, use the <close process> command instead of the <kill> <command> to terminate a <process>. The <kill> <command> causes an immediate <exit>, and may prevent the <process> from removing temporary <files> or doing other cleanup tasks.
 
-References: file (keyword), signal (message), open process (command), quit (command), close process (command), launch (command), openProcessIDs (function), sysError (function), files (function), processID (function), openProcesses (function), Unix (glossary), Apple Event (glossary), command (glossary), process (glossary), exit (control_st)
+References: file (keyword), signal (message), open process (command), quit (command), close process (command), launch (command), openProcessIDs (function), sysError (function), files (function), processID (function), openProcesses (function), Unix (glossary), Apple Event (glossary), command (glossary), process (glossary), exit (control structure)

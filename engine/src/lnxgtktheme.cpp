@@ -306,13 +306,11 @@ Boolean MCNativeTheme::load()
 		MCColor tbackcolor;
 		moz_gtk_get_widget_color(GTK_STATE_NORMAL,
 		                         tbackcolor.red,tbackcolor.green,tbackcolor.blue) ;
-		MCscreen->alloccolor(tbackcolor);
 		MCscreen->background_pixel = tbackcolor;//tcolor = zcolor;
 		
 		// MW-2012-01-27: [[ Bug 9511 ]] Set the hilite color based on the current GTK theme.
 		MCColor thilitecolor;
 		moz_gtk_get_widget_color(GTK_STATE_SELECTED, thilitecolor.red, thilitecolor.green, thilitecolor.blue);
-		MCscreen -> alloccolor(thilitecolor);
 		MChilitecolor = thilitecolor;
 	}
 

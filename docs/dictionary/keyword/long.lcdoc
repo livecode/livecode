@@ -52,6 +52,6 @@ card "My Card" of stack "/Drive/Folder/Stack.rev"
 
 >*Note:*  The <long> <keyword> is implemented internally as a <property> and <function>, and appears in the <propertyNames> and the <functionNames>. However, it cannot be used as a <property> in an <expression>, nor with the <set> <command>.
 
-References: owner (property), function (control_st), card (keyword), short (keyword), abbreviated (keyword), keyword (glossary), property (glossary), command (glossary), object type (glossary), expression (glossary), functionNames (function), propertyNames (function), time (function), folders (function), files (function), dateFormat (function), date (function), set (command), libURLSetLogField (command), convert (command), object (glossary)
+References: owner (property), function (control structure), card (keyword), short (keyword), abbreviated (keyword), keyword (glossary), property (glossary), command (glossary), object type (glossary), expression (glossary), functionNames (function), propertyNames (function), time (function), folders (function), files (function), dateFormat (function), date (function), set (command), libURLSetLogField (command), convert (command), object (glossary)
 
 Tags: file system

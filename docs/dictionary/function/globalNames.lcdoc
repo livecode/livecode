@@ -29,6 +29,6 @@ Use the <globalNames> <function> to determine which <global|global variables> ar
 
 Global variables are created with the <global> command. They can be deleted with the <delete variable> command. All <global|global variables> that have been <declare|declared> since the <application> was started up are included in the <globalNames> <function>, except any that have been explictly deleted.
 
-References: global (command), delete variable (command), variableNames (function), localNames (function), declare (glossary), application (glossary), return (glossary), global (glossary), function (control_st)
+References: global (command), delete variable (command), variableNames (function), localNames (function), declare (glossary), application (glossary), return (glossary), global (glossary), function (control structure)
 
 Tags: properties

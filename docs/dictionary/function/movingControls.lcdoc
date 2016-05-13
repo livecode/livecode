@@ -25,6 +25,6 @@ Returns: The <movingControls> <function> <return|returns> a list of the long <ID
 Description:
 Use the <movingControls> <function> to find out whether a <control> or window is still moving, or to perform an action on each <control> or window that is moving.
 
-References: control (keyword), line (keyword), properties (property), ID (property), move (command), control (object), command (glossary), return (glossary), function (control_st)
+References: control (keyword), line (keyword), properties (property), ID (property), move (command), control (object), command (glossary), return (glossary), function (control structure)
 
 Tags: multimedia

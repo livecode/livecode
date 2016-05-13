@@ -29,4 +29,4 @@ This function exists to aid compatibility with imported HyperCard stacks. It may
 
 On Unix and Windows systems, this function does not return a meaningful value.
 
-References: size (property), alwaysBuffer (property), destroyStack (property), hasMemory (function), stackSpace (function), byte (glossary), Mac OS (glossary), return (glossary), function (control_st)
+References: size (property), alwaysBuffer (property), destroyStack (property), hasMemory (function), stackSpace (function), byte (glossary), Mac OS (glossary), return (glossary), function (control structure)

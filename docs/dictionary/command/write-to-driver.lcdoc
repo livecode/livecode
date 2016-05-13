@@ -26,6 +26,6 @@ The result: The device to write to must be opened first with the <open driver> <
 Description:
 Use the <write to driver> <command> to control a <peripheral device> or send data through it.
 
-References: real8 (keyword), int1 (keyword), int4 (keyword), real4 (keyword), int2 (keyword), LPT1: (keyword), printer: (keyword), modem: (keyword), COMn: (keyword), write to file (command), open driver (command), close driver (command), read from driver (command), write to process (command), write to socket (command), driverNames (function), result (function), command (glossary), peripheral device (glossary), function (control_st)
+References: real8 (keyword), int1 (keyword), int4 (keyword), real4 (keyword), int2 (keyword), LPT1: (keyword), printer: (keyword), modem: (keyword), COMn: (keyword), write to file (command), open driver (command), close driver (command), read from driver (command), write to process (command), write to socket (command), driverNames (function), result (function), command (glossary), peripheral device (glossary), function (control structure)
 
 Tags: networking

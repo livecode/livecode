@@ -60,4 +60,5 @@ The "columnAverage" property of the field does not exist in the list of the fiel
 
   put the columnAverage of field "Numbers" into field "Average"
 
-References: customPropertySets (property), stack (object), object (glossary), return (constant), end (keyword), word (keyword), field (keyword), card (keyword), getProp (control_st), exit (control_st), paramCount (function), value (function), get (command), call (command), script (glossary), return (glossary), call (glossary), property (glossary), recursion (glossary), custom function (glossary), control structure (glossary), custom property (glossary), handle (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary)
+
+References: customPropertySets (property), stack (object), object (glossary), return (constant), end (keyword), word (keyword), field (keyword), card (keyword), getProp (control structure), exit (control structure), paramCount (function), value (function), get (command), call (command), script (glossary), return (glossary), call (glossary), property (glossary), recursion (glossary), custom function (glossary), control structure (glossary), custom property (glossary), handle (glossary), message path (glossary), message (glossary), parameter (glossary), statement (glossary), handler (glossary)

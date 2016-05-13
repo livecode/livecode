@@ -27,6 +27,6 @@ Use the <focusedObject> <function> to determine which <object(glossary)> receive
 
 The <focusedObject> can be any <control> on the <current card>. If no <object(glossary)> has the <focus>, the <focusedObject> is the <current card>.
 
-References: control (keyword), ID (property), focus (command), type (command), object (glossary), property (glossary), current card (glossary), command (glossary), return (glossary), active control (glossary), function (control_st)
+References: control (keyword), ID (property), focus (command), type (command), object (glossary), property (glossary), current card (glossary), command (glossary), return (glossary), active control (glossary), function (control structure)
 
 Tags: ui

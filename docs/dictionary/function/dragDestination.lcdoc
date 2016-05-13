@@ -27,6 +27,6 @@ Use the <dragDestination> <function> to determine which <object(glossary)> recei
 
 The <dragDestination> function only <return|returns> a value while a <dragDrop> <handler> is being <execute|executed>: that is, you can use it in a <dragDrop> <handler>, or in a <handler> that's called by a <dragDrop> <handler>. If called from another <handler>, the <dragDestination> <function> <return|returns> empty.
 
-References: function (control_st), ID (property), dragEnd (message), dragDrop (message), dropChunk (function), target (function), handler (glossary), property (glossary), return (glossary), execute (glossary), drag and drop (glossary), object (glossary)
+References: function (control structure), ID (property), dragEnd (message), dragDrop (message), dropChunk (function), target (function), handler (glossary), property (glossary), return (glossary), execute (glossary), drag and drop (glossary), object (glossary)
 
 Tags: ui

@@ -17,4 +17,4 @@ The <recordFormats> <function> reported information about the most recent <execu
 
 For the information formerly returned by the <recordFormats> <function>, see the <recordCompressionTypes> <function>.
 
-References: function (control_st), recordCompressionTypes (function), QTVersion (function), execution error (glossary)
+References: function (control structure), recordCompressionTypes (function), QTVersion (function), execution error (glossary)

@@ -675,7 +675,7 @@ constant kDefaultPreferredSize       = 15000
 constant kDefaultRegion              = 1
 constant kDefaultRelease             = "Final"
 constant kDefaultVersionNumber       = "1.0.0.0"
-constant kDefaultScriptLibraries     = "Internet,Geometry,Printing"
+constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
@@ -1292,7 +1292,8 @@ function revSBLcextFileIsZipArchive pFile, @rError
       return false
    end if
    
-   return byte 1 of it is "P" and byte 2 of it is "K" and byte 3 of it is numToChar(3) and byte 4 of it is numToChar(4)
+   return byte 1 of it is "P" and byte 2 of it is "K" and \ 
+         byte 3 of it is numToByte(3) and byte 4 of it is numToByte(4)
 end revSBLcextFileIsZipArchive
 
 function revSBLcextExternalHasFolder pExternal, pPlatform
@@ -1398,7 +1399,7 @@ function revSBGetExternalPath pPlatform, pName
       get revSBExternalsList(pPlatform)
    end if
    
-   return sExternalsLocationA[pPlatform][pName] into tExtPath
+   return sExternalsLocationA[pPlatform][pName]
 end revSBGetExternalPath
 
 -- Ensure the name used for platforms is consistent
@@ -1493,7 +1494,7 @@ end revSBAvailableResources
 
 -- Additional in-IDE external paths can be added here
 private function revSBAdditionalExternalFolders
-   return revEnvironmentToolsPath() & "/MergExt" into tMergExtFolder
+   return revEnvironmentToolsPath() & "/MergExt"
 end revSBAdditionalExternalFolders
 
 -- Use the specified getter to fetch all the data about the inclusions
@@ -1707,3 +1708,15 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
       end if
    end repeat
 end revSBConvertSettingsForPlatform
+
+command revSBResolveIncludedExternal pPlatform, @xFile
+   -- Added to support mergExt inclusion
+   if xFile begins with "!" then
+      local tExtPath
+      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      -- if the file prefixed with ! was not a named external, treat normally
+      if tExtPath is not empty then
+         put tExtPath into xFile
+      end if
+   end if
+end revSBResolveIncludedExternal

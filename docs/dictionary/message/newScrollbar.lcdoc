@@ -26,6 +26,6 @@ Normally, the <newScrollbar> <message> is handled at a higher level of the <mess
 
 The actual creation is not triggered by the <newScrollbar> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <scrollbar> from being created.
 
-References: templateScrollbar (keyword), scrollbar (keyword), script (property), copy (command), clone (command), paste (command), object (glossary), trap (glossary), message (glossary), templateScrollbar (glossary), tool (glossary), message path (glossary), pass (control_st)
+References: templateScrollbar (keyword), scrollbar (keyword), script (property), copy (command), clone (command), paste (command), object (glossary), trap (glossary), message (glossary), templateScrollbar (glossary), tool (glossary), message path (glossary), pass (control structure)
 
 Tags: objects

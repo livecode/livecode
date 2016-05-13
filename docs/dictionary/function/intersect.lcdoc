@@ -41,6 +41,6 @@ If both objects are <stacks> or <card(object)|cards>, the <intersect> <function>
 
 The <intersect> <function> uses screen coordinates for <stacks> and <card(object)|cards>, and <relative coordinates|window coordinates> for <control(object)|controls>. This means that if one <object(glossary)> is a <stack> or <card(keyword)> and the other is a <control(keyword)>, the <intersect> <function> does not <return(constant)> a reliable result.
 
-References: layer (property), function (control_st), card (keyword), control (keyword), return (constant), within (function), stacks (function), relative coordinates (glossary), return (glossary), stack window (glossary), card (object), object (glossary), stack (object), control (object)
+References: layer (property), function (control structure), card (keyword), control (keyword), return (constant), within (function), stacks (function), relative coordinates (glossary), return (glossary), stack window (glossary), card (object), object (glossary), stack (object), control (object)
 
 Tags: ui

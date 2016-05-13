@@ -33,6 +33,6 @@ Converts a single byte to a numeric value in the range 0-255
 
 The <byteToNum> function is the inverse of the <numToByte> function.
 
-References: integer (keyword), md5Digest (function), charToNum (function), numToByte (function), numToChar (function), function (control_st)
+References: integer (keyword), md5Digest (function), charToNum (function), numToByte (function), numToChar (function), function (control structure)
 
 Tags: text processing

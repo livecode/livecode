@@ -30,6 +30,6 @@ The <geometricMean> <function> was added in version 6.1 to complement the <avera
 
 If the <numbersList> is empty, the <geometricMean> <function> returns zero.
 
-References: function (control_st), min (function), statRound (function), round (function), harmonicMean (function), variance (function), average (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
+References: function (control structure), min (function), statRound (function), round (function), harmonicMean (function), variance (function), average (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
 
 Tags: math

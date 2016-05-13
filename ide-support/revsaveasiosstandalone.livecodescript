@@ -72,8 +72,8 @@ private function linkingIsValid pLinkingOutput
    repeat for each line tLine in pLinkingOutput
       // Discard Xcode 7 new warnings like:
       // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
-      // On the first use of Xcode 7.0 for deployment, 'ld: warning: ' is duplicated...
-      if not matchtext(tLine, "(ld: warning: )+object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
+      // ld: warning: ignoring linker optimzation..
+      if not (tLine begins with "ld: warning:") then
          return false
       end if
    end repeat
@@ -412,6 +412,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
+         local tArchSpecificEngineList, tArchSpecificEngineFile
          put empty into tArchSpecificEngineList
          repeat for each word tArch in tArchs
             -- Make a temporary file for link options and execute it
@@ -704,7 +705,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
       delete file tEntitlementsFile
-      if not (tResult contains "signed bundle") then
+      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
       --      finally
@@ -928,15 +929,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    local tManifest
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      -- Added to support mergExt inclusion for iOS
-      if tFile begins with "!" then
-         local tExtPath
-         put revSBGetExternalPath("ios", char 2 to -1 of tFile) into tExtPath
-         -- if the file prefixed with ! was not a named external, treat normally
-         if tExtPath is not empty then
-            put tExtPath into tFile
-         end if
-      end if
+      revSBResolveIncludedExternal "ios", tFile
       
       local tIsAbsolute, tName
       put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute

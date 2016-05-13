@@ -32,6 +32,6 @@ Within each line, the variable or parameter names are separated by commas.
 Description:
 Use the <variableNames> <function> to find out which sources of <value> are available to the current <handler>, or to see whether a <variable> name is available for use.
 
-References: lines (keyword), global (command), local (command), functionNames (function), paramCount (function), globalNames (function), value (function), parameter (glossary), handler (glossary), variable (glossary), return (glossary), local variable (glossary), function (control_st)
+References: lines (keyword), global (command), local (command), functionNames (function), paramCount (function), globalNames (function), value (function), parameter (glossary), handler (glossary), variable (glossary), return (glossary), local variable (glossary), function (control structure)
 
 Tags: properties

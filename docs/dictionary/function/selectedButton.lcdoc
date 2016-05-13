@@ -28,6 +28,6 @@ Use the <selectedButton> function to find out the current setting of a <radio bu
 
 This function exists for compatibility with imported HyperCard stacks. You can use the <radioBehavior> <property> to cause a <group> consisting of <button(object)|buttons> to behave as a <radio button|radio cluster>, and use the <hilitedButton> <property> to find out which <button(keyword)> in the <group> is <highlight|highlighted>.
 
-References: family (property), hilitedButton (property), radioBehavior (property), string (keyword), button (keyword), group (command), button (object), property (glossary), highlight (glossary), radio button (glossary), return (glossary), function (control_st)
+References: family (property), hilitedButton (property), radioBehavior (property), string (keyword), button (keyword), group (command), button (object), property (glossary), highlight (glossary), radio button (glossary), return (glossary), function (control structure)
 
 Tags: ui

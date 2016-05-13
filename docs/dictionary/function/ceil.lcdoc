@@ -30,6 +30,6 @@ Use the <ceil> <function> to return the greatest integer less than or equal to a
 
 The <ceil> function does not always <return(constant)> the <integer> closest to the <number>.. For example, ceil(5.1) <return(glossary)|returns> 6, but  ceil(4.99) <return(glossary)|returns> 5.
 
-References: integer (keyword), return (constant), trunc (function), abs (function), floor (function), return (glossary), function (control_st)
+References: integer (keyword), return (constant), trunc (function), abs (function), floor (function), return (glossary), function (control structure)
 
 Tags: math

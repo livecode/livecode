@@ -22,4 +22,4 @@ LiveCode evaluates the condition each time the loop repeats, at the top of the l
 
 If the condition is already true when LiveCode reaches the <repeat> <statement>, the <loop> is not <execute|executed> at all.
 
-References: forever (keyword), for (keyword), end repeat (keyword), keyword (glossary), statement (glossary), loop (glossary), control structure (glossary), execute (glossary), repeat (control_st)
+References: forever (keyword), for (keyword), end repeat (keyword), keyword (glossary), statement (glossary), loop (glossary), control structure (glossary), execute (glossary), repeat (control structure)

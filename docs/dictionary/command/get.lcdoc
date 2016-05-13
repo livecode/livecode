@@ -41,6 +41,6 @@ The <get> <command> is a shorthand way of writing the following statement:
 > URLs. The Android and iOS engines do not support 'libUrl', which
 > would allow characters such as @ in the username.
 
-References: it (keyword), post (command), unload (command), put (command), libURLSetFTPStopTime (command), load (command), set (command), libURLSetLogField (command), getProp (control_st), value (function), URLEncode (function), expression (glossary), command (glossary), variable (glossary)
+References: it (keyword), post (command), unload (command), put (command), libURLSetFTPStopTime (command), load (command), set (command), libURLSetLogField (command), getProp (control structure), value (function), URLEncode (function), expression (glossary), command (glossary), variable (glossary)
 
 Tags: properties

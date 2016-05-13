@@ -29,6 +29,6 @@ The <answer record> <command> displays a <dialog box> where the user can select 
 
 The <answer record> <command> sets the <recordCompression>, <recordRate>, <recordSampleSize>, and <recordChannels> <properties> in accordance with the settings chosen in the <dialog box>. To save the settings you choose in the <dialog box> and use them later without re-displaying the <dialog box|dialog>, save the values of these <properties>, then restore them when you want to record sound.
 
-References: recordCompression (property), recordSampleSize (property), recordChannels (property), properties (property), recordRate (property), answer effect (command), record sound (command), result (function), recordCompressionTypes (function), property (glossary), dialog box (glossary), command (glossary), QuickTime (glossary), return (glossary), function (control_st)
+References: recordCompression (property), recordSampleSize (property), recordChannels (property), properties (property), recordRate (property), answer effect (command), record sound (command), result (function), recordCompressionTypes (function), property (glossary), dialog box (glossary), command (glossary), QuickTime (glossary), return (glossary), function (control structure)
 
 Tags: multimedia

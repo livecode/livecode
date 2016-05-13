@@ -64,6 +64,6 @@ the value returned by the <params> <function> is
 Changes:
 The format of the params when used in a function handler was changed in version 2.0. In previous versions, the format for functions was the same as the format for message handlers:  the parameters were not enclosed in parentheses, but instead separated from the handler name by a space.
 
-References: call (command), paramCount (function), pass (glossary), handler (glossary), parameter (glossary), function handler (glossary), return (glossary), value (glossary), function (control_st)
+References: call (command), paramCount (function), pass (glossary), handler (glossary), parameter (glossary), function handler (glossary), return (glossary), value (glossary), function (control structure)
 
 Tags: properties

@@ -24,6 +24,6 @@ Use the <customPropertySets> <property> to find out what <property> sets are def
 
 You can delete an object's custom property sets by setting the object's <customPropertySets> to empty.
 
-References: customPropertySet (property), revProfile (property), customKeys (property), set (command), getProp (control_st), setProp (control_st), custom property (glossary), property (glossary), object (glossary)
+References: customPropertySet (property), revProfile (property), customKeys (property), set (command), getProp (control structure), setProp (control structure), custom property (glossary), property (glossary), object (glossary)
 
 Tags: properties

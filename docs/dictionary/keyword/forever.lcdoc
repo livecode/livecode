@@ -25,4 +25,4 @@ All forms of the <repeat> <control structure> that test for a condition, test at
     if myCondition is true then exit repeat
   end repeat
 
-References: until (keyword), while (keyword), keyword (glossary), conditional (glossary), statement (glossary), loop (glossary), iteration (glossary), control structure (glossary), exit repeat (control_st), repeat (control_st)
+References: until (keyword), while (keyword), keyword (glossary), conditional (glossary), statement (glossary), loop (glossary), iteration (glossary), control structure (glossary), exit repeat (control structure), repeat (control structure)

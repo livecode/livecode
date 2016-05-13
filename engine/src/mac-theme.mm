@@ -373,10 +373,6 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
         r_color.blue = [t_color blueComponent] * 65535;
     }
     
-    // Ensure the colour structure is set up correctly
-    if (t_found)
-        MCscreen->alloccolor(r_color);
-    
     return t_found;
 }
 

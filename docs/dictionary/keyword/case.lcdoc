@@ -47,4 +47,4 @@ then a <case> <statement> inside the <switch> <control structure|structure> migh
 
 and the statements following the <case> <keyword> are <execute|executed> if the <character> "a" appears in the <current card|current card's> name.
 
-References: word (keyword), character (keyword), switch (control_st), break (control_st), keyword (glossary), current card (glossary), statement (glossary), execute (glossary), control structure (glossary), expression (glossary), value (function)
+References: word (keyword), character (keyword), switch (control structure), break (control structure), keyword (glossary), current card (glossary), statement (glossary), execute (glossary), control structure (glossary), expression (glossary), value (function)

@@ -27,6 +27,6 @@ Use the <paramCount> <function> to find out how many <parameter|parameters> were
 
 The <paramCount> <function> <return|returns> the number of <parameter|parameters> <pass|passed> to the current <handler>. If no <parameter|parameters> were <pass|passed>, the <paramCount> <function> <return|returns> zero.
 
-References: $ (keyword), integer (keyword), variableNames (function), param (function), params (function), on (control_st), setProp (control_st), getProp (control_st), function (control_st), pass (glossary), handler (glossary), parameter (glossary), return (glossary), non-negative (glossary)
+References: $ (keyword), integer (keyword), variableNames (function), param (function), params (function), on (control structure), setProp (control structure), getProp (control structure), function (control structure), pass (glossary), handler (glossary), parameter (glossary), return (glossary), non-negative (glossary)
 
 Tags: properties

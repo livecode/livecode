@@ -32,6 +32,6 @@ If the replacing form is used, then the found strings will be replaced in the ta
 
 All styling outside of the instances of the pattern which are found is unaffected.
 
-References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control_st)
+References: field (object), string (keyword), field (keyword), command (glossary), regular expression (glossary), container (glossary), replaceText (function), find (command), filter (command), replace (command), function (control structure)
 
 Tags: text processing

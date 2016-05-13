@@ -31,4 +31,5 @@ You can refer to the <templateStack> using any of the following forms:
 
 >*Note:* The <templateStack> <keyword> is implemented internally as a <function> and appears in the <functionNames>. However, it cannot be used as a <function> in an <expression>.
 
-References: properties (property), ID (property), function (control_st), templateScrollbar (keyword), default (keyword), stack (object), object (glossary), stacks (function), functionNames (function), create stack (command), reset (command), set (command), keyword (glossary), property (glossary), command (glossary), expression (glossary)
+
+References: properties (property), ID (property), function (control structure), templateScrollbar (keyword), default (keyword), stack (object), object (glossary), stacks (function), functionNames (function), create stack (command), reset (command), set (command), keyword (glossary), property (glossary), command (glossary), expression (glossary)

@@ -48,6 +48,6 @@ A background group is also a shared group. This means that when the <backgroundB
 
 >*Note:* If a stack created in a version of LiveCode earlier than 1.1 is opened in 1.1 or later, the <backgroundBehavior> of all its groups is set to true by default. This also applies to imported HyperCard stacks.
 
-References: HCAddressing (property), sharedBehavior (property), backgroundNames (property), backgroundIDs (property), dynamicPaths (property), preOpenBackground (message), openControl (message), openBackground (message), closeBackground (message), preOpenControl (message), closeControl (message), place (command), send (command), pass (control_st)
+References: HCAddressing (property), sharedBehavior (property), backgroundNames (property), backgroundIDs (property), dynamicPaths (property), preOpenBackground (message), openControl (message), openBackground (message), closeBackground (message), preOpenControl (message), closeControl (message), place (command), send (command), pass (control structure)
 
 Tags: objects
