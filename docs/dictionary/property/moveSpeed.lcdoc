@@ -26,6 +26,6 @@ A <moveSpeed> of zero moves the <object|objects> directly to their destination, 
 
 The <moveSpeed> <property> has no effect if you include the in time <parameter> in the <move> command. It only <control|controls> the speed of <move> <command|commands> that don't specify a time for the movement.
 
-References: dragSpeed (property), location (property), integer (keyword), move (command), object (object), control (object), command (glossary), property (glossary), parameter (glossary)
+References: dragSpeed (property), location (property), integer (keyword), move (command), object (glossary), control (object), command (glossary), property (glossary), parameter (glossary)
 
 Tags: multimedia

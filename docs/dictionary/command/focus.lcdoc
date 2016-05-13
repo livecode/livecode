@@ -2,7 +2,7 @@ Name: focus
 
 Type: command
 
-Syntax: focus [on] <object> 
+Syntax: focus [on] <object>
 
 Syntax: focus on nothing
 
@@ -40,9 +40,9 @@ If the <lookAndFeel> is set to "Appearance Manager" or "Macintosh", an outline i
 
 If the <lookAndFeel> is set to "Windows 95", a dotted outline is drawn within <button|buttons> when they receive the <focus>.
 
-If the <object> is an <unlock|unlocked> <field(keyword)>, the <insertion point> is placed after the text in the <field(keyword)>.
+If the <object(glossary)> is an <unlock|unlocked> <field(keyword)>, the <insertion point> is placed after the text in the <field(keyword)>.
 
-Use the focus on nothing command to remove focus from all objects on a card.
+Use the ``focus on nothing`` command to remove focus from all objects on a card.
 
 References: focusPattern (property), showFocusBorder (property), lockText (property), selected (property), lookAndFeel (property), focusColor (property), traversalOn (property), enterKey (message), focusIn (message), keyUp (message), tabKey (message), mouseLeave (message), mouseWithin (message), keyDown (message), focusOut (message), returnKey (message), field (keyword), control (keyword), property (glossary), EPS (glossary), error (glossary), insertion point (glossary), message (glossary), unlock (glossary), appearance (glossary), active control (glossary), command (glossary), focusedObject (function), mouseStack (function), select (command), focus (command), field (object), image (object), button (object)
 

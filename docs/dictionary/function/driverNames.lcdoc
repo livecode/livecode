@@ -32,6 +32,6 @@ Use the <driverNames> <function> to find out which serial <device driver|drivers
 
 Usually, you use the callout file name--the third item in the line for the driver you want--with the open driver, <read from driver>, <write to driver>, and <close driver> <command|commands>.
 
-References: items (keyword), line (keyword), open driver (command), write to driver (command), read from driver (command), close driver (command), function (control_st), Unix (glossary), Windows (glossary), command (glossary), return (glossary), Mac OS (glossary), device driver (glossary), result (function)
+References: items (keyword), line (keyword), open driver (command), write to driver (command), read from driver (command), close driver (command), function (control structure), Unix (glossary), Windows (glossary), command (glossary), return (glossary), Mac OS (glossary), device driver (glossary), result (function)
 
 Tags: networking

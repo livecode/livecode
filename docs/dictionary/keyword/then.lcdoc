@@ -32,4 +32,4 @@ If you want to execute multiple statements, place the <then> <keyword> on the li
     doAnotherAction
   end if
 
-References: else (keyword), end if (keyword), keyword (glossary), statement (glossary), execute (glossary), control structure (glossary), if (control_st)
+References: else (keyword), end if (keyword), keyword (glossary), statement (glossary), execute (glossary), control structure (glossary), if (control structure)

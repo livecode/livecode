@@ -27,7 +27,7 @@ Value (enum):
 Description:
 Use the <lookAndFeel> <property> to preview the <appearance> of <stacks> on a <platform> other than the one you're developing on.
 
-The <lookAndFeel> <property> determines the <appearance> and <behavior> of <scrollbar|scrollbars>, <object> borders, <checkbox|checkboxes> and <radio button|radio buttons>, and <button menu|button menus>. It also changes the <appearance> of the <active (focused) control(glossary)>.
+The <lookAndFeel> <property> determines the <appearance> and <behavior> of <scrollbar|scrollbars>, <object(glossary)> borders, <checkbox|checkboxes> and <radio button|radio buttons>, and <button menu|button menus>. It also changes the <appearance> of the <active (focused) control(glossary)>.
 
 However, changing this property does not provide an exact representation of the appearance and behavior of the stack on the target platform. For example, cursors do not change, and neither do the placement of the menu bar or the way window dragging and resizing works. Only the appearance of controls is affected.
 
@@ -42,6 +42,6 @@ On Mac OS systems, the native Appearance Manager drawing routines are much slowe
 Changes:
 The "Appearance Manager" option was introduced in version 1.1. In previous versions, LiveCode applications always used the Platinum appearance on Mac OS systems, regardless of which theme was selected on the user's system.
 
-References: emacsKeyBindings (property), activatePalettes (property), hiliteBorder (property), word (keyword), default (keyword), system (keyword), focus (command), stacks (function), platform (function), property (glossary), checkbox (glossary), behavior (glossary), Mac OS (glossary), user interface (glossary), OS X (glossary), appearance (glossary), Unix (glossary), radio button (glossary), active control (glossary), button menu (glossary), scrollbar (object), object (object), stack (object), control (object)
+References: emacsKeyBindings (property), activatePalettes (property), hiliteBorder (property), word (keyword), default (keyword), system (keyword), focus (command), stacks (function), platform (function), property (glossary), checkbox (glossary), behavior (glossary), Mac OS (glossary), user interface (glossary), OS X (glossary), appearance (glossary), Unix (glossary), radio button (glossary), active control (glossary), button menu (glossary), scrollbar (object), object (glossary), stack (object), control (object)
 
 Tags: ui

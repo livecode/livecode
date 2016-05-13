@@ -88,13 +88,13 @@ uint2 MCObject::s_last_font_index = 0;
 bool MCObject::s_loaded_parent_script_reference = false;
 
 MCColor MCObject::maccolors[MAC_NCOLORS] = {
-            { 0, 0x7070, 0x7070, 0x7070, 0, 0 },
-            { 0, 0xCCCC, 0xCCCC, 0xFFFF, 0, 0 },
-            { 0, 0x9999, 0x9999, 0xFFFF, 0, 0 },
-            { 0, 0x6666, 0x6666, 0xCCCC, 0, 0 },
-            { 0, 0x3333, 0x3333, 0x9999, 0, 0 },
-            { 0, 0x0000, 0x0000, 0x5555, 0, 0 },
-            { 0, 0xE8E8, 0xE8E8, 0xE8E8, 0, 0 }
+            { 0x7070, 0x7070, 0x7070 },
+            { 0xCCCC, 0xCCCC, 0xFFFF },
+            { 0x9999, 0x9999, 0xFFFF },
+            { 0x6666, 0x6666, 0xCCCC },
+            { 0x3333, 0x3333, 0x9999 },
+            { 0x0000, 0x0000, 0x5555 },
+            { 0xE8E8, 0xE8E8, 0xE8E8 }
         };
 
 MCObject::MCObject()
@@ -378,9 +378,6 @@ void MCObject::open()
 
 	// MW-2012-02-14: [[ FontRefs ]] Map the object's font.
 	mapfont();
-
-	for (uint32_t i = 0 ; i < ncolors ; i++)
-		MCscreen->alloccolor(colors[i]);
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
 		patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
@@ -1634,8 +1631,8 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bo
 		        && getforecolor((state & CS_HILITED && flags & F_OPAQUE)
 		                        ? DI_HILITE : DI_BACK, False, False, fcolor,
 		                        t_pattern, x, y, dc -> gettype(), this)
-		        && color.pixel == fcolor.pixel)
-			color.pixel ^= 1;
+		        && MCColorGetPixel(color) == MCColorGetPixel(fcolor))
+			MCColorSetPixel(color, ~MCColorGetPixel(color));
 		dc->setforeground(color);
 		dc->setfillstyle(FillSolid, nil, 0, 0);
 	}
@@ -1681,8 +1678,6 @@ Boolean MCObject::setcolor(uint2 index, const MCString &data)
 		{
 			i = createcindex(index);
 			colors[i].red = colors[i].green = colors[i].blue = 0;
-			if (opened)
-				MCscreen->alloccolor(colors[i]);
 		}
 		MCColor oldcolor = colors[i];
 		if (!MCscreen->parsecolor(data, &colors[i], &colornames[i]))
@@ -1699,8 +1694,6 @@ Boolean MCObject::setcolor(uint2 index, const MCString &data)
 				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
-		if (opened)
-			MCscreen->alloccolor(colors[i]);
 	}
 	return True;
 }
@@ -1737,8 +1730,6 @@ Boolean MCObject::setcolors(const MCString &data)
 			{
 				i = createcindex(index);
 				colors[i] = newcolors[index];
-				if (opened)
-					MCscreen->alloccolor(colors[i]);
 				colornames[i] = newcolornames[index];
 			}
 		}
@@ -1750,7 +1741,6 @@ Boolean MCObject::setcolors(const MCString &data)
 				if (opened)
 				{
 					colors[i] = newcolors[index];
-					MCscreen->alloccolor(colors[i]);
 				}
 				colornames[i] = newcolornames[index];
 			}
@@ -1970,11 +1960,11 @@ uint32_t MCObject::getcoloraspixel(uint2 di)
 		switch(di)
 		{
 		case DI_BACK:
-			return MCscreen -> background_pixel . pixel;
+			return MCColorGetPixel(MCscreen -> background_pixel);
 		case DI_HILITE:
-			return MChilitecolor . pixel;
+			return MCColorGetPixel(MChilitecolor);
 		case DI_FOCUS:
-			return MCaccentcolor . pixel;
+			return MCColorGetPixel(MCaccentcolor);
 		case DI_TOP:
 		case DI_BOTTOM:
 		case DI_FORE:
@@ -1984,10 +1974,7 @@ uint32_t MCObject::getcoloraspixel(uint2 di)
 		return 0;
 	}
 
-	if (!opened)
-		MCscreen -> alloccolor(colors[t_index]);
-
-	return colors[t_index] . pixel;
+	return MCColorGetPixel(colors[t_index]);
 }
 
 // MW-2012-02-14: [[ FontRefs ]] New method for getting the font props from the
@@ -2011,15 +1998,26 @@ uint32_t MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		}
 
         MCFontRef t_default_font;
-        MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, t_default_font);
-        
-        MCFontStruct* t_font_struct;
-        t_font_struct = MCFontGetFontStruct(t_default_font);
-        
         Boolean t_printer;
         MCNameRef t_fname;
         uint2 t_size, t_style;
-        MCdispatcher->getfontlist()->getfontstructinfo(t_fname, t_size, t_style, t_printer, t_font_struct);
+        
+        MCFontStruct* t_font_struct = nil;
+        
+        if (MCPlatformGetControlThemePropFont(getcontroltype(), getcontrolsubpart(), getcontrolstate(), kMCPlatformThemePropertyTextFont, t_default_font))
+            t_font_struct = MCFontGetFontStruct(t_default_font);
+
+        if (t_font_struct != nil)
+        {
+            MCdispatcher->getfontlist()->getfontstructinfo(t_fname, t_size, t_style, t_printer, t_font_struct);
+        }
+        else
+        {
+            t_fname = MCNAME(DEFAULT_TEXT_FONT);
+            t_size = DEFAULT_TEXT_SIZE;
+            t_style = 0;
+            t_printer = false;
+        }
         
         if ((t_explicit_flags & FF_HAS_TEXTFONT) == 0)
             fname = t_fname;
@@ -3055,9 +3053,6 @@ void MCObject::alloccolors()
 		maccolors[MAC_THUMB_GRIP] = syscolors[4];
 		maccolors[MAC_THUMB_HILITE] = syscolors[6];
 	}
-	uint2 i = MAC_NCOLORS;
-	while (i--)
-		MCscreen->alloccolor(maccolors[i]);
 }
 
 MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, MCGFloat p_scale_factor, bool p_with_effects)
@@ -3317,7 +3312,6 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 				MCValueRelease(colornames[i]);
 				colornames[i] = nil;
 			}
-			colors[i].pixel = i;
 		}
 		if (stat != IO_NORMAL)
 		{

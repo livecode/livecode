@@ -40,6 +40,6 @@ Since the <numberFormat> is a <local property>, its value is <reset> to 0.######
   put 10^-1 = 0.1 -- reports false because of the decimal error
   put abs((10^-1) - 0.1) = zero -- reports true
 
-References: showValue (property), scrollbar (object), = (operator), scrollbar (keyword), numeric (keyword), container (glossary), precision (glossary), string (glossary), property (glossary), call (glossary), comment (glossary), operator (glossary), execute (glossary), decimal point (glossary), local property (glossary), statement (glossary), handler (glossary), format (function), value (function), abs (function), reset (command), multiply (command), function (control_st)
+References: showValue (property), scrollbar (object), = (operator), scrollbar (keyword), numeric (keyword), container (glossary), precision (glossary), string (glossary), property (glossary), call (glossary), comment (glossary), operator (glossary), execute (glossary), decimal point (glossary), local property (glossary), statement (glossary), handler (glossary), format (function), value (function), abs (function), reset (command), multiply (command), function (control structure)
 
 Tags: math

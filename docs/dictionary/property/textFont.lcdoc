@@ -6,7 +6,7 @@ Syntax: set the textFont of <object> to <fontName> [, <language>]
 
 Syntax: set the textFont of [<chunk> of] <field> to <fontName> [, <language>]
 
-Summary: Specifies the <font|font face> of text in an <object>.
+Summary: Specifies the <font|font face> of text in an <object(glossary)>.
 
 Associations: stack,card,field,button,graphic,scrollbar,player,image
 
@@ -31,12 +31,12 @@ set the textFont of field "Text" to "Japanese"
 Example:
 set the textFont of button "Themed" to "(System UI Font - Messages)"
 
-Value: The <textFont> of an <object> or <chunk> is either empty or a <string>.
+Value: The <textFont> of an <object(glossary)> or <chunk> is either empty or a <string>.
 
 Description:
 Use the <textFont> <property> to change the appearance of text.
 
-Setting the <textFont> of an <object> to empty allows the <textFont> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what <font> is used for the <object>, even if its own <textFont> is empty.
+Setting the <textFont> of an <object(glossary)> to empty allows the <textFont> of the <object|object's> <owner> to show through. Use the <effective> <keyword> to find out what <font> is used for the <object(glossary)>, even if its own <textFont> is empty.
 
 If the <chunk> contains more than one font, the <chunk|chunk's> <textFont> <property> reports "mixed".
 
@@ -48,6 +48,6 @@ Some special font names can be used to request the themed fonts used for drawing
 
 Setting the <textFont> to `(Default)` causes the control to use the default font for that type of control rather than inheriting the font from a parent object.
 
-References: fontNames (function), printTextFont (property), owner (property), printFontTable (property), allowInlineInput (property), HTMLText (property), string (keyword), effective (keyword), object (object), property (glossary), keyword (glossary), font (glossary), chunk (glossary)
+References: fontNames (function), printTextFont (property), owner (property), printFontTable (property), allowInlineInput (property), HTMLText (property), string (keyword), effective (keyword), object (glossary), property (glossary), keyword (glossary), font (glossary), chunk (glossary)
 
 Tags: ui

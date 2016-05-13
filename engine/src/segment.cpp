@@ -453,7 +453,6 @@ void MCSegment::Draw(MCDC *dc, coord_t p_line_origin_x, int16_t p_line_origin_y,
 			t_color . red = 255 << 8;
 			t_color . green = 0 << 8;
 			t_color . blue = 0 << 8;
-			MCscreen -> alloccolor(t_color);
 			dc -> setforeground(t_color);
 			dc -> setquality(QUALITY_SMOOTH);
 			dc -> setlineatts(2, LineOnOffDash, CapButt, JoinRound);

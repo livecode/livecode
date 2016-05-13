@@ -25,7 +25,7 @@ Value:
 The <margins> of an object consists of either a <non-negative> <integer(keyword)>, or four <non-negative> <integer(glossary)|integers> separated by commas.
 By default, the <margins> <property> of a <field(keyword)> is set to 8. If the <field(object)|field's> <wideMargins> <property> is true, the <field(object)|field's> <margins> is set to 20.
 
-The default <margins> setting for an <object> other than a <field(keyword)> is 4.
+The default <margins> setting for an <object(glossary)> other than a <field(keyword)> is 4.
 
 Description:
 Use the <margins> <property> to control how close text within a <button> or <field(keyword)> can come to the <object|object's> edges, how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> edges, and how the <label> of a <graphic> is displayed.
@@ -39,10 +39,10 @@ If a single integer is specified, all four margins of the object are set to that
 
 If the lookAndFeel is set to "Motif", <control(object)|controls> require two <pixels> of margin space for the border that shows when the <control(keyword)> is <active (focused)(glossary)>. To avoid interfering with this border on <Unix|Unix systems>, set the <margins> <property> of <group(glossary)|groups> to at least 2 if the <group(command)> contains <control(object)|controls> whose <traversalOn> <property> is set to true.
 
->*Important:*  The <margins> of an <object> include the 2- <pixel> space required for the focus border, even if the <lookAndFeel> is not "Motif". This means that 2 is the smallest usable margin, rather than zero. For example, if the <margins> of a <field(keyword)> is set to zero, a few <pixels> at the edge of the <field(object)|field's> text may be cut off.
+>*Important:*  The <margins> of an <object(glossary)> include the 2- <pixel> space required for the focus border, even if the <lookAndFeel> is not "Motif". This means that 2 is the smallest usable margin, rather than zero. For example, if the <margins> of a <field(keyword)> is set to zero, a few <pixels> at the edge of the <field(object)|field's> text may be cut off.
 
 The <margins> setting of an <image>, <player>, or <scrollbar> has no effect.
 
-References: topMargin (property), pixels (property), formattedWidth (property), textAlign (property), formattedHeight (property), wideMargins (property), boundingRect (property), rectangle (property), rightMargin (property), bottomMargin (property), label (property), lookAndFeel (property), leftMargin (property), traversalOn (property), image (keyword), integer (keyword), button (keyword), scrollbar (keyword), graphic (keyword), player (keyword), field (keyword), control (keyword), group (command), field (object), object (object), control (object), property (glossary), pixel (glossary), group (glossary), Unix (glossary), active control (glossary), non-negative (glossary), integer (glossary)
+References: topMargin (property), pixels (property), formattedWidth (property), textAlign (property), formattedHeight (property), wideMargins (property), boundingRect (property), rectangle (property), rightMargin (property), bottomMargin (property), label (property), lookAndFeel (property), leftMargin (property), traversalOn (property), image (keyword), integer (keyword), button (keyword), scrollbar (keyword), graphic (keyword), player (keyword), field (keyword), control (keyword), group (command), field (object), object (glossary), control (object), property (glossary), pixel (glossary), group (glossary), Unix (glossary), active control (glossary), non-negative (glossary), integer (glossary)
 
 Tags: ui

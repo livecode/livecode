@@ -266,7 +266,7 @@ inline uint1 MCS_toupper(uint1 p_char) {return _toupper_l(p_char, NULL);}
 class CDropTarget;
 
 #define fixmaskrop(a) ((a == GXand || a == GXor)?(a == GXand?GXor:GXand):(a == GXandInverted?GXorInverted:GXandInverted))//DEBUG
-#define fixmaskcolor(a) (a.pixel == 0 ? MConecolor:MCzerocolor)//DEBUG
+#define fixmaskcolor(a) (MCColorGetPixel(a) == 0 ? MConecolor:MCzerocolor)//DEBUG
 
 typedef uintptr_t MCSocketHandle;
 
@@ -614,10 +614,7 @@ void *operator new[] (size_t size) throw();
 
 struct MCColor
 {
-	uint4 pixel;
 	uint2 red, green, blue;
-	uint1 flags;
-	uint1 pad;
 };
 
 //////////////////////////////////////////////////////////////////////

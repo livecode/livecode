@@ -29,4 +29,4 @@ The wait with messages form of the <wait command>, when used in a <handler>, pau
 
 If there are no paused handlers, the <waitDepth> <function> returns 1.
 
-References: integer (keyword), wait command (command), wait (command), function (control_st), handler (glossary), statement (glossary), command (glossary), return (glossary), execute (glossary)
+References: integer (keyword), wait command (command), wait (command), function (control structure), handler (glossary), statement (glossary), command (glossary), return (glossary), execute (glossary)

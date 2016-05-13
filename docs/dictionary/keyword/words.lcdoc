@@ -25,6 +25,6 @@ A word is a set of characters enclosed by spaces, tabs, or returns.
 
 When used with the <find command>, the <words> <keyword> finds <card|cards> that contain each of the specified <words>, though not necessarily next to each other.
 
-References: properties (property), card (object), is among (operator), is not among (operator), word (keyword), string (keyword), words (keyword), function (control_st), keyword (glossary), command (glossary), quoted (glossary), delimit (glossary), number (function), select (command), find command (command), find (command), sort (command)
+References: properties (property), card (object), is among (operator), is not among (operator), word (keyword), string (keyword), words (keyword), function (control structure), keyword (glossary), command (glossary), quoted (glossary), delimit (glossary), number (function), select (command), find command (command), find (command), sort (command)
 
 Tags: database

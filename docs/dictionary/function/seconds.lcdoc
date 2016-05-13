@@ -33,6 +33,6 @@ The <seconds> <function> <return|returns> the total number of seconds since midn
 
 The long seconds form returns a value with a precision to a millionth of a second. However, this value is not normally accurate past the third decimal place because of processor delays.
 
-References: wait (command), milliseconds (function), event (glossary), eon (glossary), return (glossary), decimal point (glossary), function (control_st)
+References: wait (command), milliseconds (function), event (glossary), eon (glossary), return (glossary), decimal point (glossary), function (control structure)
 
 Tags: math

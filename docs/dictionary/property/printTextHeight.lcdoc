@@ -17,4 +17,4 @@ In HyperCard, the <printTextHeight> <property> specifies the vertical spacing of
 
 By default, the value of <printTextHeight> is 18. A <handler> can set the <property>, but the new setting has no effect.
 
-References: textHeight (property), properties (property), card (keyword), print (command), stacks (function), property (glossary), handler (glossary), LiveCode (glossary), HyperCard (glossary), card (object), object (object)
+References: textHeight (property), properties (property), card (keyword), print (command), stacks (function), property (glossary), handler (glossary), LiveCode (glossary), HyperCard (glossary), card (object), object (glossary)

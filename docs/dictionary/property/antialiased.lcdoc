@@ -25,6 +25,6 @@ Use the <antialiased> <property> to enable or disable the smoothing of the edges
 
 >*Note:* Anitialised graphics cannot be displayed with dashed lines.  The property inspector adjusts for this by unsetting the antialised property when the <dashes> property is set.
 
-References: capStyle (property), joinStyle (property), fillRule (property), miterLimit (property), fillGradient (property), strokeGradient (property), dashes (property), property (glossary), object (object)
+References: capStyle (property), joinStyle (property), fillRule (property), miterLimit (property), fillGradient (property), strokeGradient (property), dashes (property), property (glossary), object (glossary)
 
 Tags: multimedia

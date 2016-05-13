@@ -2418,10 +2418,30 @@ begin
 	MCCanvasPathMakeWithRoundedRectangle(mRect, mRadius, output)
 end syntax
 
+/**
+Summary:	Create a new rectangle path with elliptical corner rounding
+
+Parameters:
+Rectangle (Rectangle):	A rectangle to create the path from
+Radii (List):	A list of the horizontal radius and vertical radius for rounding
+
+Returns (Path):	A newly-created canvas path
+
+Description:
+Create a new rounded rectangle path based on <Rectangle>.
+
+The <Radii> is a list of two numbers.  The first specifies the
+horizontal rounding radius and the second specifies the vertical
+rounding radius.
+
+References: PathMakeWithRoundedRectangle
+
+Tags: Canvas
+*/
 syntax PathMakeWithRoundedRectangleWithRadii is prefix operator with constructor precedence
-	"rounded" "rectangle" "path" "of" <mRect: Expression> "with" "radii" <mRadii: Expression>
+	"rounded" "rectangle" "path" "of" <Rectangle: Expression> "with" "radii" <Radii: Expression>
 begin
-	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(mRect, mRadii, output)
+	MCCanvasPathMakeWithRoundedRectangleWithRadiiAsList(Rectangle, Radii, output)
 end syntax
 
 //////////
@@ -4874,24 +4894,73 @@ end syntax
 
 //////////
 
+/**
+Summary:	Create a new canvas
+
+Parameters:
+Size (List):	A list containing the width and height of the new canvas in pixels
+
+Returns (Canvas):	A newly-created canvas
+
+Description:
+Create and return a new temporary canvas of the specified pixel width
+and height.
+
+Tags:	Canvas
+*/
 syntax NewCanvasWithSize is prefix operator with constructor precedence
   "a" "new" "canvas" "with" "size" <Size: Expression>
 begin
   MCCanvasNewCanvasWithSize(Size, output)
 end syntax
 
+/**
+Summary:	Get the current contents of a canvas as raw pixel data
+
+Parameters:
+Canvas (Canvas):	The canvas to be examined.
+
+Returns (Data):	The raw pixel values as binary data.
+
+Description:
+Capture the current contents of the <Canvas> as raw pixel data in RGBA
+format with 8 bits per colour component, i.e. 32 bits or 4 bytes per
+pixel.
+
+Tags:	Canvas
+*/
 syntax GetPixelDataOfCanvas is prefix operator with property precedence
   "the" "pixel" "data" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelDataOfCanvas(Canvas, output)
 end syntax
 
+/**
+Summary:	Get the width of a canvas in pixels.
+
+Parameters:
+Canvas (Canvas):	The canvas to be examined.
+
+Returns (Number):	The width of the canvas, in pixels.
+
+Tags:	Canvas
+*/
 syntax GetPixelWidthOfCanvas is prefix operator with property precedence
   "the" "pixel" "width" "of" <Canvas: Expression>
 begin
   MCCanvasGetPixelWidthOfCanvas(Canvas, output)
 end syntax
 
+/**
+Summary:	Get the height of a canvas in pixels.
+
+Parameters:
+Canvas (Canvas):	The canvas to be examined.
+
+Returns (Number):	The height of the canvas, in pixels.
+
+Tags:	Canvas
+*/
 syntax GetPixelHeightOfCanvas is prefix operator with property precedence
   "the" "pixel" "height" "of" <Canvas: Expression>
 begin

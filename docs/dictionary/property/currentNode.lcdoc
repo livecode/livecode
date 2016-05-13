@@ -29,6 +29,8 @@ Each node of a QuickTime VR movie is a viewpoint. The movie author sets the node
 
 If the player does not contain a QuickTime VR movie, its <currentNode> <property> is zero.
 
+Deprecated: In order to support 64-bit on Mac we have been required to switch to using AVFoundation on Mac, which does not support QTVR. In addition, the Windows player object is now based on DirectShow, as Apple have dropped support for the QuickTime libraries previously used.
+
 References: nodes (property), integer (keyword), nodeChanged (message), QuickTime VR (glossary), property (glossary)
 
 Tags: multimedia

@@ -40,10 +40,10 @@ Use the <value> <function> to <evaluate> an <expression>, or to force LiveCode t
   ask "What do you want to compute?"
   answer it && "equals" && the value of it
 
-If you specify an <object>, references to <me> in the <expression> are treated as references to the <object>. However, other <object reference|object references> are treated as though the <handler> were in the current <object|object's> <script>. For example, "button 3" refers to button 3 on the <current card>, not the <card> where the <object> is located.
+If you specify an <object(glossary)>, references to <me> in the <expression> are treated as references to the <object(glossary)>. However, other <object reference|object references> are treated as though the <handler> were in the current <object|object's> <script>. For example, "button 3" refers to button 3 on the <current card>, not the <card> where the <object(glossary)> is located.
 
 If the <expression> is a single <string>, then even if it is enclosed in quotes, LiveCode attempts to <evaluate> its contents instead of treating it as a <literal string|string literal>. This means that you must be careful about <literal string|string literals> that contain <operator|operators> such as "and".
 
-References: script (property), object (object), () (operator), me (keyword), numeric (keyword), string (keyword), card (keyword), current card (glossary), return (glossary), handler (glossary), operator (glossary), logical (glossary), statement (glossary), literal string (glossary), expression (glossary), evaluate (glossary), object reference (glossary), value (function), merge (function), call (command), function (control_st)
+References: script (property), object (glossary), () (operator), me (keyword), numeric (keyword), string (keyword), card (keyword), current card (glossary), return (glossary), handler (glossary), operator (glossary), logical (glossary), statement (glossary), literal string (glossary), expression (glossary), evaluate (glossary), object reference (glossary), value (function), merge (function), call (command), function (control structure)
 
 Tags: properties

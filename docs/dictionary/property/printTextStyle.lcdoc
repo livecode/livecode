@@ -17,4 +17,4 @@ In HyperCard, the <printTextStyle> <property> specifies the styles of printed te
 
 By default, the value of <printTextStyle> is plain. A handler can set the <property>, but the new setting has no effect.
 
-References: card (keyword), textStyle (property), fontStyles (function), property (glossary), LiveCode (glossary), HyperCard (glossary), card (object), object (object)
+References: card (keyword), textStyle (property), fontStyles (function), property (glossary), LiveCode (glossary), HyperCard (glossary), card (object), object (glossary)

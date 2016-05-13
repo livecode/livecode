@@ -26,4 +26,4 @@ If the <selectionMode> is set to "intersect", all <object|objects> that are part
 
 >*Tip:*  You can also set the <selectionMode> by choosing <a/>Edit menu<img src="202656"/>Intersected Selections<important/>.
 
-References: intersect (keyword), selectGroupedControls (property), selected (property), object (object), tool (function), property (glossary)
+References: intersect (keyword), selectGroupedControls (property), selected (property), object (glossary), tool (function), property (glossary)

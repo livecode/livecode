@@ -10,7 +10,7 @@ Associations: image
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac,linux,ios,android
 
 Platforms: desktop,server,web,mobile
 
@@ -23,7 +23,7 @@ set the alwaysBuffer of image "Smile" to false
 Example:
 set the alwaysBuffer of the templatePlayer to true
 
-Value (bool): The <alwaysBuffer> of an <object> is true or false. By <default>, the <alwaysBuffer> <property> of newly created <image|images>, <player|players>, and <stacks> is set to false.
+Value (bool): The <alwaysBuffer> of an <object(glossary)> is true or false. By <default>, the <alwaysBuffer> <property> of newly created <image|images>, <player|players>, and <stacks> is set to false.
 
 Description:
 Use the <alwaysBuffer> <property> to eliminate unwanted flicker when <object|objects> are being <redraw|redrawn>. This <property> is especially useful for eliminating flicker when using animation in a <stack>.
@@ -39,8 +39,6 @@ If a player's <alwaysBuffer> is false, the movie it contains is drawn in front o
 
 >*Note:* Setting a <player(object)|player's> <alwaysBuffer> to true always increases memory usage, and may make movie playing more jerky.
 
->*Note:* The <alwaysBuffer> property has no effect on Windows if the global <dontUseQT property> is set to true.
-
-References: screenSharedMemory (property), dontUseQT property (property), script (property), constantMask (property), bufferHiddenImages (property), card (keyword), player (keyword), image (keyword), default (keyword), rectangle (keyword), control (keyword), visual effect (command), show (command), lock screen (command), global (command), heapSpace (function), stacks (function), hasMemory (function), button (object), image (object), player (object), object (object), stack (object), property (glossary), uncompress (glossary), controller bar (glossary), buffer (glossary), command (glossary), redraw (glossary)
+References: screenSharedMemory (property), dontUseQT property (property), script (property), constantMask (property), bufferHiddenImages (property), card (keyword), player (keyword), image (keyword), default (keyword), rectangle (keyword), control (keyword), visual effect (command), show (command), lock screen (command), global (command), heapSpace (function), stacks (function), hasMemory (function), button (object), image (object), player (object), object (glossary), stack (object), property (glossary), uncompress (glossary), controller bar (glossary), buffer (glossary), command (glossary), redraw (glossary)
 
 Tags: multimedia

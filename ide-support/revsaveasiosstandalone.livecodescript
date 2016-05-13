@@ -72,8 +72,8 @@ private function linkingIsValid pLinkingOutput
    repeat for each line tLine in pLinkingOutput
       // Discard Xcode 7 new warnings like:
       // ld: warning: object file (<path_to_exe) was built for newer iOS version (9.0) than being linked (7.0)
-      // On the first use of Xcode 7.0 for deployment, 'ld: warning: ' is duplicated...
-      if not matchtext(tLine, "(ld: warning: )+object file \(.*\) was built for newer iOS version \(.*\) than being linked \(.*\)") then
+      // ld: warning: ignoring linker optimzation..
+      if not (tLine begins with "ld: warning:") then
          return false
       end if
    end repeat
@@ -700,7 +700,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
       delete file tEntitlementsFile
-      if not (tResult contains "signed bundle") then
+      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
       --      finally
@@ -924,6 +924,16 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    local tManifest
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
+      -- Added to support mergExt inclusion for iOS
+      if tFile begins with "!" then
+         local tExtPath
+         put revSBGetExternalPath("ios", char 2 to -1 of tFile) into tExtPath
+         -- if the file prefixed with ! was not a named external, treat normally
+         if tExtPath is not empty then
+            put tExtPath into tFile
+         end if
+      end if
+      
       local tIsAbsolute, tName
       put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute
       if the last item of tFile is "*" then
@@ -995,7 +1005,13 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
       -- MM-2012-09-18: Updated to use the new copied externals array instead of the copy files,
       -- where we extract the appropraite external for the instruciton set(s) we are building for.
       --
-      if tSource ends with ".lcext" and lcextFileIsZipArchive(tSource) then
+      local tIsZip, tError
+      put revSBLcextFileIsZipArchive(tSource, tError) into tIsZip
+      if tError is not empty then
+         throw tError
+      end if
+      
+      if tSource ends with ".lcext" and tIsZip then
          if tProcessedDylibs[tSource] then
             next repeat
          end if         
@@ -1076,19 +1092,6 @@ private command revCopyMobileFilesComputeFolderManifest @xManifest, pSource, pTa
 end revCopyMobileFilesComputeFolderManifest
 
 ################################################################################
-
-private function lcextFileIsZipArchive pFile
-   open file pFile for binary read
-   if the result is empty then
-      read from file pFile for 4 bytes
-      close file pFile
-   end if
-   if it is empty then
-      throw "could not open external -" && pFile
-   end if
-   
-   return byte 1 of it is "P" and byte 2 of it is "K" and byte 3 of it is numToChar(3) and byte 4 of it is numToChar(4)
-end lcextFileIsZipArchive
 
 -- MERG-2013-09-05: [[ Bug 11152 ]] Change to function to return whether the external was found or not. 
 private function lcextExtractExternal pExternal, pBuild, pTarget

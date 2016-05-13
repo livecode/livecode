@@ -345,7 +345,6 @@ bool MCImageGenerateWebsafePalette(uint32_t &r_palette_size, MCColor *&r_colours
 					r_colours[t_index].red = (red << 8) | red;
 					r_colours[t_index].green = (green << 8) | green;
 					r_colours[t_index].blue = (blue << 8) | blue;
-					r_colours[t_index++].pixel = 0xFF000000 | (red << 16) | (green << 8) | blue;
 				}
 		r_palette_size = t_index;
 	}

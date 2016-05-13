@@ -29,6 +29,6 @@ If the <dynamicPaths> is false, the <message path> does not change even when a <
 
 The <dynamicPaths> <property> of <stacks> imported from <HyperCard> is set to true by <default>.
 
-References: backgroundBehavior (property), stack (object), card (object), card (keyword), default (keyword), pass (control_st), property (glossary), current card (glossary), owner (glossary), handler (glossary), message path (glossary), HyperCard (glossary), command (glossary), behavior (glossary), find (command), go (command), stacks (function)
+References: backgroundBehavior (property), stack (object), card (object), card (keyword), default (keyword), pass (control structure), property (glossary), current card (glossary), owner (glossary), handler (glossary), message path (glossary), HyperCard (glossary), command (glossary), behavior (glossary), find (command), go (command), stacks (function)
 
 Tags: objects

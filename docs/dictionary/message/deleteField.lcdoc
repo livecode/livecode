@@ -32,6 +32,6 @@ However, the undo <command> will restore a <field> after it is deleted by the us
     send "undo" to this card in 5 milliseconds
   end deleteField
 
-References: field (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), card (glossary), pass (control_st)
+References: field (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), card (glossary), pass (control structure)
 
 Tags: objects

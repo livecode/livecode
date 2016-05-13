@@ -34,6 +34,6 @@ The <transpose> <function> is its own <inverse> : you can transpose a transposed
 
 >*Important:*  If the <array> has missing <element(glossary)|elements>, the <transpose> <function> will fail to work. For example, an <array> that contains <element(glossary)|elements> myArray[1,1], myArray[1,2], and myArray[2,2] cannot be transposed because the element myArray[2,1] <a/>is missing.
 
-References: inverse (keyword), element (keyword), keys (function), transpose (function), matrixMultiply (function), array (glossary), return (glossary), element (glossary), function (control_st)
+References: inverse (keyword), element (keyword), keys (function), transpose (function), matrixMultiply (function), array (glossary), return (glossary), element (glossary), function (control structure)
 
 Tags: properties

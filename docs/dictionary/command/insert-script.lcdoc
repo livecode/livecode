@@ -30,6 +30,6 @@ Objects added to the front or back are placed at the start of the <frontScripts>
 
 Be aware that inserting scripts may make it difficult to understand how a stack behaves. If you use this command for development, be sure to carefully document which scripts are inserted, where, and when.
 
-References: script (property), remove script (command), place (command), call (command), start using (command), object (object), message path (glossary), backScripts (function), frontScripts (function)
+References: script (property), remove script (command), place (command), call (command), start using (command), object (glossary), message path (glossary), backScripts (function), frontScripts (function)
 
 Tags: objects

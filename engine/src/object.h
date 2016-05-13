@@ -562,7 +562,7 @@ public:
 	void setname(MCNameRef new_name);
 	void setname_cstring(const char *p_new_name);
 
-	uint1 getopened() const
+	uint32_t getopened() const
 	{
 		return opened;
 	}

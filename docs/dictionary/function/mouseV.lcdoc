@@ -35,6 +35,6 @@ This function is equal to item 2 of the <mouseLoc> <function>.
 
 >*Tip:*  The <mouseMove> message sends the mouse's vertical position as a <parameter>. This means that in a <mouseMove> <handler>, normally it's not necessary to use the <mouseV> <function>.
 
-References: screenMouseLoc (property), integer (keyword), pointer (keyword), mouseMove (message), mouseStack (function), mouseLoc (function), clickV (function), mouseH (function), property (glossary), return (glossary), stack window (glossary), handler (glossary), negative (glossary), parameter (glossary), mouse pointer (glossary), current stack (glossary), function (control_st)
+References: screenMouseLoc (property), integer (keyword), pointer (keyword), mouseMove (message), mouseStack (function), mouseLoc (function), clickV (function), mouseH (function), property (glossary), return (glossary), stack window (glossary), handler (glossary), negative (glossary), parameter (glossary), mouse pointer (glossary), current stack (glossary), function (control structure)
 
 Tags: ui

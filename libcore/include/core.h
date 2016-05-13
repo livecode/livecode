@@ -507,15 +507,15 @@ inline int32_t MCMin(int32_t a, int32_t b) { return a < b ? a : b; }
 inline int32_t MCMax(int32_t a, int32_t b) { return a > b ? a : b; }
 inline int64_t MCMin(int64_t a, int64_t b) { return a < b ? a : b; }
 inline int64_t MCMax(int64_t a, int64_t b) { return a > b ? a : b; }
-inline int64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
-inline int64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
+inline uint64_t MCMin(uint64_t a, uint64_t b) { return a < b ? a : b; }
+inline uint64_t MCMax(uint64_t a, uint64_t b) { return a > b ? a : b; }
 inline double MCMin(double a, double b) { return a < b ? a : b; }
 inline double MCMax(double a, double b) { return a > b ? a : b; }
 inline float MCMin(float a, float b) { return a < b ? a : b; }
 inline float MCMax(float a, float b) { return a > b ? a : b; }
 
-inline uint32_t MCAbs(int32_t a) { return a < 0 ? -a : a; }
-inline uint64_t MCAbs(int64_t a) { return a < 0 ? -a : a; }
+inline uint32_t MCAbs(int32_t a) { return a < 0 ? uint32_t(-a) : uint32_t(a); }
+inline uint64_t MCAbs(int64_t a) { return a < 0 ? uint64_t(-a) : uint64_t(a); }
 inline float MCAbs(float a) { return fabsf(a); }
 inline double MCAbs(double a) { return fabs(a); }
 inline compare_t MCSgn(int32_t a) { return a < 0 ? -1 : (a > 0 ? 1 : 0); }

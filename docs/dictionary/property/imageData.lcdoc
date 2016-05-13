@@ -35,7 +35,7 @@ Since each pixel is represented by 4 bytes (4 characters), you can obtain the nu
 
 The <imageData> <property> is related to the content of the <image> --changing either one changes what's displayed in the <image> --but they're not identical: the <imageData> <property> and the <image> content are in different forms, have different sizes, and include overlapping but not identical information about the picture.
 
-The <imageData>, unlike the contents of the <image> <container>, is based on the picture as it's presented on the screen, not stored in the <image> <object>. This means that if you resize an <image>, the content of the <image> does not change, but its <imageData> does. If you create an <image> and then reduce its size, its <imageData> reflects the scaled-down, displayed <image>, not the original full-scale <image>. If you create a second <image> and set its <imageData> <property> to the <imageData> of the original <image>, resizing the first <image> back to the original dimensions displays the original <image> at full resolution, but resizing the second <image> does not, because setting its <imageData> transferred only the scaled-down version of the original.
+The <imageData>, unlike the contents of the <image> <container>, is based on the picture as it's presented on the screen, not stored in the <image> <object(glossary)>. This means that if you resize an <image>, the content of the <image> does not change, but its <imageData> does. If you create an <image> and then reduce its size, its <imageData> reflects the scaled-down, displayed <image>, not the original full-scale <image>. If you create a second <image> and set its <imageData> <property> to the <imageData> of the original <image>, resizing the first <image> back to the original dimensions displays the original <image> at full resolution, but resizing the second <image> does not, because setting its <imageData> transferred only the scaled-down version of the original.
 
 >*Tip:*  To copy the information in an <image> at full resolution, regardless of whether its <height> and <width> have been changed, use a <statement> like the following:
 
@@ -43,6 +43,6 @@ The <imageData>, unlike the contents of the <image> <container>, is based on the
 
 >*Important:*  Since the <imageData> of an <image> is <binary file|binary data> rather than text, trying to display the data in a <field> may cause unexpected behavior.
 
-References: alphaData (property), height (property), width (property), imageData (property), format (function), field (keyword), image (keyword), image (object), object (object), property (glossary), binary file (glossary), pixel (glossary), statement (glossary), container (glossary), binary (glossary), byte (glossary), channel (glossary), crop (command), revVideoFrameImage (command), function (control_st)
+References: alphaData (property), height (property), width (property), imageData (property), format (function), field (keyword), image (keyword), image (object), object (glossary), property (glossary), binary file (glossary), pixel (glossary), statement (glossary), container (glossary), binary (glossary), byte (glossary), channel (glossary), crop (command), revVideoFrameImage (command), function (control structure)
 
 Tags: multimedia

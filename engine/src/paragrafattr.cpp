@@ -558,10 +558,8 @@ static bool setparagraphattr_color(MCExecPoint& ep, MCParagraphAttrs*& attrs, ui
 	if (attrs == nil)
 		attrs = new MCParagraphAttrs;
 
-	MCscreen -> alloccolor(t_color);
-
 	attrs -> flags |= p_flag;
-	((uint32_t *)((char *)attrs + p_field_offset))[0] = t_color . pixel;
+	((uint32_t *)((char *)attrs + p_field_offset))[0] = MCColorGetPixel(t_color);
 
 	return true;
 }

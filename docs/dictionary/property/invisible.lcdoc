@@ -4,9 +4,9 @@ Type: property
 
 Syntax: set the invisible of <object> to {true | false}
 
-Syntax: get the [effective] invisible of <object> 
+Syntax: get the [effective] invisible of <object>
 
-Summary: Specifies whether an <object> is hidden.
+Summary: Specifies whether an <object(glossary)> is hidden.
 
 Synonyms: inv
 
@@ -44,6 +44,6 @@ You can set the <invisible> property of a card, but doing so has no effect. Card
 
 The <invisible> property is the logical inverse of the visible property. When an object's invisible is true, its visible is false, and vice versa.
 
-References: show (command), hide (command), showInvisibles (property), visible (property), object (object)
+References: show (command), hide (command), showInvisibles (property), visible (property), object (glossary)
 
 Tags: ui

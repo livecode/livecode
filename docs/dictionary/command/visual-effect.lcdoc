@@ -102,6 +102,6 @@ The ability to use Core Image transition effects together with the enhanced synt
 Changes:
 The ability to use QuickTime special effects was introduced in version 1.1. In previous versions, only the built-in visual effects listed in the Parameters section were available.
 
-References: dontUseQTEffects (property), alwaysBuffer (property), multiEffect (property), stacks (function), card (keyword), black (keyword), exit (control_st), player (object), pop (command), go (command), answer effect (command), find (command), command (glossary), handler (glossary), property (glossary)
+References: dontUseQTEffects (property), alwaysBuffer (property), multiEffect (property), stacks (function), card (keyword), black (keyword), exit (control structure), player (object), pop (command), go (command), answer effect (command), find (command), command (glossary), handler (glossary), property (glossary)
 
 Tags: multimedia

@@ -104,7 +104,7 @@ end handler
 Summary: Formats an integer as a string
 
 Parameters:
-pInteger: The integer to format
+pNumber: The integer to format
 
 Example:
 log 5 formatted as string 			-- logs 5.000000
@@ -218,7 +218,7 @@ end handler
 Summary: Converts a string to a color
 
 Parameters:
-pColor: A comma delimited string representing a color in RGB / RGBA format
+pString: A comma delimited string representing a color in RGB / RGBA format
 
 Example:
 property widgetColor 	get getColor	set setColor

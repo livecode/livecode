@@ -34,6 +34,6 @@ The point returned by the <globalLoc> function is relative to the top left of th
 
 The first item of the return value is the horizontal distance in pixels from the left edge of the screen to the location given by <point>.  The second <item> of the <return value> is the vertical distance from the top edge of the screen to the location given by <point>.
 
-References: item (keyword), point (keyword), relative (keyword), revSetVideoGrabberRect (command), function (control_st), relative coordinates (glossary), integer (glossary), absolute coordinates (glossary), return (glossary), return value (glossary)
+References: item (keyword), point (keyword), relative (keyword), revSetVideoGrabberRect (command), function (control structure), relative coordinates (glossary), integer (glossary), absolute coordinates (glossary), return (glossary), return value (glossary)
 
 Tags: ui

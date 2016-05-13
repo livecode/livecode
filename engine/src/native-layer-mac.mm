@@ -195,7 +195,13 @@ void MCNativeLayerMac::doRelayer()
 
 NSWindow* MCNativeLayerMac::getStackWindow()
 {
-    return ((MCMacPlatformWindow*)(m_object->getstack()->getwindow()))->GetHandle();
+    MCMacPlatformWindow *t_window;
+    t_window = (MCMacPlatformWindow*)(m_object->getstack()->getwindow());
+    
+    if (t_window != nil)
+        return t_window -> GetHandle();
+    
+    return nil;
 }
 
 bool MCNativeLayerMac::getParentView(NSView *&r_view)
@@ -205,16 +211,22 @@ bool MCNativeLayerMac::getParentView(NSView *&r_view)
 		MCNativeLayer *t_container;
 		t_container = nil;
 		
-		if (!((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
-			return false;
-		
-		return t_container->GetNativeView((void*&)r_view);
+		if (((MCGroup*)m_object->getparent())->getNativeContainerLayer(t_container))
+            return t_container->GetNativeView((void*&)r_view);
 	}
 	else
 	{
-		r_view = [getStackWindow() contentView];
-		return true;
+        NSWindow* t_window;
+        t_window = getStackWindow();
+        
+        if (t_window != nil)
+        {
+            r_view = [t_window contentView];
+            return true;
+        }
 	}
+
+    return false;
 }
 
 bool MCNativeLayerMac::GetNativeView(void *&r_view)

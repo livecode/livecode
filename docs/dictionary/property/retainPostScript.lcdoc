@@ -21,12 +21,12 @@ By default, the <retainPostScript> <property> of newly created <EPS|EPS objects>
 Description:
 Use the <retainPostScript> <property> to keep or ignore the underlying <PostScript> code of an <EPS|EPS object> after rendering it.
 
-If an EPS object's <retainPostScript> <property> is true, the <PostScript> code used to draw the <object> is kept as the <object|object's> <PostScript> <property>. This means the <EPS|EPS object> can be printed or scaled and re-drawn without loss of quality.
+If an EPS object's <retainPostScript> <property> is true, the <PostScript> code used to draw the <object(glossary)> is kept as the <object|object's> <PostScript> <property>. This means the <EPS|EPS object> can be printed or scaled and re-drawn without loss of quality.
 
-If the <retainPostScript> <property> is false, the <PostScript> code is deleted once the <object> has been drawn.
+If the <retainPostScript> <property> is false, the <PostScript> code is deleted once the <object(glossary)> has been drawn.
 
 This property is supported only on Unix systems with Display PostScript installed.
 
-References: postScript (property), retainImage (property), EPS (glossary), property (glossary), object (object)
+References: postScript (property), retainImage (property), EPS (glossary), property (glossary), object (glossary)
 
 Tags: multimedia

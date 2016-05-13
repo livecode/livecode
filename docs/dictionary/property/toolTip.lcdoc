@@ -4,7 +4,7 @@ Type: property
 
 Syntax: set the toolTip of <object> to <string> 
 
-Summary: Specifies the explanatory text that pops up in a small box when the user <points> to an <object>.
+Summary: Specifies the explanatory text that pops up in a small box when the user <points> to an <object(glossary)>.
 
 Introduced: 1.0
 
@@ -36,6 +36,6 @@ Tool tips appear only when the Browse tool is selected.
 
 >*Note:* As of LiveCode version 2.7.4 toolTips can be multiline strings. Previous version restrict tooltips to single lines.
 
-References: points (property), toolTipDelay (property), control (keyword), help (message), show (command), popup (command), object (object), property (glossary), tool tip (glossary)
+References: points (property), toolTipDelay (property), control (keyword), help (message), show (command), popup (command), object (glossary), property (glossary), tool tip (glossary)
 
 Tags: ui

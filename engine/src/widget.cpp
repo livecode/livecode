@@ -712,6 +712,23 @@ void MCWidget::geometrychanged(const MCRectangle &p_rect)
 		MCwidgeteventmanager -> event_setrect(this, p_rect);
 }
 
+Boolean MCWidget::del(void)
+{
+    if (!MCControl::del())
+        return False;
+
+    // Make sure we release the widget ref here. Otherwise its
+    // module cannot be released until the pending object pools
+    // are drained.
+    if (m_widget != nil)
+    {
+        MCValueRelease(m_widget);
+        m_widget = nil;
+    }
+    
+    return True;
+}
+
 void MCWidget::OnOpen()
 {
 	if (m_widget != nil)
@@ -999,7 +1016,7 @@ void MCWidget::SetFocused(bool p_setting)
 {
     if (p_setting)
         focused = this;
-    else
+    else if (focused == this)
         focused = nil;
 }
 

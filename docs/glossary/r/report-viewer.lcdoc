@@ -5,7 +5,7 @@ Synonyms: report viewer,report object,report viewer object
 Type: glossary
 
 Description:
-A special <object> used to set up and display data for printed reports. 
+A special <object(glossary)> used to set up and display data for printed reports. 
  
 To create a report, you place one or more report viewers on a <card> and specify which <field|fields> they should display, then use the <Report Builder> to select the cards to print.
 
