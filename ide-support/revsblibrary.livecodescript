@@ -655,6 +655,17 @@ end revFolderNameMakeLegal
 // SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
 constant kPlatforms = "Windows,MacOSX x86-32,Linux"
 
+// List of all desktop target platforms + architecture
+constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
+function revSBDesktopTargets
+   return kDesktopTargets
+end revSBDesktopTargets
+
+constant kAdditionalTargets = "iOS,Android,Emscripten"
+function revSBAdditionalTargets
+   return kAdditionalTargets
+end revSBAdditionalTargets
+
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
 constant kDefaultDocumentExtension   = ""
