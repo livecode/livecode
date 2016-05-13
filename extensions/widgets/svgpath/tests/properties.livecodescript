@@ -17,14 +17,13 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 private function getPathData
-	return "M1664 698Q1664 720 1638 746L1275 1100 1361 1600Q1362 1607 1362 1620 1362 1641 1351.5 1655.5 1341 1670 1321 1670 1302 1670 1281 1658L832 1422 383 1658Q361 1670 343 1670 322 1670 311.5 1655.5 301 1641 301 1620 301 1614 303 1600L389 1100 25 746Q0 719 0 698 0 661 56 652L558 579 783 124Q802 83 832 83 862 83 881 124L1106 579 1608 652Q1664 661 1664 698Z"
+	return "M10 10 H 90 V 90 H 10 L 10 10"
 end getPathData
 
 on TestSetup
 	TestLoadExtension "com.livecode.library.widgetutils"
-	TestLoadExtension "com.livecode.library.iconSVG"
-	TestLoadExtension "com.livecode.widget.svgPath"
-	create widget "testSvgPath" as "com.livecode.widget.svgPath"
+	TestLoadExtension "com.livecode.widget.svgpath"
+	create widget "testSvgPath" as "com.livecode.widget.svgpath"
 end TestSetup
 
 on TestTeardown
@@ -56,13 +55,13 @@ end TestSetRect
 on TestScaledSizing
 	set the iconPath of widget "testSvgPath" to getPathData()
 	set the maintainAspectRatio of widget "testSvgPath" to true
-	set the rect of widget "testSvgPath" to "0,0,100,100"
-	TestAssert "scaledHeight with maintainAspectRatio = true", round(the scaledHeight of widget "testSvgPath",3) is 95.373
 
-	set the rect of widget "testSvgPath" to "0,0,150,100"
-	TestAssert "scaledWidth with maintainAspectRatio = true", round(the scaledWidth of widget "testSvgPath",3) is 104.852
+	set the rect of widget "testSvgPath" to "0,0,90,100"
+	TestAssert "scaledWidth with maintainAspectRatio = true", (the scaledWidth of widget "testSvgPath" is 90 and the scaledHeight of widget "testSvgPath" is 90)
+
+	set the rect of widget "testSvgPath" to "0,0,100,90"
+	TestAssert "scaledWidth with maintainAspectRatio = true", (the scaledWidth of widget "testSvgPath" is 90 and the scaledHeight of widget "testSvgPath" is 90)
 
 	set the maintainAspectRatio of widget "testSvgPath" to false
-	TestAssert "scaledHeight with maintainAspectRatio = false", the scaledHeight of widget "testSvgPath" is 100
-	TestAssert "scaledWidth with maintainAspectRatio = false", the scaledWidth of widget "testSvgPath" is 150
+	TestAssert "scaledHeight with maintainAspectRatio = false", (the scaledHeight of widget "testSvgPath" is not the scaledWidth of widget "testSvgPath")
 end TestScaledSizing
