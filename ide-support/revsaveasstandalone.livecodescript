@@ -1883,7 +1883,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
             -- missing PkgInfo file, so copy it in quietly
             put "BNDL????" into URL ("binfile:" & tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo")
          end if
-         revAddExternal "revdb"
+         revAddExternal pPlatform, "revdb"
       end if
    end if
    
@@ -1953,14 +1953,14 @@ end revCopyDatabaseDrivers
 # about adding external libraries to the build process for MacOS.
 #####################################################################
 
-private command revAddExternal pExternalName
-   if pExternalName is among the lines of sStandaloneSettingsA["externals"]  then
+private command revAddExternal pPlatform, pExternalName
+   if pExternalName is among the lines of sStandaloneSettingsA["externals"][pPlatform]  then
       exit revAddExternal
    end if
 
    // AL-2015-05-07: [[ Bug 15320 ]] Don't duplicate external names in standalone settings
-   if sStandaloneSettingsA["externals"] is not empty then put return after sStandaloneSettingsA["externals"]
-   put pExternalName after sStandaloneSettingsA["externals"]
+   if sStandaloneSettingsA["externals"][pPlatform] is not empty then put return after sStandaloneSettingsA["externals"][pPlatform]
+   put pExternalName after sStandaloneSettingsA["externals"][pPlatform]
 end revAddExternal
 
 constant kSeparator = ":"
@@ -2282,7 +2282,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
             put "BNDL????" into URL ("binfile:" & (tCurrentLocation & slash & "Externals/" & (item -1 of tExternalPath) & "/Contents/PkgInfo"))
          end if
       end if
-      revAddExternal tExternal
+      revAddExternal tPlatform, tExternal
    end repeat
    
    // SN-2015-07-01: [[ Bug 15259 ]] We don't want the saving to be trapped by
@@ -2380,8 +2380,8 @@ private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePa
    end if
    
    # AL-2015-02-04: [[ Standalone Resources ]] Add (universal) external names and resource mappings to the deploy parameters
-   if sStandaloneSettingsA["externals"] is not empty then
-      put sStandaloneSettingsA["externals"] into tDeployInfo["externals"]
+   if sStandaloneSettingsA["externals"][tPlatformDetailsA["platform"]] is not empty then
+      put sStandaloneSettingsA["externals"][tPlatformDetailsA["platform"]] into tDeployInfo["externals"]
    end if
    if sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] is not empty then
       put sStandaloneSettingsA[tPlatformDetailsA["platform"] & ",library"] into tDeployInfo["library"]
