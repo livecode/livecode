@@ -512,19 +512,12 @@ private command revCreateStandalone pStack, pFolder
    set the itemDelimiter to slash
    
    put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
-   if tStandaloneSettingsA["Windows,iconFile"] = "" then 
-      put tName & "/genericapp.ico" into tStandaloneSettingsA["Windows,iconFile"]
-      -- OK-2007-12-14 : This block appears to be redundant.
-      --    if "Windows" is among the lines of sPlatformList and there is no file tStandaloneSettingsA["Windows,iconFile"] then
-      --      revStandaloneAddWarning "Windows, generic icon file not found:" && quote & tName & "/genericapp.ico" & quote
-      --    end if
+   if sStandaloneSettingsA["Windows,iconFile"] = "" then 
+      put tName & "/genericapp.ico" into sStandaloneSettingsA["Windows,iconFile"]
    end if
-   if tStandaloneSettingsA["Windows,documenticonFile"] = "" then 
-      put tName & "/genericdoc.ico" into tStandaloneSettingsA["Windows,documenticonFile"]
-      -- OK-2007-12-14 : This block appears to be redundant.
-      --    if "Windows" is among the lines of sPlatformList and there is no tStandaloneSettingsA["Windows,documenticonFile"] then
-      --      revStandaloneAddWarning "Windows, generic document icon not found:" && quote & tName & "/genericdoc.ico" & quote
-      --    end if
+   
+   if sStandaloneSettingsA["Windows,documenticonFile"] = "" then 
+      put tName & "/genericdoc.ico" into sStandaloneSettingsA["Windows,documenticonFile"]
    end if
    
    -- get all the stackfiles
