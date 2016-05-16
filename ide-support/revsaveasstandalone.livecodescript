@@ -690,9 +690,16 @@ private command revCreateStandalone pStack, pFolder
    
    -- copy resources (inclusions) to files
    revCopyResources pStack, tStackFileList
+   
+   -- keep a copy of the standalone settings to restore after each build
+   local tStandaloneSettingsA
+   put sStandaloneSettingsA into tStandaloneSettingsA
+   
    -- loop over the platforms to build
    put 1 into tCount
    repeat for each line tPlatform in sPlatformList
+      -- Ensure standalone settings script local is reset when building for subsequent platforms
+      put tStandaloneSettingsA into sStandaloneSettingsA
       -- Architectures
       local tArchitectures
       if tPlatform contains "MacOSX" then

@@ -1,0 +1,1 @@
+# Don't retain other platforms' temporary standalone settings data
