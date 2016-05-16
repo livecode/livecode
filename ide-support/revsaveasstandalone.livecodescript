@@ -303,20 +303,12 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put tFolder into pFolder
    put tFolder into sStandaloneSettingsA["defaultBuildFolder"]
    
-   -- Ensure the custom prop is set before we possible search for inclusions
-   set the customProperties["cRevStandaloneSettings"] of stack pStack to sStandaloneSettingsA
-   
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
       revStandaloneProgress "Preparing to build standalone..."
       
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
-      
-      -- If we're searching for inclusions, do it here 
-      if sStandaloneSettingsA["inclusions"] = "search" then 
-         revSearchForInclusions pStack
-      end if
       
       try
          -- Clear left over state information from previous build
@@ -487,7 +479,12 @@ end revStandalonePlatformDetails
 
 private command revCreateStandalone pStack, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
-   local tStackPath, tStackFileName, tDirectory, tStackSourceFile, tName, tStandaloneSettingsA
+   local tStackPath, tStackFileName, tDirectory, tStackSourceFile, tName
+   
+   -- If we're searching for inclusions, do it here 
+   if sStandaloneSettingsA["inclusions"] = "search" then 
+      revSearchForInclusions pStack, sStandaloneSettingsA
+   end if
    
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
@@ -2631,16 +2628,13 @@ end revAddInclusion
 
 ------------------- SMART CHECKING --------------------
 
-command revSearchForInclusions pStack
+command revSearchForInclusions pStack, @xSettings
    -- Ensure all properties and patterns are initialised
    initialiseSearchForInclusions
    -- ensure revSBLibrary is in use
    start using stack "revSBLibrary"
-   --fetch and update the custom prop set
-   local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
-   revSmartChecking revRelativeStackFilesList(pStack), tSettings
-   set the customProperties["cRevStandaloneSettings"] of stack pStack to tSettings
+
+   revSmartChecking revRelativeStackFilesList(pStack), xSettings
 end revSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings

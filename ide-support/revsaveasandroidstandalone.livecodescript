@@ -84,6 +84,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    local tSettings
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
+   -- If we're searching for inclusions, do it here 
+   if tSettings["inclusions"] is "search" then 
+      dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pStack, tSettings
+   end if
+   
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
    revSBConvertSettingsForPlatform tSettings, "android"
