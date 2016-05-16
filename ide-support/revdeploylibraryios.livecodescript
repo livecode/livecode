@@ -387,7 +387,7 @@ function deployGetInvalidityMessage pIosXcodePairs
    //  pairs to list (as for now, 2 for Yosemite)
    repeat for each element tIosXcodePair in pIosXcodePairs
       if tIosToInstall is not empty then put " or " before tIosToInstall
-      if tIosList is not empy then put LF before tIosList
+      if tIosList is not empty then put LF before tIosList
       
       put item 1 of tIosXcodePair before tIosToInstall
       put "  - iOS" && item 1 of tIosXcodePair && "comes with Xcode" && item 2 of tIosXcodePair before tIosList
@@ -428,7 +428,6 @@ function deployCheckLatestSDKIsInstalled @rTooltip, @rAvailableSDKs
    end if
    
    put it into rAvailableSDKs
-   put tSDKStatus into rSDKStatus
    
    return tValid
 end deployCheckLatestSDKIsInstalled
@@ -532,7 +531,7 @@ function deployIsValidSDK pSDK
       return false
    end if
    
-   local tOldFolder, tSDKVersion, tValidSDK
+   local tOldFolder, tSDKVersion, tValidSDK, tSDKList
    put the defaultfolder into tOldFolder
    set the defaultfolder to pSDK & slash & "Platforms/iPhoneSimulator.platform/Developer/SDKs"
    
