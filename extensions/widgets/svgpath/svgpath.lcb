@@ -262,8 +262,6 @@ public handler OnCreate()
 	put false into mFlipVertically
 	put "non-zero" into mFillRule
 	setPathPreset("Star")
-
-	CalculateScaledSizes()
 end handler
 ----------
 
@@ -336,6 +334,7 @@ end handler
 
 public handler setMaintainAspectRatio(in pBoolean as Boolean)
 	put pBoolean into mMaintainAspectRatio
+	CalculateScaledSizes()
 	redraw all
 end handler
 
@@ -347,17 +346,20 @@ end handler
 public handler setPath(in pPath as String) returns nothing
 	put pPath into mPath
 	put "" into mPathName
+	CalculateScaledSizes()
 	redraw all
 end handler
 
 public handler setPathPreset(in pPresetName as String) returns nothing
 	put iconSVGPathFromName(pPresetName) into mPath
 	put pPresetName into mPathName
+	CalculateScaledSizes()
 	redraw all
 end handler
 
 public handler setAngle(in pAngle as Number) returns nothing
 	put pAngle into mAngle
+	CalculateScaledSizes()
 	redraw all
 end handler
 
