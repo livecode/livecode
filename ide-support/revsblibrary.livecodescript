@@ -1797,3 +1797,34 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
    put tStartupScript into xDeployParams["startup_script"]
    put tModules into xDeployParams["modules"]
 end revSBUpdateDeployParams
+
+command revSBRemoveInclusions pStack, pInclusions, pConfirm, @xSettings
+   local tName, tKey
+   repeat for each item tItem in pInclusions
+      put word 1 of tItem into tKey
+      put word 2 to -1 of tItem into tName
+      
+      local tInclude
+      put xSettings["overrideInclusions"][tName] into tInclude
+      if pConfirm and xSettings["overrideInclusions"][tName] is empty then
+         local tSilenceWarning
+         dispatch "revConfirmInclusion" to stack "revStandaloneSettings" with tName, tInclude, tSilenceWarning
+         
+         if tSilenceWarning then
+            local tOverride
+            put xSettings["overrideInclusions"] into tOverride
+            put tInclude into tOverride[tName]
+            set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
+            revSetEdited the short name of stack pStack
+         end if
+      end if
+      
+      if tInclude is not true then
+         local tLineNo
+         put lineOffset(tName, xSettings[tKey]) into tLineNo
+         if tLineNo is not 0 then
+            delete line tLineNo of xSettings[tKey]
+         end if
+      end if
+   end repeat
+end revSBRemoveInclusions

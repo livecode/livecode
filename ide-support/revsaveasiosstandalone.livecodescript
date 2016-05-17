@@ -81,7 +81,7 @@ private function linkingIsValid pLinkingOutput
    return true
 end linkingIsValid
    
-
+constant kBuiltInImplementations = "scriptLibraries Internet"
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
@@ -94,9 +94,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
    -- If we're searching for inclusions, do it here 
+   local tConfirm
+   put true into tConfirm
    if tSettings["inclusions"] is "search" then 
+      put false into tConfirm
       dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pStack, tSettings
    end if
+   
+   -- Manually remove built-in implementations from detected script library inclusions
+   revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
    
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
