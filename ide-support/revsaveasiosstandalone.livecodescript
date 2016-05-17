@@ -248,8 +248,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       revCopyMobileNewSplash tSettings, tBaseFolder, pAppBundle
    end if
    
-   local tPlist
-   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist
+   local tPlist, tCustomEntitlements
+   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
    -- Copy in the appropriate externals and drivers
@@ -651,16 +651,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
          throw "could not find a valid identity to use for the selected profile"
       end if
       
-      -- Determine what kind of profile is being used
-      if tProfileInfo["store"] then
-         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "StoreEntitlements.xcent")) into tEntitlements
-      else
-         put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Entitlements.xcent")) into tEntitlements
-      end if
+      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Entitlements.xcent")) into tEntitlements
       
       -- Construct the entitlements file
+      replace "${GET_TASK_ALLOW}" with not tProfileInfo["store"] in tEntitlements
       replace "${APP_IDENTIFIER}" with tProfileInfo["appid"] in tEntitlements
       replace "${BUNDLE_IDENTIFIER}" with tSettings["ios,bundle id"] in tEntitlements
+      replace "${CUSTOM_ENTITLEMENTS}" with tCustomEntitlements in tEntitlements
       
       -- MM-2012-02-12: Added support for push notificaitons entitlements
       if tSettings["ios,push notifications"] then
@@ -911,7 +908,7 @@ end revModifyMobileImageFile
 --   foobar/baz -> <base>/foobar/baz
 --   C:/foobar/baz -> <base>/baz
 --
-private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist
+private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
    revStandaloneProgress "Copying files..."
    
    -- Only use redirects in simulator 4.x
@@ -1000,6 +997,12 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
       if tSource ends with ".ttf" or tSource ends with ".ttc" then
          revSBCopyFileToFile tSource, tTarget, "revStandaloneProgressCallback", the long id of me
          put "font", tTarget & return after rFonts
+         next repeat
+      end if
+      
+      -- If the file is an entitlement then handle appropriately
+      if tSource ends with ".xcent" then
+         put url ("binfile:" & tSource) after rCustomEntitlements
          next repeat
       end if
       
