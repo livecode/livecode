@@ -148,7 +148,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #define WM_GRAPHNOTIFY (WM_APP + 1)   // Window message for graph events
-long FAR PASCAL DSHiddenWindowProc (HWND hWnd, UINT message, UINT wParam, LONG lParam)
+LRESULT CALLBACK DSHiddenWindowProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
 	{
@@ -158,15 +158,6 @@ long FAR PASCAL DSHiddenWindowProc (HWND hWnd, UINT message, UINT wParam, LONG l
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)t_create->lpCreateParams);
 		break;
 
-	//case WM_LBUTTONUP:
-	//	DispatchMetaCardMessage("XMediaPlayer_LMouseUp","");
-	//	break;
-	//case WM_RBUTTONUP:
-	//	DispatchMetaCardMessage("XMediaPlayer_RMouseUp","");
-	//	break;
-	//case WM_MOUSEMOVE:
-	//	DispatchMetaCardMessage("XMediaPlayer_MouseMove","");
-	//	break;
 	case WM_GRAPHNOTIFY:
 		{
 			MCWin32DSPlayer *whichplayer = (MCWin32DSPlayer *)lParam;
@@ -197,7 +188,7 @@ bool RegisterEventWindowClass()
 	{
 		// Register the Monitor child window class
 		wc.style         = CS_HREDRAW|CS_VREDRAW|CS_OWNDC|CS_SAVEBITS;
-		wc.lpfnWndProc   = (WNDPROC)DSHiddenWindowProc;
+		wc.lpfnWndProc   = DSHiddenWindowProc;
 		wc.cbClsExtra    = 0;
 		wc.cbWndExtra    = 0;
 		wc.hInstance     = MChInst;
@@ -212,7 +203,7 @@ bool RegisterEventWindowClass()
 	return windowclassregistered;
 }
 
-long FAR PASCAL DSVideoWindowProc(HWND hWnd, UINT message, UINT wParam, LONG lParam)
+LRESULT CALLBACK DSVideoWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message)
 	{
