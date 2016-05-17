@@ -1466,7 +1466,8 @@ private function revSBAvailableScriptLibraries
       put tLine into tLibrary["id"]
       put tLine into tLibrary["title"]
       put "script library" into tLibrary["type"]
-      put revSBAllDesktopPlatforms() into tLibrary["platforms"]
+      put revSBAllDesktopPlatforms() & comma & \ 
+            revSBAllMobilePlatforms() into tLibrary["platforms"]
       addToList tLibrary, tInclusions
    end repeat
    return tInclusions
