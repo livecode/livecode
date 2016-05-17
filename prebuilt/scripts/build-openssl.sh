@@ -11,7 +11,7 @@ cd "${BUILDDIR}"
 if [ ! -d "$OPENSSL_SRC" ] ; then
 	if [ ! -e "$OPENSSL_TGZ" ] ; then
 		echo "Fetching OpenSSL source"
-		curl http://www.openssl.org/source/openssl-${OpenSSL_VERSION}.tar.gz -o "${OPENSSL_TGZ}"
+		curl https://www.openssl.org/source/openssl-${OpenSSL_VERSION}.tar.gz -o "${OPENSSL_TGZ}"
 		if [ $? != 0 ] ; then
 			echo "    failed"
 			if [ -e "${OPENSSL_TGZ}" ] ; then 
