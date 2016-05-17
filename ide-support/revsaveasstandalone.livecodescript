@@ -124,6 +124,15 @@ on initialiseSearchForInclusions
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
    put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
    
+   repeat for each item tDBDriver in revIDEDatabaseDriversMapping()
+      local tDBName, tDB
+      put word 1 of tDBDriver into tDB
+      put word 2 to -1 of tDBDriver into tDBName
+      put "revOpenDatabase.*\(.*" & quote & tDB & quote & comma \
+            & "revdb_connect.*\(.*" & quote & tDB & quote into sPatternsA[tDBName]["Regex"]
+      put "databaseDrivers" into sPatternsA[tDBName]["Key"]
+   end repeat
+   
    put true into sInitialised
 end initialiseSearchForInclusions
 
@@ -254,7 +263,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put false into tEdited
    
    # Find out if the stack or any substack has been edited
-   global gREVStackStatus
    if gREVStackStatus[the short name of stack pStack] is "edited" then
       put true into tEdited
    else
@@ -275,7 +283,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # working.
    if folderNameIsIllegal(sStandaloneSettingsA["name"]) then
       put folderNameMakeLegal(sStandaloneSettingsA["name"]) into sStandaloneSettingsA["name"]
-      set the cRevStandaloneSettings["name"] of stack pStack to sStandaloneSettingsA["name"]
       put true into tEdited
       revStandaloneAddWarning "Standalone name was changed because it contained illegal characters"
    end if
@@ -296,20 +303,12 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put tFolder into pFolder
    put tFolder into sStandaloneSettingsA["defaultBuildFolder"]
    
-   -- Ensure the custom prop is set before we possible search for inclusions
-   set the customProperties["cRevStandaloneSettings"] of stack pStack to sStandaloneSettingsA
-   
    # Do the check and continue building as normal.
    if revSaveCheck(pStack) then
       revStandaloneProgress "Preparing to build standalone..."
       
       put the mainStack of stack pStack into pStack
       set the defaultStack to pStack
-      
-      -- If we're searching for inclusions, do it here 
-      if sStandaloneSettingsA["inclusions"] = "search" then 
-         revSearchForInclusions pStack
-      end if
       
       try
          -- Clear left over state information from previous build
@@ -462,6 +461,7 @@ private function revStandalonePlatformDetails pPlatform
    end switch
 
    -- SN-2015-03-04: [[ CloneAndRun ]] Refactor the setting of externals / support location
+   local tRuntimeFolder
    if revEnvironmentIsInstalled() then
       put revEnvironmentRuntimePath() & slash & tArchFolder into tRuntimeFolder
       put tRuntimeFolder & slash & "Support" into tDetailsA["support_folder"]
@@ -479,7 +479,12 @@ end revStandalonePlatformDetails
 
 private command revCreateStandalone pStack, pFolder
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
-   local tStackPath, tStackFileName, tDirectory, tStackSourceFile, tName, tStandaloneSettingsA
+   local tStackPath, tStackFileName, tDirectory, tStackSourceFile, tName
+   
+   -- If we're searching for inclusions, do it here 
+   if sStandaloneSettingsA["inclusions"] = "search" then 
+      revSearchForInclusions pStack, sStandaloneSettingsA
+   end if
    
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
@@ -507,19 +512,12 @@ private command revCreateStandalone pStack, pFolder
    set the itemDelimiter to slash
    
    put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
-   if tStandaloneSettingsA["Windows,iconFile"] = "" then 
-      put tName & "/genericapp.ico" into tStandaloneSettingsA["Windows,iconFile"]
-      -- OK-2007-12-14 : This block appears to be redundant.
-      --    if "Windows" is among the lines of sPlatformList and there is no file tStandaloneSettingsA["Windows,iconFile"] then
-      --      revStandaloneAddWarning "Windows, generic icon file not found:" && quote & tName & "/genericapp.ico" & quote
-      --    end if
+   if sStandaloneSettingsA["Windows,iconFile"] = "" then 
+      put tName & "/genericapp.ico" into sStandaloneSettingsA["Windows,iconFile"]
    end if
-   if tStandaloneSettingsA["Windows,documenticonFile"] = "" then 
-      put tName & "/genericdoc.ico" into tStandaloneSettingsA["Windows,documenticonFile"]
-      -- OK-2007-12-14 : This block appears to be redundant.
-      --    if "Windows" is among the lines of sPlatformList and there is no tStandaloneSettingsA["Windows,documenticonFile"] then
-      --      revStandaloneAddWarning "Windows, generic document icon not found:" && quote & tName & "/genericdoc.ico" & quote
-      --    end if
+   
+   if sStandaloneSettingsA["Windows,documenticonFile"] = "" then 
+      put tName & "/genericdoc.ico" into sStandaloneSettingsA["Windows,documenticonFile"]
    end if
    
    -- get all the stackfiles
@@ -692,9 +690,16 @@ private command revCreateStandalone pStack, pFolder
    
    -- copy resources (inclusions) to files
    revCopyResources pStack, tStackFileList
+   
+   -- keep a copy of the standalone settings to restore after each build
+   local tStandaloneSettingsA
+   put sStandaloneSettingsA into tStandaloneSettingsA
+   
    -- loop over the platforms to build
    put 1 into tCount
    repeat for each line tPlatform in sPlatformList
+      -- Ensure standalone settings script local is reset when building for subsequent platforms
+      put tStandaloneSettingsA into sStandaloneSettingsA
       -- Architectures
       local tArchitectures
       if tPlatform contains "MacOSX" then
@@ -2581,16 +2586,13 @@ end revAddInclusion
 
 ------------------- SMART CHECKING --------------------
 
-command revSearchForInclusions pStack
+command revSearchForInclusions pStack, @xSettings
    -- Ensure all properties and patterns are initialised
    initialiseSearchForInclusions
    -- ensure revSBLibrary is in use
    start using stack "revSBLibrary"
-   --fetch and update the custom prop set
-   local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
-   revSmartChecking revRelativeStackFilesList(pStack), tSettings
-   set the customProperties["cRevStandaloneSettings"] of stack pStack to tSettings
+
+   revSmartChecking revRelativeStackFilesList(pStack), xSettings
 end revSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings
@@ -2704,6 +2706,16 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          local tRoot
          repeat for each item tRoot in sPatternsA[tLib]["Root"]
             if lineOffset(tRoot,tScript) is not 0 then
+               revAddInclusion tLib, tSettingsKey, xSettings
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
+            end if
+         end repeat
+         
+         # Allow regex search patterns
+         local tRegex
+         repeat for each item tRegex in sPatternsA[tLib]["Regex"]
+            if matchText(tScript,tRegex) then
                revAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
