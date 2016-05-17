@@ -87,12 +87,6 @@ void MCNativeLayerWin32::doAttach()
 
 	// Restore the state of the widget (in case it changed due to a
 	// tool change while on another card - we don't get a message then)
-	m_rect = m_object->getrect();
-	if (m_object->getparent()->gettype() == CT_GROUP)
-		m_viewport_rect = ((MCGroup*)m_object->getparent())->getviewportgeometry();
-	else
-		m_viewport_rect = m_rect;
-
 	doSetViewportGeometry(m_viewport_rect);
 	doSetGeometry(m_rect);
 	doSetVisible(ShouldShowLayer());
@@ -109,7 +103,7 @@ void MCNativeLayerWin32::doDetach()
 bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 {
 	MCRectangle t_rect;
-	t_rect = m_object->getrect();
+	t_rect = m_rect;
 
 	bool t_success;
 	t_success = true;

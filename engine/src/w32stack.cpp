@@ -238,6 +238,24 @@ static RECT getwrect(MCRectangle rect, DWORD wstyle, DWORD exstyle)
 	return wrect;
 }
 
+struct MCNativeLayerReattachVisitor : public MCObjectVisitor
+{
+public:
+	virtual bool OnObject(MCObject *p_control)
+	{
+		MCNativeLayer *t_layer;
+		t_layer = p_control->getNativeLayer();
+		if (t_layer != nil && t_layer->isAttached())
+		{
+			// reattach native layer view to new window
+			t_layer->OnDetach();
+			t_layer->OnAttach();
+		}
+
+		return true;
+	}
+};
+
 // MW-2006-03-20: Bug 3316 - There seems absolutely no way of preventing flicker
 //   when transitioning from no alpha to alpha. Therefore, we need to create a new
 //   window opened *behind* the current window; show it; redraw it; then delete
@@ -324,19 +342,9 @@ void MCStack::setopacity(uint1 p_level)
 
 			SetWindowPos((HWND)window -> handle . window, t_old_window, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOREDRAW | SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_SHOWWINDOW);
 
-			MCPlayer *t_player;
-			for(t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
-				if (t_player -> getstack() == this)
-				{
-					MCNativeLayer *t_layer;
-					t_layer = t_player->getNativeLayer();
-					if (t_layer != nil && t_layer->isAttached())
-					{
-						// reattach native layer view to new window
-						t_layer->OnDetach();
-						t_layer->OnAttach();
-					}
-				}
+			// Reattach any native layers on this stack
+			MCNativeLayerReattachVisitor t_visitor;
+			visit_children(kMCObjectVisitorRecursive | kMCObjectVisitorHeirarchical, 0, &t_visitor);
 		}
 
 		if (p_level < 255)
