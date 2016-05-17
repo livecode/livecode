@@ -5,8 +5,9 @@
 	<key>application-identifier</key>
 	<string>${APP_IDENTIFIER}.${BUNDLE_IDENTIFIER}</string>
 	<key>get-task-allow</key>
-	<true/>
+	<${GET_TASK_ALLOW}/>
 	${REMOTE_NOTIFICATIONS}
 	${BETA_REPORT_ENTITLEMENT}
+	${CUSTOM_ENTITLEMENTS}
 </dict>
 </plist>
