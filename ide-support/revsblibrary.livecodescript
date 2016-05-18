@@ -1768,11 +1768,6 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
       end if
    end repeat
    
-   -- If the datagrid is used, then include the library as an aux stack
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      appendToStringList the effective filename of stack "revDataGridLibrary", tAuxiliaryStackFiles
-   end if
-   
    -- Make sure we include the initialisation library (at the top of the list) if needed
    if tAuxiliaryStackFiles is not empty then
       local tRevInitialisationLibrary
@@ -1792,6 +1787,11 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
          revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
          appendToStringList tTempStackFile, tResavedAux
       end repeat
+   end if
+   
+   -- If the datagrid is used, then include the library as an aux stack
+   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      appendToStringList the effective filename of stack "revDataGridLibrary", tResavedAux
    end if
    
    put tResavedAux into xDeployParams["auxiliary_stackfiles"]
