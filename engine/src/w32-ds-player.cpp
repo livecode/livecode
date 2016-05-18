@@ -621,6 +621,9 @@ bool MCWin32DSPlayer::GetDuration(uint32_t &r_duration)
 	if (S_OK != m_seeking->GetDuration(&t_duration))
 		return false;
 
+	if (t_duration > UINT32_MAX)
+		return false;
+
 	r_duration = (uint32_t)t_duration;
 	return true;
 }
@@ -632,6 +635,9 @@ bool MCWin32DSPlayer::GetCurrentPosition(uint32_t &r_position)
 
 	LONGLONG t_current;
 	if (S_OK != m_seeking->GetCurrentPosition(&t_current))
+		return false;
+
+	if (t_current > UINT32_MAX)
 		return false;
 
 	r_position = t_current;
@@ -736,6 +742,9 @@ bool MCWin32DSPlayer::GetLoadedPosition(uint32_t &r_loaded)
 
 	LONGLONG t_start, t_end;
 	if (S_OK != m_seeking->GetAvailable(&t_start, &t_end))
+		return false;
+
+	if (t_end > UINT32_MAX)
 		return false;
 
 	r_loaded = t_end;
