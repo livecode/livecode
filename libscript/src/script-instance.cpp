@@ -662,6 +662,11 @@ static inline bool MCScriptIsConstantValidInFrame(MCScriptFrame *p_frame, int p_
     return p_constant >= 0 && p_constant < p_frame -> instance -> module -> value_count;
 }
 
+static inline MCTypeInfoRef MCScriptGetSignatureForFrame(MCScriptFrame *p_frame)
+{
+	return p_frame->instance->module->types[p_frame->handler->type]->typeinfo;
+}
+
 static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_instance, MCScriptHandlerDefinition *p_handler, MCScriptFrame*& r_frame)
 {
     MCScriptFrame *self;
@@ -685,6 +690,111 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
     r_frame = self;
     
     return true;
+}
+
+static bool
+MCScriptFrameInitializeParametersCaller(MCScriptFrame *self,
+                                        uindex_t *p_arguments,
+                                        uindex_t p_arity)
+{
+	MCTypeInfoRef t_signature = MCScriptGetSignatureForFrame(self);
+
+	bool t_needs_mapping = false;
+
+	for (uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); ++i)
+	{
+		MCHandlerTypeFieldMode t_mode =
+			MCHandlerTypeInfoGetParameterMode(t_signature, i);
+
+		MCValueRef t_value;
+		if (t_mode != kMCHandlerTypeFieldModeOut)
+		{
+			t_value = self->caller->slots[p_arguments[i]];
+		}
+		else
+		{
+			t_value = kMCNull;
+		}
+
+		MCValueAssign(self->slots[i], t_value);
+
+		if (t_mode != kMCHandlerTypeFieldModeIn)
+		{
+			t_needs_mapping = true;
+		}
+	}
+
+	if (t_needs_mapping)
+	{
+		if (!MCMemoryNewArray(p_arity, self->mapping))
+		{
+			return false;
+		}
+
+		MCMemoryCopy(self->mapping, p_arguments, p_arity * sizeof(*p_arguments));
+	}
+
+	return true;
+}
+
+static bool
+MCScriptFrameInitializeParametersImmediate(MCScriptFrame *self,
+                                           MCValueRef *p_arguments,
+                                           uindex_t p_arity)
+{
+	MCTypeInfoRef t_signature = MCScriptGetSignatureForFrame(self);
+	uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
+
+	for (uindex_t i = 0; i < MCMin(p_arity, t_param_count); ++i)
+	{
+		MCHandlerTypeFieldMode t_mode =
+			MCHandlerTypeInfoGetParameterMode(t_signature, i);
+
+		MCValueRef t_value;
+		if (t_mode != kMCHandlerTypeFieldModeOut)
+		{
+			t_value = p_arguments[i];
+		}
+		else
+		{
+			t_value = kMCNull;
+		}
+
+		MCValueAssign(self->slots[i], t_value);
+	}
+
+	return true;
+}
+
+static bool
+MCScriptFrameInitializeSlots(MCScriptFrame *self)
+{
+	MCTypeInfoRef t_signature = MCScriptGetSignatureForFrame(self);
+	uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
+
+	for (uindex_t i = t_param_count; i < self->handler->slot_count; ++i)
+	{
+		MCTypeInfoRef t_slot_type = nil;
+		if (i < t_param_count + self->handler->local_type_count)
+		{
+			t_slot_type = self->instance->module->types[self->handler->local_types[i - t_param_count]]->typeinfo;
+		}
+
+		MCValueRef t_default = nil;
+		if (nil != t_slot_type)
+		{
+			t_default = MCTypeInfoGetDefault(t_slot_type);
+		}
+
+		if (nil == t_default)
+		{
+			t_default = kMCNull;
+		}
+
+		MCValueAssign(self->slots[i], t_default);
+	}
+
+	return true;
 }
 
 static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *self)
@@ -913,40 +1023,14 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
     MCScriptFrame *t_callee;
     if (!MCScriptCreateFrame(x_frame, p_instance, p_handler, t_callee))
         return false;
-    
-    // We need to record a mapping vector if we have any out parameters.
-    bool t_needs_mapping;
-    t_needs_mapping = false;
 
-    // Fetch the parameter values and store them in the appropriate slots. The
-    // parameters are always the first 'arity' slots in the frame.
-    for(int i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
-    {
-        MCHandlerTypeFieldMode t_mode;
-        t_mode = MCHandlerTypeInfoGetParameterMode(t_signature, i);
-        
-        MCValueRef t_value;
-        if (t_mode != kMCHandlerTypeFieldModeOut)
-            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i]);
-        else
-            t_value = kMCNull;
-        
-        if (t_mode != kMCHandlerTypeFieldModeIn)
-            t_needs_mapping = true;
-        
-        MCValueAssign(t_callee -> slots[i], t_value);
-    }
-    
-    if (t_needs_mapping)
-    {
-        if (!MCMemoryNewArray(p_arity, t_callee -> mapping))
-		{
-			MCScriptDestroyFrame (t_callee);
-            return false;
-		}
-        
-        MCMemoryCopy(t_callee -> mapping, p_arguments, sizeof(int) * p_arity);
-    }
+	if (!MCScriptFrameInitializeParametersCaller(t_callee,
+	                                             p_arguments, p_arity) ||
+	    !MCScriptFrameInitializeSlots(t_callee))
+	{
+		MCScriptDestroyFrame(t_callee);
+		return false;
+	}
     
     t_callee -> result = t_result_reg;
     
@@ -1852,21 +1936,12 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     MCScriptFrame *t_frame;
     if (!MCScriptCreateFrame(nil, self, p_handler, t_frame))
         return false;
-    
-    MCTypeInfoRef t_signature;
-    t_signature = self -> module -> types[p_handler -> type] -> typeinfo;
-    
-    // Populate the parameter slots in the frame with the input arguments. These
-    // are always the first <arg-count> slots.
-    for(uindex_t i = 0; i < p_argument_count; i++)
+
+    if (!MCScriptFrameInitializeParametersImmediate(t_frame, p_arguments, p_argument_count) ||
+        !MCScriptFrameInitializeSlots(t_frame))
     {
-        MCValueRef t_value;
-        if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeOut)
-            t_value = MCValueRetain(p_arguments[i]);
-        else
-            t_value = MCValueRetain(kMCNull);
-        
-        t_frame -> slots[i] = t_value;
+	    MCScriptDestroyFrame(t_frame);
+	    return false;
     }
 
     bool t_success;
