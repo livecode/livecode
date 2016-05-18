@@ -24,7 +24,7 @@ put "This is some text & return & this is some more text" into fld "myFld"
 repeat for each item tIndent in "firstIndent,leftIndent,rightIndent"
   TestAssert "getting the effective " & tIndent, the effective tIndent of line 2 of fld "myFld" is 0
   
-  put random(5) to tIndentValue
+  put random(5) into tIndentValue
   set the tIndent of line 1 of fld "myFld" to tIndentValue
   TestAssert "setting the " & tIndent & " of line 1 of field", the tIndent of line 1 of fld "myFld" is tIndentValue
 end repeat
