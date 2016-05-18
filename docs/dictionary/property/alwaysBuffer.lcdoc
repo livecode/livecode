@@ -39,6 +39,9 @@ If a player's <alwaysBuffer> is false, the movie it contains is drawn in front o
 
 >*Note:* Setting a <player(object)|player's> <alwaysBuffer> to true always increases memory usage, and may make movie playing more jerky.
 
+Changes:
+This property was removed from the Windows platform in version 8.1.0, due to the change of player implementation from QuickTime to DirectShow.
+
 References: screenSharedMemory (property), dontUseQT property (property), script (property), constantMask (property), bufferHiddenImages (property), card (keyword), player (keyword), image (keyword), default (keyword), rectangle (keyword), control (keyword), visual effect (command), show (command), lock screen (command), global (command), heapSpace (function), stacks (function), hasMemory (function), button (object), image (object), player (object), object (glossary), stack (object), property (glossary), uncompress (glossary), controller bar (glossary), buffer (glossary), command (glossary), redraw (glossary)
 
 Tags: multimedia

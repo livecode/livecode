@@ -31,6 +31,9 @@ When an interval number is reached during playback, LiveCode sends the correspon
 
 The number of intervals per second is specified by the player's <timeScale> <property>. The total number of intervals is given in the <player(object)|player's> <duration> <property>.
 
+Changes:
+This property was removed from the Windows platform in version 8.1.0, due to the change of player implementation from QuickTime to DirectShow.
+
 References: timeScale (property), duration (property), currentTime (property), playRate (property), player (keyword), currentTimeChanged (message), send (command), play (command), player (object), property (glossary), synchronize (glossary), message (glossary), callback (glossary), player (glossary)
 
 Tags: multimedia

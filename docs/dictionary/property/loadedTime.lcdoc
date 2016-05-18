@@ -22,6 +22,9 @@ Value: The <loadedTime> of a <player> is an integer.
 Description:
 Use the <loadedTime> <property> to find out up to which time a movie or sound can be played.
 
+Changes:
+Support for this property on Windows was added in version 8.1.0.
+
 References: looping (property), endTime (property), showSelection (property), callbacks (property), startTime (property), property (glossary), player (keyword)
 
 Tags: multimedia

@@ -28,6 +28,9 @@ Use the <tracks> <property> to find out the contents of a <QuickTime> movie.
 
 A movie can contain multiple tracks intended to be played at the same time (for example, an audio and a video track), or tracks that are separate (for example, an alternative audio track). You specify which tracks are active using the enabledTracks <property>.
 
+Changes:
+This property was removed from the Windows platform in version 8.1.0, due to the change of player implementation from QuickTime to DirectShow.
+
 References: trackCount (property), QuickTime (glossary), property (glossary), items (keyword), line (keyword)
 
 Tags: multimedia
