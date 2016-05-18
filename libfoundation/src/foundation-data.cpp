@@ -775,16 +775,21 @@ bool MCDataEndsWith(MCDataRef p_data, MCDataRef p_needle)
 }
 
 MC_DLLEXPORT_DEF
-bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, uindex_t& r_index)
+bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range, uindex_t& r_index)
 {
 	__MCAssertIsData(p_data);
 	__MCAssertIsData(p_chunk);
-
-    __MCDataClampRange(p_data, t_range);
+	
+	__MCDataClampRange(p_data, p_range);
+	
+	if (p_range.length == 0)
+		return false;
     
     uindex_t t_limit, t_chunk_byte_count;
     t_chunk_byte_count = MCDataGetLength(p_chunk);
-    t_limit = t_range . offset + t_range . length - t_chunk_byte_count + 1;
+	if (t_chunk_byte_count == 0)
+		return false;
+    t_limit = p_range . offset + p_range . length - t_chunk_byte_count + 1;
     
     const byte_t *t_bytes = MCDataGetBytePtr(p_data);
     const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
@@ -795,10 +800,10 @@ bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange t_range, ui
     bool t_found;
     t_found = false;
     
-    for (t_offset = t_range . offset; t_offset < t_limit; t_offset++)
+    for (t_offset = p_range . offset; t_offset < t_limit; t_offset++)
         if (MCMemoryCompare(t_bytes + t_offset, t_chunk_bytes, sizeof(byte_t) * t_chunk_byte_count) == 0)
         {
-            t_result = t_offset - t_range . offset;
+            t_result = t_offset - p_range . offset;
             t_found = true;
             break;
         }

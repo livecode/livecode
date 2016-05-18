@@ -899,6 +899,25 @@ end revModifyMobileImageFile
 
 ################################################################################
 
+private command addToManifest pFile, pName, pAppBundle, @xManifest, @xRedirects
+   if pName contains "//" or pName contains tab then
+      local tWarning
+      put "File/folder to include in standalone contains invalid chars (tab or //):" into tWarning
+      revStandaloneAddWarning tWarning && quote & pFile & quote
+      exit addToManifest
+   end if
+   
+   if there is a file pFile then
+      put pAppBundle & slash & pName & tab & pFile & return after xManifest
+      put pName & "//" & pFile & return after xRedirects
+   else if there is a folder pFile then
+      revCopyMobileFilesComputeFolderManifest xManifest, pFile, pAppBundle & slash & pName
+      put pName & "//" & pFile & return after xRedirects
+   else
+      revStandaloneAddWarning "File/folder to include in standalone not found:" && quote & pFile & quote
+   end if
+end addToManifest
+
 -- The files list from the standalone builder contains relative and absolute references.
 --
 -- Relative references get copied and keep their folder structure.
@@ -931,7 +950,29 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    local tManifest
    set the itemDelimiter to slash
    repeat for each line tFile in pFiles
-      revSBResolveIncludedExternal "ios", tFile
+	  local tResolved
+	  put tFile into tResolved
+      revSBResolveIncludedExternal "ios", tResolved
+      
+      if tResolved is not tFile then
+         -- if this was a !-prefixed external and there is a resources 
+         -- folder, add everything in it to the top level of the app 
+         -- bundle
+         local tResources
+         put item 1 to -2 of tResolved & slash & "resources" into tResources
+         if there is a folder tResources then
+            local tContents
+            put revSBEnumerateFolder(tResources, false) into tContents
+            repeat for each line tLine in tContents
+               -- addToManifest deals with subfolders, but we need them sans slash
+               if tLine ends with "/" then
+                  put char 1 to -2 of tLine into tLine
+               end if
+               addToManifest tResources & slash & tLine, item -1 of tLine, pAppBundle, tManifest, rRedirects
+            end repeat
+         end if
+         put tResolved into tFile
+      end if
       
       local tIsAbsolute, tName
       put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute
@@ -959,15 +1000,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
          end if
       end repeat
       
-      if there is a file tFile then
-         put pAppBundle & slash & tName & tab & tFile & return after tManifest
-         put tName & "//" & tFile & return after rRedirects
-      else if there is a folder tFile then
-         revCopyMobileFilesComputeFolderManifest tManifest, tFile, pAppBundle & slash & tName
-         put tName & "//" & tFile & return after rRedirects
-      else
-         revStandaloneAddWarning "File/folder to include in standalone not found:" && quote & tFile & quote
-      end if
+      addToManifest tFile, tName, pAppBundle, tManifest, rRedirects
    end repeat
    
    -- Remove trailing delimiter
