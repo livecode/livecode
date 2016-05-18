@@ -2931,7 +2931,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
 			MCImageBitmap *t_bitmap = nil;
 			
-			if (MCPlatformLockPlayerBitmap(m_platform_player, t_transformed_rect.width, t_transformed_rect.height, t_bitmap))
+			if (MCPlatformLockPlayerBitmap(m_platform_player, MCGIntegerSizeMake(t_transformed_rect.width, t_transformed_rect.height), t_bitmap))
 			{
 				MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
 				

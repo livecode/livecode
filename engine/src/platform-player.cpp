@@ -103,9 +103,9 @@ void MCPlatformStopPlayer(MCPlatformPlayerRef player)
 	player -> Stop();
 }
 
-bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap)
+bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap)
 {
-	return player -> LockBitmap(p_width, p_height, r_bitmap);
+	return player -> LockBitmap(p_size, r_bitmap);
 }
 
 void MCPlatformUnlockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap *bitmap)

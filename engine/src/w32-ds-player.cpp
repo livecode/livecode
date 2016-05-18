@@ -65,7 +65,7 @@ public:
 	virtual void Stop(void);
 	virtual void Step(int amount);
 	
-	virtual bool LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap);
+	virtual bool LockBitmap(const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap);
 	virtual void UnlockBitmap(MCImageBitmap *bitmap);
 	
 	virtual void SetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
@@ -1205,7 +1205,7 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWin32DSPlayer::LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap)
+bool MCWin32DSPlayer::LockBitmap(const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap)
 {
 	// TODO implement offscreen rendering
 	return false;

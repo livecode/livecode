@@ -1023,7 +1023,7 @@ void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate);
 //void MCPlatformFastBackPlayer(MCPlatformPlayerRef player);
 void MCPlatformStopPlayer(MCPlatformPlayerRef player);
 
-bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap);
+bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap);
 void MCPlatformUnlockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap *bitmap);
 
 void MCPlatformSetPlayerProperty(MCPlatformPlayerRef player, MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);

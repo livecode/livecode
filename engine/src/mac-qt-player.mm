@@ -78,7 +78,7 @@ public:
     virtual void Stop(void);
     virtual void Step(int amount);
     
-    virtual bool LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap);
+    virtual bool LockBitmap(const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap);
     virtual void UnlockBitmap(MCImageBitmap *bitmap);
     
     virtual void SetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
@@ -633,12 +633,12 @@ void MCQTKitPlayer::Step(int amount)
 }
 
 extern bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap);
-bool MCQTKitPlayer::LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap)
+bool MCQTKitPlayer::LockBitmap(const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap)
 {
 	if (m_current_frame == nil)
 		return false;
 	
-	return MCMacPlayerSnapshotCVImageBuffer(m_current_frame, p_width, p_height, m_mirrored, r_bitmap);
+	return MCMacPlayerSnapshotCVImageBuffer(m_current_frame, p_size.width, p_size.height, m_mirrored, r_bitmap);
 }
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
