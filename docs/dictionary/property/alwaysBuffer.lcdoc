@@ -23,12 +23,12 @@ set the alwaysBuffer of image "Smile" to false
 Example:
 set the alwaysBuffer of the templatePlayer to true
 
-Value (bool): The <alwaysBuffer> of an <object> is true or false. By <default>, 
+Value (bool): The <alwaysBuffer> of an <object(glossary)> is true or false. By <default>, 
 the <alwaysBuffer> <property> of newly created <image|images>, <player|players>, 
 and <stack|stacks> is set to false.
 
 Description:
-Use the <alwaysBuffer> <property> to eliminate unwanted flicker when <object|objects> are 
+Use the <alwaysBuffer> <property> to eliminate unwanted flicker when <object(glossary)|objects> are 
 being <redraw|redrawn>. This <property> is especially useful for eliminating flicker when 
 using animation in a <stack>.
 
@@ -47,7 +47,7 @@ Setting a <player|player's> <alwaysBuffer> <property> to true forces the movie t
 are drawn on top of it. It also allows the current frame to be seen when the <card> is printed.
 
 If a <player|player's> movie contains only sound with no visual track, the setting of its <alwaysBuffer> <property> has no effect.
-If a <player|player's> <alwaysBuffer> is false, the movie it contains is drawn in front of all <object|objects>. 
+If a <player|player's> <alwaysBuffer> is false, the movie it contains is drawn in front of all <object(glossary)|objects>. 
 The <visual effect> <command> does not affect the screen area inside the <rectangle> of a <player> 
 whose <alwaysBuffer> is false. If a <player|player's> <alwaysBuffer> is true, it cannot be controlled with the 
 <controller bar> and must be operated by <script> control.
