@@ -135,8 +135,40 @@ bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstance
     
     if (t_success)
     {
+        /* Loop over all of the variables of the module, initialising
+         * the corresponding slot to a default value of the
+         * appropriate type, if available. */
+	    for (uindex_t i = 0; i < p_module->definition_count; ++i)
+	    {
+		    if (p_module->definitions[i]->kind != kMCScriptDefinitionKindVariable)
+			    continue; /* Not a variable */
+
+		    MCScriptVariableDefinition *t_variable =
+			    static_cast<MCScriptVariableDefinition *>(p_module->definitions[i]);
+
+		    uindex_t t_slot_index = t_variable->slot_index;
+		    /* COMPUTE CHECK */ __MCScriptAssert__(t_slot_index < p_module->slot_count,
+		                                           "computed variable slot out of range");
+
+		    MCTypeInfoRef t_type = p_module->types[t_variable->type]->typeinfo;
+		    if (nil == t_type)
+			    continue; /* Variable is untyped */
+
+		    MCValueRef t_default = MCTypeInfoGetDefault(t_type);
+		    if (nil == t_default)
+			    continue; /* Type has no default value */
+
+		    t_instance->slots[t_slot_index] = MCValueRetain(t_default);
+	    }
+	    
+	    /* Fill in all remaining slots with null values */
         for(uindex_t i = 0; i < p_module -> slot_count; i++)
-            t_instance -> slots[i] = MCValueRetain(kMCNull);
+        {
+	        if (nil == t_instance->slots[i])
+	        {
+		        t_instance -> slots[i] = MCValueRetain(kMCNull);
+	        }
+        }
 
         // If this is a module which shares its instance, then add a link to it.
         // (Note this is weak reference - we don't retain, otherwise we would have

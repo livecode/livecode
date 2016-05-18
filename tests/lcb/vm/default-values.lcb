@@ -1,5 +1,9 @@
 module __VMTEST.default_values
 
+variable sBoolean as Boolean
+variable sOptionalString as optional String
+variable sVariant
+
 public handler TestDefaultValueOfBoolean()
 	variable tBoolean as Boolean
 	test "default value (boolean)" when tBoolean is false
@@ -35,6 +39,12 @@ end handler
 public handler TestDefaultValueOfUntyped()
 	variable tVar
 	test "default value (untyped)" when tVar is nothing
+end handler
+
+public handler TestDefaultValueOfModuleVariable()
+	test "default value (boolean)" when sBoolean is false
+	test "default value (optional)" when sOptionalString is nothing
+	test "default value (untyped)" when sVariant is nothing
 end handler
 
 end module
