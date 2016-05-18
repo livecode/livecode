@@ -2312,6 +2312,28 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
             }
         }
             break;
+		
+		// PM-2016-05-18: [[ Bug 17666 ]] Handle case of kMCPropertyTypeMixedInt16
+		case kMCPropertyTypeMixedInt16:
+        {
+            bool t_mixed;
+            integer_t t_value;
+            ((void(*)(MCExecContext&, void *, bool&, integer_t&))prop -> getter)(ctxt, mark, t_mixed, t_value);
+            if (!ctxt . HasError())
+            {
+                if (t_mixed)
+                {
+                    r_value . stringref_value = MCSTR(MCmixedstring);
+                    r_value . type = kMCExecValueTypeStringRef;
+                }
+                else
+                {
+                    r_value . int_value = t_value;
+                    r_value . type = kMCExecValueTypeInt;
+                }
+            }
+        }
+            break;
         
         case kMCPropertyTypeMixedOptionalBool:
         {
