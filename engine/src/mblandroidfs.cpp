@@ -510,7 +510,7 @@ bool MCAndroidSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolder
 {
 	MCAutoStringRef t_apk_folder;
 	if ((p_folder == nil && apk_get_current_folder (&t_apk_folder)) ||
-		path_to_apk_path (p_folder, &t_apk_folder))
+		(p_folder != nil && path_to_apk_path (p_folder, &t_apk_folder)))
 		return apk_list_folder_entries (*t_apk_folder, p_callback, p_context);
 
 	MCAutoStringRefAsUTF8String t_path;
