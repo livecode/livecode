@@ -1725,59 +1725,70 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
             MCValueRelease(t_chunks[i] . mark . text);
         }
 	}
-    else if (targets != nil && targets -> istextchunk())
-	{
-		MCAutoArray<MCObjectChunkPtr> t_chunks;
-        bool t_return;
-        t_return = false;
-        for(MCChunk *t_chunk = targets; t_chunk != nil && !t_return; t_chunk = t_chunk -> next)
-		{
-			if (!t_chunk -> istextchunk())
-			{
-                ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
-                t_return = true;
-                break;
-			}
-            
-			MCObjectChunkPtr t_obj_chunk;
-            if (!t_chunk -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
-            {
-                t_return = true;
-                break;
-            }
-            
-			if (!t_chunks . Push(t_obj_chunk))
-			{
-                ctxt . LegacyThrow(EE_NO_MEMORY);
-                MCValueRelease(t_obj_chunk . mark . text);
-				break;
-			}
-		}
-
-        if (!t_return)
-            MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
-
-        for (uindex_t i = 0; i < t_chunks . Size(); ++i)
-            MCValueRelease(t_chunks[i] . mark . text);
-	}
     else if (targets != nil)
 	{
-		MCAutoArray<MCObjectPtr> t_objects;
-		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
-		{
-			MCObjectPtr t_object;
-            if (!t_chunk -> getobj(ctxt, t_object, True))
-                return;
-				            
-			if (!t_objects . Push(t_object))
-			{
-                ctxt . LegacyThrow(EE_NO_MEMORY);
-                break;
-			}
-		}
+        // Parse the first chunk before determining if we have a text
+        // chunk or not - otherwise things like 'delete tVar' where
+        // tVar contains 'line x of field y' do not go through the
+        // correct code path.
+        MCObjectPtr t_first_object;
+        if (!targets -> getobj(ctxt, t_first_object, True))
+            return;
         
-		MCInterfaceExecDeleteObjects(ctxt, t_objects . Ptr(), t_objects . Size());
-	}
+        if (targets -> istextchunk())
+        {
+            MCAutoArray<MCObjectChunkPtr> t_chunks;
+            bool t_return;
+            t_return = false;
+            for(MCChunk *t_chunk = targets; t_chunk != nil && !t_return; t_chunk = t_chunk -> next)
+            {
+                if (!t_chunk -> istextchunk())
+                {
+                    ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
+                    t_return = true;
+                    break;
+                }
+                
+                MCObjectChunkPtr t_obj_chunk;
+                if (!t_chunk -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
+                {
+                    t_return = true;
+                    break;
+                }
+                
+                if (!t_chunks . Push(t_obj_chunk))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    MCValueRelease(t_obj_chunk . mark . text);
+                    break;
+                }
+            }
+            
+            if (!t_return)
+                MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
+            
+            for (uindex_t i = 0; i < t_chunks . Size(); ++i)
+                MCValueRelease(t_chunks[i] . mark . text);
+        }
+        else
+        {
+            MCAutoArray<MCObjectPtr> t_objects;
+            for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+            {
+                MCObjectPtr t_object;
+                if (!t_chunk -> getobj(ctxt, t_object, True))
+                    return;
+                
+                if (!t_objects . Push(t_object))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    break;
+                }
+            }
+            
+            MCInterfaceExecDeleteObjects(ctxt, t_objects . Ptr(), t_objects . Size());
+        }
+    }
     else if (session)
 	{
 #ifdef _SERVER
