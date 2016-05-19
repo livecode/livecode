@@ -129,8 +129,10 @@ Once the document is open for editing you can begin to make changes. You probabl
   - Read through element sections and correct confusing wording, misspelled words, grammatical errors, etc.
 
 #### [ ] Dictionary Style Conventions:
-  - Notes indented (blockquoted) and the word *Note* italicized.
+  - Notes indented (blockquoted) and the word *Note* italicized:
+
   >&gt;&#42;Note:&#42; Yada yada.
+  
   - Code blocks (outside of the Example element) should be properly formatted by inserting 4 leading spaces before each line.
   - Inline code references designated by \`back ticks\`.
   - Are &#42;&#42;bold&#42;&#42; and &#42;italic&#42; tagging used appropriately, but not over-used?
