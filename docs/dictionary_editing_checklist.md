@@ -12,6 +12,7 @@ If you're like me, by this point your head is swimming with all the information 
 >*Note:* This checklist assumes you are using the [GitHub web interface](https://github.com). It is assumed that if you are familiar with another Git interface you will be able to transfer these instructions to that interface. 
 
 ### [ ] Find a dictionary entry you think needs improving
+
 There are several ways of doing this. Let me suggest a few here:
 
 * Check the [list of Documentation bugs in LiveCode's bug tracker](http://quality.livecode.com/buglist.cgi?resolution=---&query_format=advanced&token=1452855087-20cfd8992ae1a7b6dc3560a4a0aad511&bug_status=CONFIRMED&component=Documentation&list_id=55772). Fixing these bugs not only improves the documentation, but also makes the reporter of the bug happy. *If you fix one of these, don't forget to add a bug fix release note!*
