@@ -6,7 +6,7 @@ Syntax: set the borderPattern of <object> to {empty | <patternID> | <imageID>}
 
 Summary: Specifies the pattern of an <object|object's> border.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

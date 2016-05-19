@@ -10,7 +10,7 @@ Summary: Specifies the vertical scroll of a <field>, <group>, or <stack>.
 
 Synonyms: scroll
 
-Associations: field
+Associations: field,group
 
 Introduced: 1.0
 

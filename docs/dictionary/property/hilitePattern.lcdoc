@@ -8,7 +8,7 @@ Summary: Specifies the fill pattern used for the background when an <object(glos
 
 Synonyms: markerPattern,thirdPattern
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

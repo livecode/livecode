@@ -6,7 +6,7 @@ Syntax: set the leftMargin of {<button> | <field> | <group>} to <pixels>
 
 Summary: Specifies how close text within an <object(glossary)> can come to the <object|object's> left edge, and how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> left edge.
 
-Associations: button
+Associations: button,field,group
 
 Introduced: 1.0
 

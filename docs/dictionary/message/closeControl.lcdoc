@@ -6,6 +6,8 @@ Syntax: closeControl
 
 Summary: Sent to a <group> when the user is leaving the <card> that contains it.
 
+Associations: group
+
 Introduced: 3.5
 
 OS: mac,windows,linux,ios,android

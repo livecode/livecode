@@ -6,6 +6,8 @@ Syntax: set the lockUpdates of <group> to {true | false}
 
 Summary: When a control within a group is resized or moved it causes all parents to recalculate their bounds appropriately. The lockUpdates property of the group prevents this behavior.
 
+Associations: group
+
 Introduced: 6.1
 
 OS: mac,windows,linux,ios,android

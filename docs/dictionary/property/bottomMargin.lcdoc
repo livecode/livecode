@@ -6,6 +6,8 @@ Syntax: set the bottomMargin of {<button> | <field> | <group>} to <pixels>
 
 Summary: Specifies how close text within an <object(glossary)> can come to the <object|object's> lower edge, and how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> lower edge.
 
+Associations: button,field,group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

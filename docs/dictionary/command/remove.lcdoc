@@ -6,6 +6,8 @@ Syntax: remove <group> from <card>
 
 Summary: Deletes a group from a specified card.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

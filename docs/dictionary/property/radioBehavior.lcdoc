@@ -6,6 +6,8 @@ Syntax: set the radioBehavior of <group> to {true | false}
 
 Summary: Specifies that only one <radio button> in a <group> can be <highlight|highlighted> at a time.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

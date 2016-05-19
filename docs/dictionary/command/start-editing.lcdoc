@@ -6,6 +6,8 @@ Syntax: start editing <group> [of <stack>]
 
 Summary: Puts a <stack> into group-editing mode.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

@@ -6,6 +6,8 @@ Syntax: set the boundingRect of <group> to {<left>, <top>, <right>, <bottom> | e
 
 Summary: Specifies whether a <group> automatically changes size to fit when its <control|controls> are moved or resized.
 
+Associations: group
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

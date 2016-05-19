@@ -8,6 +8,8 @@ Syntax: get the formattedRect of <chunk> of <field>
 
 Summary: Reports the rectangle that surrounds all the <object|objects> in a <card> or <group>.
 
+Associations: field,group,card
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

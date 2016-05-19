@@ -8,7 +8,7 @@ Syntax: get the [{ long | abbr[ev[iated]] | short }] ID of <object>
 
 Summary: Reports the unique ID number assigned to an <object(glossary)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

@@ -6,7 +6,7 @@ Syntax: set the showName of {<button> | <graphic> | <group>} to {true | false}
 
 Summary: Specifies whether an <object|object's> name is displayed within it.
 
-Associations: button
+Associations: button,graphic,group
 
 Introduced: 1.0
 
