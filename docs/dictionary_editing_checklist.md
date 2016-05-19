@@ -129,7 +129,7 @@ Once the document is open for editing you can begin to make changes. You probabl
   - Read through element sections and correct confusing wording, misspelled words, grammatical errors, etc.
 
 #### [ ] Dictionary Style Conventions:
-  - Notes indented (blockquoted) and the word *Note* italicized:
+  - Notes indented (blockquoted) and the word *Note* italicized.
   >&gt;&#42;Note:&#42; Yada yada.
   - Code blocks (outside of the Example element) should be properly formatted by inserting 4 leading spaces before each line.
   - Inline code references designated by \`back ticks\`.
@@ -143,6 +143,7 @@ This is covered thoroughly in [Contributing to LiveCode Documentation](https://g
 Directly beneath the editing section there is a **Propose file change** section.
  
   - Name the change appropriately. Normally something like this:
+  
   > [[ Community Docs ]] entryName various fixes
   - If more than one change has been made, summarize the changes made in the content area beneath the title.
 
