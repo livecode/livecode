@@ -1,15 +1,23 @@
 # Setup
 ## Installation
 
-Each version of LiveCode installs to its own, separate folder, to allow multiple versions of LiveCode to be installed side-by-side.  On Windows (and Linux), each version of LiveCode has its own Start Menu (or application menu) entry, and on Mac OS X, each version has its own app bundle.
+Each version of LiveCode installs can be installed to its own,
+separate folder.  This allow multiple versions of LiveCode to be
+installed side-by-side.  On Windows (and Linux), each version of
+LiveCode has its own Start Menu (or application menu) entry. On Mac OS
+X, each version has its own app bundle.
 
-The default installation locations when installing for "All Users" are:
+On Mac OS X, install LiveCode by mounting the `.dmg` file and dragging
+the app bundle to the `Applications` folder (or any other suitable
+location).
+
+For Windows and Linux, the default installation locations when
+installing for "All Users" are:
 
 | Platform | Path |
 | -------- | ---- |
 | Windows  | `<x86 program files folder>/RunRev/LiveCode <version>` |
 | Linux    | `/opt/livecode/livecode-<version>` |
-| Mac OS X | `/Applications/LiveCode <version>.app` |
 
 The installations when installing for "This User" are:
 
@@ -17,7 +25,6 @@ The installations when installing for "This User" are:
 | -------- | ---- |
 | Windows  | `<user roaming app data folder>/RunRev/Components/LiveCode <version>` |
 | Linux    | `~/.runrev/components/livecode-<version>` |
-| Mac OS X | `~/Applications/LiveCode <version>.app` |
 
 **Note:** If installing for "All Users" on Linux, either the **gksu** tool must be available, or you must manually run the LiveCode installer executable as root (e.g. using **sudo** or **su**).
 
@@ -47,7 +54,6 @@ The installer log file can be located as follows:
 | Windows 2000/XP | `<documents and settings folder>/<user>/Local Settings/` |
 | Windows Vista/7 | `<users folder>/<user>/AppData/Local/RunRev/Logs` |
 | Linux           | `<home>/.runrev/logs` |
-| Mac OS X        | `<home>/Library/Application Support/Logs/RunRev` |
 
 ## Activating LiveCode Indy or Business edition
 
@@ -57,7 +63,7 @@ Alternatively it is possible to activate the product via the use of a specially 
 
 ## Command-line installation
 
-It is possible to invoke the installer from the command-line on Mac, Linux and Windows. When doing command-line installation, no GUI will be displayed.  The installation process is controlled by arguments passed to the installer.
+It is possible to invoke the installer from the command-line on Linux and Windows. When doing command-line installation, no GUI will be displayed.  The installation process is controlled by arguments passed to the installer.
 
 Run the installer using a command in the form:
 
@@ -82,10 +88,6 @@ As the installer is actually a GUI application, it needs to be run slightly diff
 On Windows, the command is:
 
 	start /wait <installer> install noui [OPTION ...]
-
-On Mac OS X, you need to do:
-
-	<installer>/Contents/MacOS/installer install noui *options*
 
 ## Command-line uninstallation
 
