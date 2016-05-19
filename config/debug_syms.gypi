@@ -52,7 +52,20 @@
 			}
 		],
 		[
-			'OS == "win" or OS == "emscripten"',
+			'OS == "win"',
+			{
+				# MSVS generates the debug databases automatically; we just need to copy them
+				'variables':
+				{
+					'debug_syms_outputs':
+					[
+						'>!@(["<@(perl)", "tools/windows_debug_syms.pl", \'>@(debug_syms_inputs)\'])',
+					],
+				},
+			},
+		],
+		[
+			'OS == "emscripten"',
 			{
 				# Not yet implemented...
 				'variables':
