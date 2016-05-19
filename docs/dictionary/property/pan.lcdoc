@@ -35,6 +35,11 @@ The <pan> is limited by the <player(object)|player's> <constraints> <property>. 
 
 If the player does not contain a QuickTime VR movie, its <pan> <property> is zero.
 
+Deprecated: In order to support 64-bit on Mac we have been required to switch to using AVFoundation on Mac, which does not support QTVR. In addition, the Windows player object is now based on DirectShow, as Apple have dropped support for the QuickTime libraries previously used.
+
+Changes:
+This property was deprecated in version 8.1.0 due to the retirement of the QuickTime player implementation.
+
 References: currentNode (property), properties (property), tilt (property), constraints (property), player (keyword), player (object), property (glossary), QuickTime VR (glossary), error (glossary), range (glossary), degree (glossary), value (function)
 
 Tags: multimedia

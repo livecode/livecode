@@ -12,16 +12,15 @@ public:
 	void Retain(void);
 	void Release(void);
     
-	void Attach(MCPlatformWindowRef window);
-	void Detach(void);
-    
+	virtual bool GetNativeView(void *&r_view) = 0;
+	
 	virtual bool IsPlaying(void) = 0;
     // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
 	virtual void Start(double rate) = 0;
 	virtual void Stop(void) = 0;
 	virtual void Step(int amount) = 0;
     
-	virtual void LockBitmap(MCImageBitmap*& r_bitmap) = 0;
+	virtual bool LockBitmap(uint32_t p_width, uint32_t p_height, MCImageBitmap*& r_bitmap) = 0;
 	virtual void UnlockBitmap(MCImageBitmap *bitmap) = 0;
     
 	virtual void SetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value) = 0;
@@ -36,12 +35,8 @@ protected:
 	virtual void Realize(void) = 0;
 	virtual void Unrealize(void) = 0;
     
-	static void DoWindowStateChanged(void *object, bool realized);
-    
 protected:
 	uint32_t m_references;
-    
-	MCPlatformWindowRef m_window;
     
 };
 

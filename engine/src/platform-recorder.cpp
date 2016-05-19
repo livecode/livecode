@@ -29,7 +29,6 @@
 #include "platform.h"
 #include "platform-internal.h"
 
-#include "mac-player.h"
 #include "variable.h"
 
 ////////////////////////////////////////////////////////////////////////////////

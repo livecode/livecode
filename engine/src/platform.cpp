@@ -83,6 +83,8 @@ void MCPlatformHandleSoundFinished(MCPlatformSoundRef sound);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(FEATURE_PLATFORM_APPLICATION)
+
 void MCPlatformCallbackSendApplicationStartup(int p_argc, MCStringRef *p_argv, MCStringRef *p_envp, int& r_error_code, MCStringRef & r_error_message)
 {
 	MCPlatformHandleApplicationStartup(p_argc, p_argv, p_envp, r_error_code, r_error_message);
@@ -115,6 +117,8 @@ void MCPlatformCallbackSendApplicationResume(void)
 	MCPlatformHandleApplicationResume();
 }
 
+#endif // FEATURE_PLATFORM_APPLICATION
+
 //////////
 
 void MCPlatformCallbackSendScreenParametersChanged(void)
@@ -124,6 +128,8 @@ void MCPlatformCallbackSendScreenParametersChanged(void)
 }
 
 //////////
+
+#if defined(FEATURE_PLATFORM_WINDOW)
 
 void MCPlatformCallbackSendWindowCloseRequest(MCPlatformWindowRef p_window)
 {
@@ -377,7 +383,11 @@ void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint3
 	MCPlatformHandleViewFocusSwitched(p_window, p_view_id);
 }
 
+#endif // FEATURE_PLATFORM_WINDOW
+
 //////////
+
+#if defined(FEATURE_PLATFORM_PLAYER)
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
 {
@@ -407,12 +417,19 @@ void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef p_player)
     // MCLog("Player(%p) -> BufferUpdated()", p_player);
     MCPlatformHandlePlayerBufferUpdated(p_player);
 }
+
+#endif // FEATURE_PLATFORM_PLAYER
+
 //////////
+
+#if defined(FEATURE_PLATFORM_AUDIO)
 
 void MCPlatformCallbackSendSoundFinished(MCPlatformSoundRef p_sound)
 {
     //MCLog("Sound(%p) -> Finished()", p_sound);
     MCPlatformHandleSoundFinished(p_sound);
 }
+
+#endif // FEATURE_PLATFORM_AUDIO
 
 ////////////////////////////////////////////////////////////////////////////////

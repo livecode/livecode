@@ -1012,8 +1012,7 @@ void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player);
 void MCPlatformPlayerRelease(MCPlatformPlayerRef player);
 
-void MCPlatformAttachPlayer(MCPlatformPlayerRef player, MCPlatformWindowRef window);
-void MCPlatformDetachPlayer(MCPlatformPlayerRef player);
+void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player);
 
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player);
 
@@ -1024,7 +1023,7 @@ void MCPlatformStartPlayer(MCPlatformPlayerRef player, double rate);
 //void MCPlatformFastBackPlayer(MCPlatformPlayerRef player);
 void MCPlatformStopPlayer(MCPlatformPlayerRef player);
 
-void MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap*& r_bitmap);
+bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap);
 void MCPlatformUnlockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap *bitmap);
 
 void MCPlatformSetPlayerProperty(MCPlatformPlayerRef player, MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);

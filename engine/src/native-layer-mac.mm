@@ -90,7 +90,7 @@ void MCNativeLayerMac::doAttach()
     // Restore the visibility state of the widget (in case it changed due to a
     // tool change while on another card - we don't get a message then)
 	
-	doSetGeometry(m_object->getrect());
+	doSetGeometry(m_rect);
 	doSetVisible(ShouldShowLayer());
 }
 

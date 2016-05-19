@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -26,7 +26,6 @@
 
 #include "mac-internal.h"
 
-#include "mac-player.h"
 #include "graphics_util.h"
 #include <objc/objc-runtime.h>
 
@@ -71,13 +70,15 @@ public:
     MCQTKitPlayer(void);
     virtual ~MCQTKitPlayer(void);
     
+	virtual bool GetNativeView(void *& r_view);
+	
     virtual bool IsPlaying(void);
     // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
     virtual void Start(double rate);
     virtual void Stop(void);
     virtual void Step(int amount);
     
-    virtual void LockBitmap(MCImageBitmap*& r_bitmap);
+    virtual bool LockBitmap(const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap);
     virtual void UnlockBitmap(MCImageBitmap *bitmap);
     
     virtual void SetProperty(MCPlatformPlayerProperty property, MCPlatformPropertyType type, void *value);
@@ -273,6 +274,15 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
     MCMemoryDeleteArray(m_markers);
 }
 
+bool MCQTKitPlayer::GetNativeView(void *& r_view)
+{
+	if (m_view == nil)
+		return false;
+	
+	r_view = m_view;
+	return true;
+}
+
 void MCQTKitPlayer::MovieIsLoading(QTTimeRange p_timerange)
 {
     QTTime t_buffered_time;
@@ -396,37 +406,11 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 
 void MCQTKitPlayer::Realize(void)
 {
-	if (m_window == nil)
-		return;
-	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
-	
-	if (!m_offscreen)
-	{
-		MCWindowView *t_parent_view;
-		t_parent_view = t_window -> GetView();
-		[t_parent_view addSubview: m_view];
-	}
-	
 	Synchronize();
 }
 
 void MCQTKitPlayer::Unrealize(void)
 {
-	if (m_offscreen || m_window == nil)
-		return;
-    
-	if (!m_offscreen)
-	{
-		MCMacPlatformWindow *t_window;
-		t_window = (MCMacPlatformWindow *)m_window;
-        
-		MCWindowView *t_parent_view;
-		t_parent_view = t_window -> GetView();
-        
-		[m_view removeFromSuperview];
-	}
 }
 
 Boolean MCQTKitPlayer::MovieActionFilter(MovieController mc, short action, void *params, long refcon)
@@ -609,27 +593,7 @@ void MCQTKitPlayer::Unmirror(void)
 
 void MCQTKitPlayer::Synchronize(void)
 {
-	if (m_window == nil)
-		return;
-	
-	MCMacPlatformWindow *t_window;
-	t_window = (MCMacPlatformWindow *)m_window;
-	
-	// PM-2015-11-26: [[ Bug 13277 ]] Scale m_rect before mapping
-	MCRectangle t_rect = m_rect;
-	t_rect.x *= m_scale;
-	t_rect.y *= m_scale;
-	t_rect.width *= m_scale;
-	t_rect.height *= m_scale;
-	
-	NSRect t_frame;
-	t_window -> MapMCRectangleToNSRect(t_rect, t_frame);
-
     m_synchronizing = true;
-    
-	[m_view setFrame: t_frame];
-	
-	[m_view setHidden: !m_visible];
     
     [m_view setEditable: m_show_selection];
 	[m_view setControllerVisible: m_show_controller];
@@ -668,61 +632,18 @@ void MCQTKitPlayer::Step(int amount)
 		[m_movie stepBackward];
 }
 
-void MCQTKitPlayer::LockBitmap(MCImageBitmap*& r_bitmap)
+extern bool MCMacPlayerSnapshotCVImageBuffer(CVImageBufferRef p_imagebuffer, uint32_t p_width, uint32_t p_height, bool p_mirror, MCImageBitmap *&r_bitmap);
+bool MCQTKitPlayer::LockBitmap(const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap)
 {
-	MCImageBitmap *t_bitmap;
-	t_bitmap = new MCImageBitmap;
-	t_bitmap -> width = m_rect . width;
-	t_bitmap -> height = m_rect . height;
-	t_bitmap -> stride = m_rect . width * sizeof(uint32_t);
-	t_bitmap -> data = (uint32_t *)malloc(t_bitmap -> stride * t_bitmap -> height);
-    memset(t_bitmap -> data, 0,t_bitmap -> stride * t_bitmap -> height);
-	t_bitmap -> has_alpha = t_bitmap -> has_transparency = true;
-    
+	if (m_current_frame == nil)
+		return false;
 	
-	// Now if we have a current frame, then composite at the appropriate size into
-	// the movie portion of the buffer.
-	if (m_current_frame != nil)
-	{
-		extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
-		
-		CGColorSpaceRef t_colorspace;
-		/* UNCHECKED */ MCMacPlatformGetImageColorSpace(t_colorspace);
-		
-		CGContextRef t_cg_context;
-		t_cg_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true));
-		
-        CIImage *t_old_ci_image;
-		t_old_ci_image = [[CIImage alloc] initWithCVImageBuffer: m_current_frame];
-        CIImage *t_ci_image;
-        if (m_mirrored)
-            t_ci_image = [t_old_ci_image imageByApplyingTransform:CGAffineTransformMakeScale(-1, 1)];
-        else
-            t_ci_image = t_old_ci_image;
-        
-        NSAutoreleasePool *t_pool;
-        t_pool = [[NSAutoreleasePool alloc] init];
-        
-		CIContext *t_ci_context;
-		t_ci_context = [CIContext contextWithCGContext: t_cg_context options: nil];
-		
-		[t_ci_context drawImage: t_ci_image inRect: CGRectMake(0, 0, m_rect . width, m_rect . height) fromRect: [t_ci_image extent]];
-		
-        [t_pool release];
-        
-		[t_old_ci_image release];
-		
-		CGContextRelease(t_cg_context);
-		CGColorSpaceRelease(t_colorspace);
-	}
-	
-	r_bitmap = t_bitmap;
+	return MCMacPlayerSnapshotCVImageBuffer(m_current_frame, p_size.width, p_size.height, m_mirrored, r_bitmap);
 }
 
 void MCQTKitPlayer::UnlockBitmap(MCImageBitmap *bitmap)
 {
-    delete bitmap -> data;
-	delete bitmap;
+	MCImageFreeBitmap(bitmap);
 }
 
 extern NSString **QTMovieLoopsAttribute_ptr;
@@ -1042,8 +963,12 @@ void MCQTKitPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProp
 
 ////////////////////////////////////////////////////////
 
+extern bool MCQTInitialize();
 MCQTKitPlayer *MCQTKitPlayerCreate(void)
 {
+	if (!MCQTInitialize())
+		return nil;
+
     return new MCQTKitPlayer;
 }
 

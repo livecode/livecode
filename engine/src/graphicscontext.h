@@ -114,6 +114,8 @@ public:
 	bool lockgcontext(MCGContextRef& r_gcontext);
 	void unlockgcontext(MCGContextRef gcontext);
 	
+	MCGAffineTransform getdevicetransform(void);
+	
 private:
 	void init(MCGContextRef p_context);
 

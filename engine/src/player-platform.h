@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -77,9 +77,6 @@ class MCPlayer : public MCControl, public MCPlayerInterface
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
 
-    bool m_is_attached : 1;
-    bool m_should_attach : 1;
-
     bool m_should_recreate : 1;
 
 	static MCPropertyInfo kProperties[];
@@ -111,9 +108,10 @@ public:
 	virtual Boolean mup(uint2 which, bool p_release);
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
-	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
+	virtual MCRectangle GetNativeViewRect(const MCRectangle &p_object_rect);
+	
 #ifdef LEGACY_EXEC
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
@@ -204,12 +202,7 @@ public:
 	{
 		return disposable;
 	}
-	void setscale(real8 &s)
-	{
-		scale = s;
-    }
 
-	void scale_native_rect(void);
     //void playfast(Boolean forward);
     //void playfastforward();
     //void playfastback();
@@ -384,6 +377,11 @@ public:
     void currenttimechanged(void);
 	void moviefinished(void);
     
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the area in which the video will display for a player with the given rect.
+	MCRectangle getvideorect(const MCRectangle &p_player_rect);
+	// IM-2016-04-22: [[ WindowsPlayer ]] Returns the player rect required to display video content in the given area.
+	MCRectangle getplayerrectforvideorect(const MCRectangle &p_video_rect);
+	
     MCRectangle getcontrollerrect(void);
     MCRectangle getcontrollerpartrect(const MCRectangle& total_rect, int part);
 

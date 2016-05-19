@@ -10,7 +10,7 @@ Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,linux
 
 Platforms: desktop,server,web
 
@@ -28,6 +28,9 @@ Description:
 Use the <trackCount> <property> to loop through the tracks in a <QuickTime> movie.
 
 Each track of a QuickTime movie holds a different set of data, which may consist of sound, video, or other data types. The <trackCount> <property> specifies how many tracks there are.
+
+Changes:
+This property was removed from the Windows platform in version 8.1.0, due to the change of player implementation from QuickTime to DirectShow.
 
 References: enabledTracks (property), tracks (property), mediaTypes (property), nodes (property), QuickTime (glossary), property (glossary), integer (keyword)
 

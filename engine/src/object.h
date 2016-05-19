@@ -497,6 +497,9 @@ public:
 	// Gets the current native layer (if any) associated with this object
 	MCNativeLayer* getNativeLayer() const;
 	
+	// IM-2016-04-26: [[ WindowsPlayer ]] Retrieve the rect of the native view attached to the object.
+	virtual MCRectangle GetNativeViewRect(const MCRectangle &p_object_rect);
+	
 	MCNameRef getdefaultpropsetname(void);
 
 #ifdef LEGACY_EXEC

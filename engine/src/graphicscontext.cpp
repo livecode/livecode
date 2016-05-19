@@ -1484,6 +1484,11 @@ void MCGraphicsContext::unlockgcontext(MCGContextRef p_gcontext)
 	MCGContextRestore(p_gcontext);
 }
 
+MCGAffineTransform MCGraphicsContext::getdevicetransform()
+{
+	return MCGContextGetDeviceTransform(m_gcontext);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint2 MCGraphicsContext::getdepth(void) const

@@ -1827,11 +1827,6 @@ bool MCModeHandleMessage(LPARAM lparam)
 	return false;
 }
 
-bool MCPlayer::mode_avi_closewindowonplaystop()
-{
-	return true;
-}
-
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////

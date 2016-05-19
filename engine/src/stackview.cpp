@@ -214,12 +214,6 @@ void MCStack::view_set_content_scale(MCGFloat p_scale)
 	
 	m_view_content_scale = p_scale;
 	
-#ifdef FEATURE_PLATFORM_PLAYER
-	// PM-2015-11-26: [[ Bug 13277 ]] Scale native player rect
-	for(MCPlayer *t_player = MCplayers; t_player != nil; t_player = t_player -> getnextplayer())
-		t_player -> scale_native_rect();
-#endif
-	
 	// IM-2014-01-16: [[ StackScale ]] Update view transform after changing view property
 	view_update_transform(true);
 	// IM-2014-10-22: [[ Bug 13746 ]] Update window mask when stack scale changes

@@ -10,7 +10,7 @@ Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,linux
 
 Platforms: desktop,server,web
 
@@ -23,6 +23,9 @@ Description:
 Use the <enabledTracks> <property> to control the user's ability to play a <QuickTime> movie.
 
 A movie can contain multiple tracks intended to be played at the same time (for example, an audio and a video track), or tracks that are separate (for example, an alternative audio track). You can list the tracks in a movie using the tracks <property>.
+
+Changes:
+This property was removed from the Windows platform in version 8.1.0, due to the change of player implementation from QuickTime to DirectShow.
 
 References: trackCount (property), QuickTime (glossary), property (glossary), integer (keyword)
 

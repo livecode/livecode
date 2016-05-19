@@ -262,6 +262,7 @@
 								'-lrpcrt4',
 								'-lshell32',
 								'-lshlwapi',
+								'-lstrmiids',
 								'-luser32',
 								'-lusp10',
 								'-lwinmm',

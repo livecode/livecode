@@ -1318,11 +1318,6 @@ bool MCModeHandleMessage(LPARAM lparam)
 	return false;
 }
 
-bool MCPlayer::mode_avi_closewindowonplaystop()
-{
-	return true;
-}
-
 // IM-2014-08-08: [[ Bug 12372 ]] Only use pixel scaling in the standalone
 // if dpiAwareness has been configured in the application manifest.
 bool MCModeGetPixelScalingEnabled()

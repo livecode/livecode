@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -53,26 +53,6 @@
 
 #include "platform.h"
 
-static MCPlatformPlayerMediaType ppmediatypes[] =
-{
-	kMCPlatformPlayerMediaTypeVideo,
-	kMCPlatformPlayerMediaTypeAudio,
-	kMCPlatformPlayerMediaTypeText,
-	kMCPlatformPlayerMediaTypeQTVR,
-	kMCPlatformPlayerMediaTypeSprite,
-	kMCPlatformPlayerMediaTypeFlash,
-};
-
-static const char *ppmediastrings[] =
-{
-	"video",
-	"audio",
-	"text",
-	"qtvr",
-	"sprite",
-	"flash"
-};
-
 #define CONTROLLER_HEIGHT 26
 #define SELECTION_RECT_WIDTH CONTROLLER_HEIGHT / 2
 // PM-2014-07-17: [[ Bug 12835 ]] Adjustments to prevent selectedArea and playedArea to be drawn without taking into account the width of the well
@@ -83,11 +63,6 @@ static const char *ppmediastrings[] =
 #define DARKGRAY 4
 #define MIN_RATE -3
 #define MAX_RATE 3
-
-extern "C" int initialise_weak_link_QuickTime(void);
-extern "C" int initialise_weak_link_QTKit(void);
-extern "C" int initialise_weak_link_QuickDraw(void);
-
 
 static MCColor controllercolors[] = {
     
@@ -395,6 +370,8 @@ public:
                 break;
                 
             default:
+				// click outside control area - close popup
+				close();
                 break;
         }
         return True;
@@ -850,8 +827,6 @@ MCPlayer::MCPlayer()
     MCplayers = this;
     
     // PM-2104-10-14: [[ Bug 13569 ]] Make sure changes to player in preOpenCard are not visible
-    m_is_attached = false;
-    m_should_attach = false;
     m_should_recreate = false;
 }
 
@@ -943,15 +918,7 @@ void MCPlayer::open()
 {
     MCControl::open();
     prepare(kMCEmptyString);
-    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    // PM-2014-10-21: [[ Bug 13710 ]] Check if the player is already attached
-    
-    if (m_platform_player != nil && !m_is_attached && m_should_attach)
-    {
-        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-        m_is_attached = true;
-        m_should_attach = false;
-    }
+	attachplayer();
 }
 
 void MCPlayer::close()
@@ -966,14 +933,9 @@ void MCPlayer::close()
     
     if (s_volume_popup != nil)
         s_volume_popup -> close();
-    
-    // PM-2014-10-15: [[ Bug 13650 ]] Check for nil to prevent a crash
-    // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
-    if (m_platform_player != nil && m_is_attached)
-    {
-        MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
-    }
+	
+	detachplayer();
+
     // PM-2014-11-03: [[ Bug 13917 ]] m_platform_player should be recreated when reopening a recently closed stack, to take into account if the value of dontuseqt has changed in the meanwhile
     // PM-2015-03-13: [[ Bug 14821 ]] Use a bool to decide whether to recreate a player, since assigning nil to m_platform_player caused player to become unresponsive when switching between cards
     if (m_platform_player != nil)
@@ -1136,22 +1098,9 @@ Boolean MCPlayer::doubleup(uint2 which)
 }
 
 
-void MCPlayer::applyrect(const MCRectangle &nrect)
+MCRectangle MCPlayer::GetNativeViewRect(const MCRectangle &p_object_rect)
 {
-	rect = nrect;
-	
-	if (m_platform_player != nil)
-	{
-		MCRectangle trect = MCU_reduce_rect(rect, getflag(F_SHOW_BORDER) ? borderwidth : 0);
-        
-        if (getflag(F_SHOW_CONTROLLER))
-            trect . height -= CONTROLLER_HEIGHT;
-        
-        // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
-        //   (backscale factor handled in platform layer).
-		trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
-	}
+	return getvideorect(p_object_rect);
 }
 
 void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
@@ -1951,19 +1900,9 @@ void MCPlayer::setlooping(Boolean loop)
 	}
 }
 
-// SN-2015-09-30: Make specific implementation for the platformplayer, which
-//  ensures that QT is weak-linked.
 void MCPlayer::setdontuseqt(bool noqt)
 {
 	dontuseqt = noqt;
-	
-	// Weak link QT when setting a player's dontuseqt to false, if it is not already linked
-	if (!noqt && MCdontuseQT)
-	{
-		initialise_weak_link_QuickTime();
-		initialise_weak_link_QTKit() ;
-		initialise_weak_link_QuickDraw() ;
-	}
 }
 
 real8 MCPlayer::getplayrate()
@@ -2078,27 +2017,9 @@ void MCPlayer::showcontroller(Boolean show)
 	}
 }
 
-void MCPlayer::scale_native_rect(void)
-{
-	if (m_platform_player != nil)
-	{
-		double t_scale_factor = getstack() -> view_get_content_scale();
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyScalefactor, kMCPlatformPropertyTypeDouble, &t_scale_factor);
-	}
-}
-
 Boolean MCPlayer::prepare(MCStringRef options)
 {
-    // For osversion < 10.8 we have to have QT initialized.
-    if (MCmajorosversion < 0x1080)
-    {
-        extern bool MCQTInit(void);
-        if (!MCQTInit())
-            return False;
-    }
-
 	Boolean ok = False;
-    m_should_attach = false;
     
     if (state & CS_PREPARED)
         return True;
@@ -2112,8 +2033,10 @@ Boolean MCPlayer::prepare(MCStringRef options)
             MCPlatformPlayerRelease(m_platform_player);
         MCPlatformCreatePlayer(dontuseqt, m_platform_player);
     }
+
+	if (m_platform_player == nil)
+		return False;
 		
-    
     // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder
     //  to the filename property. Use resolved_filename to set the "internal" absolute path
     MCAutoStringRef t_resolved_filename;
@@ -2131,9 +2054,9 @@ Boolean MCPlayer::prepare(MCStringRef options)
             || MCStringBeginsWithCString(resolved_filename, (const char_t*)"ftp:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(resolved_filename, (const char_t*)"file:", kMCStringOptionCompareCaseless)
             || MCStringBeginsWithCString(resolved_filename, (const char_t*)"rtsp:", kMCStringOptionCompareCaseless))
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
+        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyURL, kMCPlatformPropertyTypeMCString, &resolved_filename);
 	else
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeNativeCString, &resolved_filename);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFilename, kMCPlatformPropertyTypeMCString, &resolved_filename);
 	
     if (!hasfilename())
         return True;
@@ -2149,18 +2072,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
         return False;
     }
 	
-	MCRectangle trect = resize(t_movie_rect);
-	
-    // Adjust so that the controller isn't included in the movie rect.
-    if (getflag(F_SHOW_CONTROLLER))
-        trect . height -= CONTROLLER_HEIGHT;
-    
-	// IM-2011-11-12: [[ Bug 11320 ]] Transform player rect to device coords
-    // MW-2014-04-09: [[ Bug 11922 ]] Make sure we use the view not device transform
-    //   (backscale factor handled in platform layer).
-	trect = MCRectangleGetTransformedBounds(trect, getstack()->getviewtransform());
-	
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyRect, kMCPlatformPropertyTypeRectangle, &trect);
+	resize(t_movie_rect);
 	
 	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
 	
@@ -2185,19 +2097,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	t_offscreen = getflag(F_ALWAYS_BUFFER);
 	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyOffscreen, kMCPlatformPropertyTypeBool, &t_offscreen);
 	
-	bool t_visible;
-	t_visible = getflag(F_VISIBLE);
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
 	
-    if (m_is_attached)
-    {
-        MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
-        m_should_attach = true;
-    }
-    else
-        m_should_attach = true;
-    	
 	layer_redrawall();
 	
 	setloudness();
@@ -2219,14 +2119,14 @@ void MCPlayer::attachplayer()
 {
     if (m_platform_player == nil)
         return;
-    
-    // Make sure we attach the player only if it was previously detached by detachplayer().
-    if (!m_is_attached && m_should_attach)
-    {
-        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-        m_is_attached = true;
-        m_should_attach = false;
-    }
+	
+	if (getflag(F_ALWAYS_BUFFER))
+		return;
+	
+	if (getNativeLayer() != nil)
+		return;
+	
+	SetNativeView(MCPlatformPlayerGetNativeView(m_platform_player));
 }
 
 // PM-2014-10-14: [[ Bug 13569 ]] Make sure changes to player are not visible in preOpenCard
@@ -2234,13 +2134,8 @@ void MCPlayer::detachplayer()
 {
     if (m_platform_player == nil)
         return;
-    
-    if (m_is_attached)
-    {
-        MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
-        m_should_attach = true;
-    }
+	
+	SetNativeView(nil);
 }
 
 Boolean MCPlayer::playstart(MCStringRef options)
@@ -2249,11 +2144,7 @@ Boolean MCPlayer::playstart(MCStringRef options)
 		return False;
     
     // PM-2014-10-21: [[ Bug 13710 ]] Attach the player if not already attached
-    if (m_platform_player != nil && !m_is_attached)
-    {
-        MCPlatformAttachPlayer(m_platform_player, getstack() -> getwindow());
-        m_is_attached = true;
-    }
+	attachplayer();
 	playpause(False);
 	return True;
 }
@@ -2334,14 +2225,12 @@ Boolean MCPlayer::playstop()
     m_modify_selection_while_playing = false;
 	
     // PM-2014-10-21: [[ Bug 13710 ]] Detach the player only if already attached
-	if (m_platform_player != nil && m_is_attached)
+	if (m_platform_player != nil)
 	{
 		MCPlatformStopPlayer(m_platform_player);
 
 		needmessage = getduration() > getmoviecurtime();
-		
-		MCPlatformDetachPlayer(m_platform_player);
-        m_is_attached = false;
+		detachplayer();
 	}
     
     redrawcontroller();
@@ -2408,15 +2297,10 @@ MCRectangle MCPlayer::getpreferredrect()
     MCRectangle t_bounds;
 	MCU_set_rect(t_bounds, 0, 0, 0, 0);
 	if (m_platform_player != nil)
-    {
 		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_bounds);
-        // PM-2015-06-09: [[ Bug 5209 ]] formattedHeight should take into account the controller
-        if (flags & F_SHOW_CONTROLLER)
-            t_bounds.height += CONTROLLER_HEIGHT;
-    }
-    
-    // PM-2014-04-28: [[Bug 12299]] Make sure the correct MCRectangle is returned
-    return t_bounds;
+	
+	// IM-2016-04-22: [[ WindowsPlayer ]] Return player rect required to display video at preferred size
+	return getplayerrectforvideorect(t_bounds);
 }
 
 uint2 MCPlayer::getloudness()
@@ -2571,7 +2455,6 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 
 MCRectangle MCPlayer::resize(MCRectangle movieRect)
 {
-	int2 x, y;
 	MCRectangle trect = rect;
 	
 	// MW-2011-10-24: [[ Bug 9800 ]] Store the current rect for layer notification.
@@ -2591,20 +2474,10 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 		}
 		else
 		{
-			x = trect.x + (trect.width >> 1);
-			y = trect.y + (trect.height >> 1);
-			trect.width = (uint2)(formattedwidth * scale);
-			trect.height = (uint2)(formattedheight * scale);
-            
-            if (flags & F_SHOW_CONTROLLER)
-                trect.height += CONTROLLER_HEIGHT;
-            
-			trect.x = x - (trect.width >> 1);
-			trect.y = y - (trect.height >> 1);
-			if (flags & F_SHOW_BORDER)
-				rect = MCU_reduce_rect(trect, -borderwidth);
-			else
-				rect = trect;
+			// IM-2016-04-22: [[ WindowsPlayer ]] Use convenience method to get required player rect,
+			//   centered on the current rect.
+			trect = MCU_center_rect(trect, getplayerrectforvideorect(movieRect));
+			rect = trect;
 		}
 	}
 	else
@@ -2806,12 +2679,6 @@ void MCPlayer::getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id)
 
 void MCPlayer::updatevisibility()
 {
-    if (m_platform_player != nil)
-    {
-        bool t_visible;
-        t_visible = getflag(F_VISIBLE);
-        MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyVisible, kMCPlatformPropertyTypeBool, &t_visible);
-    }
 }
 
 void MCPlayer::updatetraversal()
@@ -3050,27 +2917,40 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		
 		if (t_offscreen)
 		{
-			MCRectangle trect = MCU_reduce_rect(rect, flags & F_SHOW_BORDER ? borderwidth : 0);
-            
+			// IM-2016-04-22: [[ WindowsPlayer ]] Get rect in which to display video content.
+			MCRectangle trect;
+			trect = getvideorect(rect);
+			
 			MCImageDescriptor t_image;
 			MCMemoryClear(&t_image, sizeof(t_image));
 			t_image.filter = kMCGImageFilterNone;
             
+			MCRectangle t_transformed_rect;
+			t_transformed_rect = MCRectangleGetTransformedBounds(trect, dc->getdevicetransform());
+			
 			// IM-2014-05-14: [[ ImageRepUpdate ]] Wrap locked bitmap in MCGImage
 			MCImageBitmap *t_bitmap = nil;
-			MCPlatformLockPlayerBitmap(m_platform_player, t_bitmap);
-            
-			MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
-            
-            // SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
-            if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
-                MCGImageCreateWithRaster(t_raster, t_image.image);
-            else
-                MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
-			if (t_image . image != nil)
-				dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
-			MCGImageRelease(t_image.image);
-			MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
+			
+			if (MCPlatformLockPlayerBitmap(m_platform_player, MCGIntegerSizeMake(t_transformed_rect.width, t_transformed_rect.height), t_bitmap))
+			{
+				MCGRaster t_raster = MCImageBitmapGetMCGRaster(t_bitmap, true);
+				
+				// SN-2014-08-25: [[ Bug 13187 ]] We need to copy the raster
+				if (dc -> gettype() == CONTEXT_TYPE_PRINTER)
+					MCGImageCreateWithRaster(t_raster, t_image.image);
+				else
+					MCGImageCreateWithRasterNoCopy(t_raster, t_image.image);
+				if (t_image . image != nil)
+					dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+				
+				MCGImageRelease(t_image.image);
+				MCPlatformUnlockPlayerBitmap(m_platform_player, t_bitmap);
+			}
+			else
+			{
+				dc->setbackground(MCzerocolor);
+				dc->fillrect(trect);
+			}
 		}
 	}
  
@@ -3582,6 +3462,34 @@ void MCPlayer::drawcontrollerbutton(MCDC *dc, const MCRectangle& p_rect)
     dc -> setlineatts(1, LineSolid, CapButt, JoinMiter);
     
     dc -> drawrect(p_rect, true);
+}
+
+MCRectangle MCPlayer::getvideorect(const MCRectangle &p_player_rect)
+{
+	MCRectangle t_rect;
+	t_rect = p_player_rect;
+	
+	if (getflag(F_SHOW_CONTROLLER))
+		t_rect.height -= CONTROLLER_HEIGHT;
+	
+	if (getflag(F_SHOW_BORDER))
+		t_rect = MCU_reduce_rect(t_rect, borderwidth);
+	
+	return t_rect;
+}
+
+MCRectangle MCPlayer::getplayerrectforvideorect(const MCRectangle &p_video_rect)
+{
+	MCRectangle t_rect;
+	t_rect = p_video_rect;
+	
+	if (getflag(F_SHOW_CONTROLLER))
+		t_rect.height += CONTROLLER_HEIGHT;
+	
+	if (getflag(F_SHOW_BORDER))
+		t_rect = MCU_reduce_rect(t_rect, -borderwidth);
+	
+	return t_rect;
 }
 
 MCRectangle MCPlayer::getcontrollerrect(void)

@@ -1210,7 +1210,7 @@ void MCObject::visibilitychanged(bool p_visible)
 void MCObject::geometrychanged(const MCRectangle &p_rect)
 {
 	if (getNativeLayer() != nil)
-		getNativeLayer()->OnGeometryChanged(p_rect);
+		getNativeLayer()->OnGeometryChanged(GetNativeViewRect(p_rect));
 }
 
 void MCObject::viewportgeometrychanged(const MCRectangle &p_rect)
@@ -5242,7 +5242,7 @@ bool MCObject::SetNativeView(void *p_view)
 				t_viewport = MCRectangleMake(INT16_MIN, INT16_MIN, UINT16_MAX, UINT16_MAX);
 			}
 				
-			m_native_layer->OnGeometryChanged(getrect());
+			m_native_layer->OnGeometryChanged(GetNativeViewRect(getrect()));
 			m_native_layer->OnViewportGeometryChanged(t_viewport);
 			m_native_layer->OnToolChanged(getstack()->gettool(this));
 			m_native_layer->OnVisibilityChanged(isvisible());
@@ -5250,6 +5250,11 @@ bool MCObject::SetNativeView(void *p_view)
 	}
 	
 	return t_success;
+}
+
+MCRectangle MCObject::GetNativeViewRect(const MCRectangle &p_object_rect)
+{
+	return p_object_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

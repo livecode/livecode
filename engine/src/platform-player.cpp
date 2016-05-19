@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -14,23 +14,18 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <Cocoa/Cocoa.h>
-
 #include "globdefs.h"
 
 #include "platform.h"
 #include "platform-internal.h"
 
-#include "mac-internal.h"
 #include "graphics_util.h"
-#include "mac-player.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPlatformPlayer::MCPlatformPlayer(void)
 {
 	m_references = 1;
-	m_window = nil;
 }
 
 MCPlatformPlayer::~MCPlatformPlayer(void)
@@ -47,76 +42,10 @@ void MCPlatformPlayer::Release(void)
 {
 	m_references -= 1;
 	if (m_references == 0)
-    {
-        // PM-2014-08-11: [[ Bug 13109 ]] Fixes issue of abort due to a pure virtual call
-        if (m_window != nil)
-            Detach();
 		delete this;
-    }
-}
-
-void MCPlatformPlayer::Attach(MCPlatformWindowRef p_window)
-{
-	if (m_window == p_window)
-		return;
-    
-	if (m_window != nil)
-		Detach();
-    
-	m_window = p_window;
-	MCPlatformRetainWindow(m_window);
-    
-	m_window -> AttachObject(this, DoWindowStateChanged);
-    // PM-2014-11-20: [[ Bug 14035 ]] When closing and reopening a stack with a player object, video does not show
-    m_window -> RealizeAndNotify();
-}
-
-void MCPlatformPlayer::Detach(void)
-{
-	if (m_window == nil)
-		return;
-    
-	m_window -> DetachObject(this);
-    
-	MCPlatformReleaseWindow(m_window);
-	m_window = nil;
-}
-
-void MCPlatformPlayer::DoWindowStateChanged(void *p_ctxt, bool p_realized)
-{
-	MCPlatformPlayer *t_player;
-	t_player = (MCPlatformPlayer *)p_ctxt;
-    
-	if (p_realized)
-		t_player -> Realize();
-	else
-		t_player -> Unrealize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-class MCAVFoundationPlayer;
-class MCQTKitPlayer;
-
-extern MCAVFoundationPlayer *MCAVFoundationPlayerCreate(void);
-extern MCQTKitPlayer *MCQTKitPlayerCreate(void);
-extern uint4 MCmajorosversion;
-extern bool MCQTInit(void);
-
-// PM-2015-06-16: [[ Bug 13820 ]] Take into account the *player* property dontuseqt 
-void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player)
-{
-#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
-    // MW-2014-07-16: [[ QTSupport ]] If we manage to init QT (i.e. dontUseQT is false and
-    //   QT is available) then use QTKit, else use AVFoundation if 10.8 and above.
-    if (!MCQTInit() && MCmajorosversion >= 0x1080 && dontuseqt)
-    {
-        r_player = (MCPlatformPlayerRef)MCAVFoundationPlayerCreate();
-    }
-    else
-#endif
-        r_player = (MCPlatformPlayerRef)MCQTKitPlayerCreate();
-}
 
 void MCPlatformPlayerRetain(MCPlatformPlayerRef player)
 {
@@ -128,14 +57,13 @@ void MCPlatformPlayerRelease(MCPlatformPlayerRef player)
 	player -> Release();
 }
 
-void MCPlatformAttachPlayer(MCPlatformPlayerRef player, MCPlatformWindowRef window)
+void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player)
 {
-	player -> Attach(window);
-}
-
-void MCPlatformDetachPlayer(MCPlatformPlayerRef player)
-{
-	player -> Detach();
+	void *t_view;
+	if (!player -> GetNativeView(t_view))
+		return nil;
+	
+	return t_view;
 }
 
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player)
@@ -175,9 +103,9 @@ void MCPlatformStopPlayer(MCPlatformPlayerRef player)
 	player -> Stop();
 }
 
-void MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap*& r_bitmap)
+bool MCPlatformLockPlayerBitmap(MCPlatformPlayerRef player, const MCGIntegerSize &p_size, MCImageBitmap*& r_bitmap)
 {
-	player -> LockBitmap(r_bitmap);
+	return player -> LockBitmap(p_size, r_bitmap);
 }
 
 void MCPlatformUnlockPlayerBitmap(MCPlatformPlayerRef player, MCImageBitmap *bitmap)
@@ -246,5 +174,43 @@ void MCPlatformSetPlayerHotSpotProperty(MCPlatformPlayerRef player, uindex_t ind
 void MCPlatformFindPlayerHotSpotWithId(MCPlatformPlayerRef player, uint32_t id, uindex_t& r_index)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef TARGET_PLATFORM_MACOS_X
+
+class MCAVFoundationPlayer;
+class MCQTKitPlayer;
+
+extern MCAVFoundationPlayer *MCAVFoundationPlayerCreate(void);
+extern MCQTKitPlayer *MCQTKitPlayerCreate(void);
+extern uint4 MCmajorosversion;
+extern bool MCQTInit(void);
+
+// PM-2015-06-16: [[ Bug 13820 ]] Take into account the *player* property dontuseqt
+void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player)
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_6
+	// MW-2014-07-16: [[ QTSupport ]] If we manage to init QT (i.e. dontUseQT is false and
+	//   QT is available) then use QTKit, else use AVFoundation if 10.8 and above.
+	if (!MCQTInit() && MCmajorosversion >= 0x1080 && dontuseqt)
+	{
+		r_player = (MCPlatformPlayerRef)MCAVFoundationPlayerCreate();
+	}
+	else
+#endif
+		r_player = (MCPlatformPlayerRef)MCQTKitPlayerCreate();
+}
+
+#endif
+
+#ifdef TARGET_PLATFORM_WINDOWS
+class MCWin32DSPlayer;
+extern MCWin32DSPlayer *MCWin32DSPlayerCreate(void);
+void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef &r_player)
+{
+	r_player = (MCPlatformPlayerRef)MCWin32DSPlayerCreate();
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

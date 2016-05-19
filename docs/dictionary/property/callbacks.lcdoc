@@ -10,7 +10,7 @@ Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac,linux
 
 Platforms: desktop,server,web
 
@@ -30,6 +30,9 @@ Use the <callbacks> <property> to send <callback|callback messages> to a <player
 When an interval number is reached during playback, LiveCode sends the corresponding message to the player.
 
 The number of intervals per second is specified by the player's <timeScale> <property>. The total number of intervals is given in the <player(object)|player's> <duration> <property>.
+
+Changes:
+This property was removed from the Windows platform in version 8.1.0, due to the change of player implementation from QuickTime to DirectShow.
 
 References: timeScale (property), duration (property), currentTime (property), playRate (property), player (keyword), currentTimeChanged (message), send (command), play (command), player (object), property (glossary), synchronize (glossary), message (glossary), callback (glossary), player (glossary)
 
