@@ -100,8 +100,8 @@ particular customer. Here's an example:
 |--------|-------------------|---------------|-------------|
 | 123    | Jane Jones        | 234 E. Street | U.K.        | 
 | 836    | Acme Corporation  | PO Box 23788  | USA         | 
-| 823    | CanCo, Inc.   	 | 1 CanCo Blvd. | Japan       |
-| 
+| 823    | CanCo, Inc.       | 1 CanCo Blvd. | Japan       |
+
 Figure 59 – Example Database Grid
 
 There are three rows in this grid (each is the record for a particular
