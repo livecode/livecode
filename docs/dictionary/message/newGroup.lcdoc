@@ -6,6 +6,8 @@ Syntax: newGroup
 
 Summary: Sent to a new <group> right after it's created.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

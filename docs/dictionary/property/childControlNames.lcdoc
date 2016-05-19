@@ -6,6 +6,8 @@ Syntax: get the childControlNames of <group>
 
 Summary: Reports the names of all the children of a group.
 
+Associations: group
+
 Introduced: 6.1
 
 OS: mac,windows,linux,ios,android

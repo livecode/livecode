@@ -8,7 +8,7 @@ Summary: Specifies the color of the outline around the <active control> or the <
 
 Synonyms: eighthColor
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

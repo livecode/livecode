@@ -6,7 +6,7 @@ Syntax: set the bottomPattern of <object> to {empty | <patternID> | <imageID>}
 
 Summary: Specifies the pattern of a three-D <object|object's> lowered edge.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

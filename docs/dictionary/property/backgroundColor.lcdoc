@@ -10,7 +10,7 @@ Summary: Specifies an <object|object's> background color.
 
 Synonyms: backColor,secondColor
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

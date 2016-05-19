@@ -6,7 +6,7 @@ Syntax: set the scrollbarWidth of {<field> | <group>} to <pixels>
 
 Summary: Specifies the width of the scrollbar associated with a scrolling <field> or <group>.
 
-Associations: field
+Associations: field,group
 
 Introduced: 1.0
 

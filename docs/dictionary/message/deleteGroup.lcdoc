@@ -6,6 +6,8 @@ Syntax: deleteGroup
 
 Summary: Sent to a <group> just before it is removed from the <stack>.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

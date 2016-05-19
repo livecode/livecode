@@ -6,6 +6,8 @@ Syntax: set the tabGroupBehavior of <group> to {true | false}
 
 Summary: Specifies whether the arrow keys navigate within a <group> and whether the Tab key skips to the next <group>.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux
