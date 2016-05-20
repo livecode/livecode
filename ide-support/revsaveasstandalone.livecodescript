@@ -2754,18 +2754,14 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
       end repeat
    end if
    
-   -- answer dialog
-   if lineOffset("answer",tScript) is not 0 then
-      put true into xSettings["answerDialog"]
-   end if
-   -- ask dialog
-   if lineOffset("ask",tScript) is not 0 then
-      put true into xSettings["askDialog"]
-   end if
-   -- pdf printer
-   if lineOffset("open printing to pdf", tScript) is not 0 then
-      put true into xSettings["pdfPrinter"]
-   end if
+   local tInclusion, tSyntax
+   repeat for each item tItem in "answerDialog answer,askDialog ask,pdfPrinter open printing to pdf"
+      put word 1 of tItem into tInclusion
+      put word 2 to -1 of tItem into tSyntax
+      if not xSettings[tInclusion] and lineOffset(tSyntax, tScript) is not 0 then
+         put true into xSettings[tInclusion]
+      end if
+   end repeat
    
    # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
    # or if we are building for linux. (This might include the files more often than they are required).
