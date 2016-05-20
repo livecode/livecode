@@ -1676,6 +1676,39 @@ command revSBInclusionIconFromType pType, pID, @rIconName, @rIconPath
    end switch
 end revSBInclusionIconFromType
 
+function revSBInclusionToMobileKey pName, pType, pPlatform
+   local tToInclude
+   switch pName
+      case "pdfPrinter"
+         put "revpdfprinter" into tToInclude
+         break
+      case "SSL & Encryption"
+         put "revsecurity" into tToInclude
+         break
+      default
+         switch pType
+            case "database driver"
+               local tDBDriverID, tDBDrivers
+               put revIDEDatabaseDriversMapping() into tDBDrivers
+               put "db" & word 1 of item itemOffset(pName, tDBDrivers) of tDBDrivers into tToInclude
+               break
+            case "external"
+            default
+               local tExternals
+               put revIDEExternalsMapping() into tExternals
+               put word 1 of item itemOffset(pName, tExternals) of tExternals into tToInclude
+               break
+         end switch
+         break
+   end switch
+   
+   if tToInclude is not empty then
+      return pPlatform & ",include" && tToInclude 
+   end if
+   
+   return empty
+end revSBInclusionToMobileKey
+
 -- Mobile standalone builders need to use this to convert from new inclusion settings
 command revSBConvertSettingsForPlatform @xSettings, pPlatform
    -- Sanitise the list of externals and route through copy files mechanism
@@ -1693,26 +1726,15 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    
    -- Convert from desktop specific keys to mobile
    if xSettings["pdfPrinter"] then
-      put "true" into xSettings[pPlatform & ",include revpdfprinter"]
-   end if
-   
-   if "SSL & Encryption" is among the lines of xSettings["scriptLibraries"] then
-      put "true" into xSettings[pPlatform & ",include revsecurity"]
+      put "true" into xSettings[revSBInclusionToMobileKey("pdfPrinter", "", pPlatform)]
    end if
    
    repeat for each line tLine in xSettings["databaseDrivers"]
-      put "true" into xSettings[pPlatform & ",include db" & toLower(tLine)]
+      put "true" into xSettings[revSBInclusionToMobileKey(tLine, "database driver", pPlatform)]
    end repeat
    
-   local tExternalsMapping, tExternal
-   put revIDEExternalsMapping() into tExternalsMapping
-   repeat for each item tExternalMapping in tExternalsMapping
-      put word 1 of tExternalMapping into tExternal
-      if tExternal is among the items of "revzip,revxml" then
-         if word 2 to -1 of tExternalMapping is among the lines of xSettings["scriptLibraries"] then
-            put "true" into xSettings[pPlatform & ",include" && tExternal]
-         end if
-      end if
+   repeat for each line tLine in xSettings["scriptLibraries"]
+      put "true" into xSettings[revSBInclusionToMobileKey(tLine, "external", pPlatform)]
    end repeat
 end revSBConvertSettingsForPlatform
 
