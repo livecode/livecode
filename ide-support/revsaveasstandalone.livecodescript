@@ -2655,6 +2655,9 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
       exit revCheckObject
    end if
    
+   -- Keep the progress indicator updated
+   revStandaloneProgress "Auto detecting library inclusions..."
+   
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
    local tProps, tLib, tProperty
    put the customPropertySets of pObject into tProps
