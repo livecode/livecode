@@ -6,7 +6,7 @@ Syntax: preOpenBackground <backgroundID>
 
 Summary: Sent to the <current card> when you go from a <card> that does not have a <group> to a <card> that does.
 
-Associations: card
+Associations: card,group
 
 Introduced: 1.0
 

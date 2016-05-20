@@ -6,7 +6,7 @@ Syntax: scrollbarDrag <newPosition>
 
 Summary: Sent to a <field>, <scrollbar>, or <group> when the user drags the <scrollbar thumb> or when a text <selection> causes a <field> to scroll.
 
-Associations: field
+Associations: field,group,scrollbar
 
 Introduced: 1.0
 

@@ -6,7 +6,7 @@ Syntax: set the hScrollbar of {<field> | <group>} to {true | false}
 
 Summary: Specifies whether a <field> or <group> has a horizontal scrollbar.
 
-Associations: field
+Associations: field,group
 
 Introduced: 1.0
 

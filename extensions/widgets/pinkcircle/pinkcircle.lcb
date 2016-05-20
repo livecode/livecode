@@ -41,7 +41,7 @@ public handler OnPaint()
    fill tCirclePath on this canvas
 end handler
 
-public handler setMargin(in pMargin as Real) as undefined
+public handler setMargin(in pMargin as Real)
 	put pMargin into mMargin
 	redraw all
 end handler

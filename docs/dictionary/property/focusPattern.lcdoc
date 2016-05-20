@@ -6,7 +6,7 @@ Syntax: set the focusPattern of <object> to {<patternNumber> | <imageID> | empty
 
 Summary: Specifies the pattern used for an <object|object's> outline when it has the <insertion point> or is <active (focused)(glossary)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

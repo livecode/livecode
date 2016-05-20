@@ -6,7 +6,7 @@ Syntax: set the shadowPattern of <object> to {<patternNumber> | <imageID> | empt
 
 Summary: Specifies the pattern of an <object|object's> drop shadow.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

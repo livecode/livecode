@@ -23,9 +23,15 @@ on newWidget
 end newWidget
 
 Description:
-Use the <widget> <object type> to create a <widget> control. <widget|Widgets> are created from <LiveCode Builder extension|LiveCode Builder extensions> that have previously been loaded into memory using the <load extension> <command>. 
-For more details on how to create widgets, please consult the *Extending Livecode* guide.
+Use the <widget> <object type> to create a <widget> control. 
+<widget|Widgets> are created from 
+<LiveCode Builder extension|LiveCode Builder extensions> that have 
+previously been loaded into memory using the <load extension> <command>. 
+For more details on how to create widgets, please consult the 
+*Extending Livecode* guide.
 
-References: load extension (command), control (keyword), object type (glossary), LiveCode Builder extension (glossary), command (glossary)
+References: load extension (command), control (keyword), 
+object type (glossary), LiveCode Builder extension (glossary), 
+command (glossary)
 
 Tags: objects, extensions

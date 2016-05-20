@@ -8,7 +8,7 @@ Syntax: get the name
 
 Summary: Specifies the name of an <object(object)>.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

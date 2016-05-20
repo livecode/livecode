@@ -18,14 +18,28 @@ Example:
 play audioClip theCurrentSoundtrack
 
 Description:
-Use the <audioClip> <object type> to play a sound that is stored in the <stack>, rather than in another file.
+Use the <audioClip> <object type> to play a sound that is stored in the 
+<stack>, rather than in another file.
 
-Unlike a player, an audio clip contains the sound that it plays. This increases the memory required by your stack, because the sound data is loaded into memory along with the rest of the stack whenever the stack file is open. However, it prevents the sound from being accidentally separated from the stack file and lost.
+Unlike a player, an audio clip contains the sound that it plays. This 
+increases the memory required by your stack, because the sound data is 
+loaded into memory along with the rest of the stack whenever the stack 
+file is open. However, it prevents the sound from being accidentally 
+separated from the stack file and lost.
+
 Audio clips can be in WAV, AIFF, or AU format
 
-An audio clip is contained in a stack. Audio clips cannot contain other objects. (An audio clip is not a control, since it has no user interface and cannot be owned by a <card>.)
+An audio clip is contained in a stack. Audio clips cannot contain other 
+objects. (An audio clip is not a control, since it has no user interface 
+and cannot be owned by a <card>.)
 
-To play an audioClip, use the syntax "play audioClip &lt;filename_of_audioclip&gt;".
-To stop an audioClip, use the syntax "play stop".
+To play an audioClip, use the syntax 
 
-References: card (keyword), templateAudioClip (keyword), object type (glossary), stack (object)
+	play audioClip <filename_of_audioclip>
+	
+To stop an audioClip, use the syntax 
+
+	play stop
+
+References: card (keyword), templateAudioClip (keyword), 
+object type (glossary), stack (object)

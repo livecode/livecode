@@ -8,6 +8,8 @@ Summary: Specifies the color of the background when an <object(glossary)>, or te
 
 Synonyms: markerColor,thirdColor
 
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android
