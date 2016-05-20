@@ -2592,7 +2592,7 @@ command revSearchForInclusions pStack, @xSettings
    -- ensure revSBLibrary is in use
    start using stack "revSBLibrary"
 
-   revSmartChecking revRelativeStackFilesList(pStack), xSettings
+   revSmartChecking revGetStackFilesList(pStack), xSettings
 end revSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings
@@ -2621,7 +2621,7 @@ private command revSmartChecking pStackFilesList, @xSettings
    put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
    put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
    
-   repeat for each line tStackFile in pStackFilesList["full"]
+   repeat for each line tStackFile in pStackFilesList
       put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
       repeat for each line tStack in tStacksList
          # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
