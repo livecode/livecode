@@ -6,6 +6,8 @@ Syntax: ungroup
 
 Summary: Makes a <group(glossary)|group's> <object|objects> into <card control|card objects>, deleting the <group(command)>.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

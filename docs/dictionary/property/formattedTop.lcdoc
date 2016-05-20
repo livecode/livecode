@@ -8,7 +8,7 @@ Syntax: get the formattedTop of <chunk> of <field>
 
 Summary: Reports the distance between the top edge of the <stack window> and the topmost <object(glossary)> in a <card> or <group>.
 
-Associations: field
+Associations: field,group,card
 
 Introduced: 1.0
 

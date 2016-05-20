@@ -1,0 +1,1 @@
+# Fix 'delete tVar' where tVar contains an object text chunk

@@ -6,6 +6,8 @@ Syntax: set the relayerGroupedControls to {true | false}
 
 Summary: Specifies whether you can change the <layer> of <control|controls> in a <group> even if not in <group-editing mode>.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

@@ -8,7 +8,7 @@ Syntax: get the formattedLeft of <chunk> of <field>
 
 Summary: Reports the distance between the left edge of the <stack window> and the leftmost <object(glossary)> in a <card> or <group>.
 
-Associations: field
+Associations: field,group,card
 
 Introduced: 1.0
 

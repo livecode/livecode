@@ -8,7 +8,7 @@ Summary: Specifies the location of the specified <object|object's> lower right c
 
 Synonyms: botRight
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

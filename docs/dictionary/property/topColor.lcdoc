@@ -8,7 +8,7 @@ Summary: Specifies the color of a three-D <object|object's> raised edge.
 
 Synonyms: fifthColor
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

@@ -6,6 +6,8 @@ Syntax: set the cantDelete of {<card> | <group> | <stack>} to {true | false}
 
 Summary: Specifies whether an <object(glossary)> can be deleted.
 
+Associations: card,group,stack
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

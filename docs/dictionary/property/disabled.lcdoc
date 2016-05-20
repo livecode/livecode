@@ -6,6 +6,8 @@ Syntax: set the disabled of <object> to {true | false}
 
 Summary: Specifies that an <object(glossary)> is dimmed and does not respond to user action.
 
+Associations: field,button,graphic,scrollbar,player,image,group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

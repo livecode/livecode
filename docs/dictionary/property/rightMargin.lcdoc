@@ -6,7 +6,7 @@ Syntax: set the rightMargin of {<button> | <field> | <group>} to <pixels>
 
 Summary: Specifies how close text within an <object(glossary)> can come to the <object|object's> right edge, and how close <object|objects> in a <group(command)> can come to the <group(glossary)|group's> right edge.
 
-Associations: button
+Associations: button,field,group
 
 Introduced: 1.0
 

@@ -6,7 +6,7 @@ Syntax: set the dontSearch of <field> to {true | false}
 
 Summary: Specifies whether the <find> <command> skips a <field>, <group>, or <card>.
 
-Associations: field
+Associations: field,group,card
 
 Introduced: 1.0
 

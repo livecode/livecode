@@ -6,7 +6,7 @@ Syntax: set the topPattern of <object> to {<patternNumber> | <imageID> | empty}
 
 Summary: Specifies the pattern used to draw a three-D <object|object's> raised edge.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

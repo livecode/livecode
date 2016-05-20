@@ -8,6 +8,8 @@ Summary: Specifies whether a group behaves as a background and come after it's c
 
 Synonyms: bgBehavior
 
+Associations: group
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

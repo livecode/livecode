@@ -6,6 +6,8 @@ Syntax: place <group> onto <card>
 
 Summary: Adds an existing group of objects to a card and sets the sharedBehavior property to true.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

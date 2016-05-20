@@ -4931,6 +4931,9 @@ bool MCChunk::issubstringchunk(void) const
 	if (destvar == nil)
 		return false;
 
+    if (m_transient_text_chunk)
+        return false;
+    
 	if (isstringchunk() || isdatachunk())
 		return true;
 
