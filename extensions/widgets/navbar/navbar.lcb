@@ -50,6 +50,57 @@ item changes, either by clicking on the navigation bar or by setting
 the <hilitedItem> or <hilitedItemName> properties.
 
 References: hilitedItem (property), hilitedItemName (property)
+
+Name: hiliteColor
+Type: Property
+Syntax: set the hiliteColor of <widget> to <color>
+Syntax: get the hiliteColor of <widget>
+
+Summary: The color of the highlighted navigation item
+
+Description:
+The <hiliteColor> is used to draw the icon and/or label of the
+navigation item that is <hilitedItemName|currently highlighted>.
+
+Related: hilitedItemName(property)
+
+Name: foreColor
+Type: property
+Syntax: set the foreColor of <widget> to <color>
+Syntax: get the foreColor of <widget>
+
+Summary: The color of the navigation items that are not highlighted
+
+Description:
+The <foreColor> is used to draw the icons and/or labels of the
+navigation items that are not <hilitedItemName|currently highlighted>.
+
+Related: hilitedItemName(property)
+
+Name: backColor
+Type: property
+Syntax: set the backColor of <widget> to <color>
+Syntax: get the backColor of <widget>
+
+Summary: The color of the navigation bar background
+
+Description:
+When the navigation bar has an <opaque> background, it is filled with
+the <backColor>.
+
+Related: opaque(property)
+
+Name: borderColor
+Type: property
+Syntax: set the borderColor of <widget> to <color>
+Syntax: get the borderColor of <widget>
+
+Summary: The color of the navigation bar border
+
+Description:
+The top border of the navigation bar is drawn using the <borderColor>.
+
+Related: showBorder(property)
 */
 
 -- declaring extension as widget, followed by identifier
@@ -71,7 +122,31 @@ metadata title is "Navigation Bar"
 metadata preferredSize is "320,49"
 metadata svgicon is "M0,0v29.5h80.2V0H0z M21.1,21.5c-0.2-0.1-0.4-0.2-0.4-0.2c-0.5-0.2-0.9-0.3-1.4-0.4c-0.7-0.1-0.9-0.4-0.9-1.1c0-0.1-0.1-0.9,0-1c0.4-0.2,0.5-0.9,0.5-1.3c0-0.3,0.2-0.5,0.3-0.7c0.2-0.3,0.2-0.6,0.3-0.9c0.1-0.2,0.2-0.6,0.1-0.8c0-0.2-0.2-0.4-0.2-0.6c0-0.3,0.1-0.6,0.1-0.9c0-0.5,0-0.9,0-1.4c-0.2-1.2-1.4-1.6-2.5-1.9c-1-0.2-2.2,0.3-2.9,1c-0.3,0.3-0.6,0.7-0.7,1.1c-0.1,0.4,0,0.9,0,1.2c0,0.2,0,0.4,0.1,0.6c0,0.2,0.1,0.3,0.1,0.5c0,0.1-0.1,0.2-0.1,0.3c-0.2,0.4,0,1,0.2,1.4c0.1,0.2,0.2,0.4,0.3,0.5c0.2,0.2,0.2,0.3,0.2,0.6c0,0.4,0.1,1.2,0.6,1.4c0.1,0.1,0,0.8-0.1,0.9c0,0.7,0,1-0.6,1.1c-0.5,0.1-0.9,0.2-1.4,0.4c-0.2,0.1-0.4,0.2-0.7,0.3c-2-1.4-3.4-3.8-3.4-6.4c0-4.3,3.5-7.8,7.8-7.8s7.8,3.5,7.8,7.8C24.3,17.8,23,20.1,21.1,21.5z M45.1,22.7l-4.9-3.6v-0.7l0.2,0.2l3.6,2.6L42.6,17l-0.1-0.4l0.3-0.3l3.4-2.5H42h-0.4l-0.1-0.4l-1.4-4.2l-1.4,4.2l-0.1,0.4h-0.4h-4.3l3.4,2.5l0.3,0.3L37.5,17l-1.4,4.2l3.6-2.6l0.2-0.2v0.7L35,22.7l1.9-5.9l-4.9-3.6h6.1l1.9-5.9l1.9,5.9h6.1l-4.9,3.6L45.1,22.7z M71.1,23.1l-4.9-4.9c-1,0.9-2.4,1.4-3.9,1.5V19c3-0.1,5.4-2.5,5.4-5.5c0-3.1-2.5-5.5-5.5-5.5c-3.1,0-5.5,2.5-5.5,5.5c0,3,2.4,5.4,5.4,5.5v0.7c-3.4-0.1-6-2.8-6-6.2c0-3.4,2.8-6.2,6.2-6.2c3.4,0,6.2,2.8,6.2,6.2c0,1.5-0.6,2.9-1.5,4l4.9,4.9L71.1,23.1z"
 
---
+----------------------------------------------------------------
+
+-- Metadata for re-used engine-level control properties
+
+metadata hiliteColor.editor is "com.livecode.pi.color"
+metadata hiliteColor.label is "Selected item color"
+metadata hiliteColor.section is "Colors"
+metadata hiliteColor.default is "10,95,244"
+
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.label is "Item color"
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.default is "128,128,128"
+
+metadata backgroundColor.editor is "com.livecode.pi.color"
+metadata backgroundColor.label is "Background color"
+metadata backgroundColor.section is "Colors"
+metadata backgroundColor.default is "244,244,244"
+
+metadata borderColor.editor is "com.livecode.pi.color"
+metadata borderColor.label is "Border color"
+metadata borderColor.section is "Colors"
+metadata borderColor.default is "166,166,166"
+
+----------------------------------------------------------------
 
 /**
 Syntax: set the itemArray of <widget> to <array>
@@ -268,76 +343,6 @@ metadata itemStyle.options is "icons,text,both"
 metadata itemStyle.default is "both"
 metadata itemStyle.label is "Display style"
 
-/**
-Syntax: set the hiliteColor of <widget> to <color>
-Syntax: get the hiliteColor of <widget>
-
-Summary: The color of the highlighted navigation item
-
-Description:
-The <hiliteColor> is used to draw the icon and/or label of the
-navigation item that is <hilitedItemName|currently highlighted>.
-
-Related: hilitedItemName(property)
-*/
-metadata hiliteColor.editor is "com.livecode.pi.color"
-metadata hiliteColor.label is "Selected item color"
-metadata hiliteColor.section is "Colors"
-metadata hiliteColor.default is "10,95,244"
-
-/**
-Name: foreColor
-
-Syntax: set the foreColor of <widget> to <color>
-Syntax: get the foreColor of <widget>
-
-Summary: The color of the navigation items that are not highlighted
-
-Description:
-The <foreColor> is used to draw the icons and/or labels of the
-navigation items that are not <hilitedItemName|currently highlighted>.
-
-Related: hilitedItemName(property)
-*/
-metadata foregroundColor.editor is "com.livecode.pi.color"
-metadata foregroundColor.label is "Item color"
-metadata foregroundColor.section is "Colors"
-metadata foregroundColor.default is "128,128,128"
-
-/**
-Name: backColor
-
-Syntax: set the backColor of <widget> to <color>
-Syntax: get the backColor of <widget>
-
-Summary: The color of the navigation bar background
-
-Description:
-When the navigation bar has an <opaque> background, it is filled with
-the <backColor>.
-
-Related: opaque(property)
-*/
-metadata backgroundColor.editor is "com.livecode.pi.color"
-metadata backgroundColor.label is "Background color"
-metadata backgroundColor.section is "Colors"
-metadata backgroundColor.default is "244,244,244"
-
-/**
-Syntax: set the borderColor of <widget> to <color>
-Syntax: get the borderColor of <widget>
-
-Summary: The color of the navigation bar border
-
-Description:
-The top border of the navigation bar is drawn using the <borderColor>.
-
-Related: showBorder(property)
-*/
-metadata borderColor.editor is "com.livecode.pi.color"
-metadata borderColor.label is "Border color"
-metadata borderColor.section is "Colors"
-metadata borderColor.default is "166,166,166"
 
 /**
 Syntax: set the hilitedItem of <widget> to <itemNumber>
