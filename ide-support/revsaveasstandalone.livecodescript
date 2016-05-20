@@ -2721,9 +2721,34 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
                exit repeat
             end if
          end repeat
-         
       end repeat
       
+      -- Detect widgets created in script
+      repeat for each key tWidget in revIDEExtensions("widget","installed", false)
+         if tWidget is among the lines of xSettings["extensions"] then
+            next repeat
+         end if
+         
+         if lineOffset(tWidget, tScript) is not 0 then
+            revAddInclusion tWidget, "extensions", xSettings
+         end if
+      end repeat
+      
+      -- Detect use of library extensions
+      local tHandlers
+      repeat for each key tLibrary in revIDEExtensions("library","installed", false) 
+         if tLibrary is among the lines of xSettings["extensions"] then
+            next repeat
+         end if
+         
+         put revIDEExtensionLibraryHandlers(tLibrary) into tHandlers
+         repeat for each line tHandler in tHandlers
+            if lineOffset(tHandler, tScript) is not 0 then
+               revAddInclusion tLibrary, "extensions", xSettings
+            end if
+         end repeat
+         
+      end repeat
    end if
    
    -- answer dialog
