@@ -231,6 +231,8 @@ void MCDeletedObjectsLeaveWait(bool p_dispatching);
 void MCDeletedObjectsOnObjectCreated(MCObject *object);
 void MCDeletedObjectsOnObjectDeleted(MCObject *object);
 void MCDeletedObjectsOnObjectDestroyed(MCObject *object);
+void MCDeletedObjectsOnObjectSuspendDeletion(MCObject *object, void*& r_cookie);
+void MCDeletedObjectsOnObjectResumeDeletion(MCObject *object, void *cookie);
 
 void MCDeletedObjectsDoDrain(void);
 
@@ -287,7 +289,10 @@ protected:
     
     // If this is true, then this object is in the parentScript resolution table.
     bool m_is_parent_script : 1;
-    
+	
+	// If this is true, then the object is currently suspended from deletion.
+	bool m_deletion_is_suspended : 1;
+	
     // Whether to use legacy theming (or native-like theming)
     MCInterfaceTheme m_theme;
     
@@ -1261,6 +1266,8 @@ public:
     // Object pool instance variable manipulation
     MCDeletedObjectPool *getdeletedobjectpool(void) const { return m_pool; }
     void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
+	bool getdeletionissuspended(void) const { return m_deletion_is_suspended; }
+	void setdeletionissuspended(bool value) { m_deletion_is_suspended = value; }
 
 protected:
     IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
