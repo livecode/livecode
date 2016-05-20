@@ -6,7 +6,7 @@ Syntax: set the hilite of <button> to {true | false}
 
 Summary: Determines whether a <button> is <highlight|highlighted>.
 
-Synonyms: highlight,highlite,hilight,highlighted,highlited,hilighted,hilited
+Synonyms: highlight, highlite, hilight, highlighted, highlited, hilighted, hilited
 
 Associations: button
 
