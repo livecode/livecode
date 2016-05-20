@@ -1,4 +1,4 @@
-#Add support for custom entitlements for iOS
+# Add support for custom entitlements for iOS
 
 Custom entitlements can now be added to an iOS app by including one or more 
 `.xcent` files in the copy files section of the standalone builder containing an

@@ -1104,7 +1104,11 @@ private command V2BugGenerate pBugInfo, pBugCategory
    put the keys of pBugInfo into tTags
    GitSortTags tTags
    put the number of lines of tTags into tTagCount
-   
+
+   if tTagCount is 0 then
+      exit V2BugGenerate
+   end if
+
    MarkdownAppend "notes", merge("## Specific [[pBugCategory]] bug fixes")
    
    local tVersion, tBugs, tPrettyVersion, tBugList
