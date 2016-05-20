@@ -1472,7 +1472,8 @@ private function revSBAvailableScriptLibraries
       put tLine into tLibrary["id"]
       put tLine into tLibrary["title"]
       put "script library" into tLibrary["type"]
-      put revSBAllDesktopPlatforms() into tLibrary["platforms"]
+      put revSBAllDesktopPlatforms() & comma & \ 
+            revSBAllMobilePlatforms() into tLibrary["platforms"]
       addToList tLibrary, tInclusions
    end repeat
    return tInclusions
@@ -1726,3 +1727,111 @@ command revSBResolveIncludedExternal pPlatform, @xFile
       end if
    end if
 end revSBResolveIncludedExternal
+
+private command addToStringList pAppend, pValue, @xList
+   if pValue is among the lines of xList then
+      exit addToStringList
+   end if
+   
+   if xList is empty then
+      put pValue into xList
+   else if pAppend then
+      put return & pValue after xList
+   else
+      put pValue & return before xList
+   end if
+end addToStringList
+
+private command appendToStringList pValue, @xList
+   addToStringList true, pValue, xList
+end appendToStringList
+
+private command prependToStringList pValue, @xList
+   addToStringList false, pValue, xList
+end prependToStringList
+
+command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
+   local tModules, tAuxiliaryStackfiles, tStartupScript
+   
+   -- auxiliary_stackfiles key might not be empty
+   put pStandaloneSettings["auxiliary_stackfiles"] into tAuxiliaryStackfiles
+   
+   # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
+   # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
+      local tExtensionFile
+      put revIDEExtensionModuleFile(tExtension) into tExtensionFile
+      appendToStringList tExtensionFile, tModules
+   end repeat
+   
+   repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
+      # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
+      local tLibraryStack
+      put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
+      if there is a stack tLibraryStack then
+         appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
+         appendToStringList "revInternal__LoadLibrary" && tLibraryStack, tStartupScript
+      end if
+   end repeat
+   
+   -- Make sure we include the initialisation library (at the top of the list) if needed
+   if tAuxiliaryStackFiles is not empty then
+      local tRevInitialisationLibrary
+      put the effective filename of stack "revInitialisationLibrary" into tRevInitialisationLibrary
+      local tInitScript
+      put "insert the script of stack" && quote & "revInitialisationLibrary" & quote && "into back" into tInitScript
+      prependToStringList tRevInitialisationLibrary, tAuxiliaryStackFiles
+      prependToStringList tInitScript, tStartupScript
+   end if
+   
+   -- Resave all aux stack files as non-script-only files 
+   local tResavedAux
+   if tAuxiliaryStackFiles is not empty then
+      repeat for each line tStackFile in tAuxiliaryStackFiles
+         local tTempStackFile
+         put the tempname into tTempStackFile
+         revSBResaveScriptOnlyStackAsProperStackFile the short name of stack tStackFile, tStackFile, tTempStackFile
+         appendToStringList tTempStackFile, tResavedAux
+      end repeat
+   end if
+   
+   -- If the datagrid is used, then include the library as an aux stack
+   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+      appendToStringList the effective filename of stack "revDataGridLibrary", tResavedAux
+   end if
+   
+   put tResavedAux into xDeployParams["auxiliary_stackfiles"]
+   put tStartupScript into xDeployParams["startup_script"]
+   put tModules into xDeployParams["modules"]
+end revSBUpdateDeployParams
+
+command revSBRemoveInclusions pStack, pInclusions, pConfirm, @xSettings
+   local tName, tKey
+   repeat for each item tItem in pInclusions
+      put word 1 of tItem into tKey
+      put word 2 to -1 of tItem into tName
+      
+      local tInclude
+      put xSettings["overrideInclusions"][tName] into tInclude
+      if pConfirm and xSettings["overrideInclusions"][tName] is empty then
+         local tSilenceWarning
+         dispatch "revConfirmInclusion" to stack "revStandaloneSettings" with tName, tInclude, tSilenceWarning
+         
+         if tSilenceWarning then
+            local tOverride
+            put xSettings["overrideInclusions"] into tOverride
+            put tInclude into tOverride[tName]
+            set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
+            revSetEdited the short name of stack pStack
+         end if
+      end if
+      
+      if tInclude is not true then
+         local tLineNo
+         put lineOffset(tName, xSettings[tKey]) into tLineNo
+         if tLineNo is not 0 then
+            delete line tLineNo of xSettings[tKey]
+         end if
+      end if
+   end repeat
+end revSBRemoveInclusions

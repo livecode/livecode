@@ -76,6 +76,7 @@ private function badAndroidApiMessage
    return "Not a valid Android API"
 end badAndroidApiMessage
 
+constant kBuiltInImplementations = "scriptLibraries Internet"
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    start using stack "revSBLibrary"
    
@@ -85,9 +86,15 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
    -- If we're searching for inclusions, do it here 
+   local tConfirm
+   put true into tConfirm
    if tSettings["inclusions"] is "search" then 
+      put false into tConfirm
       dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pStack, tSettings
    end if
+   
+   -- Manually remove built-in implementations from detected script library inclusions
+   revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
    
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
@@ -637,16 +644,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       revStandaloneProgress "Building executable..."
       
       local tDeploy
-      # AL-2015-07-24: [[ Standalone Extensions ]] Include selected extensions in android standalone
-      repeat for each line tExtension in revIDEExtensionsOrderByDependency(tSettings["extensions"])
-         local tExtensionFile
-         put revIDEExtensionModuleFile(tExtension) into tExtensionFile
-         if tDeploy["modules"] is empty then
-            put tExtensionFile into tDeploy["modules"]
-         else
-            put return & tExtensionFile after tDeploy["modules"]
-         end if
-      end repeat
+      -- Update the deploy params with script library and extension inclusions
+      revSBUpdateDeployParams pStack, tSettings, tDeploy
       
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
@@ -656,11 +655,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end if
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
-      
-      -- If the datagrid is used, then include the library as an aux stack
-      if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-         put the effective filename of stack "revDataGridLibrary" into tDeploy["auxiliary_stackfiles"]
-      end if
       
       -- Externals to reference (on Android we include drivers in this list)
       repeat for each line tEntry in tExternals
