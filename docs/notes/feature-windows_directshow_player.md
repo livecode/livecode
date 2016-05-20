@@ -1,21 +1,32 @@
 # Windows DirectShow Player Control
 
-Due to the recent decision by Apple to end support for QuickTime on Windows, the player implementation on that platform has been replaced with one based on DirectShow - a Multimedia API available on all supported Windows versions.
-The new implementation should function as a drop-in replacement for the old one, though some properties are not yet implemented.
+Due to the recent decision by Apple to end support for QuickTime on
+Windows, the player implementation on that platform has been replaced
+with one based on DirectShow.  This is a multimedia API that is
+available by default on all versions of Windows supported by LiveCode.
 
-## Property Changes
-Functionality of the following Player properties on Windows has changed:
+The new implementation should function as a drop-in replacement for
+the old one, though some properties are not yet implemented.
 
-**Removed:** alwaysBuffer, callbacks, enabledTracks, mediaTypes, mirrored, trackCount, tracks.
+### Property Changes
+On Windows, the behaviour of some properties of the player control have changed.
 
-**Added:** loadedTime.
+- The **loadedTime** property previously did not work on Windows, but now does.
+- The **alwaysBuffer**, **callbacks**, **enabledTracks**,
+  **mediaTypes**, **mirrored**, **trackCount** and **tracks**
+  properties do not currently work, but will be re-enabled in a
+  subsequent release.
 
-We will be working to reinstate these properties where possible.
+On all platforms, the following player control properties, which are
+specific to QuickTime and QTVR, have been deprecated: **constraints**,
+**currentNode**, **movieControllerId**, **nodes**, **pan**, **tilt**,
+and **zoom**.
 
-In addition, the following properties specific to QuickTime and QTVR have been deprecated:
+### Supported File Formats
 
-**Deprecated:** constraints, currentNode, movieControllerId, nodes, pan, tilt, zoom
+Media format support in the new Windows player control depends on
+which codecs are installed.
 
-## Supported File Formats
-
-Media format support in DirectShow depends on the installed codecs, though the following page lists the file formats and compression types available as standard: https://msdn.microsoft.com/en-us/library/ms787745(VS.85).aspx
+A list of the
+[file formats and compression types available as standard](https://msdn.microsoft.com/en-us/library/ms787745(VS.85).aspx)
+on Windows is available in the MSDN documentation
