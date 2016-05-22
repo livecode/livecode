@@ -91,3 +91,119 @@ TestAssert "test", "-6,-11" is not within "-5,-10,5,10"
 TestAssert "test", "5,10" is not within "-5,-10,5,10"
 
 end TestGraphicsIsNotWithin
+
+-- new brush mapping for 101..135
+-- brush < 101 = brush
+-- 101 < brush < 135 = brush - 100
+-- brush > 136 = brush
+
+on TestBrushWithNoIcons
+	TestAssert "set brush with revicons stack not loaded", SetBrushNoIcons() is not 2
+end TestBrushWithNoIcons
+
+on TestBadBrush100
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	set the brush to 8
+	TestAssert "no brush with id=100", SetBrush100() is not 100
+	TestAssert "brush image not found", the brush is 8
+end TestBadBrush100
+
+on TestBadBrushZero
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	set the brush to 8
+	TestAssert "no brush with id=0", SetBrushZero() is not zero
+	TestAssert "brush image not found", the brush is 8
+end TestBadBrushZero
+
+function SetBrushNoIcons
+	try
+		set the brush to 2
+	catch e
+		TestDiagnostic e
+	end try
+	return the brush
+end SetBrushNoIcons
+
+function SetBrush100
+	try
+		set the brush to 100
+	catch e
+		TestDiagnostic e
+	end try
+	return the brush
+end SetBrush100
+
+function SetBrushZero
+	try
+		set the brush to 0
+	catch e
+		TestDiagnostic e
+	end try
+	return the brush
+end SetBrushZero
+
+on TestBrush
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	set the brush to 30
+	TestAssert "brush > 35 unchanged", the brush is 30
+end TestBrush
+
+on TestRemappedBrush
+	local tBrush
+	
+	open stack "../ide/Toolset/palettes/revicons.rev"
+#	repeat with tBrush = 101 to 102
+#		set the brush to tBrush
+#		TestAssert "100 < brush < 136 subtracts 100", the brush is (tBrush-100)
+#	end repeat
+	set the brush to 101
+	TestAssert "brush = 101 unchanged", the brush is 1
+end TestRemappedBrush
+
+on TestBrushInBounds
+	local tBrush
+	
+	open stack "../ide/Toolset/palettes/revicons.rev"
+#	repeat with tBrush = 1 to 1
+#		set the brush to tBrush
+#		TestAssert "1 < brush < 35 unchanged", the brush is tBrush
+#	end repeat
+	set the brush to 1
+	TestAssert "brush = 1 unchanged", the brush is 1
+end TestBrushInBounds
+
+on TestBrushBoundaries
+	open stack "../ide/Toolset/palettes/revicons.rev"
+#	set the brush to 99
+#	TestAssert "brush = 99 unchanged", the brush is 99
+	set the brush to 136
+	TestAssert "brush = 136 unchanged", the brush is 136
+end TestBrushBoundaries
+
+on TestBrush137
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	set the brush to 137
+	TestAssert "brush > 136 is unchanged", the brush is 137
+end TestBrush137
+
+on TestSpray
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	set the spray to 2
+	TestAssert "directly setting the spray", the spray is 2
+end TestSpray
+
+on TestEraser
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	set the eraser to 8
+	TestAssert "directly setting the eraser", the eraser is 8
+end TestEraser
+
+on TestResetPaint
+	open stack "../ide/Toolset/palettes/revicons.rev"
+	reset paint
+	TestAssert "brush is reset to 8", the brush is 8
+	TestAssert "spray is reset to 34", the spray is 34
+	TestAssert "eraser is reset to 2", the eraser is 2
+end TestResetPaint
+
+

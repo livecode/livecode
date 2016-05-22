@@ -1991,8 +1991,9 @@ void MCInterfaceSetRelayerGroupedControls(MCExecContext& ctxt, bool p_value)
 void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_value)
 {
 	uint4 t_newbrush = p_value;
-	// MDW-2016-05-06 [[ bugfix_17553 ]] safer to compare against PI_BRUSHES than PI_PATTERNS
-	if (t_newbrush < PI_BRUSHES)
+	// MDW-2016-05-21 [[ bugfix_17553 ]] map low brush values up to 101..135 range
+	// if less than 36, map to 101..135
+	if (t_newbrush < (PI_PATTERNS-PI_BRUSHES))
 		t_newbrush += PI_BRUSHES;
 
 	// MW-2009-02-02: [[ Improved image search ]]
@@ -2029,7 +2030,11 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_v
 
 void MCInterfaceGetBrush(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCbrush < PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
+	// MDW-2016-05-21 [[ bugfix_17553 ]] map 101..135 down to 1..35
+	if (MCbrush < PI_PATTERNS)
+		r_value = MCbrush > PI_BRUSHES ? MCbrush - PI_BRUSHES : MCbrush;
+	else
+		r_value = MCbrush;
 }
 
 void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
@@ -2039,7 +2044,11 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetEraser(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCeraser < PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
+	// MDW-2016-05-21 [[ bugfix_17553 ]] map 101..135 down to 1..35
+	if (MCeraser < PI_PATTERNS)
+		r_value = MCeraser > PI_BRUSHES ? MCeraser - PI_BRUSHES : MCeraser;
+	else
+		r_value = MCeraser;
 }
 
 void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
@@ -2049,7 +2058,11 @@ void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetSpray(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCspray < PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
+	// MDW-2016-05-21 [[ bugfix_17553 ]] map 101..135 down to 1..35
+	if (MCspray < PI_PATTERNS)
+		r_value = MCspray > PI_BRUSHES ? MCspray - PI_BRUSHES : MCspray;
+	else
+		r_value = MCspray;
 }
 
 void MCInterfaceSetSpray(MCExecContext& ctxt, uinteger_t p_value)
