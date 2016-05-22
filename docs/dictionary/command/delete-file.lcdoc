@@ -34,10 +34,36 @@ This command can also be used to remove files your stack did not create. Of cour
 
 >*Warning:* This <command> cannot be undone, so be very certain before you use it. The <delete file> <command> removes the file completely from the user's system. It does not place the file in the Trash or Recycle Bin.
 
+To place a file in the OS X Trash use the <rename> command or the <do> command for the Windows Recycle Bin:
+
+	local tName, tNameTrash
+	answer file "Choose a file to Trash:"
+	put it into tName
+	switch (the platform)
+		case "MacOS"
+			--on OS X the Trash is ~/.Trash/ so all you need to do is
+			--rename your file to '~/.Trash/fileToTrash'.
+			put tName into tNameTrash
+			set the itemDel to "/"
+			put "~/.Trash" into item 1 to -2 of tNameTrash
+			rename file tName to tNameTrash
+		break
+		case "Win32"
+			--on Windows VBScript is required to move a file to the Recycle Bin
+			replace "/" with "\" in tName
+			put "Const RECYCLE_BIN = &Ha&" & cr & \
+			"Set objShell = CreateObject(`Shell.Application`)" & cr & \
+			"Set recycleFolder = objShell.NameSpace(RECYCLE_BIN)" & cr & \
+			"recycleFolder.MoveHere `" & tName & "`" into tScript
+			replace "`" with quote in tScript
+			do tScript as "VBScript"
+		break
+	end switch
+
 >*Note:* iOS imposes strict controls over what you can and cannot access. Each application in iOS is stored in its own 'sandbox' folder (referred to as the home folder). An application is free to read and write files within this folder and its descendants, but it is not allowed to access anything outside of the 'sandbox'.
 
 >*Note:* An Android application is installed on the phone in the form of its zip package. This means that any assets that are included are not available as discrete files in the native filesystem. In order to manage this the engine essentially 'virtualizes' the asset files you include, allowing (read-only) manipulation with all the standard LiveCode file and folder handling syntax.
 
-References: revDeleteFolder (command), close file (command), delete URL (command), delete (command), file (keyword), command (glossary)
+References: revDeleteFolder (command), close file (command), delete URL (command), delete (command), rename (command), do (command), file (keyword), command (glossary)
 
 Tags: file system
