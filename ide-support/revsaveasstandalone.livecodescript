@@ -2606,7 +2606,7 @@ command revSearchForInclusions pStack, @xSettings
    -- ensure revSBLibrary is in use
    start using stack "revSBLibrary"
 
-   revSmartChecking revRelativeStackFilesList(pStack), xSettings
+   revSmartChecking revGetStackFilesList(pStack), xSettings
 end revSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings
@@ -2635,7 +2635,7 @@ private command revSmartChecking pStackFilesList, @xSettings
    put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
    put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
    
-   repeat for each line tStackFile in pStackFilesList["full"]
+   repeat for each line tStackFile in pStackFilesList
       put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
       repeat for each line tStack in tStacksList
          # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
@@ -2668,6 +2668,9 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
    if the password of stack (revTargetStack(pObject)) then
       exit revCheckObject
    end if
+   
+   -- Keep the progress indicator updated
+   revStandaloneProgress "Auto detecting library inclusions..."
    
    # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
    local tProps, tLib, tProperty
@@ -2735,23 +2738,44 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
                exit repeat
             end if
          end repeat
-         
       end repeat
       
+      -- Detect widgets created in script
+      repeat for each key tWidget in revIDEExtensions("widget","installed", false)
+         if tWidget is among the lines of xSettings["extensions"] then
+            next repeat
+         end if
+         
+         if lineOffset(tWidget, tScript) is not 0 then
+            revAddInclusion tWidget, "extensions", xSettings
+         end if
+      end repeat
+      
+      -- Detect use of library extensions
+      local tHandlers
+      repeat for each key tLibrary in revIDEExtensions("library","installed", false) 
+         if tLibrary is among the lines of xSettings["extensions"] then
+            next repeat
+         end if
+         
+         put revIDEExtensionLibraryHandlers(tLibrary) into tHandlers
+         repeat for each line tHandler in tHandlers
+            if lineOffset(tHandler, tScript) is not 0 then
+               revAddInclusion tLibrary, "extensions", xSettings
+            end if
+         end repeat
+         
+      end repeat
    end if
    
-   -- answer dialog
-   if lineOffset("answer",tScript) is not 0 then
-      put true into xSettings["answerDialog"]
-   end if
-   -- ask dialog
-   if lineOffset("ask",tScript) is not 0 then
-      put true into xSettings["askDialog"]
-   end if
-   -- pdf printer
-   if lineOffset("open printing to pdf", tScript) is not 0 then
-      put true into xSettings["pdfPrinter"]
-   end if
+   local tInclusion, tSyntax
+   repeat for each item tItem in "answerDialog answer,askDialog ask,pdfPrinter open printing to pdf"
+      put word 1 of tItem into tInclusion
+      put word 2 to -1 of tItem into tSyntax
+      if not xSettings[tInclusion] and lineOffset(tSyntax, tScript) is not 0 then
+         put true into xSettings[tInclusion]
+      end if
+   end repeat
    
    # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
    # or if we are building for linux. (This might include the files more often than they are required).

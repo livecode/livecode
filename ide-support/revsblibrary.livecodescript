@@ -1780,7 +1780,14 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
-   repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
+   local tExtensions
+   put revSBListWidgetsInUse(pStack) into tExtensions
+   if tExtensions is not empty then
+      put return after tExtensions
+   end if
+   put pStandaloneSettings["extensions"] after tExtensions
+   
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(tExtensions)
       local tExtensionFile
       put revIDEExtensionModuleFile(tExtension) into tExtensionFile
       appendToStringList tExtensionFile, tModules
@@ -1857,3 +1864,28 @@ command revSBRemoveInclusions pStack, pInclusions, pConfirm, @xSettings
       end if
    end repeat
 end revSBRemoveInclusions
+
+private command revSBListWidgetsOfStack pStack, @xWidgetKindsA
+   local tNumCards, tNumWidgets, tKind
+   put the number of cards of pStack into tNumCards
+   repeat with tCard = 1 to tNumCards
+      put the number of widgets of card tCard of pStack into tNumWidgets
+      repeat with tWidget = 1 to tNumWidgets
+         put the kind of widget tWidget of card tCard of pStack into tKind
+         put "" into xWidgetKindsA[tKind]
+      end repeat
+   end repeat
+end revSBListWidgetsOfStack
+
+function revSBListWidgetsInUse pStack
+   local tStackFilesList, tStacksList, tWidgetKindsA
+   put revGetStackFilesList(pStack) into tStackFilesList
+   repeat for each line tStackFile in tStackFilesList
+      put the short name of stack tStackFile & return \ 
+            & the substacks of stack tStackFile into tStacksList
+      repeat for each line tStack in tStacksList
+         revSBListWidgetsOfStack the long id of stack tStack, tWidgetKindsA
+      end repeat
+   end repeat
+   return the keys of tWidgetKindsA
+end revSBListWidgetsInUse
