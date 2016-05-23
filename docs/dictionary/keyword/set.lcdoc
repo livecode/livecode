@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: set
 
-Summary: Specifies one of the <transfer mode|transfer modes> that can be used with the <ink> <property>.
+Summary: Specifies one of the <transfer mode|transfer modes> that can be
+used with the <ink> <property>. 
 
 Introduced: 1.0
 
@@ -18,12 +19,21 @@ set the ink of last button to set
 Description:
 Use the <set> <keyword> to turn an <object(glossary)> white.
 
-The <ink> <property> determines how an <object|object's> colors combine with the colors of the <pixels> underneath the <object(glossary)> to determine how the <object|object's> color is displayed.
+The <ink> <property> determines how an <object|object's> colors combine
+with the colors of the <pixels> underneath the <object(glossary)> to
+determine how the <object|object's> color is displayed. 
 
-When the <set> mode is used, each component of the color underneath the <object(glossary)> --red, green, and blue--is raised to be equal to white.
+When the <set> mode is used, each component of the color underneath the
+<object(glossary)> --red, green, and blue--is raised to be equal to
+white. 
 
-The <set> mode can be used only on <Unix> and <Windows|Windows systems>. On <Mac OS|Mac OS systems>, <object|objects> whose <ink> <property> is set to this mode appear as though their <ink> were set to <reverse>.
+The <set> mode can be used only on <Unix> and <Windows|Windows systems>.
+On <Mac OS|Mac OS systems>, <object|objects> whose <ink> <property> is
+set to this mode appear as though their <ink> were set to <reverse>. 
 
-References: reverse (keyword), notSrcCopy (keyword), ink (property), pixels (property), object (glossary), property (glossary), keyword (glossary), Unix (glossary), Windows (glossary), Mac OS (glossary), transfer mode (glossary)
+References: reverse (keyword), notSrcCopy (keyword), ink (property),
+pixels (property), object (glossary), property (glossary),
+keyword (glossary), Unix (glossary), Windows (glossary),
+Mac OS (glossary), transfer mode (glossary)
 
 Tags: ui

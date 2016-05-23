@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the scriptOnly of <stack> to { true | false }
 
-Summary: Specifies whether the stack should be saved as script only which does not retain any objects or custom properties
+Summary: Specifies whether the stack should be saved as script only
+which does not retain any objects or custom properties 
 
 Associations: stack
 
@@ -43,11 +44,18 @@ Parameters:
 Stack: The name or ID of the stack.
 
 Description:
-A <scriptOnly> stack will save just the script with a single header line declaring the stack name. Any other objects or properties of the stack will not be written to disk.
+A <scriptOnly> stack will save just the script with a single header line
+declaring the stack name. Any other objects or properties of the stack
+will not be written to disk. 
 
-The <scriptOnly> property has been added to enable scripts to detect and set the file format of the stack. Without this property it is not possible to detect the file format the stack is being saved in without examining the file itself.
+The <scriptOnly> property has been added to enable scripts to detect and
+set the file format of the stack. Without this property it is not
+possible to detect the file format the stack is being saved in without
+examining the file itself. 
 
->*Warning:* <scriptOnly> stacks only save the stack name and script. Any property changes and objects created while the stack is open will not exist the next time the stack is opened.
+>*Warning:* <scriptOnly> stacks only save the stack name and script. Any
+property changes and objects created while the stack is open will not
+exist the next time the stack is opened. 
 
 Refereneces: create stack (command), stack (object)
 

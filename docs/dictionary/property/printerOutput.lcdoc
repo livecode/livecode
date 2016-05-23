@@ -35,11 +35,14 @@ Value (enum): The <printerOutput> can be one of the following values.The default
  - system: output in a system-specific mode. This setting is read-only, and can occur if you configure an output in the answer printer dialog that LiveCode does not recognise (e.g. WorkFlow output options on Mac OS X 10.4 and above).
 
 Description:
-Use the <printerOutput> property to determine or change the destination of a print job.
+Use the <printerOutput> property to determine or change the destination
+of a print job. 
 
-Setting the <printerOutput> to an invalid value will result in a script execution error.
+Setting the <printerOutput> to an invalid value will result in a script
+execution error. 
 
-To have an effect, this property must be set before calling <open printing>.
+To have an effect, this property must be set before calling <open
+printing>. 
 
 References: open printing (command), answer printer (command)
 

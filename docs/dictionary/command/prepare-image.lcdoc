@@ -26,9 +26,9 @@ into the image cache.
 
 filename: The location and name of the image file you want to load and 
 decompress into the image data cache. Since the image data cache is 
-keyed on the absolute filename, any images which reference that file are 
-able to use the data from the cache. This assumes that the cache has not 
-been flushed.
+keyed on the absolute filename, any images which reference that file
+are able to use the data from the cache. This assumes that the cache has
+not been flushed.
 
 Description:
 Use the <prepare image> <command> to speed up <execute|execution> when 

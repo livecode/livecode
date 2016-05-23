@@ -30,8 +30,8 @@ separated from the stack file and lost.
 Audio clips can be in WAV, AIFF, or AU format
 
 An audio clip is contained in a stack. Audio clips cannot contain other 
-objects. (An audio clip is not a control, since it has no user interface 
-and cannot be owned by a <card>.)
+objects. (An audio clip is not a control, since it has no user
+interface and cannot be owned by a <card>.)
 
 To play an audioClip, use the syntax 
 

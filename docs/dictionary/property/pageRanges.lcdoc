@@ -4,7 +4,8 @@ Type: property
 
 Syntax: get the pageRanges of <field> 
 
-Summary: Splits the content of a field into pages based on the height of a field.
+Summary: Splits the content of a field into pages based on the height of
+a field. 
 
 Associations: field
 
@@ -23,12 +24,16 @@ field: A reference to a field
 Value: Returns a list of char ranges, one per line.
 
 Description:
-Use the <pageRanges> property to split field content into pages based on the height of the field.
+Use the <pageRanges> property to split field content into pages based on
+the height of the field. 
 
-The <pageRanges> property (notionally) splits up the field content into pages based on the height of the field, and then returns a return-delimited list of char ranges. Each char range corresponds to an individual page.
+The <pageRanges> property (notionally) splits up the field content into
+pages based on the height of the field, and then returns a
+return-delimited list of char ranges. Each char range corresponds to an
+individual page. 
 
-For example, for a field capable of displaying two lines of text and containing these lines:
-Line 1
+For example, for a field capable of displaying two lines of text and
+containing these lines: Line 1
 Line 2
 Line 3
 Line 4

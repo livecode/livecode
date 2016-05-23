@@ -4,7 +4,9 @@ Type: keyword
 
 Syntax: element
 
-Summary: Used with the <repeat> <control structure> to specify that the statements in the repeat loop will be executed once for each <element> in an <array>.
+Summary: Used with the <repeat> <control structure> to specify that the
+statements in the repeat loop will be executed once for each <element>
+in an <array>. 
 
 Introduced: 1.1
 
@@ -16,9 +18,12 @@ Example:
 repeat for each element thisMonth in monthlyReceivables
 
 Description:
-Use the <element> <keyword> to perform an action on all the elements of an <array>.
+Use the <element> <keyword> to perform an action on all the elements of
+an <array>. 
 
-The word after the phrase for each element is a variable name. The value of each element is placed in this variable during that iteration of the <repeat> loop.
+The word after the phrase for each element is a variable name. The value
+of each element is placed in this variable during that iteration of the
+<repeat> loop. 
 
 The structure
 
@@ -35,6 +40,8 @@ is equivalent to
 
 However, the first form, using the <element> <keyword>, is much faster.
 
-References: each (keyword), item (keyword), element (keyword), array (glossary), keyword (glossary), control structure (glossary), repeat (control structure)
+References: each (keyword), item (keyword), element (keyword),
+array (glossary), keyword (glossary), control structure (glossary),
+repeat (control structure)
 
 Tags: properties

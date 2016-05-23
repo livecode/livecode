@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the showPict of <card> to {true | false}
 
-Summary: This <property> is included in <LiveCode> for compatibility with imported <HyperCard> stacks.
+Summary: This <property> is included in <LiveCode> for compatibility
+with imported <HyperCard> stacks. 
 
 Associations: card
 
@@ -13,8 +14,12 @@ Introduced: 1.0
 Platforms: desktop,server,web
 
 Description:
-In HyperCard, the <showPict> <property> determines whether the <card> <image> is visible.
+In HyperCard, the <showPict> <property> determines whether the <card>
+<image> is visible. 
 
-In LiveCode, setting this property does not cause a script error, but doing so has no effect.
+In LiveCode, setting this property does not cause a script error, but
+doing so has no effect. 
 
-References: visible (property), card (keyword), image (keyword), show (command), hide (command), property (glossary), LiveCode (glossary), HyperCard (glossary)
+References: visible (property), card (keyword), image (keyword),
+show (command), hide (command), property (glossary),
+LiveCode (glossary), HyperCard (glossary)

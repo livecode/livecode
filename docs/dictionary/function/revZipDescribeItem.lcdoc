@@ -21,17 +21,21 @@ Example:
 put item 6 of revZipDescribeItem(tArchive, "myZippedItem") into tCompressionMethod
 
 Parameters:
-archivePath: The absolute path to the archive containing the item to describe.
-itemName: The name of the item to describe in the archive.
+archivePath: The absolute path to the archive containing the item to
+describe. itemName: The name of the item to describe in the archive.
 
 Returns:
 This function returns a comma delimited list of details in the form:
 index, crc, size, mtime, compressed_size, compression_method.
 
 Description:
-Use the <revZipDescribeItem> function to obtain detailed information about a given item in an open zip archive. The archive must first have been opened using the <revZipOpenArchive> command.
+Use the <revZipDescribeItem> function to obtain detailed information
+about a given item in an open zip archive. The archive must first have
+been opened using the <revZipOpenArchive> command. 
 
->*Note:* While the Zip library can read most archives, extracting files from archives is only supported for files compressed with the method deflate.
+>*Note:* While the Zip library can read most archives, extracting files
+from archives is only supported for files compressed with the method
+deflate. 
 
 References: revZipDeleteItem (command), revZipOpenArchive (command)
 

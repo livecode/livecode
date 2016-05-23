@@ -20,10 +20,12 @@ the capsLockKey
 Example:
 if the capsLockKey is down then exit repeat
 
-Returns: The <capsLockKey> function <return|returns> down if the key is locked down and up if it's not.
+Returns: The <capsLockKey> function <return|returns> down if the key is
+locked down and up if it's not. 
 
 Description:
-Use the <capsLockKey> function to check whether the Caps Lock key is locked down.
+Use the <capsLockKey> function to check whether the Caps Lock key is
+locked down. 
 
 References: keysDown (function), return (glossary)
 

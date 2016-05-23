@@ -29,16 +29,23 @@ upperLimit: A number.
 Returns: The <random> <function> <return|returns> an <integer>.
 
 Description:
-Use the <random> <function> to pick a <random> member of a set, or to generate a <random> number.
+Use the <random> <function> to pick a <random> member of a set, or to
+generate a <random> number. 
 
-If the <upperLimit> is a positive <integer>, the <random> <function> <return|returns> an <integer> between 1 and the <upperLimit>. If the <upperLimit> is a number that is not an <integer>, the <random> function <return|returns> an <integer> between 1 and round(<upperLimit>).
+If the <upperLimit> is a positive <integer>, the <random> <function>
+<return|returns> an <integer> between 1 and the <upperLimit>. If the
+<upperLimit> is a number that is not an <integer>, the <random> function
+<return|returns> an <integer> between 1 and round(<upperLimit>). 
 
-To generate a random number between two integers, use a handler like this:
+To generate a random number between two integers, use a handler like
+this: 
 
   function randomInRange lowerLimit,upperLimit
     return random(upperLimit - lowerLimit + 1) + lowerLimit - 1
   end randomInRange
 
-References: any (keyword), integer (keyword), randomSeed (property), round (function), random (function), return (glossary), function (control structure)
+References: any (keyword), integer (keyword), randomSeed (property),
+round (function), random (function), return (glossary),
+function (control structure)
 
 Tags: math

@@ -18,8 +18,13 @@ on playerFinished
 end playerFinished
 
 Description:
-Handle the <playerFinished> message when the content of the movie player has finished playing.
+Handle the <playerFinished> message when the content of the movie player
+has finished playing. 
 
-You can test the playbackState of the player by using the <mobileControlGet> function.
+You can test the playbackState of the player by using the
+<mobileControlGet> function. 
 
-References: playerMovieChanged (message), playerError (message), playerLeaveFullscreen (message), playerStopped (message), playerProgressChanged (message), playerPropertyAvailable (message), playerEnterFullscreen (message), mobileControlGet (function)
+References: playerMovieChanged (message), playerError (message),
+playerLeaveFullscreen (message), playerStopped (message),
+playerProgressChanged (message), playerPropertyAvailable (message),
+playerEnterFullscreen (message), mobileControlGet (function)

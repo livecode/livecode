@@ -63,19 +63,21 @@ The <loopForm> is one of the following forms:
   - `until `*`condition`*
   - `while `*`condition`*
   - `[for] `*`number`*` [times]`
-  - `with `*`counterVariable`*` = `*`startValue`*` {to | down to} `*`endValue`*` [step `*`increment`*`]`
-  - `for each `*`chunkType`* *`labelVariable`*` in `*`container`*
-  - `for each element `*`labelVariable`*` in `*`array`*
-  - `for each key `*`labelVariable`*` in `*`array`*
-statementList: One or more LiveCode statements, and can also include `if`, `switch`, 
-`try`, or `repeat` <control structure|control structures>.
-condition (bool): Any <expression> that <evaluate|evaluates> to true or false.
-number, startValue, endValue, and increment: Numbers or <expression|expressions> that evaluate to numbers.
-counter or labelVariable: A legal <variable> name.
-chunkType: One of these text chunk types: byte, codeunit, codepoint, character (or char), 
+  - `with `*`counterVariable`*` = `*`startValue`*` {to | down to}
+  `*`endValue`*` [step `*`increment`*`]` - `for each `*`chunkType`*
+  *`labelVariable`*` in `*`container`* - `for each element
+  `*`labelVariable`*` in `*`array`* - `for each key `*`labelVariable`*`
+in `*`array`* statementList: One or more LiveCode statements, and can
+also include `if`, `switch`, `try`, or `repeat` <control
+structure|control structures>. condition (bool): Any <expression> that
+<evaluate|evaluates> to true or false. number, startValue, endValue, and
+increment: Numbers or <expression|expressions> that evaluate to numbers.
+counter or labelVariable: A legal <variable> name. chunkType: One of
+these text chunk types: byte, codeunit, codepoint, character (or char),
 token, trueword, word (or segment), item, sentence, paragraph or line.
 container: Any existing <container>; e.g. a <variable> or a <field>.
-array (array): Any existing <container> that contains an <array> of <value|values>.
+array (array): Any existing <container> that contains an <array> of
+<value|values>. 
 
 Description:
 Use the <repeat> <control structure> to perform the same series of
@@ -269,8 +271,8 @@ References: iteration (glossary), array (glossary), card (keyword),
 chunk (glossary), conditional (glossary), container (glossary), 
 control structure (glossary), delimit (glossary), each (keyword), 
 element (glossary), element (keyword), end repeat (keyword), 
-execute (glossary), field (glossary), for (keyword), forever (keyword), 
-function (glossary), integer (glossary), keyword (glossary), 
+execute (glossary), field (glossary), for (keyword), forever (keyword),
+, function (glossary), integer (glossary), keyword (glossary), 
 line (keyword), next repeat (control structure), round (function), 
-stack (object), statement (glossary), until (keyword), value (glossary), 
-variable (glossary), wait (command), while (keyword)
+stack (object), statement (glossary), until (keyword), value (glossary),
+, variable (glossary), wait (command), while (keyword)

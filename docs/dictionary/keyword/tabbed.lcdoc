@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: tabbed
 
-Summary: Specifies one of the menu types that can be used with the <menuMode> <property>.
+Summary: Specifies one of the menu types that can be used with the
+<menuMode> <property>. 
 
 Introduced: 1.0
 
@@ -20,6 +21,7 @@ Use the <tabbed> <keyword> to create a set of tabs in a window.
 
 Tabbed buttons are normally used to switch between sets of options.
 
-References: popup (keyword), menuMode (property), property (glossary), keyword (glossary)
+References: popup (keyword), menuMode (property), property (glossary),
+keyword (glossary)
 
 Tags: menus

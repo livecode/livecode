@@ -4,7 +4,8 @@ Type: command
 
 Syntax: revStopRecordingVideo
 
-Summary: Stops a <video capture> that was started with the <revRecordVideo> <command>.
+Summary: Stops a <video capture> that was started with the
+<revRecordVideo> <command>. 
 
 Introduced: 2.0
 
@@ -21,12 +22,25 @@ Example:
 if the mouseClick then revStopRecordingVideo
 
 Description:
-Use the <revStopRecordingVideo> <command> to stop recording video input to a <file>.
+Use the <revStopRecordingVideo> <command> to stop recording video input
+to a <file>. 
 
-The <revStopRecordingVideo> <command> stops a recording started with the <revRecordVideo> <command>. If no recording is in progress, this command has no effect.
+The <revStopRecordingVideo> <command> stops a recording started with the
+<revRecordVideo> <command>. If no recording is in progress, this command
+has no effect. 
 
->*Important:*   The <revStopRecordingVideo> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*   The <revStopRecordingVideo> <command> is part of the
+<Video library>. To ensure that the <command> works in a <standalone
+application>, you must include this <LiveCode custom library|custom
+library> when you create your <standalone application|standalone>. In
+the Inclusions section on the General screen of the <Standalone
+Application Settings> window, make sure that "Video Grabber" is selected
+from the list of script libraries. 
 
-References: file (keyword), revStopPreviewingVideo (command), revRecordVideo (command), stop recording (command), video capture (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), Video library (library), LiveCode custom library (library)
+References: file (keyword), revStopPreviewingVideo (command),
+revRecordVideo (command), stop recording (command),
+video capture (glossary), Standalone Application Settings (glossary),
+command (glossary), standalone application (glossary),
+Video library (library), LiveCode custom library (library)
 
 Tags: multimedia

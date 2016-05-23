@@ -4,7 +4,9 @@ Type: property
 
 Syntax: set the hilitePixel of <object> to <colorNumber> 
 
-Summary: Specifies which entry in the <color table> is used for the background color when an <object(glossary)>, or text in an <object(glossary)>, is <highlight|highlighted>.
+Summary: Specifies which entry in the <color table> is used for the
+background color when an <object(glossary)>, or text in an
+<object(glossary)>, is <highlight|highlighted>. 
 
 Synonyms: thirdPixel
 
@@ -20,16 +22,25 @@ Example:
 set the hilitePixel of card button 8 to (the number of cards + 3)
 
 Value:
-The <hilitePixel> of an <object(glossary)> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.
-By default, the <hilitePixel> for all <object|objects> is empty.
+The <hilitePixel> of an <object(glossary)> is an <integer> between zero
+and (the screenColors - 1). It designates an entry in the current color
+table. By default, the <hilitePixel> for all <object|objects> is empty. 
 
 Description:
-Use the <hilitePixel> <property> to change the <highlight> color of an <object(glossary)> when the <bit depth> of the screen is 8 <bit|bits> (256 colors) or less.
+Use the <hilitePixel> <property> to change the <highlight> color of an
+<object(glossary)> when the <bit depth> of the screen is 8 <bit|bits>
+(256 colors) or less. 
 
-The <hilitePixel> <property> specifies which entry in the <color table> is used for an <object|object's> <highlight> color. It is similar to the <hiliteColor> <property>, but is specified as an entry in the current <color table>, rather than as a <color reference>.
+The <hilitePixel> <property> specifies which entry in the <color table>
+is used for an <object|object's> <highlight> color. It is similar to the
+<hiliteColor> <property>, but is specified as an entry in the current
+<color table>, rather than as a <color reference>. 
 
 The color table can be set by changing the colorMap <property>.
 
-References: borderPixel (property), integer (keyword), object (glossary), property (glossary), highlight (glossary), color reference (glossary), bit (glossary), color table (glossary), hiliteColor (glossary), bit depth (glossary)
+References: borderPixel (property), integer (keyword),
+object (glossary), property (glossary), highlight (glossary),
+color reference (glossary), bit (glossary), color table (glossary),
+hiliteColor (glossary), bit depth (glossary)
 
 Tags: ui

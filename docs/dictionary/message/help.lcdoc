@@ -20,10 +20,13 @@ on help
 end help
 
 Description:
-Handle the <help> <message> in order to substitute custom help for the LiveCode help system, or to provide help in a <standalone application>.
+Handle the <help> <message> in order to substitute custom help for the
+LiveCode help system, or to provide help in a <standalone application>. 
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused. 
 
-References: toolTip (property), functionKey (message), message (glossary), standalone application (glossary)
+References: toolTip (property), functionKey (message),
+message (glossary), standalone application (glossary)
 
 Tags: ui

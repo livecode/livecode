@@ -4,7 +4,8 @@ Type: property
 
 Syntax: startFrame
 
-Summary: The <startFrame> <property> is not implemented and is <reserved word|reserved>.
+Summary: The <startFrame> <property> is not implemented and is <reserved
+word|reserved>. 
 
 Introduced: 1.0
 
@@ -12,4 +13,5 @@ OS: ios,android
 
 Platforms: desktop,server,web,mobile
 
-References: currentFrame (property), endFrame (property), property (glossary), reserved word (glossary)
+References: currentFrame (property), endFrame (property),
+property (glossary), reserved word (glossary)

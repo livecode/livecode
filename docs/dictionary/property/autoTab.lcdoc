@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the autoTab of <field> to {true | false}
 
-Summary: Specifies whether pressing Return (or Enter) moves to the next <field>.
+Summary: Specifies whether pressing Return (or Enter) moves to the next
+<field>. 
 
 Associations: field
 
@@ -27,12 +28,19 @@ Value (bool):The <autoTab> of a <field(keyword)> is true or false.
 By default, the <autoTab> <property> of newly created <field(object)|fields> is set to false.
 
 Description:
-Use the <autoTab> <property> to make data entry easier for single-line <field(object)|fields>.
+Use the <autoTab> <property> to make data entry easier for single-line
+<field(object)|fields>. 
 
-If the <autoTab> <property> of a <field(keyword)> is false, pressing the Return key moves the <insertion point> to the next line of the <field(keyword)>.
+If the <autoTab> <property> of a <field(keyword)> is false, pressing the
+Return key moves the <insertion point> to the next line of the
+<field(keyword)>. 
 
-If the <autoTab> of a <field(keyword)> is true, and the <insertion point> is already at the last visible line of the <field(keyword)>, then pressing Return advances to the next <field(keyword)> on the <card>.
+If the <autoTab> of a <field(keyword)> is true, and the <insertion
+point> is already at the last visible line of the <field(keyword)>, then
+pressing Return advances to the next <field(keyword)> on the <card>. 
 
-References: tabStops (property), field (keyword), card (keyword), tabKey (message), field (object), property (glossary), insertion point (glossary)
+References: tabStops (property), field (keyword), card (keyword),
+tabKey (message), field (object), property (glossary),
+insertion point (glossary)
 
 Tags: ui

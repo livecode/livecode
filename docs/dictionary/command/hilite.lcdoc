@@ -25,10 +25,16 @@ Parameters:
 button: Any button reference.
 
 Description:
-Use the <hilite> <command> to draw attention to a <button(keyword)>, or to emulate the action of a <button(keyword)> when it's being pressed, or to turn on a <checkbox> or <radio button>.
+Use the <hilite> <command> to draw attention to a <button(keyword)>, or
+to emulate the action of a <button(keyword)> when it's being pressed, or
+to turn on a <checkbox> or <radio button>. 
 
-The <hilite> <command> sets the <button(object)|button's> <hilite> <property> to true.
+The <hilite> <command> sets the <button(object)|button's> <hilite>
+<property> to true. 
 
-References: autoHilite (property), hilite (property), button (keyword), enable (command), unhilite (command), select (command), button (object), property (glossary), highlight (glossary), radio button (glossary), command (glossary), checkbox (glossary)
+References: autoHilite (property), hilite (property), button (keyword),
+enable (command), unhilite (command), select (command), button (object),
+property (glossary), highlight (glossary), radio button (glossary),
+command (glossary), checkbox (glossary)
 
 Tags: ui

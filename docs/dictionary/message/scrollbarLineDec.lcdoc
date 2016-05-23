@@ -4,7 +4,8 @@ Type: message
 
 Syntax: scrollbarLineDec <newPosition> 
 
-Summary: Sent to a <scrollbar> when the user clicks the decrease arrow, scrolling backward one <line>.
+Summary: Sent to a <scrollbar> when the user clicks the decrease arrow,
+scrolling backward one <line>. 
 
 Associations: scrollbar
 
@@ -24,12 +25,17 @@ Parameters:
 newPosition: The new position of the scrollbar thumb.
 
 Description:
-Handle the <scrollbarLineDec> <message> if you want to respond to the use of the top or left scrollbar arrow.
+Handle the <scrollbarLineDec> <message> if you want to respond to the
+use of the top or left scrollbar arrow. 
 
-Dragging the scrollbar thumb does not send a <scrollbarLineDec> <message>.
+Dragging the scrollbar thumb does not send a <scrollbarLineDec>
+<message>. 
 
-If the <scrollbarLineDec> <message> is not <handle|handled>, a <scrollbarDrag> <message> is sent in addition.
+If the <scrollbarLineDec> <message> is not <handle|handled>, a
+<scrollbarDrag> <message> is sent in addition. 
 
-References: lineIncrement (property), scrollbar (keyword), line (keyword), scrollbarDrag (message), scrollbarLineInc (message), scrollbarBeginning (message), handle (glossary), message (glossary)
+References: lineIncrement (property), scrollbar (keyword),
+line (keyword), scrollbarDrag (message), scrollbarLineInc (message),
+scrollbarBeginning (message), handle (glossary), message (glossary)
 
 Tags: ui

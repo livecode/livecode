@@ -21,10 +21,18 @@ on unIconifyStack -- in stack script
 end unIconifyStack
 
 Description:
-Handle the <unIconifyStack> message if you want to do something special when the user expands the window to normal size.
+Handle the <unIconifyStack> message if you want to do something special
+when the user expands the window to normal size. 
 
-The terminology varies depending on platform. The <unIconifyStack> message is sent when the user expands (<Mac OS|Mac OS systems>), un-iconifies (<Unix|Unix systems>), or un-minimizes (<Windows|Windows systems>) the <stack window>.
+The terminology varies depending on platform. The <unIconifyStack>
+message is sent when the user expands (<Mac OS|Mac OS systems>),
+un-iconifies (<Unix|Unix systems>), or un-minimizes (<Windows|Windows
+systems>) the <stack window>. 
 
-References: startUpIconic (property), minimizeBox (property), decorations (property), iconic (property), resumeStack (message), closeStack (message), iconifyStack (message), resizeStack (message), stack (object), Unix (glossary), Windows (glossary), Mac OS (glossary), stack window (glossary)
+References: startUpIconic (property), minimizeBox (property),
+decorations (property), iconic (property), resumeStack (message),
+closeStack (message), iconifyStack (message), resizeStack (message),
+stack (object), Unix (glossary), Windows (glossary), Mac OS (glossary),
+stack window (glossary)
 
 Tags: windowing

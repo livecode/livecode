@@ -25,8 +25,21 @@ end if
 Returns: Returns true if in-app purchases can be made, and false if not.
 
 Description:
-Use the mobileStoreCanMakePurchase function to determine if in-app purchasing is available.
+Use the mobileStoreCanMakePurchase function to determine if in-app
+purchasing is available. 
 
-The command mobileStoreCanMakePurchase is used to determine if in-app purchasing is available.
+The command mobileStoreCanMakePurchase is used to determine if in-app
+purchasing is available. 
 
-References: mobileStoreRestorePurchases (command), mobileStoreDisablePurchaseUpdates (command), mobileStoreEnablePurchaseUpdates (command), mobileStoreRequestProductDetails (command), mobileStoreMakePurchase (command), mobileStoreSetProductType (command), mobileStoreConsumePurchase (command), mobileStoreConfirmPurchase (command), mobileStoreVerifyPurchase (command), mobileStorePurchasedProducts (function), mobileStoreProductProperty (function), mobileStorePurchaseError (function), purchaseStateUpdate (message), productRequestError (message), productDetailsReceived (message)
+References: mobileStoreRestorePurchases (command),
+mobileStoreDisablePurchaseUpdates (command),
+mobileStoreEnablePurchaseUpdates (command),
+mobileStoreRequestProductDetails (command),
+mobileStoreMakePurchase (command), mobileStoreSetProductType (command),
+mobileStoreConsumePurchase (command),
+mobileStoreConfirmPurchase (command),
+mobileStoreVerifyPurchase (command),
+mobileStorePurchasedProducts (function),
+mobileStoreProductProperty (function),
+mobileStorePurchaseError (function), purchaseStateUpdate (message),
+productRequestError (message), productDetailsReceived (message)

@@ -12,4 +12,5 @@ OS: mac,windows,linux
 
 Platforms: desktop,server,web
 
-References: colors (property), backgroundColor (property), foregroundColor (property), reserved word (glossary)
+References: colors (property), backgroundColor (property),
+foregroundColor (property), reserved word (glossary)

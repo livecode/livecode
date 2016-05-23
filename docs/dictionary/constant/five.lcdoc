@@ -16,7 +16,8 @@ Example:
 multiply field "Raw Score" by five
 
 Description:
-Use the <five> <constant> when it is easier to read than the numeral 5<a/>.
+Use the <five> <constant> when it is easier to read than the numeral
+5<a/>. 
 
 References: constant (command), fifth (keyword)
 

@@ -16,7 +16,8 @@ Example:
 set the cursor to arrow
 
 Description:
-Use the <arrow> <constant> to set the <cursor(property)> to an arrow shape.
+Use the <arrow> <constant> to set the <cursor(property)> to an arrow
+shape. 
 
 The following two statements are equivalent:
 
@@ -25,8 +26,15 @@ The following two statements are equivalent:
 
 However, the first is easier to read and understand in LiveCode.
 
->*Important:*  If you use the <arrow> <cursor(property)> or other standard <cursor(glossary)|cursors> in your application, you must include the cursors when you create your <standalone application|standalone>. Make sure the "Cursors" option on the Inclusions section on the General screen of the <Standalone Application Settings> window is checked.
+>*Important:*  If you use the <arrow> <cursor(property)> or other
+standard <cursor(glossary)|cursors> in your application, you must
+include the cursors when you create your <standalone
+application|standalone>. Make sure the "Cursors" option on the
+Inclusions section on the General screen of the <Standalone Application
+Settings> window is checked. 
 
-References: cursor (property), one (constant), constant (command), Standalone Application Settings (glossary), standalone application (glossary), cursor (glossary)
+References: cursor (property), one (constant), constant (command),
+Standalone Application Settings (glossary),
+standalone application (glossary), cursor (glossary)
 
 Tags: ui

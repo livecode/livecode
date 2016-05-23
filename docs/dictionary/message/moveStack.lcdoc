@@ -4,7 +4,8 @@ Type: message
 
 Syntax: moveStack <newStackH>, <newStackV> 
 
-Summary: Sent to the <current card> when the user moves the <stack window>.
+Summary: Sent to the <current card> when the user moves the <stack
+window>. 
 
 Associations: card
 
@@ -21,14 +22,22 @@ on moveStack finalLeft, finalTop
 end moveStack
 
 Parameters:
-newStackH: The horizontal distance in pixels from the left of the screen to the left edge of the stack.
-newStackV: The vertical distance in pixels from the top of the screen to the top edge of the stack.
+newStackH: The horizontal distance in pixels from the left of the screen
+to the left edge of the stack. newStackV: The vertical distance in
+pixels from the top of the screen to the top edge of the stack. 
 
 Description:
-Handle the <moveStack> <message> if you want to respond to movement of the <stack window>. 
+Handle the <moveStack> <message> if you want to respond to movement of
+the <stack window>. 
 
-The <moveStack> <message> is sent only if the user moved the <stack window>. This <message> is not sent when a <handler> moves the window by changing its <location>, <rectangle>, or other <properties>.
+The <moveStack> <message> is sent only if the user moved the <stack
+window>. This <message> is not sent when a <handler> moves the window by
+changing its <location>, <rectangle>, or other <properties>. 
 
-References: properties (property), rectangle (property), location (property), moveControl (message), resizeControl (message), resizeStack (message), grab (command), handler (glossary), current card (glossary), message (glossary), stack window (glossary), rectangle (glossary)
+References: properties (property), rectangle (property),
+location (property), moveControl (message), resizeControl (message),
+resizeStack (message), grab (command), handler (glossary),
+current card (glossary), message (glossary), stack window (glossary),
+rectangle (glossary)
 
 Tags: windowing

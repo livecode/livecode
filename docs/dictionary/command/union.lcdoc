@@ -75,25 +75,34 @@ targetArray (array): The value to modify.
 templateArray (array): The array to intersect <array> with.
 
 Description:
-Use the <union> <command> to combine two <array|arrays>, eliminating duplicate elements.
+Use the <union> <command> to combine two <array|arrays>, eliminating
+duplicate elements. 
 
-The recursively adverb controls whether the intersection recurses through nested arrays or 
-not.
+The recursively adverb controls whether the intersection recurses
+through nested arrays or not.
 
-The <union> <command> combines <targetArray> and <templateArray>. Each <key> of <targetArray> 
-is checked to see whether there is already an <element(keyword)> with that <key> in 
-<templateArray>. If there is, that <element(keyword)> of <targetArray> is unchanged. If not, 
-the corresponding <element(keyword)> of the <templateArray> is placed in <targetArray>.
+The <union> <command> combines <targetArray> and <templateArray>. Each
+<key> of <targetArray> is checked to see whether there is already an
+<element(keyword)> with that <key> in <templateArray>. If there is, that
+<element(keyword)> of <targetArray> is unchanged. If not, the
+corresponding <element(keyword)> of the <templateArray> is placed in
+<targetArray>. 
 
-After the <union> <command> is <execute|executed>, the <keys> of <targetArray> consists of 
-the logical union of the <keys> of the original <targetArray> and the keys of <templateArray>.
+After the <union> <command> is <execute|executed>, the <keys> of
+<targetArray> consists of the logical union of the <keys> of the
+original <targetArray> and the keys of <templateArray>. 
 
-The content of individual elements of the <templateArray> does not control the final result. 
-Only which <element(glossary)|elements> exist in the <templateArray>, not their content, 
-controls which <element(glossary)|elements> of the <templateArray> are placed in <targetArray>. 
-If <targetArray> and <templateArray> have the same set of <keys> but different content in 
-each <element(keyword)>, the <union> <command> does not change the value of <targetArray>.
+The content of individual elements of the <templateArray> does not
+control the final result. Only which <element(glossary)|elements> exist
+in the <templateArray>, not their content, controls which
+<element(glossary)|elements> of the <templateArray> are placed in
+<targetArray>. If <targetArray> and <templateArray> have the same set of
+<keys> but different content in each <element(keyword)>, the <union>
+<command> does not change the value of <targetArray>. 
 
-References: element (keyword), + (operator), add (command), intersect (command), keys (function), element (glossary), key (glossary), command (glossary), array (glossary), execute (glossary)
+References: element (keyword), + (operator), add (command),
+intersect (command), keys (function), element (glossary),
+key (glossary), command (glossary), array (glossary),
+execute (glossary)
 
 Tags: properties

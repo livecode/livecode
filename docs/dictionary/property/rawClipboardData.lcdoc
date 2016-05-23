@@ -5,7 +5,8 @@ Type: property
 Syntax: set the rawClipboardData[<key>] to <data>
 Syntax: set the rawClipboardData to empty
 
-Summary: Provides low-level access to the contents of the <clipboard(glossary)>.
+Summary: Provides low-level access to the contents of the
+<clipboard(glossary)>. 
 
 Introduced: 8.0
 
@@ -55,9 +56,9 @@ platform-specific, but can be summarised as:
  - Windows: arbitrary strings but keys of the form CF_xxx correspond to 
  the <clipboard(glossary)> formats defined by Windows itself
  - OSX: Uniform Type Identifiers (UTIs) with an extension: 
- OSTypes/MIME-types can be used by prefixing the key with com.apple.ostype:/public.mime-type:
- - Linux: arbitrary strings (X11 atoms) but, by convention, MIME types 
- are used
+ OSTypes/MIME-types can be used by prefixing the key with
+ com.apple.ostype:/public.mime-type: - Linux: arbitrary strings (X11
+ atoms) but, by convention, MIME types are used
 
 >*Tip:* All contents of the <rawClipboardData> are binary - use the 
 <textEncode>/<textDecode> functions to convert to/from the appropriate 

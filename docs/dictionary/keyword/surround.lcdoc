@@ -4,7 +4,9 @@ Type: keyword
 
 Syntax: surround
 
-Summary: Used with the <selectionMode> <property> to cause <object|objects> to be <selected> only when the entire <object(glossary)> is within the rectangle you drag.
+Summary: Used with the <selectionMode> <property> to cause
+<object|objects> to be <selected> only when the entire
+<object(glossary)> is within the rectangle you drag. 
 
 Introduced: 1.0
 
@@ -16,8 +18,14 @@ Example:
 set the selectionMode to surround
 
 Description:
-Use the <surround> <keyword> to change the way <select|selecting> behaves.
+Use the <surround> <keyword> to change the way <select|selecting>
+behaves. 
 
-The <surround> <keyword> applies only to <selection|selections> made with the <Pointer tool>. It does not affect text <selection|selections> in a <field>.
+The <surround> <keyword> applies only to <selection|selections> made
+with the <Pointer tool>. It does not affect text <selection|selections>
+in a <field>. 
 
-References: intersect (keyword), field (keyword), selectionMode (property), selected (property), object (glossary), property (glossary), keyword (glossary), selection (glossary), select (glossary), Pointer tool (glossary)
+References: intersect (keyword), field (keyword),
+selectionMode (property), selected (property), object (glossary),
+property (glossary), keyword (glossary), selection (glossary),
+select (glossary), Pointer tool (glossary)

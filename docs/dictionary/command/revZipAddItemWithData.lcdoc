@@ -4,7 +4,8 @@ Type: command
 
 Syntax: revZipAddItemWithData <archivePath>, <itemName>, <variableName> 
 
-Summary: Adds an item to a zip archive and puts the specified data into it
+Summary: Adds an item to a zip archive and puts the specified data into
+it 
 
 Introduced: 2.7.3
 
@@ -23,11 +24,20 @@ revZipAddItemWithData the cArchive of me, "Test.txt", "This is a test text file"
 Parameters:
 archivePath: The absolute path to the zip archive to add the file to.
 itemName: The unique name of the item to create in the zip archive.
-variableName: The name of a variable in your LiveCode program containing data to place into the item in the zip archive.  If the revZipAddItemWithData command encounters an error then the result will be set to an error code beginning with "ziperr", otherwise the result will be empty.
+variableName: The name of a variable in your LiveCode program containing
+data to place into the item in the zip archive. If the
+revZipAddItemWithData command encounters an error then the result will
+be set to an error code beginning with "ziperr" , otherwise the result
+will be empty. 
 
 Description:
-Use the <revZipAddItemWithData> command to put data from a LiveCode variable into a file in a zip archive. The archive must have first been opened with <revZipOpenArchive>.
+Use the <revZipAddItemWithData> command to put data from a LiveCode
+variable into a file in a zip archive. The archive must have first been
+opened with <revZipOpenArchive>. 
 
-References: revZipAddUncompressedItemWithFile (command), revZipOpenArchive (command), revZipAddUncompressedItemWithData (command), revZipAddItemWithFile (command), revZipReplaceItemWithData (command)
+References: revZipAddUncompressedItemWithFile (command),
+revZipOpenArchive (command),
+revZipAddUncompressedItemWithData (command),
+revZipAddItemWithFile (command), revZipReplaceItemWithData (command)
 
 Tags: text processing

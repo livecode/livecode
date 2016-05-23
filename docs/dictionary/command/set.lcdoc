@@ -23,14 +23,18 @@ set the backgroundcolor of graphic "background" to green
 
 Parameters:
 property: A built-in property name or custom property name.
-object: Any object reference. If you don't specify an object, the property must be a global property.
-value (string): 
+object: Any object reference. If you don't specify an object, the
+property must be a global property. value (string): 
 
 Description:
-Use the <set> <command> to change the setting of a <property> or <custom property>.
+Use the <set> <command> to change the setting of a <property> or <custom
+property>. 
 
-If you specify a property that doesn't exist, LiveCode creates a custom property with that name for the <object(glossary)>.
+If you specify a property that doesn't exist, LiveCode creates a custom
+property with that name for the <object(glossary)>. 
 
-References: customPropertySets (property), customPropertySet (property), get (command), value (function), property (glossary), custom property (glossary), command (glossary)
+References: customPropertySets (property), customPropertySet (property),
+get (command), value (function), property (glossary),
+custom property (glossary), command (glossary)
 
 Tags: properties

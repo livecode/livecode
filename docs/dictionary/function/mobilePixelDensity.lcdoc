@@ -4,7 +4,8 @@ Type: function
 
 Syntax: mobilePixelDensity()
 
-Summary: Returns the pixel density of the device screen (relative to a non-Retina display)
+Summary: Returns the pixel density of the device screen (relative to a
+non-Retina display) 
 
 Introduced: 5.5.3
 
@@ -21,8 +22,14 @@ Returns (enum): The <mobilePixelDensity> function returns
  - display metrics (Android)
 
 Description:
-Use the <mobilePixelDensity> function to find the scale of the device screen relative to a non-Retinal display on iOS and the display metrics density on Android.
+Use the <mobilePixelDensity> function to find the scale of the device
+screen relative to a non-Retinal display on iOS and the display metrics
+density on Android. 
 
-The <mobilePixelDensity> function returns the scale of the device screen (relative to a non-Retinal display on iOS), this is 2 on a retina display and 1 otherwise. On Android this function return the Display Metrics.
+The <mobilePixelDensity> function returns the scale of the device screen
+(relative to a non-Retinal display on iOS), this is 2 on a retina
+display and 1 otherwise. On Android this function return the Display
+Metrics. 
 
-References: iphoneUseDeviceResolution (command), iphoneDeviceScale (function), iphoneDeviceResolution (function)
+References: iphoneUseDeviceResolution (command),
+iphoneDeviceScale (function), iphoneDeviceResolution (function)

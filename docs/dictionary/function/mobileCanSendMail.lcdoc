@@ -27,6 +27,8 @@ Returns (enum): Returns a boolean result:
 - false : the device does not support email submission
 
 Description:
-Use the <mobileCanSendMail> function to determine if a particular mobile device is configured to send email.
+Use the <mobileCanSendMail> function to determine if a particular mobile
+device is configured to send email. 
 
-References: mobileComposeUnicodeMail (command), mobileComposeMail (command), mobileComposeHtmlMail (command)
+References: mobileComposeUnicodeMail (command),
+mobileComposeMail (command), mobileComposeHtmlMail (command)

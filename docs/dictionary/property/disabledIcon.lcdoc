@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the disabledIcon of <button> to {<imageID> | <imageName>}
 
-Summary: Specifies an <image> to display in a <button> when the <button> is disabled.
+Summary: Specifies an <image> to display in a <button> when the <button>
+is disabled. 
 
 Associations: button
 
@@ -18,16 +19,24 @@ Example:
 set the disabledIcon of button "Boss Key" to "Innocent Spreadsheet"
 
 Value:
-The <disabledIcon> <property> is the <ID> or <name> of an <image> to use for an icon. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
-By default, the <disabledIcon> <property> of newly created <button|buttons> is set to zero.
+The <disabledIcon> <property> is the <ID> or <name> of an <image> to use
+for an icon. LiveCode looks for the specified <image> first in the
+<current stack>, then in other open <stacks>. By default, the
+<disabledIcon> <property> of newly created <button|buttons> is set to
+zero. 
 
 Description:
-Use the <disabledIcon> <property> to change a <button|button's> appearance when it is disabled.
+Use the <disabledIcon> <property> to change a <button|button's>
+appearance when it is disabled. 
 
-When the button's enabled <property> is set to false, the <disabledIcon> is displayed within the <button|button's> rectangle.
+When the button's enabled <property> is set to false, the <disabledIcon>
+is displayed within the <button|button's> rectangle. 
 
-If a button's showIcon <property> is false, the setting of its <disabledIcon> <property> has no effect.
+If a button's showIcon <property> is false, the setting of its
+<disabledIcon> <property> has no effect. 
 
-References: image (keyword), button (keyword), ID (property), name (property), disable (command), button (object), property (glossary), current stack (glossary), stacks (function)
+References: image (keyword), button (keyword), ID (property),
+name (property), disable (command), button (object),
+property (glossary), current stack (glossary), stacks (function)
 
 Tags: ui

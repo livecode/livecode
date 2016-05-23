@@ -16,9 +16,15 @@ Example:
 set the cursor to busy
 
 Description:
-Use the <busy> <constant> to set the <cursor(property)> to a rotating beachball shape, suitable for showing the progress of lengthy operations.
+Use the <busy> <constant> to set the <cursor(property)> to a rotating
+beachball shape, suitable for showing the progress of lengthy
+operations. 
 
-The <busy> <cursor(property)> is a rotating beach ball. Each time you use the statement set the cursor to busy, the beach ball advances in its rotation. For example, the following statements cause the <cursor(property)> to appear to spin as long as the <repeat> <loop> is running:
+The <busy> <cursor(property)> is a rotating beach ball. Each time you
+use the statement set the cursor to busy, the beach ball advances in its
+rotation. For example, the following statements cause the
+<cursor(property)> to appear to spin as long as the <repeat> <loop> is
+running: 
 
   repeat until someCondition is true
     set the cursor to busy -- spins a bit further
@@ -32,8 +38,15 @@ The following two statements are equivalent:
 
 However, the first is easier to read and understand in LiveCode.
 
->*Important:*  If you use the <busy> <cursor(property)> or other standard <cursor(glossary)|cursors> in your application, you must include it when you create your <standalone application|standalone>. Make sure the "Cursors" option on the Inclusions section on the General screen of the <Standalone Application Settings> window is checked.
+>*Important:*  If you use the <busy> <cursor(property)> or other
+standard <cursor(glossary)|cursors> in your application, you must
+include it when you create your <standalone application|standalone>.
+Make sure the "Cursors" option on the Inclusions section on the General
+screen of the <Standalone Application Settings> window is checked. 
 
-References: cursor (property), watch (constant), six (constant), constant (command), repeat (control structure), Standalone Application Settings (glossary), cursor (glossary), standalone application (glossary), loop (glossary)
+References: cursor (property), watch (constant), six (constant),
+constant (command), repeat (control structure),
+Standalone Application Settings (glossary), cursor (glossary),
+standalone application (glossary), loop (glossary)
 
 Tags: ui

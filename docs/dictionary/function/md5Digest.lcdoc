@@ -26,15 +26,26 @@ if the savedPrint of field 1 is not the md5Digest of field 1 then beep
 Parameters:
 dataString (string): 
 
-Returns: The <md5Digest> <function> <return|returns> a 128- <bit> value. (If you view this <value> as a <string>, it is 16 <characters> long.).
+Returns: The <md5Digest> <function> <return|returns> a 128- <bit> value.
+(If you view this <value> as a <string>, it is 16 <characters> long.). 
 
 Description:
-Use the <md5Digest> <function> to create a fingerprint of the <dataString> which can be checked later to ensure that the <string> has not changed.
+Use the <md5Digest> <function> to create a fingerprint of the
+<dataString> which can be checked later to ensure that the <string> has
+not changed. 
 
-The value returned for one <dataString> is mathematically unlikely to be identical to the value <return|returned> for an altered version of the <dataString>. Therefore, you can check the <md5Digest> of a <string> against a saved <md5Digest> to determine whether the <string> has changed since you saved the <value>.
+The value returned for one <dataString> is mathematically unlikely to be
+identical to the value <return|returned> for an altered version of the
+<dataString>. Therefore, you can check the <md5Digest> of a <string>
+against a saved <md5Digest> to determine whether the <string> has
+changed since you saved the <value>. 
 
-For technical information about the MD5 digest algorithm, see [RFC 1321](https://tools.ietf.org/html/rfc1321).
+For technical information about the MD5 digest algorithm, see [RFC
+1321](https://tools.ietf.org/html/rfc1321). 
 
-References: string (keyword), characters (keyword), base64Decode (function), base64Encode (function), charToNum (function), value (function), return (glossary), bit (glossary), function (control structure)
+References: string (keyword), characters (keyword),
+base64Decode (function), base64Encode (function), charToNum (function),
+value (function), return (glossary), bit (glossary),
+function (control structure)
 
 Tags: text processing

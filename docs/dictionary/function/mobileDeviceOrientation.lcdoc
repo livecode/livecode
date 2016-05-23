@@ -27,10 +27,17 @@ Returns (enum): The <mobileDeviceOrientation> function returns one of:
 - face down : the device is lying flat with the screen downward
 
 Description:
-Use the <mobileDeviceOrientation> function to find the current device orientation.
+Use the <mobileDeviceOrientation> function to find the current device
+orientation. 
 
-The <mobileDeviceOrientation> function returns the current orientation of the device.
+The <mobileDeviceOrientation> function returns the current orientation
+of the device. 
 
->*Note:* Due to the limitation of the Android operating system, landscape left and portrait upside-down are only supported on Android 2.3 and later.
+>*Note:* Due to the limitation of the Android operating system,
+landscape left and portrait upside-down are only supported on Android
+2.3 and later. 
 
-References: mobileSetAllowedOrientations (command), mobileLockOrientation (command), mobileUnlockOrientation (command), mobileAllowedOrientations (function), mobileOrientation (function), orientationChanged (message)
+References: mobileSetAllowedOrientations (command),
+mobileLockOrientation (command), mobileUnlockOrientation (command),
+mobileAllowedOrientations (function), mobileOrientation (function),
+orientationChanged (message)

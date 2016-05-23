@@ -22,12 +22,21 @@ The <linkText> of a <chunk> is a <string>.
 By default, the <linkText> <property> of any <chunk> is empty.
 
 Description:
-Use the <linkText> <property> to store the destination of a link, the text of an associated <file>, a definition, or other data along with a <chunk> of text in a <field>.
+Use the <linkText> <property> to store the destination of a link, the
+text of an associated <file>, a definition, or other data along with a
+<chunk> of text in a <field>. 
 
 The <linkText> <property> can be set for any <chunk> in a <field>.
 
-However, it is most useful when used with grouped text. If the <linkText> of <grouped text> is set to a value, the value is passed with the <linkClicked> <message> when the user clicks the text. This lets you use the <linkText> to specify the destination of a link or other data to use when the text is clicked.
+However, it is most useful when used with grouped text. If the
+<linkText> of <grouped text> is set to a value, the value is passed with
+the <linkClicked> <message> when the user clicks the text. This lets you
+use the <linkText> to specify the destination of a link or other data to
+use when the text is clicked. 
 
-References: scriptTextSize (property), fixedLineHeight (property), file (keyword), field (keyword), link (keyword), string (keyword), linkClicked (message), property (glossary), grouped text (glossary), message (glossary), chunk (glossary)
+References: scriptTextSize (property), fixedLineHeight (property),
+file (keyword), field (keyword), link (keyword), string (keyword),
+linkClicked (message), property (glossary), grouped text (glossary),
+message (glossary), chunk (glossary)
 
 Tags: navigation

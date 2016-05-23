@@ -28,14 +28,26 @@ type (enum): The reason for the request. One of:
 - "other"
 
 Description:
-Handle the <browserLoadRequested> message to perform an action when a URL has been requested.
+Handle the <browserLoadRequested> message to perform an action when a
+URL has been requested. 
 
-The <browserLoadRequested> message is sent to the object containing the script that created the UIWebView browser control after a url has been requested and passed for loading.
+The <browserLoadRequested> message is sent to the object containing the
+script that created the UIWebView browser control after a url has been
+requested and passed for loading. 
 
-If <delayRequests(command)> has been set to false, <browserLoadRequested> is sent as soon as the URL is requested.
+If <delayRequests(command)> has been set to false,
+<browserLoadRequested> is sent as soon as the URL is requested. 
 
-If <delayRequests(command)> is set to true, <browserLoadRequested> is only sent if the corresponding <browserLoadRequest> message has been passed.
+If <delayRequests(command)> is set to true, <browserLoadRequested> is
+only sent if the corresponding <browserLoadRequest> message has been
+passed. 
 
->*Note:* The <browserLoadRequested> message is sent in response to the webView:shouldStartLoadWithRequest: delegate method.
+>*Note:* The <browserLoadRequested> message is sent in response to the
+webView:shouldStartLoadWithRequest: delegate method. 
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), browserStartedLoading (message), browserFinishedLoading (message), browserLoadRequest (message), browserLoadFailed (message)
+References: mobileControlCreate (command),
+mobileControlDelete (command), mobileControlSet (command),
+mobileControlGet (function), mobileControlTarget (function),
+mobileControls (function), browserStartedLoading (message),
+browserFinishedLoading (message), browserLoadRequest (message),
+browserLoadFailed (message)

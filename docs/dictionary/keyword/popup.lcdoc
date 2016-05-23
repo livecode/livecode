@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: popup
 
-Summary: Specifies one of the <menu> types that can be used with the <menuMode> <property>.
+Summary: Specifies one of the <menu> types that can be used with the
+<menuMode> <property>. 
 
 Introduced: 1.0
 
@@ -16,10 +17,14 @@ Example:
 set the menuMode of button "Hot Text Options" to popup
 
 Description:
-Use the <popup> <keyword> to create a <popup menu> that appears under the <mouse pointer>.
+Use the <popup> <keyword> to create a <popup menu> that appears under
+the <mouse pointer>. 
 
 Popup menus are normally used as contextual menus.
 
-References: cascade (keyword), comboBox (keyword), option (keyword), pulldown (keyword), tabbed (keyword), menu (keyword), style (property), menuMode (property), popup (command), property (glossary), keyword (glossary), mouse pointer (glossary), popup menu (glossary)
+References: cascade (keyword), comboBox (keyword), option (keyword),
+pulldown (keyword), tabbed (keyword), menu (keyword), style (property),
+menuMode (property), popup (command), property (glossary),
+keyword (glossary), mouse pointer (glossary), popup menu (glossary)
 
 Tags: menus

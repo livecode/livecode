@@ -6,7 +6,9 @@ Syntax: the result
 
 Syntax: result()
 
-Summary: Is a global property returning the last value returned by return from a handler, from an engine function, or from an engine command which sets the result.
+Summary: Is a global property returning the last value returned by
+return from a handler, from an engine function, or from an engine
+command which sets the result. 
 
 Introduced: 1.0
 
@@ -64,4 +66,9 @@ finishes <execute|executing>.
 > ensures that the result you are checking is the correct one, not a 
 > value set by a later <statement>.
 
-References: string (keyword), catch (keyword), find (command), sysError (function), value (function), on (control structure), return (control structure), function (control structure), return (glossary), variable (glossary), handler (glossary), return value (glossary), execute (glossary), statement (glossary), error (glossary), control structure (glossary), command (glossary)
+References: string (keyword), catch (keyword), find (command),
+sysError (function), value (function), on (control structure),
+return (control structure), function (control structure),
+return (glossary), variable (glossary), handler (glossary),
+return value (glossary), execute (glossary), statement (glossary),
+error (glossary), control structure (glossary), command (glossary)

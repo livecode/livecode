@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: this
 
-Summary: Indicates the <current stack>, or the <current card> of the <current stack>.
+Summary: Indicates the <current stack>, or the <current card> of the
+<current stack>. 
 
 Synonyms: current
 
@@ -24,10 +25,15 @@ Example:
 send preOpenStack to this stack
 
 Description:
-Use the <this> <keyword> to indicate the <current card> or <current stack> in an <expression>.
+Use the <this> <keyword> to indicate the <current card> or <current
+stack> in an <expression>. 
 
-When used in a sort <command>, the <this> <keyword> indicates each <card(keyword)> to be sorted. You can use the <this> <keyword> to sort <card(object)|cards> by a <card(keyword)> <property>.
+When used in a sort <command>, the <this> <keyword> indicates each
+<card(keyword)> to be sorted. You can use the <this> <keyword> to sort
+<card(object)|cards> by a <card(keyword)> <property>. 
 
-References: card (keyword), the (keyword), keyword (glossary), current stack (glossary), current card (glossary), command (glossary), property (glossary), expression (glossary), card (object)
+References: card (keyword), the (keyword), keyword (glossary),
+current stack (glossary), current card (glossary), command (glossary),
+property (glossary), expression (glossary), card (object)
 
 Tags: objects

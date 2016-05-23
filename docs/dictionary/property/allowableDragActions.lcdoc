@@ -6,7 +6,8 @@ Syntax: set the allowableDragActions to <actionsList>
 
 Syntax: get the allowableDragActions
 
-Summary: Reports a list of actions that the source application will act upon for the current drag-drop operation.
+Summary: Reports a list of actions that the source application will act
+upon for the current drag-drop operation. 
 
 Introduced: 2.9
 
@@ -25,6 +26,8 @@ Value (enum):
 Set the <allowableDragActions> during a <dragStart> handler to indicate how the offered data can be manipulated.
 
 Description:
-Use the <allowableDragActions> to specify how the drag-data you are offering can be manipulated.
+Use the <allowableDragActions> to specify how the drag-data you are
+offering can be manipulated. 
 
-References: dragAction (property), dragEnter (message), dragStart (message)
+References: dragAction (property), dragEnter (message),
+dragStart (message)

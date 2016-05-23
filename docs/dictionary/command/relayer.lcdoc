@@ -38,11 +38,25 @@ owner: The target control is the owner of the control.
 Description:
 Use the <relayer> command to aid the manipulation of layers.
 
-Use the <relayer> command move a control relative to a target in a number of ways. The <relayer> command can only be used within a card. Attempts to relayer controls from one card or another stack would throw an exception.
+Use the <relayer> command move a control relative to a target in a
+number of ways. The <relayer> command can only be used within a card.
+Attempts to relayer controls from one card or another stack would throw
+an exception. 
 
-When using "before" the owner of the control becomes the owner of the target and is inserted before the target. The layer of the control becomes the layer of the target and the target and all subsequent controls shift up one.
-When using "after" the owner of the control becomes the owner of the target and is inserted after the target. The layer of the control becomes one greater than the layer of the last child of the target and all subsequent controls sift one up.
-When using "front" the owner of the control becomes the owner of the target and is inserted after the last child of the target (only valid if <target> is a container).
-When using "back" the owner of the control becomes the owner of the target and is inserted before the first child of the target (only valid if <target> is a container).
+When using "before" the owner of the control becomes the owner of the
+target and is inserted before the target. The layer of the control
+becomes the layer of the target and the target and all subsequent
+controls shift up one. When using "after" the owner of the control
+becomes the owner of the target and is inserted after the target. The
+layer of the control becomes one greater than the layer of the last
+child of the target and all subsequent controls sift one up. When using
+"front" the owner of the control becomes the owner of the target and is
+inserted after the last child of the target (only valid if <target> is a
+container). When using "back" the owner of the control becomes the owner
+of the target and is inserted before the first child of the target (only
+valid if <target> is a container). 
 
-References: tabGroupBehavior (property), relayerGroupedControls (property), layer (property), control (keyword), group (command), ungroup (command), intersect (function), number (function), mouseControl (function)
+References: tabGroupBehavior (property),
+relayerGroupedControls (property), layer (property), control (keyword),
+group (command), ungroup (command), intersect (function),
+number (function), mouseControl (function)

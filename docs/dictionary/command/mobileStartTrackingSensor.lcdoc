@@ -24,13 +24,21 @@ sensor (enum): The name of the sensor you wish to start using
 - "heading": starts tracking the heading of the device
 - "acceleration": enables the accelerometer on the device
 - "rotation rate": starts tracking the rotation of the device
-loosely (enum): How accurate the readings from sensors should be. The default value is false
-- "true": readings are determined without using accurate(but power consuming) sources such as GPS.
-- "false": readings are determined using accurate(but power consuming) sources such as GPS.
+loosely (enum): How accurate the readings from sensors should be. The
+default value is false - "true": readings are determined without using
+accurate(but power consuming) sources such as GPS. - "false": readings
+are determined using accurate(but power consuming) sources such as GPS. 
 
 Description:
-Use the <mobileStartTrackingSensor> command to start listening for readings from a sensor.
+Use the <mobileStartTrackingSensor> command to start listening for
+readings from a sensor. 
 
-The <mobileStartTrackingSensor> command starts listening for readings from the named sensor.
+The <mobileStartTrackingSensor> command starts listening for readings
+from the named sensor. 
 
-References: mobileStopTrackingSensor (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), mobileSensorReading (function), mobileCurrentLocation (function), headingChanged (message), accelerationChanged (message), locationChanged (message), rotationRateChanged (message), trackingError (message)
+References: mobileStopTrackingSensor (command),
+mobileCanTrackHeading (function), mobileCanTrackLocation (function),
+mobileCurrentHeading (function), mobileSensorReading (function),
+mobileCurrentLocation (function), headingChanged (message),
+accelerationChanged (message), locationChanged (message),
+rotationRateChanged (message), trackingError (message)

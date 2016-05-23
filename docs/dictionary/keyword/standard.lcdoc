@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: standard
 
-Summary: Used with the <style> <property> to indicate a <button> that looks and behaves like a standard <button> for the current <platform>.
+Summary: Used with the <style> <property> to indicate a <button> that
+looks and behaves like a standard <button> for the current <platform>. 
 
 Introduced: 1.0
 
@@ -16,8 +17,10 @@ Example:
 set the style of button "Cancel" to standard
 
 Description:
-Use the <standard> <keyword> to create a <button> that looks like a standard dialog-box button.
+Use the <standard> <keyword> to create a <button> that looks like a
+standard dialog-box button. 
 
-References: style (property), button (keyword), platform (function), property (glossary), keyword (glossary)
+References: style (property), button (keyword), platform (function),
+property (glossary), keyword (glossary)
 
 Tags: ui

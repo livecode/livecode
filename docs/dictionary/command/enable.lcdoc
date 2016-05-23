@@ -22,10 +22,14 @@ Parameters:
 object: Any control in an open stack.
 
 Description:
-Use the <enable> <command> to allow an <object(glossary)> to respond to mouse clicks or keypresses.
+Use the <enable> <command> to allow an <object(glossary)> to respond to
+mouse clicks or keypresses. 
 
-The <enable> <command> is equivalent to setting the <object|object's> <enabled> <property> to true.
+The <enable> <command> is equivalent to setting the <object|object's>
+<enabled> <property> to true. 
 
-References: control (keyword), enabled (property), hilite (command), enable menu (command), disable (command), object (glossary), command (glossary), property (glossary)
+References: control (keyword), enabled (property), hilite (command),
+enable menu (command), disable (command), object (glossary),
+command (glossary), property (glossary)
 
 Tags: ui

@@ -22,10 +22,15 @@ Parameters:
 player: A player reference.
 
 Description:
-Use the <start> <command> to start playing the movie or sound in a <player>.
+Use the <start> <command> to start playing the movie or sound in a
+<player>. 
 
 The playing starts at the player's <currentTime> <property>.
 
-References: looping (property), paused (property), showSelection (property), currentTime (property), player (keyword), playStopped (message), stop (command), play (command), sound (function), movie (function), command (glossary), property (glossary), resume (glossary)
+References: looping (property), paused (property),
+showSelection (property), currentTime (property), player (keyword),
+playStopped (message), stop (command), play (command), sound (function),
+movie (function), command (glossary), property (glossary),
+resume (glossary)
 
 Tags: multimedia

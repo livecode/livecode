@@ -16,10 +16,16 @@ Example:
 end if
 
 Description:
-Use the <end if> <keyword> to mark the end of an <if> <control structure>.
+Use the <end if> <keyword> to mark the end of an <if> <control
+structure>. 
 
-The <end if> <keyword> is used only with certain forms of the <if> <control structure>. If the entire <if> <control structure> is on one line, or if the <else> clause is on one line, the <end if> <keyword> is not used.
+The <end if> <keyword> is used only with certain forms of the <if>
+<control structure>. If the entire <if> <control structure> is on one
+line, or if the <else> clause is on one line, the <end if> <keyword> is
+not used. 
 
 The <end if> <keyword> occurs on a line by itself.
 
-References: then (keyword), end (keyword), else (keyword), control (keyword), keyword (glossary), control structure (glossary), if (control structure), break (control structure)
+References: then (keyword), end (keyword), else (keyword),
+control (keyword), keyword (glossary), control structure (glossary),
+if (control structure), break (control structure)

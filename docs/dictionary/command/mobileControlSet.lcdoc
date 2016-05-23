@@ -24,13 +24,13 @@ mobileControlSet "nameInput", "visible", true
 
 Parameters:
 idOrName: The id or name of the control.
-propertyName (enum): The name of the <property> to be set. See Description 
-section for complete <propertyName> listing.
+propertyName (enum): The name of the <property> to be set. See
+Description section for complete <propertyName> listing.
 value: The value to set the <property> to.
 
 Description:
-Use the <mobileControlSet> command to set properties of a native mobile control 
-created using <mobileControlCreate>.
+Use the <mobileControlSet> command to set properties of a native mobile
+control created using <mobileControlCreate>.
 
 **<propertyName> listing: **
 **Global properties (All native mobile controls)**
@@ -38,8 +38,8 @@ created using <mobileControlCreate>.
 card. For example "0,0,100,100".
 - "visible": set to true or false to determine whether the control
 should be displayed.
-- "alpha": set to an integer value between 0 and 255 to blend the control 
-with any controls underneath it.
+- "alpha": set to an integer value between 0 and 255 to blend the
+control with any controls underneath it.
 - "backgroundColor": Set to either a standard color name, or a string of
 the form red,green,blue or red,green,blue,alpha. Where the components
 are integers in the range 0 to 255.
@@ -50,10 +50,10 @@ transparency. In particular, set this control to true if you set a
 <backgroundColor> that is not fully opaque.
 - "ignoreVoiceOverSensitivity": set to true or false to determine
 whether the control should be accessible through Voice Over.
->*Note*: When setting the "ignoreVoiceOverSensitivity" <property> of a native iOS 
-control to "true", then this control can interact with Voice Over. 
-Remember to set this <property> back to "false" when this control is no longer 
-on the current view.
+>*Note*: When setting the "ignoreVoiceOverSensitivity" <property> of a
+native iOS control to "true", then this control can interact with Voice
+Over. Remember to set this <property> back to "false" when this control
+is no longer on the current view.
 
 **Browser Specific Properties**
 - "URL": the URL to be loaded into the web-view.
@@ -440,9 +440,10 @@ the control can contain multiple lines of text, wraps text to fit
 horizontally, and scrolls vertically. If false, the field contains a
 single line of text which can scroll horizontally.
 
-References: backgroundColor (property), boolean (glossary), integer (glossary), 
-mobileControlCreate (command), mobileControlDelete (command), 
-mobileControlDo (command), mobileControlGet (function), mobileControlTarget (function), 
+References: backgroundColor (property), boolean (glossary),
+integer (glossary), , mobileControlCreate (command),
+mobileControlDelete (command), , mobileControlDo (command),
+mobileControlGet (function), mobileControlTarget (function), ,
 mobileControls (function), property (glossary), string (glossary)
 
 Tags: properties

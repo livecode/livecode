@@ -19,8 +19,11 @@ Example:
 if the filled is false then set the filled to true
 
 Description:
-Use the <false> <constant> to indicate that a <property> is turned off or that a <logical> <expression> <evaluate|evaluates> to false.
+Use the <false> <constant> to indicate that a <property> is turned off
+or that a <logical> <expression> <evaluate|evaluates> to false. 
 
-References: string (keyword), not (operator), and (operator), true (constant), constant (command), property (glossary), logical (glossary), evaluate (glossary), expression (glossary)
+References: string (keyword), not (operator), and (operator),
+true (constant), constant (command), property (glossary),
+logical (glossary), evaluate (glossary), expression (glossary)
 
 Tags: math

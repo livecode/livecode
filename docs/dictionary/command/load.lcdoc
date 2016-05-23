@@ -4,7 +4,8 @@ Type: command
 
 Syntax: load [URL] <url> [with message <callbackMessage>]
 
-Summary: <download|Downloads> the <file> specified by a <URL> to a <cache> where it can be used by another <handler>.
+Summary: <download|Downloads> the <file> specified by a <URL> to a
+<cache> where it can be used by another <handler>. 
 
 Introduced: 1.0
 
@@ -37,8 +38,8 @@ Use the <load> <command> to pre-fetch a <file> from the Internet in
 order to speed up access when using it in an <expression> with the 
 <URL> <keyword>.
 
-To use a file that has been downloaded by the <load> <command>, refer to 
-it using the <URL> <keyword> as usual. When you request the original 
+To use a file that has been downloaded by the <load> <command>, refer
+to it using the <URL> <keyword> as usual. When you request the original 
 <URL>, LiveCode uses the <cache|cached> <file> automatically.
 
 The <callbackMessage> is sent to the <object(glossary)> whose <script> 
@@ -62,8 +63,8 @@ access to the specified URL, not to store it permanently. You can use a
 URL even if it is not in the cache, so use of the <load> <command> is 
 optional.
 
->*Note:* Cached <files> consume memory. To release this memory after you 
-are finished with a <URL>, use the <unload (command)> <command> to 
+>*Note:* Cached <files> consume memory. To release this memory after
+you are finished with a <URL>, use the <unload (command)> <command> to 
 remove it from the <cache>.
 
 >*Important:*  The <load> <command> is part of the <Internet library on 
@@ -72,8 +73,8 @@ desktop platforms(library)>. To ensure that the <command> works in a
 <LiveCode custom library|custom library> when you create your 
 <standalone application|standalone>. In the Inclusions section of the 
 <Standalone Application Settings> window, make sure Internet Library is 
-selected in the list of script libraries. The iOS and Android engines do 
-not support 'libUrl' but allows you to use <load> in the background.
+selected in the list of script libraries. The iOS and Android engines
+do not support 'libUrl' but allows you to use <load> in the background.
 
 
 > *Note:* When specifying URLs for iOS or Android, you must use the
@@ -83,14 +84,15 @@ not support 'libUrl' but allows you to use <load> in the background.
 > URLs.
 
 >*Note:*  When included in a <standalone application>, the 
-<Internet library> is implemented as a hidden <group> and made available 
-when the <group> receives its first <openBackground> message. During the 
-first part of the <application|application's> startup process, before 
-this <message> is sent, the <load> <command> is not yet available. This 
-may affect attempts to use this <command> in <startup>, <preOpenStack>, 
-<openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. 
-Once the <application> has finished starting up, the <library> is 
-available and the <load> <command> can be used in any <handler>.
+<Internet library> is implemented as a hidden <group> and made
+available when the <group> receives its first <openBackground> message.
+During the first part of the <application|application's> startup
+process, before this <message> is sent, the <load> <command> is not yet
+available. This may affect attempts to use this <command> in <startup>,
+<preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the
+<main stack>. Once the <application> has finished starting up, the
+<library> is available and the <load> <command> can be used in any
+<handler>. 
 
 References: script (property), object (glossary), startup (message), 
 openBackground (message), preOpenStack (message), openStack (message), 
@@ -102,9 +104,9 @@ standalone desktop application (glossary), main stack (glossary),
 expression (glossary), keyword (glossary), 
 Standalone Application Settings (glossary), download (glossary), 
 message (glossary), parameter (glossary), handler (glossary), 
-libURLLastRHHeaders (function), URLEncode (function), files (function), 
-libURLErrorData (function), URLStatus (function), cachedURLs (function), 
-unload (command), libURLftpUpload (command), 
+libURLLastRHHeaders (function), URLEncode (function), files (function),
+, libURLErrorData (function), URLStatus (function),
+cachedURLs (function), , unload (command), libURLftpUpload (command), 
 libURLDownloadToFile (command), get (command), load (command), 
 group (command), function (control structure)
 

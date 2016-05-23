@@ -25,12 +25,19 @@ The <windowID> of a <stack> is an <integer>.
 This property is read-only and cannot be set.
 
 Description:
-Use the <windowID> <property> to pass to an <external> that needs to manipulate the window.
+Use the <windowID> <property> to pass to an <external> that needs to
+manipulate the window. 
 
-The window ID is provided by the operating system, and is unique for each window.
+The window ID is provided by the operating system, and is unique for
+each window. 
 
-Some externals need to manipulate the contents of a stack window directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+Some externals need to manipulate the contents of a stack window
+directly, and do so by referencing the ID. Such externals require you to
+pass the ID when you use the external. 
 
-References: altID (property), imagePixmapID (property), movieControllerID (property), integer (keyword), export snapshot (command), stack (object), property (glossary), external (glossary), stack window (glossary)
+References: altID (property), imagePixmapID (property),
+movieControllerID (property), integer (keyword),
+export snapshot (command), stack (object), property (glossary),
+external (glossary), stack window (glossary)
 
 Tags: windowing

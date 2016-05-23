@@ -31,8 +31,12 @@ type (enum): The type of keyboard to use. One of:
 - "email": the email keyboard
 
 Description:
-Use the <mobileSetKeyboardType> command to configure the type of keyboard that is to be displayed.
+Use the <mobileSetKeyboardType> command to configure the type of
+keyboard that is to be displayed. 
 
-The keyboard type setting takes affect the next time the keyboard is shown. It does not affect the current keyboard, if it is being displayed.
+The keyboard type setting takes affect the next time the keyboard is
+shown. It does not affect the current keyboard, if it is being
+displayed. 
 
-References: iphoneSetKeyboardReturnKey (command), keyboardDeactivated (message), keyboardActivated (message)
+References: iphoneSetKeyboardReturnKey (command),
+keyboardDeactivated (message), keyboardActivated (message)

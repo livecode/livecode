@@ -21,11 +21,18 @@ end adLoaded
 
 Parameters:
 adName: The name of ad that has loaded (as specified in mobileAdCreate)
-default (bool): True or false, specifying if the loaded ad is a default ad.
+default (bool): True or false, specifying if the loaded ad is a default
+ad. 
 
 Description:
-Handle the <adLoaded> message if you want to perform an action when an ad finishes loading.
+Handle the <adLoaded> message if you want to perform an action when an
+ad finishes loading. 
 
-The <adLoaded> messge is sent to the object that created the ad when the ad has loaded, or reloaded.
+The <adLoaded> messge is sent to the object that created the ad when the
+ad has loaded, or reloaded. 
 
-References: mobileAdCreate (command), mobileAdDelete (command), mobileAdSetVisible (command), mobileAdSetTopLeft (command), mobileAdRegister (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function), adClicked (message), adLoadFailed (message)
+References: mobileAdCreate (command), mobileAdDelete (command),
+mobileAdSetVisible (command), mobileAdSetTopLeft (command),
+mobileAdRegister (command), mobileAdGetTopLeft (function),
+mobileAdGetVisible (function), adClicked (message),
+adLoadFailed (message)

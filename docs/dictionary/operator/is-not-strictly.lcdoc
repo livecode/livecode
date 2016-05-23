@@ -4,7 +4,8 @@ Type: operator
 
 Syntax: <value> is not strictly [ nothing | a boolean | an integer | a real | a string | a binary string | an array ]
 
-Summary: Evaluates to true if the actual type of <value> is not the specified type.
+Summary: Evaluates to true if the actual type of <value> is not the
+specified type. 
 
 Introduced: 8.0
 
@@ -35,8 +36,8 @@ implicit type coercion. The true type of a value can be one of the
 following:
 
 - nothing: no value, typically seen as <empty>
-- boolean: either true or false, typically seen as the result of a comparison operator
-- integer: a number with no fractional part
+- boolean: either true or false, typically seen as the result of a
+comparison operator - integer: a number with no fractional part
 - real: a number with a fractional part
 - string: a piece of text (sequence of characters)
 - binary string: a sequence of bytes
@@ -48,4 +49,5 @@ would return false only when `x` is neither an integer nor a string
 which parses as an integer; whereas `x is not strictly an integer`
 only returns false if `x` is not currently an integer.
 
-References: is strictly (operator), is a (operator), is not a (operator)
+References: is strictly (operator), is a (operator),
+is not a (operator)

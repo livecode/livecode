@@ -27,8 +27,14 @@ Returns (enum):
 - complete until first user authentication: (iOS 5 and later only)
 
 Description:
-Use the <iphoneFileDataProtection> function to query the current level of protection of a particular file set using the command <iphoneSetFileDataProtection>.
+Use the <iphoneFileDataProtection> function to query the current level
+of protection of a particular file set using the command
+<iphoneSetFileDataProtection>. 
 
-References: iphoneSetFileDataProtection (command), iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function), iphoneDoNotBackupFile (function), protectedDataWillBecomeUnavailable (message), protectedDataDidBecomeAvailable (message)
+References: iphoneSetFileDataProtection (command),
+iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function),
+iphoneDoNotBackupFile (function),
+protectedDataWillBecomeUnavailable (message),
+protectedDataDidBecomeAvailable (message)
 
 Tags: ui

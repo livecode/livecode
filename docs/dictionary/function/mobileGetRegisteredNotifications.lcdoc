@@ -4,7 +4,8 @@ Type: function
 
 Syntax: mobileGetRegisteredNotifications()
 
-Summary: Returns a comma delimited list of Local Notifications that are scheduled with the iOS or Android operating system.
+Summary: Returns a comma delimited list of Local Notifications that are
+scheduled with the iOS or Android operating system. 
 
 Synonyms: iphoneGetRegisteredNotifications
 
@@ -34,9 +35,14 @@ else
    end if
 end if
 
-Returns: The <mobileGetRegisteredNotifications> function returns a comma delimited list of positive integers, each indicating the ID of a particular Notification that is scheduled with the iOS or Android operating system.
+Returns: The <mobileGetRegisteredNotifications> function returns a comma
+delimited list of positive integers, each indicating the ID of a
+particular Notification that is scheduled with the iOS or Android
+operating system. 
 
 Description:
-Use the <mobileGetRegisteredNotifications> function to return a comma delimited list of scheduled Local Notifications.
+Use the <mobileGetRegisteredNotifications> function to return a comma
+delimited list of scheduled Local Notifications. 
 
-References: mobileCancelAllLocalNotifications (command), mobileCancelLocalNotification (command)
+References: mobileCancelAllLocalNotifications (command),
+mobileCancelLocalNotification (command)

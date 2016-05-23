@@ -21,6 +21,9 @@ script (string): The code to execute within the widget.
 widget: A widget reference
 
 Description:
-Use the <do in widget> command to execute statements in a widget. LiveCode sends a "OnDo" message with <script> as parameter to the widget, which can then handle that messages to run the code appropriately.
+Use the <do in widget> command to execute statements in a widget.
+LiveCode sends a "OnDo" message with <script> as parameter to the
+widget, which can then handle that messages to run the code
+appropriately. 
 
 References: do (command), widget (object)

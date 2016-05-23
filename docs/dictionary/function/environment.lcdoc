@@ -29,6 +29,8 @@ Returns (enum): The <environment> function returns one of:
 -"command line" : The stack was launched from the command line with :ui
 
 Description:
-Use the <environment> function to change a stack's behavior depending on how the stack was opened.
+Use the <environment> function to change a stack's behavior depending on
+how the stack was opened. 
 
-References: version (function), revLicenseType (function), buildNumber (function), systemVersion (function)
+References: version (function), revLicenseType (function),
+buildNumber (function), systemVersion (function)

@@ -4,7 +4,8 @@ Type: function
 
 Syntax: mobileControlGet ( <idOrName>, <propertyName> )
 
-Summary: Gets the value of a <property> of a native mobile control created using <mobileControlCreate>.
+Summary: Gets the value of a <property> of a native mobile control
+created using <mobileControlCreate>. 
 
 Synonyms: iphoneControlGet
 
@@ -29,11 +30,13 @@ end if
 
 Parameters:
 idOrName: The id or name of the control.
-propertyName (enum): The name of the <property> to be set. See Description section for complete <propertyName> listing.
+propertyName (enum): The name of the <property> to be set. See
+Description section for complete <propertyName> listing. 
 
 Description:
-Use the <mobileControlGet> function to get the value of <property|properties> of a native mobile control 
-created with <mobileControlCreate>.
+Use the <mobileControlGet> function to get the value of
+<property|properties> of a native mobile control created with
+<mobileControlCreate>. 
 
 **<propertyName> listing: **
 
@@ -474,8 +477,10 @@ scrolled (boolean).
 - "enabled" (iOS Only): Determines whether the control is enabled or
 not. This is a boolean value.
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlDo (command), 
-mobileControlSet (command), mobileControls (function), mobileControlTarget (function), property (glossary),
-boolean (glossary), integer (glossary), string, (glossary), value (glossary)
+References: mobileControlCreate (command),
+mobileControlDelete (command), mobileControlDo (command), ,,
+mobileControlSet (command), mobileControls (function),
+mobileControlTarget (function), property (glossary), boolean (glossary),
+integer (glossary), string, (glossary), value (glossary)
 
 Tags: properties

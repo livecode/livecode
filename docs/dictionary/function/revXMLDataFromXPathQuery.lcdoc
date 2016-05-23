@@ -4,10 +4,10 @@ Type: function
 
 Syntax: revXMLDataFromXPathQuery(pDocID, pXPathExpression [, charDelimiter [, lineDelimiter ] ] )
 
-Summary: pDocID is the xml document id returned from one of the revXMLCreate functions.
-The charDelimiter and lineDelimiter both default to cr. If neither is specified then the items will be returned one per line:
-J. K. Rowling
-Harry Potter
+Summary: pDocID is the xml document id returned from one of the
+revXMLCreate functions. The charDelimiter and lineDelimiter both default
+to cr. If neither is specified then the items will be returned one per
+line: J. K. Rowling Harry Potter
 Cory Doctorow
 Little Brother
 
@@ -21,7 +21,9 @@ Example:
 put revXMLDataFromXPathQuery(2, "/bookstore/book/[price&lt;30]/title") into tBooks
 
 Description:
-The revXMLDataFromXPathQuery function returns the data set resulting from evaluating the xpath expression against the specified xml tree. For instance, given xml data of
+The revXMLDataFromXPathQuery function returns the data set resulting
+from evaluating the xpath expression against the specified xml tree. For
+instance, given xml data of 
 
 &lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
 &lt;bookstore&gt;
@@ -62,6 +64,7 @@ put revXMLDataFromXPathQuery(pDocID, pXPathExpression)
 
 gives you "Harry Potter"
 
-References: revXMLCreateTreeFromFile (function), revXMLEvaluateXpath (function), revXMLCreateTree (function)
+References: revXMLCreateTreeFromFile (function),
+revXMLEvaluateXpath (function), revXMLCreateTree (function)
 
 Tags: xml

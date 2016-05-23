@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: seconds
 
-Summary: Designates the number of seconds in a time period, or a format used with the <convert> <command>.
+Summary: Designates the number of seconds in a time period, or a format
+used with the <convert> <command>. 
 
 Synonyms: secs,sec
 
@@ -21,10 +22,16 @@ Example:
 convert it to seconds
 
 Description:
-Use the <seconds> <keyword> to designate a time period with the <wait> or <send> <command|commands>, or to convert a date or time to the number of seconds since the start of the <eon>.
+Use the <seconds> <keyword> to designate a time period with the <wait>
+or <send> <command|commands>, or to convert a date or time to the number
+of seconds since the start of the <eon>. 
 
-When used with the wait or <send> <command|commands>, the <seconds> <keyword> designates a time period measured in seconds.
+When used with the wait or <send> <command|commands>, the <seconds>
+<keyword> designates a time period measured in seconds. 
 
-References: ticks (keyword), second (keyword), milliseconds (keyword), number (property), wait (command), convert (command), send (command), seconds (function), command (glossary), keyword (glossary), eon (glossary)
+References: ticks (keyword), second (keyword), milliseconds (keyword),
+number (property), wait (command), convert (command), send (command),
+seconds (function), command (glossary), keyword (glossary),
+eon (glossary)
 
 Tags: math

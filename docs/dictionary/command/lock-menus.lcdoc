@@ -4,7 +4,9 @@ Type: command
 
 Syntax: lock menus
 
-Summary: Sets the <lockMenus> <property> to true, preventing the <menu bar> from being updated when the <control|controls> for the <menu bar> are changed.
+Summary: Sets the <lockMenus> <property> to true, preventing the <menu
+bar> from being updated when the <control|controls> for the <menu bar>
+are changed. 
 
 Introduced: 1.0
 
@@ -19,12 +21,18 @@ Example:
 if the lockScreen then lock menus
 
 Description:
-Use the <lock menus> <command> to hide changes in the <menu bar> from the user.
+Use the <lock menus> <command> to hide changes in the <menu bar> from
+the user. 
 
 The <lock menus> <command> sets the <lockMenus> <property> to true.
 
-When all pending handlers are finished executing, the <lockMenus> <property> is set back to false, undoing the <lock menus> <command|command's> action. Any changes made to the <menus> become visible to the user.
+When all pending handlers are finished executing, the <lockMenus>
+<property> is set back to false, undoing the <lock menus>
+<command|command's> action. Any changes made to the <menus> become
+visible to the user. 
 
-References: lockMenus (property), unlock menus (command), lock screen (command), control (object), property (glossary), command (glossary), menu bar (glossary), menus (function)
+References: lockMenus (property), unlock menus (command),
+lock screen (command), control (object), property (glossary),
+command (glossary), menu bar (glossary), menus (function)
 
 Tags: menus

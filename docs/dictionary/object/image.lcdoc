@@ -21,13 +21,13 @@ Example:
 export image ID 9234 to file "Test Image.jpg"
 
 Description:
-Use the <image> <object type> to hold photographs, icons, and decorative 
-elements, and to allow the user to paint.
+Use the <image> <object type> to hold photographs, icons, and
+decorative elements, and to allow the user to paint.
 
 Each image contains a bitmapped picture, which can either be imported 
-with the import <command> or created using the <paint tool|paint tools>. 
-An <image(keyword)> can display either its own data, or a <file> 
-specified by the <image(object)|image's> <filename> <property>.
+with the import <command> or created using the <paint tool|paint
+tools>. An <image(keyword)> can display either its own data, or a
+<file> specified by the <image(object)|image's> <filename> <property>.
 
 An image is contained in a card, group, or background. Images cannot 
 contain other objects.

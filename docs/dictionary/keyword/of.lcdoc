@@ -4,7 +4,9 @@ Type: keyword
 
 Syntax: of
 
-Summary: Designates the <object(glossary)> a <property> belongs to, or the <parameter> of a <function>, or the <string> that contains a <chunk expression>.
+Summary: Designates the <object(glossary)> a <property> belongs to, or
+the <parameter> of a <function>, or the <string> that contains a <chunk
+expression>. 
 
 Introduced: 1.0
 
@@ -22,6 +24,12 @@ Example:
 put word 12 of it after field "Go On"
 
 Description:
-References: string (keyword), character (keyword), lines (keyword), the (keyword), in (keyword), word (keyword), line (keyword), properties (property), object (glossary), function (control structure), property (glossary), custom function (glossary), chunk expression (glossary), global (glossary), chunk (glossary), keyword (glossary), expression (glossary), parameter (glossary), function (glossary), object reference (glossary)
+References: string (keyword), character (keyword), lines (keyword),
+the (keyword), in (keyword), word (keyword), line (keyword),
+properties (property), object (glossary), function (control structure),
+property (glossary), custom function (glossary),
+chunk expression (glossary), global (glossary), chunk (glossary),
+keyword (glossary), expression (glossary), parameter (glossary),
+function (glossary), object reference (glossary)
 
 Tags: text processing

@@ -19,9 +19,12 @@ Example:
 mobileVibrate 7
 
 Parameters:
-numberOfTimes (integer): An integer (or an expression that evaluates to an integer) and specifies how many times to vibrate. If the <numberOfTimes> is not specified, the device is vibrated once.
+numberOfTimes (integer): An integer (or an expression that evaluates to
+an integer) and specifies how many times to vibrate. If the
+<numberOfTimes> is not specified, the device is vibrated once. 
 
 Description:
-Use the <mobileVibrate> command to cause the iOS or Android device to vibrate.
+Use the <mobileVibrate> command to cause the iOS or Android device to
+vibrate. 
 
 References: beep (command)

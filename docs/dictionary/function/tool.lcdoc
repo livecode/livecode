@@ -23,8 +23,11 @@ if the tool is not "browse tool" then choose browse tool
 Returns (enum): The <tool> <function> <return|returns> one of the following <tool> names:browse, pointer, button, field, scrollbar, graphic, image, player, select, pencil, bucket, brush, eraser, spray can, rectangle, line, round rect, oval, polygon, curve, regular polygon, dropperfollowed by the word "tool"
 
 Description:
-Use the <tool> <function> to find out which <tool> is currently selected.
+Use the <tool> <function> to find out which <tool> is currently
+selected. 
 
-The tool names are the same as the names used with the <choose> <command> to select a <tool> for use.
+The tool names are the same as the names used with the <choose>
+<command> to select a <tool> for use. 
 
-References: choose (command), tool (function), command (glossary), return (glossary), function (control structure)
+References: choose (command), tool (function), command (glossary),
+return (glossary), function (control structure)

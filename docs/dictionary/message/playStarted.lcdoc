@@ -21,12 +21,20 @@ on playStarted
 end playStarted
 
 Description:
-Handle the playStarted message if you want to perform a task when a movie or sound starts playing.
+Handle the playStarted message if you want to perform a task when a
+movie or sound starts playing. 
 
-The playStarted message is sent when the user clicks the play button, or when a play start command executes. If the user pauses the movie or sound, the <playPaused> message is sent. If the user stops the movie or sound, the <playStopped> message is sent.
+The playStarted message is sent when the user clicks the play button, or
+when a play start command executes. If the user pauses the movie or
+sound, the <playPaused> message is sent. If the user stops the movie or
+sound, the <playStopped> message is sent. 
 
-When an audio clip or video clip is playing, a temporary player is created for it. When the clip starts playing, the playStarted message is sent to it
+When an audio clip or video clip is playing, a temporary player is
+created for it. When the clip starts playing, the playStarted message is
+sent to it 
 
-References: paused (property), currentTime (property), endTime (property), playStopped (message), playPaused (message), currentTimeChanged (message), play (command)
+References: paused (property), currentTime (property),
+endTime (property), playStopped (message), playPaused (message),
+currentTimeChanged (message), play (command)
 
 Tags: multimedia

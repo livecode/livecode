@@ -24,10 +24,15 @@ Parameters:
 button: Any button reference.
 
 Description:
-Use the <unhilite> <command> to turn off the <highlight|highlighting> of a button and restore it to its normal unhighlighted state, or to turn off a <checkbox> or <radio button>.
+Use the <unhilite> <command> to turn off the <highlight|highlighting> of
+a button and restore it to its normal unhighlighted state, or to turn
+off a <checkbox> or <radio button>. 
 
-The <unhilite> <command> sets the <button|button's> <hilite> <property> to false.
+The <unhilite> <command> sets the <button|button's> <hilite> <property>
+to false. 
 
-References: hilite (command), button (object), property (glossary), highlight (glossary), radio button (glossary), command (glossary), checkbox (glossary)
+References: hilite (command), button (object), property (glossary),
+highlight (glossary), radio button (glossary), command (glossary),
+checkbox (glossary)
 
 Tags: ui

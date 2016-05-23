@@ -43,10 +43,16 @@ Value (enum): A string describing the current tool.
 - dropper tool:
 
 Description:
-Use the <tool> <property> to check which <tool> is in use before performing an action that depends on the <tool>.
+Use the <tool> <property> to check which <tool> is in use before
+performing an action that depends on the <tool>. 
 
-The tool names are the same as the names used with the <choose> <command> to select a <tool> for use.
+The tool names are the same as the names used with the <choose>
+<command> to select a <tool> for use. 
 
-Setting the <tool> is equivalent to choosing the <tool> with the <choose> <command>. When setting the <tool> <property>, you can omit the word "tool".
+Setting the <tool> is equivalent to choosing the <tool> with the
+<choose> <command>. When setting the <tool> <property>, you can omit the
+word "tool" . 
 
-References: powerKeys (property), choose (command), tool (function), property (glossary), command (glossary), return (glossary), function (control structure)
+References: powerKeys (property), choose (command), tool (function),
+property (glossary), command (glossary), return (glossary),
+function (control structure)

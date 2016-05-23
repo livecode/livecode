@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the dontSearch of <field> to {true | false}
 
-Summary: Specifies whether the <find> <command> skips a <field>, <group>, or <card>.
+Summary: Specifies whether the <find> <command> skips a <field>,
+<group>, or <card>. 
 
 Associations: field,group,card
 
@@ -21,8 +22,13 @@ Value (bool):The <dontSearch> of a <field(keyword)>, <group(command)>, or <card(
 By default, the <dontSearch> <property> of newly created <field(object)|fields>, <group(glossary)|groups>, and <card(object)|cards> is set to false.
 
 Description:
-Use the <dontSearch> <property> to skip certain <field|fields> (such as label <field|fields> that contain static text), or to skip all the <field|fields> in a specified <group> or <card>, when searching with the <find> <command>.
+Use the <dontSearch> <property> to skip certain <field|fields> (such as
+label <field|fields> that contain static text), or to skip all the
+<field|fields> in a specified <group> or <card>, when searching with the
+<find> <command>. 
 
-References: sharedText (property), field (keyword), card (keyword), find (command), group (command), field (object), card (object), command (glossary), property (glossary), group (glossary)
+References: sharedText (property), field (keyword), card (keyword),
+find (command), group (command), field (object), card (object),
+command (glossary), property (glossary), group (glossary)
 
 Tags: database

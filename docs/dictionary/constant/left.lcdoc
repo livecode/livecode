@@ -19,8 +19,13 @@ Example:
 if theKey is left then go previous card
 
 Description:
-Use the <left> <constant> to indicate the left arrow key in an <arrowKey> <handler>.
+Use the <left> <constant> to indicate the left arrow key in an
+<arrowKey> <handler>. 
 
-References: string (keyword), left (constant), up (constant), down (constant), right (constant), arrowKey (message), constant (command), mouse (function), altKey (function), shiftKey (function), optionKey (function), commandKey (function), controlKey (function), handler (glossary)
+References: string (keyword), left (constant), up (constant),
+down (constant), right (constant), arrowKey (message),
+constant (command), mouse (function), altKey (function),
+shiftKey (function), optionKey (function), commandKey (function),
+controlKey (function), handler (glossary)
 
 Tags: ui

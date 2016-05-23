@@ -4,7 +4,8 @@ Type: command
 
 Syntax: call <handler> [of <object>]
 
-Summary: <execute|Executes> the specified <handler> in any <object|object's> <script>.
+Summary: <execute|Executes> the specified <handler> in any
+<object|object's> <script>. 
 
 Introduced: 1.0
 
@@ -36,10 +37,10 @@ next <object(glossary)> in the object's <message path>.
 
 When executing a handler invoked by the call command the <defaultStack> 
 remains the same as it was when the call command was issued. Therefore 
-any object references in the called handler are evaluated in the context 
-of the call command that invoked the handler.  For example, button 3 may 
-commonly refer to button 3 of the current card of the stack from which 
-the target handler was called.
+any object references in the called handler are evaluated in the
+context of the call command that invoked the handler.  For example,
+button 3 may commonly refer to button 3 of the current card of the stack
+from which the target handler was called.
 
 This differs from the <send> <command> which temporarily changes the 
 context so that object references are evaluated in the context of the 
@@ -52,10 +53,11 @@ name and <parameter|parameters> into a <variable>, then use the name of
 the <variable> in the <call> <statement>.
 
 References: script (property), defaultStack (property), 
-object (glossary), do (command), send (command), insert script (command), 
-start using (command), value (function), params (function), 
-pass (control structure), trap (glossary), variable (glossary), 
-handler (glossary), execute (glossary), pass (glossary), 
-message path (glossary), message (glossary), statement (glossary), 
-double quote (glossary), command (glossary), parameter (glossary)
+object (glossary), do (command), send (command),
+insert script (command), , start using (command), value (function),
+params (function), , pass (control structure), trap (glossary),
+variable (glossary), , handler (glossary), execute (glossary),
+pass (glossary), , message path (glossary), message (glossary),
+statement (glossary), , double quote (glossary), command (glossary),
+parameter (glossary)
 

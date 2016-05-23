@@ -18,6 +18,7 @@ if last char of it is slash then put true into isAFolder
 Description:
 Use the <slash> <constant> as an easier-to-read replacement for "/"<a/>.
 
-References: backslash (constant), constant (command), character (keyword)
+References: backslash (constant), constant (command),
+character (keyword)
 
 Tags: text processing

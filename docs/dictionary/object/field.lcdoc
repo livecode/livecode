@@ -21,13 +21,13 @@ Example:
 put it into line 3 of field "Help"
 
 Description:
-Use the <field> <object type> to hold text or to provide a place for the 
-user to enter text.
+Use the <field> <object type> to hold text or to provide a place for
+the user to enter text.
 
-Fields can contain styled text (with different fonts, sizes, styles, and 
-colors for different parts of the text they contain). A field can be 
-displayed with or without horizontal and vertical scrollbars, and can be 
-unlocked (allowing the user to enter text) or locked.
+Fields can contain styled text (with different fonts, sizes, styles,
+and colors for different parts of the text they contain). A field can
+be displayed with or without horizontal and vertical scrollbars, and can
+be unlocked (allowing the user to enter text) or locked.
 
 A field is contained in a card, group, or background. Fields cannot 
 contain other objects.

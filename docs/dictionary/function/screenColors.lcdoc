@@ -20,18 +20,29 @@ the screenColors
 Example:
 if the screenColors = 2 then put "black & white" into graphicsLevel
 
-Returns: The <screenColors> <function> <return|returns> a positive <integer> which is a power of two.
+Returns: The <screenColors> <function> <return|returns> a positive
+<integer> which is a power of two. 
 
 Description:
-Use the <screenColors> <function> to determine the color capacity of the screen. For example, you might display different <image|images> depending on the number of colors available.
+Use the <screenColors> <function> to determine the color capacity of the
+screen. For example, you might display different <image|images>
+depending on the number of colors available. 
 
-If the system has more than one monitor, the <screenColors> function <return|returns> the number of colors for the main screen.
+If the system has more than one monitor, the <screenColors> function
+<return|returns> the number of colors for the main screen. 
 
 The expression
   the screenColors
 is equal to
   the screenDepth^2
 
-The value returned by the <screenColors> <function> is updated only when you start up the <application>. If you change the screen settings after starting up the <application>, you must quit and restart to update the <screenColors>.
+The value returned by the <screenColors> <function> is updated only when
+you start up the <application>. If you change the screen settings after
+starting up the <application>, you must quit and restart to update the
+<screenColors>. 
 
-References: colorWorld (property), colorMap (property), borderPixel (property), dontRefresh (property), remapColor (property), integer (keyword), function (control structure), return (glossary), application (glossary), screenType (function), unlock colorMap (command), image (object)
+References: colorWorld (property), colorMap (property),
+borderPixel (property), dontRefresh (property), remapColor (property),
+integer (keyword), function (control structure), return (glossary),
+application (glossary), screenType (function),
+unlock colorMap (command), image (object)

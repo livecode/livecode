@@ -21,9 +21,9 @@ mobileUpdateContact tContact
 
 Parameters:
 contactArray (array): 
- (enum): <name/> Person Information - The personal information of the contact is stored at the top level of the array and has the following keys:
-- "firstname": The first name.
-- "middlename": The middle name.
+ (enum): <name/> Person Information - The personal information of the
+contact is stored at the top level of the array and has the following
+keys: - "firstname" : The first name. - "middlename": The middle name.
 - "lastname": The last name.
 - "alternatename": The alternative name.
 - "nickname": The nick name (iOS only).
@@ -43,8 +43,14 @@ The ID of the contact that was created.
 If no contact could be created, then empty is returned.
 
 Description:
-Allows the user to create a contact in the contact list, based on some existing contact information. The contact information is collected in a nested array structure that is defined as follows:
+Allows the user to create a contact in the contact list, based on some
+existing contact information. The contact information is collected in a
+nested array structure that is defined as follows: 
 
 Use the <mobileAddContact> command to add a contact to the contact list.
 
-References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobilePickContact (command), mobileShowContact (command), mobilePick (command), mobileFindContact (command), mobileCreateContact (command), mobileGetContactData (function)
+References: mobilePickDate (command), mobileRemoveContact (command),
+mobilePickMedia (command), mobilePickContact (command),
+mobileShowContact (command), mobilePick (command),
+mobileFindContact (command), mobileCreateContact (command),
+mobileGetContactData (function)

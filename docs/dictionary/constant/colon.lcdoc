@@ -18,6 +18,7 @@ put colon into offset("/",thePath)
 Description:
 Use the <colon> <constant> as an easier-to-read replacement for ":"<a/>.
 
-References: constant (command), itemDelimiter (property), character (keyword)
+References: constant (command), itemDelimiter (property),
+character (keyword)
 
 Tags: text processing

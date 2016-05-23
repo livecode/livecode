@@ -31,15 +31,21 @@ Value (enum):
 - square: The edge is extended beyond the end-point by half the line width.
 
 Description:
-Set the <capStyle> <property> to specify how the ends of <line|lines> and <dashes> are drawn.
+Set the <capStyle> <property> to specify how the ends of <line|lines>
+and <dashes> are drawn. 
 
-Setting the <capStyle> <property> changes the appearance of <line> and <dashes|dash> ends for <graphic> objects. 
-If the <graphic|graphic's> <lineSize> <property> is 1, the setting of the <capStyle> has no effect.
+Setting the <capStyle> <property> changes the appearance of <line> and
+<dashes|dash> ends for <graphic> objects. If the <graphic|graphic's>
+<lineSize> <property> is 1, the setting of the <capStyle> has no
+effect. 
 
->*Note:* This only affects <polygon>, freehand <curve> and line <graphic|graphics> which have their <antialiased> set to true.
+>*Note:* This only affects <polygon>, freehand <curve> and line
+<graphic|graphics> which have their <antialiased> set to true. 
 
->*Note:* Setting the <roundEnds> of a <graphic> to true sets the <capStyle> of the <graphic> to "round". 
-Setting the <roundEnds> of a <graphic> to false sets the <capStyle> of the <graphic> to "butt".
+>*Note:* Setting the <roundEnds> of a <graphic> to true sets the
+<capStyle> of the <graphic> to "round" . Setting the <roundEnds> of a
+<graphic> to false sets the <capStyle> of the <graphic> to "butt" . 
 
-References: antialiased (property), curve (keyword), dashes (property), graphic (object), line (keyword), lineSize (property), 
+References: antialiased (property), curve (keyword), dashes (property),
+graphic (object), line (keyword), lineSize (property), ,
 polygon (keyword), property (glossary), roundEnds (property)

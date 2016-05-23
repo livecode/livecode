@@ -23,15 +23,22 @@ Example:
 toLower("NO, MAANA!") -- returns "no, maana!"
 
 Parameters:
-stringToConvert (string): Any string or expression that evaluates to a string.
+stringToConvert (string): Any string or expression that evaluates to a
+string. 
 
-Returns: The <toLower> <function> <return|returns> a <string> the same length as the <stringToConvert>.
+Returns: The <toLower> <function> <return|returns> a <string> the same
+length as the <stringToConvert>. 
 
 Description:
 Use the <toLower> <function> to change the case of a <string>.
 
-Uppercase letters, including special characters with diacritical marks, are converted to the lowercase equivalents. All other characters, including lowercase letters, numbers, punctuation, and special characters with no upper or lower case, are left unchanged by the <toLower> <function>.
+Uppercase letters, including special characters with diacritical marks,
+are converted to the lowercase equivalents. All other characters,
+including lowercase letters, numbers, punctuation, and special
+characters with no upper or lower case, are left unchanged by the
+<toLower> <function>. 
 
-References: string (keyword), numToChar (function), toUpper (function), return (glossary), function (control structure)
+References: string (keyword), numToChar (function), toUpper (function),
+return (glossary), function (control structure)
 
 Tags: text processing

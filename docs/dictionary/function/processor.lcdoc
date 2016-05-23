@@ -27,6 +27,8 @@ Returns (enum):
 - ARM : iOS and Android Devices and the Android simulator
 
 Description:
-Use the <processor> function to determine which microprocessor the device has.
+Use the <processor> function to determine which microprocessor the
+device has. 
 
-References: string (keyword), machine (function), platform (function), return (glossary)
+References: string (keyword), machine (function), platform (function),
+return (glossary)

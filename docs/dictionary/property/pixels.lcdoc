@@ -4,7 +4,8 @@ Type: property
 
 Syntax: pixels
 
-Summary: The <pixels> <property> is not implemented and is <reserved word|reserved>.
+Summary: The <pixels> <property> is not implemented and is <reserved
+word|reserved>. 
 
 Associations: image
 
@@ -14,4 +15,5 @@ OS: ios,android
 
 Platforms: desktop,server,web,mobile
 
-References: borderPixel (property), backgroundPixel (property), property (glossary), reserved word (glossary)
+References: borderPixel (property), backgroundPixel (property),
+property (glossary), reserved word (glossary)

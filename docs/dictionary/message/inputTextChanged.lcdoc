@@ -4,7 +4,8 @@ Type: message
 
 Syntax: inputTextChanged
 
-Summary: Sent when the content of a mobile text input control has changed.
+Summary: Sent when the content of a mobile text input control has
+changed. 
 
 Introduced: 4.6
 
@@ -18,10 +19,18 @@ on inputTextChanged -- enable the save button when a change is made
 end inputTextChanged
 
 Description:
-The inputTextChanged message is sent when the content of a mobile text input control has changed.
+The inputTextChanged message is sent when the content of a mobile text
+input control has changed. 
 
-Handle the <inputTextChanged> message if you want to make changes to the interface or perform an action when the content of an iosTextInput, iosMultiline, androidTextInput or androidMultiline control changes.
+Handle the <inputTextChanged> message if you want to make changes to the
+interface or perform an action when the content of an iosTextInput,
+iosMultiline, androidTextInput or androidMultiline control changes. 
 
-The <inputTextChanged> message is sent to the object containing the script that created the text input control.
+The <inputTextChanged> message is sent to the object containing the
+script that created the text input control. 
 
-References: mobileControlCreate (command), mobileControlDelete (command), mobileControlSet (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function), inputEndEditing (message), inputReturnKey (message), inputBeginEditing (message)
+References: mobileControlCreate (command),
+mobileControlDelete (command), mobileControlSet (command),
+mobileControlGet (function), mobileControlTarget (function),
+mobileControls (function), inputEndEditing (message),
+inputReturnKey (message), inputBeginEditing (message)

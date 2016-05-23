@@ -21,19 +21,25 @@ Example:
 if x is among the lines of the groupNames of card y then next repeat
 
 Value:
-The <groupNames> of a <card> reports a list of group names, one per <line>.
-This property is read-only and cannot be set.
+The <groupNames> of a <card> reports a list of group names, one per
+<line>. This property is read-only and cannot be set.
 
 Description:
-Use the <groupNames> <property> to find out which <group|groups> are placed on a <card>.
+Use the <groupNames> <property> to find out which <group|groups> are
+placed on a <card>. 
 
-If a group on the <card> contains <group|groups>, only the top-level <group|groups> are reported.
+If a group on the <card> contains <group|groups>, only the top-level
+<group|groups> are reported. 
 
-To find out which groups are in a stack, use the backgroundNames <property>.
+To find out which groups are in a stack, use the backgroundNames
+<property>. 
 
 Changes:
-In versions before 1.1, groupNames and backgroundNames were synonyms and could be used interchangeably.
+In versions before 1.1, groupNames and backgroundNames were synonyms and
+could be used interchangeably. 
 
-References: groupIDs (property), card (keyword), line (keyword), nameChanged (message), place (command), property (glossary), group (glossary)
+References: groupIDs (property), card (keyword), line (keyword),
+nameChanged (message), place (command), property (glossary),
+group (glossary)
 
 Tags: objects

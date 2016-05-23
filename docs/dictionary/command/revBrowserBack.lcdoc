@@ -27,8 +27,11 @@ instanceId: The integer identifier of a browser object.
 The result: The <revBrowserBack> command places empty into the <result>.
 
 Description:
-The <revBrowserBack> command navigates one page backwards in the browser specified by <instanceId>.
+The <revBrowserBack> command navigates one page backwards in the browser
+specified by <instanceId>. 
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+notes in the <revBrowserOpen function> reference. 
 
-References: revBrowserNavigate (command), result (function), revBrowserOpen function (function)
+References: revBrowserNavigate (command), result (function),
+revBrowserOpen function (function)

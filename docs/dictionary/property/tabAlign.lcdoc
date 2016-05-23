@@ -27,6 +27,9 @@ Value (enum): The <tabAlign> of a field is a return delimited list of alignments
 Description:
 Use the <tabAlign> property to set the alignment of tab separated text.
 
-References: textAlign (property), formattedWidth (property), autoTab (property), formattedText (property), width (property), listStyle (property), tabStops (property), listBehavior (property), hScrollbar (property), textSize (property), tabKey (message)
+References: textAlign (property), formattedWidth (property),
+autoTab (property), formattedText (property), width (property),
+listStyle (property), tabStops (property), listBehavior (property),
+hScrollbar (property), textSize (property), tabKey (message)
 
 Tags: ui

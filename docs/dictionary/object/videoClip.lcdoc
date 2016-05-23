@@ -26,9 +26,9 @@ the <stack>, rather than in another file.
 
 Unlike a player, a video clip contains the movie that it displays. This 
 increases the memory required by your stack, because the movie data is 
-loaded into memory whenever the stack file is open. However, it prevents 
-the movie from being accidentally separated from the stack file and 
-lost.
+loaded into memory whenever the stack file is open. However, it
+prevents the movie from being accidentally separated from the stack file
+and lost.
 
 Video clips can be in QuickTime, AVI, or MPEG format.
 

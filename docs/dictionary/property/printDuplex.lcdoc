@@ -25,12 +25,17 @@ Value (enum): The <printDuplex> property is one of the following values.
   - long edge: double-sided printing without tumble
 
 Description:
-Use the <printDuplex> property to print double-sided. If "duplex" is not among the items of the <printerFeatures> then this property has no effect.
+Use the <printDuplex> property to print double-sided. If "duplex" is not
+among the items of the <printerFeatures> then this property has no
+effect. 
 
-Attempting to set the <printDuplex> to an invalid value results in a script execution error.
+Attempting to set the <printDuplex> to an invalid value results in a
+script execution error. 
 
-To have an effect, this property must be set before calling <open printing>.
+To have an effect, this property must be set before calling <open
+printing>. 
 
-References: print (command), open printing (command), printCollate (property), printerFeatures (property)
+References: print (command), open printing (command),
+printCollate (property), printerFeatures (property)
 
 Tags: printing

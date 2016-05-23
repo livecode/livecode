@@ -4,7 +4,8 @@ Type: property
 
 Syntax: mimeText
 
-Summary: The <mimeText> <property> is not implemented and is <reserved word|reserved>.
+Summary: The <mimeText> <property> is not implemented and is <reserved
+word|reserved>. 
 
 Associations: field
 
@@ -12,4 +13,5 @@ Introduced: 1.0
 
 Platforms: desktop,server,web
 
-References: HTMLText (property), property (glossary), reserved word (glossary)
+References: HTMLText (property), property (glossary),
+reserved word (glossary)

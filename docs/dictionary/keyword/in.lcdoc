@@ -16,20 +16,30 @@ Example:
 repeat with x = 1 to the number of items in the hilitedLines of me
 
 Description:
-Use the <in> <keyword> as a synonym for the <of> <keyword> in <chunk expression|chunk expressions>.
+Use the <in> <keyword> as a synonym for the <of> <keyword> in <chunk
+expression|chunk expressions>. 
 
-When designating a part of a string, use the <in> <keyword> after the <chunk> type. For example, to specify the first <word> of a <string>, use an <expression> like this:
+When designating a part of a string, use the <in> <keyword> after the
+<chunk> type. For example, to specify the first <word> of a <string>,
+use an <expression> like this: 
 
   word 1 in string
 
-In complex chunk expressions with multiple chunk types, use the <in> <keyword> after each <chunk> type. For example, to specify the last <character> of the second <line> of a <string>, use an <expression> like this:
+In complex chunk expressions with multiple chunk types, use the <in>
+<keyword> after each <chunk> type. For example, to specify the last
+<character> of the second <line> of a <string>, use an <expression> like
+this: 
 
   last char in line 2 in string
 
-When designating the number of chunks in a string, use the <in> <keyword> after the <chunk> type. For example, to get the number of <lines> in a <string>, use an <expression> like this:
+When designating the number of chunks in a string, use the <in>
+<keyword> after the <chunk> type. For example, to get the number of
+<lines> in a <string>, use an <expression> like this: 
 
   the number of lines in string
 
-References: character (keyword), of (keyword), word (keyword), line (keyword), string (keyword), lines (keyword), keyword (glossary), chunk (glossary), chunk expression (glossary), expression (glossary)
+References: character (keyword), of (keyword), word (keyword),
+line (keyword), string (keyword), lines (keyword), keyword (glossary),
+chunk (glossary), chunk expression (glossary), expression (glossary)
 
 Tags: text processing

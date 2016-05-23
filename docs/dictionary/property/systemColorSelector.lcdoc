@@ -4,10 +4,12 @@ Type: property
 
 Syntax: systemColorSelector
 
-Summary: The <systemColorSelector> <property> is not implemented and is <reserved word|reserved>.
+Summary: The <systemColorSelector> <property> is not implemented and is
+<reserved word|reserved>. 
 
 Introduced: 1.1
 
 Platforms: desktop,server
 
-References: answer color (command), property (glossary), reserved word (glossary)
+References: answer color (command), property (glossary),
+reserved word (glossary)

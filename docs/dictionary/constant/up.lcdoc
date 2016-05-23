@@ -19,8 +19,12 @@ Example:
 wait while the mouse is up
 
 Description:
-Use the <up> <constant> to indicate the state of a <mouse button> or <modifier key>, or in an <arrowKey> <handler>.
+Use the <up> <constant> to indicate the state of a <mouse button> or
+<modifier key>, or in an <arrowKey> <handler>. 
 
-References: string (keyword), left (constant), down (constant), arrowKey (message), constant (command), commandKey (function), altKey (function), controlKey (function), mouse button (glossary), modifier key (glossary), handler (glossary)
+References: string (keyword), left (constant), down (constant),
+arrowKey (message), constant (command), commandKey (function),
+altKey (function), controlKey (function), mouse button (glossary),
+modifier key (glossary), handler (glossary)
 
 Tags: ui

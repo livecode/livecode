@@ -33,10 +33,19 @@ returnKey (enum): Specifies what the return key function is.
 - emergency call: the 'emergency call' return key
 
 Description:
-Use the iphoneSetKeyboardReturnKey command to configure the type of return key displayed on the keyboard.
+Use the iphoneSetKeyboardReturnKey command to configure the type of
+return key displayed on the keyboard. 
 
-The <iphoneSetKeyboardReturnKey> command configures the type of return key displayed on the keyboard
+The <iphoneSetKeyboardReturnKey> command configures the type of return
+key displayed on the keyboard 
 
-The return key type setting takes effect the next time the keyboard is shown - it does not affect the currently displaying keyboard, if any. If you wish to configure the keyboard options based on the field that is being focused, simply use the commands in an <openField> handler of the given field. The keyboard is only shown after this handler returns, so it is the ideal time to configure it.
+The return key type setting takes effect the next time the keyboard is
+shown - it does not affect the currently displaying keyboard, if any. If
+you wish to configure the keyboard options based on the field that is
+being focused, simply use the commands in an <openField> handler of the
+given field. The keyboard is only shown after this handler returns, so
+it is the ideal time to configure it. 
 
-References: mobileSetKeyboardType (command), keyboardDeactivated (message), keyboardActivated (message), openField (message)
+References: mobileSetKeyboardType (command),
+keyboardDeactivated (message), keyboardActivated (message),
+openField (message)

@@ -16,14 +16,21 @@ Example:
 iphoneEnableRemoteControl
 
 Description:
-Use the <iphoneEnableRemoteControl> command to start receiving remote control events after you start playing audio.
+Use the <iphoneEnableRemoteControl> command to start receiving remote
+control events after you start playing audio. 
 
-The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).
+The remote control feature on iOS allows access to the audio controls
+both on an external device and also on the device itself when in lock
+screen (via double-tapping on the Home button). 
 
-To use this feature remote control access must be enabled using the <iphoneEnableRemoteControl> command.
+To use this feature remote control access must be enabled using the
+<iphoneEnableRemoteControl> command. 
 
-The audio category must be set to 'playback' using the <iphoneSetAudioCategory> command.
+The audio category must be set to 'playback' using the
+<iphoneSetAudioCategory> command. 
 
 >*Note:* This functionality is only available on iOS 5.x and above.
 
-References: iphoneSetRemoteControlDisplay (command), iphoneDisableRemoteControl (command), iphoneSetAudioCategory (command), iphoneRemoteControlEnabled (function), remoteControlReceived (message)
+References: iphoneSetRemoteControlDisplay (command),
+iphoneDisableRemoteControl (command), iphoneSetAudioCategory (command),
+iphoneRemoteControlEnabled (function), remoteControlReceived (message)

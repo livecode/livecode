@@ -29,8 +29,8 @@ polygons with any number of sides, irregular polygons (closed or open),
 lines (jagged or straight), or curves (smooth or broken). You specify a 
 graphic's basic shape by setting its style <property>, and details of 
 different basic shapes with the <points>, <arcAngle>, <startAngle>, 
-<angle>, and <polySides> <properties>. Unlike an image, a graphic can be 
-resized without losing detail or becoming "jagged".
+<angle>, and <polySides> <properties>. Unlike an image, a graphic can
+be resized without losing detail or becoming "jagged".
 
 A graphic is contained in a card, group, or background. Graphics cannot 
 contain other objects.

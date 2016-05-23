@@ -21,10 +21,13 @@ Value (bool):The <printCardBorders> is true or false.
 By default, the <printCardBorders> <property> is set to false.
 
 Description:
-Use the <printCardBorders> <property> to place a border around each <card> when printed.
+Use the <printCardBorders> <property> to place a border around each
+<card> when printed. 
 
-If the card's <showBorder> <property> is false, the border is not drawn and the setting of this <property> has no effect.
+If the card's <showBorder> <property> is false, the border is not drawn
+and the setting of this <property> has no effect. 
 
-References: showBorder (property), printMargins (property), card (keyword), print (command), property (glossary)
+References: showBorder (property), printMargins (property),
+card (keyword), print (command), property (glossary)
 
 Tags: printing

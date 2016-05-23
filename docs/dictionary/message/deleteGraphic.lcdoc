@@ -21,17 +21,26 @@ on deleteGraphic -- announce deletion to user
 end deleteGraphic
 
 Description:
-Handle the <deleteGraphic> <message> if you want to perform cleanup before a <graphic> is removed from the <stack>.
+Handle the <deleteGraphic> <message> if you want to perform cleanup
+before a <graphic> is removed from the <stack>. 
 
-The actual deletion is not triggered by the <deleteGraphic> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <graphic> from being removed.
+The actual deletion is not triggered by the <deleteGraphic> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <graphic> from being removed. 
 
-However, the undo <command> will restore a <graphic> after it is deleted by the user. For example, the following <handler>, placed in a <card> or stack <script>, effectively prevents a <graphic> from being deleted by the user:
+However, the undo <command> will restore a <graphic> after it is deleted
+by the user. For example, the following <handler>, placed in a <card> or
+stack <script>, effectively prevents a <graphic> from being deleted by
+the user: 
 
   on deleteGraphic
     beep
     send "undo" to this card in 5 milliseconds
   end deleteGraphic
 
-References: card (keyword), graphic (keyword), script (property), delete (command), stack (object), handler (glossary), trap (glossary), message (glossary), command (glossary), graphic (glossary), pass (control structure)
+References: card (keyword), graphic (keyword), script (property),
+delete (command), stack (object), handler (glossary), trap (glossary),
+message (glossary), command (glossary), graphic (glossary),
+pass (control structure)
 
 Tags: objects

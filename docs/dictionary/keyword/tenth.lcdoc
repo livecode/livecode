@@ -19,12 +19,17 @@ Example:
 multiply the tenth word of currentAmounts by ten
 
 Description:
-Use the <tenth> <keyword> in an <object reference> or <chunk expression>.
+Use the <tenth> <keyword> in an <object reference> or <chunk
+expression>. 
 
-The <tenth> <keyword> can be used to specify any <object(glossary)> whose <number> <property> is 10. It can also be used to designate the tenth <chunk> in a <chunk expression>.
+The <tenth> <keyword> can be used to specify any <object(glossary)>
+whose <number> <property> is 10. It can also be used to designate the
+tenth <chunk> in a <chunk expression>. 
 
 The word the is optional when using the <tenth> <keyword>.
 
-References: ten (constant), object (glossary), keyword (glossary), property (glossary), object reference (glossary), chunk expression (glossary), chunk (glossary), number (function)
+References: ten (constant), object (glossary), keyword (glossary),
+property (glossary), object reference (glossary),
+chunk expression (glossary), chunk (glossary), number (function)
 
 Tags: math

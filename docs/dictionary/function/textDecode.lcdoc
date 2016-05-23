@@ -40,10 +40,17 @@ Returns: Returns the binaryData as text.
 Description:
 Converts from binary data to text.
 
-The <textDecode> function takes binary data, in the specified encoding, and returns the given string as text.
+The <textDecode> function takes binary data, in the specified encoding,
+and returns the given string as text. 
 
-It is highly recommended that any time you interface with things outside LiveCode (files, network sockets, processes, etc) that you explicitly <textEncode> any text you send outside LiveCode and textDecode all text received into LiveCode. If this doesnt happen, a platform-dependent encoding will be used (which normally does not support Unicode text).
+It is highly recommended that any time you interface with things outside
+LiveCode (files, network sockets, processes, etc) that you explicitly
+<textEncode> any text you send outside LiveCode and textDecode all text
+received into LiveCode. If this doesnt happen, a platform-dependent
+encoding will be used (which normally does not support Unicode text). 
 
-It is not, in general, possible to reliably auto-detect text encodings so please check the documentation for the programme you are communicating with to find out what it expects. If in doubt, try UTF-8.
+It is not, in general, possible to reliably auto-detect text encodings
+so please check the documentation for the programme you are
+communicating with to find out what it expects. If in doubt, try UTF-8. 
 
 References: textEncode (function)

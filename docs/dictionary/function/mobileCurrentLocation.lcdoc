@@ -30,8 +30,13 @@ If the latitude and longitude could not be measured, those keys together with th
 If location tracking has not been enabled the <mobileCurrentLocation> function returns empty
 
 Description:
-Use the <mobileCurrentLocation> function to find the current location of the device.
+Use the <mobileCurrentLocation> function to find the current location of
+the device. 
 
-Use the <mobileCurrentLocation> function to find the current location of the device. If location tracking has not been enabled this function returns empty. Otherwise it returns an array.
+Use the <mobileCurrentLocation> function to find the current location of
+the device. If location tracking has not been enabled this function
+returns empty. Otherwise it returns an array. 
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileSensorReading (function), trackingError (message), locationChanged (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileSensorReading (function),
+trackingError (message), locationChanged (message)

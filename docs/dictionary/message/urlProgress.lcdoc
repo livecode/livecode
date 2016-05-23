@@ -36,12 +36,15 @@ status (enum): The type of update message being sent. One of:
 - "downloaded": Data has finished downloading.
 - "uploaded": Data has finished uploading.
 - "error": An error occurred.
-message (enum): A message sent with some of the status parameters. One of:
-- "bytesReceived": Sent when the status parameter is either 'loading' or 'uploading'.
-- "erroMessage": Sent when the status parameter is 'error'.
-bytesTotal: Empty if the web server does not send the total data size.
+message (enum): A message sent with some of the status parameters. One
+of: - "bytesReceived": Sent when the status parameter is either
+'loading' or 'uploading'. - "erroMessage": Sent when the status
+parameter is 'error'. bytesTotal: Empty if the web server does not send
+the total data size. 
 
 Description:
-Sent when updates on ongoing url requests are communicated. This message is periodically sent to the object whose script initiated the operation.
+Sent when updates on ongoing url requests are communicated. This message
+is periodically sent to the object whose script initiated the
+operation. 
 
 References: put (command), post (command), load (command)

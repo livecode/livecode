@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the flagged of <fieldChunk> to {true | false}
 
-Summary: The <flagged> property of a field chunk specifies whether it is underlined with a red dotted line.
+Summary: The <flagged> property of a field chunk specifies whether it is
+underlined with a red dotted line. 
 
 Associations: field
 

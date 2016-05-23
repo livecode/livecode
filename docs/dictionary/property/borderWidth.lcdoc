@@ -31,15 +31,19 @@ Parameters:
 pixelWidth (integer): An integer between zero and 255.
 
 Description:
-Use the <borderWidth> <property> to change the appearance of an <object|object's> border.
+Use the <borderWidth> <property> to change the appearance of an
+<object|object's> border. 
 
 By default, the <borderWidth> of newly created <object|objects> is 2.
 By default, the <borderWidth> of a paragraph of text in a field is 0.
 
-If the object's showBorder <property> is false, the <borderWidth> <property> has no effect.
+If the object's showBorder <property> is false, the <borderWidth>
+<property> has no effect. 
 
-The border's appearance and color is affected by the setting of the object's threeD <property>.
+The border's appearance and color is affected by the setting of the
+object's threeD <property>. 
 
-References: borderPattern (property), object (glossary), property (glossary)
+References: borderPattern (property), object (glossary),
+property (glossary)
 
 Tags: ui

@@ -26,12 +26,19 @@ on browserNewUrlWindow pInstanceId, pUrl
 end browserNewUrlWindow
 
 Parameters:
-instanceId: The integer identifier of the browser object >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
-url: The url that has opened in a new window
+instanceId: The integer identifier of the browser object >*Note:* For
+general information on using the browser library, see the notes in the
+revBrowserOpen function reference. url: The url that has opened in a new
+window 
 
 Description:
-The <browserNewUrlWindow> message is sent to the current card of a stack containing a browser object when the browser object has opened a url in a new window.
+The <browserNewUrlWindow> message is sent to the current card of a stack
+containing a browser object when the browser object has opened a url in
+a new window. 
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+notes in the <revBrowserOpen function> reference. 
 
-References: revBrowserSet (command), browserNewInstance (message), browserBeforeNavigate (message), revBrowserOpen (function), revBrowserOpen function (function)
+References: revBrowserSet (command), browserNewInstance (message),
+browserBeforeNavigate (message), revBrowserOpen (function),
+revBrowserOpen function (function)

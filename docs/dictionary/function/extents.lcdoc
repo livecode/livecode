@@ -6,7 +6,8 @@ Syntax: the extents of <array>
 
 Syntax: extents(<array>)
 
-Summary: Returns a list of the smallest and largest <keys> for each dimension of an <array>.
+Summary: Returns a list of the smallest and largest <keys> for each
+dimension of an <array>. 
 
 Introduced: 1.1
 
@@ -24,14 +25,21 @@ Parameters:
 array (array): 
 
 Returns:
-The <extents> function returns one <line> for each dimension of the <array>. 
-Each line contains two numbers separated by commas. The first item is the lowest key number in that dimension, and the second item is the highest key number.
+The <extents> function returns one <line> for each dimension of the
+<array>. Each line contains two numbers separated by commas. The first
+item is the lowest key number in that dimension, and the second item is
+the highest key number. 
 
 Description:
-Use the <extents> <function> to find the minimum and maximum row and column numbers of an <array> whose <keys> are <integer|integers>. 
+Use the <extents> <function> to find the minimum and maximum row and
+column numbers of an <array> whose <keys> are <integer|integers>. 
 
-If any of the keys of the <array> is non-numeric, the <extents> <function> returns empty.
+If any of the keys of the <array> is non-numeric, the <extents>
+<function> returns empty. 
 
-References: line (keyword), combine (command), split (command), keys (function), round (function), matrixMultiply (function), sum (function), max (function), min (function), array (glossary), integer (glossary), function (control structure)
+References: line (keyword), combine (command), split (command),
+keys (function), round (function), matrixMultiply (function),
+sum (function), max (function), min (function), array (glossary),
+integer (glossary), function (control structure)
 
 Tags: properties

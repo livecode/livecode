@@ -24,12 +24,13 @@ separate <file>.
 
 Unlike an audio clip or video clip, a player does not contain the movie
 or sound data. Instead, you use the player's filename <property> to 
-indicate the separate <file> that holds the movie or sound. This reduces 
-the memory required by your <stack>, because the movie or sound data is 
-only <loaded into memory> when it's being used, rather than being 
-<loaded into memory> whenever the <stack file> is open. However, it also 
-makes it possible for the movie or sound data to be misplaced during 
-distribution, since the <file> is separate from your <stack file>.
+indicate the separate <file> that holds the movie or sound. This
+reduces the memory required by your <stack>, because the movie or sound
+data is only <loaded into memory> when it's being used, rather than
+being <loaded into memory> whenever the <stack file> is open. However,
+it also makes it possible for the movie or sound data to be misplaced
+during distribution, since the <file> is separate from your <stack
+file>. 
 
 A player is contained in a card, group, or background. Players cannot 
 contain other objects.
@@ -37,16 +38,16 @@ contain other objects.
 >*Important:*  Setting a <player|player's> filename does not 
 automatically update its <currentTime> <property>. If you play a 
 <movie|movie file>, then change the <player|player's> <filename> in 
-order to play another, you must reset the <currentTime> to zero in order 
-to start from the beginning of the second <movie> :
+order to play another, you must reset the <currentTime> to zero in
+order to start from the beginning of the second <movie> :
 
 	set the filename of player "My Player" to "SecondMovie.mov"
 	set the currentTime of player "My Player" to zero
 
-References: templatePlayer (keyword), control (keyword), file (keyword), 
-filename (property), currentTime (property), qtIdleRate (property), 
+References: templatePlayer (keyword), control (keyword), file (keyword),
+, filename (property), currentTime (property), qtIdleRate (property), 
 stack (object), player (object), property (glossary), 
-stack file (glossary), movie (glossary), loaded into memory (glossary), 
-object type (glossary), movie (function)
+stack file (glossary), movie (glossary), loaded into memory (glossary),
+, object type (glossary), movie (function)
 
 Tags: objects

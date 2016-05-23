@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: segments
 
-Summary: Used with the n <umber> <function to count the number of segment chunks in a container.>
+Summary: Used with the n <umber> <function to count the number of
+segment chunks in a container.> 
 
 Synonyms: words
 
@@ -18,6 +19,7 @@ Example:
 put "one two three" into tText
 put the number of segments in tText -- returns 3
 
-References: segment (keyword), umber (function), function to count the number of segment chunks in a container. (control structure)
+References: segment (keyword), umber (function),
+function to count the number of segment chunks in a container. (control structure)
 
 Tags: database
