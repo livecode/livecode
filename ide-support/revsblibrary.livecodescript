@@ -1865,7 +1865,7 @@ command revSBRemoveInclusions pStack, pInclusions, pConfirm, @xSettings
    end repeat
 end revSBRemoveInclusions
 
-command revSBListWidgetsOfStack pStack, @xWidgetKindsA
+private command revSBListWidgetsOfStack pStack, @xWidgetKindsA
    local tNumCards, tNumWidgets, tKind
    put the number of cards of pStack into tNumCards
    repeat with tCard = 1 to tNumCards
