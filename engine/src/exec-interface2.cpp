@@ -2031,10 +2031,7 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_v
 void MCInterfaceGetBrush(MCExecContext& ctxt, uinteger_t& r_value)
 {
 	// MDW-2016-05-21 [[ bugfix_17553 ]] map 101..135 down to 1..35
-	if (MCbrush < PI_PATTERNS)
-		r_value = MCbrush > PI_BRUSHES ? MCbrush - PI_BRUSHES : MCbrush;
-	else
-		r_value = MCbrush;
+	r_value = MCbrush > PI_BRUSHES && MCbrush < PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
 }
 
 void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
@@ -2045,10 +2042,7 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
 void MCInterfaceGetEraser(MCExecContext& ctxt, uinteger_t& r_value)
 {
 	// MDW-2016-05-21 [[ bugfix_17553 ]] map 101..135 down to 1..35
-	if (MCeraser < PI_PATTERNS)
-		r_value = MCeraser > PI_BRUSHES ? MCeraser - PI_BRUSHES : MCeraser;
-	else
-		r_value = MCeraser;
+	r_value = MCeraser > PI_BRUSHES && MCeraser < PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
 }
 
 void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
@@ -2059,10 +2053,7 @@ void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
 void MCInterfaceGetSpray(MCExecContext& ctxt, uinteger_t& r_value)
 {
 	// MDW-2016-05-21 [[ bugfix_17553 ]] map 101..135 down to 1..35
-	if (MCspray < PI_PATTERNS)
-		r_value = MCspray > PI_BRUSHES ? MCspray - PI_BRUSHES : MCspray;
-	else
-		r_value = MCspray;
+	r_value = MCspray > PI_BRUSHES && MCspray < PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
 }
 
 void MCInterfaceSetSpray(MCExecContext& ctxt, uinteger_t p_value)
