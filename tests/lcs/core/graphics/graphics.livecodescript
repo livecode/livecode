@@ -101,15 +101,43 @@ on TestBrushWithNoIcons
 	TestAssert "set brush with revicons stack not loaded", SetBrushNoIcons() is not 2
 end TestBrushWithNoIcons
 
+on TestInitialPaintConditions
+#	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	TestAssert "brush is initially 8", the brush is 8
+	TestAssert "spray is initially 34", the spray is 34
+	TestAssert "eraser is initially 2", the eraser is 2
+	
+	TestAssert "the centered is initially false", the centered is false
+	TestAssert "the filled is initially false", the filled is false
+	
+	TestAssert "the grid is initially true", the grid is true
+
+	TestAssert "the gridSize is initially 4", the gridSize is 4
+	TestAssert "the lineSize is initially 0", the lineSize is 0
+
+	TestAssert "the multiple is initially false", the multiple is false
+	TestAssert "the multiSpace is initially 1", the multiSpace is 1
+
+# not sure if this should work. it doesn't in previous builds either
+	TestAssert "the penPattern is initially 136", the penPattern is 136
+	TestAssert "the brushPattern is initially 136", the brushPattern is 136
+	TestAssert "the polySides is initially 4", the polySides is 4
+
+	TestAssert "the roundEnds is initially false", the roundEnds is false
+	TestAssert "the slices is initially 16", the slices is 16
+	TestAssert "the penColor is initially 0,0,0", the penColor is "0,0,0"
+	TestAssert "the brushColor is initially 255,255,255", the brushColor is "255,255,255"
+end TestInitialPaintConditions
+
 on TestBadBrush100
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the brush to 8
 	TestAssert "no brush with id=100", SetBrush100() is not 100
 	TestAssert "brush image not found", the brush is 8
 end TestBadBrush100
 
 on TestBadBrushZero
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the brush to 8
 	TestAssert "no brush with id=0", SetBrushZero() is not zero
 	TestAssert "brush image not found", the brush is 8
@@ -143,37 +171,33 @@ function SetBrushZero
 end SetBrushZero
 
 on TestBrush
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the brush to 30
-	TestAssert "brush > 35 unchanged", the brush is 30
+	TestAssert "brush < 35 unchanged", the brush is 30
 end TestBrush
 
 on TestRemappedBrush
 	local tBrush
 	
-	open stack "../ide/Toolset/palettes/revicons.rev"
-#	repeat with tBrush = 101 to 102
-#		set the brush to tBrush
-#		TestAssert "100 < brush < 136 subtracts 100", the brush is (tBrush-100)
-#	end repeat
-	set the brush to 101
-	TestAssert "brush = 101 unchanged", the brush is 1
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	repeat with tBrush = 101 to 135
+		set the brush to tBrush
+		TestAssert "setting brush to" && tBrush && "subtracts 100", the brush is (tBrush-100)
+	end repeat
 end TestRemappedBrush
 
 on TestBrushInBounds
 	local tBrush
 	
-	open stack "../ide/Toolset/palettes/revicons.rev"
-#	repeat with tBrush = 1 to 1
-#		set the brush to tBrush
-#		TestAssert "1 < brush < 35 unchanged", the brush is tBrush
-#	end repeat
-	set the brush to 1
-	TestAssert "brush = 1 unchanged", the brush is 1
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+	repeat with tBrush = 1 to 35
+		set the brush to tBrush
+		TestAssert "setting brush to" && tBrush && "is unchanged", the brush is tBrush
+	end repeat
 end TestBrushInBounds
 
 on TestBrushBoundaries
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 #	set the brush to 99
 #	TestAssert "brush = 99 unchanged", the brush is 99
 	set the brush to 136
@@ -181,29 +205,54 @@ on TestBrushBoundaries
 end TestBrushBoundaries
 
 on TestBrush137
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the brush to 137
 	TestAssert "brush > 136 is unchanged", the brush is 137
 end TestBrush137
 
 on TestSpray
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the spray to 2
 	TestAssert "directly setting the spray", the spray is 2
 end TestSpray
 
 on TestEraser
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the eraser to 8
 	TestAssert "directly setting the eraser", the eraser is 8
 end TestEraser
 
 on TestResetPaint
-	open stack "../ide/Toolset/palettes/revicons.rev"
+	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	reset paint
 	TestAssert "brush is reset to 8", the brush is 8
 	TestAssert "spray is reset to 34", the spray is 34
 	TestAssert "eraser is reset to 2", the eraser is 2
+	
+	TestAssert "the centered is reset to false", the centered is false
+	TestAssert "the filled is reset to false", the filled is false
+	TestAssert "the grid is reset to false", the grid is false
+
+	TestAssert "the gridSize is reset to 8", the gridSize is 8
+	TestAssert "the lineSize is reset to 1", the lineSize is 1
+
+	TestAssert "the multiple is reset to false", the multiple is false
+	TestAssert "the multiSpace is reset to 1", the multiSpace is 1
+
+# not sure if this should be empty. it isn't in previous builds either
+	TestAssert "the penPattern is reset to 136", the penPattern is 136
+	TestAssert "the brushPattern is reset to 136", the brushPattern is 136
+	TestAssert "the polySides is reset to 4", the polySides is 4
+
+	TestAssert "the roundEnds is reset to false", the roundEnds is false
+	TestAssert "the slices is reset to 16", the slices is 16
+	TestAssert "the penColor is reset to 0,0,0", the penColor is "0,0,0"
+	TestAssert "the brushColor is reset to 255,255,255", the brushColor is "255,255,255"
 end TestResetPaint
 
+on TestTeardown
+	if there is a stack "revicons" then
+		close stack "revicons"
+	end if
+end TestTeardown
 
