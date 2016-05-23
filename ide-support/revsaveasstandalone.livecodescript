@@ -2228,10 +2228,24 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    wait 0 ticks with messages -- allow for progress update
    
    -- sanitise raw list of externals from inclusions pane
-   local tAvailableExternals, tValidExternals
+   local tAvailableExternals, tFixedExternals, tValidExternals
    put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
+   put revIDEExternalsMapping() into tFixedExternals
+   split tFixedExternals by comma and space
+   put the keys of tFixedExternals into tFixedExternals
+   
+   local tValid
    repeat for each line tAddedExternal in sStandaloneSettingsA["externals"]
+      put false into tValid
       if tAddedExternal is among the lines of tAvailableExternals then
+         put true into tValid
+      end if
+      
+      if tAddedExternal is among the lines of tFixedExternals then
+         put true into tValid
+      end if
+      
+      if tValid then
          if tValidExternals is empty then
             put tAddedExternal into tValidExternals
          else
