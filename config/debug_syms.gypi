@@ -57,11 +57,37 @@
 				# MSVS generates the debug databases automatically; we just need to copy them
 				'variables':
 				{
+					'command':
+					[
+						'<@(perl)',
+						'>(DEPTH)/tools/windows_debug_syms.pl',
+						'<@(debug_syms_inputs)',
+					],
+					
 					'debug_syms_outputs':
 					[
-						'>!@(["<@(perl)", "tools/windows_debug_syms.pl", \'>@(debug_syms_inputs)\'])',
+						'>!@(<(command))',
 					],
 				},
+				
+				'actions':
+				[
+					{
+						'action_name': 'windows_debug_syms',
+						'message': 'Extracting debug symbols',
+						
+						'inputs': [ '>@(debug_syms_inputs)', ],
+						'outputs': [ '>@(debug_syms_outputs)', ],
+						
+						# Dummy action
+						# This action is needed so that dependencies work correctly
+						'action':
+						[
+							'echo',
+							'Nothing to be done',
+						],
+					},
+				],
 			},
 		],
 		[
