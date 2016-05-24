@@ -84,12 +84,11 @@ Once the document is open for editing you can begin to make changes. You probabl
   
 	- Look for conflicts between parameter names and referenced/linked vocabulary; e.g. if a Syntax element uses *property* as a parameter name, it may be best to change it to something like *propertyName*.
 	
-	
 * Value or Returns
   - These two elements are mutually exclusive; only one should appear in any document.
   - Use a Returns element for the return value of a function; e.g.:
   
-      >Return: The abs function returns a positive number.
+      >Returns: The abs function returns a positive number.
     
   - Use a Value element when a value is both an input and output value, as for the value of a property; e.g.:
   
