@@ -203,11 +203,11 @@ public:
 	virtual void SetFileName(MCExecContext& ctxt, MCStringRef p_name) = 0;
 	virtual void GetDontRefresh(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetDontRefresh(MCExecContext& ctxt, bool setting) = 0;
-	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time) = 0;
-	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time) = 0;
-	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration) = 0;
+	virtual void GetCurrentTime(MCExecContext& ctxt, double& r_time) = 0;
+	virtual void SetCurrentTime(MCExecContext& ctxt, double p_time) = 0;
+	virtual void GetDuration(MCExecContext& ctxt, double& r_duration) = 0;
     // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
-    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time) = 0;
+    virtual void GetLoadedTime(MCExecContext& ctxt, double& r_loaded_time) = 0;
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetLooping(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting) = 0;
@@ -216,10 +216,10 @@ public:
 	virtual void SetAlwaysBuffer(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetPlayRate(MCExecContext& ctxt, double& r_rate) = 0;
 	virtual void SetPlayRate(MCExecContext& ctxt, double p_rate) = 0;
-	virtual void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time) = 0;
-	virtual void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time) = 0;
-	virtual void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time) = 0;
-	virtual void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time) = 0;
+	virtual void GetStartTime(MCExecContext& ctxt, double*& r_time) = 0;
+	virtual void SetStartTime(MCExecContext& ctxt, double* p_time) = 0;
+	virtual void GetEndTime(MCExecContext& ctxt, double*& r_time) = 0;
+	virtual void SetEndTime(MCExecContext& ctxt, double* p_time) = 0;
 	virtual void GetShowBadge(MCExecContext& ctxt, bool& r_setting) = 0;
 	virtual void SetShowBadge(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetShowController(MCExecContext& ctxt, bool& r_setting) = 0;
@@ -230,7 +230,7 @@ public:
 	virtual void SetShowSelection(MCExecContext& ctxt, bool setting) = 0;
 	virtual void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks) = 0;
 	virtual void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks) = 0;
-	virtual void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale) = 0;
+	virtual void GetTimeScale(MCExecContext& ctxt, double& r_scale) = 0;
 	virtual void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height) = 0;
 	virtual void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width) = 0;
 	virtual void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id) = 0;
