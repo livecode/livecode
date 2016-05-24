@@ -9,13 +9,13 @@ on libraryStack
 end libraryStack
 
 local sInitialised
-private command initialize
+private command initialise
    if sInitialised then
-      exit initialize
+      exit initialise
    end if
    
    initialiseInclusionDependencies
-end initialize
+end initialise
 
 -- Some higher level wrappers..
 

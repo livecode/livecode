@@ -413,6 +413,9 @@ private command revCreateStandalone pStack, pFolder
       revSearchForInclusions pStack, sStandaloneSettingsA
    end if
    
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies sStandaloneSettingsA
+   
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
    lock cursor
@@ -1782,9 +1785,6 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
       exit revCopyDatabaseDrivers
    end if
    
-   # AL-2015-02-06: [[ SB Inclusions ]] Ensure revDatabaseLibrary stack is included
-   revAddInclusion "Database", "scriptLibraries", sStandaloneSettingsA
-   
    local tDBLibPath
    put revStandaloneDatabaseDriversPath(pPlatform) into tDBLibPath
    
@@ -1808,21 +1808,6 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
    
    if there is not a folder (tStandaloneFolder&"Externals") then 
       create folder (tStandaloneFolder&"Externals")
-   end if
-   
-   if not revResourceExists(tDBLibPath) then
-      revStandaloneAddWarning tPlatform & ", cannot find database driver:" && quote & tDBLibPath & quote
-   else
-      revCopyModule tPlatform, "revdb", "revdb" & tExtension, tDBLibPath, tStandaloneFolder, "Externals", tPlatform is "MacOSX"
-      if the result is not empty then
-         revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tDBLibPath & slash & "revdb" & tExtension & quote
-      else
-         if tPlatform is "MacOSX" and there is no file (tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo") then
-            -- missing PkgInfo file, so copy it in quietly
-            put "BNDL????" into URL ("binfile:" & tStandaloneFolder & "Externals/revdb.bundle/Contents/PkgInfo")
-         end if
-         revAddExternal "revdb"
-      end if
    end if
    
    if there is not a folder tNewDriverPath then 
@@ -2055,12 +2040,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    put sStandaloneSettingsA["scriptLibraries"] into tScriptLibraries
    
    local tAppBundle, tCEFFramework, tCEFResources, tCEFDest
-   // IM-2014-03-20: [[ revBrowserCEF ]] Ensure revbrowser is included if revbrowser-cef is selected
-   if "Browser (CEF)"  is among the lines of tScriptLibraries and "Browser" is not among the lines of tScriptLibraries then
-      // AL-2015-03-13: [[ Bug 14936 ]] tScriptLibraries doesn't necessarily have an empty line at the end
-      put "Browser" & cr before tScriptLibraries
-   end if
-   
+
    revStandaloneProgress "Copying externals..."
    
    lock screen
@@ -2208,17 +2188,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          next repeat
       end if
       
-      -- SN-2015-03-06: [[ DBDriverInclusion ]] In case Database drivers were
-      -- included, then the revdb external has been copied.
-      -- No issue to copy over it on Windows / Linux, but copying a folder (revdb.bundle)
-      -- will fail on Mac.
       local tSourceExternal
       put item -1 of tExternalPath into tSourceExternal
-      if tSourceExternal contains "revdb" and \
-            (there is a folder (tCurrentLocation & "/Externals/" &  tSourceExternal) \
-            or there is a file (tCurrentLocation & "/Externals/" & tSourceExternal)) then
-         next repeat
-      end if
       
       // AL-2015-05-07: [[ Bug 15320 ]] Make sure universal external name is used.
       local tExternal
