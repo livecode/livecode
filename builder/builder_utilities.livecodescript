@@ -1,5 +1,5 @@
 ﻿script "BuilderUtilities"
-constant kMergExtVersion = "2016-4-1"
+constant kMergExtVersion = "2016-5-23"
 
 local sEngineDir
 local sWorkDir
