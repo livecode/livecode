@@ -2124,7 +2124,9 @@ enum {
     ST_ID,
     ST_ESC,
     ST_LIT,
-	
+	ST_LC,
+    ST_RC,
+    
 	// MW-2009-03-03: The ST_DATA symbol type is a string that shoudl be treated
 	//   as an echoed literal - it represents the data between <?rev ?> blocks in
 	//   SERVER mode. ST_TAG is the type of '?' so we can identify '?>'.

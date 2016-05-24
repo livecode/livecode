@@ -1126,7 +1126,9 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 					t_end = t_index;
 				break;
 
-				case ST_EOF:
+                case ST_LC:
+                case ST_RC:
+                case ST_EOF:
 				case ST_ERR:
 					t_char = next_valid_char(p_text, t_index);
 					t_class = COLOURIZE_CLASS_ERROR;
@@ -1493,7 +1495,9 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 					t_end = t_index;
                     break;
                     
-				case ST_EOF:
+                case ST_LC:
+                case ST_RC:
+                case ST_EOF:
 				case ST_ERR:
 					t_char = next_valid_unichar(p_string, t_index);
 					t_class = COLOURIZE_CLASS_ERROR;
