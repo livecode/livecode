@@ -100,6 +100,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeUInt16,
 	kMCPlatformPropertyTypeInt32,
 	kMCPlatformPropertyTypeUInt32,
+	kMCPlatformPropertyTypeInt64,
+	kMCPlatformPropertyTypeUInt64,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,
 	kMCPlatformPropertyTypeRectangle,
@@ -1006,6 +1008,10 @@ struct MCPlatformPlayerQTVRConstraints
 	double y_min, y_max;
 	double z_min, z_max;
 };
+
+typedef uint64_t MCPlatformPlayerDuration;
+#define MCPlatformPlayerDurationPropertyType kMCPlatformPropertyTypeUInt64
+#define MCPlatformPlayerDurationMax UINT64_MAX
 
 void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 
