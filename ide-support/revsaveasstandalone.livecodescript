@@ -866,7 +866,7 @@ end revPlatformCount
 # to the stack being built. Will remove any existing group called revLibraries from card 1 of the stack.
 private command revCopyScriptLibraries pStack, pPlatform
    # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
-   revAddInclusion "Common", "scriptLibraries", sStandaloneSettingsA
+   revSBAddInclusion "Common", "scriptLibraries", sStandaloneSettingsA
    
    -- data grid
    // SN-2015-10-19: [[ Bug 16238 ]] DataGrid can be included on the wish of the user - in case the standalone stack
@@ -878,7 +878,7 @@ private command revCopyScriptLibraries pStack, pPlatform
    
    // AL-2015-04-28: [[ Bug 15244 ]] Include profiles library if needed
    if sStandaloneSettingsA["includeProfiles"] is not empty then 
-      revAddInclusion "Profiles", "scriptLibraries", sStandaloneSettingsA
+      revSBAddInclusion "Profiles", "scriptLibraries", sStandaloneSettingsA
    end if
    
    /*

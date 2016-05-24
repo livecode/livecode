@@ -1903,14 +1903,14 @@ function revSBListWidgetsInUse pStack
    return the keys of tWidgetKindsA
 end revSBListWidgetsInUse
 
-command revAddInclusion pInclusion, pKey, @xSettings
+command revSBAddInclusion pInclusion, pKey, @xSettings
    if pInclusion is among the lines of xSettings[pKey]  then
-      exit revAddInclusion
+      exit revSBAddInclusion
    end if
    
    if xSettings[pKey] is not empty then put return after xSettings[pKey]
    put pInclusion after xSettings[pKey]
-end revAddInclusion
+end revSBAddInclusion
 
 local sDependencies
 private command initialiseInclusionDependencies
@@ -1936,7 +1936,7 @@ command revSBUpdateForDependencies @xSettings
             put sDependencies[tDependentKey][tDependent] into tDependencies
             repeat for each key tRequiredKey in tDependencies
                repeat for each line tRequired in tDependencies[tRequiredKey]
-                  revAddInclusion tRequired, tRequiredKey, xSettings
+                  revSBAddInclusion tRequired, tRequiredKey, xSettings
                end repeat
             end repeat
          end if
@@ -2104,7 +2104,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
       
       repeat for each item tProperty in sPatternsA[tLib]["Property"]
          if lineOffset(tProperty, tProps) is not 0 then
-            revAddInclusion tLib, tSettingsKey, xSettings
+            revSBAddInclusion tLib, tSettingsKey, xSettings
             # AL-2015-01-29: If we are including this lib then go on to the next one
             exit repeat
          end if
@@ -2127,7 +2127,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          local tHandler
          repeat for each item tHandler in sPatternsA[tLib]["Script"]
             if lineOffset(tHandler,tScript) is not 0 then
-               revAddInclusion tLib, tSettingsKey, xSettings
+               revSBAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
             end if
@@ -2141,7 +2141,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          local tRoot
          repeat for each item tRoot in sPatternsA[tLib]["Root"]
             if lineOffset(tRoot,tScript) is not 0 then
-               revAddInclusion tLib, tSettingsKey, xSettings
+               revSBAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
             end if
@@ -2151,7 +2151,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          local tRegex
          repeat for each item tRegex in sPatternsA[tLib]["Regex"]
             if matchText(tScript,tRegex) then
-               revAddInclusion tLib, tSettingsKey, xSettings
+               revSBAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
             end if
@@ -2165,7 +2165,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          end if
          
          if lineOffset(tWidget, tScript) is not 0 then
-            revAddInclusion tWidget, "extensions", xSettings
+            revSBAddInclusion tWidget, "extensions", xSettings
          end if
       end repeat
       
@@ -2179,7 +2179,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          put revIDEExtensionLibraryHandlers(tLibrary) into tHandlers
          repeat for each line tHandler in tHandlers
             if lineOffset(tHandler, tScript) is not 0 then
-               revAddInclusion tLibrary, "extensions", xSettings
+               revSBAddInclusion tLibrary, "extensions", xSettings
             end if
          end repeat
          
