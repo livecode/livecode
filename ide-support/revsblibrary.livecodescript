@@ -4,6 +4,19 @@
 #?author
 # Marcus van Houdt
 
+on libraryStack
+   initialise
+end libraryStack
+
+local sInitialised
+private command initialize
+   if sInitialised then
+      exit initialize
+   end if
+   
+   initialiseInclusionDependencies
+end initialize
+
 -- Some higher level wrappers..
 
 #?semantics
@@ -1898,6 +1911,38 @@ command revAddInclusion pInclusion, pKey, @xSettings
    if xSettings[pKey] is not empty then put return after xSettings[pKey]
    put pInclusion after xSettings[pKey]
 end revAddInclusion
+
+local sDependencies
+private command initialiseInclusionDependencies
+   // CEF requires revbrowser
+   put "Browser" into sDependencies["scriptLibraries"]["Browser (CEF)"]["scriptLibraries"]
+   
+   // Database drivers require revdb
+   local tDBName
+   repeat for each item tDatabaseDriver in revIDEDatabaseDriversMapping()
+      put word 2 to -1 of tDatabaseDriver into tDBName
+      put "Database" into sDependencies["databaseDrivers"][tDBName]["scriptLibraries"]
+   end repeat
+   
+   // XMLRPC requires revxml
+   put "XML" into sDependencies["scriptLibraries"]["XMLRPC"]["scriptLibraries"]
+end initialiseInclusionDependencies
+
+command revSBUpdateForDependencies @xSettings
+   local tDependencies
+   repeat for each key tDependentKey in sDependencies
+      repeat for each key tDependent in sDependencies[tDependentKey]
+         if tDependent is among the lines of xSettings[tDependentKey] then
+            put sDependencies[tDependentKey][tDependent] into tDependencies
+            repeat for each key tRequiredKey in tDependencies
+               repeat for each line tRequired in tDependencies[tRequiredKey]
+                  revAddInclusion tRequired, tRequiredKey, xSettings
+               end repeat
+            end repeat
+         end if
+      end repeat
+   end repeat
+end revSBUpdateForDependencies
 
 ------------------- SMART CHECKING --------------------
 
