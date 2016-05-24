@@ -18,6 +18,8 @@
 #define PLAYER_INTERFACE_H
 
 typedef uint4 MCPlayerMediaTypeSet;
+typedef uint64_t MCPlayerDuration;
+
 enum
 {
 	PLAYER_MEDIA_TYPE_VIDEO_BIT = 0,
@@ -74,13 +76,13 @@ protected:
 	Boolean istmpfile;
 	real8 scale;
 	real8 rate;
-	uint4 starttime;
-	uint4 endtime;
+	MCPlayerDuration starttime;
+	MCPlayerDuration endtime;
 	MCStringRef userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;
-    int4 lasttime;
+    MCPlayerDuration lasttime;
     Boolean dontuseqt;
     Boolean usingqt;
     
@@ -90,10 +92,10 @@ public:
     
 	virtual bool getversion(MCStringRef& r_string) = 0;
 	virtual void freetmp() = 0;
-	virtual uint4 getduration() = 0;    //get movie duration/length
-	virtual uint4 gettimescale() = 0;  //get movie time scale
-	virtual uint4 getmoviecurtime() = 0;//get movie current time
-	virtual void setcurtime(uint4 curtime, bool notify) = 0;
+	virtual MCPlayerDuration getduration() = 0;    //get movie duration/length
+	virtual MCPlayerDuration gettimescale() = 0;  //get movie time scale
+	virtual MCPlayerDuration getmoviecurtime() = 0;//get movie current time
+	virtual void setcurtime(MCPlayerDuration curtime, bool notify) = 0;
 	virtual void setselection(bool notify) = 0;                  //set movie selection
 	virtual void setlooping(Boolean loop) = 0;        //to loop or not to loop a movie
 	virtual void setplayrate() = 0;                   //set the movie playing rate
@@ -138,22 +140,22 @@ public:
 	virtual void setvolume(uint2 tloudness) = 0;
 	virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp) = 0;
     
-	uint4 getstarttime()
+	MCPlayerDuration getstarttime()
 	{
 		return starttime;
 	}
-	uint4 getendtime()
+	MCPlayerDuration getendtime()
 	{
 		return endtime;
 	}
-	int4 getlasttime()
+	MCPlayerDuration getlasttime()
 	{
 		return lasttime;
 	}
     
-	virtual void setstarttime(uint4 stime) = 0;
-	virtual void setendtime(uint4 etime) = 0;
-	virtual void setlasttime(int4 ltime) = 0;
+	virtual void setstarttime(MCPlayerDuration stime) = 0;
+	virtual void setendtime(MCPlayerDuration etime) = 0;
+	virtual void setlasttime(MCPlayerDuration ltime) = 0;
     
     
 	virtual void syncbuffering(MCContext *dc) = 0;

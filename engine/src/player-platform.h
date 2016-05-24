@@ -143,10 +143,10 @@ public:
     //
 	virtual bool getversion(MCStringRef& r_string);
 	virtual void freetmp();
-	virtual uint4 getduration();    //get movie duration/length
-	virtual uint4 gettimescale();  //get movie time scale
-	virtual uint4 getmoviecurtime();//get movie current time
-	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual MCPlayerDuration getduration();    //get movie duration/length
+	virtual MCPlayerDuration gettimescale();  //get movie time scale
+	virtual MCPlayerDuration getmoviecurtime();//get movie current time
+	virtual void setcurtime(MCPlayerDuration curtime, bool notify);
 	virtual void setselection(bool notify);                  //set movie selection
 	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
 	virtual void setplayrate();                   //set the movie playing rate
@@ -173,7 +173,7 @@ public:
     virtual void setvolume(uint2 tloudness);
     virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
     
-	virtual void setstarttime(uint4 stime)
+	virtual void setstarttime(MCPlayerDuration stime)
 	{
         if (stime <= 0)
             starttime = 0;
@@ -183,20 +183,20 @@ public:
             starttime = stime;
         
         if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypeUInt32, &starttime);
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, MCPlatformPlayerDurationPropertyType, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
     
-	virtual void setendtime(uint4 etime)
+	virtual void setendtime(MCPlayerDuration etime)
     {
         if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypeUInt32, &endtime);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, MCPlatformPlayerDurationPropertyType, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
 	
     real8 getplayrate();
     void updateplayrate(real8 p_rate);
-    uint4 getmovieloadedtime();
+    MCPlayerDuration getmovieloadedtime();
 	
     Boolean isdisposable()
 	{
@@ -207,20 +207,20 @@ public:
     //void playfastforward();
     //void playfastback();
 	
-	uint4 getstarttime()
+	MCPlayerDuration getstarttime()
 	{
 		return starttime;
 	}
-	uint4 getendtime()
+	MCPlayerDuration getendtime()
 	{
 		return endtime;
 	}
-	int4 getlasttime()
+	MCPlayerDuration getlasttime()
 	{
 		return lasttime;
 	}
 
-	virtual void setlasttime(int4 ltime)
+	virtual void setlasttime(MCPlayerDuration ltime)
 	{
 		lasttime = ltime;
 	}
