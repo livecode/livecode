@@ -203,58 +203,11 @@ end getBuildFolder
 on revSaveAsStandalone pStack, pFolder, pPreview
    global gREVStackStatus
    
-   start using stack "revSBLibrary"
-   
-   revStandaloneResetWarnings
-   
-   local tError, tStandaloneFolder
-   
    if pStack = empty then
       put the short name of the topStack into pStack
    end if
    if the fileName of stack pStack = empty then
       put "edited" into gREVStackStatus[pStack]
-   end if
-   
-   set the defaultStack to pStack
-   
-   # Set empty values to defaults
-   revDefaultStandaloneSettings pStack
-   
-   # The following line used to be in revCreateStandalone, however, if we check below we see that pStack would always be the mainstack
-   # as that is the stack that has its cRevStandaloneSettings custom property set. This explains the line "the mainstack of pStack" here.
-   put the customProperties["cRevStandaloneSettings"] of stack (the mainstack of stack pStack) into sStandaloneSettingsA
-   
-   -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
-   if sStandaloneSettingsA["MacOSX"] then
-      delete variable sStandaloneSettingsA["MacOSX"]
-      put true into sStandaloneSettingsA["MacOSX x86-32"]
-   end if
-   if sStandaloneSettingsA["MacOSX PowerPC-32"] then
-      delete variable sStandaloneSettingsA["MacOSX PowerPC-32"]
-      put true into sStandaloneSettingsA["MacOSX x86-32"]
-   end if
-   
-   -- Make sure there is actually something to build..
-   # Check if any platforms have actually been selected..
-   local tCanBuild
-   put false into tCanBuild
-   
-   local tMessage 
-   put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
-   repeat for each item tPlatform in revSBDesktopTargets()
-      put tCanBuild or sStandaloneSettingsA[tPlatform] into tCanBuild
-   end repeat
-   put tCanBuild or sStandaloneSettingsA["ios"] into tCanBuild
-   put tCanBuild or sStandaloneSettingsA["android"] into tCanBuild
-   put tCanBuild or sStandaloneSettingsA["emscripten"] into tCanBuild
-   if not tCanBuild then
-      if revTestEnvironment() then
-         return tError
-      else
-         answer error tMessage
-      end if
-      exit revSaveAsStandalone
    end if
    
    # OK-2008-03-13 : Bug 5874. Do a complete check to see if the stack needs to be saved here
@@ -275,14 +228,40 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       end repeat
    end if
    
+   local tSettings
+   put the customProperties["cRevStandaloneSettings"] of stack (the mainstack of stack pStack) into tSettings
+
+   -- Make sure there is actually something to build..
+   # Check if any platforms have actually been selected..
+   local tCanBuild
+   put false into tCanBuild
+   
+   local tMessage, tError
+   put "You have not selected any platforms to build for. Please do so using Standalone Settings." into tMessage
+   repeat for each item tPlatform in revSBDesktopTargets()
+      put tCanBuild or tSettings[tPlatform] into tCanBuild
+   end repeat
+   put tCanBuild or tSettings["ios"] into tCanBuild
+   put tCanBuild or tSettings["android"] into tCanBuild
+   put tCanBuild or tSettings["emscripten"] into tCanBuild
+   if not tCanBuild then
+      if revTestEnvironment() then
+         return tError
+      else
+         answer error tMessage
+      end if
+      exit revSaveAsStandalone
+   end if
+   
    # OK-2010-03-31: Ensure that the standalone name doesn't contain stuff that is not allowed in folder names,
    # otherwise this could cause problems. In particular a return char at the end of the name causes the cleanup
    # routines to try and delete the parent folder, which can result in data loss. The data loss potential has also
    # been eliminated at a lower level by redirecting all calls to revDeleteFolder through a wrapper, which checks that
    # the folder is safe to delete using some rather strict tests. This may result in ocassional problems with cleanup not
    # working.
-   if folderNameIsIllegal(sStandaloneSettingsA["name"]) then
-      put folderNameMakeLegal(sStandaloneSettingsA["name"]) into sStandaloneSettingsA["name"]
+   if folderNameIsIllegal(tSettings["name"]) then
+      put folderNameMakeLegal(tSettings["name"]) into tSettings["name"]
+      set the cRevStandaloneSettings["name"] of stack (the mainstack of stack pStack) to tSettings["name"] 
       put true into tEdited
       revStandaloneAddWarning "Standalone name was changed because it contained illegal characters"
    end if
@@ -290,6 +269,53 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
       revSetEdited the short name of stack pStack
+   end if
+   
+   # Do the check and continue building as normal.
+   if revSaveCheck(pStack) then
+      revDoSaveAsStandalone pStack, pFolder
+      put the result into tError
+   end if
+   
+   if revStandaloneGetWarnings() is not empty then
+      set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
+   else
+      if not revTestEnvironment() then
+         answer information "Standalone application saved successfully."
+      end if
+      
+      if pPreview is not "false" and sStubPath is not empty then
+         launch document sStubPath
+      end if
+   end if
+   
+   return tError
+end revSaveAsStandalone
+
+command revDoSaveAsStandalone pStack, pFolder
+   start using stack "revSBLibrary"
+   
+   revStandaloneResetWarnings
+   
+   local tError, tStandaloneFolder
+   
+   set the defaultStack to pStack
+   
+   # The following line used to be in revCreateStandalone, however, if we check below we see that pStack would always be the mainstack
+   # as that is the stack that has its cRevStandaloneSettings custom property set. This explains the line "the mainstack of pStack" here.
+   put the customProperties["cRevStandaloneSettings"] of stack (the mainstack of stack pStack) into sStandaloneSettingsA
+   
+   # Set empty values to defaults
+   revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
+   
+   -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
+   if sStandaloneSettingsA["MacOSX"] then
+      delete variable sStandaloneSettingsA["MacOSX"]
+      put true into sStandaloneSettingsA["MacOSX x86-32"]
+   end if
+   if sStandaloneSettingsA["MacOSX PowerPC-32"] then
+      delete variable sStandaloneSettingsA["MacOSX PowerPC-32"]
+      put true into sStandaloneSettingsA["MacOSX x86-32"]
    end if
    
    # OK-2009-05-22 : Added ability to remember default folder. We now do the folder check before saving the stack,
@@ -303,110 +329,96 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put tFolder into pFolder
    put tFolder into sStandaloneSettingsA["defaultBuildFolder"]
    
-   # Do the check and continue building as normal.
-   if revSaveCheck(pStack) then
-      revStandaloneProgress "Preparing to build standalone..."
+   revStandaloneProgress "Preparing to build standalone..."
+   
+   put the mainStack of stack pStack into pStack
+   set the defaultStack to pStack
+   
+   try
+      -- Clear left over state information from previous build
+      put empty into sDirectoryList
+      put empty into sPlatformList
+      put 0 into sPlatformCount
       
-      put the mainStack of stack pStack into pStack
-      set the defaultStack to pStack
+      -- Create an appropriate output dir
+      local tOutputFolder
+      revOutputDirectories tFolder & slash
+      put the result into tOutputFolder
+      if there is no folder tOutputFolder then
+         create folder tOutputFolder
+      end if
       
-      try
-         -- Clear left over state information from previous build
-         put empty into sDirectoryList
-         put empty into sPlatformList
-         put 0 into sPlatformCount
-         
-         -- Create an appropriate output dir
-         local tOutputFolder
-         revOutputDirectories tFolder & slash
-         put the result into tOutputFolder
-         if there is no folder tOutputFolder then
-            create folder tOutputFolder
+      -- Check to see if we're building for any desktop platforms
+      local tDesktopTarget
+      put false into tDesktopTarget
+      repeat for each item tPlatform in revSBDesktopTargets()
+         if sStandaloneSettingsA[tPlatform] then
+            put true into tDesktopTarget
+         end if
+      end repeat
+      
+      if tDesktopTarget then
+         revCreateStandalone pStack, tOutputFolder
+      end if
+      
+      -- build for all selected additional platforms
+      repeat for each item tPlatform in revSBAdditionalTargets()
+         wait 0 millisecs with messages
+         if not sStandaloneSettingsA[tPlatform] then
+            next repeat
          end if
          
-         -- Check to see if we're building for any desktop platforms
-         local tDesktopTarget
-         put false into tDesktopTarget
-         repeat for each item tPlatform in revSBDesktopTargets()
-            if sStandaloneSettingsA[tPlatform] then
-               put true into tDesktopTarget
-            end if
-         end repeat
-         
-         if tDesktopTarget then
-            revCreateStandalone pStack, tOutputFolder
+         local tTargetFolder
+         -- If we are building for multiple platforms, then build in a platform-specific subfolder
+         if sPlatformCount > 1 then
+            put tOutputFolder & slash & tPlatform into tTargetFolder
+         else
+            put tOutputFolder into tTargetFolder
          end if
+         -- Make sure folder exists
+         revSBEnsureFolder tTargetFolder
          
-         -- build for all selected additional platforms
-         repeat for each item tPlatform in revSBAdditionalTargets()
-            wait 0 millisecs with messages
-            if not sStandaloneSettingsA[tPlatform] then
-               next repeat
-            end if
-            
-            local tTargetFolder
-            -- If we are building for multiple platforms, then build in a platform-specific subfolder
-            if sPlatformCount > 1 then
-               put tOutputFolder & slash & tPlatform into tTargetFolder
-            else
-               put tOutputFolder into tTargetFolder
-            end if
-            -- Make sure folder exists
-            revSBEnsureFolder tTargetFolder
-            
-            switch tPlatform
-               case "iOS"
-                  if not (the platform begins with "MacOS") then
-                     next repeat
-                  end if
-                  dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                        pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device"
-                  break
-               case "Android"
-                  dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-                        pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
-                  break
-               case "Emscripten"
-                  dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                        pStack, tTargetFolder, "Build"
-                  break
-               default
-                  throw "invalid platform:" && tPlatform
-            end switch
-         end repeat
-      catch tError
-         revAbort
-         if word 1 of tError = "Standalone:" then 
-            if revTestEnvironment() then
-               return word 2 to -1 of tError
-            else
-               answer error word 2 to -1 of tError
-            end if
-         else  
-            if revTestEnvironment() then
-               return tError
-            else
-               answer error "There was an error while saving the standalone application"&cr&tError
-            end if
+         switch tPlatform
+            case "iOS"
+               if not (the platform begins with "MacOS") then
+                  next repeat
+               end if
+               dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
+                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device"
+               break
+            case "Android"
+               dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
+                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+               break
+            case "Emscripten"
+               dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
+                     pStack, tTargetFolder, "Build"
+               break
+            default
+               throw "invalid platform:" && tPlatform
+         end switch
+      end repeat
+   catch tError
+      revAbort
+      if word 1 of tError = "Standalone:" then 
+         if revTestEnvironment() then
+            return word 2 to -1 of tError
+         else
+            answer error word 2 to -1 of tError
          end if
-         exit to top
-      end try
-      
-      revReset
-      
-      if revStandaloneGetWarnings() is not empty then
-         set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
-      else
-         if not revTestEnvironment() then
-            answer information "Standalone application saved successfully."
-         end if
-         
-         if pPreview is not "false" and sStubPath is not empty then
-            launch document sStubPath
+      else  
+         if revTestEnvironment() then
+            return tError
+         else
+            answer error "There was an error while saving the standalone application"&cr&tError
          end if
       end if
-   end if
-end revSaveAsStandalone
+      exit to top
+   end try
+   
+   revReset
+   
+end revDoSaveAsStandalone
 
 private function folderNameIllegalChars
    return revFolderNameIllegalChars()

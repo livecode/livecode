@@ -686,75 +686,72 @@ constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
 
-on revDefaultStandaloneSettings pStack
-   local tStandaloneSettingsA,tPlatform,tName
-   put the customproperties["cRevStandaloneSettings"] of stack pStack into tStandaloneSettingsA
+on revSBDefaultStandaloneSettings pStack, @xSettingsA
+   local tPlatform,tName
    -- name
-   if tStandaloneSettingsA["name"] = "" then put pStack into tStandaloneSettingsA["name"]
-   put char 1 to 246 of tStandaloneSettingsA["name"] into tStandaloneSettingsA["name"]
-   if tStandaloneSettingsA["inclusions"] = "" then put "search" into tStandaloneSettingsA["inclusions"]
-   if tStandaloneSettingsA["OSX,name"] = "" then put pStack into tStandaloneSettingsA["OSX,name"]
-   if tStandaloneSettingsA["Windows,ProductName"] = "" then put pStack into tStandaloneSettingsA["Windows,ProductName"]
+   if xSettingsA["name"] = "" then put pStack into xSettingsA["name"]
+   put char 1 to 246 of xSettingsA["name"] into xSettingsA["name"]
+   if xSettingsA["inclusions"] = "" then put "search" into xSettingsA["inclusions"]
+   if xSettingsA["OSX,name"] = "" then put pStack into xSettingsA["OSX,name"]
+   if xSettingsA["Windows,ProductName"] = "" then put pStack into xSettingsA["Windows,ProductName"]
    -- main resources
-   if tStandaloneSettingsA["askDialog"] = "" then 
-      put kAskDialog into tStandaloneSettingsA["askDialog"]
+   if xSettingsA["askDialog"] = "" then 
+      put kAskDialog into xSettingsA["askDialog"]
       -- assume no properties set
-      if tStandaloneSettingsA["scriptLibraries"] = "" then put replaceText(kDefaultScriptLibraries,",",cr) into tStandaloneSettingsA["scriptLibraries"]
+      if xSettingsA["scriptLibraries"] = "" then put replaceText(kDefaultScriptLibraries,",",cr) into xSettingsA["scriptLibraries"]
       
       put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
-      if tStandaloneSettingsA["Windows,iconFile"] = "" then put tName & "/genericapp.ico" into tStandaloneSettingsA["Windows,iconFile"]
-      if tStandaloneSettingsA["Windows,documenticonFile"] = "" then put tName & "/genericdoc.ico" into tStandaloneSettingsA["Windows,documenticonFile"]
+      if xSettingsA["Windows,iconFile"] = "" then put tName & "/genericapp.ico" into xSettingsA["Windows,iconFile"]
+      if xSettingsA["Windows,documenticonFile"] = "" then put tName & "/genericdoc.ico" into xSettingsA["Windows,documenticonFile"]
    end if
-   if tStandaloneSettingsA["answerDialog"] = "" then put kAnswerDialog into tStandaloneSettingsA["answerDialog"]
-   if tStandaloneSettingsA["cursors"] = "" then put kCursors into tStandaloneSettingsA["cursors"]
+   if xSettingsA["answerDialog"] = "" then put kAnswerDialog into xSettingsA["answerDialog"]
+   if xSettingsA["cursors"] = "" then put kCursors into xSettingsA["cursors"]
    -- version
    set the itemDel to "."
    repeat with X=1 to the number of items of kDefaultVersionNumber
-      if tStandaloneSettingsA["Windows,fileversion"&X] = "" then put item X of kDefaultVersionNumber into tStandaloneSettingsA["Windows,fileversion"&X]
-      if tStandaloneSettingsA["Windows,productversion"&X] = "" then put item X of kDefaultVersionNumber into tStandaloneSettingsA["Windows,productversion"&X]
+      if xSettingsA["Windows,fileversion"&X] = "" then put item X of kDefaultVersionNumber into xSettingsA["Windows,fileversion"&X]
+      if xSettingsA["Windows,productversion"&X] = "" then put item X of kDefaultVersionNumber into xSettingsA["Windows,productversion"&X]
    end repeat
    set the itemDel to ","
-   if tStandaloneSettingsA["OSX,longVersion"] = "" then put pStack&&kDefaultVersionNumber into tStandaloneSettingsA["OSX,longVersion"]
-   if tStandaloneSettingsA["OSX,info"] = "" then put pStack&&"Version"&&kDefaultVersionNumber into tStandaloneSettingsA["OSX,info"]
-   if tStandaloneSettingsA["OSX,shortVersion"] = "" then put kDefaultVersionNumber into tStandaloneSettingsA["OSX,shortVersion"]
-   if tStandaloneSettingsA["Windows,FileDescription"] = "" then put pStack&&kDefaultVersionNumber&&"for Windows" into tStandaloneSettingsA["Windows,FileDescription"]
+   if xSettingsA["OSX,longVersion"] = "" then put pStack&&kDefaultVersionNumber into xSettingsA["OSX,longVersion"]
+   if xSettingsA["OSX,info"] = "" then put pStack&&"Version"&&kDefaultVersionNumber into xSettingsA["OSX,info"]
+   if xSettingsA["OSX,shortVersion"] = "" then put kDefaultVersionNumber into xSettingsA["OSX,shortVersion"]
+   if xSettingsA["Windows,FileDescription"] = "" then put pStack&&kDefaultVersionNumber&&"for Windows" into xSettingsA["Windows,FileDescription"]
    -- document types
-   if the number of chars of tStandaloneSettingsA["OSX,signature"] <> 4 then put kDefaultCreator into tStandaloneSettingsA["OSX,signature"]
-   if tStandaloneSettingsA["OSX,documentType"] = "" then put kDefaultDocumentType into tStandaloneSettingsA["OSX,documentType"]
-   if tStandaloneSettingsA["OSX,documentExtension"] = "" then put kDefaultDocumentExtension into tStandaloneSettingsA["OSX,documentExtension"]
+   if the number of chars of xSettingsA["OSX,signature"] <> 4 then put kDefaultCreator into xSettingsA["OSX,signature"]
+   if xSettingsA["OSX,documentType"] = "" then put kDefaultDocumentType into xSettingsA["OSX,documentType"]
+   if xSettingsA["OSX,documentExtension"] = "" then put kDefaultDocumentExtension into xSettingsA["OSX,documentExtension"]
    -- set the unix stuff to true because they will only be imported into unix builds anyway
-   if tStandaloneSettingsA["UNIX,colorChooser"] = "" then put true into tStandaloneSettingsA["UNIX,colorChooser"]
-   if tStandaloneSettingsA["UNIX,printerChooser"] = "" then put true into tStandaloneSettingsA["UNIX,printerChooser"]
-   if tStandaloneSettingsA["UNIX,pageSetup"] = "" then put true into tStandaloneSettingsA["UNIX,pageSetup"]
-   if tStandaloneSettingsA["UNIX,fileSelector"] = "" then put true into tStandaloneSettingsA["UNIX,fileSelector"]
+   if xSettingsA["UNIX,colorChooser"] = "" then put true into xSettingsA["UNIX,colorChooser"]
+   if xSettingsA["UNIX,printerChooser"] = "" then put true into xSettingsA["UNIX,printerChooser"]
+   if xSettingsA["UNIX,pageSetup"] = "" then put true into xSettingsA["UNIX,pageSetup"]
+   if xSettingsA["UNIX,fileSelector"] = "" then put true into xSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
    repeat for each item tPlatform in kPlatforms
-      if tStandaloneSettingsA[tPlatform] = "" then 
-            put revEngineCheck(tPlatform) into tStandaloneSettingsA[tPlatform]
+      if xSettingsA[tPlatform] = "" then 
+            put revEngineCheck(tPlatform) into xSettingsA[tPlatform]
       end if
    end repeat
    
    -- copyright
    get the seconds
    convert it to dateItems
-   if tStandaloneSettingsA["OSX,copyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into tStandaloneSettingsA["OSX,copyright"]
-   if tStandaloneSettingsA["OSX,identifier"] = "" then put "com."&replaceText(toLower(the cUserOrganisation of stack "Home")," ","")&"."&replaceText(toLower(tStandaloneSettingsA["name"])," ","") into tStandaloneSettingsA["OSX,identifier"]
-   if tStandaloneSettingsA["Windows,LegalCopyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into tStandaloneSettingsA["Windows,LegalCopyright"]
-   if tStandaloneSettingsA["Windows,companyname"] = "" then put the cUserOrganisation of stack "Home" into tStandaloneSettingsA["Windows,companyname"]
+   if xSettingsA["OSX,copyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into xSettingsA["OSX,copyright"]
+   if xSettingsA["OSX,identifier"] = "" then put "com."&replaceText(toLower(the cUserOrganisation of stack "Home")," ","")&"."&replaceText(toLower(xSettingsA["name"])," ","") into xSettingsA["OSX,identifier"]
+   if xSettingsA["Windows,LegalCopyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into xSettingsA["Windows,LegalCopyright"]
+   if xSettingsA["Windows,companyname"] = "" then put the cUserOrganisation of stack "Home" into xSettingsA["Windows,companyname"]
    
    -- Since the intel choice, set the default here:
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Only create standalone setting for Intel (for OS X) by default.
-   if tStandaloneSettingsA["MacOSX x86-32"] is empty then put true into tStandaloneSettingsA["MacOSX x86-32"]
+   if xSettingsA["MacOSX x86-32"] is empty then put true into xSettingsA["MacOSX x86-32"]
    
    -- Auto-remove stack passwords from community stacks
    if revLicenseType() is "community" then
-      if tStandaloneSettingsA["password"] is not empty then
-         delete variable tStandaloneSettingsA["password"]
+      if xSettingsA["password"] is not empty then
+         delete variable xSettingsA["password"]
       end if
    end if
-   
-   set the customproperties["cRevStandaloneSettings"] of stack pStack to tStandaloneSettingsA
-end revDefaultStandaloneSettings
+end revSBDefaultStandaloneSettings
 
 local sStackFiles
 
