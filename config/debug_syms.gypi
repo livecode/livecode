@@ -57,16 +57,34 @@
 				# MSVS generates the debug databases automatically; we just need to copy them
 				'variables':
 				{
+					'variables':
+					{
+						'conditions':
+						[
+							[
+								# If configuring from a Unix-like environment, use its perl
+								# otherwise use the detected Windows perl.
+								'unix_configure != 0',
+								{
+									'perl_command': [ 'perl' ],
+								},
+								{
+									'perl_command': [ '<@(perl)' ],
+								},
+							],
+						],
+					},
+					
 					'command':
 					[
-						'<@(perl)',
+						'<@(perl_command)',
 						'>(DEPTH)/tools/windows_debug_syms.pl',
-						'<@(debug_syms_inputs)',
+						"<@(debug_syms_inputs)",
 					],
 					
 					'debug_syms_outputs':
 					[
-						'>!@(<(command))',
+						">!@(<(command))",
 					],
 				},
 				
