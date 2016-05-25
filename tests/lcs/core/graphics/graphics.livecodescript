@@ -180,7 +180,7 @@ on TestRemappedBrush
 	local tBrush
 	
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	repeat with tBrush = 101 to 135
+	repeat with tBrush = 101 to 136
 		set the brush to tBrush
 		TestAssert "setting brush to" && tBrush && "subtracts 100", the brush is (tBrush-100)
 	end repeat
@@ -190,7 +190,7 @@ on TestBrushInBounds
 	local tBrush
 	
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	repeat with tBrush = 1 to 35
+	repeat with tBrush = 1 to 36
 		set the brush to tBrush
 		TestAssert "setting brush to" && tBrush && "is unchanged", the brush is tBrush
 	end repeat
@@ -200,15 +200,9 @@ on TestBrushBoundaries
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 #	set the brush to 99
 #	TestAssert "brush = 99 unchanged", the brush is 99
-	set the brush to 136
-	TestAssert "brush = 136 unchanged", the brush is 136
-end TestBrushBoundaries
-
-on TestBrush137
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the brush to 137
 	TestAssert "brush > 136 is unchanged", the brush is 137
-end TestBrush137
+end TestBrushBoundaries
 
 on TestSpray
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
