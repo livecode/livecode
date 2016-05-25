@@ -924,22 +924,8 @@ private command revOutputDirectories pFolder
             put 0 into tOSXCount -- Reset the count to zero to force other OSX platforms to be ignored
          end if
          
-         # OK-2010-02-17: Bug 8608 - Deploying stack with trailing whitespace in name fails on Windows
-         # because the folder created doesn't match the name passed to create folder command.
-         local tFolderName
-         put sStandaloneSettingsA["name"] & tCount into tFolderName
-         if the platform is "Win32" or tPlatform is "Windows" then
-            put replaceText(tFolderName, "[ \t]+$", empty) into tFolderName
-         end if
+         put revSBStandaloneOutputDirectory(sStandaloneSettingsA["name"], tCount, pFolder, tPlatform, tPlatforms > 1) into tDirectory
          
-         if tPlatforms > 1 then
-            put pFolder & tFolderName & "/" & tPlatform & "/" into tDirectory
-         else
-            put pFolder & tFolderName & "/" into tDirectory
-         end if
-         if tPlatform contains "MacOSX" then 
-            put sStandaloneSettingsA["name"] & ".app/Contents/MacOS/" after tDirectory
-         end if
          put tDirectory & return after sDirectoryList
          put tPlatform & return after sPlatformList
       end if

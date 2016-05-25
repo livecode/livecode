@@ -1903,3 +1903,24 @@ function revSBSuppressDialogs
    end if
    return true
 end revSBSuppressDialogs
+
+function revSBStandaloneOutputDirectory pName, pCount, pFolder, pPlatform, pMultiple
+   # OK-2010-02-17: Bug 8608 - Deploying stack with trailing whitespace in name fails on Windows
+   # because the folder created doesn't match the name passed to create folder command.
+   local tFolderName
+   put pName & pCount into tFolderName
+   if the platform is "Win32" or pPlatform is "Windows" then
+      put replaceText(tFolderName, "[ \t]+$", empty) into tFolderName
+   end if
+   
+   local tDirectory
+   if pMultiple then
+      put pFolder & tFolderName & "/" & pPlatform & "/" into tDirectory
+   else
+      put pFolder & tFolderName & "/" into tDirectory
+   end if
+   if pPlatform contains "MacOSX" then 
+      put pName & ".app/Contents/MacOS/" after tDirectory
+   end if
+   return tDirectory
+end revSBStandaloneOutputDirectory
