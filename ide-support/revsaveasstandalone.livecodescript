@@ -431,6 +431,8 @@ command revDoSaveAsStandalone pStack, pFolder
       end if
       exit to top
    end try
+   
+   return empty
 end revDoSaveAsStandalone
 
 private function folderNameIllegalChars
