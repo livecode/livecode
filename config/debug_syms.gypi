@@ -75,11 +75,15 @@
 						],
 					},
 					
+					# Note the use of the magic '<|(...)' expansion to write the
+					# list of files out to another file: this prevents the
+					# shell from attempting to expand any $(...) expressions in
+					# the file list.
 					'command':
 					[
 						'<@(perl_command)',
 						'>(DEPTH)/tools/windows_debug_syms.pl',
-						'<@(debug_syms_inputs)',
+						'>|(>(DEPTH)/debug_syms_inputs.txt <@(debug_syms_inputs))',
 					],
 					
 					'debug_syms_outputs':
