@@ -151,6 +151,18 @@ end getWindowsMaxLength
 
 local sStubPath
 
+
+-- Standalone settings are always set on the mainstack
+private function getSettings pStack
+   return the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack)
+end getSettings
+
+private command setSettings pStack, pSettings
+   set the customProperties["cRevStandaloneSettings"] of stack \
+         (the mainstack of stack pStack) to pSettings
+end setSettings
+
 # OK-2009-05-22 : Added ability to remember default folder
 private function getBuildFolder pStack, pFolder, pSettings
    # If the standalone builder has been passed a folder to build in from outside, we just use this.
@@ -159,7 +171,9 @@ private function getBuildFolder pStack, pFolder, pSettings
    end if
    
    # This means the user has chosen to build directly to the default folder without prompt (and the folder exists) so we just go for it.
-   if pSettings["defaultBuildFolder"] is not empty  and pSettings["automaticallyBuildInDefaultFolder"] and there is a folder (pSettings["defaultBuildFolder"]) then
+   if pSettings["defaultBuildFolder"] is not empty and \ 
+         pSettings["automaticallyBuildInDefaultFolder"] and \ 
+         there is a folder (pSettings["defaultBuildFolder"]) then
       return pSettings["defaultBuildFolder"]
    end if
    
@@ -167,16 +181,19 @@ private function getBuildFolder pStack, pFolder, pSettings
    # prompt as normal, but with the difference being that we use the specified folder as the default path,
    # saving browsing for it.
    local tFolder
-   if pSettings["defaultBuildFolder"] is not empty and there is a folder (pSettings["defaultBuildFolder"]) then
+   if pSettings["defaultBuildFolder"] is not empty and \
+         there is a folder (pSettings["defaultBuildFolder"]) then
       
-      if pStack is among the lines of the openStacks and the visible of stack pStack and the mode of stack pStack <= 2 then
+      if pStack is among the lines of the openStacks and the visible of stack pStack and \ 
+            the mode of stack pStack <= 2 then
          set the defaultStack to pStack
          answer folder "Choose a folder to build in:" with pSettings["defaultBuildFolder"] 
       else
          answer folder "Choose a folder to build in:" with pSettings["defaultBuildFolder"] 
       end if
    else
-      if pStack is among the lines of the openStacks and the visible of stack pStack and the mode of stack pStack <= 2 then
+      if pStack is among the lines of the openStacks and the visible of stack pStack and \ 
+            the mode of stack pStack <= 2 then
          set the defaultStack to pStack
          answer folder "Choose a folder to build in:"
       else
@@ -190,12 +207,6 @@ private function getBuildFolder pStack, pFolder, pSettings
    end if
    
    put it into tFolder
-   
-   # If the folder was changed, then we flag the stack as edited so it gets remembered
-   if the cRevStandaloneSettings["defaultBuildFolder"] of stack pStack is not tFolder then
-      set the cRevStandaloneSettings["defaultBuildFolder"] of stack pStack to tFolder
-      revSetEdited pStack
-   end if
    
    return tFolder
 end getBuildFolder
@@ -229,8 +240,20 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    end if
    
    local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack (the mainstack of stack pStack) into tSettings
-
+   put getSettings(pStack) into tSettings
+   
+   -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
+   if tSettings["MacOSX"] then
+      delete variable tSettings["MacOSX"]
+      put true into tSettings["MacOSX x86-32"]
+      put true into tEdited
+   end if
+   if tSettings["MacOSX PowerPC-32"] then
+      delete variable tSettings["MacOSX PowerPC-32"]
+      put true into tSettings["MacOSX x86-32"]
+      put true into tEdited
+   end if
+   
    -- Make sure there is actually something to build..
    # Check if any platforms have actually been selected..
    local tCanBuild
@@ -261,14 +284,30 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # working.
    if folderNameIsIllegal(tSettings["name"]) then
       put folderNameMakeLegal(tSettings["name"]) into tSettings["name"]
-      set the cRevStandaloneSettings["name"] of stack (the mainstack of stack pStack) to tSettings["name"] 
       put true into tEdited
       revStandaloneAddWarning "Standalone name was changed because it contained illegal characters"
    end if
    
+   # OK-2009-05-22 : Added ability to remember default folder. We now do the folder check before saving the stack,
+   # so that if the user chose a different folder, it can be remembered for next time.
+   local tFolder
+   put getBuildFolder(pStack, pFolder, sStandaloneSettingsA) into tFolder
+   if tFolder is empty then
+      exit to top
+   end if
+   
+   # If the folder was changed, then we flag the stack as edited so it gets remembered
+   if tSettings["defaultBuildFolder"] is not tFolder then
+      put tFolder into tSettings["defaultBuildFolder"]
+      put true into tEdited
+   end if
+   
+   put tFolder into pFolder
+   
    # If any have been edited, force the save dialog by setting edited on the mainstack
    if tEdited then
       revSetEdited the short name of stack pStack
+      setSettings pStack, tSettings
    end if
    
    # Do the check and continue building as normal.
@@ -301,33 +340,10 @@ command revDoSaveAsStandalone pStack, pFolder
    
    set the defaultStack to pStack
    
-   # The following line used to be in revCreateStandalone, however, if we check below we see that pStack would always be the mainstack
-   # as that is the stack that has its cRevStandaloneSettings custom property set. This explains the line "the mainstack of pStack" here.
-   put the customProperties["cRevStandaloneSettings"] of stack (the mainstack of stack pStack) into sStandaloneSettingsA
+   put getSettings(pStack) into sStandaloneSettingsA
    
    # Set empty values to defaults
    revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
-   
-   -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
-   if sStandaloneSettingsA["MacOSX"] then
-      delete variable sStandaloneSettingsA["MacOSX"]
-      put true into sStandaloneSettingsA["MacOSX x86-32"]
-   end if
-   if sStandaloneSettingsA["MacOSX PowerPC-32"] then
-      delete variable sStandaloneSettingsA["MacOSX PowerPC-32"]
-      put true into sStandaloneSettingsA["MacOSX x86-32"]
-   end if
-   
-   # OK-2009-05-22 : Added ability to remember default folder. We now do the folder check before saving the stack,
-   # so that if the user chose a different folder, it can be remembered for next time.
-   local tFolder
-   put getBuildFolder(pStack, pFolder, sStandaloneSettingsA) into tFolder
-   if tFolder is empty then
-      exit to top
-   end if
-   
-   put tFolder into pFolder
-   put tFolder into sStandaloneSettingsA["defaultBuildFolder"]
    
    revStandaloneProgress "Preparing to build standalone..."
    
@@ -342,7 +358,7 @@ command revDoSaveAsStandalone pStack, pFolder
       
       -- Create an appropriate output dir
       local tOutputFolder
-      revOutputDirectories tFolder & slash
+      revOutputDirectories pFolder & slash
       put the result into tOutputFolder
       if there is no folder tOutputFolder then
          create folder tOutputFolder
