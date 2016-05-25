@@ -217,36 +217,20 @@ bool MCNativeLayerWin32::doPaint(MCGContextRef p_context)
 	return t_success;
 }
 
-void MCNativeLayerWin32::updateViewportGeometry()
+void MCNativeLayerWin32::updateViewGeometry()
 {
 	m_intersect_rect = MCU_intersect_rect(m_viewport_rect, m_rect);
 
 	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
-	MCRectangle t_rect;
-	t_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
+	MCRectangle t_intersect_rect;
+	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
 
 	// Move the window. Only trigger a repaint if not in edit mode
-	MoveWindow(m_viewport_hwnd, t_rect.x, t_rect.y, t_rect.width, t_rect.height, ShouldShowLayer());
-}
-
-void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
-{
-	m_viewport_rect = p_rect;
-	updateViewportGeometry();
-}
-
-void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
-{
-	m_rect = p_rect;
-	updateViewportGeometry();
+	MoveWindow(m_viewport_hwnd, t_intersect_rect.x, t_intersect_rect.y, t_intersect_rect.width, t_intersect_rect.height, ShouldShowLayer());
 
 	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
 	MCRectangle t_rect;
 	t_rect = MCRectangleGetTransformedBounds(m_rect, m_object->getstack()->getdevicetransform());
-
-	// IM-2016-02-18: [[ Bug 16603 ]] Transform view rect to device coords
-	MCRectangle t_intersect_rect;
-	t_intersect_rect = MCRectangleGetTransformedBounds(m_intersect_rect, m_object->getstack()->getdevicetransform());
 
 	t_rect.x -= t_intersect_rect.x;
 	t_rect.y -= t_intersect_rect.y;
@@ -257,6 +241,18 @@ void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
 	// We need to delete the bitmap that we've been caching
 	DeleteObject(m_cached);
 	m_cached = NULL;
+}
+
+void MCNativeLayerWin32::doSetViewportGeometry(const MCRectangle &p_rect)
+{
+	m_viewport_rect = p_rect;
+	updateViewGeometry();
+}
+
+void MCNativeLayerWin32::doSetGeometry(const MCRectangle& p_rect)
+{
+	m_rect = p_rect;
+	updateViewGeometry();
 }
 
 void MCNativeLayerWin32::doSetVisible(bool p_visible)
