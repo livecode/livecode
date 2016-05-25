@@ -379,7 +379,6 @@ command revDoSaveAsStandalone pStack, pFolder
       
       -- build for all selected additional platforms
       repeat for each item tPlatform in revSBAdditionalTargets()
-         wait 0 millisecs with messages
          if not sStandaloneSettingsA[tPlatform] then
             next repeat
          end if
@@ -1528,9 +1527,7 @@ private command revSetMacOS pWhatFile, pPlatformCode, pEnginePath
          put escapeForXml(tDocExtList) into line lineoffset("<key>CFBundleTypeExtensions</key>",tTempPlist) + 2 of tTempPlist
       end if
       set the itemDel to "/"
-      wait 0 ticks with messages
       put uniDecode(uniEncode(tTempPlist), "UTF8") into URL ("file:" & item 1 to -3 of pWhatFile&"/Info.plist")
-      wait 0 ticks with messages
       if sStandaloneSettingsA["OSX,signature"] is not empty then
          put "APPL" & sStandaloneSettingsA["OSX,signature"] into URL ("file:" & item 1 to -3 of pWhatFile&"/PkgInfo")
       end if
@@ -2506,7 +2503,6 @@ private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePa
    -- in the original handler and serves our purposes to guarantee the right
    -- origin info).
    revStandaloneProgress "Preparing main stackfile..."
-   wait 0 ticks with messages
    lock messages
    lock screen
    save stack pStackFilePath
@@ -2515,7 +2511,6 @@ private command revBuildStandaloneDeploy pPlatform, pArchitectures, pStackFilePa
    delete stack pStackFilePath
    unlock screen
    unlock messages
-   wait 0 ticks with messages
    
    -- Actually do the standalone engine build - we probably need some sort of
    -- error handling here :oD
