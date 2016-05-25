@@ -616,7 +616,9 @@ end revStandaloneAddWarning
 ----------
 
 command revStandaloneProgress pMessage
-   send "revUpdateStandaloneProgress pMessage" to stack "revStandaloneSettings"
+   if not revSBSuppressDialogs() then
+      send "revUpdateStandaloneProgress pMessage" to stack "revStandaloneSettings"
+   end if
 end revStandaloneProgress
 
 # This is an event handler, not a command.
@@ -1886,3 +1888,10 @@ function revSBListWidgetsInUse pStack
    end repeat
    return the keys of tWidgetKindsA
 end revSBListWidgetsInUse
+
+function revSBSuppressDialogs
+   if the environment is "development" then
+      return revTestEnvironment()
+   end if
+   return true
+end revSBSuppressDialogs

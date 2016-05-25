@@ -268,7 +268,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    put tCanBuild or tSettings["android"] into tCanBuild
    put tCanBuild or tSettings["emscripten"] into tCanBuild
    if not tCanBuild then
-      if revTestEnvironment() then
+      if revSBSuppressDialogs() then
          return tError
       else
          answer error tMessage
@@ -319,7 +319,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    if revStandaloneGetWarnings() is not empty then
       set the cWarnings of stack "revBuildResults" to revStandaloneGetWarnings()
    else
-      if not revTestEnvironment() then
+      if not revSBSuppressDialogs() then
          answer information "Standalone application saved successfully."
       end if
       
@@ -327,6 +327,8 @@ on revSaveAsStandalone pStack, pFolder, pPreview
          launch document sStubPath
       end if
    end if
+   
+   revReset
    
    return tError
 end revSaveAsStandalone
@@ -417,13 +419,13 @@ command revDoSaveAsStandalone pStack, pFolder
    catch tError
       revAbort
       if word 1 of tError = "Standalone:" then 
-         if revTestEnvironment() then
+         if revSBSuppressDialogs() then
             return word 2 to -1 of tError
          else
             answer error word 2 to -1 of tError
          end if
       else  
-         if revTestEnvironment() then
+         if revSBSuppressDialogs() then
             return tError
          else
             answer error "There was an error while saving the standalone application"&cr&tError
@@ -431,9 +433,6 @@ command revDoSaveAsStandalone pStack, pFolder
       end if
       exit to top
    end try
-   
-   revReset
-   
 end revDoSaveAsStandalone
 
 private function folderNameIllegalChars
