@@ -328,8 +328,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
       end if
    end if
    
-   revReset
-   
    return tError
 end revSaveAsStandalone
 
@@ -761,6 +759,10 @@ private command revCreateStandalone pStack, pFolder
    try
       dispatch "standaloneSaved" to stack tStackFileName with pFolder
    end try
+   
+   revReset
+   
+   return empty
 end revCreateStandalone
 
 #####################################################################
