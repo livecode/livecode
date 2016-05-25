@@ -28,14 +28,31 @@ on startup
    end try
    
    -- If help was requested, show it then exit
-   if "h" or "help" is among the keys of tArgs then
+   if the number of elements of tArgs is zero or "help" is among the keys of tArgs then
       showHelp
       quit 0
    end if
    
+   -- Show debugging information?
+   if "d" or "debug" is among the keys of tArgs then put true into sDebugging
+   
+   -- Show verbose information?
+   if "v" or "verbose" is among the keys of tArgs then put true into sVerbose
+   
+   -- Read the crash log file
+   local tCrashLog
+   put url ("file:" & tArgs["__inputs__"]) into tCrashLog
+   if the result is not empty then
+      write "Failed to read" && quote & tArgs["__inputs__"] & quote & return to stderr
+      quit -1
+   end if
+   
    -- Set some default options if they weren't specified
+   local tGuessSucceeded
+   local tVersion
+   local tEdition
+   put guessVersionAndEdition(tCrashLog, tVersion, tEdition) into tGuessSucceeded
    if "staging-url" is not among the keys of tArgs then put kStagingUrl into tArgs["staging-url"]
-   if "edition" is not among the keys of tArgs then put "community" into tArgs["edition"]
    if "repo" is not among the keys of tArgs then 
       -- Assumes we're in the main repo folder
       if "fetch" is among the keys of tArgs then
@@ -47,18 +64,16 @@ on startup
       end if
    end if
    
-   -- Show debugging information?
-   if "d" or "debug" is among the keys of tArgs then put true into sDebugging
-   
-   -- Show verbose information?
-   if "v" or "verbose" is among the keys of tArgs then put true into sVerbose
-   
    -- Dump the input arguments to stderr if debugging is enabled
    debugPrint dumpArray(tArgs)
    
    -- Check that the mandatory options are present
-   if "version" is not among the keys of tArgs then
-      write "Error: version tag must be specified" & return to stderr
+   if "version" is not among the keys of tArgs and not tGuessSucceeded then
+      write "Error: version could not be auto-detected" & return to stderr
+      quit -1
+   end if
+   if "edition" is not among the keys of tArgs and not tGuessSucceeded then
+      write "Error: edition could not be auto-detected" & return to stderr
       quit -1
    end if
    if "fetch" is among the keys of tArgs and "cache-dir" is not among the keys of tArgs then
@@ -74,9 +89,9 @@ on startup
       quit -1
    end if
    
-   -- Version of LiveCode we're symbolicating
-   local tVersion
-   put tArgs["version"] into tVersion
+   -- Version and edition of LiveCode we're symbolicating
+   if "version" is among the keys of tArgs then put tArgs["version"] into tVersion
+   if "edition" is among the keys of tArgs then put tArgs["edition"] into tEdition
    
    -- Download the symbols for the requested version if necessary
    local tSymbolDir
@@ -95,17 +110,9 @@ on startup
          quit -1
       end try
    else
-      put tArgs["symbol-dir"] into tSymbolDir
+      put pathToSymbolDirForVersion(tArgs["symbol-dir"], tVersion) into tSymbolDir
    end if
-   put pathToSymbolFileForVersion(tSymbolDir, tArgs["edition"]) into tSymbolPath
-   
-   -- Read the crash log file
-   local tCrashLog
-   put url ("file:" & tArgs["__inputs__"]) into tCrashLog
-   if the result is not empty then
-      write "Failed to read" && quote & tArgs["__inputs__"] & quote & return to stderr
-      quit -1
-   end if
+   put pathToSymbolFileForVersion(tSymbolDir, tEdition) into tSymbolPath
    
    -- Process the crashlog file
    local tSymbolicatedLog
@@ -545,6 +552,57 @@ end fetchSymbolsForRevision
 ---------- SYMBOLICATION ----------
 -----------------------------------
 
+-- Guesses the LiveCode engine version and edition from the crash log
+private function guessVersionAndEdition pLog, @rVersion, @rEdition
+   -- Find the line that contains the embedded version information
+   local tVersionLineNumber
+   put lineOffset("Version:", pLog) into tVersionLineNumber
+   if tVersionLineNumber is zero then return false
+   
+   -- Version line has the form "Version: 8.0.0.13012 [DP 12]"
+   local tVersionLine
+   local tVersionNumber
+   local tVersionSuffix
+   put line tVersionLineNumber of pLog into tVersionLine
+   if (char 2 to -1 of word 3 of tVersionLine) is among the items of "RC,DP" then
+      put "-" & toLower(char 2 to -1 of word 3 of tVersionLine) into tVersionSuffix
+      put "-" & (char 1 to -2 of word 4 of tVersionLine) after tVersionSuffix
+   end if
+   set the itemDelimiter to "."
+   put (item 1 to 3 of (word 2 of tVersionLine)) into tVersionNumber
+   put (tVersionNumber & tVersionSuffix) into rVersion
+   verbosePrint "Auto-detected version as" && rVersion
+   
+   -- Find the line that contains the process name
+   local tProcessLineNumber
+   put lineOffset("Process:", pLog) into tProcessLineNumber
+   if tProcessLineNumber is zero then return false
+   
+   -- Look for keywords in the line
+   local tProcessLine
+   put line tProcessLineNumber of pLog into tProcessLine
+   switch
+      case "LiveCode-Community" is among the words of tProcessLine
+         put "community" into rEdition
+         break
+         
+      case "LiveCode-Indy" is among the words of tProcessLine
+         put "indy" into rEdition
+         break
+         
+      case "LiveCode-Business" is among the words of tProcessLine
+         put "business" into rEdition
+         break
+         
+      default
+         return false
+         break
+   end switch
+   
+   -- The autodetection seems to have worked
+   verbosePrint "Auto-detected edition as" && rEdition
+   return true
+end guessVersionAndEdition
 
 -- Finds the line range in the given log that corresponds to the stack trace of the crashed thread
 private command findStackTraceLineRange pLog, @rStart, @rEnd
