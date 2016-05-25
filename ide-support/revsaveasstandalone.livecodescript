@@ -1423,7 +1423,6 @@ private command revCleanBuildStacks
       end if
    end repeat
    revReset
-   close stack "revStandaloneProgress"
 end revCleanBuildStacks
 
 private command revAbort
@@ -1465,7 +1464,7 @@ command revReset
       unlock messages
    end try
    delete variable sResetA               -- stored info for resetting to the pre-build state
-   close stack "revStandaloneProgress"
+   revStandaloneProgressFinished
 end revReset
 
 private command revSetMacOS pWhatFile, pPlatformCode, pEnginePath

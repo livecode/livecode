@@ -623,8 +623,16 @@ end revStandaloneProgress
 
 # This is an event handler, not a command.
 on revStandaloneProgressCallback
-  wait 0 ticks with messages
+   if not revSBSuppressDialogs() then
+      wait 0 ticks with messages
+   end if
 end revStandaloneProgressCallback
+
+command revStandaloneProgressFinished
+   if not revSBSuppressDialogs() then
+      close stack "revStandaloneProgress"
+   end if
+end revStandaloneProgressFinished
 
 ----------
 
