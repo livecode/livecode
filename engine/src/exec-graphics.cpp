@@ -216,9 +216,10 @@ void MCGraphicsExecResetPaint(MCExecContext& ctxt)
     MCeditingimage = nil;
     
 		// MDW-2016-05-06 [[ bugfix_17553 ]] set brush defaults using validators
-    MCInterfaceSetBrush(ctxt, 8);
-    MCInterfaceSetSpray(ctxt, 34);
-    MCInterfaceSetEraser(ctxt, 2);
+		// MDW-2016-05-23 [[ no_brush_remapping ]] map to actual image ids
+    MCInterfaceSetBrush(ctxt, 108);
+    MCInterfaceSetSpray(ctxt, 134);
+    MCInterfaceSetEraser(ctxt, 102);
     MCcentered = False;
     MCfilled = False;
     MCgrid = False;
@@ -226,7 +227,7 @@ void MCGraphicsExecResetPaint(MCExecContext& ctxt)
     MClinesize = 1;
     MCmultiple = False;
     MCmultispace = 1;
-    MCpattern = 1;
+    MCpattern = 137;
     MCpolysides = 4;
     MCroundends = False;
     MCslices = 16;
