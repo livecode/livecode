@@ -608,7 +608,17 @@ private command revCreateStandalone pStack, pFolder
    try
       dispatch "savingStandalone" to stack tStackFileName
    end try
-
+   
+   local tEdition
+   put the editionType into tEdition
+   // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+   //  allow to create broken applications, so that the executable file in it bears the edition.
+   if tEdition is "professional" then
+      put "Commercial" into tEdition
+   else
+      put the upper of char 1 of tEdition into char 1 of tEdition
+   end if
+   
    --so now we have a list of output directories in sDirectoryList
    put the fileType into sResetA["FileType"]
    put 1 into tCount
@@ -628,15 +638,6 @@ private command revCreateStandalone pStack, pFolder
             case "MacOSX PowerPC-32"
             case "MacOSX x86-32"
             case "MacOSX x86-64"
-               // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
-               //  allow to create broken applications, so that the executable file in it bears the edition.
-               local tEdition
-               put the editionType into tEdition
-               if tEdition is "professional" then
-                  put "Commercial" into tEdition
-               else
-                  put the upper of char 1 of tEdition into char 1 of tEdition
-               end if
                put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
                break
             case "Windows"
@@ -666,18 +667,14 @@ private command revCreateStandalone pStack, pFolder
          if tPlatform contains "MacOSX" and the platform is not "macos" or \
                tPlatform contains "Linux" and the platform is not "linux" or \
                tPlatform is "Windows" and the platform is not "win32" then
-         put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
+            put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
          else
             put revEnvironmentBinariesPath() into tBinariesPath
          end if
          
          switch word 1 of tPlatform
             case "MacOSX"
-               if revLicenseType() is "community" then
-                  put tBinariesPath & slash & "Standalone-Community.app/Contents/MacOS/Standalone-Community" into tEngineSourceFile[tPlatform]
-               else
-                  put tBinariesPath & slash & "Standalone-Commercial.app/Contents/MacOS/Standalone-Commercial" into tEngineSourceFile[tPlatform]
-               end if
+               put tBinariesPath & "/Standalone-" & tEdition & ".app/Contents/MacOS/Standalone-" & tEdition into tEngineSourceFile[tPlatform]
                break;
             case "Windows"
                if revLicenseType() is "community" then
