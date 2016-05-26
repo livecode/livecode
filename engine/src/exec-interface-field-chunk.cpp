@@ -2899,7 +2899,7 @@ void MCParagraph::GetBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor &r_c
     else
     {
         MCColor t_color;
-		MCColorSetPixel(t_color, attrs -> background_color);
+		MCColorSetPixel(t_color, attrs -> border_color);
         get_interface_color(t_color, nil, r_color);
     }
 }
@@ -2909,7 +2909,7 @@ void MCParagraph::GetEffectiveBorderColor(MCExecContext& ctxt, MCInterfaceNamedC
     if (attrs != nil && (attrs -> flags & PA_HAS_BORDER_COLOR) != 0)
     {
         MCColor t_color;
-		MCColorSetPixel(t_color, attrs -> background_color);
+		MCColorSetPixel(t_color, attrs -> border_color);
         get_interface_color(t_color, nil, r_color);
     }
 }
