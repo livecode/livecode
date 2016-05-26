@@ -1319,12 +1319,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (target->isiconic())
 					{
 						MCstacks->restack(target);
-						target->view_configure(true);
+						target->wreshape(dw);
 						target->uniconify();
 						SetWindowPos((HWND)target -> getwindow() -> handle . window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 					}
 					else
-						target->view_configure(true);
+						target->wreshape(dw);
 				curinfo->handled = True;
 			}
 		}
@@ -1340,7 +1340,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCdispatcher->configure(dw);
+			MCdispatcher->wreshape(dw);
 			curinfo->handled = True;
 		}
 		break;

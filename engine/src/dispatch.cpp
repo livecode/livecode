@@ -1671,11 +1671,22 @@ void MCDispatch::property(Window w, Atom atom)
 {
 }
 
-void MCDispatch::configure(Window w)
+void MCDispatch::wreshape(Window p_window)
 {
-	MCStack *target = findstackd(w);
-	if (target != NULL)
-		target->view_configure(true);
+	MCStack *t_stack;
+	t_stack = findstackd(p_window);
+	if (t_stack == nil)
+		return;
+	
+	t_stack -> view_configure(true);
+	
+	// The wreshape() invocation occurs as a direct result of a system resize window
+	// request. These can occur whilst nested inside a system modal loop thus the normal
+	// force unlock which occurs at the root loop does not happen. Therefore we
+	// do that here to ensure that a 'lock screen' inside a resizeStack does not cause
+	// subsequent resize requests (in the same user resizing action) to not have an
+	// effect.
+	MCRedrawForceUnlockScreen();
 }
 
 void MCDispatch::enter(Window w)
