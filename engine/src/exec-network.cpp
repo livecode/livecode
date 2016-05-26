@@ -66,7 +66,6 @@ MC_EXEC_DEFINE_EXEC_METHOD(Network, ReadFromSocketUntil, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, WriteToSocket, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, PutIntoUrl, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Network, ReturnValueAndUrlResult, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Network, ReturnValueAndUrlResultFromVar, 2)
 MC_EXEC_DEFINE_GET_METHOD(Network, UrlResponse, 1)
 MC_EXEC_DEFINE_GET_METHOD(Network, FtpProxy, 1)
 MC_EXEC_DEFINE_SET_METHOD(Network, FtpProxy, 1)
@@ -784,17 +783,6 @@ void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef p_resu
 		return;
 	
 	ctxt . Throw();
-}
-
-void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef p_result, MCVarref *p_variable)
-{
-    MCAutoValueRef t_value;
-    if (!ctxt . EvalExprAsValueRef(p_variable, EE_RETURN_BADEXP, &t_value))
-        return;
-	
-	ctxt . SetTheResultToValue(p_result);
-	MCurlresult -> set(ctxt, *t_value);
-	p_variable -> dofree(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

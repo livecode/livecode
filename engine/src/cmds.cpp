@@ -1887,8 +1887,7 @@ void MCReset::compile(MCSyntaxFactoryRef ctxt)
 MCReturn::~MCReturn()
 {
 	delete source;
-	delete url;
-	delete var;
+	delete extra_source;
 }
 
 Parse_stat MCReturn::parse(MCScriptPoint &sp)
@@ -1902,26 +1901,13 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 	}
 	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 	{
-		if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_URL))
-		{
-			// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
-			//   execution outwith a handler.
-			Symbol_type type;
-			if (sp.next(type) != PS_NORMAL || sp.findvar(sp.gettoken_nameref(), &var) != PS_NORMAL)
-				sp.backup();
-			else
-				var->parsearray(sp);
-		}
-		if (var == NULL)
-		{
-			sp.skip_token(SP_FACTOR, TT_FUNCTION, F_CACHED_URLS);
-			if (sp.parseexp(False, True, &url) != PS_NORMAL)
-			{
-				MCperror->add
-				(PE_RETURN_BADEXP, sp);
-				return PS_ERROR;
-			}
-		}
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_URL_RESULT) == PS_NORMAL)
+            is_with_urlresult = true;
+        if (sp.parseexp(False, True, &extra_source) != PS_NORMAL)
+        {
+            MCperror->add(PE_RETURN_BADEXP, sp);
+            return PS_ERROR;
+        }
 	}
 	return PS_NORMAL;
 }
@@ -1967,22 +1953,25 @@ void MCReturn::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . EvalExprAsValueRef(source, EE_RETURN_BADEXP, &t_result))
         return;
 	
-	if (url != nil)
-	{
-		MCAutoValueRef t_url_result;
-        if (!ctxt . EvalExprAsValueRef(url, EE_RETURN_BADEXP, &t_url_result))
+	if (extra_source == nil)
+    {
+        MCEngineExecReturnValue(ctxt, *t_result);
+    }
+    else
+    {
+        MCAutoValueRef t_extra_result;
+        if (!ctxt . EvalExprAsValueRef(extra_source, EE_RETURN_BADEXP, &t_extra_result))
             return;
-
-		MCNetworkExecReturnValueAndUrlResult(ctxt, *t_result, *t_url_result);
-	}
-	else if (var != nil)
-	{
-		MCNetworkExecReturnValueAndUrlResultFromVar(ctxt, *t_result, var);
-	}
-	else
-	{
-		MCEngineExecReturnValue(ctxt, *t_result);
-	}
+        
+        if (!is_with_urlresult)
+        {
+            MCEngineExecReturnValueAndIt(ctxt, *t_result, *t_extra_result);
+        }
+        else
+        {
+            MCNetworkExecReturnValueAndUrlResult(ctxt, *t_result, *t_extra_result);
+        }
+    }
 	
 	if (!ctxt . HasError())
         ctxt . SetIsReturnHandler();
@@ -1999,18 +1988,22 @@ void MCReturn::compile(MCSyntaxFactoryRef ctxt)
 
 	source -> compile(ctxt);
 
-	if (url != nil)
-	{
-		url -> compile(ctxt);
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReturnValueAndUrlResultMethodInfo);
+    if (extra_source == nil)
+    {
+        MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecReturnValueMethodInfo);
+    }
+    else
+    {
+        extra_source -> compile(ctxt);
+        if (!is_with_urlresult)
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecReturnValueAndItMethodInfo);
+        }
+        else
+        {
+            MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReturnValueAndUrlResultMethodInfo);
+        }
 	}
-	else if (var != nil)
-	{
-		MCSyntaxFactoryEvalConstant(ctxt, var);
-		MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecReturnValueAndUrlResultFromVarMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecReturnValueMethodInfo);
 
 	MCSyntaxFactoryEndStatement(ctxt);
 }

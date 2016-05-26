@@ -1,4 +1,4 @@
-﻿script "revLibURL"
+script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
 on revLoadLibrary
@@ -193,11 +193,7 @@ on getUrl x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
-      if "2.4.1" is in the version then
-         return  empty  with  laLoadedUrls[newUrl]
-      else
-         return  empty  with cachedUrl laLoadedUrls[newUrl]
-      end if
+      return empty  with urlResult laLoadedUrls[newUrl]
    end if
    if newUrl is among the lines of keys(laLoadingUrls) and (lvAuthBlockBypass is not true) then
       return "error  URL is currently loading" with empty
@@ -223,21 +219,16 @@ on getUrl x
          
          put laUrlErrorStatus[newUrl] into tRetResult
          delete local  laUrlErrorStatus[newUrl]
-         if "2.4.1" is in the version then
-            ##for mc 2.4.1 engine only
-            put laData[newUrl] into tRetData ##swap data before deleting laData
-            delete local laData[newUrl]
-            put empty into lvBlockingUrl ##clear
-            return tRetResult  with tRetData
-         else
-            put empty into lvBlockingUrl ##clear
-            return tRetResult with url laData[newUrl]
-         end if
+
+         put laData[newUrl] into tRetData ##swap data before deleting laData
+         delete local laData[newUrl]
+         put empty into lvBlockingUrl ##clear
+         return tRetResult with urlResult tRetData
       else
          return 1
       end if
    else ##blocked by previous request
-      return "error Previous request not completed" with empty
+      return "error Previous request not completed" with urlResult empty
    end if
 end getUrl
 
@@ -249,7 +240,7 @@ on postUrl y,x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
    if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true then
       put newUrl into lvBlockingUrl
@@ -272,23 +263,18 @@ on postUrl y,x
          
          put laUrlErrorStatus[newUrl] into tRetResult
          delete local  laUrlErrorStatus[newUrl]
-         if "2.4.1" is in the version then
-            ##for mc 2.4.1 engine only
-            put laData[newUrl] into tRetData
-            delete local laData[newUrl]
-            put empty into lvBlockingUrl ##clear
-            return tRetResult  with tRetData
-         else
-            put empty into lvBlockingUrl ##clear
-            return tRetResult with url laData[newUrl]
-         end if
+
+         put laData[newUrl] into tRetData
+         delete local laData[newUrl]
+         put empty into lvBlockingUrl ##clear
+         return tRetResult with urlResult tRetData
       else
          return 1
       end if
       -----------------------------------
    else ##blocked by previous request
       put "error Previous request not completed" into tRetResult
-      return tRetResult with empty
+      return tRetResult with urlResult empty
    end if
 end postUrl
 
@@ -300,7 +286,7 @@ on putUrl y,x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
    if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true then
       put newUrl into lvBlockingUrl
@@ -323,16 +309,11 @@ on putUrl y,x
          
          put laUrlErrorStatus[newUrl] into tRetResult
          delete local  laUrlErrorStatus[newUrl]
-         if "2.4.1" is in the version then
-            ##for mc 2.4.1 engine only
-            put laData[newUrl] into tRetData
-            delete local laData[newUrl]
-            put empty into lvBlockingUrl ##clear
-            return tRetResult  with tRetData
-         else
-            put empty into lvBlockingUrl ##clear
-            return tRetResult with url laData[newUrl]
-         end if
+
+         put laData[newUrl] into tRetData
+         delete local laData[newUrl]
+         put empty into lvBlockingUrl ##clear
+         return tRetResult with urlResult tRetData
       else
          return 1
       end if
@@ -340,7 +321,7 @@ on putUrl y,x
       
    else ##blocked by previous request
       put "error Previous request not completed" into tRetResult
-      return tRetResult with empty
+      return tRetResult with urlResult empty
    end if
 end putUrl
 
@@ -351,7 +332,7 @@ on deleteUrl x
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
    if newUrl is among the lines of keys(laLoadingUrls) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
    if lvBlockingUrl is empty  or lvBlockBypass is true then
       put newUrl into lvBlockingUrl
@@ -368,21 +349,16 @@ on deleteUrl x
       delete local laStatus[newUrl]
       put laUrlErrorStatus[newUrl] into tRetResult
       delete local  laUrlErrorStatus[newUrl]
-      if "2.4.1" is in the version then
-         ##for mc 2.4.1 engine only
-         put laData[newUrl] into tRetData
-         delete local laData[newUrl]
-         put empty into lvBlockingUrl ##clear
-         return tRetResult  with tRetData
-      else
-         put empty into lvBlockingUrl ##clear
-         return tRetResult with url laData[newUrl]
-      end if
+
+      put laData[newUrl] into tRetData
+      delete local laData[newUrl]
+      put empty into lvBlockingUrl ##clear
+      return tRetResult with urlResult tRetData
       -----------------------------------
       
    else ##blocked by previous request
       put "error Previous request not completed" into tRetResult
-      return tRetResult with empty
+      return tRetResult with urlResult empty
    end if
 end deleteUrl
 
