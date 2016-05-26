@@ -17,7 +17,7 @@ set the spray to 30
 
 Value:
 The <spray> is a brush specifier.
-A <brushID> is a built-in brush number between 1 and 100. (These brushes correspond to LiveCode's built-in patterns 100 to 135.)
+A <brushID> is a built-in brush number between 1 and 35. (These brushes correspond to LiveCode's built-in patterns 101 to 135.)
 
 An <imageID> is the ID of an <image> to use for painting with the spray can. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
 
