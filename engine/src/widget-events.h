@@ -173,6 +173,10 @@ private:
     
     // The common implementation of event bubbling.
     bool doBubbleEvent(bool always_bubble, MCWidgetRef target, bool (*action)(void *context, MCWidgetRef widget, bool&), void *context);
+	
+	// A method to check for the problem when mouse_focus is not in-sync with
+	// the script object's side of mouse_focus.
+	bool check_mouse_focus(MCWidget *widget, const char *event);
 };
 
 #endif // ifndef __MC_WIDGET_EVENTS__
