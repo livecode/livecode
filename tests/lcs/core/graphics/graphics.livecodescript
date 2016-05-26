@@ -103,9 +103,9 @@ end TestBrushWithNoIcons
 
 on TestInitialPaintConditions
 #	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	TestAssert "brush is initially 8", the brush is 8
-	TestAssert "spray is initially 34", the spray is 34
-	TestAssert "eraser is initially 2", the eraser is 2
+	TestAssert "brush is initially 108", the brush is 108
+	TestAssert "spray is initially 134", the spray is 134
+	TestAssert "eraser is initially 102", the eraser is 102
 	
 	TestAssert "the centered is initially false", the centered is false
 	TestAssert "the filled is initially false", the filled is false
@@ -131,21 +131,21 @@ end TestInitialPaintConditions
 
 on TestBadBrush100
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	set the brush to 8
+	set the brush to 108
 	TestAssert "no brush with id=100", SetBrush100() is not 100
-	TestAssert "brush image not found", the brush is 8
+	TestAssert "brush image not found", the brush is 108
 end TestBadBrush100
 
 on TestBadBrushZero
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	set the brush to 8
+	set the brush to 108
 	TestAssert "no brush with id=0", SetBrushZero() is not zero
-	TestAssert "brush image not found", the brush is 8
+	TestAssert "brush image not found", the brush is 108
 end TestBadBrushZero
 
 function SetBrushNoIcons
 	try
-		set the brush to 2
+		set the brush to 102
 	catch e
 		TestDiagnostic e
 	end try
@@ -172,8 +172,8 @@ end SetBrushZero
 
 on TestBrush
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	set the brush to 30
-	TestAssert "brush < 35 unchanged", the brush is 30
+	set the brush to 234
+	TestAssert "brush 234 unchanged", the brush is 234
 end TestBrush
 
 on TestRemappedBrush
@@ -182,19 +182,20 @@ on TestRemappedBrush
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	repeat with tBrush = 101 to 136
 		set the brush to tBrush
-		TestAssert "setting brush to" && tBrush && "subtracts 100", the brush is (tBrush-100)
+#		TestAssert "setting brush to" && tBrush && "subtracts 100", the brush is (tBrush-100)
+		TestAssert "no remapping of brush" && tBrush, the brush is tBrush
 	end repeat
 end TestRemappedBrush
 
-on TestBrushInBounds
-	local tBrush
+#on TestBrushInBounds
+#	local tBrush
 	
-	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	repeat with tBrush = 1 to 36
-		set the brush to tBrush
-		TestAssert "setting brush to" && tBrush && "is unchanged", the brush is tBrush
-	end repeat
-end TestBrushInBounds
+#	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
+#	repeat with tBrush = 1 to 36
+#		set the brush to tBrush
+#		TestAssert "setting brush to" && tBrush && "is unchanged", the brush is tBrush
+#	end repeat
+#end TestBrushInBounds
 
 on TestBrushBoundaries
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
@@ -206,22 +207,22 @@ end TestBrushBoundaries
 
 on TestSpray
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	set the spray to 2
-	TestAssert "directly setting the spray", the spray is 2
+	set the spray to 102
+	TestAssert "directly setting the spray", the spray is 102
 end TestSpray
 
 on TestEraser
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
-	set the eraser to 8
-	TestAssert "directly setting the eraser", the eraser is 8
+	set the eraser to 108
+	TestAssert "directly setting the eraser", the eraser is 108
 end TestEraser
 
 on TestResetPaint
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	reset paint
-	TestAssert "brush is reset to 8", the brush is 8
-	TestAssert "spray is reset to 34", the spray is 34
-	TestAssert "eraser is reset to 2", the eraser is 2
+	TestAssert "brush is reset to 8", the brush is 108
+	TestAssert "spray is reset to 34", the spray is 134
+	TestAssert "eraser is reset to 2", the eraser is 102
 	
 	TestAssert "the centered is reset to false", the centered is false
 	TestAssert "the filled is reset to false", the filled is false
