@@ -1687,6 +1687,9 @@ void MCDispatch::wreshape(Window p_window)
 	// subsequent resize requests (in the same user resizing action) to not have an
 	// effect.
 	MCRedrawForceUnlockScreen();
+
+	// Now make sure we force an update screen.
+	MCRedrawUpdateScreen();
 }
 
 void MCDispatch::enter(Window w)
