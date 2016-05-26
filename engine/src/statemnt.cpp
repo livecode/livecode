@@ -383,6 +383,30 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 void MCComref::exec_ctxt(MCExecContext& ctxt)
 {
     MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, false);
+    
+    if (MCresultmode == kMCExecResultModeReturn)
+    {
+        // Do nothing!
+    }
+    else if (MCresultmode == kMCExecResultModeReturnValue)
+    {
+        // Set 'it' to the result and clear the result
+        MCAutoValueRef t_value;
+        if (!MCresult->eval(ctxt, &t_value))
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        ctxt.SetItToValue(*t_value);
+        ctxt.SetTheResultToEmpty();
+    }
+    else if (MCresultmode == kMCExecResultModeReturnError)
+    {
+        // Set 'it' to empty
+        ctxt.SetItToEmpty();
+        // Leave the result as is
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

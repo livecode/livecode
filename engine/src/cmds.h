@@ -317,14 +317,22 @@ public:
 
 class MCReturn : public MCStatement
 {
+    enum Kind
+    {
+        kReturn,
+        kReturnValue,
+        kReturnError,
+        kReturnWithUrlResult,
+    };
 	MCExpression *source;
-	MCExpression *url;
-	MCVarref *var;
+	MCExpression *extra_source;
+    Kind kind;
 public:
 	MCReturn()
 	{
-		source = url = NULL;
-		var = NULL;
+        source = NULL;
+        extra_source = NULL;
+        kind = kReturn;
 	}
 	virtual ~MCReturn();
 	virtual Parse_stat parse(MCScriptPoint &);
