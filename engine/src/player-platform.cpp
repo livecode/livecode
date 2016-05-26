@@ -110,9 +110,9 @@ inline MCGPoint MCRectangleScalePoints(MCRectangle p_rect, MCGFloat p_x, MCGFloa
     return MCGPointMake(p_rect . x + p_x * p_rect . width, p_rect . y + p_y * p_rect . height);
 }
 
-inline uint32_t _muludiv64(uint32_t p_multiplier, uint64_t p_numerator, uint64_t p_denominator)
+inline uint64_t _muludiv64(uint64_t p_multiplier, uint64_t p_numerator, uint64_t p_denominator)
 {
-    return (uint32_t)((((uint64_t)p_multiplier) * p_numerator) / p_denominator);
+    return ((p_multiplier * p_numerator) / p_denominator);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2800,7 +2800,7 @@ void MCPlayer::currenttimechanged(void)
         if ((MCmodifierstate & MS_SHIFT) == 0)
             playpause(True);
         
-        uint32_t t_current_time;
+        MCPlayerDuration t_current_time;
         t_current_time = getmoviecurtime();
         
         if (t_current_time < endtime && t_current_time > starttime)
@@ -3954,7 +3954,7 @@ void MCPlayer::handle_mdown(int p_which)
             
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             
-            uint32_t t_new_time, t_duration;
+            MCPlayerDuration t_new_time, t_duration;
             t_duration = getduration();
             
             // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
@@ -4017,7 +4017,7 @@ void MCPlayer::handle_mdown(int p_which)
             // PM-2014-08-12: [[ Bug 13120 ]] Option (alt) + click on the scrub buttons takes to beginning / end
             if (hasfilename() && (MCmodifierstate & MS_ALT) != 0)
             {
-                uint32_t t_duration;
+                MCPlayerDuration t_duration;
                 t_duration = getduration();
                 setcurtime(t_duration, true);
                 break;
@@ -4085,7 +4085,7 @@ void MCPlayer::handle_mfocus(int x, int y)
             {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
-                int32_t t_new_time, t_duration;
+                MCPlayerDuration t_new_time, t_duration;
                 t_duration = getduration();
                 
                 if (x < t_part_well_rect . x)
@@ -4107,7 +4107,7 @@ void MCPlayer::handle_mfocus(int x, int y)
             case kMCPlayerControllerPartSelectionStart:
             {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
-                uint32_t t_new_start_time, t_duration;
+                MCPlayerDuration t_new_start_time, t_duration;
                 t_duration = getduration();
                 
                 // PM-2014-07-08: [[Bug 12759]] Make sure we don't drag the selection start beyond the start point of the player
@@ -4136,7 +4136,7 @@ void MCPlayer::handle_mfocus(int x, int y)
             {
                 MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
                 
-                uint32_t t_new_finish_time, t_duration;
+                MCPlayerDuration t_new_finish_time, t_duration;
                 t_duration = getduration();
                 
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_finish_time will not overflow
@@ -4181,7 +4181,7 @@ void MCPlayer::handle_mstilldown(int p_which)
     {
         case kMCPlayerControllerPartScrubForward:
         {
-            uint32_t t_current_time, t_duration;
+            MCPlayerDuration t_current_time, t_duration;
             t_current_time = getmoviecurtime();
             t_duration = getduration();
             
@@ -4203,7 +4203,7 @@ void MCPlayer::handle_mstilldown(int p_which)
             
         case kMCPlayerControllerPartScrubBack:
         {
-            uint32_t t_current_time, t_duration;
+            MCPlayerDuration t_current_time, t_duration;
             t_current_time = getmoviecurtime();
             t_duration = getduration();
             
@@ -4293,7 +4293,7 @@ void MCPlayer::handle_shift_mdown(int p_which)
             MCRectangle t_part_well_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartWell);
             MCRectangle t_part_thumb_rect = getcontrollerpartrect(getcontrollerrect(), kMCPlayerControllerPartThumb);
             
-            uint32_t t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
+            MCPlayerDuration t_new_time, t_old_time, t_duration, t_old_start, t_old_end;;
             t_old_time = getmoviecurtime();
             t_duration = getduration();
             
@@ -4477,7 +4477,7 @@ void MCPlayer::shift_play()
     m_modify_selection_while_playing = true;
     
     // PM-2014-08-05: [[ Bug 13063 ]] Make sure shift + play sets the starttime to the currenttime if there is previously no selection
-    uint32_t t_old_time;
+    MCPlayerDuration t_old_time;
     t_old_time = getmoviecurtime();
     
     // If there was previously no selection, then take it to be currenttime, currenttime.

@@ -850,7 +850,7 @@ bool MCWin32DSPlayer::Play()
 	if (m_state == kMCWin32DSPlayerStopped)
 	{
 		// if play has stopped, then reset stream to the beginning
-		uint32_t t_start_position = 0;
+		MCPlatformPlayerDuration t_start_position = 0;
 		if (m_play_selection && m_start_position < m_finish_position)
 			t_start_position = m_start_position;
 
