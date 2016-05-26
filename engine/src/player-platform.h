@@ -79,6 +79,9 @@ class MCPlayer : public MCControl, public MCPlayerInterface
 
     bool m_should_recreate : 1;
 
+	bool m_extra_starttime;
+	bool m_extra_endtime;
+
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
 

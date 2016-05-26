@@ -1771,9 +1771,12 @@ IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 		if (t_stat == IO_NORMAL)
 			t_stat = checkloadstat(p_stream . Mark());
 		
-		if (t_stat == IO_NORMAL && (t_flags & PLAYER_EXTRA_STARTPOSITION) != 0)
+		m_extra_starttime = (t_flags & PLAYER_EXTRA_STARTPOSITION) != 0;
+		m_extra_endtime = (t_flags & PLAYER_EXTRA_ENDPOSITION) != 0;
+
+		if (t_stat == IO_NORMAL && m_extra_starttime)
 			t_stat = checkloadstat(p_stream . ReadU64(starttime));
-		if (t_stat == IO_NORMAL && (t_flags & PLAYER_EXTRA_ENDPOSITION) != 0)
+		if (t_stat == IO_NORMAL && m_extra_endtime)
 			t_stat = checkloadstat(p_stream . ReadU64(endtime));
 
 		if (t_stat == IO_NORMAL)
@@ -1791,12 +1794,15 @@ IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version
 
 IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
+	bool t_extended;
+	t_extended = (starttime > UINT32_MAX) || (endtime > UINT32_MAX);
+
 	IO_stat stat;
 	if (!disposable)
 	{
 		if ((stat = IO_write_uint1(OT_PLAYER, stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = MCControl::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
+		if ((stat = MCControl::save(stream, p_part, p_force_ext || t_extended, p_version)) != IO_NORMAL)
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -1821,6 +1827,8 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
     
+	m_extra_starttime = m_extra_endtime = false;
+
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return checkloadstat(stat);
 	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
@@ -1833,8 +1841,10 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&t_endtime, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
-	starttime = t_starttime;
-	endtime = t_endtime;
+	if (!m_extra_starttime)
+		starttime = t_starttime;
+	if (!m_extra_endtime)
+		endtime = t_endtime;
 
 	int4 trate;
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
