@@ -4104,8 +4104,6 @@ void MCPlayer::handle_mfocus(int x, int y)
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
                 t_new_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
-                if (t_new_time < 0)
-                    t_new_time = 0;
                 setcurtime(t_new_time, true);
                 
                 layer_redrawall();
@@ -4127,15 +4125,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_start_time will not overflow
                 t_new_start_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
-                if (t_new_start_time >= endtime)
-                    t_new_start_time = endtime;
-                
-                if (t_new_start_time <= 0)
-                    starttime = 0;
-                else if (t_new_start_time > getduration())
-                    starttime = getduration();
-                else
-                    starttime = t_new_start_time;
+				starttime = MCMin(MCMin(t_new_start_time, endtime), t_duration);
                 
                 setselection(true);
                 
@@ -4155,12 +4145,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 if (t_new_finish_time <= starttime)
                     t_new_finish_time = starttime;
                 
-                if (t_new_finish_time <= 0)
-                    endtime = 0;
-                else if (t_new_finish_time > getduration())
-                    endtime = getduration();
-                else
-                    endtime = t_new_finish_time;
+				endtime = MCMin(t_new_finish_time, t_duration);
                 
                 setselection(true);
                 
