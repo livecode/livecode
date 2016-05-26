@@ -339,7 +339,6 @@ extern uint2 MCndashes;
 extern uint2 MCroundradius;
 extern Boolean MCmultiple;
 extern uint2 MCmultispace;
-extern uint4 MCpattern;
 extern uint2 MCpolysides;
 extern Boolean MCroundends;
 extern uint2 MCslices;
