@@ -399,6 +399,7 @@ case ${OS} in
     ;;
   win)
     invoke_gyp $basic_args "-Gmsvs_version=${WIN_MSVS_VERSION}" \
+                           "-Dunix_configure=1" \
                            "-Dperl=${WIN_PERL}" "$@"
     ;;
   mac|ios)

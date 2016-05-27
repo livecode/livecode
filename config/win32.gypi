@@ -8,6 +8,9 @@
 		'ms_speech_sdk4%': '$(foo)C:/Program Files/Microsoft Speech SDK',
 		'ms_speech_sdk5%': '$(foo)C:/Program Files/Microsoft Speech SDK 5.1',
 		
+		# Set if the Gyp step is being run on a Unix-like host (i.e not Windows)
+		'unix_configure%': '0',
+		
 		'output_dir': '../win-<(target_arch)-bin',
 	},
 	
