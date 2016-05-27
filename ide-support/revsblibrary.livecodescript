@@ -2236,3 +2236,80 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
       put true into xSettings["revolutionPrintDialogs"]
    end if
 end revCheckObject
+
+
+function revSBEnginePath pPlatform
+   local tEdition
+   put the editionType into tEdition
+   // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+   //  allow to create broken applications, so that the executable file in it bears the edition.
+   if tEdition is "professional" then
+      put "Commercial" into tEdition
+   end if
+   
+   -- MW-2013-06-13: [[ CloneAndRun ]] If not installed, then fetch the engine locally.
+   if revEnvironmentIsInstalled() then
+      # MW-2009-06-24: For Mac OS X, engine source is two lines, first is PPC (if any), second
+      #   is x86 (if any). Both implies universal build.
+      -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
+      local tRuntimePath
+      put revEnvironmentRuntimePath() into tRuntimePath
+      switch pPlatform
+         case "MacOSX"
+         case "MacOSX PowerPC-32"
+         case "MacOSX x86-32"
+         case "MacOSX x86-64"
+            // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+            //  allow to create broken applications, so that the executable file in it bears the edition.
+            put the upper of char 1 of tEdition into char 1 of tEdition
+            return tRuntimePath & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition
+            break
+         case "Windows"
+            return tRuntimePath & "/Windows/x86-32/Standalone"
+            break
+         case "Linux"
+            return tRuntimePath & "/Linux/x86-32/Standalone"
+            break
+            -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
+         case "Linux x64"
+            return tRuntimePath & "/Linux/x86-64/Standalone"
+            break
+            -- FG-2014-08-19: [[ RPi ]] Compute the correct path for ARMv6 Linux
+         case "Linux armv6-hf"
+            return tRuntimePath & "/Linux/armv6-hf/Standalone"
+            break
+         default
+            return "error"
+            break
+      end switch
+   else
+      -- Make sure the platform is correct
+      // SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen
+      //  for another platform, from the repository.
+      local tBinariesPath
+      
+      if pPlatform contains "MacOSX" and the platform is not "macos" or \
+            pPlatform contains "Linux" and the platform is not "linux" or \
+            pPlatform is "Windows" and the platform is not "win32" then
+         put revEnvironmentNonNativeBinariesPath(pPlatform) into tBinariesPath
+      else
+         put revEnvironmentBinariesPath() into tBinariesPath
+      end if
+      
+      switch word 1 of pPlatform
+         case "MacOSX"
+            put the upper of char 1 of tEdition into char 1 of tEdition
+            return tBinariesPath & "/Standalone-" & tEdition & ".app/Contents/MacOS/Standalone-" & tEdition
+            break;
+         case "Windows"
+            return tBinariesPath & slash & "standalone-" & tEdition & ".exe"
+            break
+         case "Linux"
+            return tBinariesPath & slash & "standalone-" & tEdition
+            break
+         default
+            return empty
+            break
+      end switch
+   end if
+end revSBEnginePath

@@ -540,16 +540,6 @@ private command revCreateStandalone pStack, pFolder
       dispatch "savingStandalone" to stack tStackFileName
    end try
    
-   local tEdition
-   put the editionType into tEdition
-   // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
-   //  allow to create broken applications, so that the executable file in it bears the edition.
-   if tEdition is "professional" then
-      put "Commercial" into tEdition
-   else
-      put the upper of char 1 of tEdition into char 1 of tEdition
-   end if
-   
    --so now we have a list of output directories in sDirectoryList
    put the fileType into sResetA["FileType"]
    put 1 into tCount
@@ -558,79 +548,11 @@ private command revCreateStandalone pStack, pFolder
       -- copy files to each directory
       -- put the path to the engine into tEngineSourceFile[tPlatform]
       
-      -- MW-2013-06-13: [[ CloneAndRun ]] If not installed, then fetch the engine locally.
-      if revEnvironmentIsInstalled() then
-         # MW-2009-06-24: For Mac OS X, engine source is two lines, first is PPC (if any), second
-         #   is x86 (if any). Both implies universal build.
-         -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
-         get revEnvironmentRuntimePath() --into tEngineSourceFile[tPlatform]
-         switch tPlatform
-            case "MacOSX"
-            case "MacOSX PowerPC-32"
-            case "MacOSX x86-32"
-            case "MacOSX x86-64"
-               put it & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition into line 1 of tEngineSourceFile[tPlatform]
-               break
-            case "Windows"
-               put it & "/Windows/x86-32/Standalone" into tEngineSourceFile[tPlatform]
-               break
-            case "Linux"
-               put it & "/Linux/x86-32/Standalone" into tEngineSourceFile[tPlatform]
-               break
-               -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
-            case "Linux x64"
-               put it & "/Linux/x86-64/Standalone" into tEngineSourceFile[tPlatform]
-               break
-               -- FG-2014-08-19: [[ RPi ]] Compute the correct path for ARMv6 Linux
-            case "Linux armv6-hf"
-               put it & "/Linux/armv6-hf/Standalone" into tEngineSourceFile[tPlatform]
-               break
-            default
-               put "error" into tEngineSourceFile[tPlatform]
-               break
-         end switch
-      else
-         -- Make sure the platform is correct
-         // SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen
-         //  for another platform, from the repository.
-         local tBinariesPath
-         
-         if tPlatform contains "MacOSX" and the platform is not "macos" or \
-               tPlatform contains "Linux" and the platform is not "linux" or \
-               tPlatform is "Windows" and the platform is not "win32" then
-            put revEnvironmentNonNativeBinariesPath(tPlatform) into tBinariesPath
-         else
-            put revEnvironmentBinariesPath() into tBinariesPath
-         end if
-         
-         switch word 1 of tPlatform
-            case "MacOSX"
-               put tBinariesPath & "/Standalone-" & tEdition & ".app/Contents/MacOS/Standalone-" & tEdition into tEngineSourceFile[tPlatform]
-               break;
-            case "Windows"
-               if revLicenseType() is "community" then
-                  put tBinariesPath & slash & "standalone-community.exe" into tEngineSourceFile[tPlatform]
-               else
-                  put tBinariesPath & slash & "standalone-commercial.exe" into tEngineSourceFile[tPlatform]
-               end if
-               break
-            case "Linux"
-               if revLicenseType() is "community" then
-                  put tBinariesPath & slash & "standalone-community" into tEngineSourceFile[tPlatform]
-               else
-                  put tBinariesPath & slash & "standalone-commercial" into tEngineSourceFile[tPlatform]
-               end if
-               break
-            default
-               put empty into tEngineSourceFile[tPlatform]
-               break
-         end switch
-      end if
-      
+      put revSBEnginePath(tPlatform) into tEngineSourceFile[tPlatform]
       -- Necessary as some "users" might rename the actual executable file, arghhhh!
-      if (line 1 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 1 of tEngineSourceFile[tPlatform]) and \
-            (line 2 of tEngineSourceFile[tPlatform] is not empty and there is not a file line 2 of tEngineSourceFile[tPlatform]) then
-         throw "Standalone: Ensure that you have not renamed the main LiveCode executable file: " &cr& tEngineSourceFile[tPlatform]
+      if tEngineSourceFile[tPlatform] is not empty and there is not a file tEngineSourceFile[tPlatform] then
+         throw "Standalone: Ensure that you have not renamed the main LiveCode executable file: " \
+               & return & tEngineSourceFile[tPlatform]
       end if
       put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath[tPlatform]
       if tPlatform is "Windows" then
