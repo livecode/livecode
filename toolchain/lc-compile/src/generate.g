@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -137,19 +137,19 @@
         OutputWriteI("  <name>", Name, "</name>\n")
         [|
             QueryMetadata(Definitions, "title" -> TitleString)
-            OutputWriteS("  <title>", TitleString, "</title>\n")
+            OutputWriteXmlS("  <title>", TitleString, "</title>\n")
         |]
         [|
             QueryMetadata(Definitions, "author" -> AuthorString)
-            OutputWriteS("  <author>", AuthorString, "</author>\n")
+            OutputWriteXmlS("  <author>", AuthorString, "</author>\n")
         |]
         [|
             QueryMetadata(Definitions, "description" -> DescriptionString)
-            OutputWriteS("  <description>", DescriptionString, "</description>\n")
+            OutputWriteXmlS("  <description>", DescriptionString, "</description>\n")
         |]
         [|
             QueryMetadata(Definitions, "version" -> VersionString)
-            OutputWriteS("  <version>", VersionString, "</version>\n")
+            OutputWriteXmlS("  <version>", VersionString, "</version>\n")
         |]
         OutputWrite("  <license>community</license>\n")
         (|
@@ -215,8 +215,8 @@
         ||
             IsStringEqualToString(Key, "version")
         ||
-            OutputWriteS("  <metadata key=\"", Key, "\">")
-            OutputWriteS("", Value, "</metadata>\n")
+            OutputWriteXmlS("  <metadata key=\"", Key, "\">")
+            OutputWriteXmlS("", Value, "</metadata>\n")
         |)
 
     'rule' GenerateManifestDefinitions(type(_, public, Name, _)):

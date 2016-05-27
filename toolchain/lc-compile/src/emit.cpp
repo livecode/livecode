@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -168,6 +168,7 @@ extern "C" void OutputEnd(void);
 extern "C" void OutputWrite(const char *msg);
 extern "C" void OutputWriteI(const char *left, NameRef name, const char *right);
 extern "C" void OutputWriteS(const char *left, const char *string, const char *right);
+extern "C" void OutputWriteXmlS(const char *left, const char *string, const char *right);
 
 extern "C" int IsBootstrapCompile(void);
 
@@ -1790,6 +1791,70 @@ void OutputWriteI(const char *p_left, NameRef p_name, const char *p_right)
     const char *t_name_string;
     GetStringOfNameLiteral(p_name, &t_name_string);
     OutputWriteS(p_left, t_name_string, p_right);
+}
+
+/* This is the same as OutputWriteS, but escapes special XML
+ * characters (&, ", ', <, >) found in p_string */
+void
+OutputWriteXmlS(const char *p_left,
+                const char *p_string,
+                const char *p_right)
+{
+	struct xml_replacement_t {
+		const char *from, *to;
+	};
+
+	static const struct xml_replacement_t k_replacements[] = {
+		{"&", "&amp;"},
+		{"<", "&lt;"},
+		{">", "&gt;"},
+		{"\"", "&quot;"},
+		{"\'", "&apos;"},
+		{NULL, NULL},
+	};
+
+	if (s_output == NULL)
+	{
+		return;
+	}
+
+	bool t_success = true;
+	MCAutoStringRef t_string;
+	if (t_success)
+	{
+		t_success =
+			MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
+			                        strlen(p_string), kMCStringEncodingUTF8,
+			                        false, &t_string);
+	}
+
+	MCAutoStringRef t_xml_string;
+	if (t_success)
+	{
+		t_success = MCStringMutableCopy(*t_string, &t_xml_string);
+	}
+	for (int i = 0; t_success && k_replacements[i].from != nil; ++i)
+	{
+		t_success = MCStringFindAndReplace(*t_xml_string,
+		                                   MCSTR(k_replacements[i].from),
+		                                   MCSTR(k_replacements[i].to),
+		                                   kMCStringOptionCompareExact);
+	}
+
+	MCAutoStringRefAsUTF8String t_xml_utf8string;
+	if (t_success)
+	{
+		t_success = t_xml_utf8string.Lock(*t_xml_string);
+	}
+
+	if (t_success)
+	{
+		OutputWriteS(p_left, *t_xml_utf8string, p_right);
+	}
+	else
+	{
+		/* UNCHECKED */ abort();
+	}
 }
 
 void OutputEnd(void)
