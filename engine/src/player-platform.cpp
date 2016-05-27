@@ -1705,104 +1705,24 @@ MCControl *MCPlayer::clone(Boolean attach, Object_pos p, bool invisible)
 	return newplayer;
 }
 
-#define PLAYER_EXTRA_STARTPOSITION (1 << 0)
-#define PLAYER_EXTRA_ENDPOSITION (1 << 1)
-
 IO_stat MCPlayer::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
-	// Extended data area for a player consists of:
-	//   tag player_extensions
-	//   if (tag & PLAYER_EXTRA_STARTPOSITION)
-	//     uint64_t startposition
-	//   if (tag & PLAYER_EXTRA_ENDPOSITION)
-	//     uint64_t endposition
-	//
-	//   MCObject::extensions
-	IO_stat t_stat;
-	t_stat = IO_NORMAL;
-
-	uint4 t_flags;
-	t_flags = 0;
-
-	uint4 t_length;
-	t_length = 0;
-
-	// IM-2016-05-24: [[ Bug 17708 ]] If the starttime won't fit in a uint32 then save it here as uint64
-	if (starttime > UINT32_MAX)
-	{
-		t_flags |= PLAYER_EXTRA_STARTPOSITION;
-        // increase t_length to accommodate startposition
-		t_length += sizeof(uint64_t);
-	}
-    
-	// IM-2016-05-24: [[ Bug 17708 ]] If the endtime won't fit in a uint32 then save it here as uint64
-	if (endtime > UINT32_MAX)
-	{
-		t_flags |= PLAYER_EXTRA_ENDPOSITION;
-        // increase t_length to accommodate endposition
-		t_length += sizeof(uint64_t);
-	}
-    
-	if (t_stat == IO_NORMAL)
-		t_stat = p_stream . WriteTag(t_flags, t_length);
-	
-	if (t_stat == IO_NORMAL && (t_flags & PLAYER_EXTRA_STARTPOSITION) != 0)
-		t_stat = p_stream . WriteU64(starttime);
-
-	if (t_stat == IO_NORMAL && (t_flags & PLAYER_EXTRA_ENDPOSITION) != 0)
-		t_stat = p_stream . WriteU64(endtime);
-
-	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
-
-	return t_stat;
+	return defaultextendedsave(p_stream, p_part, p_version);
 }
 
 IO_stat MCPlayer::extendedload(MCObjectInputStream& p_stream, uint32_t p_version, uint4 p_remaining)
 {
-	IO_stat t_stat;
-	t_stat = IO_NORMAL;
-    
-	if (p_remaining > 0)
-	{
-		uint4 t_flags, t_length, t_header_length;
-		t_stat = checkloadstat(p_stream . ReadTag(t_flags, t_length, t_header_length));
-        
-		if (t_stat == IO_NORMAL)
-			t_stat = checkloadstat(p_stream . Mark());
-		
-		m_extra_starttime = (t_flags & PLAYER_EXTRA_STARTPOSITION) != 0;
-		m_extra_endtime = (t_flags & PLAYER_EXTRA_ENDPOSITION) != 0;
-
-		if (t_stat == IO_NORMAL && m_extra_starttime)
-			t_stat = checkloadstat(p_stream . ReadU64(starttime));
-		if (t_stat == IO_NORMAL && m_extra_endtime)
-			t_stat = checkloadstat(p_stream . ReadU64(endtime));
-
-		if (t_stat == IO_NORMAL)
-			t_stat = checkloadstat(p_stream . Skip(t_length));
-
-		if (t_stat == IO_NORMAL)
-			p_remaining -= t_length + t_header_length;
-	}
-
-	if (t_stat == IO_NORMAL)
-		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
-
-	return t_stat;
+	return defaultextendedload(p_stream, p_version, p_remaining);
 }
 
 IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
-	bool t_extended;
-	t_extended = (starttime > UINT32_MAX) || (endtime > UINT32_MAX);
-
 	IO_stat stat;
 	if (!disposable)
 	{
 		if ((stat = IO_write_uint1(OT_PLAYER, stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = MCControl::save(stream, p_part, p_force_ext || t_extended, p_version)) != IO_NORMAL)
+		if ((stat = MCControl::save(stream, p_part, p_force_ext, p_version)) != IO_NORMAL)
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
@@ -1827,8 +1747,6 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 {
 	IO_stat stat;
     
-	m_extra_starttime = m_extra_endtime = false;
-
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return checkloadstat(stat);
 	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
@@ -1841,10 +1759,8 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if ((stat = IO_read_uint4(&t_endtime, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
-	if (!m_extra_starttime)
-		starttime = t_starttime;
-	if (!m_extra_endtime)
-		endtime = t_endtime;
+	starttime = t_starttime;
+	endtime = t_endtime;
 
 	int4 trate;
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
