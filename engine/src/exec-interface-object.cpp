@@ -3731,8 +3731,6 @@ void MCObject::SetRectProp(MCExecContext& ctxt, bool p_effective, MCRectangle p_
 		{
 			// MW-2011-08-18: [[ Layers ]] Notify of change of rect.
 			static_cast<MCControl *>(this) -> layer_setrect(t_rect, false);
-			// Notify the parent of the resize.
-			resizeparent();
 		}
 		else
 			setrect(t_rect);

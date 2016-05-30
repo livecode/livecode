@@ -343,6 +343,7 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 	if (!opened)
 	{
 		setrect(p_new_rect);
+        resizeparent();
 		return;
 	}
 	
@@ -355,6 +356,7 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 	if (!layer_issprite() && !t_is_visible)
 	{
 		setrect(p_new_rect);
+        resizeparent();
 		return;
 	}
 
@@ -370,6 +372,9 @@ void MCControl::layer_setrect(const MCRectangle& p_new_rect, bool p_redraw_all)
 	setrect(p_new_rect);
 
 	layer_changeeffectiverect(t_old_effectiverect, p_redraw_all, t_is_visible);
+    
+    // Notify the parent of the resize.
+    resizeparent();
 }
 
 void MCControl::layer_rectchanged(const MCRectangle& p_old_rect, bool p_redraw_all)

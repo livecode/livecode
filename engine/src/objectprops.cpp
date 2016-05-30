@@ -1167,8 +1167,6 @@ Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 		{
 			// MW-2011-08-18: [[ Layers ]] Notify of change of rect.
 			static_cast<MCControl *>(this) -> layer_setrect(t_rect, false);
-			// Notify the parent of the resize.
-			resizeparent();
 		}
 		else
 			setrect(t_rect);

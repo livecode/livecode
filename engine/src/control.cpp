@@ -881,9 +881,6 @@ void MCControl::undo(Ustruct *us)
 	
 	// MW-2011-08-18: [[ Layers ]] Set the rect.
 	layer_setrect(newrect, false);
-	
-	// MW-2011-10-03: [[ Scrolling ]] Make sure the parent is notified.
-	resizeparent();
 }
 
 // MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
@@ -1443,9 +1440,6 @@ void MCControl::continuesize(int2 x, int2 y)
 
 	// MW-2011-08-18: [[ Layers ]] Set the rect.
 	layer_setrect(newrect, true);
-	
-	// MW-2011-10-03: [[ Scrolling ]] Make sure the parent is notified.
-	resizeparent();
 }
 
 #define SIZE_HANDLE_HIT_TOLERANCE 1
