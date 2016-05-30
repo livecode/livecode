@@ -1523,7 +1523,7 @@ end revDocsParseHandler
 
 on revDocsUpdateDocBlocksForProperty pData, pComment, @xDataA
    local tName
-   put word 2 of pData into tName
+   put token 1 to -1 of word 2 of pData into tName
    put pComment into xDataA[tName]["comments"]
    put "property" into xDataA[tName]["type"]
    put tName into xDataA[tName]["name"]
