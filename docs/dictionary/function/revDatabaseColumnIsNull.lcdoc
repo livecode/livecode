@@ -39,7 +39,14 @@ The special null value allows the database to differentiate between an unknown v
 
 This means that if the data value of the database field is empty or zero, the <revDatabaseColumnIsNull> <function> returns false. It only returns true if the field's value is not set at all.
 
->*Important:*  The <revDatabaseColumnIsNull> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDatabaseColumnIsNull> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
 The revDatabaseColumnIsNull synonym was added in version 2.0.

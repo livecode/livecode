@@ -67,7 +67,14 @@ get revDataFromQuery(2, "SELECT * FROM Customers WHERE Cust.Name Like '%Inc.'")
 
 If the query is not successful, the <revDataFromQuery> <function> <return|returns> an error message beginning with the <string> "revdberr,". You can test for success by checking whether the first item of the returned value is "revdberr".
 
->*Important:*  The <revDataFromQuery> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revDataFromQuery> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
 The ability to specify array elements in the varsList was added in 2.9.
