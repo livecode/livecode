@@ -6,6 +6,8 @@ Syntax: libURLMultipartFormAddPart(<form data>,<part name>, <value> [,<MIME type
 
 Summary: This function lets you add parts to a multipart form one at a time. It also lets you optionally specify the mime type and transfer encoding for each part. This can be useful where the mime type or transfer encoding has to be specified.
 
+Associations: Internet library
+
 Introduced: 2.5
 
 OS: mac,windows,linux

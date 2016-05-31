@@ -10,6 +10,8 @@ Summary: <return|Returns> a list of the <URL|URLs> that have been <download|down
 
 Synonyms: cachedURL
 
+Associations: Internet library
+
 Introduced: 1.0
 
 OS: mac,windows,linux

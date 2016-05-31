@@ -6,6 +6,8 @@ Syntax: libURLSetCustomHTTPHeaders <headersList>
 
 Summary: Sets the headers to be sent with each request to an <HTTP> <server>.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

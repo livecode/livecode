@@ -6,6 +6,8 @@ Syntax: libURLSetFTPStopTime <timeoutInSeconds>
 
 Summary: Sets the <timeout> value for <FTP> transfers.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

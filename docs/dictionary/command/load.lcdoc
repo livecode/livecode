@@ -6,6 +6,8 @@ Syntax: load [URL] <url> [with message <callbackMessage>]
 
 Summary: <download|Downloads> the <file> specified by a <URL> to a <cache> where it can be used by another <handler>.
 
+Associations: Internet library
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

@@ -6,6 +6,8 @@ Syntax: libURLLastHTTPHeaders()
 
 Summary: <return|Returns> the <value> of the <httpHeaders> <property> used for the previous <HTTP> request.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

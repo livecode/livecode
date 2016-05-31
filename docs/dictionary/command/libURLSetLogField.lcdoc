@@ -8,6 +8,8 @@ Syntax: libURLSetLogField "none"
 
 Summary: Specifies a field for logging information about uploads and downloads.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

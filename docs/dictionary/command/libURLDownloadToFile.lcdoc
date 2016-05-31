@@ -6,6 +6,8 @@ Syntax: libURLDownloadToFile <downloadURL>, <filePath> [, <callbackMessage>]
 
 Summary: <download|Downloads> a file from an Internet <server> asynchronously via FTP, HTTP or HTTPS
 
+Associations: Internet library
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

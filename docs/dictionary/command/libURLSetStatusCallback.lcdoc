@@ -6,6 +6,8 @@ Syntax: libURLSetStatusCallback [<messageName>, <objectLongID>]
 
 Summary: Sets up a <callback|callback message> to be sent periodically during <upload|uploads> and <download|downloads>.
 
+Associations: Internet library
+
 Introduced: 2.0
 
 OS: mac,windows,linux

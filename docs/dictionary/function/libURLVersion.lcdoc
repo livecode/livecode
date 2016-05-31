@@ -6,6 +6,8 @@ Syntax: libURLVersion()
 
 Summary: <return|Returns> the version of the Internet library.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

@@ -6,6 +6,8 @@ Syntax: libURLLastRHHeaders()
 
 Summary: <return|Returns> the headers sent by the remote host in the most recent HTTP transaction.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

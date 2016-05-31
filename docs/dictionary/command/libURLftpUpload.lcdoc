@@ -6,6 +6,8 @@ Syntax: libURLftpUpload <value>, <uploadURL> [, <callbackMessage>]
 
 Summary: <upload|Uploads> data to an Internet <server> asynchronously via <FTP>.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

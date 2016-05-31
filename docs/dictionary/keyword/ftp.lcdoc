@@ -6,6 +6,8 @@ Syntax: ftp
 
 Summary: Used as a <URL> type with such <command|commands> as <put> and <get> to designate a <file> or <folder|directory> on an FTP <server>.
 
+Associations: Internet library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

@@ -6,6 +6,8 @@ Syntax: https
 
 Summary: Used as a <URL> type with such <command|commands> as <put> and <get> to designate a <file> on the World Wide Web.
 
+Associations: Internet library
+
 Introduced: 2.5
 
 OS: mac,windows,linux,ios,android

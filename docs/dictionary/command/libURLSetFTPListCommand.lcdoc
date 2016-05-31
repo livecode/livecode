@@ -6,6 +6,8 @@ Syntax: libURLSetFTPListCommand {"LIST" | "NLST"}
 
 Summary: Switches between sending LIST or NLST formats when listing the contents of an <FTP> <folder|directory>.
 
+Associations: Internet library
+
 Introduced: 2.0
 
 OS: mac,windows,linux

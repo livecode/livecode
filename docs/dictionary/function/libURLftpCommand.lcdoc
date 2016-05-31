@@ -6,6 +6,8 @@ Syntax: libURLftpCommand(<ftpCommandLine>, <host> [: <port>][, <username> [, <pa
 
 Summary: Sends an <FTP> command to an <FTP> <server>.
 
+Associations: Internet library
+
 Introduced: 2.0
 
 OS: mac,windows,linux

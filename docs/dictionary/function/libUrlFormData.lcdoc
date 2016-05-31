@@ -6,6 +6,8 @@ Syntax: libURLFormData(<key_1>, <value_1>, ..., <key_n>, <value_n>)
 
 Summary: <libURLFormData> formats data in the standard format suitable for sending to form processing CGIs and other processes on a web server.
 
+Associations: Internet library
+
 Introduced: 2.5
 
 OS: mac,windows,linux

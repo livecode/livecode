@@ -6,6 +6,8 @@ Syntax: post <data> to URL <destinationURL>
 
 Summary: Sends data to a <web server> using the POST action of <HTTP>.
 
+Associations: Internet library
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

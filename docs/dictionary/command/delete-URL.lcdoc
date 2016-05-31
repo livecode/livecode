@@ -8,6 +8,8 @@ Summary: Removes a <file> or <folder|directory> from a <server>, or removes a <f
 
 Synonyms: clear URL
 
+Associations: Internet library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

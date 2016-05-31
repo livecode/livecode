@@ -8,6 +8,8 @@ Summary: Closes all open <socket|sockets> and halts all pending Internet operati
 
 Synonyms: libURLResetAll
 
+Associations: Internet library
+
 Introduced: 1.1
 
 OS: mac,windows,linux

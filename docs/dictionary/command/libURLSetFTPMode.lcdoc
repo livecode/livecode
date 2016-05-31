@@ -6,6 +6,8 @@ Syntax: libURLSetFTPMode {"active" | "passive"}
 
 Summary: Switches between active and passive mode for FTP transfers.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

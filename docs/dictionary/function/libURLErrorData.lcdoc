@@ -6,6 +6,8 @@ Syntax: libURLErrorData(<url>)
 
 Summary: <return|Returns> any error that was caused during a <download> that was started with the <load> <command>.
 
+Associations: Internet library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux

@@ -8,6 +8,8 @@ Syntax: URLStatus(<url>)
 
 Summary: <return|Returns> the status of <upload|uploads> and <download|downloads> that were started with the <load>, <libURLDownloadToFile>, <libURLftpUpload>, and <libURLftpUploadFile> <command|commands>.
 
+Associations: Internet library
+
 Introduced: 1.0
 
 OS: mac,windows,linux

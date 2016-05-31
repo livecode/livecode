@@ -6,6 +6,8 @@ Syntax: libURLSetAuthCallback
 
 Summary: 
 
+Associations: Internet library
+
 Introduced: 2.5
 
 OS: mac,windows,linux

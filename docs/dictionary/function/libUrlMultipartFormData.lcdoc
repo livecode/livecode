@@ -10,6 +10,8 @@ Syntax: libURLMultipartFormData(<form data>)
 
 Summary: <libURLMultipartFormData> formats data in the way described in RFC 1867.
 
+Associations: Internet library
+
 Introduced: 2.5
 
 OS: mac,windows,linux
