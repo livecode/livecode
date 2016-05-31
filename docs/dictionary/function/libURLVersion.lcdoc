@@ -29,7 +29,13 @@ Use the <libURLVersion> <function> to check whether the Internet library support
 
 There is no special significance to the version number returned by <libURLVersion>.
 
->*Important:*  The <libURLVersion> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLVersion> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
 References: Internet library (library), LiveCode custom library (library), library (library), string (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), version (function), revAppVersion (function), systemVersion (function), return (glossary), main stack (glossary), handler (glossary), Standalone Application Settings (glossary), message (glossary), group (glossary), standalone application (glossary), application (glossary), function (control structure)
 

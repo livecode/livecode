@@ -68,15 +68,19 @@ optional.
 are finished with a <URL>, use the <unload (command)> <command> to 
 remove it from the <cache>.
 
->*Important:*  The <load> <command> is part of the <Internet library on 
-desktop platforms(library)>. To ensure that the <command> works in a 
-<standalone desktop application>, you must include this 
-<LiveCode custom library|custom library> when you create your 
-<standalone application|standalone>. In the Inclusions section of the 
-<Standalone Application Settings> window, make sure Internet Library is 
-selected in the list of script libraries. The iOS and Android engines do 
-not support 'libUrl' but allows you to use <load> in the background.
+>*Important:*  The <load> <command> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <command> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
+>*Cross-platform note:* On iOS and Android, the <load> <command>
+> is implemented in the engine. Therefore the <Internet library> is not 
+> needed to ensure the <command> works in a mobile 
+> <standalone application>. If included, the <Internet library> 
+> implementation will be used instead of the engine implementation.
 
 > *Note:* When specifying URLs for iOS or Android, you must use the
 > appropriate form that conforms to [RFC

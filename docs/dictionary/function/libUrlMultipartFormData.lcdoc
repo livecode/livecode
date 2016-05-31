@@ -66,7 +66,13 @@ end if
 
  You can also call the function with no arguments except the form data. This will return an "empty" form. Basically, line 1 is the header, and line 2 is the final boundary mark of the form. It is of no use by itself, but it can be used with <libURLMultipartFormAddPart>. 
 
->*Important:*  The <libURLMultipartFormData> <function> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLMultipartFormData> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
 See also [RFC 1867](https://tools.ietf.org/html/rfc1867).
 

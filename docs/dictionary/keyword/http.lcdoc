@@ -78,7 +78,18 @@ The following example shows how to set a flag in a global variable to prevent mu
 
 For technical information about URLs and the <http> <URL(keyword)> scheme, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
 
->*Important:*  The <http> <keyword> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:*  The <http> <keyword> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <keyword> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
+
+>*Cross-platform note:* On iOS and Android, you can use the <http> 
+> <keyword> without the need for the <Internet library>. When specifying 
+> <URL(glossary)|URLs> for iOS and Android, you must use the appropriate 
+> form that conforms to [RFC 1630](https://tools.ietf.org/html/rfc1630). 
 
 Changes:
 The http keyword was moved to the Internet library in version 1.1. In previous versions, this functionality was part of the engine.

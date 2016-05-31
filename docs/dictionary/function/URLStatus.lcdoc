@@ -54,10 +54,17 @@ The third item (bytesTotal) in the "loading" or "uploading" status report is emp
 
 If an error occurs during downloading, the <URLStatus> <function> returns "error". You can get the error message using the <libURLErrorData> <function>.
 
->*Important:*  The <URLStatus> <function> is part of the <Internet library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <URLStatus> <function> is part of the 
+> <Internet library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
 Changes:
-The URLStatus function became part of the Internet library in version 1.1. In previous versions, it was not a library function.
+The <URLStatus> <function> became part of the <Internet library> in 
+version 1.1. In previous versions, it was not a library function.
 
 References: URL (keyword), function (control structure), post (command), libURLftpUploadFile (command), libURLftpUpload (command), libURLDownloadToFile (command), load (command), libURLSetStatusCallback (command), libURLLastRHHeaders (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), FTP (glossary), return (glossary), standalone application (glossary), cache (glossary), command (glossary), callback (glossary), Standalone Application Settings (glossary), upload (glossary), download (glossary), message (glossary), server (glossary), handler (glossary), Internet library (library), LiveCode custom library (library)
 

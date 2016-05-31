@@ -46,7 +46,13 @@ The <libURLSetCustomHTTPHeaders> setting replaces the <Internet library|Internet
 
 If you specify a set of headers using the <libURLSetCustomHTTPHeaders> <command>, the <Internet library|Internet library's> <default> headers and the setting of the <httpHeaders> property are ignored, and the headers set by <libURLSetCustomHTTPHeaders> are used instead.
 
->*Important:*  The <libURLSetCustomHTTPHeaders> <command> is part of the <Internet library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:* The <libURLSetCustomHTTPHeaders> <command> is part of the 
+> <Internet library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
 For technical information about the standard headers recognized in the HTTP 1.1 protocol, see [RFC 2616](https://tools.ietf.org/html/rfc2616).
 
