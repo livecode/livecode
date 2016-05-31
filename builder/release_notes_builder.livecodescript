@@ -512,8 +512,10 @@ private command V1NotesSplitHeader pType, pFileInfo, @rHeader, @rBody
       delete line 1 of tBody
    end repeat
    
-   if word 1 of tBody is "#" then
-      put word 2 to -1 of (line 1 of tBody) into rHeader
+   local tFirstLine
+   put word 1 to -1 of (line 1 of tBody) into tFirstLine
+   if tFirstLine begins with "#" then
+      put char 2 to -1 of tFirstLine into rHeader
       put word 1 to -1 of (line 2 to -1 of tBody) into rBody
    end if
    
