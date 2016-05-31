@@ -1485,7 +1485,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void onLocationChanged(double p_latitude, double p_longitude, double p_altitude, float p_timestamp, float p_accuracy, double p_speed, double p_course)
+    public void onLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course)
     {
         // MM-2013-02-21: Added spead and course to location readings.
         doLocationChanged(p_latitude, p_longitude, p_altitude, p_timestamp, p_accuracy, p_speed, p_course);
@@ -3452,7 +3452,7 @@ public class Engine extends View implements EngineApi
 	public static native void doWait(double time, boolean dispatch, boolean anyevent);
 	
     // sensor handlers
-    public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, float p_timestamp, float p_accuracy, double p_speed, double p_course);
+    public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course);
     public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,
                                                float p_x, float p_y, float p_z, float p_accuracy);
 	public static native void doAccelerationChanged(float x, float y, float z, float timestamp);
