@@ -2164,7 +2164,18 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
     //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
 	MCscreen->flush(mystack->getw());
-
+	
+	// Object's cannot be deleted whilst they are executing script. However,
+	// this method will run script when script in the object is *not* running
+	// i.e. during front scripts and passed handlers after the object handler.
+	// Due to this, we need to make sure that the object will not be destroyed
+	// whilst this method is running, but it should still be possible to use
+	// the delete command to delete the target whilst the script which is not
+	// in the object runs. To do this we ask the deleted objects system to
+	// suspend destruction of the object during this method.
+	void *t_deletion_cookie;
+	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
+	
 	MCStack *oldstackptr = MCdefaultstackptr;
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
@@ -2202,7 +2213,9 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		MCdefaultstackptr = oldstackptr;
 	MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
-
+	
+	MCDeletedObjectsOnObjectResumeDeletion(this, t_deletion_cookie);
+	
 	if (stat == ES_ERROR && !MCerrorlock && !MCtrylock)
 	{
 		if (MCnoui)
@@ -5542,6 +5555,7 @@ struct MCDeletedObjectPool
 
 static MCDeletedObjectPool *MCsparedeletedobjectpool = nil;
 static MCDeletedObjectPool *MCdeletedobjectpool = nil;
+static MCDeletedObjectPool *MCrootdeletedobjectpool = nil;
 
 static bool MCDeletedObjectPoolCreate(MCDeletedObjectPool*& r_pool)
 {
@@ -5582,9 +5596,23 @@ void MCDeletedObjectsSetup(void)
     // Setup occurs before the outer wait loop so if we get here we should not
     // have a deletedobjectpool.
     MCAssert(MCdeletedobjectpool == nil);
-    
-    if (!MCMemoryNew(MCdeletedobjectpool))
+	
+	// First create the root object pool - this is only drained right at the end
+	// and will only ever temporarily contain objects which have deletion suspended
+	// whilst they are executing.
+    if (!MCMemoryNew(MCrootdeletedobjectpool))
         return;
+	
+	// Now create the root object pool which is drained during the top-level
+	// event loop.
+	if (!MCMemoryNew(MCdeletedobjectpool))
+		return;
+	
+	// Set the references to 2 - this is the reference from the active deleted object
+	// pool list, and the reference from the MCrootdeletedobjectpool var. This stops
+	// the root pool getting flushed.
+	MCrootdeletedobjectpool -> references = 2;
+	MCdeletedobjectpool -> parent = MCrootdeletedobjectpool;
 }
 
 void MCDeletedObjectsTeardown(void)
@@ -5596,15 +5624,15 @@ void MCDeletedObjectsTeardown(void)
 	// Teardown occurs in X_close and can occur whilst inside a nested wait.
 	// In particular, on Mac the NSApp willTerminate method will never return
 	// meaning there are inbalanced waits on the stack. Therefore, we must
-	// 'LeaveWait' until the MCdeletedobjetpool has a nil parent.
+	// 'LeaveWait' until the MCdeletedobjetpool is the root pool.
 	while(MCdeletedobjectpool -> parent != nil)
 		MCDeletedObjectsLeaveWait(true);
 	
     // Ensure all objects in the pool are deleted.
     MCDeletedObjectsDoDrain();
     
-    MCMemoryDelete(MCdeletedobjectpool);
-    MCdeletedobjectpool = nil;
+    MCMemoryDelete(MCrootdeletedobjectpool);
+    MCrootdeletedobjectpool = nil;
     
     if (MCsparedeletedobjectpool != nil)
     {
@@ -5682,6 +5710,7 @@ void MCDeletedObjectsOnObjectCreated(MCObject *p_object)
 {
     MCdeletedobjectpool -> references += 1;
     p_object -> setdeletedobjectpool(MCdeletedobjectpool);
+	p_object -> setdeletionissuspended(false);
 }
 
 void MCDeletedObjectsOnObjectDeleted(MCObject *p_object)
@@ -5732,6 +5761,33 @@ void MCDeletedObjectsOnObjectDestroyed(MCObject *p_object)
         t_pool = t_pool -> parent;
         MCDeletedObjectPoolDestroy(t_this_pool);
     }
+}
+
+void MCDeletedObjectsOnObjectSuspendDeletion(MCObject *p_object, void*& r_deletion_cookie)
+{
+	if (p_object -> getdeletionissuspended())
+	{
+		r_deletion_cookie = nil;
+		return;
+	}
+	
+	MCDeletedObjectPool *t_pool;
+	t_pool = p_object -> getdeletedobjectpool();
+	
+	MCAssert(t_pool != nil && t_pool -> parent != nil);
+	
+	r_deletion_cookie = t_pool;
+	p_object -> setdeletedobjectpool(t_pool -> parent);
+	p_object -> setdeletionissuspended(true);
+}
+
+void MCDeletedObjectsOnObjectResumeDeletion(MCObject *p_object, void *p_deletion_cookie)
+{
+	if (p_deletion_cookie == nil)
+		return;
+	
+	p_object -> setdeletedobjectpool((MCDeletedObjectPool *)p_deletion_cookie);
+	p_object -> setdeletionissuspended(false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

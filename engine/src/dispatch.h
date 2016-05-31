@@ -174,7 +174,6 @@ public:
 
 	void kfocusset(Window w);
 	void property(Window w, Atom atom);
-	void configure(Window w);
 	void enter(Window w);
     void redraw(Window w, MCRegionRef dirty_region);
 	MCFontlist *getfontlist();

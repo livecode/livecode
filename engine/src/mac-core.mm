@@ -388,7 +388,10 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     if (m_explicit_quit)
         return NSTerminateNow;
     
-	// There is an NSApplicationTerminateReplyLater result code which will place
+    if ([NSApp pseudoModalFor] != nil)
+        return NSTerminateCancel;
+    
+    // There is an NSApplicationTerminateReplyLater result code which will place
 	// the runloop in a modal loop for exit dialogs. We'll try the simpler
 	// option for now of just sending the callback and seeing what AppKit does
 	// with the (eventual) event loop that will result...
