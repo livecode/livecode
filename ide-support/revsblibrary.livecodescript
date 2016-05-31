@@ -685,6 +685,16 @@ function revSBAdditionalTargets
    return kAdditionalTargets
 end revSBAdditionalTargets
 
+function revSBTargetToPlatform pTarget
+   if pTarget begins with "MacOSX" then
+      return "MacOSX"
+   else if pTarget begins with "Linux" then
+      return "Linux"
+   else
+      return pTarget
+   end if
+end revSBTargetToPlatform
+
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
 constant kDefaultDocumentExtension   = ""
@@ -1751,11 +1761,17 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    end repeat
 end revSBConvertSettingsForPlatform
 
-command revSBResolveIncludedExternal pPlatform, @xFile
+function revSBIncludedExternalPath pTarget, pName
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   return revSBGetExternalPath(tPlatform, pName)
+end revSBIncludedExternalPath
+
+command revSBResolveIncludedExternal pTarget, @xFile
    -- Added to support mergExt inclusion
    if xFile begins with "!" then
       local tExtPath
-      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      put revSBIncludedExternalPath (pTarget, char 2 to -1 of xFile) into tExtPath
       -- if the file prefixed with ! was not a named external, treat normally
       if tExtPath is not empty then
          put tExtPath into xFile
@@ -1943,6 +1959,36 @@ command revSBUpdateForDependencies @xSettings
       end repeat
    end repeat
 end revSBUpdateForDependencies
+
+command revSBSanitiseExternalsList pTarget, @xExternals
+   local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put revSBAdditionalExternalsList(tPlatform) into tAvailableExternals
+   put revIDEExternalsMapping() into tFixedExternals
+   split tFixedExternals by comma and space
+   put the keys of tFixedExternals into tFixedExternals
+   
+   local tValid
+   repeat for each line tAddedExternal in xExternals
+      put false into tValid
+      if tAddedExternal is among the lines of tAvailableExternals then
+         put true into tValid
+      end if
+      
+      if tAddedExternal is among the lines of tFixedExternals then
+         put true into tValid
+      end if
+      
+      if tValid then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into xExternals
+end revSBSanitiseExternalsList
 
 ------------------- SMART CHECKING --------------------
 
