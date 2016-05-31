@@ -6,6 +6,8 @@ Syntax: revCommitDatabase <databaseID>
 
 Summary: Saves recent changes to a database.
 
+Associations: Database library
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

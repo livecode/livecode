@@ -8,6 +8,8 @@ Summary: <return|Returns> the type of database associated with a connection.
 
 Synonyms: revdb_dbtype
 
+Associations: Database library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux,ios,android

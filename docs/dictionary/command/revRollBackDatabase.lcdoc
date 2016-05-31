@@ -6,6 +6,8 @@ Syntax: revRollBackDatabase <databaseID>
 
 Summary: Rolls back recent changes to a <database>.
 
+Associations: Database library
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

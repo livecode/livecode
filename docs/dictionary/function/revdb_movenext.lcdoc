@@ -6,6 +6,8 @@ Syntax: revdb_movenext(<recordSetID>)
 
 Summary: <execute|Executes> the <revMoveToNextRecord> <command>.
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

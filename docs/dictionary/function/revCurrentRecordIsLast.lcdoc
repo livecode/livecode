@@ -6,6 +6,8 @@ Syntax: revCurrentRecordIsLast(<recordSetID>)
 
 Summary: <return|Returns> whether the current <record> is the last <record> in a <record set (database cursor)(glossary)>.
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

@@ -6,6 +6,8 @@ Syntax: revExecuteSQL <databaseID>, <SQLStatement> [,{<variablesList> | <arrayNa
 
 Summary: Executes a <SQL> statement on a <database>.
 
+Associations: Database library
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

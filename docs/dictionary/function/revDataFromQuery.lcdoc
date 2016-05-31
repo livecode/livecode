@@ -8,6 +8,8 @@ Summary: Gets <record|records> from a <database> according to a <SQL query> and 
 
 Synonyms: revdb_querylist
 
+Associations: Database library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux,ios,android

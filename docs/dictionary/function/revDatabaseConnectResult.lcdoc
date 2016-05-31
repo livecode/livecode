@@ -8,6 +8,8 @@ Summary: <return|Returns> the most recent error message for a <database>.
 
 Synonyms: revdb_connectionerr
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

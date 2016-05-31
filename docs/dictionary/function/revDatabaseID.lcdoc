@@ -8,6 +8,8 @@ Summary: <return|Returns> the database ID of the <database> that opened a <recor
 
 Synonyms: revdb_cursorconnection
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

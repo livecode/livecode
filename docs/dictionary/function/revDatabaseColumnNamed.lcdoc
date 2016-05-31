@@ -6,6 +6,8 @@ Syntax: revDatabaseColumnNamed(<recordSetID>, <columnName> [, <holderVariable>])
 
 Summary: <return|Returns> data from a specified <database field> in a <database>.
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

@@ -6,6 +6,8 @@ Syntax: revCloseCursor <recordSetID>
 
 Summary: Closes a <record set (database cursor)(glossary)>.
 
+Associations: Database library
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

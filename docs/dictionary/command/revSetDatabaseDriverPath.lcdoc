@@ -6,6 +6,8 @@ Syntax: revSetDatabaseDriverPath <driverFolder>
 
 Summary: Specifies where the <Database library> should look for <database driver|database drivers>.
 
+Associations: Database library
+
 Introduced: 2.0
 
 OS: mac,windows,linux,ios,android

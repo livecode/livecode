@@ -8,6 +8,8 @@ Summary: <return|Returns> the data types of the columns in a <record set (databa
 
 Synonyms: revdb_columntypes
 
+Associations: Database library
+
 Introduced: 1.1.1
 
 OS: mac,windows,linux,ios,android

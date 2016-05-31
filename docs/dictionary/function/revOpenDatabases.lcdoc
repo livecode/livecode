@@ -8,6 +8,8 @@ Summary: <return|Returns> a list of open <database|databases>.
 
 Synonyms: revdb_connections
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

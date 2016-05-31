@@ -8,6 +8,8 @@ Summary: <return|Returns> the maximum field sizes in a <record set (database cur
 
 Synonyms: revdb_columnlengths
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

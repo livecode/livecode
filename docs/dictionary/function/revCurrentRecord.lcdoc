@@ -8,6 +8,8 @@ Summary: <return|Returns> the number of the current record in a <record set (dat
 
 Synonyms: revdb_currentrecord
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android
