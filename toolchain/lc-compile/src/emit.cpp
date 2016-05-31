@@ -197,9 +197,14 @@ static MCNameRef to_mcnameref(NameRef p_name)
 {
     const char *t_cstring;
     GetStringOfNameLiteral(p_name, &t_cstring);
-    
+
+    /* Names _may_ contain non-ASCII characters.  Therefore interpret
+     * them as UTF-8.  This is particularly important for properties,
+     * for example, which generate a name but via a string literal. */
     MCAutoStringRef t_string;
-    MCStringCreateWithCString(t_cstring, &t_string);
+    MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(t_cstring),
+                            strlen(t_cstring), kMCStringEncodingUTF8,
+                            false, &t_string);
     
     MCNameRef t_name;
     MCNameCreate(*t_string, t_name);
@@ -218,7 +223,9 @@ cstring_from_nameref(NameRef p_name)
 static MCStringRef to_mcstringref(long p_string)
 {
     MCAutoStringRef t_string;
-    MCStringCreateWithCString((const char *)p_string, &t_string);
+    MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_string),
+                            strlen(reinterpret_cast<const char *>(p_string)),
+                            kMCStringEncodingUTF8, false, &t_string);
     MCStringRef t_uniq_string;
     MCValueInter(*t_string, t_uniq_string);
     return t_uniq_string;
@@ -991,8 +998,7 @@ void EmitRealSyntaxMethodArgument(long p_double)
 
 void EmitStringSyntaxMethodArgument(long p_string)
 {
-    MCAutoStringRef t_string;
-    MCStringCreateWithCString((const char *)p_string, &t_string);
+	MCAutoStringRef t_string(to_mcstringref(p_string));
     MCScriptAddConstantArgumentToSyntaxMethodInModule(s_builder, *t_string);
 
     Debug_Emit("RealSyntaxMethodArgument(\"%s\")", (const char *)p_string);

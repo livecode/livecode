@@ -249,7 +249,7 @@
 'nonterm' Metadata(-> DEFINITION)
 
     'rule' Metadata(-> metadata(Position, Key, Value)):
-        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" STRING_LITERAL(-> Value)
+        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" StringLiteral(-> Value)
         
 --------------------------------------------------------------------------------
 -- Import Syntax
@@ -372,7 +372,7 @@
         Access(-> Access) "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
     
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
-        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
+        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" StringLiteral(-> Binding)
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -472,7 +472,7 @@
     --    "end" "handler"
         
     'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
-        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" STRING_LITERAL(-> Binding)
+        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
 
 'nonterm' Signature(-> SIGNATURE)
 
@@ -1124,10 +1124,10 @@
         "[" @(-> Position) Syntax(-> Operand) "]"
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
     'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position) "!"
+        StringLiteral(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"
