@@ -23,12 +23,18 @@ By default, the <showIcon> <property> of newly created <button|buttons> is set t
 Description:
 Use the <showIcon> <property> to change a <button|button's> appearance.
 
-If a button's <showIcon> <property> is set to true, the <image> specified in the <button|button's> <icon> <property> is displayed in the <button|button's> rectangle. If the <showIcon> is false, the icon is not displayed.
+If a button's <showIcon> <property> is set to true, the <image>
+specified in the <button|button's> <icon> <property> is displayed in the
+<button|button's> rectangle. If the <showIcon> is false, the icon is not
+displayed. 
 
-If the button's icon <property> is zero, the setting of this <property> has no effect.
+If the button's icon <property> is zero, the setting of this <property>
+has no effect. 
 
 A button with an icon may need to be resized to show the entire icon.
 
-References: armedIcon (property), icon (property), hilitedIcon (property), image (keyword), button (object), property (glossary)
+References: armedIcon (property), icon (property),
+hilitedIcon (property), image (keyword), button (object),
+property (glossary)
 
 Tags: ui

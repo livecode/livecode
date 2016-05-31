@@ -4,7 +4,8 @@ Type: command
 
 Syntax: print anchor <anchorName> at <anchorPoint> 
 
-Summary: Defines a target for an internal hyperlink within a PDF document.
+Summary: Defines a target for an internal hyperlink within a PDF
+document. 
 
 Introduced: 4.5
 
@@ -26,13 +27,14 @@ Description:
 Use the <print anchor> command to define a target for an internal 
 hyperlink within a pdf created using <open printing to pdf>.
 
-The print anchor command defines a target for an internal hyperlink in a 
-PDF file created using the <open printing to pdf> command.
+The print anchor command defines a target for an internal hyperlink in
+a PDF file created using the <open printing to pdf> command.
 
 The name parameter is a label used to identify the anchor in related 
 <print link> commands, and <anchorPoint> is the location on the current 
 page to which any such link should jump.
 
-References: print link (command), print bookmark (command), open printing to pdf (command), cancel printing (command)
+References: print link (command), print bookmark (command),
+open printing to pdf (command), cancel printing (command)
 
 Tags: printing

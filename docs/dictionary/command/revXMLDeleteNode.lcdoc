@@ -21,16 +21,32 @@ Example:
 revXMLDeleteNode line 3 of theTrees,currNodePath
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-nodeToDelete: The path to the node you want to remove.
+treeID: The number returned by the revXMLCreateTree or
+revXMLCreateTreeFromFile function when you created the XML tree.
+nodeToDelete: The path to the node you want to remove. 
 
-The result: If the <revXMLDeleteNode> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr".
+The result: If the <revXMLDeleteNode> <command> encounters an error, the
+<result> is set to an error message beginning with "xmlerr" . 
 
 Description:
-Use the <revXMLDeleteNode> <command> to remove part of an <XML tree> you're working with.
+Use the <revXMLDeleteNode> <command> to remove part of an <XML tree>
+you're working with. 
 
->*Important:*  The <revXMLDeleteNode> <command> is part of the <XML library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure "XML Library" is selected in the list of script libraries.
+>*Important:*  The <revXMLDeleteNode> <command> is part of the <XML
+library>. To ensure that the <command> works in a <standalone
+application>, you must include this <LiveCode custom library|custom
+library> when you create your <standalone application|standalone>. In
+the Inclusions section on the General screen of the <Standalone
+Application Settings> window, make sure "XML Library" is selected in the
+list of script libraries. 
 
-References: revEndXMLNode (message), revStartXMLNode (message), revXMLAddNode (command), revXMLDeleteTree (command), revXMLPutIntoNode (command), revXMLRootNode (function), revXMLNodeContents (function), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revEndXMLNode (message), revStartXMLNode (message),
+revXMLAddNode (command), revXMLDeleteTree (command),
+revXMLPutIntoNode (command), revXMLRootNode (function),
+revXMLNodeContents (function), result (function), node (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary),
+command (glossary), XML library (library),
+LiveCode custom library (library)
 
 Tags: text processing

@@ -22,9 +22,11 @@ sin(the startAngle of graphic "Pointer")
 
 Parameters:
 angleInRadians: 
-angle: A positive or negative number, or an expression that evaluates to a number.
+angle: A positive or negative number, or an expression that evaluates to
+a number. 
 
-Returns: The <sin> <function> <return|returns> a number between -1 and 1.
+Returns: The <sin> <function> <return|returns> a number between -1 and
+1. 
 
 Description:
 Use the <sin> <function> to find the sine of an angle.
@@ -33,12 +35,16 @@ The <sin> <function> repeats every 2*pi <radian|radians>:
   sin(x) = sin(x + 2 * pi)
 for any value of x.
 
-The <sin> <function> requires its input to be in <radian|radians>. To provide an angle in <degree|degrees>, use the following <custom function>:
+The <sin> <function> requires its input to be in <radian|radians>. To
+provide an angle in <degree|degrees>, use the following <custom
+function>: 
 
   function sinInDegrees angleInDegrees
     return sin(angleInDegrees * pi / 180)
   end sinInDegrees
 
-References: pi (constant), radian (glossary), custom function (glossary), return (glossary), degree (glossary), function (control structure)
+References: pi (constant), radian (glossary),
+custom function (glossary), return (glossary), degree (glossary),
+function (control structure)
 
 Tags: math

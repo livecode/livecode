@@ -30,6 +30,8 @@ Use the <exp> function to obtain a power of e, e^ <number>.
 
 The transcendental number e appears in many mathematical formulas.
 
-References: ^ (operator), sqrt (function), exp10 (function), ln (function), exp2 (function), baseConvert (function), exp1 (function), return (glossary)
+References: ^ (operator), sqrt (function), exp10 (function),
+ln (function), exp2 (function), baseConvert (function), exp1 (function),
+return (glossary)
 
 Tags: math

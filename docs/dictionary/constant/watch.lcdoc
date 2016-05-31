@@ -18,7 +18,9 @@ Example:
 set the cursor to watch
 
 Description:
-Use the <watch> <constant> to set the <cursor(property)> to a wristwatch shape, suitable for telling the user to wait for completion of a lengthy operation.
+Use the <watch> <constant> to set the <cursor(property)> to a wristwatch
+shape, suitable for telling the user to wait for completion of a lengthy
+operation. 
 
 The following two statements are equivalent:
 
@@ -27,8 +29,14 @@ The following two statements are equivalent:
 
 However, the first is easier to read and understand in LiveCode.
 
->*Important:*  If you use the <watch> <cursor(property)> or other standard <cursor(glossary)|cursors> in your application, you must include it when you create your <standalone application|standalone>. Make sure the "Cursors" option in the Inclusions section of the General screen of the <Standalone Application Settings> window is checked.
+>*Important:*  If you use the <watch> <cursor(property)> or other
+standard <cursor(glossary)|cursors> in your application, you must
+include it when you create your <standalone application|standalone>.
+Make sure the "Cursors" option in the Inclusions section of the General
+screen of the <Standalone Application Settings> window is checked. 
 
-References: cursor (property), busy (constant), constant (command), Standalone Application Settings (glossary), standalone application (glossary), cursor (glossary)
+References: cursor (property), busy (constant), constant (command),
+Standalone Application Settings (glossary),
+standalone application (glossary), cursor (glossary)
 
 Tags: ui

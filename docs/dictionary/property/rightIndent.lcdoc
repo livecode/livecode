@@ -18,13 +18,19 @@ Example:
 set the rightIndent of line 1 of field 1 to 15
 
 Parameters:
-pixels (integer): The number of pixels to indent the right of a paragraph of text.
+pixels (integer): The number of pixels to indent the right of a
+paragraph of text. 
 
-Value: The <rightIndent> of a line of text in a field returns an integer.
+Value: The <rightIndent> of a line of text in a field returns an
+integer. 
 
 Description:
-Use the <rightIndent> property to indent the right side of whole paragraphs of text in a field.
+Use the <rightIndent> property to indent the right side of whole
+paragraphs of text in a field. 
 
-References: textAlign (property), formattedWidth (property), formattedText (property), listStyle (property), listDepth (property), listBehavior (property), listIndent (property), hScrollbar (property), textSize (property), field (keyword)
+References: textAlign (property), formattedWidth (property),
+formattedText (property), listStyle (property), listDepth (property),
+listBehavior (property), listIndent (property), hScrollbar (property),
+textSize (property), field (keyword)
 
 Tags: ui

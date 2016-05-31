@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the shellCommand to <shellPath> 
 
-Summary: Specifies the name and location of the <command> used for the <shell> <function>.
+Summary: Specifies the name and location of the <command> used for the
+<shell> <function>. 
 
 Introduced: 1.0
 
@@ -19,13 +20,23 @@ set the shellCommand to "/bin/sh/ksh"
 
 Value:
 The <shellCommand> is a string.
-By default, the <shellCommand> <property> is set to "/bin/sh" (the Bourne shell) on <Unix|Unix systems>, and "command.com" on Windows systems.
+By default, the <shellCommand> <property> is set to "/bin/sh" (the
+Bourne shell) on <Unix|Unix systems>, and "command.com" on Windows
+systems. 
 
 Description:
-Use the <shellCommand> <property> to <execute> a command with a particular <shell>.
+Use the <shellCommand> <property> to <execute> a command with a
+particular <shell>. 
 
-When you use the <shell> <function>, the <command line> you specify is sent to the program specified in the <shellCommand>.
+When you use the <shell> <function>, the <command line> you specify is
+sent to the program specified in the <shellCommand>. 
 
-On OS X and Unix systems, the <shellCommand> is the <file path|path> to an executable <file>. On <Windows|Windows systems>, the <shellCommand> is a DOS command.
+On OS X and Unix systems, the <shellCommand> is the <file path|path> to
+an executable <file>. On <Windows|Windows systems>, the <shellCommand>
+is a DOS command. 
 
-References: hideConsoleWindows (property), videoClipPlayer (property), file (keyword), shell (function), function (control structure), property (glossary), Windows (glossary), execute (glossary), file path (glossary), command line (glossary), command (glossary), Unix (glossary)
+References: hideConsoleWindows (property), videoClipPlayer (property),
+file (keyword), shell (function), function (control structure),
+property (glossary), Windows (glossary), execute (glossary),
+file path (glossary), command line (glossary), command (glossary),
+Unix (glossary)

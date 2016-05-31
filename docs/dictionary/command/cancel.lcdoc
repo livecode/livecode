@@ -49,14 +49,15 @@ corresponding to the message in the <pendingMessages> <function>.
 All <pendingMessages|pending messages> are automatically canceled when 
 the application quits.
 
-It is common to need to <cancel> a number of <message|messages> when leaving a <card>
-or <stack>, if the <message|messages> only pertain to that card or stack. For
-example, you might have queued a number of <message|messages> that create an
-animated display on the current <card>, and need to <cancel> them when the
-user goes to another <card>. The best solution in a case like this is to
-place each <messageQueueID> in a <script local variable>, a <global> <variable>, 
-or a <custom property> at the time the <message> is sent. Then you can <cancel> all those
-<message|messages> in a <repeat> <loop> :
+It is common to need to <cancel> a number of <message|messages> when
+leaving a <card> or <stack>, if the <message|messages> only pertain to
+that card or stack. For example, you might have queued a number of
+<message|messages> that create an animated display on the current
+<card>, and need to <cancel> them when the user goes to another <card>.
+The best solution in a case like this is to place each <messageQueueID>
+in a <script local variable>, a <global> <variable>, or a <custom
+property> at the time the <message> is sent. Then you can <cancel> all
+those <message|messages> in a <repeat> <loop> : 
 
     global myPendingMessages # you've stored the message IDs here
     on closeCard
@@ -65,10 +66,11 @@ or a <custom property> at the time the <message> is sent. Then you can <cancel> 
       end repeat
     end closeCard
 
-References: card (object), command (glossary), custom property (glossary),
-flushEvents (function), function (control structure), global (glossary),
-item (keyword), loop (glossary), message (glossary), pendingMessages
-(function), repeat (control structure), result (function), script local variable
+References: card (object), command (glossary),,
+custom property (glossary), flushEvents (function),,
+function (control structure), global (glossary), item (keyword),
+loop (glossary), message (glossary), pendingMessages, (function),
+repeat (control structure), result (function), script local variable,
 (glossary), send (command), stack (object), variable (glossary)
 
 Tags: messages

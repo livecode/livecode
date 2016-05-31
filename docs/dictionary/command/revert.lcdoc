@@ -4,7 +4,8 @@ Type: command
 
 Syntax: revert
 
-Summary: Restores the <current stack> to its state when last saved, deleting all changes made since the last save.
+Summary: Restores the <current stack> to its state when last saved,
+deleting all changes made since the last save. 
 
 Introduced: 1.0
 
@@ -19,10 +20,19 @@ Example:
 if it is "Don't Save" then revert
 
 Description:
-Use the <revert> <command> to back out of any changes made to the <current stack> since the last save.
+Use the <revert> <command> to back out of any changes made to the
+<current stack> since the last save. 
 
-The <revert> <command> also <undo|undoes> changes made to other <stacks> stored in the same <stack file>. That is, if you <revert> a <main stack>, all <substacks> of that <stack> also revert to the last save, and if you revert a <substack>, its <main stack> and any other <substacks> also revert.
+The <revert> <command> also <undo|undoes> changes made to other <stacks>
+stored in the same <stack file>. That is, if you <revert> a <main
+stack>, all <substacks> of that <stack> also revert to the last save,
+and if you revert a <substack>, its <main stack> and any other
+<substacks> also revert. 
 
-References: substacks (property), mainStack (property), revRollBackDatabase (command), reset paint (command), revdb_rollback (function), stacks (function), substack (glossary), stack file (glossary), current stack (glossary), command (glossary), undo (glossary), main stack (glossary), stack (object)
+References: substacks (property), mainStack (property),
+revRollBackDatabase (command), reset paint (command),
+revdb_rollback (function), stacks (function), substack (glossary),
+stack file (glossary), current stack (glossary), command (glossary),
+undo (glossary), main stack (glossary), stack (object)
 
 Tags: file system

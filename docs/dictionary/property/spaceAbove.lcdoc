@@ -23,8 +23,16 @@ pixels (integer): The number of pixels of space above the paragraph.
 Value: The <spaceAbove> of a line of text in a field returns an integer.
 
 Description:
-Use the <spaceAbove> property to specify the amount of space above a paragraph of text in a field.
+Use the <spaceAbove> property to specify the amount of space above a
+paragraph of text in a field. 
 
-References: leftIndent (property), borderWidth (property), vgrid (property), textAlign (property), dontWrap (property), formattedText (property), backgroundColor (property), listBehavior (property), listIndent (property), hidden (property), textSize (property), firstIndent (property), tabstops (property), spaceBelow (property), listStyle (property), rightIndent (property), listDepth (property), hgrid (property), hScrollbar (property), borderColor (property), formattedWidth (property)
+References: leftIndent (property), borderWidth (property),
+vgrid (property), textAlign (property), dontWrap (property),
+formattedText (property), backgroundColor (property),
+listBehavior (property), listIndent (property), hidden (property),
+textSize (property), firstIndent (property), tabstops (property),
+spaceBelow (property), listStyle (property), rightIndent (property),
+listDepth (property), hgrid (property), hScrollbar (property),
+borderColor (property), formattedWidth (property)
 
 Tags: ui

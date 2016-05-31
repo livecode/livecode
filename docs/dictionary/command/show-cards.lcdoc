@@ -25,12 +25,17 @@ Parameters:
 number: The number of cards to display.
 
 Description:
-Use the <show cards> <command> to do "flipbook"-style animation or to display a number of <card|cards> quickly to the user.
+Use the <show cards> <command> to do "flipbook"-style animation or to
+display a number of <card|cards> quickly to the user. 
 
-Theform displays <number> <card|cards>, starting with the <current card>.
+Theform displays <number> <card|cards>, starting with the <current
+card>. 
 
-Theform displays all the cards in the current stack, starting and ending with the current card.
+Theform displays all the cards in the current stack, starting and ending
+with the current card. 
 
-References: lockRecent (property), lockScreen (property), show (command), go (command), card (object), command (glossary), current stack (glossary), current card (glossary)
+References: lockRecent (property), lockScreen (property),
+show (command), go (command), card (object), command (glossary),
+current stack (glossary), current card (glossary)
 
 Tags: navigation

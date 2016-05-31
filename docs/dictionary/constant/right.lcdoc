@@ -19,8 +19,10 @@ Example:
 if theKey is right then go next card
 
 Description:
-Use the <right> <constant> to indicate the right arrow key in an <arrowKey> <handler>.
+Use the <right> <constant> to indicate the right arrow key in an
+<arrowKey> <handler>. 
 
-References: string (keyword), left (constant), arrowKey (message), constant (command), handler (glossary)
+References: string (keyword), left (constant), arrowKey (message),
+constant (command), handler (glossary)
 
 Tags: ui

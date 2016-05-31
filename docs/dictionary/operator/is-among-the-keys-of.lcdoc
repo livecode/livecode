@@ -4,7 +4,8 @@ Type: operator
 
 Syntax: <valueToFind> is among the keys of <arrayToSearch> 
 
-Summary: Evaluates to true if the <valueToFind> is an element name in the <arrayToSearch>.
+Summary: Evaluates to true if the <valueToFind> is an element name in
+the <arrayToSearch>. 
 
 Introduced: 2.9
 
@@ -27,6 +28,9 @@ valueToFind (string):
 arrayToSearch (array): 
 
 Description:
-<Is among the keys of> should be used to check whether an array contains an element of a specified name.
+<Is among the keys of> should be used to check whether an array contains
+an element of a specified name. 
 
-References: is not among (operator), is not among the keys of (operator), is among (operator), keys (function)
+References: is not among (operator),
+is not among the keys of (operator), is among (operator),
+keys (function)

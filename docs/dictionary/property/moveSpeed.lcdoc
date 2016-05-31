@@ -20,12 +20,20 @@ The <moveSpeed> is an <integer> between zero and 65535.
 By default, the <moveSpeed> <property> is set to 200.
 
 Description:
-Use the <moveSpeed> <property> to change the speed of animation performed with the <move> <command>.
+Use the <moveSpeed> <property> to change the speed of animation
+performed with the <move> <command>. 
 
-A <moveSpeed> of zero moves the <object|objects> directly to their destination, as though you had set the <object|object's> <location> <property> rather than using the <move> <command>.
+A <moveSpeed> of zero moves the <object|objects> directly to their
+destination, as though you had set the <object|object's> <location>
+<property> rather than using the <move> <command>. 
 
-The <moveSpeed> <property> has no effect if you include the in time <parameter> in the <move> command. It only <control|controls> the speed of <move> <command|commands> that don't specify a time for the movement.
+The <moveSpeed> <property> has no effect if you include the in time
+<parameter> in the <move> command. It only <control|controls> the speed
+of <move> <command|commands> that don't specify a time for the
+movement. 
 
-References: dragSpeed (property), location (property), integer (keyword), move (command), object (glossary), control (object), command (glossary), property (glossary), parameter (glossary)
+References: dragSpeed (property), location (property),
+integer (keyword), move (command), object (glossary), control (object),
+command (glossary), property (glossary), parameter (glossary)
 
 Tags: multimedia

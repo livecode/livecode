@@ -4,7 +4,8 @@ Type: property
 
 Syntax: get the freeSize of <stack> 
 
-Summary: Always reports zero and is included in <LiveCode> for compatibility with imported <HyperCard> <stacks>.
+Summary: Always reports zero and is included in <LiveCode> for
+compatibility with imported <HyperCard> <stacks>. 
 
 Associations: stack
 
@@ -15,6 +16,9 @@ OS: ios,android
 Platforms: desktop,server,web,mobile
 
 Description:
-In HyperCard, the <freeSize> <property> reports the amount of wasted space in a <stack>. In LiveCode, this <property> always reports zero.
+In HyperCard, the <freeSize> <property> reports the amount of wasted
+space in a <stack>. In LiveCode, this <property> always reports zero. 
 
-References: stack (object), stacks (function), diskSpace (function), hasMemory (function), property (glossary), LiveCode (glossary), HyperCard (glossary)
+References: stack (object), stacks (function), diskSpace (function),
+hasMemory (function), property (glossary), LiveCode (glossary),
+HyperCard (glossary)

@@ -16,10 +16,13 @@ Example:
 read from file modem: until null
 
 Description:
-Use the <null> <constant> as an easier-to-read substitute for numToChar(0).
+Use the <null> <constant> as an easier-to-read substitute for
+numToChar(0). 
 
-The <null> <constant> is needed because you can't type the <character> it represents in a <script>.
+The <null> <constant> is needed because you can't type the <character>
+it represents in a <script>. 
 
-References: character (keyword), space (constant), script (property), constant (command)
+References: character (keyword), space (constant), script (property),
+constant (command)
 
 Tags: text processing

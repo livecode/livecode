@@ -29,8 +29,11 @@ The actual deletion is not triggered by the <deleteWidget> <message>,
 so <trap|trapping> the <message> and not allowing it to <pass> does
 not prevent the <widget> from being removed.
 
-However, the <undo> <command> will restore a <widget> after it is deleted by the user.
+However, the <undo> <command> will restore a <widget> after it is
+deleted by the user. 
 
-References: undo (command), stack (object), widget (object), command (glossary), message (glossary), pass (glossary), trap (glossary)
+References: undo (command), stack (object), widget (object),
+command (glossary), message (glossary), pass (glossary),
+trap (glossary)
 
 Tags: objects

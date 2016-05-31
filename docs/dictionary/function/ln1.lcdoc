@@ -21,17 +21,21 @@ Example:
 put ln1(myValue) into logValue
 
 Parameters:
-number: A number greater than -1, or an expression that evaluates to such a number.
+number: A number greater than -1, or an expression that evaluates to
+such a number. 
 
 Returns: The <ln1> <function> <return|returns> a number.
 
 Description:
 Use the <ln1> <function> to obtain a base e logarithm, ln(<number> + 1).
 
-The natural logarithm of a <number> is the power to which e must be raised to obtain the <number>.
+The natural logarithm of a <number> is the power to which e must be
+raised to obtain the <number>. 
 
 The transcendental number e appears in many mathematical formulas.
 
-References: ^ (operator), ln (function), log10 (function), log2 (function), exp1 (function), return (glossary), function (control structure)
+References: ^ (operator), ln (function), log10 (function),
+log2 (function), exp1 (function), return (glossary),
+function (control structure)
 
 Tags: math

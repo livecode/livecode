@@ -20,10 +20,12 @@ set the paused of player "Oops!" to true -- pause the movie
 Value (bool): The <paused> of a <player> is true or false.
 
 Description:
-Use the <paused> <property> to pause or <resume> a movie or sound, or to check whether the user has done so.
+Use the <paused> <property> to pause or <resume> a movie or sound, or to
+check whether the user has done so. 
 
 When a player is not playing, its <paused> reports true.
 
-References: player (keyword), resume (message), playStarted (message), start (command), property (glossary)
+References: player (keyword), resume (message), playStarted (message),
+start (command), property (glossary)
 
 Tags: multimedia

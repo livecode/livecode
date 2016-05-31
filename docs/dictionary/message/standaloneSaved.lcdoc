@@ -4,7 +4,8 @@ Type: message
 
 Syntax: standaloneSaved <folderSavedIn> 
 
-Summary: Sent to the mainstack after it has been saved as a standalone application.
+Summary: Sent to the mainstack after it has been saved as a standalone
+application. 
 
 Associations: stack
 
@@ -27,9 +28,12 @@ on standaloneSaved pFolder
 end standaloneSaved
 
 Parameters:
-folderSavedIn: folderSavedIn is a string variable containing the folder that the standalone application was saved in.
+folderSavedIn: folderSavedIn is a string variable containing the folder
+that the standalone application was saved in. 
 
 Description:
-After a stack has been saved as a standalone application it is reopened. This mesage is then sent to the mainstack to allow custom build time automation.
+After a stack has been saved as a standalone application it is reopened.
+This mesage is then sent to the mainstack to allow custom build time
+automation. 
 
 References: savingStandalone (message)

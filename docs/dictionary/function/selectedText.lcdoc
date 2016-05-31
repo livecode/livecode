@@ -31,16 +31,30 @@ Returns: The <selectedText> <function> <return|returns> a <string>.
 Description:
 Use the <selectedText> <function> to find out what text is <selected>.
 
-If a <field> is specified, the <selectedText> <function> <return|returns> the <selected> text in that <field(keyword)>. If the <field(object)|field's> <listBehavior> <property> is set to true, the <selectedText> includes any <selected> <lines> in the <field(keyword)>.
+If a <field> is specified, the <selectedText> <function>
+<return|returns> the <selected> text in that <field(keyword)>. If the
+<field(object)|field's> <listBehavior> <property> is set to true, the
+<selectedText> includes any <selected> <lines> in the <field(keyword)>. 
 
-If a <button> is specified, the <selectedText> <function> <return|returns> the currently <selected> <menu item> associated with the <button>. If the <button> does not have a <menu> associated with it, the <selectedText> <function> <return|returns> empty.
+If a <button> is specified, the <selectedText> <function>
+<return|returns> the currently <selected> <menu item> associated with
+the <button>. If the <button> does not have a <menu> associated with it,
+the <selectedText> <function> <return|returns> empty. 
 
-If there is no insertion point or text selection and no <field> or <button> is specified, the <selectedText> <function> <return|returns> empty.
+If there is no insertion point or text selection and no <field> or
+<button> is specified, the <selectedText> <function> <return|returns>
+empty. 
 
-To get the location of the selected text, use the selectedChunk <function>.
+To get the location of the selected text, use the selectedChunk
+<function>. 
 
 To change the contents of the selection, use the <selection> <keyword>.
 
-References: hilitedLine (property), listBehavior (property), menuHistory (property), selected (property), selection (keyword), field (keyword), lines (keyword), string (keyword), menu (keyword), field (object), selectedLoc (function), clickText (function), property (glossary), keyword (glossary), return (glossary), menu item (glossary), function (control structure)
+References: hilitedLine (property), listBehavior (property),
+menuHistory (property), selected (property), selection (keyword),
+field (keyword), lines (keyword), string (keyword), menu (keyword),
+field (object), selectedLoc (function), clickText (function),
+property (glossary), keyword (glossary), return (glossary),
+menu item (glossary), function (control structure)
 
 Tags: ui

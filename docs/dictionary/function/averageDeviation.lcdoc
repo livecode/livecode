@@ -21,15 +21,21 @@ Example:
 put averageDeviation(studentScores) into field "Average Deviation"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList: A comma-separated list of numbers, or an expression that
+evaluates to such a list, or an array containing only numbers. 
 
 Returns: The <averageDeviation> function <return|returns> a number.
 
 Description:
-Use the <averageDeviation> <function> to analyze the amount of spread in a list of numbers.
+Use the <averageDeviation> <function> to analyze the amount of spread in
+a list of numbers. 
 
-The average deviation is a measure of how widely distributed the numbers in the <numbersList> are.
+The average deviation is a measure of how widely distributed the numbers
+in the <numbersList> are. 
 
-References: function (control structure), populationVariance (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
+References: function (control structure), populationVariance (function),
+variance (function), average (function), median (function),
+populationStandardDeviation (function), sum (function),
+standardDeviation (function), return (glossary)
 
 Tags: math

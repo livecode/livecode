@@ -4,7 +4,8 @@ Type: message
 
 Syntax: libraryStack
 
-Summary: Sent to a <stack> when it is placed in the <message path> by the <start using> <command>.
+Summary: Sent to a <stack> when it is placed in the <message path> by
+the <start using> <command>. 
 
 Associations: stack
 
@@ -20,10 +21,14 @@ on libraryStack -- show visually in the stack that it's in use
 end libraryStack
 
 Description:
-Handle the <libraryStack> <message> if you want to perform some task or set a configuration when a <stack> is placed in use.
+Handle the <libraryStack> <message> if you want to perform some task or
+set a configuration when a <stack> is placed in use. 
 
-The <libraryStack> <message> is sent to a <stack> even if it was already in use before the <start using> <command> was <execute|executed>.
+The <libraryStack> <message> is sent to a <stack> even if it was already
+in use before the <start using> <command> was <execute|executed>. 
 
-References: releaseStack (message), start using (command), stack (object), message (glossary), command (glossary), execute (glossary), message path (glossary)
+References: releaseStack (message), start using (command),
+stack (object), message (glossary), command (glossary),
+execute (glossary), message path (glossary)
 
 Tags: objects

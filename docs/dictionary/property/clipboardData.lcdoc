@@ -10,7 +10,8 @@ Syntax: get the clipboardData
 
 Syntax: get the clipboardData[<key>]
 
-Summary: Specifies what data and of what type is on the <clipboard(glossary)>.
+Summary: Specifies what data and of what type is on the
+<clipboard(glossary)>. 
 
 Introduced: 2.0
 
@@ -49,23 +50,25 @@ the <clipboard(glossary)>, without copying or pasting. The keys for the
   - "htmltext": LiveCode HTML text
   - "styles": styled text in LiveCode internal styled-text format
   - "styledtext": array of LiveCode styled text
-  - "image": the <text> of an image object, i.e. binary data in PNG, GIF or JPEG format
-  - "rtf": styled text in LiveCode RTF format
+  - "image": the <text> of an image object, i.e. binary data in PNG, GIF
+  or JPEG format - "rtf": styled text in LiveCode RTF format
   - "html": styled text in LiveCode HTML format
   - "styles": LiveCode styled text data
-  - "objects": one or more LiveCode objects serialized into an internal format
-  - "files": a return-delimited list of filenames in LiveCode format
-  - "private": an arbitrary application-defined string. This format will only be visible within the same LiveCode process
+  - "objects": one or more LiveCode objects serialized into an internal
+  format - "files": a return-delimited list of filenames in LiveCode
+  format - "private": an arbitrary application-defined string. This
+  format will only be visible within the same LiveCode process 
 
 The <clipboardData> property is populated automatically when the 
 <clipboard(glossary)> content is changed, either by using the cut or 
 copy command, or by cutting or copying in another application.
 
-If the <clipboard(glossary)> contains data compatible with the specified 
-type, it is converted to the requested type; otherwise the array element 
-for that type is empty. For example, if the <clipboard(glossary)> 
-contains text "hello", `the clipboardData["image"]` is empty, whereas 
-`the clipboardData["html"]` returns "&lt;p&gt;hello&lt;/p&gt;"
+If the <clipboard(glossary)> contains data compatible with the
+specified type, it is converted to the requested type; otherwise the
+array element for that type is empty. For example, if the
+<clipboard(glossary)> contains text "hello", `the
+clipboardData["image"]` is empty, whereas `the clipboardData["html"]`
+returns "&lt;p&gt;hello&lt;/p&gt;" 
 
 You can query the keys of the <clipboardData> to determine what types 
 of data are on the <clipboard(glossary)>. For example, if the 
@@ -80,11 +83,11 @@ places the text "Hello World" on the <clipboard(glossary)>:
 
 	set the clipboardData["text"] to "Hello World"
 
-The above statement is equivalent to selecting the text "Hello World" in 
-a field and choosing Edit menu, or to using the <copy> command. The data 
-you place on the <clipboard(glossary)> is accessible to your application 
-using the <paste> command, and to other applications (that support 
-pasting text) using the application's Paste menu item.
+The above statement is equivalent to selecting the text "Hello World"
+in a field and choosing Edit menu, or to using the <copy> command. The
+data you place on the <clipboard(glossary)> is accessible to your
+application using the <paste> command, and to other applications (that
+support pasting text) using the application's Paste menu item.
 
 >*Tip:*  To quickly find out what kind of data is on the clipboard, use 
 the <clipboard> function.

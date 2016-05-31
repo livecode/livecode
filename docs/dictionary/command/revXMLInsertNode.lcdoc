@@ -4,7 +4,8 @@ Type: command
 
 Syntax: revXMLInsertNode <treeId>, <siblingNode>, <nodeName>, <contents>, [<location>]
 
-Summary: Inserts a node as a sibling of siblingNode in the specified tree.
+Summary: Inserts a node as a sibling of siblingNode in the specified
+tree. 
 
 Introduced: 2.7.4
 
@@ -42,4 +43,7 @@ Use <revXMLInsertNode> to insert a node into an XML tree.
 General screen of the <Standalone Application Settings> window, make 
 sure "XML Library" is selected in the list of script libraries.
 
-References: revXMLAppend (command), result (function), XML library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary)
+References: revXMLAppend (command), result (function),
+XML library (library), LiveCode custom library (library),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary)

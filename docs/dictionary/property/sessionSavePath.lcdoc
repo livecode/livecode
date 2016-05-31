@@ -25,14 +25,23 @@ Parameters:
 folderPath: the path to a folder
 
 Description:
-Use the <sessionSavePath> property to set the path to the location on the server filesystem where session data is stored.
+Use the <sessionSavePath> property to set the path to the location on
+the server filesystem where session data is stored. 
 
-Use the <sessionSavePath> property to set the path to the location on the server filesystem where session data is stored. If the <sessionSavePath> property is not set then the standard temporary folder is used.
+Use the <sessionSavePath> property to set the path to the location on
+the server filesystem where session data is stored. If the
+<sessionSavePath> property is not set then the standard temporary folder
+is used. 
 
-To set the <sessionSavePath> back to the default set the <sessionSavePath> to empty.
+To set the <sessionSavePath> back to the default set the
+<sessionSavePath> to empty. 
 
->*Note:* You do not need to alter any of the session properties in order to start and use sessions. They provide a way for advanced users to configure the way session work.
+>*Note:* You do not need to alter any of the session properties in order
+to start and use sessions. They provide a way for advanced users to
+configure the way session work. 
 
->*Note:* The sessionSavePath property is only available when running in CGI mode (Server).
+>*Note:* The sessionSavePath property is only available when running in
+CGI mode (Server). 
 
-References: sessionID (property), sessionLifetime (property), sessionName (property)
+References: sessionID (property), sessionLifetime (property),
+sessionName (property)

@@ -4,7 +4,8 @@ Type: message
 
 Syntax: objectSelectionEnded
 
-Summary: Sent when, in edit mode, the user completes a drag action used to select controls.
+Summary: Sent when, in edit mode, the user completes a drag action used
+to select controls. 
 
 Associations: card
 
@@ -20,11 +21,14 @@ on objectSelectionEnded
 end objectSelectionEnded
 
 Description:
-Handle the <objectSelectionEnded> message if you want to do something when the user completes a drag action used to select controls.
+Handle the <objectSelectionEnded> message if you want to do something
+when the user completes a drag action used to select controls. 
 
-The <objectSelectionEnded> message is sent to the current card when, in edit mode, the user stops dragging over controls.
+The <objectSelectionEnded> message is sent to the current card when, in
+edit mode, the user stops dragging over controls. 
 
->*Note:* The <objectSelectionEnded> message is only available in the IDE.
+>*Note:* The <objectSelectionEnded> message is only available in the
+IDE. 
 
 References: objectSelectionStarted (message)
 

@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: minimize
 
-Summary: Used with the <decorations> <property> to indicate whether the <minimize button> appears in a window's <title bar>.
+Summary: Used with the <decorations> <property> to indicate whether the
+<minimize button> appears in a window's <title bar>. 
 
 Introduced: 1.0
 
@@ -16,12 +17,18 @@ Example:
 set the decorations of stack "Help" to "minimize, menu"
 
 Description:
-Use the <minimize> <keyword> to turn a window's <minimize button> on or off.
+Use the <minimize> <keyword> to turn a window's <minimize button> on or
+off. 
 
-Setting a stack's <decorations> <property> to <minimize> automatically includes <title> in the value of the <decorations>, turning on the window's <title bar>.
+Setting a stack's <decorations> <property> to <minimize> automatically
+includes <title> in the value of the <decorations>, turning on the
+window's <title bar>. 
 
-On Windows systems, the menu decoration must be set along with <minimize> : you cannot use <minimize> without including <menu>.
+On Windows systems, the menu decoration must be set along with
+<minimize> : you cannot use <minimize> without including <menu>. 
 
-References: title (keyword), menu (keyword), decorations (property), systemWindow (property), title (property), property (glossary), title bar (glossary), keyword (glossary), minimize button (glossary)
+References: title (keyword), menu (keyword), decorations (property),
+systemWindow (property), title (property), property (glossary),
+title bar (glossary), keyword (glossary), minimize button (glossary)
 
 Tags: windowing

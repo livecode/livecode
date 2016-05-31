@@ -24,6 +24,9 @@ Parameters:
 control: The name or the id of the control to be deleted.
 
 Description:
-Use <mobileControlDelete> to delete a native mobile control that was created with <mobileControlCreate>.
+Use <mobileControlDelete> to delete a native mobile control that was
+created with <mobileControlCreate>. 
 
-References: mobileControlCreate (command), mobileControlSet (command), mobileControlDo (command), mobileControlGet (function), mobileControlTarget (function), mobileControls (function)
+References: mobileControlCreate (command), mobileControlSet (command),
+mobileControlDo (command), mobileControlGet (function),
+mobileControlTarget (function), mobileControls (function)

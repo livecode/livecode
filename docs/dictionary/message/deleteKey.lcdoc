@@ -4,7 +4,8 @@ Type: message
 
 Syntax: deleteKey
 
-Summary: Sent to the <active (focused) control(glossary)>, or to the <current card> if there is no <active control>.
+Summary: Sent to the <active (focused) control(glossary)>, or to the
+<current card> if there is no <active control>. 
 
 Introduced: 1.0
 
@@ -20,14 +21,21 @@ on deleteKey -- clear the entire field
 end deleteKey
 
 Description:
-Handle the <deleteKey> <message> if you want to do something special when the user presses the forward delete key.
+Handle the <deleteKey> <message> if you want to do something special
+when the user presses the forward delete key. 
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused. 
 
 The forward delete key is not the same as the backspace or delete key:
-        * The forward delete key is usually to the right of the main keyboard layout, and may be labeled with the word "Delete" or a left-facing arrow. Pressing it sends a <deleteKey> <message>.
-       * The backspace key is usually on the main keyboard above the Return key, and is may be labeled "Backspace" or "Delete". Pressing it sends a <backspaceKey> <message>.
+        * The forward delete key is usually to the right of the main
+       keyboard layout, and may be labeled with the word "Delete" or a
+       left-facing arrow. Pressing it sends a <deleteKey> <message>. *
+       The backspace key is usually on the main keyboard above the
+       Return key, and is may be labeled "Backspace" or "Delete" .
+       Pressing it sends a <backspaceKey> <message>. 
 
-References: cutKey (message), backspaceKey (message), message (glossary), active control (glossary), current card (glossary)
+References: cutKey (message), backspaceKey (message),
+message (glossary), active control (glossary), current card (glossary)
 
 Tags: ui

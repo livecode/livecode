@@ -23,12 +23,18 @@ The editionType property returns community or commercial.
 This property is read-only and cannot be set.
 
 Description:
-Use the <editionType> global property to determine what edition of the engine is currently running.
+Use the <editionType> global property to determine what edition of the
+engine is currently running. 
 
-The global property the editionType can be used to determine what edition of the engine is currently running.
+The global property the editionType can be used to determine what
+edition of the engine is currently running. 
 
-The editionType returns "community" if the currently running engine is the LiveCode Community IDE or a standalone built with LiveCode Community.
+The editionType returns "community" if the currently running engine is
+the LiveCode Community IDE or a standalone built with LiveCode
+Community. 
 
-The editionType returns "commercial" if the currently running engine is the LiveCode Commercial IDE or a standalone built with LiveCode Commercial.
+The editionType returns "commercial" if the currently running engine is
+the LiveCode Commercial IDE or a standalone built with LiveCode
+Commercial. 
 
 References: revLicenseType (function), version (function)

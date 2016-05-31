@@ -23,11 +23,15 @@ The <effectRate> is an <integer> between zero and 65535.
 By default, the <effectRate> <property> is set to 2000 (2 seconds).
 
 Value:
-You can specify five speeds with the visual effect <command> : very fast, fast, normal, slow, or very slow. The <effectRate> <property> specifies how long a very slow <a/>visual effect takes.
+You can specify five speeds with the visual effect <command> : very
+fast, fast, normal, slow, or very slow. The <effectRate> <property>
+specifies how long a very slow <a/>visual effect takes. 
 
 Description:
-Use the <effectRate> <property> to fine-tune the speed of visual effects.
+Use the <effectRate> <property> to fine-tune the speed of visual
+effects. 
 
-References: idleRate (property), syncRate (property), property (glossary), command (glossary), integer (keyword)
+References: idleRate (property), syncRate (property),
+property (glossary), command (glossary), integer (keyword)
 
 Tags: multimedia

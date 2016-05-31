@@ -32,8 +32,11 @@ Value (enum):
 This property is read-only and cannot be set.
 
 Description:
-Use the <status> <property> to find out the current status of a player object.
+Use the <status> <property> to find out the current status of a player
+object. 
 
-References: looping (property), showSelection (property), callbacks (property), startTime (property), duration (property), property (glossary), player (keyword)
+References: looping (property), showSelection (property),
+callbacks (property), startTime (property), duration (property),
+property (glossary), player (keyword)
 
 Tags: multimedia

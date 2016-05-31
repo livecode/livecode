@@ -19,17 +19,26 @@ Example:
 put harmonicMean(importedList) into field "Harmonic Mean"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList: A comma-separated list of numbers, or an expression that
+evaluates to such a list, or an array containing only numbers. 
 
 Returns: The <harmonicMean> function <return|returns> a number.
 
 Description:
-Use the <harmonicMean> <function> to find the <value(function)> that best represents a group of <value(glossary)|values> for sets of numbers which are defined in relation to some unit.
+Use the <harmonicMean> <function> to find the <value(function)> that
+best represents a group of <value(glossary)|values> for sets of numbers
+which are defined in relation to some unit. 
 
-The <harmonicMean> <function> was added in version 6.1 to complement the <average> <function>.
+The <harmonicMean> <function> was added in version 6.1 to complement the
+<average> <function>. 
 
-If the <numbersList> is empty, the <harmonicMean> <function> returns zero.
+If the <numbersList> is empty, the <harmonicMean> <function> returns
+zero. 
 
-References: function (control structure), min (function), geometricMean (function), statRound (function), variance (function), round (function), average (function), value (function), max (function), median (function), standardDeviation (function), return (glossary), value (glossary)
+References: function (control structure), min (function),
+geometricMean (function), statRound (function), variance (function),
+round (function), average (function), value (function), max (function),
+median (function), standardDeviation (function), return (glossary),
+value (glossary)
 
 Tags: math

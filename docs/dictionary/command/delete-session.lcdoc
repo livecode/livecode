@@ -16,8 +16,12 @@ Example:
 delete session
 
 Description:
-Use the <delete session> command to end the current session, expiring the session cookie and discarding any values contained in the $_SESSION variable.
+Use the <delete session> command to end the current session, expiring
+the session cookie and discarding any values contained in the $_SESSION
+variable. 
 
-References: stop session (command), start session (command), sessionSavePath (property), sessionLifetime (property), sessionId (property), sessionName (property)
+References: stop session (command), start session (command),
+sessionSavePath (property), sessionLifetime (property),
+sessionId (property), sessionName (property)
 
 Tags: multimedia

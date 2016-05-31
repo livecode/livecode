@@ -18,10 +18,13 @@ on escapeKey -- return to the last card visited
 end escapeKey
 
 Description:
-Handle the <escapeKey> <message> if you want to perform some action when the user presses <Escape key|Escape>.
+Handle the <escapeKey> <message> if you want to perform some action when
+the user presses <Escape key|Escape>. 
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused. 
 
-References: keyDown (message), Escape key (glossary), message (glossary)
+References: keyDown (message), Escape key (glossary),
+message (glossary)
 
 Tags: ui

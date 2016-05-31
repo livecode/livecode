@@ -21,16 +21,23 @@ Example:
 set the scaleFactor of stack "myApp" to 1.5
 
 Parameters:
-stack: A reference to a stack or an expression that evaluates to a stack.
-scale: A non-zero real number value which represents the scale multiplier.
+stack: A reference to a stack or an expression that evaluates to a
+stack. scale: A non-zero real number value which represents the scale
+multiplier. 
 
-Value: The <scaleFactor> property returns a a non-zero real number or empty.
+Value: The <scaleFactor> property returns a a non-zero real number or
+empty. 
 
 Description:
-Use the <scaleFactor> property when developing to scale down stacks that are larger than the available screen space.
+Use the <scaleFactor> property when developing to scale down stacks that
+are larger than the available screen space. 
 
-We do not recommend setting the <scaleFactor> property above 2. The higher the value, the more pixels must be rendered. For example, setting the <scaleFactor> property to 10 will cause 100 times the number of pixels to be rendered causing the IDE to run slowly.
+We do not recommend setting the <scaleFactor> property above 2. The
+higher the value, the more pixels must be rendered. For example, setting
+the <scaleFactor> property to 10 will cause 100 times the number of
+pixels to be rendered causing the IDE to run slowly. 
 
-References: iphoneUseDeviceResolution (command), usePixelScaling (property), systemPixelScale (property)
+References: iphoneUseDeviceResolution (command),
+usePixelScaling (property), systemPixelScale (property)
 
 Tags: windowing

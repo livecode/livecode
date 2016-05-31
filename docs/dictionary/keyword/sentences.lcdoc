@@ -4,7 +4,9 @@ Type: keyword
 
 Syntax: sentences
 
-Summary: Used with the <number> <function (control structure)>to designate parts of a string delimited by Unicode sentence breaks, as determined by the ICU Library.
+Summary: Used with the <number> <function (control structure)>to
+designate parts of a string delimited by Unicode sentence breaks, as
+determined by the ICU Library. 
 
 Introduced: 7.0
 
@@ -21,11 +23,14 @@ put "The green apple costs $0.50, the red apple costs $0.60. Which one should I 
 put the number of sentences in tText -- returns 2
 
 Description:
-Use the <sentences> <keyword> to count the number of sentences in a container.
+Use the <sentences> <keyword> to count the number of sentences in a
+container. 
 
-A <sentence> is a chunk delimited by Unicode sentence breaks, as determined by the ICU Library.
->*Note:*  The sentence chunk includes the punctuation mark at the end of the sentence, if there is one.
+A <sentence> is a chunk delimited by Unicode sentence breaks, as
+determined by the ICU Library. >*Note:*  The sentence chunk includes the
+punctuation mark at the end of the sentence, if there is one. 
 
-References: sentence (keyword), number (function), function (control structure), keyword (glossary)
+References: sentence (keyword), number (function),
+function (control structure), keyword (glossary)
 
 Tags: database

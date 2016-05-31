@@ -21,15 +21,20 @@ Example:
 put sqrt(sideA^2 + sideB^2) into hypotenuseLength
 
 Parameters:
-number: Any non-negative number, or an expression that evaluates to such a number.
+number: Any non-negative number, or an expression that evaluates to such
+a number. 
 
-Returns: The <sqrt> <function> <return|returns> a <non-negative> <number>.
+Returns: The <sqrt> <function> <return|returns> a <non-negative>
+<number>. 
 
 Description:
 Use the <sqrt> <function> to find the square root of a number.
 
-The square root of a <number> is the number which must be squared to obtain <number> : sqrt(<number>)^2 is equal to <number>.
+The square root of a <number> is the number which must be squared to
+obtain <number> : sqrt(<number>)^2 is equal to <number>. 
 
-References: ^ (operator), exp (function), number (function), return (glossary), non-negative (glossary), function (control structure)
+References: ^ (operator), exp (function), number (function),
+return (glossary), non-negative (glossary),
+function (control structure)
 
 Tags: math

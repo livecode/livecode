@@ -4,7 +4,10 @@ Type: keyword
 
 Syntax: words
 
-Summary: Used with the <sort> <command>, <number> <function>, and <is among> and <is not among> <properties> to designate space-<delimit|delimited> or <quoted> parts of a <string>. Also used with the <find> <command> to search for one or more entire <words>.
+Summary: Used with the <sort> <command>, <number> <function>, and <is
+among> and <is not among> <properties> to designate
+space-<delimit|delimited> or <quoted> parts of a <string>. Also used
+with the <find> <command> to search for one or more entire <words>. 
 
 Introduced: 1.0
 
@@ -23,8 +26,15 @@ Use the <words> <keyword> to <sort> or <select> individual <words>.
 
 A word is a set of characters enclosed by spaces, tabs, or returns.
 
-When used with the <find command>, the <words> <keyword> finds <card|cards> that contain each of the specified <words>, though not necessarily next to each other.
+When used with the <find command>, the <words> <keyword> finds
+<card|cards> that contain each of the specified <words>, though not
+necessarily next to each other. 
 
-References: properties (property), card (object), is among (operator), is not among (operator), word (keyword), string (keyword), words (keyword), function (control structure), keyword (glossary), command (glossary), quoted (glossary), delimit (glossary), number (function), select (command), find command (command), find (command), sort (command)
+References: properties (property), card (object), is among (operator),
+is not among (operator), word (keyword), string (keyword),
+words (keyword), function (control structure), keyword (glossary),
+command (glossary), quoted (glossary), delimit (glossary),
+number (function), select (command), find command (command),
+find (command), sort (command)
 
 Tags: database

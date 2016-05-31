@@ -6,7 +6,8 @@ Syntax: the propertyNames
 
 Syntax: propertyNames()
 
-Summary: <return|Returns> a list of all built-in <properties> in <LiveCode>.
+Summary: <return|Returns> a list of all built-in <properties> in
+<LiveCode>. 
 
 Introduced: 1.0
 
@@ -20,13 +21,23 @@ the propertyNames
 Example:
 if it is among the lines of the propertyNames then beep
 
-Returns: The <propertyNames> <function> <return|returns> a list of <property> names, one per <line>.
+Returns: The <propertyNames> <function> <return|returns> a list of
+<property> names, one per <line>. 
 
 Description:
-Use the <propertyNames> <function> to check whether a particular <property> already exists in <LiveCode>, to avoid using a <reserved word> for your own <custom property|custom properties>.
+Use the <propertyNames> <function> to check whether a particular
+<property> already exists in <LiveCode>, to avoid using a <reserved
+word> for your own <custom property|custom properties>. 
 
-The <propertyNames> <function> <return|returns> all the <property|properties> that can be used in <LiveCode>, including synonyms.
+The <propertyNames> <function> <return|returns> all the
+<property|properties> that can be used in <LiveCode>, including
+synonyms. 
 
-References: properties (property), customProperties (property), line (keyword), constantNames (function), functionNames (function), commandNames (function), colorNames (function), setProp (control structure), function (control structure), property (glossary), custom property (glossary), LiveCode (glossary), return (glossary), reserved word (glossary)
+References: properties (property), customProperties (property),
+line (keyword), constantNames (function), functionNames (function),
+commandNames (function), colorNames (function),
+setProp (control structure), function (control structure),
+property (glossary), custom property (glossary), LiveCode (glossary),
+return (glossary), reserved word (glossary)
 
 Tags: properties

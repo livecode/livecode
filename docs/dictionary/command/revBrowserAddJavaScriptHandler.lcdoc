@@ -4,7 +4,8 @@ Type: function
 
 Syntax: revBrowserAddJavaScriptHandler <instanceID>, <handlerName> 
 
-Summary: Adds the named handler to the 'LiveCode' object within the current JavaScript context of the browser.
+Summary: Adds the named handler to the 'LiveCode' object within the
+current JavaScript context of the browser. 
 
 Introduced: 6.7
 
@@ -20,13 +21,20 @@ put revOpenBrowserCef(the windowId of this stack, "http://www.livecode.com") int
 revBrowserAddJavaScriptHander, tBrowserID, "myLiveCodeHandler"
 
 Parameters:
-instanceID: the ID of the browser instance returned by the revOpenBrowser function.
-handlerName: the name of a LiveCode handler in the script of the card / stack displaying the browser.
+instanceID: the ID of the browser instance returned by the
+revOpenBrowser function. handlerName: the name of a LiveCode handler in
+the script of the card / stack displaying the browser. 
 
 Description:
-The  revBrowserAddJavaScriptHandler adds the named handler to the 'LiveCode' object within the currect JavaScript context of the browser.
+The  revBrowserAddJavaScriptHandler adds the named handler to the
+'LiveCode' object within the currect JavaScript context of the browser. 
 
-The revBrowserAddJavaScriptHandler function will make the named LiveCode handler visible to JavaScript within the browser as a function belonging to the global JavaScript 'LiveCode' object. Calling this JavaScript function will result in a call to the LiveCode handler, which will be passed the browser instance as the first parameter followed by any parameters given to the JavaScript function.
+The revBrowserAddJavaScriptHandler function will make the named LiveCode
+handler visible to JavaScript within the browser as a function belonging
+to the global JavaScript 'LiveCode' object. Calling this JavaScript
+function will result in a call to the LiveCode handler, which will be
+passed the browser instance as the first parameter followed by any
+parameters given to the JavaScript function. 
 
 Example:
 A LiveCode card has the following handler:
@@ -52,4 +60,11 @@ liveCode.myBrowserHandler(tValue1, tValue2);
 
 &lt;/script&gt;
 
-References: revBrowserStop (command), revBrowserPrint (command), revBrowserSet (command), revBrowserMakeTextBigger (command), revBrowserNavigate (command), revBrowserRemoveJavaScriptHandler (command), revBrowserClose (command), revBrowserOpenCef (function), browserOver (message), browserNewInstance (message), browserNewUrlWindow (message), browserDownloadRequest (message), browserNavigateCompleteFrame (message)
+References: revBrowserStop (command), revBrowserPrint (command),
+revBrowserSet (command), revBrowserMakeTextBigger (command),
+revBrowserNavigate (command),
+revBrowserRemoveJavaScriptHandler (command), revBrowserClose (command),
+revBrowserOpenCef (function), browserOver (message),
+browserNewInstance (message), browserNewUrlWindow (message),
+browserDownloadRequest (message),
+browserNavigateCompleteFrame (message)

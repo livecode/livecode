@@ -23,10 +23,15 @@ The <recordChannels> is either 1 or 2.
 By default, the <recordChannels> <property> is set to 1 (monophone).
 
 Description:
-Use the <recordChannels> <property> to trade off between sound quality and disk space when you record a sound.
+Use the <recordChannels> <property> to trade off between sound quality
+and disk space when you record a sound. 
 
-The <recordChannels> <property> determines the kind of recording made when you use the <record sound> <command> to record a sound.
+The <recordChannels> <property> determines the kind of recording made
+when you use the <record sound> <command> to record a sound. 
 
->*Note:* The <answer record> <command> sets the <recordChannels> <property> according to what the user chose in the <answer record> <dialog box>.
+>*Note:* The <answer record> <command> sets the <recordChannels>
+<property> according to what the user chose in the <answer record>
+<dialog box>. 
 
-References: answer record (command), record sound (command), property (glossary), command (glossary), dialog box (glossary)
+References: answer record (command), record sound (command),
+property (glossary), command (glossary), dialog box (glossary)

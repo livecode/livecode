@@ -21,15 +21,18 @@ Example:
 log2(0.125) -- returns -3
 
 Parameters:
-number: A positive number, or an expression that evaluates to a positive number.
+number: A positive number, or an expression that evaluates to a positive
+number. 
 
 Returns: The <log2> function <return|returns> a number.
 
 Description:
 Use the <log2> <function> to obtain a base-2 logarithm.
 
-The base-2 logarithm of a <number> is the power to which 2 must be raised to obtain the <number> : 2^log2(<number>) is equal to number.
+The base-2 logarithm of a <number> is the power to which 2 must be
+raised to obtain the <number> : 2^log2(<number>) is equal to number. 
 
-References: function (control structure), ln1 (function), return (glossary)
+References: function (control structure), ln1 (function),
+return (glossary)
 
 Tags: math

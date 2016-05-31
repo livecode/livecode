@@ -18,10 +18,16 @@ Example:
 put the externalPackages of stack "Main" into field "Package List"
 
 Value:
-The <externalFunctions> of a <stack> reports a list of available <external|external packages>, one per <line>.
-This property is read-only and cannot be set.
+The <externalFunctions> of a <stack> reports a list of available
+<external|external packages>, one per <line>. This property is read-only
+and cannot be set. 
 
 Description:
-Use the <externalPackages> <property> to find out whether a particular <external|external package> is available for use in <handler|handlers>, or to list all the available <external|external packages>.
+Use the <externalPackages> <property> to find out whether a particular
+<external|external package> is available for use in <handler|handlers>,
+or to list all the available <external|external packages>. 
 
-References: externalCommands (property), externalFunctions (property), destroyWindow (property), externals (property), line (keyword), stack (object), external (glossary), property (glossary), handler (glossary)
+References: externalCommands (property), externalFunctions (property),
+destroyWindow (property), externals (property), line (keyword),
+stack (object), external (glossary), property (glossary),
+handler (glossary)

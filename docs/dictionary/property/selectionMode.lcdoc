@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the selectionMode to {intersect | surround}
 
-Summary: Determines which <object|objects> are <selected> when you drag a rectangle with the Pointer <tool>.
+Summary: Determines which <object|objects> are <selected> when you drag
+a rectangle with the Pointer <tool>. 
 
 Introduced: 1.0
 
@@ -18,12 +19,22 @@ set the selectionMode to intersect
 Value: The <selectionMode> is either intersect or surround.
 
 Description:
-Use the <selectionMode> <property> to change the behavior of drag selections.
+Use the <selectionMode> <property> to change the behavior of drag
+selections. 
 
-When you choose the Pointer tool, click in the window, and drag diagonally to select a rectangle, objects within the rectangle are selected. The <selectionMode> <property> determines which <object|objects> are included inside the dragged rectangle.
+When you choose the Pointer tool, click in the window, and drag
+diagonally to select a rectangle, objects within the rectangle are
+selected. The <selectionMode> <property> determines which
+<object|objects> are included inside the dragged rectangle. 
 
-If the <selectionMode> is set to "intersect", all <object|objects> that are partially or completely inside the rectangle are <selected>. If the <selectionMode> is set to "surround", only <object|objects> that are completely inside the rectangle are <selected>.
+If the <selectionMode> is set to "intersect", all <object|objects> that
+are partially or completely inside the rectangle are <selected>. If the
+<selectionMode> is set to "surround" , only <object|objects> that are
+completely inside the rectangle are <selected>. 
 
->*Tip:*  You can also set the <selectionMode> by choosing <a/>Edit menu<img src="202656"/>Intersected Selections<important/>.
+>*Tip:*  You can also set the <selectionMode> by choosing <a/>Edit
+menu<img src="202656"/>Intersected Selections<important/>. 
 
-References: intersect (keyword), selectGroupedControls (property), selected (property), object (glossary), tool (function), property (glossary)
+References: intersect (keyword), selectGroupedControls (property),
+selected (property), object (glossary), tool (function),
+property (glossary)

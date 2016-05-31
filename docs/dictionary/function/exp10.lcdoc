@@ -30,8 +30,11 @@ Use the <exp10> function to obtain a power of 10.
 
 The expression exp10(number) is equal to 10^number.
 
-If <number> is a positive <integer>, exp10(number) is a 1 followed by <number> zeros. If <number> is a <negative> <integer>, exp10(number) is a decimal point followed by <number> -1  zeros and a one.
+If <number> is a positive <integer>, exp10(number) is a 1 followed by
+<number> zeros. If <number> is a <negative> <integer>, exp10(number) is
+a decimal point followed by <number> -1 zeros and a one. 
 
-References: integer (keyword), exp (function), negative (glossary), return (glossary), decimal (glossary)
+References: integer (keyword), exp (function), negative (glossary),
+return (glossary), decimal (glossary)
 
 Tags: math

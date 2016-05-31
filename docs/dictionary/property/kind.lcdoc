@@ -22,7 +22,8 @@ end if
 Value: The <kind> of a <widget> is a string.
 
 Description:
-Use the <kind> <property> to identify the type of an arbitrary <widget> object.
+Use the <kind> <property> to identify the type of an arbitrary <widget>
+object. 
 
 References: widget (object), property (glossary)
 

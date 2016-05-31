@@ -23,17 +23,27 @@ put the currentNode of player myPlayerName into myNode
 Value: The <currentNode> is a positive <integer>.
 
 Description:
-Use the <currentNode> <property> to find out where the user is in a <QuickTime VR> movie.
+Use the <currentNode> <property> to find out where the user is in a
+<QuickTime VR> movie. 
 
-Each node of a QuickTime VR movie is a viewpoint. The movie author sets the nodes during development of the movie. The user can change nodes using the navigational controls in the player; a handler can change nodes by setting the player's <currentNode> <property>.
+Each node of a QuickTime VR movie is a viewpoint. The movie author sets
+the nodes during development of the movie. The user can change nodes
+using the navigational controls in the player; a handler can change
+nodes by setting the player's <currentNode> <property>. 
 
-If the player does not contain a QuickTime VR movie, its <currentNode> <property> is zero.
+If the player does not contain a QuickTime VR movie, its <currentNode>
+<property> is zero. 
 
-Deprecated: In order to support 64-bit on Mac we have been required to switch to using AVFoundation on Mac, which does not support QTVR. In addition, the Windows player object is now based on DirectShow, as Apple have dropped support for the QuickTime libraries previously used.
+Deprecated: In order to support 64-bit on Mac we have been required to
+switch to using AVFoundation on Mac, which does not support QTVR. In
+addition, the Windows player object is now based on DirectShow, as Apple
+have dropped support for the QuickTime libraries previously used. 
 
 Changes:
-This property was deprecated in version 8.1.0 due to the retirement of the QuickTime player implementation.
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. 
 
-References: nodes (property), integer (keyword), nodeChanged (message), QuickTime VR (glossary), property (glossary)
+References: nodes (property), integer (keyword), nodeChanged (message),
+QuickTime VR (glossary), property (glossary)
 
 Tags: multimedia

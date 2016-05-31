@@ -4,7 +4,8 @@ Type: function
 
 Syntax: mobileGetContactData <contactId> 
 
-Summary: Allows the user to read contact information from the contacts list.
+Summary: Allows the user to read contact information from the contacts
+list. 
 
 Introduced: 5.5.1
 
@@ -20,9 +21,9 @@ put mobileGetContactData (field "InputData ID") into tResultData
 
 Parameters:
 contactId: 
- (enum): <name/> Person Information - The personal information of the contact is stored at the top level of the array and has the following keys:
-- "firstname": The first name.
-- "middlename": The middle name.
+ (enum): <name/> Person Information - The personal information of the
+contact is stored at the top level of the array and has the following
+keys: - "firstname" : The first name. - "middlename": The middle name.
 - "lastname": The last name.
 - "alternatename": The alternative name.
 - "nickname": The nick name (iOS only).
@@ -40,11 +41,20 @@ contactId:
 The result:
 A nested array of data entries for the specified user ID.
 If no contact could be found, then no array is returned.
-Use a test like: "if the result is an array" to determine if contact information was returned. "if the result is empty" will always be empty, even if data is returned in an array.
+Use a test like: "if the result is an array" to determine if contact
+information was returned. "if the result is empty" will always be empty,
+even if data is returned in an array. 
 
 Description:
-Allows the user to extract contact data information from the contact list, based on a contact ID. The information returned is stored in a nested array repressentation with the following format:
+Allows the user to extract contact data information from the contact
+list, based on a contact ID. The information returned is stored in a
+nested array repressentation with the following format: 
 
-Use the <mobileGetContactData> function to read contact data from the contact list.
+Use the <mobileGetContactData> function to read contact data from the
+contact list. 
 
-References: mobilePickDate (command), mobileRemoveContact (command), mobilePickMedia (command), mobilePickContact (command), mobileShowContact (command), mobilePick (command), mobileAddContact (command), mobileFindContact (command), mobileCreateContact (command)
+References: mobilePickDate (command), mobileRemoveContact (command),
+mobilePickMedia (command), mobilePickContact (command),
+mobileShowContact (command), mobilePick (command),
+mobileAddContact (command), mobileFindContact (command),
+mobileCreateContact (command)

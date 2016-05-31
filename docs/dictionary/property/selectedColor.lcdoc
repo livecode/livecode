@@ -4,7 +4,8 @@ Type: property
 
 Syntax: selectedColor
 
-Summary: The <selectedColor> <property> is <reserved word|reserved> for internal use.
+Summary: The <selectedColor> <property> is <reserved word|reserved> for
+internal use. 
 
 Introduced: 1.0
 

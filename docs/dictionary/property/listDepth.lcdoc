@@ -25,11 +25,18 @@ repeat with x = 0 to the number of lines of field 1
    end if
 end repeat
 
-Value: The <listDepth> of a line of a field returns the depth of the list line as a number.
+Value: The <listDepth> of a line of a field returns the depth of the
+list line as a number. 
 
 Description:
 Use the <listStyle> property to control the depth of a line in a list.
 
-References: hScrollbar (property), borderColor (property), textSize (property), listBehavior (property), formattedWidth (property), textAlign (property), spaceBelow (property), rightIndent (property), firstIndent (property), formattedText (property), tabstops (property), borderWidth (property), spaceAbove (property), hgrid (property), vgrid (property), backgroundColor (property), hidden (property), dontWrap (property), listStyle (property)
+References: hScrollbar (property), borderColor (property),
+textSize (property), listBehavior (property), formattedWidth (property),
+textAlign (property), spaceBelow (property), rightIndent (property),
+firstIndent (property), formattedText (property), tabstops (property),
+borderWidth (property), spaceAbove (property), hgrid (property),
+vgrid (property), backgroundColor (property), hidden (property),
+dontWrap (property), listStyle (property)
 
 Tags: ui

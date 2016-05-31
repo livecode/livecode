@@ -4,7 +4,8 @@ Type: function
 
 Syntax: standardDeviation(<numbersList>)
 
-Summary: <return|Returns> the sample standard deviation of a list of numbers.
+Summary: <return|Returns> the sample standard deviation of a list of
+numbers. 
 
 Synonyms: sampleStandardDeviation,sampStdDev,stdDev
 
@@ -21,15 +22,21 @@ Example:
 put standardDeviation(studentScores) into field "Sample Standard Deviation"
 
 Parameters:
-numbersList: A comma-separated list of numbers, or an expression that evaluates to such a list, or an array containing only numbers.
+numbersList: A comma-separated list of numbers, or an expression that
+evaluates to such a list, or an array containing only numbers. 
 
 Returns: The <standardDeviation> function <return|returns> a number.
 
 Description:
-Use the <standardDeviation> <function> to analyze the amount of spread in a list of numbers.
+Use the <standardDeviation> <function> to analyze the amount of spread
+in a list of numbers. 
 
-The sample standard deviation is a measure of how widely distributed the numbers in the <numbersList> are.
+The sample standard deviation is a measure of how widely distributed the
+numbers in the <numbersList> are. 
 
-References: function (control structure), populationVariance (function), averageDeviation (function), variance (function), average (function), median (function), populationStandardDeviation (function), sum (function), standardDeviation (function), return (glossary)
+References: function (control structure), populationVariance (function),
+averageDeviation (function), variance (function), average (function),
+median (function), populationStandardDeviation (function),
+sum (function), standardDeviation (function), return (glossary)
 
 Tags: math

@@ -4,7 +4,8 @@ Type: function
 
 Syntax: revXMLRPC_GetParamType(<XML-RPC document>,<param number>)
 
-Summary: Returns the type of a single parameter from an XML-RPC document structure.
+Summary: Returns the type of a single parameter from an XML-RPC document
+structure. 
 
 Introduced: 2.5
 

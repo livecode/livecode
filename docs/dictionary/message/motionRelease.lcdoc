@@ -4,7 +4,8 @@ Type: message
 
 Syntax: motionRelease <motion> 
 
-Summary: Sent when a motion is ended due to an incoming even such as a phone-call.
+Summary: Sent when a motion is ended due to an incoming even such as a
+phone-call. 
 
 Introduced: 4.5.2
 
@@ -21,12 +22,16 @@ Parameters:
 motion: The type of motion detected by the device
 
 Description:
-Handle the <motionRelease> message to perform an action when a motion is stopped due to an incoming event such as a phone-call.
+Handle the <motionRelease> message to perform an action when a motion is
+stopped due to an incoming event such as a phone-call. 
 
-The <motionRelease> message is sent to the current card of the <defaultStack> when a motion is ended due to an incoming event such as a phone-call.
+The <motionRelease> message is sent to the current card of the
+<defaultStack> when a motion is ended due to an incoming event such as a
+phone-call. 
 
 >*Note:* As of iPhoneOS 3.0 the only motion that is generated is "shake"
 
-References: defaultStack (property), motionEnd (message), motionStart (message)
+References: defaultStack (property), motionEnd (message),
+motionStart (message)
 
 Tags: ui

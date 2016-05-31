@@ -25,9 +25,14 @@ end if
 
 Parameters:
 ad: The name of the ad.
-visible (boolean): True to set the ad to visible, false to make the ad invisible.
+visible (boolean): True to set the ad to visible, false to make the ad
+invisible. 
 
 Description:
-Use the <mobileAdSetVisible> command to set the visibility of an ad created using the mobileAdCreate command.
+Use the <mobileAdSetVisible> command to set the visibility of an ad
+created using the mobileAdCreate command. 
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdSetTopLeft (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function), mobileAds (function), adLoaded (message), adLoadFailed (message), adClicked (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdSetTopLeft (command), mobileAdGetTopLeft (function),
+mobileAdGetVisible (function), mobileAds (function), adLoaded (message),
+adLoadFailed (message), adClicked (message)

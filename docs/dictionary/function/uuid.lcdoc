@@ -30,8 +30,8 @@ which the <uuidName> sits
 
 Returns:
 If the <uuidType> is empty or "random" a version 4 (random) UUID is 
-returned. A cryptographic quality pseudo-random number generator is used 
-to generate the randomness.
+returned. A cryptographic quality pseudo-random number generator is
+used to generate the randomness.
 
 If the <uuidType> is md5 a version 3 UUID is returned.
 

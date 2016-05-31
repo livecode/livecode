@@ -4,7 +4,8 @@ Type: control structure
 
 Syntax: exit repeat
 
-Summary: Skips the rest of the current <repeat> <loop> and goes to the <statement> following the <end repeat>.
+Summary: Skips the rest of the current <repeat> <loop> and goes to the
+<statement> following the <end repeat>. 
 
 Introduced: 1.0
 
@@ -16,18 +17,31 @@ Example:
 if x &gt; 0 then exit repeat
 
 Description:
-Use the <exit repeat> <control structure> to skip the rest of a <repeat> <loop>.
+Use the <exit repeat> <control structure> to skip the rest of a <repeat>
+<loop>. 
 
 Form:
-The <exit repeat> <statement> appears on a line by itself, anywhere inside a <repeat> <control structure>.
+The <exit repeat> <statement> appears on a line by itself, anywhere
+inside a <repeat> <control structure>. 
 
-After an <exit repeat> <statement>, none of the remaining <statement|statements> in the current <loop> is <execute|executed>, and any more <loop|loops> are skipped. The <handler> <resume|resumes> <execute|executing> at the first <statement> after the end of the <repeat> <loop>.
+After an <exit repeat> <statement>, none of the remaining
+<statement|statements> in the current <loop> is <execute|executed>, and
+any more <loop|loops> are skipped. The <handler> <resume|resumes>
+<execute|executing> at the first <statement> after the end of the
+<repeat> <loop>. 
 
-Usually, <exit repeat> is used within an <if> <control structure>, so that the <loop> stops if a condition is true and continues if the condition is false. This example stops the <loop> when the user presses the mouse button:
+Usually, <exit repeat> is used within an <if> <control structure>, so
+that the <loop> stops if a condition is true and continues if the
+condition is false. This example stops the <loop> when the user presses
+the mouse button: 
 
   repeat with x = 1 to the number of cards
     go card x
     if the mouse is down then exit repeat -- bail out
   end repeat
 
-References: end repeat (keyword), handler (glossary), resume (glossary), statement (glossary), loop (glossary), execute (glossary), control structure (glossary), exit (control structure), next repeat (control structure), repeat (control structure), if (control structure)
+References: end repeat (keyword), handler (glossary), resume (glossary),
+statement (glossary), loop (glossary), execute (glossary),
+control structure (glossary), exit (control structure),
+next repeat (control structure), repeat (control structure),
+if (control structure)

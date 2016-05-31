@@ -4,7 +4,8 @@ Type: function
 
 Syntax: compound(<interestPerPeriod>, <numberOfPeriods>)
 
-Summary: <return|Returns> the principal plus accrued interest of an investment.
+Summary: <return|Returns> the principal plus accrued interest of an
+investment. 
 
 Introduced: 1.0
 
@@ -21,12 +22,14 @@ put theInvestment * compound(yearlyInterest,numberYears) into endValue
 Parameters:
 interestPerPeriod: 
 numberOfPeriods: A positive number.
-interestRate: A positive number. The interestRate is expressed as a fraction of 1 so, for example, an 8% rate is written .08.
+interestRate: A positive number. The interestRate is expressed as a
+fraction of 1 so, for example, an 8% rate is written .08. 
 
 Returns: The <compound> <function> <return|returns> a positive number.
 
 Description:
-Use the <compound> <function> to calculate the value of an investment that earns interest.
+Use the <compound> <function> to calculate the value of an investment
+that earns interest. 
 
 The formula for the value of an compound-interest-bearing account is
 
@@ -34,8 +37,11 @@ The formula for the value of an compound-interest-bearing account is
 
 The <compound> <function> calculates this value.
 
-The <numberOfPeriods> and the <interestRate> must use the same unit of time. For example, if the periods are months, the interest rate is the interest per month.
+The <numberOfPeriods> and the <interestRate> must use the same unit of
+time. For example, if the periods are months, the interest rate is the
+interest per month. 
 
-References: function (control structure), annuity (function), round (function), return (glossary)
+References: function (control structure), annuity (function),
+round (function), return (glossary)
 
 Tags: math

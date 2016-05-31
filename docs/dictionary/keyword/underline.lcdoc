@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: underline
 
-Summary: Used with the <textStyle> <property> to indicate underlined text.
+Summary: Used with the <textStyle> <property> to indicate underlined
+text. 
 
 Introduced: 1.0
 
@@ -18,9 +19,12 @@ set the textStyle of field "Manhunt" to underline
 Description:
 Use the <underline> <keyword> to emphasize text by underlining it.
 
-You can underline an object (which underlines all the text displayed by the object) or  a chunk in a field or button.
+You can underline an object (which underlines all the text displayed by
+the object) or a chunk in a field or button. 
 
-To add underlining to an object without removing other styles (such as bold), append the <underline> <keyword> to the end of the <textStyle>. The following example adds underlining to the styles of a <button> :
+To add underlining to an object without removing other styles (such as
+bold), append the <underline> <keyword> to the end of the <textStyle>.
+The following example adds underlining to the styles of a <button> : 
 
     if the textStyle of button 1 is empty then
        set the textStyle of button 1 to "underline"
@@ -29,6 +33,7 @@ To add underlining to an object without removing other styles (such as bold), ap
              (the textStyle of button 1) & comma & "underline"
     end if
 
-References: button (keyword), italic (keyword), textStyle (property), property (glossary), keyword (glossary)
+References: button (keyword), italic (keyword), textStyle (property),
+property (glossary), keyword (glossary)
 
 Tags: ui

@@ -21,10 +21,14 @@ Example:
 get the short name of previous card
 
 Description:
-Use the <previous> <keyword> to move backward in the <stack> or to <object reference|reference> the <card> before the <current card>.
+Use the <previous> <keyword> to move backward in the <stack> or to
+<object reference|reference> the <card> before the <current card>. 
 
-If you are already on the first card, the <previous> <card> is the last <card> in the <stack>.
+If you are already on the first card, the <previous> <card> is the last
+<card> in the <stack>. 
 
-References: first (keyword), next (keyword), last (keyword), card (keyword), go (command), stack (object), keyword (glossary), current card (glossary), object reference (glossary)
+References: first (keyword), next (keyword), last (keyword),
+card (keyword), go (command), stack (object), keyword (glossary),
+current card (glossary), object reference (glossary)
 
 Tags: navigation

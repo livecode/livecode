@@ -4,7 +4,9 @@ Type: property
 
 Syntax: set the lockUpdates of <group> to {true | false}
 
-Summary: When a control within a group is resized or moved it causes all parents to recalculate their bounds appropriately. The lockUpdates property of the group prevents this behavior.
+Summary: When a control within a group is resized or moved it causes all
+parents to recalculate their bounds appropriately. The lockUpdates
+property of the group prevents this behavior. 
 
 Associations: group
 
@@ -29,13 +31,21 @@ Value (bool):The <lockUpdates> of a group is true or false.
 By default, the <lockUpdates> property of newly created groups is set to false.
 
 Description:
-Use the <lockUpdates> property to temporarily prevent parent controls from recalculating their size when a child object changes position or size.
+Use the <lockUpdates> property to temporarily prevent parent controls
+from recalculating their size when a child object changes position or
+size. 
 
-When a control within a group is resized or moved it causes all parents to recalculate their bounds appropriately. This action can now be temporarily suspended by using the <lockUpdates> property of the group.
+When a control within a group is resized or moved it causes all parents
+to recalculate their bounds appropriately. This action can now be
+temporarily suspended by using the <lockUpdates> property of the group. 
 
-Typically, you'll want to set the lockUpdates of a group to true before performing moving or resizing child controls, and then turn it back to false afterwards.
+Typically, you'll want to set the lockUpdates of a group to true before
+performing moving or resizing child controls, and then turn it back to
+false afterwards. 
 
->*Note:*  The <lockUpdates> property does not nest and the group will not resize itself appropriately based on the child controls until it is set back to false.
+>*Note:*  The <lockUpdates> property does not nest and the group will
+not resize itself appropriately based on the child controls until it is
+set back to false. 
 
 References: lockLocation (property), resizeControl (message)
 

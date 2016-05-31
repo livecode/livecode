@@ -27,8 +27,8 @@ camera (enum):
 - empty: return capabilities of all cameras
 
 Returns:
-The <mobileCameraFeatures> function returns a comma-delimited list of one or more of the following:
-For a specific camera ("front" | "rear")
+The <mobileCameraFeatures> function returns a comma-delimited list of
+one or more of the following: For a specific camera ("front" | "rear")
 * photo - the camera is capable of taking photos
 * video - the camera is capable of recording videos
 * flash - the camera has a flash that can be turned on or off
@@ -44,8 +44,11 @@ If no camera parameter is specified:
 * empty - the device has no cameras.
 
 Description:
-Use <mobileCameraFeatures> to find out what camera capabilities the device has.
+Use <mobileCameraFeatures> to find out what camera capabilities the
+device has. 
 
-At this time, Android can only detect whether there are front and/or back cameras and whether they can take photos.
+At this time, Android can only detect whether there are front and/or
+back cameras and whether they can take photos. 
 
-References: mobileExportImageToAlbum (command), mobilePickPhoto (command)
+References: mobileExportImageToAlbum (command),
+mobilePickPhoto (command)

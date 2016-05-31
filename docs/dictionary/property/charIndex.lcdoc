@@ -4,7 +4,8 @@ Type: property
 
 Syntax: get the charIndex of <fieldChunk> 
 
-Summary: The <charIndex> of a field chunk returns the character offset in the field of the start of the chunk.
+Summary: The <charIndex> of a field chunk returns the character offset
+in the field of the start of the chunk. 
 
 Associations: field
 

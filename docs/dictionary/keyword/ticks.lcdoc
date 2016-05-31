@@ -18,10 +18,13 @@ Example:
 wait for 10 ticks -- 1/6 of a second
 
 Description:
-Use the <ticks> <keyword> to designate a time period with the <wait> or <send> <command|commands>. 
+Use the <ticks> <keyword> to designate a time period with the <wait> or
+<send> <command|commands>. 
 
-When used with the wait or <send> <command|commands>, the <ticks> <keyword> designates a time period measured in sixtieths of a second.
+When used with the wait or <send> <command|commands>, the <ticks>
+<keyword> designates a time period measured in sixtieths of a second. 
 
-References: seconds (keyword), wait (command), send (command), ticks (function), keyword (glossary), command (glossary)
+References: seconds (keyword), wait (command), send (command),
+ticks (function), keyword (glossary), command (glossary)
 
 Tags: math

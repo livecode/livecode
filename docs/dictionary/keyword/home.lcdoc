@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: home
 
-Summary: This keyword exists only to aid compatibility with imported HyperCard stacks.
+Summary: This keyword exists only to aid compatibility with imported
+HyperCard stacks. 
 
 Introduced: 1.0
 
@@ -19,6 +20,8 @@ Example:
 go home
 
 Description:
-In the development environment, the home stack is the License stack, and the statement go home does not do anything useful.
+In the development environment, the home stack is the License stack, and
+the statement go home does not do anything useful. 
 
-References: middle (keyword), last (keyword), two (constant), number (property), seconds (function)
+References: middle (keyword), last (keyword), two (constant),
+number (property), seconds (function)

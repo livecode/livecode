@@ -4,7 +4,8 @@ Type: keyword
 
 Syntax: target
 
-Summary: Specifies the text contents of the <field> which was the target of the <message> currently being <handle|handled>.
+Summary: Specifies the text contents of the <field> which was the target
+of the <message> currently being <handle|handled>. 
 
 Introduced: 1.0
 
@@ -16,12 +17,18 @@ Example:
 answer target
 
 Description:
-Use the <target> <keyword> to access the contents of the <field> named in the <target> <function>.
+Use the <target> <keyword> to access the contents of the <field> named
+in the <target> <function>. 
 
-The only semantic difference between the <target> <function> and the <target> <keyword> is that the <target> <keyword> is not preceded by the word "the".
+The only semantic difference between the <target> <function> and the
+<target> <keyword> is that the <target> <keyword> is not preceded by the
+word "the" . 
 
-If the target object is not a field, the <target> <keyword> reports the name of the <object(glossary)>, just like the <target> <function>.
+If the target object is not a field, the <target> <keyword> reports the
+name of the <object(glossary)>, just like the <target> <function>. 
 
-References: field (keyword), function (control structure), target (function), handle (glossary), message (glossary), keyword (glossary), object (glossary)
+References: field (keyword), function (control structure),
+target (function), handle (glossary), message (glossary),
+keyword (glossary), object (glossary)
 
 Tags: objects

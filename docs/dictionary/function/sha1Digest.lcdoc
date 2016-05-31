@@ -6,7 +6,8 @@ Syntax: the sha1Digest of <data>
 
 Syntax: sha1Digest(<data>)
 
-Summary: Returns the SHA-1 digest of a block of data in the form of 20 (binary) bytes.
+Summary: Returns the SHA-1 digest of a block of data in the form of 20
+(binary) bytes. 
 
 Introduced: 4.6
 
@@ -23,10 +24,12 @@ sha1Digest(tData)
 Parameters:
 data: A block of data.
 
-Returns: The <sha1Digest> function returns the SHA-1 digest of a block of data in the form of 20 (binary) bytes.
+Returns: The <sha1Digest> function returns the SHA-1 digest of a block
+of data in the form of 20 (binary) bytes. 
 
 Description:
-Use the <sha1Digest> function to compute the SHA-1 digest of a block of data.
+Use the <sha1Digest> function to compute the SHA-1 digest of a block of
+data. 
 
 References: md5Digest (function)
 

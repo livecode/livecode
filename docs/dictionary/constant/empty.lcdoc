@@ -16,12 +16,16 @@ Example:
 put empty into field "Results" -- clears the field
 
 Description:
-Use the <empty> <constant> as an easier-to-read substitute for a <quoted> <string> with nothing inside the quotes, "".
+Use the <empty> <constant> as an easier-to-read substitute for a
+<quoted> <string> with nothing inside the quotes, "" . 
 
 Putting <empty> into a <field> or <variable> clears it.
 
-Putting <empty> into a nonexistent <variable> creates the <variable> with no content.
+Putting <empty> into a nonexistent <variable> creates the <variable>
+with no content. 
 
-References: constant (command), delete variable (command), string (keyword), field (keyword), quoted (glossary), variable (glossary)
+References: constant (command), delete variable (command),
+string (keyword), field (keyword), quoted (glossary),
+variable (glossary)
 
 Tags: text processing

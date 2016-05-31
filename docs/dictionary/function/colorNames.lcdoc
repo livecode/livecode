@@ -6,7 +6,8 @@ Syntax: the colorNames
 
 Syntax: colorNames()
 
-Summary: <return|Returns> a list of the color names you can use in <LiveCode>.
+Summary: <return|Returns> a list of the color names you can use in
+<LiveCode>. 
 
 Introduced: 1.0
 
@@ -20,13 +21,28 @@ the colorNames
 Example:
 if field "Color" is not among the lines of the colorNames then beep
 
-Returns: The <colorNames> function <return|returns> a list of color names, one per line.
+Returns: The <colorNames> function <return|returns> a list of color
+names, one per line. 
 
 Description:
-Use the <colorNames> <property> to check whether a particular color name can be used to specify <properties> such as <foregroundColor> and <backgroundColor>.
+Use the <colorNames> <property> to check whether a particular color name
+can be used to specify <properties> such as <foregroundColor> and
+<backgroundColor>. 
 
-You can use the color names with the foregroundColor, <backgroundColor>, <focusColor>, <topColor>, <bottomColor>, <hiliteColor>, <borderColor>, <shadowColor>, <selectionHandleColor>, <accentColor>, <backdrop>, <brushColor>, and <penColor> <properties>.
+You can use the color names with the foregroundColor, <backgroundColor>,
+<focusColor>, <topColor>, <bottomColor>, <hiliteColor>, <borderColor>,
+<shadowColor>, <selectionHandleColor>, <accentColor>, <backdrop>,
+<brushColor>, and <penColor> <properties>. 
 
-References: hiliteColor (property), shadowColor (property), foregroundColor (property), linkHiliteColor (property), HTMLText (property), borderColor (property), penColor (property), focusColor (property), brushColor (property), properties (property), backdrop (property), bottomColor (property), backgroundColor (property), accentColor (property), topColor (property), linkColor (property), selectionHandleColor (property), is a (operator), answer color (command), propertyNames (function), functionNames (function), property (glossary), LiveCode (glossary), return (glossary)
+References: hiliteColor (property), shadowColor (property),
+foregroundColor (property), linkHiliteColor (property),
+HTMLText (property), borderColor (property), penColor (property),
+focusColor (property), brushColor (property), properties (property),
+backdrop (property), bottomColor (property), backgroundColor (property),
+accentColor (property), topColor (property), linkColor (property),
+selectionHandleColor (property), is a (operator),
+answer color (command), propertyNames (function),
+functionNames (function), property (glossary), LiveCode (glossary),
+return (glossary)
 
 Tags: ui

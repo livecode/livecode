@@ -20,11 +20,14 @@ on objectSelectionStarted
 end objectSelectionStarted
 
 Description:
-Handle the objectSelectionStarted message if you want to do something when the user starts selection controls by dragging over them.
+Handle the objectSelectionStarted message if you want to do something
+when the user starts selection controls by dragging over them. 
 
-The <objectSelectionStarted> message is sent to the current card when, in edit mode, the user drags over a control.
+The <objectSelectionStarted> message is sent to the current card when,
+in edit mode, the user drags over a control. 
 
->*Note:* The <objectSelectionStarted> message is only available in the IDE.
+>*Note:* The <objectSelectionStarted> message is only available in the
+IDE. 
 
 References: objectSelectionEnded (message)
 

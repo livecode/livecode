@@ -36,24 +36,31 @@ Example:
 go invisible stack "Preferences"
 
 Parameters:
-card: Any card reference. Cards can be described by their name, number, or ID properties.
-stack: Any stack reference, or any file path or http URL reference that resolves to a stack file. If you specify a file path or http URL, the command opens the main stack of the specified stack file.
-mode (enum):
-- editable window :
-- palette :
+card: Any card reference. Cards can be described by their name, number,
+or ID properties. stack: Any stack reference, or any file path or http
+URL reference that resolves to a stack file. If you specify a file path
+or http URL, the command opens the main stack of the specified stack
+file. mode (enum): - editable window : - palette :
 - modal dialog box :
 - modeless dialog box :
 - sheet dialog box : appears in <defaultStack>
-- drawer : appears in <defaultStack>, centered at left side if there's room
-window: The name or windowID property of any open stack. If a window is specified, the stack opens in that window, replacing the stack that was previously displayed in that window.
-number: The number of cards to move within the recent cards list.
+- drawer : appears in <defaultStack>, centered at left side if there's
+room window: The name or windowID property of any open stack. If a
+window is specified, the stack opens in that window, replacing the stack
+that was previously displayed in that window. number: The number of
+cards to move within the recent cards list. 
 
-The result: If the stack or card you specify doesn't exist, an error message is returned by the result function.
+The result: If the stack or card you specify doesn't exist, an error
+message is returned by the result function. 
 
 Description:
-Use the <go> command to move to another card in the current stack, to open a stack and go to a card within it, or to move backward and forward among recently visited cards.
+Use the <go> command to move to another card in the current stack, to
+open a stack and go to a card within it, or to move backward and forward
+among recently visited cards. 
 
-If the stack is open, is closed but loaded into memory, or is listed in the current stack's stackFiles property, you can specify it simply by name:
+If the stack is open, is closed but loaded into memory, or is listed in
+the current stack's stackFiles property, you can specify it simply by
+name: 
 
 go stack "My Stack"
 
@@ -93,6 +100,12 @@ if there is a stack myPath then go card 2 of stack myPath
 
 The go... as sheet form was introduced in version 2.0. Previous versions did not support sheet dialogs.
 
-References: lockRecent property (property), lockScreen (property), lockScreen property (property), HCImportStat (property), visible property (property), previous (keyword), recent (keyword), as (keyword), card (keyword), unlock recent (command), show command (command), show cards (command), drawer (command), modeless (command), push (command), stack (object), defaultStack (property)
+References: lockRecent property (property), lockScreen (property),
+lockScreen property (property), HCImportStat (property),
+visible property (property), previous (keyword), recent (keyword),
+as (keyword), card (keyword), unlock recent (command),
+show command (command), show cards (command), drawer (command),
+modeless (command), push (command), stack (object),
+defaultStack (property)
 
 Tags: navigation

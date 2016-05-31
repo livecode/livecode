@@ -20,11 +20,16 @@ on adResizeStart pAdName
 end adResizeStart
 
 Parameters:
-adName: The name of ad that has been expanded (as specified in mobileAdCreate)
+adName: The name of ad that has been expanded (as specified in
+mobileAdCreate) 
 
 Description:
-Handle the <adResizeStart> message if you want to perform an action when an ad is about to resize.
+Handle the <adResizeStart> message if you want to perform an action when
+an ad is about to resize. 
 
-The <adResizeStart> messge is sent to the current card when an ad is about to resize.
+The <adResizeStart> messge is sent to the current card when an ad is
+about to resize. 
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdDelete (command), adLoaded (message), adLoadFailed (message), adResizeEnd (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdDelete (command), adLoaded (message), adLoadFailed (message),
+adResizeEnd (message)

@@ -25,13 +25,19 @@ set the imageData of image "Browser Thumbnail" to tSnapshot
 
 Parameters:
 instanceId: The integer identifier of a browser object.
-variableName: The name of a variable to place the resulting image data into.
+variableName: The name of a variable to place the resulting image data
+into. 
 
-The result: The <revBrowserSnapshot> command puts empty into the <result>.
+The result: The <revBrowserSnapshot> command puts empty into the
+<result>. 
 
 Description:
-The <revBrowserSnapshot> command takes a snapshot of the page currently being displayed in the specified browser object. 
+The <revBrowserSnapshot> command takes a snapshot of the page currently
+being displayed in the specified browser object. 
 
-The <variableName> should be the name of a declared variable. This means that before calling <revBrowserSnapshot> a variable to place the image data into should be declared using the <local command>.
+The <variableName> should be the name of a declared variable. This means
+that before calling <revBrowserSnapshot> a variable to place the image
+data into should be declared using the <local command>. 
 
-References: local command (command), revBrowserPrint (command), revBrowserClose (command), revBrowserSet (command), result (function)
+References: local command (command), revBrowserPrint (command),
+revBrowserClose (command), revBrowserSet (command), result (function)

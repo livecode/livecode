@@ -25,17 +25,27 @@ The <movieControllerID> of a <stack> is an <integer>.
 The <movieControllerID> <property> is <read-only> and cannot be set.
 
 Description:
-Use the <movieControllerID> <property> to pass to an <external> that needs to manipulate the <player>.
+Use the <movieControllerID> <property> to pass to an <external> that
+needs to manipulate the <player>. 
 
 The controller ID is provided by the operating system.
 
-Some externals need to manipulate the QuickTime movie directly, and do so by referencing the ID. Such externals require you to pass the ID when you use the external.
+Some externals need to manipulate the QuickTime movie directly, and do
+so by referencing the ID. Such externals require you to pass the ID when
+you use the external. 
 
-Deprecated: In order to support 64-bit on Mac we have been required to switch to using AVFoundation on Mac, which does not support this feature. In addition, the Windows player object is now based on DirectShow, as Apple have dropped support for the QuickTime libraries previously used.
+Deprecated: In order to support 64-bit on Mac we have been required to
+switch to using AVFoundation on Mac, which does not support this
+feature. In addition, the Windows player object is now based on
+DirectShow, as Apple have dropped support for the QuickTime libraries
+previously used. 
 
 Changes:
-This property was deprecated in version 8.1.0 due to the retirement of the QuickTime player implementation.
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. 
 
-References: windowID (property), showController (property), integer (keyword), player (keyword), play (command), stack (object), property (glossary), external (glossary), read-only (glossary)
+References: windowID (property), showController (property),
+integer (keyword), player (keyword), play (command), stack (object),
+property (glossary), external (glossary), read-only (glossary)
 
 Tags: multimedia

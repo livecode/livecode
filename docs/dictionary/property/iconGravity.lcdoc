@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the iconGravity of <button> to <position> 
 
-Summary: Specifies wether the icon of a button is placed independently of the label.
+Summary: Specifies wether the icon of a button is placed independently
+of the label. 
 
 Associations: button
 
@@ -31,10 +32,14 @@ Value(enum): A string representing the desired layout of the icon of the button.
 - resize: Stretches the icon to fill the button.
 
 Description:
-Use to iconGravity property to position the icon of a button independent of the label.
+Use to iconGravity property to position the icon of a button independent
+of the label. 
 
-The margins and borderWidth are taken into account when rendering the icon - the rectangle the icon is placed in is taken to be the button rect after subtracting margins and borderWidth all the way round.
+The margins and borderWidth are taken into account when rendering the
+icon - the rectangle the icon is placed in is taken to be the button
+rect after subtracting margins and borderWidth all the way round. 
 
-References: borderWidth (property), icon (property), margins (property), iconGravity (property)
+References: borderWidth (property), icon (property), margins (property),
+iconGravity (property)
 
 Tags: ui

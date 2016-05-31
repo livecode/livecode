@@ -4,7 +4,8 @@ Type: property
 
 Syntax: get the hotspots of <player> 
 
-Summary: Reports a list of the clickable hot spots in a <QuickTime VR> movie.
+Summary: Reports a list of the clickable hot spots in a <QuickTime VR>
+movie. 
 
 Associations: player
 
@@ -24,17 +25,27 @@ Value (enum): The <hotspots> consists of a list of hot spots, one per line. Each
 The <hotspots> <property> is <read:only> and cannot be set
 
 Description:
-Use the <hotspots> <property> to list the clickable spots of a <QuickTime VR> movie.
+Use the <hotspots> <property> to list the clickable spots of a
+<QuickTime VR> movie. 
 
-Each hot spot of a QuickTime VR movie is a clickable link, usually from one node to another. The movie author sets the hot spots during development of the movie. The user clicks a hot spot in the player to activate the link.
+Each hot spot of a QuickTime VR movie is a clickable link, usually from
+one node to another. The movie author sets the hot spots during
+development of the movie. The user clicks a hot spot in the player to
+activate the link. 
 
-If the player does not contain a QuickTime VR movie, its <hotspots> <property> is empty.
+If the player does not contain a QuickTime VR movie, its <hotspots>
+<property> is empty. 
 
-Deprecated: In order to support 64-bit on Mac we have been required to switch to using AVFoundation on Mac, which does not support QTVR. In addition, the Windows player object is now based on DirectShow, as Apple have dropped support for the QuickTime libraries previously used.
+Deprecated: In order to support 64-bit on Mac we have been required to
+switch to using AVFoundation on Mac, which does not support QTVR. In
+addition, the Windows player object is now based on DirectShow, as Apple
+have dropped support for the QuickTime libraries previously used. 
 
 Changes:
-This property was deprecated in version 8.1.0 due to the retirement of the QuickTime player implementation.
+This property was deprecated in version 8.1.0 due to the retirement of
+the QuickTime player implementation. 
 
-References: items (keyword), hotspotClicked (message), QuickTime VR (glossary), property (glossary), read-only (glossary)
+References: items (keyword), hotspotClicked (message),
+QuickTime VR (glossary), property (glossary), read-only (glossary)
 
 Tags: multimedia

@@ -19,10 +19,13 @@ on tabKey -- go forward in stack on tab, backward on shift-tab
 end tabKey
 
 Description:
-Handle the <tabKey> <message> when you want to perform an action (such as going to the next <card>) when the user presses the Tab key.
+Handle the <tabKey> <message> when you want to perform an action (such
+as going to the next <card>) when the user presses the Tab key. 
 
-The message is sent to the active (focused) control, or to the current card if no control is focused.
+The message is sent to the active (focused) control, or to the current
+card if no control is focused. 
 
-References: tabStops (property), tabGroupBehavior (property), autoTab (property), card (keyword), focus (command), message (glossary)
+References: tabStops (property), tabGroupBehavior (property),
+autoTab (property), card (keyword), focus (command), message (glossary)
 
 Tags: ui

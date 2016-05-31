@@ -18,6 +18,7 @@ get scrollbarFactor
 Description:
 This constant is obsolete and no longer used in LiveCode.
 
-References: endValue (property), vScroll (property), startValue (property), hScroll (property)
+References: endValue (property), vScroll (property),
+startValue (property), hScroll (property)
 
 Tags: ui

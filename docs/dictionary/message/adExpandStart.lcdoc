@@ -20,11 +20,16 @@ on adExpandStart pAdName
 end adExpandStart
 
 Parameters:
-adName: The name of ad that has been expanded (as specified in mobileAdCreate)
+adName: The name of ad that has been expanded (as specified in
+mobileAdCreate) 
 
 Description:
-Handle the <adExpandStart> message if you want to perform an action when an ad is about to expand.
+Handle the <adExpandStart> message if you want to perform an action when
+an ad is about to expand. 
 
-The <adExpandStart> messge is sent to the current card when an ad is about to expand.
+The <adExpandStart> messge is sent to the current card when an ad is
+about to expand. 
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdDelete (command), adLoaded (message), adLoadFailed (message), adExpandEnd (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdDelete (command), adLoaded (message), adLoadFailed (message),
+adExpandEnd (message)

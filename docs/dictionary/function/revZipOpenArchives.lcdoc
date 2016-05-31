@@ -22,10 +22,12 @@ if tArchive is among the lines of revZipOpenArchives() then
   beep
 end if
 
-Returns: The <revZipOpenArchives> function returns a list of absolute file paths, one per line, or empty if no archives are open.
+Returns: The <revZipOpenArchives> function returns a list of absolute
+file paths, one per line, or empty if no archives are open. 
 
 Description:
-Use the <revZipOpenArchives> function if you need to know the paths of the archives that have been loaded using revZipOpenArchive.
+Use the <revZipOpenArchives> function if you need to know the paths of
+the archives that have been loaded using revZipOpenArchive. 
 
 References: revZipCloseArchive (command)
 

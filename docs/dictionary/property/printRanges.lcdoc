@@ -29,16 +29,24 @@ Value: The <printRanges> property is one of the following values.
   - a comma-separated list of ranges or individual page numbers
 
 Description:
-Use the <printRanges> property to specify ranges of pages to be printed. 
+Use the <printRanges> property to specify ranges of pages to be
+printed. 
 
-If the <printRanges> is set to a list of ranges, LiveCode will automatically skip pages not in the range. Otherwise it is up to the application to print the appropriate pages.
+If the <printRanges> is set to a list of ranges, LiveCode will
+automatically skip pages not in the range. Otherwise it is up to the
+application to print the appropriate pages. 
 
-If an application wishes to handle the skipping of pages, it can do so by setting the <printRanges> property to "all" before starting the printing loop.
+If an application wishes to handle the skipping of pages, it can do so
+by setting the <printRanges> property to "all" before starting the
+printing loop. 
 
->*Note:* LiveCode automatically handles coalescing overlapping ranges, e.g. 1-10,5-25,23 will result in the range being 1-25.
+>*Note:* LiveCode automatically handles coalescing overlapping ranges,
+e.g. 1-10,5-25,23 will result in the range being 1-25. 
 
-To have an effect, this property must be set before calling <open printing>.
+To have an effect, this property must be set before calling <open
+printing>. 
 
-References: open printing (command), answer printer (command), printPageNumber (property)
+References: open printing (command), answer printer (command),
+printPageNumber (property)
 
 Tags: printing

@@ -4,7 +4,8 @@ Type: message
 
 Syntax: deleteScrollbar
 
-Summary: Sent to a <scrollbar> just before it is removed from the <stack>.
+Summary: Sent to a <scrollbar> just before it is removed from the
+<stack>. 
 
 Associations: scrollbar
 
@@ -21,12 +22,18 @@ on deleteScrollbar -- prevent the deletion by immediately undoing it
 end deleteScrollbar
 
 Description:
-Handle the <deleteScrollbar> <message> if you want to perform cleanup before a <scrollbar> is removed from the <stack>.
+Handle the <deleteScrollbar> <message> if you want to perform cleanup
+before a <scrollbar> is removed from the <stack>. 
 
-The actual deletion is not triggered by the <deleteScrollbar> <message>, so <trap|trapping> the <message> and not allowing it to <pass> does not prevent the <scrollbar> from being removed.
+The actual deletion is not triggered by the <deleteScrollbar> <message>,
+so <trap|trapping> the <message> and not allowing it to <pass> does not
+prevent the <scrollbar> from being removed. 
 
-However, the undo <command> will restore a <scrollbar> after it is deleted by the user.
+However, the undo <command> will restore a <scrollbar> after it is
+deleted by the user. 
 
-References: scrollbar (keyword), delete (command), stack (object), command (glossary), message (glossary), trap (glossary), pass (control structure)
+References: scrollbar (keyword), delete (command), stack (object),
+command (glossary), message (glossary), trap (glossary),
+pass (control structure)
 
 Tags: objects

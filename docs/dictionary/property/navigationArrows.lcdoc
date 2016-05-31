@@ -21,17 +21,23 @@ By default, the <navigationArrows> <property> is set to true.
 Description:
 Use the <navigationArrows> <property> to control what the arrow keys do.
 
-If the <navigationArrows> is true, pressing the keyboard arrow keys moves to a different <card> :
+If the <navigationArrows> is true, pressing the keyboard arrow keys
+moves to a different <card> : 
 
         * The Left arrow key moves to the previous card.
         * The Right arrow key moves to the next card.
         * The Up arrow key moves backward within the recent-cards list.
         * The Down arrow key moves forward within the recent-cards list.
 
-If there is an insertion point or text selection in a field, and the textArrows <property> is set to true, the arrow keys move the insertion <point> one <character> left or right, or one line up or down. In this case, the setting of the <navigationArrows> <property> has no effect.
+If there is an insertion point or text selection in a field, and the
+textArrows <property> is set to true, the arrow keys move the insertion
+<point> one <character> left or right, or one line up or down. In this
+case, the setting of the <navigationArrows> <property> has no effect. 
 
-If an object is selected, pressing the arrow keys nudges the object one pixel in the appropriate direction.
+If an object is selected, pressing the arrow keys nudges the object one
+pixel in the appropriate direction. 
 
-References: powerKeys (property), card (keyword), point (keyword), character (keyword), arrowKey (message), property (glossary)
+References: powerKeys (property), card (keyword), point (keyword),
+character (keyword), arrowKey (message), property (glossary)
 
 Tags: navigation

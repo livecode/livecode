@@ -22,10 +22,14 @@ Parameters:
 cookieName: the name of the cookie
 
 Description:
-Use the <sessionName> property to set the name of the cookie used to store the session id.
+Use the <sessionName> property to set the name of the cookie used to
+store the session id. 
 
-Use the <sessionName> property to set the the name of the cookie used to store the session id.
+Use the <sessionName> property to set the the name of the cookie used to
+store the session id. 
 
-If the <sessionName> is not specified then the default, LCSESSION, is used.
+If the <sessionName> is not specified then the default, LCSESSION, is
+used. 
 
-References: sessionSavePath (property), sessionLifetime (property), sessionID (property)
+References: sessionSavePath (property), sessionLifetime (property),
+sessionID (property)

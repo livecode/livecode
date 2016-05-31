@@ -6,7 +6,8 @@ Syntax: the aliasReference of <aliasPath>
 
 Syntax: aliasReference(<aliasPath>)
 
-Summary: <return|Returns> the name and location of the <file> or <folder> that an <alias>, <symbolic link>, or <shortcut> refers to.
+Summary: <return|Returns> the name and location of the <file> or
+<folder> that an <alias>, <symbolic link>, or <shortcut> refers to. 
 
 Introduced: 1.1
 
@@ -23,15 +24,24 @@ Example:
 put the aliasReference of it into fileToOpen
 
 Parameters:
-aliasPath: The location and name of the alias whose referenced file or folder you want to get. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.
+aliasPath: The location and name of the alias whose referenced file or
+folder you want to get. If you specify a name but not a location,
+LiveCode assumes the file is in the defaultFolder. 
 
-The result: If the <aliasPath> does not exist, the <aliasReference> <function> returns <empty> and the <result> is set to "can't get".
+The result: If the <aliasPath> does not exist, the <aliasReference>
+<function> returns <empty> and the <result> is set to "can't get" . 
 
-Returns: The <aliasReference> <function> <return|returns> the name and location of a <file> or <folder>.
+Returns: The <aliasReference> <function> <return|returns> the name and
+location of a <file> or <folder>. 
 
 Description:
-Use the <aliasReference> <function> to perform an operation on a <file> after the user has selected an <alias>, <symbolic link>, or <shortcut> to the <file>.
+Use the <aliasReference> <function> to perform an operation on a <file>
+after the user has selected an <alias>, <symbolic link>, or <shortcut>
+to the <file>. 
 
-References: file (keyword), empty (constant), create alias (command), function (control structure), symbolic link (glossary), shortcut (glossary), return (glossary), alias (glossary), folder (glossary), result (function), aliasReference (function)
+References: file (keyword), empty (constant), create alias (command),
+function (control structure), symbolic link (glossary),
+shortcut (glossary), return (glossary), alias (glossary),
+folder (glossary), result (function), aliasReference (function)
 
 Tags: file system

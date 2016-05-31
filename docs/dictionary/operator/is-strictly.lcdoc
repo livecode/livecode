@@ -4,7 +4,8 @@ Type: operator
 
 Syntax: <value> is strictly [ nothing | a boolean | an integer | a real | a string | a binary string | an array ]
 
-Summary: Evaluates to true if the actual type of <value> is the specified type.
+Summary: Evaluates to true if the actual type of <value> is the
+specified type. 
 
 Introduced: 8.0
 
@@ -48,4 +49,5 @@ true if `x` is truly an integer or if it is a string which can be parsed
 as an integer; whereas `x is strictly an integer` only returns true if
 `x` is currently an integer (and not a string).
 
-References: is not strictly (operator), is a (operator), is not a (operator)
+References: is not strictly (operator), is a (operator),
+is not a (operator)

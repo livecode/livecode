@@ -4,7 +4,8 @@ Type: operator
 
 Syntax: <string> begins with <prefix> 
 
-Summary: The <begins with> operator takes two strings and returns true if the second string matches the start of the first string.
+Summary: The <begins with> operator takes two strings and returns true
+if the second string matches the start of the first string. 
 
 Introduced: 2.9
 
@@ -23,8 +24,13 @@ string (string):
 prefix: 
 
 Description:
-For the expression to evaluate to true the whole of <prefix> must be present at the beginning of <string>. For example, if <prefix> has three characters these must match the first three characters of <string> (in order).
+For the expression to evaluate to true the whole of <prefix> must be
+present at the beginning of <string>. For example, if <prefix> has three
+characters these must match the first three characters of <string> (in
+order). 
 
-This operator takes into consideration the current value of the <caseSensitive property>.
+This operator takes into consideration the current value of the
+<caseSensitive property>. 
 
-References: ends with (operator), contains (operator), offset (function), length (function), caseSensitive property (property)
+References: ends with (operator), contains (operator),
+offset (function), length (function), caseSensitive property (property)

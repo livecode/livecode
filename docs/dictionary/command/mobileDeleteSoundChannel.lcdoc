@@ -24,8 +24,18 @@ Parameters:
 channel: The name of the channel.
 
 Description:
-Use the <mobileDeleteSoundChannel> command to remove a channel from memory.
+Use the <mobileDeleteSoundChannel> command to remove a channel from
+memory. 
 
-Sound channels only consume system resources when they are playing sounds, thus you don't need to be concerned about having many around at once (assuming most are inactive).
+Sound channels only consume system resources when they are playing
+sounds, thus you don't need to be concerned about having many around at
+once (assuming most are inactive). 
 
-References: mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+References: mobilePlaySoundOnChannel (command),
+mobileSetSoundChannelVolume (command),
+mobilePausePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command),
+mobileResumePlayingOnChannel (command),
+mobileSoundChannelVolume (function), mobileSoundOnChannel (function),
+mobileNextSoundOnChannel (function), mobileSoundChannels (function),
+mobileSoundChannelStatus (function), soundFinishedOnChannel (message)

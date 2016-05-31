@@ -24,23 +24,27 @@ Example:
 ln(10) -- returns 2.302585
 
 Parameters:
-number: A positive number, or an expression that evaluates to a positive number.
+number: A positive number, or an expression that evaluates to a positive
+number. 
 
 Returns: The <ln> <function> <return|returns> a number.
 
 Description:
 Use the <ln> function to obtain a base e logarithm.
 
-The natural logarithm of a <number> is the power to which e must be raised to obtain the <number>.
+The natural logarithm of a <number> is the power to which e must be
+raised to obtain the <number>. 
 
 The transcendental number e appears in many mathematical formulas.
 
-To find the logarithm of a number in any base, use the following function:
+To find the logarithm of a number in any base, use the following
+function: 
 
   function logarithm theBase,theNumber
     return ln(theNumber)/ln(theBase)
   end logarithm
 
-References: function (control structure), ln1 (function), exp (function), return (glossary)
+References: function (control structure), ln1 (function),
+exp (function), return (glossary)
 
 Tags: math

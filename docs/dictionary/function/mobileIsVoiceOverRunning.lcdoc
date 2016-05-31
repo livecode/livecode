@@ -20,4 +20,5 @@ if mobileIsVoiceOverRunning() then
 end if
 
 Description:
-Use the <mobileIsVoiceOverRunning> function if you need to know if Voice Over is turned on or not.
+Use the <mobileIsVoiceOverRunning> function if you need to know if Voice
+Over is turned on or not. 

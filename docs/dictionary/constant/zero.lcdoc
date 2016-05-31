@@ -18,7 +18,8 @@ Example:
 if the number of fields is zero then beep
 
 Description:
-Use the <zero> <constant> when it is easier to read than the numeral 0<a/>.
+Use the <zero> <constant> when it is easier to read than the numeral
+0<a/>. 
 
 References: constant (command)
 

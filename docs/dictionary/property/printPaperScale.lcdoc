@@ -22,12 +22,15 @@ set the printPaperScale to the label of button "Scale" of group "Print Settings"
 Example:
 set the printPaperScale to 2
 
-Value: The <printPaperScale> is a number greater than 0, it does not have to be a whole number. The default value is 1.
+Value: The <printPaperScale> is a number greater than 0, it does not
+have to be a whole number. The default value is 1. 
 
 Description:
-Use the <printPaperScale> property to apply a final scaling factor to a printed page after all other settings have been taken into account.
+Use the <printPaperScale> property to apply a final scaling factor to a
+printed page after all other settings have been taken into account. 
 
-To have an effect, this property must be set before calling <open printing>.
+To have an effect, this property must be set before calling <open
+printing>. 
 
 References: open printing (command), answer printer (command)
 

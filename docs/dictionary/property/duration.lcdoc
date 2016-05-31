@@ -22,10 +22,16 @@ The <duration> of a <player> is an integer.
 This property is read-only and cannot be set.
 
 Description:
-Use the <duration> <property> to find out how long a movie or sound takes to play.
+Use the <duration> <property> to find out how long a movie or sound
+takes to play. 
 
-The <duration> of a <player(keyword)> is the number of intervals in the movie or sound contained in the <player(keyword)>. (The number of intervals per second is specified by the <player(object)|player's> <timeScale> <property>.)
+The <duration> of a <player(keyword)> is the number of intervals in the
+movie or sound contained in the <player(keyword)>. (The number of
+intervals per second is specified by the <player(object)|player's>
+<timeScale> <property>.) 
 
-References: looping (property), showSelection (property), callbacks (property), startTime (property), timeScale (property), player (keyword), player (object), property (glossary)
+References: looping (property), showSelection (property),
+callbacks (property), startTime (property), timeScale (property),
+player (keyword), player (object), property (glossary)
 
 Tags: multimedia

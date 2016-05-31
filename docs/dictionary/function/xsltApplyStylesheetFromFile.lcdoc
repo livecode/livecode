@@ -19,7 +19,9 @@ put xsltApplyStylesheetFromFile(tDocID, tFilePath) into tProcessedData
 The result: &lt;!-- order the result by revenue --&gt;.
 
 Description:
-The xsltApplyStylesheetFromFile function returns the data set resulting from applying the xslt document in the specified file against the specified xml document. For instance, given xml data of
+The xsltApplyStylesheetFromFile function returns the data set resulting
+from applying the xslt document in the specified file against the
+specified xml document. For instance, given xml data of 
 
 &lt;sales&gt;
         &lt;division id="North"&gt;
@@ -61,8 +63,8 @@ and a file containing xslt data of
                           order="descending"/&gt;
                 &lt;tr&gt;
                     &lt;td&gt;
-                        &lt;em&gt;&lt;xsl:value-of select="@id"/&gt;&lt;/em&gt;
-                    &lt;/td&gt;
+                        &lt;em&gt;&lt;xsl:value-of
+                    select="@id"/&gt;&lt;/em&gt; &lt;/td&gt;
                     &lt;td&gt;
                         &lt;xsl:value-of select="revenue"/&gt;
                     &lt;/td&gt;
@@ -88,8 +90,8 @@ You would end up with
 
 &lt;html lang="en"&gt;
 &lt;head&gt;
-&lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8"&gt;
-&lt;title&gt;Sales Results By Division&lt;/title&gt;
+&lt;meta http-equiv="Content-Type" content="text/html;
+charset=UTF-8"&gt; &lt;title&gt;Sales Results By Division&lt;/title&gt;
 &lt;/head&gt;
 &lt;body&gt;&lt;table border="1"&gt;
 &lt;tr&gt;
@@ -119,6 +121,9 @@ You would end up with
 &lt;/table&gt;&lt;/body&gt;
 &lt;/html&gt;
 
-References: revXMLEvaluateXpath (function), xsltLoadStylesheet (function), xsltLoadStylesheetFromFile (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), xsltApplyStylesheetFromFile (function)
+References: revXMLEvaluateXpath (function),
+xsltLoadStylesheet (function), xsltLoadStylesheetFromFile (function),
+revXMLCreateTreeFromFile (function), revXMLCreateTree (function),
+xsltApplyStylesheetFromFile (function)
 
 Tags: xml

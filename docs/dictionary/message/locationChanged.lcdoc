@@ -4,7 +4,8 @@ Type: message
 
 Syntax: locationChanged <latitude>, <longitude>, <altitude> 
 
-Summary: Sent to the current card of the default stack when the location of the device changes.
+Summary: Sent to the current card of the default stack when the location
+of the device changes. 
 
 Introduced: 4.5.2
 
@@ -29,10 +30,16 @@ longitude: the longitude of the device
 altitude: the altitude of the device
 
 Description:
-Handle the <locationChanged> message if you want to perform tasks when the location of the device changes.
+Handle the <locationChanged> message if you want to perform tasks when
+the location of the device changes. 
 
-The <locationChanged> message is sent to the current card of the default stack when the location of the device changes. 
+The <locationChanged> message is sent to the current card of the default
+stack when the location of the device changes. 
 
-If location tracking cannot be started (typically due to the user 'not allowing' access to CoreLocation) then a trackingError message is sent instead.
+If location tracking cannot be started (typically due to the user 'not
+allowing' access to CoreLocation) then a trackingError message is sent
+instead. 
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileCurrentLocation (function), trackingError (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileCurrentLocation (function),
+trackingError (message)

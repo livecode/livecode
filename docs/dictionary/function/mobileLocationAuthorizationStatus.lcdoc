@@ -4,7 +4,8 @@ Type: function
 
 Syntax: mobileLocationAuthorizationStatus()
 
-Summary: Returns the current location authorization status of the calling aplication.
+Summary: Returns the current location authorization status of the
+calling aplication. 
 
 Synonyms: iphoneLocationAuthorizationStatus()
 
@@ -28,8 +29,12 @@ Returns (enum): The <mobileLocationAuthorizationStatus> function returns one of 
 - authorizedWhenInUse : User has granted authorization to use their location only when the app is visible to them. Authorization to use launch APIs has not been granted
 
 Description:
-Use the <mobileLocationAuthorizationStatus> function to find the current location authorization status of the calling application. 
+Use the <mobileLocationAuthorizationStatus> function to find the current
+location authorization status of the calling application. 
 
 This function is available in iOS 8 and above.
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileSensorReading (function), mobileCurrentLocation (function), trackingError (message), locationChanged (message)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileSensorReading (function),
+mobileCurrentLocation (function), trackingError (message),
+locationChanged (message)

@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the blinkRate to <blinkDelayInMilliseconds> 
 
-Summary: Specifies the interval in <milliseconds> between the time the <insertion point> blinks on and the time it blinks off.
+Summary: Specifies the interval in <milliseconds> between the time the
+<insertion point> blinks on and the time it blinks off. 
 
 Introduced: 1.0
 
@@ -23,10 +24,13 @@ The <blinkRate> is an <integer> between 1 and 65535.
 By default, the <blinkRate> is 200 (one-fifth of a second).
 
 Description:
-Use the <blinkRate> <property> to control how fast the text <insertion point> blinks.
+Use the <blinkRate> <property> to control how fast the text <insertion
+point> blinks. 
 
 The <blinkRate> should be a multiple of the <idleRate>.
 
-References: idleRate (property), syncRate (property), typingRate (property), integer (keyword), milliseconds (function), property (glossary), insertion point (glossary)
+References: idleRate (property), syncRate (property),
+typingRate (property), integer (keyword), milliseconds (function),
+property (glossary), insertion point (glossary)
 
 Tags: ui

@@ -26,6 +26,15 @@ Returns (enum): The <mobileSoundChannelStatus> function returns one of:
    - playing : a sound is currently playing
 
 Description:
-Use the <mobileSoundChannelStatus> function to find the status of the given channel.
+Use the <mobileSoundChannelStatus> function to find the status of the
+given channel. 
 
-References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileSoundOnChannel (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), soundFinishedOnChannel (message)
+References: mobileDeleteSoundChannel (command),
+mobilePlaySoundOnChannel (command),
+mobileSetSoundChannelVolume (command),
+mobilePausePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command),
+mobileResumePlayingOnChannel (command),
+mobileSoundChannelVolume (function), mobileSoundOnChannel (function),
+mobileNextSoundOnChannel (function), mobileSoundChannels (function),
+soundFinishedOnChannel (message)

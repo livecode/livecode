@@ -26,16 +26,30 @@ on browserBeforeNavigate pInstanceId, pUrl
 end browserBeforeNavigate
 
 Parameters:
-instanceId: instanceId : the integer identifier of a browser object >*Note:* For general information on using the browser library, see the notes in the revBrowserOpen function reference.
-url: url : The new url that the browser is about to navigate to
+instanceId: instanceId : the integer identifier of a browser object
+>*Note:* For general information on using the browser library, see the
+notes in the revBrowserOpen function reference. url: url : The new url
+that the browser is about to navigate to 
 
 Description:
-The <browserBeforeNavigate> message is sent to a the current card of the stack containing a browser object when the browser object is about to navigate to a new url, ie a change in url in the target browser has been requested but not yet actioned. 
+The <browserBeforeNavigate> message is sent to a the current card of the
+stack containing a browser object when the browser object is about to
+navigate to a new url, ie a change in url in the target browser has been
+requested but not yet actioned. 
 
-If the target is the main frame of the browser (e.g. the html page containing the "FRAMESET" declaration), then the <browserBeforeNavigate> message is sent, otherwise the <browserBeforeNavigateFrame message> is sent instead
+If the target is the main frame of the browser (e.g. the html page
+containing the "FRAMESET" declaration), then the <browserBeforeNavigate>
+message is sent, otherwise the <browserBeforeNavigateFrame message> is
+sent instead 
 
-To prevent the navigatation from occurring, set the global variable <browserCancel> to true.
+To prevent the navigatation from occurring, set the global variable
+<browserCancel> to true. 
 
->*Note:* For general information on using the browser library, see the notes in the <revBrowserOpen function> reference.
+>*Note:* For general information on using the browser library, see the
+notes in the <revBrowserOpen function> reference. 
 
-References: browserNewUrlWindow (message), browserDownloadRequest (message), browserBeforeNavigateFrame (message), browserBeforeNavigateFrame message (message), revBrowserNavigate (command), revBrowserOpen function (function), browserCancel (glossary)
+References: browserNewUrlWindow (message),
+browserDownloadRequest (message), browserBeforeNavigateFrame (message),
+browserBeforeNavigateFrame message (message),
+revBrowserNavigate (command), revBrowserOpen function (function),
+browserCancel (glossary)
