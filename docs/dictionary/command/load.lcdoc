@@ -82,16 +82,6 @@ not support 'libUrl' but allows you to use <load> in the background.
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
->*Note:*  When included in a <standalone application>, the 
-<Internet library> is implemented as a hidden <group> and made available 
-when the <group> receives its first <openBackground> message. During the 
-first part of the <application|application's> startup process, before 
-this <message> is sent, the <load> <command> is not yet available. This 
-may affect attempts to use this <command> in <startup>, <preOpenStack>, 
-<openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. 
-Once the <application> has finished starting up, the <library> is 
-available and the <load> <command> can be used in any <handler>.
-
 References: script (property), object (glossary), startup (message), 
 openBackground (message), preOpenStack (message), openStack (message), 
 preOpenCard (message), Internet library (library), library (library), 

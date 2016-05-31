@@ -54,8 +54,6 @@ get URL fileURLToGet
 
 >*Important:* The <post> command is part of the Internet library on desktops. To ensure that the command works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section of the Standalone Application Settings window, make sure "Internet Library" is selected in the list of script libraries.
 
->*Note:* When included in a standalone application, the Internet library is implemented as a hidden group and made available when the group receives its first openBackground message. During the first part of the application startup process, before this message is sent, the <post> command is not yet available. This may affect attempts to use this command in startup, preOpenStack, openStack, or preOpenCard hand in the main stack. Once the application has finished starting up, the library is available and the <post> command can be used in any handler.
-
 > *Note:* The Android and iOS engines do not support 'libUrl' but do
 > allow you to use <post> in the background. When specifying URLs for
 > Android or iOS, you must use the appropriate form that conforms to
