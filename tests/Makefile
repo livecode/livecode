@@ -34,9 +34,10 @@ guess_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Commu
 guess_dev_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community,$(bin_dir)/LiveCode-Community)
 
 # When running on headless Linux, run tests in -ui mode.
+TRAVIS ?= false
 guess_engine_flags_script := \
-	if echo $(guess_platform) | grep "^linux" >/dev/null 2>&1 && \
-	        ! xset -q >/dev/null 2>&1 ; then \
+	if (echo $(guess_platform) | grep "^linux" >/dev/null 2>&1 && \
+	        ! xset -q >/dev/null 2>&1) || $(TRAVIS) ; then \
 	    echo "-ui"; \
 	fi
 guess_engine_flags := $(shell $(guess_engine_flags_script))
