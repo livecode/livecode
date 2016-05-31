@@ -671,9 +671,6 @@ function revFolderNameMakeLegal pName
    return tLegalName
 end revFolderNameMakeLegal
 
-// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
-constant kPlatforms = "Windows,MacOSX x86-32,Linux"
-
 // List of all desktop target platforms + architecture
 constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
@@ -708,6 +705,9 @@ constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
+
+// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
+constant kInitialTargets = "Windows,MacOSX x86-32,Linux"
 
 on revDefaultStandaloneSettings pStack
    local tStandaloneSettingsA,tPlatform,tName
@@ -751,9 +751,9 @@ on revDefaultStandaloneSettings pStack
    if tStandaloneSettingsA["UNIX,pageSetup"] = "" then put true into tStandaloneSettingsA["UNIX,pageSetup"]
    if tStandaloneSettingsA["UNIX,fileSelector"] = "" then put true into tStandaloneSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
-   repeat for each item tPlatform in kPlatforms
-      if tStandaloneSettingsA[tPlatform] = "" then 
-            put revEngineCheck(tPlatform) into tStandaloneSettingsA[tPlatform]
+   repeat for each item tTarget in kInitialTargets
+      if tStandaloneSettingsA[tTarget] = "" then 
+            put revEngineCheck(tTarget) into tStandaloneSettingsA[tTarget]
       end if
    end repeat
    
