@@ -749,7 +749,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				break;
 			case kLCValueOptionAsLCArray:
 				t_options_to_use = kMCOptionAsVariable;
-				t_value_to_use = &t_array_value;
+				t_error = (LCError)MCVariableCreate(&t_array_value);
+				t_value_to_use = t_array_value;
 				break;
                 
             // SN-2014-07-01: [[ ExternalsApiV6 ]] Handling unicode types
@@ -822,7 +823,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
                 if (s_interface -> version < 6)
                 {
                     t_options_to_use = kMCOptionAsVariable;
-                    t_value_to_use = &t_array_value;
+                    t_error = (LCError)MCVariableCreate(&t_array_value);
+                    t_value_to_use = t_array_value;
                 }
                 else
                 {
@@ -834,7 +836,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
                 if (s_interface -> version < 6)
                 {
                     t_options_to_use = kMCOptionAsVariable;
-                    t_value_to_use = &t_array_value;
+                    t_error = (LCError)MCVariableCreate(&t_array_value);
+                    t_value_to_use = t_array_value;
                 }
                 else
                 {

@@ -34,6 +34,7 @@ enum NativeType
 	kNativeTypeUTF8CData,
 	kNativeTypeUTF16CString,
 	kNativeTypeUTF16CData,
+	kNativeTypeLCArray,
 	kNativeTypeCArray,
 	kNativeTypeCDictionary,
 	kNativeTypeObjcString,
