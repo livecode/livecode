@@ -28,8 +28,6 @@ B) The current object's stack's mainstack (if a substack)
 C) The current object's stack's mainstacks substacks
 D) The list of open stacks, in order they were loaded
 
-<img src="202651"/> >*Tip:* LiveCode includes several built-in <cursor(glossary)|cursors> whose names you can use in place of their image IDs. The built-in cursors are described in the entry for the <cursor(property)> <property>.
-
 Description:
 Use the <defaultCursor> <property> to change the <cursor(property)> used when the <Browse tool> is being used from a hand to some other <cursor(property)> shape.
 
