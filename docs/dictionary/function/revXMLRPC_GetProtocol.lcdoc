@@ -37,6 +37,6 @@ If the <revXMLRPC_GetProtocol> <function> encounters an error, it <return|return
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: https (keyword), http (keyword), revXMLRPC_SetProtocol (command), function (control structure), Standalone Application Settings (glossary), host (glossary), standalone application (glossary), return (glossary), function (glossary), XML-RPC request (glossary), XML-RPC library (library), LiveCode custom library (library)
+References: https (keyword), http (keyword), revXMLRPC_SetProtocol (command), function (control structure), Standalone Application Settings (glossary), host (glossary), standalone application (glossary), return (glossary), function (glossary), XML-RPC request (glossary), XML-RPC library (library), LiveCode custom library (glossary)
 
 Tags: networking

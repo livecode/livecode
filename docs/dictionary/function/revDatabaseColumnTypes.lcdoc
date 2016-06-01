@@ -66,4 +66,4 @@ You can use the <revDatabaseColumnTypes> <function> to find out what kind of dat
 Changes:
 The revDatabaseColumnTypes synonym was added in version 2.0.
 
-References: field (keyword), Database library (library), LiveCode custom library (library), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseType (function), return (glossary), binary file (glossary), record set (database cursor) (glossary), Standalone Application Settings (glossary), standalone application (glossary), column (glossary), database field (glossary), BLOB (glossary), function (control structure)
+References: field (keyword), Database library (library), LiveCode custom library (glossary), revDatabaseColumnNames (function), revDatabaseColumnLengths (function), revDatabaseType (function), return (glossary), binary file (glossary), record set (database cursor) (glossary), Standalone Application Settings (glossary), standalone application (glossary), column (glossary), database field (glossary), BLOB (glossary), function (control structure)

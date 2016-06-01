@@ -44,4 +44,4 @@ The higher the <volume>, the louder LiveCode will speak. Setting the volume to 0
 References: revSpeak (command), revSetSpeechProvider (command), 
 revGetSpeechVolume (function), Standalone Application Settings (glossary), 
 standalone application (glossary), command (glossary), 
-Speech library (library), LiveCode custom library (library)
+Speech library (library), LiveCode custom library (glossary)

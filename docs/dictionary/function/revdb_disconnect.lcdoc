@@ -38,6 +38,6 @@ Evaluating the <revdb_disconnect> <function> has the same effect as <execute|exe
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: revCloseCursor (command), revCloseDatabase (command), function (control structure), Standalone Application Settings (glossary), database (glossary), command (glossary), standalone application (glossary), execute (glossary), function call (glossary), Database library (library), LiveCode custom library (library)
+References: revCloseCursor (command), revCloseDatabase (command), function (control structure), Standalone Application Settings (glossary), database (glossary), command (glossary), standalone application (glossary), execute (glossary), function call (glossary), Database library (library), LiveCode custom library (glossary)
 
 Tags: database

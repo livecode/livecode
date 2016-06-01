@@ -35,7 +35,7 @@ If your application uses text to speech, you should execute the <revUnloadSpeech
 > <Standalone Application Settings> window, make sure the "Speech" 
 > library checkbox is checked.
 
-References: Speech library (library), LiveCode custom library (library), 
+References: Speech library (library), LiveCode custom library (glossary), 
 closeStack (message), shutdown (message), unload (command), 
 revLoadSpeech (command), revSpeak (command), revStopSpeech (command), 
 revSetSpeechProvider (command), hasMemory (function), handler (glossary), 

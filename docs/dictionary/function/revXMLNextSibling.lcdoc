@@ -45,6 +45,6 @@ If the <revXMLNextSibling> <function> encounters an error, it <return|returns> a
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: nodes (property), XML library (library), LiveCode custom library (library), revXMLRootNode (function), revXMLFirstChild (function), sibling node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), child node (glossary), function (control structure)
+References: nodes (property), XML library (library), LiveCode custom library (glossary), revXMLRootNode (function), revXMLFirstChild (function), sibling node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), child node (glossary), function (control structure)
 
 Tags: text processing

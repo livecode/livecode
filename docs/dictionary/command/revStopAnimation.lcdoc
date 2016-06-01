@@ -38,6 +38,6 @@ The <animationName> must be an animation that was created on the <current card> 
 > <Standalone Application Settings> window, make sure the "Animation" 
 > library checkbox is checked.
 
-References: defaultStack (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), stop (command), revPlayAnimation (command), revGoToFramePaused (command), play (command), current card (glossary), main stack (glossary), handler (glossary), key frame (glossary), Standalone Application Settings (glossary), group (glossary), standalone application (glossary), trigger (glossary), message (glossary), command (glossary), application (glossary), LiveCode custom library (library), Animation library (library), library (library)
+References: defaultStack (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), stop (command), revPlayAnimation (command), revGoToFramePaused (command), play (command), current card (glossary), main stack (glossary), handler (glossary), key frame (glossary), Standalone Application Settings (glossary), group (glossary), standalone application (glossary), trigger (glossary), message (glossary), command (glossary), application (glossary), LiveCode custom library (glossary), Animation library (library), library (library)
 
 Tags: multimedia

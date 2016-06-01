@@ -46,6 +46,6 @@ Use the <revXMLPutIntoNode> <command> to put data into a <node>, between the <no
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLDeleteNode (command), revXMLAppend (command), result (function), uniDecode (function), XML tree (glossary), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), Unicode (glossary), node (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLDeleteNode (command), revXMLAppend (command), result (function), uniDecode (function), XML tree (glossary), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), Unicode (glossary), node (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

@@ -35,6 +35,6 @@ Use the <revXMLDeleteAllTrees> <command> to free up memory after you finish usin
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLDeleteTree (command), result (function), revXMLTrees (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLDeleteTree (command), result (function), revXMLTrees (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

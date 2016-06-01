@@ -46,7 +46,7 @@ The <revSpeak> <command> uses the voice, pitch, and speed specified by the <revS
 > library checkbox is checked.
 
 References: closeStack (message), shutdown (message), 
-Speech library (library), LiveCode custom library (library), 
+Speech library (library), LiveCode custom library (glossary), 
 handler (glossary), Standalone Application Settings (glossary), 
 standalone application (glossary), text to speech (glossary), 
 execute (glossary), command (glossary), stack (object), 

@@ -37,4 +37,4 @@ If the <revXMLRPC_GetMethod> <function> encounters an error, it <return|returns>
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), function (glossary), XML-RPC document (glossary), XML-RPC library (library), LiveCode custom library (library)
+References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), function (glossary), XML-RPC document (glossary), XML-RPC library (library), LiveCode custom library (glossary)

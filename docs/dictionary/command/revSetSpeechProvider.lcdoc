@@ -54,4 +54,4 @@ References: revSetSpeechSpeed (command), revUnloadSpeech (command),
 revUnloadSpeech (command), revSetSpeechVolume (command), 
 result (function), revSpeechVoices (function), 
 Standalone Application Settings (glossary), standalone application (glossary), 
-command (glossary), Speech library (library), LiveCode custom library (library)
+command (glossary), Speech library (library), LiveCode custom library (glossary)

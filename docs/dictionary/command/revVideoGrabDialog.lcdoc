@@ -55,6 +55,6 @@ If you specified "VFW", use the <settingsType> <parameter> to specify which <dia
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: revVideoGrabSettings (command), command (glossary), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), statement (glossary), standalone application (glossary), parameter (glossary), video grabber (glossary), dialog box (glossary), Video library (library), LiveCode custom library (library)
+References: revVideoGrabSettings (command), command (glossary), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), statement (glossary), standalone application (glossary), parameter (glossary), video grabber (glossary), dialog box (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

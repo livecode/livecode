@@ -43,6 +43,6 @@ If the <revXMLAttribute> <function> encounters an error, it <return|returns> an 
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), string (keyword), revXMLAttributes (function), revXMLNodeContents (function), XML library (library), LiveCode custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), attribute (glossary), XML tree (glossary)
+References: function (control structure), string (keyword), revXMLAttributes (function), revXMLNodeContents (function), XML library (library), LiveCode custom library (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), attribute (glossary), XML tree (glossary)
 
 Tags: text processing

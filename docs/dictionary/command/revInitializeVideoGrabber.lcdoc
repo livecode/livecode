@@ -51,6 +51,6 @@ To close the window and unload the video capture code, you should use the <revCl
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: properties (property), file (keyword), revCloseVideoGrabber (command), revSetVideoGrabberRect (command), revRecordVideo (command), revPreviewVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), stack window (glossary), video capture (glossary), Windows (glossary), VFW (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), function (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: properties (property), file (keyword), revCloseVideoGrabber (command), revSetVideoGrabberRect (command), revRecordVideo (command), revPreviewVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), stack window (glossary), video capture (glossary), Windows (glossary), VFW (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), function (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

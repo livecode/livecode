@@ -33,6 +33,6 @@ Use the <revXMLRPC_GetRequest> <function> to retrieve the original <XML-RPC requ
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: XML-RPC library (library), LiveCode custom library (library), revXMLRPC_GetResponse (function), Standalone Application Settings (glossary), standalone application (glossary), function (glossary), XML-RPC request (glossary)
+References: XML-RPC library (library), LiveCode custom library (glossary), revXMLRPC_GetResponse (function), Standalone Application Settings (glossary), standalone application (glossary), function (glossary), XML-RPC request (glossary)
 
 Tags: networking

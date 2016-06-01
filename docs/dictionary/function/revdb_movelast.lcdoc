@@ -38,6 +38,6 @@ Evaluating the <revdb_movelast> <function> has the same effect as <execute|execu
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: Database library (library), LiveCode custom library (library), revMoveToLastRecord (command), revMoveToFirstRecord (command), revMoveToNextRecord (command), revCurrentRecord (function), revCurrentRecordIsFirst (function), revCurrentRecordIsLast (function), execute (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), function call (glossary), command (glossary), function (control structure)
+References: Database library (library), LiveCode custom library (glossary), revMoveToLastRecord (command), revMoveToFirstRecord (command), revMoveToNextRecord (command), revCurrentRecord (function), revCurrentRecordIsFirst (function), revCurrentRecordIsLast (function), execute (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), function call (glossary), command (glossary), function (control structure)
 
 Tags: database

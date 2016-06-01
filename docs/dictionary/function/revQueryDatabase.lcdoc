@@ -71,6 +71,6 @@ If the query is not successful, the <revQueryDatabase> <function> returns an err
 Changes:
 The revQueryDatabase synonym was added in version 2.0.
 
-References: integer (keyword), element (keyword), Database library (library), LiveCode custom library (library), revExecuteSQLcommand (command), revCloseCursor (command), revExecuteSQL (command), revQueryIsAtStart (function), variable (glossary), element (glossary), standalone application (glossary), binary file (glossary), array (glossary), prepend (glossary), SQL query (glossary), record set (database cursor) (glossary), return value (glossary), record (glossary), Standalone Application Settings (glossary), database (glossary), function (control structure)
+References: integer (keyword), element (keyword), Database library (library), LiveCode custom library (glossary), revExecuteSQLcommand (command), revCloseCursor (command), revExecuteSQL (command), revQueryIsAtStart (function), variable (glossary), element (glossary), standalone application (glossary), binary file (glossary), array (glossary), prepend (glossary), SQL query (glossary), record set (database cursor) (glossary), return value (glossary), record (glossary), Standalone Application Settings (glossary), database (glossary), function (control structure)
 
 Tags: database

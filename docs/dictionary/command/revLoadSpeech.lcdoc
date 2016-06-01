@@ -36,4 +36,4 @@ be removed from memory when it is no longer needed by using the
 
 References: revUnloadSpeech (command), revUnloadSpeech (command), 
 Standalone Application Settings (glossary), standalone application (glossary), 
-command (glossary), Speech library (library), LiveCode custom library (library)
+command (glossary), Speech library (library), LiveCode custom library (glossary)

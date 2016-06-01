@@ -41,6 +41,6 @@ To update the settings, use the following statement in a handler or the message 
 > <Standalone Application Settings> window, make sure the "Geometry" 
 > library checkbox is checked.
 
-References: moveControl (message), openBackground (message), startup (message), preOpenStack (message), openStack (message), resizeControl (message), preOpenCard (message), lock messages (command), revUpdateGeometry (command), control (object), Geometry library (library), LiveCode custom library (library), library (library), application (glossary), main stack (glossary), handler (glossary), development environment (glossary), Standalone Application Settings (glossary), message (glossary), group (glossary), standalone application (glossary), control (glossary), pane (glossary), command (glossary)
+References: moveControl (message), openBackground (message), startup (message), preOpenStack (message), openStack (message), resizeControl (message), preOpenCard (message), lock messages (command), revUpdateGeometry (command), control (object), Geometry library (library), LiveCode custom library (glossary), library (library), application (glossary), main stack (glossary), handler (glossary), development environment (glossary), Standalone Application Settings (glossary), message (glossary), group (glossary), standalone application (glossary), control (glossary), pane (glossary), command (glossary)
 
 Tags: ui

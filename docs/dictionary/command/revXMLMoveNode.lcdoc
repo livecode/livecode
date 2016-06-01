@@ -42,4 +42,4 @@ Use the <revXMLMoveNode> command to move a node in an XML tree.
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLAddNode (command), revXMLCopyNode (command), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLAddNode (command), revXMLCopyNode (command), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)

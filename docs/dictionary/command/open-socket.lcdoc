@@ -99,4 +99,4 @@ References: accept (command), post (command), wait (command),
 socketTimeout (message), TCP (glossary), command (glossary), 
 socket (glossary), SSL & Encryption library (library)
 standalone application (glossary), Standalone Application Settings (glossary), 
-command (glossary), LiveCode custom library (library)
+command (glossary), LiveCode custom library (glossary)

@@ -40,4 +40,4 @@ Use the <revXMLCopyNode> command to create a duplicate of a node in an xml tree.
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLMoveNode (command), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLMoveNode (command), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)

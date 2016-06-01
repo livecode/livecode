@@ -40,6 +40,6 @@ The <revCloseDatabase> <command> closes all open <record sets (database cursors)
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revCloseCursor (command), revRollBackDatabase (command), revDatabaseConnectResult (function), revdb_rollback (function), revDatabaseID (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), command (glossary), function (control structure)
+References: string (keyword), Database library (library), LiveCode custom library (glossary), revCloseCursor (command), revRollBackDatabase (command), revDatabaseConnectResult (function), revdb_rollback (function), revDatabaseID (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), command (glossary), function (control structure)
 
 Tags: database

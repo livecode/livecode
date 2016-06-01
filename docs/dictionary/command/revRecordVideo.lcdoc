@@ -49,6 +49,6 @@ To stop recording the video input, use the <revStopRecordingVideo> <command>.
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: revVideoGrabIdle (command), revPreviewVideo (command), revInitializeVideoGrabber (command), revStopRecordingVideo (command), revVideoFrameImage (command), format (function), movie (function), execute (glossary), AVI (glossary), Standalone Application Settings (glossary), QuickTime (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revVideoGrabIdle (command), revPreviewVideo (command), revInitializeVideoGrabber (command), revStopRecordingVideo (command), revVideoFrameImage (command), format (function), movie (function), execute (glossary), AVI (glossary), Standalone Application Settings (glossary), QuickTime (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

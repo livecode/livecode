@@ -39,6 +39,6 @@ Use the <revXMLAddDTD> <command> to specify the format of an <XML tree>.
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLAppend (command), revXMLValidateDTD (function), result (function), Standalone Application Settings (glossary), standalone application (glossary), DTD (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLAppend (command), revXMLValidateDTD (function), result (function), Standalone Application Settings (glossary), standalone application (glossary), DTD (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

@@ -45,6 +45,6 @@ If the <revXMLText> <function> encounters an error, it <return|returns> an error
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), revXMLAppend (command), revXMLChildNames (function), revXMLAttributes (function), revXMLTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML document (glossary), XML library (library), LiveCode custom library (library)
+References: function (control structure), revXMLAppend (command), revXMLChildNames (function), revXMLAttributes (function), revXMLTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML document (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

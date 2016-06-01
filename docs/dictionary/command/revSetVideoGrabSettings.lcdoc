@@ -38,6 +38,6 @@ You specify settings for video capture in the video capture dialog box, which is
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: revVideoGrabSettings (command), function (control structure), video capture (glossary), Standalone Application Settings (glossary), standalone application (glossary), QuickTime (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revVideoGrabSettings (command), function (control structure), video capture (glossary), Standalone Application Settings (glossary), standalone application (glossary), QuickTime (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

@@ -36,4 +36,4 @@ The default volume is 100 on both Windows and Mac OS X.
 References: revSetSpeechSpeed (command), revSetSpeechVolume (command), 
 function (control structure), Standalone Application Settings (glossary), 
 standalone application (glossary), Speech library (library), 
-LiveCode custom library (library)
+LiveCode custom library (glossary)

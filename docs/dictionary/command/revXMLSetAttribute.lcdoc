@@ -50,6 +50,6 @@ If the attribute already exists, its value is set to the <newValue>.
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLAppend (command), revXMLAttributes (function), result (function), uniDecode (function), Unicode (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), attribute (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLAppend (command), revXMLAttributes (function), result (function), uniDecode (function), Unicode (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), attribute (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

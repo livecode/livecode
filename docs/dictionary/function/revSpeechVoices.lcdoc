@@ -46,6 +46,6 @@ revSpeak (command), revSetSpeechProvider (command),
 function (control structure), parameter (glossary), 
 Standalone Application Settings (glossary), command (glossary), 
 return (glossary), standalone application (glossary), 
-Speech library (library), LiveCode custom library (library)
+Speech library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

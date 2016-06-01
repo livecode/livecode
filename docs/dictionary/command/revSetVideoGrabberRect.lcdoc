@@ -43,6 +43,6 @@ The rectangle specified by the <left>, <top>, <right>, and <bottom> is the recta
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: revInitializeVideoGrabber (command), globalLoc (function), Standalone Application Settings (glossary), absolute coordinates (glossary), video grabber (glossary), standalone application (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revInitializeVideoGrabber (command), globalLoc (function), Standalone Application Settings (glossary), absolute coordinates (glossary), video grabber (glossary), standalone application (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

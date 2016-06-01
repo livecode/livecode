@@ -36,6 +36,6 @@ You can use the <revIsSpeaking> <function> to determine whether there's currentl
 References: function (control structure), revUnloadSpeech (command), 
 revSpeak (command), revIsSpeaking (function), command (glossary), 
 Standalone Application Settings (glossary), standalone application (glossary), 
-Speech library (library), LiveCode custom library (library)
+Speech library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

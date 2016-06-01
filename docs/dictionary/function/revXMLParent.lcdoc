@@ -41,6 +41,6 @@ If the <revXMLParent> <function> encounters an error, it <return|returns> an err
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), revXMLRootNode (function), revXMLFirstChild (function), XML library (library), LiveCode custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), XML tree (glossary), parent node (glossary)
+References: function (control structure), revXMLRootNode (function), revXMLFirstChild (function), XML library (library), LiveCode custom library (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), XML tree (glossary), parent node (glossary)
 
 Tags: text processing

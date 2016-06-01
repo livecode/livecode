@@ -49,6 +49,6 @@ The record set IDs returned are those opened by the specified <databaseID>.
 Changes:
 The revDatabaseCursors synonym was added in version 2.0.
 
-References: revCloseCursor (command), function (control structure), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), Database library (library), LiveCode custom library (library)
+References: revCloseCursor (command), function (control structure), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), Database library (library), LiveCode custom library (glossary)
 
 Tags: database

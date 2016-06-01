@@ -37,6 +37,6 @@ If the <revXMLRPC_GetHost> <function> encounters an error, it <return|returns> a
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: function (control structure), revXMLRPC_SetHost (command), revXMLRPC_CreateRequest (function), return (glossary), host (glossary), XML-RPC request (glossary), Standalone Application Settings (glossary), IP address (glossary), standalone application (glossary), XML-RPC document (glossary), function (glossary), domain name (glossary), XML-RPC library (library), LiveCode custom library (library)
+References: function (control structure), revXMLRPC_SetHost (command), revXMLRPC_CreateRequest (function), return (glossary), host (glossary), XML-RPC request (glossary), Standalone Application Settings (glossary), IP address (glossary), standalone application (glossary), XML-RPC document (glossary), function (glossary), domain name (glossary), XML-RPC library (library), LiveCode custom library (glossary)
 
 Tags: networking

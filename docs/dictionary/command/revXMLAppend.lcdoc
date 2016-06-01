@@ -40,6 +40,6 @@ Use the <revXMLAppend> <command> to add new <XML> data to an existing <XML tree>
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLAddDTD (command), revXMLPutIntoNode (command), revXMLSetAttribute (command), revXMLInsertNode (command), revXMLAddNode (command), revXMLNodeContents (function), result (function), revXMLText (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), revXMLChildContents (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), XML (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLAddDTD (command), revXMLPutIntoNode (command), revXMLSetAttribute (command), revXMLInsertNode (command), revXMLAddNode (command), revXMLNodeContents (function), result (function), revXMLText (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), revXMLChildContents (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), XML (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

@@ -91,7 +91,7 @@ remove it from the <cache>.
 References: script (property), object (glossary), startup (message), 
 openBackground (message), preOpenStack (message), openStack (message), 
 preOpenCard (message), Internet library (library), library (library), 
-LiveCode custom library (library), url (keyword), file (keyword), 
+LiveCode custom library (glossary), url (keyword), file (keyword), 
 application (glossary), standalone application (glossary), 
 load (glossary), cache (glossary), command (glossary), 
 standalone desktop application (glossary), main stack (glossary), 

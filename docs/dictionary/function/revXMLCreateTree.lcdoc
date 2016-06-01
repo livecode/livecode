@@ -51,6 +51,6 @@ If the <revXMLCreateTree> <function(control structure)> encounters an error, it 
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revStartXMLData (message), revStartXMLNode (message), revEndXMLNode (message), revXMLStartTree (message), revXMLEndTree (message), XML library (library), LiveCode custom library (library), return (glossary), XML tree (glossary), Standalone Application Settings (glossary), message (glossary), standalone application (glossary), XML (glossary), function (glossary), command (glossary), function (control structure), revXMLValidateDTD (function), revXMLTrees (function), revXMLDeleteAllTrees (command), revXMLMoveNode (command), revXMLAppend (command), integer (keyword)
+References: revStartXMLData (message), revStartXMLNode (message), revEndXMLNode (message), revXMLStartTree (message), revXMLEndTree (message), XML library (library), LiveCode custom library (glossary), return (glossary), XML tree (glossary), Standalone Application Settings (glossary), message (glossary), standalone application (glossary), XML (glossary), function (glossary), command (glossary), function (control structure), revXMLValidateDTD (function), revXMLTrees (function), revXMLDeleteAllTrees (command), revXMLMoveNode (command), revXMLAppend (command), integer (keyword)
 
 Tags: text processing

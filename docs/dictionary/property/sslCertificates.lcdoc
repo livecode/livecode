@@ -57,4 +57,4 @@ Before version 4.5 it was necessary to set the <sslCertificates> property to the
 
 References: encrypt (command), SSL & Encryption library (library)
 standalone application (glossary), Standalone Application Settings (glossary), 
-property (glossary), LiveCode custom library (library)
+property (glossary), LiveCode custom library (glossary)

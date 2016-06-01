@@ -54,7 +54,7 @@ If the <revXMLRPC_CreateRequest> <function> encounters an error, it <return|retu
 > library checkbox is checked.
 
 References: integer (keyword), http (keyword), XML-RPC library (library), 
-LiveCode custom library (library), revXMLRPC_SetProtocol (command), 
+LiveCode custom library (glossary), revXMLRPC_SetProtocol (command), 
 revXMLRPC_SetPath (command), revXMLRPC_SetPort (command), 
 revXMLRPC_SetSocket (command), revXMLRPC_DeleteAllDocuments (command), 
 revXMLRPC_GetHost (function), return (glossary), XML-RPC request (glossary), 

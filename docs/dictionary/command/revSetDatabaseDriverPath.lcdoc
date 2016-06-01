@@ -41,6 +41,6 @@ If the database drivers your application needs are installed in a different fold
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: defaultFolder (property), startup (message), preOpenStack (message), Database library (library), LiveCode custom library (library), field (keyword), property inspector (glossary), handler (glossary), database (glossary), Standalone Application Settings (glossary), standalone application (glossary), database driver (glossary), function (glossary), command (glossary), specialFolderPath (function), revOpenDatabase (function), revGetDatabaseDriverPath (function), field (object), stack (object)
+References: defaultFolder (property), startup (message), preOpenStack (message), Database library (library), LiveCode custom library (glossary), field (keyword), property inspector (glossary), handler (glossary), database (glossary), Standalone Application Settings (glossary), standalone application (glossary), database driver (glossary), function (glossary), command (glossary), specialFolderPath (function), revOpenDatabase (function), revGetDatabaseDriverPath (function), field (object), stack (object)
 
 Tags: database

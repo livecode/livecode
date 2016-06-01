@@ -39,6 +39,6 @@ Use the <revXMLDeleteNode> <command> to remove part of an <XML tree> you're work
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revEndXMLNode (message), revStartXMLNode (message), revXMLAddNode (command), revXMLDeleteTree (command), revXMLPutIntoNode (command), revXMLRootNode (function), revXMLNodeContents (function), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (library)
+References: revEndXMLNode (message), revStartXMLNode (message), revXMLAddNode (command), revXMLDeleteTree (command), revXMLPutIntoNode (command), revXMLRootNode (function), revXMLNodeContents (function), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

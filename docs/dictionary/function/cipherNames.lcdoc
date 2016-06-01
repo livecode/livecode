@@ -29,4 +29,4 @@ Some ciphers like blowfish accept key lengths up to 448 bits where 128 is the de
 
 References: encrypt (command), SSL & Encryption library (library)
 standalone application (glossary), Standalone Application Settings (glossary), 
-function (glossary), LiveCode custom library (library)
+function (glossary), LiveCode custom library (glossary)

@@ -53,6 +53,6 @@ Changes:
 The <cachedURLs> <function> became part of the <Internet library> in 
 version 1.1. In previous versions, it was not a library function.
 
-References: URL (keyword), line (keyword), Internet library (library), LiveCode custom library (library), unload (command), load (command), files (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), return (glossary), handler (glossary), download (glossary), cache (glossary), Standalone Application Settings (glossary), URL (glossary), standalone application (glossary), command (glossary), load (glossary), function (control structure)
+References: URL (keyword), line (keyword), Internet library (library), LiveCode custom library (glossary), unload (command), load (command), files (function), libURLErrorData (function), URLStatus (function), cachedURLs (function), return (glossary), handler (glossary), download (glossary), cache (glossary), Standalone Application Settings (glossary), URL (glossary), standalone application (glossary), command (glossary), load (glossary), function (control structure)
 
 Tags: networking

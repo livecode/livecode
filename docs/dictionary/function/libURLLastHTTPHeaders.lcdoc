@@ -37,6 +37,6 @@ You can set the <httpHeaders> <property> to send custom headers in addition to t
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: httpHeaders (property), Internet library (library), LiveCode custom library (library), URL (keyword), http (keyword), property (glossary), return (glossary), web server (glossary), Standalone Application Settings (glossary), download (glossary), standalone application (glossary), expression (glossary), command (glossary), libURLLastRHHeaders (function), value (function), post (command), libURLSetCustomHTTPHeaders (command), libURLFollowHttpRedirects (command), load (command), function (control structure)
+References: httpHeaders (property), Internet library (library), LiveCode custom library (glossary), URL (keyword), http (keyword), property (glossary), return (glossary), web server (glossary), Standalone Application Settings (glossary), download (glossary), standalone application (glossary), expression (glossary), command (glossary), libURLLastRHHeaders (function), value (function), post (command), libURLSetCustomHTTPHeaders (command), libURLFollowHttpRedirects (command), load (command), function (control structure)
 
 Tags: networking

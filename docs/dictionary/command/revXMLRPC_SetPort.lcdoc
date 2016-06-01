@@ -33,6 +33,6 @@ Use the <revXMLRPC_SetPort> <command> to set the port that is the target of the 
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_SetHost (command), revXMLRPC_GetPort (function), result (function), revXMLRPC_CreateRequest (function), XML-RPC library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC request (glossary)
+References: revXMLRPC_SetHost (command), revXMLRPC_GetPort (function), result (function), revXMLRPC_CreateRequest (function), XML-RPC library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC request (glossary)
 
 Tags: networking

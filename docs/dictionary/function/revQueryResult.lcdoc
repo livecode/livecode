@@ -44,6 +44,6 @@ If there were no errors associated with the specified record set, the <revQueryR
 Changes:
 The revQueryResult synonym was added in version 2.0.
 
-References: function (control structure), string (keyword), revCommitDatabase (command), revdb_commit (function), revDatabaseConnectResult (function), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL (glossary), Database library (library), LiveCode custom library (library)
+References: function (control structure), string (keyword), revCommitDatabase (command), revdb_commit (function), revDatabaseConnectResult (function), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL (glossary), Database library (library), LiveCode custom library (glossary)
 
 Tags: database

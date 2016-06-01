@@ -87,6 +87,6 @@ or structs) you can specify a <dataType> of xml, and pass raw xml.
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary), revXMLRPC_GetParamType (function), revXMLRPC_GetParam (function), result (function), revXMLRPC_GetParamCount (function), XML-RPC library (library), LiveCode custom library (library)
+References: Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary), revXMLRPC_GetParamType (function), revXMLRPC_GetParam (function), result (function), revXMLRPC_GetParamCount (function), XML-RPC library (library), LiveCode custom library (glossary)
 
 Tags: networking

@@ -46,6 +46,6 @@ If the <revXMLMatchingNode> <function> encounters an error, it <return|returns> 
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), revXMLAttributeValues (function), revXMLChildNames (function), revXMLTree (function), revXMLAttributes (function), XML library (library), LiveCode custom library (library), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), attribute (glossary)
+References: function (control structure), revXMLAttributeValues (function), revXMLChildNames (function), revXMLTree (function), revXMLAttributes (function), XML library (library), LiveCode custom library (glossary), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), attribute (glossary)
 
 Tags: text processing

@@ -34,6 +34,6 @@ Whenever another system sends data via HTTP to your system, the remote system se
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: httpHeaders (property), Internet library (library), LiveCode custom library (library), http (keyword), Standalone Application Settings (glossary), return (glossary), standalone application (glossary), libURLLastHTTPHeaders (function), URLStatus (function), load (command), function (control structure)
+References: httpHeaders (property), Internet library (library), LiveCode custom library (glossary), http (keyword), Standalone Application Settings (glossary), return (glossary), standalone application (glossary), libURLLastHTTPHeaders (function), URLStatus (function), load (command), function (control structure)
 
 Tags: networking

@@ -41,6 +41,6 @@ Evaluating the <revdb_closecursor> <function> has the same effect as <execute|ex
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: revCloseCursor (command), function (control structure), function call (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), record set (database cursor) (glossary), Database library (library), LiveCode custom library (library)
+References: revCloseCursor (command), function (control structure), function call (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), execute (glossary), record set (database cursor) (glossary), Database library (library), LiveCode custom library (glossary)
 
 Tags: database

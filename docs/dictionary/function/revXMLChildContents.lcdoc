@@ -54,6 +54,6 @@ In the preceeding XML document, <revXMLChildContents> will return the string "Te
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: nodes (property), XML library (library), LiveCode custom library (library), function (control structure), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), return (glossary), XML tree (glossary), revXMLAttributes (function), revXMLNumberOfChildren (function), revXMLAppend (command), string (keyword)
+References: nodes (property), XML library (library), LiveCode custom library (glossary), function (control structure), Standalone Application Settings (glossary), tag (glossary), standalone application (glossary), return (glossary), XML tree (glossary), revXMLAttributes (function), revXMLNumberOfChildren (function), revXMLAppend (command), string (keyword)
 
 Tags: text processing

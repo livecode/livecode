@@ -35,6 +35,6 @@ When you stop previewing video, the video grabber window shows a blank screen.
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: revInitializeVideoGrabber (command), revPreviewVideo (command), revStopRecordingVideo (command), Standalone Application Settings (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: revInitializeVideoGrabber (command), revPreviewVideo (command), revStopRecordingVideo (command), Standalone Application Settings (glossary), standalone application (glossary), video grabber (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

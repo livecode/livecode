@@ -59,6 +59,6 @@ References: open socket (command), sslCertificates property (property),
 sslCertificates (property), socketError message (message), 
 socketError (message), SSL & Encryption library (library)
 standalone application (glossary), Standalone Application Settings (glossary), 
-command (glossary), LiveCode custom library (library)
+command (glossary), LiveCode custom library (glossary)
 
 Tags: file system

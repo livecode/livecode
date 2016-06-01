@@ -51,6 +51,6 @@ References: string (keyword), revMoveToNextRecord (command),
 Standalone Application Settings (glossary), record (glossary), 
 standalone application (glossary), record set (database cursor) (glossary), 
 return (glossary), SQL query (glossary), Database library (library), 
-LiveCode custom library (library), function (glossary)
+LiveCode custom library (glossary), function (glossary)
 
 Tags: database

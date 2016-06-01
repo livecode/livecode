@@ -38,4 +38,4 @@ Where the <path> of the <XML-RPC document> tells the server which resource will 
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function), result (function), revXMLRPC_CreateRequest (function), XML-RPC library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
+References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function), result (function), revXMLRPC_CreateRequest (function), XML-RPC library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)

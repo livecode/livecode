@@ -45,6 +45,6 @@ If the <revXMLFirstChild> <function> encounters an error, it <return|returns> an
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), string (keyword), revXMLNextSibling (function), revXMLChildNames (function), revXMLNumberOfChildren (function), revXMLPreviousSibling (function), revXMLParent (function), revXMLRootNode (function), XML library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), parent node (glossary), child node (glossary)
+References: function (control structure), string (keyword), revXMLNextSibling (function), revXMLChildNames (function), revXMLNumberOfChildren (function), revXMLPreviousSibling (function), revXMLParent (function), revXMLRootNode (function), XML library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), parent node (glossary), child node (glossary)
 
 Tags: text processing

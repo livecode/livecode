@@ -39,6 +39,6 @@ If both these conditions are true, execute the <revUpdateGeometry> <command> in 
 > <Standalone Application Settings> window, make sure the "Geometry" 
 > library checkbox is checked.
 
-References: resizeStack (message), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), revCacheGeometry (command), lock messages (command), stack (object), object (glossary), Geometry library (library), LiveCode custom library (library), library (library), main stack (glossary), handler (glossary), handle (glossary), message (glossary), group (glossary), standalone application (glossary), Standalone Application Settings (glossary), command (glossary), application (glossary)
+References: resizeStack (message), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), revCacheGeometry (command), lock messages (command), stack (object), object (glossary), Geometry library (library), LiveCode custom library (glossary), library (library), main stack (glossary), handler (glossary), handle (glossary), message (glossary), group (glossary), standalone application (glossary), Standalone Application Settings (glossary), command (glossary), application (glossary)
 
 Tags: ui

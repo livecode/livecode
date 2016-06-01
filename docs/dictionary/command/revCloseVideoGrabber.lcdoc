@@ -45,6 +45,6 @@ revInitializeVideoGrabber (command), close (command), stack (object),
 video capture (glossary), handler (glossary), 
 Standalone Application Settings (glossary), standalone application (glossary), 
 video grabber (glossary), command (glossary), Video library (library), 
-LiveCode custom library (library)
+LiveCode custom library (glossary)
 
 Tags: multimedia

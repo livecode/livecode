@@ -7,6 +7,6 @@ Type: library
 Description:
 The <LiveCode custom library|LiveCode custom library> that supports text printing. The <revPrintField>, <revPrintText>, and <revShowPrintDialog> <command|commands> are part of the Printing library.
 
-References: revShowPrintDialog (command), revPrintField (command), revPrintText (command), command (glossary), LiveCode custom library (library)
+References: revShowPrintDialog (command), revPrintField (command), revPrintText (command), command (glossary), LiveCode custom library (glossary)
 
 Tags: printing

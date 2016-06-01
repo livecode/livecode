@@ -47,7 +47,7 @@ The pitch specified by the <revSetSpeechPitch> <command> is used for all speeche
 > <Standalone Application Settings> window, make sure the "Speech" 
 > library checkbox is checked.
 
-References: Speech library (library), LiveCode custom library (library), 
+References: Speech library (library), LiveCode custom library (glossary), 
 revSetSpeechSpeed (command), revSpeak (command), result (function), 
 command (glossary), Standalone Application Settings (glossary), 
 custom function (glossary), text to speech (glossary), 

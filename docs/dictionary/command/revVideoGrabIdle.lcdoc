@@ -39,6 +39,6 @@ There is no specific interval to use between calls to <revVideoGrabIdle>. If you
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: idle (message), revInitializeVideoGrabber (command), revPreviewVideo (command), revRecordVideo (command), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), video grabber (glossary), standalone application (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+References: idle (message), revInitializeVideoGrabber (command), revPreviewVideo (command), revRecordVideo (command), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), video grabber (glossary), standalone application (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

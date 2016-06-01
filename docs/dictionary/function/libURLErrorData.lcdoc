@@ -45,6 +45,6 @@ If the download failed because of a server error--for example, if a requested we
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: https (keyword), ftp (keyword), URL (keyword), http (keyword), Internet library (library), LiveCode custom library (library), libURLSetLogField (command), load (command), libURLErrorData (function), cachedURLs (function), URLStatus (function), return (glossary), Standalone Application Settings (glossary), download (glossary), cache (glossary), standalone application (glossary), command (glossary), server (glossary), function (control structure)
+References: https (keyword), ftp (keyword), URL (keyword), http (keyword), Internet library (library), LiveCode custom library (glossary), libURLSetLogField (command), load (command), libURLErrorData (function), cachedURLs (function), URLStatus (function), return (glossary), Standalone Application Settings (glossary), download (glossary), cache (glossary), standalone application (glossary), command (glossary), server (glossary), function (control structure)
 
 Tags: networking

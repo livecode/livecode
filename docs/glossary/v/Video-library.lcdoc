@@ -7,6 +7,6 @@ Type: library
 Description:
 The <LiveCode custom library|LiveCode custom library> that supports <video capture> from a camera or other video input device.
 
-References: video capture (glossary), LiveCode custom library (library)
+References: video capture (glossary), LiveCode custom library (glossary)
 
 Tags: multimedia

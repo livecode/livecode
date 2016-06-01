@@ -42,6 +42,6 @@ If the <revXMLRootNode> <function> encounters an error, it <return|returns> an e
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), revXMLStartTree (message), revXMLDeleteNode (command), revXMLNextSibling (function), revXMLPreviousSibling (function), revXMLParent (function), revXMLFirstChild (function), Standalone Application Settings (glossary), root node (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (library)
+References: function (control structure), revXMLStartTree (message), revXMLDeleteNode (command), revXMLNextSibling (function), revXMLPreviousSibling (function), revXMLParent (function), revXMLFirstChild (function), Standalone Application Settings (glossary), root node (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

@@ -86,4 +86,4 @@ padding method is that used by the openSSL utility and is a minimum of one byte.
 References: encrypt (command), cipherNames (function), 
 sslcertificates (property), SSL & Encryption library (library)
 standalone application (glossary), Standalone Application Settings (glossary), 
-command (glossary), LiveCode custom library (library)
+command (glossary), LiveCode custom library (glossary)

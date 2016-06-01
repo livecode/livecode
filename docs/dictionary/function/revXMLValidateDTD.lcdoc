@@ -41,6 +41,6 @@ If the <revXMLValidateDTD> <function> encounters an error, it <return|returns> a
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), revXMLAddDTD (command), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), validate (glossary), standalone application (glossary), XML tree (glossary), DTD (glossary), return (glossary), XML library (library), LiveCode custom library (library)
+References: function (control structure), revXMLAddDTD (command), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), validate (glossary), standalone application (glossary), XML tree (glossary), DTD (glossary), return (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

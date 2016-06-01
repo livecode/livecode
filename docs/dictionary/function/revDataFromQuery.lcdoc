@@ -79,6 +79,6 @@ If the query is not successful, the <revDataFromQuery> <function> <return|return
 Changes:
 The ability to specify array elements in the varsList was added in 2.9.
 
-References: string (keyword), Database library (library), LiveCode custom library (library), revCloseCursor (command), revExecuteSQL (command), base64Encode function (function), revQueryDatabase function (function), revDatabaseColumnNamed (function), return (glossary), variable (glossary), database (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), SQL query (glossary), delimit (glossary), prepend (glossary), function (control structure)
+References: string (keyword), Database library (library), LiveCode custom library (glossary), revCloseCursor (command), revExecuteSQL (command), base64Encode function (function), revQueryDatabase function (function), revDatabaseColumnNamed (function), return (glossary), variable (glossary), database (glossary), record set (database cursor) (glossary), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), SQL query (glossary), delimit (glossary), prepend (glossary), function (control structure)
 
 Tags: database

@@ -42,6 +42,6 @@ Use the <revXMLAddNode> <command> to add a <node> to an <XML tree>.
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLMoveNode (command), revXMLDeleteNode (command), revXMLAppend (command), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), child node (glossary), XML library (library), LiveCode custom library (library)
+References: revXMLMoveNode (command), revXMLDeleteNode (command), revXMLAppend (command), result (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), child node (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing

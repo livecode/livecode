@@ -86,7 +86,7 @@ status, use the <unload> <command> to remove it from the <URLStatus>
 References: script (property), object (glossary), startup (message), 
 openBackground (message), preOpenStack (message), openStack (message), 
 preOpenCard (message), Internet library (library), library (library), 
-LiveCode custom library (library), URL (keyword), ftp (keyword), 
+LiveCode custom library (glossary), URL (keyword), ftp (keyword), 
 file (keyword), binfile (keyword), non-blocking (glossary), 
 standalone application (glossary), application (glossary), 
 handler (glossary), function (glossary), binary file (glossary), 

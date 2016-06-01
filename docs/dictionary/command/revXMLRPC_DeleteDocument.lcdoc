@@ -37,6 +37,6 @@ Use the <revXMLRPC_DeleteDocument> <command> to free up memory when you're finis
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_DeleteAllDocuments (command), result (function), XML-RPC library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
+References: revXMLRPC_DeleteAllDocuments (command), result (function), XML-RPC library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
 
 Tags: networking

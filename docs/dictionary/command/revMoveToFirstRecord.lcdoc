@@ -38,6 +38,6 @@ Use the <revMoveToFirstRecord> <command> to move around within the selected set 
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: function (control structure), revMoveToNextRecord (command), revdb_movefirst (function), revdb_moveprev (function), revdb_movelast (function), revDatabaseColumnNumbered (function), revdb_movenext (function), Standalone Application Settings (glossary), record (glossary), command (glossary), record set (database cursor) (glossary), standalone application (glossary), database (glossary), Database library (library), LiveCode custom library (library)
+References: function (control structure), revMoveToNextRecord (command), revdb_movefirst (function), revdb_moveprev (function), revdb_movelast (function), revDatabaseColumnNumbered (function), revdb_movenext (function), Standalone Application Settings (glossary), record (glossary), command (glossary), record set (database cursor) (glossary), standalone application (glossary), database (glossary), Database library (library), LiveCode custom library (glossary)
 
 Tags: database

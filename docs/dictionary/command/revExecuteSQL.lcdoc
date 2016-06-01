@@ -70,6 +70,6 @@ To pass binary data in an array element, prepend "*b" to the element's key.
 Changes:
 The ability to specify array elements in the <variablesList> was added in 2.9
 
-References: element (keyword), Database library (library), LiveCode custom library (library), revDatabaseTableNames (function), revOpenDatabase (function), result (function), revQueryDatabase (function), revDataFromQuery (function), revdb_execute (function), prepend (glossary), binary file (glossary), variable (glossary), database (glossary), SQL (glossary), Standalone Application Settings (glossary), record (glossary), standalone application (glossary), array (glossary), SQL query (glossary), command (glossary), function (control structure)
+References: element (keyword), Database library (library), LiveCode custom library (glossary), revDatabaseTableNames (function), revOpenDatabase (function), result (function), revQueryDatabase (function), revDataFromQuery (function), revdb_execute (function), prepend (glossary), binary file (glossary), variable (glossary), database (glossary), SQL (glossary), Standalone Application Settings (glossary), record (glossary), standalone application (glossary), array (glossary), SQL query (glossary), command (glossary), function (control structure)
 
 Tags: database

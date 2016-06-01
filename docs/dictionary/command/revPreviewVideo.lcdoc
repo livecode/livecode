@@ -43,6 +43,6 @@ To stop displaying the video input, use the <revStopPreviewingVideo> <command>.
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: file (keyword), revVideoFrameImage (command), revRecordVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), execute (glossary), Standalone Application Settings (glossary), command (glossary), video grabber (glossary), standalone application (glossary), QuickTime (glossary), Video library (library), LiveCode custom library (library)
+References: file (keyword), revVideoFrameImage (command), revRecordVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), execute (glossary), Standalone Application Settings (glossary), command (glossary), video grabber (glossary), standalone application (glossary), QuickTime (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

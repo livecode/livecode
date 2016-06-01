@@ -44,4 +44,4 @@ Use <revXMLInsertNode> to insert a node into an XML tree.
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLAppend (command), result (function), XML library (library), LiveCode custom library (library), Standalone Application Settings (glossary), standalone application (glossary), command (glossary)
+References: revXMLAppend (command), result (function), XML library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary)

@@ -35,6 +35,6 @@ The <revStopRecordingVideo> <command> stops a recording started with the <revRec
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
 
-References: file (keyword), revStopPreviewingVideo (command), revRecordVideo (command), stop recording (command), video capture (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), Video library (library), LiveCode custom library (library)
+References: file (keyword), revStopPreviewingVideo (command), revRecordVideo (command), stop recording (command), video capture (glossary), Standalone Application Settings (glossary), command (glossary), standalone application (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

@@ -47,6 +47,6 @@ In the preceeding XML document, <revXMLNodeContents> will return the string "Tex
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), string (keyword), revXMLDeleteNode (command), revXMLAppend (command), revXMLAttribute (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (library)
+References: function (control structure), string (keyword), revXMLDeleteNode (command), revXMLAppend (command), revXMLAttribute (function), node (glossary), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (glossary)
 
 Tags: text processing
