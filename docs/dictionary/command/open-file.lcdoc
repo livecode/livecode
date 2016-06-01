@@ -21,7 +21,7 @@ Example:
 open file "/etc/Glossary" for write
 
 Example:
-open file (myFilePath  "/"  myFileName) for binary read
+open file (myFilePath & "/" & myFileName) for binary read
 
 Parameters:
 filePath: Specifies the name and location of the file you want to open or create. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder. If the file you specify doesn't exist, LiveCode creates it.

@@ -531,6 +531,7 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				case F_MOUSE_TEXT:
 				case F_DRAG_SOURCE:
 				case F_DRAG_DESTINATION:
+                case F_DROP_CHUNK:
 				case F_FOCUSED_OBJECT:
 					if (desttype == DT_ISDEST)
 					{ // delete the selectedLine of field x
@@ -973,6 +974,9 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
                         break;
                     case F_DRAG_DESTINATION:
                         MCPasteboardEvalDragDestinationAsObject(ctxt, t_object);
+                        break;
+                    case F_DROP_CHUNK:
+                        MCPasteboardEvalDropChunkAsObject(ctxt, t_object);
                         break;
                     default:
                         break;
@@ -5523,7 +5527,10 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 				case F_DRAG_DESTINATION:
 					t_method = kMCPasteboardEvalDragDestinationAsObjectMethodInfo;
 					break;
-				default:
+                case F_DROP_CHUNK:
+                    t_method = kMCPasteboardEvalDropChunkAsObjectMethodInfo;
+                    break;
+                default:
 					t_method = nil;
 					break;
 				}

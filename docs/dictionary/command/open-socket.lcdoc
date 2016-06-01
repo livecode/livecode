@@ -32,13 +32,13 @@ open secure socket to "livecode.com:443" with message "wasConnected" with verifi
 
 Example:
 on mouseUp
-open socket "www.google.com:80"<
-write "test" to socket "www.google.com:80" with message "socketFinishedWriting"
+   open socket "www.google.com:80"
+   write "test" to socket "www.google.com:80" with message "socketFinishedWriting"
 end mouseUp
 
 on socketFinishedWriting pSocketID
-put "Data written to socket" && pSocketID
-close socket "www.google.com:80"
+   put "Data written to socket" && pSocketID
+   close socket "www.google.com:80"
 end socketFinishedWriting
 
 Parameters:

@@ -20,7 +20,7 @@ Example:
 set the itemDelimiter to ":"
 if item 1 of the printerOutput is "file" then
   set the hilite of button "Print To File" of group "Printer Settings" of me to true
-end 
+end if
 
 set the printerOutput to "device"
 

@@ -1888,6 +1888,18 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
+void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCdragdest != nil)
+    {
+        r_object . object = MCdropfield;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCPasteboardExecLockClipboard(MCExecContext& ctxt)

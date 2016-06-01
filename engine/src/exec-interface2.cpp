@@ -3526,6 +3526,9 @@ void MCInterfaceMarkFunction(MCExecContext& ctxt, MCObjectPtr p_object, Function
             if (!t_field->locmark(wholeline, wholeword, False, True, p_whole_chunk, start, end))
                 start = end = 0;
             break;
+        case F_DROP_CHUNK:
+            start = end = MCdropchar;
+            break;
         default:
             start = 0;
             end = t_field->getpgsize(NULL);

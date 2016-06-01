@@ -16,7 +16,7 @@ Example:
 cut -- cuts whatever is selected
 
 Example:
-cut player "Quivering Apple" from recent card
+cut player "Quivering Apple" of recent card
 
 Example:
 cut the selectedObject

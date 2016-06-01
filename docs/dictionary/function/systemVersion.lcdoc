@@ -18,7 +18,7 @@ Example:
 the systemVersion
 
 Example:
-if the systemVersion begins with "10.11." then set the OSVersion to "10.11"
+if the systemVersion begins with "10.11." then set the OSVersion of me to "10.11"
 
 Returns: The <systemVersion> <function> <return|returns> a <string>.
 

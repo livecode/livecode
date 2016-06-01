@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-move image "sprite" to the mouseLocation in 30 ticks
+move image "sprite" to the mouseLoc in 30 ticks
 
 Example:
 move button ID 4 relative 50,50 without waiting

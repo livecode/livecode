@@ -18,7 +18,7 @@ Example:
 put empty into tForm
 put "dave" into tName
 put "hello" into tMessage
-if libURLMultipartFormData (tForm, "name", tName, "message", tMessage)\
+if libURLMultipartFormData (tForm, "name", tName, "message", tMessage) \
      is not empty then
    ##handle error and exit
 end if
@@ -27,11 +27,11 @@ delete line 1 of tForm
 put "&lt;file&gt;" & "C:/myfile.gif" into tFile
 put "image/gif" into tType
 put "binary" into tEnc
-if libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc)\
-      empty then
+if libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) \
+    is empty then
    ##handle error and exit
 else
-   post  tForm to url 
+   post tForm to url tURL
    set the httpHeaders to empty
 end if
 

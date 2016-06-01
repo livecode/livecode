@@ -13,7 +13,7 @@ OS: mac,windows
 Platforms: desktop
 
 Example:
-put controlAtScreenLoc(100,100)
+put controlAtScreenLoc((100,100))
 
 Example:
 get the name of (controlAtScreenLoc(the mouseLoc))

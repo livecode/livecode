@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-answer "You've been waiting for"  numberOfMinutes \
+answer "You've been waiting for" & numberOfMinutes & \
     "minutes." with "Keep Waiting" or "Cancel"
 
 Description:

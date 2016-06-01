@@ -26,7 +26,7 @@ put it into tGroupIds
 
 Example:
 repeat for each line tGroupId in the sharedGroupIds of this card
-   remove group tGroupId of this card
+   remove group id tGroupId from this card
 end repeat
 
 Value:

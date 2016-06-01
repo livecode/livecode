@@ -43,7 +43,7 @@ intersect tLeft with tRight recursively
 # tRight unchanged
 
 Example:
-function ScriptIntersect(pLeft, pRight, pRecursive)
+function ScriptIntersect pLeft, pRight, pRecursive
 	repeat for each key tKey in pLeft
 		if tKey is not among the keys of pRight then
 			delete variable pLeft[tKey]
@@ -55,7 +55,7 @@ function ScriptIntersect(pLeft, pRight, pRecursive)
 	return pLeft
 end ScriptIntersect
 
-function EngineIntersect(pLeft, pRight, pRecursive)
+function EngineIntersect pLeft, pRight, pRecursive
 	if pRecursive then
 		intersect pLeft with pRight recursively
 	else
@@ -66,7 +66,7 @@ function EngineIntersect(pLeft, pRight, pRecursive)
 end EngineIntersect
 
 -- This function should return true for all inputs.
-function CheckIntersect(pLeft, pRight, pRecursive)
+function CheckIntersect pLeft, pRight, pRecursive
 	return ScriptIntersect(pLeft, pRight, pRecursive) is EngineIntersect(pLeft, pRight, pRecursive)
 end CheckIntersect
 

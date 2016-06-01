@@ -18,7 +18,7 @@ Example:
 globalLoc("22,173")
 
 Example:
-put globalLoc(the mouseLoc) into screenLoc
+put globalLoc(the mouseLoc) into tScreenLoc
 
 Parameters:
 point: Any expression that evaluates to a point--a vertical and horizontal distance from the top left of the current stack, separated by a comma.

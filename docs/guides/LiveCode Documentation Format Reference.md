@@ -105,6 +105,7 @@ A comma-delimited list specifying which operating systems the API entry is avail
 * iOS
 * android
 * RPi
+* html5
 
 #### Platforms
 A comma-delimited list specifying which platforms the API entry is available for. One or more of the following:

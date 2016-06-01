@@ -16,7 +16,7 @@ Example:
 on mouseDown theButton -- show popup menu on Control/Right-click
   if theButton is 3 then popup button "Configure"
   else pass mouseDown
-end mouseDow
+end mouseDown
 
 Parameters:
 mouseButtonNumber (enum): The mouseButtonNumber specifies which mouse button was pressed:

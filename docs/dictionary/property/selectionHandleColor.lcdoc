@@ -19,7 +19,7 @@ Example:
 set the selectionHandleColor to "255,0,0"
 
 Example:
-set the selectionColor to the hiliteColor
+set the selectionHandleColor to the hiliteColor
 
 Value:
 The <selectionHandleColor> is a <color reference>.

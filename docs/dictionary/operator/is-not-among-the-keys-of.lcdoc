@@ -15,7 +15,7 @@ Platforms: desktop,server,web,mobile
 Example:
 local tArray
 put "World" into tArray["Hello"]
-"Foo" is not among the keys of tArray -- evaluates to true
+get "Foo" is not among the keys of tArray -- evaluates to true
 
 Example:
 if "text" is not among the keys of the dragData then

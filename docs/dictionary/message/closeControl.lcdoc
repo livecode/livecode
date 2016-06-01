@@ -17,7 +17,7 @@ Platforms: desktop,server,web,mobile
 Example:
 on closeControl
   deleteTemporaryObjects
-  pass closeBackground
+  pass closeControl
 end closeControl
 
 Description:

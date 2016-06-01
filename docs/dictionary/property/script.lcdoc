@@ -15,7 +15,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-set the script of button 2 to empty <a name="code tag=">-- clear out the script</a>
+set the script of button 2 to empty -- clear out the script
 
 Example:
 set the script of field "Get It" to field "Get It Script"

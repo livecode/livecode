@@ -14,7 +14,7 @@ Platforms: mobile
 
 Example:
 on productRequestError pProduct, pError
-   "Error:" && pError && "when requesting details for " && pProduct
+   put "Error:" && pError && "when requesting details for " && pProduct
 end productRequestError
 
 Parameters:

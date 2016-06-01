@@ -1,8 +1,8 @@
-Name: paragraph
+Name: paragraphs
 
 Type: keyword
 
-Syntax: paragraph
+Syntax: paragraphs
 
 Summary: Used with the number function to count the number of paragraph chunks in a container.
 

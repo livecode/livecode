@@ -17,7 +17,7 @@ Platforms: desktop,server,web,mobile
 Security: disk,network
 
 Example:
-revDatabaseConnectResult(line x of the openDatabases)
+revDatabaseConnectResult(line x of revOpenDatabases())
 
 Example:
 if revDatabaseConnectResult(myReservations) is empty then exit repeat

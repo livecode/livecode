@@ -17,7 +17,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-set the unicodeText of field 1 to URL binfile:Chinese.txt
+set the unicodeText of field 1 to URL "binfile:Chinese.txt"
 
 Example:
 set the unicodeText of line 4 of field 1 to mySavedText

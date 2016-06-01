@@ -33,7 +33,7 @@ Example:
 # Writing the contents of a field to an external file, preserving text encoding
 on textSave
    put "всем привет" into field "russiantext"
-   put textEncode(field "russiantext","UTF-8") into "binfile:/Users/myuser/Documents/russtext.txt"
+   put textEncode(field "russiantext","UTF-8") into URL "binfile:/Users/myuser/Documents/russtext.txt"
 end textSave
 
 # Reading contents of a file into LiveCode, preserving text encoding
@@ -89,4 +89,3 @@ standalone application (glossary), text file (glossary), Unicode (glossary), URL
 urlEncode (function), web server (glossary)
 
 Tags: networking,file system
-

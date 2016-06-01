@@ -1,6 +1,6 @@
 Name: remoteControlReceived
 
-Type: function
+Type: message
 
 Syntax: remoteControlReceived <eventType> 
 

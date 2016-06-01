@@ -11,7 +11,7 @@ Summary: Creates a picture file from a portion of the screen.
 Introduced: 2.1
 
 Example:
-export snapshot with effects to file "Test.ppm"
+export snapshot to file "Test.ppm"
 
 Example:
 export snapshot from rect "0,0,200,200" to file "Nav.jpg" as JPEG
