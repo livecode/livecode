@@ -6,6 +6,8 @@ Syntax: revXMLRPC_GetParamCount(<XML-RPC document>)
 
 Summary: Returns the number of parameters from an XML-RPC document structure.
 
+Associations: XML-RPC library
+
 Introduced: 2.5
 
 OS: mac,windows,linux

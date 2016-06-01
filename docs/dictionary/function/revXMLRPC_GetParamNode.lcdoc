@@ -6,6 +6,8 @@ Syntax: revXMLRPC_GetParamNode(<XML-RPC document>,<param number>)
 
 Summary: Returns the node of a single parameter from an XML-RPC document structure, so you can parse the data using the <XML library> <command|commands> and <function|functions>.
 
+Associations: XML-RPC library
+
 Introduced: 2.5
 
 OS: mac,windows,linux

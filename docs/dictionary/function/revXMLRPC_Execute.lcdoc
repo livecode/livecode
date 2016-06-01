@@ -6,6 +6,8 @@ Syntax: revXMLRPC_Execute(<XML-RPC document>)
 
 Summary: Executes an XML-RPC request and returns the result as an XML-RPC document structure.
 
+Associations: XML-RPC library
+
 Introduced: 2.5
 
 OS: mac,windows,linux
