@@ -326,6 +326,10 @@ public handler setData(in pData as String) returns nothing
 	variable tNewData as List
 	put the empty list into tNewData
 
+	if pData is empty then
+		throw "Invalid graph data"
+	end if
+
 	split pData by newline into tData
 
 	variable tCount as Number

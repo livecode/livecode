@@ -49,6 +49,11 @@ The <scriptOnly> property has been added to enable scripts to detect and set the
 
 >*Warning:* <scriptOnly> stacks only save the stack name and script. Any property changes and objects created while the stack is open will not exist the next time the stack is opened.
 
+>*Note:* Script only stacks are unable to be password protected. In order to password protect a script only stack use the following commands.
+
+    set the scriptOnly of stack "Secrets" to false
+    set the password of stack "Secrets" to field "Password"
+
 Refereneces: create stack (command), stack (object)
 
 Tags: objects
