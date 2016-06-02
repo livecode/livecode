@@ -2071,48 +2071,32 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    wait 0 ticks with messages -- allow for progress update
    
    -- sanitise raw list of externals from inclusions pane
-   local tAvailableExternals, tFixedExternals, tValidExternals
-   put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
-   put revIDEExternalsMapping() into tFixedExternals
-   split tFixedExternals by comma and space
-   put the keys of tFixedExternals into tFixedExternals
+   revSBSanitiseExternalsList pPlatform, sStandaloneSettingsA["externals"]
    
-   local tValid
-   repeat for each line tAddedExternal in sStandaloneSettingsA["externals"]
-      put false into tValid
-      if tAddedExternal is among the lines of tAvailableExternals then
-         put true into tValid
-      end if
-      
-      if tAddedExternal is among the lines of tFixedExternals then
-         put true into tValid
-      end if
-      
-      if tValid then
-         if tValidExternals is empty then
-            put tAddedExternal into tValidExternals
-         else
-            put return & tAddedExternal after tValidExternals
-         end if
-      end if
+   -- create list of externals and paths
+   local tExternalPathsA
+   repeat for each line tExternalName in sStandaloneSettingsA["externals"]
+      put revSBIncludedExternalPath(pPlatform, tExternalName) into tExternalPathsA[tExternalName]
    end repeat
-   put tValidExternals into sStandaloneSettingsA["externals"]
    
-   if there is not a folder (tCurrentLocation & slash & "Externals") then 
-      create folder (tCurrentLocation & slash & "Externals")
-   end if
-   
-   set the itemDel to slash
+   -- check externals that are added to the 'scriptLibraries' key
    repeat for each line tExternalName in revExternalsList()
-      
       -- check this item is selected for installation
       if tExternalName is not among the lines of tScriptLibraries then
          next repeat
       end if
       
       -- get the path to the external
-      put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPath
-      
+      put revExternalPath(tExternalName, tPlatform, tArch) into tExternalPathsA[tExternalName]
+   end repeat
+   
+   if there is not a folder (tCurrentLocation & slash & "Externals") then 
+      create folder (tCurrentLocation & slash & "Externals")
+   end if
+   
+   set the itemDel to slash
+   repeat for each key tExternalName in tExternalPathsA
+      put tExternalPathsA[tExternalName] into tExternalPath
       -- SN-2015-04-15: [[ Bug 15231 ]] We don't want to copy from an empty path
       --  in case we cannot find any Runtime/<platform>/<arch>/Externals/externals.txt file
       if tExternalPath is empty then

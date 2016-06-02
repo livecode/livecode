@@ -865,6 +865,9 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
     // MW-2014-07-16: [[ Bug ]] Put the player in the list.
     nextplayer = MCplayers;
     MCplayers = this;
+	
+	// IM-2016-05-27: [[ Bug 17697 ]] Initialise m_should_recreate to false
+	m_should_recreate = false;
 }
 
 MCPlayer::~MCPlayer()
@@ -2030,8 +2033,14 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	if (m_platform_player == nil || m_should_recreate || !dontuseqt)
     {
         if (m_platform_player != nil)
+		{
+			// IM-2016-05-27: [[ Bug 17697 ]] Clear native layer when releasing player
+			SetNativeView(nil);
             MCPlatformPlayerRelease(m_platform_player);
+		}
         MCPlatformCreatePlayer(dontuseqt, m_platform_player);
+		// IM-2016-05-27: [[ Bug 17697 ]] reset m_should_recreate after player has been created
+		m_should_recreate = false;
     }
 
 	if (m_platform_player == nil)

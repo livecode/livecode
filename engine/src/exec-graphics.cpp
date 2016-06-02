@@ -225,7 +225,6 @@ void MCGraphicsExecResetPaint(MCExecContext& ctxt)
     MClinesize = 1;
     MCmultiple = False;
     MCmultispace = 1;
-    MCpattern = 1;
     MCpolysides = 4;
     MCroundends = False;
     MCslices = 16;

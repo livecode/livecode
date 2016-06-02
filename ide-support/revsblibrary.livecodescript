@@ -681,9 +681,6 @@ function revFolderNameMakeLegal pName
    return tLegalName
 end revFolderNameMakeLegal
 
-// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
-constant kPlatforms = "Windows,MacOSX x86-32,Linux"
-
 // List of all desktop target platforms + architecture
 constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
@@ -694,6 +691,16 @@ constant kAdditionalTargets = "iOS,Android,Emscripten"
 function revSBAdditionalTargets
    return kAdditionalTargets
 end revSBAdditionalTargets
+
+function revSBTargetToPlatform pTarget
+   if pTarget begins with "MacOSX" then
+      return "MacOSX"
+   else if pTarget begins with "Linux" then
+      return "Linux"
+   else
+      return pTarget
+   end if
+end revSBTargetToPlatform
 
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
@@ -708,6 +715,9 @@ constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
+
+// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
+constant kInitialTargets = "Windows,MacOSX x86-32,Linux"
 
 on revSBDefaultStandaloneSettings pStack, @xSettingsA
    local tPlatform,tName
@@ -750,9 +760,10 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    if xSettingsA["UNIX,pageSetup"] = "" then put true into xSettingsA["UNIX,pageSetup"]
    if xSettingsA["UNIX,fileSelector"] = "" then put true into xSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
-   repeat for each item tPlatform in kPlatforms
-      if xSettingsA[tPlatform] = "" then 
-            put revEngineCheck(tPlatform) into xSettingsA[tPlatform]
+
+   repeat for each item tTarget in kInitialTargets
+      if xSettingsA[tTarget] = "" then
+            put revEngineCheck(tTarget) into xSettingsA[tTarget]
       end if
    end repeat
    
@@ -1758,11 +1769,17 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    end repeat
 end revSBConvertSettingsForPlatform
 
-command revSBResolveIncludedExternal pPlatform, @xFile
+function revSBIncludedExternalPath pTarget, pName
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   return revSBGetExternalPath(tPlatform, pName)
+end revSBIncludedExternalPath
+
+command revSBResolveIncludedExternal pTarget, @xFile
    -- Added to support mergExt inclusion
    if xFile begins with "!" then
       local tExtPath
-      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      put revSBIncludedExternalPath (pTarget, char 2 to -1 of xFile) into tExtPath
       -- if the file prefixed with ! was not a named external, treat normally
       if tExtPath is not empty then
          put tExtPath into xFile
@@ -1978,6 +1995,36 @@ command revSBUpdateForDependencies @xSettings
       end repeat
    end repeat
 end revSBUpdateForDependencies
+
+command revSBSanitiseExternalsList pTarget, @xExternals
+   local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put revSBAdditionalExternalsList(tPlatform) into tAvailableExternals
+   put revIDEExternalsMapping() into tFixedExternals
+   split tFixedExternals by comma and space
+   put the keys of tFixedExternals into tFixedExternals
+   
+   local tValid
+   repeat for each line tAddedExternal in xExternals
+      put false into tValid
+      if tAddedExternal is among the lines of tAvailableExternals then
+         put true into tValid
+      end if
+      
+      if tAddedExternal is among the lines of tFixedExternals then
+         put true into tValid
+      end if
+      
+      if tValid then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into xExternals
+end revSBSanitiseExternalsList
 
 ------------------- SMART CHECKING --------------------
 

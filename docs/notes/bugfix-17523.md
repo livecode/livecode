@@ -1,0 +1,1 @@
+# Fix LCB docs builder handling of string-like property names
