@@ -6,7 +6,7 @@ Syntax: set the topLeft of <object> to left,top
 
 Summary: Specifies the location of the specified <object|object's> upper left corner.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

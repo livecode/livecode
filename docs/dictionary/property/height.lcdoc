@@ -6,7 +6,7 @@ Syntax: set the height of <object> to <numberOfPixels>
 
 Summary: Specifies the distance from an <object|object's> top edge to its bottom edge.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

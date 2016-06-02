@@ -6,7 +6,7 @@ Syntax: closeBackground <backgroundID>
 
 Summary: Sent to the <current card> when the user is leaving a <card> that has a <group> to go to one that doesn't have the <group>.
 
-Associations: card
+Associations: card,group
 
 Introduced: 1.0
 

@@ -6,7 +6,7 @@ Syntax: set the topRight of <object> to <right>, <top>
 
 Summary: Specifies the location of the specified <object|object's> upper right corner.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

@@ -470,6 +470,30 @@ LCError LCArrayRemoveKeyWithPath(LCArrayRef array, unsigned int options, const c
 	
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __ANDROID__
+
+// Function:
+//   LCAttachCurrentThread
+// Parameters:
+//   none
+// Errors:
+//   Failed - System was unable to attach the current thread to the Java VM
+//
+LCError LCAttachCurrentThread(void);
+
+// Function:
+//   LCDetachCurrentThread
+// Parameters:
+//   none
+// Errors:
+//   Failed - System was unable to detach the current thread from the Java VM
+//
+LCError LCDetachCurrentThread(void);
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef struct __LCObject *LCObjectRef;
 
 // Parameters:

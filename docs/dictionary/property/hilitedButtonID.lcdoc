@@ -6,6 +6,8 @@ Syntax: set the hilitedButtonID of <group> to <buttonID>
 
 Summary: Specifies which <button> in a <group> is currently <highlight|highlighted>.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

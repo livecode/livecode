@@ -8,7 +8,7 @@ Syntax: get the formattedWidth of [<chunk> of] <field>
 
 Summary: Reports the width needed by an <object(glossary)> to display its full contents without scrolling.
 
-Associations: button
+Associations: card,field,button,player,image,group
 
 Introduced: 1.0
 

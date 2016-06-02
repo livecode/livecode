@@ -422,7 +422,6 @@ uint2 MCstartangle = 0;
 uint2 MCarcangle = 360;
 Boolean MCmultiple;
 uint2 MCmultispace = 1;
-uint4 MCpattern = 1;
 uint2 MCpolysides = 4;
 Boolean MCroundends;
 uint2 MCslices = 16;
@@ -802,7 +801,6 @@ void X_clear_globals(void)
 	MCarcangle = 360;
 	MCmultiple = False;
 	MCmultispace = 1;
-	MCpattern = 1;
 	MCpolysides = 4;
 	MCroundends = False;
 	MCslices = 16;

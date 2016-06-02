@@ -6,6 +6,8 @@ Syntax: set the unboundedHScroll of <group> to {true | false}
 
 Summary: Specifies whether automatic clamping of the hScroll offsets of a group is on or off.
 
+Associations: group
+
 Introduced: 4.6
 
 OS: mac,windows,linux,ios,android

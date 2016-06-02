@@ -26,4 +26,9 @@ Use the <passKey> <property> to unlock a <password> -protected <stack>.
 
 If a stack has been locked against modification with a password, you can set the <passKey> <property> of the stack to the correct <password> to <unlock> the <stack>. Setting the <passKey> <property> is the <script> equivalent of typing the <password> into LiveCode's <password> <dialog box>. Use this <property> if you want to perform <password> authentication in a <handler>.
 
+>*Note:* Script only stacks are unable to be password protected. In order to password protect a script only stack use the following commands.
+
+    set the scriptOnly of stack "Secrets" to false
+    set the password of stack "Secrets" to field "Password"
+
 References: password (property), script (property), string (keyword), stack (object), property (glossary), unlock (glossary), dialog box (glossary), handler (glossary), stacks (function)

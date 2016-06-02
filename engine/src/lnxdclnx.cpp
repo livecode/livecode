@@ -781,7 +781,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     gdk_window_resize(t_event->configure.window, t_new_width, t_new_height);
                 }                        
                 
-                MCdispatcher->configure(t_event->configure.window);
+                MCdispatcher->wreshape(t_event->configure.window);
                 break;
             }
                 

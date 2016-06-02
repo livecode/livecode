@@ -6,7 +6,7 @@ Syntax: set the hScroll of {<field> | <group>} to <pixels>
 
 Summary: Specifies the horizontal scroll of a <field> or <group>.
 
-Associations: field
+Associations: field,group
 
 Introduced: 1.0
 

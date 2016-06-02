@@ -8,7 +8,7 @@ Summary: The <backgroundPattern> specifies the pattern used to draw an <object|o
 
 Synonyms: backPattern,fillPat
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

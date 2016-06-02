@@ -148,11 +148,6 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 		curcard->message_with_args(MCM_resize_stack, rect.width, rect.height + newy, oldw, oldh);
 	}
 	MCRedrawUnlockScreen();
-
-	// MW-2011-08-18: [[ Redraw ]] For now, update the screen here. This should
-	//   really be done 'in general' after event dispatch, but things don't work
-	//   in a suitable way for that... Yet...
-	MCRedrawUpdateScreen();
 }
 
 static bool _MCStackConfigureCallback(MCStack *p_stack, void *p_context)

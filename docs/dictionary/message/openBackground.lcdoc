@@ -6,7 +6,7 @@ Syntax: openBackground <backgroundID>
 
 Summary: Sent to all background groups when a card they are placed on is opened.
 
-Associations: card
+Associations: card,group
 
 Introduced: 1.0
 

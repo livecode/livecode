@@ -6,7 +6,7 @@ Syntax: set the right of <object> to <pixels>
 
 Summary: Specifies how far an <object|object's> right edge is from the left edge of the window or screen.
 
-Associations: stack,card,field,button,graphic,scrollbar,player,image
+Associations: stack,card,field,button,graphic,scrollbar,player,image,group
 
 Introduced: 1.0
 

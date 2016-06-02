@@ -6,6 +6,8 @@ Syntax: set the traversalOn of <object> to {true | false}
 
 Summary: Specifies whether a <control> can become the <active (focused) control(glossary)>.
 
+Associations: field,button,group
+
 Introduced: 1.0
 
 OS: mac,windows,linux,ios,android

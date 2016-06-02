@@ -1,1 +1,1 @@
-#Fix crash on Android in the files and folders functions
+# Fix crash on Android in the files and folders functions

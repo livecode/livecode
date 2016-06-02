@@ -6,6 +6,8 @@ Syntax: set the defaultMenubar to <group>
 
 Summary: Specifies which <menu bar> is displayed on <Mac OS> systems when the <active window|active window's> <menubar> <property> is empty.
 
+Associations: group
+
 Introduced: 1.0
 
 OS: mac

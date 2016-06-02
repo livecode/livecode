@@ -3218,6 +3218,25 @@ static JavaNativeMapping s_native_mappings[] =
 	{ kJavaNativeTypeData, "java/nio/ByteBuffer", "array", "()[B", nil, nil },
 };
 
+LCError LCAttachCurrentThread(void)
+{
+	JNIEnv *t_env;
+
+	t_env = nil;
+	if (s_java_vm -> AttachCurrentThread(&t_env, nil) < 0)
+		return kLCErrorFailed;
+
+	return kLCErrorNone;
+}
+
+LCError LCDetachCurrentThread(void)
+{
+	if (s_java_vm -> DetachCurrentThread() < 0)
+		return kLCErrorFailed;
+
+	return kLCErrorNone;
+}
+
 static bool java__initialize(JNIEnv *env)
 {
 	for(uint32_t i = 0; i < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); i++)

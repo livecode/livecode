@@ -6,6 +6,8 @@ Syntax: preOpenControl
 
 Summary: Sent to a <group> when you go to the <card> that contains it and to a <background group> when going from a card which it is not placed on to one where it is.
 
+Associations: group
+
 Introduced: 3.5
 
 OS: mac,windows,linux,ios,android

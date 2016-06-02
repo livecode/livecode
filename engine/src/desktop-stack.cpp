@@ -34,6 +34,7 @@
 #include "resolution.h"
 #include "player.h"
 #include "dispatch.h"
+#include "redraw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -451,16 +452,6 @@ void MCDispatch::wredraw(Window p_window, MCPlatformSurfaceRef p_surface, MCGReg
 		t_stack -> view_surface_redrawwindow(&t_stack_surface, p_update_rgn);
 	else
 		s_update_callback(&t_stack_surface, (MCRegionRef)p_update_rgn, s_update_context);
-}
-
-void MCDispatch::wreshape(Window p_window)
-{
-	MCStack *t_stack;
-	t_stack = findstackd(p_window);
-	if (t_stack == nil)
-		return;
-	
-	t_stack -> view_configure(true);
 }
 
 void MCDispatch::wiconify(Window p_window)
