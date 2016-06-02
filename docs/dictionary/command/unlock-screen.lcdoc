@@ -37,6 +37,12 @@ Use the <unlock screen> <command> to allow changes to the screen appearance to b
 
 The <unlock screen> <command> sets the <lockScreen> <property> to false. When all pending <handler|handlers> are finished <execute|executing>, the <lockScreen> <property> is automatically set to false.
 
-References: unlock colorMap (command), unlock cursor (command), unlock error dialogs (command), unlock moves (command), unlock recent (command), allowFieldRedraw (property), lockScreen (property), property (glossary), handler (glossary), lock (glossary), lockScreen (glossary), command (glossary), execute (glossary)
+Changes:
+The use of QuickTime was deprecated in version 8.1 with new defaults for 
+<dontUseQT> and <dontUseQTEffects> as true on all systems apart from pre
+OS X 10.8. Additionally QuickTime can not be supported on 64 bit builds
+of LiveCode.
+
+References: dontUseQT (property), dontUseQTEffects (property), unlock colorMap (command), unlock cursor (command), unlock error dialogs (command), unlock moves (command), unlock recent (command), allowFieldRedraw (property), lockScreen (property), property (glossary), handler (glossary), lock (glossary), lockScreen (glossary), command (glossary), execute (glossary)
 
 Tags: ui

@@ -19,7 +19,9 @@ Example:
 if not the wantEffects of me then set the dontUseQTEffects of me to true
 
 Value (bool):The <dontUseQTEffects> is true or false.
-By default, the <dontUseQTEffects> <property> is set to false.
+On Windows, the default value of <dontUseQTEffects> is false. On OSX, the 
+default value of the <dontUseQTEffects> is true unless the 32 bit
+version is running on a system under 10.8. 
 
 Description:
 Use the <dontUseQTEffects> <property> on slower machines for better visual results on slower machines when using built-in effects.
@@ -32,6 +34,12 @@ If the <dontUseQTEffects> <property> is set to true, LiveCode uses its own built
 
 The setting of this property has no effect on Unix systems.
 
-References: answer effect (command), show (command), unlock screen (command), hide (command), QTVersion (function), property (glossary), command (glossary), QuickTime (glossary), stack window (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. Additionally QuickTime can not be
+supported on 64 bit builds of LiveCode.
+
+References: dontUseQTEffects (property), answer effect (command), show (command), unlock screen (command), hide (command), QTVersion (function), property (glossary), command (glossary), QuickTime (glossary), stack window (glossary)
 
 Tags: multimedia

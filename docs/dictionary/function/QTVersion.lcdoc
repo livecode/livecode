@@ -31,6 +31,13 @@ On Mac OS and Windows systems, if <QuickTime> is not installed, the <qtVersion> 
 
 >*Tip:* It can take LiveCode a second or two to load the code needed to use <QuickTime>, depending on the machine speed. Since this code is only <loaded into memory> once per session, you can speed up the first occurrence of a QuickTime-related action by calling the <qtVersion> function during otherwise dead time--for example, during startup of your application--to preload the code.
 
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. Additionally QuickTime can not be
+supported on 64 bit builds of LiveCode.
+
+
 References: videoClipPlayer (property), qtIdleRate (property), dontUseQT (property), dontUseQTEffects (property), play (command), qtVersion (function), buildNumber (function), recordFormats (function), systemVersion (function), qtEffects (function), QuickTime (glossary), return (glossary), loaded into memory (glossary)
 
 Tags: multimedia

@@ -27,6 +27,12 @@ Use the <answer effect> <command> to choose a visual effect, or to set up an eff
 
 The <answer effect> <command> displays a <dialog box> where the user can select a visual effect and (for some effects) set parameters such as speed and direction. (This <dialog box> is displayed by <QuickTime>, not by LiveCode.)
 
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. Additionally QuickTime can not be
+supported on 64 bit builds of LiveCode.
+
 References: dontUseQTEffects (property), dontUseQT (property), answer (command), visual effect (command), answer record (command), show (command), hide (command), unlock screen (command), result (function), QTEffects (function), dialog box (glossary), custom property (glossary), variable (glossary), command (glossary), QuickTime (glossary), return (glossary), function (control structure)
 
 Tags: multimedia
