@@ -803,8 +803,7 @@ private function revPlatformCount
    return sPlatformCount
 end revPlatformCount
 
-# OK-2007-08-09 Copies the appropriate script libraries (i.e. group revLibraries of the appropriate revLibrary.rev)
-# to the stack being built. Will remove any existing group called revLibraries from card 1 of the stack.
+# Adds the appropriate script libraries to the standalone settings
 private command revCopyScriptLibraries pStack, pPlatform
    # AL-2015-02-03: [[ Scriptify IDE ]] Ensure revCommonLibrary is always included in a standalone
    revSBAddInclusion "Common", "scriptLibraries", sStandaloneSettingsA
@@ -821,12 +820,6 @@ private command revCopyScriptLibraries pStack, pPlatform
    if sStandaloneSettingsA["includeProfiles"] is not empty then 
       revSBAddInclusion "Profiles", "scriptLibraries", sStandaloneSettingsA
    end if
-   
-   /*
-   set the cScriptLibraries of group "revLibraries" of card 1 of stack pStack to sUserScriptLibraries
-   set the cAppIcon of group "revLibraries" of card 1 of stack pStack to sStandaloneSettingsA["OSX,appicon"]
-   set the cSmallAppIcon of group "revLibraries" of card 1 of stack pStack to sStandaloneSettingsA["OSX,smallappicon"]
-   */
 end revCopyScriptLibraries
 
 #####################################################################
@@ -1641,15 +1634,10 @@ end revCopyReferencedFile
 private function revSaveToFolder pFolder, pStack, pGeneric
    local tCheckFolder,tFileName
    revStandaloneProgress "Checking directory exists..."
-   set the itemDel to "/"
-   --  put item 1 of pFolder into tCheckFolder
-   --  repeat for each item tItem in item 2 to -1 of pFolder
-   --    put "/"&tItem after tCheckFolder
-   --    if there is not a folder tCheckFolder then
-   --      create folder tCheckFolder
-   --    end if
-   --  end repeat
+   
    revSBEnsureFolder pFolder
+   
+   set the itemDel to "/"
    -- 2007-12-18 Bug 3612 Changed the sGenericNumber from 1 to 0.
    if pGeneric and sGenericNumber is not 0 then -- don't rename the first (mainstack) generically
       put sGenericNumber into tFileName
