@@ -2103,11 +2103,11 @@ on initialiseSearchForInclusions
    put true into sSearchInitialised
 end initialiseSearchForInclusions
 
-command revSearchForInclusions pStack, @xSettings
+command revSBSearchForInclusions pStack, @xSettings
    -- Ensure all properties and patterns are initialised
    initialiseSearchForInclusions
    revSmartChecking revGetStackFilesList(pStack), xSettings
-end revSearchForInclusions
+end revSBSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings
    local tNewSettings
