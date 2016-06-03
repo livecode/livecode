@@ -1137,6 +1137,7 @@ private command revCopyIcons pStack
       end repeat
       close stack "revCopiedIcons"
    end if
+   unlock screen
 end revCopyIcons
 
 #####################################################################
@@ -1306,6 +1307,7 @@ command revReset
       unlock messages
    end try
    delete variable sResetA               -- stored info for resetting to the pre-build state
+   unlock screen
    revStandaloneProgressFinished
 end revReset
 
@@ -1448,6 +1450,7 @@ private command revSetStackProps pStack
          revSetObjectProps the long id of control tControl of cd tCard of stack pStack,tSetTo,sStandaloneSettingsA["includeProfiles"],tControl
       end repeat
    end repeat
+   unlock screen
 end revSetStackProps
 
 #####################################################################
@@ -1664,6 +1667,7 @@ private function revSaveToFolder pFolder, pStack, pGeneric
    lock messages
    save stack pStack as pFolder&tFileName
    unlock messages
+   unlock screen
    return tFileName
 end revSaveToFolder
 
@@ -2065,11 +2069,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       set the name of stack ("copy of" && tLine) to tLine
    end repeat
    unlock messages
-   -- copies the remaining external libraries
-   
-   -- hack
-   unlock screen; unlock screen
-   wait 0 ticks with messages -- allow for progress update
+   unlock screen
    
    -- sanitise raw list of externals from inclusions pane
    revSBSanitiseExternalsList pPlatform, sStandaloneSettingsA["externals"]

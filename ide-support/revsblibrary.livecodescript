@@ -2161,6 +2161,8 @@ private command revSmartChecking pStackFilesList, @xSettings
    
    -- Update the output settings
    put tNewSettings into xSettings
+   unlock messages
+   unlock screen
 end revSmartChecking
 
 private command revCheckObject pObject,pUserLibraries, @xSettings
