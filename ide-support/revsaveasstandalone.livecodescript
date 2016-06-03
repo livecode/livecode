@@ -139,6 +139,8 @@ private function getBuildFolder pStack, pFolder, pSettings
 end getBuildFolder
 
 on revSaveAsStandalone pStack, pFolder, pPreview
+   start using stack "revSBLibrary"
+   
    global gREVStackStatus
    
    if pStack = empty then
