@@ -263,21 +263,30 @@ end revSaveAsStandalone
 command revDoSaveAsStandalone pStack, pFolder
    start using stack "revSBLibrary"
    
+   # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
+   put 0 into sGenericNumber
+   lock cursor
+   set cursor to watch
+   
+   put empty into sUserScriptLibraries
+   
+   put empty into sStubPath
+   
+   put the directory into sResetA["Directory"]
+   put the fileType into sResetA["FileType"]
+   put getSettings(pStack) into sStandaloneSettingsA
+   
+   put the mainStack of stack pStack into pStack
+   set the defaultStack to pStack
+   
    revStandaloneResetWarnings
    
    local tError, tStandaloneFolder
-   
-   set the defaultStack to pStack
-   
-   put getSettings(pStack) into sStandaloneSettingsA
    
    # Set empty values to defaults
    revSBDefaultStandaloneSettings pStack, sStandaloneSettingsA
    
    revStandaloneProgress "Preparing to build standalone..."
-   
-   put the mainStack of stack pStack into pStack
-   set the defaultStack to pStack
    
    try
       -- Clear left over state information from previous build
@@ -359,6 +368,8 @@ command revDoSaveAsStandalone pStack, pFolder
       end if
       exit to top
    end try
+   
+   revReset
    
    return empty
 end revDoSaveAsStandalone
@@ -444,14 +455,7 @@ private command revCreateStandalone pStack, pFolder
    -- Make sure all dependencies are included
    revSBUpdateForDependencies sStandaloneSettingsA
    
-   # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
-   put 0 into sGenericNumber
-   lock cursor
-   set cursor to watch
-   lock messages
-   
-   revStandaloneProgress "Loading settings..."
-   
+   local tCount
    if there is a file (pFolder & "/" & sStandaloneSettingsA["name"]) then
       put " Standalone" after sStandaloneSettingsA["name"]
       put empty into tCount
@@ -460,11 +464,6 @@ private command revCreateStandalone pStack, pFolder
       end repeat
       put sStandaloneSettingsA["name"] & tCount into sStandaloneSettingsA["name"]
    end if
-   
-   # OK-2007-08-09
-   put empty into sUserScriptLibraries
-   
-   put empty into sStubPath
    
    -- generic icons if none set
    set the itemDelimiter to slash
@@ -1265,12 +1264,12 @@ private command revCleanBuildStacks
          end if
       end if
    end repeat
-   revReset
 end revCleanBuildStacks
 
 private command revAbort
    revCleanOutputFolders
    revCleanBuildStacks
+   revReset
 end revAbort
 
 command revReset
