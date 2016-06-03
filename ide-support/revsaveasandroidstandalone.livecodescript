@@ -90,7 +90,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    put true into tConfirm
    if tSettings["inclusions"] is "search" then 
       put false into tConfirm
-      dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pStack, tSettings
+      -- search for inclusions when building for simulator
+      if pTarget contains "test" then
+         revSBSearchForInclusions pStack, tSettings
+      end if
+      
    end if
    
    -- Make sure all dependencies are included
