@@ -386,15 +386,17 @@ private function folderNameMakeLegal pName
    return revFolderNameMakeLegal(pName)
 end folderNameMakeLegal
 
-private function revStandalonePlatformDetails pPlatform
+private function revStandalonePlatformDetails pTarget
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
    local tDetailsA
-
    -- SN-2015-03-04: [[ IDE Restructure ]] Externals folder contains the externals,
    --  and Support contains support libraries (revpdfprinter and revsecurity):
    --  they should have their own keys in the details array.
    local tArchFolder
-   switch
-      case pPlatform contains "MacOSX"
+   switch tPlatform
+      case "MacOSX"
          -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
          -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
          put "Mac OS X/x86-32" into tArchFolder
@@ -403,17 +405,17 @@ private function revStandalonePlatformDetails pPlatform
          put "MacOSX" into  tDetailsA["platform"]
          put "x86-32" into tDetailsA["architecture"]
          break
-      case pPlatform = "Windows"
+      case "Windows"
          put "Windows/x86-32" into tArchFolder
          put ".dll" into tDetailsA["loadable_extension"]
          put "Windows" into tDetailsA["platform"]
          put "x86-32" into tDetailsA["architecture"]
          break
-      default
-         if pPlatform is "Linux" then
+      case "Linux"
+         if pTarget is "Linux" then
             put "Linux/x86-32" into tArchFolder
             put "x86-32" into tDetailsA["architecture"]
-         else if pPlatform is "Linux x64" then
+         else if pTarget is "Linux x64" then
             -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
             put "Linux/x86-64" into tArchFolder
             put "x86-64" into tDetailsA["architecture"]
@@ -424,8 +426,11 @@ private function revStandalonePlatformDetails pPlatform
          end if
          put ".so" into tDetailsA["loadable_extension"]
          put "Linux" into tDetailsA["platform"]
+         break
+      default
+         throw "invalid target" && pTarget
    end switch
-
+   
    -- SN-2015-03-04: [[ CloneAndRun ]] Refactor the setting of externals / support location
    local tRuntimeFolder
    if revEnvironmentIsInstalled() then
