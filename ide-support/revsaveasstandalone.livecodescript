@@ -296,24 +296,24 @@ command revDoSaveAsStandalone pStack, pFolder
          create folder tOutputFolder
       end if
       
-      -- Check to see if we're building for any desktop platforms
-      local tDesktopTarget
-      put false into tDesktopTarget
-      repeat for each item tPlatform in revSBDesktopTargets()
-         if sStandaloneSettingsA[tPlatform] then
-            put true into tDesktopTarget
+      local tBuildPlatforms, tPlatform
+      repeat for each item tTarget in revSBDesktopTargets() & comma & revSBAdditionalTargets()
+         if sStandaloneSettingsA[tTarget] then
+            put revSBTargetToPlatform(tTarget) into tPlatform
+            put true into tBuildPlatforms[tPlatform]
          end if
       end repeat
       
-      if tDesktopTarget then
-         revCreateStandalone pStack, tOutputFolder
+      -- If we're searching for inclusions, do it here 
+      if sStandaloneSettingsA["inclusions"] = "search" then 
+         revSearchForInclusions pStack, sStandaloneSettingsA
       end if
       
-      -- build for all selected additional platforms
-      repeat for each item tPlatform in revSBAdditionalTargets()
-         if not sStandaloneSettingsA[tPlatform] then
-            next repeat
-         end if
+      -- keep a copy of the standalone settings to restore after each build
+      local tStandaloneSettingsA
+      put sStandaloneSettingsA into tStandaloneSettingsA
+      repeat for each key tPlatform in tBuildPlatforms
+         put tStandaloneSettingsA into sStandaloneSettingsA
          
          local tTargetFolder
          -- If we are building for multiple platforms, then build in a platform-specific subfolder
@@ -341,8 +341,15 @@ command revDoSaveAsStandalone pStack, pFolder
                dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
                      pStack, tTargetFolder, "Build"
                break
-            default
-               throw "invalid platform:" && tPlatform
+            case "MacOSX"
+               revSaveAsMacStandalone pStack, tTargetFolder
+               break
+            case "Windows"
+               revSaveAsWindowsStandalone pStack, tTargetFolder
+               break
+            case "Linux"
+               revSaveAsLinuxStandalone pStack, tTargetFolder
+               break
          end switch
       end repeat
    catch tError
