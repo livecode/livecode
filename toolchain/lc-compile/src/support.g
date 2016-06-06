@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -252,6 +252,7 @@
     OutputWrite
     OutputWriteI
     OutputWriteS
+    OutputWriteXmlS
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -627,6 +628,7 @@
 'action' OutputWrite(STRING)
 'action' OutputWriteI(STRING, NAME, STRING)
 'action' OutputWriteS(STRING, STRING, STRING)
+'action' OutputWriteXmlS(STRING, STRING, STRING)
 
 --------------------------------------------------------------------------------
 
