@@ -517,8 +517,7 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          set the filename of tStack to pStackFile
          
          -- Revert to unmodified state
-         go tStack
-         revert
+         revert tStack
          set the defaultStack to the short name of tStack
          
          unlock screen
