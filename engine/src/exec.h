@@ -236,6 +236,7 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalInt16,
 	kMCPropertyTypeOptionalUInt16,
 	kMCPropertyTypeOptionalUInt32,
+	kMCPropertyTypeOptionalDouble,
 	kMCPropertyTypeOptionalString,
 	kMCPropertyTypeOptionalRectangle,
     kMCPropertyTypeOptionalPoint,
@@ -476,6 +477,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetOptionalUInt16(mth) MCPropertyThunkImp(mth, uinteger_t*&)
 #define MCPropertyThunkGetOptionalUInt32(mth) MCPropertyThunkImp(mth, uinteger_t*&)
 #define MCPropertyThunkGetDouble(mth) MCPropertyThunkImp(mth, double&)
+#define MCPropertyThunkGetOptionalDouble(mth) MCPropertyThunkImp(mth, double *&)
 #define MCPropertyThunkGetChar(mth) MCPropertyThunkImp(mth, char_t&)
 #define MCPropertyThunkGetString(mth) MCPropertyThunkImp(mth, MCStringRef&)
 #define MCPropertyThunkGetBinaryString(mth) MCPropertyThunkImp(mth, MCDataRef&)
@@ -510,6 +512,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetOptionalUInt16(mth) MCPropertyThunkImp(mth, uinteger_t*)
 #define MCPropertyThunkSetOptionalUInt32(mth) MCPropertyThunkImp(mth, uinteger_t*)
 #define MCPropertyThunkSetDouble(mth) MCPropertyThunkImp(mth, double)
+#define MCPropertyThunkSetOptionalDouble(mth) MCPropertyThunkImp(mth, double*)
 #define MCPropertyThunkSetChar(mth) MCPropertyThunkImp(mth, char_t)
 #define MCPropertyThunkSetString(mth) MCPropertyThunkImp(mth, MCStringRef)
 #define MCPropertyThunkSetBinaryString(mth) MCPropertyThunkImp(mth, MCDataRef)
@@ -554,6 +557,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkGetOptionalUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectThunkGetOptionalUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectThunkGetDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double&)
+#define MCPropertyObjectThunkGetOptionalDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double*&)
 #define MCPropertyObjectThunkGetString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectThunkGetBinaryString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectThunkGetOptionalString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef&)
@@ -589,6 +593,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkSetOptionalUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectThunkSetOptionalUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectThunkSetDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double)
+#define MCPropertyObjectThunkSetOptionalDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double*)
 #define MCPropertyObjectThunkSetString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectThunkSetBinaryString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectThunkSetOptionalString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef)
@@ -622,6 +627,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectPartThunkGetOptionalUInt16(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectPartThunkGetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectPartThunkGetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double&)
+#define MCPropertyObjectPartThunkGetOptionalDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double*&)
 #define MCPropertyObjectPartThunkGetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectPartThunkGetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectPartThunkGetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
@@ -645,6 +651,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectPartThunkSetOptionalUInt16(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectPartThunkSetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectPartThunkSetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double)
+#define MCPropertyObjectPartThunkSetOptionalDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double*)
 #define MCPropertyObjectPartThunkSetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectPartThunkSetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectPartThunkSetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
