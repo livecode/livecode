@@ -2496,6 +2496,7 @@ extern MCExecMethodInfo *kMCInterfaceExecRemoveGroupFromCardMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecResetCursorsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecResetTemplateMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecRevertMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecRevertStackMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectEmptyMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfFieldMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfButtonMethodInfo;
@@ -3010,6 +3011,7 @@ void MCInterfaceExecResetCursors(MCExecContext& ctxt);
 void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type type);
 
 void MCInterfaceExecRevert(MCExecContext& ctxt);
+void MCInterfaceExecRevertStack(MCExecContext& ctxt, MCObject *p_stack);
 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt);
 void MCInterfaceExecSelectAllTextOfField(MCExecContext& ctxt, MCObjectPtr target);
