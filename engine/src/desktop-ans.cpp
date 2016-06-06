@@ -23,7 +23,7 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 #include "exec.h"
 #include "stack.h"

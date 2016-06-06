@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "param.h"
 #include "scriptpt.h"
 #include "chunk.h"

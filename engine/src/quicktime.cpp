@@ -23,7 +23,7 @@
 
 #include "graphics.h"
 #include "stack.h"
-#include "execpt.h"
+
 #include "player.h"
 #include "util.h"
 #include "osspec.h"

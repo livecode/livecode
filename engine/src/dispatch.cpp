@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -195,81 +195,6 @@ bool MCDispatch::isdragtarget(void)
 {
 	return m_drag_target;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCDispatch::getprop */ LEGACY_EXEC
-	case P_BACK_PIXEL:
-        //ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
-        return ES_NOT_HANDLED;
-	case P_TOP_PIXEL:
-        //ep.setint(MCscreen->white_pixel.pixel & 0xFFFFFF);
-        return ES_NOT_HANDLED;
-	case P_HILITE_PIXEL:
-	case P_FORE_PIXEL:
-	case P_BORDER_PIXEL:
-	case P_BOTTOM_PIXEL:
-	case P_SHADOW_PIXEL:
-	case P_FOCUS_PIXEL:
-        //ep.setint(MCscreen->black_pixel.pixel & 0xFFFFFF);
-        return ES_NOT_HANDLED;
-	case P_BACK_COLOR:
-	case P_HILITE_COLOR:
-        //ep.setstaticcstring("white");
-        return ES_NOT_HANDLED;
-	case P_FORE_COLOR:
-	case P_BORDER_COLOR:
-	case P_TOP_COLOR:
-	case P_BOTTOM_COLOR:
-	case P_SHADOW_COLOR:
-	case P_FOCUS_COLOR:
-        //ep.setstaticcstring("black");
-        return ES_NOT_HANDLED;
-	case P_FORE_PATTERN:
-	case P_BACK_PATTERN:
-	case P_HILITE_PATTERN:
-	case P_BORDER_PATTERN:
-	case P_TOP_PATTERN:
-	case P_BOTTOM_PATTERN:
-	case P_SHADOW_PATTERN:
-	case P_FOCUS_PATTERN:
-		ep.clear();
-		return ES_NORMAL;
-	case P_TEXT_ALIGN:
-		ep.setstaticcstring(MCleftstring);
-		return ES_NORMAL;
-	case P_TEXT_FONT:
-        //ep.setstaticcstring(DEFAULT_TEXT_FONT);
-		return ES_NOT_HANDLED;
-	case P_TEXT_HEIGHT:
-        //ep.setint(heightfromsize(DEFAULT_TEXT_SIZE));
-		return ES_NOT_HANDLED;
-	case P_TEXT_SIZE:
-        //ep.setint(DEFAULT_TEXT_SIZE);
-		return ES_NOT_HANDLED;
-	case P_TEXT_STYLE:
-		ep.setstaticcstring(MCplainstring);
-		return ES_NORMAL;
-#endif /* MCDispatch::getprop */ 
-	default:
-		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
-		return ES_ERROR;
-	}
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
-{
-#ifdef /* MCDispatch::setprop */ LEGACY_EXEC
-	return ES_NORMAL;
-#endif /* MCDispatch::setprop */
-    return ES_NORMAL;
-}
-#endif
 
 // bogus "cut" call actually checks license
 Boolean MCDispatch::cut(Boolean home)

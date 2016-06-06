@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 #include "globals.h"
 #include "context.h"
-//#include "execpt.h"
+
 
 #include "graphicscontext.h"
 
