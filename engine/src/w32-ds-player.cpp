@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "stack.h"
+#include "osspec.h"
 
 #include "graphics_util.h"
 #include "platform.h"
@@ -601,12 +602,70 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 	if (t_success)
 		t_success = S_OK == t_graph.CoCreateInstance(CLSID_FilterGraph);
 
+	MCAutoStringRef t_native_filename;
+	if (t_success)
+		t_success = MCS_pathtonative(p_filename, &t_native_filename);
+
 	MCAutoCustomPointer<OLECHAR, MCWin32BSTRFree> t_filename;
 	if (t_success)
-		t_success = MCStringConvertToBSTR(p_filename, &t_filename);
+		t_success = MCStringConvertToBSTR(*t_native_filename, &t_filename);
+
+	CComPtr<IBaseFilter> t_source_filter;
 
 	if (t_success)
-		t_success = S_OK == t_graph->RenderFile(*t_filename, nil);
+	{
+		// Attempt to load using WM ASF Reader first as this has better support for some formats (mp3) than the
+		//    source filter selected by the graph builder.
+		bool t_asf_success = true;
+
+		CComPtr<IFileSourceFilter> t_asf_reader;
+		t_asf_success = SUCCEEDED(t_asf_reader.CoCreateInstance(CLSID_WMAsfReader));
+
+		if (t_asf_success)
+			t_asf_success = SUCCEEDED(t_asf_reader->Load(*t_filename, NULL));
+
+		HRESULT t_result;
+		if (t_asf_success)
+		{
+			CComQIPtr<IBaseFilter> t_base_filter(t_asf_reader);
+			t_asf_success = t_base_filter != nil;
+
+			if (t_asf_success)
+			{
+				t_result = t_graph->AddFilter(t_base_filter, L"MCWin32DSASFReaderFilter");
+				t_asf_success = SUCCEEDED(t_result);
+			}
+		}
+
+		if (t_asf_success)
+			t_source_filter = t_asf_reader;
+	}
+
+	// FALLBACK: Allow the graph builder to select the source filter.
+	if (t_success && t_source_filter == nil)
+		t_success = SUCCEEDED(t_graph->AddSourceFilter(*t_filename, L"MCWin32DSSourceFilter", &t_source_filter));
+
+	CComPtr<IEnumPins> t_enum_pins;
+	if (t_success)
+		t_success = SUCCEEDED(t_source_filter->EnumPins(&t_enum_pins));
+
+	if (t_success)
+	{
+		// Ask the graph builder to render each output pin of the source filter.
+		IPin *t_pin;
+		while (t_success && S_OK == t_enum_pins->Next(1, &t_pin, NULL))
+		{
+			PIN_DIRECTION t_direction;
+			t_success = SUCCEEDED(t_pin->QueryDirection(&t_direction));
+
+			if (t_success && t_direction == PINDIR_OUTPUT)
+			{
+				t_success = SUCCEEDED(t_graph->Render(t_pin));
+			}
+
+			t_pin->Release();
+		}
+	}
 
 	if (t_success)
 		t_success = SetFilterGraph(t_graph);
