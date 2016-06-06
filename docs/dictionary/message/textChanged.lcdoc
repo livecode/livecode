@@ -19,6 +19,14 @@ on textChanged -- enable the save button when a change is made
    enable button "save"
 end textChanged
 
+Example:
+on textChanged -- resize height of field to fit text
+   lock screen -- lock screen to delay the screen update so that there is no flicker
+   put the rect of me into tRect
+   put item 2 of tRect + the formattedHeight of me into item 4 of tRect
+   set the rect of me to tRect
+end textChanged
+
 Description:
 Is dispatched by the field whenever a user (or simulated user) action causes the content of the field to change.
 
