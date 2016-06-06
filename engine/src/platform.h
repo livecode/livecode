@@ -973,12 +973,19 @@ enum MCPlatformPlayerProperty
 typedef uint32_t MCPlatformPlayerMediaTypes;
 enum MCPlatformPlayerMediaType
 {
-	kMCPlatformPlayerMediaTypeVideo,
-	kMCPlatformPlayerMediaTypeAudio,
-	kMCPlatformPlayerMediaTypeText,
-	kMCPlatformPlayerMediaTypeQTVR,
-	kMCPlatformPlayerMediaTypeSprite,
-	kMCPlatformPlayerMediaTypeFlash,
+	kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlashBit,
+
+	kMCPlatformPlayerMediaTypeVideo = 1 << kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudio = 1 << kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeText = 1 << kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVR = 1 << kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSprite = 1 << kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlash = 1 << kMCPlatformPlayerMediaTypeFlashBit,
 };
 
 enum MCPlatformPlayerTrackProperty

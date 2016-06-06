@@ -2255,16 +2255,62 @@ void MCReplace::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
+MCRevert::~MCRevert()
+{
+    delete stack;
+}
+
+Parse_stat MCRevert::parse(MCScriptPoint &sp)
+{
+    initpoint(sp);
+    Symbol_type type;
+    if (sp.next(type) == PS_EOL)
+        return PS_NORMAL;
+    
+    // Otherwise backup and parse a chunk
+    sp.backup();
+    stack = new MCChunk(False);
+    if (stack->parse(sp, False) != PS_NORMAL)
+    {
+        MCperror->add(PE_REVERT_BADSTACK, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+
 void MCRevert::exec_ctxt(MCExecContext& ctxt)
 {
-	MCInterfaceExecRevert(ctxt);
+    if (stack != nil)
+    {
+        MCObject *t_object;
+        uint4 parid;
+        
+        if (!stack->getobj(ctxt, t_object, parid, True))
+        {
+            ctxt . LegacyThrow(EE_SAVE_NOTARGET);
+            return;
+        }
+        
+        MCInterfaceExecRevertStack(ctxt, t_object);
+    }
+    else
+        MCInterfaceExecRevert(ctxt);
 }
 
 void MCRevert::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertMethodInfo);
+    if (stack != nil)
+    {
+        stack -> compile_object_ptr(ctxt);
+        
+        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertStackMethodInfo);
+    }
+    else
+        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertMethodInfo);
 
 	MCSyntaxFactoryEndStatement(ctxt);
 }

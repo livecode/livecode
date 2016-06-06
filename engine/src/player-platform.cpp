@@ -1152,6 +1152,14 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     MCControl::timer(mptr, params);
 }
 
+void MCPlayer::toolchanged(Tool p_new_tool)
+{
+	if (p_new_tool != T_BROWSE && p_new_tool != T_HELP)
+		playpause(True);
+
+	MCControl::toolchanged(p_new_tool);
+}
+
 // MW-2011-09-23: Make sure we sync the buffer state at this point, rather than
 //   during drawing.
 void MCPlayer::select(void)

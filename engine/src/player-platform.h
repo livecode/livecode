@@ -110,6 +110,9 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
+	// IM-2016-06-01: [[ Bug 17700 ]] Override toolchanged to pause player when editing
+    virtual void toolchanged(Tool p_new_tool);
+
 	virtual MCRectangle GetNativeViewRect(const MCRectangle &p_object_rect);
 	
     

@@ -864,9 +864,13 @@ public:
 
 class MCRevert : public MCStatement
 {
+    MCChunk *stack;
 public:
-	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
+    MCRevert() : stack(NULL) {}
+    virtual ~MCRevert();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRotate : public MCStatement
