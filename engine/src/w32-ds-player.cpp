@@ -86,6 +86,9 @@ public:
 	bool StartTimer();
 	void StopTimer();
 
+	bool HasVideo();
+	bool HasAudio();
+
 protected:
 	virtual void Realize(void);
 	virtual void Unrealize(void);
@@ -221,7 +224,7 @@ LRESULT CALLBACK DSVideoWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		{
 			MCWin32DSPlayer *t_player;
 			t_player = (MCWin32DSPlayer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-			if (t_player != nil)
+			if (t_player != nil && t_player->HasVideo())
 				t_player->SetVideoWindowSize(LOWORD(lParam), HIWORD(lParam));
 			break;
 		}
@@ -398,6 +401,16 @@ bool MCWin32DSPlayer::Initialize()
 	return true;
 }
 
+bool MCWin32DSPlayer::HasVideo()
+{
+	return 0 != (m_media_types & kMCPlatformPlayerMediaTypeVideo);
+}
+
+bool MCWin32DSPlayer::HasAudio()
+{
+	return 0 != (m_media_types & kMCPlatformPlayerMediaTypeAudio);
+}
+
 bool MCWin32DSPinIsConnected(IPin *p_pin)
 {
 	CComPtr<IPin> t_connected;
@@ -507,12 +520,11 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 			// clean up graph and related objects
             Stop();
 
-            CComQIPtr<IVideoWindow> t_video(m_graph);
-            if (t_video)
-            {
-                t_video->put_Visible(OAFALSE);
-                t_video->put_Owner(NULL);
-            }
+			if (HasVideo())
+			{
+				SetVisible(false);
+				SetVideoWindow(nil);
+			}
         }
 
 		m_graph = p_graph;
@@ -569,7 +581,7 @@ bool MCWin32DSPlayer::SetEventWindow(HWND hwnd)
 	if (!m_graph)
 		return false;
 	CComQIPtr<IVideoWindow> pVideo(m_graph);
-	if (pVideo)	
+	if (pVideo && HasVideo())	
 		 pVideo->put_MessageDrain((OAHWND)hwnd);
     if (m_event)
     {
@@ -695,6 +707,12 @@ void MCWin32DSPlayer::StopTimer()
 
 bool MCWin32DSPlayer::GetFormattedSize(uint32_t &r_width, uint32_t &r_height)
 {
+	if (!HasVideo() && HasAudio())
+	{
+		r_width = r_height = 0;
+		return true;
+	}
+
     CComQIPtr<IBasicVideo> pVideo(m_graph);
     if (pVideo == nil)
 		return false;
@@ -721,13 +739,13 @@ bool MCWin32DSPlayer::SetUrl(MCStringRef p_url)
 	if (t_success)
 		t_success = OpenFile(p_url);
 
-	if (t_success)
+	if (t_success && HasVideo())
 		t_success = SetVideoWindow(m_video_window);
 
 	if (t_success)
 		t_success = SetEventWindow(m_event_window);
 
-	if (t_success)
+	if (t_success && HasVideo())
 		t_success = SetVisible(true);
 
 	if (!t_success)
