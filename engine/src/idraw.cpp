@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "stacklst.h"
 #include "undolst.h"

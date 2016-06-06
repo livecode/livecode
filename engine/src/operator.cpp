@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "scriptpt.h"
-//#include "execpt.h"
+
 #include "chunk.h"
 #include "operator.h"
 #include "mcerror.h"

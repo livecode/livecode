@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "securemode.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "util.h"
 #include "stack.h"

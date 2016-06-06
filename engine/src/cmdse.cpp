@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "group.h"
 #include "scriptpt.h"
-//#include "execpt.h"
+
 #include "handler.h"
 #include "cmds.h"
 #include "mcerror.h"

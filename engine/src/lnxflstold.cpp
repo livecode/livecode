@@ -24,7 +24,7 @@
 //#include "parsedef.h"
 //#include "objdefs.h"
 //
-////#include "execpt.h"
+//
 //#include "font.h"
 //#include "util.h"
 //

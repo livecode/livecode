@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "line.h"
 #include "field.h"
 #include "paragraf.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "segment.h"

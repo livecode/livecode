@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"

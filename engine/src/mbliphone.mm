@@ -809,29 +809,6 @@ bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 		return MCStringCopy(p_path, r_resolved);
 }
 
-// Moved to ResolvePath as the path is always native on MCSystemInterface functions
-//bool MCIPhoneSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
-//{
-//	char *t_absolute_path;
-//	if (MCStringGetCharAtIndex(p_path, 0) != '/')
-//	{
-//		MCAutoStringRef t_folder;
-//		if (!GetCurrentFolder(&t_folder))
-//			return false;
-//
-//		MCAutoStringRef t_resolved;
-//		if (!MCStringMutableCopy(*t_folder, &t_resolved) ||
-//			!MCStringAppendChar(*t_resolved, '/') ||
-//			!MCStringAppend(*t_resolved, p_path))
-//			return false;
-//
-//		return MCStringCopy(*t_resolved, r_resolved);
-//	}
-//	else
-//		return MCStringCopy(p_path, r_resolved);
-//}
-
-
 bool MCIPhoneSystem::ListFolderEntries(MCStringRef p_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
 	MCAutoStringRefAsUTF8String t_path;

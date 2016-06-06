@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "handler.h"
 #include "scriptpt.h"
-//#include "execpt.h"
+
 #include "cmds.h"
 #include "chunk.h"
 #include "mcerror.h"

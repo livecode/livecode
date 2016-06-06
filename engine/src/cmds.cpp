@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "globals.h"
-//#include "execpt.h"
+
 #include "handler.h"
 #include "scriptpt.h"
 #include "newobj.h"

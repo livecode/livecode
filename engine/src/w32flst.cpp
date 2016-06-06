@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "globals.h"
-//#include "execpt.h"
+
 #include "w32flst.h"
 #include "w32printer.h"
 #include "w32dc.h"

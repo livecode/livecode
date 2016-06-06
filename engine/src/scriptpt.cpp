@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 
 #include "scriptpt.h"
-//#include "execpt.h"
+
 #include "hndlrlst.h"
 #include "handler.h"
 #include "cmds.h"
@@ -55,54 +55,54 @@ extern const uint4 factor_table_size;
 
 static struct { codepoint_t codepoint; Symbol_type type; } remainder_table[] =
 {
-    { 0x0131,  ST_ID },    //    õ
-    { 0x0152,  ST_ID },    //    Î
-    { 0x0153,  ST_ID },    //    Ï
-    { 0x0178,  ST_ID },    //    Ù
-    { 0x0192,  ST_ID },    //    Ä
-    { 0x02C6,  ST_ID },    //    ö
-    { 0x02C7,  ST_ID },    //    ÿ
-    { 0x02D8,  ST_ID },    //    ù
-    { 0x02D9,  ST_ID },    //    ú
-    { 0x02DA,  ST_ID },    //    û
-    { 0x02DB,  ST_ID },    //    þ
-    { 0x02DC,  ST_ID },    //    ÷
-    { 0x02DD,  ST_ID },    //    ý
-    { 0x03A9,  ST_ID },    //    ½
-    { 0x03C0,  ST_ID },    //    ¹
-    { 0x2013,  ST_ID },    //    Ð
-    { 0x2014,  ST_ID },    //    Ñ
-    { 0x2018,  ST_ID },    //    Ô
-    { 0x2019,  ST_ID },    //    Õ
-    { 0x201A,  ST_ID },    //    â
-    { 0x201C,  ST_ID },    //    Ò
-    { 0x201D,  ST_ID },    //    Ó
-    { 0x201E,  ST_ID },    //    ã
-    { 0x2020,  ST_ID },    //     
-    { 0x2021,  ST_ID },    //    à
-    { 0x2022,  ST_ID },    //    ¥
-    { 0x2026,  ST_ID },    //    É
-    { 0x2030,  ST_ID },    //    ä
-    { 0x2039,  ST_ID },    //    Ü
-    { 0x203A,  ST_ID },    //    Ý
-    { 0x2044,  ST_ID },    //    Ú
-    { 0x20AC,  ST_ID },    //    Û
-    { 0x2122,  ST_ID },    //    ª
-    { 0x2202,  ST_ID },    //    ¶
-    { 0x2206,  ST_ID },    //    Æ
-    { 0x220F,  ST_ID },    //    ¸
-    { 0x2211,  ST_ID },    //    ·
-    { 0x221A,  ST_ID },    //    Ã
-    { 0x221E,  ST_ID },    //    °
-    { 0x222B,  ST_ID },    //    º
-    { 0x2248,  ST_ID },    //    Å
-    { 0x2260,  ST_OP },    //    ­
-    { 0x2264,  ST_OP },    //    ²
-    { 0x2265,  ST_OP },    //    ³
-    { 0x25CA,  ST_ID },    //    ×
-    { 0xF8FF,  ST_ID },    //    ð
-    { 0xFB01,  ST_ID },    //    Þ
-    { 0xFB02,  ST_ID }     //    ß
+    { 0x0131,  ST_ID },    //    ï¿½
+    { 0x0152,  ST_ID },    //    ï¿½
+    { 0x0153,  ST_ID },    //    ï¿½
+    { 0x0178,  ST_ID },    //    ï¿½
+    { 0x0192,  ST_ID },    //    ï¿½
+    { 0x02C6,  ST_ID },    //    ï¿½
+    { 0x02C7,  ST_ID },    //    ï¿½
+    { 0x02D8,  ST_ID },    //    ï¿½
+    { 0x02D9,  ST_ID },    //    ï¿½
+    { 0x02DA,  ST_ID },    //    ï¿½
+    { 0x02DB,  ST_ID },    //    ï¿½
+    { 0x02DC,  ST_ID },    //    ï¿½
+    { 0x02DD,  ST_ID },    //    ï¿½
+    { 0x03A9,  ST_ID },    //    ï¿½
+    { 0x03C0,  ST_ID },    //    ï¿½
+    { 0x2013,  ST_ID },    //    ï¿½
+    { 0x2014,  ST_ID },    //    ï¿½
+    { 0x2018,  ST_ID },    //    ï¿½
+    { 0x2019,  ST_ID },    //    ï¿½
+    { 0x201A,  ST_ID },    //    ï¿½
+    { 0x201C,  ST_ID },    //    ï¿½
+    { 0x201D,  ST_ID },    //    ï¿½
+    { 0x201E,  ST_ID },    //    ï¿½
+    { 0x2020,  ST_ID },    //    ï¿½
+    { 0x2021,  ST_ID },    //    ï¿½
+    { 0x2022,  ST_ID },    //    ï¿½
+    { 0x2026,  ST_ID },    //    ï¿½
+    { 0x2030,  ST_ID },    //    ï¿½
+    { 0x2039,  ST_ID },    //    ï¿½
+    { 0x203A,  ST_ID },    //    ï¿½
+    { 0x2044,  ST_ID },    //    ï¿½
+    { 0x20AC,  ST_ID },    //    ï¿½
+    { 0x2122,  ST_ID },    //    ï¿½
+    { 0x2202,  ST_ID },    //    ï¿½
+    { 0x2206,  ST_ID },    //    ï¿½
+    { 0x220F,  ST_ID },    //    ï¿½
+    { 0x2211,  ST_ID },    //    ï¿½
+    { 0x221A,  ST_ID },    //    ï¿½
+    { 0x221E,  ST_ID },    //    ï¿½
+    { 0x222B,  ST_ID },    //    ï¿½
+    { 0x2248,  ST_ID },    //    ï¿½
+    { 0x2260,  ST_OP },    //    ï¿½
+    { 0x2264,  ST_OP },    //    ï¿½
+    { 0x2265,  ST_OP },    //    ï¿½
+    { 0x25CA,  ST_ID },    //    ï¿½
+    { 0xF8FF,  ST_ID },    //    ï¿½
+    { 0xFB01,  ST_ID },    //    ï¿½
+    { 0xFB02,  ST_ID }     //    ï¿½
 };
 
 static const unichar_t open_comment[] = {'<', '!', '-', '-'};

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "literal.h"
 #include "scriptpt.h"
-//#include "execpt.h"
+
 
 #include "syntax.h"
 

@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "stack.h"
 #include "sellst.h"
-//#include "execpt.h"
+
 
 #include "globals.h"
 #include "osspec.h"

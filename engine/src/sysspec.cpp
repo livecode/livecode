@@ -24,7 +24,7 @@
 
 #include "param.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "object.h"
 #include "socket.h"

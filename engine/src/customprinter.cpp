@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "mcerror.h"
 #include "globals.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "metacontext.h"
 #include "printer.h"
