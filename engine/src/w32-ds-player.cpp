@@ -114,6 +114,7 @@ private:
 	bool SetOffscreen(bool p_offscreen);
 	bool GetMirrored(bool &r_mirrored);
 	bool SetMirrored(bool p_mirrored);
+	bool GetMediaTypes(MCPlatformPlayerMediaTypes &r_types);
 
 	bool Play();
 	bool Pause();
@@ -132,6 +133,8 @@ private:
 	bool m_is_valid;
 	HWND m_video_window;
 	HWND m_event_window;
+
+	MCPlatformPlayerMediaTypes m_media_types;
 
 	bool m_play_selection;
 	uint32_t m_start_position;
@@ -326,10 +329,28 @@ bool MCWin32DSPlayer::HandleTimer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
+{
+	if (t_type.cbFormat != 0)
+	{
+		CoTaskMemFree(t_type.pbFormat);
+		t_type.cbFormat = nil;
+		t_type.pbFormat = nil;
+	}
+	if (t_type.pUnk != nil)
+	{
+		t_type.pUnk->Release();
+		t_type.pUnk = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCWin32DSPlayer::MCWin32DSPlayer()
 {
 	m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
+	m_media_types = 0;
 	m_is_valid = false;
 
 	m_play_selection = false;
@@ -376,6 +397,83 @@ bool MCWin32DSPlayer::Initialize()
 	return true;
 }
 
+bool MCWin32DSPinIsConnected(IPin *p_pin)
+{
+	CComPtr<IPin> t_connected;
+	HRESULT t_result;
+	t_result = p_pin->ConnectedTo(&t_connected);
+	return t_result == S_OK;
+}
+
+bool MCWin3DSGetFilterGraphMediaTypes(IFilterGraph *p_graph, MCPlatformPlayerMediaTypes &r_types)
+{
+	bool t_success;
+	t_success = true;
+
+	MCPlatformPlayerMediaTypes t_types = 0;
+
+	CComPtr<IEnumFilters> t_enum_filters;
+	if (t_success)
+		t_success = SUCCEEDED(p_graph->EnumFilters(&t_enum_filters));
+
+	IBaseFilter *t_base_filter = nil;
+	while (t_success && S_OK == t_enum_filters->Next(1, &t_base_filter, nil))
+	{
+		CComPtr<IEnumPins> t_enum_pins;
+		if (t_success)
+			t_success = SUCCEEDED(t_base_filter->EnumPins(&t_enum_pins));
+
+		bool t_is_renderer = true;
+		MCPlatformPlayerMediaTypes t_filter_types = 0;
+
+		IPin *t_pin = nil;
+		while (t_success && S_OK == t_enum_pins->Next(1, &t_pin, nil))
+		{
+			PIN_DIRECTION t_direction;
+			bool t_connected;
+			
+			t_connected = MCWin32DSPinIsConnected(t_pin);
+
+			if (t_success)
+				t_success = SUCCEEDED(t_pin->QueryDirection(&t_direction));
+
+			if (t_success && t_connected)
+			{
+				if (t_direction == PINDIR_OUTPUT)
+					t_is_renderer = false;
+				else
+				{
+					AM_MEDIA_TYPE t_media_type;
+					MCMemoryClear(t_media_type);
+					t_success = SUCCEEDED(t_pin->ConnectionMediaType(&t_media_type));
+
+					if (t_success)
+					{
+						if (t_media_type.majortype == MEDIATYPE_Audio)
+							t_filter_types |= kMCPlatformPlayerMediaTypeAudio;
+						else if (t_media_type.majortype == MEDIATYPE_Video)
+							t_filter_types |= kMCPlatformPlayerMediaTypeVideo;
+
+						MCWin32DSFreeMediaType(t_media_type);
+					}
+				}
+			}
+
+			t_pin->Release();
+		}
+
+		// combine filter types with others if it is a renderer
+		if (t_is_renderer)
+			t_types |= t_filter_types;
+
+		t_base_filter->Release();
+	}
+
+	if (t_success)
+		r_types = t_types;
+	return t_success;
+}
+
 bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 {
 	bool t_success;
@@ -397,6 +495,10 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 			t_success = S_OK == p_graph->QueryInterface(&t_seeking); //IMediaSeeking
     }
 
+	MCPlatformPlayerMediaTypes t_types = 0;
+	if (t_success && p_graph != nil)
+		t_success = MCWin3DSGetFilterGraphMediaTypes(p_graph, t_types);
+
 	if (t_success)
 	{
         if (m_graph)
@@ -416,6 +518,8 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
         m_event = t_event;
         m_control = t_control;
 		m_seeking = t_seeking;
+
+		m_media_types = t_types;
     }
     
 	return t_success;
@@ -839,6 +943,12 @@ bool MCWin32DSPlayer::SetMirrored(bool p_mirrored)
 	return false;
 }
 
+bool MCWin32DSPlayer::GetMediaTypes(MCPlatformPlayerMediaTypes &r_types)
+{
+	r_types = m_media_types;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 //play
@@ -1092,6 +1202,14 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 		}
 
 	case kMCPlatformPlayerPropertyMediaTypes:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerMediaTypes);
+			MCPlatformPlayerMediaTypes t_types;
+			if (GetMediaTypes(t_types))
+				*((MCPlatformPlayerMediaTypes*)r_value) = t_types;
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyURL:
 		MCLog("UNIMPLEMENTED");
 		break;
@@ -1197,8 +1315,6 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
-	case kMCPlatformPlayerPropertyMediaTypes:
-	
 	case kMCPlatformPlayerPropertyMarkers:
 	case kMCPlatformPlayerPropertyLoadedTime:
     
