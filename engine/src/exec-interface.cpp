@@ -162,6 +162,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, RemoveGroupFromCard, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResetCursors, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResetTemplate, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, Revert, 0)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, RevertStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectEmpty, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectAllTextOfField, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectAllTextOfButton, 1)
@@ -1930,32 +1931,55 @@ void MCInterfaceExecUndo(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void MCInterfaceRevertStack(MCExecContext& ctxt, MCStack *p_stack)
+{
+    MCAssert(p_stack != nil);
+    
+    Window_mode oldmode = p_stack->getmode();
+    MCRectangle oldrect = p_stack->getrect();
+    
+    if (!MCdispatcher->ismainstack(p_stack))
+        p_stack = (MCStack *)p_stack->getparent();
+    if (p_stack == MCdispatcher->gethome())
+    {
+        ctxt . LegacyThrow(EE_REVERT_HOME);
+        return;
+    }
+    
+    MCAutoStringRef t_filename;
+    p_stack -> getstringprop(ctxt, 0, P_FILE_NAME, False, &t_filename);
+    
+    MCNewAutoNameRef t_name;
+    if (!MCNameCreate(*t_filename, &t_name))
+        return;
+    
+    Boolean oldlock = MClockmessages;
+    MClockmessages = True;
+    MCerrorlock++;
+    if (p_stack->del())
+        p_stack -> scheduledelete();
+    MCerrorlock--;
+    MClockmessages = oldlock;
+
+    p_stack = MCdispatcher->findstackname(*t_name);
+    if (p_stack != NULL)
+        p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+}
+
 void MCInterfaceExecRevert(MCExecContext& ctxt)
 {
-	Window_mode oldmode = MCtopstackptr->getmode();
-	MCRectangle oldrect = MCtopstackptr->getrect();
-	MCStack *t_sptr = MCtopstackptr;
-	if (!MCdispatcher->ismainstack(t_sptr))
-		t_sptr = (MCStack *)t_sptr->getparent();
-	if (t_sptr == MCdispatcher->gethome())
-	{
-		ctxt . LegacyThrow(EE_REVERT_HOME);
-		return;
-	}
-	MCAutoStringRef t_filename;
-	t_sptr->getstringprop(ctxt, 0, P_FILE_NAME, False, &t_filename);
-	Boolean oldlock = MClockmessages;
-	MClockmessages = True;
-	MCerrorlock++;
-    if (t_sptr->del())
-        t_sptr -> scheduledelete();
-	MCerrorlock--;
-	MClockmessages = oldlock;
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreate(*t_filename, &t_name);
-	t_sptr = MCdispatcher->findstackname(*t_name);
-	if (t_sptr != NULL)
-		t_sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+    MCInterfaceRevertStack(ctxt, MCtopstackptr);
+}
+
+void MCInterfaceExecRevertStack(MCExecContext& ctxt, MCObject *p_stack)
+{
+    if (p_stack == nil || p_stack->gettype() != CT_STACK)
+    {
+        ctxt . LegacyThrow(EE_REVERT_NOSTACK);
+        return;
+    }
+
+    MCInterfaceRevertStack(ctxt, (MCStack *)p_stack);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
