@@ -60,24 +60,10 @@ MCVarref *MCExpression::getrootvarref(void)
 	return NULL;
 }
 
-#ifdef LEGACY_EXEC
-MCVariable *MCExpression::evalvar(MCExecPoint& ep)
-{
-	return NULL;
-}
-#endif
-
 MCVariable *MCExpression::evalvar(MCExecContext& ctxt)
 {
     return NULL;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
-{
-	return ES_ERROR;
-}
-#endif
 
 bool MCExpression::evalcontainer(MCExecContext& ctxt, MCContainer*& r_container)
 {
@@ -591,24 +577,6 @@ Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCExpression::eval(MCExecPoint &ep)
-{
-    MCAssert(false);
-    MCExecContext ctxt(ep . GetEC());
-	
-	MCAutoValueRef t_value;
-	eval_valueref(ctxt, &t_value);
-	if (!ctxt . HasError())
-    {
-        ep . setvalueref(*t_value);
-		return ES_NORMAL;
-    }
-	
-	return ctxt . Catch(line, pos);
-}
-#endif
-
 void MCExpression::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
     fprintf(stderr, "ERROR: eval method for expression not implemented properly\n");
@@ -684,158 +652,6 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
     
 	return PS_NORMAL;
 }
-
-#if /* MCFuncref::eval */ LEGACY_EXEC
-Exec_stat MCFuncref::eval(MCExecPoint &ep)
-{
-	MCExecContext ctxt(ep);
-	if (MCscreen->abortkey())
-	{
-		MCeerror->add(EE_HANDLER_ABORT, line, pos);
-		return ES_ERROR;
-	}
-
-	if (!resolved)
-	{
-		// MW-2008-01-28: [[ Inherited parentScripts ]]
-		// If we are in parentScript context, then the object we search for
-		// private handlers in is the parentScript's object, rather than the
-		// ep's.
-		MCParentScriptUse *t_parentscript;
-		t_parentscript = ep . getparentscript();
-
-		MCObject *t_object;
-		if (t_parentscript == NULL)
-			t_object = ep . getobj();
-		else
-			t_object = t_parentscript -> GetParent() -> GetObject();
-
-		// MW-2008-10-28: [[ ParentScripts ]] Private handlers are resolved
-		//   relative to the object containing the handler we are executing.
-		MCHandler *t_resolved_handler;
-		t_resolved_handler = t_object -> findhandler(HT_FUNCTION, name);
-		if (t_resolved_handler != NULL && t_resolved_handler -> isprivate())
-			handler = t_resolved_handler;
-
-		resolved = true;
-    }
-
-	// Go through all the parameters to the function, if they are not variables, clear their current value. Each parameter stores an expression
-	// which allows its value to be re-evaluated in a given context. Re-evaluate each in the context of ep and set it to the new value.
-	// As the ep should contain the context of the caller at this point, the expression should be evaluated in that context.
-	MCParameter *tptr = params;
-	MCexitall = False;
-	while (tptr != NULL)
-	{
-		MCVariable* t_var;
-		t_var = tptr -> evalvar(ep);
-
-		if (t_var == NULL)
-		{
-			tptr -> clear_argument();
-			Exec_stat stat;
-			MCExecContext ctxt(ep);
-			while ((stat = tptr->eval(ep)) != ES_NORMAL && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
-				MCB_error(ctxt, line, pos, EE_FUNCTION_BADSOURCE);
-			if (stat != ES_NORMAL)
-			{
-				MCeerror->add(EE_FUNCTION_BADSOURCE, line, pos);
-				return ES_ERROR;
-			}
-			tptr->set_argument(ep);
-		}
-		else
-			tptr->set_argument_var(t_var);
-
-		tptr = tptr->getnext();
-	}
-
-	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
-	//   than the 'parent' field in this.
-	MCObject *p = ep.getobj();
-	MCExecContext *oldctxt = MCECptr;
-	MCECptr = &ctxt;
-	Exec_stat stat = ES_NOT_HANDLED;
-	Boolean added = False;
-	if (MCnexecutioncontexts < MAX_CONTEXTS)
-	{
-		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
-		added = True;
-	}
-    
-#ifdef _MOBILE
-    if (platform_message)
-    {
-        stat = MCHandlePlatformMessage(name, params);
-    }
-#endif
-    
-	if (handler != nil)
-	{   
-        // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
-        //   parent, then use a special method.
-        // MW-2009-01-28: [[ Inherited parentScripts ]]
-        // If we are in parentScript context, then pass the parentScript in use to execparenthandler.
-        if (ep . getparentscript() == NULL)
-            stat = parent -> exechandler(handler, params);
-        else
-            stat = ep.getobj() -> execparenthandler(handler, params, ep . getparentscript());
-        
-        switch(stat)
-        {
-            case ES_ERROR:
-            case ES_PASS:
-                MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, handler -> getname());
-                if (MCerrorptr == NULL)
-                    MCerrorptr = parent;
-                stat = ES_ERROR;
-                break;
-                
-            case ES_EXIT_HANDLER:
-                stat = ES_NORMAL;
-                break;
-                
-            default:
-                break;
-        }
-        
-		MCECptr = oldctxt;
-		if (added)
-			MCnexecutioncontexts--;
-	}
-	else
-	{
-		stat = MCU_dofrontscripts(HT_FUNCTION, name, params);
-		Boolean olddynamic = MCdynamicpath;
-		MCdynamicpath = MCdynamiccard != NULL;
-		if (stat == ES_PASS || stat == ES_NOT_HANDLED)
-		{
-			// PASS STATE FIX
-			Exec_stat oldstat = stat;
-			stat = p->handle(HT_FUNCTION, name, params, p);
-			if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
-				stat = ES_PASS;
-		}
-		MCECptr = oldctxt;
-		MCdynamicpath = olddynamic;
-		if (added)
-			MCnexecutioncontexts--;
-	}
-     
-	// MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
-	//   exception.
-	if (stat != ES_NORMAL && stat != ES_PASS && stat != ES_EXIT_HANDLER)
-	{
-		MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, name);
-		return ES_ERROR;
-	}
-
-	MCresult->eval(ep);
-    
-	return ES_NORMAL;
-}
-#endif
 
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {

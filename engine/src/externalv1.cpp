@@ -2063,22 +2063,6 @@ static MCExternalError MCExternalVariableEdit(MCExternalVariableRef var, MCExter
 
 static MCExternalError MCExternalVariableCountKeys(MCExternalVariableRef var, uint32_t* r_count)
 {
-#ifdef OLD_EXEC
-    if (var == nil)
-        return kMCExternalErrorNoVariable;
-    
-    MCValueRef t_value;
-    t_value = var -> GetValueRef();
-    
-    if (MCValueIsArray(t_value))
-        *r_count = MCArrayGetCount((MCArrayRef)t_value);
-    else if (MCValueIsEmpty(t_value))
-        *r_count = 0;
-    else
-        return kMCExternalErrorNotAnArray;
-    
-    return kMCExternalErrorNone;
-#endif
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
         return kMCExternalErrorNoVariable;
@@ -2101,69 +2085,6 @@ static MCExternalError MCExternalVariableCountKeys(MCExternalVariableRef var, ui
 
 static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, MCExternalVariableIteratorRef *p_iterator, MCExternalValueOptions p_options, void *p_key, MCExternalVariableRef *r_value)
 {
-#ifdef OLD_EXEC
-    if (var == nil)
-        return kMCExternalErrorNoVariable;
-    
-    if (p_iterator == nil)
-        return kMCExternalErrorNoIterator;
-    
-    MCValueRef t_value;
-    t_value = var -> GetValueRef();
-    
-    // If the var is not an array, we set the iterator to nil to indicate
-    // there are no elements.
-    if (!var -> is_array())
-    {
-        *p_iterator = nil;
-        return var -> is_empty() ? kMCExternalErrorNone : kMCExternalErrorNotAnArray;
-    }
-    
-    // If both key and value are nil, then the iteration is being cleaned up.
-    if (p_key == nil && r_value == nil)
-    {
-        // We don't have anything to clean up at the moment...
-        return kMCExternalErrorNone;
-    }
-    
-    MCHashentry *t_entry;
-    t_entry = var -> get_array() -> getnextkey(static_cast<MCHashentry *>(*p_iterator));
-    
-    // Update the iterator pointer. Note that we do this here to allow iteration
-    // to continue after a value conversion error.
-    *p_iterator = t_entry;
-    
-    // If we have an entry, then extract the key in the form that was requested
-    // and return it's value.
-    if (t_entry != nil)
-    {
-        *r_value = &t_entry -> value;
-        switch(p_options & 0xf)
-        {
-            case kMCExternalValueOptionAsVariable:
-                if (!((MCExternalVariableRef)p_key) -> assign_string(t_entry -> string))
-                    return kMCExternalErrorOutOfMemory;
-                break;
-            case kMCExternalValueOptionAsBoolean:
-                return string_to_boolean(t_entry -> string, p_options, p_key);
-            case kMCExternalValueOptionAsInteger:
-            case kMCExternalValueOptionAsCardinal:
-                return string_to_integer(t_entry -> string, p_options, p_key);
-            case kMCExternalValueOptionAsReal:
-                return string_to_real(t_entry -> string, p_options, p_key);
-            case kMCExternalValueOptionAsString:
-                *(MCString *)p_key = t_entry -> string;
-                return kMCExternalErrorNone;
-            case kMCExternalValueOptionAsCString:
-                *(char **)p_key = t_entry -> string;
-                return kMCExternalErrorNone;
-            default:
-                return kMCExternalErrorInvalidValueType;
-        }
-    }
-    
-    return kMCExternalErrorNone;
-#endif
     
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
@@ -2279,16 +2200,6 @@ static bool MCExternalIsCaseSensitive(MCExternalValueOptions p_options)
 
 static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key)
 {
-#ifdef OLD_EXEC
-    MCExternalError t_error;
-    
-    MCHashentry *t_entry;
-    t_error = fetch_hash_entry(var, p_options, p_key, false, t_entry);
-    if (t_error == kMCExternalErrorNone && t_entry != nil)
-        var -> remove_hash(t_entry);
-    
-    return t_error;
-#endif
     
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
@@ -2329,16 +2240,6 @@ static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MC
 
 static MCExternalError MCExternalVariableLookupKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key, bool p_ensure, MCExternalVariableRef *r_var)
 {
-#ifdef OLD_EXEC
-    MCExternalError t_error;
-    
-    MCHashentry *t_entry;
-    t_error = fetch_hash_entry(var, p_options, p_key, p_ensure, t_entry);
-    if (t_error == kMCExternalErrorNone)
-        *r_var = t_entry != nil ? &t_entry -> value : nil;
-    
-    return t_error;
-#endif
     
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)

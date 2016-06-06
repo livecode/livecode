@@ -769,25 +769,6 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error
 	return false;
 }
 
-#ifdef LEGACY_EXEC
-bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)
-{
-	if (p_expr -> eval(m_ep) != ES_NORMAL)
-	{
-		LegacyThrow(EE_EXPR_EVALERROR);
-		return false;
-	}
-
-	if (!m_ep . copyasvalueref(r_result))
-	{
-		Throw();
-		return false;
-	}
-
-	return true;
-}
-#endif
-
 bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
 {
     MCAssert(p_expr != nil);

@@ -17,12 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_EXEC__
 #define __MC_EXEC__
 
-#ifdef LEGACY_EXEC
-#ifndef __MC_EXECPT__
-//#include "execpt.h"
-#endif
-#endif
-
 #ifndef OBJDEFS_H
 #include "objdefs.h"
 #endif
@@ -1252,12 +1246,6 @@ public:
         m_string_options = kMCStringOptionCompareCaseless;
     }
 
-#ifdef LEGACY_EXEC
-    MCExecContext(MCExecPoint& ep)
-        : m_ep(ep), m_stat(ES_NORMAL)
-    {
-    }
-#endif
 	
     MCExecContext(const MCExecContext& p_ctxt)
         : m_stat(ES_NORMAL)
@@ -1297,12 +1285,6 @@ public:
     
 	//////////
 
-#ifdef LEGACY_EXEC
-	MCExecPoint& GetEP(void)
-	{
-		return m_ep;
-	}
-#endif
 	
 	Exec_stat GetExecStat(void)
 	{
@@ -1775,9 +1757,6 @@ public:
     bool EvalExprAsStrictInt(MCExpression *p_expr, Exec_errors p_error, integer_t& r_value);
     
 private:
-#ifdef LEGACY_EXEC
-    MCExecPoint& m_ep;
-#endif
 	Exec_stat m_stat;
 
     MCObjectPtr m_object;

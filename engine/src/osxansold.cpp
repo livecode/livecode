@@ -64,18 +64,7 @@ void getFSSpecFromAEDesc(AEDesc &inDesc, FSSpec &outValue);
 pascal void navEventProc(NavEventCallbackMessage callBackSelector,
                          NavCBRecPtr callBackParms,
                          NavCallBackUserData callBackUD);
-#ifdef LEGACY_EXEC
-OSErr navOpenFile(const char *prompt, Boolean hasDefaultPath,
-                  const FSSpecPtr defaultDirFspec, short numTypes,
-                  SFTypeList filetypes, MCExecPoint &ep, Boolean oneSelection,
-                  Boolean sheet);
-#endif
 OSErr navAnswerFolder(MCStringRef prompt, Boolean hasDefaultPath, const FSRef *p_default_fsref, MCExecContext &ctxt, Boolean sheet);
-#ifdef LEGACY_EXEC
-OSErr navSaveFile(char *prompt, char *defaultDir,
-                  char *proposedName, MCExecPoint &ep, Boolean sheet);
-#endif
-
 struct FilterRecord
 {
     MCStringRef tag;

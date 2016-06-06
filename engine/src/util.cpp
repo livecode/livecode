@@ -264,38 +264,6 @@ bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_stri
 	return false;
 }
 
-#ifdef LEGACY_EXEC
-void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
-{
-#ifdef OLD_EXEC
-	char *eptr;
-	ep.reserve(fw + 1, eptr);
-	uint2 i = MCU_max(fw - trail - 1, 0);
-	while (i--)
-		*eptr++ = '0';
-	if (trail != 0)
-	{
-		*eptr++ = '.';
-		i = force;
-		while (i--)
-			*eptr++ = '0';
-		i = trail - force;
-		while (i--)
-			*eptr++ = '#';
-	}
-	*eptr = '\0';
-	ep.commit(strlen(eptr));
-#else
-	MCAutoStringRef t_format;
-	if (MCU_getnumberformat(fw, trail, force, &t_format))
-		/* UNCHECKED */ ep . setvalueref(*t_format);
-	else
-		ep . clear();
-#endif
-}
-#endif
-
-
 void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
@@ -1045,115 +1013,6 @@ Boolean MCU_offset(const MCString &part, const MCString &whole,
 	return False;
 }
 
-#ifdef LEGACY_EXEC
-void MCU_chunk_offset(MCExecPoint &ep, MCString &w,
-                      Boolean whole, Chunk_term delimiter)
-{
-	uint4 i;
-	uint4 chunkstart = 0;
-	const char *wptr = w.getstring();
-	uint4 count = 1;
-	if (delimiter == CT_WORD)
-	{
-		Boolean t_match = false;
-
-		uint4 length = w.getlength();
-		if (length == 0)
-			count = 0;
-		while (chunkstart < length)
-		{
-			while (chunkstart < length && isspace((uint1)wptr[chunkstart]))
-				chunkstart++;
-			uint4 wordstart = chunkstart;
-			if (wptr[chunkstart] == '"')
-			{
-				chunkstart++;
-				while (chunkstart < length && wptr[chunkstart] != '"'
-				        && wptr[chunkstart] != '\n')
-					chunkstart++;
-				if (chunkstart < length && wptr[chunkstart] == '"')
-					chunkstart++;
-			}
-			else
-				while (chunkstart < length && !isspace((uint1)wptr[chunkstart]))
-					chunkstart++;
-			if (whole)
-			{
-				if (chunkstart - wordstart == ep.getsvalue().getlength())
-				{
-					if (ep.getcasesensitive())
-					{
-						if (strncmp(wptr + wordstart, ep.getsvalue().getstring(),
-						            ep.getsvalue().getlength()) == 0)
-						{
-							t_match = true;
-							break;
-						}
-					}
-					else
-						if (MCU_strncasecmp(wptr + wordstart, ep.getsvalue().getstring(),
-						                    ep.getsvalue().getlength()) == 0)
-						{
-							t_match = true;
-							break;
-						}
-				}
-			}
-			else
-			{
-				MCString word(wptr + wordstart, chunkstart - wordstart);
-				if (MCU_offset(ep.getsvalue(), word, i, ep.getcasesensitive()))
-				{
-					t_match = true;
-					break;
-				}
-			}
-			count++;
-		}
-		if (!t_match)
-			count = 0;
-	}
-	else
-	{
-		char c = delimiter == CT_LINE ? ep.getlinedel() : ep.getitemdel();
-		while (True)
-		{
-			if (MCU_offset(ep.getsvalue(), w, i, ep.getcasesensitive()))
-			{
-				if (whole)
-				{
-					uint4 l = ep.getsvalue().getlength();
-					// MW-2006-04-21: [[ Purify ]] i + l != w.getlength() should be first
-					if ((i != 0 && w.getstring()[i - 1] != c)
-					        || (i + l != w.getlength() && w.getstring()[i + l] != c))
-					{
-						while (i != w.getlength() && w.getstring()[i] != c)
-							i++;
-						if (i == 0)
-						{// delimiter is in find string
-							count = 0;
-							break;
-						}
-						w.set(w.getstring() + i, w.getlength() - i);
-						continue;
-					}
-					else
-						i += w.getstring() - &wptr[chunkstart];
-				}
-				i += chunkstart;
-				while (chunkstart < i)
-					if (wptr[chunkstart++] == c)
-						count++;
-			}
-			else
-				count = 0;
-			break;
-		}
-	}
-	ep.setnvalue(count);
-}
-#endif
-
 void MCU_additem(char *&dptr, const char *sptr, Boolean first)
 {
 	uint4 dlength = strlen(dptr);
@@ -1420,26 +1279,6 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 	}
 	npoints = i;
 }
-
-#ifdef LEGACY_EXEC
-void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
-{
-	uint2 i;
-	//ep.getbuffer(I2L * 2 * npoints + 1);
-	ep.clear();
-	for (i = 0 ; i < npoints ; i++)
-	{
-		if (points[i].x != MININT2)
-		{
-			char buf[I2L * 2];
-			sprintf(buf, "%d,%d", points[i].x, points[i].y);
-	 		ep.concatcstring(buf, EC_RETURN, i == 0);
-		}
-		else
-			ep.concatcstring(MCnullstring, EC_RETURN, i == 0);
-	}
-}
-#endif
 
 Boolean MCU_parsepoints(MCPoint *&points, uindex_t &noldpoints, MCStringRef data)
 {
@@ -2029,69 +1868,6 @@ void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_input, Tool p_tool)
 	ctxt . GetObject()->message_with_valueref_args(MCM_new_tool, *t_tool_name);
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
-{
-	Tool t_new_tool;
-	MColdtool = MCcurtool;
-	if (littool != T_UNDEFINED)
-	{
-		t_new_tool = littool;
-		ep.setstaticcstring(MCtoolnames[t_new_tool]);
-	}
-	else
-	{
-		if (ep.getsvalue().getlength() < 3)
-		{
-			MCeerror->add(EE_CHOOSE_BADTOOL, line, pos, ep.getsvalue());
-			return ES_ERROR;
-		}
-		uint2 i;
-		for (i = 0 ; i <= T_TEXT ; i++)
-            // SN-13-10-04: [[ Bug 11193 ]] set the tool to Browse fails - case-sensitive
-			if (MCU_strncasecmp(MCtoolnames[i], ep.getsvalue().getstring(), 3) == 0)
-			{
-				t_new_tool = (Tool)i;
-				break;
-			}
-		if (i > T_TEXT)
-		{
-			MCeerror->add(EE_CHOOSE_BADTOOL, line, pos, ep.getsvalue());
-			return ES_ERROR;
-		}
-	}
-	if (t_new_tool == MCcurtool)
-		return ES_NORMAL;
-
-	if (MCeditingimage != NULL)
-		MCeditingimage -> canceldraw();
-
-	MCcurtool = t_new_tool;
-
-	MCundos->freestate();
-	if (MCcurtool != T_POINTER)
-		MCselected->clear(True);
-	if (MCactiveimage != NULL && MCcurtool != T_SELECT)
-		MCactiveimage->endsel();
-	MCeditingimage = nil;
-	if (MCactivefield != NULL
-	        && MCactivefield->getstack()->gettool(MCactivefield) != T_BROWSE)
-		MCactivefield->getstack()->kunfocus();
-	ep.getobj()->getstack()->resetcursor(True);
-	if (MCcurtool == T_BROWSE)
-		MCstacks->restartidle();
-	if (MCtopstackptr != NULL)
-		MCtopstackptr->updatemenubar();
-    
-    // MW-2014-04-24: [[ Bug 12249 ]] Prod each player to make sure its buffered correctly for the new tool.
-    for(MCPlayer *t_player = MCplayers; t_player != NULL; t_player = t_player -> getnextplayer())
-        t_player -> syncbuffering(nil);
-    
-	ep.getobj()->message_with_valueref_args(MCM_new_tool, ep.getvalueref());
-	return ES_NORMAL;
-}
-#endif
-
 Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *params)
 {
 	Exec_stat stat = ES_NOT_HANDLED;
@@ -2384,40 +2160,6 @@ void MCU_cleaninserted()
 		;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
-                           uint2 line, uint2 pos)
-{
-	MCColor color;
-	MCStringRef t_name;
-	MCAutoStringRef string;
-	ep . copyasstringref(&string);
-
-	t_name = nil;
-	if (!MCscreen->parsecolor(*string, color, &t_name))
-	{
-		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, *string);
-		return ES_ERROR;
-	}
-
-	c = color;
-	if (n != nil)
-		MCValueRelease(n);
-	if (t_name != nil)
-		n = t_name;
-	else
-		n = nil;
-	return ES_NORMAL;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
-{
-	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
-}
-#endif
-
 void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
@@ -2571,20 +2313,6 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 		r_output = MCValueRetain(kMCEmptyString);
 }
 
-#ifdef LEGACY_EXEC
-void MCU_geturl(MCExecPoint &ep)
-{
-    MCAutoStringRef t_filename, t_output;
-    MCStringCreateWithOldString(ep.getsvalue(), &t_filename);
-    
-    MCExecContext ctxt(ep);
-    
-    MCU_geturl(ctxt, *t_filename, &t_output);
-    
-    ep.setvalueref(*t_output);
-}
-#endif
-
 void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 // SJT-2014-09-10: [[ URLMessages ]] Send "putURL" messages on all platforms.
 {
@@ -2651,19 +2379,6 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 		MCresult -> setvalueref(*t_err);
 	}
 }
-
-#ifdef LEGACY_EXEC
-void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
-{
-	MCAutoStringRef t_url;
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ dest.copyasstringref(&t_url);
-	/* UNCHECKED */ data.copyasstringref(&t_data);
-	
-	MCExecContext ctxt(data);
-	MCU_puturl(ctxt, *t_url, *t_data);
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3139,33 +2854,6 @@ uint32_t MCDictionary::Checksum(const void *p_data, uint32_t p_length)
 
 	return (((t_b % 65521) << 16) | (t_a % 65521));
 }
-
-#ifdef LEGACY_EXEC
-bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode)
-{
-	MCExecPoint *t_convert_a = new MCExecPoint();
-	MCExecPoint *t_convert_b = new MCExecPoint();
-	MCString t_a;
-	MCString t_b;
-
-	t_convert_a->setsvalue(p_a);
-	if (p_a_isunicode)
-		t_convert_a->utf16tonative();
-	t_a = t_convert_a->getsvalue();
-
-	t_convert_b->setsvalue(p_b);
-	if (p_b_isunicode)
-		t_convert_b->utf16tonative();
-	t_b = t_convert_b->getsvalue();
-
-	bool t_compval = (t_a == t_b) == True;
-
-	delete t_convert_a;
-	delete t_convert_b;
-
-	return t_compval;
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

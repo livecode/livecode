@@ -32,13 +32,6 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-#ifdef /* MCLiteral::eval */ LEGACY_EXEC
-Exec_stat MCLiteral::eval(MCExecPoint &ep)
-{
-    MCExecValueTraits<MCNameRef>::set(r_value, value);
-}
-#endif /* MCLiteral::eval */ 
-
 void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
 	r_value . type = kMCExecValueTypeValueRef;

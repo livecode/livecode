@@ -161,71 +161,6 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
-#ifdef /* MCPurchaseSet */ LEGACY_EXEC
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-	switch (p_property)
-	{
-		case kMCPurchasePropertyQuantity:
-		{
-			uint32_t t_quantity;
-			if (!MCU_stoui4(ep . getsvalue(), t_quantity))
-			{
-				MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-				return ES_ERROR;
-			}
-			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: t_quantity];
-			return ES_NORMAL;
-		}
-			break;
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseSet */
-
-#ifdef /* MCStoreGetPurchaseProperty */ LEGACY_EXEC
-char* MCStoreGetPurchaseProperty(const char *p_product_id, const char*  p_prop_name)
-{
-    bool t_success = true;
-    MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
-
-	if (t_success)
-		t_success =
-		MCPurchaseFindByProdId(p_product_id, t_purchase) &&
-		MCPurchaseLookupProperty(p_prop_name, t_property);
-        
-        /*
-    if (t_success)
-		t_success = MCPurchaseLookupProperty(p_prop_name, t_property);
-    
-    if (t_success)
-        MCLog("Success in lookUpProperty!...",nil);
-    
-    if (t_success)
-		t_success = MCPurchaseFindByProdId(p_product_id, t_purchase);
-    
-    if (t_success)
-        MCLog("Success in finding Purchase!...",nil);
-        */
-
-	
-	MCExecPoint ep(nil, nil, nil);
-	if (t_success)
-		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
-	
-    char *temp;
-    MCCStringFormat(temp, "%s", ep.getcstring());
-    return temp;
-	
-}
-#endif
-
 // PM-2015-01-12: [[ Bug 14343 ]] Implemented MCStoreGetPurchaseProperty/MCStoreSetPurchaseProperty for iOS
 extern MCPropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, Properties p_which);
 
@@ -275,98 +210,6 @@ void MCStoreSetPurchaseProperty(MCExecContext& ctxt, MCStringRef p_product_id, M
     
     ctxt . Throw();
 }
-
-#ifdef /* MCPurchaseGet */ LEGACY_EXEC
-Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-
-	SKPayment *t_payment = nil;
-	SKPaymentTransaction *t_transaction = nil;
-	SKPaymentTransaction *t_original_transaction = nil;
-	
-	if (t_ios_data->transaction != nil)
-	{
-		t_transaction = t_ios_data->transaction;
-		t_payment = [t_transaction payment];
-		t_original_transaction = [t_transaction originalTransaction];
-	}
-	else
-		t_payment = t_ios_data->payment;
-	
-	switch (p_property)
-	{
-		case kMCPurchasePropertyProductIdentifier:
-			if (t_payment == nil)
-				break;
-			
-			ep.copysvalue([[t_payment productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-			return ES_NORMAL;
-			
-		case kMCPurchasePropertyQuantity:
-			if (t_payment == nil)
-				break;
-			
-			ep.setuint([t_payment quantity]);
-			return ES_NORMAL;
-			
-		case kMCPurchasePropertyReceipt:
-		{
-			if (t_transaction == nil)
-				break;
-			
-			NSData *t_bytes = [t_transaction transactionReceipt];
-			ep.copysvalue((const char*)[t_bytes bytes], [t_bytes length]);
-			return ES_NORMAL;
-		}
-			
-		case kMCPurchasePropertyPurchaseDate:
-			if (t_transaction == nil)
-				break;
-			
-			ep.setnvalue([[t_transaction transactionDate] timeIntervalSince1970]);
-            ep.ntos();
-			return ES_NORMAL;
-
-		case kMCPurchasePropertyTransactionIdentifier:
-            // PM-2015-03-10: [[ Bug 14858 ]] transactionIdentifier can be nil if the purchase is still in progress (i.e when purchaseStateUpdate msg is sent with state=sendingRequest)
-			if (t_transaction == nil || [t_transaction transactionIdentifier] == nil)
-				break;
-			
-			ep.copysvalue([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
-			return ES_NORMAL;
-			
-		case kMCPurchasePropertyOriginalReceipt:
-		{
-			if (t_original_transaction == nil)
-				break;
-			
-			NSData *t_bytes = [t_original_transaction transactionReceipt];
-			ep.copysvalue((const char*)[t_bytes bytes], [t_bytes length]);
-			return ES_NORMAL;
-		}
-			
-		case kMCPurchasePropertyOriginalPurchaseDate:
-			if (t_original_transaction == nil)
-				break;
-			
-			ep.setnvalue([[t_original_transaction transactionDate] timeIntervalSince1970]);
-			return ES_NORMAL;
-
-		case kMCPurchasePropertyOriginalTransactionIdentifier:
-			if (t_original_transaction == nil)
-				break;
-			
-			ep.copysvalue([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
-			return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseGet */
 
 void MCPurchaseGetProductIdentifier(MCExecContext& ctxt, MCPurchase *p_purchase, MCStringRef& r_productIdentifier)
 {
@@ -538,27 +381,6 @@ void MCPurchaseGetOriginalReceipt(MCExecContext& ctxt, MCPurchase *p_purchase, M
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCPurchaseSet */ LEGACY_EXEC
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-	switch (p_property)
-	{
-		case kMCPurchasePropertyQuantity:
-		{
-			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: p_quantity];
-			return ES_NORMAL;
-		}
-			break;
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseSet */
 
 void MCPurchaseSetQuantity(MCExecContext& ctxt, MCPurchase *p_purchase, uinteger_t p_quantity)
 {

@@ -104,40 +104,6 @@ bool MCCardlist::GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which
 
 	return t_success;
 }
-#ifdef LEGACY_EXEC
-void MCCardlist::getprop(Properties prop, MCStack *stack, MCExecPoint &ep)
-{
-	trim();
-	MCCardnode *tmp = cards;
-	ep.clear();
-	bool first = true;
-	if (tmp != NULL)
-	{
-		MCExecPoint ep2;
-		do
-		{
-			if (stack == NULL || tmp->card->getstack() == stack)
-			{
-				tmp->card->getprop(0, prop, ep2, False);
-				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, first);
-				first = false;
-			}
-			tmp = tmp->next();
-		}
-		while (tmp != cards);
-	}
-}
-
-void MCCardlist::getnames(MCStack *stack, MCExecPoint &ep)
-{
-	getprop(P_SHORT_NAME, stack, ep);
-}
-
-void MCCardlist::getlongids(MCStack *stack, MCExecPoint &ep)
-{
-	getprop(P_LONG_ID, stack, ep);
-}
-#endif
 
 void MCCardlist::addcard(MCCard *card)
 {

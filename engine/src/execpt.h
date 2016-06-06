@@ -27,34 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCExecPoint
 {
-#ifdef LEGACY_EXEC
-    MCObject *curobj;
-
-    // MW-2009-01-30: [[ Inherited parentScripts ]]
-    // We store a reference to the parentScript use which is the current context
-    // so we can retrieve the correct script locals. If this is NULL, then we
-    // are not in parentScript context.
-    MCParentScriptUse *parentscript;
-
-    MCHandlerlist *curhlist;
-    MCHandler *curhandler;
-    uint2 nffw;
-    uint2 nftrailing;
-    uint2 nfforce;
-    uint2 cutoff;
-    uint2 line;
-    Boolean convertoctals;
-    Boolean casesensitive;
-    Boolean wholematches;
-    Boolean usesystemdate;
-    Boolean useunicode;
-    Boolean deletearray;
-    char itemdel;
-    char columndel;
-    char linedel;
-    char rowdel;
-
-#endif
     MCExecContext m_ec;
     MCValueRef value;
 
@@ -161,37 +133,6 @@ public:
 	{
         return m_ec . GetUseUnicode();
 	}
-#ifdef LEGACY_EXEC
-	Exec_stat setcasesensitive(uint2 line, uint2 pos)
-	{
-		return getboolean(casesensitive, line, pos, EE_PROPERTY_NAB);
-	}
-	Exec_stat setcutoff(uint2 line, uint2 pos)
-	{
-		return getuint2(cutoff, line, pos, EE_PROPERTY_NOTANUM);
-	}
-	Exec_stat setconvertoctals(uint2 line, uint2 pos)
-	{
-		return getboolean(convertoctals, line, pos, EE_PROPERTY_NAB);
-	}
-	Exec_stat setusesystemdate(uint2 line, uint2 pos)
-	{
-		return getboolean(usesystemdate, line, pos, EE_PROPERTY_NAB);
-	}
-	Exec_stat setuseunicode(uint2 line, uint2 pos)
-	{
-		return getboolean(useunicode, line, pos, EE_PROPERTY_NAB);
-	}
-	Exec_stat setitemdel(uint2 line, uint2 pos);
-	Exec_stat setcolumndel(uint2 line, uint2 pos);
-	Exec_stat setlinedel(uint2 line, uint2 pos);
-	Exec_stat setrowdel(uint2 line, uint2 pos);
-	Exec_stat setwholematches(uint2 line, uint2 pos)
-	{
-		return getboolean(wholematches, line, pos, EE_PROPERTY_NAB);
-	}
-#endif
-
     void setcasesensitive(bool p_value) { m_ec . SetCaseSensitive(p_value);}
     void setconvertoctals(bool p_value) { m_ec . SetConvertOctals(p_value);}
     void setwholematches(bool p_value) { m_ec . SetWholeMatches(p_value);}
@@ -231,70 +172,6 @@ public:
 	void setnumberformat();
 
 	//////////
-
-#ifdef LEGACY_EXEC
-	// Returns true if the exec point contains the empty value.
-	bool isempty(void) const;
-	// Returns true if the exec point contains a (non-empty) array.
-	bool isarray(void) const;
-	// Returns true if the exec point contains a string.
-	bool isstring(void) const;
-	// Returns true if the exec point contains a number.
-	bool isnumber(void) const;
-
-	void clear(void);
-	void setsvalue(const MCString& string);
-	void copysvalue(const MCString& string);
-	void copysvalue(const char *string, uindex_t length);
-	void setnvalue(real8 number);
-	void setnvalue(uinteger_t number);
-	void setnvalue(integer_t number);
-	void grabbuffer(char *buffer, uint32_t length);
-
-	bool reserve(uindex_t capacity, char*& r_buffer);
-	void commit(uindex_t size);
-
-	bool modify(char*& r_buffer, uindex_t& r_length);
-	void resize(uindex_t size);
-
-	const char *getcstring(void);
-	MCString getsvalue(void);
-	MCString getsvalue0(void);
-	real8 getnvalue();
-
-	Exec_stat tos(void);
-	Exec_stat ton(void);
-	Exec_stat tona(void);
-
-	uint4 getuint4();
-	uint2 getuint2();
-	int4 getint4();
-
-	Exec_stat getreal8(real8 &, uint2, uint2, Exec_errors);
-	Exec_stat getuint2(uint2 &, uint2, uint2, Exec_errors);
-	Exec_stat getint4(int4 &, uint2, uint2, Exec_errors);
-	Exec_stat getuint4(uint4 &, uint2, uint2, Exec_errors);
-	Exec_stat getboolean(Boolean &, uint2, uint2, Exec_errors);
-
-	void setint(int4);
-	void setuint(uint4);
-    void setint64(int64_t);
-    void setuint64(uint64_t);
-	void setr8(real8 n, uint2 fw, uint2 trailing, uint2 force);
-
-	Exec_stat ntos();
-	Exec_stat ston();
-	void lower();
-	void upper();
-
-	void insert(const MCString &, uint4 s, uint4 e);
-	uint1 *pad(char value, uint4 count);
-	void substring(uint4 s, uint4 e);
-	void tail(uint4 s);
-	void fill(uint4 s, char c, uint4 n);
-	void texttobinary();
-	void binarytotext();
-#endif
 
 #if 0
 	Boolean isempty(void) const
@@ -557,122 +434,6 @@ public:
 	// Make a copy of the contents of the ep as a value.
 	bool copyasvalueref(MCValueRef& r_value);
 
-#ifdef LEGACY_EXEC
-	// These two methods attempt to convert the given value to a string and return
-	// false if this fails. Note that failure to be the given type and exception
-	// failure are both returned as false (hence these are slightly sloppy).
-	bool convertvaluereftostring(MCValueRef value, MCStringRef& r_string);
-    bool convertvaluereftonumber(MCValueRef value, MCNumberRef& r_number);
-
-	// This method attempts to convert the given value to an numeric type. Returning false
-	// if this is not possible. Note that this method does not throw, so a false
-	// return value really means the value cannot be a number.
-	bool convertvaluereftobool(MCValueRef value, bool& r_uint);
-	bool convertvaluereftouint(MCValueRef value, uinteger_t& r_uint);
-	bool convertvaluereftoint(MCValueRef value, integer_t& r_int);
-	bool convertvaluereftoreal(MCValueRef value, real64_t& r_real);
-
-	// This method attempts to convert the given value to a boolean. Returning false
-	// if this is not possible. Note that this method does not throw, so a false
-	// return value really means the value cannot be a boolean.
-    bool convertvaluereftoboolean(MCValueRef value, MCBooleanRef& r_boolean);
-
-	// Array methods.
-
-	// Return the array contained within the ep - isarray() must return true for this
-	// to be a valid call.
-	MCArrayRef getarrayref(void);
-	// Copy the contents of the ep as an array - non arrays convert to empty array.
-	bool copyasarrayref(MCArrayRef& r_array);
-	// Copy the contents of the ep as a mutable array - non arrays convert to empty array.
-    bool copyasmutablearrayref(MCArrayRef& r_array);
-
-	// Set the ep to a string containing the list of keys from the given array.
-	bool listarraykeys(MCArrayRef array, char delimiter);
-	// Set the ep to the value of the given key in the array.
-	bool fetcharrayelement(MCArrayRef array, MCNameRef key);
-	// Store the contents of the ep as the given key in the given array.
-	bool storearrayelement(MCArrayRef array, MCNameRef key);
-    bool appendarrayelement(MCArrayRef array, MCNameRef key);
-
-	// Compatibility methods - these should eventually be phased out.
-
-	bool fetcharrayindex(MCArrayRef array, index_t index);
-	bool storearrayindex(MCArrayRef array, index_t index);
-
-	// Set the ep to the value of the given key (as a c-string) in the given array.
-	bool fetcharrayelement_cstring(MCArrayRef array, const char *key);
-	// Store the contents of the ep as the given key (as a c-string) in the given array.
-	bool storearrayelement_cstring(MCArrayRef array, const char *key);
-	// Store the contents of the ep as the given key (as a c-string) in the given array.
-	bool appendarrayelement_cstring(MCArrayRef array, const char *key);
-	// Returns true if the given array has the given key (as a c-string);
-	bool hasarrayelement_cstring(MCArrayRef array, const char *key);
-	// Set the ep to the value of the given key (as a c-string) in the given array.
-	bool fetcharrayelement_oldstring(MCArrayRef array, const MCString& key);
-	// Store the contents of the ep as the given key (as a c-string) in the given array.
-	bool storearrayelement_oldstring(MCArrayRef array, const MCString& key);
-	// Returns true if the given array has the given key (as a c-string);
-	bool hasarrayelement_oldstring(MCArrayRef array, const MCString& key);
-	bool appendarrayelement_oldstring(MCArrayRef array, const MCString& key);
-
-	// Perform put ep op src into ep.
-    Exec_stat factorarray(MCExecPoint& src, Operators op);
-    
-    // SN-2015-06-03: [[ Bug 11277 ]] Refactor similar functions from MCHandler
-    //  and MCHandlerlist
-    static void deletestatements(MCStatement *p_statements);
-    Exec_stat eval(MCExecPoint &ep);
-    Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
-
-private:
-	void dounicodetomultibyte(bool p_native, bool p_reverse);
-
-	void concat(uint4 n, Exec_concat, Boolean);
-	void concat(int4 n, Exec_concat, Boolean);
-	void concat(const MCString &, Exec_concat, Boolean);
-
-	bool converttostring(void);
-	bool converttomutablestring(void);
-	bool converttonumber(void);
-	bool converttoboolean(void);
-	bool converttoarray(void);
-	bool converttomutablearray(void);
-#endif
 };
-
-#ifdef LEGACY_EXEC
-inline void MCExecPoint::utf16toutf8(void)
-{
-	dounicodetomultibyte(false, false);
-}
-
-inline void MCExecPoint::utf8toutf16(void)
-{
-	dounicodetomultibyte(false, true);
-}
-
-inline void MCExecPoint::utf16tonative(void)
-{
-	dounicodetomultibyte(true, false);
-}
-
-inline void MCExecPoint::nativetoutf16(void)
-{
-	dounicodetomultibyte(true, true);
-}
-
-inline void MCExecPoint::utf8tonative(void)
-{
-	utf8toutf16();
-	utf16tonative();
-}
-
-inline void MCExecPoint::nativetoutf8(void)
-{
-	nativetoutf16();
-	utf16toutf8();
-}
-#endif
 
 #endif

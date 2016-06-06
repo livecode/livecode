@@ -109,13 +109,6 @@ public:
 	virtual uint2 getloudness() = 0;
 	virtual void setloudness() = 0;
     
-#ifdef LEGACY_EXEC
-	void gettracks(MCExecPoint &ep);
-	void getenabledtracks(MCExecPoint &ep);
-	void getnodes(MCExecPoint &ep);
-	void gethotspots(MCExecPoint &ep);
-#endif
-
     Boolean isdisposable()
     {
         return disposable;

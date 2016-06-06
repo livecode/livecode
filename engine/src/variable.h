@@ -78,17 +78,6 @@ public:
 	uint32_t getnfilled(void) const;
 
 	//
-#ifdef LEGACY_EXEC
-	// Perform an iterated function on the keys of the value.
-	// PRECONDITION: this is initialized
-	Exec_stat dofunc(MCExecPoint& ep, Functions func, uint4 &nparams, real8 &n, real8 oldn, void *titems);
-
-	// Perform:
-	//    this = this op <ep>
-	// PRECONDITION: this is initialized
-	Exec_stat factorarray(MCExecPoint &ep, Operators op);
-#endif
-
 	// Copy any keys from v not present in this
 	// PRECONDITION: this is initialized
     // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
@@ -99,12 +88,6 @@ public:
 	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     Exec_stat intersectarray(MCVariableArray& v, bool p_recursive);
 
-#ifdef LEGACY_EXEC
-	// Set the value of the variable to the result of va * vb, considered as
-	// matrices.
-	// PRECONDITION: this is uninitialized
-	Exec_stat matrixmultiply(MCExecPoint& ep, MCVariableArray& va, MCVariableArray& vb);
-#endif
 	// Set the value of the variable to the transpose of the value contained in v.
 	// PRECONDITION: this is uninitialized
 	Exec_stat transpose(MCVariableArray& v);
@@ -140,26 +123,9 @@ public:
 	// PRECONDITION: this is uninitialized
 	bool copytable(const MCVariableArray &v);
 
-#ifdef LEGACY_EXEC
-	// Return the list of extents of the array into ep
-	// PRECONDITION: this is initialized
-	void getextents(MCExecPoint& ep);
-#endif
-
 	// Return a list of keys of the array (used by xcommands)
 	// PRECONDITION: this is initialized
 	void getkeys(char **keylist, uint4 kcount);
-
-#ifdef LEGACY_EXEC
-	// Return a list of keys into ep
-	// PRECONDITION: this is initialized
-	void getkeys(MCExecPoint& ep);
-
-	// Iterate over the hash elements in the array
-	// PRECONDITION: this is initialized
-	MCHashentry *getnextelement(uint4 &l, MCHashentry *e, Boolean donumeric, MCExecPoint &ep);
-#endif
-
 
 	// Iterate over the keys in the array
 	// PRECONDITION: this is initialized
@@ -170,31 +136,13 @@ public:
 	// PRECONDITION: this is initialized
 	MCHashentry *getnextkey(MCHashentry *e) const;
 
-#ifdef LEGACY_EXEC
-	// Combine the elements of the array and return a string
-	// PRECONDITION: this is initialized
-	void combine(MCExecPoint& ep, char e, char k, char*& r_buffer, uint32_t& r_length);
-#endif
-
 	// Set the array to the result of splitting the given value.
 	// PRECONDITION: this is uninitialized
 	void split(const MCString& s, char e, char k);
 
-#ifdef LEGACY_EXEC
-	// Combine the elements of the array column-wise and return a string.
-	// PRECONDITION: this is initialized
-	void combine_column(MCExecPoint& ep, char r, char c, char*& r_buffer, uint32_t& r_length);
-#endif
-
 	// Set the array to the result of splitting the given value column-wise
 	// PRECONDITION: this is uninitialized
 	void split_column(const MCString& s, char r, char c);
-
-#ifdef LEGACY_EXEC
-	// Combine the elements of the array as a set and return a string
-	// PRECONDITION: this is initialized
-	void combine_as_set(MCExecPoint& ep, char e, char*& r_buffer, uint32_t& r_length);
-#endif
 
 	// Set the array to the result of splitting the given value as a set.
 	// PRECONDITION: this is uninitialized
@@ -286,306 +234,6 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeLegacyArray 5
 #define kMCEncodedValueTypeArray 6
 
-
-#ifdef LEGACY_EXEC
-class MCVariableValue
-{
-public:
-	MCVariableValue(void);
-	MCVariableValue(const MCVariableValue& p_other);
-
-	~MCVariableValue(void);
-
-	bool is_clear(void) const;
-	bool is_undefined(void) const;
-	bool is_empty(void) const;
-	bool is_string(void) const;
-	bool is_real(void) const;
-	bool is_number(void) const;
-	bool is_array(void) const;
-
-	Value_format get_format(void) const;
-
-	MCString get_string(void) const;
-	real64_t get_real(void) const;
-	MCVariableArray* get_array(void);
-
-	void clear(void);
-
-	bool assign(const MCVariableValue& v);
-	void exchange(MCVariableValue& v);
-
-	void assign_empty(void);
-	void assign_new_array(uint32_t p_hash_size);
-	void assign_constant_string(const MCString& s);
-	bool assign_string(const MCString& s);
-	void assign_real(real64_t r);
-	bool assign_both(const MCString& s, real64_t n);
-	void assign_constant_both(const MCString& s, real64_t n);
-	void assign_buffer(char *p_buffer, uint32_t p_length);
-
-	// Append the given byte sequence to the variable.
-	bool append_string(const MCString& s);
-    
-    // Prepend the given byte sequence to the variable.
-	bool prepend_string(const MCString& s);
-    
-    bool insert_string(const MCString& s, int insert_at);
-
-	// This method is used to set the buffer of the value to a custom conversion
-	// of it as a number. It results in the format being VF_NUMBER, but the buffer
-	// being non-nil. Note that the buffer is set as a C-string.
-	bool assign_custom_both(const char *s, real64_t n);
-	MCString get_custom_string(void) const;
-
-	// These methods are used by the externals API to access the char buffer directly.
-	bool reserve(uint32_t required_length, void*& r_buffer, uint32_t& r_length);
-	bool commit(uint32_t actual_length);
-
-	// Fetch the value of 'this' into ep.
-	// If p_copy is false then it is a reference.
-	// If p_copy is true then it is a copy.
-	//
-	Exec_stat fetch(MCExecPoint& ep, bool p_copy = false);
-	
-	// Store the value of 'ep' into 'this'.
-	// A copy is always taken.
-	Exec_stat store(MCExecPoint& ep);
-	
-	// Append the value of ep to 'this'.
-	// String coercion is performed as required.
-	Exec_stat append(MCExecPoint& ep);
-    
-    Exec_stat prepend(MCExecPoint& ep);
-
-	bool has_element(MCExecPoint& ep, const MCString& key);
-
-	// MW-2012-01-06: Used by the field styledText code, this method returns false if
-	//   the key doesn't exist.
-	bool fetch_element_if_exists(MCExecPoint& ep, const MCString& key, bool p_copy = false);
-
-	Exec_stat fetch_element(MCExecPoint& ep, const MCString& key, bool p_copy = false);
-	Exec_stat store_element(MCExecPoint& ep, const MCString& key);
-	Exec_stat append_element(MCExecPoint& ep, const MCString& key);
-	Exec_stat remove_element(MCExecPoint& ep, const MCString& key);
-	Exec_stat lookup_index(MCExecPoint& ep, uindex_t index, bool p_add, MCVariableValue*& r_value);
-	Exec_stat lookup_index(MCExecPoint& ep, uint32_t index, MCVariableValue*& r_value);
-	Exec_stat lookup_element(MCExecPoint& ep, const MCString& key, MCVariableValue*& r_value);
-
-	// This does the same as lookup_element except creation is optional, and it
-	// returns a reference to the Hashentry rather than the value. This is used
-	// by MCVarref::resolve.
-	Exec_stat lookup_hash(MCExecPoint& ep, const MCString& p_key, bool p_add, MCHashentry*& r_hash);
-
-	// This removes the given hash entry from the value. The hash entry must be
-	// a direct child of 'this'.
-	void remove_hash(MCHashentry *p_hash);
-
-	bool get_as_real(MCExecPoint& ep, real64_t& r_value);
-
-	bool ensure_real(MCExecPoint& ep);
-	bool ensure_string(MCExecPoint& ep);
-
-	// Ensure the string value (if any) is actually usable as a C-string.
-	bool ensure_cstring(void);
-
-	Exec_stat combine(char e, char k, MCExecPoint& ep);
-	Exec_stat split(char e, char k, MCExecPoint& ep);
-
-	Exec_stat combine_column(char col, char row, MCExecPoint& ep);
-	Exec_stat split_column(char col, char row, MCExecPoint& ep);
-
-	Exec_stat combine_as_set(char e, MCExecPoint& ep);
-	Exec_stat split_as_set(char e, MCExecPoint& ep);
-
-	Exec_stat factorarray(MCExecPoint& ep, Operators op);
-    
-	// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
-    Exec_stat unionarray(MCVariableValue& v, bool recursive);
-	Exec_stat intersectarray(MCVariableValue& v, bool recursive);
-
-	Exec_stat transpose(MCVariableValue& v);
-
-	Exec_stat matrixmultiply(MCExecPoint& ep, MCVariableValue& va, MCVariableValue& vb);
-	Exec_stat setprops(uint4 parid, MCObject* optr);
-
-	void getextents(MCExecPoint& ep);
-	void getkeys(MCExecPoint& ep);
-	void getkeys(char **keys, uint32_t kcount);
-
-	IO_stat loadkeys(IO_handle stream, bool p_merge);
-	IO_stat savekeys(IO_handle stream);
-
-	IO_stat loadarray(MCObjectInputStream& p_stream, bool p_merge);
-	
-	// Encode the value as a binary sequence, returned in <r_buffer, r_length>.
-	// Returns 'true' if the operation succeeded.
-	// Returns 'false' if it failed.
-	//
-	// Failure can only occur if memory is exhausted.
-	//
-	bool encode(void*& r_buffer, uint32_t& r_length);
-	
-	// Decode the value in <p_value>.
-	// Returns 'true' if the operation succeedd.
-	// Returns 'false' if it failed.
-	//
-	// Failure can occur if memory is exhausted, or if <p_value> is
-	// malformed.
-	//
-	bool decode(const MCString& p_value);
-	
-	// If a variable's dbg-notify is set it means it will notify the (server)
-	// debugger when it is deleted and/or changed.
-	void set_dbg_notify(bool p_state);
-	bool get_dbg_notify(void) const;
-	void set_dbg_changed(bool p_state);
-	bool get_dbg_changed(void) const;
-	void set_dbg_mutated(bool p_state);
-	bool get_dbg_mutated(void) const;
-
-	void set_external(void);
-	bool get_external(void) const;
-
-	void set_temporary(void);
-	bool get_temporary(void) const;
-
-private:
-	bool copy(const MCVariableValue& p_other);
-	void destroy(void);
-
-	bool coerce_to_real(MCExecPoint& ep);
-	bool coerce_to_string(MCExecPoint& ep);
-
-	Value_format get_type(void) const;
-	void set_type(Value_format new_type);
-
-	enum
-	{
-		// If this is true, then modifying this value will have no visible effect
-		// beyond its direct use.
-		kTemporaryBit = 1 << 0,
-
-		// If this is true, then this value was created by an external using the
-		// 'variable_create' external interface method.
-		kExternalBit = 1 << 1,
-
-		// Integrated from server
-		kDebugNotifyBit = 1 << 2,
-		kDebugChangedBit = 1 << 3,
-		kDebugMutatedBit = 1 << 4,
-	};
-
-	uint8_t _type;
-	uint8_t _flags;
-	union
-	{
-		struct
-		{
-			struct
-			{
-				char *data;
-				uint32_t size;
-			} buffer;
-			struct
-			{
-				const char *string;
-				uint32_t length;
-			} svalue;
-			double nvalue;
-		} strnum;
-		MCVariableArray array;
-	};
-};
-
-////
-
-struct MCHashentry
-{
-	MCHashentry *next;
-	uint32_t hash;
-	MCVariableValue value;
-	char string[4];
-
-	MCHashentry(void);
-	MCHashentry(const MCString& p_key, uint32_t p_hash);
-	MCHashentry(const MCHashentry& e);
-
-	MCHashentry *Clone(void) const;
-
-	uint4 Measure(void);
-
-	IO_stat Save(MCObjectOutputStream& p_stream);
-
-	static IO_stat Load(MCObjectInputStream& p_stream, MCHashentry*& r_entry);
-
-	static MCHashentry *Create(uint32_t p_key_length);
-	static MCHashentry *Create(const MCString& p_key, uint32_t p_hash);
-};
-
-inline MCHashentry::MCHashentry(void)
-	: next(NULL)
-{
-}
-
-inline MCHashentry::MCHashentry(const MCString& p_key, uint32_t p_hash)
-	: next(NULL),
-	  hash(p_hash)
-{
-	strncpy(string, p_key . getstring(), p_key . getlength());
-	string[p_key . getlength()] = '\0';
-}
-
-inline MCHashentry::MCHashentry(const MCHashentry& e)
-	: next(NULL),
-	  hash(e . hash),
-	  value(e . value)
-{
-	strcpy(string, e . string);
-}
-
-#ifdef _DEBUG
-#ifdef new
-#undef new
-#define redef_new
-#endif
-#endif
-
-inline MCHashentry *MCHashentry::Clone(void) const
-{
-	void *t_new_entry;
-	t_new_entry = new char[sizeof(MCHashentry) + strlen(string) - 3];
-	if (t_new_entry != NULL)
-		return new(t_new_entry) MCHashentry(*this);
-	return NULL;
-}
-
-inline MCHashentry *MCHashentry::Create(uint32_t p_key_length)
-{
-	void *t_new_entry;
-	t_new_entry = new char[sizeof(MCHashentry) + p_key_length - 3];
-	if (t_new_entry != NULL)
-		return new(t_new_entry) MCHashentry;
-	return NULL;
-}
-
-inline MCHashentry *MCHashentry::Create(const MCString& p_key, uint32_t p_hash)
-{
-	void *t_new_entry;
-	t_new_entry = new char[sizeof(MCHashentry) + p_key . getlength() - 3];
-	if (t_new_entry != NULL)
-		return new(t_new_entry) MCHashentry(p_key, p_hash);
-	return NULL;
-}
-
-#ifdef _DEBUG
-#ifdef redef_new
-#undef redef_new
-#define new new(__FILE__, __LINE__)
-#endif
-#endif
-
-#endif
 
 typedef enum
 {
@@ -697,18 +345,7 @@ public:
     
 	// Converts the value in the variable to an array of strings.
     bool converttoarrayofstrings(MCExecContext& ctxt);
-#ifdef LEGACY_EXEC
-	bool converttoarrayofstrings(MCExecPoint& ep);
-#endif
-#ifdef LEGACY_EXEC
-	// Converts the value in the variable to an array of numbers.
-	bool converttoarrayofnumbers(MCExecPoint& ep);
-#endif
-
 	// Converts the value to a (mutable) string.
-#ifdef LEGACY_EXEC
-	bool converttomutablestring(MCExecPoint& ep);
-#endif
     bool converttomutablestring(MCExecContext& ctxt);
     bool converttomutabledata(MCExecContext& ctxt);
 
@@ -771,20 +408,6 @@ public:
 	// This is used in places where a potentially large string has been manipulated
 	// transiently.
 	void grab(char *p_buffer, uint4 p_length);
-
-#ifdef LEGACY_EXEC
-    Exec_stat eval(MCExecPoint& ep);
-    Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
-
-    Exec_stat set(MCExecPoint& ep);
-    Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
-
-    Exec_stat append(MCExecPoint& ep);
-    Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
-
-    Exec_stat remove(MCExecPoint& ep);
-    Exec_stat remove(MCExecPoint& ep, MCNameRef *path, uindex_t length);
-#endif
 
 	// Apply any changes to the value to the 'special' part of the var.
 	// i.e. if it is an environment variable or the msg variable
@@ -861,12 +484,6 @@ public:
 
 	//
 
-#ifdef LEGACY_EXEC
-	Exec_stat eval(MCExecPoint& ep);
-	Exec_stat set(MCExecPoint& ep);
-	Exec_stat append(MCExecPoint& ep);
-	Exec_stat remove(MCExecPoint& ep);
-#endif
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
 	bool remove(MCExecContext& ctxt);
@@ -879,10 +496,6 @@ public:
 	bool deleterange(MCExecContext& ctxt, MCRange p_range);
 
 	bool clear(void);
-#ifdef LEGACY_EXEC
-	bool set_oldstring(const MCString& string);
-	bool set_cstring(const char *cstring);
-#endif
 	bool set_real(double real);
 
 	bool set_valueref(MCValueRef value);
@@ -973,20 +586,11 @@ public:
 		isplain = true;
 	}
     virtual ~MCVarref();
-#ifdef LEGACY_EXEC
-	virtual Exec_stat eval(MCExecPoint &);
-#endif
     
     bool needsContainer(void) const {return dimensions != 0;}
     
     void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
-#ifdef LEGACY_EXEC
-	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
-#endif
     bool evalcontainer(MCExecContext &ctxt, MCContainer*& r_container);
-#ifdef LEGACY_EXEC
-	virtual MCVariable *evalvar(MCExecPoint& ep);
-#endif
     virtual MCVariable *evalvar(MCExecContext& ctxt);
 	
 	virtual void compile(MCSyntaxFactoryRef);
@@ -1003,9 +607,6 @@ public:
 
 	Boolean getisscriptlocal() { return isscriptlocal; };
 
-#ifdef LEGACY_EXEC
-	Exec_stat set(MCExecPoint &, Boolean append = False);
-#endif
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
@@ -1014,23 +615,14 @@ public:
 	Exec_stat sets(const MCString &s);
 	void clear();
 	void clearuql();
-#ifdef LEGACY_EXEC
-	Exec_stat dofree(MCExecPoint &);
-#endif
     bool dofree(MCExecContext& ctxt);
     
 	bool getisplain(void) const { return isplain; }
 	
 private:
-#ifdef LEGACY_EXEC
-	MCVariable *fetchvar(MCExecPoint& ep);
-#endif
     MCVariable *fetchvar(MCExecContext& ctxt);
     MCContainer *fetchcontainer(MCExecContext& ctxt);
     
-#ifdef LEGACY_EXEC
-	Exec_stat resolve(MCExecPoint& ep, MCContainer*& r_container);
-#endif
     bool resolve(MCExecContext& ctxt, MCContainer*& r_container);
     
     void getpath(MCExecContext& ctxt, MCNameRef*& r_path, uindex_t& r_length);
@@ -1067,11 +659,6 @@ public:
 	// Override all methods that require the value of the variable. These
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
-#ifdef LEGACY_EXEC
-	virtual Exec_stat eval(MCExecPoint&);
-	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
-	virtual MCVariable *evalvar(MCExecPoint& ep);
-#endif
     virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     virtual bool evalcontainer(MCExecContext& ctxt, MCContainer*& r_container);
     virtual MCVariable *evalvar(MCExecContext& ctxt);

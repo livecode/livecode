@@ -108,17 +108,6 @@ Parse_stat MCChoose::parse(MCScriptPoint &sp)
 
 void MCChoose::exec_ctxt(MCExecContext &ctxt)
 {
-#ifdef /* MCChoose */ LEGACY_EXEC
-	if (etool != NULL)
-		if (etool->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_CHOOSE_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-	return MCU_choose_tool(ep, littool, line, pos); 
-#endif /* MCChoose */
-
     MCAutoStringRef t_string;
     if (!ctxt . EvalOptionalExprAsStringRef(etool, kMCEmptyString, EE_CHOOSE_BADEXP, &t_string))
         return;
@@ -282,44 +271,6 @@ Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 
 void MCConvert::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCConvert */ LEGACY_EXEC
-	MCresult->clear(False);
-	if (container != NULL)
-	{
-		if (container->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_CONVERT_CANTGET, line, pos);
-			return ES_ERROR;
-		}
-	}
-	else
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_CONVERT_CANTGET, line, pos);
-			return ES_ERROR;
-		}
-	if (!MCD_convert(ep, fform, fsform, pform, sform))
-	{
-		MCresult->sets("invalid date");
-		return ES_NORMAL;
-	}
-	Exec_stat stat;
-	if (container == NULL)
-		stat = ep . getit() -> set(ep);
-	else
-		stat = container->set(ep, PT_INTO);
-	
-	if (stat != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_CONVERT_CANTSET, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-	return ES_NORMAL; 
-#endif /* MCConvert */
-
     MCAutoStringRef t_input;
 	MCAutoStringRef t_output;
 	if (container != NULL)
@@ -415,90 +366,6 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 
 void MCDo::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCDo */ LEGACY_EXEC
-	MCExecPoint *epptr;
-	if (browser)
-	{
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DO_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		
-		return MCModeExecuteScriptInBrowser(ep . getsvalue());
-	}
-
-	if (alternatelang != NULL)
-	{
-		if (alternatelang->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_DO_BADLANG, line, pos);
-			return ES_ERROR;
-		}
-		char *langname = ep.getsvalue().clone();
-		if (source->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_DO_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		
-		if (!MCSecureModeCheckDoAlternate(line, pos))
-			return ES_ERROR;
-		
-		MCString s = ep.getsvalue();
-		MCS_doalternatelanguage(s, langname);
-		delete langname;
-		return ES_NORMAL;
-	}
-	Boolean added = False;
-	if (MCnexecutioncontexts < MAX_CONTEXTS)
-	{
-		ep.setline(line);
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
-		added = True;
-	}
-	if (debug)
-	{
-		if (MCdebugcontext >= MCnexecutioncontexts)
-			MCdebugcontext = MCnexecutioncontexts - 1;
-		epptr = MCexecutioncontexts[MCdebugcontext];
-	}
-	else
-	{
-		if (caller)
-		{
-			if (MCnexecutioncontexts < 2)
-			{
-				if (added)
-					MCnexecutioncontexts--;
-				MCeerror -> add(EE_DO_NOCALLER, line, pos);
-				return ES_ERROR;
-			}
-			
-			epptr = MCexecutioncontexts[MCnexecutioncontexts - 2];
-		}
-		else
-		epptr = &ep;
-	}
-	if (source->eval(*epptr) != ES_NORMAL)
-	{
-		if (added)
-			MCnexecutioncontexts--;
-		MCeerror->add(EE_DO_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	// MW-2013-11-15: [[ Bug 11277 ]] If no handler, then evaluate in context of the
-	//   server script object.
-	Exec_stat stat;
-    stat = ep.doscript(*epptr, line, pos);
-    
-	if (added)
-		MCnexecutioncontexts--;
-	return stat;
-#endif /* MCDo */
-
     MCAutoStringRef t_script;
     if (!ctxt . EvalExprAsStringRef(source, EE_DO_BADEXP, &t_script))
         return;
@@ -682,29 +549,6 @@ Parse_stat MCDoMenu::parse(MCScriptPoint &sp)
 
 void MCDoMenu::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCDoMenu */ LEGACY_EXEC
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_DOMENU_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	const char *dstring = lookup(ep.getsvalue());
-	if (dstring == NULL)
-	{
-		char *tptr = ep.getsvalue().clone();
-		ep.setstringf("doMenu \"%s\" not implemented", tptr);
-		delete tptr;
-
-		MCresult->sets(ep.getsvalue());
-	}
-	else
-	{
-		ep.getobj()->domess(dstring);
-	}
-	return ES_NORMAL; 
-#endif /* MCDoMenu */
-
     MCAutoStringRef t_option;
     if (!ctxt . EvalExprAsStringRef(source, EE_DOMENU_BADEXP, &t_option))
         return;
@@ -763,41 +607,6 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 
 void MCEdit::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCEdit */ LEGACY_EXEC
-	MCObject *optr;
-	uint4 parid;
-	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
-	{
-		MCeerror->add(EE_EDIT_BADTARGET, line, pos);
-		return ES_ERROR;
-	}
-
-    // MERG 2013-9-13: [[ EditScriptChunk ]] Added at expression that's passed through as a second parameter to editScript
-    MCString t_at;
-    t_at = NULL;
-    
-    if (m_at != NULL)
-    {
-        if (m_at->eval(ep) != ES_NORMAL)
-        {
-            MCeerror->add
-            (EE_EDIT_BADAT, line, pos);
-            return ES_ERROR;
-        }
-        t_at = ep.getsvalue();
-    }
-    
-    // MW-2010-10-13: [[ Bug 7476 ]] Make sure we temporarily turn off lock messages
-	//   before invoking the method - since it requires message sending to work!
-	Boolean t_old_lock;
-	t_old_lock = MClockmessages;
-	MClockmessages = False;
-	optr->editscript(t_at);
-	MClockmessages = t_old_lock;
-
-	return ES_NORMAL;
-#endif /* MCEdit */
-
 	MCObject *optr;
     uint4 parid;
     if (!target->getobj(ctxt, optr, parid, True))
@@ -869,24 +678,6 @@ Parse_stat MCFind::parse(MCScriptPoint &sp)
 
 void MCFind::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCFind */ LEGACY_EXEC
-	if (tofind->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_FIND_BADSTRING, line, pos);
-		return ES_ERROR;
-	}
-	if (ep.getsvalue().getlength() == 0)
-	{
-		if (MCfoundfield != NULL)
-			MCfoundfield->clearfound();
-		MCresult->sets(MCnotfoundstring);
-		return ES_NORMAL;
-	}
-	MCdefaultstackptr->find(ep, mode, ep.getsvalue(), field);
-	return ES_NORMAL;
-#endif /* MCFind */
-
     MCAutoStringRef t_needle;
     if (!ctxt . EvalExprAsStringRef(tofind, EE_FIND_BADSTRING, &t_needle))
         return;
@@ -930,20 +721,6 @@ Parse_stat MCGet::parse(MCScriptPoint &sp)
 
 void MCGet::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCGet */ LEGACY_EXEC
-	if (value->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_GET_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	if (ep.getit()->set(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_GET_CANTSET, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-	return ES_NORMAL;
-#endif /* MCGet */
-
     MCExecValue t_value;
     if (!ctxt . EvaluateExpression(value, EE_GET_BADEXP, t_value))
         return;
@@ -1071,37 +848,6 @@ if (sp.next(type) != PS_NORMAL)
 
 void MCMarking::exec_ctxt(MCExecContext &ctxt)
 {
-#ifdef /* MCMarking */ LEGACY_EXEC
-	if (card != NULL)
-	{
-		MCObject *optr;
-		uint4 parid;
-		if (card->getobj(ep, optr, parid, True) != ES_NORMAL
-		        || optr->gettype() != CT_CARD)
-		{
-			MCeerror->add
-			(EE_MARK_BADCARD, line, pos);
-			return ES_ERROR;
-		}
-		ep.setboolean(mark);
-		return optr->setprop(0, P_MARKED, ep, False);
-	}
-	if (tofind == NULL)
-		MCdefaultstackptr->mark(ep, where, mark);
-	else
-	{
-		if (tofind->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_MARK_BADSTRING, line, pos);
-			return ES_ERROR;
-		}
-        
-		MCdefaultstackptr->markfind(ep, mode, ep.getsvalue(), field, mark);
-	}
-    return ES_NORMAL;
-#endif /* MCMarking */
-
     if (card != NULL)
 	{
         MCObjectPtr t_object;
@@ -1328,81 +1074,6 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 
 void MCPut::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCPut */ LEGACY_EXEC
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PUT_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	if (dest != NULL)
-	{
-		if (overlap)
-			ep . grab();
-
-		Exec_stat t_stat;
-		if (!is_unicode)
-			t_stat = dest -> set(ep, prep);
-		else
-			t_stat = dest -> setunicode(ep, prep);
-		if (t_stat != ES_NORMAL)
-		{
-			MCeerror->add(EE_PUT_CANTSET, line, pos);
-			return ES_ERROR;
-		}
-		return ES_NORMAL;
-	}
-	else
-	{
-		// MW-2011-06-22: [[ SERVER ]] Handle the non-dest forms of put.
-		MCSPutKind t_kind;
-		switch(prep)
-		{
-			case PT_UNDEFINED:
-				t_kind = is_unicode ? kMCSPutUnicodeOutput : kMCSPutOutput;
-				break;
-			case PT_INTO:
-				t_kind = kMCSPutIntoMessage;
-				break;
-			case PT_AFTER:
-				t_kind = kMCSPutAfterMessage;
-				break;
-			case PT_BEFORE:
-				t_kind = kMCSPutBeforeMessage;
-				break;
-			case PT_HEADER:
-				t_kind = kMCSPutHeader;
-				break;
-			case PT_NEW_HEADER:
-				t_kind = kMCSPutNewHeader;
-				break;
-			case PT_CONTENT:
-				t_kind = is_unicode ? kMCSPutUnicodeContent : kMCSPutContent;
-				break;
-			case PT_MARKUP:
-				t_kind = is_unicode ? kMCSPutUnicodeMarkup : kMCSPutMarkup;
-				break;
-			case PT_BINARY:
-				t_kind = kMCSPutBinaryOutput;
-				break;
-
-			case PT_COOKIE:
-				return exec_cookie(ep);
-				
-			default:
-				t_kind = kMCSPutNone;
-				break;
-		}
-		
-		if (!MCS_put(ep, t_kind, ep . getsvalue()))
-		{
-			MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-			return ES_ERROR;
-		}
-		
-		return ES_NORMAL;
-	}
-#endif /* MCPut */
-
     
     MCExecValue t_value;
     if (!ctxt . EvaluateExpression(source, EE_PUT_BADEXP, t_value))
@@ -1575,86 +1246,6 @@ void MCPut::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-#ifdef LEGACY_EXEC
-#if defined(_SERVER)
-bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
-Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
-{
-	char *t_name = NULL;
-	char *t_value = NULL;
-	char *t_path = NULL;
-	char *t_domain = NULL;
-	
-	uint32_t t_name_len = 0;
-	uint32_t t_value_len = 0;
-	uint32_t t_path_len = 0;
-	uint32_t t_domain_len = 0;
-	
-	uint32_t t_expires = 0;
-	
-	bool t_success = true;
-	
-	
-	t_value = ep.getsvalue().clone();
-	t_value_len = ep.getsvalue().getlength();
-	
-	t_success = (ES_NORMAL == name->eval(ep));
-	
-	if (t_success)
-	{
-		t_name = ep.getsvalue().clone();
-		t_name_len = ep.getsvalue().getlength();
-		if (expires != NULL)
-			t_success = expires->eval(ep);
-	}
-	if (t_success && expires)
-		t_success = ep.isempty() || MCU_stoui4(ep.getsvalue(), t_expires);
-	
-	if (t_success && path)
-	{
-		t_success = path->eval(ep);
-		if (t_success)
-		{
-			t_path = ep.getsvalue().clone();
-			t_path_len = ep.getsvalue().getlength();
-		}
-	}
-	
-	if (t_success && domain)
-	{
-		t_success = domain->eval(ep);
-		if (t_success)
-		{
-			t_domain = ep.getsvalue().clone();
-			t_domain_len = ep.getsvalue().getlength();
-		}
-	}
-		
-	if(t_success)
-		t_success = MCServerSetCookie(MCString(t_name, t_name_len), MCString(t_value, t_value_len), t_expires, MCString(t_path, t_path_len), MCString(t_domain, t_domain_len), is_secure, is_httponly);
-
-	MCCStringFree(t_name);
-	MCCStringFree(t_value);
-	MCCStringFree(t_path);
-	MCCStringFree(t_domain);
-
-	if (!t_success)
-	{
-		MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
-		return ES_ERROR;
-	}
-	ep.clear();
-	return ES_NORMAL;
-}
-#else // !defined(_SERVER)
-Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
-{
-	MCeerror->add(EE_PUT_CANTSET, line, pos);
-	return ES_ERROR;
-}
-#endif
-#endif
-
 MCQuit::~MCQuit()
 {
 	delete retcode;
@@ -1671,34 +1262,6 @@ Parse_stat MCQuit::parse(MCScriptPoint &sp)
 
 void MCQuit::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef LEGACY_EXEC
-// MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
-#ifndef _SERVER
-	switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-	{
-	case ES_PASS:
-	case ES_NOT_HANDLED:
-		break;
-	default:
-		return ES_NORMAL;
-	}
-	// IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
-	// here on Android in the same place as (almost) everything else
-	MCdefaultstackptr->getcard()->message(MCM_shut_down);
-#endif
-
-	if (retcode != NULL && retcode->eval(ep) == ES_NORMAL
-	        && ep.ton() == ES_NORMAL)
-		MCretcode = ep.getint4();
-	MCquit = True;
-	MCquitisexplicit = True;
-	MCexitall = True;
-	MCtracestackptr = NULL;
-	MCtraceabort = True;
-	MCtracereturn = True;
-	return ES_NORMAL;
-#endif
-
     integer_t t_retcode;
     if (!ctxt . EvalOptionalExprAsInt(retcode, 0, EE_UNDEFINED, t_retcode))
         return;
@@ -1745,99 +1308,6 @@ Parse_stat MCReset::parse(MCScriptPoint &sp)
 
 void MCReset::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCReset */ LEGACY_EXEC
-	switch (which)
-	{
-	case RT_CURSORS:
-		MCModeResetCursors();
-		break;
-	case RT_PAINT:
-		MCeditingimage = nil;
-
-		MCbrush = 8;
-		MCspray = 31;
-		MCeraser = 2;
-		MCcentered = False;
-		MCfilled = False;
-		MCgrid = False;
-		MCgridsize = 8;
-		MClinesize = 1;
-		MCmultiple = False;
-		MCmultispace = 1;
-		MCpattern = 1;
-		MCpolysides = 4;
-		MCroundends = False;
-		MCslices = 16;
-		MCmagnification = 8;
-
-		MCpatternlist->freepat(MCpenpattern);
-		MCpencolor.red = MCpencolor.green = MCpencolor.blue = 0x0;
-
-		MCpatternlist->freepat(MCbrushpattern);
-		MCbrushcolor.red = MCbrushcolor.green = MCbrushcolor.blue = 0xFFFF;
-		break;
-	case RT_PRINTING:
-		MCprinter -> Reset();
-		if (MCprinter != MCsystemprinter)
-		{
-			delete MCprinter;
-			MCprinter = MCsystemprinter;
-		}
-	break;
-	case RT_TEMPLATE_AUDIO_CLIP:
-		delete MCtemplateaudio;
-		MCtemplateaudio = new MCAudioClip;
-		break;
-	case RT_TEMPLATE_BUTTON:
-		delete MCtemplatebutton;
-		MCtemplatebutton = new MCButton;
-		break;
-	case RT_TEMPLATE_CARD:
-		delete MCtemplatecard;
-		MCtemplatecard = new MCCard;
-		break;
-	case RT_TEMPLATE_EPS:
-		delete MCtemplateeps;
-		MCtemplateeps = new MCEPS;
-		break;
-	case RT_TEMPLATE_FIELD:
-		delete MCtemplatefield;
-		MCtemplatefield = new MCField;
-		break;
-	case RT_TEMPLATE_GRAPHIC:
-		delete MCtemplategraphic;
-		MCtemplategraphic = new MCGraphic;
-		break;
-	case RT_TEMPLATE_GROUP:
-		delete MCtemplategroup;
-		MCtemplategroup = new MCGroup;
-		break;
-	case RT_TEMPLATE_IMAGE:
-		delete MCtemplateimage;
-		MCtemplateimage = new MCImage;
-		break;
-	case RT_TEMPLATE_SCROLLBAR:
-		delete MCtemplatescrollbar;
-		MCtemplatescrollbar = new MCScrollbar;
-		break;
-	case RT_TEMPLATE_PLAYER:
-		delete MCtemplateplayer;
-		MCtemplateplayer = new MCPlayer;
-		break;
-	case RT_TEMPLATE_STACK:
-		delete MCtemplatestack;
-		/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
-		break;
-	case RT_TEMPLATE_VIDEO_CLIP:
-		delete MCtemplatevideo;
-		MCtemplatevideo = new MCVideoClip;
-		break;
-	default:
-		break;
-	}
-	return ES_NORMAL;
-#endif /* MCReset */
-
     switch (which)
 	{
 		case RT_CURSORS:
@@ -1932,36 +1402,6 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 //   clear the result in this case. (see MCHandler::exec).
 void MCReturn::exec_ctxt(MCExecContext &ctxt)
 {
-#ifdef /* MCReturn */ LEGACY_EXEC
-	if (source->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_RETURN_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	MCresult -> store(ep, False);
-	if (url != NULL)
-	{
-		if (url->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_RETURN_BADEXP, line, pos);
-			return ES_ERROR;
-		}
-		MCurlresult -> store(ep, False);
-	}
-	else
-		if (var != NULL)
-		{
-			if (var->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_RETURN_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			MCurlresult->store(ep, False);
-			var->dofree(ep);
-		}
-
-	return ES_RETURN_HANDLER;
-#endif /* MCReturn */
 	MCAutoValueRef t_result;
 
     if (!ctxt . EvalExprAsValueRef(source, EE_RETURN_BADEXP, &t_result))
@@ -2055,25 +1495,6 @@ Parse_stat MCSet::parse(MCScriptPoint &sp)
 
 void MCSet::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCSet */ LEGACY_EXEC
-	if (value->eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_SET_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-	ep.grabsvalue();
-	MCresult->clear(False);
-	if (target->set
-	        (ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_SET_BADSET, line, pos, ep.getsvalue());
-		return ES_ERROR;
-	}
-	return ES_NORMAL;
-#endif /* MCSet */
-
     MCAutoValueRef t_value;
     if (!ctxt . EvalExprAsValueRef(value, EE_SET_BADEXP, &t_value))
         return;
@@ -2188,188 +1609,8 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, Sort_type p_direction, Sort_type p_form, MCExpression *p_by)
-{
-	MCSortnode *t_items;
-	uint4 t_item_count;
-	t_item_count = 0;
-
-	// If sorting items of the container, then we use the current itemDelimiter to split each item,
-	// all other forms of search default to the lineDelimiter for now. Note that this is a slight
-	// change of behavior as previously sorting containers by line ignored the lineDelimiter and
-	// always delimited by ascii 10.
-	char t_delimiter;
-	if (p_type == CT_ITEM)
-		t_delimiter = p_exec_point . getitemdel();
-	else
-		t_delimiter = p_exec_point . getlinedel();
-
-	if (t_delimiter == '\0')
-		return ES_NORMAL;
-
-	// Calculate the number of items we need to sort, store this in t_item_count.
-	uint4 t_item_size;
-	t_item_size = p_exec_point . getsvalue() . getlength();
-
-	char *t_item_text;
-	t_item_text = p_exec_point . getsvalue() . clone();
-
-	char *t_string_pointer;
-	t_string_pointer = t_item_text;
-
-	char *t_end_pointer;
-	bool t_trailing_delim = false;
-	while ((t_end_pointer = strchr(t_string_pointer, t_delimiter)) != NULL)
-	{
-		// knock out last delim for lines with a trailing return char
-		if (p_type != CT_ITEM && t_end_pointer[1] == '\0')
-		{
-			t_end_pointer[0] = '\0';
-			t_trailing_delim = true;
-		}
-		else
-			t_item_count++;
-		t_string_pointer = t_end_pointer + 1;
-	}
-
-	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
-	// this keeps the behavior consistent with previous versions of LiveCode.
-	if (t_item_count < 1)
-	{
-		delete t_item_text;
-		return ES_NORMAL;
-	}
-
-	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
-	t_items = new MCSortnode[t_item_count + 1];
-	t_item_count = 0;
-	t_string_pointer = t_item_text;
-
-	// Next, populate the MCSortnodes with all the items to be sorted
-	MCString t_string;
-	do
-	{
-		if ((t_end_pointer = strchr(t_string_pointer, t_delimiter)) != NULL)
-		{
-			*t_end_pointer++ = '\0';
-			t_string . set(t_string_pointer, t_end_pointer - t_string_pointer - 1);
-		}
-		else
-			t_string . set(t_string_pointer, strlen(t_string_pointer));
-
-		MCExecPoint t_exec_point2(p_exec_point);
-		additem(t_exec_point2, t_items, t_item_count, p_form, t_string, p_by);
-
-		t_items[t_item_count - 1] . data = (void *)t_string_pointer;
-		t_string_pointer = t_end_pointer;
-	}
-	while (t_end_pointer != NULL);
-
-	// Sort the array
-	MCU_sort(t_items, t_item_count, p_direction, p_form);
-
-	// Build the output string
-	char *t_output;
-	t_output = new char[t_item_size + 1];
-	*t_output = '\0';
-	
-	uint4 t_length;
-	t_length = 0;
-
-	for (unsigned int i = 0; i < t_item_count; i++)
-	{
-		uint4 t_item_length;
-		t_item_length = strlen((const char *)t_items[i] . data);
-		strncpy(&t_output[t_length], (const char *)t_items[i] . data, t_item_length);
-		t_length = t_length + t_item_length;
-
-		if ((p_form == ST_INTERNATIONAL || p_form == ST_TEXT) && (!p_exec_point . getcasesensitive() || p_by != NULL))
-			delete t_items[i] . svalue;
-
-		if (t_trailing_delim || i < t_item_count - 1)
-			t_output[t_length++] = t_delimiter;
-	}
-	t_output[t_length] = '\0';
-
-	p_exec_point . grabbuffer(t_output, t_length);
-
-	delete t_item_text;
-	delete t_items;
-	return ES_NORMAL;
-}
-#endif
-
 void MCSort::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCSort */ LEGACY_EXEC
-	if (of == NULL && chunktype == CT_FIELD)
-	{
-		MCeerror->add
-		(EE_SORT_NOTARGET, line, pos);
-		return ES_ERROR;
-	}
-	MCObject *optr = NULL;
-	uint4 parid;
-	if (of != NULL)
-	{
-		MCerrorlock++;
-		if (of->getobj(ep, optr, parid, False) != ES_NORMAL
-		        || optr->gettype() == CT_BUTTON)
-		{
-			MCerrorlock--;
-			if (of->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add
-				(EE_SORT_BADTARGET, line, pos);
-				return ES_ERROR;
-			}
-		}
-		else
-			MCerrorlock--;
-		if (optr != NULL && optr->gettype() > CT_GROUP && chunktype <= CT_GROUP)
-			chunktype = CT_LINE;
-	}
-	else
-		optr = MCdefaultstackptr;
-	if (chunktype == CT_CARD || chunktype == CT_MARKED)
-	{
-		MCStack *sptr = (MCStack *)optr;
-		if (optr == NULL || optr->gettype() != CT_STACK
-		        || sptr->sort(ep, direction, format, by,
-		                      chunktype == CT_MARKED) != ES_NORMAL)
-		{
-			MCeerror->add
-			(EE_SORT_CANTSORT, line, pos);
-			return ES_ERROR;
-		}
-	}
-	else
-	{
-		if (optr == NULL || optr->gettype() == CT_BUTTON)
-		{
-			if (sort_container(ep, chunktype, direction, format, by) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SORT_CANTSORT, line, pos);
-				return ES_ERROR;
-			}
-			of -> set(ep, PT_INTO);
-		}
-		else
-		{
-			MCField *fptr = (MCField *)optr;
-			if (optr->gettype() != CT_FIELD || !of->notextchunks()
-			        || fptr->sort(ep, parid, chunktype, direction,
-			                      format, by) != ES_NORMAL)
-			{
-				MCeerror->add
-				(EE_SORT_CANTSORT, line, pos);
-				return ES_ERROR;
-			}
-		}
-	}
-	return ES_NORMAL;
-#endif /* MCSort */
     
     MCObjectPtr t_object;
     MCAutoStringRef t_target;
@@ -2530,75 +1771,6 @@ Parse_stat MCWait::parse(MCScriptPoint &sp)
 
 void MCWait::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCWait */ LEGACY_EXEC
-	while (True)
-	{
-		MCU_play();
-		if (duration == NULL)
-		{
-			if (MCscreen->wait(MCmaxwait, messages, messages) || MCabortscript)
-			{
-				MCeerror->add(EE_WAIT_ABORT, line, pos);
-				return ES_ERROR;
-			}
-			break;
-		}
-		else
-		{
-			if (duration->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_WAIT_BADEXP, line, pos);
-				return ES_ERROR;
-			}
-			switch (condition)
-			{
-			case RF_FOR:
-				real8 delay;
-				if (ep.getreal8(delay, line, pos, EE_WAIT_NAN) != ES_NORMAL)
-					return ES_ERROR;
-				switch (units)
-				{
-				case F_MILLISECS:
-					delay /= 1000.0;
-					break;
-				case F_TICKS:
-					delay /= 60.0;
-					break;
-				default:
-					break;
-				}
-				if (MCscreen->wait(delay, messages, False))
-				{
-					MCeerror->add(EE_WAIT_ABORT, line, pos);
-					return ES_ERROR;
-				}
-				return ES_NORMAL;
-			case RF_UNTIL:
-				if (ep.getsvalue() == MCtruemcstring)
-					return ES_NORMAL;
-				if (MCscreen->wait(WAIT_INTERVAL, messages, True))
-				{
-					MCeerror->add(EE_WAIT_ABORT, line, pos);
-					return ES_ERROR;
-				}
-				break;
-			case RF_WHILE:
-				if (ep.getsvalue() == MCfalsemcstring)
-					return ES_NORMAL;
-				if (MCscreen->wait(WAIT_INTERVAL, messages, True))
-				{
-					MCeerror->add(EE_WAIT_ABORT, line, pos);
-					return ES_ERROR;
-				}
-				break;
-			default:
-				return ES_ERROR;
-			}
-		}
-	}
-	return ES_NORMAL;
-#endif /* MCWait */
-
     if (duration == NULL)
 		MCEngineExecWaitFor(ctxt, MCmaxwait, F_UNDEFINED, messages == True);
 
@@ -2687,36 +1859,6 @@ Parse_stat MCInclude::parse(MCScriptPoint& sp)
 
 void MCInclude::exec_ctxt(MCExecContext& ctxt)
 {	
-#ifdef /* MCInclude */ LEGACY_EXEC
-	if (filename -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror -> add(EE_INCLUDE_BADFILENAME, line, pos);
-		return ES_ERROR;
-	}
-
-#ifdef _SERVER
-	MCServerScript *t_script;
-	t_script = static_cast<MCServerScript *>(ep . getobj());
-
-	if (t_script -> GetIncludeDepth() > 16)
-	{
-		MCeerror -> add(EE_INCLUDE_TOOMANY, line, pos);
-		return ES_ERROR;
-	}
-	
-	if (!t_script -> Include(ep, ep . getcstring(), is_require))
-	{
-		MCeerror -> add(EE_SCRIPT_ERRORPOS, line, pos);
-		return ES_ERROR;
-	}
-	
-	return ES_NORMAL;
-#else
-	MCeerror -> add(is_require ? EE_REQUIRE_BADCONTEXT : EE_INCLUDE_BADCONTEXT, line, pos);
-	return ES_ERROR;
-#endif
-#endif /* MCInclude */
-
     MCAutoStringRef t_filename;
     if (!ctxt . EvalExprAsStringRef(filename, EE_INCLUDE_BADFILENAME, &t_filename))
         return;
@@ -2751,13 +1893,6 @@ Parse_stat MCEcho::parse(MCScriptPoint& sp)
 
 void MCEcho::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCEcho */ LEGACY_EXEC
-	if (!MCS_put(ep, kMCSPutBinaryOutput, data) != IO_NORMAL)
-		MCexitall = True;
-	
-	return ES_NORMAL;
-#endif /* MCEcho */
-
 	MCServerExecEcho(ctxt, data);
 	return;
 }
@@ -2825,50 +1960,6 @@ Parse_stat MCResolveImage::parse(MCScriptPoint &p_sp)
 
 void MCResolveImage::exec_ctxt(MCExecContext &ctxt)
 {
-#ifdef /* MCResolveImage */ LEGACY_EXEC
-    Exec_stat t_stat;
-    t_stat = ES_NORMAL;
-    
-    uint4 t_part_id;
-    MCObject *t_relative_object;
-    if (t_stat == ES_NORMAL)
-        t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
-    
-    if (t_stat == ES_NORMAL)
-        t_stat = m_id_or_name -> eval(p_ep);
-    
-    MCImage *t_found_image;
-    t_found_image = nil;
-    if (t_stat == ES_NORMAL)
-    {
-        if (m_is_id)
-        {
-            if (p_ep . ton() == ES_ERROR)
-            {
-                MCeerror -> add(EE_VARIABLE_NAN, line, pos);
-                return ES_ERROR;
-            }
-            
-            t_found_image = t_relative_object -> resolveimageid(p_ep . getuint4());
-        }
-        else
-        {
-            MCAutoStringRef t_name;
-            /* UNCHECKED */ p_ep . copyasstringref(&t_name);
-            t_found_image = t_relative_object -> resolveimagename(*t_name);
-        }
-        
-        if (t_found_image != nil)
-            t_stat = t_found_image -> getprop(0, P_LONG_ID, p_ep, False);
-        else
-            p_ep . clear();
-    }
-    
-    if (t_stat == ES_NORMAL)
-        t_stat = p_ep.getit() -> set(p_ep);
-    
-    return t_stat;
-#endif /* MCResolveImage */
     
     uint4 t_part_id;
     MCObject *t_relative_object;
@@ -2975,66 +2066,6 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 
 void MCAssertCmd::exec_ctxt(MCExecContext& ctxt)
 {
-#ifdef /* MCAssertCmd */ LEGACY_EXEC
-    Exec_stat t_stat;
-	t_stat = ES_NORMAL;
-	
-	t_stat = m_expr -> eval(ep);
-	
-	switch(m_type)
-	{
-		case TYPE_NONE:
-		case TYPE_TRUE:
-			// If the expression threw an error, then just throw.
-			if (t_stat != ES_NORMAL)
-				return ES_ERROR;
-			
-			// If the expression is true, we are done.
-			if (ep.getsvalue() == MCtruemcstring)
-				return ES_NORMAL;
-            break;
-            
-		case TYPE_FALSE:
-			// If the expression threw an error, then just throw.
-			if (t_stat != ES_NORMAL)
-				return ES_ERROR;
-			
-			// If the expression is not true, we are done. (this uses the same logic as if).
-			if (ep.getsvalue() != MCtruemcstring)
-				return ES_NORMAL;
-            break;
-            
-		case TYPE_SUCCESS:
-			if (t_stat == ES_NORMAL)
-				return ES_NORMAL;
-			break;
-            
-		case TYPE_FAILURE:
-			if (t_stat == ES_ERROR)
-				return ES_NORMAL;
-			break;
-			
-		default:
-			assert(false);
-			break;
-	}
-	
-	// Clear the execution error.
-	MCeerror -> clear();
-	
-	// Dispatch 'assertError <handler>, <line>, <pos>, <object>'
-	MCParameter t_handler, t_line, t_pos, t_object;
-	t_handler.setnameref_unsafe_argument(ep.gethandler()->getname());
-	t_handler.setnext(&t_line);
-	t_line.setn_argument((real8)line);
-	t_line.setnext(&t_pos);
-	t_pos.setn_argument((real8)pos);
-	t_pos.setnext(&t_object);
-	ep.getobj()->getprop(0, P_LONG_ID, ep, False);
-	t_object.sets_argument(ep.getsvalue());
-	
-	return ep.getobj() -> message(MCM_assert_error, &t_handler);
-#endif /* MCAssertCmd */
     
 	bool t_success, t_result;
     t_success = ctxt . EvalExprAsNonStrictBool(m_expr, EE_UNDEFINED, t_result);

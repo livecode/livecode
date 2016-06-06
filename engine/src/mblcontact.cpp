@@ -68,11 +68,6 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, 
 
 bool MCContactAddProperty(MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value)
 {
-#ifdef /* MCContactAddProperty */ LEGACY_EXEC
-	MCVariableValue *t_element;
-	return p_contact->lookup_element(ep, MCNameGetOldString(p_property), t_element) == ES_NORMAL &&
-    t_element->assign_string(p_value);
-#endif /* MCContactAddProperty */
    
     return MCArrayStoreValue(p_contact, false, p_property, p_value);
 }

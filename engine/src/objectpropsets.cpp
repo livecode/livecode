@@ -87,13 +87,6 @@ bool MCObjectPropertySet::createwithname(MCNameRef p_name, MCObjectPropertySet*&
 
 //////////
 
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::list(MCExecPoint& ep)
-{
-	return ep . listarraykeys(m_props, '\n');
-}
-#endif
-
 bool MCObjectPropertySet::list(MCStringRef& r_keys)
 {
     if (MCArrayListKeys(m_props, '\n', r_keys))
@@ -108,49 +101,16 @@ bool MCObjectPropertySet::clear(void)
 	return MCArrayCreateMutable(m_props);
 }
 
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::fetch(MCExecPoint& ep)
-{
-	return ep . setvalueref(m_props);
-}
-#endif
-
 bool MCObjectPropertySet::fetch(MCArrayRef& r_array)
 {
     return MCArrayCopy(m_props, r_array);
 }
-
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::store(MCExecPoint& ep)
-{
-	MCArrayRef t_new_props;
-	if (!ep . copyasarrayref(t_new_props))
-		return false;
-	MCValueRelease(m_props);
-	m_props = t_new_props;
-	return true;
-}
-#endif
 
 bool MCObjectPropertySet::store(MCArrayRef p_array)
 {
 	MCValueRelease(m_props);
     return MCArrayMutableCopy(p_array, m_props);
 }
-
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::fetchelement(MCExecPoint& ep, MCNameRef p_name)
-{
-	return ep . fetcharrayelement(m_props, p_name);
-}
-#endif
-
-#ifdef LEGACY_EXEC
-bool MCObjectPropertySet::storeelement(MCExecPoint& ep, MCNameRef p_name)
-{
-	return ep . storearrayelement(m_props, p_name);
-}
-#endif
 
 bool MCObjectPropertySet::fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value)
 {
@@ -291,120 +251,6 @@ bool MCObject::ensurepropset(MCNameRef p_name, bool p_empty_is_default, MCObject
 
 	return true;
 }
-
-#ifdef OLD_EXEC
-bool MCObject::setpropset(MCNameRef p_name)
-{
-	if (props == nil)
-		if (!MCObjectPropertySet::createwithname(kMCEmptyName, props))
-			return false;
-
-	if (props -> hasname(p_name))
-		return true;
-
-	MCObjectPropertySet *t_set;
-	t_set = props;
-	while(t_set -> getnext() != nil && !t_set -> getnext() -> hasname(p_name))
-		t_set = t_set -> getnext();
-
-	if (t_set -> getnext() == nil)
-	{
-		if (!MCObjectPropertySet::createwithname(p_name, t_set))
-			return false;
-
-		t_set -> setnext(props);
-		props = t_set;
-	}
-	else
-	{
-		MCObjectPropertySet *t_next_set;
-		t_next_set = t_set -> getnext();
-		t_set -> setnext(t_next_set -> getnext());
-		t_next_set -> setnext(props);
-		props = t_next_set;
-	}
-
-	return true;
-}
-
-void MCObject::listpropsets(MCExecPoint& ep)
-{
-	ep.clear();
-
-	MCObjectPropertySet *p = props;
-	uint2 j = 0;
-	while (p != NULL)
-	{
-		if (!p->hasname(kMCEmptyName))
-			ep.concatnameref(p->getname(), EC_RETURN, j++ == 0);
-		p = p->getnext();
-	}
-}
-
-bool MCObject::changepropsets(MCExecPoint& ep)
-{
-	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[ep.getsvalue().getlength() - 1] != '\n')
-		ep.appendnewline();
-	ep.appendnewline();
-	char *string = ep.getsvalue().clone();
-	char *eptr = string;
-	MCObjectPropertySet *newprops = NULL;
-	MCObjectPropertySet *newp = NULL;
-	while ((eptr = strtok(eptr, "\n")) != NULL)
-	{
-		MCAutoNameRef t_name;
-		/* UNCHECKED */ t_name . CreateWithCString(eptr);
-
-		MCObjectPropertySet *lp = NULL;
-		MCObjectPropertySet *p = props;
-		while (p != NULL && !p->hasname(t_name))
-		{
-			lp = p;
-			p = p->getnext();
-		}
-		if (p == NULL)
-			/* UNCHECKED */ MCObjectPropertySet::createwithname(t_name, p);
-		else
-		{
-			if (p == props)
-				props = props->getnext();
-			else
-				lp->setnext(p->getnext());
-			p->setnext(NULL);
-		}
-		if (newprops == NULL)
-			newprops = p;
-		else
-			newp->setnext(p);
-		newp = p;
-		eptr = NULL;
-	}
-	Boolean gotdefault = False;
-	while (props != NULL)
-	{
-		MCObjectPropertySet *sp = props->getnext();
-		if (props->hasname(kMCEmptyName))
-		{
-			props->setnext(newprops);
-			newprops = props;
-			gotdefault = True;
-		}
-		else
-			delete props;
-		props = sp;
-	}
-	if (!gotdefault && newprops != NULL)
-	{
-		/* UNCHECKED */ MCObjectPropertySet::createwithname(kMCEmptyName, props);
-		props->setnext(newprops);
-	}
-	else
-		props = newprops;
-	delete string;
-
-	return true;
-}
-#endif
 
 bool MCObject::clonepropsets(MCObjectPropertySet*& r_new_props) const
 {

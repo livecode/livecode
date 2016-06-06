@@ -174,60 +174,6 @@ Boolean MCColors::mup(uint2 which, bool p_release)
 	return True;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCColors::getprop */ LEGACY_EXEC
-	case P_SELECTED_COLOR:
-		MCColor color;
-		MCColorSetPixel(color, selectedcolor);
-		ep.setcolor(color);
-		break;
-#endif /* MCColors::getprop */ 
-	default:
-		return MCControl::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-
-Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	Boolean dirty = True;
-	MCString data = ep.getsvalue();
-
-	switch (p)
-	{
-#ifdef /* MCColors::setprop */ LEGACY_EXEC
-	case P_SELECTED_COLOR:
-	{
-		MCColor color;
-		char *colorname = NULL;
-		if (!MCscreen->parsecolor(data, &color, &colorname))
-		{
-			MCeerror->add
-			(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
-			return ES_ERROR;
-		}
-		if (colorname != NULL)
-			delete colorname;
-		selectedcolor = color.pixel;
-	}
-        break;
-#endif /* MCColors::setprop */
-	default:
-		return MCControl::setprop_legacy(parid, p, ep, effective);
-	}
-	if (dirty && opened)
-	{
-		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
-		layer_redrawall();
-	}
-	return ES_NORMAL;
-}
-#endif
-
 Boolean MCColors::count(Chunk_term type, MCObject *stop, uint2 &num)
 {
 	if (type == CT_COLOR_PALETTE || type == CT_LAYER)

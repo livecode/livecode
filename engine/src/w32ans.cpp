@@ -1007,56 +1007,6 @@ bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bo
 	return t_success;
 }
 
-#ifdef /* MCA_setdialogcolors */ LEGACY_EXEC
-void MCA_setcolordialogcolors(MCExecPoint& p_ep)
-{
-	const char * t_color_list;
-	t_color_list = p_ep.getcstring();
-    
-	if (t_color_list != NULL)
-	{
-		MCColor t_colors[16];
-		char *t_colornames[16];
-		int i;
-        
-		for (i = 0 ; i < 16 ; i++)
-			t_colornames[i] = NULL;
-        
-		MCscreen->parsecolors(t_color_list, t_colors, t_colornames, 16);
-        
-		for(i=0;i < 16;i++)
-		{
-			if (t_colors[i] . flags != 0)
-				s_colordialogcolors[i] = RGB(t_colors[i].red >> 8, t_colors[i].green >> 8,
-                                             t_colors[i].blue >> 8);
-			else
-				s_colordialogcolors[i] = NULL;
-            
-            delete t_colornames[i];
-		}
-        
-	}
-}
-#endif /* MCA_setdialogcolors */
-
-#ifdef /* MCA_getdialogcolors */ LEGACY_EXEC
-void MCA_getcolordialogcolors(MCExecPoint& p_ep)
-{
-	p_ep.clear();
-	MCExecPoint t_ep(p_ep);
-    
-	for(int i=0;i < 16;i++)
-	{
-		if (s_colordialogcolors[i] != 0)
-			t_ep.setcolor(GetRValue(s_colordialogcolors[i]), GetGValue(s_colordialogcolors[i]), GetBValue(s_colordialogcolors[i]));
-		else
-			t_ep.clear();
-        
-		p_ep.concatmcstring(t_ep.getsvalue(), EC_RETURN, i==0);
-	}
-}
-#endif /* MCA_getdialogcolors */
-
 void MCA_setcolordialogcolors(MCColor* p_colors, uindex_t p_count)
 {
     for(int i = 0; i < 16; i++)

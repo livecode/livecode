@@ -407,11 +407,6 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void applyrect(const MCRectangle &nrect);
 
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
 	virtual void select();
 	virtual void deselect();
 	virtual void undo(Ustruct *us);

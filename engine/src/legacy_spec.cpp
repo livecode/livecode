@@ -82,18 +82,6 @@ void MCS_getspecialfolder(MCExecPoint &ep)
 }
 #endif
 
-#ifdef LEGACY_EXEC
-void MCS_getentries(MCExecPoint& ep, bool p_files, bool p_detailed)
-{
-	MCAutoListRef t_list;
-	MCAutoStringRef t_string;
-	if (MCS_getentries(p_files, p_detailed, &t_list) && MCListCopyAsString(*t_list, &t_string))
-		/* UNCHECKED */ ep.setvalueref(*t_string);
-	else
-		ep . clear();
-}
-#endif
-
 Boolean MCS_exists(const char *path, Boolean file)
 {
 	MCAutoStringRef t_string;

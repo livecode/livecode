@@ -134,18 +134,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for SERVER mode.
 //
 
-#ifdef LEGACY_EXEC
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
-
 #ifdef _WINDOWS_SERVER
 MCSysWindowHandle MCStack::getrealwindow(void)
 {
@@ -203,33 +191,6 @@ void MCStack::mode_closeasmenu(void)
 void MCStack::mode_constrain(MCRectangle& rect)
 {
 }
-
-#ifdef LEGACY_EXEC
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCObject::mode_get/setprop for SERVER mode.
-//
-
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCProperty::mode_eval/mode_set for SERVER mode.
-//
-
-Exec_stat MCProperty::mode_set(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

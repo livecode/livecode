@@ -128,10 +128,6 @@ static uint2 shift_keysyms[] =
 		/* 0xD8 */ 0x0000, 0x0000, 0x0000, 0x007B, 0x007C, 0x007D, 0x0022
     };
 
-#ifdef LEGACY_EXEC
-static bool build_pick_string(MCExecPoint& p_ep, HMENU p_menu, UINT32 p_command);
-#endif
-
 void MCScreenDC::appendevent(MCEventnode *tptr)
 {
 	tptr->appendto(pendingevents);

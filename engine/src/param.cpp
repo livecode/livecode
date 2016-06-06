@@ -42,18 +42,6 @@ Parse_stat MCParameter::parse(MCScriptPoint &sp)
 }
 /////////
 
-#ifdef LEGACY_EXEC
-bool MCParameter::setoldstring_argument(const MCString& p_string)
-{
-	MCStringRef t_string_ref;
-	if (!MCStringCreateWithNativeChars((const char_t *)p_string . getstring(), p_string . getlength(), t_string_ref))
-		return false;
-	MCValueRelease(value);
-	value = t_string_ref;
-	return true;
-}
-#endif
-
 void MCParameter::setvalueref_argument(MCValueRef p_value)
 {
 	MCValueRef t_value;
@@ -112,16 +100,6 @@ void MCParameter::clear_argument(void)
 
 ////////
 
-#ifdef LEGACY_EXEC
-MCVariable *MCParameter::evalvar(MCExecPoint& ep)
-{
-	if (exp == NULL)
-		return NULL;
-
-    return exp -> evalvar(ep);
-}
-#endif
-
 MCVariable *MCParameter::evalvar(MCExecContext &ctxt)
 {
     if (exp == NULL)
@@ -129,21 +107,6 @@ MCVariable *MCParameter::evalvar(MCExecContext &ctxt)
 
     return exp -> evalvar(ctxt);
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCParameter::eval(MCExecPoint& ep)
-{
-	if (value != nil || exp == nil)
-		/* UNCHECKED */ ep . setvalueref_nullable(value);
-	else if (exp -> eval(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_PARAM_BADEXP, line, pos);
-		return ES_ERROR;
-	}
-
-	return ES_NORMAL;
-}
-#endif
 
 bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
@@ -180,16 +143,6 @@ bool MCParameter::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     
     return true;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
-{
-	if (exp == NULL)
-		return ES_ERROR;
-
-	return exp -> evalcontainer(ep, r_container);
-}
-#endif
 
 bool MCParameter::evalcontainer(MCExecContext &ctxt, MCContainer *&r_container)
 {
@@ -239,19 +192,6 @@ bool MCParameter::eval_argument_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     return true;
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCParameter::eval_argument(MCExecPoint& ep)
-{
-	if (var != NULL)
-		return var -> eval(ep);
-
-	if (ep . setvalueref_nullable(value))
-		return ES_NORMAL;
-
-	return ES_ERROR;
-}
-#endif
-
 MCVariable *MCParameter::eval_argument_var(void)
 {
 	return var;
@@ -281,17 +221,6 @@ void MCParameter::set_exec_argument(MCExecContext& ctxt, MCExecValue p_value)
 	MCExecTypeRelease(t_old_value);
 	var = NULL;
 }
-
-#ifdef LEGACY_EXEC
-void MCParameter::set_argument(MCExecPoint& ep)
-{
-	MCValueRef t_old_value;
-	t_old_value = value;
-	/* UNCHECKED */ ep . copyasvalueref(value);
-	MCValueRelease(t_old_value);
-	var = NULL;
-}
-#endif
 
 void MCParameter::set_argument_var(MCVariable* p_var)
 {

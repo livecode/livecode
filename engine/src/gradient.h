@@ -93,11 +93,6 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect);
 void MCGradientFillFree(MCGradientFill *gradient);
 MCGradientFill *MCGradientFillCopy(const MCGradientFill *p_gradient);
 
-#ifdef LEGACY_EXEC
-Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCExecPoint &ep, MCNameRef prop);
-Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCExecPoint &ep, MCNameRef prop, Boolean &dirty, MCRectangle rect);
-#endif
-
 bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient, MCExecValue& r_array);
 bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill* &x_gradient, MCRectangle rect, MCExecValue p_array, bool& r_dirty);
 bool MCGradientFillGetElement(MCExecContext& ctxt, MCGradientFill* p_gradient, MCNameRef p_prop, MCExecValue& r_value);

@@ -636,64 +636,6 @@ void MCHandlerlist::addhandler(Handler_type type, MCHandler *handler)
 	handlers[type - 1] . sort();
 }
 
-#ifdef LEGACY_EXEC
-static bool enumerate_handlers(MCExecPoint& ep, MCStringRef p_type, MCHandlerArray& p_handlers, bool p_first = false, MCObject *p_object = NULL)
-{
-	for(uint32_t j = 0; j < p_handlers . count(); ++j)
-	{
-		MCHandler *t_handler;
-		t_handler = p_handlers . get()[j];
-
-		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringFormat(&t_string, 
-										"%s%s%@ %@ %d %d", 
-										p_first ? "" : "\n",
-										t_handler->isprivate() ? "P" : "",
-										p_type,
-										t_handler->getname(),
-										t_handler->getstartline(),
-										t_handler->getendline());
-		
-		ep.concatstringref(*t_string, EC_NONE, p_first);
-
-		// OK-2008-07-23 : Add the object long id to the first handler from each object. This will
-		// allow the script editor to look up handlers faster.
-		if (p_first && p_object != NULL)
-		{
-			MCExecPoint t_ep;
-			MCExecContext t_ctxt(t_ep);
-			MCAutoStringRef t_long_id;
-			p_object -> GetLongId(t_ctxt, &t_long_id);
-			ep.concatstringref(*t_long_id, EC_SPACE, false);
-		}	
-
-		p_first = false;
-	}
-	
-	return p_first;
-}
-#endif 
-
-#ifdef LEGACY_EXEC
-bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
-{
-	// OK-2008-07-23 : Added parent object reference for script editor.
-	MCObject *t_object;
-	t_object = getparent();
-
-	p_first = enumerate_handlers(ep, MCSTR("M"), handlers[0], p_first, t_object);
-	p_first = enumerate_handlers(ep, MCSTR("F"), handlers[1], p_first, t_object);
-	p_first = enumerate_handlers(ep, MCSTR("G"), handlers[2], p_first, t_object);
-	p_first = enumerate_handlers(ep, MCSTR("S"), handlers[3], p_first, t_object);
-	
-	// MW-2012-09-07: [[ BeforeAfter ]] Make sure before/after appear in the handlerlist.
-	p_first = enumerate_handlers(ep, MCSTR("B"), handlers[4], p_first, t_object);
-	p_first = enumerate_handlers(ep, MCSTR("A"), handlers[5], p_first, t_object);
-	
-	return p_first;
-}
-#endif
-
 static const char *s_handler_types[] =
 {
     "M",

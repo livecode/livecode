@@ -1501,9 +1501,6 @@ public:
 
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
-#ifdef LEGACY_EXEC
-	static void evaluate(MCExecPoint&, bool working, bool plural, bool effective);
-#endif
 };
 
 class MCScreenType : public MCConstantFunctionCtxt<MCNameRef, MCLegacyEvalScreenType>

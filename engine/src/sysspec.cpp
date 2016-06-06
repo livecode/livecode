@@ -497,28 +497,6 @@ bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_t
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
-#ifdef LEGACY_EXEC
-/* LEGACY */
-void MCS_query_registry(MCExecPoint &dest)
-{
-	MCAutoStringRef t_key;
-	/* UNCHECKED */ dest.copyasstringref(&t_key);
-	MCAutoStringRef t_type, t_error;
-	MCAutoValueRef t_value;
-	/* UNCHECKED */ MCS_query_registry(*t_key, &t_value, &t_type, &t_error);
-	if (*t_error != nil)
-	{
-		dest.clear();
-		/* UNCHECKED */ MCresult->setvalueref(*t_error);
-	}
-	else
-	{
-		dest.setvalueref(*t_value);
-		MCresult->clear();
-	}
-}
-#endif
-
 bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error)
 {
     MCWindowsSystemServiceInterface *t_service;

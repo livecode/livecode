@@ -227,10 +227,6 @@ bool MCSystemSetReachabilityTarget(MCStringRef p_hostname)
 
 bool MCSystemGetReachabilityTarget(MCStringRef& r_reach_target)
 {
-#ifdef /* MCHandleReachabilityTarget */ LEGACY_EXEC
-	MCresult -> copysvalue(MCReachabilityGetTarget());
-	return ES_NORMAL;
-#endif /* MCHandleReachabilityTarget */
     r_reach_target = MCValueRetain(s_reach_target);
     
 	return true;

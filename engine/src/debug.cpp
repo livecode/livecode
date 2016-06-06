@@ -442,41 +442,7 @@ bool MCB_unparsebreaks(MCStringRef& r_value)
 
 	return t_success;
 }
-#ifdef LEGACY_EXEC
-void MCB_unparsebreaks(MCExecPoint& ep)
-{
-	ep.clear();
-	
-	// MW-2005-06-26: Fix breakpoint crash issue - ignore any breakpoints with NULL object
-	for (uint32_t i = 0 ; i < MCnbreakpoints ; i++)
-		if (MCbreakpoints[i] . object != NULL)
-		{
-			MCExecPoint ep2(ep);
-			MCbreakpoints[i].object->getprop(0, P_LONG_ID, ep2, False);
-			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == 0);
-			ep.concatuint(MCbreakpoints[i] . line, EC_COMMA, false);
-			if (!MCStringIsEmpty(MCbreakpoints[i].info))
-				ep.concatstringref(MCbreakpoints[i].info, EC_COMMA, false);
-		}
-}
-#endif
-#ifdef LEGACY_EXEC
-static MCObject *getobj(MCExecPoint& ep)
-{
-	MCObject *objptr = NULL;
-	MCChunk *tchunk = new MCChunk(False);
-	MCerrorlock++;
-	MCScriptPoint sp(ep);
-	if (tchunk->parse(sp, False) == PS_NORMAL)
-	{
-		uint4 parid;
-		tchunk->getobj(ep, objptr, parid, True);
-	}
-	MCerrorlock--;
-	delete tchunk;
-	return objptr;
-}
-#endif
+
 void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 {
 	MCB_clearbreaks(NULL);
@@ -567,77 +533,7 @@ void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input)
 		t_last_offset = t_return_offset + 1;
 	}
 }
-#ifdef LEGACY_EXEC 
-void MCB_parsebreaks(MCExecPoint& ep)
-{
-	MCB_clearbreaks(NULL);
-	
-	char *buffer = ep.getsvalue().clone();
-	char *eptr = buffer;
 
-	while ((eptr = strtok(eptr, "\n")) != NULL)
-	{
-		bool t_in_quote;
-		t_in_quote = false;
-		
-		// Find the end of the long id
-		char *line_ptr;
-		line_ptr = eptr;
-		while(*line_ptr != '\0')
-		{
-			if (t_in_quote)
-			{
-				if (*line_ptr == '"')
-					t_in_quote = false;
-			}
-			else
-			{
-				if (*line_ptr == '"')
-					t_in_quote = true;
-				else if (*line_ptr == ',')
-					break;
-			}
-			line_ptr++;
-		}
-
-		*line_ptr++ = '\0';
-		
-		char *info_ptr;
-		info_ptr = strchr(line_ptr, ',');
-		if (info_ptr != NULL)
-			*info_ptr++;
-			
-		MCObject *t_object;
-		ep.setsvalue(eptr);
-		t_object = getobj(ep);
-		
-		uint32_t t_line;
-		t_line = strtoul(line_ptr, NULL, 10);
-		
-		if (t_object != nil && t_line != 0)
-		{
-			Breakpoint *t_new_breakpoints;
-			t_new_breakpoints = (Breakpoint *)realloc(MCbreakpoints, sizeof(Breakpoint) * (MCnbreakpoints + 1));
-			if (t_new_breakpoints != nil)
-			{
-				MCbreakpoints = t_new_breakpoints;
-				MCbreakpoints[MCnbreakpoints] . object = t_object;
-				MCbreakpoints[MCnbreakpoints] . line = t_line;
-				MCStringRef t_info;
-				if (info_ptr != nil)
-					/* UNCHECKED */ MCStringCreateWithCString(info_ptr, t_info);
-				else
-					t_info = MCValueRetain(kMCEmptyString);
-				MCbreakpoints[MCnbreakpoints] . info = t_info;
-				MCnbreakpoints++;
-			}
-		}
-		
-		eptr = NULL;
-	}
-	delete buffer;
-}
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCB_clearwatches(void)

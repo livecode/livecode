@@ -148,9 +148,6 @@ public:
 	// MW-2012-03-04: [[ StackFile5500 ]] Measure the size of the serialized attributes.
 	uint32_t measureattrs(uint32_t p_version);
 
-#ifdef LEGACY_EXEC
-	void setatts(Properties which, void *value);
-#endif
 	Boolean getshift(int2 &out);
 	void setshift(int2 in);
 	Boolean getcolor(const MCColor *&color);

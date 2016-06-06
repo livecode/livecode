@@ -1786,67 +1786,6 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 }
 
 
-#ifdef LEGACY_EXEC
-Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
-                            char *cnames[], uint2 ncolors)
-{
-	uint2 offset = 0;
-	char *data = s.clone();
-	char *sptr = data;
-
-	while (*sptr && offset < ncolors)
-	{
-		char *tptr;
-		if ((tptr = strchr(sptr, '\n')) != NULL)
-			*tptr++ = '\0';
-		else
-			tptr = &sptr[strlen(sptr)];
-		if (strlen(sptr) != 0)
-		{
-			if (!parsecolor(sptr, &colors[offset], &cnames[offset]))
-			{
-				while (offset--)
-					if (cnames[offset] != NULL)
-						delete cnames[offset];
-				delete data;
-				return False;
-			}
-			colors[offset].flags = DoRed | DoGreen | DoBlue;
-		}
-		else
-		{
-			colors[offset].flags = 0;
-			cnames[offset] = NULL;
-		}
-		sptr = tptr;
-		offset++;
-	}
-	while (offset < ncolors)
-	{
-		colors[offset].flags = 0;
-		cnames[offset] = NULL;
-		offset++;
-	}
-	delete data;
-	return True;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Boolean MCUIDC::getcolors(MCExecPoint &ep)
-{
-		ep.setstaticcstring("fixed");
-		return True;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Boolean MCUIDC::setcolors(const MCString &values)
-{
-		return False;
-}
-#endif
-
 bool MCUIDC::getcolornames(MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
