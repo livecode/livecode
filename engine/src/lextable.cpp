@@ -1788,6 +1788,7 @@ LT factor_table[] =
         {"vc", TT_CHUNK, CT_VIDEO_CLIP},
         {"vcplayer", TT_PROPERTY, P_VC_PLAYER},
         {"vcs", TT_CLASS, CT_VIDEO_CLIP},
+        {"vectordotproduct", TT_FUNCTION, F_VECTOR_DOT_PRODUCT},
         {"version", TT_FUNCTION, F_VERSION},
         {"vgrid", TT_PROPERTY, P_VGRID},
         {"videoclip", TT_CHUNK, CT_VIDEO_CLIP},

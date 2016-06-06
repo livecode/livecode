@@ -53,6 +53,7 @@ MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayEncode, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, ArrayDecode, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, MatrixMultiply, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, TransposeMatrix, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Arrays, VectorDotProduct, 3)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsAnArray, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsNotAnArray, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, IsAmongTheKeysOf, 3)
@@ -1195,6 +1196,31 @@ void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayR
 		return;
 
 	ctxt.Throw();
+}
+
+void MCArraysEvalVectorDotProduct(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, double& r_result)
+{
+    double t_sum = 0.0;
+    
+    MCNameRef t_key;
+    MCValueRef t_value;
+    uintptr_t t_index = 0;
+    while (MCArrayIterate(p_left, t_index, t_key, t_value))
+    {
+        MCValueRef t_other_value;
+        double t_number, t_other_number;
+        if (!ctxt . ConvertToReal(t_value, t_number) ||
+            !MCArrayFetchValue(p_right, ctxt.GetCaseSensitive(), t_key, t_other_value) ||
+            !ctxt . ConvertToReal(t_other_value, t_other_number))
+        {
+            ctxt . LegacyThrow(EE_VECTORDOT_MISMATCH);
+            return;
+        }
+
+        t_sum += t_number * t_other_number;
+    }
+    
+    r_result = t_sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

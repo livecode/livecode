@@ -1757,6 +1757,8 @@ enum Parse_errors
 	// {PE-0569} replace: missing 'styles'
 	PE_REPLACE_NOSTYLES,
 	
+    // {PE-0570} vectordot: bad parameter
+    PE_VECTORDOT_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

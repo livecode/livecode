@@ -1083,3 +1083,38 @@ void MCStatRound::compile(MCSyntaxFactoryRef ctxt)
 	return ES_NORMAL;
 #endif /* MCTranspose */
 
+MCVectorDotProduct::~MCVectorDotProduct()
+{
+	delete first;
+	delete second;
+}
+
+Parse_stat MCVectorDotProduct::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	if (get2params(sp, &first, &second) != PS_NORMAL)
+	{
+		MCperror->add(PE_VECTORDOT_BADPARAM, sp);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+void MCVectorDotProduct::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
+{
+    MCAutoArrayRef t_src_array;
+    if (!ctxt . EvalExprAsArrayRef(first, EE_VECTORDOT_BADLEFT, &t_src_array))
+        return;
+	
+    MCAutoArrayRef t_dst_array;
+    if (!ctxt . EvalExprAsArrayRef(second, EE_VECTORDOT_BADRIGHT, &t_dst_array))
+        return;
+
+    MCArraysEvalVectorDotProduct(ctxt, *t_src_array, *t_dst_array, r_value . double_value);
+    r_value . type = kMCExecValueTypeDouble;
+}
+
+void MCVectorDotProduct::compile(MCSyntaxFactoryRef ctxt)
+{
+	compile_with_args(ctxt, kMCArraysEvalVectorDotProductMethodInfo, first, second);
+}

@@ -2709,7 +2709,16 @@ enum Exec_errors
 	EE_INVOKE_TOOMANYARGS,
     
     // {EE-0887} Stack: script only stacks can not be password protected
-    EE_SCRIPT_ONLY_STACK_NOPASSWORD
+    EE_SCRIPT_ONLY_STACK_NOPASSWORD,
+    
+    // {EE-0888} vectordot: error in first parameter
+    EE_VECTORDOT_BADLEFT,
+    
+    // {EE-0889} vectordot: error in second parameter
+    EE_VECTORDOT_BADRIGHT,
+    
+    // {EE-0890} vectordot: arrays are not key-wise compatible
+    EE_VECTORDOT_MISMATCH,
 };
 
 extern const char *MCexecutionerrors;
