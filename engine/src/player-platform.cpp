@@ -1152,6 +1152,14 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
     MCControl::timer(mptr, params);
 }
 
+void MCPlayer::toolchanged(Tool p_new_tool)
+{
+	if (p_new_tool != T_BROWSE && p_new_tool != T_HELP)
+		playpause(True);
+
+	MCControl::toolchanged(p_new_tool);
+}
+
 #ifdef LEGACY_EXEC
 Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
 {
