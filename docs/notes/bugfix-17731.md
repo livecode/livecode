@@ -1,0 +1,1 @@
+# Prevent anomalies when revert used in html5 standalone building
