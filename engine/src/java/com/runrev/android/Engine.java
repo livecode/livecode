@@ -1478,7 +1478,7 @@ public class Engine extends View implements EngineApi
         return m_sensor_module.stopTrackingRotationRate();
     }
 
-    public void onAccelerationChanged(float p_x, float p_y, float p_z, float p_timestamp)
+    public void onAccelerationChanged(float p_x, float p_y, float p_z, double p_timestamp)
     {
         doAccelerationChanged(p_x, p_y, p_z, p_timestamp);
         if (m_wake_on_event)
@@ -1493,7 +1493,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void onHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,
+    public void onHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, double p_timestamp,
                                  float p_x, float p_y, float p_z, float p_accuracy)
     {
         doHeadingChanged(p_heading, p_magnetic_heading, p_true_heading, p_timestamp, p_x, p_y, p_z, p_accuracy);
@@ -1501,7 +1501,7 @@ public class Engine extends View implements EngineApi
             doProcess(false);
     }
 
-    public void onRotationRateChanged(float p_x, float p_y, float p_z, float p_timestamp)
+    public void onRotationRateChanged(float p_x, float p_y, float p_z, double p_timestamp)
     {
         doRotationRateChanged(p_x, p_y, p_z, p_timestamp);
         if (m_wake_on_event)
@@ -3453,10 +3453,10 @@ public class Engine extends View implements EngineApi
 	
     // sensor handlers
     public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, double p_timestamp, float p_accuracy, double p_speed, double p_course);
-    public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,
+    public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, double p_timestamp,
                                                float p_x, float p_y, float p_z, float p_accuracy);
-	public static native void doAccelerationChanged(float x, float y, float z, float timestamp);
-	public static native void doRotationRateChanged(float x, float y, float z, float timestamp);
+	public static native void doAccelerationChanged(float x, float y, float z, double timestamp);
+	public static native void doRotationRateChanged(float x, float y, float z, double timestamp);
 
     // input event handlers
 	public static native void doBackPressed();
