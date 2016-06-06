@@ -2221,11 +2221,22 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		if (MCnoui)
 		{
             MCAutoPointer<char> t_mccmd;
-            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
+            if (!MCStringConvertToCString(MCcmd, &t_mccmd))
+                return ES_ERROR;
+            
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
-			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        *t_mccmd, line, pos);
+            
+            MCAutoValueRef t_object;
+            if (!names(P_NAME, &t_object))
+                return ES_ERROR;
+            
+            MCAutoPointer<char> t_object_name;
+            if (!MCStringConvertToCString((MCStringRef)*t_object, &t_object_name))
+                return ES_ERROR;
+            
+			fprintf(stderr, "%s: Script execution error at line %d, column %d in %s\n",
+			        *t_mccmd, line, pos, *t_object_name);
 		}
 		else
 			if (!send)
