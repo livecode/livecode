@@ -160,15 +160,6 @@ bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstance
 
 		    t_instance->slots[t_slot_index] = MCValueRetain(t_default);
 	    }
-	    
-	    /* Fill in all remaining slots with null values */
-        for(uindex_t i = 0; i < p_module -> slot_count; i++)
-        {
-	        if (nil == t_instance->slots[i])
-	        {
-		        t_instance -> slots[i] = MCValueRetain(kMCNull);
-	        }
-        }
 
         // If this is a module which shares its instance, then add a link to it.
         // (Note this is weak reference - we don't retain, otherwise we would have
@@ -550,8 +541,7 @@ MCScriptCheckedFetchFromVariableInInstance(MCScriptInstanceRef self,
     MCValueRef t_value;
     t_value = self -> slots[p_definition -> slot_index];
     
-    if (t_value == kMCNull &&
-        !MCTypeInfoIsOptional(self -> module -> types[p_definition -> type] -> typeinfo))
+    if (t_value == nil)
         return MCScriptThrowGlobalVariableUsedBeforeDefinedError(self -> module,
                                                                  p_definition);
     
@@ -874,9 +864,6 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
         return false;
     }
     
-    for(uindex_t i = 0; i < p_handler -> slot_count; i++)
-        self -> slots[i] = MCValueRetain(kMCNull);
-    
     self -> caller = p_caller;
     self -> instance = MCScriptRetainInstance(p_instance);
     self -> handler = p_handler;
@@ -901,23 +888,21 @@ MCScriptFrameInitializeParametersCaller(MCScriptFrame *self,
 	{
 		MCHandlerTypeFieldMode t_mode =
 			MCHandlerTypeInfoGetParameterMode(t_signature, i);
-
-		MCValueRef t_value;
-		if (t_mode != kMCHandlerTypeFieldModeOut)
-		{
-			t_value = self->caller->slots[p_arguments[i]];
-		}
-		else
-		{
-			t_value = kMCNull;
-		}
-
+        
+        if (t_mode != kMCHandlerTypeFieldModeIn)
+        {
+            t_needs_mapping = true;
+        }
+        
+		if (t_mode == kMCHandlerTypeFieldModeOut)
+        {
+            continue;
+        }
+        
+        MCValueRef t_value;
+        t_value = self->caller->slots[p_arguments[i]];
+		
 		MCValueAssign(self->slots[i], t_value);
-
-		if (t_mode != kMCHandlerTypeFieldModeIn)
-		{
-			t_needs_mapping = true;
-		}
 	}
 
 	if (t_needs_mapping)
@@ -946,15 +931,11 @@ MCScriptFrameInitializeParametersImmediate(MCScriptFrame *self,
 		MCHandlerTypeFieldMode t_mode =
 			MCHandlerTypeInfoGetParameterMode(t_signature, i);
 
+        if (t_mode == kMCHandlerTypeFieldModeOut)
+            continue;
+        
 		MCValueRef t_value;
-		if (t_mode != kMCHandlerTypeFieldModeOut)
-		{
-			t_value = p_arguments[i];
-		}
-		else
-		{
-			t_value = kMCNull;
-		}
+        t_value = p_arguments[i];
 
 		MCValueAssign(self->slots[i], t_value);
 	}
@@ -984,7 +965,7 @@ MCScriptFrameInitializeSlots(MCScriptFrame *self)
 
 		if (nil == t_default)
 		{
-			t_default = kMCNull;
+            continue;
 		}
 
 		MCValueAssign(self->slots[i], t_default);
@@ -1069,24 +1050,6 @@ static inline MCTypeInfoRef MCScriptGetRegisterTypeInFrame(MCScriptFrame *p_fram
     return nil;
 }
 
-static bool MCScriptGetRegisterTypeIsOptionalInFrame(MCScriptFrame *p_frame, uindex_t p_register)
-{
-    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
-                                        "register out of range on fetch register type is optional");
-    
-    MCTypeInfoRef t_type;
-    t_type = MCScriptGetRegisterTypeInFrame(p_frame, p_register);
-    
-    if (t_type == nil)
-        return true;
-    
-    MCResolvedTypeInfo t_resolved_type;
-    if (!MCTypeInfoResolve(t_type, t_resolved_type))
-        return true; /* RESOLVE UNCHECKED */
-    
-    return t_resolved_type . is_optional;
-}
-
 static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, uindex_t p_register)
 {
     /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
@@ -1124,8 +1087,7 @@ static bool MCScriptCheckedFetchFromRegisterInFrame(MCScriptFrame *p_frame, uind
     MCValueRef t_value;
     t_value = MCScriptFetchFromRegisterInFrame(p_frame, p_register);
     
-    if (t_value == kMCNull &&
-        !MCScriptGetRegisterTypeIsOptionalInFrame(p_frame, p_register))
+    if (t_value == nil)
         return MCScriptThrowLocalVariableUsedBeforeDefinedError(p_frame -> instance -> module, p_frame -> handler, p_register);
     
     r_value = t_value;
@@ -2017,7 +1979,8 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
                 continue;
             
             MCValueRef t_value;
-            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[j + 1]);
+            if (!MCScriptCheckedFetchFromRegisterInFrame(x_frame, p_arguments[j + 1], t_value))
+                return false;
             
             MCTypeInfoRef t_value_type, t_param_type;
             t_value_type = MCValueGetTypeInfo(t_value);
@@ -2160,20 +2123,23 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
-                t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_register);
+                t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_register, t_value);
                 
-                if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                if (t_success)
                 {
-                    if (t_value == kMCTrue)
-                        t_next_bytecode = t_bytecode + t_offset;
+                    if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                    {
+                        if (t_value == kMCTrue)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+                    {
+                        if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else
+                        t_success = MCScriptThrowNotABooleanError(t_value);
                 }
-                else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
-                {
-                    if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
-                        t_next_bytecode = t_bytecode + t_offset;
-                }
-                else
-                    t_success = MCScriptThrowNotABooleanError(t_value);
             }
             break;
             case kMCScriptBytecodeOpJumpIfFalse:
@@ -2185,20 +2151,23 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
-                t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_register);
+                t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_register, t_value);
                 
-                if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                if (t_success)
                 {
-                    if (t_value == kMCFalse)
-                        t_next_bytecode = t_bytecode + t_offset;
+                    if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                    {
+                        if (t_value == kMCFalse)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+                    {
+                        if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else
+                        t_success = MCScriptThrowNotABooleanError(t_value);
                 }
-                else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
-                {
-                    if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
-                        t_next_bytecode = t_bytecode + t_offset;
-                }
-                else
-                    t_success = MCScriptThrowNotABooleanError(t_value);
             }
             break;
             case kMCScriptBytecodeOpAssignConstant:
@@ -2273,10 +2242,9 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // Check that all out variables which should be defined are.
                 for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
-                    if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeOut)
+                    if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
                     {
-                        if (MCScriptFetchFromRegisterInFrame(t_frame, i) == kMCNull &&
-                            !MCScriptGetRegisterTypeIsOptionalInFrame(t_frame, i))
+                        if (MCScriptFetchFromRegisterInFrame(t_frame, i) == nil)
                             t_success = MCScriptThrowOutParameterNotDefinedError(t_frame -> instance -> module, t_frame -> handler, i);
                     }
                 

@@ -1098,7 +1098,10 @@ MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef self, MCScrip
     if (p_index < t_type -> parameter_name_count)
         return t_type -> parameter_names[p_index];
     
-    return t_handler -> local_names[p_index - t_type -> parameter_name_count];
+    if (p_index - t_type -> parameter_name_count < t_handler -> local_name_count)
+        return t_handler -> local_names[p_index - t_type -> parameter_name_count];
+    
+    return kMCEmptyName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
