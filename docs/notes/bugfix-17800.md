@@ -1,0 +1,1 @@
+# Ensure all parameters are included when using send script

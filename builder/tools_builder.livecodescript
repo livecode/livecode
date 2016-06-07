@@ -426,7 +426,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
             put tCertificatesFolder & "/runrev_bin.spc" into tSignParams["certificate"]
             put tCertificatesFolder & "/runrev.pvk" into tSignParams["privatekey"]
             put word 1 of url ("file:" & tCertificatesFolder & "/runrev_password.txt") into tSignParams["passphrase"]
-            put "http://timestamp.verisign.com/scripts/timstamp.dll" into tSignParams["timestamper"]
+            put "http://timestamp.comodoca.com/authenticode" into tSignParams["timestamper"]
             put "http://www.livecode.com" into tSignParams["url"]
             if pEdition is "Community" then
                put "LiveCode Community Installer" into tSignParams["description"]
