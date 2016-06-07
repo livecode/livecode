@@ -67,6 +67,7 @@ static const char *s_interface_native_types[] =
 	"boolean",
 	"c-string",
 	"c-data",
+	"lc-array",
 	"utf8-c-string",
 	"utf8-c-data",
     "utf16-c-string",
@@ -549,6 +550,7 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// RULE: default values not supported for c-data, objc-data, objc-dictionary, objc-array types
 	if (p_optional && p_default != nil &&
 		(t_native_type == kNativeTypeCData ||
+         t_native_type == kNativeTypeLCArray ||
          t_native_type == kNativeTypeObjcData ||
          t_native_type == kNativeTypeObjcArray ||
          t_native_type == kNativeTypeObjcDictionary))

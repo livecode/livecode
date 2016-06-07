@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "scriptpt.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -909,33 +909,6 @@ public:
 		return PS_NORMAL;
 	}
     
-#ifdef LEGACY_EXEC
-	Exec_stat exec(MCExecPoint& ep)
-	{
-		bool t_success;
-		t_success = true;
-
-		if (m_module -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
-
-		char *t_module;
-		t_module = ep . getsvalue() . clone();
-		
-		ep . clear();
-
-		State t_state;
-		t_state . module = t_module;
-		t_state . ep = &ep;
-		t_state . first = true;
-		MCSystemListProcesses(ListProcessCallback, &t_state);
-
-		MCresult -> set(ep);
-
-		delete t_module;
-
-		return ES_NORMAL;
-	}
-#endif
     
     void exec_ctxt(MCExecContext& ctxt)
 	{
@@ -1426,18 +1399,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
 //
 
-#ifdef LEGACY_EXEC
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
-
 void MCStack::mode_load(void)
 {
 }
@@ -1504,33 +1465,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 #endif
 
-
-#ifdef LEGACY_EXEC
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
-//
-
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCProperty::mode_eval/mode_set for INSTALLER mode.
-//
-
-Exec_stat MCProperty::mode_set(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

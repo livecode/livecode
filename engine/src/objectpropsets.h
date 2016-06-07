@@ -68,38 +68,19 @@ public:
 	//////////
 
 	// List the props in the property set into the ep.
-#ifdef LEGACY_EXEC
-    bool list(MCExecPoint& ep);
-#endif
     bool list(MCStringRef& r_keys);
 
 	// Clear the contents of the propset.
 	bool clear(void);
 
 	// Remove any props not in the list in ep.
-#ifdef LEGACY_EXEC
-//	bool restrict(MCExecPoint& ep);
-#endif
     /* WRAPPER */ bool restrict(MCStringRef p_string);
     
 	// Copy the prop set into the ep.
-#ifdef LEGACY_EXEC
-    bool fetch(MCExecPoint& ep);
-#endif
     bool fetch(MCArrayRef& r_array);
     
 	// Store the contents of the ep as the prop set.
-#ifdef LEGACY_EXEC
-    bool store(MCExecPoint& ep);
-#endif
     bool store(MCArrayRef p_array);
-
-#ifdef LEGACY_EXEC
-    // Fetch the given element of the property set into the ep.
-    bool fetchelement(MCExecPoint& ep, MCNameRef name);
-    // Store the contents of the ep as the given property.
-    bool storeelement(MCExecPoint& ep, MCNameRef name);
-#endif
 
     bool fetchelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef& r_value);
     bool storeelement(MCExecContext& ctxt, MCNameRef p_name, MCValueRef p_value);
