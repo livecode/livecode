@@ -1363,6 +1363,15 @@ end GitGetChangedFiles
 -- File helpers
 ----------------------------------------------------------------
 
+private command DeleteByteOrderMarks @xEncoded, pEncoding
+   local tBom
+   put textEncode(numToCodepoint(0xfeff), pEncoding) into tBom
+
+   if xEncoded begins with tBom then
+      delete byte 1 to (the number of bytes in tBom) of xEncoded
+   end if
+end DeleteByteOrderMarks
+
 private function FileGetBasename pPath
    set the itemdelimiter to slash
    put item -1 of pPath into pPath
@@ -1410,6 +1419,7 @@ private function FileGetContents pPath, pEncoding
    end if
    
    if pEncoding is not empty then
+      DeleteByteOrderMarks tContents, pEncoding
       put textDecode(tContents, pEncoding) into tContents
    end if
    
