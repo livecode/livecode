@@ -2206,7 +2206,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    
    put "dictionary" into tDataGridA["type"]
    
-   addToList tLCBDictionaryA, tLibrariesA
+   addToList tDataGridA, tLibrariesA
    
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
