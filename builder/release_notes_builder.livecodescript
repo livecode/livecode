@@ -259,6 +259,7 @@ end BaseReadFile
 
 private command BaseCreateUpdates
    MarkdownAppend "updates", merge("LiveCode [[sVersion]] is now available.") & return
+   MarkdownAppend "updates", merge("The full [[sVersion]] release notes are available on the LiveCode website.") & return
    MarkdownAppend "updates", "Changes in this release include:" & return
 end BaseCreateUpdates
 
