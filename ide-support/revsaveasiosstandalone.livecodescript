@@ -101,6 +101,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
       dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pStack, tSettings
    end if
    
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies tSettings
+   
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
    

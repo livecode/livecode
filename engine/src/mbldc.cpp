@@ -843,12 +843,6 @@ MCPrinter *MCScreenDC::createprinter(void)
 	return new MCDummyPrinter;
 }
 
-#ifdef LEGACY_EXEC
-void MCScreenDC::listprinters(MCExecPoint& ep)
-{
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCScreenDC::ownsselection(void)

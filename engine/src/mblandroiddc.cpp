@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -2891,7 +2891,7 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		
 		MCRunOnMainThreadHelper *t_helper;
 		t_helper = new MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
-		MCAndroidEngineCall("nativeNotify", "(II)V", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
+		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
 		return true;
 	}
 	

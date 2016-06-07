@@ -4,6 +4,19 @@
 #?author
 # Marcus van Houdt
 
+on libraryStack
+   initialise
+end libraryStack
+
+local sInitialised
+private command initialise
+   if sInitialised then
+      exit initialise
+   end if
+   
+   initialiseInclusionDependencies
+end initialise
+
 -- Some higher level wrappers..
 
 #?semantics
@@ -658,9 +671,6 @@ function revFolderNameMakeLegal pName
    return tLegalName
 end revFolderNameMakeLegal
 
-// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
-constant kPlatforms = "Windows,MacOSX x86-32,Linux"
-
 // List of all desktop target platforms + architecture
 constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
@@ -671,6 +681,16 @@ constant kAdditionalTargets = "iOS,Android,Emscripten"
 function revSBAdditionalTargets
    return kAdditionalTargets
 end revSBAdditionalTargets
+
+function revSBTargetToPlatform pTarget
+   if pTarget begins with "MacOSX" then
+      return "MacOSX"
+   else if pTarget begins with "Linux" then
+      return "Linux"
+   else
+      return pTarget
+   end if
+end revSBTargetToPlatform
 
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
@@ -685,6 +705,9 @@ constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
+
+// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
+constant kInitialTargets = "Windows,MacOSX x86-32,Linux"
 
 on revDefaultStandaloneSettings pStack
    local tStandaloneSettingsA,tPlatform,tName
@@ -728,9 +751,9 @@ on revDefaultStandaloneSettings pStack
    if tStandaloneSettingsA["UNIX,pageSetup"] = "" then put true into tStandaloneSettingsA["UNIX,pageSetup"]
    if tStandaloneSettingsA["UNIX,fileSelector"] = "" then put true into tStandaloneSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
-   repeat for each item tPlatform in kPlatforms
-      if tStandaloneSettingsA[tPlatform] = "" then 
-            put revEngineCheck(tPlatform) into tStandaloneSettingsA[tPlatform]
+   repeat for each item tTarget in kInitialTargets
+      if tStandaloneSettingsA[tTarget] = "" then 
+            put revEngineCheck(tTarget) into tStandaloneSettingsA[tTarget]
       end if
    end repeat
    
@@ -1738,11 +1761,17 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    end repeat
 end revSBConvertSettingsForPlatform
 
-command revSBResolveIncludedExternal pPlatform, @xFile
+function revSBIncludedExternalPath pTarget, pName
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   return revSBGetExternalPath(tPlatform, pName)
+end revSBIncludedExternalPath
+
+command revSBResolveIncludedExternal pTarget, @xFile
    -- Added to support mergExt inclusion
    if xFile begins with "!" then
       local tExtPath
-      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      put revSBIncludedExternalPath (pTarget, char 2 to -1 of xFile) into tExtPath
       -- if the file prefixed with ! was not a named external, treat normally
       if tExtPath is not empty then
          put tExtPath into xFile
@@ -1889,3 +1918,333 @@ function revSBListWidgetsInUse pStack
    end repeat
    return the keys of tWidgetKindsA
 end revSBListWidgetsInUse
+
+command revSBAddInclusion pInclusion, pKey, @xSettings
+   if pInclusion is among the lines of xSettings[pKey]  then
+      exit revSBAddInclusion
+   end if
+   
+   if xSettings[pKey] is not empty then put return after xSettings[pKey]
+   put pInclusion after xSettings[pKey]
+end revSBAddInclusion
+
+local sDependencies
+private command initialiseInclusionDependencies
+   // CEF requires revbrowser
+   put "Browser" into sDependencies["scriptLibraries"]["Browser (CEF)"]["scriptLibraries"]
+   
+   // Database drivers require revdb
+   local tDBName
+   repeat for each item tDatabaseDriver in revIDEDatabaseDriversMapping()
+      put word 2 to -1 of tDatabaseDriver into tDBName
+      put "Database" into sDependencies["databaseDrivers"][tDBName]["scriptLibraries"]
+   end repeat
+   
+   // XMLRPC requires revxml
+   put "XML" into sDependencies["scriptLibraries"]["XMLRPC"]["scriptLibraries"]
+end initialiseInclusionDependencies
+
+command revSBUpdateForDependencies @xSettings
+   local tDependencies
+   repeat for each key tDependentKey in sDependencies
+      repeat for each key tDependent in sDependencies[tDependentKey]
+         if tDependent is among the lines of xSettings[tDependentKey] then
+            put sDependencies[tDependentKey][tDependent] into tDependencies
+            repeat for each key tRequiredKey in tDependencies
+               repeat for each line tRequired in tDependencies[tRequiredKey]
+                  revSBAddInclusion tRequired, tRequiredKey, xSettings
+               end repeat
+            end repeat
+         end if
+      end repeat
+   end repeat
+end revSBUpdateForDependencies
+
+command revSBSanitiseExternalsList pTarget, @xExternals
+   local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put revSBAdditionalExternalsList(tPlatform) into tAvailableExternals
+   put revIDEExternalsMapping() into tFixedExternals
+   split tFixedExternals by comma and space
+   put the keys of tFixedExternals into tFixedExternals
+   
+   local tValid
+   repeat for each line tAddedExternal in xExternals
+      put false into tValid
+      if tAddedExternal is among the lines of tAvailableExternals then
+         put true into tValid
+      end if
+      
+      if tAddedExternal is among the lines of tFixedExternals then
+         put true into tValid
+      end if
+      
+      if tValid then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into xExternals
+end revSBSanitiseExternalsList
+
+------------------- SMART CHECKING --------------------
+
+local sPatternsA, sSearchInitialised
+on initialiseSearchForInclusions
+   if sSearchInitialised then
+      exit initialiseSearchForInclusions
+   end if
+   # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] The library autodetection uses various patterns to find library handlers being used.
+   # Geometry
+   put "cRevGeometry" into sPatternsA["Geometry"]["Property"]
+   put "scriptLibraries" into sPatternsA["Geometry"]["Key"]
+   
+   # Animation
+   put "cRevAnimation" into sPatternsA["Animation"]["Property"]
+   put "scriptLibraries" into sPatternsA["Animation"]["Key"]
+   
+   # Table
+   put "cRevTable" into sPatternsA["Table"]["Property"]
+   put "scriptLibraries" into sPatternsA["Table"]["Key"]
+   
+   # Database
+   put "cRevDatabase" into sPatternsA["Database"]["Property"]
+   put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
+   put "scriptLibraries" into sPatternsA["Database"]["Key"]
+   
+   # Internet
+   put "libUrl" into sPatternsA["Internet"]["Root"]
+   put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "scriptLibraries" into sPatternsA["Internet"]["Key"]
+   
+   # XML
+   put "revXML" into sPatternsA["XMLRPC"]["Root"]
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
+   put "scriptLibraries" into sPatternsA["XMLRPC"]["Key"]
+   
+   # Speech
+   put "revIsSpeaking,revSetSpeechPitch,revSetSpeechSpeed,revSetSpeechVoice,revSpeak,revSpeechVoices,revStopSpeech,revUnloadSpeech" into sPatternsA["Speech"]["Script"]
+   put "scriptLibraries" into sPatternsA["Speech"]["Key"]
+   
+   # Video Grabber
+   put "revCloseVideoGrabber,revInitializeVideoGrabber,revPreviewVideo,revRecordVideo,revSetVideoGrabberRect,revSetVideoGrabSettings,revStopPreviewingVideo,revStopRecordingVideo,revVideoFrameImage,revVideoGrabDialog,revVideoGrabIdle,revVideoGrabSettings" into sPatternsA["Video Grabber"]["Script"]
+   put "scriptLibraries" into sPatternsA["Video Grabber"]["Key"]
+   
+   # SSL & Encryption 
+   // AL-2015-04-28: [[ Bug 15288 ]] 'https' requires revsecurity.
+   put "secure,encrypt,decrypt,cipherNames,randomBytes,https" into sPatternsA["SSL & Encryption"]["Script"]
+   put "scriptLibraries" into sPatternsA["SSL & Encryption"]["Key"]
+   
+   # Printing
+   put "revPrintField,revPrintText,revShowPrintDialog" into sPatternsA["Printing"]["Script"]
+   put "scriptLibraries" into sPatternsA["Printing"]["Key"]
+   
+   # Browser
+   put "revBrowser,xBrowser" into sPatternsA["Browser"]["Script"]
+   put "scriptLibraries" into sPatternsA["Browser"]["Key"]
+   
+   # revFont
+   put "revFontLoad,revFontUnload"into sPatternsA["Font Support"]["Script"]
+   put "scriptLibraries" into sPatternsA["Font Support"]["Key"]
+   
+   # revZip
+   put "revZip" into sPatternsA["Revolution Zip"]["Script"]
+   put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
+   
+   repeat for each item tDBDriver in revIDEDatabaseDriversMapping()
+      local tDBName, tDB
+      put word 1 of tDBDriver into tDB
+      put word 2 to -1 of tDBDriver into tDBName
+      put "revOpenDatabase.*\(.*" & quote & tDB & quote & comma \
+            & "revdb_connect.*\(.*" & quote & tDB & quote into sPatternsA[tDBName]["Regex"]
+      put "databaseDrivers" into sPatternsA[tDBName]["Key"]
+   end repeat
+   
+   put true into sSearchInitialised
+end initialiseSearchForInclusions
+
+command revSearchForInclusions pStack, @xSettings
+   -- Ensure all properties and patterns are initialised
+   initialiseSearchForInclusions
+   revSmartChecking revGetStackFilesList(pStack), xSettings
+end revSearchForInclusions
+
+private command revSmartChecking pStackFilesList, @xSettings
+   local tNewSettings
+   put xSettings into tNewSettings
+   local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
+   local tFiles
+   revStandaloneProgress "Auto detecting library inclusions..."
+   lock screen
+   lock messages
+   
+   put empty into tNewSettings["scriptLibraries"]
+   put true into tNewSettings["cursors"]
+   put false into tNewSettings["answerDialog"]
+   put false into tNewSettings["askDialog"]
+   put false into tNewSettings["brushes"]   --LG-2007-12-13: Bug 4370
+   put false into tNewSettings["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
+   put false into tNewSettings["pdfPrinter"]
+   
+   # OK-2007-11-13 : Support for LiveCode print dialogs
+   put false into tNewSettings["revolutionPrintDialogs"]
+   
+   put empty into tNewSettings["databaseDrivers"]
+   put empty into tNewSettings["externals"]
+   
+   put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
+   put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
+   
+   repeat for each line tStackFile in pStackFilesList
+      put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
+      repeat for each line tStack in tStacksList
+         # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
+         if the password of stack tStack then
+            revStandaloneAddWarning "Could not auto-detect inclusions or security categories because stack is password protected"
+            exit revSmartChecking
+         end if
+         
+         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings
+         put the number of cards of stack tStack into tCardNum
+         repeat with tCard=1 to tCardNum
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings
+            put the number of controls of cd tCard of stack tStack into tControlNum
+            repeat with tControl = 1 to tControlNum
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings
+            end repeat
+         end repeat
+         repeat for each line tBg in the backgroundIDs of stack tStack
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings
+         end repeat
+      end repeat
+   end repeat
+   
+   -- Update the output settings
+   put tNewSettings into xSettings
+end revSmartChecking
+
+private command revCheckObject pObject,pUserLibraries, @xSettings
+   -- Should never get here if the stack is password protected
+   if the password of stack (revTargetStack(pObject)) then
+      exit revCheckObject
+   end if
+   
+   -- Keep the progress indicator updated
+   revStandaloneProgress "Auto detecting library inclusions..."
+   
+   # AL-2015-01-29: [[ Scriptify revSaveAsStandalone ]] Use script locals to check for library inclusions
+   local tProps, tLib, tProperty
+   put the customPropertySets of pObject into tProps
+   repeat for each key tLib in sPatternsA
+      local tSettingsKey
+      put sPatternsA[tLib]["Key"] into tSettingsKey
+      
+      # AL-2015-01-29: Don't search the script for handlers if this lib is already included
+      if tLib is among the lines of xSettings[tSettingsKey]  then
+         next repeat
+      end if
+      
+      repeat for each item tProperty in sPatternsA[tLib]["Property"]
+         if lineOffset(tProperty, tProps) is not 0 then
+            revSBAddInclusion tLib, tSettingsKey, xSettings
+            # AL-2015-01-29: If we are including this lib then go on to the next one
+            exit repeat
+         end if
+      end repeat
+   end repeat
+   
+   local tScript
+   put the script of pObject into tScript
+   
+   if tScript is not empty then
+      
+      repeat for each key tLib in sPatternsA
+         put sPatternsA[tLib]["Key"] into tSettingsKey
+         
+         # AL-2015-01-29: Don't search the script for handlers if this lib is already included
+         if tLib is among the lines of xSettings[tSettingsKey]  then
+            next repeat
+         end if
+         
+         local tHandler
+         repeat for each item tHandler in sPatternsA[tLib]["Script"]
+            if lineOffset(tHandler,tScript) is not 0 then
+               revSBAddInclusion tLib, tSettingsKey, xSettings
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
+            end if
+         end repeat
+         
+         # AL-2015-01-29: Don't search the script for roots if this lib is already included
+         if tLib is among the lines of xSettings[tSettingsKey]  then
+            next repeat
+         end if
+         
+         local tRoot
+         repeat for each item tRoot in sPatternsA[tLib]["Root"]
+            if lineOffset(tRoot,tScript) is not 0 then
+               revSBAddInclusion tLib, tSettingsKey, xSettings
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
+            end if
+         end repeat
+         
+         # Allow regex search patterns
+         local tRegex
+         repeat for each item tRegex in sPatternsA[tLib]["Regex"]
+            if matchText(tScript,tRegex) then
+               revSBAddInclusion tLib, tSettingsKey, xSettings
+               # AL-2015-01-29: If we are including this lib then go on to the next one
+               exit repeat
+            end if
+         end repeat
+      end repeat
+      
+      -- Detect widgets created in script
+      repeat for each key tWidget in revIDEExtensions("widget","installed", false)
+         if tWidget is among the lines of xSettings["extensions"] then
+            next repeat
+         end if
+         
+         if lineOffset(tWidget, tScript) is not 0 then
+            revSBAddInclusion tWidget, "extensions", xSettings
+         end if
+      end repeat
+      
+      -- Detect use of library extensions
+      local tHandlers
+      repeat for each key tLibrary in revIDEExtensions("library","installed", false) 
+         if tLibrary is among the lines of xSettings["extensions"] then
+            next repeat
+         end if
+         
+         put revIDEExtensionLibraryHandlers(tLibrary) into tHandlers
+         repeat for each line tHandler in tHandlers
+            if lineOffset(tHandler, tScript) is not 0 then
+               revSBAddInclusion tLibrary, "extensions", xSettings
+            end if
+         end repeat
+         
+      end repeat
+   end if
+   
+   local tInclusion, tSyntax
+   repeat for each item tItem in "answerDialog answer,askDialog ask,pdfPrinter open printing to pdf"
+      put word 1 of tItem into tInclusion
+      put word 2 to -1 of tItem into tSyntax
+      if not xSettings[tInclusion] and lineOffset(tSyntax, tScript) is not 0 then
+         put true into xSettings[tInclusion]
+      end if
+   end repeat
+   
+   # OK-2007-11-13 : Support for LiveCode print dialogs. The dialogs are included if there is any reference to systemPrintSelector in the script,
+   # or if we are building for linux. (This might include the files more often than they are required).
+   if offset("systemPrintSelector", tScript) is not 0 then
+      put true into xSettings["revolutionPrintDialogs"]
+   end if
+end revCheckObject
+

@@ -1,0 +1,1 @@
+# Fix incorrect Windows player rect on opening

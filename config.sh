@@ -275,7 +275,7 @@ WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
 # Android default settings and tools
 if test "${OS}" = "android" ; then
     ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
-    ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-10}
+    ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-17}
 
     # Attempt to locate an Android NDK
     if [ -z "${ANDROID_NDK}" -a "${OS}" = "android" ] ; then
@@ -399,6 +399,7 @@ case ${OS} in
     ;;
   win)
     invoke_gyp $basic_args "-Gmsvs_version=${WIN_MSVS_VERSION}" \
+                           "-Dunix_configure=1" \
                            "-Dperl=${WIN_PERL}" "$@"
     ;;
   mac|ios)

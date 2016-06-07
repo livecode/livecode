@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __COMMANDS_ANSWER_H
 
 #ifndef __EXECUTION_POINT_H
-//#include "execpt.h"
+
 #endif
 
 #ifndef __VARIABLE_H

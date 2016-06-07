@@ -113,11 +113,6 @@ public:
 	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
     
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.
 	virtual void select(void);
@@ -322,10 +317,6 @@ public:
 	MCRectangle qt_getpreferredrect(void);
 	uint2 qt_getloudness(void);
 	void qt_setloudness(uint2 loudn);
-#ifdef LEGACY_EXEC
-	void qt_gettracks(MCExecPoint& ep);
-	void qt_getenabledtracks(MCExecPoint& ep);
-#endif
     void qt_gettracks(MCStringRef &r_tracks);
     void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
     void qt_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
@@ -358,10 +349,6 @@ public:
 	MCRectangle avi_getpreferredrect(void);
 	uint2 avi_getloudness(void);
 	void avi_setloudness(uint2 loudn);
-#ifdef LEGACY_EXEC
-	void avi_gettracks(MCExecPoint& ep);
-	void avi_getenabledtracks(MCExecPoint& ep);
-#endif
     void avi_gettracks(MCStringRef &r_tracks);
     void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
     void avi_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
@@ -395,10 +382,6 @@ public:
 	void x11_playselection(Boolean play) {}
 	void x11_showcontroller(Boolean show) {}
     MCRectangle x11_getpreferredrect(void) { MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
-#ifdef LEGACY_EXEC
-	void x11_gettracks(MCExecPoint& ep) {}
-	void x11_getenabledtracks(MCExecPoint& ep) {}
-#endif
     void x11_gettracks(MCStringRef &r_tracks) { r_tracks = MCValueRetain(kMCEmptyString); }
     void x11_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) { r_count = 0; }
     void x11_setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id) {}

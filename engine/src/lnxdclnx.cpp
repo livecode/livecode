@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "sellst.h"
 #include "util.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "osspec.h"
 #include "stacklst.h"
@@ -781,7 +781,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent, Boolean& abort, B
                     gdk_window_resize(t_event->configure.window, t_new_width, t_new_height);
                 }                        
                 
-                MCdispatcher->configure(t_event->configure.window);
+                MCdispatcher->wreshape(t_event->configure.window);
                 break;
             }
                 

@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "util.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "param.h"
 #include "osspec.h"
@@ -127,10 +127,6 @@ static uint2 shift_keysyms[] =
 		/* 0xD0 */ 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 		/* 0xD8 */ 0x0000, 0x0000, 0x0000, 0x007B, 0x007C, 0x007D, 0x0022
     };
-
-#ifdef LEGACY_EXEC
-static bool build_pick_string(MCExecPoint& p_ep, HMENU p_menu, UINT32 p_command);
-#endif
 
 void MCScreenDC::appendevent(MCEventnode *tptr)
 {
@@ -1319,12 +1315,12 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (target->isiconic())
 					{
 						MCstacks->restack(target);
-						target->view_configure(true);
+						MCdispatcher->wreshape(dw);
 						target->uniconify();
 						SetWindowPos((HWND)target -> getwindow() -> handle . window, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 					}
 					else
-						target->view_configure(true);
+						MCdispatcher->wreshape(dw);
 				curinfo->handled = True;
 			}
 		}
@@ -1340,7 +1336,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		else
 		{
-			MCdispatcher->configure(dw);
+			MCdispatcher->wreshape(dw);
 			curinfo->handled = True;
 		}
 		break;

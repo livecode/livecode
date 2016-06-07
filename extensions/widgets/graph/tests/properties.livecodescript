@@ -49,3 +49,13 @@ on TestHilitedCoordinates
 	
 	TestAssert "set hilited coordinates interpolate x value", true
 end TestHilitedCoordinates
+
+-- Bug 17692
+on _TestEmptyGraphData
+	TestDiagnostic "SetEmptyGraphData"
+	set the graphData of sGraphID to empty
+end _TestEmptyGraphData
+on TestEmptyGraphData
+	TestAssertThrow "set graph data to empty", "_TestEmptyGraphData", \
+		the long id of me, 863 -- Error occurred in extension
+end TestEmptyGraphData

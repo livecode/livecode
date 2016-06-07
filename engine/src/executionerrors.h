@@ -2706,7 +2706,13 @@ enum Exec_errors
 	EE_INVOKE_TOOFEWARGS,
 	
 	// {EE-0886} call: too many arguments
-	EE_INVOKE_TOOMANYARGS
+	EE_INVOKE_TOOMANYARGS,
+    
+    // {EE-0887} Stack: script only stacks can not be password protected
+    EE_SCRIPT_ONLY_STACK_NOPASSWORD,
+    
+    // {EE-0888} revert: can't find stack
+    EE_REVERT_NOSTACK
 };
 
 extern const char *MCexecutionerrors;

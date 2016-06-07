@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "stack.h"
+#include "osspec.h"
 
 #include "graphics_util.h"
 #include "platform.h"
@@ -85,6 +86,9 @@ public:
 	bool StartTimer();
 	void StopTimer();
 
+	bool HasVideo();
+	bool HasAudio();
+
 protected:
 	virtual void Realize(void);
 	virtual void Unrealize(void);
@@ -114,6 +118,7 @@ private:
 	bool SetOffscreen(bool p_offscreen);
 	bool GetMirrored(bool &r_mirrored);
 	bool SetMirrored(bool p_mirrored);
+	bool GetMediaTypes(MCPlatformPlayerMediaTypes &r_types);
 
 	bool Play();
 	bool Pause();
@@ -132,6 +137,8 @@ private:
 	bool m_is_valid;
 	HWND m_video_window;
 	HWND m_event_window;
+
+	MCPlatformPlayerMediaTypes m_media_types;
 
 	bool m_play_selection;
 	MCPlatformPlayerDuration m_start_position;
@@ -217,7 +224,7 @@ LRESULT CALLBACK DSVideoWindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		{
 			MCWin32DSPlayer *t_player;
 			t_player = (MCWin32DSPlayer*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-			if (t_player != nil)
+			if (t_player != nil && t_player->HasVideo())
 				t_player->SetVideoWindowSize(LOWORD(lParam), HIWORD(lParam));
 			break;
 		}
@@ -326,10 +333,28 @@ bool MCWin32DSPlayer::HandleTimer()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
+{
+	if (t_type.cbFormat != 0)
+	{
+		CoTaskMemFree(t_type.pbFormat);
+		t_type.cbFormat = nil;
+		t_type.pbFormat = nil;
+	}
+	if (t_type.pUnk != nil)
+	{
+		t_type.pUnk->Release();
+		t_type.pUnk = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCWin32DSPlayer::MCWin32DSPlayer()
 {
 	m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
+	m_media_types = 0;
 	m_is_valid = false;
 
 	m_play_selection = false;
@@ -376,6 +401,93 @@ bool MCWin32DSPlayer::Initialize()
 	return true;
 }
 
+bool MCWin32DSPlayer::HasVideo()
+{
+	return 0 != (m_media_types & kMCPlatformPlayerMediaTypeVideo);
+}
+
+bool MCWin32DSPlayer::HasAudio()
+{
+	return 0 != (m_media_types & kMCPlatformPlayerMediaTypeAudio);
+}
+
+bool MCWin32DSPinIsConnected(IPin *p_pin)
+{
+	CComPtr<IPin> t_connected;
+	HRESULT t_result;
+	t_result = p_pin->ConnectedTo(&t_connected);
+	return t_result == S_OK;
+}
+
+bool MCWin3DSGetFilterGraphMediaTypes(IFilterGraph *p_graph, MCPlatformPlayerMediaTypes &r_types)
+{
+	bool t_success;
+	t_success = true;
+
+	MCPlatformPlayerMediaTypes t_types = 0;
+
+	CComPtr<IEnumFilters> t_enum_filters;
+	if (t_success)
+		t_success = SUCCEEDED(p_graph->EnumFilters(&t_enum_filters));
+
+	IBaseFilter *t_base_filter = nil;
+	while (t_success && S_OK == t_enum_filters->Next(1, &t_base_filter, nil))
+	{
+		CComPtr<IEnumPins> t_enum_pins;
+		if (t_success)
+			t_success = SUCCEEDED(t_base_filter->EnumPins(&t_enum_pins));
+
+		bool t_is_renderer = true;
+		MCPlatformPlayerMediaTypes t_filter_types = 0;
+
+		IPin *t_pin = nil;
+		while (t_success && S_OK == t_enum_pins->Next(1, &t_pin, nil))
+		{
+			PIN_DIRECTION t_direction;
+			bool t_connected;
+			
+			t_connected = MCWin32DSPinIsConnected(t_pin);
+
+			if (t_success)
+				t_success = SUCCEEDED(t_pin->QueryDirection(&t_direction));
+
+			if (t_success && t_connected)
+			{
+				if (t_direction == PINDIR_OUTPUT)
+					t_is_renderer = false;
+				else
+				{
+					AM_MEDIA_TYPE t_media_type;
+					MCMemoryClear(t_media_type);
+					t_success = SUCCEEDED(t_pin->ConnectionMediaType(&t_media_type));
+
+					if (t_success)
+					{
+						if (t_media_type.majortype == MEDIATYPE_Audio)
+							t_filter_types |= kMCPlatformPlayerMediaTypeAudio;
+						else if (t_media_type.majortype == MEDIATYPE_Video)
+							t_filter_types |= kMCPlatformPlayerMediaTypeVideo;
+
+						MCWin32DSFreeMediaType(t_media_type);
+					}
+				}
+			}
+
+			t_pin->Release();
+		}
+
+		// combine filter types with others if it is a renderer
+		if (t_is_renderer)
+			t_types |= t_filter_types;
+
+		t_base_filter->Release();
+	}
+
+	if (t_success)
+		r_types = t_types;
+	return t_success;
+}
+
 bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 {
 	bool t_success;
@@ -397,6 +509,10 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 			t_success = S_OK == p_graph->QueryInterface(&t_seeking); //IMediaSeeking
     }
 
+	MCPlatformPlayerMediaTypes t_types = 0;
+	if (t_success && p_graph != nil)
+		t_success = MCWin3DSGetFilterGraphMediaTypes(p_graph, t_types);
+
 	if (t_success)
 	{
         if (m_graph)
@@ -404,18 +520,19 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 			// clean up graph and related objects
             Stop();
 
-            CComQIPtr<IVideoWindow> t_video(m_graph);
-            if (t_video)
-            {
-                t_video->put_Visible(OAFALSE);
-                t_video->put_Owner(NULL);
-            }
+			if (HasVideo())
+			{
+				SetVisible(false);
+				SetVideoWindow(nil);
+			}
         }
 
 		m_graph = p_graph;
         m_event = t_event;
         m_control = t_control;
 		m_seeking = t_seeking;
+
+		m_media_types = t_types;
     }
     
 	return t_success;
@@ -464,7 +581,7 @@ bool MCWin32DSPlayer::SetEventWindow(HWND hwnd)
 	if (!m_graph)
 		return false;
 	CComQIPtr<IVideoWindow> pVideo(m_graph);
-	if (pVideo)	
+	if (pVideo && HasVideo())	
 		 pVideo->put_MessageDrain((OAHWND)hwnd);
     if (m_event)
     {
@@ -497,12 +614,70 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 	if (t_success)
 		t_success = S_OK == t_graph.CoCreateInstance(CLSID_FilterGraph);
 
+	MCAutoStringRef t_native_filename;
+	if (t_success)
+		t_success = MCS_pathtonative(p_filename, &t_native_filename);
+
 	MCAutoCustomPointer<OLECHAR, MCWin32BSTRFree> t_filename;
 	if (t_success)
-		t_success = MCStringConvertToBSTR(p_filename, &t_filename);
+		t_success = MCStringConvertToBSTR(*t_native_filename, &t_filename);
+
+	CComPtr<IBaseFilter> t_source_filter;
 
 	if (t_success)
-		t_success = S_OK == t_graph->RenderFile(*t_filename, nil);
+	{
+		// Attempt to load using WM ASF Reader first as this has better support for some formats (mp3) than the
+		//    source filter selected by the graph builder.
+		bool t_asf_success = true;
+
+		CComPtr<IFileSourceFilter> t_asf_reader;
+		t_asf_success = SUCCEEDED(t_asf_reader.CoCreateInstance(CLSID_WMAsfReader));
+
+		if (t_asf_success)
+			t_asf_success = SUCCEEDED(t_asf_reader->Load(*t_filename, NULL));
+
+		HRESULT t_result;
+		if (t_asf_success)
+		{
+			CComQIPtr<IBaseFilter> t_base_filter(t_asf_reader);
+			t_asf_success = t_base_filter != nil;
+
+			if (t_asf_success)
+			{
+				t_result = t_graph->AddFilter(t_base_filter, L"MCWin32DSASFReaderFilter");
+				t_asf_success = SUCCEEDED(t_result);
+			}
+		}
+
+		if (t_asf_success)
+			t_source_filter = t_asf_reader;
+	}
+
+	// FALLBACK: Allow the graph builder to select the source filter.
+	if (t_success && t_source_filter == nil)
+		t_success = SUCCEEDED(t_graph->AddSourceFilter(*t_filename, L"MCWin32DSSourceFilter", &t_source_filter));
+
+	CComPtr<IEnumPins> t_enum_pins;
+	if (t_success)
+		t_success = SUCCEEDED(t_source_filter->EnumPins(&t_enum_pins));
+
+	if (t_success)
+	{
+		// Ask the graph builder to render each output pin of the source filter.
+		IPin *t_pin;
+		while (t_success && S_OK == t_enum_pins->Next(1, &t_pin, NULL))
+		{
+			PIN_DIRECTION t_direction;
+			t_success = SUCCEEDED(t_pin->QueryDirection(&t_direction));
+
+			if (t_success && t_direction == PINDIR_OUTPUT)
+			{
+				t_success = SUCCEEDED(t_graph->Render(t_pin));
+			}
+
+			t_pin->Release();
+		}
+	}
 
 	if (t_success)
 		t_success = SetFilterGraph(t_graph);
@@ -532,6 +707,12 @@ void MCWin32DSPlayer::StopTimer()
 
 bool MCWin32DSPlayer::GetFormattedSize(uint32_t &r_width, uint32_t &r_height)
 {
+	if (!HasVideo() && HasAudio())
+	{
+		r_width = r_height = 0;
+		return true;
+	}
+
     CComQIPtr<IBasicVideo> pVideo(m_graph);
     if (pVideo == nil)
 		return false;
@@ -558,13 +739,13 @@ bool MCWin32DSPlayer::SetUrl(MCStringRef p_url)
 	if (t_success)
 		t_success = OpenFile(p_url);
 
-	if (t_success)
+	if (t_success && HasVideo())
 		t_success = SetVideoWindow(m_video_window);
 
 	if (t_success)
 		t_success = SetEventWindow(m_event_window);
 
-	if (t_success)
+	if (t_success && HasVideo())
 		t_success = SetVisible(true);
 
 	if (!t_success)
@@ -839,6 +1020,12 @@ bool MCWin32DSPlayer::SetMirrored(bool p_mirrored)
 	return false;
 }
 
+bool MCWin32DSPlayer::GetMediaTypes(MCPlatformPlayerMediaTypes &r_types)
+{
+	r_types = m_media_types;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 //play
@@ -1092,6 +1279,14 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 		}
 
 	case kMCPlatformPlayerPropertyMediaTypes:
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerMediaTypes);
+			MCPlatformPlayerMediaTypes t_types;
+			if (GetMediaTypes(t_types))
+				*((MCPlatformPlayerMediaTypes*)r_value) = t_types;
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyURL:
 		MCLog("UNIMPLEMENTED");
 		break;
@@ -1197,8 +1392,6 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 			break;
 		}
 
-	case kMCPlatformPlayerPropertyMediaTypes:
-	
 	case kMCPlatformPlayerPropertyMarkers:
 	case kMCPlatformPlayerPropertyLoadedTime:
     

@@ -193,6 +193,9 @@ enum MCShadowedItemTags
 
 - (void)menuItemSelected: (id)sender
 {
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
     NSMenuItem *t_item;
     t_item = (NSMenuItem *)sender;
     
@@ -324,7 +327,10 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-	// IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
+    if ([NSApp pseudoModalFor] != nil)
+        return;
+    
+    // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
 	//    to allow shutdown in orderly fashion.
 	bool t_shutdown;
 	MCPlatformCallbackSendApplicationShutdownRequest(t_shutdown);
