@@ -157,6 +157,7 @@ extern "C" void EmitFetch(long reg, long var, long level);
 extern "C" void EmitStore(long reg, long var, long level);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
+extern "C" void EmitReset(long reg);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
 extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
@@ -1654,6 +1655,13 @@ void EmitReturnNothing(void)
     MCScriptEmitReturnUndefinedInModule(s_builder);
 
     Debug_Emit("ReturnUndefined()", 0);
+}
+
+void EmitReset(long reg)
+{
+    MCScriptEmitResetInModule(s_builder, reg);
+    
+    Debug_Emit("Reset()", 0);
 }
 
 ////////

@@ -566,6 +566,12 @@ enum MCScriptBytecodeOp
 	// are used, pair-wise, to build an array. (This will be replaced by an invoke
 	// when variadic bindings are implemented).
 	kMCScriptBytecodeOpAssignArray,
+    
+    // Slot resetting
+    //   reset <reg_1>, ..., <reg_n>
+    // Initializes the given slots to default values, if the type of the slot
+    // has a default, otherwise makes the slot unassigned.
+    kMCScriptBytecodeOpReset,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);

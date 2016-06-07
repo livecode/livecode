@@ -943,37 +943,6 @@ MCScriptFrameInitializeParametersImmediate(MCScriptFrame *self,
 	return true;
 }
 
-static bool
-MCScriptFrameInitializeSlots(MCScriptFrame *self)
-{
-	MCTypeInfoRef t_signature = MCScriptGetSignatureForFrame(self);
-	uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
-
-	for (uindex_t i = t_param_count; i < self->handler->slot_count; ++i)
-	{
-		MCTypeInfoRef t_slot_type = nil;
-		if (i < t_param_count + self->handler->local_type_count)
-		{
-			t_slot_type = self->instance->module->types[self->handler->local_types[i - t_param_count]]->typeinfo;
-		}
-
-		MCValueRef t_default = nil;
-		if (nil != t_slot_type)
-		{
-			t_default = MCTypeInfoGetDefault(t_slot_type);
-		}
-
-		if (nil == t_default)
-		{
-            continue;
-		}
-
-		MCValueAssign(self->slots[i], t_default);
-	}
-
-	return true;
-}
-
 static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *self)
 {
     MCScriptFrame *t_caller;
@@ -1078,7 +1047,11 @@ static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, uindex
     if (p_frame -> slots[p_register] != p_value)
     {
         MCValueRelease(p_frame -> slots[p_register]);
-        p_frame -> slots[p_register] = MCValueRetain(p_value);
+        
+        if (p_value != nil)
+            MCValueRetain(p_value);
+        
+        p_frame -> slots[p_register] = p_value;
     }
 }
 
@@ -1159,8 +1132,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
         return false;
 
 	if (!MCScriptFrameInitializeParametersCaller(t_callee,
-	                                             p_arguments, p_arity) ||
-	    !MCScriptFrameInitializeSlots(t_callee))
+	                                             p_arguments, p_arity))
 	{
 		MCScriptDestroyFrame(t_callee);
 		return false;
@@ -2075,8 +2047,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     if (!MCScriptCreateFrame(nil, self, p_handler, t_frame))
         return false;
 
-    if (!MCScriptFrameInitializeParametersImmediate(t_frame, p_arguments, p_argument_count) ||
-        !MCScriptFrameInitializeSlots(t_frame))
+    if (!MCScriptFrameInitializeParametersImmediate(t_frame, p_arguments, p_argument_count))
     {
 	    MCScriptDestroyFrame(t_frame);
 	    return false;
@@ -2586,6 +2557,30 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				}
 			}
 			break;
+            case kMCScriptBytecodeOpReset:
+            {
+                for(uindex_t t_arg = 0; t_success && t_arg < t_arity; t_arg += 1)
+                {
+                    MCTypeInfoRef t_type =
+                        MCScriptGetRegisterTypeInFrame(t_frame, t_arguments[t_arg]);
+                    
+                    // If there is no type attached to the slot, then the creation
+                    // makes it unassigned.
+                    MCValueRef t_default_value = nil;
+                    if (t_type != nil)
+                    {
+                        t_default_value = MCTypeInfoGetDefault(t_type);
+                    }
+                    
+                    // Assign to the slot. Notice that we don't do a 'checked'
+                    // store, this is because we might be making the slot unassigned
+                    // and we already know the type conforms.
+                    MCScriptStoreToRegisterInFrame(t_frame,
+                                                   t_arguments[t_arg],
+                                                   t_default_value);
+                }
+            }
+            break;
         }
         
         // If we failed, then make sure the frame address is up to date.

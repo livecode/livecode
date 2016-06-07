@@ -240,6 +240,7 @@
     EmitStore
     EmitReturn
     EmitReturnNothing
+    EmitReset
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
@@ -613,6 +614,7 @@
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitReset(Register: INT)
 'action' EmitPosition(Position: POS)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)

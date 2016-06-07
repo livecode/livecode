@@ -366,6 +366,7 @@ void MCScriptContinueInvokeInModule(MCScriptModuleBuilderRef builder, uindex_t a
 void MCScriptEndInvokeInModule(MCScriptModuleBuilderRef builder);
 void MCScriptEmitFetchInModule(MCScriptModuleBuilderRef builder, uindex_t dst_reg, uindex_t index, uindex_t level);
 void MCScriptEmitStoreInModule(MCScriptModuleBuilderRef builder, uindex_t src_reg, uindex_t index, uindex_t level);
+void MCScriptEmitResetInModule(MCScriptModuleBuilderRef builder, uindex_t reg);
 
 void MCScriptEmitPositionInModule(MCScriptModuleBuilderRef builder, MCNameRef file, uindex_t line);
 

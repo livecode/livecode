@@ -383,6 +383,11 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
 		                    t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
 	                    }
 	                    break;
+                    case kMCScriptBytecodeOpReset:
+                        // create <reg_1>, ..., <reg_n>
+                        for(uindex_t j = 0; j < t_arity; j++)
+                            t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
+                        break;
                 }
             }
             

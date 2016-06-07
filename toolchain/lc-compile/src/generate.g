@@ -665,6 +665,7 @@
         Info'Index -> DefIndex
         EmitVariableDefinition(DefIndex, Position, Name, TypeIndex)
 
+
     'rule' GenerateDefinitions(handler(Position, _, Id, Signature:signature(Parameters, _), _, Body)):
         GenerateType(handler(Position, normal, Signature) -> TypeIndex)
         
@@ -808,12 +809,17 @@
 
 'action' GenerateParameters(PARAMETERLIST)
 
-    'rule' GenerateParameters(parameterlist(parameter(_, _, Id, Type), Rest)):
+    'rule' GenerateParameters(parameterlist(parameter(Position, Mode, Id, Type), Rest)):
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
         GenerateType(Type -> TypeIndex)
         EmitHandlerParameter(Name, TypeIndex -> Index)
         Info'Index <- Index
+        [|
+            where(Mode -> out)
+            EmitPosition(Position)
+            EmitReset(Index)
+        |]
         GenerateParameters(Rest)
 
     'rule' GenerateParameters(nil):
@@ -870,6 +876,8 @@
         GenerateType(Type -> TypeIndex)
         EmitHandlerVariable(Name, TypeIndex -> Index)
         Info'Index <- Index
+        EmitPosition(Position)
+        EmitReset(Index)
     
     'rule' GenerateBody(Result, Context, if(Position, Condition, Consequent, Alternate)):
         EmitDeferLabel(-> AlternateLabel)
