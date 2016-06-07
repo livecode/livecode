@@ -1108,7 +1108,7 @@ private command V1BugGenerate pBugInfo, pBugCategory
    GitSortTags tTags
    
    local tVersion, tBugs, tCurrent, tLine, tId, tDesc, tUrl
-   local tPrettyVersion
+   local tPrettyVersion, tBugCount
    
    put the number of lines in tTags into tTagCount
    repeat tTagCount times
@@ -1141,12 +1141,20 @@ private command V1BugGenerate pBugInfo, pBugCategory
          
          MarkdownAppend "notes", "<tr><td><a href=" & quote & tUrl & quote & ">" & tId & "</a>" & \
                "</td><td>" & tDesc & "</td></tr>"
+         
+         add 1 to tBugCount
       end repeat
       
       MarkDownAppend "notes", "</table>"
       
       subtract 1 from tTagCount
    end repeat
+   
+   if tBugCount is 1 then
+      MarkDownAppend "updates", merge("1 [[pBugCategory]] bug fix.")
+   else if tBugCount > 1 then
+      MarkDownAppend "updates", merge("[[tBugCount]] [[pBugCategory]] bug fixes.")
+   end if
 end V1BugGenerate
 
 private command V2BugGenerate pBugInfo, pBugCategory
