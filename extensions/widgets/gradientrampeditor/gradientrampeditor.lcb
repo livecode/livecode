@@ -493,6 +493,7 @@ private handler paintRampEditors() returns nothing
    put false into tHasSelected
    variable tStopIndex as Integer
    put 1 into tStopIndex
+   variable tSelStop as GradientStop
 
    variable tStop as GradientStop
    repeat for each element tStop in mGradientRamp
@@ -500,7 +501,6 @@ private handler paintRampEditors() returns nothing
       put the bottom of mGradientRectangle into tY
 
       if tStopIndex = mCurrentlySelectedStopIndex then
-         variable tSelStop as GradientStop
          put true into tHasSelected
          put  tStop into tSelStop
          add 1 to tStopIndex

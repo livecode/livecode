@@ -5,37 +5,37 @@ group: reference
 # LiveCode Builder Language Reference
 
 ## Introduction
-LiveCode Builder is a variant of the current LiveCode scripting language 
-(LiveCode Script) which has been designed for 'systems' building. It is 
-statically compiled with optional static typing and direct foreign code 
+LiveCode Builder is a variant of the current LiveCode scripting language
+(LiveCode Script) which has been designed for 'systems' building. It is
+statically compiled with optional static typing and direct foreign code
 interconnect (allowing easy access to APIs written in other languages).
 
-Unlike most languages, LiveCode Builder has been designed around the 
-idea of extensible syntax. Indeed, the core language is very small - 
-comprising declarations and control structures - with the majority of 
+Unlike most languages, LiveCode Builder has been designed around the
+idea of extensible syntax. Indeed, the core language is very small -
+comprising declarations and control structures - with the majority of
 the language syntax and functionality being defined in modules.
 
-> **Note:** It is an eventual aim that control structures will also be 
+> **Note:** It is an eventual aim that control structures will also be
 > extensible, however this is not the case in the current incarnation).
 
-The syntax will be familiar to anyone familiar with LiveCode Script, 
-however LiveCode Builder is a great deal more strict - the reason being 
-it is intended that it will eventually be compilable to machine code 
-with the performance and efficiency you'd expect from any 'traditional' 
-programming language. Indeed, over time we hope to move the majority of 
-implementation of the whole LiveCode system over to being written in 
+The syntax will be familiar to anyone familiar with LiveCode Script,
+however LiveCode Builder is a great deal more strict - the reason being
+it is intended that it will eventually be compilable to machine code
+with the performance and efficiency you'd expect from any 'traditional'
+programming language. Indeed, over time we hope to move the majority of
+implementation of the whole LiveCode system over to being written in
 LiveCode Builder.
 
-> **Note:** One of the principal differences is that type conversion is 
-> strict - there is no automatic conversion between different types such 
-> as between number and string. Such conversion must be explicitly 
-> specified using syntax (currently this is using things like 
+> **Note:** One of the principal differences is that type conversion is
+> strict - there is no automatic conversion between different types such
+> as between number and string. Such conversion must be explicitly
+> specified using syntax (currently this is using things like
 > *... parsed as number* and *... formatted as string*.
 
 ## Tokens
 
-The structure of tokens is similar to LiveCode Script, but again a 
-little stricter. The regular expressions describing the tokens are as 
+The structure of tokens is similar to LiveCode Script, but again a
+little stricter. The regular expressions describing the tokens are as
 follows:
 
  - **Identifier**: [A-Za-z_][A-Za-z0-9_.]*
@@ -53,27 +53,27 @@ Strings use backslash ('\') as an escape - the following are understood:
  - **\u{X...X}: character with unicode codepoint U+X...X - any number of nibbles may be specified, but any values greater than 0x10FFFF will be replaced by U+FFFD.
  - **\\**: backslash '\'
 
-> **Note:** The presence of '.' in identifiers are used as a namespace 
+> **Note:** The presence of '.' in identifiers are used as a namespace
 > scope delimiter.
 
 > **Note:** Source files are presumed to be in UTF-8 encoding.
 
 ### Case-Sensitivity
 
-At the moment, due to the nature of the parser being used, keywords are 
-all case-sensitive and reserved. The result of this is that, using all 
-lower-case identifiers for names of definitions should be avoided. 
-However, identifiers *are* case-insensitive - so a variable with name 
+At the moment, due to the nature of the parser being used, keywords are
+all case-sensitive and reserved. The result of this is that, using all
+lower-case identifiers for names of definitions should be avoided.
+However, identifiers *are* case-insensitive - so a variable with name
 pFoo can also be referenced as PFOO, PfOO, pfoO etc.
 
-> **Aside:** The current parser and syntax rules for LiveCode Builder 
-> are constructed at build-time of the LiveCode Builder compiler and 
-> uses *bison* (a standard parser generator tool) to build the parser. 
-> Unfortunately, this means that any keywords have to be reserved as the 
-> parser cannot distinguish the use of an identifier in context (whether 
+> **Aside:** The current parser and syntax rules for LiveCode Builder
+> are constructed at build-time of the LiveCode Builder compiler and
+> uses *bison* (a standard parser generator tool) to build the parser.
+> Unfortunately, this means that any keywords have to be reserved as the
+> parser cannot distinguish the use of an identifier in context (whether
 > it is a keyword at a particular point, or a name of a definition).
 
-It is highly recommended that the following naming conventions be used 
+It is highly recommended that the following naming conventions be used
 for identifiers:
 
  - **tVar** - for local variables
@@ -85,20 +85,20 @@ for identifiers:
  - **kConstant** - for constants
  - Use identifiers starting with an uppercase letter for handler and type names.
 
-By following this convention, there will not be any ambiguity between 
+By following this convention, there will not be any ambiguity between
 identifiers and keywords. (All keywords are all lower-case).
 
-> **Note:** When we have a better parsing technology we will be 
-> evaluating whether to make keywords case-insensitive as well. At the 
-> very least, at that point, we expect to be able to make all keywords 
+> **Note:** When we have a better parsing technology we will be
+> evaluating whether to make keywords case-insensitive as well. At the
+> very least, at that point, we expect to be able to make all keywords
 > unreserved.
 
 ## Typing
 
-LiveCode Builder is a typed language, although typing is completely 
-optional in most places (the only exception being in foreign handler 
-declarations). If a type annotation is not specified it is simply taken 
-to be the most general type *optional any* (meaning any value, including 
+LiveCode Builder is a typed language, although typing is completely
+optional in most places (the only exception being in foreign handler
+declarations). If a type annotation is not specified it is simply taken
+to be the most general type *optional any* (meaning any value, including
 nothing).
 
 The range of core types is relatively small, comprising the following:
@@ -210,7 +210,7 @@ definitions can only be used within the module.
 
 > **Note**: Properties and events are, by their nature, always public as
 > they define things which only make sense to access from outside.
-> 
+>
 > **Note**: When writing a library module, all public handlers are added
 > to bottom of the message path in LiveCode Script.
 
@@ -273,7 +273,7 @@ The remaining types are as follows:
  - **Pointer**: a low-level pointer (this is used with foreign code interconnect and shouldn't be generally used).
 
 > **Note:** *Integer* and *Real* are currently the same as *Number*.
- 
+
 > **Note:** In a subsequent update you will be able to specify lists and
 > arrays of fixed types. For example, *List of String*.
 
@@ -313,6 +313,24 @@ The type specification for the variable is optional, if it is not
 specified the type of the variable is *optional any* meaning that it can
 hold any value, including being nothing.
 
+Variables whose type has a default value are initialized to that value at the
+point of definition. The default values for the standard types are:
+
+- **optional**: nothing
+- **Boolean**: false
+- **Integer**: 0
+- **Real**: 0.0
+- **Number**: 0
+- **String**: the empty string
+- **Data**: the empty data
+- **Array**: the empty array
+- **List**: the empty list
+- **nothing**: nothing
+
+Variables whose type do not have a default value will remain unassigned and it
+is a checked runtime error to fetch from such variables until they are assigned
+a value.
+
 ### Handlers
 
     HandlerDefinition
@@ -350,8 +368,10 @@ return.
 
 > **Note:** It is a checked runtime error to return from a handler
 > without ensuring all non-optional 'out' parameters have been assigned
-> a value.
-> 
+> a value. However, this will only occur for typed variables whose type does
+> not have a default value as those which do will be default initialized at the
+> start of the handler.
+
 An inout parameter means that the value from the caller is copied to the
 parameter variable in the callee handler on entry, and copied back out
 again on exit.
@@ -385,8 +405,8 @@ low-level types to be specified making it easier to interoperate.
 
 Foreign types map to high-level types as follows:
 
- - bool maps to boolean 
- - int and uint map to integer (number) 
+ - bool maps to boolean
+ - int and uint map to integer (number)
  - float and double map to real (number)
 
 This mapping means that a foreign handler with a bool parameter say,
@@ -519,20 +539,16 @@ statement is defined in auxiliary modules.
       : 'variable' <Name: Identifier> [ 'as' <TypeOf: Type> ]
 
 A variable statement defines a handler-scope variable. Such variables
-can be used after the variable statement, but not before.
+can be used after the variable statement and up to the end of the current statement
+block, but not before.
 
-> **Note:** Variables are currently not block-scoped, they are defined
-> from the point of declaration to the end of the handler - this might
-> change in a subsequent revision.
- 
-Variables are initially undefined and thus cannot be fetched without a
-runtime error occurring until a value is placed into them. If a variable
-has been annotated with an optional type, its initial value will be
-nothing.
+Variables whose type have a default value are initialized with that value at
+the point of definition in the handler. See the main Variables section for the
+defaults of the standard types.
 
-> **Note:** It is a checked runtime error to attempt to use a
-> non-optionally typed variable before it has a value.
- 
+> **Note:** It is a checked runtime error to attempt to use a variable whose
+> type has no default before it is assigned a value.
+
 The type specification for the variable is optional, if it is not
 specified the type of the variable is *optional any* meaning that it can
 hold any value, including being nothing.
@@ -550,6 +566,9 @@ hold any value, including being nothing.
 
 The if statement enables conditional execution based on the result of an
 expression which evaluates to a boolean.
+
+Each block of code in an if/else if/else statement defines a unique scope for
+handler-local variable definitions.
 
 > **Note:** It is a checked runtime error to use an expression which
 > does not evaluate to a boolean in any condition expression.
@@ -574,6 +593,9 @@ expression which evaluates to a boolean.
 The repeat statements allow iterative execute of a sequence of
 statements.
 
+The block of code present in a repeat statement defines a unique scope for
+handler-local variable definitions.
+
 The **repeat forever** form repeats the body continually. To exit the
 loop, either an error must be thrown, or **exit repeat** must be
 executed.
@@ -583,7 +605,7 @@ evaluates to a negative integer, it is taken to be zero.
 
 > **Note:** It is a checked runtime error to use an expression not
 > evaluating to a number as the Count.
- 
+
 The **repeat while** form repeats the body until the Condition
 expression evaluates to false.
 
@@ -595,7 +617,7 @@ expression evaluates to true.
 
 > **Note:** It is a checked runtime error to use an expression not
 > evaluating to a boolean as the Condition.
- 
+
 The **repeat with** form repeats the body until the Counter variable
 reaches or crosses (depending on iteration direction) the value of the
 Finish expression. The counter variable is adjusted by the value of the
@@ -606,7 +628,7 @@ statement.
 
 > **Note:** It is a checked runtime error to use expressions not
 > evaluating to a number as Start, Finish or Step.
- 
+
 The **repeat for each** form evaluates the Container expression, and
 then iterates through it in a custom manner depending on the Iterator
 syntax. For example:
