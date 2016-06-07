@@ -267,6 +267,7 @@ void* g_builtin_modules[1] = {NULL};
 unsigned int g_builtin_module_count = 0;
 
 extern int yydebug;
+extern void InitializeFoundation(void);
 
 int main(int argc, char *argv[])
 {
@@ -287,6 +288,9 @@ int main(int argc, char *argv[])
         yydebug = 1;
 #endif
     }
+    
+    // Initialize libfoundation
+    InitializeFoundation();
     
     InitializeFiles();
     InitializePosition();

@@ -98,6 +98,7 @@
             ||
                 (|
                     IsBootstrapCompile()
+                    InitializeSyntax
                     GenerateSyntaxForModules(Modules)
                     (|
                         ErrorsDidOccur()
@@ -141,8 +142,6 @@
 'action' GenerateSyntaxForModules(MODULELIST)
 
     'rule' GenerateSyntaxForModules(modulelist(Head, Tail)):
-        InitializeSyntax
-        
         (|
             Head'Kind -> import
         ||
@@ -819,6 +818,11 @@
     'rule' Statement(-> call(Position, Handler, Arguments)):
         Identifier(-> Handler) @(-> Position) "(" OptionalExpressionList(-> Arguments) ")"
 
+    'rule' Statement(-> bytecode(Position, Opcodes)):
+        "bytecode" @(-> Position) Separator
+            Bytecodes(-> Opcodes)
+        "end" "bytecode"
+
     'rule' Statement(-> postfixinto(Position, Statement, Target)):
         CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)
 
@@ -852,6 +856,34 @@
     'rule' TryStatementCatches(-> catch(Position, Type, Body)):
         "catch" Type(-> Type) Separator
             Statements(-> Body)*/
+
+--------------------------------------------------------------------------------
+-- Bytecode Syntax
+--------------------------------------------------------------------------------
+
+'nonterm' Bytecodes(-> BYTECODE)
+
+    'rule' Bytecodes(-> sequence(Left, Right)):
+        Bytecode(-> Left) Separator
+        Bytecodes(-> Right)
+
+    'rule' Bytecodes(-> nil):
+        -- empty
+
+'nonterm' Bytecode(-> BYTECODE)
+
+    'rule' Bytecode(-> label(Position, Name)):
+        Identifier(-> Name) @(-> Position) ":"
+
+    'rule' Bytecode(-> register(Position, Name, Type)):
+        "register" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
+
+    'rule' Bytecode(-> opcode(Position, Opcode, Arguments)):
+        NAME_LITERAL(-> Opcode) @(-> Position) OptionalExpressionList(-> Arguments)
+
+    'rule' Bytecode(-> opcode(Position, Opcode, Arguments)):
+        CustomKeywords(-> OpcodeString) @(-> Position) OptionalExpressionList(-> Arguments)
+        MakeNameLiteral(OpcodeString -> Opcode)
 
 --------------------------------------------------------------------------------
 -- Expression Syntax

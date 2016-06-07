@@ -515,42 +515,42 @@
         GenerateDefinitionIndexes(Right)
         
     'rule' GenerateDefinitionIndexes(type(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("type", Name)
     
     'rule' GenerateDefinitionIndexes(constant(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("constant", Name)
     
     'rule' GenerateDefinitionIndexes(variable(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("variable", Name)
     
     'rule' GenerateDefinitionIndexes(handler(_, _, Name, _, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("handler", Name)
 
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("foreignhandler", Name)
 
     'rule' GenerateDefinitionIndexes(property(_, _, Name, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("property", Name)
 
     'rule' GenerateDefinitionIndexes(event(_, _, Name, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("event", Name)
 
     'rule' GenerateDefinitionIndexes(syntax(_, _, Name, _, _, _, _)):
-        GenerateDefinitionIndex(Name)
+        GenerateDefinitionIndex("syntax", Name)
     
     'rule' GenerateDefinitionIndexes(_):
         -- nothing
 
-'action' GenerateDefinitionIndex(ID)
+'action' GenerateDefinitionIndex(STRING, ID)
 
-    'rule' GenerateDefinitionIndex(Id):
+    'rule' GenerateDefinitionIndex(String, Id):
         QuerySyntaxId(Id -> Info)
-        EmitDefinitionIndex(-> Index)
+        EmitDefinitionIndex(String -> Index)
         Info'Index <- Index
 
-    'rule' GenerateDefinitionIndex(Id):
+    'rule' GenerateDefinitionIndex(String, Id):
         QuerySymbolId(Id -> Info)
-        EmitDefinitionIndex(-> Index)
+        EmitDefinitionIndex(String -> Index)
         Info'Index <- Index
 
 'condition' IsRValueMethodPresent(SYNTAXMETHODLIST)
@@ -839,6 +839,9 @@
     'rule' CreateVariableRegisters(STATEMENT'variable(_, _, _)):
         EmitCreateRegister(-> Register)
 
+    'rule' CreateVariableRegisters(BYTECODE'register(_, _, _)):
+        EmitCreateRegister(-> Register)
+
 'action' DestroyParameterRegisters(PARAMETERLIST)
 
     'rule' DestroyParameterRegisters(parameterlist(parameter(_, _, Id, _), Rest)):
@@ -850,19 +853,17 @@
     'rule' DestroyParameterRegisters(nil):
         -- nothing
 
-'action' DestroyVariableRegisters(STATEMENT)
+'sweep' DestroyVariableRegisters(ANY)
 
-    'rule' DestroyVariableRegisters(sequence(Left, Right)):
-        DestroyVariableRegisters(Left)
-        DestroyVariableRegisters(Right)
-
-    'rule' DestroyVariableRegisters(variable(_, Id, _)):
+    'rule' DestroyVariableRegisters(STATEMENT'variable(_, Id, _)):
         QuerySymbolId(Id -> Info)
         Info'Index -> Index
         EmitDestroyRegister(Index)
 
-    'rule' DestroyVariableRegisters(_):
-        -- nothing
+    'rule' DestroyVariableRegisters(BYTECODE'register(_, Id, _)):
+        QuerySymbolId(Id -> Info)
+        Info'Index -> Index
+        EmitDestroyRegister(Index)
 
 'action' GenerateBody(INT, INT, STATEMENT)
 
@@ -1161,6 +1162,7 @@
         GenerateExpression(Result, Context, Error -> Reg)
         GenerateBeginBuiltinInvoke("Throw", Context, Result)
         EmitContinueInvoke(Reg)
+        EmitEndInvoke()
         EmitDestroyRegister(Reg)
         EmitAssignUndefined(Result)
         
@@ -1189,6 +1191,10 @@
         GenerateInvoke_FreeArgument(Target)
         EmitAssignUndefined(Result)
 
+    'rule' GenerateBody(Result, Context, bytecode(Position, Block)):
+        GenerateBytecodeDeferLabels(Block)
+        GenerateBytecode(Block)
+
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
 
@@ -1201,6 +1207,66 @@
         EmitUndefinedType(-> SymbolTypeIndex)
         EmitImportedHandler(ModuleIndex, InvokeName, SymbolTypeIndex -> SymbolIndex)
         EmitBeginInvoke(SymbolIndex, ContextReg, ResultReg)
+
+--
+
+'sweep' GenerateBytecodeDeferLabels(ANY)
+
+    'rule' GenerateBytecodeDeferLabels(BYTECODE'label(Position, Name)):
+        QuerySymbolId(Name -> Info)
+        EmitDeferLabel(-> Label)
+        Info'Index <- Label
+
+
+'action' GenerateBytecode(BYTECODE)
+
+    'rule' GenerateBytecode(sequence(Left, Right)):
+        GenerateBytecode(Left)
+        GenerateBytecode(Right)
+
+    'rule' GenerateBytecode(label(Position, Name)):
+        QuerySymbolId(Name -> Info)
+        Info'Index -> Label
+        EmitResolveLabel(Label)
+
+    'rule' GenerateBytecode(register(Position, Id, Type)):
+        QuerySymbolId(Id -> Info)
+        Id'Name -> Name
+        GenerateType(Type -> TypeIndex)
+        EmitHandlerVariable(Name, TypeIndex -> Index)
+        Info'Index <- Index
+
+    'rule' GenerateBytecode(opcode(Position, Opcode, Arguments)):
+        GetStringOfNameLiteral(Opcode -> OpcodeString)
+        EmitPosition(Position)
+        EmitBeginOpcode(OpcodeString)
+        GenerateBytecodeArguments(Arguments)
+        EmitEndOpcode()
+
+    'rule' GenerateBytecode(nil):
+        -- do nothing
+
+
+'action' GenerateBytecodeArguments(EXPRESSIONLIST)
+
+    'rule' GenerateBytecodeArguments(expressionlist(Head, Tail)):
+        GenerateBytecodeArgument(Head)
+        GenerateBytecodeArguments(Tail)
+
+    'rule' GenerateBytecodeArguments(nil):
+        -- do nothing
+
+'action' GenerateBytecodeArgument(EXPRESSION)
+
+    'rule' GenerateBytecodeArgument(slot(Position, Name)):
+        QuerySymbolId(Name -> Info)
+        Info'Index -> Index
+        EmitContinueOpcode(Index)
+
+    'rule' GenerateBytecodeArgument(Constant):
+        IsExpressionSimpleConstant(Constant)
+        EmitConstant(Constant -> Index)
+        EmitContinueOpcode(Index)
 
 ----
 

@@ -243,6 +243,18 @@
     'rule' DeclareFields(nil):
         -- do nothing
 
+'action' DeclareLabels(BYTECODE)
+
+    'rule' DeclareLabels(sequence(Left, Right)):
+        DeclareLabels(Left)
+        DeclareLabels(Right)
+
+    'rule' DeclareLabels(label(Position, Name)):
+        DeclareId(Name)
+
+    'rule' DeclareLabels(_):
+        -- do nothing
+
 --------------------------------------------------------------------------------
 
 -- The 'Define' phase associates meanings with the definining ids.
@@ -389,7 +401,6 @@
         Apply(Parameters)
         LeaveScope
 
-
     ----------
 
     'rule' Apply(TYPE'named(_, Name)):
@@ -518,8 +529,30 @@
         ApplyId(Handler)
         Apply(Arguments)
 
+    'rule' Apply(STATEMENT'bytecode(_, Block)):
+        -- Enter a new scope to limit labels and temporaries
+        EnterScope
+
+        -- Declare the labels as we might need forward references
+        DeclareLabels(Block)
+
+        -- Apply the definitions to the content, this handles temporaries
+        Apply(Block)
+
+        LeaveScope
+
+    'rule' Apply(BYTECODE'label(_, Name)):
+        CurrentHandlerId -> ParentId
+        DefineSymbolId(Name, ParentId, inferred, label, nil)
+
+    'rule' Apply(BYTECODE'register(_, Name, Type)):
+        DeclareId(Name)
+        CurrentHandlerId -> ParentId
+        DefineSymbolId(Name, ParentId, inferred, local, Type)
+        Apply(Type)
+
     ---------
-    
+
     'rule' Apply(EXPRESSION'slot(_, Name)):
         ApplyId(Name)
 

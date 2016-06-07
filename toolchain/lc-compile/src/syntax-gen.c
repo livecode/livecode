@@ -179,6 +179,9 @@ static unsigned int s_stack_index = 0;
 static long *s_invoke_lists = NULL;
 static long s_invoke_list_size = 0;
 
+static NameRef *s_unreserved_keywords = NULL;
+static unsigned int s_unreserved_keyword_count = 0;
+
 static int IsSyntaxNodeEqualTo(SyntaxNodeRef p_left, SyntaxNodeRef p_right, int p_with_mark_values);
 
 static FILE* s_output;
@@ -1117,6 +1120,12 @@ void PushInOutMarkArgumentSyntaxMapping(long p_index)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void AddUnreservedSyntaxKeyword(long p_name)
+{
+    s_unreserved_keywords = Reallocate(s_unreserved_keywords, sizeof(NameRef) * (s_unreserved_keyword_count + 1));
+    s_unreserved_keywords[s_unreserved_keyword_count++] = (NameRef)p_name;
+}
+
 static void ListSyntaxNodeUnreservedKeywords(SyntaxNodeRef p_node, NameRef** x_tokens, long *x_token_count)
 {
     switch(p_node -> kind)
@@ -1739,12 +1748,20 @@ static void GenerateTokenList(void)
         ListSyntaxNodeUnreservedKeywords(t_group -> rules -> expr, &t_tokens, &t_token_count);
     
     fprintf(s_output, "'nonterm' CustomKeywords(-> STRING)\n");
-    if (t_token_count != 0)
+    if (t_token_count != 0 || s_unreserved_keyword_count != 0)
     {
         for(i = 0; i < t_token_count; i++)
         {
             const char *t_string;
             GetStringOfNameLiteral(t_tokens[i], &t_string);
+            fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
+            fprintf(s_output, "    \"%s\"\n", t_string);
+            fprintf(s_output, "    where(\"%s\" -> String)\n", t_string);
+        }
+        for(i = 0; i < s_unreserved_keyword_count; i++)
+        {
+            const char *t_string;
+            GetStringOfNameLiteral(s_unreserved_keywords[i], &t_string);
             fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
             fprintf(s_output, "    \"%s\"\n", t_string);
             fprintf(s_output, "    where(\"%s\" -> String)\n", t_string);
