@@ -8,7 +8,7 @@ Summary: Specifies the file path to the file that the stack represents.
 
 Associations: stack
 
-Introduced: 8.0.0
+Introduced: 8.0
 
 OS: mac,windows,linux,ios,android
 
