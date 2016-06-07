@@ -1315,7 +1315,7 @@ private function GitGetRelevantTags pType
    set the itemdelimiter to "."
    
    repeat for each line tLine in tTags
-      if tLine begins with item 1 to 2 of sVersion then
+      if tLine begins with item 1 to 3 of sVersion then
          exit repeat
       end if
       add 1 to tStart
@@ -1323,7 +1323,7 @@ private function GitGetRelevantTags pType
    put line tStart to -1 of tTags into tTags
    
    repeat for each line tLine in tTags
-      if not (tLine begins with item 1 to 2 of sVersion) then
+      if not (tLine begins with item 1 to 3 of sVersion) then
          if not (tEnd is 0) then
             exit repeat
          end if
