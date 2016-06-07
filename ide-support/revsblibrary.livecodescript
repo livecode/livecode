@@ -1046,6 +1046,14 @@ private function revSBPlatformToRuntimeFolderName pPlatform
    return empty
 end revSBPlatformToRuntimeFolderName
 
+function revSBExternalsMapping
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+end revSBExternalsMapping
+
+function revSBDatabaseDriversMapping
+   return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
+end revSBDatabaseDriversMapping
+
 -- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
 --   list by hand.
 private function revSBExternalsBuildList pPlatform
@@ -1116,7 +1124,7 @@ private function revSBMobileExternalsFromFolder pFolder
    end repeat
    
    local tFixedExternals
-   put revIDEExternalsMapping() into tFixedExternals
+   put revSBExternalsMapping() into tFixedExternals
    
    local tListA
    repeat for each item tItem in tFixedExternals
@@ -1238,7 +1246,7 @@ private function revSBMobileDatabaseDriversFromFolder pFolder
    end repeat
    
    local tFixedDrivers
-   put revIDEDatabaseDriversMapping() into tFixedDrivers
+   put revSBDatabaseDriversMapping() into tFixedDrivers
    
    local tListA
    set the itemdelimiter to comma
@@ -1712,13 +1720,13 @@ function revSBInclusionToMobileKey pName, pType, pPlatform
          switch pType
             case "database driver"
                local tDBDriverID, tDBDrivers
-               put revIDEDatabaseDriversMapping() into tDBDrivers
+               put revSBDatabaseDriversMapping() into tDBDrivers
                put "db" & word 1 of item itemOffset(pName, tDBDrivers) of tDBDrivers into tToInclude
                break
             case "external"
             default
                local tExternals
-               put revIDEExternalsMapping() into tExternals
+               put revSBExternalsMapping() into tExternals
                put word 1 of item itemOffset(pName, tExternals) of tExternals into tToInclude
                break
          end switch
@@ -1935,7 +1943,7 @@ private command initialiseInclusionDependencies
    
    // Database drivers require revdb
    local tDBName
-   repeat for each item tDatabaseDriver in revIDEDatabaseDriversMapping()
+   repeat for each item tDatabaseDriver in revSBDatabaseDriversMapping()
       put word 2 to -1 of tDatabaseDriver into tDBName
       put "Database" into sDependencies["databaseDrivers"][tDBName]["scriptLibraries"]
    end repeat
@@ -1964,7 +1972,7 @@ command revSBSanitiseExternalsList pTarget, @xExternals
    local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
    put revSBTargetToPlatform(pTarget) into tPlatform
    put revSBAdditionalExternalsList(tPlatform) into tAvailableExternals
-   put revIDEExternalsMapping() into tFixedExternals
+   put revSBExternalsMapping() into tFixedExternals
    split tFixedExternals by comma and space
    put the keys of tFixedExternals into tFixedExternals
    
@@ -2055,7 +2063,7 @@ on initialiseSearchForInclusions
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
    put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
    
-   repeat for each item tDBDriver in revIDEDatabaseDriversMapping()
+   repeat for each item tDBDriver in revSBDatabaseDriversMapping()
       local tDBName, tDB
       put word 1 of tDBDriver into tDB
       put word 2 to -1 of tDBDriver into tDBName
