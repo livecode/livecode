@@ -87,11 +87,11 @@ of return.
 
 ### Invoke
 
-    invoke <handler>, <result>, <arg_1>, ..., <arg_n>
+    invoke <handler>, <result-reg>, <arg1-reg>, ..., <argn-reg>
 
 The invoke operation creates a new frame copying values from the argument registers
 for any in or inout parameters. It then starts executing the bytecode attached
-to <handler>.
+to <handler>, a definition. The return value is placed into the register <result-reg>.
 
 If is a runtime error if the number of arguments provided is different from the
 signature of <handler>
@@ -101,7 +101,7 @@ does not conform to the type of the parameter required by the signature.
 
 ### Invoke Indirect
 
-    invoke <handler-reg>, <result>, <arg_1>, ..., <arg_n>
+    invoke <handler-reg>, <result-reg>, <arg1-reg>, ..., <argn-reg>
 
 The invoke indirect operation functions identically to the invoke operation
 except that it calls the handler in <handler-reg>.
@@ -133,7 +133,7 @@ to the type of <definition>.
 
     assign_list <dst-reg>, <element1-reg>, ..., <elementn-reg>
 
-The assign_array operation builds a list value from <element1-reg> up to
+The assign_list operation builds a list value from <element1-reg> up to
 <elementn-reg>.
 
 It is a runtime error if the type of <dst-reg> does not conform to list.
