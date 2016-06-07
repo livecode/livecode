@@ -1661,7 +1661,7 @@ void EmitReset(long reg)
 {
     MCScriptEmitResetInModule(s_builder, reg);
     
-    Debug_Emit("Reset()", 0);
+    Debug_Emit("Reset(%ld)", reg);
 }
 
 ////////

@@ -539,11 +539,8 @@ statement is defined in auxiliary modules.
       : 'variable' <Name: Identifier> [ 'as' <TypeOf: Type> ]
 
 A variable statement defines a handler-scope variable. Such variables
-can be used after the variable statement, but not before.
-
-> **Note:** Variables are currently not block-scoped, they are defined
-> from the point of declaration to the end of the handler - this might
-> change in a subsequent revision.
+can be used after the variable statement and up to the end of the current statement
+block, but not before.
 
 Variables whose type have a default value are initialized with that value at
 the point of definition in the handler. See the main Variables section for the
@@ -570,6 +567,9 @@ hold any value, including being nothing.
 The if statement enables conditional execution based on the result of an
 expression which evaluates to a boolean.
 
+Each block of code in an if/else if/else statement defines a unique scope for
+handler-local variable definitions.
+
 > **Note:** It is a checked runtime error to use an expression which
 > does not evaluate to a boolean in any condition expression.
 
@@ -592,6 +592,9 @@ expression which evaluates to a boolean.
 
 The repeat statements allow iterative execute of a sequence of
 statements.
+
+The block of code present in a repeat statement defines a unique scope for
+handler-local variable definitions.
 
 The **repeat forever** form repeats the body continually. To exit the
 loop, either an error must be thrown, or **exit repeat** must be

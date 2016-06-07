@@ -457,25 +457,62 @@
         CurrentHandlerId -> ParentId
         DefineSymbolId(Name, ParentId, inferred, local, Type)
         Apply(Type)
-        
+
+    'rule' Apply(STATEMENT'if(Position, Condition, Consequent, Alternate)):
+        Apply(Condition)
+
+        EnterScope
+        Apply(Consequent)
+        LeaveScope
+
+        EnterScope
+        Apply(Alternate)
+        LeaveScope
+
+    'rule' Apply(STATEMENT'repeatforever(_, Body)):
+        EnterScope
+        Apply(Body)
+        LeaveScope
+
+    'rule' Apply(STATEMENT'repeatwhile(_, Expression, Body)):
+        Apply(Expression)
+        EnterScope
+        Apply(Body)
+        LeaveScope
+
+    'rule' Apply(STATEMENT'repeatuntil(_, Expression, Body)):
+        Apply(Expression)
+        EnterScope
+        Apply(Body)
+        LeaveScope
+
     'rule' Apply(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
         ApplyId(Slot)
         Apply(Start)
         Apply(Finish)
         Apply(Step)
+
+        EnterScope
         Apply(Body)
+        LeaveScope
 
     'rule' Apply(STATEMENT'repeatdownto(_, Slot, Start, Finish, Step, Body)):
         ApplyId(Slot)
         Apply(Start)
         Apply(Finish)
         Apply(Step)
+
+        EnterScope
         Apply(Body)
+        LeaveScope
 
     'rule' Apply(STATEMENT'repeatforeach(_, Iterator, Container, Body)):
         Apply(Iterator)
         Apply(Container)
+
+        EnterScope
         Apply(Body)
+        LeaveScope
 
     'rule' Apply(STATEMENT'call(_, Handler, Arguments)):
         ApplyId(Handler)
