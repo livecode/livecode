@@ -1456,21 +1456,27 @@ void EmitCurrentRepeatLabels(long& r_next, long& r_exit)
 
 void EmitUndefinedConstant(long *idx)
 {
-    MCScriptAddValueToModule(s_builder, kMCNull, (uindex_t&)*idx);
+    uindex_t t_index;
+    MCScriptAddValueToModule(s_builder, kMCNull, t_index);
+    *idx = t_index;
     
     Debug_Emit("UndefinedConstant(-> %ld)", *idx);
 }
 
 void EmitTrueConstant(long *idx)
 {
-    MCScriptAddValueToModule(s_builder, kMCTrue, (uindex_t&)*idx);
+    uindex_t t_index;
+    MCScriptAddValueToModule(s_builder, kMCTrue, t_index);
+    *idx = t_index;
     
     Debug_Emit("TrueConstant(-> %ld)", *idx);
 }
 
 void EmitFalseConstant(long *idx)
 {
-    MCScriptAddValueToModule(s_builder, kMCFalse, (uindex_t&)*idx);
+    uindex_t t_index;
+    MCScriptAddValueToModule(s_builder, kMCFalse, t_index);
+    *idx = t_index;
     
     Debug_Emit("FalseConstant(%ld)", *idx);
 }
@@ -1478,8 +1484,10 @@ void EmitFalseConstant(long *idx)
 void EmitIntegerConstant(long value, long *idx)
 {
     MCAutoNumberRef t_number;
+    uindex_t t_index;
     MCNumberCreateWithInteger(value, &t_number);
-    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCScriptAddValueToModule(s_builder, *t_number, t_index);
+    *idx = t_index;
     
     Debug_Emit("IntegerConstant(%ld -> %ld)", value, *idx);
 }
@@ -1487,8 +1495,10 @@ void EmitIntegerConstant(long value, long *idx)
 void EmitUnsignedIntegerConstant(unsigned long value, long *idx)
 {
     MCAutoNumberRef t_number;
+    uindex_t t_index;
     MCNumberCreateWithUnsignedInteger(value, &t_number);
-    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCScriptAddValueToModule(s_builder, *t_number, t_index);
+    *idx = t_index;
     
     Debug_Emit("UnsignedIntegerConstant(%lu -> %ld)", value, *idx);
 }
@@ -1496,8 +1506,10 @@ void EmitUnsignedIntegerConstant(unsigned long value, long *idx)
 void EmitRealConstant(long value, long *idx)
 {
     MCAutoNumberRef t_number;
+    uindex_t t_index;
     MCNumberCreateWithReal(*(double *)value, &t_number);
-    MCScriptAddValueToModule(s_builder, *t_number, (uindex_t&)*idx);
+    MCScriptAddValueToModule(s_builder, *t_number, t_index);
+    *idx = t_index;
     
     Debug_Emit("RealConstant(%lf -> %ld)", *(double *)value, *idx);
 }
@@ -1505,8 +1517,10 @@ void EmitRealConstant(long value, long *idx)
 void EmitStringConstant(long value, long *idx)
 {
     MCAutoStringRef t_string;
+    uindex_t t_index;
     MCStringCreateWithBytes((const byte_t *)value, strlen((const char *)value), kMCStringEncodingUTF8, false, &t_string);
-    MCScriptAddValueToModule(s_builder, *t_string, (uindex_t&)*idx);
+    MCScriptAddValueToModule(s_builder, *t_string, t_index);
+    *idx = t_index;
     
     Debug_Emit("StringConstant(\"%s\" -> %ld)", (const char *)value, *idx);
 }
@@ -1520,7 +1534,7 @@ void EmitBeginListConstant(void)
 
 void EmitContinueListConstant(long idx)
 {
-    MCScriptContinueListValueInModule(s_builder, idx);
+    MCScriptContinueListValueInModule(s_builder, (uindex_t)idx);
     
     Debug_Emit("ContinueListConstant(%ld)", idx);
 }
@@ -1541,14 +1555,16 @@ void EmitBeginArrayConstant(void)
 
 void EmitContinueArrayConstant(long key_idx, long value_idx)
 {
-    MCScriptContinueArrayValueInModule(s_builder, key_idx, value_idx);
+    MCScriptContinueArrayValueInModule(s_builder, (uindex_t)key_idx, (uindex_t)value_idx);
     
     Debug_Emit("ContinueArrayConstant(%ld, %ld)", key_idx, value_idx);
 }
 
 void EmitEndArrayConstant(long *idx)
 {
-    MCScriptEndArrayValueInModule(s_builder, (uindex_t&)*idx);
+    uindex_t t_index;
+    MCScriptEndArrayValueInModule(s_builder, t_index);
+    *idx = t_index;
     
     Debug_Emit("EndArrayConstant(-> %ld)", *idx);
 }
