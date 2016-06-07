@@ -54,9 +54,7 @@ extern "C" void EmitDefinitionIndex(long& r_index);
 extern "C" void EmitTypeDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index);
 extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef name, long type_index);
-extern "C" void EmitContextVariableDefinition(long index, PositionRef position, NameRef name, long type_index, long default_index);
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
-extern "C" void EmitBeginContextHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
 extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
@@ -159,6 +157,7 @@ extern "C" void EmitFetch(long reg, long var, long level);
 extern "C" void EmitStore(long reg, long var, long level);
 extern "C" void EmitReturn(long reg);
 extern "C" void EmitReturnNothing(void);
+extern "C" void EmitReset(long reg);
 extern "C" void EmitAttachRegisterToExpression(long reg, long expr);
 extern "C" void EmitDetachRegisterFromExpression(long expr);
 extern "C" int EmitGetRegisterAttachedToExpression(long expr, long *reg);
@@ -795,14 +794,6 @@ void EmitVariableDefinition(long p_index, PositionRef p_position, NameRef p_name
                cstring_from_nameref(p_name), p_type_index);
 }
 
-void EmitContextVariableDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_default_index)
-{
-    MCScriptAddContextVariableToModule(s_builder, to_mcnameref(p_name), p_type_index, p_default_index, p_index);
-
-    Debug_Emit("ContextVariableDefinition(%ld, %s, %ld, %ld)", p_index,
-               cstring_from_nameref(p_name), p_type_index, p_default_index);
-}
-
 void EmitForeignHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index, long p_binding)
 {
     MCAutoStringRef t_binding_str;
@@ -863,17 +854,9 @@ void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, l
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeNormal, to_mcnameref(p_name), p_type_index, p_index);
+    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), p_type_index, p_index);
 
     Debug_Emit("BeginHandlerDefinition(%ld, %s, %ld)", p_index,
-               cstring_from_nameref(p_name), p_type_index);
-}
-
-void EmitBeginContextHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
-{
-    MCScriptBeginHandlerInModule(s_builder, kMCScriptHandlerScopeContext, to_mcnameref(p_name), p_type_index, p_index);
-
-    Debug_Emit("BeginContextHandlerDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_type_index);
 }
 
@@ -1672,6 +1655,13 @@ void EmitReturnNothing(void)
     MCScriptEmitReturnUndefinedInModule(s_builder);
 
     Debug_Emit("ReturnUndefined()", 0);
+}
+
+void EmitReset(long reg)
+{
+    MCScriptEmitResetInModule(s_builder, reg);
+    
+    Debug_Emit("Reset(%ld)", reg);
 }
 
 ////////

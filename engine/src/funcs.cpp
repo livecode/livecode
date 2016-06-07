@@ -2721,8 +2721,6 @@ void MCSetResource::compile(MCSyntaxFactoryRef ctxt)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCScriptEnvironment *MCHTTPProxyForURL::pac_engine = NULL;
-
 MCHTTPProxyForURL::~MCHTTPProxyForURL(void)
 {
 	delete url;
@@ -2767,38 +2765,6 @@ void MCHTTPProxyForURL::compile(MCSyntaxFactoryRef ctxt)
 		compile_with_args(ctxt, kMCNetworkEvalHTTPProxyForURLWithPACMethodInfo, url, host, pac);
 	else
 		compile_with_args(ctxt, kMCNetworkEvalHTTPProxyForURLMethodInfo, url, host);
-}
-
-char *MCHTTPProxyForURL::PACdnsResolve(const char* const* p_arguments, unsigned int p_argument_count)
-{
-	if (p_argument_count != 1)
-		return NULL;
-
-	MCAutoStringRef t_address_string;
-	MCAutoStringRef p_arguments0_string;
-	/* UNCHECKED */ MCStringCreateWithCString(p_arguments[0], &p_arguments0_string);
-	MCS_dnsresolve(*p_arguments0_string, &t_address_string);
-	
-	char *t_address = nil;
-	if (*t_address_string != nil)
-		/* UNCHECKED */ MCStringConvertToCString(*t_address_string, t_address);
-
-	return t_address;
-}
-
-char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned int p_argument_count)
-{
-	if (p_argument_count != 0)
-		return NULL;
-
-	MCAutoStringRef t_address_string;
-	MCS_hostaddress(&t_address_string);
-
-	char *t_address = nil;
-	if (*t_address_string != nil)
-		/* UNCHECKED */ MCStringConvertToCString(*t_address_string, t_address);
-
-	return t_address;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

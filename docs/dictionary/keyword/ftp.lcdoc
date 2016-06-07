@@ -6,6 +6,8 @@ Syntax: ftp
 
 Summary: Used as a <URL> type with such <command|commands> as <put> and <get> to designate a <file> or <folder|directory> on an FTP <server>.
 
+Associations: Internet library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android
@@ -83,13 +85,39 @@ To send any FTP command to an FTP server, use the libURLftpCommand <function>.
 
 For technical information about URLs and the <ftp> <URL> scheme, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
 
->*Important:*  The <ftp> <keyword> is part of the <Internet library>. To ensure that the <keyword> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the <Standalone Application Settings> window, make sure "Internet Library" is selected in the list of script libraries.
+>*Important:*  The <ftp> <keyword> is part of the 
+> <Internet library> on desktop platforms. To ensure that the <keyword> 
+> works in a desktop <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Internet" 
+> script library is selected.
 
->*Note:* When included in a <standalone application>, the <Internet library> is implemented as a hidden <group> and made available when the <group> receives its first <openBackground> message. During the first part of the <application|application's> startup process, before this <message> is sent, the <ftp> <keyword> is not yet available. This may affect attempts to use this <keyword> in <startup>, <preOpenStack>, <openStack>, or <preOpenCard> <handler|handlers> in the <main stack>. Once the <application> has finished starting up, the <library> is available and the <ftp> <keyword> can be used in any <handler>.
+>*Cross-platform note:* On iOS and Android, you can use the <ftp> 
+> <keyword> without the need for the <Internet library>. When specifying 
+> <URL(glossary)|URLs> for iOS and Android, you must use the appropriate 
+> form that conforms to [RFC 1630](https://tools.ietf.org/html/rfc1630). 
 
 Changes:
 The ability to specify a port number was added in version 2.0. In previous versions, port 21 was always used for FTP transactions.
 
-References: startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), library (library), LiveCode custom library (library), delete URL (library), libURLSetFTPListCommand (library), Internet library (library), URL (keyword), file (keyword), ftp (keyword), button (keyword), http (keyword), flag (glossary), standalone application (glossary), upload (glossary), folder (glossary), command (glossary), main stack (glossary), blocking (glossary), text file (glossary), statement (glossary), message (glossary), cache (glossary), Standalone Application Settings (glossary), container (glossary), URL (glossary), server (glossary), keyword (glossary), application (glossary), handler (glossary), word (glossary), expression (glossary), download (glossary), result (function), files (function), libURLErrorData (function), value (function), libURLSetFTPListCommand (command), libURLSetFTPMode (command), get (command), post (command), put (command), load (command), group (command), delete URL (command), libURLftpUpload (command), libURLDownloadToFile (command), function (control structure)
+References: startup (message), openBackground (message), 
+preOpenStack (message), openStack (message), preOpenCard (message), 
+library (library), LiveCode custom library (glossary), delete URL (library), 
+libURLSetFTPListCommand (library), Internet library (library), 
+URL (keyword), file (keyword), ftp (keyword), button (keyword), 
+http (keyword), flag (glossary), standalone application (glossary), 
+upload (glossary), folder (glossary), command (glossary), 
+main stack (glossary), blocking (glossary), text file (glossary), 
+statement (glossary), message (glossary), cache (glossary), 
+Standalone Application Settings (glossary), container (glossary), 
+URL (glossary), server (glossary), keyword (glossary), 
+application (glossary), handler (glossary), word (glossary), 
+expression (glossary), download (glossary), result (function), 
+files (function), libURLErrorData (function), value (function), 
+libURLSetFTPListCommand (command), libURLSetFTPMode (command), 
+get (command), post (command), put (command), load (command), 
+group (command), delete URL (command), libURLftpUpload (command), 
+libURLDownloadToFile (command), function (control structure)
 
 Tags: networking

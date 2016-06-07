@@ -2486,8 +2486,6 @@ class MCHTTPProxyForURL: public MCFunction
 	MCExpression *host;
 	MCExpression *pac;
 
-	static MCScriptEnvironment *pac_engine;
-
 public:
 	MCHTTPProxyForURL(void)
 	{
@@ -2501,10 +2499,6 @@ public:
 	virtual Parse_stat parse(MCScriptPoint& sp, Boolean the);
 	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 	virtual void compile(MCSyntaxFactoryRef);
-
-private:
-	static char *PACdnsResolve(const char* const* p_arguments, unsigned int p_argument_count);
-	static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argument_count);
 };
 
 class MCRandomBytes: public MCUnaryFunctionCtxt<uinteger_t, MCDataRef, MCSecurityEvalRandomBytes, EE_RANDOMBYTES_BADCOUNT, PE_RANDOMBYTES_BADPARAM, kMCSecurityEvalRandomBytesMethodInfo>

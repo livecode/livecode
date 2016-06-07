@@ -1613,14 +1613,6 @@
         ||
             --Error_VariableMustHaveHighLevelType(Position)
         |)
-        
-    'rule' CheckDeclaredTypes(DEFINITION'contextvariable(Position, _, _, Type, _)):
-        -- Variable types must be high-level
-        (|
-            IsHighLevelType(Type)
-        ||
-            --Error_VariableMustHaveHighLevelType(Position)
-        |)
 
     'rule' CheckDeclaredTypes(DEFINITION'foreignhandler(Position, _, _, signature(Parameters, ReturnType), _)):
         -- Foreign handlers must be fully typed.
@@ -1716,11 +1708,7 @@
     'rule' CheckIdentifiers(DEFINITION'variable(_, _, Id, _)):
         CheckIdIsSuitableForDefinition(Id)
 
-    'rule' CheckIdentifiers(DEFINITION'contextvariable(_, _, Id, Type, _)):
-        CheckIdIsSuitableForDefinition(Id)
-        CheckIdentifiers(Type)
-
-    'rule' CheckIdentifiers(DEFINITION'handler(_, _, Id, _, Signature, Definitions, Body)):
+    'rule' CheckIdentifiers(DEFINITION'handler(_, _, Id, Signature, Definitions, Body)):
         CheckIdIsSuitableForDefinition(Id)
         CheckIdentifiers(Signature)
         CheckIdentifiers(Definitions)

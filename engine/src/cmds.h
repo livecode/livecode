@@ -1489,7 +1489,6 @@ public:
 		sig = NULL;
 		pname = NULL;
 	}
-	int4 lookup(MCStringRef s);
 	virtual ~MCKill();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);

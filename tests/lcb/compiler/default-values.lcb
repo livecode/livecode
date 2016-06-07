@@ -1,4 +1,21 @@
-module __VMTEST.default_values
+/*
+Copyright (C) 2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.compiler.default_values.tests
 
 variable sBoolean as Boolean
 variable sOptionalString as optional String
@@ -45,6 +62,15 @@ public handler TestDefaultValueOfModuleVariable()
 	test "default value (boolean)" when sBoolean is false
 	test "default value (optional)" when sOptionalString is nothing
 	test "default value (untyped)" when sVariant is nothing
+end handler
+
+private handler DoTestDefaultValueOfOutParameter(out rValue as Boolean)
+end handler
+
+public handler TestDefaultValueOfOutParameter()
+   variable tValue
+   DoTestDefaultValueOfOutParameter(tValue)
+   test "default value of parameter (boolean)" when tValue is false
 end handler
 
 end module
