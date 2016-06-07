@@ -358,10 +358,13 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
+	uint32_t t_starttime, t_endtime;
+	if ((stat = IO_read_uint4(&t_starttime, stream)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_uint4(&endtime, stream)) != IO_NORMAL)
+	starttime = t_starttime;
+	if ((stat = IO_read_uint4(&t_endtime, stream)) != IO_NORMAL)
 		return stat;
+	endtime = t_endtime;
 	int4 trate;
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
 		return stat;
@@ -403,22 +406,22 @@ void MCPlayer::freetmp()
 	}
 }
 
-uint4 MCPlayer::getduration() //get movie duration/length
+MCPlayerDuration MCPlayer::getduration() //get movie duration/length
 {
 	return 0;
 }
 
-uint4 MCPlayer::gettimescale() //get moive time scale
+MCPlayerDuration MCPlayer::gettimescale() //get moive time scale
 {
 	return 0;
 }
 
-uint4 MCPlayer::getmoviecurtime()
+MCPlayerDuration MCPlayer::getmoviecurtime()
 {
 	return 0;
 }
 
-void MCPlayer::setcurtime(uint4 newtime, bool notify)
+void MCPlayer::setcurtime(MCPlayerDuration newtime, bool notify)
 {
 	lasttime = newtime;
 }

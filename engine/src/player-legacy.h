@@ -144,10 +144,10 @@ public:
     // virtual function from MCPlayerInterface
 	virtual bool getversion(MCStringRef& r_string);
 	virtual void freetmp();
-	virtual uint4 getduration();    //get movie duration/length
-	virtual uint4 gettimescale();  //get movie time scale
-	virtual uint4 getmoviecurtime();//get movie current time
-	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual MCPlayerDuration getduration();    //get movie duration/length
+	virtual MCPlayerDuration gettimescale();  //get movie time scale
+	virtual MCPlayerDuration getmoviecurtime();//get movie current time
+	virtual void setcurtime(MCPlayerDuration curtime, bool notify);
 	virtual void setselection(bool notify);                  //set movie selection
 	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
 	virtual void setplayrate();                   //set the movie playing rate
@@ -169,15 +169,15 @@ public:
 	virtual void setvolume(uint2 tloudness);
 	virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
     
-	virtual void setstarttime(uint4 stime)
+	virtual void setstarttime(MCPlayerDuration stime)
 	{
 		starttime = stime;
 	}
-	virtual void setendtime(uint4 etime)
+	virtual void setendtime(MCPlayerDuration etime)
 	{
 		endtime = etime;
 	}
-	virtual void setlasttime(int4 ltime)
+	virtual void setlasttime(MCPlayerDuration ltime)
 	{
 		lasttime = ltime;
 	}
@@ -401,10 +401,10 @@ public:
 	virtual void SetFileName(MCExecContext& ctxt, MCStringRef p_name);
 	virtual void GetDontRefresh(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetDontRefresh(MCExecContext& ctxt, bool setting);
-	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
-	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
-	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
-    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_time);
+	virtual void GetCurrentTime(MCExecContext& ctxt, double& r_time);
+	virtual void SetCurrentTime(MCExecContext& ctxt, double p_time);
+	virtual void GetDuration(MCExecContext& ctxt, double& r_duration);
+    virtual void GetLoadedTime(MCExecContext& ctxt, double& r_time);
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetLooping(MCExecContext& ctxt, bool setting);
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting);
@@ -413,10 +413,10 @@ public:
 	virtual void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
 	virtual void GetPlayRate(MCExecContext& ctxt, double& r_rate);
 	virtual void SetPlayRate(MCExecContext& ctxt, double p_rate);
-	virtual void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time);
-	virtual void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time);
-	virtual void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time);
-	virtual void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time);
+	virtual void GetStartTime(MCExecContext& ctxt, double*& r_time);
+	virtual void SetStartTime(MCExecContext& ctxt, double* p_time);
+	virtual void GetEndTime(MCExecContext& ctxt, double*& r_time);
+	virtual void SetEndTime(MCExecContext& ctxt, double* p_time);
 	virtual void GetShowBadge(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetShowBadge(MCExecContext& ctxt, bool setting);
 	virtual void GetShowController(MCExecContext& ctxt, bool& r_setting);
@@ -427,7 +427,7 @@ public:
 	virtual void SetShowSelection(MCExecContext& ctxt, bool setting);
 	virtual void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks);
 	virtual void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks);
-	virtual void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale);
+	virtual void GetTimeScale(MCExecContext& ctxt, double& r_scale);
 	virtual void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
 	virtual void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
 	virtual void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id);

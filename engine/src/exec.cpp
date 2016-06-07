@@ -2085,6 +2085,29 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+		case kMCPropertyTypeOptionalDouble:
+		{
+			double t_value;
+			double *t_value_ptr;
+			t_value_ptr = &t_value;
+			((void(*)(MCExecContext&, void *, double *&))prop -> getter)(ctxt, mark, t_value_ptr);
+			if (!ctxt . HasError())
+			{
+				if (t_value_ptr != nil)
+				{
+					r_value . double_value = t_value;
+					r_value . type = kMCExecValueTypeDouble;
+				}
+				else
+				{
+					r_value . stringref_value = MCValueRetain(kMCEmptyString);
+					r_value . type = kMCExecValueTypeStringRef;
+				}
+			}
+
+		}
+			break;
+
         case kMCPropertyTypeOptionalString:
         {
             MCAutoStringRef t_value;
@@ -2963,6 +2986,23 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+		case kMCPropertyTypeOptionalDouble:
+		{
+			double t_value;
+			double *t_value_ptr;
+			if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+				t_value_ptr = nil;
+			else
+			{
+				t_value_ptr = &t_value;
+				MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDouble, &t_value);
+			}
+
+			if (!ctxt . HasError())
+				((void(*)(MCExecContext&, void *, double*))prop -> setter)(ctxt, mark, t_value_ptr);
+		}
+			break;
+
         case kMCPropertyTypeMixedOptionalString:
         case kMCPropertyTypeOptionalString:
         {

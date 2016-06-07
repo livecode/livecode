@@ -99,19 +99,19 @@ private:
 	bool SetUrl(MCStringRef p_url);
 	bool GetPlayRate(double &r_play_rate);
 	bool SetPlayRate(double p_play_rate);
-	bool GetCurrentPosition(uint32_t &r_position);
-	bool SetCurrentPosition(uint32_t p_position);
-	bool GetStartPosition(uint32_t &r_position);
-	bool SetStartPosition(uint32_t p_position);
-	bool GetFinishPosition(uint32_t &r_position);
-	bool SetFinishPosition(uint32_t p_position);
-	bool GetLoadedPosition(uint32_t &r_position);
+	bool GetCurrentPosition(MCPlatformPlayerDuration &r_position);
+	bool SetCurrentPosition(MCPlatformPlayerDuration p_position);
+	bool GetStartPosition(MCPlatformPlayerDuration &r_position);
+	bool SetStartPosition(MCPlatformPlayerDuration p_position);
+	bool GetFinishPosition(MCPlatformPlayerDuration &r_position);
+	bool SetFinishPosition(MCPlatformPlayerDuration p_position);
+	bool GetLoadedPosition(MCPlatformPlayerDuration &r_position);
 	bool GetPlaySelection(bool &r_play_selection);
 	bool SetPlaySelection(bool p_play_selection);
 	bool GetLoop(bool &r_loop);
 	bool SetLoop(bool p_loop);
-	bool GetDuration(uint32_t &r_duration);
-	bool GetTimeScale(uint32_t &r_time_scale);
+	bool GetDuration(MCPlatformPlayerDuration &r_duration);
+	bool GetTimeScale(MCPlatformPlayerDuration &r_time_scale);
 	bool GetVolume(uint16_t &r_volume);
 	bool SetVolume(uint16_t p_volume);
 	bool GetOffscreen(bool &r_offscreen);
@@ -123,7 +123,7 @@ private:
 	bool Play();
 	bool Pause();
 	bool SeekRelative(int32_t p_amount);
-	bool SetPositions(uint32_t p_start, uint32_t p_finish);
+	bool SetPositions(MCPlatformPlayerDuration p_start, MCPlatformPlayerDuration p_finish);
 
 	bool SetEventWindow(HWND hwnd);
 	bool SetFilterGraph(IGraphBuilder *p_graph);
@@ -141,8 +141,8 @@ private:
 	MCPlatformPlayerMediaTypes m_media_types;
 
 	bool m_play_selection;
-	uint32_t m_start_position;
-	uint32_t m_finish_position;
+	MCPlatformPlayerDuration m_start_position;
+	MCPlatformPlayerDuration m_finish_position;
 
 	bool m_looping;
 
@@ -779,7 +779,7 @@ bool MCWin32DSPlayer::SetPlayRate(double p_play_rate)
 	return S_OK == m_seeking->SetRate(p_play_rate);
 }
 
-bool MCWin32DSPlayer::GetTimeScale(uint32_t &r_time_scale)
+bool MCWin32DSPlayer::GetTimeScale(MCPlatformPlayerDuration &r_time_scale)
 {
 	if (m_seeking == nil)
 		return false;
@@ -789,11 +789,11 @@ bool MCWin32DSPlayer::GetTimeScale(uint32_t &r_time_scale)
 	if (S_OK != m_seeking->ConvertTimeFormat(&t_media_time, &TIME_FORMAT_MEDIA_TIME, 1, NULL))
 		return false;
 
-	r_time_scale = (uint32_t)(10000 / t_media_time); // convert to units/second
+	r_time_scale = (MCPlatformPlayerDuration)(10000000 / t_media_time); // convert to units/second
 	return true;
 }
 
-bool MCWin32DSPlayer::GetDuration(uint32_t &r_duration)
+bool MCWin32DSPlayer::GetDuration(MCPlatformPlayerDuration &r_duration)
 {
 	if (m_seeking == nil)
 		return false;
@@ -802,14 +802,14 @@ bool MCWin32DSPlayer::GetDuration(uint32_t &r_duration)
 	if (S_OK != m_seeking->GetDuration(&t_duration))
 		return false;
 
-	if (t_duration > UINT32_MAX)
+	if (t_duration > MCPlatformPlayerDurationMax)
 		return false;
 
-	r_duration = (uint32_t)t_duration;
+	r_duration = (MCPlatformPlayerDuration)t_duration;
 	return true;
 }
 
-bool MCWin32DSPlayer::GetCurrentPosition(uint32_t &r_position)
+bool MCWin32DSPlayer::GetCurrentPosition(MCPlatformPlayerDuration &r_position)
 {
 	if (m_seeking == nil)
 		return false;
@@ -818,15 +818,15 @@ bool MCWin32DSPlayer::GetCurrentPosition(uint32_t &r_position)
 	if (S_OK != m_seeking->GetCurrentPosition(&t_current))
 		return false;
 
-	if (t_current > UINT32_MAX)
+	if (t_current > MCPlatformPlayerDurationMax)
 		return false;
 
-	r_position = t_current;
+	r_position = (MCPlatformPlayerDuration)t_current;
 
 	return true;
 }
 
-bool MCWin32DSPlayer::SetCurrentPosition(uint32_t p_position)
+bool MCWin32DSPlayer::SetCurrentPosition(MCPlatformPlayerDuration p_position)
 {
 	if (m_seeking == nil)
 		return false;
@@ -846,18 +846,18 @@ bool MCWin32DSPlayer::SetCurrentPosition(uint32_t p_position)
 	return true;
 }
 
-bool MCWin32DSPlayer::SetPositions(uint32_t p_start, uint32_t p_finish)
+bool MCWin32DSPlayer::SetPositions(MCPlatformPlayerDuration p_start, MCPlatformPlayerDuration p_finish)
 {
 	if (m_seeking == nil)
 		return false;
 
-	uint32_t t_current, t_duration;
+	MCPlatformPlayerDuration t_current, t_duration;
 	if (!GetCurrentPosition(t_current))
 		return false;
 	if (!GetDuration(t_duration))
 		return false;
 
-	uint32_t t_start, t_finish;
+	MCPlatformPlayerDuration t_start, t_finish;
 	t_start = 0;
 	t_finish = t_duration;
 
@@ -892,31 +892,31 @@ bool MCWin32DSPlayer::SetPositions(uint32_t p_start, uint32_t p_finish)
 	return true;
 }
 
-bool MCWin32DSPlayer::GetStartPosition(uint32_t &r_position)
+bool MCWin32DSPlayer::GetStartPosition(MCPlatformPlayerDuration &r_position)
 {
 	r_position = m_start_position;
 	return true;
 }
 
-bool MCWin32DSPlayer::SetStartPosition(uint32_t p_position)
+bool MCWin32DSPlayer::SetStartPosition(MCPlatformPlayerDuration p_position)
 {
 	m_start_position = p_position;
 	return SetPositions(m_start_position, m_finish_position);
 }
 
-bool MCWin32DSPlayer::GetFinishPosition(uint32_t &r_position)
+bool MCWin32DSPlayer::GetFinishPosition(MCPlatformPlayerDuration &r_position)
 {
 	r_position = m_finish_position;
 	return true;
 }
 
-bool MCWin32DSPlayer::SetFinishPosition(uint32_t p_position)
+bool MCWin32DSPlayer::SetFinishPosition(MCPlatformPlayerDuration p_position)
 {
 	m_finish_position = p_position;
 	return SetPositions(m_start_position, m_finish_position);
 }
 
-bool MCWin32DSPlayer::GetLoadedPosition(uint32_t &r_loaded)
+bool MCWin32DSPlayer::GetLoadedPosition(MCPlatformPlayerDuration &r_loaded)
 {
 	if (m_seeking == nil)
 		return false;
@@ -925,7 +925,7 @@ bool MCWin32DSPlayer::GetLoadedPosition(uint32_t &r_loaded)
 	if (S_OK != m_seeking->GetAvailable(&t_start, &t_end))
 		return false;
 
-	if (t_end > UINT32_MAX)
+	if (t_end > MCPlatformPlayerDurationMax)
 		return false;
 
 	r_loaded = t_end;
@@ -1037,7 +1037,7 @@ bool MCWin32DSPlayer::Play()
 	if (m_state == kMCWin32DSPlayerStopped)
 	{
 		// if play has stopped, then reset stream to the beginning
-		uint32_t t_start_position = 0;
+		MCPlatformPlayerDuration t_start_position = 0;
 		if (m_play_selection && m_start_position < m_finish_position)
 			t_start_position = m_start_position;
 
@@ -1156,55 +1156,55 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 	{
 	case kMCPlatformPlayerPropertyDuration:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_duration;
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_duration;
 			if (GetDuration(t_duration))
-				*((uint32_t*)r_value) = t_duration;
+				*((MCPlatformPlayerDuration*)r_value) = t_duration;
 			break;
 		}
 
 	case kMCPlatformPlayerPropertyTimescale:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_time_scale;
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_time_scale;
 			if (GetTimeScale(t_time_scale))
-				*((uint32_t*)r_value) = t_time_scale;
+				*((MCPlatformPlayerDuration*)r_value) = t_time_scale;
 			break;
 		}
 
 	case kMCPlatformPlayerPropertyCurrentTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_position;
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_position;
 			if (GetCurrentPosition(t_position))
-				*((uint32_t*)r_value) = t_position;
+				*((MCPlatformPlayerDuration*)r_value) = t_position;
 			break;
 		}
 
 	case kMCPlatformPlayerPropertyStartTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_position;
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_position;
 			if (GetStartPosition(t_position))
-				*((uint32_t*)r_value) = t_position;
+				*((MCPlatformPlayerDuration*)r_value) = t_position;
 			break;
 		}
 
 	case kMCPlatformPlayerPropertyFinishTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_position;
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_position;
 			if (GetFinishPosition(t_position))
-				*((uint32_t*)r_value) = t_position;
+				*((MCPlatformPlayerDuration*)r_value) = t_position;
 			break;
 		}
 
 	case kMCPlatformPlayerPropertyLoadedTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_position;
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_position;
 			if (GetLoadedPosition(t_position))
-				*((uint32_t*)r_value) = t_position;
+				*((MCPlatformPlayerDuration*)r_value) = t_position;
 			break;
 		}
 
@@ -1313,8 +1313,8 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyCurrentTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_position = *((uint32_t*)p_value);
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_position = *((MCPlatformPlayerDuration*)p_value);
 			SetCurrentPosition(t_position);
 
 			break;
@@ -1322,8 +1322,8 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyStartTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_start = *((uint32_t*)p_value);
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_start = *((MCPlatformPlayerDuration*)p_value);
 			SetStartPosition(t_start);
 
 			break;
@@ -1331,8 +1331,8 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyFinishTime:
 		{
-			MCAssert(p_type == kMCPlatformPropertyTypeUInt32);
-			uint32_t t_finish = *((uint32_t*)p_value);
+			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCPlatformPlayerDuration t_finish = *((MCPlatformPlayerDuration*)p_value);
 			SetFinishPosition(t_finish);
 
 			break;
