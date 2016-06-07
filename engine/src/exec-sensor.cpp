@@ -199,21 +199,21 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
         t_success = t_location.MakeMutable();
         if (t_success)
         {
-            if (!isnan(t_reading.latitude))
+            if (!isfinite(t_reading.latitude))
                 t_success = MCStringAppendFormat(*t_location, "%lf,", t_reading.latitude);
             else
                 t_success = MCStringAppendChar(*t_location, ',');
         }
         if (t_success)
         {
-            if (!isnan(t_reading.longitude))
+            if (!isfinite(t_reading.longitude))
                 t_success = MCStringAppendFormat(*t_location, "%lf,", t_reading.longitude);
             else
                 t_success = MCStringAppendChar(*t_location, ',');
         }
         if (t_success)
         {
-            if (!isnan(t_reading.altitude))
+            if (!isfinite(t_reading.altitude))
                 t_success = MCStringAppendFormat(*t_location, "%lf,", t_reading.altitude);
             else
                 t_success = MCStringAppendChar(*t_location, ',');
