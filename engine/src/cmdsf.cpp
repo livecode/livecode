@@ -1078,9 +1078,6 @@ void MCExport::compile(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define OPEN_BRACKET '['
-#define CLOSE_BRACKET ']'
-
 MCFilter::~MCFilter()
 {
 	delete container;
@@ -1683,39 +1680,6 @@ void MCImport::compile(MCSyntaxFactoryRef ctxt)
 	}
     
 	MCSyntaxFactoryEndStatement(ctxt);
-}
-
-typedef struct
-{
-	const char *token;
-	int4 which;
-}
-ST;
-
-static ST signal_table[] = {
-#if defined(TARGET_PLATFORM_LINUX)
-                               {"abrt", SIGABRT}, {"alrm", SIGALRM}, {"bus", SIGBUS}, {"chld", SIGCHLD},
-                               {"cld", SIGCLD}, {"cont", SIGCONT}, {"emt", SIGBOGUS}, {"fpe", SIGFPE},
-                               {"hup", SIGHUP}, {"ill", SIGILL}, {"info", SIGBOGUS}, {"int", SIGINT},
-                               {"io", SIGIO}, {"iot", SIGIOT}, {"kill", SIGKILL}, {"lwp", SIGBOGUS},
-                               {"phone", SIGBOGUS}, {"pipe", SIGPIPE}, {"poll", SIGPOLL}, {"prof", SIGPROF},
-                               {"pwr", SIGPWR}, {"quit", SIGQUIT}, {"segv", SIGSEGV}, {"stop", SIGSTOP},
-                               {"sys", SIGSYS}, {"term", SIGTERM}, {"trap", SIGTRAP}, {"tstp", SIGTSTP},
-                               {"ttin", SIGTTIN}, {"ttou", SIGTTOU}, {"urg", SIGURG}, {"usr1", SIGUSR1},
-                               {"usr2", SIGUSR2}, {"vtalrm", SIGVTALRM}, {"waiting", SIGBOGUS},
-                               {"winch", SIGWINCH}, {"xcpu", SIGXCPU}, {"xfsz", SIGXFSZ}
-#else
-                               {"xfsz", 1}
-#endif
-                           };
-
-int4 MCKill::lookup(MCStringRef s)
-{
-	uint2 size = ELEMENTS(signal_table);
-	while(size--)
-		if (MCStringIsEqualToCString(s, signal_table[size].token, kMCCompareCaseless))
-			return signal_table[size].which;
-	return SIGTERM;
 }
 
 MCKill::~MCKill()
