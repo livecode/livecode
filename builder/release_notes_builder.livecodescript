@@ -1050,7 +1050,7 @@ private function BugUrl pId
 end BugUrl
 
 private command BugGenerate pBugInfo, pBugCategory
-   V2BugGenerate pBugInfo, pBugCategory
+   V1BugGenerate pBugInfo, pBugCategory
 end BugGenerate
 
 private command V1BugGenerate pBugInfo, pBugCategory
