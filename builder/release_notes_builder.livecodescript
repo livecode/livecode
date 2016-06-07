@@ -284,15 +284,17 @@ files get their own section in the release notes.
 private command V1NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pReadableType]] release notes")
    
-   MarkdownAppend "notes", merge("# [[pTitle]]")
-   MarkdownAppend "updates", merge("# [[pTitle]]")
-   
    -- First, gather all files, their contents, and their metadata
    local tScannedNotes
    put V1NotesScan(pType) into tScannedNotes
    
    -- Next generate markdown
-   V1NotesGenerate pType, pReadableType, tScannedNotes
+   if V1NotesHaveContent(tScannedNotes) then
+      MarkdownAppend "notes", merge("# [[pTitle]]")
+      MarkdownAppend "updates", merge("# [[pTitle]]")
+      
+      V1NotesGenerate pType, pReadableType, tScannedNotes
+   end if
 end V1NotesCreate
 
 /*
@@ -384,6 +386,29 @@ private command V1NotesScanVersion pType, pVersion, pFiles, @xScan
       put tFileInfo into xScan[tVersion][tFile]
    end repeat
 end V1NotesScanVersion
+
+private function V1NotesHaveContent pScanData
+   local tTagData
+   repeat for each element tTagData in pScanData
+      if V1NotesHaveContentVersion(tTagData) then
+         return true
+      end if
+   end repeat
+   return false
+end V1NotesHaveContent
+
+private function V1NotesHaveContentVersion pScanData
+   local tFileInfo
+   repeat for each element tFileInfo in pScanData
+      if tFileInfo["basename"] contains "feature" then
+         return true
+      end if
+      if tFileInfo["basename"] contains "bugfix" then
+         return true
+      end if
+   end repeat
+   return false
+end V1NotesHaveContentVersion
 
 private command V1NotesGenerate pType, pReadableType, pScanData
    local tBugInfo
@@ -565,18 +590,21 @@ end V1NotesGenerateBlock
 private command V2NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pReadableType]] release notes")
    
-   MarkdownAppend "notes", merge("# [[pTitle]]")
-   MarkdownAppend "updates", merge("# [[pTitle]]")
-   
    local tScannedNotes
    put V2NotesScan(pType) into tScannedNotes
    
    local tCollated, tBugInfo
    V2NotesCollate pType, tScannedNotes, tCollated, tBugInfo
    
-   V2NotesGenerate pType, tCollated, 1
+   if V2NotesHaveContent(tCollated, tBugInfo) then
+      MarkdownAppend "notes", merge("# [[pTitle]]")
+      MarkdownAppend "updates", merge("# [[pTitle]]")
+      
+      V2NotesGenerate pType, tCollated, 1
+      
+      BugGenerate tBugInfo, pReadableType
+   end if
    
-   BugGenerate tBugInfo, pReadableType
 end V2NotesCreate
 
 -- There isn't actually any difference between the information
@@ -752,6 +780,26 @@ private command V2NotesAppendSection pName, pCollatedSection, @xCollated
    put pCollatedSection into xCollated[tId]
    put pName into xCollated[tId]["__name"]
 end V2NotesAppendSection
+
+private function V2NotesHaveContent pCollated, pBugInfo   
+   if (word 1 to -1 of pCollated["__markdown"]) is not empty then
+      return true
+   end if
+   
+   -- Recurse into child nodes
+   local tId
+   repeat with tId = 1 to pCollated["__count"]
+      if V2NotesHaveContent(pCollated[tId]) then
+         return true
+      end if
+   end repeat
+   
+   if the number of elements in pBugInfo > 0 then
+      return true
+   end if
+   
+   return false
+end V2NotesHaveContent
 
 private command V2NotesGenerate pType, pCollated, pLevel
    MarkdownAppend "notes", V2NotesGenerateContent(pType, pCollated, pLevel)
