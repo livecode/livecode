@@ -227,9 +227,6 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
         else
             ctxt.Throw();
     }
-
-    // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
-    MCStringFormat(r_location, "%lf,%lf,%lf,", t_reading.latitude, t_reading.longitude, t_reading.altitude);
 }
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
