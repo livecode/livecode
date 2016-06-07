@@ -17,7 +17,7 @@ Platforms: desktop,server,web,mobile
 Example:
 on newWidget -- set tooltips of new widgets
 	set the tooltip of the target to the kind of the target
-end newButton
+end newWidget
 
 Description:
 Handle the <newWidget> <message> if you want to create additional <object|objects>, switch <tool|tools>, or do other tasks when a new <widget> is created.
