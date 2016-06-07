@@ -803,21 +803,19 @@ end V2NotesHaveContent
 
 private command V2NotesGenerate pType, pCollated, pLevel
    MarkdownAppend "notes", V2NotesGenerateContent(pType, pCollated, pLevel)
-   MarkdownAppend "updates", V2NotesGenerateContent(pType, pCollated, pLevel, true)
+   MarkdownAppend "updates", V2NotesGenerateContent(pType, pCollated, pLevel)
 end V2NotesGenerate
 
 -- If <pOnlyCurrent> is true, then only generate content that's brand new in
 -- the release that notes are being generated for
-private function V2NotesGenerateContent pType, pCollated, pLevel, pOnlyCurrent
+private function V2NotesGenerateContent pType, pCollated, pLevel
    -- Compute the content from this node + all child nodes
    local tContent
    
-   if not (pOnlyCurrent is true and (pCollated["__version"] is not sVersion)) then
-      if (word 1 to -1 of pCollated["__markdown"]) is not empty then
-         put pCollated["__markdown"] into tContent
-         if the last char of tContent is not return then
-            put return after tContent
-         end if
+   if (word 1 to -1 of pCollated["__markdown"]) is not empty then
+      put pCollated["__markdown"] into tContent
+      if the last char of tContent is not return then
+         put return after tContent
       end if
    end if
    
@@ -825,7 +823,7 @@ private function V2NotesGenerateContent pType, pCollated, pLevel, pOnlyCurrent
    local tSectionContent, tHeader
    
    repeat with tId = 1 to pCollated["__count"]
-      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1, pOnlyCurrent) into tSectionContent
+      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1) into tSectionContent
       
       -- Only generate a subsection header if the subsection (and all
       -- the subsections it contains) doesn't contain any notes
