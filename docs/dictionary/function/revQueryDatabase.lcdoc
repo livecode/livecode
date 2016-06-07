@@ -8,6 +8,8 @@ Summary: Selects <record|records> in a <database> according to a <SQL query>.
 
 Synonyms: revdb_query,revQueryDatabaseBlob
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android
@@ -57,11 +59,18 @@ To pass binary data in a variable in the <variablesList>, <prepend> "*b" to the 
 
 If the query is not successful, the <revQueryDatabase> <function> returns an error message.  The error message is never an <integer>, so you can check whether the query was successful by checking whether the <return value> is an <integer> or not.
 
->*Important:*  The <revQueryDatabase> <function> is part of the <Database library>. To ensure that the <function> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section of the General screen of the <Standalone Application Settings> window, make sure the "Database Support" checkbox is checked and the database drivers you are using are selected in the list of database drivers.
+>*Important:*  The <revQueryDatabase> <function> is part of the 
+> <Database library>. To ensure that the <function> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure both the 
+> "Database" library checkbox and those of the database drivers you are 
+> using are checked.
 
 Changes:
 The revQueryDatabase synonym was added in version 2.0.
 
-References: integer (keyword), element (keyword), Database library (library), LiveCode custom library (library), revExecuteSQLcommand (command), revCloseCursor (command), revExecuteSQL (command), revQueryIsAtStart (function), variable (glossary), element (glossary), standalone application (glossary), binary file (glossary), array (glossary), prepend (glossary), SQL query (glossary), record set (database cursor) (glossary), return value (glossary), record (glossary), Standalone Application Settings (glossary), database (glossary), function (control structure)
+References: integer (keyword), element (keyword), Database library (library), LiveCode custom library (glossary), revExecuteSQLcommand (command), revCloseCursor (command), revExecuteSQL (command), revQueryIsAtStart (function), variable (glossary), element (glossary), standalone application (glossary), binary file (glossary), array (glossary), prepend (glossary), SQL query (glossary), record set (database cursor) (glossary), return value (glossary), record (glossary), Standalone Application Settings (glossary), database (glossary), function (control structure)
 
 Tags: database
