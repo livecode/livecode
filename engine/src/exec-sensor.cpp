@@ -193,8 +193,43 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
 {
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
-        // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
-        MCStringFormat(r_location, "%lf,%lf,%lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
+    {
+        bool t_success = true;
+        MCAutoStringRef t_location(kMCEmptyString);
+        t_success = t_location.MakeMutable();
+        if (t_success)
+        {
+            if (!isnan(t_reading.latitude))
+                t_success = MCStringAppendFormat(*t_location, "%lf,", t_reading.latitude);
+            else
+                t_success = MCStringAppendChar(*t_location, ',');
+        }
+        if (t_success)
+        {
+            if (!isnan(t_reading.longitude))
+                t_success = MCStringAppendFormat(*t_location, "%lf,", t_reading.longitude);
+            else
+                t_success = MCStringAppendChar(*t_location, ',');
+        }
+        if (t_success)
+        {
+            if (!isnan(t_reading.altitude))
+                t_success = MCStringAppendFormat(*t_location, "%lf,", t_reading.altitude);
+            else
+                t_success = MCStringAppendChar(*t_location, ',');
+        }
+        
+        if (t_success)
+            t_success = t_location.MakeImmutable();
+        
+        if (t_success)
+            r_location = MCValueRetain(*t_location);
+        else
+            ctxt.Throw();
+    }
+
+    // PM-2014-10-09: [[ Bug 12142 ]] The old %Lf format worked for device but failed on simulator.
+    MCStringFormat(r_location, "%lf,%lf,%lf,", t_reading.latitude, t_reading.longitude, t_reading.altitude);
 }
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
