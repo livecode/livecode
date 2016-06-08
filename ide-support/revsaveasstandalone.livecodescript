@@ -449,11 +449,10 @@ end revStandalonePlatformDetails
 # Main use-case controller for the Standalone Application Builder
 #####################################################################
 
-local sSearchedForInclusions
 command revSearchForInclusions pStack, @xSettings
-   if not sSearchedForInclusions then
+   if not xSettings["searchedForInclusions"] then
       revSBSearchForInclusions pStack, xSettings
-      put true into sSearchedForInclusions
+      put true into xSettings["searchedForInclusions"]
    end if
 end revSearchForInclusions
 
@@ -1539,7 +1538,6 @@ command revReset
    delete variable sGenericNumber        -- a simple counter for the generic file naming
    delete variable sStandaloneSettingsA  -- a copy of the cRevStandaloneSettings of stack pFolder
    delete variable sIconA                -- array for icons
-   delete variable sSearchedForInclusions
    set the directory to sResetA["Directory"]
    set the fileType to sResetA["fileType"]
    unlock messages
