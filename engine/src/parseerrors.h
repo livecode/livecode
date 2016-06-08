@@ -1760,7 +1760,7 @@ enum Parse_errors
     // {PE-0570} revert: bad stack expression
     PE_REVERT_BADSTACK,
 	
-    // {PE-0570} vectordot: bad parameter
+    // {PE-0571} vectordot: bad parameter
     PE_VECTORDOT_BADPARAM,
 };
 
