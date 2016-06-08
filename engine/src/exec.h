@@ -1865,6 +1865,7 @@ extern MCExecMethodInfo *kMCArraysEvalArrayEncodeMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalArrayDecodeMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalMatrixMultiplyMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalTransposeMatrixMethodInfo;
+extern MCExecMethodInfo *kMCArraysEvalVectorDotProductMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsAnArrayMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsNotAnArrayMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsAmongTheKeysOfMethodInfo;
@@ -1889,6 +1890,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayRef& r_array);
 void MCArraysEvalMatrixMultiply(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, MCArrayRef& r_result);
 void MCArraysEvalTransposeMatrix(MCExecContext& ctxt, MCArrayRef p_matrix, MCArrayRef& r_result);
+void MCArraysEvalVectorDotProduct(MCExecContext& ctxt, MCArrayRef p_left, MCArrayRef p_right, double& r_result);
 
 void MCArraysEvalIsAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 void MCArraysEvalIsNotAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);

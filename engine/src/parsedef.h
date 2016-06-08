@@ -594,6 +594,8 @@ enum Functions {
     F_NORMALIZE_TEXT,
     
     F_CODEPOINT_PROPERTY,
+    
+    F_VECTOR_DOT_PRODUCT,
 };
 
 enum Handler_type {

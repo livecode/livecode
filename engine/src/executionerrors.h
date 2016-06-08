@@ -2712,7 +2712,16 @@ enum Exec_errors
     EE_SCRIPT_ONLY_STACK_NOPASSWORD,
     
     // {EE-0888} revert: can't find stack
-    EE_REVERT_NOSTACK
+    EE_REVERT_NOSTACK,
+    
+    // {EE-0889} vectordot: error in first parameter
+    EE_VECTORDOT_BADLEFT,
+    
+    // {EE-0890} vectordot: error in second parameter
+    EE_VECTORDOT_BADRIGHT,
+    
+    // {EE-0891} vectordot: arrays are not key-wise compatible
+    EE_VECTORDOT_MISMATCH,
 };
 
 extern const char *MCexecutionerrors;

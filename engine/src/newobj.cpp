@@ -802,6 +802,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCValue;
 	case F_VARIABLES:
 		return new MCVariables;
+    case F_VECTOR_DOT_PRODUCT:
+        return new MCVectorDotProduct;
 	case F_VERSION:
 		return new MCVersion;
 	case F_WAIT_DEPTH:

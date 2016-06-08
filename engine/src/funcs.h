@@ -2304,6 +2304,22 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 };
 
+class MCVectorDotProduct : public MCFunction
+{
+	MCExpression *first;
+	MCExpression *second;
+public:
+	MCVectorDotProduct(void)
+	{
+		first = NULL;
+		second = NULL;
+	}
+	virtual ~MCVectorDotProduct();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+	virtual void compile(MCSyntaxFactoryRef);
+};
+
 class MCMaxFunction : public MCParamFunctionCtxt<MCMathEvalMax, EE_MAX_BADSOURCE, PE_MAX_BADPARAM, kMCMathEvalMaxMethodInfo>
 {
 public:
