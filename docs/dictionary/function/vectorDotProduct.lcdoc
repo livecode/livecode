@@ -6,7 +6,7 @@ Syntax: vectorDotProduct(<firstArray>, <secondArray>)
 
 Summary: <return|Returns> the vector dot product of two <array|arrays>.
 
-Introduced: 1.1
+Introduced: 8.1
 
 OS: mac,windows,linux,ios,android
 
