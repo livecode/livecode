@@ -477,8 +477,11 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
    
    set the itemdelimiter to slash
    put item -1 of the effective filename of stack tStackFileName into tStackName
+   local tExtension
    set the itemdelimiter to "."
-   if item -1 of tStackName is not among the items of revIDELiveCodeFileExtensions() then
+   put item -1 of tStackName into tExtension
+   set the itemdelimiter to comma
+   if tExtension is not among the items of revIDELiveCodeFileExtensions() then
       put ".livecode" after tStackName
    end if
    
