@@ -2123,7 +2123,6 @@ private command revSmartChecking pStackFilesList, @xSettings
    local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
    local tFiles
    revStandaloneProgress "Auto detecting library inclusions..."
-   lock screen
    lock messages
    
    put empty into tNewSettings["scriptLibraries"]
@@ -2170,7 +2169,6 @@ private command revSmartChecking pStackFilesList, @xSettings
    -- Update the output settings
    put tNewSettings into xSettings
    unlock messages
-   unlock screen
 end revSmartChecking
 
 private command revCheckObject pObject,pUserLibraries, @xSettings
