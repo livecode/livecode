@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -1663,95 +1663,6 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bo
 	}
 }
 
-#ifdef LEGACY_EXEC 
-Boolean MCObject::setcolor(uint2 index, const MCString &data)
-{
-	uint2 i, j;
-	if (data.getlength() == 0)
-	{
-		if (getcindex(index, i))
-			destroycindex(index, i);
-	}
-	else
-	{
-		if (!getcindex(index, i))
-		{
-			i = createcindex(index);
-			colors[i].red = colors[i].green = colors[i].blue = 0;
-		}
-		MCColor oldcolor = colors[i];
-		if (!MCscreen->parsecolor(data, &colors[i], &colornames[i]))
-		{
-			MCeerror->add
-			(EE_OBJECT_BADCOLOR, 0, 0, data);
-			return False;
-		}
-		j = i;
-		if (getpindex(index, j))
-		{
-			if (opened)
-
-				MCpatternlist->freepat(patterns[j].pattern);
-			destroypindex(index, j);
-		}
-	}
-	return True;
-}
-
-Boolean MCObject::setcolors(const MCString &data)
-{
-	uint2 i, j, index;
-	MCColor newcolors[8];
-	char *newcolornames[8];
-	for (i = 0 ; i < 8 ; i++)
-		newcolornames[i] = NULL;
-	if (!MCscreen->parsecolors(data, newcolors, newcolornames, 8))
-	{
-		MCeerror->add
-		(EE_OBJECT_BADCOLORS, 0, 0, data);
-		return False;
-	}
-	for (index = DI_FORE ; index <= DI_FOCUS ; index++)
-	{
-		// MW-2013-02-21: [[ Bug 10683 ]] Only clear the pattern if we are actually
-		//   setting a color.
-		if (newcolors[index] . flags != 0)
-		{
-			if (getpindex(index, j))
-			{
-				if (opened)
-					MCpatternlist->freepat(patterns[j].pattern);
-				destroypindex(index, j);
-			}
-		}
-		if (!getcindex(index, i))
-		{
-			if (newcolors[index].flags)
-			{
-				i = createcindex(index);
-				colors[i] = newcolors[index];
-				colornames[i] = newcolornames[index];
-			}
-		}
-		else
-		{
-			if (newcolors[index].flags)
-			{
-				delete colornames[i];
-				if (opened)
-				{
-					colors[i] = newcolors[index];
-				}
-				colornames[i] = newcolornames[index];
-			}
-			else
-				destroycindex(index, i);
-		}
-	}
-	return True;
-}
-#endif
-
 Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 {
 	uint2 i;
@@ -2221,11 +2132,22 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		if (MCnoui)
 		{
             MCAutoPointer<char> t_mccmd;
-            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
+            if (!MCStringConvertToCString(MCcmd, &t_mccmd))
+                return ES_ERROR;
+            
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
-			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        *t_mccmd, line, pos);
+            
+            MCAutoValueRef t_object;
+            if (!names(P_NAME, &t_object))
+                return ES_ERROR;
+            
+            MCAutoPointer<char> t_object_name;
+            if (!MCStringConvertToCString((MCStringRef)*t_object, &t_object_name))
+                return ES_ERROR;
+            
+			fprintf(stderr, "%s: Script execution error at line %d, column %d in %s\n",
+			        *t_mccmd, line, pos, *t_object_name);
 		}
 		else
 			if (!send)
@@ -2369,18 +2291,6 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 
 	MCmessagemessages = True;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
-{
-	MCAutoValueRef t_name;
-	if (names(which, &t_name) &&
-		ep . setvalueref(*t_name))
-		return ES_NORMAL;
-	/* CHECK MCERROR */
-	return ES_ERROR;
-}
-#endif
 
 bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val)
 {
@@ -4321,113 +4231,6 @@ MCObjectHandle *MCObject::gethandle(void)
 
 	return m_weak_handle;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef OLD_EXEC
-struct MCObjectChangeIdVisitor: public MCObjectVisitor
-{
-	uint32_t old_card_id;
-	uint32_t new_card_id;
-
-	void Process(MCCdata *p_cdata)
-	{
-		if (p_cdata == nil)
-			return;
-
-		MCCdata *t_ptr;
-		t_ptr = p_cdata;
-		do
-		{
-			if (t_ptr -> getid() == old_card_id)
-			{
-				t_ptr -> setid(new_card_id);
-				return;
-			}
-
-			t_ptr = t_ptr -> next();
-		}
-		while(t_ptr != p_cdata);
-	}
-
-	bool OnField(MCField *p_field)
-	{
-		Process(p_field -> getcdata());
-		return true;
-	}
-
-	bool OnButton(MCButton *p_button)
-	{
-		Process(p_button -> getcdata());
-		return true;
-	}
-};
-
-Exec_stat MCObject::changeid(uint32_t p_new_id)
-{
-	if (obj_id == p_new_id)
-		return ES_NORMAL;
-
-	// MW-2010-05-18: (Silently) don't allow id == 0 - this prevents people working around the
-	//   script limits, which don't come into effect on objects with 0 id.
-	if (p_new_id == 0)
-		return ES_NORMAL;
-	
-	// MW-2011-02-08: Don't allow id change if the parent is nil as this means its a template
-	//   object which doesn't really have an id.
-	if (parent == nil)
-		return ES_NORMAL;
-	
-	MCStack *t_stack;
-	t_stack = getstack();
-
-	if (t_stack -> isediting())
-	{
-		MCeerror -> add(EE_OBJECT_NOTWHILEEDITING, 0, 0);
-		return ES_ERROR;
-	}
-
-	// If the stack's id is less than the requested id then we are fine
-	// since the stack id is always greater or equal to the highest numbered
-	// control/card id. Otherwise, check the whole list of controls and cards.
-	if (p_new_id <= t_stack -> getid())
-	{
-		if (t_stack -> getcontrolid(CT_LAYER, p_new_id) != NULL ||
-			t_stack -> findcardbyid(p_new_id) != NULL)
-		{
-			MCeerror->add(EE_OBJECT_IDINUSE, 0, 0, p_new_id);
-			return ES_ERROR;
-		}
-	}
-	else
-		t_stack -> obj_id = p_new_id;
-
-	// If the object is a card, we have to reset all the control's data
-	// id's.
-	// If the object is not a card, but has a card as parent, we need to
-	// reset the card's objptr id for it.
-	if (gettype() == CT_CARD)
-	{
-		MCObjectChangeIdVisitor t_visitor;
-		t_visitor . old_card_id = obj_id;
-		t_visitor . new_card_id = p_new_id;
-		t_stack -> visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
-	}
-	else if (parent -> gettype() == CT_CARD)
-		static_cast<MCCard *>(parent) -> resetid(obj_id, p_new_id);
-
-	// MW-2012-10-10: [[ IdCache ]] If the object is in the cache, then remove
-	//   it since its id is changing.
-	if (m_in_id_cache)
-		t_stack -> uncacheobjectbyid(this);
-
-	uint4 oldid = obj_id;
-	obj_id = p_new_id;
-	message_with_args(MCM_id_changed, oldid, obj_id);
-
-	return ES_NORMAL;
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

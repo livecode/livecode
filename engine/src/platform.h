@@ -100,6 +100,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeUInt16,
 	kMCPlatformPropertyTypeInt32,
 	kMCPlatformPropertyTypeUInt32,
+	kMCPlatformPropertyTypeInt64,
+	kMCPlatformPropertyTypeUInt64,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,
 	kMCPlatformPropertyTypeRectangle,
@@ -973,12 +975,19 @@ enum MCPlatformPlayerProperty
 typedef uint32_t MCPlatformPlayerMediaTypes;
 enum MCPlatformPlayerMediaType
 {
-	kMCPlatformPlayerMediaTypeVideo,
-	kMCPlatformPlayerMediaTypeAudio,
-	kMCPlatformPlayerMediaTypeText,
-	kMCPlatformPlayerMediaTypeQTVR,
-	kMCPlatformPlayerMediaTypeSprite,
-	kMCPlatformPlayerMediaTypeFlash,
+	kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlashBit,
+
+	kMCPlatformPlayerMediaTypeVideo = 1 << kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudio = 1 << kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeText = 1 << kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVR = 1 << kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSprite = 1 << kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlash = 1 << kMCPlatformPlayerMediaTypeFlashBit,
 };
 
 enum MCPlatformPlayerTrackProperty
@@ -1006,6 +1015,10 @@ struct MCPlatformPlayerQTVRConstraints
 	double y_min, y_max;
 	double z_min, z_max;
 };
+
+typedef uint64_t MCPlatformPlayerDuration;
+#define MCPlatformPlayerDurationPropertyType kMCPlatformPropertyTypeUInt64
+#define MCPlatformPlayerDurationMax UINT64_MAX
 
 void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 

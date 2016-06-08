@@ -17,7 +17,6 @@ set the fileType to "ttxtTEXT" -- text file owned by SimpleText app
 
 Value:
 The <fileType> is an eight- <character> <string>. The first four <characters> are the <creator signature>, and the last four are the <type signature|file type>.
-<img src="202653"/> >*Important:* The <type signature|file type> and <creator signature> are <case-sensitive>.
 
 Description:
 Use the <fileType> <property> to ensure that <files> that a <standalone application> creates are recognized by the operating system as belonging to the <standalone application|standalone>.

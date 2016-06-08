@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "date.h"
 
 #if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(_DARWIN_SERVER) || defined(__EMSCRIPTEN__)

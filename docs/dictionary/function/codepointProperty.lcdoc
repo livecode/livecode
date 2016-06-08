@@ -2,7 +2,7 @@ Name: codepointProperty
 
 Type: function
 
-Syntax: codepointToNum(<unicodeCodepoint>, <propertyName>)
+Syntax: codepointProperty(<unicodeCodepoint>, <propertyName>)
 
 Summary: Retrieves a Unicode Character Database (UCD )character property of a Unicode codepoint.
 

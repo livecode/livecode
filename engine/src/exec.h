@@ -17,12 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_EXEC__
 #define __MC_EXEC__
 
-#ifdef LEGACY_EXEC
-#ifndef __MC_EXECPT__
-//#include "execpt.h"
-#endif
-#endif
-
 #ifndef OBJDEFS_H
 #include "objdefs.h"
 #endif
@@ -236,6 +230,7 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalInt16,
 	kMCPropertyTypeOptionalUInt16,
 	kMCPropertyTypeOptionalUInt32,
+	kMCPropertyTypeOptionalDouble,
 	kMCPropertyTypeOptionalString,
 	kMCPropertyTypeOptionalRectangle,
     kMCPropertyTypeOptionalPoint,
@@ -476,6 +471,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkGetOptionalUInt16(mth) MCPropertyThunkImp(mth, uinteger_t*&)
 #define MCPropertyThunkGetOptionalUInt32(mth) MCPropertyThunkImp(mth, uinteger_t*&)
 #define MCPropertyThunkGetDouble(mth) MCPropertyThunkImp(mth, double&)
+#define MCPropertyThunkGetOptionalDouble(mth) MCPropertyThunkImp(mth, double *&)
 #define MCPropertyThunkGetChar(mth) MCPropertyThunkImp(mth, char_t&)
 #define MCPropertyThunkGetString(mth) MCPropertyThunkImp(mth, MCStringRef&)
 #define MCPropertyThunkGetBinaryString(mth) MCPropertyThunkImp(mth, MCDataRef&)
@@ -510,6 +506,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyThunkSetOptionalUInt16(mth) MCPropertyThunkImp(mth, uinteger_t*)
 #define MCPropertyThunkSetOptionalUInt32(mth) MCPropertyThunkImp(mth, uinteger_t*)
 #define MCPropertyThunkSetDouble(mth) MCPropertyThunkImp(mth, double)
+#define MCPropertyThunkSetOptionalDouble(mth) MCPropertyThunkImp(mth, double*)
 #define MCPropertyThunkSetChar(mth) MCPropertyThunkImp(mth, char_t)
 #define MCPropertyThunkSetString(mth) MCPropertyThunkImp(mth, MCStringRef)
 #define MCPropertyThunkSetBinaryString(mth) MCPropertyThunkImp(mth, MCDataRef)
@@ -554,6 +551,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkGetOptionalUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectThunkGetOptionalUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectThunkGetDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double&)
+#define MCPropertyObjectThunkGetOptionalDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double*&)
 #define MCPropertyObjectThunkGetString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectThunkGetBinaryString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectThunkGetOptionalString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef&)
@@ -589,6 +587,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectThunkSetOptionalUInt16(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectThunkSetOptionalUInt32(obj, mth) MCPropertyObjectThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectThunkSetDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double)
+#define MCPropertyObjectThunkSetOptionalDouble(obj, mth) MCPropertyObjectThunkImp(obj, mth, double*)
 #define MCPropertyObjectThunkSetString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectThunkSetBinaryString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectThunkSetOptionalString(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCStringRef)
@@ -622,6 +621,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectPartThunkGetOptionalUInt16(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectPartThunkGetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*&)
 #define MCPropertyObjectPartThunkGetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double&)
+#define MCPropertyObjectPartThunkGetOptionalDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double*&)
 #define MCPropertyObjectPartThunkGetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
 #define MCPropertyObjectPartThunkGetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef&)
 #define MCPropertyObjectPartThunkGetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef&)
@@ -645,6 +645,7 @@ template<typename A, typename B, void Method(MCExecContext&, B, A)> inline void 
 #define MCPropertyObjectPartThunkSetOptionalUInt16(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectPartThunkSetOptionalUInt32(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, uinteger_t*)
 #define MCPropertyObjectPartThunkSetDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double)
+#define MCPropertyObjectPartThunkSetOptionalDouble(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, double*)
 #define MCPropertyObjectPartThunkSetString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
 #define MCPropertyObjectPartThunkSetBinaryString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCDataRef)
 #define MCPropertyObjectPartThunkSetOptionalString(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCStringRef)
@@ -1252,12 +1253,6 @@ public:
         m_string_options = kMCStringOptionCompareCaseless;
     }
 
-#ifdef LEGACY_EXEC
-    MCExecContext(MCExecPoint& ep)
-        : m_ep(ep), m_stat(ES_NORMAL)
-    {
-    }
-#endif
 	
     MCExecContext(const MCExecContext& p_ctxt)
         : m_stat(ES_NORMAL)
@@ -1297,12 +1292,6 @@ public:
     
 	//////////
 
-#ifdef LEGACY_EXEC
-	MCExecPoint& GetEP(void)
-	{
-		return m_ep;
-	}
-#endif
 	
 	Exec_stat GetExecStat(void)
 	{
@@ -1775,9 +1764,6 @@ public:
     bool EvalExprAsStrictInt(MCExpression *p_expr, Exec_errors p_error, integer_t& r_value);
     
 private:
-#ifdef LEGACY_EXEC
-    MCExecPoint& m_ep;
-#endif
 	Exec_stat m_stat;
 
     MCObjectPtr m_object;
@@ -2494,6 +2480,7 @@ extern MCExecMethodInfo *kMCInterfaceExecRemoveGroupFromCardMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecResetCursorsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecResetTemplateMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecRevertMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceExecRevertStackMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectEmptyMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfFieldMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceExecSelectAllTextOfButtonMethodInfo;
@@ -3008,6 +2995,7 @@ void MCInterfaceExecResetCursors(MCExecContext& ctxt);
 void MCInterfaceExecResetTemplate(MCExecContext& ctxt, Reset_type type);
 
 void MCInterfaceExecRevert(MCExecContext& ctxt);
+void MCInterfaceExecRevertStack(MCExecContext& ctxt, MCObject *p_stack);
 
 void MCInterfaceExecSelectEmpty(MCExecContext& ctxt);
 void MCInterfaceExecSelectAllTextOfField(MCExecContext& ctxt, MCObjectPtr target);

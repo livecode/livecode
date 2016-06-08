@@ -236,7 +236,7 @@
     'rule' ImportDefinition(-> variable(Position, public, Id, Type)):
         "variable" @(-> Position) Identifier(-> Id) "as" Type(-> Type)
 
-    'rule' ImportDefinition(-> handler(Position, public, Id, normal, Signature, nil, nil)):
+    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
@@ -249,7 +249,7 @@
 'nonterm' Metadata(-> DEFINITION)
 
     'rule' Metadata(-> metadata(Position, Key, Value)):
-        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" STRING_LITERAL(-> Value)
+        "metadata" @(-> Position) StringOrNameLiteral(-> Key) "is" StringLiteral(-> Value)
         
 --------------------------------------------------------------------------------
 -- Import Syntax
@@ -352,9 +352,6 @@
 
     'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
         Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
-
-    'rule' VariableDefinition(-> contextvariable(Position, Access, Name, Type, Default)):
-        Access(-> Access) "context" @(-> Position) "variable" Identifier(-> Name) OptionalTypeClause(-> Type) "default" Expression(-> Default)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 
@@ -372,7 +369,7 @@
         Access(-> Access) "type" @(-> Position) Identifier(-> Name) "is" Type(-> Type)
     
     'rule' TypeDefinition(-> type(Position, Access, Name, foreign(Position, Binding))):
-        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" STRING_LITERAL(-> Binding)
+        Access(-> Access) "foreign" @(-> Position) "type" Identifier(-> Name) "binds" "to" StringLiteral(-> Binding)
         
     'rule' TypeDefinition(-> type(Position, Access, Name, record(Position, Base, Fields))):
         Access(-> Access) "record" @(-> Position) "type" Identifier(-> Name) OptionalBaseType(-> Base) Separator
@@ -455,24 +452,13 @@
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, normal, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
         
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, context, Signature, nil, Body)):
-        Access(-> Access) "context" @(-> Position) "handler" Identifier(-> Name) Signature(-> Signature) Separator
-            Statements(-> Body)
-        "end" "handler"
-            --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
-    --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
-    --        Definitions(-> Definitions)
-    --    "begin"
-    --        Statements(-> Body)
-    --    "end" "handler"
-        
     'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
-        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" STRING_LITERAL(-> Binding)
+        Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
 
 'nonterm' Signature(-> SIGNATURE)
 
@@ -1124,10 +1110,10 @@
         "[" @(-> Position) Syntax(-> Operand) "]"
         
     'rule' AtomicSyntax(-> keyword(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position)
+        StringLiteral(-> Value) @(-> Position)
 
     'rule' AtomicSyntax(-> unreservedkeyword(Position, Value)):
-        STRING_LITERAL(-> Value) @(-> Position) "!"
+        StringLiteral(-> Value) @(-> Position) "!"
         
     'rule' AtomicSyntax(-> rule(Position, Name)):
         "<" @(-> Position) Identifier(-> Name) ">"

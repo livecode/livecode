@@ -671,9 +671,6 @@ function revFolderNameMakeLegal pName
    return tLegalName
 end revFolderNameMakeLegal
 
-// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
-constant kPlatforms = "Windows,MacOSX x86-32,Linux"
-
 // List of all desktop target platforms + architecture
 constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
@@ -684,6 +681,16 @@ constant kAdditionalTargets = "iOS,Android,Emscripten"
 function revSBAdditionalTargets
    return kAdditionalTargets
 end revSBAdditionalTargets
+
+function revSBTargetToPlatform pTarget
+   if pTarget begins with "MacOSX" then
+      return "MacOSX"
+   else if pTarget begins with "Linux" then
+      return "Linux"
+   else
+      return pTarget
+   end if
+end revSBTargetToPlatform
 
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
@@ -698,6 +705,9 @@ constant kDefaultScriptLibraries     = ""
 constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
+
+// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
+constant kInitialTargets = "Windows,MacOSX x86-32,Linux"
 
 on revDefaultStandaloneSettings pStack
    local tStandaloneSettingsA,tPlatform,tName
@@ -741,9 +751,9 @@ on revDefaultStandaloneSettings pStack
    if tStandaloneSettingsA["UNIX,pageSetup"] = "" then put true into tStandaloneSettingsA["UNIX,pageSetup"]
    if tStandaloneSettingsA["UNIX,fileSelector"] = "" then put true into tStandaloneSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
-   repeat for each item tPlatform in kPlatforms
-      if tStandaloneSettingsA[tPlatform] = "" then 
-            put revEngineCheck(tPlatform) into tStandaloneSettingsA[tPlatform]
+   repeat for each item tTarget in kInitialTargets
+      if tStandaloneSettingsA[tTarget] = "" then 
+            put revEngineCheck(tTarget) into tStandaloneSettingsA[tTarget]
       end if
    end repeat
    
@@ -1036,6 +1046,14 @@ private function revSBPlatformToRuntimeFolderName pPlatform
    return empty
 end revSBPlatformToRuntimeFolderName
 
+function revSBExternalsMapping
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+end revSBExternalsMapping
+
+function revSBDatabaseDriversMapping
+   return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
+end revSBDatabaseDriversMapping
+
 -- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
 --   list by hand.
 private function revSBExternalsBuildList pPlatform
@@ -1106,7 +1124,7 @@ private function revSBMobileExternalsFromFolder pFolder
    end repeat
    
    local tFixedExternals
-   put revIDEExternalsMapping() into tFixedExternals
+   put revSBExternalsMapping() into tFixedExternals
    
    local tListA
    repeat for each item tItem in tFixedExternals
@@ -1228,7 +1246,7 @@ private function revSBMobileDatabaseDriversFromFolder pFolder
    end repeat
    
    local tFixedDrivers
-   put revIDEDatabaseDriversMapping() into tFixedDrivers
+   put revSBDatabaseDriversMapping() into tFixedDrivers
    
    local tListA
    set the itemdelimiter to comma
@@ -1702,13 +1720,13 @@ function revSBInclusionToMobileKey pName, pType, pPlatform
          switch pType
             case "database driver"
                local tDBDriverID, tDBDrivers
-               put revIDEDatabaseDriversMapping() into tDBDrivers
+               put revSBDatabaseDriversMapping() into tDBDrivers
                put "db" & word 1 of item itemOffset(pName, tDBDrivers) of tDBDrivers into tToInclude
                break
             case "external"
             default
                local tExternals
-               put revIDEExternalsMapping() into tExternals
+               put revSBExternalsMapping() into tExternals
                put word 1 of item itemOffset(pName, tExternals) of tExternals into tToInclude
                break
          end switch
@@ -1751,11 +1769,17 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    end repeat
 end revSBConvertSettingsForPlatform
 
-command revSBResolveIncludedExternal pPlatform, @xFile
+function revSBIncludedExternalPath pTarget, pName
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   return revSBGetExternalPath(tPlatform, pName)
+end revSBIncludedExternalPath
+
+command revSBResolveIncludedExternal pTarget, @xFile
    -- Added to support mergExt inclusion
    if xFile begins with "!" then
       local tExtPath
-      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      put revSBIncludedExternalPath (pTarget, char 2 to -1 of xFile) into tExtPath
       -- if the file prefixed with ! was not a named external, treat normally
       if tExtPath is not empty then
          put tExtPath into xFile
@@ -1919,7 +1943,7 @@ private command initialiseInclusionDependencies
    
    // Database drivers require revdb
    local tDBName
-   repeat for each item tDatabaseDriver in revIDEDatabaseDriversMapping()
+   repeat for each item tDatabaseDriver in revSBDatabaseDriversMapping()
       put word 2 to -1 of tDatabaseDriver into tDBName
       put "Database" into sDependencies["databaseDrivers"][tDBName]["scriptLibraries"]
    end repeat
@@ -1943,6 +1967,36 @@ command revSBUpdateForDependencies @xSettings
       end repeat
    end repeat
 end revSBUpdateForDependencies
+
+command revSBSanitiseExternalsList pTarget, @xExternals
+   local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put revSBAdditionalExternalsList(tPlatform) into tAvailableExternals
+   put revSBExternalsMapping() into tFixedExternals
+   split tFixedExternals by comma and space
+   put the keys of tFixedExternals into tFixedExternals
+   
+   local tValid
+   repeat for each line tAddedExternal in xExternals
+      put false into tValid
+      if tAddedExternal is among the lines of tAvailableExternals then
+         put true into tValid
+      end if
+      
+      if tAddedExternal is among the lines of tFixedExternals then
+         put true into tValid
+      end if
+      
+      if tValid then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into xExternals
+end revSBSanitiseExternalsList
 
 ------------------- SMART CHECKING --------------------
 
@@ -2009,7 +2063,7 @@ on initialiseSearchForInclusions
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
    put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
    
-   repeat for each item tDBDriver in revIDEDatabaseDriversMapping()
+   repeat for each item tDBDriver in revSBDatabaseDriversMapping()
       local tDBName, tDB
       put word 1 of tDBDriver into tDB
       put word 2 to -1 of tDBDriver into tDBName

@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mode.h"
 
-//#include "execpt.h"
+
 #include "scriptpt.h"
 #include "mcerror.h"
 #include "globals.h"

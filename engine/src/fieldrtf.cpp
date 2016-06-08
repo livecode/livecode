@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "text.h"
 #include "osspec.h"
-//#include "execpt.h"
+
 #include "mcstring.h"
 #include "uidc.h"
 
@@ -820,25 +820,6 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 }
 
 // MW-2012-02-29: [[ FieldExport ]] New RTF export method.
-#ifdef LEGACY_EXEC
-void MCField::exportasrtftext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index)
-{
-	MCAutoStringRef t_string;
-
-	if (exportasrtftext(p_paragraphs, p_start_index, p_finish_index, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
-	else
-		ep . clear();
-}
-#endif
-
-#ifdef LEGACY_EXEC
-void MCField::exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index)
-{
-	exportasrtftext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index);
-}
-#endif
-
 bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef &r_string)
 {
 	return exportasrtftext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, r_string);

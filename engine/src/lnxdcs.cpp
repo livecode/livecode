@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "stack.h"
 #include "util.h"
-//#include "execpt.h"
+
 #include "stacklst.h"
 
 #include "sellst.h"

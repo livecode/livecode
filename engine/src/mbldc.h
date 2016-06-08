@@ -178,10 +178,6 @@ public:
 	//
 
 	MCPrinter *createprinter(void);
-#ifdef LEGACY_EXEC
-	void listprinters(MCExecPoint& ep);
-#endif
-
 	//
 
 	bool ownsselection(void);

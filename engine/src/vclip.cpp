@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "date.h"
 #include "sellst.h"
@@ -91,95 +91,6 @@ const char *MCVideoClip::gettypestring()
 {
 	return MCvideostring;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
-{
-	switch (which)
-	{
-#ifdef /* MCVideoClip::getprop */ LEGACY_EXEC
-	case P_DONT_REFRESH:
-		ep.setboolean(getflag(F_DONT_REFRESH));
-		break;
-	case P_FRAME_RATE:
-		if (flags & F_FRAME_RATE)
-			ep.setint(framerate);
-		else
-			ep.clear();
-		break;
-	case P_SCALE:
-		ep.setnvalue(scale);
-		break;
-	case P_SIZE:
-		ep.setint(size);
-		break;
-	case P_TEXT:
-		{
-			MCString s((const char *)frames, size);
-			ep.setsvalue(s);
-		}
-		break;
-#endif /* MCVideoClip::getprop */
-	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	MCString data = ep.getsvalue();
-
-	Boolean dirty = False;
-	switch (p)
-	{
-#ifdef /* MCVideoClip::setprop */ LEGACY_EXEC
-	case P_DONT_REFRESH:
-		if (!MCU_matchflags(data, flags, F_DONT_REFRESH, dirty))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAB, 0, 0, data);
-			return ES_ERROR;
-		}
-		return ES_NORMAL;
-	case P_FRAME_RATE:
-		if (data.getlength() == 0)
-			flags &= ~F_FRAME_RATE;
-		else
-		{
-			if (!MCU_stoui2(data, framerate))
-			{
-				MCeerror->add
-				(EE_OBJECT_NAN, 0, 0, data);
-				return ES_ERROR;
-			}
-			flags |= F_FRAME_RATE;
-		}
-		return ES_NORMAL;
-	case P_SCALE:
-		if (!MCU_stor8(data, scale))
-		{
-			MCeerror->add
-			(EE_OBJECT_NAN, 0, 0, data);
-			return ES_ERROR;
-		}
-		flags |= F_SCALE_FACTOR;
-		return ES_NORMAL;
-	case P_TEXT:
-		delete frames;
-		size = data.getlength();
-		frames = new uint1[size];
-		memcpy(frames, data.getstring(), size);
-		return ES_NORMAL;
-#endif /* MCVideoClip::setprop */
-	default:
-		break;
-	}
-	return MCObject::setprop_legacy(parid, p, ep, effective);
-}
-#endif
 
 Boolean MCVideoClip::del()
 {

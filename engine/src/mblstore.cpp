@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 #include "stack.h"
 #include "card.h"
@@ -368,16 +368,3 @@ void MCPurchaseCompleteListUpdate(MCPurchase *p_purchase)
     MCListAppend(s_completed_purchases, p_purchase -> prod_id);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-#ifdef LEGACY_EXEC
-static bool list_purchases(void *context, MCPurchase* p_purchase)
-{
-	MCExecPoint *ep;
-	ep = (MCExecPoint *)context;
-	
-	ep -> concatuint(p_purchase -> id, EC_RETURN, ep -> isempty());
-	
-	return true;
-}
-#endif
