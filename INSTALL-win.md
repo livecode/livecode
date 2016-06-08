@@ -41,7 +41,6 @@ The build process also requires:
 
 * [ActiveState Perl](https://www.activestate.com/activeperl/downloads) Community Edition
 * [Python 2.7](https://www.python.org/) (Python 3 isn't supported)
-* [QuickTime 7.3 SDK for Windows](https://developer.apple.com/downloads)
 
 ## Configuring LiveCode
 

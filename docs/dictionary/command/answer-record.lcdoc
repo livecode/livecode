@@ -8,7 +8,7 @@ Summary: Displays the <QuickTime> sound-recording settings <dialog box>.
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac
 
 Platforms: desktop
 
@@ -28,6 +28,15 @@ Use the <answer record> <command> to specify settings for use with the <record s
 The <answer record> <command> displays a <dialog box> where the user can select a sound compression format, rate, sampling rate, and whether to record in mono or stereo. Depending on the compression format, other options may also be offered. (This <dialog box> is displayed by <QuickTime>, not by LiveCode.) The settings the user chooses will be used the next time the <record sound> <command> is used.
 
 The <answer record> <command> sets the <recordCompression>, <recordRate>, <recordSampleSize>, and <recordChannels> <properties> in accordance with the settings chosen in the <dialog box>. To save the settings you choose in the <dialog box> and use them later without re-displaying the <dialog box|dialog>, save the values of these <properties>, then restore them when you want to record sound.
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: recordCompression (property), recordSampleSize (property), recordChannels (property), properties (property), recordRate (property), answer effect (command), record sound (command), result (function), recordCompressionTypes (function), property (glossary), dialog box (glossary), command (glossary), QuickTime (glossary), return (glossary), function (control structure)
 

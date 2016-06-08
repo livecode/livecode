@@ -101,10 +101,13 @@ The ability to use Core Image transition effects together with the enhanced synt
 
 Changes:
 The ability to use QuickTime special effects was introduced in version 1.1. In previous versions, only the built-in visual effects listed in the Parameters section were available.
-The use of QuickTime was deprecated in version 8.1 with new defaults for 
-<dontUseQT> and <dontUseQTEffects> as true on all systems apart from pre
-OS X 10.8. Additionally QuickTime can not be supported on 64 bit builds
-of LiveCode.
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: dontUseQT (property), dontUseQTEffects (property), alwaysBuffer (property), multiEffect (property), stacks (function), card (keyword), black (keyword), exit (control structure), player (object), pop (command), go (command), answer effect (command), find (command), command (glossary), handler (glossary), property (glossary)
 
