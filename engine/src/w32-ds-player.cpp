@@ -139,6 +139,7 @@ private:
 	HWND m_event_window;
 
 	MCPlatformPlayerMediaTypes m_media_types;
+	MCPlatformPlayerDuration m_frame_length;
 
 	bool m_play_selection;
 	MCPlatformPlayerDuration m_start_position;
@@ -355,6 +356,7 @@ MCWin32DSPlayer::MCWin32DSPlayer()
 	m_video_window = nil;
 	m_state = kMCWin32DSPlayerStopped;
 	m_media_types = 0;
+	m_frame_length = 0;
 	m_is_valid = false;
 
 	m_play_selection = false;
@@ -419,12 +421,14 @@ bool MCWin32DSPinIsConnected(IPin *p_pin)
 	return t_result == S_OK;
 }
 
-bool MCWin3DSGetFilterGraphMediaTypes(IFilterGraph *p_graph, MCPlatformPlayerMediaTypes &r_types)
+// Examines the input pins of each renderer filter to determine the supported media types, and video frame-rate if applicable
+bool MCWin3DSGetFilterGraphMediaInfo(IFilterGraph *p_graph, MCPlatformPlayerMediaTypes &r_types, MCPlatformPlayerDuration &r_frame_length)
 {
 	bool t_success;
 	t_success = true;
 
 	MCPlatformPlayerMediaTypes t_types = 0;
+	MCPlatformPlayerDuration t_frame_length = 0;
 
 	CComPtr<IEnumFilters> t_enum_filters;
 	if (t_success)
@@ -466,7 +470,17 @@ bool MCWin3DSGetFilterGraphMediaTypes(IFilterGraph *p_graph, MCPlatformPlayerMed
 						if (t_media_type.majortype == MEDIATYPE_Audio)
 							t_filter_types |= kMCPlatformPlayerMediaTypeAudio;
 						else if (t_media_type.majortype == MEDIATYPE_Video)
+						{
+							// Take a note of the video frame rate
+							VIDEOINFOHEADER *t_videoinfoheader = nil;
+							if (t_media_type.cbFormat >= sizeof(VIDEOINFOHEADER))
+							{
+								t_videoinfoheader = (VIDEOINFOHEADER*)t_media_type.pbFormat;
+								t_frame_length = t_videoinfoheader->AvgTimePerFrame;
+							}
+
 							t_filter_types |= kMCPlatformPlayerMediaTypeVideo;
+						}
 
 						MCWin32DSFreeMediaType(t_media_type);
 					}
@@ -484,7 +498,11 @@ bool MCWin3DSGetFilterGraphMediaTypes(IFilterGraph *p_graph, MCPlatformPlayerMed
 	}
 
 	if (t_success)
+	{
 		r_types = t_types;
+		r_frame_length = t_frame_length;
+	}
+
 	return t_success;
 }
 
@@ -510,8 +528,9 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
     }
 
 	MCPlatformPlayerMediaTypes t_types = 0;
+	MCPlatformPlayerDuration t_frame_length = 0;
 	if (t_success && p_graph != nil)
-		t_success = MCWin3DSGetFilterGraphMediaTypes(p_graph, t_types);
+		t_success = MCWin3DSGetFilterGraphMediaInfo(p_graph, t_types, t_frame_length);
 
 	if (t_success)
 	{
@@ -533,6 +552,7 @@ bool MCWin32DSPlayer::SetFilterGraph(IGraphBuilder *p_graph)
 		m_seeking = t_seeking;
 
 		m_media_types = t_types;
+		m_frame_length = t_frame_length;
     }
     
 	return t_success;
@@ -1075,13 +1095,25 @@ bool MCWin32DSPlayer::Pause()
 	return true;
 }
 
+// seek forward / backward n frames
 bool MCWin32DSPlayer::SeekRelative(int32_t p_amount)
 {
 	if (m_seeking == nil)
 		return false;
 
-	LONGLONG t_amount = p_amount;
-	return S_OK == m_seeking->SetPositions(&t_amount, AM_SEEKING_RelativePositioning, NULL, AM_SEEKING_NoPositioning);
+	LONGLONG t_current_position;
+	if (!SUCCEEDED(m_seeking->GetCurrentPosition(&t_current_position)))
+		return false;
+
+	if (!SUCCEEDED(m_seeking->ConvertTimeFormat(&t_current_position, &TIME_FORMAT_MEDIA_TIME, t_current_position, NULL)))
+		return false;
+
+	t_current_position += (p_amount * m_frame_length);
+
+	if (!SUCCEEDED(m_seeking->ConvertTimeFormat(&t_current_position, NULL, t_current_position, &TIME_FORMAT_MEDIA_TIME)))
+		return false;
+
+	return SUCCEEDED(m_seeking->SetPositions(&t_current_position, AM_SEEKING_AbsolutePositioning, NULL, AM_SEEKING_NoPositioning));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
