@@ -1266,6 +1266,15 @@
 					],
 				},
 			],
+			[
+				'mobile == 0',
+				{
+					'sources!':
+					[
+						'src/exec-sensor.cpp',
+					],
+				},
+			],
 		],
 	},
 }
