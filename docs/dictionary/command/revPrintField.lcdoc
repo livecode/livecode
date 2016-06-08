@@ -41,7 +41,7 @@ Instead, use a form that evaluates to a field reference, like this:
   revPrintField the name of field "My Field" -- use this form instead
   revPrintField ("field" && quote & "My Field" & quote) -- or this
 
-The <revPrintField> <command> is equivalent to <select|selecting> the <field> and choosing File menu<img src="202656"/>Print Field<important/>.
+The <revPrintField> <command> is equivalent to <select|selecting> the <field> and choosing File → Print Field… from the menubar.
 
 If the field contains any expressions of the form &expression%&gt;, the expression is <evaluate|evaluated> and replaced with the value before the <field> is printed. For example, if the <field> contains the text
 	Today's date is &lt;%the long date%&gt;

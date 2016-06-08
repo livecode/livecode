@@ -38,6 +38,6 @@ If the strings are of different lengths, so that the trailing characters in one 
 
 If the <caseSensitive> <property> is true, the comparison between two <string|strings> treats uppercase letters as coming before lowercase letters. If the <caseSensitive> <property> is false, the comparison is not <case-sensitive>, so "a" is considered equivalent to "A".
 
-<img src="202654"/> Cross-platform caution! The synonym  can be used only on <Mac OS> and <OS X|OS X systems>. If you use a <script> containing the  character on a <Windows> or <Unix|Unix system>, a <error|script error> may result. To ensure cross-platform compatibility, use the synonym <&lt;=> instead.
+>*Cross-platform note:* The synonym ≤ can be used only on <OS X|OS X systems>. If you use a <script> containing the ≤ character on a <Windows> or <Unix|Unix system>, a <error|script error> may result. To ensure cross-platform compatibility, use the synonym <&lt;=> instead.
 
-References: caseSensitive (property), script (property), &gt;= (operator), &lt; (operator), character (keyword), min (function), max (function), value (function), return (glossary), string (glossary), property (glossary), operator (glossary), character set (glossary), Windows (glossary), error (glossary), OS X (glossary), case-sensitive (glossary), ASCII (glossary), value (glossary), Unix (glossary), Mac OS (glossary)
+References: caseSensitive (property), script (property), &gt;= (operator), &lt; (operator), character (keyword), min (function), max (function), value (function), return (glossary), string (glossary), property (glossary), operator (glossary), character set (glossary), Windows (glossary), error (glossary), OS X (glossary), case-sensitive (glossary), ASCII (glossary), value (glossary), Unix (glossary)

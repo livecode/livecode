@@ -30,8 +30,6 @@ Use the <externalCommands> <property> to find out whether a particular <external
 
 You use an external command in a handler the same way you use one of LiveCode's built-in commands.
 
-<img src="202654"/> Cross-platform caution! It is not possible to load externals written for PowerPC in an application running natively on an Intel Mac. To get around this limitation either use Universal Binary externals, or run the program under Rosetta.
-
 Changes:
 Support for using the externalCommands property on OS X systems was added in version 2.0.
 
