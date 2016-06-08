@@ -241,7 +241,6 @@ engine/src/exec-context.h
 engine/src/exec.h
 engine/src/exec-interface.h
 engine/src/exec-keywords.h
-engine/src/execpt.h
 engine/src/exec-strings.h
 engine/src/executionerrors.h
 engine/src/express.h
@@ -303,7 +302,6 @@ engine/src/mbldc.h
 engine/src/mblevent.h
 engine/src/mblflst.h
 engine/src/mbliphoneapp.h
-engine/src/mbliphonecontext.h
 engine/src/mbliphonecontrol.h
 engine/src/mbliphone.h
 engine/src/mbliphoneview.h
@@ -338,10 +336,8 @@ engine/src/osxcontext.h
 engine/src/osxdc.h
 engine/src/osxflst.h
 engine/src/osxprefix.h
-engine/src/osxprefix-legacy.h
 engine/src/osxprinter.h
 engine/src/osxtheme.h
-engine/src/osxtransfer.h
 engine/src/packed.h
 engine/src/paint.h
 engine/src/paragraf.h
@@ -362,7 +358,6 @@ engine/src/regex.h
 engine/src/region.h
 engine/src/resolution.h
 engine/src/resource.h
-engine/src/revolution.h
 engine/src/rtf.h
 engine/src/scriptenvironment.h
 engine/src/scriptpt.h
@@ -373,9 +368,7 @@ engine/src/sellst.h
 engine/src/sha1.h
 engine/src/socket.h
 engine/src/srvcgi.h
-engine/src/srvdbgvar.h
 engine/src/srvdebug.h
-engine/src/srvflst.h
 engine/src/srvmain.h
 engine/src/srvmultipart.h
 engine/src/srvscript.h
@@ -387,7 +380,6 @@ engine/src/statemnt.h
 engine/src/styledtext.h
 engine/src/syntax.h
 engine/src/sysdefs.h
-engine/src/sysposix.h
 engine/src/system.h
 engine/src/textbuffer.h
 engine/src/text.h

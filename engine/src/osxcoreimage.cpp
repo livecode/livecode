@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "util.h"
 #include "param.h"
-//#include "execpt.h"
+
 #include "debug.h"
 #include "globals.h"
 #include "visual.h"

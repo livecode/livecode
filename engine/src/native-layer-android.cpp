@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"

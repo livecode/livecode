@@ -16,6 +16,8 @@ Summary: Connects to a MySQL, SQLite, PostgreSQL, ODBC or Oracle database.
 
 Synonyms: revdb_connect
 
+Associations: Database library
+
 Introduced: 1.1
 
 OS: mac,windows,linux,ios,android

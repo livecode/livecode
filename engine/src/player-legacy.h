@@ -113,11 +113,6 @@ public:
 	virtual void applyrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
     
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.
 	virtual void select(void);
@@ -149,10 +144,10 @@ public:
     // virtual function from MCPlayerInterface
 	virtual bool getversion(MCStringRef& r_string);
 	virtual void freetmp();
-	virtual uint4 getduration();    //get movie duration/length
-	virtual uint4 gettimescale();  //get movie time scale
-	virtual uint4 getmoviecurtime();//get movie current time
-	virtual void setcurtime(uint4 curtime, bool notify);
+	virtual MCPlayerDuration getduration();    //get movie duration/length
+	virtual MCPlayerDuration gettimescale();  //get movie time scale
+	virtual MCPlayerDuration getmoviecurtime();//get movie current time
+	virtual void setcurtime(MCPlayerDuration curtime, bool notify);
 	virtual void setselection(bool notify);                  //set movie selection
 	virtual void setlooping(Boolean loop);        //to loop or not to loop a movie
 	virtual void setplayrate();                   //set the movie playing rate
@@ -174,15 +169,15 @@ public:
 	virtual void setvolume(uint2 tloudness);
 	virtual void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
     
-	virtual void setstarttime(uint4 stime)
+	virtual void setstarttime(MCPlayerDuration stime)
 	{
 		starttime = stime;
 	}
-	virtual void setendtime(uint4 etime)
+	virtual void setendtime(MCPlayerDuration etime)
 	{
 		endtime = etime;
 	}
-	virtual void setlasttime(int4 ltime)
+	virtual void setlasttime(MCPlayerDuration ltime)
 	{
 		lasttime = ltime;
 	}
@@ -322,10 +317,6 @@ public:
 	MCRectangle qt_getpreferredrect(void);
 	uint2 qt_getloudness(void);
 	void qt_setloudness(uint2 loudn);
-#ifdef LEGACY_EXEC
-	void qt_gettracks(MCExecPoint& ep);
-	void qt_getenabledtracks(MCExecPoint& ep);
-#endif
     void qt_gettracks(MCStringRef &r_tracks);
     void qt_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
     void qt_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
@@ -358,10 +349,6 @@ public:
 	MCRectangle avi_getpreferredrect(void);
 	uint2 avi_getloudness(void);
 	void avi_setloudness(uint2 loudn);
-#ifdef LEGACY_EXEC
-	void avi_gettracks(MCExecPoint& ep);
-	void avi_getenabledtracks(MCExecPoint& ep);
-#endif
     void avi_gettracks(MCStringRef &r_tracks);
     void avi_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id);
     void avi_setenabledtracks(uindex_t p_count, uint32_t* p_tracks);
@@ -395,10 +382,6 @@ public:
 	void x11_playselection(Boolean play) {}
 	void x11_showcontroller(Boolean show) {}
     MCRectangle x11_getpreferredrect(void) { MCRectangle t_rect; t_rect.x = 0;t_rect.y = 0;t_rect.width=0;t_rect.height=0; return t_rect;}
-#ifdef LEGACY_EXEC
-	void x11_gettracks(MCExecPoint& ep) {}
-	void x11_getenabledtracks(MCExecPoint& ep) {}
-#endif
     void x11_gettracks(MCStringRef &r_tracks) { r_tracks = MCValueRetain(kMCEmptyString); }
     void x11_getenabledtracks(uindex_t &r_count, uint32_t *&r_tracks_id) { r_count = 0; }
     void x11_setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id) {}
@@ -418,10 +401,10 @@ public:
 	virtual void SetFileName(MCExecContext& ctxt, MCStringRef p_name);
 	virtual void GetDontRefresh(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetDontRefresh(MCExecContext& ctxt, bool setting);
-	virtual void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
-	virtual void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
-	virtual void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
-    virtual void GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_time);
+	virtual void GetCurrentTime(MCExecContext& ctxt, double& r_time);
+	virtual void SetCurrentTime(MCExecContext& ctxt, double p_time);
+	virtual void GetDuration(MCExecContext& ctxt, double& r_duration);
+    virtual void GetLoadedTime(MCExecContext& ctxt, double& r_time);
 	virtual void GetLooping(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetLooping(MCExecContext& ctxt, bool setting);
 	virtual void GetPaused(MCExecContext& ctxt, bool& r_setting);
@@ -430,10 +413,10 @@ public:
 	virtual void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
 	virtual void GetPlayRate(MCExecContext& ctxt, double& r_rate);
 	virtual void SetPlayRate(MCExecContext& ctxt, double p_rate);
-	virtual void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time);
-	virtual void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time);
-	virtual void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time);
-	virtual void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time);
+	virtual void GetStartTime(MCExecContext& ctxt, double*& r_time);
+	virtual void SetStartTime(MCExecContext& ctxt, double* p_time);
+	virtual void GetEndTime(MCExecContext& ctxt, double*& r_time);
+	virtual void SetEndTime(MCExecContext& ctxt, double* p_time);
 	virtual void GetShowBadge(MCExecContext& ctxt, bool& r_setting);
 	virtual void SetShowBadge(MCExecContext& ctxt, bool setting);
 	virtual void GetShowController(MCExecContext& ctxt, bool& r_setting);
@@ -444,7 +427,7 @@ public:
 	virtual void SetShowSelection(MCExecContext& ctxt, bool setting);
 	virtual void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks);
 	virtual void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks);
-	virtual void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale);
+	virtual void GetTimeScale(MCExecContext& ctxt, double& r_scale);
 	virtual void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
 	virtual void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
 	virtual void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id);

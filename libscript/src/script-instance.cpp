@@ -160,15 +160,6 @@ bool MCScriptCreateInstanceOfModule(MCScriptModuleRef p_module, MCScriptInstance
 
 		    t_instance->slots[t_slot_index] = MCValueRetain(t_default);
 	    }
-	    
-	    /* Fill in all remaining slots with null values */
-        for(uindex_t i = 0; i < p_module -> slot_count; i++)
-        {
-	        if (nil == t_instance->slots[i])
-	        {
-		        t_instance -> slots[i] = MCValueRetain(kMCNull);
-	        }
-        }
 
         // If this is a module which shares its instance, then add a link to it.
         // (Note this is weak reference - we don't retain, otherwise we would have
@@ -242,102 +233,226 @@ MCScriptModuleRef MCScriptGetModuleOfInstance(MCScriptInstanceRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCHandlerTypeInfoConformsToPropertyGetter(MCTypeInfoRef typeinfo)
+MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
+{
+    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindVariable,
+                            "definition not a variable");
+    return static_cast<MCScriptVariableDefinition *>(self);
+}
+
+MCScriptHandlerDefinition *MCScriptDefinitionAsHandler(MCScriptDefinition *self)
+{
+    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindHandler,
+                       "definition not a handler");
+    return static_cast<MCScriptHandlerDefinition *>(self);
+}
+
+MCScriptForeignHandlerDefinition *MCScriptDefinitionAsForeignHandler(MCScriptDefinition *self)
+{
+    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindForeignHandler,
+                       "definition not a foreign handler");
+    return static_cast<MCScriptForeignHandlerDefinition *>(self);
+}
+
+MCScriptDefinitionGroupDefinition *MCScriptDefinitionAsDefinitionGroup(MCScriptDefinition *self)
+{
+    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindDefinitionGroup,
+                       "definition not a definition group");
+    return static_cast<MCScriptDefinitionGroupDefinition *>(self);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool MCHandlerTypeInfoConformsToPropertyGetter(MCTypeInfoRef typeinfo)
 {
     return MCHandlerTypeInfoGetParameterCount(typeinfo) == 0 &&
             MCHandlerTypeInfoGetReturnType(typeinfo) != kMCNullTypeInfo;
 }
 
-bool MCHandlerTypeInfoConformsToPropertySetter(MCTypeInfoRef typeinfo)
+static bool MCHandlerTypeInfoConformsToPropertySetter(MCTypeInfoRef typeinfo)
 {
     return MCHandlerTypeInfoGetParameterCount(typeinfo) == 1 &&
             MCHandlerTypeInfoGetParameterMode(typeinfo, 0) == kMCHandlerTypeFieldModeIn;
 }
 
-///////////
+////////////////////////////////////////////////////////////////////////////////
+//
+//  ERROR PROPAGATORS
+//
 
-bool MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptModuleRef p_module, MCNameRef p_property)
+static bool MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptModuleRef p_module, MCNameRef p_property)
 {
-    return MCErrorCreateAndThrow(kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
+    return MCErrorCreateAndThrow(kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "property",
+                                    p_property,
+                                    nil);
 }
 
-bool MCScriptThrowInvalidValueForPropertyError(MCScriptModuleRef p_module, MCNameRef p_property, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+static bool MCScriptThrowInvalidValueForPropertyError(MCScriptModuleRef p_module, MCNameRef p_property, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidPropertyValueErrorTypeInfo, "module", p_module -> name, "property", p_property, "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidPropertyValueErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "property",
+                                    p_property,
+                                    "type",
+                                    MCNamedTypeInfoGetName(p_expected_type),
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowInvalidValueForResultError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+static bool MCScriptThrowInvalidValueForResultError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidReturnValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidReturnValueErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_handler),
+                                    "type",
+                                    MCNamedTypeInfoGetName(p_expected_type),
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowInParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
+static bool MCScriptThrowInParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
 {
-    return MCErrorCreateAndThrow(kMCScriptInParameterNotDefinedErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "parameter", MCScriptGetNameOfParameterInModule(p_module, p_handler, p_index), nil);
+    return MCErrorCreateAndThrow(kMCScriptInParameterNotDefinedErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_handler),
+                                    "parameter",
+                                    MCScriptGetNameOfParameterInModule(p_module, p_handler, p_index),
+                                    nil);
 }
 
-bool MCScriptThrowOutParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
+static bool MCScriptThrowOutParameterNotDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
 {
-    return MCErrorCreateAndThrow(kMCScriptOutParameterNotDefinedErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "parameter", MCScriptGetNameOfParameterInModule(p_module, p_handler, p_index), nil);
+    return MCErrorCreateAndThrow(kMCScriptOutParameterNotDefinedErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_handler),
+                                    "parameter",
+                                    MCScriptGetNameOfParameterInModule(p_module, p_handler, p_index),
+                                    nil);
 }
 
-bool MCScriptThrowLocalVariableUsedBeforeDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
+static bool MCScriptThrowLocalVariableUsedBeforeDefinedError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index)
 {
-    return MCErrorCreateAndThrow(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "variable", MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index), nil);
+    return MCErrorCreateAndThrow(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_handler),
+                                    "variable",
+                                    MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index),
+                                    nil);
 }
 
-bool MCScriptThrowGlobalVariableUsedBeforeDefinedError(MCScriptModuleRef p_module, uindex_t p_index)
+static bool MCScriptThrowGlobalVariableUsedBeforeDefinedError(MCScriptModuleRef p_module, MCScriptVariableDefinition *p_definition)
 {
-    return MCErrorCreateAndThrow(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo, "module", p_module -> name, "variable", MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), nil);
+    return MCErrorCreateAndThrow(kMCScriptVariableUsedBeforeDefinedErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "variable",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_definition),
+                                    nil);
 }
 
-bool MCScriptThrowInvalidValueForLocalVariableError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+static bool MCScriptThrowInvalidValueForLocalVariableError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), "variable", MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_handler),
+                                    "variable",
+                                    MCScriptGetNameOfLocalVariableInModule(p_module, p_handler, p_index),
+                                    "type",
+                                    MCNamedTypeInfoGetName(p_expected_type),
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowInvalidValueForGlobalVariableError(MCScriptModuleRef p_module, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+static bool MCScriptThrowInvalidValueForGlobalVariableError(MCScriptModuleRef p_module, MCScriptVariableDefinition *p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, "variable",  MCScriptGetNameOfGlobalVariableInModule(p_module, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "variable",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_index),
+                                    "type",
+                                    MCNamedTypeInfoGetName(p_expected_type),
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowInvalidValueForContextVariableError(MCScriptModuleRef p_module, uindex_t p_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+static bool MCScriptThrowNotABooleanError(MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidVariableValueErrorTypeInfo, "module", p_module -> name, "variable",  MCScriptGetNameOfContextVariableInModule(p_module, p_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptNotABooleanValueErrorTypeInfo,
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowNotABooleanError(MCValueRef p_value)
+static bool MCScriptThrowNotAStringError(MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptNotABooleanValueErrorTypeInfo, "value", p_value, nil);
+	return MCErrorCreateAndThrow(kMCScriptNotAStringValueErrorTypeInfo,
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowNotAStringError(MCValueRef p_value)
-{
-	return MCErrorCreateAndThrow(kMCScriptNotAStringValueErrorTypeInfo, "value", p_value, nil);
-}
-
-bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_provided)
+static bool MCScriptThrowWrongNumberOfArgumentsForInvokeError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_provided)
 {
     // TODO: Encode provided / expected.
-    return MCErrorCreateAndThrow(kMCScriptWrongNumberOfArgumentsErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), nil);
+    return MCErrorCreateAndThrow(kMCScriptWrongNumberOfArgumentsErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_definition),
+                                    nil);
 }
 
-bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_arg_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
+static bool MCScriptThrowInvalidValueForArgumentError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, uindex_t p_arg_index, MCTypeInfoRef p_expected_type, MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptInvalidArgumentValueErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), "parameter", MCScriptGetNameOfParameterInModule(p_module, p_definition, p_arg_index), "type", MCNamedTypeInfoGetName(p_expected_type), "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptInvalidArgumentValueErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_definition),
+                                    "parameter",
+                                    MCScriptGetNameOfParameterInModule(p_module, p_definition, p_arg_index),
+                                    "type",
+                                    MCNamedTypeInfoGetName(p_expected_type),
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition)
+static bool MCScriptThrowUnableToResolveForeignHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_definition)
 {
-    return MCErrorCreateAndThrow(kMCScriptForeignHandlerBindingErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_definition), nil);
+    return MCErrorCreateAndThrow(kMCScriptForeignHandlerBindingErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    MCScriptGetNameOfDefinitionInModule(p_module, p_definition),
+                                    nil);
 }
 
-bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
+static bool MCScriptThrowUnableToResolveTypeError(MCTypeInfoRef p_type)
 {
     return MCErrorThrowUnboundType(p_type);
 }
 
-bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
+static bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScriptDefinition *p_definition, MCProperListRef p_arguments)
 {
     MCAutoListRef t_handlers;
     if (!MCListCreateMutable(',', &t_handlers))
@@ -377,60 +492,113 @@ bool MCScriptThrowUnableToResolveMultiInvoke(MCScriptModuleRef p_module, MCScrip
         !MCListCopyAsString(*t_types, &t_type_list))
         return false;
     
-    return MCErrorCreateAndThrow(kMCScriptNoMatchingHandlerErrorTypeInfo, "handlers", *t_handler_list, "types", *t_type_list, nil);
+    return MCErrorCreateAndThrow(kMCScriptNoMatchingHandlerErrorTypeInfo,
+                                    "handlers",
+                                    *t_handler_list,
+                                    "types",
+                                    *t_type_list,
+                                    nil);
 }
 
-bool MCScriptThrowNotAHandlerValueError(MCValueRef p_value)
+static bool MCScriptThrowNotAHandlerValueError(MCValueRef p_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptNotAHandlerValueErrorTypeInfo, "value", p_value, nil);
+    return MCErrorCreateAndThrow(kMCScriptNotAHandlerValueErrorTypeInfo,
+                                    "value",
+                                    p_value,
+                                    nil);
 }
 
-bool MCScriptThrowCannotCallContextHandlerError(MCScriptModuleRef p_module, MCScriptDefinition *p_handler)
+static bool MCScriptThrowHandlerNotFoundError(MCScriptModuleRef p_module, MCNameRef p_handler)
 {
-    return MCErrorCreateAndThrow(kMCScriptCannotCallContextHandlerErrorTypeInfo, "module", p_module -> name, "handler", MCScriptGetNameOfDefinitionInModule(p_module, p_handler), nil);
+    return MCErrorCreateAndThrow(kMCScriptHandlerNotFoundErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "handler",
+                                    p_handler,
+                                    nil);
 }
 
-bool MCScriptThrowHandlerNotFoundError(MCScriptModuleRef p_module, MCNameRef p_handler)
+static bool MCScriptThrowPropertyNotFoundError(MCScriptModuleRef p_module, MCNameRef p_property)
 {
-    return MCErrorCreateAndThrow(kMCScriptHandlerNotFoundErrorTypeInfo, "module", p_module -> name, "handler", p_handler, nil);
+    return MCErrorCreateAndThrow(kMCScriptPropertyNotFoundErrorTypeInfo,
+                                    "module",
+                                    p_module -> name,
+                                    "property",
+                                    p_property,
+                                    nil);
 }
 
-bool MCScriptThrowPropertyNotFoundError(MCScriptModuleRef p_module, MCNameRef p_property)
+////////////////////////////////////////////////////////////////////////////////
+//
+//  INSTANCE AND MODULE MANIPULATION
+//
+
+static bool
+MCScriptCheckedFetchFromVariableInInstance(MCScriptInstanceRef self,
+                                           MCScriptVariableDefinition *p_definition,
+                                           MCValueRef& r_value)
 {
-    return MCErrorCreateAndThrow(kMCScriptPropertyNotFoundErrorTypeInfo, "module", p_module -> name, "property", p_property, nil);
+    MCValueRef t_value;
+    t_value = self -> slots[p_definition -> slot_index];
+    
+    if (t_value == nil)
+        return MCScriptThrowGlobalVariableUsedBeforeDefinedError(self -> module,
+                                                                 p_definition);
+    
+    r_value = t_value;
+    
+    return true;
 }
 
-///////////
-
-MCScriptVariableDefinition *MCScriptDefinitionAsVariable(MCScriptDefinition *self)
+static bool
+MCScriptCheckedStoreToVariableInInstance(MCScriptInstanceRef self,
+                                         MCScriptVariableDefinition *p_definition,
+                                         MCValueRef p_value)
 {
-    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindVariable,
-                            "definition not a variable");
-    return static_cast<MCScriptVariableDefinition *>(self);
+    MCTypeInfoRef t_output_type;
+    t_output_type = self -> module -> types[p_definition -> type] -> typeinfo;
+    
+    if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_output_type))
+        return MCScriptThrowInvalidValueForGlobalVariableError(self -> module,
+                                                               p_definition,
+                                                               t_output_type,
+                                                               p_value);
+    
+    MCValueAssign(self -> slots[p_definition -> slot_index], p_value);
+    
+    return true;
 }
 
-MCScriptHandlerDefinition *MCScriptDefinitionAsHandler(MCScriptDefinition *self)
+static inline
+void MCScriptResolveDefinitionInInstance(MCScriptInstanceRef self,
+                                         uindex_t p_index,
+                                         MCScriptInstanceRef& r_instance,
+                                         MCScriptDefinition*& r_definition)
 {
-    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindHandler,
-                       "definition not a handler");
-    return static_cast<MCScriptHandlerDefinition *>(self);
+    MCScriptDefinition *t_definition;
+    t_definition = self -> module -> definitions[p_index];
+    
+    MCScriptInstanceRef t_instance;
+    if (t_definition -> kind != kMCScriptDefinitionKindExternal)
+    {
+        t_instance = self;
+    }
+    else
+    {
+        MCScriptExternalDefinition *t_ext_def;
+        t_ext_def = static_cast<MCScriptExternalDefinition *>(t_definition);
+        
+        MCScriptImportedDefinition *t_import_def;
+        t_import_def = &self -> module -> imported_definitions[t_ext_def -> index];
+        
+        t_instance = t_import_def -> resolved_module -> shared_instance;
+        t_definition = t_import_def -> resolved_definition;
+    }
+    
+    r_instance = t_instance;
+    r_definition = t_definition;
 }
-
-MCScriptForeignHandlerDefinition *MCScriptDefinitionAsForeignHandler(MCScriptDefinition *self)
-{
-    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindForeignHandler,
-                       "definition not a foreign handler");
-    return static_cast<MCScriptForeignHandlerDefinition *>(self);
-}
-
-MCScriptDefinitionGroupDefinition *MCScriptDefinitionAsDefinitionGroup(MCScriptDefinition *self)
-{
-    __MCScriptAssert__(self -> kind == kMCScriptDefinitionKindDefinitionGroup,
-                       "definition not a definition group");
-    return static_cast<MCScriptDefinitionGroupDefinition *>(self);
-}
-
-///////////
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_property, MCValueRef& r_value)
 {
@@ -457,15 +625,14 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         MCScriptVariableDefinition *t_variable_def;
         t_variable_def = MCScriptDefinitionAsVariable(t_getter);
         
-        // Variables are backed by an slot in the instance.
-        uindex_t t_slot_index;
-        t_slot_index = t_variable_def -> slot_index;
+        MCValueRef t_value;
+        if (!MCScriptCheckedFetchFromVariableInInstance(self,
+                                                        t_variable_def,
+                                                        t_value))
+            return false;
         
-        /* COMPUTE CHECK */ __MCScriptAssert__(t_slot_index < self -> module -> slot_count,
-                                               "computed variable slot out of range");
-        
-        // Slot based properties are easy, we just copy the value out of the slot.
-        r_value = MCValueRetain(self -> slots[t_slot_index]);
+        // Copy the value out
+        r_value = MCValueRetain(t_value);
     }
     else if (t_getter -> kind == kMCScriptDefinitionKindHandler)
     {
@@ -525,19 +692,11 @@ bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
         if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value), t_type))
             return MCScriptThrowInvalidValueForPropertyError(self -> module, p_property, t_type, p_value);
         
-        // Variables are backed by an slot in the instance.
-        uindex_t t_slot_index;
-        t_slot_index = t_variable_def -> slot_index;
-        
-        /* COMPUTE CHECK */ __MCScriptAssert__(t_slot_index < self -> module -> slot_count,
-                                               "computed variable slot out of range");
-        
-        // If the value of the slot isn't changing, assign our new value.
-        if (p_value != self -> slots[t_slot_index])
-        {
-            MCValueRelease(self -> slots[t_slot_index]);
-            self -> slots[t_slot_index] = MCValueRetain(p_value);
-        }
+        // Store the value
+        if (!MCScriptCheckedStoreToVariableInInstance(self,
+                                                      t_variable_def,
+                                                      p_value))
+            return false;
     }
     else if (t_setter -> kind == kMCScriptDefinitionKindHandler)
     {
@@ -578,11 +737,6 @@ static bool MCScriptCallHandlerOfInstanceDirect(MCScriptInstanceRef self, MCScri
     // Get the signature of the handler.
     MCTypeInfoRef t_signature;
     t_signature = self -> module -> types[p_handler -> type] -> typeinfo;
-    
-    // If the handler is of context scope, then we cannot call it directly - only
-    // from a LCB frame.
-    if (p_handler -> scope == kMCScriptHandlerScopeContext)
-        return MCScriptThrowCannotCallContextHandlerError(self -> module, p_handler);
     
     // Check the number of arguments.
     uindex_t t_required_param_count;
@@ -684,14 +838,14 @@ struct MCScriptFrame
 	uindex_t *mapping;
 };
 
-static inline bool MCScriptIsRegisterValidInFrame(MCScriptFrame *p_frame, int p_register)
+static inline bool MCScriptIsRegisterValidInFrame(MCScriptFrame *p_frame, uindex_t p_register)
 {
-    return p_register >= 0 && p_register < p_frame -> handler -> slot_count;
+    return p_register < p_frame -> handler -> slot_count;
 }
 
-static inline bool MCScriptIsConstantValidInFrame(MCScriptFrame *p_frame, int p_constant)
+static inline bool MCScriptIsConstantValidInFrame(MCScriptFrame *p_frame, uindex_t p_constant)
 {
-    return p_constant >= 0 && p_constant < p_frame -> instance -> module -> value_count;
+    return p_constant < p_frame -> instance -> module -> value_count;
 }
 
 static inline MCTypeInfoRef MCScriptGetSignatureForFrame(MCScriptFrame *p_frame)
@@ -709,9 +863,6 @@ static bool MCScriptCreateFrame(MCScriptFrame *p_caller, MCScriptInstanceRef p_i
         MCMemoryDelete(self);
         return false;
     }
-    
-    for(uindex_t i = 0; i < p_handler -> slot_count; i++)
-        self -> slots[i] = MCValueRetain(kMCNull);
     
     self -> caller = p_caller;
     self -> instance = MCScriptRetainInstance(p_instance);
@@ -737,23 +888,21 @@ MCScriptFrameInitializeParametersCaller(MCScriptFrame *self,
 	{
 		MCHandlerTypeFieldMode t_mode =
 			MCHandlerTypeInfoGetParameterMode(t_signature, i);
-
-		MCValueRef t_value;
-		if (t_mode != kMCHandlerTypeFieldModeOut)
-		{
-			t_value = self->caller->slots[p_arguments[i]];
-		}
-		else
-		{
-			t_value = kMCNull;
-		}
-
+        
+        if (t_mode != kMCHandlerTypeFieldModeIn)
+        {
+            t_needs_mapping = true;
+        }
+        
+		if (t_mode == kMCHandlerTypeFieldModeOut)
+        {
+            continue;
+        }
+        
+        MCValueRef t_value;
+        t_value = self->caller->slots[p_arguments[i]];
+		
 		MCValueAssign(self->slots[i], t_value);
-
-		if (t_mode != kMCHandlerTypeFieldModeIn)
-		{
-			t_needs_mapping = true;
-		}
 	}
 
 	if (t_needs_mapping)
@@ -782,48 +931,13 @@ MCScriptFrameInitializeParametersImmediate(MCScriptFrame *self,
 		MCHandlerTypeFieldMode t_mode =
 			MCHandlerTypeInfoGetParameterMode(t_signature, i);
 
+        if (t_mode == kMCHandlerTypeFieldModeOut)
+            continue;
+        
 		MCValueRef t_value;
-		if (t_mode != kMCHandlerTypeFieldModeOut)
-		{
-			t_value = p_arguments[i];
-		}
-		else
-		{
-			t_value = kMCNull;
-		}
+        t_value = p_arguments[i];
 
 		MCValueAssign(self->slots[i], t_value);
-	}
-
-	return true;
-}
-
-static bool
-MCScriptFrameInitializeSlots(MCScriptFrame *self)
-{
-	MCTypeInfoRef t_signature = MCScriptGetSignatureForFrame(self);
-	uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(t_signature);
-
-	for (uindex_t i = t_param_count; i < self->handler->slot_count; ++i)
-	{
-		MCTypeInfoRef t_slot_type = nil;
-		if (i < t_param_count + self->handler->local_type_count)
-		{
-			t_slot_type = self->instance->module->types[self->handler->local_types[i - t_param_count]]->typeinfo;
-		}
-
-		MCValueRef t_default = nil;
-		if (nil != t_slot_type)
-		{
-			t_default = MCTypeInfoGetDefault(t_slot_type);
-		}
-
-		if (nil == t_default)
-		{
-			t_default = kMCNull;
-		}
-
-		MCValueAssign(self->slots[i], t_default);
 	}
 
 	return true;
@@ -834,7 +948,7 @@ static MCScriptFrame *MCScriptDestroyFrame(MCScriptFrame *self)
     MCScriptFrame *t_caller;
     t_caller = self -> caller;
     
-    for(int i = 0; i < self -> handler -> slot_count; i++)
+    for(uindex_t i = 0; i < self -> handler -> slot_count; i++)
         MCValueRelease(self -> slots[i]);
     
     MCScriptReleaseInstance(self -> instance);
@@ -885,31 +999,7 @@ static inline uindex_t MCScriptBytecodeDecodeArgument(byte_t*& x_bytecode_ptr)
     return t_value;
 }
 
-static inline void MCScriptResolveDefinitionInFrame(MCScriptFrame *p_frame, uindex_t p_index, MCScriptInstanceRef& r_instance, MCScriptDefinition*& r_definition)
-{
-    MCScriptInstanceRef t_instance;
-    t_instance = p_frame -> instance;
-    
-    MCScriptDefinition *t_definition;
-    t_definition = t_instance -> module -> definitions[p_index];
-    
-    if (t_definition -> kind == kMCScriptDefinitionKindExternal)
-    {
-        MCScriptExternalDefinition *t_ext_def;
-        t_ext_def = static_cast<MCScriptExternalDefinition *>(t_definition);
-        
-        MCScriptImportedDefinition *t_import_def;
-        t_import_def = &t_instance -> module -> imported_definitions[t_ext_def -> index];
-        
-        t_instance = t_import_def -> resolved_module -> shared_instance;
-        t_definition = t_import_def -> resolved_definition;
-    }
-
-    r_instance = t_instance;
-    r_definition = t_definition;
-}
-
-static inline MCTypeInfoRef MCScriptGetRegisterTypeInFrame(MCScriptFrame *p_frame, int p_register)
+static inline MCTypeInfoRef MCScriptGetRegisterTypeInFrame(MCScriptFrame *p_frame, uindex_t p_register)
 {
     /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
                                         "register out of range on fetch register type");
@@ -929,25 +1019,7 @@ static inline MCTypeInfoRef MCScriptGetRegisterTypeInFrame(MCScriptFrame *p_fram
     return nil;
 }
 
-static bool MCScriptGetRegisterTypeIsOptionalInFrame(MCScriptFrame *p_frame, int p_register)
-{
-    /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
-                                        "register out of range on fetch register type is optional");
-    
-    MCTypeInfoRef t_type;
-    t_type = MCScriptGetRegisterTypeInFrame(p_frame, p_register);
-    
-    if (t_type == nil)
-        return true;
-    
-    MCResolvedTypeInfo t_resolved_type;
-    if (!MCTypeInfoResolve(t_type, t_resolved_type))
-        return true; /* RESOLVE UNCHECKED */
-    
-    return t_resolved_type . is_optional;
-}
-
-static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, int p_register)
+static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame, uindex_t p_register)
 {
     /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
                                         "register out of range on fetch");
@@ -955,7 +1027,7 @@ static inline MCValueRef MCScriptFetchFromRegisterInFrame(MCScriptFrame *p_frame
     return p_frame -> slots[p_register];
 }
 
-static inline void MCScriptStoreToRegisterInFrameAndRelease(MCScriptFrame *p_frame, int p_register, MCValueRef p_value)
+static inline void MCScriptStoreToRegisterInFrameAndRelease(MCScriptFrame *p_frame, uindex_t p_register, MCValueRef p_value)
 {
     /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
                                         "register out of range on store");
@@ -967,7 +1039,7 @@ static inline void MCScriptStoreToRegisterInFrameAndRelease(MCScriptFrame *p_fra
     }
 }
 
-static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_register, MCValueRef p_value)
+static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, uindex_t p_register, MCValueRef p_value)
 {
     /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsRegisterValidInFrame(p_frame, p_register),
                        "register out of range on store");
@@ -975,17 +1047,20 @@ static inline void MCScriptStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_
     if (p_frame -> slots[p_register] != p_value)
     {
         MCValueRelease(p_frame -> slots[p_register]);
-        p_frame -> slots[p_register] = MCValueRetain(p_value);
+        
+        if (p_value != nil)
+            MCValueRetain(p_value);
+        
+        p_frame -> slots[p_register] = p_value;
     }
 }
 
-static bool MCScriptCheckedFetchFromRegisterInFrame(MCScriptFrame *p_frame, int p_register, MCValueRef& r_value)
+static bool MCScriptCheckedFetchFromRegisterInFrame(MCScriptFrame *p_frame, uindex_t p_register, MCValueRef& r_value)
 {
     MCValueRef t_value;
     t_value = MCScriptFetchFromRegisterInFrame(p_frame, p_register);
     
-    if (t_value == kMCNull &&
-        !MCScriptGetRegisterTypeIsOptionalInFrame(p_frame, p_register))
+    if (t_value == nil)
         return MCScriptThrowLocalVariableUsedBeforeDefinedError(p_frame -> instance -> module, p_frame -> handler, p_register);
     
     r_value = t_value;
@@ -993,7 +1068,7 @@ static bool MCScriptCheckedFetchFromRegisterInFrame(MCScriptFrame *p_frame, int 
     return true;
 }
 
-static bool MCScriptCheckedStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_register, MCValueRef p_value)
+static bool MCScriptCheckedStoreToRegisterInFrame(MCScriptFrame *p_frame, uindex_t p_register, MCValueRef p_value)
 {
     MCTypeInfoRef t_type;
     t_type = MCScriptGetRegisterTypeInFrame(p_frame, p_register);
@@ -1007,7 +1082,7 @@ static bool MCScriptCheckedStoreToRegisterInFrame(MCScriptFrame *p_frame, int p_
     return true;
 }
 
-static inline MCValueRef MCScriptFetchConstantInFrame(MCScriptFrame *p_frame, int p_index)
+static inline MCValueRef MCScriptFetchConstantInFrame(MCScriptFrame *p_frame, uindex_t p_index)
 {
     /* LOAD CHECK */ __MCScriptAssert__(MCScriptIsConstantValidInFrame(p_frame, p_index),
                        "constant out of range on fetch");
@@ -1057,8 +1132,7 @@ static bool MCScriptPerformScriptInvoke(MCScriptFrame*& x_frame, byte_t*& x_next
         return false;
 
 	if (!MCScriptFrameInitializeParametersCaller(t_callee,
-	                                             p_arguments, p_arity) ||
-	    !MCScriptFrameInitializeSlots(t_callee))
+	                                             p_arguments, p_arity))
 	{
 		MCScriptDestroyFrame(t_callee);
 		return false;
@@ -1797,7 +1871,7 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
 
 static bool MCScriptPerformInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_bytecode, MCScriptInstanceRef p_instance, MCScriptDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
-    x_frame -> address = x_next_bytecode - x_frame -> instance -> module -> bytecode;
+    x_frame -> address = (uindex_t)(x_next_bytecode - x_frame -> instance -> module -> bytecode);
     
 	if (p_handler -> kind == kMCScriptDefinitionKindHandler)
 	{
@@ -1850,7 +1924,10 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
     {
         MCScriptInstanceRef t_instance;
         MCScriptDefinition *t_definition;
-        MCScriptResolveDefinitionInFrame(x_frame, t_group -> handlers[i], t_instance, t_definition);
+        MCScriptResolveDefinitionInInstance(x_frame -> instance,
+                                            t_group -> handlers[i],
+                                            t_instance,
+                                            t_definition);
         
         uindex_t t_type_index = 0;
         if (t_definition -> kind == kMCScriptDefinitionKindHandler)
@@ -1874,7 +1951,8 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
                 continue;
             
             MCValueRef t_value;
-            t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[j + 1]);
+            if (!MCScriptCheckedFetchFromRegisterInFrame(x_frame, p_arguments[j + 1], t_value))
+                return false;
             
             MCTypeInfoRef t_value_type, t_param_type;
             t_value_type = MCValueGetTypeInfo(t_value);
@@ -1969,8 +2047,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
     if (!MCScriptCreateFrame(nil, self, p_handler, t_frame))
         return false;
 
-    if (!MCScriptFrameInitializeParametersImmediate(t_frame, p_arguments, p_argument_count) ||
-        !MCScriptFrameInitializeSlots(t_frame))
+    if (!MCScriptFrameInitializeParametersImmediate(t_frame, p_arguments, p_argument_count))
     {
 	    MCScriptDestroyFrame(t_frame);
 	    return false;
@@ -1993,7 +2070,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 		uindex_t t_arity;
         MCScriptBytecodeDecodeOp(t_next_bytecode, t_op, t_arity);
 		
-		for(int i = 0; i < t_arity; i++)
+		for(uindex_t i = 0; i < t_arity; i++)
 			t_arguments[i] = MCScriptBytecodeDecodeArgument(t_next_bytecode);
 		
         switch(t_op)
@@ -2017,20 +2094,23 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
-                t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_register);
+                t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_register, t_value);
                 
-                if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                if (t_success)
                 {
-                    if (t_value == kMCTrue)
-                        t_next_bytecode = t_bytecode + t_offset;
+                    if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                    {
+                        if (t_value == kMCTrue)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+                    {
+                        if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else
+                        t_success = MCScriptThrowNotABooleanError(t_value);
                 }
-                else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
-                {
-                    if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
-                        t_next_bytecode = t_bytecode + t_offset;
-                }
-                else
-                    t_success = MCScriptThrowNotABooleanError(t_value);
             }
             break;
             case kMCScriptBytecodeOpJumpIfFalse:
@@ -2042,20 +2122,23 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // if the value in the register is true, then jump.
                 MCValueRef t_value;
-                t_value = MCScriptFetchFromRegisterInFrame(t_frame, t_register);
+                t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_register, t_value);
                 
-                if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                if (t_success)
                 {
-                    if (t_value == kMCFalse)
-                        t_next_bytecode = t_bytecode + t_offset;
+                    if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeBoolean)
+                    {
+                        if (t_value == kMCFalse)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
+                    {
+                        if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
+                            t_next_bytecode = t_bytecode + t_offset;
+                    }
+                    else
+                        t_success = MCScriptThrowNotABooleanError(t_value);
                 }
-                else if (MCValueGetTypeInfo(t_value) == kMCBoolTypeInfo)
-                {
-                    if (*(bool *)MCForeignValueGetContentsPtr(t_value) == 0)
-                        t_next_bytecode = t_bytecode + t_offset;
-                }
-                else
-                    t_success = MCScriptThrowNotABooleanError(t_value);
             }
             break;
             case kMCScriptBytecodeOpAssignConstant:
@@ -2130,10 +2213,9 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
                 // Check that all out variables which should be defined are.
                 for(uindex_t i = 0; t_success && i < MCHandlerTypeInfoGetParameterCount(t_signature); i++)
-                    if (MCHandlerTypeInfoGetParameterMode(t_signature, i) == kMCHandlerTypeFieldModeOut)
+                    if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeIn)
                     {
-                        if (MCScriptFetchFromRegisterInFrame(t_frame, i) == kMCNull &&
-                            !MCScriptGetRegisterTypeIsOptionalInFrame(t_frame, i))
+                        if (MCScriptFetchFromRegisterInFrame(t_frame, i) == nil)
                             t_success = MCScriptThrowOutParameterNotDefinedError(t_frame -> instance -> module, t_frame -> handler, i);
                     }
                 
@@ -2196,7 +2278,10 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 
 				MCScriptInstanceRef t_instance;
                 MCScriptDefinition *t_definition;
-                MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
+                MCScriptResolveDefinitionInInstance(t_frame -> instance,
+                                                    t_index,
+                                                    t_instance,
+                                                    t_definition);
 
                 if (t_definition -> kind != kMCScriptDefinitionKindDefinitionGroup)
                     t_success = MCScriptPerformInvoke(t_frame, t_next_bytecode, t_instance, t_definition, t_result_then_args, t_result_then_arg_count);
@@ -2257,7 +2342,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     if (t_success)
                         t_success = MCMemoryNewArray(t_arg_count, t_linear_args);
                 
-                    for(int i = 0; t_success && i < t_arg_count; i++)
+                    for(uindex_t i = 0; t_success && i < t_arg_count; i++)
                         t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_arg_regs[i], t_linear_args[i]);
                 
                     MCValueRef t_result;
@@ -2305,66 +2390,34 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_dst = t_arguments[0];
                 t_index = t_arguments[1];
                 
-				MCScriptInstanceRef t_instance;
+                MCScriptInstanceRef t_instance;
                 MCScriptDefinition *t_definition;
-                MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
+                MCScriptResolveDefinitionInInstance(t_frame -> instance,
+                                                    t_index,
+                                                    t_instance,
+                                                    t_definition);
                 
                 // Fetch the value:
                 //   - variables get fetched from the slot
                 //   - constants from the constant pool
                 //   - handlers have a value constructed
+                MCValueRef t_value;
                 if (t_definition -> kind == kMCScriptDefinitionKindVariable)
                 {
-                    MCScriptVariableDefinition *t_var_definition;
-                    t_var_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
+                    MCScriptVariableDefinition *t_variable_definition;
+                    t_variable_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
                     
-                    MCValueRef t_value;
-                    t_value = t_instance -> slots[t_var_definition -> slot_index];
-                
-                    if (t_value == kMCNull &&
-                        !MCTypeInfoIsOptional(t_instance -> module -> types[t_var_definition -> type] -> typeinfo))
-                        t_success = MCScriptThrowGlobalVariableUsedBeforeDefinedError(t_frame -> instance -> module, t_index);
+                    t_success = MCScriptCheckedFetchFromVariableInInstance(t_frame -> instance,
+                                                                           t_variable_definition,
+                                                                           t_value);
                     
-                    if (t_success)
-                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
                 }
                 else if (t_definition -> kind == kMCScriptDefinitionKindConstant)
                 {
                     MCScriptConstantDefinition *t_constant_definition;
                     t_constant_definition = static_cast<MCScriptConstantDefinition *>(t_definition);
                     
-                    MCValueRef t_value;
                     t_value = t_instance -> module -> values[t_constant_definition -> value];
-                    
-                    if (t_success)
-                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
-                }
-                else if (t_definition -> kind == kMCScriptDefinitionKindContextVariable)
-                {
-                    MCScriptContextVariableDefinition *t_var_definition;
-                    t_var_definition = static_cast<MCScriptContextVariableDefinition *>(t_definition);
-                    
-                    // If we are a normal handler we use the current frame.
-                    // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame = nil;
-                    if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
-                        t_target_frame = t_frame;
-                    else if (t_frame -> caller != nil)
-                        t_target_frame = t_frame -> caller;
-                    else
-                        __MCScriptUnreachable__("cannot determine context variable target frame");
-                    
-                    // If there is no context table, or the value of the slot at the given
-                    // index is nil then we use the default.
-                    MCValueRef t_value;
-                    if (t_target_frame -> context == nil ||
-                        t_target_frame -> context -> count < t_var_definition -> slot_index ||
-                        t_target_frame -> context -> slots[t_var_definition -> slot_index] == nil)
-                        t_value = t_instance -> module -> values[t_var_definition -> default_value];
-                    else
-                        t_value = t_target_frame -> context -> slots[t_var_definition -> slot_index];
-                    
-                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_target_frame, t_dst, t_value);
                 }
                 else if (t_definition -> kind == kMCScriptDefinitionKindHandler ||
                          t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
@@ -2377,11 +2430,18 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                     // previously created one. These MCHandlerRefs are retained
                     // on a per-instance basis. Unbindable foreign handlers are
                     // returned as nil.
-                    MCHandlerRef t_value;
-                    t_success = MCScriptEvaluateHandlerOfInstanceInternal(t_instance, t_handler_definition, t_value);
-                    if (t_success)
-                        t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value != nil ? (MCValueRef)t_value : kMCNull);
+                    MCHandlerRef t_handler_value;
+                    if (MCScriptEvaluateHandlerOfInstanceInternal(t_instance, t_handler_definition, t_handler_value))
+                    {
+                        if (t_handler_value != nil)
+                            t_value = t_handler_value;
+                        else
+                            t_value = kMCNull;
+                    }
                 }
+                
+                if (t_success)
+                    t_success = MCScriptCheckedStoreToRegisterInFrame(t_frame, t_dst, t_value);
             }
             break;
             case kMCScriptBytecodeOpStore:
@@ -2393,64 +2453,25 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
                 t_dst = t_arguments[0];
                 t_index = t_arguments[1];
                 
-				MCScriptInstanceRef t_instance;
+                MCScriptInstanceRef t_instance;
                 MCScriptDefinition *t_definition;
-                MCScriptResolveDefinitionInFrame(t_frame, t_index, t_instance, t_definition);
+                MCScriptResolveDefinitionInInstance(t_frame -> instance,
+                                                    t_index,
+                                                    t_instance,
+                                                    t_definition);
                 
                 MCValueRef t_value;
                 t_success = MCScriptCheckedFetchFromRegisterInFrame(t_frame, t_dst, t_value);
                 
                 if (t_definition -> kind == kMCScriptDefinitionKindVariable)
                 {
-                    MCScriptVariableDefinition *t_var_definition;
-                    t_var_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
-                    
-                    MCTypeInfoRef t_output_type;
-                    t_output_type = t_instance -> module -> types[t_var_definition -> type] -> typeinfo;
-                    
-                    if (t_success &&
-                        !MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_output_type))
-                        t_success = MCScriptThrowInvalidValueForGlobalVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
+                    MCScriptVariableDefinition *t_variable_definition;
+                    t_variable_definition = static_cast<MCScriptVariableDefinition *>(t_definition);
                     
                     if (t_success)
-                        MCValueAssign(t_instance -> slots[t_var_definition -> slot_index], t_value);
-                }
-                else if (t_definition -> kind == kMCScriptDefinitionKindContextVariable)
-                {
-                    MCScriptContextVariableDefinition *t_var_definition;
-                    t_var_definition = static_cast<MCScriptContextVariableDefinition *>(t_definition);
-                    
-                    MCTypeInfoRef t_output_type;
-                    t_output_type = t_instance -> module -> types[t_var_definition -> type] -> typeinfo;
-                    
-                    if (t_success &&
-                        !MCTypeInfoConforms(MCValueGetTypeInfo(t_value), t_output_type))
-                        t_success = MCScriptThrowInvalidValueForContextVariableError(t_frame -> instance -> module, t_index, t_output_type, t_value);
-                    
-                    // If we are a normal handler we use the current frame.
-                    // If we are context handler, we use the caller's frame.
-                    MCScriptFrame *t_target_frame = nil;
-                    if (t_frame -> handler -> scope == kMCScriptHandlerScopeNormal)
-                        t_target_frame = t_frame;
-                    else if (t_frame -> caller != nil)
-                        t_target_frame = t_frame -> caller;
-                    else
-	                    __MCScriptUnreachable__("cannot determine context variable target frame");
-                    
-                    if (t_success &&
-                        (t_target_frame -> context == nil ||
-                         t_target_frame -> context -> count <= t_var_definition -> slot_index))
-                    {
-                        // Note that MCScriptFrameContext has an implement MCValueRef
-                        // so we don't need to adjust index to be a count.
-                        if (MCMemoryReallocate(t_target_frame -> context, sizeof(MCScriptFrameContext) + (sizeof(MCValueRef) * t_var_definition -> slot_index), t_target_frame -> context))
-                            t_target_frame -> context -> count = t_var_definition -> slot_index + 1;
-                        else
-                            t_success = false;
-                    }
-                    
-                    if (t_success)
-                        MCValueAssign(t_target_frame -> context -> slots[t_var_definition -> slot_index], t_value);
+                        t_success = MCScriptCheckedStoreToVariableInInstance(t_instance,
+                                                                             t_variable_definition,
+                                                                             t_value);
                 }
                 else
                     MCUnreachable();
@@ -2495,7 +2516,7 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 					t_success = false;
 				}
 
-				for (int t_arg_ofs = 1; t_success && t_arg_ofs + 1 < t_arity; t_arg_ofs += 2)
+				for (uindex_t t_arg_ofs = 1; t_success && t_arg_ofs + 1 < t_arity; t_arg_ofs += 2)
 				{
 					MCValueRef t_raw_key, t_value;
 					MCNewAutoNameRef t_key;
@@ -2536,12 +2557,36 @@ bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self, MCScriptHan
 				}
 			}
 			break;
+            case kMCScriptBytecodeOpReset:
+            {
+                for(uindex_t t_arg = 0; t_success && t_arg < t_arity; t_arg += 1)
+                {
+                    MCTypeInfoRef t_type =
+                        MCScriptGetRegisterTypeInFrame(t_frame, t_arguments[t_arg]);
+                    
+                    // If there is no type attached to the slot, then the creation
+                    // makes it unassigned.
+                    MCValueRef t_default_value = nil;
+                    if (t_type != nil)
+                    {
+                        t_default_value = MCTypeInfoGetDefault(t_type);
+                    }
+                    
+                    // Assign to the slot. Notice that we don't do a 'checked'
+                    // store, this is because we might be making the slot unassigned
+                    // and we already know the type conforms.
+                    MCScriptStoreToRegisterInFrame(t_frame,
+                                                   t_arguments[t_arg],
+                                                   t_default_value);
+                }
+            }
+            break;
         }
         
         // If we failed, then make sure the frame address is up to date.
         if (!t_success)
         {
-            t_frame -> address = t_bytecode - t_frame -> instance -> module -> bytecode;
+            t_frame -> address = uindex_t(t_bytecode - t_frame -> instance -> module -> bytecode);
             break;
         }
         

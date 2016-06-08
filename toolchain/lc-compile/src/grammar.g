@@ -236,7 +236,7 @@
     'rule' ImportDefinition(-> variable(Position, public, Id, Type)):
         "variable" @(-> Position) Identifier(-> Id) "as" Type(-> Type)
 
-    'rule' ImportDefinition(-> handler(Position, public, Id, normal, Signature, nil, nil)):
+    'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
@@ -352,9 +352,6 @@
 
     'rule' VariableDefinition(-> variable(Position, Access, Name, Type)):
         Access(-> Access) "variable" @(-> Position) Identifier(-> Name) OptionalTypeClause(-> Type)
-
-    'rule' VariableDefinition(-> contextvariable(Position, Access, Name, Type, Default)):
-        Access(-> Access) "context" @(-> Position) "variable" Identifier(-> Name) OptionalTypeClause(-> Type) "default" Expression(-> Default)
         
 'nonterm' OptionalTypeClause(-> TYPE)
 
@@ -455,21 +452,10 @@
 
 'nonterm' HandlerDefinition(-> DEFINITION)
 
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, normal, Signature, nil, Body)):
+    'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
-        
-    'rule' HandlerDefinition(-> handler(Position, Access, Name, context, Signature, nil, Body)):
-        Access(-> Access) "context" @(-> Position) "handler" Identifier(-> Name) Signature(-> Signature) Separator
-            Statements(-> Body)
-        "end" "handler"
-            --'rule' HandlerDefinition(-> handler(Position, Access, Name, Signature, nil, Body)):
-    --    Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
-    --        Definitions(-> Definitions)
-    --    "begin"
-    --        Statements(-> Body)
-    --    "end" "handler"
         
     'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
         Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)

@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "mcerror.h"
 #include "exec.h"
-//#include "execpt.h"
+
 
 #include "param.h"
 #include "handler.h"

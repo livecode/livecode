@@ -912,6 +912,8 @@ end handler
 
 public handler OnMouseDown()
    -- the icons change color when they are pressed down
+   -- update the mouseAction
+   put locToAction(the mouse position) into mMouseAction
    if mMouseAction > 0 then
       put mMouseAction into mSelectedAction
       redraw all
@@ -919,11 +921,15 @@ public handler OnMouseDown()
 end handler
 
 public handler OnMouseUp()
+   -- update the mouseAction
+   put locToAction(the mouse position) into mMouseAction
+   if mMouseAction is mSelectedAction then
+      post "mouseUp"
+   end if
+   
    -- the icons change back to their original colors on mouse up
    put 0 into mSelectedAction
    redraw all
-
-   post "mouseUp"
 end handler 
 
 public handler OnMouseMove()

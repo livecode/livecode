@@ -1,4 +1,6 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+﻿script "CoreEngineSend"
+/*
+Copyright (C) 2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -14,13 +16,19 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-
-#ifndef SYSPOSIX_H
-#define SYSPOSIX_H
-
-#include "globdefs.h"
-#include "system.h"
-
-#include "globals.h"
-
-#endif // SYSPOSIX_H
+on TestSendParams
+	local tScript, tStack
+	put "on testParameters p1, p2; return p2; end testParameters" \
+		into tScript
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tSendScript
+	put "--ensure this is executed as script not a handler name" \
+		into tSendScript
+	put return & "testParameters 1, 2" after tSendScript
+	
+	send tSendScript to tStack
+	TestAssert "send script with multiple params", the result is "2"
+end TestSendParams

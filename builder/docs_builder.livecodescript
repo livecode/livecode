@@ -2194,6 +2194,20 @@ command docsBuilderGenerateDistributedAPI pEdition
    
    addToList tLCBDictionaryA, tLibrariesA
    
+   local tDatagridA, tDGDocs
+   put builderIDEDocsFolder() & "/dictionary/datagrid.lcdoc" into tDGDocs
+   put revDocsParseDocFileToLibraryArray(tDGDocs, "Data Grid", "LiveCode") \
+      into tDataGridA
+
+   if tDataGridA is empty then
+      builderLog "error", "Couldn't parse datagrid dictionary data for" && pEdition
+      exit docsBuilderGenerateDistributedAPI
+   end if
+   
+   put "dictionary" into tDataGridA["type"]
+   
+   addToList tLCBDictionaryA, tLibrariesA
+   
    local tJSON
    put revDocsFormatLibrariesArrayAsJSON(tLibrariesA) into tJSON
    

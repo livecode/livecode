@@ -33,7 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "util.h"
 #include "font.h"
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "mode.h"
 #include "globals.h"

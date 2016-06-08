@@ -82,9 +82,6 @@ extern void MCU_resetprops(Boolean update);
 extern void MCU_saveprops(MCSaveprops &sp);
 extern void MCU_restoreprops(MCSaveprops &sp);
 extern int4 MCU_any(int4 max);
-#ifdef LEGACY_EXEC
-extern void MCU_getnumberformat(MCExecPoint &, uint2, uint2, uint2);
-#endif
 extern bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_string);
 extern void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force);
 extern real8 MCU_stoIEEE(const char *bytes);
@@ -132,10 +129,6 @@ extern void MCU_lower(char *sptr, const MCString& s);
 extern int4 MCU_strncasecmp(const char *one, const char *two, size_t n);
 extern Boolean MCU_offset(const MCString &p, const MCString &w,
 	                          uint4 &offset, Boolean casesensitive = False);
-#ifdef LEGACY_EXEC
-void MCU_chunk_offset(MCExecPoint &ep, MCString &w,
-                      Boolean whole, Chunk_term delimiter);
-#endif
 extern void MCU_additem(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_addline(char *&dptr, const char *sptr, Boolean first);
 extern void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
@@ -150,9 +143,6 @@ extern void MCU_snap(int2 &p);
 // MDW-2014-07-06: [[ oval_points ]]
 extern void MCU_roundrect(MCPoint *&points, uint2 &npoints,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags);
-#ifdef LEGACY_EXEC
-extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
-#endif
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uindex_t &n, MCStringRef p_data);
 extern Boolean MCU_parsepoint(MCPoint &r_point, MCStringRef);
 extern void MCU_querymouse(int2 &x, int2 &y);
@@ -183,10 +173,6 @@ extern MCRectangle MCU_offset_rect(const MCRectangle& r, int2 ox, int2 oy);
 extern MCRectangle MCU_recttoroot(MCStack *sptr, const MCRectangle &o);
 extern void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask);
 extern void MCU_choose_tool(MCExecContext& ctxt, MCStringRef p_string, Tool p_tool);
-#ifdef LEGACY_EXEC
-extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
-	                                 uint2 line, uint2 pos);
-#endif
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
 //extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
 //extern void MCU_path2std(char *dptr);
@@ -199,27 +185,14 @@ extern void MCU_urldecode(MCStringRef p_source, bool p_use_utf8, MCStringRef& r_
 extern bool MCU_urlencode(MCStringRef p_url, bool p_use_utf8, MCStringRef &r_encoded);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
-//extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
-#ifdef LEGACY_EXEC
-extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
-#endif
 //extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
-#ifdef LEGACY_EXEC
-extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
-#endif
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output);
 extern void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
 //   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
 extern bool MCU_couldbeurl(const MCString& potential_url);
-#ifdef LEGACY_EXEC
-extern void MCU_geturl(MCExecPoint &ep);
-#endif
 extern void MCU_puturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef p_data);
-#ifdef LEGACY_EXEC
-extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
-#endif
 extern uint1 MCU_unicodetocharset(uint2 uchar);
 extern uint1 MCU_languagetocharset(MCNameRef langname);
 extern MCNameRef MCU_charsettolanguage(uint1 charset);
@@ -236,9 +209,6 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
 
-#ifdef LEGACY_EXEC
-extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
-#endif
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
 // AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading

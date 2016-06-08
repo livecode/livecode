@@ -146,10 +146,8 @@
     EmitTypeDefinition
     EmitConstantDefinition
     EmitVariableDefinition
-    EmitContextVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
-    EmitBeginContextHandlerDefinition
     EmitForeignHandlerDefinition
     EmitPropertyDefinition
     EmitEventDefinition
@@ -242,6 +240,7 @@
     EmitStore
     EmitReturn
     EmitReturnNothing
+    EmitReset
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
@@ -513,9 +512,7 @@
 'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitConstantDefinition(Index: INT, Position: POS, Name: NAME, ConstIndex: INT)
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
-'action' EmitContextVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, DefaultIndex: INT)
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
-'action' EmitBeginContextHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 'action' EmitPropertyDefinition(Index: INT, Position: POS, Name: NAME, GetIndex: INT, SetIndex: INT)
@@ -617,6 +614,7 @@
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitReset(Register: INT)
 'action' EmitPosition(Position: POS)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)

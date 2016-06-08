@@ -67,10 +67,6 @@ class MCScriptPoint
 public:
 	MCScriptPoint(MCScriptPoint &sp);
 	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
-#ifdef LEGACY_EXEC
-	MCScriptPoint(MCExecPoint &ep);
-    MCScriptPoint(const MCString &s);
-#endif
     MCScriptPoint(MCExecContext &ctxt);
     MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string);
 	MCScriptPoint(MCStringRef p_string);
@@ -105,9 +101,6 @@ public:
 	}
 	bool token_is_cstring(const char *p_cstring);
 
-#ifdef LEGACY_EXEC
-	MCString gettoken_oldstring(void);
-#endif
 	MCNameRef gettoken_nameref(void);
 	MCStringRef gettoken_stringref(void);
 

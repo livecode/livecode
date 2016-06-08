@@ -390,16 +390,6 @@ public:
 	void setrect(const MCRectangle &p_rect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
-
-    // FG-2014-11-07: [[ Better theming ]] Gets a propery according to the native UI theme
-    virtual Exec_stat getsystemthemeprop(Properties which, MCExecPoint&);
-#endif
-
 	virtual void select();
 	virtual void deselect();
 	virtual Boolean del();
@@ -446,10 +436,6 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
 
-#ifdef LEGACY_EXEC
-    Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
-    Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
-#endif
     
     Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
     Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
@@ -507,19 +493,7 @@ public:
 	
 	MCNameRef getdefaultpropsetname(void);
 
-#ifdef LEGACY_EXEC
-	Exec_stat sendgetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-	Exec_stat getcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-
-	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-#endif
     
-#ifdef OLD_EXEC
-	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
-	Exec_stat changeid(uint32_t new_id);
-#endif
-
 	uint4 getid() const
 	{
 		return obj_id;
@@ -757,11 +731,6 @@ public:
 	bool names(Properties which, MCValueRef& r_name);
     bool getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val);
     
-#ifdef LEGACY_EXEC
-	// Wrapper for 'names()' working in the old way (for convenience).
-	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
-#endif
-
 	Boolean parsescript(Boolean report, Boolean force = False);
 	void drawshadow(MCDC *dc, const MCRectangle &drect, int2 soffset);
 	void draw3d(MCDC *dc, const MCRectangle &drect,
@@ -805,14 +774,6 @@ public:
 
 	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
 	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
-
-#ifdef OLD_EXEC
-	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
-	//   the correct result.
-	// MERG-2013-05-07: [[ RevisedPropsProp ]] Add 'effective' option to enable 'the effective
-	//   properties of object ...'.
-	Exec_stat getproparray(MCExecPoint &ep, uint4 parid, bool effective);
-#endif
 
 	MCObjectHandle *gethandle(void);
 
@@ -1294,11 +1255,6 @@ protected:
 		setscript(*t_script);
 	}
 
-#ifdef OLD_EXEC
-    // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
-    Exec_stat setscriptprop(MCExecPoint& ep);
-#endif
-
     // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
     virtual MCPlatformControlType getcontroltype();
     virtual MCPlatformControlPart getcontrolsubpart();
@@ -1309,14 +1265,6 @@ protected:
     MCInterfaceTheme gettheme() const;
     
 private:
-#ifdef OLD_EXEC
-	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
-	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
-	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
-
-	Exec_stat setparentscriptprop(MCExecPoint& ep);
-	Exec_stat setshowfocusborderprop(MCExecPoint& ep);
-#endif
 	bool clonepropsets(MCObjectPropertySet*& r_new_props) const;
 	void deletepropsets(void);
 
@@ -1324,15 +1272,6 @@ private:
 	bool findpropset(MCNameRef name, bool p_empty_is_default, MCObjectPropertySet*& r_set);
 	// Find the propset with the given name, creating it if necessary.
 	/* CAN FAIL */ bool ensurepropset(MCNameRef name, bool p_empty_is_default, MCObjectPropertySet*& r_set);
-#ifdef OLD_EXEC
-	// Set propset to the one corresponding to name, creating it if it does not exist.
-	/* CAN FAIL */ bool setpropset(MCNameRef name);
-
-	// List the available propsets into ep.
-	void listpropsets(MCExecPoint& ep);
-	// Change the available propsets to those listed in ep.
-	/* CAN FAIL */ bool changepropsets(MCExecPoint& ep);
-#endif
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are all the legacy propset pickle routines.
 	//   If sfv >= 7000, then they are written out more directly.
@@ -1365,10 +1304,6 @@ private:
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);
-
-#ifdef LEGACY_EXEC
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
-#endif
 
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
