@@ -119,8 +119,8 @@ on TestInitialPaintConditions
 	TestAssert "the multiSpace is initially 1", the multiSpace is 1
 
 # not sure if this should work. it doesn't in previous builds either
-	TestAssert "the penPattern is initially 136", the penPattern is 136
-	TestAssert "the brushPattern is initially 136", the brushPattern is 136
+	TestAssert "the penPattern is initially empty", the penPattern is empty
+	TestAssert "the brushPattern is initially empty", the brushPattern is empty
 	TestAssert "the polySides is initially 4", the polySides is 4
 
 	TestAssert "the roundEnds is initially false", the roundEnds is false
@@ -234,8 +234,8 @@ on TestResetPaint
 	TestAssert "the multiSpace is reset to 1", the multiSpace is 1
 
 # not sure if this should be empty. it isn't in previous builds either
-	TestAssert "the penPattern is reset to 136", the penPattern is 136
-	TestAssert "the brushPattern is reset to 136", the brushPattern is 136
+	TestAssert "the penPattern is reset to empty", the penPattern is empty
+	TestAssert "the brushPattern is reset to empty", the brushPattern is empty
 	TestAssert "the polySides is reset to 4", the polySides is 4
 
 	TestAssert "the roundEnds is reset to false", the roundEnds is false
