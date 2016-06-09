@@ -177,7 +177,7 @@ public:
     virtual void layerchanged();
 	virtual void geometrychanged(const MCRectangle &p_rect);
     
-    virtual Boolean del(void);
+    virtual Boolean del(bool p_check_flag);
     
 	virtual void OnOpen();
 	virtual void OnClose();

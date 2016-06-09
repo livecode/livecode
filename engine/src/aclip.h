@@ -79,7 +79,7 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	// MCAudioClip functions

@@ -981,31 +981,40 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 	}
 }
 
-Boolean MCGroup::del()
+bool MCGroup::isdeletable(bool p_check_flag)
 {
-	if (flags & F_G_CANT_DELETE)
-	{
-		MCeerror->add
-		(EE_OBJECT_CANTREMOVE, 0, 0);
-		return False;
-	}
-	if (controls != NULL)
-	{
-		MCControl *cptr = controls;
-		do
-		{
-			if (cptr->getscriptdepth() != 0)
-			{
-				MCeerror->add
-				(EE_OBJECT_CANTREMOVE, 0, 0);
-				return False;
-			}
-			cptr = cptr->next();
-		}
-		while (cptr != controls);
-	}
-	rect = getcard()->getrect();
-	return MCControl::del();
+    if (parent == NULL || scriptdepth != 0 ||
+        (p_check_flag && getflag(F_G_CANT_DELETE)))
+    {
+        MCAutoValueRef t_long_name;
+        getnameproperty(P_LONG_NAME, 0, &t_long_name);
+        MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0, *t_long_name);
+        return false;
+    }
+    
+    if (controls != NULL)
+    {
+        MCControl *t_control = controls;
+        do
+        {
+            if (!t_control->isdeletable(p_check_flag))
+                return false;
+            
+            t_control = t_control->next();
+        }
+        while (t_control != controls);
+    }
+    
+    return true;
+}
+
+Boolean MCGroup::del(bool p_check_flag)
+{
+	if (!isdeletable(p_check_flag))
+	    return False;
+	
+    rect = getcard()->getrect();
+	return MCControl::del(p_check_flag);
 }
 
 void MCGroup::recompute()

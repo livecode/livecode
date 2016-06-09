@@ -92,13 +92,16 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
-Boolean MCVideoClip::del()
+Boolean MCVideoClip::del(bool p_check_flag)
 {
-	getstack()->removevclip(this);
+    if (!isdeletable(p_check_flag))
+        return False;
+    
+    getstack()->removevclip(this);
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(p_check_flag);
 }
 
 void MCVideoClip::paste(void)

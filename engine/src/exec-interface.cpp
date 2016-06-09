@@ -1953,17 +1953,16 @@ static void MCInterfaceRevertStack(MCExecContext& ctxt, MCStack *p_stack)
     if (!MCNameCreate(*t_filename, &t_name))
         return;
     
-    Boolean oldlock = MClockmessages;
-    MClockmessages = True;
-    MCerrorlock++;
-    if (p_stack->del())
+    // we don't want to check flags on stack revert
+    if (p_stack->del(false))
+    {
         p_stack -> scheduledelete();
-    MCerrorlock--;
-    MClockmessages = oldlock;
-
-    p_stack = MCdispatcher->findstackname(*t_name);
-    if (p_stack != NULL)
-        p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+        p_stack = MCdispatcher->findstackname(*t_name);
+        if (p_stack != NULL)
+            p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+    }
+    else
+        ctxt . Throw();
 }
 
 void MCInterfaceExecRevert(MCExecContext& ctxt)
@@ -2226,7 +2225,7 @@ void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, u
 {
 	for(uindex_t i = 0; i < p_object_count; i++)
 	{
-		if (!p_objects[i] . object -> del())
+		if (!p_objects[i] . object -> del(true))
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTDELETEOBJECT);
 			return;

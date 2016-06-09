@@ -84,7 +84,7 @@ public:
 	virtual void applyrect(const MCRectangle &nrect);
 
     
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void recompute();
 
 	// MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
@@ -136,6 +136,8 @@ public:
 	bool getNativeContainerLayer(MCNativeLayer *&r_layer);
 	
     virtual void scheduledelete(bool p_is_child);
+    
+    virtual bool isdeletable(bool p_check_flag);
     
     // This call computes the pixel bounds of the group, rather than
     // just its active bounds - transients, bitmap effects and selection

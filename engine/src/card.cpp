@@ -1088,30 +1088,43 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 		MCObject::timer(mptr, params);
 }
 
-Boolean MCCard::del()
+bool MCCard::isdeletable(bool p_check_flag)
 {
-	if (parent == NULL || scriptdepth != 0 || getstack()->islocked()
-	        || getstack()->isediting() || flags & F_C_CANT_DELETE)
-	{
-		MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0);
-		return False;
-	}
-	clean();
-	if (objptrs != NULL)
-	{
-		MCObjptr *optr = objptrs;
-		do
-		{
-			if (optr->getref()->getscriptdepth() != 0)
-			{
-				MCeerror->add
-				(EE_OBJECT_CANTREMOVE, 0, 0);
-				return False;
-			}
-			optr = optr->next();
-		}
-		while (optr != objptrs);
-	}
+    if (parent == NULL || scriptdepth != 0 ||
+       (p_check_flag && getflag(F_C_CANT_DELETE)) ||
+       getstack() -> isediting())
+    {
+        MCAutoValueRef t_long_name;
+        getnameproperty(P_LONG_NAME, 0, &t_long_name);
+        MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0, *t_long_name);
+        return false;
+    }
+
+    if (objptrs != NULL)
+    {
+        MCObjptr *t_object_ptr = objptrs;
+        do
+        {
+            // if it's a background group then don't check flags
+            if (!((t_object_ptr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(t_object_ptr->getref())->isshared())) &&
+                t_object_ptr->getref()->isdeletable(true))
+                return false;
+            
+            t_object_ptr = t_object_ptr->next();
+        }
+        while (t_object_ptr != objptrs);
+    }
+    
+    return true;
+}
+
+Boolean MCCard::del(bool p_check_flag)
+{
+	if (!isdeletable(p_check_flag))
+	    return False;
+	
+    clean();
+    
 	MCselected->remove(this);
 	
 	// MW-2008-10-31: [[ ParentScripts ]] Make sure we close the controls
@@ -1151,7 +1164,7 @@ Boolean MCCard::del()
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(p_check_flag);
 }
 
 struct UpdateDataIdsVisitor: public MCObjectVisitor

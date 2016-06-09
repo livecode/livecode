@@ -115,7 +115,7 @@ public:
 
 	virtual void select();
 	virtual void deselect();
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual void undo(Ustruct *us);

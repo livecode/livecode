@@ -203,13 +203,16 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 	}
 }
 
-Boolean MCAudioClip::del()
+Boolean MCAudioClip::del(bool p_check_flag)
 {
-	getstack()->removeaclip(this);
+    if (!isdeletable(p_check_flag))
+        return False;
+    
+    getstack()->removeaclip(this);
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-	return MCObject::del();
+	return MCObject::del(p_check_flag);
 }
 
 void MCAudioClip::paste(void)

@@ -897,17 +897,20 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 {
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
-	switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-	{
-		case ES_PASS:
-		case ES_NOT_HANDLED:
-			break;
-		default:
-			return;
-	}
-	// IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
-	// here on Android in the same place as (almost) everything else
-	MCdefaultstackptr->getcard()->message(MCM_shut_down);
+    if (MCdefaultstackptr != nil && !MCdefaultstackptr->getstate(CS_DELETE_STACK))
+    {
+        switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+        {
+            case ES_PASS:
+            case ES_NOT_HANDLED:
+                break;
+            default:
+                return;
+        }
+        // IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
+        // here on Android in the same place as (almost) everything else
+        MCdefaultstackptr->getcard()->message(MCM_shut_down);
+    }
 #endif
 
 	MCretcode = p_retcode;

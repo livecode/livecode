@@ -83,7 +83,7 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
@@ -107,7 +107,9 @@ public:
 
     virtual void scheduledelete(bool p_is_child);
     
-	void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
+    virtual bool isdeletable(bool p_check_flag);
+    
+    void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
 
 	MCObject *hittest(int32_t x, int32_t y);
 	

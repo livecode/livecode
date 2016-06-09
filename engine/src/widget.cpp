@@ -712,9 +712,10 @@ void MCWidget::geometrychanged(const MCRectangle &p_rect)
 		MCwidgeteventmanager -> event_setrect(this, p_rect);
 }
 
-Boolean MCWidget::del(void)
+Boolean MCWidget::del(bool p_check_flag)
 {
-    if (!MCControl::del())
+    // MCControl::del will check deletable
+    if (!MCControl::del(p_check_flag))
         return False;
 
     // Make sure we release the widget ref here. Otherwise its

@@ -450,14 +450,12 @@ void MCControl::deselect()
 	}
 }
 
-Boolean MCControl::del()
+Boolean MCControl::del(bool p_check_flag)
 {
-	if (parent == NULL || scriptdepth != 0 || getstack()->islocked())
-	{
-		MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0);
-		return False;
-	}
-	switch (gettype())
+	if (!isdeletable(p_check_flag))
+	    return False;
+	
+    switch (gettype())
 	{
 	case CT_BUTTON:
 		message(MCM_delete_button);
@@ -529,7 +527,7 @@ Boolean MCControl::del()
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(p_check_flag);
 }
 
 void MCControl::paste(void)
@@ -591,7 +589,7 @@ void MCControl::undo(Ustruct *us)
 		}
 		return;
 	case UT_REPLACE:
-		del();
+		del(true);
 		us->type = UT_DELETE;
 		return;
 	default:

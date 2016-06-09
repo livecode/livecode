@@ -212,7 +212,8 @@ void MCStacklist::top(MCStack *sptr)
 		tptr = stacks;
 		do
 		{
-			if (tptr->getstack()->getmode() == pass)
+			if (tptr->getstack()->getmode() == pass &&
+                !tptr->getstack()->getstate(CS_DELETE_STACK))
 			{
 				MCtopstackptr = tptr->getstack();
 				return;

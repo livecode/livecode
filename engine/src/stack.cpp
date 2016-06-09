@@ -604,7 +604,12 @@ MCStack::~MCStack()
 	// MW-2004-11-17: If this is the current Message Box, set to NULL
 	if (MCmbstackptr == this)
 		MCmbstackptr = NULL;
-	if (MCstaticdefaultstackptr == this)
+    if (MCtopstackptr == this)
+    {
+        MCtopstackptr = nil;
+        MCstacks->top(nil);
+    }
+    if (MCstaticdefaultstackptr == this)
 		MCstaticdefaultstackptr = MCtopstackptr;
 	if (MCdefaultstackptr == this)
 		MCdefaultstackptr = MCstaticdefaultstackptr;
@@ -1299,19 +1304,79 @@ void MCStack::applyrect(const MCRectangle &nrect)
 		resize(oldrect . width, oldrect . height);
 }
 
-Boolean MCStack::del()
+bool MCStack::isdeletable(bool p_check_flag)
 {
-	// MW-2012-10-26: [[ Bug 9918 ]] If 'cantDelete' is set, then don't delete the stack. Also
-	//   make sure we throw an error.
-	if (parent == NULL || scriptdepth != 0 || flags & F_S_CANT_DELETE)
-	{
-		MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0);
-		return False;
-	}
-	if (MCdispatcher->gethome() == this)
-		return False;
+    // MW-2012-10-26: [[ Bug 9918 ]] If 'cantDelete' is set, then don't delete the stack. Also
+    //   make sure we throw an error.
+    if (parent == NULL || scriptdepth != 0 ||
+        (p_check_flag && getflag(F_S_CANT_DELETE)) ||
+        MCdispatcher->gethome() == this || this -> isediting())
+    {
+        MCAutoValueRef t_long_name;
+        getnameproperty(P_LONG_NAME, 0, &t_long_name);
+        MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0, *t_long_name);
+        return false;
+    }
+    
+    if (cards != nil)
+    {
+        MCCard *t_card;
+        t_card = cards;
+        do
+        {
+            // we should be able to remove a stack
+            // that has cantDelete cards
+            
+            // ensure we don't iterate controls twice
+            // by calling isdeletable on the card
+            if (!t_card->MCObject::isdeletable(false))
+                return false;
+            
+            t_card = t_card -> next();
+        }
+        while(t_card != cards);
+    }
+    
+    if (controls != nil)
+    {
+        MCControl *t_control;
+        t_control = controls;
+        do
+        {
+            // we should be able to remove a stack
+            // that has cantDelete groups
+            if (!t_control->isdeletable(false))
+                return false;
+            
+            t_control = t_control -> next();
+        }
+        while(t_control != controls);
+    }
+    
+    if (substacks != nil)
+    {
+        MCStack *t_stack = substacks;
+        do
+        {
+            // we should be able to delete a mainstack from
+            // memory that has cantDelete substacks
+            if (!t_stack->isdeletable(false))
+                return false;
+            
+            t_stack = t_stack->next();
+        }
+        while (t_stack != substacks);
+    }
+
+    return true;
+}
+
+Boolean MCStack::del(bool p_check_flag)
+{
+    if (!isdeletable(true))
+	   return False;
 	
-    setstate(CS_DELETE_STACK, True);
+    setstate(True, CS_DELETE_STACK);
     
 	if (opened)
 	{
@@ -1342,7 +1407,12 @@ Boolean MCStack::del()
 			((MCStack *)parent) -> extraclose(true);
 	}
 
-	if (MCstaticdefaultstackptr == this)
+    if (MCtopstackptr == this)
+    {
+        MCtopstackptr = nil;
+        MCstacks->top(nil);
+    }
+    if (MCstaticdefaultstackptr == this)
 		MCstaticdefaultstackptr = MCtopstackptr;
 	if (MCdefaultstackptr == this)
 		MCdefaultstackptr = MCstaticdefaultstackptr;
@@ -1354,7 +1424,7 @@ Boolean MCStack::del()
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-    return MCObject::del();
+    return MCObject::del(true);
 }
 
 void MCStack::paste(void)
