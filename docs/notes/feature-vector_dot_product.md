@@ -1,7 +1,8 @@
-# New function 'vectorDotProduct'
+# New vectorDotProduct function
 
-There is a new function vectorDotProduct which computes the vector
-dot product of two single-dimensional arrays with identical keys.
+A new **vectorDotProduct** function has been added.  It computes the
+vector dot product of two single-dimensional arrays with identical
+keys.
 
 More specifically:
 
@@ -15,4 +16,5 @@ Will compute:
     end repeat
     return tSum
 
-If the two arrays do not have the same set of keys, then an error is thrown.
+If the two arrays do not have the same set of keys, then an error is
+thrown.
