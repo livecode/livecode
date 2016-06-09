@@ -8,7 +8,7 @@ Summary: Specifies whether the stack should be saved as script only which does n
 
 Associations: stack
 
-Introduced: 8.0.0
+Introduced: 8.0
 
 OS: mac,windows,linux,ios,android
 
