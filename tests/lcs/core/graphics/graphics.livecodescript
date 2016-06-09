@@ -94,7 +94,7 @@ end TestGraphicsIsNotWithin
 
 -- new brush mapping for 101..135
 -- brush < 101 = brush
--- 101 < brush < 135 = brush - 100
+-- 101 < brush < 137 = brush - 100
 -- brush > 136 = brush
 
 on TestBrushWithNoIcons
@@ -173,7 +173,7 @@ end SetBrushZero
 on TestBrush
 	open stack TestGetIDERepositoryPath() & "/Toolset/palettes/revicons.rev"
 	set the brush to 30
-	TestAssert "brush < 35 unchanged", the brush is 30
+	TestAssert "brush < 37 unchanged", the brush is 30
 end TestBrush
 
 on TestRemappedBrush
@@ -201,7 +201,7 @@ on TestBrushBoundaries
 #	set the brush to 99
 #	TestAssert "brush = 99 unchanged", the brush is 99
 	set the brush to 137
-	TestAssert "brush > 136 is unchanged", the brush is 137
+	TestAssert "brush can be set to a pattern", the brush is 137
 end TestBrushBoundaries
 
 on TestSpray
