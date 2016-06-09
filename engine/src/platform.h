@@ -125,6 +125,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	kMCPlatformPropertyTypeUInt64Array,
 	
 	kMCPlatformPropertyTypePointer,
     
@@ -1018,6 +1019,7 @@ struct MCPlatformPlayerQTVRConstraints
 
 typedef uint64_t MCPlatformPlayerDuration;
 #define kMCPlatformPropertyTypePlayerDuration kMCPlatformPropertyTypeUInt64
+#define kMCPlatformPropertyTypePlayerDurationArray kMCPlatformPropertyTypeUInt64Array
 #define MCPlatformPlayerDurationMax UINT64_MAX
 
 void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);

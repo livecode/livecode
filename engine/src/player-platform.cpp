@@ -2129,7 +2129,7 @@ void MCPlayer::updatetraversal()
 // End of virtual MCPlayerInterface's functions
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlayer::markerchanged(uint32_t p_time)
+void MCPlayer::markerchanged(MCPlatformPlayerDuration p_time)
 {
     // Search for the first marker with the given time, and dispatch the message.
     for(uindex_t i = 0; i < m_callback_count; i++)
@@ -2247,7 +2247,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         
         // SN-2014-07-28: [[ Bug 12984 ]] Mimic the strtol behaviour in case of a parsing failure
         if (MCNumberParse(*t_callback_substring, &t_time))
-            m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
+            m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsReal(*t_time);
         else
             m_callbacks[m_callback_count - 1] . time = 0;
         
@@ -2291,12 +2291,12 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         return;
     
     // Now set the markers in the player so that we get notified.
-    array_t<uint32_t> t_markers;
+    array_t<MCPlatformPlayerDuration> t_markers;
     /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
     for(uindex_t i = 0; i < m_callback_count; i++)
         t_markers . ptr[i] = m_callbacks[i] . time;
     t_markers . count = m_callback_count;
-    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypePlayerDurationArray, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
 }
 

@@ -119,7 +119,7 @@ private:
     
     com_runrev_livecode_MCQTKitPlayerObserver *m_observer;
     
-    uint32_t *m_markers;
+    MCPlatformPlayerDuration *m_markers;
     uindex_t m_marker_count;
     uint32_t m_last_marker;
 	double m_scale;
@@ -751,15 +751,17 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			break;
         case kMCPlatformPlayerPropertyMarkers:
         {
-            array_t<uint32_t> *t_markers;
-            t_markers = (array_t<uint32_t> *)p_value;
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDurationArray);
+			
+            array_t<MCPlatformPlayerDuration> *t_markers;
+            t_markers = (array_t<MCPlatformPlayerDuration> *)p_value;
             
             m_last_marker = UINT32_MAX;
             MCMemoryDeleteArray(m_markers);
             m_markers = nil;
             
             /* UNCHECKED */ MCMemoryResizeArray(t_markers -> count, m_markers, m_marker_count);
-            MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(uint32_t));
+            MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(MCPlatformPlayerDuration));
         }
             break;
 	}

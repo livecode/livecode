@@ -369,7 +369,7 @@ void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef menu, uindex_t item);
 void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef window, uint32_t view_id);
 
 void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef player);
-void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef player, MCPlatformPlayerDuration time);
 void MCPlatformCallbackSendPlayerCurrentTimeChanged(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerFinished(MCPlatformPlayerRef player);
 void MCPlatformCallbackSendPlayerBufferUpdated(MCPlatformPlayerRef player);

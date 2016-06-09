@@ -56,7 +56,7 @@ struct MCPlayerCallback
 {
     MCNameRef message;
     MCNameRef parameter;
-    uint32_t time;
+    MCPlayerDuration time;
 };
 
 // SN-2014-07-23: [[ Bug 12893 ]] MCControl must be the first class inherited
@@ -371,7 +371,7 @@ public:
         return t_has_invalid_filename;
     }
     
-    void markerchanged(uint32_t p_time);
+    void markerchanged(MCPlatformPlayerDuration p_time);
     void selectionchanged(void);
     void currenttimechanged(void);
 	void moviefinished(void);
