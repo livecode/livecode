@@ -1188,7 +1188,7 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 	{
 	case kMCPlatformPlayerPropertyDuration:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_duration;
 			if (GetDuration(t_duration))
 				*((MCPlatformPlayerDuration*)r_value) = t_duration;
@@ -1197,7 +1197,7 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyTimescale:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_time_scale;
 			if (GetTimeScale(t_time_scale))
 				*((MCPlatformPlayerDuration*)r_value) = t_time_scale;
@@ -1206,7 +1206,7 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyCurrentTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_position;
 			if (GetCurrentPosition(t_position))
 				*((MCPlatformPlayerDuration*)r_value) = t_position;
@@ -1215,7 +1215,7 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyStartTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_position;
 			if (GetStartPosition(t_position))
 				*((MCPlatformPlayerDuration*)r_value) = t_position;
@@ -1224,7 +1224,7 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyFinishTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_position;
 			if (GetFinishPosition(t_position))
 				*((MCPlatformPlayerDuration*)r_value) = t_position;
@@ -1233,7 +1233,7 @@ void MCWin32DSPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyLoadedTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_position;
 			if (GetLoadedPosition(t_position))
 				*((MCPlatformPlayerDuration*)r_value) = t_position;
@@ -1345,7 +1345,7 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyCurrentTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_position = *((MCPlatformPlayerDuration*)p_value);
 			SetCurrentPosition(t_position);
 
@@ -1354,7 +1354,7 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyStartTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_start = *((MCPlatformPlayerDuration*)p_value);
 			SetStartPosition(t_start);
 
@@ -1363,7 +1363,7 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 
 	case kMCPlatformPlayerPropertyFinishTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			MCPlatformPlayerDuration t_finish = *((MCPlatformPlayerDuration*)p_value);
 			SetFinishPosition(t_finish);
 

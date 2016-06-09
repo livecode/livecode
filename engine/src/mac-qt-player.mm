@@ -679,12 +679,12 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 			Synchronize();
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			[m_movie setCurrentTime: do_QTMakeTime(*(MCPlatformPlayerDuration*)p_value, [m_movie duration] . timeScale)];
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			QTTime t_selection_start, t_selection_end;
 			t_selection_start = [m_movie selectionStart];
 			t_selection_end = [m_movie selectionEnd];
@@ -706,7 +706,7 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
             break;
 		case kMCPlatformPlayerPropertyFinishTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			QTTime t_selection_start, t_selection_end;
 			t_selection_start = [m_movie selectionStart];
 			t_selection_end = [m_movie selectionEnd];
@@ -845,27 +845,27 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
             break;
         // PM-2014-08-20 [[ Bug 13121 ]] Added property for displaying download progress
         case kMCPlatformPlayerPropertyLoadedTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = m_buffered_time . timeValue;
 			break;
 		case kMCPlatformPlayerPropertyDuration:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = [m_movie duration] . timeValue;
 			break;
 		case kMCPlatformPlayerPropertyTimescale:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = [m_movie currentTime] . timeScale;
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = [m_movie currentTime] . timeValue;
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = [m_movie selectionStart] . timeValue;
 			break;
 		case kMCPlatformPlayerPropertyFinishTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = [m_movie selectionEnd] . timeValue;
 			break;
 		case kMCPlatformPlayerPropertyPlayRate:

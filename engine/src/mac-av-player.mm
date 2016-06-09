@@ -1076,7 +1076,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
         {
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
             // MW-2014-07-29: [[ Bug 12989 ]] Make sure we use the duration timescale.
             // MW-2014-08-01: [[ Bug 13046 ]] Use a completion handler to wait until the currentTime is
             //   where we want it to be.
@@ -1092,7 +1092,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
         break;
 		case kMCPlatformPlayerPropertyStartTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
             m_selection_start = *(MCPlatformPlayerDuration*)p_value;
             
 			if (m_selection_start > m_selection_finish)
@@ -1106,7 +1106,7 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             break;
 		case kMCPlatformPlayerPropertyFinishTime:
 		{
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
             m_selection_finish = *(MCPlatformPlayerDuration*)p_value;
             
 			if (m_selection_start > m_selection_finish)
@@ -1225,28 +1225,28 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
     
             // PM-2014-08-20: [[ Bug 13121 ]] Added property for displaying download progress
         case kMCPlatformPlayerPropertyLoadedTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = m_buffered_time;
 			break;
 		case kMCPlatformPlayerPropertyDuration:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
             *(MCPlatformPlayerDuration*)r_value = CMTimeToLCTime([m_player currentItem] . asset . duration);
 			break;
 		case kMCPlatformPlayerPropertyTimescale:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
             // MW-2014-07-29: [[ Bug 12989 ]] Use the duration timescale.
 			*(MCPlatformPlayerDuration*)r_value = [m_player currentItem] . asset . duration . timescale;
 			break;
 		case kMCPlatformPlayerPropertyCurrentTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = CMTimeToLCTime([m_player currentItem] . currentTime);
 			break;
 		case kMCPlatformPlayerPropertyStartTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = m_selection_start;
 			break;
 		case kMCPlatformPlayerPropertyFinishTime:
-			MCAssert(p_type == MCPlatformPlayerDurationPropertyType);
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDuration);
 			*(MCPlatformPlayerDuration*)r_value = m_selection_finish;
 			break;
 		case kMCPlatformPlayerPropertyPlayRate:

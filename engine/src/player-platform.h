@@ -182,14 +182,14 @@ public:
             starttime = stime;
         
         if (hasfilename())
-			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, MCPlatformPlayerDurationPropertyType, &starttime);
+			MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypePlayerDuration, &starttime);
         layer_redrawrect(getcontrollerrect());
 	}
     
 	virtual void setendtime(MCPlayerDuration etime)
     {
         if (hasfilename())
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, MCPlatformPlayerDurationPropertyType, &endtime);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypePlayerDuration, &endtime);
         layer_redrawrect(getcontrollerrect());
 	}
 	
