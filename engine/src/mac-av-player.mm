@@ -672,10 +672,10 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     {
         m_player_item_video_output = nil;
         [m_view setPlayer: nil];
-        uint4 t_zero_time = 0;
+        MCPlatformPlayerDuration t_zero_time = 0;
         // PM-2014-12-17: [[ Bug 14233 ]] Setting the filename to empty should reset the currentItem
         [m_player replaceCurrentItemWithPlayerItem:nil];
-        SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypeUInt32, &t_zero_time);
+        SetProperty(kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypePlayerDuration, &t_zero_time);
         return;
     }
 
