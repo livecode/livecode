@@ -38,6 +38,7 @@
     SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
     SYNTAXPRECEDENCE
+    BYTECODE
 
 --------------------------------------------------------------------------------
 
@@ -125,6 +126,13 @@
     out
     inout
 
+'type' BYTECODE
+    sequence(Left: BYTECODE, Right: BYTECODE)
+    label(Position: POS, Name: ID)
+    register(Position: POS, Name: ID, Type: TYPE)
+    opcode(Position: POS, Opcode: NAME, Arguments: EXPRESSIONLIST)
+    nil
+
 'type' STATEMENT
     sequence(Left: STATEMENT, Right: STATEMENT)
     variable(Position: POS, Name: ID, Type: TYPE)
@@ -145,6 +153,7 @@
     invoke(Position: POS, Info: INVOKELIST, Arguments: EXPRESSIONLIST)
     throw(Position: POS, Error: EXPRESSION)
     postfixinto(Position: POS, Command: STATEMENT, Target: EXPRESSION)
+    bytecode(Position: POS, Block: BYTECODE)
     nil
     
 'type' EXPRESSIONLIST
@@ -280,6 +289,7 @@
     parameter
     local
     context
+    label
 
 'type' INTLIST
     intlist(Head: INT, Tail: INTLIST)

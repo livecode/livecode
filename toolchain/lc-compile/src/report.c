@@ -27,7 +27,7 @@ extern int IsDependencyCompile(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_error_count;
-int s_verbose_level;
+int s_verbose_level = 1;
 int s_is_werror_enabled;
 
 void InitializeReports(void)
@@ -112,7 +112,7 @@ void Error_Bootstrap(const char *p_format, ...)
 
 void Error_CouldNotGenerateBytecode (void)
 {
-	fprintf(stderr, "error: Could not generate interface\n");
+	fprintf(stderr, "error: Could not generate bytecode\n");
 	++s_error_count;
 }
 
@@ -323,6 +323,15 @@ DEFINE_ERROR(NoTypeSpecifiedForForeignHandlerParameter, "Foreign handler paramet
 DEFINE_ERROR(ConstantArrayKeyIsNotStringLiteral, "Array keys must be strings")
 DEFINE_ERROR(ListExpressionTooLong, "List expressions can have at most 254 elements")
 DEFINE_ERROR(ArrayExpressionTooLong, "Array expressions can have at most 127 keys")
+
+DEFINE_ERROR_I(UnknownOpcode, "Unknown opcode '%s'")
+DEFINE_ERROR(OpcodeArgumentMustBeLabel, "Opcode argument must be a label")
+DEFINE_ERROR(OpcodeArgumentMustBeRegister, "Opcode argument must be a temporary variable, local variable or parameter variable")
+DEFINE_ERROR(OpcodeArgumentMustBeConstant, "Opcode argument must be a literal expression")
+DEFINE_ERROR(OpcodeArgumentMustBeHandler, "Opcode argument must be a handler id")
+DEFINE_ERROR(OpcodeArgumentMustBeVariable, "Opcode argument must be a module variable")
+DEFINE_ERROR(OpcodeArgumentMustBeDefinition, "Opcode argument must be a module variable, constant id or handler id")
+DEFINE_ERROR(IllegalNumberOfArgumentsForOpcode, "Wrong number of arguments for opcode")
 
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, Message); }

@@ -474,6 +474,7 @@ enum MCScriptBytecodeOp
 	// Unconditional jump:
 	//  X: jump <Y-X>
 	// Location is encoded as relative position to jump instruction.
+    //
 	kMCScriptBytecodeOpJump,
 	
 	// Conditional jumps:
@@ -490,12 +491,14 @@ enum MCScriptBytecodeOp
 	//   assign-constant <dst>, <index>
 	// Dst is a register and index is a constant pool index. The value in dst is
     // freed, and the constant value at the specified index is assigned to it.
+    //
 	kMCScriptBytecodeOpAssignConstant,
     
 	// Register assignment:
 	//   assign <dst>, <src>
 	// Dst and Src are registers. The value in dst is freed, and src copied
 	// into it.
+    //
 	kMCScriptBytecodeOpAssign,
     
 	// Return control to caller with value:
@@ -540,7 +543,6 @@ enum MCScriptBytecodeOp
     // The <level> indicates where the definition should be looked up with 0 being
     // the enclosing scope, 1 the next scope and so on.
     //
-    //
 	kMCScriptBytecodeOpFetch,
     
 	// Store:
@@ -558,13 +560,15 @@ enum MCScriptBytecodeOp
     // Dst is a register. The remaining arguments are registers and are used to
     // build a list. (This will be replaced by an invoke when variadic bindings are
     // implemented).
+    //
     kMCScriptBytecodeOpAssignList,
 
 	// Array creation assignment.
 	//   assign-array <dst>, <key_1>, <value_1>, ..., <key_n>, <value_n>
 	// Dst is a register.  The remaining arguments are registers and
 	// are used, pair-wise, to build an array. (This will be replaced by an invoke
-	// when variadic bindings are implemented).
+    // when variadic bindings are implemented).
+    //
 	kMCScriptBytecodeOpAssignArray,
     
     // Slot resetting

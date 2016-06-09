@@ -133,6 +133,11 @@
 
     --
 
+    'rule' CheckBindings(BYTECODE'opcode(Position, Opcode, Arguments)):
+        CheckOpcode(Position, Opcode, Arguments)
+
+    --
+
     'rule' CheckBindings(EXPRESSION'slot(_, Name)):
         /* BE1 */ CheckBindingIsConstantOrVariableOrHandlerId(Name)
 
@@ -1788,6 +1793,168 @@
         ||
             Error_ExitRepeatOutOfContext(Position)
         |)
+
+--------------------------------------------------------------------------------
+
+'action' CheckOpcode(POS, NAME, EXPRESSIONLIST)
+
+    'rule' CheckOpcode(Position, Name, Arguments):
+        (|
+            GetStringOfNameLiteral(Name -> String)
+            BytecodeLookup(String -> Opcode)
+            (|
+                QueryExpressionListLength(Arguments -> Length)
+                BytecodeIsValidArgumentCount(Opcode, Length)
+                CheckOpcodeArguments(Position, Opcode, Arguments, 0)
+            ||
+                Error_IllegalNumberOfArgumentsForOpcode(Position)
+            |)
+
+        ||
+            Error_UnknownOpcode(Position, Name)
+        |)
+
+
+'action' CheckOpcodeArguments(POS, INT, EXPRESSIONLIST, INT)
+
+    'rule' CheckOpcodeArguments(Position, Opcode, expressionlist(Head, Tail), Index)
+        BytecodeDescribeParameter(Opcode, Index -> ParamType)
+        CheckOpcodeArgument(Position, ParamType, Head)
+        CheckOpcodeArguments(Position, Opcode, Tail, Index + 1)
+
+    'rule' CheckOpcodeArguments(Position, Opcode, nil, Index):
+        -- do nothing
+
+
+'action' CheckOpcodeArgument(POS, INT, EXPRESSION)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 1)
+        CheckOpcodeArgIsLabel(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 2)
+        CheckOpcodeArgIsRegister(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 3)
+        CheckOpcodeArgIsConstant(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 4)
+        CheckOpcodeArgIsDefinition(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 5)
+        CheckOpcodeArgIsVariable(Position, Argument)
+
+    'rule' CheckOpcodeArgument(Position, Index, Argument):
+        eq(Index, 6)
+        CheckOpcodeArgIsHandler(Position, Argument)
+
+
+'action' CheckOpcodeArgIsLabel(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsLabel(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            QuerySymbolId(Id -> Symbol)
+            Symbol'Kind -> label
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeLabel(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsRegister(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsRegister(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                (|
+                    Symbol'Kind -> local
+                ||
+                    Symbol'Kind -> parameter
+                |)
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeRegister(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsConstant(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsConstant(_, Head):
+        (|
+            IsExpressionSimpleConstant(Head)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeConstant(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsHandler(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsHandler(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                Symbol'Kind -> handler
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeHandler(Position)
+        |)
+
+
+
+'action' CheckOpcodeArgIsVariable(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsVariable(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                Symbol'Kind -> variable
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeVariable(Position)
+        |)
+
+
+'action' CheckOpcodeArgIsDefinition(POS, EXPRESSION)
+
+    'rule' CheckOpcodeArgIsDefinition(_, Head):
+        (|
+            where(Head -> slot(Position, Id))
+            (|
+                QuerySymbolId(Id -> Symbol)
+                (|
+                    Symbol'Kind -> variable
+                ||
+                    Symbol'Kind -> handler
+                ||
+                    Symbol'Kind -> constant
+                |)
+            ||
+                QueryId(Id -> error)
+            |)
+        ||
+            GetExpressionPosition(Head -> Position)
+            Error_OpcodeArgumentMustBeDefinition(Position)
+        |)
+
 
 --------------------------------------------------------------------------------
 

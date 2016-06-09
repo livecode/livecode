@@ -2014,8 +2014,18 @@ static bool MCScriptPerformMultiInvoke(MCScriptFrame*& x_frame, byte_t*& x_next_
         return false;
     
     for(uindex_t i = 0; i < p_arity - 1; i++)
-        if (!MCProperListPushElementOntoBack(*t_args, MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i + 1])))
+    {
+        MCValueRef t_value;
+        t_value = MCScriptFetchFromRegisterInFrame(x_frame, p_arguments[i + 1]);
+        
+        if (t_value == nil)
+        {
+            t_value = kMCNull;
+        }
+        
+        if (!MCProperListPushElementOntoBack(*t_args, t_value))
             return false;
+    }
         
     return MCScriptThrowUnableToResolveMultiInvoke(p_instance -> module, p_handler, *t_args);
 }

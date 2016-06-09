@@ -528,6 +528,7 @@ environment.
       | SetStatement
       | GetStatement
       | CallStatement
+      | BytecodeStatement
 
 There are a number of built-in statements which define control flow,
 variables, and basic variable transfer. The remaining syntax for
@@ -727,6 +728,40 @@ result** expression.
 
 > **Note:** All handlers return a value, even if it is nothing. This
 > means that calling a handler will always change **the result**.
+
+### Bytecode Statements
+
+    BytecodeStatement
+      : 'bytecode' SEPARATOR
+            { BytecodeOperation }
+        'end'
+
+    BytecodeOperation
+      : <Label: Identifier> ':'
+      | 'register' <Name: Identifier> [ 'as' <Type: Type> ]
+      | <Opcode: Identifier> { BytecodeArgument , ',' }
+
+    BytecodeArgument
+      : ConstantValueExpression
+      | Identifier
+
+The bytecode statement allows bytecode to be written directly for the LiveCode
+Builder Virtual Machine.
+
+Bytecode operation arguments can either be a constant expression, the name of a
+definition in current scope, the name of a register, or the name of a label in
+the current bytecode block. The exact opcodes and allowed arguments are defined
+in the LiveCode Builder Bytecode Reference.
+
+Labels are local to the current bytecode block, and can be used as the target
+of one of the jump instructions.
+
+Register definitions define a named register which is local to the current
+bytecode block. Registers are the same as handler-local variables except
+that they do not undergo default initialization.
+
+> **Note:** Bytecode blocks are not intended for general use and the actual
+> available operations are subject to change.
 
 ## Expressions
 
