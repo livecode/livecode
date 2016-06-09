@@ -38,7 +38,7 @@
     SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
     SYNTAXPRECEDENCE
-    BYTECODE OPCODE
+    BYTECODE
 
 --------------------------------------------------------------------------------
 
@@ -125,20 +125,6 @@
     in
     out
     inout
-
-'type' OPCODE
-    jump
-    jumpiftrue
-    jumpiffalse
-    assignconstant
-    assign
-    return
-    invoke
-    invokeindirect
-    fetch
-    store
-    assignlist
-    assignarray
 
 'type' BYTECODE
     sequence(Left: BYTECODE, Right: BYTECODE)
