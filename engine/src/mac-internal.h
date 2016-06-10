@@ -94,6 +94,8 @@ class MCMacPlatformSurface;
 
 - (void)sendEvent:(NSEvent *)event;
 
+- (bool)windowIsMoving: (MCPlatformWindowRef)window;
+
 // FG-2014-11-07: [[ Bugfix 13628 ]] Fake being modal for a non-modal window
 - (void)becomePseudoModalFor: (NSWindow*)window;
 - (NSWindow*)pseudoModalFor;
@@ -102,9 +104,17 @@ class MCMacPlatformSurface;
 
 @end
 
-@interface com_runrev_livecode_MCWindow: NSWindow
+@protocol com_runrev_livecode_MCMovingFrame <NSObject>
+
+- (NSRect)movingFrame;
+- (void)setMovingFrame:(NSRect)p_moving_frame;
+
+@end
+
+@interface com_runrev_livecode_MCWindow: NSWindow <com_runrev_livecode_MCMovingFrame>
 {
 	bool m_can_become_key : 1;
+    NSRect m_moving_frame;
 }
 
 - (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)windowStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)deferCreation;
@@ -120,11 +130,12 @@ class MCMacPlatformSurface;
 
 @end
 
-@interface com_runrev_livecode_MCPanel: NSPanel
+@interface com_runrev_livecode_MCPanel: NSPanel  <com_runrev_livecode_MCMovingFrame>
 {
 	bool m_can_become_key : 1;
     bool m_is_popup : 1;
     id m_monitor;
+    NSRect m_moving_frame;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)value;
@@ -201,6 +212,7 @@ class MCMacPlatformSurface;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize;
 - (void)windowDidMove:(NSNotification *)notification;
+- (void)windowDidChangeScreen:(NSNotification *)notification;
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification;
 - (void)windowDidEndLiveResize:(NSNotification *)notification;
