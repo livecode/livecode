@@ -266,6 +266,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLocationChanged(JNIEnv *
     s_location_reading->speed = speed;
     s_location_reading->course = course;
     
+    MCSensorAddLocationSample(*s_location_reading);
     MCSensorPostChangeMessage(kMCSensorTypeLocation);
 }
 
