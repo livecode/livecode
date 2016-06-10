@@ -438,90 +438,101 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
 		else
 			MCPasteboardExecCopy(ctxt);
 	}
-	else if (targets -> istextchunk())
+	else
 	{
-		// Explicit form (1) - text chunk-
-		if (targets -> next != NULL)
-		{
-            ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
-			return;
-		}
-        
-        MCObjectChunkPtr t_obj_chunk;
-
-        if (!targets -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
-        {
-            ctxt . LegacyThrow(EE_CLIPBOARD_BADTEXT);
+        // Parse the first chunk before determining if we have a text
+        // chunk or not - otherwise things like 'cut tVar' where
+        // tVar contains 'line x of field y' do not go through the
+        // correct code path.
+        MCObjectPtr t_first_object;
+        if (!targets -> getobj(ctxt, t_first_object, True))
             return;
-        }
         
-		if (iscut())
-			MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
-		else
-			MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
-
-        MCValueRelease(t_obj_chunk . mark . text);
-	}
-    else
-	{
-		// Explicit form (2)/(3) - object chunks
-        
-		MCChunk *chunkptr = targets;
-		MCObjectPtr t_object;
-		MCAutoArray<MCObjectPtr> t_objects;
-        
-		while (chunkptr != NULL)
-		{
-			if (chunkptr -> istextchunk())
-			{
-                ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
-				return;
-			}
-            
-            if (!chunkptr -> getobj(ctxt, t_object, True))
-            {
-                ctxt . LegacyThrow(EE_CLIPBOARD_BADOBJ);
-                return;
-            }
-			
-			if (!t_objects . Push(t_object))
-            {
-                ctxt . LegacyThrow(EE_NO_MEMORY);
-				break;
-			}
-            
-			chunkptr = chunkptr->next;
-		}
-        
-		// Calculate destination object (if applicable)
-		MCObjectPtr t_dst_object;
-		if (dest != NULL)
+        if (targets -> istextchunk())
         {
-            if (!dest -> getobj(ctxt, t_dst_object, True))
+            // Explicit form (1) - text chunk-
+            if (targets -> next != NULL)
             {
-                ctxt  . LegacyThrow(EE_CLIPBOARD_BADOBJ);
+                ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
                 return;
             }
+            
+            MCObjectChunkPtr t_obj_chunk;
+
+            if (!targets -> evalobjectchunk(ctxt, true, false, t_obj_chunk))
+            {
+                ctxt . LegacyThrow(EE_CLIPBOARD_BADTEXT);
+                return;
+            }
+            
+            if (iscut())
+                MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
+            else
+                MCPasteboardExecCopyTextToClipboard(ctxt, t_obj_chunk);
+
+            MCValueRelease(t_obj_chunk . mark . text);
         }
-        
-		if (t_objects . Size() > 0)
-		{
-			if (dest != NULL)
-			{
-				if (iscut())
-					MCInterfaceExecCutObjectsToContainer(ctxt, t_objects . Ptr(), t_objects . Size(), t_dst_object);
-				else
-					MCInterfaceExecCopyObjectsToContainer(ctxt, t_objects . Ptr(), t_objects . Size(), t_dst_object);
-			}
-			else
-			{
-				if (iscut())
-					MCPasteboardExecCutObjectsToClipboard(ctxt, t_objects . Ptr(), t_objects . Size());
-				else
-					MCPasteboardExecCopyObjectsToClipboard(ctxt, t_objects . Ptr(), t_objects . Size());
-			}
-		}
-	}
+        else
+        {
+            // Explicit form (2)/(3) - object chunks
+            
+            MCChunk *chunkptr = targets;
+            MCObjectPtr t_object;
+            MCAutoArray<MCObjectPtr> t_objects;
+            
+            while (chunkptr != NULL)
+            {
+                if (chunkptr -> istextchunk())
+                {
+                    ctxt . LegacyThrow(EE_CLIPBOARD_BADMIX);
+                    return;
+                }
+                
+                if (!chunkptr -> getobj(ctxt, t_object, True))
+                {
+                    ctxt . LegacyThrow(EE_CLIPBOARD_BADOBJ);
+                    return;
+                }
+                
+                if (!t_objects . Push(t_object))
+                {
+                    ctxt . LegacyThrow(EE_NO_MEMORY);
+                    break;
+                }
+                
+                chunkptr = chunkptr->next;
+            }
+            
+            // Calculate destination object (if applicable)
+            MCObjectPtr t_dst_object;
+            if (dest != NULL)
+            {
+                if (!dest -> getobj(ctxt, t_dst_object, True))
+                {
+                    ctxt  . LegacyThrow(EE_CLIPBOARD_BADOBJ);
+                    return;
+                }
+            }
+            
+            if (t_objects . Size() > 0)
+            {
+                if (dest != NULL)
+                {
+                    if (iscut())
+                        MCInterfaceExecCutObjectsToContainer(ctxt, t_objects . Ptr(), t_objects . Size(), t_dst_object);
+                    else
+                        MCInterfaceExecCopyObjectsToContainer(ctxt, t_objects . Ptr(), t_objects . Size(), t_dst_object);
+                }
+                else
+                {
+                    if (iscut())
+                        MCPasteboardExecCutObjectsToClipboard(ctxt, t_objects . Ptr(), t_objects . Size());
+                    else
+                        MCPasteboardExecCopyObjectsToClipboard(ctxt, t_objects . Ptr(), t_objects . Size());
+                }
+            }
+        }
+    }
 }
 
 void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
