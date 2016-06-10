@@ -119,6 +119,7 @@ private:
 	bool GetMirrored(bool &r_mirrored);
 	bool SetMirrored(bool p_mirrored);
 	bool GetMediaTypes(MCPlatformPlayerMediaTypes &r_types);
+	bool SetCallbackMarkers(const MCPlatformPlayerDurationArray &p_markers);
 
 	bool Play();
 	bool Pause();
@@ -144,6 +145,9 @@ private:
 	bool m_play_selection;
 	MCPlatformPlayerDuration m_start_position;
 	MCPlatformPlayerDuration m_finish_position;
+
+	MCPlatformPlayerDurationArray m_callback_markers;
+	index_t m_last_marker;
 
 	bool m_looping;
 
@@ -327,7 +331,29 @@ bool MCWin32DSPlayer::HandleGraphEvent()
 bool MCWin32DSPlayer::HandleTimer()
 {
 	if (IsPlaying())
+	{
+		MCPlatformPlayerDuration t_current;
+		if (!GetCurrentPosition(t_current))
+			return false;
+
+		if (m_callback_markers.count > 0)
+		{
+			while (m_last_marker >= 0 && t_current < m_callback_markers.ptr[m_last_marker])
+				m_last_marker--;
+
+			index_t t_index = 0;
+			while (t_index < m_callback_markers.count && m_callback_markers.ptr[t_index] <= t_current)
+				t_index++;
+
+			if (t_index - 1 > m_last_marker)
+			{
+				m_last_marker = t_index - 1;
+				MCPlatformCallbackSendPlayerMarkerChanged(this, m_callback_markers.ptr[m_last_marker]);
+			}
+		}
+
 		MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
+	}
 
 	return true;
 }
@@ -361,6 +387,10 @@ MCWin32DSPlayer::MCWin32DSPlayer()
 
 	m_play_selection = false;
 	m_start_position = m_finish_position = 0;
+
+	m_callback_markers.count = 0;
+	m_callback_markers.ptr = nil;
+	m_last_marker = -1;
 }
 
 MCWin32DSPlayer::~MCWin32DSPlayer()
@@ -372,6 +402,8 @@ MCWin32DSPlayer::~MCWin32DSPlayer()
 
 	if (m_video_window != nil)
 		DestroyWindow(m_video_window);
+
+	MCPlatformArrayClear(m_callback_markers);
 }
 
 bool MCWin32DSPlayer::Initialize()
@@ -1046,6 +1078,20 @@ bool MCWin32DSPlayer::GetMediaTypes(MCPlatformPlayerMediaTypes &r_types)
 	return true;
 }
 
+bool MCWin32DSPlayer::SetCallbackMarkers(const MCPlatformPlayerDurationArray &p_markers)
+{
+	MCPlatformPlayerDurationArray t_markers = { nil, 0 };
+
+	if (!MCPlatformArrayCopy(p_markers, t_markers))
+		return false;
+
+	MCPlatformArrayClear(m_callback_markers);
+	m_callback_markers = t_markers;
+	m_last_marker = -1;
+
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 //play
@@ -1425,8 +1471,15 @@ void MCWin32DSPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatfor
 		}
 
 	case kMCPlatformPlayerPropertyMarkers:
-	case kMCPlatformPlayerPropertyLoadedTime:
-    
+		{
+			MCAssert(p_type == kMCPlatformPropertyTypePlayerDurationArray);
+			MCPlatformPlayerDurationArray *t_markers;
+			t_markers = (MCPlatformPlayerDurationArray*)p_value;
+			SetCallbackMarkers(*t_markers);
+
+			break;
+		}
+
 	case kMCPlatformPlayerPropertyScalefactor:
 		MCLog("UNIMPLEMENTED");
 		break;

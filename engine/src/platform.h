@@ -37,6 +37,24 @@ template<typename T> struct array_t
     uindex_t count;
 };
 
+template <typename T>
+inline void MCPlatformArrayClear(array_t<T> &p_array)
+{
+	MCMemoryDeleteArray(p_array.ptr);
+	p_array.count = 0;
+	p_array.ptr = nil;
+}
+
+template <typename T>
+inline bool MCPlatformArrayCopy(const array_t<T> &p_src, array_t<T> &p_dst)
+{
+	if (!MCMemoryAllocateCopy(p_src.ptr, p_src.count * sizeof(T), p_dst.ptr))
+		return false;
+
+	p_dst.count = p_src.count;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPlatformCallbackType
