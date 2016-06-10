@@ -1310,7 +1310,7 @@ bool MCModeGetPixelScalingEnabled()
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Mac OS X-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Mac OS X-specific mode hooks for STANDALONE mode.
 //
 
 #ifdef _MACOSX
@@ -1324,7 +1324,7 @@ bool MCModePreWaitNextEvent(Boolean anyevent)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Linux-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Linux-specific mode hooks for STANDALONE mode.
 //
 
 #ifdef _LINUX

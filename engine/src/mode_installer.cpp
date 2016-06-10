@@ -1149,7 +1149,7 @@ MCInternalVerbInfo MCinternalverbs[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of MCDispatch::startup method for STANDALONE mode.
+//  Implementation of MCDispatch::startup method for INSTALLER mode.
 //
 
 extern IO_stat readheader(IO_handle& stream, char *version);
@@ -1396,7 +1396,7 @@ IO_stat MCDispatch::startup(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of MCStack::mode* hooks for STANDALONE mode.
+//  Implementation of MCStack::mode* hooks for INSTALLER mode.
 //
 
 void MCStack::mode_load(void)
@@ -1735,7 +1735,7 @@ uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, ui
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Windows-specific mode hooks for STANDALONE mode.
+//  Implementation of Windows-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef TARGET_PLATFORM_WINDOWS
@@ -1770,7 +1770,7 @@ bool MCModeHandleMessage(LPARAM lparam)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Mac OS X-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Mac OS X-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef _MACOSX
@@ -1784,7 +1784,7 @@ bool MCModePreWaitNextEvent(Boolean anyevent)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Linux-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Linux-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef _LINUX
