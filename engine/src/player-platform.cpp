@@ -2291,7 +2291,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         return;
     
     // Now set the markers in the player so that we get notified.
-    array_t<MCPlatformPlayerDuration> t_markers;
+    MCPlatformPlayerDurationArray t_markers;
     /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
     for(uindex_t i = 0; i < m_callback_count; i++)
         t_markers . ptr[i] = m_callbacks[i] . time;

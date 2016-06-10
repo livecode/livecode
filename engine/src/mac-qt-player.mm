@@ -753,8 +753,8 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
         {
 			MCAssert(p_type == kMCPlatformPropertyTypePlayerDurationArray);
 			
-            array_t<MCPlatformPlayerDuration> *t_markers;
-            t_markers = (array_t<MCPlatformPlayerDuration> *)p_value;
+            MCPlatformPlayerDurationArray *t_markers;
+            t_markers = (MCPlatformPlayerDurationArray*)p_value;
             
             m_last_marker = UINT32_MAX;
             MCMemoryDeleteArray(m_markers);

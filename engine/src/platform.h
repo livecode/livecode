@@ -1018,6 +1018,7 @@ struct MCPlatformPlayerQTVRConstraints
 };
 
 typedef uint64_t MCPlatformPlayerDuration;
+typedef array_t<MCPlatformPlayerDuration> MCPlatformPlayerDurationArray;
 #define kMCPlatformPropertyTypePlayerDuration kMCPlatformPropertyTypeUInt64
 #define kMCPlatformPropertyTypePlayerDurationArray kMCPlatformPropertyTypeUInt64Array
 #define MCPlatformPlayerDurationMax UINT64_MAX
