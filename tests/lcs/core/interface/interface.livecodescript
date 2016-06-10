@@ -187,7 +187,7 @@ on TestImageIntersect
    set the alphadata of tImage1 to tHalfAlpha
    set the alphadata of tImage2 to tFullAlpha
    __testIntersect tImage1, tImage2, "bounds", true
-   __testIntersect tImage1, tImage2, "pixels", true, true // Broken
+   __testIntersect tImage1, tImage2, "pixels", true
    __testIntersect tImage1, tImage2, "opaque pixels", false
    __testIntersect tImage1, tImage2, 127, true, true // Broken
    __testIntersect tImage1, tImage2, 128, false
@@ -195,7 +195,7 @@ on TestImageIntersect
    set the alphadata of tImage1 to tFullAlpha
    set the alphadata of tImage2 to tHalfAlpha
    __testIntersect tImage1, tImage2, "bounds", true
-   __testIntersect tImage1, tImage2, "pixels", true, true // Broken
+   __testIntersect tImage1, tImage2, "pixels", true
    __testIntersect tImage1, tImage2, "opaque pixels", false
    __testIntersect tImage1, tImage2, 127, true, true // Broken
    __testIntersect tImage1, tImage2, 128, false
