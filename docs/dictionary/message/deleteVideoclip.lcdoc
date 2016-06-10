@@ -25,8 +25,8 @@ not prevent the <videoclip(object)> from being removed.
 However, the undo <command> will restore a <videoclip(object)> after
 it is deleted by the user.
 
-References: videoclip (object), delete (command), stack (object), trap
-	(glossary), button (glossary), message (glossary),
+References: videoclip (object), delete (command), stack (object),
+	trap (glossary), button (glossary), message (glossary),
 	command (glossary), pass (control structure)
 
 Tags: objects
