@@ -596,6 +596,12 @@ enum Functions {
     F_CODEPOINT_PROPERTY,
     
     F_VECTOR_DOT_PRODUCT,
+    
+    F_EVENT_CAPSLOCK_KEY,
+    F_EVENT_COMMAND_KEY,
+    F_EVENT_CONTROL_KEY,
+    F_EVENT_OPTION_KEY,
+    F_EVENT_SHIFT_KEY,
 };
 
 enum Handler_type {
