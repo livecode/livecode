@@ -486,6 +486,12 @@ extern MCNameRef MCM_update_var;
 extern MCNameRef MCM_url_progress;
 #endif
 
+// AL-2014-11-27: [[ NewIdeMEssages ]] Add new ide messages
+extern MCNameRef MCM_delete_audioclip;
+extern MCNameRef MCM_delete_videoclip;
+extern MCNameRef MCM_new_audioclip;
+extern MCNameRef MCM_new_videoclip;
+
 #ifdef _MOBILE
 extern MCNameRef MCN_firstname;
 extern MCNameRef MCN_lastname;

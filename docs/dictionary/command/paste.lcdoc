@@ -33,6 +33,6 @@ Unless overidden by script, the standard paste keyboard shortcuts will have the 
 
 The <paste> <command> is equivalent to choosing Edit → Paste from the menubar.
 
-References: defaultStack (property), newButton (message), newCard (message), newGroup (message), newPlayer (message), newGraphic (message), newField (message), newScrollbar (message), newEPS (message), newImage (message), selection (keyword), image (keyword), command (glossary), insertion point (glossary), current card (glossary), clipboard (function), copy (command), doMenu (command), clone (command), object (glossary)
+References: defaultStack (property), newAudioclip (message), newButton (message), newCard (message), newGroup (message), newPlayer (message), newGraphic (message), newField (message), newScrollbar (message), newEPS (message), newImage (message), newVideoclip (message), selection (keyword), image (keyword), command (glossary), insertion point (glossary), current card (glossary), clipboard (function), copy (command), doMenu (command), clone (command), object (glossary)
 
 Tags: ui
