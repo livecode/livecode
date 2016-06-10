@@ -8,9 +8,9 @@ Summary: Specifies where the <record sound> <command> should listen when recordi
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 set the recordInput to "imic" -- internal microphone
@@ -43,5 +43,14 @@ The possible soundSources vary, depending on the QuickTime version installed and
     modm - records from the modem
     zvpc - records from zoom video input
     none - does not record.
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: playDestination (property), string (keyword), open driver (command), record sound (command), command (glossary), property (glossary)

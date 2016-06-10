@@ -8,9 +8,9 @@ Summary: Specifies the file <format> for sound files recorded with the <record s
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Example:
 set the recordFormat to "wave"
@@ -32,5 +32,14 @@ Use the <recordFormat> <property> to specify what kind of file to create when re
 The <recordFormat> <property> determines what kind of file is created when you use the <record sound> <command> to record sound.
 
 Not all sound file formats are compatible with all supported codecs. If you try to record sound using a recordCompressionType that is not compatible with the <recordFormat>, the <compress|compression> type will be changed automatically to a <codec> that is compatible with the specified <recordFormat>.
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: recordFormat (property), filename (property), file (keyword), player (keyword), record sound (command), play (command), format (function), property (glossary), compress (glossary), audio clip (glossary), QuickTime (glossary), file path (glossary), command (glossary), codec (glossary)

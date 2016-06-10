@@ -5,7 +5,7 @@ Synonyms: movie,movie file
 Type: glossary
 
 Description:
-A <file> that can be displayed by <QuickTime>. Movies can contain video tracks, sound tracks, or both. <QuickTime> can also display interactive movies (<QuickTime VR>) and picture files in a number of formats. 
+A <file> that can be displayed by the LiveCode player. Movies can contain video tracks, sound tracks, or both.
  
 Any movie can be displayed in a <player> <object(glossary)>.
 

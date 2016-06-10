@@ -10,7 +10,7 @@ Associations: image
 
 Introduced: 1.0
 
-OS: mac,linux,ios,android
+OS: mac,linux,ios,android,windows
 
 Platforms: desktop,server,web,mobile
 

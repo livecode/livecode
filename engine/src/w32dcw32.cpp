@@ -358,9 +358,6 @@ Boolean MCScreenDC::handle(real8 sleep, Boolean dispatch, Boolean anyevent,
 		else
 			MCWindowProc(msg.hwnd, msg.message, msg.wParam, msg.lParam);
 	}
-	
-	extern void MCQTHandleRecord(void);
-	MCQTHandleRecord();
 
 	abort = curinfo->abort;
 	reset = curinfo->reset;

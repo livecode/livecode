@@ -39,7 +39,17 @@ You can hide a card without causing a script error, but doing so has no effect.
 Hiding a group hides all the controls in the group.
 
 Changes:
-The ability to use QuickTime special effects was introduced in version 1.1. In previous versions, only the built-in visual effects listed under the visual effect command were available.
+The ability to use QuickTime special effects was introduced in version
+1.1. In previous versions, only the built-in visual effects listed under
+the visual effect command were available.
+
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: black (keyword), showPict (property), imageSource (property), visible (property), showInvisibles (property), disable (command), answer effect (command), show (command), hide menubar (command), stack (object), object (glossary), command (glossary), property (glossary)
 

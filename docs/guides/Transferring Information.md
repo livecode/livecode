@@ -36,7 +36,7 @@ can be written in a few lines of code.
 A file path is a way of describing the location of a file or folder so
 that it can be found by a handler. File paths are used throughout
 LiveCode: when you read to and write from text files, when you reference
-an external QuickTime file to display in a player, and in many other
+an external video file to display in a player, and in many other
 situations. If your application refers to external files in any way, an
 understanding of file path is essential.
 

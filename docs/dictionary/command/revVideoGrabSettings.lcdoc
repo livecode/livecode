@@ -8,7 +8,7 @@ Summary: Puts the current <video capture> settings, stored as <binary file|binar
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac
 
 Platforms: desktop
 
@@ -44,6 +44,15 @@ The value returned by the <revVideoGrabSettings> command consists of binary data
 > <standalone application|standalone>. In the Inclusions pane of the 
 > <Standalone Application Settings> window, make sure the "Video Grabber" 
 > library checkbox is checked.
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: revVideoGrabDialog (command), revSetVideoGrabSettings (command), 
 binary file (glossary), variable (glossary), video capture (glossary),
