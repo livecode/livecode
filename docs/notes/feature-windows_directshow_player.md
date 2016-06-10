@@ -1,3 +1,6 @@
+---
+version: 8.1.0-dp-1
+---
 # Windows DirectShow Player Control
 
 Due to the recent decision by Apple to end support for QuickTime on
@@ -12,7 +15,7 @@ the old one, though some properties are not yet implemented.
 On Windows, the behaviour of some properties of the player control have changed.
 
 - The **loadedTime** property previously did not work on Windows, but now does.
-- The **alwaysBuffer**, **callbacks**, **enabledTracks**,
+- The **alwaysBuffer**, **enabledTracks**,
   **mediaTypes**, **mirrored**, **trackCount** and **tracks**
   properties do not currently work, but will be re-enabled in a
   subsequent release.

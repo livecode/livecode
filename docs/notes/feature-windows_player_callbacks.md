@@ -1,1 +1,0 @@
-# Add support for the player "callbacks" property on Windows
