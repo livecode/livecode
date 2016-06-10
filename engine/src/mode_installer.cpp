@@ -1604,7 +1604,7 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
+void MCModeObjectDeleted(MCObject *object)
 {
 }
 
@@ -1694,6 +1694,11 @@ bool MCModeHasHomeStack(void)
 bool MCModeGetPixelScalingEnabled(void)
 {
 	return true;
+}
+
+void MCModeFinalize(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

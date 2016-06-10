@@ -1123,7 +1123,7 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
+void MCModeObjectDeleted(MCObject *object)
 {
 }
 
@@ -1207,6 +1207,11 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return false;
+}
+
+void MCModeFinalize(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

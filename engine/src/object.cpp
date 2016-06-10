@@ -317,8 +317,6 @@ MCObject::~MCObject()
 	MCMemoryDeleteArray(patterns);
 	deletepropsets();
 	MCValueRelease(tooltip);
-	
-	MCModeObjectDestroyed(this);
 
 	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
 	//   all deletions vector through 'scheduledelete'.
@@ -863,6 +861,8 @@ Boolean MCObject::del()
 		MCParentScript::FlushObject(this);
         m_is_parent_script = false;
     }
+    
+    MCModeObjectDeleted(this);
     
     // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
     //  MCObject::scheduledelete, since a deleted object is no longer something
