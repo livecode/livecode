@@ -1690,6 +1690,9 @@ MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
 
 id MCMacPlatformWindow::GetHandle(void)
 {
+	// IM-2016-06-13: [[ Bug 17815 ]] Ensure the handle has been created before returning.
+	if (m_handle == nil)
+		RealizeAndNotify();
 	return m_handle;
 }
 
