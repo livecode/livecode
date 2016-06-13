@@ -29,6 +29,7 @@ extern void InitializeCustomInvokeLists(void);
 
 static int s_is_bootstrap = 0;
 
+extern int ErrorInfo;
 extern enum DependencyModeType DependencyMode;
 extern int OutputFileAsC;
 extern int OutputFileAsBytecode;
@@ -102,20 +103,22 @@ usage(int status)
 "Compile a LiveCode Builder source file.\n"
 "\n"
 "Options:\n"
-"      --modulepath PATH    Search PATH for module interface files.\n"
-"      --output OUTFILE     Filename for bytecode output.\n"
-"      --outputc OUTFILE    Filename for C source code output.\n"
-"      --deps make          Generate lci file dependencies in make format for\n"
-"                           the input source files.\n"
-"      --deps order         Generate the order the input source files should be\n"
-"                           compiled in.\n"
-"      --deps changed-order Generate the order the input source files should be\n"
-"                           compiled in, but only if they need recompiling.\n"
-"      --manifest MANIFEST  Filename for generated manifest.\n"
-"      -Werror              Turn all warnings into errors.\n"
-"  -v, --verbose            Output extra debugging information.\n"
-"  -h, --help               Print this message.\n"
-"  --                       Treat all remaining arguments as filenames.\n"
+"      --modulepath PATH      Search PATH for module interface files.\n"
+"      --output OUTFILE       Filename for bytecode output.\n"
+"      --outputc OUTFILE      Filename for C source code output.\n"
+"      --deps make            Generate lci file dependencies in make format for\n"
+"                             the input source files.\n"
+"      --deps order           Generate the order the input source files should be\n"
+"                             compiled in.\n"
+"      --deps changed-order   Generate the order the input source files should be\n"
+"                             compiled in, but only if they need recompiling.\n"
+"      --manifest MANIFEST    Filename for generated manifest.\n"
+"      --interface INTERFACE  Filename for generated interface.\n"
+"      -Werror                Turn all warnings into errors.\n"
+"      --error-info           Emit warnings and errors in form suitable for testing.\n"
+"  -v, --verbose              Output extra debugging information.\n"
+"  -h, --help                 Print this message.\n"
+"  --                         Treat all remaining arguments as filenames.\n"
 "\n"
 "More than one `--modulepath' option may be specified.  The PATHs are\n"
 "searched in the order they appear.  An interface file may be generated in\n"
@@ -163,6 +166,11 @@ static void full_main(int argc, char *argv[])
                 }
                 continue;
             }
+            if (0 == strcmp(opt, "--error-info"))
+            {
+                ErrorInfo = 1;
+                continue;
+            }
             if (0 == strcmp(opt, "--modulepath") && optarg)
             {
                 AddImportedModuleDir(argv[++argi]);
@@ -187,6 +195,11 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "--manifest") && optarg)
             {
                 SetManifestOutputFile(argv[++argi]);
+                continue;
+            }
+            if (0 == strcmp(opt, "--interface") && optarg)
+            {
+                SetInterfaceOutputFile(argv[++argi]);
                 continue;
             }
             /* FIXME This should be expanded to support "-W error",
