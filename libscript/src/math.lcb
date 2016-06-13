@@ -128,7 +128,9 @@ end syntax
 
 public handler Sin(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalSinNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalSinNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -152,7 +154,9 @@ end syntax
 
 public handler Cos(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalCosNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalCosNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -180,7 +184,9 @@ end syntax
 
 public handler Tan(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalTanNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalTanNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -211,7 +217,9 @@ end syntax
 
 public handler Asin(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalAsinNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalAsinNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -242,7 +250,9 @@ end syntax
 
 public handler Acos(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalAcosNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalAcosNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -273,7 +283,9 @@ end syntax
 
 public handler Atan(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalAtanNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalAtanNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -306,7 +318,9 @@ end syntax
 
 public handler atan2(in pY as Number, in pX as Number) returns Number
     variable tVar as Number
-    MCMathEvalAtan2Number(pX, pY, tVar)
+    unsafe
+        MCMathEvalAtan2Number(pX, pY, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -332,7 +346,9 @@ end syntax
 
 public handler log10(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalBase10LogNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalBase10LogNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -359,7 +375,9 @@ end syntax
 
 public handler Ln(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalNaturalLogNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalNaturalLogNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -385,7 +403,9 @@ end syntax
 
 public handler Exp(in pOperand as Number) returns Number
     variable tVar as Number
-    MCMathEvalExpNumber(pOperand, tVar)
+    unsafe
+        MCMathEvalExpNumber(pOperand, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -477,7 +497,9 @@ end syntax
 
 public handler Min(in pX as Number, in pY as Number) returns Number
     variable tVar as Number
-    MCMathEvalMinNumber(pX, pY, tVar)
+    unsafe
+        MCMathEvalMinNumber(pX, pY, tVar)
+    end unsafe
     return tVar
 end handler
 
@@ -499,7 +521,9 @@ end syntax
 
 public handler Max(in pX as Number, in pY as Number) returns Number
     variable tVar as Number
-    MCMathEvalMaxNumber(pX, pY, tVar)
+    unsafe
+        MCMathEvalMaxNumber(pX, pY, tVar)
+    end unsafe
     return tVar
 end handler
 

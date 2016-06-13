@@ -1312,7 +1312,9 @@ foreign handler MCStringDecode(in BinaryData as Data, in Encoding as LCUInt, in 
 
 // Temporary wrapper to allow conversion of data to string until it is implemented in the LCB stdlib
 private handler ConvertToString(in pData as Data, out rString as optional String) returns Boolean
-    return MCStringDecode(pData, kUTF8Encoding, false, rString)
+    unsafe
+        return MCStringDecode(pData, kUTF8Encoding, false, rString)
+    end unsafe
 end handler
 
 // Convert an array to a list, as used by this widget. Ignoring the 'folded' ans selected

@@ -133,6 +133,7 @@ MC_PICKLE_BEGIN_RECORD(MCScriptHandlerDefinition)
     MC_PICKLE_ARRAY_OF_NAMEREF(local_names, local_name_count)
     MC_PICKLE_UINDEX(start_address)
     MC_PICKLE_UINDEX(finish_address)
+    MC_PICKLE_INTSET(MCScriptHandlerAttributes, attributes)
 MC_PICKLE_END_RECORD()
 
 MC_PICKLE_BEGIN_RECORD(MCScriptForeignHandlerDefinition)
@@ -1293,9 +1294,14 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
             break;
             case kMCScriptDefinitionKindHandler:
             {
+                MCScriptHandlerDefinition *t_handler;
+                t_handler = static_cast<MCScriptHandlerDefinition *>(t_def);
                 MCAutoStringRef t_sig;
-                type_to_string(self, static_cast<MCScriptHandlerDefinition *>(t_def) -> type, &t_sig);
-                __writeln(stream, "handler %@%@", t_def_name, *t_sig);
+                type_to_string(self, t_handler -> type, &t_sig);
+                if ((t_handler -> attributes & kMCScriptHandlerAttributeUnsafe) == 0)
+                    __writeln(stream, "handler %@%@", t_def_name, *t_sig);
+                else
+                    __writeln(stream, "unsafe handler %@%@", t_def_name, *t_sig);
             }
             break;
             case kMCScriptDefinitionKindForeignHandler:

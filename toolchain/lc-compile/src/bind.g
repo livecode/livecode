@@ -124,7 +124,10 @@
     'rule' DeclareImportedDefinitions(sequence(Left, Right)):
         DeclareImportedDefinitions(Left)
         DeclareImportedDefinitions(Right)
-        
+
+    'rule' DeclareImportedDefinitions(unsafe(_, Definition)):
+        DeclareImportedDefinitions(Definition)
+
     'rule' DeclareImportedDefinitions(type(Position, _, Name, _)):
         DeclareId(Name)
 
@@ -184,7 +187,10 @@
     'rule' Declare(sequence(Left, Right)):
         Declare(Left)
         Declare(Right)
-        
+
+    'rule' Declare(unsafe(_, Definition)):
+        Declare(Definition)
+
     'rule' Declare(type(Position, _, Name, _)):
         DeclareId(Name)
 
@@ -282,9 +288,13 @@
     'rule' Define(ModuleId, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _)):
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
-    
+
+    'rule' Define(ModuleId, unsafe(_, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _))):
+        DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
+        DefineParameters(Name, Parameters)
+
     'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
-        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
+        DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
     'rule' Define(ModuleId, property(Position, Access, Name, Getter, Setter)):
@@ -551,6 +561,11 @@
         DefineSymbolId(Name, ParentId, inferred, local, Type)
         Apply(Type)
 
+    'rule' Apply(STATEMENT'unsafe(_, Block)):
+        EnterScope
+        Apply(Block)
+        LeaveScope
+
     ---------
 
     'rule' Apply(EXPRESSION'slot(_, Name)):
@@ -688,6 +703,20 @@
         Info'Kind <- Kind
         Info'Type <- Type
         Info'Access <- Access
+        Info'Safety <- safe
+        Id'Meaning <- symbol(Info)
+
+'action' DefineUnsafeSymbolId(ID, ID, ACCESS, SYMBOLKIND, TYPE)
+
+    'rule' DefineUnsafeSymbolId(Id, ParentId, Access, Kind, Type)
+        Info::SYMBOLINFO
+        Info'Index <- -1
+        Info'Generator <- -1
+        Info'Parent <- ParentId
+        Info'Kind <- Kind
+        Info'Type <- Type
+        Info'Access <- Access
+        Info'Safety <- unsafe
         Id'Meaning <- symbol(Info)
 
 'action' DefineSyntaxId(ID, ID, SYNTAXCLASS, SYNTAX, SYNTAXMETHODLIST)

@@ -204,7 +204,10 @@
     'rule' GenerateManifestDefinitions(sequence(Left, Right)):
         GenerateManifestDefinitions(Left)
         GenerateManifestDefinitions(Right)
-        
+
+    'rule' GenerateManifestDefinitions(unsafe(_, Definition)):
+        GenerateManifestDefinitions(Definition)
+
     'rule' GenerateManifestDefinitions(metadata(_, Key, Value)):
         (|
             IsStringEqualToString(Key, "title")
@@ -513,7 +516,10 @@
     'rule' GenerateDefinitionIndexes(sequence(Left, Right)):
         GenerateDefinitionIndexes(Left)
         GenerateDefinitionIndexes(Right)
-        
+
+    'rule' GenerateDefinitionIndexes(unsafe(_, Definition)):
+        GenerateDefinitionIndexes(Definition)
+
     'rule' GenerateDefinitionIndexes(type(_, _, Name, _)):
         GenerateDefinitionIndex("type", Name)
     
@@ -593,7 +599,10 @@
     'rule' GenerateExportedDefinitions(sequence(Left, Right)):
         GenerateExportedDefinitions(Left)
         GenerateExportedDefinitions(Right)
-        
+
+    'rule' GenerateExportedDefinitions(unsafe(_, Definition)):
+        GenerateExportedDefinitions(Definition)
+
     'rule' GenerateExportedDefinitions(type(_, public, Id, _)):
         GenerateExportedDefinition(Id)
         
@@ -641,7 +650,10 @@
     'rule' GenerateDefinitions(sequence(Left, Right)):
         GenerateDefinitions(Left)
         GenerateDefinitions(Right)
-        
+
+    'rule' GenerateDefinitions(unsafe(_, Definition)):
+        GenerateDefinitions(Definition)
+
     'rule' GenerateDefinitions(type(Position, _, Id, Type)):
         GenerateType(Type -> TypeIndex)
         
@@ -665,14 +677,20 @@
         Info'Index -> DefIndex
         EmitVariableDefinition(DefIndex, Position, Name, TypeIndex)
 
-
     'rule' GenerateDefinitions(handler(Position, _, Id, Signature:signature(Parameters, _), _, Body)):
         GenerateType(handler(Position, normal, Signature) -> TypeIndex)
         
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
+        Info'Safety -> Safety
         Info'Index -> DefIndex
-        EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+        (|
+            where(Safety -> safe)
+            EmitBeginHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+        ||
+            where(Safety -> unsafe)
+            EmitBeginUnsafeHandlerDefinition(DefIndex, Position, Name, TypeIndex)
+        |)
         GenerateParameters(Parameters)
         CreateParameterRegisters(Parameters)
         CreateVariableRegisters(Body)
@@ -1194,6 +1212,9 @@
     'rule' GenerateBody(Result, Context, bytecode(Position, Block)):
         GenerateBytecodeDeferLabels(Block)
         GenerateBytecode(Block)
+
+    'rule' GenerateBody(Result, Context, unsafe(Position, Block)):
+        GenerateBody(Result, Context, Block)
 
     'rule' GenerateBody(Result, Context, nil):
         -- nothing
