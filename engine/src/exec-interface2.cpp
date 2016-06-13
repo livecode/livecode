@@ -2026,7 +2026,7 @@ void MCInterfaceSetRelayerGroupedControls(MCExecContext& ctxt, bool p_value)
 void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_value)
 {
 	uint4 t_newbrush = p_value;
-	if (t_newbrush < PI_PATTERNS)
+	if (t_newbrush <= (PI_PATTERNS-PI_BRUSHES))
 		t_newbrush += PI_BRUSHES;
 
 	// MW-2009-02-02: [[ Improved image search ]]
@@ -2063,7 +2063,7 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_v
 
 void MCInterfaceGetBrush(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCbrush < PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
+	r_value = MCbrush > PI_BRUSHES && MCbrush <= PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
 }
 
 void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
@@ -2073,7 +2073,7 @@ void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetEraser(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCeraser < PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
+	r_value = MCeraser > PI_BRUSHES && MCeraser <= PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
 }
 
 void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
@@ -2083,7 +2083,7 @@ void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
 
 void MCInterfaceGetSpray(MCExecContext& ctxt, uinteger_t& r_value)
 {
-	r_value = MCspray < PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
+	r_value = MCspray > PI_BRUSHES && MCspray <= PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
 }
 
 void MCInterfaceSetSpray(MCExecContext& ctxt, uinteger_t p_value)
