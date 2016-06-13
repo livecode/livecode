@@ -55,6 +55,7 @@ extern "C" void EmitTypeDefinition(long index, PositionRef position, NameRef nam
 extern "C" void EmitConstantDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_const_index);
 extern "C" void EmitVariableDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitBeginHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
+extern "C" void EmitBeginUnsafeHandlerDefinition(long index, PositionRef position, NameRef name, long type_index);
 extern "C" void EmitEndHandlerDefinition(void);
 extern "C" void EmitForeignHandlerDefinition(long index, PositionRef position, NameRef name, long type_index, long binding);
 extern "C" void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index);
@@ -891,9 +892,17 @@ void EmitEventDefinition(long p_index, PositionRef p_position, NameRef p_name, l
 
 void EmitBeginHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
 {
-    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, (uindex_t)p_index);
+    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, kMCScriptHandlerAttributeSafe, (uindex_t)p_index);
 
     Debug_Emit("BeginHandlerDefinition(%ld, %s, %ld)", p_index,
+               cstring_from_nameref(p_name), p_type_index);
+}
+
+void EmitBeginUnsafeHandlerDefinition(long p_index, PositionRef p_position, NameRef p_name, long p_type_index)
+{
+    MCScriptBeginHandlerInModule(s_builder, to_mcnameref(p_name), (uindex_t)p_type_index, kMCScriptHandlerAttributeUnsafe, (uindex_t)p_index);
+    
+    Debug_Emit("BeginUnsafeHandlerDefinition(%ld, %s, %ld)", p_index,
                cstring_from_nameref(p_name), p_type_index);
 }
 

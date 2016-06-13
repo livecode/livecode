@@ -27,10 +27,13 @@ handler MCUnitTestHandlerThrowsImpl(in pHandler as any, in pDescription as Strin
 
 	variable tArgList as optional List
 	variable tResult as optional any
-	variable tMaybeError as optional any
+   variable tMaybeError as optional any
 
 	put [] into tArgList
-	put MCHandlerTryToInvokeWithList(tHandler, tArgList, tResult) into tMaybeError
+
+   unsafe
+     put MCHandlerTryToInvokeWithList(tHandler, tArgList, tResult) into tMaybeError
+   end unsafe
 
 	variable tHasError as Boolean
 	put tMaybeError is not nothing into tHasError

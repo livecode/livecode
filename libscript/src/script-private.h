@@ -271,6 +271,8 @@ struct MCScriptHandlerDefinition: public MCScriptCommonHandlerDefinition
 	uindex_t start_address;
 	uindex_t finish_address;
     
+    MCScriptHandlerAttributes attributes;
+    
     // The number of slots required in a frame in order to execute this handler - computed.
     uindex_t slot_count;
 };
@@ -600,7 +602,8 @@ bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCSc
 // of each module version.
 
 #define kMCScriptModuleVersion_8_0_0_DP_1 0
-#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_0_0_DP_1
+#define kMCScriptModuleVersion_8_1_0_DP_2 1
+#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_1_0_DP_2
 
 ////////////////////////////////////////////////////////////////////////////////
 

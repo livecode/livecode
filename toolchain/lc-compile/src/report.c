@@ -364,6 +364,9 @@ DEFINE_ERROR(OpcodeArgumentMustBeVariable, "Opcode argument must be a module var
 DEFINE_ERROR(OpcodeArgumentMustBeDefinition, "Opcode argument must be a module variable, constant id or handler id")
 DEFINE_ERROR(IllegalNumberOfArgumentsForOpcode, "Wrong number of arguments for opcode")
 
+DEFINE_ERROR(BytecodeNotAllowedInSafeContext, "Bytecode blocks can only be present in unsafe context")
+DEFINE_ERROR_I(UnsafeHandlerCallNotAllowedInSafeContext, "Unsafe handler '%s' can only be called in unsafe context")
+
 #define DEFINE_WARNING(Name, Message) \
     void Warning_##Name(long p_position) { _Warning(p_position, #Name, Message); }
 #define DEFINE_WARNING_I(Name, Message) \

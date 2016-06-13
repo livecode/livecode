@@ -405,7 +405,7 @@ end handler
 
 --
 
-private handler InitBrowserView()
+private unsafe handler InitBrowserView()
 	variable tParent as Pointer
 	
 	// put my native window into tParent
@@ -437,7 +437,7 @@ private handler InitBrowserView()
 	applyProperties(mProperties)
 end handler
 
-private handler FinalizeBrowserView()
+private unsafe handler FinalizeBrowserView()
 	//set my native layer to nothing
 	MCWidgetSetMyNativeLayer(nothing)
 	
@@ -454,11 +454,15 @@ public handler OnOpen()
 
 	put true into mOpened
 
-	InitBrowserView()
+    unsafe
+        InitBrowserView()
+    end unsafe
 end handler
 
 public handler OnClose()
-	FinalizeBrowserView()
+    unsafe
+        FinalizeBrowserView()
+    end unsafe
 
 	put false into mOpened
 end handler
@@ -565,9 +569,11 @@ private handler setUrl(in pUrl as String)
 		updateUrlProperty(pUrl)
 
 		if mBrowser is not nothing then
-			if not MCBrowserGoToURL(mBrowser, pUrl) then
-				throw "error launching url " & pUrl
-			end if
+            unsafe
+                if not MCBrowserGoToURL(mBrowser, pUrl) then
+                    throw "error launching url " & pUrl
+                end if
+            end unsafe
 		end if
 	end if
 end handler
@@ -665,17 +671,21 @@ end handler
 
 public handler OnGoBack()
 	if mBrowser is not nothing then
-		if not MCBrowserGoBack(mBrowser) then
-			throw "error going back"
-		end if
+        unsafe
+            if not MCBrowserGoBack(mBrowser) then
+                throw "error going back"
+            end if
+        end unsafe
 	end if
 end handler
 
 public handler OnGoForward()
 	if mBrowser is not nothing then
-		if not MCBrowserGoForward(mBrowser) then
-			throw "error going forward"
-		end if
+        unsafe
+            if not MCBrowserGoForward(mBrowser) then
+                throw "error going forward"
+            end if
+        end unsafe
 	end if
 end handler
 
@@ -686,10 +696,12 @@ end handler
 private handler browserEvaluateJavaScript(in pScript as String) returns String
 	if mBrowser is not nothing then
 		variable tResult as String
-		if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
-			throw "error evaluating javascript"
-		end if
-		
+        unsafe
+            if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
+                throw "error evaluating javascript"
+            end if
+        end unsafe
+
 		return tResult
 	end if
 	

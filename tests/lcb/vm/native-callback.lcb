@@ -25,11 +25,15 @@ public handler TestNativeCallback_Manual()
 
     -- Fetch the function pointer
     variable tFunctionPtr as Pointer
-    test "create function pointer - manual" when MCHandlerGetFunctionPtr_Manual(tHandler, tFunctionPtr)
+    unsafe
+        test "create function pointer - manual" when MCHandlerGetFunctionPtr_Manual(tHandler, tFunctionPtr)
+    end unsafe
 
     -- See if it works
     put 0 into sTotal_Manual
-    MCProperListApply_Manual([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+    unsafe
+        MCProperListApply_Manual([1, 2, 3, 4, 5, 6], tFunctionPtr, nothing)
+    end unsafe
     test "use function pointer - manual" when sTotal_Manual is (1 + 2 + 3 + 4 + 5 + 6)
 end handler
 
@@ -48,7 +52,9 @@ foreign handler MCProperListApply(in pList as List, in pCallback as MCProperList
 
 public handler TestNativeCallback()
     put 0 into sTotal
-    MCProperListApply([1, 2, 3, 4, 5, 6], SumElementOfList, nothing)
+    unsafe
+        MCProperListApply([1, 2, 3, 4, 5, 6], SumElementOfList, nothing)
+    end unsafe
     test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
 end handler
 
