@@ -1292,7 +1292,7 @@ MCPlayerDuration MCPlayer::getmovieloadedtime()
 {
     MCPlayerDuration loadedtime;
 	if (m_platform_player != nil && hasfilename())
-		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoadedTime, MCPlatformPlayerDurationPropertyType, &loadedtime);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoadedTime, kMCPlatformPropertyTypePlayerDuration, &loadedtime);
 	else
 		loadedtime = 0;
 	return loadedtime;
@@ -1302,7 +1302,7 @@ MCPlayerDuration MCPlayer::getduration() //get movie duration/length
 {
 	MCPlatformPlayerDuration duration;
 	if (m_platform_player != nil && hasfilename())
-		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, MCPlatformPlayerDurationPropertyType, &duration);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyDuration, kMCPlatformPropertyTypePlayerDuration, &duration);
 	else
 		duration = 0;
 	return duration;
@@ -1312,7 +1312,7 @@ MCPlayerDuration MCPlayer::gettimescale() //get moive time scale
 {
 	MCPlatformPlayerDuration timescale;
 	if (m_platform_player != nil && hasfilename())
-		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyTimescale, MCPlatformPlayerDurationPropertyType, &timescale);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyTimescale, kMCPlatformPropertyTypePlayerDuration, &timescale);
 	else
 		timescale = 0;
 	return timescale;
@@ -1322,7 +1322,7 @@ MCPlayerDuration MCPlayer::getmoviecurtime()
 {
 	MCPlatformPlayerDuration curtime;
 	if (m_platform_player != nil && hasfilename())
-		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, MCPlatformPlayerDurationPropertyType, &curtime);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypePlayerDuration, &curtime);
 	else
 		curtime = 0;
 	return curtime;
@@ -1333,7 +1333,7 @@ void MCPlayer::setcurtime(MCPlayerDuration newtime, bool notify)
 	lasttime = newtime;
 	if (m_platform_player != nil && hasfilename())
     {
-		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, MCPlatformPlayerDurationPropertyType, &newtime);
+		MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypePlayerDuration, &newtime);
         if (notify)
             currenttimechanged();
     }
@@ -1344,8 +1344,8 @@ void MCPlayer::setselection(bool notify)
     if (m_platform_player != nil && hasfilename())
 	{
         MCPlatformPlayerDuration t_current_start, t_current_finish;
-        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, MCPlatformPlayerDurationPropertyType, &t_current_start);
-		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, MCPlatformPlayerDurationPropertyType, &t_current_finish);
+        MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypePlayerDuration, &t_current_start);
+		MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypePlayerDuration, &t_current_finish);
         
         if (starttime != t_current_start || endtime != t_current_finish)
         {
@@ -1361,8 +1361,8 @@ void MCPlayer::setselection(bool notify)
             // PM-2014-08-06: [[ Bug 13064 ]] 
             // If we first set StartTime and FinishTime is not set (= 0), then startTime becomes 0 (Since if StartTime > FinishTime then StartTime = FinishTime)
             // For this reason, we first set FinishTime 
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, MCPlatformPlayerDurationPropertyType, &t_et);
-            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, MCPlatformPlayerDurationPropertyType, &t_st);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyFinishTime, kMCPlatformPropertyTypePlayerDuration, &t_et);
+            MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyStartTime, kMCPlatformPropertyTypePlayerDuration, &t_st);
             
             if (notify)
                 selectionchanged();
@@ -1574,7 +1574,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
     t_play_selection = getflag(F_PLAY_SELECTION);
     t_mirrored = getflag(F_MIRRORED);
 	
-	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, MCPlatformPlayerDurationPropertyType, &lasttime);
+	MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyCurrentTime, kMCPlatformPropertyTypePlayerDuration, &lasttime);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyLoop, kMCPlatformPropertyTypeBool, &t_looping);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyShowSelection, kMCPlatformPropertyTypeBool, &t_show_selection);
     MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMirrored, kMCPlatformPropertyTypeBool, &t_mirrored);
@@ -2130,7 +2130,7 @@ void MCPlayer::updatetraversal()
 // End of virtual MCPlayerInterface's functions
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPlayer::markerchanged(uint32_t p_time)
+void MCPlayer::markerchanged(MCPlatformPlayerDuration p_time)
 {
     // Search for the first marker with the given time, and dispatch the message.
     for(uindex_t i = 0; i < m_callback_count; i++)
@@ -2248,7 +2248,7 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         
         // SN-2014-07-28: [[ Bug 12984 ]] Mimic the strtol behaviour in case of a parsing failure
         if (MCNumberParse(*t_callback_substring, &t_time))
-            m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsInteger(*t_time);
+            m_callbacks[m_callback_count - 1] . time = MCNumberFetchAsReal(*t_time);
         else
             m_callbacks[m_callback_count - 1] . time = 0;
         
@@ -2292,12 +2292,12 @@ void MCPlayer::SynchronizeUserCallbacks(void)
         return;
     
     // Now set the markers in the player so that we get notified.
-    array_t<uint32_t> t_markers;
+    MCPlatformPlayerDurationArray t_markers;
     /* UNCHECKED */ MCMemoryNewArray(m_callback_count, t_markers . ptr);
     for(uindex_t i = 0; i < m_callback_count; i++)
         t_markers . ptr[i] = m_callbacks[i] . time;
     t_markers . count = m_callback_count;
-    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypeUInt32Array, &t_markers);
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMarkers, kMCPlatformPropertyTypePlayerDurationArray, &t_markers);
     MCMemoryDeleteArray(t_markers . ptr);
 }
 

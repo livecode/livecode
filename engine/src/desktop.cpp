@@ -1352,7 +1352,7 @@ void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
     MCPlatformBreakWait();
 }
 
-void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
 {
     MCPlayer *t_player;
     t_player = find_player(p_player);
