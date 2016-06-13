@@ -6,7 +6,7 @@
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
 	<string>${EXECUTABLE_NAME}</string>
-	<key>CFBundleBundleName</key>
+	<key>CFBundleName</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
