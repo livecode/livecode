@@ -1357,7 +1357,7 @@ static void __emit_position(MCScriptModuleBuilderRef self, uindex_t p_address, u
     self -> module . positions[t_pindex] . line = p_line;
 }
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, uindex_t p_index)
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_name, uindex_t p_type, MCScriptHandlerAttributes p_attributes, uindex_t p_index)
 {
     if (self == nil || !self -> valid)
         return;
@@ -1377,6 +1377,7 @@ void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef self, MCNameRef p_nam
     
     t_definition -> kind = kMCScriptDefinitionKindHandler;
     t_definition -> type = p_type;
+    t_definition -> attributes = p_attributes;
     t_definition -> start_address = self -> module . bytecode_count;
     
     self -> current_handler = p_index;

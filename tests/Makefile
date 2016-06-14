@@ -8,6 +8,17 @@ endif
 # Attempt to guess where to find various tools and libraries
 ################################################################
 
+MODE ?= release
+ifeq ($(MODE),release)
+	UC_MODE := Release
+else ifeq ($(MODE),debug)
+	UC_MODE := Debug
+else ifeq ($(MODE),fast)
+	UC_MODE := Fast
+else
+	$(error "Mode must be 'debug' or 'release'")
+endif
+
 top_srcdir ?= ..
 TEST_DIR ?= $(top_srcdir)/_tests
 LCM_DIR ?= $(TEST_DIR)/_build
@@ -26,7 +37,11 @@ guess_platform_script := \
 	esac
 guess_platform := $(shell $(guess_platform_script))
 
-bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
+ifeq ($(guess_platform),mac)
+	bin_dir ?= $(top_srcdir)/_build/mac/$(UC_MODE)
+else
+	bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
+endif
 
 ########## LiveCode Script test parameters
 
@@ -66,6 +81,14 @@ LCB_LOG = _lcb_test_suite.log
 
 LCB_TESTRUNNER = $(LCM_DIR)/_testrunner.lcm
 LCB_TESTLIB = $(LCM_DIR)/_testlib.lcm
+
+########## LiveCode Builder Compiler test parameters
+
+LCC_COMPILERTESTRUNNER ?= $(top_srcdir)/tests/_compilertestrunner.livecodescript
+
+LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
+
+LCC_LOG = _compiler_test_suite.log
 
 ################################################################
 # Top-level targets
@@ -137,6 +160,17 @@ $(LCM_DIR)/%.lcm: %.lcb | $(LCM_DIR)
 lcs-check: $(LCS_ENGINE)
 	@rm -f $(LCS_LOG)
 	@cmd="$(LCS_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
+
+################################################################
+# LCB compiler tests
+################################################################
+
+compiler-check: $(LC_COMPILE)
+	@rm -f $(LCC_LOG)
+	@export LC_COMPILE="$(LC_COMPILE)"; \
+	cmd="$(LCC_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
 

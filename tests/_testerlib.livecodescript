@@ -31,7 +31,7 @@ end revLoadLibrary
 
 -- Get all livecode script files beneath the CWD, apart from
 -- filenames starting with "." or "_"
-function TesterGetTestFileNames pBaseFolder
+function TesterGetTestFileNames pBaseFolder, pExtension
    local tFiles, tCount
 
    put empty into tFiles
@@ -41,13 +41,17 @@ function TesterGetTestFileNames pBaseFolder
       put the defaultfolder into pBaseFolder
    end if
 
-   TesterGetTestFileNames_Recursive pBaseFolder, empty, tFiles, tCount
+   if pExtension is empty then
+      put "livecodescript" into pExtension
+   end if
+
+   TesterGetActualFileNames_Recursive pBaseFolder, empty, pExtension, tFiles, tCount
 
    return tFiles
 end TesterGetTestFileNames
 
 -- Helper command used by runGetTestFileNames
-private command TesterGetTestFileNames_Recursive pPath, pRelPath, @xFiles, @xCount
+private command TesterGetActualFileNames_Recursive pPath, pRelPath, pExtension, @xFiles, @xCount
    -- Save the CWD
    local tSaveFolder
    put the defaultfolder into tSaveFolder
@@ -56,7 +60,7 @@ private command TesterGetTestFileNames_Recursive pPath, pRelPath, @xFiles, @xCou
    -- Process files in the current directory
    local tFile
    repeat for each line tFile in the files
-      if tFile ends with ".livecodescript" and \
+      if tFile ends with ("." & pExtension) and \
             not (tFile begins with "." or tFile begins with "_") then
 
          if pRelPath is not empty then
@@ -81,12 +85,12 @@ private command TesterGetTestFileNames_Recursive pPath, pRelPath, @xFiles, @xCou
          put pRelPath & slash before tFolder
       end if
 
-      TesterGetTestFileNames_Recursive tFolderPath, tFolder, xFiles, xCount
+      TesterGetActualFileNames_Recursive tFolderPath, tFolder, pExtension, xFiles, xCount
    end repeat
 
    -- Restore the CWD
    set the defaultfolder to tSaveFolder
-end TesterGetTestFileNames_Recursive
+end TesterGetActualFileNames_Recursive
 
 -- Get a number-indexed array contain the names of all "test"
 -- commands in pFilename.
@@ -131,8 +135,12 @@ function TesterParseTestCommandNames pFilename
 end TesterParseTestCommandNames
 
 -- Prettify a test name by removing a ".livecodescript" suffix
-function TesterGetPrettyTestName pFilename
-   if pFilename ends with ".livecodescript" then
+function TesterGetPrettyTestName pFilename, pExtension
+   if pExtension is empty then
+      put "livecodescript" into pExtension
+   end if
+
+   if pFilename ends with ("." & pExtension) then
       set the itemDelimiter to "."
       return item 1 to -2 of pFileName
    end if

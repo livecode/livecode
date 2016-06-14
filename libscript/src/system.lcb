@@ -63,11 +63,15 @@ end syntax
 foreign handler __exit(in ExitStatus as CInt) returns nothing binds to "exit"
 
 public handler MCSystemExecQuit() returns nothing
-	__exit(0)
+    unsafe
+        __exit(0)
+    end unsafe
 end handler
 
 public handler MCSystemExecQuitWithStatus(in Status as Number)
-	__exit(Status)
+    unsafe
+        __exit(Status)
+    end unsafe
 end handler
 
 /**

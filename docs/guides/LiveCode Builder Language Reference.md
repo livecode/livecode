@@ -334,7 +334,7 @@ a value.
 ### Handlers
 
     HandlerDefinition
-      : 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ] SEPARATOR
+      : [ 'unsafe' ] 'handler' <Name: Identifier> '(' [ ParameterList ] ')' [ 'returns' <ReturnType: Type> ] SEPARATOR
           { Statement }
         'end' 'handler'
 
@@ -382,6 +382,10 @@ to be *optional any* meaning it can be of any type.
 > **Note:** Only assignable expressions can be passed as arguments to
 > inout or out parameters. It is a checked compile-time error to pass a
 > non-assignable expression to such a parameter.
+
+If 'unsafe' is specified for the handler, then the handler itself is considered
+to be unsafe, and may only be called from other unsafe handlers or unsafe
+statement blocks.
 
 ### Foreign Handlers
 
@@ -476,6 +480,10 @@ non-Windows platform then it is taken to be 'default'.
 Foreign handler's bound symbols are resolved on first use and an error
 is thrown if the symbol cannot be found.
 
+Foreign handlers are always considered unsafe, and thus may only be called
+from unsafe context - i.e. from within an unsafe handler, or unsafe statement
+block.
+
 > **Note:** The current foreign handler definition is an initial
 > version, mainly existing to allow binding to implementation of the
 > syntax present in the standard language modules. It will be expanded
@@ -529,6 +537,7 @@ environment.
       | GetStatement
       | CallStatement
       | BytecodeStatement
+      | UnsafeStatement
 
 There are a number of built-in statements which define control flow,
 variables, and basic variable transfer. The remaining syntax for
@@ -760,8 +769,24 @@ Register definitions define a named register which is local to the current
 bytecode block. Registers are the same as handler-local variables except
 that they do not undergo default initialization.
 
+Bytecode statements are considered to be unsafe and can only appear inside
+unsafe handlers or unsafe statement blocks.
+
 > **Note:** Bytecode blocks are not intended for general use and the actual
 > available operations are subject to change.
+
+### Unsafe Statements
+
+    UnsafeStatement
+      : 'unsafe' SEPARATOR
+            { Statement }
+        'end' 'unsafe'
+
+The unsafe statement allows a block of unsafe code to be written in a safe
+context.
+
+In particular, calls to unsafe handlers (including all foreign handlers) and
+bytecode blocks are allowed in unsafe statement blocks but nowhere else.
 
 ## Expressions
 

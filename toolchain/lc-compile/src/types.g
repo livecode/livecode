@@ -33,7 +33,7 @@
     NAMELIST
     MEANING
     MODULEINFO
-    SYMBOLINFO SYMBOLKIND
+    SYMBOLINFO SYMBOLKIND SYMBOLSAFETY
     SYNTAXINFO
     SYNTAXMARKINFO SYNTAXMARKTYPE
     NAME DOUBLE
@@ -68,6 +68,7 @@
     property(Position: POS, Access: ACCESS, Name: ID, Getter: ID, Setter: OPTIONALID)
     event(Position: POS, Access: ACCESS, Name: ID, Signature: SIGNATURE)
     syntax(Position: POS, Access: ACCESS, Name: ID, Class: SYNTAXCLASS, Warnings: SYNTAXWARNING, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST)
+    unsafe(Position: POS, Definition: DEFINITION)
     nil
 
 'type' SIGNATURE
@@ -154,6 +155,7 @@
     throw(Position: POS, Error: EXPRESSION)
     postfixinto(Position: POS, Command: STATEMENT, Target: EXPRESSION)
     bytecode(Position: POS, Block: BYTECODE)
+    unsafe(Position: POS, Block: STATEMENT)
     nil
     
 'type' EXPRESSIONLIST
@@ -291,6 +293,10 @@
     context
     label
 
+'type' SYMBOLSAFETY
+    safe
+    unsafe
+
 'type' INTLIST
     intlist(Head: INT, Tail: INTLIST)
     nil
@@ -316,7 +322,7 @@
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING)
 
 'table' MODULEINFO(Index: INT, Generator: INT)
-'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Kind: SYMBOLKIND, Type: TYPE)
+'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Safety: SYMBOLSAFETY, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
 'table' INVOKEINFO(Index: INT, ModuleIndex: INT, Name: STRING, ModuleName: STRING, Methods: INVOKEMETHODLIST)

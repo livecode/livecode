@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 module com.livecode.compiler.bytecode.tests
 
-public handler TestJump()
+public unsafe handler TestJump()
    variable tTest as Boolean
    put false into tTest
    bytecode
@@ -28,7 +28,7 @@ public handler TestJump()
    test "jump forward label" when tTest is false
 end handler
 
-public handler TestJumpIfFalse()
+public unsafe handler TestJumpIfFalse()
    variable tTest as Boolean
    put false into tTest
    bytecode
@@ -41,7 +41,7 @@ public handler TestJumpIfFalse()
    test "jumpiffalse forward label" when tTest is false
 end handler
 
-public handler TestJumpIfTrue()
+public unsafe handler TestJumpIfTrue()
    variable tTest as Boolean
    put false into tTest
    bytecode
@@ -54,7 +54,7 @@ public handler TestJumpIfTrue()
    test "jumpiffalse forward label" when tTest is false
 end handler
 
-public handler TestAssignConstant()
+public unsafe handler TestAssignConstant()
    variable tTest
    put "Hello World!" into tTest
 
@@ -84,7 +84,7 @@ public handler TestAssignConstant()
    test "assignconstant string literal" when tTest is "Foo"
 end handler
 
-private handler DoTestAssignParameter(in pSource)
+private unsafe handler DoTestAssignParameter(in pSource)
    bytecode
          register regTemp
          assign_constant regTemp, true
@@ -103,7 +103,7 @@ private handler DoTestAssignParameter(in pSource)
    test "assign param to temp" when tTarget is false
 end handler
 
-public handler TestAssign()
+public unsafe handler TestAssign()
    variable tTarget
 
    put false into tTarget
@@ -127,21 +127,21 @@ public handler TestAssign()
    DoTestAssignParameter(false)
 end handler
 
-private handler DoTestReturnNothing()
+private unsafe handler DoTestReturnNothing()
    bytecode
          return
    end bytecode
    return true
 end handler
 
-private handler DoTestReturnValue(in pValue)
+private unsafe handler DoTestReturnValue(in pValue)
    bytecode
          return pValue
    end bytecode
    return true
 end handler
 
-public handler TestReturn()
+public unsafe handler TestReturn()
    DoTestReturnNothing()
    test "return nothing" when the result is nothing
 
@@ -154,7 +154,7 @@ private handler DoTestInvoke(in pInput, out rOutput)
    return true
 end handler
 
-public handler TestInvoke()
+public unsafe handler TestInvoke()
    variable tOutput
    variable tResult
    put nothing into tOutput
@@ -168,7 +168,7 @@ public handler TestInvoke()
    test "invoke result" when tResult is true
 end handler
 
-public handler TestInvokeIndirect()
+public unsafe handler TestInvokeIndirect()
    variable tOutput
    variable tResult
    put nothing into tOutput
@@ -196,7 +196,7 @@ private handler Return100()
    return 100
 end handler
 
-public handler TestFetch()
+public unsafe handler TestFetch()
    variable tTest
 
    put "Hello World!" into tTest
@@ -245,7 +245,7 @@ public handler TestFetch()
    test "fetch handler" when tTestHandler() is 100
 end handler
 
-public handler TestStore()
+public unsafe handler TestStore()
    put nothing into sModuleVariable
    bytecode
          register regTemp
@@ -255,7 +255,7 @@ public handler TestStore()
    test "store variable" when sModuleVariable is 100
 end handler
 
-public handler TestAssignList()
+public unsafe handler TestAssignList()
    variable tTest
 
    variable tElement1
@@ -269,7 +269,7 @@ public handler TestAssignList()
    test "assignlist" when tTest is [1, 2]
 end handler
 
-public handler TestAssignArray()
+public unsafe handler TestAssignArray()
    variable tTest
 
    variable tElement1
@@ -288,7 +288,7 @@ public handler TestAssignArray()
                            tTest["foo"] is 1 and tTest["bar"] is 2
 end handler
 
-public handler TestReset()
+public unsafe handler TestReset()
    variable tTest as Boolean
    put true into tTest
    bytecode
