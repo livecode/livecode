@@ -3448,8 +3448,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCPlayerDuration t_new_time, t_duration;
                 t_duration = getduration();
                 
-                if (x < t_part_well_rect . x)
-                    x = t_part_well_rect . x;
+				x = MCClamp(x, t_part_well_rect.x, t_part_well_rect.x + t_part_well_rect.width);
                 
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_time will not overflow
                 t_new_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
@@ -3468,9 +3467,7 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCPlayerDuration t_new_start_time, t_duration;
                 t_duration = getduration();
                 
-                // PM-2014-07-08: [[Bug 12759]] Make sure we don't drag the selection start beyond the start point of the player
-                if (x <= t_part_well_rect . x)
-                    x = t_part_well_rect . x;
+				x = MCClamp(x, t_part_well_rect.x, t_part_well_rect.x + t_part_well_rect.width);
                 
                 // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_start_time will not overflow
                 t_new_start_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
@@ -3489,7 +3486,9 @@ void MCPlayer::handle_mfocus(int x, int y)
                 MCPlayerDuration t_new_finish_time, t_duration;
                 t_duration = getduration();
                 
-                // PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_finish_time will not overflow
+				x = MCClamp(x, t_part_well_rect.x, t_part_well_rect.x + t_part_well_rect.width);
+
+				// PM-2014-08-22 [[ Bug 13257 ]] Make sure t_new_finish_time will not overflow
                 t_new_finish_time = _muludiv64(t_duration, x - t_part_well_rect . x, t_part_well_rect . width);
                 
                 if (t_new_finish_time <= starttime)
