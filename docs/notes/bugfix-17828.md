@@ -1,0 +1,1 @@
+# Fix player slider moving outside its track boundary
