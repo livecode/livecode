@@ -238,6 +238,9 @@
     'rule' ImportDefinition(-> handler(Position, public, Id, Signature, nil, nil)):
         "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
+    'rule' ImportDefinition(-> unsafe(Position, handler(Position, public, Id, Signature, nil, nil))):
+        "unsafe" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
+
     'rule' ImportDefinition(-> foreignhandler(Position, public, Id, Signature, "")):
         "foreign" "handler" @(-> Position) Identifier(-> Id) Signature(-> Signature)
 
@@ -455,7 +458,12 @@
         Access(-> Access) "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
             Statements(-> Body)
         "end" "handler"
-        
+
+    'rule' HandlerDefinition(-> unsafe(Position, handler(Position, Access, Name, Signature, nil, Body))):
+        Access(-> Access) "unsafe" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) Separator
+            Statements(-> Body)
+        "end" "handler"
+
     'rule' HandlerDefinition(-> foreignhandler(Position, Access, Name, Signature, Binding)):
         Access(-> Access) "foreign" "handler" @(-> Position) Identifier(-> Name) Signature(-> Signature) "binds" "to" StringLiteral(-> Binding)
 
@@ -822,6 +830,11 @@
         "bytecode" @(-> Position) Separator
             Bytecodes(-> Opcodes)
         "end" "bytecode"
+
+    'rule' Statement(-> unsafe(Position, Body)):
+        "unsafe" @(-> Position) Separator
+            Statements(-> Body)
+        "end" "unsafe"
 
     'rule' Statement(-> postfixinto(Position, Statement, Target)):
         CustomStatements(-> Statement) "into" @(-> Position) Expression(-> Target)

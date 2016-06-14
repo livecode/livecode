@@ -51,6 +51,9 @@
         -- compatible value expressions
         CheckLiterals(Module)
 
+        -- Check that safe / unsafe boundaries are respected
+        CheckSafety(Module)
+
 --------------------------------------------------------------------------------
 
 -- At this point all identifiers either have a defined meaning, or are defined
@@ -1996,6 +1999,62 @@
             CheckLiterals(Key)
         |)
         CheckLiterals(Value)
+
+--------------------------------------------------------------------------------
+
+'action' CheckSafety(MODULE)
+
+    'rule' CheckSafety(Module):
+        CheckSafety_(Module, safe)
+
+'sweep' CheckSafety_(ANY, SYMBOLSAFETY)
+
+    'rule' CheckSafety_(DEFINITION'handler(Position, _, Name, _, _, Body), _):
+        [|
+            QuerySymbolId(Name -> Symbol)
+            Symbol'Safety -> Safety
+            CheckSafety_(Body, Safety)
+        |]
+
+    'rule' CheckSafety_(STATEMENT'unsafe(Position, Block), _):
+        CheckSafety_(Block, unsafe)
+
+    'rule' CheckSafety_(STATEMENT'bytecode(Position, Block), Safety):
+        (|
+            where(Safety -> unsafe)
+            -- It is fine for bytecode to appear in unsafe context
+        ||
+            where(Safety -> safe)
+            Error_BytecodeNotAllowedInSafeContext(Position)
+        |)
+
+    'rule' CheckSafety_(STATEMENT'call(Position, Handler, Arguments), Safety):
+        CheckHandlerSafety(Position, Handler, Safety)
+        CheckSafety_(Arguments, Safety)
+
+    'rule' CheckSafety_(EXPRESSION'call(Position, Handler, Arguments), Safety):
+        CheckHandlerSafety(Position, Handler, Safety)
+        CheckSafety_(Arguments, Safety)
+
+'action' CheckHandlerSafety(POS, ID, SYMBOLSAFETY)
+
+    'rule' CheckHandlerSafety(Position, Handler, Safety):
+        [|
+            QuerySymbolId(Handler -> Symbol)
+            Symbol'Safety -> HandlerSafety
+            (|
+                -- Safe handlers can be called from any context
+                where(HandlerSafety -> safe)
+            ||
+                -- Unsafe handlers can be called from unsafe context
+                (|
+                    where(Safety -> unsafe)
+                ||
+                    Handler'Name -> Name
+                    Error_UnsafeHandlerCallNotAllowedInSafeContext(Position, Name)
+                |)
+            |)
+        |]
 
 --------------------------------------------------------------------------------
 

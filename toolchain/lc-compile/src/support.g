@@ -155,6 +155,7 @@
     EmitVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
+    EmitBeginUnsafeHandlerDefinition
     EmitForeignHandlerDefinition
     EmitPropertyDefinition
     EmitEventDefinition
@@ -345,6 +346,9 @@
     Error_OpcodeArgumentMustBeVariable
     Error_OpcodeArgumentMustBeDefinition
     Error_IllegalNumberOfArgumentsForOpcode
+    Error_BytecodeNotAllowedInSafeContext
+    Error_UnsafeHandlerCallNotAllowedInSafeContext
+
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
@@ -542,6 +546,7 @@
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
+'action' EmitBeginUnsafeHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 'action' EmitPropertyDefinition(Index: INT, Position: POS, Name: NAME, GetIndex: INT, SetIndex: INT)
 'action' EmitEventDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
@@ -761,6 +766,9 @@
 'action' Error_OpcodeArgumentMustBeVariable(Position: POS)
 'action' Error_OpcodeArgumentMustBeDefinition(Position: POS)
 'action' Error_IllegalNumberOfArgumentsForOpcode(Position: POS)
+
+'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
+'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)

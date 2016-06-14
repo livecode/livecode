@@ -311,6 +311,12 @@ enum MCScriptHandlerTypeParameterMode
     kMCScriptHandlerTypeParameterMode__Last
 };
 
+enum MCScriptHandlerAttributes
+{
+    kMCScriptHandlerAttributeSafe = 0 << 0,
+    kMCScriptHandlerAttributeUnsafe = 1 << 0,
+};
+    
 void MCScriptBeginModule(MCScriptModuleKind kind, MCNameRef name, MCScriptModuleBuilderRef& r_builder);
 bool MCScriptEndModule(MCScriptModuleBuilderRef builder, MCStreamRef stream);
 
@@ -345,7 +351,7 @@ void MCScriptAddTypeToModule(MCScriptModuleBuilderRef builder, MCNameRef name, u
 void MCScriptAddConstantToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t const_idx, uindex_t index);
 void MCScriptAddVariableToModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t index);
 
-void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, uindex_t index);
+void MCScriptBeginHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t signature, MCScriptHandlerAttributes attributes, uindex_t index);
 void MCScriptAddParameterToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptAddVariableToHandlerInModule(MCScriptModuleBuilderRef builder, MCNameRef name, uindex_t type, uindex_t& r_index);
 void MCScriptEndHandlerInModule(MCScriptModuleBuilderRef builder);
