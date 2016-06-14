@@ -709,6 +709,36 @@ public:
     virtual ~MCEncrypt(){}
 };
 
+class MCEventCapsLockKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalEventCapsLockKey>
+{
+public:
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalEventCapsLockKeyMethodInfo; }
+};
+
+class MCEventCommandKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalEventCommandKey>
+{
+public:
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalEventCommandKeyMethodInfo; }
+};
+
+class MCEventControlKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalEventControlKey>
+{
+public:
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalEventControlKeyMethodInfo; }
+};
+
+class MCEventOptionKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalEventOptionKey>
+{
+public:
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalEventOptionKeyMethodInfo; }
+};
+
+class MCEventShiftKey : public MCConstantFunctionCtxt<MCNameRef, MCInterfaceEvalEventShiftKey>
+{
+public:
+    virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCInterfaceEvalEventShiftKeyMethodInfo; }
+};
+
 class MCExists : public MCFunction
 {
 	MCChunk *object;

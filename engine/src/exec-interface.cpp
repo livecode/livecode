@@ -122,6 +122,11 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, CommandKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ControlKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ShiftKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventCapsLockKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventCommandKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventControlKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventOptionKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventShiftKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, KeysDown, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, MainStacks, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, OpenStacks, 1)
@@ -1191,6 +1196,36 @@ void MCInterfaceEvalShiftKey(MCExecContext& ctxt, MCNameRef& r_result)
 {
 	r_result = MCInterfaceKeyConditionToName((MCscreen->querymods() & MS_SHIFT) != 0);
 	MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventCapsLockKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_CAPS_LOCK) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventCommandKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_CONTROL) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventControlKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_MAC_CONTROL) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventOptionKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_ALT) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventShiftKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_SHIFT) != 0);
+    MCValueRetain(r_result);
 }
 
 void MCInterfaceEvalKeysDown(MCExecContext& ctxt, MCStringRef& r_string)
