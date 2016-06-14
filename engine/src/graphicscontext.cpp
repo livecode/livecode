@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "bitmapeffect.h"
 #include "globals.h"
-//#include "execpt.h"
+
 #include "path.h"
 #include "gradient.h"
 

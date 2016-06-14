@@ -124,7 +124,10 @@
     'rule' DeclareImportedDefinitions(sequence(Left, Right)):
         DeclareImportedDefinitions(Left)
         DeclareImportedDefinitions(Right)
-        
+
+    'rule' DeclareImportedDefinitions(unsafe(_, Definition)):
+        DeclareImportedDefinitions(Definition)
+
     'rule' DeclareImportedDefinitions(type(Position, _, Name, _)):
         DeclareId(Name)
 
@@ -133,11 +136,8 @@
     
     'rule' DeclareImportedDefinitions(variable(Position, _, Name, _)):
         DeclareId(Name)
-    
-    'rule' DeclareImportedDefinitions(contextvariable(Position, _, Name, _, _)):
-        DeclareId(Name)
 
-    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _, _)):
+    'rule' DeclareImportedDefinitions(handler(Position, _, Name, _, _, _)):
         DeclareId(Name)
     
     'rule' DeclareImportedDefinitions(foreignhandler(Position, _, Name, _, _)):
@@ -187,7 +187,10 @@
     'rule' Declare(sequence(Left, Right)):
         Declare(Left)
         Declare(Right)
-        
+
+    'rule' Declare(unsafe(_, Definition)):
+        Declare(Definition)
+
     'rule' Declare(type(Position, _, Name, _)):
         DeclareId(Name)
 
@@ -197,10 +200,7 @@
     'rule' Declare(variable(Position, _, Name, _)):
         DeclareId(Name)
     
-    'rule' Declare(contextvariable(Position, _, Name, _, _)):
-        DeclareId(Name)
-    
-    'rule' Declare(handler(Position, _, Name, _, _, _, _)):
+    'rule' Declare(handler(Position, _, Name, _, _, _)):
         DeclareId(Name)
     
     'rule' Declare(foreignhandler(Position, _, Name, _, _)):
@@ -249,6 +249,18 @@
     'rule' DeclareFields(nil):
         -- do nothing
 
+'action' DeclareLabels(BYTECODE)
+
+    'rule' DeclareLabels(sequence(Left, Right)):
+        DeclareLabels(Left)
+        DeclareLabels(Right)
+
+    'rule' DeclareLabels(label(Position, Name)):
+        DeclareId(Name)
+
+    'rule' DeclareLabels(_):
+        -- do nothing
+
 --------------------------------------------------------------------------------
 
 -- The 'Define' phase associates meanings with the definining ids.
@@ -272,16 +284,17 @@
     
     'rule' Define(ModuleId, variable(Position, Access, Name, Type)):
         DefineSymbolId(Name, ModuleId, Access, variable, Type)
-
-    'rule' Define(ModuleId, contextvariable(Position, Access, Name, Type, _)):
-        DefineSymbolId(Name, ModuleId, Access, context, Type)
     
-    'rule' Define(ModuleId, handler(Position, Access, Name, _, Signature:signature(Parameters, _), _, _)):
+    'rule' Define(ModuleId, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _)):
         DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
         DefineParameters(Name, Parameters)
-    
+
+    'rule' Define(ModuleId, unsafe(_, handler(Position, Access, Name, Signature:signature(Parameters, _), _, _))):
+        DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, normal, Signature))
+        DefineParameters(Name, Parameters)
+
     'rule' Define(ModuleId, foreignhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
-        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
+        DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
     'rule' Define(ModuleId, property(Position, Access, Name, Getter, Setter)):
@@ -351,7 +364,7 @@
 
     ----------
 
-    'rule' Apply(DEFINITION'handler(_, _, Id, _, signature(Parameters, Type), _, Body)):
+    'rule' Apply(DEFINITION'handler(_, _, Id, signature(Parameters, Type), _, Body)):
         -- The type of the handler is resolved in the current scope
         Apply(Type)
         
@@ -397,7 +410,6 @@
         DeclareParameters(Parameters)
         Apply(Parameters)
         LeaveScope
-
 
     ----------
 
@@ -466,32 +478,96 @@
         CurrentHandlerId -> ParentId
         DefineSymbolId(Name, ParentId, inferred, local, Type)
         Apply(Type)
-        
+
+    'rule' Apply(STATEMENT'if(Position, Condition, Consequent, Alternate)):
+        Apply(Condition)
+
+        EnterScope
+        Apply(Consequent)
+        LeaveScope
+
+        EnterScope
+        Apply(Alternate)
+        LeaveScope
+
+    'rule' Apply(STATEMENT'repeatforever(_, Body)):
+        EnterScope
+        Apply(Body)
+        LeaveScope
+
+    'rule' Apply(STATEMENT'repeatwhile(_, Expression, Body)):
+        Apply(Expression)
+        EnterScope
+        Apply(Body)
+        LeaveScope
+
+    'rule' Apply(STATEMENT'repeatuntil(_, Expression, Body)):
+        Apply(Expression)
+        EnterScope
+        Apply(Body)
+        LeaveScope
+
     'rule' Apply(STATEMENT'repeatupto(_, Slot, Start, Finish, Step, Body)):
         ApplyId(Slot)
         Apply(Start)
         Apply(Finish)
         Apply(Step)
+
+        EnterScope
         Apply(Body)
+        LeaveScope
 
     'rule' Apply(STATEMENT'repeatdownto(_, Slot, Start, Finish, Step, Body)):
         ApplyId(Slot)
         Apply(Start)
         Apply(Finish)
         Apply(Step)
+
+        EnterScope
         Apply(Body)
+        LeaveScope
 
     'rule' Apply(STATEMENT'repeatforeach(_, Iterator, Container, Body)):
         Apply(Iterator)
         Apply(Container)
+
+        EnterScope
         Apply(Body)
+        LeaveScope
 
     'rule' Apply(STATEMENT'call(_, Handler, Arguments)):
         ApplyId(Handler)
         Apply(Arguments)
 
+    'rule' Apply(STATEMENT'bytecode(_, Block)):
+        -- Enter a new scope to limit labels and temporaries
+        EnterScope
+
+        -- Declare the labels as we might need forward references
+        DeclareLabels(Block)
+
+        -- Apply the definitions to the content, this handles temporaries
+        Apply(Block)
+
+        LeaveScope
+
+    'rule' Apply(BYTECODE'label(_, Name)):
+        CurrentHandlerId -> ParentId
+        DefineSymbolId(Name, ParentId, inferred, label, nil)
+
+    'rule' Apply(BYTECODE'register(_, Name, Type)):
+        DeclareId(Name)
+        CurrentHandlerId -> ParentId
+        DefineSymbolId(Name, ParentId, inferred, local, Type)
+        Apply(Type)
+
+    'rule' Apply(STATEMENT'unsafe(_, Block)):
+        EnterScope
+        Apply(Block)
+        LeaveScope
+
     ---------
-    
+
     'rule' Apply(EXPRESSION'slot(_, Name)):
         ApplyId(Name)
 
@@ -627,6 +703,20 @@
         Info'Kind <- Kind
         Info'Type <- Type
         Info'Access <- Access
+        Info'Safety <- safe
+        Id'Meaning <- symbol(Info)
+
+'action' DefineUnsafeSymbolId(ID, ID, ACCESS, SYMBOLKIND, TYPE)
+
+    'rule' DefineUnsafeSymbolId(Id, ParentId, Access, Kind, Type)
+        Info::SYMBOLINFO
+        Info'Index <- -1
+        Info'Generator <- -1
+        Info'Parent <- ParentId
+        Info'Kind <- Kind
+        Info'Type <- Type
+        Info'Access <- Access
+        Info'Safety <- unsafe
         Id'Meaning <- symbol(Info)
 
 'action' DefineSyntaxId(ID, ID, SYNTAXCLASS, SYNTAX, SYNTAXMETHODLIST)
@@ -736,10 +826,7 @@
     'rule' DumpBindings(DEFINITION'variable(_, _, Name, Type)):
         DumpId("variable", Name)
         DumpBindings(Type)
-    'rule' DumpBindings(DEFINITION'contextvariable(_, _, Name, Type, _)):
-        DumpId("variable", Name)
-        DumpBindings(Type)
-    'rule' DumpBindings(DEFINITION'handler(_, _, Name, _, Signature, Definitions, Body)):
+    'rule' DumpBindings(DEFINITION'handler(_, _, Name, Signature, Definitions, Body)):
         DumpId("handler", Name)
         DumpBindings(Signature)
         DumpBindings(Definitions)

@@ -8,7 +8,7 @@ Summary: Specifies whether the stack should be saved as script only which does n
 
 Associations: stack
 
-Introduced: 8.0.0
+Introduced: 8.0
 
 OS: mac,windows,linux,ios,android
 
@@ -48,6 +48,11 @@ A <scriptOnly> stack will save just the script with a single header line declari
 The <scriptOnly> property has been added to enable scripts to detect and set the file format of the stack. Without this property it is not possible to detect the file format the stack is being saved in without examining the file itself.
 
 >*Warning:* <scriptOnly> stacks only save the stack name and script. Any property changes and objects created while the stack is open will not exist the next time the stack is opened.
+
+>*Note:* Script only stacks are unable to be password protected. In order to password protect a script only stack use the following commands.
+
+    set the scriptOnly of stack "Secrets" to false
+    set the password of stack "Secrets" to field "Password"
 
 Refereneces: create stack (command), stack (object)
 

@@ -498,7 +498,7 @@ void MCStack::view_configure(bool p_user)
 
 	// IM-2014-10-29: [[ Bug 13812 ]] Remove need resize check and unset flag
 	m_view_need_resize = false;
-	
+
 	if (!MCU_equal_rect(t_view_rect, m_view_rect))
 	{
 		// IM-2014-02-13: [[ StackScale ]] Test if the view size has changed

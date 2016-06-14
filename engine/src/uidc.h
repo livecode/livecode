@@ -624,9 +624,6 @@ public:
 	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
-#ifdef LEGACY_EXEC
-	Boolean getcolors(MCExecPoint &);
-#endif
 	Boolean setcolors(const MCString &);
 	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);

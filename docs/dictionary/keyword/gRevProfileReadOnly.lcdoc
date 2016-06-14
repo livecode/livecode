@@ -27,7 +27,7 @@ If this global variable is false, the profile is re-saved when you switch profil
 
 The <gRevProfileReadOnly> <global|global variable> can also be changed in the Preferences dialog box:
 
-1. Choose <a/>Edit menu<img src="202656"/>Preferences<important/>.
+1. Choose LiveCode → Preferences from the menubar.
 
 2. Choose "Property Profiles" from the menu at the top.
 

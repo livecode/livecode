@@ -2182,6 +2182,12 @@ void MCStack::GetScriptOnly(MCExecContext& ctxt, bool& r_script_only)
 
 void MCStack::SetScriptOnly(MCExecContext& ctxt, bool p_script_only)
 {
+    if (haspassword())
+    {
+        ctxt . LegacyThrow(EE_SCRIPT_ONLY_STACK_NOPASSWORD);
+        return;
+    }
+    
     m_is_script_only = p_script_only;
 }
 

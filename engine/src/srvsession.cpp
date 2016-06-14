@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcssl.h"
 
 #include "variable.h"
-//#include "execpt.h"
+
 
 #include "srvmain.h"
 #include "srvsession.h"

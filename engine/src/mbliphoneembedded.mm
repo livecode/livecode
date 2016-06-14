@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "param.h"
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "osspec.h"
 #include "globals.h"
 #include "stack.h"

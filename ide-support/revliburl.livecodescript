@@ -81,7 +81,8 @@ on initialiseCustomProps
    set the customProperties["cFtpGoodCodes"] of me to tFtpCodes
    
    # initialise default header
-   set the cDefaultHeader of me to "METHOD --- HTTP/1.1" & return & "Host:" & return & "User-Agent: "
+   set the cDefaultHeader of me to "METHOD --- HTTP/1.1" & return & \
+      "Host: " & return & "User-Agent: "
    
    # initialise version
    set the cVersion of me to "1.2.0"

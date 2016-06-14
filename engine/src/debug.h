@@ -78,13 +78,7 @@ extern void MCB_setvar(MCExecContext &ctxt, MCValueRef p_value, MCNameRef name);
 extern void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name);
 
 extern void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input);
-#ifdef LEGACY_EXEC
-extern void MCB_parsebreaks(MCExecPoint& breaks);
-#endif
 extern bool MCB_unparsebreaks(MCStringRef& r_value);
-#ifdef LEGACY_EXEC
-extern void MCB_unparsebreaks(MCExecPoint& breaks);
-#endif
 extern void MCB_clearbreaks(MCObject *object);
 
 extern void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input);

@@ -86,10 +86,6 @@ MCExecCustomTypeInfo *kMCAdTopLeftTypeInfo = &_kMCAdTopLeftTypeInfo;
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key)
 {
-#ifdef /* MCAdExecRegisterWithInneractive */ LEGACY_EXEC
-    MCCStringFree(s_inneractive_ad_key);
-    /* UNCHECKED */ MCCStringClone(p_key, s_inneractive_ad_key);
-#endif /* MCAdExecRegisterWithInneractive */
     if (MCAdSetInneractiveKey(p_key))
         return;
     
@@ -98,60 +94,6 @@ void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key)
 
 void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, MCAdTopLeft p_topleft, MCArrayRef p_metadata)
 {
-#ifdef /* MCAdExecCreateAd */ LEGACY_EXEC
-    bool t_success;
-    t_success = true;
-    
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
-    {
-        ctxt.SetTheResultToStaticCString("not registered with ad service");
-        t_success = false;;
-    }
-    
-    MCAd *t_ad;
-    t_ad = nil;
-    
-    if (t_success)
-        if (MCAd::FindByNameOrId(p_name, t_ad))
-        {
-            ctxt.SetTheResultToStaticCString("ad already exists");
-            t_success = false;
-        }
-    
-    if (t_success)
-    {
-        uint32_t t_timeout;
-        if (t_success)
-        {
-            t_timeout = 0;
-            if (p_meta_data != nil && p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "refresh", false))
-                t_timeout = ctxt.GetEP().getint4();
-            if (p_type == kMCAdTypeFullscreen)
-                t_timeout = 0;
-            else if (t_timeout < 30 || t_timeout > 500)
-                t_timeout = 120;
-        }
-        
-        if (t_success)
-            t_success = MCSystemInneractiveAdCreate(ctxt, t_ad, p_type, p_top_left, t_timeout, p_meta_data);
-        
-        if (t_success)
-            t_success = t_ad->Create();
-        
-        if (t_success)
-        {
-            t_ad->SetNext(s_ads);
-            t_ad->SetName(p_name);
-            t_ad->SetOwner(ctxt.GetObjectHandle());
-            s_ads = t_ad;
-        }
-        else if (t_ad != nil)
-            t_ad->Release();
-    }
-    
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not create ad");
-#endif /* MCAdExecCreateAd */
     bool t_success;
     t_success = true;
     
@@ -219,20 +161,6 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
 
 void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
 {
-#ifdef /* MCAdExecDeleteAd */ LEGACY_EXEC
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
-    {
-        ctxt.SetTheResultToStaticCString("not registered with ad service");
-        return;
-    }
-    
-    MCAd *t_ad;
-    t_ad = nil;
-    if (!MCAd::FindByNameOrId(p_name, t_ad))
-        ctxt.SetTheResultToStaticCString("could not find ad");
-    else
-        t_ad->Release();
-#endif /* MCAdExecDeleteAd */
     if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -253,26 +181,6 @@ void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
 
 void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, MCAdTopLeft& r_topleft)
 {
-#ifdef /* MCAdGetTopLeftOfAd */ LEGACY_EXEC
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
-    {
-        ctxt.SetTheResultToStaticCString("not registered with ad service");
-        return false;
-    }
-    
-    MCAd *t_ad;
-    t_ad = nil;
-    if (!MCAd::FindByNameOrId(p_name, t_ad))
-    {
-        ctxt.SetTheResultToStaticCString("could not find ad");
-        return false;
-    }
-    else
-    {
-        r_top_left = t_ad->GetTopLeft();
-        return true;
-    }
-#endif /* MCAdGetTopLeftOfAd */
     if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -293,20 +201,6 @@ void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, MCAdTopLeft& r_
 
 void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, const MCAdTopLeft& p_topleft)
 {
-#ifdef /* MCAdSetTopLeftOfAd */ LEGACY_EXEC
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
-    {
-        ctxt.SetTheResultToStaticCString("not registered with ad service");
-        return;
-    }
-    
-    MCAd *t_ad;
-    t_ad = nil;
-    if (!MCAd::FindByNameOrId(p_name, t_ad))
-        ctxt.SetTheResultToStaticCString("could not find ad");
-    else
-        t_ad->SetTopLeft(p_top_left);
-#endif /* MCAdSetTopLeftOfAd */
     if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -328,26 +222,6 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, const MCAdTopLe
 
 void MCAdGetVisibleOfAd(MCExecContext& ctxt,  MCStringRef p_name, bool &r_visible)
 {
-#ifdef /* MCAdGetVisibleOfAd */ LEGACY_EXEC
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
-    {
-        ctxt.SetTheResultToStaticCString("not registered with ad service");
-        return false;
-    }
-    
-    MCAd *t_ad;
-    t_ad = nil;
-    if (!MCAd::FindByNameOrId(p_name, t_ad))
-    {
-        ctxt.SetTheResultToStaticCString("could not find ad");
-        return false;
-    }
-    else
-    {
-        r_visible = t_ad->GetVisible();
-        return true;
-    }
-#endif /* MCAdGetVisibleOfAd */
     if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -368,20 +242,6 @@ void MCAdGetVisibleOfAd(MCExecContext& ctxt,  MCStringRef p_name, bool &r_visibl
 
 void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
 {
-#ifdef /* MCAdSetVisibleOfAd */ LEGACY_EXEC
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
-    {
-        ctxt.SetTheResultToStaticCString("not registered with ad service");
-        return;
-    }
-    
-    MCAd *t_ad;
-    t_ad = nil;
-    if (!MCAd::FindByNameOrId(p_name, t_ad))
-        ctxt.SetTheResultToStaticCString("could not find ad");
-    else
-        t_ad->SetVisible(p_visible);
-#endif /* MCAdSetVisibleOfAd */
     if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
@@ -403,19 +263,6 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
 
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 {
-#ifdef /* MCAdGetAds */ LEGACY_EXEC
-    bool t_success;
-    t_success = true;
-	for(MCAd *t_ad = s_ads; t_ad != nil && t_success; t_ad = t_ad->GetNext())
-		if (t_ad->GetName() != nil)
-        {
-            if (r_ads == nil)
-                t_success = MCCStringClone(t_ad->GetName(), r_ads);
-            else
-                t_success = MCCStringAppendFormat(r_ads, "\n%s", t_ad->GetName());
-        }
-    return t_success;
-#endif /* MCAdGetAds */
     bool t_success;
     t_success = false;
     

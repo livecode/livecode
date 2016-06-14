@@ -1,4 +1,7 @@
-# Mobile search for inclusions
+---
+version: 8.1.0-dp-1
+---
+# Standalone 'Search for inclusions' for mobile deployment
 
-The standalone builder 'search for inclusions' mechanism will now work
-for mobile deployment, both to device and simulator.
+The standalone builder 'Search for required inclusions...' option now
+supports mobile deployment, both to device and simulator.

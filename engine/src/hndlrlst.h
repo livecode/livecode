@@ -131,9 +131,6 @@ public:
 
 	uint2 getnglobals(void);
 	MCVariable *getglobal(uint2 p_index);
-#ifdef LEGACY_EXEC
-    bool enumerate(MCExecPoint& ep, bool p_first = true);
-#endif
     bool enumerate(MCExecContext& ctxt, bool p_first, uindex_t& r_count, MCStringRef*& r_handlers);
 	
 	uint2 getnvars(void)

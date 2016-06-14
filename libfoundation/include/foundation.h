@@ -3283,6 +3283,7 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_TYPEINFOREF(Field) MC_PICKLE_FIELD(TypeInfoRef, Field, 0)
 
 #define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)
+#define MC_PICKLE_INTSET(SType, SField) MC_PICKLE_FIELD(IntEnum, SField, 0)
 
 #define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfByte, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_UINDEX(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfUIndex, Field, CountField, 0)

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "globals.h"
 
 #include "exec.h"
@@ -408,6 +408,10 @@ bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detai
             if (p_detailed)
                 r_reading.horizontal_accuracy = [t_location horizontalAccuracy];
 		}
+        else
+        {
+            r_reading.latitude = r_reading.longitude = NAN;
+        }
 		
 		if ([t_location verticalAccuracy] >= 0.0)
 		{
@@ -415,6 +419,10 @@ bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detai
             if (p_detailed)
                 r_reading.vertical_accuracy = [t_location verticalAccuracy];
 		}
+        else
+        {
+            r_reading.altitude = NAN;
+        }
 		
         // MM-2013-02-21: Added speed and course to the detailed readings.
         if (p_detailed)

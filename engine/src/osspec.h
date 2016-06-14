@@ -109,9 +109,6 @@ extern bool MCS_savetextfile(MCStringRef f, MCStringRef data);
 extern void MCS_saveresfile(MCStringRef p_path, MCDataRef data);
 
 extern bool MCS_query_registry(MCStringRef p_key, MCValueRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
-#ifdef LEGACY_EXEC
-/* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
-#endif
 extern bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error);
 extern bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error);
 extern bool MCS_set_registry(MCStringRef p_key, MCValueRef p_value, MCSRegistryValueType p_type, MCStringRef& r_error);

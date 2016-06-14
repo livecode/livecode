@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 #include "dispatch.h"
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "exec.h"
 #include "object.h"
 #include "hndlrlst.h"

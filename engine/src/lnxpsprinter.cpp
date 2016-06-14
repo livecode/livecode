@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "object.h"
 #include "context.h"
 #include "globals.h"
-//#include "execpt.h"
+
 #include "stack.h"
 #include "region.h"
 #include "osspec.h"

@@ -629,13 +629,23 @@ end revStandaloneAddWarning
 ----------
 
 command revStandaloneProgress pMessage
-   send "revUpdateStandaloneProgress pMessage" to stack "revStandaloneSettings"
+   if not revSBSuppressDialogs() then
+      send "revUpdateStandaloneProgress pMessage" to stack "revStandaloneSettings"
+   end if
 end revStandaloneProgress
 
 # This is an event handler, not a command.
 on revStandaloneProgressCallback
-  wait 0 ticks with messages
+   if not revSBSuppressDialogs() then
+      wait 0 ticks with messages
+   end if
 end revStandaloneProgressCallback
+
+command revStandaloneProgressFinished
+   if not revSBSuppressDialogs() then
+      close stack "revStandaloneProgress"
+   end if
+end revStandaloneProgressFinished
 
 ----------
 
@@ -671,9 +681,6 @@ function revFolderNameMakeLegal pName
    return tLegalName
 end revFolderNameMakeLegal
 
-// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
-constant kPlatforms = "Windows,MacOSX x86-32,Linux"
-
 // List of all desktop target platforms + architecture
 constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
@@ -684,6 +691,16 @@ constant kAdditionalTargets = "iOS,Android,Emscripten"
 function revSBAdditionalTargets
    return kAdditionalTargets
 end revSBAdditionalTargets
+
+function revSBTargetToPlatform pTarget
+   if pTarget begins with "MacOSX" then
+      return "MacOSX"
+   else if pTarget begins with "Linux" then
+      return "Linux"
+   else
+      return pTarget
+   end if
+end revSBTargetToPlatform
 
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
@@ -699,75 +716,76 @@ constant kAskDialog                  = "true"
 constant kAnswerDialog               = "true"
 constant kCursors                    = "false"
 
-on revDefaultStandaloneSettings pStack
-   local tStandaloneSettingsA,tPlatform,tName
-   put the customproperties["cRevStandaloneSettings"] of stack pStack into tStandaloneSettingsA
+// SN-2015-01-21: [[ Bug 14371 ]] 'MacOSX' has been replaced by 'MacOSX x86-32'
+constant kInitialTargets = "Windows,MacOSX x86-32,Linux"
+
+on revSBDefaultStandaloneSettings pStack, @xSettingsA
+   local tPlatform,tName
    -- name
-   if tStandaloneSettingsA["name"] = "" then put pStack into tStandaloneSettingsA["name"]
-   put char 1 to 246 of tStandaloneSettingsA["name"] into tStandaloneSettingsA["name"]
-   if tStandaloneSettingsA["inclusions"] = "" then put "search" into tStandaloneSettingsA["inclusions"]
-   if tStandaloneSettingsA["OSX,name"] = "" then put pStack into tStandaloneSettingsA["OSX,name"]
-   if tStandaloneSettingsA["Windows,ProductName"] = "" then put pStack into tStandaloneSettingsA["Windows,ProductName"]
+   if xSettingsA["name"] = "" then put pStack into xSettingsA["name"]
+   put char 1 to 246 of xSettingsA["name"] into xSettingsA["name"]
+   if xSettingsA["inclusions"] = "" then put "search" into xSettingsA["inclusions"]
+   if xSettingsA["OSX,name"] = "" then put pStack into xSettingsA["OSX,name"]
+   if xSettingsA["Windows,ProductName"] = "" then put pStack into xSettingsA["Windows,ProductName"]
    -- main resources
-   if tStandaloneSettingsA["askDialog"] = "" then 
-      put kAskDialog into tStandaloneSettingsA["askDialog"]
+   if xSettingsA["askDialog"] = "" then 
+      put kAskDialog into xSettingsA["askDialog"]
       -- assume no properties set
-      if tStandaloneSettingsA["scriptLibraries"] = "" then put replaceText(kDefaultScriptLibraries,",",cr) into tStandaloneSettingsA["scriptLibraries"]
+      if xSettingsA["scriptLibraries"] = "" then put replaceText(kDefaultScriptLibraries,",",cr) into xSettingsA["scriptLibraries"]
       
       put revEnvironmentRuntimePath() & "/Windows/x86-32/Support/Sample Icons" into tName
-      if tStandaloneSettingsA["Windows,iconFile"] = "" then put tName & "/genericapp.ico" into tStandaloneSettingsA["Windows,iconFile"]
-      if tStandaloneSettingsA["Windows,documenticonFile"] = "" then put tName & "/genericdoc.ico" into tStandaloneSettingsA["Windows,documenticonFile"]
+      if xSettingsA["Windows,iconFile"] = "" then put tName & "/genericapp.ico" into xSettingsA["Windows,iconFile"]
+      if xSettingsA["Windows,documenticonFile"] = "" then put tName & "/genericdoc.ico" into xSettingsA["Windows,documenticonFile"]
    end if
-   if tStandaloneSettingsA["answerDialog"] = "" then put kAnswerDialog into tStandaloneSettingsA["answerDialog"]
-   if tStandaloneSettingsA["cursors"] = "" then put kCursors into tStandaloneSettingsA["cursors"]
+   if xSettingsA["answerDialog"] = "" then put kAnswerDialog into xSettingsA["answerDialog"]
+   if xSettingsA["cursors"] = "" then put kCursors into xSettingsA["cursors"]
    -- version
    set the itemDel to "."
    repeat with X=1 to the number of items of kDefaultVersionNumber
-      if tStandaloneSettingsA["Windows,fileversion"&X] = "" then put item X of kDefaultVersionNumber into tStandaloneSettingsA["Windows,fileversion"&X]
-      if tStandaloneSettingsA["Windows,productversion"&X] = "" then put item X of kDefaultVersionNumber into tStandaloneSettingsA["Windows,productversion"&X]
+      if xSettingsA["Windows,fileversion"&X] = "" then put item X of kDefaultVersionNumber into xSettingsA["Windows,fileversion"&X]
+      if xSettingsA["Windows,productversion"&X] = "" then put item X of kDefaultVersionNumber into xSettingsA["Windows,productversion"&X]
    end repeat
    set the itemDel to ","
-   if tStandaloneSettingsA["OSX,longVersion"] = "" then put pStack&&kDefaultVersionNumber into tStandaloneSettingsA["OSX,longVersion"]
-   if tStandaloneSettingsA["OSX,info"] = "" then put pStack&&"Version"&&kDefaultVersionNumber into tStandaloneSettingsA["OSX,info"]
-   if tStandaloneSettingsA["OSX,shortVersion"] = "" then put kDefaultVersionNumber into tStandaloneSettingsA["OSX,shortVersion"]
-   if tStandaloneSettingsA["Windows,FileDescription"] = "" then put pStack&&kDefaultVersionNumber&&"for Windows" into tStandaloneSettingsA["Windows,FileDescription"]
+   if xSettingsA["OSX,longVersion"] = "" then put pStack&&kDefaultVersionNumber into xSettingsA["OSX,longVersion"]
+   if xSettingsA["OSX,info"] = "" then put pStack&&"Version"&&kDefaultVersionNumber into xSettingsA["OSX,info"]
+   if xSettingsA["OSX,shortVersion"] = "" then put kDefaultVersionNumber into xSettingsA["OSX,shortVersion"]
+   if xSettingsA["Windows,FileDescription"] = "" then put pStack&&kDefaultVersionNumber&&"for Windows" into xSettingsA["Windows,FileDescription"]
    -- document types
-   if the number of chars of tStandaloneSettingsA["OSX,signature"] <> 4 then put kDefaultCreator into tStandaloneSettingsA["OSX,signature"]
-   if tStandaloneSettingsA["OSX,documentType"] = "" then put kDefaultDocumentType into tStandaloneSettingsA["OSX,documentType"]
-   if tStandaloneSettingsA["OSX,documentExtension"] = "" then put kDefaultDocumentExtension into tStandaloneSettingsA["OSX,documentExtension"]
+   if the number of chars of xSettingsA["OSX,signature"] <> 4 then put kDefaultCreator into xSettingsA["OSX,signature"]
+   if xSettingsA["OSX,documentType"] = "" then put kDefaultDocumentType into xSettingsA["OSX,documentType"]
+   if xSettingsA["OSX,documentExtension"] = "" then put kDefaultDocumentExtension into xSettingsA["OSX,documentExtension"]
    -- set the unix stuff to true because they will only be imported into unix builds anyway
-   if tStandaloneSettingsA["UNIX,colorChooser"] = "" then put true into tStandaloneSettingsA["UNIX,colorChooser"]
-   if tStandaloneSettingsA["UNIX,printerChooser"] = "" then put true into tStandaloneSettingsA["UNIX,printerChooser"]
-   if tStandaloneSettingsA["UNIX,pageSetup"] = "" then put true into tStandaloneSettingsA["UNIX,pageSetup"]
-   if tStandaloneSettingsA["UNIX,fileSelector"] = "" then put true into tStandaloneSettingsA["UNIX,fileSelector"]
+   if xSettingsA["UNIX,colorChooser"] = "" then put true into xSettingsA["UNIX,colorChooser"]
+   if xSettingsA["UNIX,printerChooser"] = "" then put true into xSettingsA["UNIX,printerChooser"]
+   if xSettingsA["UNIX,pageSetup"] = "" then put true into xSettingsA["UNIX,pageSetup"]
+   if xSettingsA["UNIX,fileSelector"] = "" then put true into xSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
-   repeat for each item tPlatform in kPlatforms
-      if tStandaloneSettingsA[tPlatform] = "" then 
-            put revEngineCheck(tPlatform) into tStandaloneSettingsA[tPlatform]
+
+   repeat for each item tTarget in kInitialTargets
+      if xSettingsA[tTarget] = "" then
+            put revEngineCheck(tTarget) into xSettingsA[tTarget]
       end if
    end repeat
    
    -- copyright
    get the seconds
    convert it to dateItems
-   if tStandaloneSettingsA["OSX,copyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into tStandaloneSettingsA["OSX,copyright"]
-   if tStandaloneSettingsA["OSX,identifier"] = "" then put "com."&replaceText(toLower(the cUserOrganisation of stack "Home")," ","")&"."&replaceText(toLower(tStandaloneSettingsA["name"])," ","") into tStandaloneSettingsA["OSX,identifier"]
-   if tStandaloneSettingsA["Windows,LegalCopyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into tStandaloneSettingsA["Windows,LegalCopyright"]
-   if tStandaloneSettingsA["Windows,companyname"] = "" then put the cUserOrganisation of stack "Home" into tStandaloneSettingsA["Windows,companyname"]
+   if xSettingsA["OSX,copyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into xSettingsA["OSX,copyright"]
+   if xSettingsA["OSX,identifier"] = "" then put "com."&replaceText(toLower(the cUserOrganisation of stack "Home")," ","")&"."&replaceText(toLower(xSettingsA["name"])," ","") into xSettingsA["OSX,identifier"]
+   if xSettingsA["Windows,LegalCopyright"] = "" then put item 1 of it&&the cUserOrganisation of stack "Home"&&"All rights reserved worldwide" into xSettingsA["Windows,LegalCopyright"]
+   if xSettingsA["Windows,companyname"] = "" then put the cUserOrganisation of stack "Home" into xSettingsA["Windows,companyname"]
    
    -- Since the intel choice, set the default here:
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Only create standalone setting for Intel (for OS X) by default.
-   if tStandaloneSettingsA["MacOSX x86-32"] is empty then put true into tStandaloneSettingsA["MacOSX x86-32"]
+   if xSettingsA["MacOSX x86-32"] is empty then put true into xSettingsA["MacOSX x86-32"]
    
    -- Auto-remove stack passwords from community stacks
    if revLicenseType() is "community" then
-      if tStandaloneSettingsA["password"] is not empty then
-         delete variable tStandaloneSettingsA["password"]
+      if xSettingsA["password"] is not empty then
+         delete variable xSettingsA["password"]
       end if
    end if
-   
-   set the customproperties["cRevStandaloneSettings"] of stack pStack to tStandaloneSettingsA
-end revDefaultStandaloneSettings
+end revSBDefaultStandaloneSettings
 
 local sStackFiles
 
@@ -1036,6 +1054,14 @@ private function revSBPlatformToRuntimeFolderName pPlatform
    return empty
 end revSBPlatformToRuntimeFolderName
 
+function revSBExternalsMapping
+   return "revbrowser Browser,revdb Database,revspeech Speech,revvideograbber Video Grabber,revxml XML,revzip Revolution Zip,revfont Font Support"
+end revSBExternalsMapping
+
+function revSBDatabaseDriversMapping
+   return "mysql MySQL,odbc ODBC,postgresql PostgreSQL,sqlite SQLite,oracle Oracle"
+end revSBDatabaseDriversMapping
+
 -- MW-2013-06-13: [[ CloneAndRun ]] If we aren't installed, then generate the externals
 --   list by hand.
 private function revSBExternalsBuildList pPlatform
@@ -1106,7 +1132,7 @@ private function revSBMobileExternalsFromFolder pFolder
    end repeat
    
    local tFixedExternals
-   put revIDEExternalsMapping() into tFixedExternals
+   put revSBExternalsMapping() into tFixedExternals
    
    local tListA
    repeat for each item tItem in tFixedExternals
@@ -1228,7 +1254,7 @@ private function revSBMobileDatabaseDriversFromFolder pFolder
    end repeat
    
    local tFixedDrivers
-   put revIDEDatabaseDriversMapping() into tFixedDrivers
+   put revSBDatabaseDriversMapping() into tFixedDrivers
    
    local tListA
    set the itemdelimiter to comma
@@ -1702,13 +1728,13 @@ function revSBInclusionToMobileKey pName, pType, pPlatform
          switch pType
             case "database driver"
                local tDBDriverID, tDBDrivers
-               put revIDEDatabaseDriversMapping() into tDBDrivers
+               put revSBDatabaseDriversMapping() into tDBDrivers
                put "db" & word 1 of item itemOffset(pName, tDBDrivers) of tDBDrivers into tToInclude
                break
             case "external"
             default
                local tExternals
-               put revIDEExternalsMapping() into tExternals
+               put revSBExternalsMapping() into tExternals
                put word 1 of item itemOffset(pName, tExternals) of tExternals into tToInclude
                break
          end switch
@@ -1751,11 +1777,17 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    end repeat
 end revSBConvertSettingsForPlatform
 
-command revSBResolveIncludedExternal pPlatform, @xFile
+function revSBIncludedExternalPath pTarget, pName
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   return revSBGetExternalPath(tPlatform, pName)
+end revSBIncludedExternalPath
+
+command revSBResolveIncludedExternal pTarget, @xFile
    -- Added to support mergExt inclusion
    if xFile begins with "!" then
       local tExtPath
-      put revSBGetExternalPath(pPlatform, char 2 to -1 of xFile) into tExtPath
+      put revSBIncludedExternalPath (pTarget, char 2 to -1 of xFile) into tExtPath
       -- if the file prefixed with ! was not a named external, treat normally
       if tExtPath is not empty then
          put tExtPath into xFile
@@ -1903,6 +1935,34 @@ function revSBListWidgetsInUse pStack
    return the keys of tWidgetKindsA
 end revSBListWidgetsInUse
 
+function revSBSuppressDialogs
+   if the environment is "development" then
+      return revTestEnvironment()
+   end if
+   return true
+end revSBSuppressDialogs
+
+function revSBStandaloneOutputDirectory pName, pCount, pFolder, pPlatform, pMultiple
+   # OK-2010-02-17: Bug 8608 - Deploying stack with trailing whitespace in name fails on Windows
+   # because the folder created doesn't match the name passed to create folder command.
+   local tFolderName
+   put pName & pCount into tFolderName
+   if the platform is "Win32" or pPlatform is "Windows" then
+      put replaceText(tFolderName, "[ \t]+$", empty) into tFolderName
+   end if
+   
+   local tDirectory
+   if pMultiple then
+      put pFolder & tFolderName & "/" & pPlatform & "/" into tDirectory
+   else
+      put pFolder & tFolderName & "/" into tDirectory
+   end if
+   if pPlatform contains "MacOSX" then 
+      put pName & ".app/Contents/MacOS/" after tDirectory
+   end if
+   return tDirectory
+end revSBStandaloneOutputDirectory
+
 command revSBAddInclusion pInclusion, pKey, @xSettings
    if pInclusion is among the lines of xSettings[pKey]  then
       exit revSBAddInclusion
@@ -1919,7 +1979,7 @@ private command initialiseInclusionDependencies
    
    // Database drivers require revdb
    local tDBName
-   repeat for each item tDatabaseDriver in revIDEDatabaseDriversMapping()
+   repeat for each item tDatabaseDriver in revSBDatabaseDriversMapping()
       put word 2 to -1 of tDatabaseDriver into tDBName
       put "Database" into sDependencies["databaseDrivers"][tDBName]["scriptLibraries"]
    end repeat
@@ -1943,6 +2003,36 @@ command revSBUpdateForDependencies @xSettings
       end repeat
    end repeat
 end revSBUpdateForDependencies
+
+command revSBSanitiseExternalsList pTarget, @xExternals
+   local tAvailableExternals, tFixedExternals, tValidExternals, tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   put revSBAdditionalExternalsList(tPlatform) into tAvailableExternals
+   put revSBExternalsMapping() into tFixedExternals
+   split tFixedExternals by comma and space
+   put the keys of tFixedExternals into tFixedExternals
+   
+   local tValid
+   repeat for each line tAddedExternal in xExternals
+      put false into tValid
+      if tAddedExternal is among the lines of tAvailableExternals then
+         put true into tValid
+      end if
+      
+      if tAddedExternal is among the lines of tFixedExternals then
+         put true into tValid
+      end if
+      
+      if tValid then
+         if tValidExternals is empty then
+            put tAddedExternal into tValidExternals
+         else
+            put return & tAddedExternal after tValidExternals
+         end if
+      end if
+   end repeat
+   put tValidExternals into xExternals
+end revSBSanitiseExternalsList
 
 ------------------- SMART CHECKING --------------------
 
@@ -2009,7 +2099,7 @@ on initialiseSearchForInclusions
    put "revZip" into sPatternsA["Revolution Zip"]["Script"]
    put "scriptLibraries" into sPatternsA["Revolution Zip"]["Key"]
    
-   repeat for each item tDBDriver in revIDEDatabaseDriversMapping()
+   repeat for each item tDBDriver in revSBDatabaseDriversMapping()
       local tDBName, tDB
       put word 1 of tDBDriver into tDB
       put word 2 to -1 of tDBDriver into tDBName
@@ -2021,11 +2111,11 @@ on initialiseSearchForInclusions
    put true into sSearchInitialised
 end initialiseSearchForInclusions
 
-command revSearchForInclusions pStack, @xSettings
+command revSBSearchForInclusions pStack, @xSettings
    -- Ensure all properties and patterns are initialised
    initialiseSearchForInclusions
    revSmartChecking revGetStackFilesList(pStack), xSettings
-end revSearchForInclusions
+end revSBSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings
    local tNewSettings
@@ -2033,7 +2123,6 @@ private command revSmartChecking pStackFilesList, @xSettings
    local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
    local tFiles
    revStandaloneProgress "Auto detecting library inclusions..."
-   lock screen
    lock messages
    
    put empty into tNewSettings["scriptLibraries"]
@@ -2079,6 +2168,7 @@ private command revSmartChecking pStackFilesList, @xSettings
    
    -- Update the output settings
    put tNewSettings into xSettings
+   unlock messages
 end revSmartChecking
 
 private command revCheckObject pObject,pUserLibraries, @xSettings
@@ -2202,3 +2292,79 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
    end if
 end revCheckObject
 
+
+function revSBEnginePath pPlatform
+   local tEdition
+   put the editionType into tEdition
+   // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+   //  allow to create broken applications, so that the executable file in it bears the edition.
+   if tEdition is "professional" then
+      put "Commercial" into tEdition
+   end if
+   
+   -- MW-2013-06-13: [[ CloneAndRun ]] If not installed, then fetch the engine locally.
+   if revEnvironmentIsInstalled() then
+      # MW-2009-06-24: For Mac OS X, engine source is two lines, first is PPC (if any), second
+      #   is x86 (if any). Both implies universal build.
+      -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
+      local tRuntimePath
+      put revEnvironmentRuntimePath() into tRuntimePath
+      switch pPlatform
+         case "MacOSX"
+         case "MacOSX PowerPC-32"
+         case "MacOSX x86-32"
+         case "MacOSX x86-64"
+            // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
+            //  allow to create broken applications, so that the executable file in it bears the edition.
+            put the upper of char 1 of tEdition into char 1 of tEdition
+            return tRuntimePath & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition
+            break
+         case "Windows"
+            return tRuntimePath & "/Windows/x86-32/Standalone"
+            break
+         case "Linux"
+            return tRuntimePath & "/Linux/x86-32/Standalone"
+            break
+            -- MW-2013-11-06: [[ LinuxX64 ]] Compute the correct path for 64-bit linux.
+         case "Linux x64"
+            return tRuntimePath & "/Linux/x86-64/Standalone"
+            break
+            -- FG-2014-08-19: [[ RPi ]] Compute the correct path for ARMv6 Linux
+         case "Linux armv6-hf"
+            return tRuntimePath & "/Linux/armv6-hf/Standalone"
+            break
+         default
+            return "error"
+            break
+      end switch
+   else
+      -- Make sure the platform is correct
+      // SN-2015-05-15: [[ DeployAllPlatforms ]] Allow the deployment to happen
+      //  for another platform, from the repository.
+      local tBinariesPath
+      
+      if pPlatform contains "MacOSX" and the platform is not "macos" or \
+            pPlatform contains "Linux" and the platform is not "linux" or \
+            pPlatform is "Windows" and the platform is not "win32" then
+         put revEnvironmentNonNativeBinariesPath(pPlatform) into tBinariesPath
+      else
+         put revEnvironmentBinariesPath() into tBinariesPath
+      end if
+      
+      switch word 1 of pPlatform
+         case "MacOSX"
+            put the upper of char 1 of tEdition into char 1 of tEdition
+            return tBinariesPath & "/Standalone-" & tEdition & ".app/Contents/MacOS/Standalone-" & tEdition
+            break;
+         case "Windows"
+            return tBinariesPath & slash & "standalone-" & tEdition & ".exe"
+            break
+         case "Linux"
+            return tBinariesPath & slash & "standalone-" & tEdition
+            break
+         default
+            return empty
+            break
+      end switch
+   end if
+end revSBEnginePath

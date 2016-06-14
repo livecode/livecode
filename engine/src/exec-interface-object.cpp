@@ -2416,7 +2416,7 @@ bool MCObject::GetPattern(MCExecContext& ctxt, Properties which, bool effective,
     uint2 i;
     if (getpindex(which - P_FORE_PATTERN, i))
     {
-        if (patterns[i].id < PI_END && patterns[i].id > PI_PATTERNS)
+        if (patterns[i].id <= PI_END && patterns[i].id >= PI_PATTERNS)
             *r_pattern = patterns[i].id - PI_PATTERNS;
         else
             *r_pattern = patterns[i].id;
@@ -2446,7 +2446,7 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
     uint2 i;
     bool t_isopened;
     t_isopened = (opened != 0) || (gettype() == CT_STACK && static_cast<MCStack*>(this)->getextendedstate(ECS_ISEXTRAOPENED));
-    if (p_new_id == nil)
+    if (p_new_id == nil || *p_new_id == 0)
     {
         if (getpindex(p_new_pixmap, i))
         {
@@ -2462,7 +2462,7 @@ void MCObject::SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_
         else
             if (t_isopened)
                 MCpatternlist->freepat(patterns[i].pattern);
-        if (*p_new_id < PI_PATTERNS)
+        if (*p_new_id <= PI_END - PI_PATTERNS)
             *p_new_id += PI_PATTERNS;
         patterns[i].id = *p_new_id;
         if (t_isopened)

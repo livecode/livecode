@@ -17,11 +17,8 @@ Platforms: desktop,server,web
 Example:
 get colorAnimate(the pixmapID of this stack) -- an XFCN
 
-Value:
-The <pixmapID> of a stack is an <integer>.
-This property is read-only and cannot be set.
-
-<img src="202653"/> >*Important:* The pixmapID property is not supported in version 2.7 of LiveCode and always returns 0.
+Value: The <pixmapID> of a stack is an <integer>. This property is 
+read-only and cannot be set.
 
 Description:
 Use the <pixmapID> <property> to pass to an <external> that needs to manipulate the window.

@@ -180,10 +180,10 @@ on TestAssertBroken pDescription, pExpectTrue, pReasonBroken
    _TestOutput pExpectTrue, pDescription, "TODO", pReasonBroken
 end TestAssertBroken
 
-on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode
+on TestAssertThrow pDescription, pHandler, pTarget, pErrorCode, pParam
    local tError
    try
-      dispatch pHandler to pTarget
+      dispatch pHandler to pTarget with pParam
     catch tError
     end try
     

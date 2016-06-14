@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "globals.h"
 #include "osspec.h"
-//#include "execpt.h"
+
 #include "context.h"
 #include "button.h"
 

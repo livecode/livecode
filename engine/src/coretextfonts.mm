@@ -19,7 +19,7 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "globals.h"
 #include "osspec.h"

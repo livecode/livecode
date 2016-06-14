@@ -422,7 +422,6 @@ uint2 MCstartangle = 0;
 uint2 MCarcangle = 360;
 Boolean MCmultiple;
 uint2 MCmultispace = 1;
-uint4 MCpattern = 1;
 uint2 MCpolysides = 4;
 Boolean MCroundends;
 uint2 MCslices = 16;
@@ -543,6 +542,7 @@ void X_clear_globals(void)
 	MCraisepalettes = True;
 	MCsystemmodals = True;
     MCactivatepalettes = True;
+    MCdontuseQT = True;
     // SN-2014-10-2-: [[ Bug 13684 ]] Bugfix brought in 7.0 initialisation
     // MW-2007-07-05: [[ Bug 2288 ]] Default for hidePalettes is not system-standard
 #ifdef _MACOSX
@@ -551,8 +551,7 @@ void X_clear_globals(void)
     MChidepalettes = False;
 #endif
 	MCdontuseNS = False;
-	MCdontuseQT = False;
-	MCdontuseQTeffects = False;
+	MCdontuseQTeffects = True;
 	MCeventtime = 0;
 	MCbuttonstate = 0;
 	MCmodifierstate = 0;
@@ -802,7 +801,6 @@ void X_clear_globals(void)
 	MCarcangle = 360;
 	MCmultiple = False;
 	MCmultispace = 1;
-	MCpattern = 1;
 	MCpolysides = 4;
 	MCroundends = False;
 	MCslices = 16;
@@ -1066,13 +1064,16 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 #ifdef MCSSL
 	InitialiseSSL();
 #endif
-
+    
     ////
     
-#ifdef _MACOSX
+#if defined(_MACOSX) && defined(FEATURE_QUICKTIME)
     // MW-2014-07-21: Make AVFoundation the default on 10.8 and above.
-    if (MCmajorosversion >= 0x1080)
-        MCdontuseQT = True;
+    if (MCmajorosversion < 0x1080)
+    {
+        MCdontuseQT = False;
+        MCdontuseQTeffects = False;
+    }
 #endif
     
     ////

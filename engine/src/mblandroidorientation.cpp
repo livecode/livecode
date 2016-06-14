@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "printer.h"
 #include "globals.h"
 #include "dispatch.h"
@@ -319,22 +319,12 @@ void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
 
 void MCSystemLockOrientation()
 {
-#ifdef /* MCHandleLockOrientation */ LEGACY_EXEC
-	if (s_orientation_lock < MAXUINT4)
-		s_orientation_lock++;
-	return ES_NORMAL;
-#endif /* MCHandleLockOrientation */
 	if (s_orientation_lock < MAXUINT4)
 		s_orientation_lock++;
 }
 
 void MCSystemUnlockOrientation()
 {
-#ifdef /* MCHandleUnlockOrientation */ LEGACY_EXEC
-	if (s_orientation_lock > 0)
-		s_orientation_lock--;
-	return ES_NORMAL;
-#endif /* MCHandleUnlockOrientation */
 	if (s_orientation_lock > 0)
 		s_orientation_lock--;
 }

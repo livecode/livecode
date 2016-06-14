@@ -8,9 +8,9 @@ Summary: Starts recording from the system's audio input to a <file>.
 
 Introduced: 1.1
 
-OS: mac,windows
+OS: mac
 
-Platforms: desktop,server,web
+Platforms: desktop
 
 Security: disk,privacy
 
@@ -38,6 +38,14 @@ The technical specifications of the recording are determined by the settings of 
 
 Changes:
 The syntax of the record sound command was simplified in version 2.0. In previous versions, specification of sample rate, compression format, and whether to display a settings dialog box was included in the syntax for the record sound command. These capabilities are now available using the answer record command and the recordRate and recordCompression properties.
+
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: filenameproperty (property), properties (property), recording (property), recordCompression (property), recordSampleSize (property), recordChannels (property), recordFormat (property), recordInput (property), recordRate (property), file (keyword), player (keyword), stop recording (command), recordLoudness (function), format (function), recordCompressionTypes (function), property (glossary), audio clip (glossary), file path (glossary), command (glossary), QuickTime (glossary)
 

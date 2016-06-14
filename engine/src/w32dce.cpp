@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "date.h"
 #include "param.h"
-//#include "execpt.h"
+
 #include "vclip.h"
 #include "globals.h"
 #include "notify.h"

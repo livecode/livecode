@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "execpt.h"
+
 #include "util.h"
 #include "mcerror.h"
 #include "sellst.h"
@@ -209,6 +209,11 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
     if (!widgetIsInRunMode(p_widget))
         return p_widget->MCControl::kdown(p_text, p_key);
     
+    // If the control that is the target of the event is not the mouse focus's
+    // host widget - then this indicates the sync error has occurred.
+    if (!check_mouse_focus(p_widget, "event_kdown"))
+        return False;
+    
     // Mouse scroll events are sent as key events
     switch (p_key)
     {
@@ -227,7 +232,7 @@ Boolean MCWidgetEventManager::event_kdown(MCWidget* p_widget, MCStringRef p_text
         default:
             break;
     }
-    
+
     // WIDGET-TODO: Reinstate keyDown
 #if 0
     return keyDown(p_widget, p_text, p_key);
@@ -251,7 +256,10 @@ Boolean MCWidgetEventManager::event_mdown(MCWidget* p_widget, uint2 p_which)
     // Prevent the IDE from breaking
     if (!widgetIsInRunMode(p_widget))
         return p_widget->MCControl::mdown(p_which);
-    
+	
+	if (!check_mouse_focus(p_widget, "event_mdown"))
+		return False;
+	
     return mouseDown(m_mouse_focus, p_which);
 }
 
@@ -383,10 +391,11 @@ void MCWidgetEventManager::event_munfocus(MCWidget* p_widget)
             mouseCancel(m_mouse_grab, 0);
         }
     }
-    
+
     // If the unfocused widget is the currently focused widget, then
     // leave it.
-    if (p_widget -> getwidget() == m_mouse_focus)
+    if (m_mouse_focus != nil &&
+		MCWidgetGetHost(m_mouse_focus) == p_widget)
     {
         mouseLeave(m_mouse_focus);
         MCValueRelease(m_mouse_focus);
@@ -1186,6 +1195,19 @@ bool MCWidgetEventManager::doBubbleEvent(bool p_always_bubble, MCWidgetRef p_tar
     m_target = t_old_target;
     
     return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWidgetEventManager::check_mouse_focus(MCWidget *p_widget, const char *p_event)
+{
+	if (m_mouse_focus != nil &&
+		MCWidgetGetHost(m_mouse_focus) == p_widget)
+		return true;
+	
+	MCLog("mfocus-sync-error: %s invoked on widget (%p) which is not m_mouse_focus (%p)", p_event, p_widget -> getwidget(), m_mouse_focus);
+	
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "stack.h"
 #include "aclip.h"
@@ -1446,10 +1446,15 @@ void MCStack::appendaclip(MCAudioClip *aptr)
 	aptr->appendto(aclips);
 	aptr->setid(newid());
 	aptr->setparent(this);
+    
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send newAudioclip message
+    aptr->message(MCM_new_audioclip);
 }
 
 void MCStack::removeaclip(MCAudioClip *aptr)
 {
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send deleteAudioclip message
+    aptr->message(MCM_delete_audioclip);
 	aptr->remove(aclips);
 }
 
@@ -1458,12 +1463,16 @@ void MCStack::appendvclip(MCVideoClip *vptr)
 	vptr->appendto(vclips);
 	vptr->setid(newid());
 	vptr->setparent(this);
+    
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send newVideoclip message
+    vptr->message(MCM_new_videoclip);
 }
 
 void MCStack::removevclip(MCVideoClip *vptr)
 {
-	vptr->remove
-	(vclips);
+    // AL-2014-11-27: [[ NewIdeMEssages ]] Send deleteVideoclip message
+    vptr->message(MCM_delete_videoclip);
+	vptr->remove(vclips);
 }
 
 void MCStack::appendcontrol(MCControl *optr)
@@ -2140,40 +2149,6 @@ void MCStack::markfind(MCExecContext &ctxt, Find_mode fmode,
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
 }
-
-#ifdef LEGACY_EXEC
-void MCStack::mark(MCExecPoint &ep, MCExpression *where, Boolean mark)
-{
-	if (where == NULL)
-	{
-		MCCard *cptr = cards;
-		do
-		{
-			cptr->setmark(mark);
-			cptr = (MCCard *)cptr->next();
-		}
-		while (cptr != cards);
-	}
-	else
-	{
-		MCCard *oldcard = curcard;
-		curcard = cards;
-		MCerrorlock++;
-		do
-		{
-			if (where->eval(ep) == ES_NORMAL)
-			{
-				if (ep.getsvalue() == MCtruemcstring)
-					curcard->setmark(mark);
-			}
-			curcard = (MCCard *)curcard->next();
-		}
-		while (curcard != cards);
-		curcard = oldcard;
-		MCerrorlock--;
-	}
-}
-#endif
 
 void MCStack::mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark)
 {

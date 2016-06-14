@@ -27,7 +27,7 @@ object: Any available object. If no object is specified, the cut command cuts wh
 Description:
 Use the <cut> command to place <object|objects> or text on the <clipboard> while removing them from the <stack>.
 
-If no object is specified, the <cut> <command> is equivalent to choosing <a/>Edit menu<img src="202656"/>Cut<important/>.
+If no object is specified, the <cut> <command> is equivalent to choosing Edit → Cut from the menubar.
 
 References: selected (property), cutKey (message), selection (keyword), image (keyword), stack (object), object (glossary), clipboard (function), copy (command), delete (command), command (glossary)
 

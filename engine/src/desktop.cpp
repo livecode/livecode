@@ -128,6 +128,13 @@ void MCPlatformHandleApplicationRun(bool& r_continue)
 
 void MCPlatformHandleScreenParametersChanged(void)
 {
+	// It is possible for this notification to be sent *before* MCscreen has
+	// been initialized. In this case, we do nothing (the screen info is fetched
+	// on first use so there's no need to do anything before MCscreen is
+	// initialized).
+	if (MCscreen == nil)
+		return;
+	
 	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 	bool t_changed;
 	t_changed = false;
@@ -1345,7 +1352,7 @@ void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef p_player)
     MCPlatformBreakWait();
 }
 
-void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
 {
     MCPlayer *t_player;
     t_player = find_player(p_player);

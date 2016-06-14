@@ -445,6 +445,16 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCEncrypt;
 	case F_ENVIRONMENT:
 		return new MCEnvironment;
+    case F_EVENT_CAPSLOCK_KEY:
+        return new MCEventCapsLockKey;
+    case F_EVENT_COMMAND_KEY:
+        return new MCEventCommandKey;
+    case F_EVENT_CONTROL_KEY:
+        return new MCEventControlKey;
+    case F_EVENT_OPTION_KEY:
+        return new MCEventOptionKey;
+    case F_EVENT_SHIFT_KEY:
+        return new MCEventShiftKey;
 	case F_EXISTS:
 		return new MCExists;
 	case F_EXP:
@@ -802,6 +812,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCValue;
 	case F_VARIABLES:
 		return new MCVariables;
+    case F_VECTOR_DOT_PRODUCT:
+        return new MCVectorDotProduct;
 	case F_VERSION:
 		return new MCVersion;
 	case F_WAIT_DEPTH:

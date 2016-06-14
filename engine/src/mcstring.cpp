@@ -355,6 +355,9 @@ MCNameRef MCM_copy_key;
 MCNameRef MCM_current_time_changed;
 MCNameRef MCM_cut_key;
 MCNameRef MCM_debug_str;
+
+// AL-2014-11-27: [[ NewIdeMEssages ]] Add deleteAudioclip message
+MCNameRef MCM_delete_audioclip;
 MCNameRef MCM_delete_background;
 MCNameRef MCM_delete_button;
 MCNameRef MCM_delete_card;
@@ -367,6 +370,8 @@ MCNameRef MCM_delete_key;
 MCNameRef MCM_delete_scrollbar;
 MCNameRef MCM_delete_player;
 MCNameRef MCM_delete_stack;
+// AL-2014-11-27: [[ NewIdeMEssages ]] Add deleteVideoclip message
+MCNameRef MCM_delete_videoclip;
 MCNameRef MCM_delete_widget;
 MCNameRef MCM_delete_url;
 MCNameRef MCM_desktop_changed;
@@ -438,10 +443,14 @@ MCNameRef MCM_move_stack;
 MCNameRef MCM_move_stopped;
 MCNameRef MCM_movie_touched;
 MCNameRef MCM_name_changed;
+// AL-2014-11-27: [[ NewIdeMEssages ]] Add newAudioclip message
+MCNameRef MCM_new_audioclip;
 MCNameRef MCM_new_background;
 MCNameRef MCM_new_card;
 MCNameRef MCM_new_stack;
 MCNameRef MCM_new_tool;
+// AL-2014-11-27: [[ NewIdeMEssages ]] Add newVideoclip message
+MCNameRef MCM_new_videoclip;
 MCNameRef MCM_node_changed;
 MCNameRef MCM_object_selection_ended;
 MCNameRef MCM_object_selection_started;
@@ -974,6 +983,12 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("urlProgress", MCM_url_progress);
 #endif
 
+    
+    /* UNCHECKED */ MCNameCreateWithCString("deleteAudioclip", MCM_delete_audioclip);
+    /* UNCHECKED */ MCNameCreateWithCString("deleteVideoclip", MCM_delete_videoclip);
+    /* UNCHECKED */ MCNameCreateWithCString("newAudioclip", MCM_new_audioclip);
+    /* UNCHECKED */ MCNameCreateWithCString("newVideoclip", MCM_new_videoclip);
+    
 #ifdef _MOBILE
 	/* UNCHECKED */ MCNameCreateWithCString("firstname", MCN_firstname);
 	/* UNCHECKED */ MCNameCreateWithCString("lastname", MCN_lastname);
@@ -1428,6 +1443,11 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCM_url_progress);
 #endif
 
+    MCNameDelete(MCM_delete_audioclip);
+    MCNameDelete(MCM_delete_videoclip);
+    MCNameDelete(MCM_new_audioclip);
+    MCNameDelete(MCM_new_videoclip);
+    
 #ifdef _MOBILE
 	MCNameDelete(MCN_firstname);
 	MCNameDelete(MCN_lastname);

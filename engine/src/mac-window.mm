@@ -62,8 +62,20 @@ static bool s_lock_responder_change = false;
         return nil;
     
     m_can_become_key = false;
-    
     return self;
+}
+
+- (NSRect)movingFrame
+{
+    if ([NSApp windowIsMoving:[(MCWindowDelegate *)[self delegate] platformWindow]])
+        return m_moving_frame;
+    else
+        return [self frame];
+}
+
+- (void)setMovingFrame:(NSRect)p_moving_frame
+{
+    m_moving_frame = p_moving_frame;
 }
 
 - (void)setCanBecomeKeyWindow: (BOOL)p_value
@@ -157,6 +169,19 @@ static bool s_lock_responder_change = false;
     m_monitor = nil;
     
     return self;
+}
+
+- (NSRect)movingFrame
+{
+    if ([NSApp windowIsMoving:[(MCWindowDelegate *)[self delegate] platformWindow]])
+        return m_moving_frame;
+    else
+        return [self frame];
+}
+
+- (void)setMovingFrame:(NSRect)p_moving_frame
+{
+    m_moving_frame = p_moving_frame;
 }
 
 - (void)dealloc
@@ -315,17 +340,12 @@ static bool s_lock_responder_change = false;
         CGRect t_rect;
         CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)t_rect_dict, &t_rect);
         
-        // MW-2014-06-11: [[ Bug ]] Only temporarily update the frame fields otherwise it screws
-        //   up backingstore scale factor changes.
-        NSPoint t_origin;
-        t_origin = _frame . origin;
+        NSScreen * t_screen = [[NSScreen screens] objectAtIndex:0];
+        t_rect . origin . y = [t_screen frame] . size . height - t_rect . origin . y - t_rect . size . height;
         
-        _frame . origin . x = t_rect . origin . x;
-        _frame . origin . y = [[NSScreen mainScreen] frame] . size . height - t_rect . origin . y - t_rect . size . height;
+        [(NSWindow <com_runrev_livecode_MCMovingFrame> *)self setMovingFrame:NSRectFromCGRect(t_rect)];
         
         ((MCMacPlatformWindow *)window) -> ProcessDidMove();
-    
-        _frame . origin = t_origin;
     }
     
     [t_info_array release];
@@ -377,6 +397,7 @@ static bool s_lock_responder_change = false;
 //   frame sizes).
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
 {
+    NSLog(@"windowWillResize");
     MCRectangle t_frame;
     t_frame = MCRectangleMake(0, 0, frameSize . width, frameSize . height);
     
@@ -414,13 +435,19 @@ static bool s_lock_responder_change = false;
 
 - (void)windowMoveFinished
 {
-	// IM-2014-10-29: [[ Bug 13814 ]] Make sure we unset the user reshape flag once dragging is finished.
+    // IM-2014-10-29: [[ Bug 13814 ]] Make sure we unset the user reshape flag once dragging is finished.
 	m_user_reshape = false;
+    m_window -> ProcessDidMove();
 }
 
 - (void)windowDidMove:(NSNotification *)notification
 {
-	m_window -> ProcessDidMove();
+    m_window -> ProcessDidMove();
+}
+
+- (void)windowDidChangeScreen:(NSNotification *)notification
+{
+    m_window -> ProcessDidMove();
 }
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification
@@ -1690,6 +1717,9 @@ MCWindowContainerView *MCMacPlatformWindow::GetContainerView(void)
 
 id MCMacPlatformWindow::GetHandle(void)
 {
+	// IM-2016-06-13: [[ Bug 17815 ]] Ensure the handle has been created before returning.
+	if (m_handle == nil)
+		RealizeAndNotify();
 	return m_handle;
 }
 
@@ -1733,7 +1763,7 @@ void MCMacPlatformWindow::ProcessDidMove(void)
 	
 	// Get the window's new content rect.
 	NSRect t_new_cocoa_content;
-	t_new_cocoa_content = [m_window_handle contentRectForFrameRect: [m_window_handle frame]];
+	t_new_cocoa_content = [m_window_handle contentRectForFrameRect: [(NSWindow <com_runrev_livecode_MCMovingFrame>*)m_window_handle movingFrame]];
 	
 	// Map from cocoa coords.
 	MCRectangle t_content;
@@ -1883,7 +1913,8 @@ void MCMacPlatformWindow::DoRealize(void)
     
     [m_window_handle setFrame: t_cocoa_frame display: YES];
     
-	m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
+    if (m_delegate == nil)
+        m_delegate = [[com_runrev_livecode_MCWindowDelegate alloc] initWithPlatformWindow: this];
 	[m_window_handle setDelegate: m_delegate];
 	
     m_container_view = [[MCWindowContainerView alloc] initWithPlatformWindow: this];

@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "image.h"
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "mcio.h"
 
 #include "globals.h"
