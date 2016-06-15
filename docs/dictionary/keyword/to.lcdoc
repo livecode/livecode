@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-drag image "sprite" from firstPoint to secondPoint with shiftKey
+drag button 5 from firstPoint to secondPoint with shiftKey
 
 Example:
 copy myButton to this card

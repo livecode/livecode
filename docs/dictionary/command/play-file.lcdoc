@@ -19,7 +19,7 @@ Example:
 play empty
 
 Example:
-put specialFolderPath("engine) & "/applause.mp3" into tSoundFile
+put specialFolderPath("engine") & "/applause.mp3" into tSoundFile
 play tSoundFile
 
 Parameters:

@@ -18,7 +18,8 @@ Security: disk,privacy
 
 Example:
 local tSettings
-put the cSavedSettings of me into tSettingsrevSetVideoGrabSettings "tSettings"
+put the cSavedSettings of me into tSettings
+revSetVideoGrabSettings "tSettings"
 
 Parameters:
 variableName: The name of a LiveCode variable that contains the settings string. The settings string is a block of binary data returned by the revVideoGrabSettings function.

@@ -17,7 +17,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-set the shadowPixel of this card to the short number of this card
+set the shadowPixel of this card to 200
 
 Value:
 The <shadowPixel> of an <object(glossary)> is an <integer> between zero and (the screenColors - 1). It designates an entry in the current color table.

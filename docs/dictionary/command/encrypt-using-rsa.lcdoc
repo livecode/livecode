@@ -15,10 +15,10 @@ Platforms: desktop,server,web,mobile
 Security: network
 
 Example:
-encrypt myMessage with public key myKey
+encrypt myMessage using rsa with public key myKey
 
 Example:
-encrypt thisMessage with private key privateKey
+encrypt thisMessage using rsa with private key privateKey
 
 Parameters:
 source: 

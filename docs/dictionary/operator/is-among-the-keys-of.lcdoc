@@ -15,7 +15,7 @@ Platforms: desktop,server,web,mobile
 Example:
 local tArray
 put "World" into tArray["Hello"] 
-"Hello" is among the keys of tArray -- evaluates to true
+get "Hello" is among the keys of tArray -- evaluates to true
 
 Example:
 if "text" is among the keys of the dragData then

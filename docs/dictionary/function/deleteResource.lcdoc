@@ -15,10 +15,10 @@ Platforms: desktop,web
 Security: disk
 
 Example:
-get deleteResource("New Build",ICN#,129)
+get deleteResource("New Build","ICN#",129)
 
 Example:
-put deleteResource(line x of theFiles,XFCN,"Colorize") into temp
+put deleteResource(line x of theFiles,"XFCN","Colorize") into temp
 
 Parameters:
 file: The name and location of the file containing the resource. If you specify a name but not a location, LiveCode assumes the file is in the defaultFolder.

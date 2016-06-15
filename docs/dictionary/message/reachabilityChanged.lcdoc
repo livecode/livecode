@@ -17,7 +17,7 @@ Platforms: mobile
 Example:
 on reachabilityChanged pHost, pInfo
    updateConnectivityList pHost, pInfo
-on reachabilityChanged
+end reachabilityChanged
 
 Parameters:
 hostNameOrAddress: The server being monitored

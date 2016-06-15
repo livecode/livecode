@@ -21,8 +21,7 @@ put "John" into tName
 put "Hello" into tMessage
 get libURLFormData("name", tName,"message", tMessage)
 post it to url "http://www.someserver.com/cgi-bin/form.pl"
-
-In this case, the data posted to the url will look like this: name=John&message=Hello
+-- In this case, the data posted to the url will look like this: name=John&message=Hello
 
 Parameters:
 key_1: 

@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-put the localLoc(the screenMouseLoc) into localMouse
+put localLoc(the screenMouseLoc) into localMouse
 
 Example:
 set the screenMouseLoc to the topLeft of this stack

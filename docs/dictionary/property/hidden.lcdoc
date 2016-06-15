@@ -20,9 +20,9 @@ set the hidden of line 2 of field 1 to true
 Example:
 -- Toggle visibility of a line
 if the hidden of line 1 of field 1 is true then
-   set the hidden of line 1 of field 1 is false
+   set the hidden of line 1 of field 1 to false
 else
-   set the hidden of line 1 of field 1 is true
+   set the hidden of line 1 of field 1 to true
 end if
 
 Value (bool): The <hidden> of a line of a field is true or false.

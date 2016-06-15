@@ -20,10 +20,11 @@ Example:
 do "go next card"
 
 Example:
-do "put"  x  "into tNumberOfRecords"  x -- might become "put 3 into tNumberOfRecords"
+do "put"  x  "into tNumberOfRecords" 
+-- might become "put 3 into tNumberOfRecords"
 
 Example:
-do "select"  line 3 of field "Objects"
+do "select" && line 3 of field "Objects"
 
 Example:
 do field "Statements" as AppleScript

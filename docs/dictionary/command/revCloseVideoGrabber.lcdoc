@@ -21,7 +21,8 @@ revCloseVideoGrabber
 
 Example:
 if there is no stack "Video Control" then
-  revCloseVideoGrabberend if
+  revCloseVideoGrabber
+end if
 
 Description:
 Use the <revCloseVideoGrabber> <command> to free up memory when you're done using the <Video library>.

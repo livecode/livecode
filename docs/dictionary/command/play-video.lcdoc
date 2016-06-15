@@ -16,7 +16,7 @@ Example:
 play video myVideoFile
 
 Example:
-put specialFolderPath("engine) & "/intro_movie.mp4" into tVideoFile
+put specialFolderPath("engine") & "/intro_movie.mp4" into tVideoFile
 play video tVideoFile
 
 Example:

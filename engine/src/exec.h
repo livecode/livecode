@@ -3600,6 +3600,7 @@ extern MCExecMethodInfo *kMCPasteboardEvalIsAmongTheKeysOfTheDragDataMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalDragSourceAsObjectMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalDragDestinationAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardEvalDropChunkAsObjectMethodInfo;
 
 extern MCExecMethodInfo *kMCPasteboardExecPasteMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardExecCopyMethodInfo;
@@ -3656,6 +3657,7 @@ void MCPasteboardEvalIsNotAmongTheKeysOfTheFullDragData(MCExecContext& ctxt, MCN
 
 void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 
 void MCPasteboardExecPaste(MCExecContext& ctxt);
 

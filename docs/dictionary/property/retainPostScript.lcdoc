@@ -13,7 +13,7 @@ OS: linux
 Platforms: desktop,server,web
 
 Example:
-set the retainPostScript of the EPSTemplate to true
+set the retainPostScript of the templateEPS to true
 
 Value (bool):The <retainPostScript> of an <EPS|EPS object> is true or false.
 By default, the <retainPostScript> <property> of newly created <EPS|EPS objects> is set to true.

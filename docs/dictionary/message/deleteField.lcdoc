@@ -16,8 +16,9 @@ Platforms: desktop,server,web,mobile
 
 Example:
 on deleteField -- first save the contents in a custom property
-  set the (the short name of the target) of this card to target
-  pass deleteField
+   set the uFieldText[the short name of the target] of this card to \
+         the text of the target
+   pass deleteField
 end deleteField
 
 Description:

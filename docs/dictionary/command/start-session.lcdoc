@@ -20,7 +20,7 @@ start session
 put "jack" into $_SESSION['user']
 
 Example:
-set the sessionLifeTime 360 -- 10 minutes
+set the sessionLifeTime to 360 -- 10 minutes
 start session
 
 Description:

@@ -19,7 +19,7 @@ on socketTimeout theID
   answer error "The connnection is not responding." \
      with "Keep Trying" or "Cancel"
   if it is "Cancel" then close socket theID
-end if
+end socketTimeout
 
 Parameters:
 socketID: The identifier (set when you opened the socket) of the socket which had an error.

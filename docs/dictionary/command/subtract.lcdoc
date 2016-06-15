@@ -15,7 +15,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-subtract 5 from 10
+subtract 5 from tSize
 
 Example:
 put "10,10" into tPoint

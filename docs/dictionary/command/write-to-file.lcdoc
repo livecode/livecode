@@ -30,7 +30,7 @@ Example:
 mouseUp
    local tFile
    put specialFolderPath("desktop")  & "/test.txt" into tFile
-   open file tFile for text 
+   open file tFile for text write
 
    write "one 222" to file tFile -- Writes to the start of the file
    write "two" to file tFile at 4 -- Writes to the file from character 4

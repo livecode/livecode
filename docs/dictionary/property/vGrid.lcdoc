@@ -15,7 +15,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-set the vGrid of the fieldTemplate to true
+set the vGrid of the templateField to true
 
 Example:
 set the vGrid of line 10 to -1 of field 1 to true

@@ -19,7 +19,7 @@ Example:
 -- counter variables in repeat with loops may use 0
 local tVarNum, tText
 repeat with tVarNum = 0 to 5
-  put tVarNum  comma after tText
+  put tVarNum & comma after tText
 end repeat
 put tText
 -- tText = 0,1,2,3,4,5,
@@ -28,7 +28,7 @@ Example:
 -- Repeat with loops can also make use of negative numbers
 local tVarNum, tText
 repeat with tVarNum = 3 down to -5
-  put tVarNum  comma after tText
+  put tVarNum & comma after tText
 end repeat
 put tText
 -- tText = 3,2,1,0,-1,-2,-3,-4,-5,
@@ -52,8 +52,9 @@ Example:
 local tPrefix = "myVar"
 local tVarCount = 20
 repeat with tVarNum = 1 to 20
-  put tPrefix  x into tVarName
-  do "put empty into "  tVarNameend repeat
+  put tPrefix & x into tVarName
+  do "put empty into " & tVarName
+end repeat
 
 Parameters:
 loopForm: 

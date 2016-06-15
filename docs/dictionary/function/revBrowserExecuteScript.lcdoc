@@ -15,7 +15,7 @@ Platforms: desktop
 Security: network
 
 Example:
-get revBrowserExecuteScript(sBrowserId, "alert('This is a debugging message');"
+get revBrowserExecuteScript(sBrowserId, "alert('This is a debugging message');")
 
 Example:
 get revBrowserExecuteScript(sBrowserId, the text of field "JavaScript" of me)

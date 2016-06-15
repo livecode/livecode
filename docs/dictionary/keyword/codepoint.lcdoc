@@ -19,7 +19,7 @@ Example:
 get the first codepoint of tString
 
 Example:
-repeat for each codepoint tCodepoint of tString
+repeat for each codepoint tCodepoint in tString
 
 Description:
 Use the codepoint <keyword> to refer to the integer identifier(s) associated with Unicode character

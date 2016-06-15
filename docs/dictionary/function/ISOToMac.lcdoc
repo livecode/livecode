@@ -18,7 +18,7 @@ Example:
 ISOToMac("Ab4+")
 
 Example:
-ISOToMac(")
+ISOToMac("")
 
 Example:
 charToNum(ISOToMac(numToChar(myASCIIVal)))

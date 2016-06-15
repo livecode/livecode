@@ -20,7 +20,7 @@ Example:
 set the label of button 1 to "Hello" & return & "World"
 
 Example:
-get the label of button "Choices Popup" <a name="code tag=">-- current menu choice</a>
+get the label of button "Choices Popup" -- current menu choice
 
 Example:
 set the label of this stack to the short name of this card

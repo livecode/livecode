@@ -18,7 +18,7 @@ Example:
 revZipAddItemWithFile tArchive, "myZippedItem", "/myFolder/myZippedItem.rev"
 
 Example:
-revZipAddItemWithFile the cArchive of me, tFile, (tFolder  slash  tFile)
+revZipAddItemWithFile the cArchive of me, tFile, (tFolder & slash & tFile)
 
 Parameters:
 archivePath: The absolute path to the zip archive to add the file to.

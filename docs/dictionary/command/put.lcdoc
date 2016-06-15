@@ -23,7 +23,7 @@ Example:
 put 3 + 12 into myVariable
 
 Example:
-put return  someGlobalVar after field "Accumulations"
+put return & someGlobalVar after field "Accumulations"
 
 Example:
 put tData into URL "ftp://ftp.myftpserver.com"

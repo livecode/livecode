@@ -16,7 +16,7 @@ Example:
 get uuid()
 
 Example:
-put uuid(random) into tRandomUUID
+put uuid("random") into tRandomUUID
 
 Parameters:
 uuidType (enum): A string. The type of UUID to be generated, one of:

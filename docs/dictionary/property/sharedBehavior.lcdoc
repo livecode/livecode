@@ -26,7 +26,7 @@ put the sharedBehavior of group myGroup into tSharedBehavior
 
 Example:
 set the sharedBehavior of group 1 to true
-place group 1 on card 2 of this stack
+place group 1 onto card 2 of this stack
 
 Value (bool):The <sharedBehavior> of a group is true or false.
 By default, the <sharedBehavior> property of newly created groups is set to false.

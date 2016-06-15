@@ -16,7 +16,7 @@ Example:
 set the dontUseQTEffects to false
 
 Example:
-if not the wantEffects of me then set the dontUseQTEffects of me to true
+if not the wantEffects of me then set the dontUseQTEffects to true
 
 Value (bool):The <dontUseQTEffects> is true or false.
 On all systems other than Mac OS X 32 bit on a system earlier than 10.8 

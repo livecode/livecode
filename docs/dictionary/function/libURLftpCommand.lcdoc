@@ -17,10 +17,10 @@ Platforms: desktop,server,web
 Security: network
 
 Example:
-put libURLftpCommand("PWD",ftp.example.org) into field "Directory"
+put libURLftpCommand("PWD","ftp.example.org") into field "Directory"
 
 Example:
-get libURLftpCommand("SITE HELP",example.net:75,"root",field "password")
+get libURLftpCommand("SITE HELP","example.net:75","root",field "password")
 
 Parameters:
 ftpCommandLine (string): A string consisting of any valid FTP command and any parameters it requires.

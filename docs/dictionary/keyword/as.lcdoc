@@ -16,7 +16,7 @@ Example:
 do field 1 as Javascript
 
 Example:
-export me to file myFile as "PNG"
+export image "image" to file myFile as PNG
 
 Example:
 go stack "Controls" as palette

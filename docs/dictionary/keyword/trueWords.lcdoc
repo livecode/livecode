@@ -19,7 +19,7 @@ put "Изучение и обучение иностранных языков" a
 put the number of trueWords in tText -- yields 15
 
 Example:
-put the number of trueWords of ("The programme output:" && quote & "Hello World!"  quote) -- yields 5
+put the number of trueWords of ("The programme output:" && quote & "Hello World!" & quote) -- yields 5
 
 Description:
 Use the <trueWords> keyword to count the number of trueWord chunks in a container.

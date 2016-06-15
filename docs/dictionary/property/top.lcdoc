@@ -18,7 +18,7 @@ Example:
 set the top of card button 1 to 100
 
 Example:
-set the top of message window to (the bottom of this stack + 2)
+set the top of stack "message window" to (the bottom of this stack + 2)
 
 Value:
 The <top> of an <object(glossary)> is an <integer>. A <negative> <integer> indicates that the position is above the top of the screen or <card> (and therefore cannot be seen).

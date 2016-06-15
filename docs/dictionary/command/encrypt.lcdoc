@@ -42,7 +42,7 @@ then copies the file back to disk. */
 local path2input, myData, path2output
 /* put the file path to your input and output files into path2input and path2output */
 put URL ("binfile:" & path2input) into myData 
-encrypt myData using "aes-256-cbc" with password “@&^2fy” 
+encrypt myData using "aes-256-cbc" with password "@&^2fy" 
 put it into URL ("binfile:" & path2output) 
 
 Description:
