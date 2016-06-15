@@ -22,7 +22,7 @@ handler SafeHandler()
 end handler
 end module
 %EXPECT PASS
-%ERROR BytecodeNotAllowedInSafeContext AT BEFORE_BYTECODE
+%ERROR "Bytecode blocks can only be present in unsafe context" AT BEFORE_BYTECODE
 %ENDTEST
 
 %TEST BytecodeInUnsafeBlock
@@ -91,15 +91,17 @@ end module
 
 %TEST UnsafeHandlerCallInSafeContext
 module compiler_test
-unsafe handler OtherUnsafeHandler(in pArg)
+unsafe handler CmdUnsafeHandler(in pArg)
+end handler
+unsafe handler FuncUnsafeHandler(in pArg)
 end handler
 handler SafeHandler()
-   %{BEFORE_CALL}OtherUnsafeHandler(%{BEFORE_EVAL}OtherUnsafeHandler(nothing))
+   %{BEFORE_CALL}CmdUnsafeHandler(%{BEFORE_EVAL}FuncUnsafeHandler(nothing))
 end handler
 end module
 %EXPECT PASS
-%ERROR UnsafeHandlerCallNotAllowedInSafeContext AT BEFORE_CALL WITH OtherUnsafeHandler
-%ERROR UnsafeHandlerCallNotAllowedInSafeContext AT BEFORE_EVAL WITH OtherUnsafeHandler
+%ERROR "Unsafe handler 'CmdUnsafeHandler' can only be called in unsafe context" AT BEFORE_CALL
+%ERROR "Unsafe handler 'CmdUnsafeHandler' can only be called in unsafe context" AT BEFORE_EVAL
 %ENDTEST
 
 %TEST UnsafeHandlerCallInUnsafeHandler

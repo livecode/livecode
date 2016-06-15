@@ -111,6 +111,7 @@ void yyGetPos(long *r_result)
 
 static const char *ImportedModuleDir[8];
 static int ImportedModuleDirCount = 0;
+static const char *s_interface_output_file = NULL;
 
 void AddImportedModuleDir(const char *p_dir)
 {
@@ -194,13 +195,21 @@ OpenImportedModuleFile (const char *p_name,
     char t_path[MAXPATHLEN];
     FILE *t_file;
 
-    if (ImportedModuleDirCount == 0)
+    if (ImportedModuleDirCount == 0 &&
+        s_interface_output_file == NULL)
         return NULL;
 
-    // Use the first modulepath to write the interface file into.
-    /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
-
-	if (NULL != r_filename)
+    if (NULL == s_interface_output_file)
+    {
+        // Use the first modulepath to write the interface file into.
+        /* OVERFLOW */ sprintf(t_path, "%s/%s.lci", ImportedModuleDir[0], p_name);
+    }
+    else
+    {
+        /* OVERFLOW */ sprintf(t_path, "%s", s_interface_output_file);
+    }
+    
+    if (NULL != r_filename)
 	{
 		*r_filename = strdup(t_path); /* FIXME should be strndup */
 	}
@@ -375,6 +384,11 @@ void SetOutputCodeFile(const char *p_output)
 void SetManifestOutputFile(const char *p_output)
 {
     s_manifest_output_file = p_output;
+}
+
+void SetInterfaceOutputFile(const char *p_output)
+{
+    s_interface_output_file = p_output;
 }
 
 void SetTemplateFile(const char *p_output)
