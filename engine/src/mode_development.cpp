@@ -112,7 +112,7 @@ MCLicenseParameters MClicenseparameters =
 
 Boolean MCenvironmentactive = False;
 
-MCObject *MCmessageboxredirect = NULL;
+MCObjectHandle *MCmessageboxredirect = nil;
 
 // IM-2013-04-16: [[ BZ 10836 ]] Provide reference to the last "put" source
 // as a global property, the "revMessageBoxLastObject"
@@ -298,7 +298,7 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-
+    
     if (MCnoui && MCnstacks > 0 && MClicenseparameters . license_class == kMCLicenseClassCommunity)
     {
         if (MCdispatcher -> loadfile(MCstacknames[0], sptr) != IO_NORMAL)
@@ -674,8 +674,8 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
 	// if the source of the change is not within the message box
 	MCObject *t_msg_box = nil;
-	if (MCmessageboxredirect != nil)
-		t_msg_box = MCmessageboxredirect;
+	if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
+		t_msg_box = MCmessageboxredirect -> Get();
 	else
 	{
 		if (MCmbstackptr == nil)
@@ -713,13 +713,19 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
         MCmessageboxlastline = ctxt . GetLine();
 	}
 	
-	if (MCmessageboxredirect != NULL)
+	if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
 	{
-		if (MCmessageboxredirect -> gettype() == CT_FIELD)
+		if (MCmessageboxredirect -> Get() -> gettype() == CT_FIELD)
 		{
+            MCField *t_msg_field;
+            t_msg_field = (MCField *)MCmessageboxredirect -> Get();
+            
 			MCStack *t_msg_stack;
-			t_msg_stack = MCmessageboxredirect -> getstack();
-			Window_mode newmode = t_msg_stack -> userlevel() == 0 ? WM_MODELESS
+			t_msg_stack = t_msg_field -> getstack();
+
+            t_msg_field -> settext(0, p_string, False);
+			
+            Window_mode newmode = t_msg_stack -> userlevel() == 0 ? WM_MODELESS
 										: (Window_mode)(t_msg_stack -> userlevel() + WM_TOP_LEVEL_LOCKED);
 			
 			// MW-2011-07-05: [[ Bug 9608 ]] The 'ep' that is passed through to us does
@@ -730,8 +736,6 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 				t_msg_stack -> openrect(t_msg_stack -> getrect(), newmode, NULL, WP_DEFAULT, OP_NONE);
 			else
 				t_msg_stack -> raise();
-
-			((MCField *)MCmessageboxredirect) -> settext(0, p_string, False);
 		}
 		else
 		{
@@ -745,7 +749,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 				t_added = true;
 			}
 			
-			MCmessageboxredirect -> message(t_msg_changed);
+			MCmessageboxredirect -> Get() -> message(t_msg_changed);
 		
 			if (t_added)
 				MCnexecutioncontexts--;
@@ -793,10 +797,8 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
+void MCModeObjectDeleted(MCObject *object)
 {
-	if (MCmessageboxredirect == object)
-		MCmessageboxredirect = NULL;
 }
 
 bool MCModeShouldQueueOpeningStacks(void)
@@ -885,6 +887,12 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return true;
+}
+
+void MCModeFinalize(void)
+{
+    if (MCmessageboxredirect != nil)
+        MCmessageboxredirect -> Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1510,10 +1518,19 @@ void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
 {
     MCObject *t_object;
     t_object = getobj(ctxt, p_target);
+    
+    if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
+    {
+        if (t_object == MCmessageboxredirect -> Get())
+            return;
+        
+        MCmessageboxredirect -> Release();
+    }
+    
     if (t_object != NULL)
-        MCmessageboxredirect = t_object;
+        MCmessageboxredirect = t_object -> gethandle();
     else
-        MCmessageboxredirect = NULL;
+        MCmessageboxredirect = nil;
 }
             
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time)
@@ -1562,10 +1579,10 @@ void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object
 
 void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
 {
-    if (MCmessageboxredirect != NULL)
+    if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
     {
         MCAutoValueRef t_long_id;
-        if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
+        if (MCmessageboxredirect -> Get() -> names(P_LONG_ID, &t_long_id) &&
             ctxt . ConvertToString(*t_long_id, r_id))
             return;
     }

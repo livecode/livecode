@@ -1123,7 +1123,7 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
+void MCModeObjectDeleted(MCObject *object)
 {
 }
 
@@ -1207,6 +1207,11 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return false;
+}
+
+void MCModeFinalize(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1305,7 +1310,7 @@ bool MCModeGetPixelScalingEnabled()
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Mac OS X-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Mac OS X-specific mode hooks for STANDALONE mode.
 //
 
 #ifdef _MACOSX
@@ -1319,7 +1324,7 @@ bool MCModePreWaitNextEvent(Boolean anyevent)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Linux-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Linux-specific mode hooks for STANDALONE mode.
 //
 
 #ifdef _LINUX

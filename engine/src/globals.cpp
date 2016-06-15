@@ -1336,6 +1336,8 @@ int X_close(void)
     delete MCtodestroy;
 	delete MCstacks;
     
+    MCModeFinalize();
+    
     MCDeletedObjectsTeardown();
     
     // These card lists must be deleted *after* draining the deleted
