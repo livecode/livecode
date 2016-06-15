@@ -16,6 +16,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+on TestSetup
+	if the environment contains "command line" then
+		return "SKIP UI-only test"
+	end if
+end TestSetup
+
 on TestCutVar
 	create field
 	put "a" & return & "b" into field 1
@@ -25,10 +31,10 @@ on TestCutVar
 	
 	cut tToCut
 	
-	TestDiagnostic field 1
+	TestDiagnostic the text of field 1
 	TestDiagnostic the clipboardData["text"]
 	
 	TestAssert "cut obj text chunk in variable", field 1 is "b"
 	TestAssert "clipboard after cut obj text chunk in variable", \ 
-		the clipboardData["text"] is ("a" & return)
+		the clipboardData["text"] is ("a")
 end TestCutVar
