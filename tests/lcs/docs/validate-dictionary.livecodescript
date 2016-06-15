@@ -101,9 +101,11 @@ on TestDocsValidateDictionary
       put 1 into tIndex
       if tElement["display name"] is not among the words of "sessionName errorObject" then
          repeat for each element tValue in tElement["Example"]
+            
             if word 1 of tValue is among the words of "end case" then
                next repeat
             end if
+            
             --some scrips have ... to indicate user code
             replace "..." with empty in tValue
             
@@ -121,9 +123,18 @@ on TestDocsValidateDictionary
                end if
             end repeat
             
+            local tWrapWith
+            put empty into tWrapWith
+            if tRequiresWrap then
+               get matchText(tValue, "exit (.+)", tWrapWith)
+               if tWrapWith is empty or word 1 of tWrapWith is among the words of "repeat if switch to" then
+                  put "mouseUp" into tWrapWith
+               end if
+            end if
+            
             local tTempValue
             if tRequiresWrap then
-               put "on mouseUp" & return & tValue & return & "end mouseUp" into tTempValue
+               put "on" && tWrapWith & return & tValue & return & "end" && tWrapWith into tTempValue
             else
                put tValue into tTempValue
             end if
@@ -135,7 +146,8 @@ on TestDocsValidateDictionary
             --!TODO this should not be necessary if we fix all these docs but baby steps!!!
             -- check for lack of vairable declaration but only auto fix for 1 variable
             if tResult is not empty then
-               if line (item 1 of line 1 of tResult) of the scriptParsingErrors contains "bad variable" and "(" is not in item 4 of line 1 of tResult then
+               -- require variable declaration
+               if item 1 of line 1 of tResult is among the items of 14,78,209,423,507 and "(" is not in item 4 of line 1 of tResult then
                   put "local" && item 4 of line 1 of tResult & return before tTempValue
                   set the script of stack "Test" to tTempValue
                   put the result into tResult
@@ -158,7 +170,7 @@ on TestDocsValidateDictionary
                   set the itemDelimiter to comma
                   
                   if tRequiresWrap then
-                     put "on mouseUp" & return & tValue & return & "end mouseUp" into tTempValue
+                     put "on" && tWrapWith & return & tValue & return & "end" && tWrapWith into tTempValue
                   end if
                   
                   set the script of stack "Test" to tTempValue
