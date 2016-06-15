@@ -19,8 +19,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblsyntax.h"
 
-typedef struct
+struct MCSensorLocationReading
 {
+    MCSensorLocationReading *next;
+    
     double latitude;
     double longitude;
     double altitude;
@@ -33,7 +35,7 @@ typedef struct
     // MM-2013-02-21: Add speed and course to detailed location reading.
     double speed;
     double course;
-} MCSensorLocationReading;
+};
 
 typedef struct
 {
@@ -98,6 +100,11 @@ void MCSystemSensorFinalize(void);
 
 // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
 bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status);
+
+void MCSensorAddLocationSample(const MCSensorLocationReading& p_reading);
+bool MCSensorPopLocationSample(MCSensorLocationReading& r_reading);
+size_t MCSensorGetLocationSampleLimit(void);
+void MCSensorSetLocationSampleLimit(size_t p_limit);
 
 ////////////////////////////////////////////////////////////////////////////////
 
