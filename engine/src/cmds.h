@@ -318,13 +318,14 @@ public:
 class MCReturn : public MCStatement
 {
 	MCExpression *source;
-	MCExpression *url;
-	MCVarref *var;
+	MCExpression *extra_source;
+    bool is_with_urlresult : 1;
 public:
 	MCReturn()
 	{
-		source = url = NULL;
-		var = NULL;
+        source = NULL;
+        extra_source = NULL;
+        is_with_urlresult = false;
 	}
 	virtual ~MCReturn();
 	virtual Parse_stat parse(MCScriptPoint &);

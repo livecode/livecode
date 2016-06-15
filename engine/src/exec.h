@@ -3782,6 +3782,7 @@ extern MCExecMethodInfo *kMCEngineExecUnlockErrorsMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecUnlockMessagesMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSetMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecReturnValueMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecReturnValueAndItMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetCaseSensitiveMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetCaseSensitiveMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetCenturyCutOffMethodInfo;
@@ -3915,6 +3916,7 @@ void MCEngineExecUnlockMessages(MCExecContext& ctxt);
 
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *target, MCValueRef value);
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
+void MCEngineExecReturnValueAndIt(MCExecContext& ctxt, MCValueRef value, MCValueRef extra_value);
 
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename, MCStringRef resource_path);
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
@@ -4418,7 +4420,6 @@ void MCNetworkExecWriteToSocket(MCExecContext& ctxt, MCNameRef p_socket, MCStrin
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef value, int prep, MCUrlChunkPtr url);
 
 void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef value, MCValueRef url_result);
-void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef result, MCVarref *variable);
 
 void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value);
 

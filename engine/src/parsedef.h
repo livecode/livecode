@@ -1964,6 +1964,8 @@ enum Sugar_constants {
 	SG_REPLACING,
 	SG_PRESERVING,
 	SG_STYLES,
+    
+    SG_URL_RESULT,
 };
 
 enum Statements {
