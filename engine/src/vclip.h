@@ -39,7 +39,7 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }

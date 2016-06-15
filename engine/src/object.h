@@ -392,7 +392,7 @@ public:
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 	virtual void select();
 	virtual void deselect();
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
@@ -870,7 +870,9 @@ public:
 
 	virtual void scheduledelete(bool p_is_child = false);
 
-	// MW-2012-10-10: [[ IdCache ]]
+    virtual bool isdeletable(bool p_check_flag);
+    
+    // MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
 	{
 		m_in_id_cache = p_value;
@@ -922,7 +924,7 @@ public:
     //  in the parent chain.
     bool isancestorof(MCObject *p_object);
     
-	////////// PROPERTY SUPPORT METHODS
+    ////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
 

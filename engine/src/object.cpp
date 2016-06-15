@@ -854,7 +854,19 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
-Boolean MCObject::del()
+bool MCObject::isdeletable(bool p_check_flag)
+{
+    if (parent == NULL || scriptdepth != 0)
+    {
+        MCAutoValueRef t_long_name;
+        getnameproperty(P_LONG_NAME, 0, &t_long_name);
+        MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0, *t_long_name);
+        return false;
+    }
+    return true;
+}
+
+Boolean MCObject::del(bool p_check_flag)
 {
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.

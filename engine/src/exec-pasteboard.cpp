@@ -1015,7 +1015,7 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				if (p_targets[i] . object -> del())
+				if (p_targets[i] . object -> del(true))
                 {
                     if (p_targets[i] . object -> gettype() == CT_STACK)
                         MCtodestroy -> remove(static_cast<MCStack *>(p_targets[i] . object));

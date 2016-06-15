@@ -427,7 +427,7 @@ bool MCSellist::clipboard(bool p_is_cut)
 					//   object if the stack is protected.
 					if (tptr -> ref -> getstack() -> iskeyed())
 					{
-						if (tptr -> ref -> del())
+						if (tptr -> ref -> del(true))
                         {
                             if (tptr -> ref -> gettype() == CT_STACK)
                                 MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
@@ -473,7 +473,7 @@ Boolean MCSellist::del()
 				MCControl *cptr = (MCControl *)tptr->ref;
 				uint2 num = 0;
 				cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
-				if (cptr->del())
+				if (cptr->del(true))
 				{
 					Ustruct *us = new Ustruct;
 					us->type = UT_DELETE;
