@@ -436,48 +436,6 @@ bool MCSystemStopTrackingLocation()
 
 bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detailed)
 {
-#if 0
-    if (s_location_enabled)
-    {
-        CLLocation *t_location;
-        t_location = [s_location_manager location];
-        if(t_location == nil)
-            return false;
-        
-        if ([t_location horizontalAccuracy] >= 0.0)
-        {
-            r_reading.latitude = [t_location coordinate].latitude;
-            r_reading.longitude = [t_location coordinate].longitude;
-            if (p_detailed)
-                r_reading.horizontal_accuracy = [t_location horizontalAccuracy];
-        }
-        else
-        {
-            r_reading.latitude = r_reading.longitude = NAN;
-        }
-        
-        if ([t_location verticalAccuracy] >= 0.0)
-        {
-            r_reading.altitude = [t_location altitude];
-            if (p_detailed)
-                r_reading.vertical_accuracy = [t_location verticalAccuracy];
-        }
-        else
-        {
-            r_reading.altitude = NAN;
-        }
-        
-        // MM-2013-02-21: Added speed and course to the detailed readings.
-        if (p_detailed)
-        {
-            r_reading.timestamp = [[t_location timestamp] timeIntervalSince1970];
-            r_reading.speed = [t_location speed];
-            r_reading.course = [t_location course];
-        }
-        
-        return true;
-    }
-#endif
     if (s_location_reading == nil)
         return false;
     
