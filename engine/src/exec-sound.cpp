@@ -120,7 +120,7 @@ void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, M
     bool t_success;
 	t_success = true;
     
-    MCObjectHandle *t_handle;
+    MCObjectHandle t_handle;
     t_handle = nil;
     if (t_success)
         t_handle = ctxt.GetObjectHandle();
@@ -130,8 +130,6 @@ void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, M
 	if (!t_success)
     {
 		ctxt.SetTheResultToStaticCString("could not play sound");
-        if (t_handle != nil)
-            t_handle->Release();
     }
 }
 

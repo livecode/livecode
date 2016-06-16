@@ -170,23 +170,22 @@ public:
         }
         else
         {
-        MCObjectHandle *t_object;
-        t_object = m_target->GetOwner();
-        if (t_object != nil && t_object->Exists())
+        MCObjectHandle t_object = m_target->GetOwner();
+        if (t_object.IsValid())
         {
             switch(m_event)
             {
                 case kMCAdEventTypeReceive:
-                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCFalse);
+                    t_object->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCFalse);
                     break;
                 case kMCAdEventTypeReceiveDefault:
-                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCTrue);
+                    t_object->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCTrue);
                     break;
                 case kMCAdEventTypeReceiveFailed:
-                    t_object->Get()->message_with_valueref_args(MCM_ad_load_failed, m_target->GetName());
+                    t_object->message_with_valueref_args(MCM_ad_load_failed, m_target->GetName());
                     break;
                 case kMCAdEventTypeClick:
-                    t_object->Get()->message_with_valueref_args(MCM_ad_clicked, m_target->GetName());
+                    t_object->message_with_valueref_args(MCM_ad_clicked, m_target->GetName());
                     break;
             }
         }
@@ -208,23 +207,17 @@ void MCAdPostMessage(MCAd *p_ad, MCAdEventType p_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCAd::MCAd(void)
+MCAd::MCAd(void) :
+  m_references(1),
+  m_id(++s_last_ad_id),
+  m_name(MCValueRetain(kMCEmptyString)),
+  m_object(nil),
+  m_next(nil)
 {
-	m_references = 1;
-	m_id = ++s_last_ad_id;
-	m_name = MCValueRetain(kMCEmptyString);
-	m_object = nil;
-	m_next = nil;
 }
 
 MCAd::~MCAd(void)
 {
-	if (m_object != nil)
-	{
-		m_object -> Release();
-		m_object = nil;
-	}
-	
 	MCValueRelease(m_name);
     
 	if (s_ads == this)
@@ -263,15 +256,13 @@ MCStringRef MCAd::GetName()
 	return m_name;
 }
 
-MCObjectHandle *MCAd::GetOwner(void)
+MCObjectHandle MCAd::GetOwner(void)
 {
 	return m_object;
 }
 
-void MCAd::SetOwner(MCObjectHandle *p_owner)
+void MCAd::SetOwner(MCObjectHandle p_owner)
 {
-	if (m_object != nil)
-		m_object -> Release();
 	m_object = p_owner;
 }
 

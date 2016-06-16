@@ -3764,10 +3764,10 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 	{
 		// As we call handlers that might invoke messages, we need to take
 		// object handles here.
-		MCObjectHandle *t_source_handle, *t_new_owner_handle, *t_new_target_handle;
-		t_source_handle = p_source . object -> gethandle();
-		t_new_owner_handle = t_new_owner -> gethandle();
-		t_new_target_handle = t_new_target != nil ? t_new_target -> gethandle() : nil;
+		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
+		t_source_handle = p_source . object -> GetHandle();
+		t_new_owner_handle = t_new_owner -> GetHandle();
+		t_new_target_handle = t_new_target != NULL ? t_new_target -> GetHandle() : MCObjectHandle(NULL);
         
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;
@@ -3780,10 +3780,10 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
         
 		// Check the source and new owner objects exist, and if we have a target object
 		// that that exists and is still a child of new owner.
-		if (t_source_handle -> Exists() &&
-			t_new_owner_handle -> Exists() &&
+		if (t_source_handle.IsValid() &&
+			t_new_owner_handle.IsValid() &&
 		    (t_new_target == nil ||
-		     (t_new_target_handle -> Exists() &&
+		     (t_new_target_handle.IsValid() &&
 		      t_new_target -> getparent() == t_new_owner)))
 		{
 			p_source . object -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(p_source . object));
@@ -3803,11 +3803,6 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 			t_card -> kfocus();
 		if (t_was_mfocused)
 			t_card -> mfocus(MCmousex, MCmousey);
-        
-		t_source_handle -> Release();
-		t_new_owner_handle -> Release();
-		if (t_new_target != nil)
-			t_new_target_handle -> Release();
 	}
     
 	if (t_success)

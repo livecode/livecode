@@ -375,7 +375,7 @@ struct MCSystemSoundPlayer
 {
 	MCStringRef sound;
 	AVAudioPlayer *player;
-	MCObjectHandle *object;
+	MCObjectHandle object;
 };
 
 struct MCSystemSoundChannel
@@ -398,7 +398,6 @@ static void delete_player_on_channel(MCSystemSoundChannel *p_channel, MCSystemSo
 	[x_player . player release];
 	x_player . player = nil;
 	MCValueRelease(x_player.sound);
-	x_player . object -> Release();
 	x_player . object = nil;
 }
 
@@ -414,7 +413,7 @@ static void delete_sound_channel(MCSystemSoundChannel *p_channel)
 	
 	[p_channel -> delegate release];
 	MCValueRelease(p_channel -> name);
-	MCMemoryDelete(p_channel);
+	MCMemoryDestroy(p_channel);
 }
 
 static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_channel)
@@ -425,7 +424,7 @@ static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_ch
 	MCSystemSoundChannel *t_channel;
 	t_channel = nil;
 	if (t_success)
-		t_success = MCMemoryNew(t_channel);
+		t_success = MCMemoryCreate(t_channel);
 	
 	if (t_success)
 		t_channel->name = MCValueRetain(p_channel);
@@ -467,7 +466,7 @@ static bool find_sound_channel(MCStringRef p_channel, bool p_create, MCSystemSou
 	return false;
 }
 
-static bool new_player_for_channel(MCSystemSoundChannel *p_channel, MCStringRef p_file, bool p_looping, MCObjectHandle *p_object, MCSystemSoundPlayer& x_player)
+static bool new_player_for_channel(MCSystemSoundChannel *p_channel, MCStringRef p_file, bool p_looping, MCObjectHandle p_object, MCSystemSoundPlayer& x_player)
 {
 	MCStringRef t_resolved_file = nil;
 	/* UNCHECKED */ MCS_resolvepath(p_file, t_resolved_file);
@@ -500,8 +499,7 @@ static bool new_player_for_channel(MCSystemSoundChannel *p_channel, MCStringRef 
 	return true;
 }
 
-// MM-2012-02-11: Refactored to take a MCObjectHandle * rather than MCObject.
-bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object)
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle p_object)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, true, t_channel))
@@ -719,7 +717,7 @@ bool MCSystemListSoundChannels(MCStringRef& r_channels)
 	return t_elementsfound;
 }
 
-extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object);
+extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle p_object);
 
 @implementation com_runrev_livecode_MCSystemSoundChannelDelegate
 
@@ -741,7 +739,9 @@ extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCSt
 	if (m_channel -> next_player . player != nil)
 	{
 		m_channel -> current_player = m_channel -> next_player;
-		MCMemoryClear(&m_channel -> next_player, sizeof(MCSystemSoundPlayer));
+        
+        // Re-initialise the sound player struct
+        MCMemoryReinit(m_channel->next_player);
 	}
 }
 
