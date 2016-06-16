@@ -282,9 +282,12 @@ MCObject::~MCObject()
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
 	clearfontattrs();
 
-	// MW-2009-08-25: Release the handle.
+	// Clear and release the handle.
 	if (m_weak_handle != NULL)
+    {
+        m_weak_handle -> Clear();
 		m_weak_handle -> Release();
+    }
 
 	// MW-2008-10-25: Release the parent script use
 	if (parent_script != NULL)
