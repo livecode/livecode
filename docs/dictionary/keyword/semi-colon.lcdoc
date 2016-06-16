@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: ;
 
-Summary: The <character> <;> is used to place more than one <statement|statements> on a single <line>.
+Summary: The <character> <;> is used to place more than one <statement> on a single <line>.
 
 Introduced: 1.0
 
