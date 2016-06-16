@@ -5311,14 +5311,20 @@ extern MCExecMethodInfo *kMCSensorSetLocationAuthorizationStatusMethodInfo;
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
 void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r_available);
+
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location);
 void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location);
+void MCSensorGetLocationHistoryOfDevice(MCExecContext& ctxt, MCArrayRef& r_location_history);
+
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading);
 void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading);
+
 void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_acceleration);
 void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceleration);
+
 void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_rotation_rate);
 void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate);
+
 void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
 void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
 // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]

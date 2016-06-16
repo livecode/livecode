@@ -1,0 +1,90 @@
+Name: mobileGetLocationHistory
+
+Type: function
+
+Syntax: mobileGetLocationHistory()
+
+Summary: Get the mobile location samples since the last call to 
+<mobileGetLocationHistory>
+
+Introduced: 8.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+local tHistory
+put mobileGetLocationHistory() into tHistory
+
+Returns (array): A numerically keyed <array> of all accumulated samples 
+since the last time it was called with lower indices being older 
+samples. Calling the function clears the internal history. The default 
+history limit is 1 - meaning that only one sample is ever kept at a 
+time. If an application wants historical access to all samples, then it 
+should set the location history limit using the 
+<mobileSetLocationistoryLimit> <command> to the maximum number of 
+samples it ever wants to record, or 0 to record the entire history 
+(between calls to <mobileGetLocationHistory>).
+
+{ 
+	index (integer) : The index (1..N) of the location sample with 1 being the 
+  most recent and N being the minimum of the location history limit or
+  the number of system <locationChanged> event occurrences since
+  the last call to <mobileGetLocationHistory>
+	location (array) : Location <array> in the same format as the detailed 
+  location <array> as returned from the <mobileSensorReading> 
+  <function>.
+	{
+		"horizontal accuracy" (string) :
+		value (real) : The maximum error in meters of the position indicated 
+    by longitude and latitude
+    "latitude" (string) :
+		value (real) : the latitude of the current location, measured in 
+    degrees relative to the equator. Positive values indicate positions 
+    in the Northern Hemisphere, negative values in the Southern.
+    "longitude" (string) :
+		value (real) : the longitude of the current location, measured in 
+    degrees relative to the zero meridian. Positive values extend east 
+    of the meridian, negative values extend west.
+    "vertical accuracy" (string) :
+		value (real) : the maximum error in meters of the altitude value.
+    "altitude" (string) :
+		value (real) : the distance in meters of the height of the device 
+    relative to sea:level. Positive values extend upward of sea:level, 
+    negative values downward.
+    "timestamp" (string) :
+    value (real) : the time at which the measurement was taken, in 
+    seconds since 1970.
+	}
+}
+
+Description:
+System <locationChanged> events may occur more frequently than the
+<locationChanged> message is sent because messages that were unable to
+be sent as a result of other scripts executing are filtered when a new 
+system <locationChanged> event occurs. 
+
+Whenever a system <locationChanged> event occurs, the location reading
+is pushed onto the front of a list. The list is capped at the length
+set by <mobileSetLocationHistoryLimit>, dropping any old samples over 
+this length.
+
+The best way to use the history is to fetch the list in 
+<locationChanged> and process each sample in turn, rather than the 
+sample provided with the <locationChanged> event (which will always be 
+the last sample in the history). e.g.
+
+    on locationChanged
+        local tHistory
+        put mobileGetLocationHistory() into tHistory
+        repeat for each element tSample in tHistory
+            processLocationChanged tSample
+        end repeat
+    end locationChanged
+
+References: mobileGetLocationHistoryLimit (function),
+mobileSetLocationHistoryLimit (command), mobileStopTrackingSensor (command), 
+mobileSensorAvailable (function), mobileSensorReading (function), 
+mobileStartTrackingSensor (command), mobileLocationAuthorizationStatus (function), 
+locationChanged (message), trackingError (message)

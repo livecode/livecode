@@ -1291,6 +1291,39 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleSetLocationHistoryLimit(void *p_context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    if (p_parameters == nil)
+        return ES_NORMAL;
+    
+    MCAutoValueRef t_value;
+    p_parameters->eval(ctxt, &t_value);
+        
+    uinteger_t t_limit = 0;
+    /* UNCHECKED */ ctxt . ConvertToUnsignedInteger(*t_value, t_limit);
+    
+    MCSensorSetLocationSampleLimit(t_limit);
+    return ES_NORMAL;
+}
+
+Exec_stat MCHandleGetLocationHistoryLimit(void *p_context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt.SetTheResultToNumber(MCSensorGetLocationSampleLimit());
+    return ES_NORMAL;
+}
+
+Exec_stat MCHandleGetLocationHistory(void *p_context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    MCAutoArrayRef t_array;
+    MCSensorGetLocationHistoryOfDevice(ctxt, &t_array);
+    ctxt.SetTheResultToValue(*t_array);
+    return ES_NORMAL;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
@@ -4239,6 +4272,10 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	/* DEPRECATED */ {false, "iphoneDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
 	/* DEPRECATED */ {false, "mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
 	/* DEPRECATED */ {false, "mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+    
+    {false, "mobileSetLocationHistoryLimit", MCHandleSetLocationHistoryLimit, nil},
+    {false, "mobileGetLocationHistoryLimit", MCHandleGetLocationHistoryLimit, nil},
+    {false, "mobileGetLocationHistory", MCHandleGetLocationHistory, nil},
     
     {false, "mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
     {false, "mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},

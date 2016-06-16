@@ -123,70 +123,109 @@ void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r
     MCSystemGetSensorAvailable((MCSensorType)p_sensor, r_available);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+static bool __MCSensorGetDetailedLocationArray(const MCSensorLocationReading& p_reading, MCArrayRef& r_detailed_location)
+{
+    MCAutoArrayRef t_location_array;
+    /* UNCHECKED */ MCArrayCreateMutable(&t_location_array);
+    
+    MCAutoNumberRef t_latitude;
+    MCNewAutoNameRef t_latitude_name;
+    /* UNCHECKED */ MCNumberCreateWithReal(p_reading.latitude, &t_latitude);
+    /* UNCHECKED */ MCNameCreateWithCString("latitude", &t_latitude_name);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_latitude_name, *t_latitude);
+    
+    MCAutoNumberRef t_longitude;
+    MCNewAutoNameRef t_longitude_name;
+    /* UNCHECKED */ MCNumberCreateWithReal(p_reading.longitude, &t_longitude);
+    /* UNCHECKED */ MCNameCreateWithCString("longitude", &t_longitude_name);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_longitude_name, *t_longitude);
+    
+    MCAutoNumberRef t_altitude;
+    MCNewAutoNameRef t_altitude_name;
+    /* UNCHECKED */ MCNumberCreateWithReal(p_reading.altitude, &t_altitude);
+    /* UNCHECKED */ MCNameCreateWithCString("altitude", &t_altitude_name);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_altitude_name, *t_altitude);
+    
+    // MM-2013-02-21: Add speed and course to detailed location readings.
+    if (p_reading.speed >= 0.0f)
+    {
+        MCAutoNumberRef t_speed;
+        MCNewAutoNameRef t_speed_name;
+        /* UNCHECKED */ MCNumberCreateWithReal(p_reading.speed, &t_speed);
+        /* UNCHECKED */ MCNameCreateWithCString("speed", &t_speed_name);
+        /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_speed_name, *t_speed);
+    }
+    if (p_reading.course >= 0.0f)
+    {
+        MCAutoNumberRef t_course;
+        MCNewAutoNameRef t_course_name;
+        /* UNCHECKED */ MCNumberCreateWithReal(p_reading.course, &t_course);
+        /* UNCHECKED */ MCNameCreateWithCString("course", &t_course_name);
+        /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_course_name, *t_course);
+    }
+    
+    MCAutoNumberRef t_timestamp;
+    MCNewAutoNameRef t_timestamp_name;
+    /* UNCHECKED */ MCNumberCreateWithReal(p_reading.timestamp, &t_timestamp);
+    /* UNCHECKED */ MCNameCreateWithCString("timestamp", &t_timestamp_name);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_timestamp_name, *t_timestamp);
+    
+    MCAutoNumberRef t_horizontal_accuracy;
+    MCNewAutoNameRef t_horizontal_accuracy_name;
+    /* UNCHECKED */ MCNumberCreateWithReal(p_reading.horizontal_accuracy, &t_horizontal_accuracy);
+    /* UNCHECKED */ MCNameCreateWithCString("horizontal accuracy", &t_horizontal_accuracy_name);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_horizontal_accuracy_name, *t_horizontal_accuracy);
+    
+    MCAutoNumberRef t_vertical_accuracy;
+    MCNewAutoNameRef t_vertical_accuracy_name;
+    /* UNCHECKED */ MCNumberCreateWithReal(p_reading.vertical_accuracy, &t_vertical_accuracy);
+    /* UNCHECKED */ MCNameCreateWithCString("vertical accuracy", &t_vertical_accuracy_name);
+    /* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_vertical_accuracy_name, *t_vertical_accuracy);
+    
+    r_detailed_location = t_location_array.Take();
+    
+    return true;
+}
+
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location)
 {
 	MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, true))
     {
-        MCAutoArrayRef t_location_array;
-		/* UNCHECKED */ MCArrayCreateMutable(&t_location_array);
-
-		MCAutoNumberRef t_latitude;
-		MCNewAutoNameRef t_latitude_name;
-		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.latitude, &t_latitude);
-		/* UNCHECKED */ MCNameCreateWithCString("latitude", &t_latitude_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_latitude_name, *t_latitude);
-              
-		MCAutoNumberRef t_longitude;
-		MCNewAutoNameRef t_longitude_name;
-		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.longitude, &t_longitude);
-		/* UNCHECKED */ MCNameCreateWithCString("longitude", &t_longitude_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_longitude_name, *t_longitude);
-
-		MCAutoNumberRef t_altitude;
-		MCNewAutoNameRef t_altitude_name;
-		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.altitude, &t_altitude);
-		/* UNCHECKED */ MCNameCreateWithCString("altitude", &t_altitude_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_altitude_name, *t_altitude);
-        
-        // MM-2013-02-21: Add speed and course to detailed location readings.
-        if (t_reading.speed >= 0.0f)
-        {
-			MCAutoNumberRef t_speed;
-			MCNewAutoNameRef t_speed_name;
-			/* UNCHECKED */ MCNumberCreateWithReal(t_reading.speed, &t_speed);
-			/* UNCHECKED */ MCNameCreateWithCString("speed", &t_speed_name);
-			/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_speed_name, *t_speed);
-        }        
-        if (t_reading.course >= 0.0f)
-        {
-			MCAutoNumberRef t_course;
-			MCNewAutoNameRef t_course_name;
-			/* UNCHECKED */ MCNumberCreateWithReal(t_reading.course, &t_course);
-			/* UNCHECKED */ MCNameCreateWithCString("course", &t_course_name);
-			/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_course_name, *t_course);
-        }
-        
-		MCAutoNumberRef t_timestamp;
-		MCNewAutoNameRef t_timestamp_name;
-		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.timestamp, &t_timestamp);
-		/* UNCHECKED */ MCNameCreateWithCString("timestamp", &t_timestamp_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_timestamp_name, *t_timestamp);
-        
-		MCAutoNumberRef t_horizontal_accuracy;
-		MCNewAutoNameRef t_horizontal_accuracy_name;
-		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.horizontal_accuracy, &t_horizontal_accuracy);
-		/* UNCHECKED */ MCNameCreateWithCString("horizontal accuracy", &t_horizontal_accuracy_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_horizontal_accuracy_name, *t_horizontal_accuracy);
-        
-		MCAutoNumberRef t_vertical_accuracy;
-		MCNewAutoNameRef t_vertical_accuracy_name;
-		/* UNCHECKED */ MCNumberCreateWithReal(t_reading.vertical_accuracy, &t_vertical_accuracy);
-		/* UNCHECKED */ MCNameCreateWithCString("vertical accuracy", &t_vertical_accuracy_name);
-		/* UNCHECKED */ MCArrayStoreValue(*t_location_array, false, *t_vertical_accuracy_name, *t_vertical_accuracy);
-        
-        r_detailed_location = MCValueRetain(*t_location_array);
+        __MCSensorGetDetailedLocationArray(t_reading, r_detailed_location);
     }
+}
+
+void MCSensorGetLocationHistoryOfDevice(MCExecContext& ctxt, MCArrayRef& r_location_history)
+{
+    MCAutoArrayRef t_history;
+    if (!MCArrayCreateMutable(&t_history))
+        return;
+    
+    uindex_t t_index;
+    t_index = 1;
+    for(;;)
+    {
+        MCSensorLocationReading t_reading;
+        if (!MCSensorPopLocationSample(t_reading))
+            break;
+        
+        MCAutoArrayRef t_sample;
+        if (!__MCSensorGetDetailedLocationArray(t_reading,
+                                                &t_sample))
+            return;
+        
+        if (!MCArrayStoreValueAtIndex(*t_history,
+                                      t_index,
+                                      *t_sample))
+            return;
+        
+        t_index += 1;
+    }
+    
+    r_location_history = t_history.Take();
 }
 
 void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
@@ -228,6 +267,8 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
             ctxt.Throw();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
 {
