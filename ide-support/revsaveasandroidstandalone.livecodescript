@@ -77,6 +77,7 @@ private function badAndroidApiMessage
 end badAndroidApiMessage
 
 constant kBuiltInImplementations = "scriptLibraries Internet"
+constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    start using stack "revSBLibrary"
    
@@ -204,7 +205,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    end if
    
    -- Compute the externals list (includes drivers on Android)
-   repeat for each word tExternal in "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter"
+   repeat for each word tExternal in kAndroidExternals
       if tSettings["android,include" && tExternal] then
          if tExternal begins with "db" then 
             if "revdb" is not among the lines of tExternals then

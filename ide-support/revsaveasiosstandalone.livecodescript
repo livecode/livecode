@@ -82,6 +82,7 @@ private function linkingIsValid pLinkingOutput
 end linkingIsValid
    
 constant kBuiltInImplementations = "scriptLibraries Internet"
+constant kIosExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter revsecurity"
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
@@ -179,7 +180,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    -- MM-2014-01-29: [[ OpenSSL ]] Include the revsecurity library.
    -- Compute the externals list
-   repeat for each word tExternal in "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter revsecurity"
+   repeat for each word tExternal in kIosExternals
       if tSettings["ios,include" && tExternal] then
          if tExternal begins with "db" then 
             if "revdb" is not among the lines of tExternals then
