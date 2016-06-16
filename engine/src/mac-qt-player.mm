@@ -205,7 +205,7 @@ private:
 
 - (NSView *) newHitTest: (NSPoint) aPoint
 {
-    return [self superview];
+	return nil;
 }
 
 @end
