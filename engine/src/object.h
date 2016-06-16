@@ -175,30 +175,40 @@ struct MCObjectVisitor
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
 #define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
-class MCObjectHandle
+
+// Proxy allowing for weak references to MCObjects
+class MCObjectProxy
 {
 public:
-	MCObjectHandle(MCObject *p_object);
-	~MCObjectHandle(void);
-
-	// Increase the reference count.
-	void Retain(void);
-
-	// Decrease the reference count, destroying the object when it reaches 0.
-	void Release(void);
-
-	MCObject *Get(void);
-
-	// Set the handle to nil - the object has been destroyed.
-	void Clear(void);
-
-	// Returns true if the object still exists.
-	bool Exists(void);
-
+    
+    // RAII handle class
+    class Handle;
+    
+    // Create a proxy for the given object
+    MCObjectProxy(MCObject* p_proxy_form);
+    
+    // Inform the proxy that the bound object no longer exists
+    void Clear();
+    
 private:
-	uint32_t m_references;
-	MCObject *m_object;
+    
+    uint32_t    m_refcount;
+    MCObject*   m_object;
+    
+    // The proxy can only be deleted by itself
+    ~MCObjectProxy();
+    
+    void Retain();
+    void Release();
+    
+    MCObject* Get();
+    
+    bool ObjectExists() const;
 };
+
+// Slightly more readable name
+typedef MCObjectProxy::Handle MCObjectHandle;
+
 
 // MW-2012-02-17: [[ LogFonts ]] The font attrs struct for the object.
 struct MCObjectFontAttrs
@@ -305,7 +315,7 @@ protected:
 	MCParentScriptUse *parent_script;
 
 	// MW-2009-08-25: Pointer to the object's weak reference (if any).
-	MCObjectHandle *m_weak_handle;
+	MCObjectProxy* m_weak_proxy;
 
 	// MW-2011-07-21: For now, make this a uint4 as imageSrc references can make
 	//   it exceed 255 and wrap causing much much badness for the likes of rTree.
@@ -348,6 +358,7 @@ protected:
 	MCNativeLayer* m_native_layer;
 	
 public:
+    
 	MCObject();
 	MCObject(const MCObject &oref);
 	virtual ~MCObject();
@@ -775,7 +786,8 @@ public:
 	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
 	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
 
-	MCObjectHandle *gethandle(void);
+    // Returns a weak reference (handle) to this object
+    MCObjectHandle GetHandle();
 
 	// MW-2011-09-20: [[ Collision ]] Check to see if the two objects touch (exactly).
 	bool intersects(MCObject *other, uint32_t threshold);
@@ -1313,7 +1325,7 @@ private:
 	bool mapfont(bool recursive = false);
 	void unmapfont(void);
 
-	friend class MCObjectHandle;
+	friend class MCObjectProxy;
 	friend class MCEncryptedStack;
 };
 
@@ -1362,6 +1374,7 @@ public:
 	}
 };
 
+
 // Utility function for safe(-ish) casting from an MCObject to a derived class
 // without using RTTI.
 template <typename T>
@@ -1372,5 +1385,132 @@ T* MCObjectCast(MCObject* p_object)
     MCAssert(p_object->gettype() == T::kObjectType);
     return static_cast<T*> (p_object);
 }
+
+
+// Automatic (RAII) class for storage of object handles
+class MCObjectProxy::Handle
+{
+public:
+    
+    Handle() :
+    m_proxy(NULL)
+    {
+    }
+    
+    Handle(MCObjectProxy* p_proxy)
+    : m_proxy(NULL)
+    {
+        Set(p_proxy);
+    }
+    
+    Handle(const Handle& p_handle) :
+    m_proxy(NULL)
+    {
+        Set(p_handle.m_proxy);
+    }
+    
+    Handle& operator= (MCObjectProxy* p_proxy)
+    {
+        Set(p_proxy);
+        return *this;
+    }
+    
+    Handle& operator= (const Handle& p_handle)
+    {
+        Set(p_handle.m_proxy);
+        return *this;
+    }
+    
+    ~Handle()
+    {
+        if (m_proxy)
+            m_proxy->Release();
+    }
+    
+    // Returns true if this handle refers to an object (even if that object has
+    // since been deleted)
+    bool IsBound() const
+    {
+        return m_proxy != NULL;
+    }
+    
+    // Returns true if this handle refers to a valid object
+    bool IsValid() const
+    {
+        return m_proxy != NULL && m_proxy->ObjectExists();
+    }
+    operator bool() const
+    {
+        return IsValid();
+    }
+    
+    // Pointer-like access
+    MCObject* Get()
+    {
+        MCAssert(IsValid());
+        return m_proxy->m_object;
+    }
+    MCObject* operator-> ()
+    {
+        return Get();
+    }
+    operator MCObject* ()
+    {
+        return Get();
+    }
+    
+    // Checked fetch as the given type
+    template <typename T>
+    T* GetAs()
+    {
+        return MCObjectCast<T> (Get());
+    }
+    
+    // Two Handles are the same if they use the same proxy
+    bool operator==(const Handle& other) const
+    {
+        return m_proxy == other.m_proxy;
+    }
+    bool operator!=(const Handle& other) const
+    {
+        return !operator==(other);
+    }
+    
+    // Performs a retain on the underlying proxy without an RAII wrapper. This
+    // is only provided for the use of the EventQueue and the ExternalV1
+    // interface.
+    // **DANGEROUS** Will lead to memory leaks if not balanced
+    MCObjectProxy* ExternalRetain()
+    {
+        MCAssert(IsBound());
+        m_proxy->Retain();
+        return m_proxy;
+    }
+    
+    // Performs a release on the underlying proxy without an RAII wrapper. This
+    // is only provided for the use of the EventQueue and the ExternalV1
+    // interface.
+    // **DANGEROUS** Will cause memory corruption if not balanced
+    void ExternalRelease()
+    {
+        MCAssert(IsBound());
+        m_proxy->Release();
+    }
+    
+    
+private:
+    
+    // The proxy for the object this is a handle to
+    MCObjectProxy*  m_proxy;
+    
+    void Set(MCObjectProxy* p_proxy)
+    {
+        if (m_proxy)
+            m_proxy->Release();
+        m_proxy = p_proxy;
+        if (m_proxy)
+            m_proxy->Retain();
+    }
+};
 
 #endif

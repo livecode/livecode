@@ -47,7 +47,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef class MCExternalVariable *MCExternalVariableRef;
-typedef MCObjectHandle *MCExternalObjectRef;
+typedef MCObjectProxy* MCExternalObjectRef;
 
 typedef void *MCExternalVariableIteratorRef;
 typedef uint32_t MCExternalValueOptions;

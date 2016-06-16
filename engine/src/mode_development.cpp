@@ -112,11 +112,11 @@ MCLicenseParameters MClicenseparameters =
 
 Boolean MCenvironmentactive = False;
 
-MCObjectHandle *MCmessageboxredirect = nil;
+MCObjectHandle MCmessageboxredirect = nil;
 
 // IM-2013-04-16: [[ BZ 10836 ]] Provide reference to the last "put" source
 // as a global property, the "revMessageBoxLastObject"
-MCObjectHandle *MCmessageboxlastobject = nil;
+MCObjectHandle MCmessageboxlastobject = nil;
 MCNameRef MCmessageboxlasthandler = nil;
 uint32_t MCmessageboxlastline = 0;
 
@@ -674,8 +674,8 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
 	// if the source of the change is not within the message box
 	MCObject *t_msg_box = nil;
-	if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
-		t_msg_box = MCmessageboxredirect -> Get();
+	if (MCmessageboxredirect.IsValid())
+		t_msg_box = MCmessageboxredirect;
 	else
 	{
 		if (MCmbstackptr == nil)
@@ -702,9 +702,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 	
 	if (!t_in_msg_box)
 	{
-		if (MCmessageboxlastobject != nil)
-			MCmessageboxlastobject->Release();
-		MCmessageboxlastobject = t_src_object->gethandle();
+		MCmessageboxlastobject = t_src_object->GetHandle();
 		
 		MCNameDelete(MCmessageboxlasthandler);
 		MCmessageboxlasthandler = nil;
@@ -713,12 +711,11 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
         MCmessageboxlastline = ctxt . GetLine();
 	}
 	
-	if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
+	if (MCmessageboxredirect.IsValid())
 	{
-		if (MCmessageboxredirect -> Get() -> gettype() == CT_FIELD)
+		if (MCmessageboxredirect -> gettype() == CT_FIELD)
 		{
-            MCField *t_msg_field;
-            t_msg_field = (MCField *)MCmessageboxredirect -> Get();
+            MCField *t_msg_field = MCmessageboxredirect.GetAs<MCField>();
             
 			MCStack *t_msg_stack;
 			t_msg_stack = t_msg_field -> getstack();
@@ -749,7 +746,7 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 				t_added = true;
 			}
 			
-			MCmessageboxredirect -> Get() -> message(t_msg_changed);
+			MCmessageboxredirect -> message(t_msg_changed);
 		
 			if (t_added)
 				MCnexecutioncontexts--;
@@ -891,8 +888,6 @@ bool MCModeHasHomeStack(void)
 
 void MCModeFinalize(void)
 {
-    if (MCmessageboxredirect != nil)
-        MCmessageboxredirect -> Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1519,16 +1514,8 @@ void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
     MCObject *t_object;
     t_object = getobj(ctxt, p_target);
     
-    if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
-    {
-        if (t_object == MCmessageboxredirect -> Get())
-            return;
-        
-        MCmessageboxredirect -> Release();
-    }
-    
     if (t_object != NULL)
-        MCmessageboxredirect = t_object -> gethandle();
+        MCmessageboxredirect = t_object -> GetHandle();
     else
         MCmessageboxredirect = nil;
 }
@@ -1543,7 +1530,7 @@ void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_
 
 void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object)
 {
-    if (MCmessageboxlastobject != NULL && MCmessageboxlastobject->Exists())
+    if (MCmessageboxlastobject.IsValid())
     {
         bool t_success;
 
@@ -1552,16 +1539,13 @@ void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object
         t_success = MCStringCreateMutable(0, &t_obj);
         
         if (t_success)
-            t_success = MCmessageboxlastobject->Get()->names(P_LONG_ID, &t_id_value);
+            t_success = MCmessageboxlastobject->names(P_LONG_ID, &t_id_value);
         if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
             t_success = MCStringAppendFormat(*t_obj, "%@,%@,%u", *t_long_id, MCNameGetString(MCmessageboxlasthandler), MCmessageboxlastline);
 
-        if (t_success && MCmessageboxlastobject->Get()->getparentscript() != nil)
+        if (t_success && MCmessageboxlastobject->getparentscript() != nil)
         {
-            MCAutoStringRef t_long_id;
-            MCAutoValueRef t_id_value;
-
-            t_success = MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
+            t_success = MCmessageboxlastobject->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
             if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
                 t_success = MCStringAppendFormat(*t_obj, ",%@", *t_long_id);
         }
@@ -1579,10 +1563,10 @@ void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object
 
 void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
 {
-    if (MCmessageboxredirect != nil && MCmessageboxredirect -> Exists())
+    if (MCmessageboxredirect.IsValid())
     {
         MCAutoValueRef t_long_id;
-        if (MCmessageboxredirect -> Get() -> names(P_LONG_ID, &t_long_id) &&
+        if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
             ctxt . ConvertToString(*t_long_id, r_id))
             return;
     }

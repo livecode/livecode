@@ -1076,6 +1076,14 @@ template <typename T> void inline MCMemoryClear(T&p_struct)
 	MCMemoryClear(&p_struct, sizeof(T));
 }
 
+// Re-initialise an object to its default-constructed state
+template <typename T> void inline MCMemoryReinit(T& p_object)
+{
+    // Run the destructor then default constructor
+    p_object.~T();
+    new (&p_object) T();
+}
+
 extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////

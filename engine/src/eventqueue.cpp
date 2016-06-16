@@ -98,7 +98,10 @@ struct MCEvent
 		
 		struct
 		{
-			MCObjectHandle *target;
+            // This shouldn't really be a raw MCObjectProxy* but we can't embed
+            // the MCObjectHandle RAII class here as it cannot be placed inside
+            // a union.
+            MCObjectProxy* target;
 			union 
 			{
 				struct
@@ -293,18 +296,16 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 			
 	case kMCEventTypeUpdateMenu:
 	{
-		MCObject *t_target;
-		t_target = t_event -> menu . target -> Get();
-		if (t_target != nil)
+		MCObjectHandle t_target = t_event->menu.target;
+		if (t_target.IsValid())
 			t_target->message_with_valueref_args(MCM_mouse_down, kMCEmptyString);
 	}
 	break;
 
 	case kMCEventTypeMenuPick:
 	{
-		MCObject *t_target;
-		t_target = t_event -> menu . target -> Get();
-		if (t_target != nil)
+		MCObjectHandle t_target = t_event->menu.target;
+		if (t_target.IsValid())
             // SN-2014-06-23: pick updated to StringRef
 			t_target->message_with_valueref_args(MCM_menu_pick, t_event -> menu . pick . string);
 	}
@@ -605,12 +606,13 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
 		MCMemoryDeleteArray(p_event -> ime . compose . chars);
 	else if (p_event -> type == kMCEventTypeUpdateMenu)
 	{
-		p_event -> menu . target -> Release();
+		MCObjectHandle t_handle = p_event->menu.target;
+        t_handle.ExternalRelease();
 	}
 	else if (p_event -> type == kMCEventTypeMenuPick)
 	{
-		p_event -> menu . target -> Release();
-        // SN-2014-06-23: pick updated to StringRef
+		MCObjectHandle t_handle = p_event->menu.target;
+        t_handle.ExternalRelease();
 		MCValueRelease(p_event -> menu . pick . string);
 	}
 #ifdef _MOBILE
@@ -1076,23 +1078,25 @@ bool MCEventQueuePostResumeApp(void)
 	return MCEventQueuePost(kMCEventTypeResumeApp, t_event);
 }
 
-bool MCEventQueuePostUpdateMenu(MCObjectHandle *p_target)
+bool MCEventQueuePostUpdateMenu(MCObjectHandle p_target)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeUpdateMenu, t_event))
 		return false;
-	p_target -> Retain();
-	t_event -> menu . target = p_target;
+    
+	t_event -> menu . target = p_target.ExternalRetain();
+    
 	return true;
 }
 
-bool MCEventQueuePostMenuPick(MCObjectHandle *p_target, MCStringRef p_string)
+bool MCEventQueuePostMenuPick(MCObjectHandle p_target, MCStringRef p_string)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeMenuPick, t_event))
 		return false;
-	p_target -> Retain();
-	t_event -> menu . target = p_target;
+
+	t_event -> menu . target = p_target.ExternalRetain();
+    
     // SN-2014-06-23: pick updated to StringRef
 	return MCStringCopy(p_string, t_event -> menu . pick . string);
 }
@@ -1138,7 +1142,7 @@ struct MCTouch
 	MCTouch *next;
 	uint32_t id;
 	int32_t x, y;
-	MCObjectHandle *target;
+	MCObjectHandle target;
 };
 
 static MCTouch *s_touches = nil;
@@ -1166,7 +1170,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 		
 		if (t_touch != nil)
 		{
-			t_target = t_touch -> target -> Get();
+			t_target = t_touch -> target;
 				
 			// MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
 			//   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
@@ -1177,9 +1181,6 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 					s_touches = t_touch -> next;
 				else
 					t_previous_touch -> next = t_touch -> next;
-				
-				// MW-2011-01-28: Looks like a leak to me - make sure we release the object handle!
-				t_touch -> target -> Release();
 				
 				delete t_touch;
 			}
@@ -1192,7 +1193,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
 		t_touch -> id = p_id;
 		
 		t_target = p_stack -> getcurcard() -> hittest(t_touch_loc.x, t_touch_loc.y);
-		t_touch -> target = t_target -> gethandle();
+		t_touch -> target = t_target -> GetHandle();
 		
 		s_touches = t_touch;
 	}
@@ -1202,7 +1203,7 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
         // Touches on widgets are handled differently
         if (t_target->gettype() == CT_WIDGET)
         {
-            MCwidgeteventmanager->event_touch(reinterpret_cast<MCWidget*>(t_target),
+            MCwidgeteventmanager->event_touch(MCObjectCast<MCWidget>(t_target),
                                               p_id, p_phase, t_touch_loc.x, t_touch_loc.y);
         }
         else
@@ -1234,8 +1235,6 @@ static void clear_touches(void)
 		MCTouch *t_touch;
 		t_touch = s_touches;
 		s_touches = s_touches -> next;
-		
-		t_touch -> target -> Release();
 		
 		delete t_touch;
 	}

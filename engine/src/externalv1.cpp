@@ -1220,20 +1220,20 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
     {
         case kMCExternalContextQueryMe:
         {
-            MCObjectHandle *t_handle;
-            t_handle = MCECptr -> GetObject() -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCECptr -> GetObject() -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
         case kMCExternalContextQueryTarget:
         {
-            MCObjectHandle *t_handle;
-            t_handle = MCtargetptr . object -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCtargetptr . object -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
         case kMCExternalContextQueryResult:
@@ -1264,11 +1264,11 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             if (MCdefaultstackptr == nil)
                 return kMCExternalErrorNoDefaultStack;
             
-            MCObjectHandle *t_handle;
-            t_handle = MCdefaultstackptr -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCdefaultstackptr -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
         case kMCExternalContextQueryDefaultCard:
@@ -1276,11 +1276,11 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             if (MCdefaultstackptr == nil)
                 return kMCExternalErrorNoDefaultStack;
             
-            MCObjectHandle *t_handle;
-            t_handle = MCdefaultstackptr -> getcurcard() -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCdefaultstackptr -> getcurcard() -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
             
@@ -2373,10 +2373,10 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 	// If we found the object, attempt to create a handle.
 	if (t_error == kMCExternalErrorNone)
 	{
-		MCObjectHandle *t_handle;
-		t_handle = t_object -> gethandle();
-		if (t_handle != NULL)
-			*(MCExternalObjectRef *)r_handle = t_handle;
+		MCObjectHandle t_handle;
+		t_handle = t_object -> GetHandle();
+		if (t_handle)
+			*(MCExternalObjectRef *)r_handle = t_handle.ExternalRetain();
 		else
 			t_error = kMCExternalErrorOutOfMemory;
 	}
@@ -2389,37 +2389,45 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 
 static MCExternalError MCExternalObjectExists(MCExternalObjectRef p_handle, bool *r_exists)
 {
-	if (p_handle == nil)
+	MCObjectHandle t_handle = p_handle;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 
-	*r_exists = p_handle -> Exists();
+	*r_exists = t_handle.IsValid();
 
 	return kMCExternalErrorNone;
 }
 
 static MCExternalError MCExternalObjectRetain(MCExternalObjectRef p_handle)
 {
-	if (p_handle == nil)
+	MCObjectHandle t_handle = p_handle;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 
-	p_handle -> Retain();
+	t_handle.ExternalRetain();
 
 	return kMCExternalErrorNone;
 }
 
 static MCExternalError MCExternalObjectRelease(MCExternalObjectRef p_handle)
 {
-	if (p_handle == nil)
+	MCObjectHandle t_handle = p_handle;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 
-	p_handle -> Release();
+	t_handle.ExternalRelease();
 
 	return kMCExternalErrorNone;
 }
 
 static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MCExternalDispatchType p_type, const char *p_message, MCExternalVariableRef *p_argv, uint32_t p_argc, MCExternalDispatchStatus *r_status)
 {
-	if (p_object == nil)
+	MCObjectHandle t_object = p_object;
+    
+    if (!t_object.IsBound())
 		return kMCExternalErrorNoObject;
 
 	if (p_message == nil)
@@ -2428,7 +2436,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 	if (p_argv == nil && p_argc > 0)
 		return kMCExternalErrorNoObjectArguments;
 
-	if (!p_object -> Exists())
+	if (!t_object.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
 
 	MCExternalError t_error;
@@ -2462,7 +2470,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 	if (t_error == kMCExternalErrorNone)
 	{
 		Exec_stat t_stat;
-		t_stat = p_object -> Get() -> dispatch(p_type == kMCExternalDispatchCommand ? HT_MESSAGE : HT_FUNCTION, t_message_as_name, t_params);
+		t_stat = t_object -> dispatch(p_type == kMCExternalDispatchCommand ? HT_MESSAGE : HT_FUNCTION, t_message_as_name, t_params);
 		if (r_status != nil)
 			switch(t_stat)
 			{
@@ -2521,7 +2529,9 @@ static Properties parse_property_name(MCStringRef p_name)
 // SN-2014-07-01: [[ ExternalsApiV6 ]] p_name and p_key can now be UTF8-encoded
 static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigned int p_options, const char *p_name, const char *p_key, MCExternalVariableRef p_value)
 {
-	if (p_object == nil)
+	MCObjectHandle t_handle = p_object;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 	
 	if (p_name == nil)
@@ -2530,7 +2540,7 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 	if (p_value == nil)
 		return kMCExternalErrorNoObjectPropertyValue;
 	
-	if (!p_object -> Exists())
+	if (!t_handle.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
     
     MCAutoStringRef t_name;
@@ -2543,8 +2553,7 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 	Properties t_prop;
 	t_prop = parse_property_name(*t_name);
 	
-	MCObject *t_object;
-	t_object = p_object -> Get();
+	MCObject *t_object = t_handle;
 	
 	MCExecContext t_ctxt;
 	
@@ -2594,7 +2603,9 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 // SN-2014-07-01: [[ ExternalsApiV6 ]] p_name and p_key can now be UTF8-encoded
 static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigned int p_options, const char *p_name, const char *p_key, MCExternalVariableRef p_value)
 {
-	if (p_object == nil)
+	MCObjectHandle t_handle = p_object;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 	
 	if (p_name == nil)
@@ -2603,7 +2614,7 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 	if (p_value == nil)
 		return kMCExternalErrorNoObjectPropertyValue;
 	
-	if (!p_object -> Exists())
+	if (!t_handle.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
     
     MCAutoStringRef t_name;
@@ -2616,8 +2627,7 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 	Properties t_prop;
 	t_prop = parse_property_name(*t_name);
 	
-	MCObject *t_object;
-	t_object = p_object -> Get();
+	MCObject *t_object = t_handle;
 	
 	MCExecContext t_ctxt;
 	MCExecValue t_value;
@@ -2671,14 +2681,15 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 
 static MCExternalError MCExternalObjectUpdate(MCExternalObjectRef p_object, unsigned int p_options, void *p_region)
 {
-	if (p_object == nil)
+	MCObjectHandle t_handle = p_object;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 	
-	if (!p_object -> Exists())
+	if (!t_handle.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
 	
-	MCObject *t_object;
-	t_object = p_object -> Get();
+	MCObject *t_object = t_handle;
 
 	// MW-2011-08-19: [[ Layers ]] Nothing to do if object not a control.
 	if (t_object -> gettype() < CT_GROUP)

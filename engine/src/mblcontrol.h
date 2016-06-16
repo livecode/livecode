@@ -510,7 +510,7 @@ private:
 	// The name of the instance
 	MCStringRef m_name;
 	// The instance's owning object (handle)
-	MCObjectHandle *m_object;    
+	MCObjectHandle m_object;
 };
 
 void MCNativeControlInitialize(void);
