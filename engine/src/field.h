@@ -264,6 +264,8 @@ class MCField : public MCControl
 	static MCObjectPropertyTable kPropertyTable;
 public:
 
+    enum { kObjectType = CT_FIELD };
+    
     // SN-2014-11-04: [[ Bug 13934 ]] Refactor the laying out the field when setting properties
     friend MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_id, findex_t &si, findex_t &ei, MCFieldLayoutSettings &r_layout_settings);
     // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
