@@ -1361,4 +1361,16 @@ public:
 		return (MCObjectList *)MCDLlist::remove((MCDLlist *&)list);
 	}
 };
+
+// Utility function for safe(-ish) casting from an MCObject to a derived class
+// without using RTTI.
+template <typename T>
+T* MCObjectCast(MCObject* p_object)
+{
+    // Check that the object's type matches the (static) type of the desired
+    // type. This will break horribly if the desired type has derived types...
+    MCAssert(p_object->gettype() == T::kObjectType);
+    return static_cast<T*> (p_object);
+}
+
 #endif
