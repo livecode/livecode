@@ -2,7 +2,7 @@ Name: return
 
 Type: control structure
 
-Syntax: return [ { value | error } ] <value>
+Syntax: return <value> [ for { value | error } ]
 
 Summary: Stops the current <handler> and <return|returns> a <value> to the
 <handler> that <call|called> the current <handler>.
@@ -27,7 +27,7 @@ Example:
 
 Example:
     function simpleFunction
-       return value 1
+       return 1 for value
     end simpleFunction
     on testSimpleFunction
        local tVar
@@ -37,7 +37,7 @@ Example:
 
 Example:
     function simpleFunction
-       return error 1
+       return 1 for error
     end simpleFunction
     on testSimpleFunction
        local tVar
@@ -56,7 +56,7 @@ Example:
 
 Example:
     command simpleCommand
-       return value 1
+       return 1 for value
     end simpleCommand
     on testSimpleCommand
        simpleCommand
@@ -65,7 +65,7 @@ Example:
 
 Example:
     command simpleCommand
-       return error 1
+       return 1 for error
     end simpleCommand
     on testSimpleCommand
        simpleCommand
@@ -116,12 +116,12 @@ halt the current <message handler> and <pass> the <message> on through the
 <handler> without returning a value, use the <exit> <control structure>
 instead.
 
-The <return error> and <return value> forms of the <return> command allow much
-easier scripting of the distinction between a return value of a handler call,
-and an error return value of a handler call. If a command or function <handler>
-succeeds, then the 'return value' form should be used to return the result of
-the execution to the calling <handler>. If a command or function <handler> fails,
-then the 'return error' form should be used to return an error status to the
+The value and error forms of the <return> command allow much easier scripting of
+the distinction between a return value of a handler call, and an error return
+value of a handler call. If a command or function <handler> succeeds, then the
+'return for value' form should be used to return the result of the execution to
+the calling <handler>. If a command or function <handler> fails, then the
+'return for error' form should be used to return an error status to the
 calling <handler>.
 
 Any callers of handlers using the new error and value forms of the <return>

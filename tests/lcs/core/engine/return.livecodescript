@@ -46,11 +46,11 @@ on TestReturn
 end TestReturn
 
 private command DoReturnValueInCommand pValue
-   return value pValue
+   return pValue for value
 end DoReturnValueInCommand
 
 private function DoReturnValueInFunction pValue
-   return value pValue
+   return pValue for value
 end DoReturnValueInFunction
 
 on TestReturnValue
@@ -70,11 +70,11 @@ on TestReturnValue
 end TestReturnValue
 
 private command DoReturnErrorInCommand pValue
-   return error pValue
+   return pValue for error
 end DoReturnErrorInCommand
 
 private function DoReturnErrorInFunction pValue
-   return error pValue
+   return pValue for error
 end DoReturnErrorInFunction
 
 on TestReturnError

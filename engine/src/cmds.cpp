@@ -1281,18 +1281,6 @@ MCReturn::~MCReturn()
 Parse_stat MCReturn::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-    if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_VALUE) == PS_NORMAL)
-    {
-        kind = kReturnValue;
-    }
-    else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_ERROR) == PS_NORMAL)
-    {
-        kind = kReturnError;
-    }
-    else
-    {
-        kind = kReturn;
-    }
     
     if (sp.parseexp(False, True, &source) != PS_NORMAL)
 	{
@@ -1300,9 +1288,33 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 		(PE_RETURN_BADEXP, sp);
 		return PS_ERROR;
 	}
-	
-    if (kind == kReturn &&
-        sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+    
+    if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_FOR) == PS_NORMAL)
+    {
+        if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_VALUE) == PS_NORMAL)
+        {
+            kind = kReturnValue;
+        }
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_ERROR) == PS_NORMAL)
+        {
+            kind = kReturnError;
+        }
+        else
+        {
+            MCperror->add(PE_RETURN_BADFOR, sp);
+            return PS_ERROR;
+        }
+        
+        Handler_type t_handler_type;
+        t_handler_type = sp.gethandler()->gettype();
+        if (t_handler_type != HT_MESSAGE &&
+            t_handler_type != HT_FUNCTION)
+        {
+            MCperror->add(PE_RETURN_BADFORMINCONTEXT, sp);
+            return PS_ERROR;
+        }
+    }
+    else if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
     {
         kind = kReturnWithUrlResult;
 		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_URL_RESULT) == PS_NORMAL)
@@ -1313,16 +1325,6 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
             return PS_ERROR;
         }
 	}
-    
-    Handler_type t_handler_type;
-    t_handler_type = sp.gethandler()->gettype();
-    if (kind != kReturn &&
-        t_handler_type != HT_MESSAGE &&
-        t_handler_type != HT_FUNCTION)
-    {
-        MCperror->add(PE_RETURN_BADFORMINCONTEXT, sp);
-        return PS_ERROR;
-    }
         
 	return PS_NORMAL;
 }
