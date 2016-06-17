@@ -187,6 +187,32 @@ metadata hilitedCoordinatesColor.label is "Hilited coordinates color"
 metadata hilitedCoordinatesColor.editor is "com.livecode.pi.colorWithAlpha"
 metadata hilitedCoordinatesColor.section is "Colors"
 
+/**
+Summary: Show Y-axis label values with or without decimals
+
+Syntax:
+set the decimalformat of <widget> to <number>
+get the decimalformat of <widget>
+
+Value(number): a number between 0 and 5
+
+Description:
+Setting the decimalformat to a value between 1 and 5 shows
+1 to 5 decimals of the Y-axis label. Missing digits will be padded with zeros
+Decimals will be truncated to the number given in decimalformat
+Setting decimalformat to 0 shows integer values only.
+Default is 0, i.e. only the integer part of the number is shown
+*/
+
+property decimalformat	get getDecimalFormat set setDecimalFormat
+metadata decimalformat.editor is "com.livecode.pi.number"
+metadata decimalformat.label is "decimalformat"
+metadata decimalformat.default is "0"
+metadata decimalformat.step is "1"
+metadata decimalformat.min is "0"
+metadata decimalformat.max is "5"
+
+
 -- private instance variables
 private variable mData as List
 
@@ -235,6 +261,13 @@ private variable mRecalculateGrid as Boolean
 private variable mHilitedCoordinates as List
 private variable mHilitedCoordinatesColor as String
 
+
+// allow formatting of Y-Values to show decimals
+private variable mFormatAsDecimal as Boolean
+private variable mFormat as Number
+
+
+
 -- this handler is called when the widget is created
 public handler OnCreate() returns nothing
 	put [["mon","tue","wed","thu","fri","sat","sun"],[1000,720,889,800,1000,964,1000],[300,340,400,360,301,400,nothing],[0,123,80,10,234,200,0]] into mData
@@ -245,13 +278,16 @@ public handler OnCreate() returns nothing
 	put true into mLabelXShow
 	put true into mLabelYShow
 	put true into mVerticesShow
-	
+
    put my height into mHeight
    put my width into mWidth
 
 	put [] into mHilitedCoordinates
 	put "0,0,0,255" into mHilitedCoordinatesColor
 	put true into mRecalculateAll
+
+	put false into mFormatAsDecimal
+	put 0 into mFormat
 end handler
 
 ----------
@@ -260,7 +296,7 @@ public handler OnPaint() returns nothing
 	-- Set the font prior to doing text measurements
    set the font of this canvas to my font
    set the paint of this canvas to getPaint("axis","stroke")
-	
+
 	if mRecalculateAll then
 		calculateAll()
 	else if mRecalculateGrid then
@@ -280,7 +316,7 @@ public handler OnPaint() returns nothing
 	end if
 
 	drawGraph()
-	
+
 	drawHilited()
 end handler
 
@@ -439,7 +475,7 @@ public handler SetHilitedCoordinates(in pCoordinates as String) returns nothing
 			return
 		end if
 	end if
-	
+
 	if tCoordList is not mHilitedCoordinates then
 		put tCoordList into mHilitedCoordinates
 		put true into mRecalculateAll
@@ -451,7 +487,21 @@ public handler SetHilitedCoordinatesColor(in pColor as String)
 	if pColor is not mHilitedCoordinatesColor then
 		put pColor into mHilitedCoordinatesColor
 		redraw all
-	end if 
+	end if
+end handler
+
+public handler setDecimalFormat(in pNumber as Number) returns nothing
+	if pNumber > 5 then
+		put 5 into pNumber
+	end if
+	put pNumber into mFormat
+	if mFormat = 0 then
+		put false into mFormatAsDecimal
+	else
+		put true into mFormatAsDecimal
+	end if
+	put true into mRecalculateAll
+	redraw all
 end handler
 
 ----------
@@ -550,6 +600,10 @@ public handler getPaint(pLocation, pType) returns Paint
 	return solid paint with stringToColor("255,100,200")
 end handler
 
+public handler getDecimalFormat() returns Number
+	return mFormat
+end handler
+
 -- Call calculateAll if the data changes
 private handler calculateAll()
 	-- Currently the widget makes the assumption that the horizontal points are
@@ -558,27 +612,27 @@ private handler calculateAll()
 
 	-- Use the same number of points for the y-axis
 	put mHPointCount into mVPointCount
-	
+
 	calculateMinMaxes()
-	
+
 	-- Set the y axis point increment
 	put (mYMax - mYMin) / mVPointCount into mYIncrement
-	
+
 	-- Calculate geomentry of any elements that affect the grid space
 	calculateGrid()
-	
+
 	put false into mRecalculateAll
 end handler
 
 private handler calculateMinMaxes() returns nothing
 	variable tYMax as optional Number
 	variable tYMin as optional Number
-	
-	variable tXMax as optional Number	
+
+	variable tXMax as optional Number
 	variable tXMin as optional Number
-	
+
 	variable tLineNumber as Integer
-	
+
 	variable tMax as Number
 	variable tMin as Number
 	repeat with tLineNumber from 2 up to the number of elements in mData
@@ -587,13 +641,13 @@ private handler calculateMinMaxes() returns nothing
 			put tMax into tYMax
 		else
 			put the maximum of tMax and tYMax into tYMax
-		end if 
+		end if
 		put listMin(mData[tLineNumber], false) into tMin
 		if tYMin is nothing then
 			put tMin into tYMin
 		else
 			put the minimum of tMin and tYMin into tYMin
-		end if 
+		end if
 	end repeat
 
 	-- No data
@@ -601,13 +655,13 @@ private handler calculateMinMaxes() returns nothing
 		put 0 into tYMax
 		put 0 into tYMin
 	end if
-	
+
 	put tYMax into mYMax
 	put tYMin into mYMin
-	
+
 	put listMin(mData[1], true) into mXMin
 	put listMax(mData[1], true) into mXMax
-	
+
 	if mHilitedCoordinates is not [] then
 		variable tNumber as Number
 		if mXMin is not nothing then
@@ -616,15 +670,15 @@ private handler calculateMinMaxes() returns nothing
 				put tNumber into mXMin
 			else if tNumber > mXMax then
 				put tNumber into mXMax
-			end if 
+			end if
 		end if
-		
+
 		put mHilitedCoordinates[2] parsed as number into tNumber
 		if tNumber < mYMin then
 			put tNumber into mYMin
 		else if tNumber > mYMax then
 			put tNumber into mYMax
-		end if 
+		end if
 	end if
 end handler
 
@@ -635,7 +689,6 @@ private handler LabelRect(in pLabel as any) returns Rectangle
    else
       put pLabel formatted as string into tString
    end if
-		
 	variable tThisRect as Rectangle
 	measure tString on this canvas into tThisRect
 
@@ -648,39 +701,57 @@ private handler calculateXOverhangs() returns nothing
 
    variable tRightOverhang as Real
    put 0 into tRightOverhang
-	
+
    if mLabelXShow then
       put the width of LabelRect(the head of mData[1]) / 2 into tLeftOverhang
 		put the width of LabelRect(the tail of mData[1]) / 2 into tRightOverhang
 	end if
-      
+
 	put tLeftOverhang into mXLabelLeftOverhang
    put tRightOverhang into mXLabelRightOverhang
 end handler
 
+private handler YLabelRect(in pLabel as Number) returns Rectangle
+	variable tString as String
+
+	if mFormatAsDecimal then
+		put getFormattedYLabel(pLabel) into tString
+	else
+		put the rounded of pLabel into pLabel
+		put pLabel formatted as string into tString
+	end if
+
+	variable tThisRect as Rectangle
+	measure tString on this canvas
+	put the result into tThisRect
+   return tThisRect
+end handler
+
+
 private handler calculateYLabelGeometry() returns nothing
    variable tMaxWidth as Real
    put 0 into tMaxWidth
-	
+
 	variable tTopOverhang as Real
-   put 0 into tTopOverhang	
-	
+   put 0 into tTopOverhang
+
 	variable tBottomOverhang as Real
    put 0 into tBottomOverhang
-	
+
    if mLabelYShow then
       variable tNumber as Real
       variable tString as String
       variable tTextBounds as Rectangle
+		variable tTestString as String
 
       variable tCount as Integer
       repeat with tCount from 1 up to mVPointCount + 1
          put mYMin + mYIncrement * (tCount - 1) into tNumber
-         put LabelRect(tNumber) into tTextBounds
+         	put YLabelRect(tNumber) into tTextBounds
          if the width of tTextBounds > tMaxWidth then
             put the width of tTextBounds into tMaxWidth
          end if
-			
+
 			if tCount is 1 then
 				put the height of tTextBounds / 2 into tBottomOverhang
 			else if tCount is mVPointCount + 1 then
@@ -693,18 +764,60 @@ private handler calculateYLabelGeometry() returns nothing
 	put tTopOverhang into mYLabelTopOverhang
 end handler
 
+-- handler returns numeric string of y label with optional decimals
+private handler getFormattedYLabel(in pLabel as Number) returns String
+
+	variable tString as String
+	-- return Integer string if no decimals
+	if not mFormatAsDecimal then
+		put the rounded of pLabel into pLabel
+		return pLabel formatted as string
+	end if
+
+	variable tOff as Number
+	variable tLength as Number
+	variable tPadd as Number
+	variable tZero as String
+	variable tFraction as String
+	variable tFractionLength as Number
+
+	put "0" into tZero
+	put pLabel formatted as string into tString
+	put the offset of "." in tString into tOff
+	put the number of chars in tString into tLength
+	put char tOff + 1 to tLength of tString into tFraction
+	put the number of chars in tFraction into tFractionLength
+	put tFractionLength - mFormat into tPadd
+
+	if tOff is 0 then
+		put "." after tString
+		repeat mFormat times
+			put tString & tZero into tString
+		end repeat
+	else
+		if tPadd  < 0 then
+			repeat (tPadd * -1) times
+				put tString & tZero into tString
+			end repeat
+		else
+			put char 1 to tOff + mFormat of tString into tString
+		end if
+	end if
+	return tString
+end handler
+
 private handler calculateGridWidth()
 	variable tPadding as Real
 	put gridPadding() into tPadding
-	
+
 	variable tYLabelNeed as Real
 	if mLabelYShow then
 		put mMaxYLabelWidth + tPadding into tYLabelNeed
 	end if
-	
+
 	variable tLabelSpaceLeft as Real
 	put the maximum of mXLabelLeftOverhang and tYLabelNeed into tLabelSpaceLeft
-	
+
 	-- There will be padding either side in addition to the specified padding
 	variable tGridWidth as Real
 	put mWidth - tLabelSpaceLeft - 2 * tPadding into tGridWidth
@@ -714,13 +827,13 @@ end handler
 private handler calculateXLabelGeometry() returns nothing
    variable tMaxHeight as Real
    put 0 into tMaxHeight
-	
+
    variable tXLabelRows as Number
    put 0 into tXLabelRows
 
    if mLabelXShow then
 		put 1 into tXLabelRows
-		
+
       variable tXLabels as List
       put mData[1] into tXLabels
 
@@ -778,15 +891,16 @@ end handler
 
 private handler gridLeft() returns Real
    variable tNeededLeft as Real
-   put the maximum of mMaxYLabelWidth and mXLabelLeftOverhang into tNeededLeft
-   return tNeededLeft + gridPadding()
+   put (the maximum of mMaxYLabelWidth and mXLabelLeftOverhang) into tNeededLeft
+	-- added gridPadding()*2 because the width of y-labels is now correctly calculated
+   return tNeededLeft + gridPadding()*2
 end handler
 
 private handler gridBottom() returns Real
 	variable tNeededBottom as Real
 	variable tPadding as Real
 	put gridPadding() into tPadding
-	
+
 	variable tXLabelsSpace as Real
 	put mXLabelRows * (mMaxXLabelHeight + tPadding) into tXLabelsSpace
 
@@ -805,21 +919,21 @@ end handler
 private handler calculateGrid()
 	-- First calculate the size of any x-axis label overhangs
 	calculateXOverhangs()
-	
+
 	-- Next calculate the geometry (especially max width) of the y-axis labels
 	calculateYLabelGeometry()
-	
+
 	-- Now we know how much horizontal space the grid has, we can work
 	-- out the spacing of the vertical grid lines
 	calculateGridWidth()
-	
+
 	-- Now we can work out how to fit the x-axis labels correctly, so they don't overlap
 	calculateXLabelGeometry()
-	
+
 	-- Now we know how much vertical space the grid has, we can work
 	-- out the rest of the grid geometry.
 	calculateGridRect()
-	
+
 	put false into mRecalculateGrid
 end handler
 
@@ -866,10 +980,10 @@ private handler drawXLabels() returns nothing
          put tRight into tLeft
          add mGridHWidth to tRight
       end if
-      
+
 		put mHeight into tBottom
       put mHeight - ((tCount mod mXLabelRows) + 1) * (mMaxXLabelHeight + gridPadding()) into tTop
-      
+
       put rectangle [tLeft, tTop, tRight, tBottom] into tThisRect
       fill text tLabel at center of tThisRect on this canvas
    end repeat
@@ -879,11 +993,12 @@ private handler drawYLabels() returns nothing
    variable tNumber as Number
    variable tCount as Number
    variable tString as String
+	variable tY as Real
+
 	// Draw the text
 	repeat with tCount from 1 up to mVPointCount + 1
 		put mYIncrement * (tCount - 1) + mYMin into tNumber
-		put the rounded of tNumber formatted as string into tString
-		variable tY as Real
+		put getFormattedYLabel(tNumber) into tString
 		put the bottom of mGridRect - (tCount - 1) * mGridVHeight into tY
 		fill text tString at right of rectangle [0,tY-20,gridLeft() - gridPadding(),tY+20] on this canvas
 	end repeat
@@ -931,19 +1046,19 @@ private handler drawGraph() returns nothing
 			put stringToColor("0,0,0") into tColour
 		end if
 		set the paint of this canvas to solid paint with tColour
-		
+
 		variable tPointIndex as Integer
 		repeat with tPointIndex from 1 up to the number of elements in tDataPoints
 			if tDataPoints[tPointIndex] is not nothing then
 				variable tPointX as Real
 				variable tPointY as Real
 				put the left of mGridRect + ((tPointIndex - 1) * mGridHWidth) into tPointX
-				
+
 				variable tHeightRatio as Real
 				put (tDataPoints[tPointIndex] - mYMin) / (mYMax - mYMin) into tHeightRatio
 				put the bottom of mGridRect - the height of mGridRect * tHeightRatio into tPointY
 				put point [tPointX, tPointY] into tPoint
-				
+
 				if tPointIndex is 1 then
 					move to tPoint on tPath
 				else
@@ -974,20 +1089,20 @@ private handler drawHilited() returns nothing
 
 	variable tX as Real
 	variable tY as Real
-	
+
 	variable tHilitedY as optional Number
 	put mHilitedCoordinates[2] parsed as number into tHilitedY
 	-- At the moment, the Y hilite must be a number (as the data points are assumed to be)
 	if tHilitedY is nothing then
 		return
 	end if
-	
+
 	variable tHilitedX as optional Number
 	put mHilitedCoordinates[1] parsed as number into tHilitedX
-	
-	-- If there is a non-numeric x axis element then we need it to be one of the named x-axis 
+
+	-- If there is a non-numeric x axis element then we need it to be one of the named x-axis
 	-- values. Otherwise we can interpolate the hliited x-coord.
-	if mXMin is nothing or tHilitedX is nothing then 
+	if mXMin is nothing or tHilitedX is nothing then
 		if not mHilitedCoordinates[1] is in mData[1] then
 			return
 		else
@@ -998,28 +1113,28 @@ private handler drawHilited() returns nothing
 	else
 		put the width of mGridRect  * (tHilitedX - mXMin) / (mXMax - mXMin) into tX
 	end if
-		
+
 	put the height of mGridRect * (tHilitedY - mYMin) / (mYMax - mYMin) into tY
-	
+
 	// Draw the graph lines
 	set the antialias of this canvas to false
 	set the stroke width of this canvas to 1
 	set the dashes of this canvas to [4,4]
-	
+
 	variable tColor as String
 	if mHilitedCoordinatesColor is "" then
 		put "0,0,0" into tColor
 	else
 		put mHilitedCoordinatesColor into tColor
-	end if 
-	
+	end if
+
 	set the paint of this canvas to solid paint with stringToColor(tColor)
-	
+
 	variable tPointX as Real
 	variable tPointY as Real
 	put the left of mGridRect + tX into tPointX
 	put the bottom of mGridRect - tY into tPointY
-	
+
 	stroke line path from point [the left of mGridRect, tPointY] to point [tPointX, tPointY] on this canvas
 	stroke line path from point [tPointX, tPointY] to point [tPointX, the bottom of mGridRect] on this canvas
 	set the antialias of this canvas to true
