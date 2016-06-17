@@ -27,7 +27,7 @@ extern int IsDependencyCompile(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 static int s_error_count;
-int s_verbose_level = 1;
+int s_verbose_level;
 int s_is_werror_enabled;
 
 void InitializeReports(void)

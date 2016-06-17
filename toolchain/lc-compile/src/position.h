@@ -67,6 +67,7 @@ void SetOutputBytecodeFile(const char *filename);
 void SetOutputCodeFile(const char *filename);
 void SetOutputGrammarFile(const char *filename);
 void SetManifestOutputFile(const char *filename);
+void SetInterfaceOutputFile(const char *filename);
 void SetTemplateFile(const char *filename);
 void GetOutputFile(const char **r_filename);
     
