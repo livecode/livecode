@@ -4308,7 +4308,7 @@ MCObjectHandle MCObject::GetHandle(void)
 {
 	if (m_weak_proxy == NULL)
 	{
-		m_weak_proxy = new (std::nothrow) MCObjectProxy(this);
+		m_weak_proxy = new MCObjectProxy(this);
         if (!m_weak_proxy)
             return MCObjectHandle(NULL);
 	}
