@@ -4,7 +4,8 @@ Type: message
 
 Syntax: shutdown
 
-Summary: Sent to the <current card of the defaultStack> when the <application> is quitting.
+Summary: Sent to the <current card> of the <defaultStack> when the 
+<application> is quitting.
 
 Associations: stack
 
@@ -29,6 +30,10 @@ In standalones, some care is needed to ensure you receive the <shutdown> message
 
 >*Note:* Applications will not receive this message when running in the IDE.
 
-References: defaultStack (property), closeStack (message), closeCard (message), closeBackground (message), suspend (message), quit (command), pass (control structure), application (glossary), trap (glossary), message (glossary), current card of the defaultStack (glossary)
+References: defaultStack (property), closeStack (message), 
+closeCard (message), closeBackground (message), suspend (message), 
+quit (command), pass (control structure), application (glossary), 
+trap (glossary), message (glossary), current card (glossary), 
+defaultStack (property)
 
 Tags: windowing
