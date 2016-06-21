@@ -561,36 +561,27 @@ on ulGetFormat pUrl,pCount
          end if
          
          break
-      case "ftp"
-         if tFilename is empty then ## require a file or directory path for FTP
-            put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
-            if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
-            exit "ulGetFormat"
-         end if
-         
-         if tPort is empty then put ":21" into tPort
-         
-         if tUser is empty then
-            put "anonymous" into tUser
-            put "guest" into tPass
-         end if
-         
-         break
       case "sftp"
          -- CW-2016-06-11: [[ External driver support ]] SFTP is only supported by external drivers.
          if lvExtDriver is empty then
-            put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
+            put "sftp protocol not supported in this version" into laUrlErrorStatus[pUrl]
             if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
             exit "ulGetFormat"
          end if
+      case "ftp"
+         -- CW-2016-06-11: [[ External driver support ]] This processing is only needed by the internal driver.
+         if lvExtDriver is empty then
+            if tPort is empty then put ":21" into tPort
          
-         if tFilename is empty then ## require a file or directory path for SFTP
-            put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
-            if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
-            exit "ulGetFormat"
+            if tUser is empty then
+               put "anonymous" into tUser
+               put "guest" into tPass
+            end if
          end if
          
-         break
+         if tFilename is not empty then
+            break
+         end if
       default
          put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
          if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
