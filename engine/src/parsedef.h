@@ -616,9 +616,9 @@ enum Handler_type {
 	HT_BEFORE,
 	HT_AFTER,
 
-		HT_PRIVATE,
+    HT_PRIVATE,
 
-		HT_MAX = HT_PRIVATE
+    HT_MAX = HT_PRIVATE
 };
 
 enum If_format {
@@ -1964,6 +1964,10 @@ enum Sugar_constants {
 	SG_REPLACING,
 	SG_PRESERVING,
 	SG_STYLES,
+    
+    SG_URL_RESULT,
+    SG_ERROR,
+    SG_VALUE,
 };
 
 enum Statements {
@@ -2296,6 +2300,13 @@ enum Server_keywords
 	SK_UNICODE,
 	SK_SECURE,
 	SK_HTTPONLY,
+};
+
+enum MCExecResultMode
+{
+    kMCExecResultModeReturn,
+    kMCExecResultModeReturnValue,
+    kMCExecResultModeReturnError,
 };
 
 #include "parseerrors.h"

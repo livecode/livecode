@@ -493,10 +493,29 @@ void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 		return;
 	}
 
-	if (MCresult->eval(ctxt, r_value . valueref_value))
-	{
-        r_value . type = kMCExecValueTypeValueRef;
-		return;
+    if (MCresultmode == kMCExecResultModeReturn)
+    {
+        if (MCresult->eval(ctxt, r_value . valueref_value))
+        {
+            r_value . type = kMCExecValueTypeValueRef;
+            return;
+        }
+    }
+    else if (MCresultmode == kMCExecResultModeReturnValue)
+    {
+        // Our return value is MCresult, and 'the result' gets set to empty.
+        if (MCresult->eval(ctxt, r_value . valueref_value))
+        {
+            r_value . type = kMCExecValueTypeValueRef;
+            ctxt.SetTheResultToEmpty();
+            return;
+        }
+    }
+    else if (MCresultmode == kMCExecResultModeReturnError)
+    {
+        // Our return value is empty, and 'the result' remains as it is.
+        MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
+        return;
     }
     
     ctxt . Throw();

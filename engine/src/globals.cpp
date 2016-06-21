@@ -374,6 +374,7 @@ MCVariable *MCdialogdata;
 MCStringRef MChcstat;
 
 MCVariable *MCresult;
+MCExecResultMode MCresultmode;
 MCVariable *MCurlresult;
 Boolean MCexitall;
 int4 MCretcode;
@@ -1044,6 +1045,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCperror = new MCError();
 	MCeerror = new MCError();
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
+    MCresultmode = kMCExecResultModeReturn;
 
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCurlresult"), MCurlresult);
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdialogdata"), MCdialogdata);
