@@ -1023,6 +1023,10 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		t_old_it = s_external_v1_current_it;
 		s_external_v1_current_it = &t_it;
 		
+		// CW-2016-06-21: [[ Bug 17891 ]] Make sure the 'was_licensed' instance var is true,
+		//   to avoid detecting a previous license check failure.
+		m_was_licensed = true;
+		
 		// Update the current external var.
 		s_current_external = this;
 		
