@@ -27,6 +27,8 @@
 #include <dlfcn.h>
 #endif
 
+#include "script-bytecode.cpp.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This context struct, callbacks and associated functions provide an implementation
