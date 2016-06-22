@@ -173,6 +173,8 @@
 			'src/unicode.cpp',
 			'src/util.cpp',
 			'src/uuid.cpp',
+			'src/patternmatcher.h',
+			'src/patternmatcher.cpp',
 			
 			# Group "Core - Objects"
 			'src/aclip.h',
