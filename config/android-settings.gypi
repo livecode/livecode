@@ -1,4 +1,9 @@
 {
+	'variables':
+	{
+		'c++_std': '<!(echo ${CXX_STD:-c++11})',
+	},
+
 	'cflags':
 	[
 		'-fstrict-aliasing',
@@ -13,7 +18,7 @@
 	
 	'cflags_cc':
 	[
-		'-std=c++03',
+		'-std=<(c++_std)',
 		'-fno-exceptions',
 		'-fno-rtti',
 	],

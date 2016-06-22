@@ -19,7 +19,7 @@ The LiveCode build obeys all of the standard make environment variables, includi
 
 There are some additional environment variables that it understands:
 
-* `CXX_STD`: which version of the C++ standard to use (`gnu++98` is recommended)
+* `CXX_STD`: which version of the C++ standard to use (`c++11` is recommended)
 
 ## Configuring LiveCode
 

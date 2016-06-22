@@ -9,7 +9,7 @@
 		'exe_suffix': '.js',
 		'debug_info_suffix': '.dbg',
 
-		'c++_std': '<!(echo ${CXX_STD:-c++03})',
+		'c++_std': '<!(echo ${CXX_STD:-c++11})',
 	},
 
 	'defines':
