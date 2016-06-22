@@ -5333,9 +5333,9 @@ void MCObjectProxy::Release()
 {
     // Sanity check to prevent over-releases (which implies a bug in the Handle
     // RAII class) as there shouldn't be another way to get a reference.
-    MCAssert(m_refcount != 0);
+    MCAssert(m_refcount >= 0);
     
-    if (--m_refcount == 0)
+    if (--m_refcount <= 0)
 	{
         // The object in question no longer has a proxy object as we are being
         // deleted

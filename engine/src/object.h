@@ -1423,7 +1423,7 @@ public:
     
     ~Handle()
     {
-        if (m_proxy)
+        if (m_proxy != nil)
             m_proxy->Release();
     }
     
@@ -1473,7 +1473,7 @@ public:
     }
     bool operator!=(const Handle& other) const
     {
-        return !operator==(other);
+        return !(operator==(other));
     }
     
     // Performs a retain on the underlying proxy without an RAII wrapper. This
@@ -1505,10 +1505,10 @@ private:
     
     void Set(MCObjectProxy* p_proxy)
     {
-        if (m_proxy)
+        if (m_proxy != nil)
             m_proxy->Release();
         m_proxy = p_proxy;
-        if (m_proxy)
+        if (m_proxy != nil)
             m_proxy->Retain();
     }
 };

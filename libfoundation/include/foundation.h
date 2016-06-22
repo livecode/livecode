@@ -1321,7 +1321,7 @@ template<typename T> void MCMemoryDeleteArray(T* p_array)
 
 // Array deleter that runs the destructor for each element
 template <typename T>
-void MCMemoryDeleteArray(T* p_array, size_t N)
+void MCMemoryDeleteArray(T* p_array, uindex_t N)
 {
     // Run the destructor for each of the elements
     for (size_t i = 0; i < N; i++)
