@@ -45,7 +45,7 @@ typedef struct __MCScriptObject *MCScriptObjectRef;
 
 struct __MCScriptObjectImpl
 {
-    MCObjectHandle *handle;
+    MCObjectHandle handle;
     uint32_t part_id;
 };
 
@@ -70,7 +70,7 @@ bool MCEngineScriptObjectCreate(MCObject *p_object, uint32_t p_part_id, MCScript
     
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(t_script_object);
-    t_script_object_imp -> handle = p_object != nil ? p_object -> gethandle() : nil;
+    t_script_object_imp -> handle = p_object != nil ? p_object -> GetHandle() : MCObjectHandle(nil);
     t_script_object_imp -> part_id = p_part_id;
     
     r_script_object = t_script_object;
@@ -175,10 +175,7 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineEvalScriptObjectExists(MCScriptObjectRe
     __MCScriptObjectImpl *t_script_object_imp;
     t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
     
-    if (t_script_object_imp -> handle != nil)
-        r_exists = t_script_object_imp -> handle -> Exists();
-    else
-        r_exists = false;
+    r_exists = t_script_object_imp->handle.IsValid();
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineEvalScriptObjectDoesNotExist(MCScriptObjectRef p_object, bool& r_not_exists)
@@ -210,13 +207,12 @@ static inline bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, 
 {
 	__MCScriptObjectImpl *t_script_object_imp;
 	t_script_object_imp = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_object);
-	if (t_script_object_imp -> handle == nil ||
-		!t_script_object_imp -> handle -> Exists())
+	if (!t_script_object_imp->handle.IsValid())
 	{
 		return MCEngineThrowScripObjectDoesNotExistError();
 	}
 	
-	r_object = t_script_object_imp->handle->Get();
+	r_object = t_script_object_imp->handle;
 	r_part_id = t_script_object_imp->part_id;
 	return true;
 }
@@ -584,8 +580,7 @@ static void __MCScriptObjectDestroy(MCValueRef p_value)
     __MCScriptObjectImpl *self;
     self = (__MCScriptObjectImpl *)MCValueGetExtraBytesPtr(p_value);
     
-    if (self -> handle != nil)
-        self -> handle -> Release();
+    self->~__MCScriptObjectImpl();
 }
 
 static bool __MCScriptObjectCopy(MCValueRef p_value, bool p_release, MCValueRef& r_copy)

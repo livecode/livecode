@@ -125,6 +125,9 @@ class MCNativeLayer;
 class MCWidget: public MCControl
 {
 public:
+    
+    enum { kObjectType = CT_WIDGET };
+    
 	MCWidget(void);
 	MCWidget(const MCWidget& p_other);
 	virtual ~MCWidget(void);

@@ -297,7 +297,7 @@ public:
 	MCImageNeed *GetNext();
 
 private:
-	MCObjectHandle *m_object;
+	MCObjectHandle m_object;
 	MCImageNeed *m_prev;
 	MCImageNeed *m_next;
 };

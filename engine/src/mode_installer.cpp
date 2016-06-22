@@ -618,7 +618,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr . object -> gethandle();
+			t_context . target = MCtargetptr . object -> GetHandle();
 			t_context . name = *t_item;
             t_context . var = ctxt . GetIt() -> evalvar(ctxt);
 			t_context . stream = nil;
@@ -639,8 +639,6 @@ public:
 			
 			if (t_context . stream != nil)
 				MCS_close(t_context . stream);
-
-			t_context . target -> Release();
 		}
 		else
 			ctxt . SetTheResultToCString("payload not open");
@@ -649,7 +647,7 @@ public:
 private:
 	struct ExtractContext
 	{
-		MCObjectHandle *target;
+		MCObjectHandle target;
 		MCStringRef name;
 		IO_handle stream;
 		MCVariable *var;
@@ -680,10 +678,8 @@ private:
             context -> var ->setvalueref(t_value);
 			MCValueRelease(t_value);
 		}
-
-		MCObject *t_target;
-		t_target = context -> target -> Get();
-		if (t_target != nil)
+        
+		if (context->target.IsValid())
 		{
 			MCParameter p1, p2, p3;
 			p1 . setnext(&p2);
@@ -694,7 +690,7 @@ private:
 
 			MCAutoNameRef t_message_name;
 			/* UNCHECKED */ t_message_name . CreateWithCString("payloadProgress");
-			t_target -> message(t_message_name, &p1);
+			context->target->message(t_message_name, &p1);
 		}
 
 		return true;

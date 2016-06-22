@@ -133,8 +133,8 @@ MCObject::MCObject()
 	// MW-2008-10-25: Initialize the parent script link to NULL
 	parent_script = NULL;
 
-	// MW-2009-08-25: Initialize the handle to NULL
-	m_weak_handle = NULL;
+	// No proxy initially
+	m_weak_proxy = nil;
 
 	// MW-2012-02-14: [[ Fonts ]] Initialize the font to nil.
 	m_font = nil;
@@ -239,8 +239,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	else
 		parent_script = NULL;
 
-	// MW-2009-08-25: Initialize the handle to NULL
-	m_weak_handle = NULL;
+	// No proxy initially
+	m_weak_proxy = nil;
 
 	// MW-2012-02-14: [[ FontRefs ]] As objects start off closed, the font is not
 	//   copied and starts nil.
@@ -282,12 +282,9 @@ MCObject::~MCObject()
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
 	clearfontattrs();
 
-	// Clear and release the handle.
-	if (m_weak_handle != NULL)
-    {
-        m_weak_handle -> Clear();
-		m_weak_handle -> Release();
-    }
+	// This object is going away; invalidate the proxy
+	if (m_weak_proxy != NULL)
+        m_weak_proxy->Clear();
 
 	// MW-2008-10-25: Release the parent script use
 	if (parent_script != NULL)
@@ -885,8 +882,10 @@ Boolean MCObject::del(bool p_check_flag)
     //  back to the list of listened objects; in case we revert the stack to its
     //  saved state, we will now be left with a list of listened-to objects with
     //  no dangling pointers.
-    if (m_weak_handle != nil)
-        m_weak_handle -> Clear();
+    
+    // This object is in the process of being deleted; invalidate any weak refs
+    if (m_weak_proxy != nil)
+        m_weak_proxy->Clear();
     
     // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
     //   (if it is in it!).
@@ -4227,21 +4226,16 @@ MCImage *MCObject::resolveimagename(MCStringRef p_name)
 	return resolveimage(p_name, 0);
 }
 
-MCObjectHandle *MCObject::gethandle(void)
+MCObjectHandle MCObject::GetHandle(void)
 {
-	if (m_weak_handle != NULL)
+	if (m_weak_proxy == NULL)
 	{
-		m_weak_handle -> Retain();
-		return m_weak_handle;
+		m_weak_proxy = new MCObjectProxy(this);
+        if (!m_weak_proxy)
+            return MCObjectHandle(NULL);
 	}
 
-	m_weak_handle = new MCObjectHandle(this);
-	if (m_weak_handle == NULL)
-		return NULL;
-
-	m_weak_handle -> Retain();
-
-	return m_weak_handle;
+	return MCObjectHandle(m_weak_proxy);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5307,43 +5301,52 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectHandle::MCObjectHandle(MCObject *p_object)
-{
-	m_object = p_object;
-	m_references = 0;
-}
-
-MCObjectHandle::~MCObjectHandle(void)
+MCObjectProxy::MCObjectProxy(MCObject *p_object) :
+  m_object(p_object),
+  m_refcount(0)
 {
 }
 
-MCObject *MCObjectHandle::Get(void)
+MCObjectProxy::~MCObjectProxy()
 {
-	return m_object;
+    // Shouldn't get deleted if there are references outstanding!
+    MCAssert(m_refcount == 0);
 }
 
-void MCObjectHandle::Clear(void)
+MCObject* MCObjectProxy::Get()
 {
-	m_object = NULL;
+	MCAssert(m_object != nil);
+    return m_object;
 }
 
-void MCObjectHandle::Retain(void)
+void MCObjectProxy::Clear()
 {
-	m_references += 1;
+	m_object = nil;
 }
 
-void MCObjectHandle::Release(void)
+void MCObjectProxy::Retain()
 {
-	m_references -= 1;
-	if (m_references == 0)
+	m_refcount += 1;
+}
+
+void MCObjectProxy::Release()
+{
+    // Sanity check to prevent over-releases (which implies a bug in the Handle
+    // RAII class) as there shouldn't be another way to get a reference.
+    MCAssert(m_refcount >= 0);
+    
+    if (--m_refcount <= 0)
 	{
-		if (m_object != NULL)
-			m_object -> m_weak_handle = NULL;
+        // The object in question no longer has a proxy object as we are being
+        // deleted
+        if (m_object)
+            m_object->m_weak_proxy = nil;
+        
 		delete this;
 	}
 }
 
-bool MCObjectHandle::Exists(void)
+bool MCObjectProxy::ObjectExists() const
 {
 	return m_object != NULL;
 }
