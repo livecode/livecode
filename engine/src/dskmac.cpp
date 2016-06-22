@@ -205,7 +205,7 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 		AEDisposeDesc(&senderDesc);
 	}
 	else
-		p3val = '\0';
+		p3val[0] = '\0';
     
 	aePtr = ae; //saving the current AE pointer for use in mcs_request_ae()
 	MCParameter p1, p2, p3;
@@ -525,18 +525,18 @@ sysfolders;
 // http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
 
 static sysfolders sysfolderlist[] = {
-    {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
-    {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
-    {&MCN_preferences,'pref', kUserDomain, 'pref'},
-    {&MCN_temporary,'temp', kUserDomain, 'temp'},
-    {&MCN_system, 'macs', kOnAppropriateDisk, 'macs'},
+    {&MCN_desktop, 'desk', OSType(kOnAppropriateDisk), 'desk'},
+    {&MCN_fonts,'font', OSType(kOnAppropriateDisk), 'font'},
+    {&MCN_preferences,'pref', OSType(kUserDomain), 'pref'},
+    {&MCN_temporary,'temp', OSType(kUserDomain), 'temp'},
+    {&MCN_system, 'macs', OSType(kOnAppropriateDisk), 'macs'},
     // TS-2007-08-20: Added to allow a common notion of "home" between all platforms
-    {&MCN_home, 'cusr', kUserDomain, 'cusr'},
+    {&MCN_home, 'cusr', OSType(kUserDomain), 'cusr'},
     // MW-2007-09-11: Added for uniformity across platforms
-    {&MCN_documents, 'docs', kUserDomain, 'docs'},
+    {&MCN_documents, 'docs', OSType(kUserDomain), 'docs'},
     // MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
     // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
-    {&MCN_support, 0, kUserDomain, 'asup'},
+    {&MCN_support, 0, OSType(kUserDomain), 'asup'},
 };
 
 static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
