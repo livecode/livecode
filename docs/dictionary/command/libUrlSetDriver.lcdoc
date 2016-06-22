@@ -4,7 +4,8 @@ Type: command
 
 Syntax: libURLSetDriver <driverName>
 
-Summary: 
+Summary: Sets the driver to be used by the libURL library for network
+transfers.
 
 Associations: Internet library
 
@@ -17,12 +18,17 @@ Platforms: desktop,server,mobile
 Security: network
 
 Parameters:
-driverName: The name of the external driver that libUrl should use for network transfers. Set this to empty to use the internal libUrl functions.
+driverName: The name of the external driver that the <Internet library>
+should use for network transfers. Set this to empty to use the internal
+driver.
 
-The result: The <libURLSetDriver> command puts empty into the result if successful. Otherwise an error string is put into the result
+The result: The <libURLSetDriver> command puts empty into the result if
+successful. Otherwise an error string is put into the result
 
 Description:
-This command causes the libUrl library to call an external library for all network transfer functions. It requires an external libUrl library to be present in the system. More documentation will be available soon. 
+This command causes the libUrl library to call an external library for
+all network transfer functions. It requires an external libUrl library
+to be present in the system. More documentation will be available soon.
 
 >*Important:* The <libURLSetDriver> <command> is part of the 
 > <Internet library>. To ensure that the <command> works in a 
@@ -32,4 +38,7 @@ This command causes the libUrl library to call an external library for all netwo
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: Standalone Application Settings (glossary), standalone application (glossary), command (glossary), application (glossary), Internet library (library), LiveCode custom library (glossary), library (library)
+References: Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+application (glossary), Internet library (library),
+LiveCode custom library (glossary), library (library)
