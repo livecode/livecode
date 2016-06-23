@@ -173,6 +173,7 @@ public:
 	// below to ensure surrogate pairs are handled properly.
 	codepoint_t GetCodepointAtIndex(findex_t p_index)
 	{
+		MCAssert(p_index >= 0);
 		// This assumes that the input string is valid UTF-16 and all surrogate
 		// pairs are matched correctly.
 		unichar_t t_lead, t_tail;
@@ -189,6 +190,8 @@ public:
 	// surrogate pairs when it does so.
 	findex_t IncrementIndex(findex_t p_in)
 	{
+		if (p_in < 0)
+			return 0;
 		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in);
         // SN-2015-09-08: [[ Bug 15895 ]] A field can end with half of a
         //  surrogate pair - in which case the index only increments by 1.
@@ -201,7 +204,7 @@ public:
 	// surrogate pairs when it does so.
 	findex_t DecrementIndex(findex_t p_in)
 	{
-		if (p_in == 0)
+		if (p_in <= 0)
             return 0;
         unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
 		if (0xDC00 <= t_char && t_char < 0xE000)
