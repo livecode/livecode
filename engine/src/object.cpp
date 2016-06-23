@@ -758,12 +758,12 @@ Boolean MCObject::mup(uint2 which, bool p_release)
 		else
 		{
 			MCStack *oldmenu = attachedmenu;
-			closemenu(True, True);
 			MCAutoStringRef t_pick;
 			uint2 menuhistory;
 			MCmenupoppedup = true;
 			oldmenu->menumup(which, &t_pick, menuhistory);
 			MCmenupoppedup = false;
+			closemenu(True, True);
 		}
 		return True;
 	}
