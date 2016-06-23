@@ -29,6 +29,7 @@
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
+		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 	},
 	
 	'target_defaults':
