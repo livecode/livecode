@@ -1666,10 +1666,6 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
-{
-}
-
 MCObject *MCModeGetU3MessageTarget(void)
 {
 	return MCdefaultstackptr -> getcard();

@@ -1391,12 +1391,6 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
-{
-	if (MCmessageboxredirect == object)
-		MCmessageboxredirect = NULL;
-}
-
 bool MCModeShouldQueueOpeningStacks(void)
 {
 	return MCscreen == NULL || MCenvironmentactive;

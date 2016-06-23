@@ -317,8 +317,6 @@ MCObject::~MCObject()
 	MCMemoryDeleteArray(patterns);
 	deletepropsets();
 	MCValueRelease(tooltip);
-	
-	MCModeObjectDestroyed(this);
 
 	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
 	//   all deletions vector through 'scheduledelete'.

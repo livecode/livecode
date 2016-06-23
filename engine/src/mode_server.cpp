@@ -355,10 +355,6 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
-{
-}
-
 bool MCModeShouldQueueOpeningStacks(void)
 {
 	return false;
