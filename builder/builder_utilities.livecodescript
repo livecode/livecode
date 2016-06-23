@@ -1,5 +1,6 @@
 ﻿script "BuilderUtilities"
 constant kMergExtVersion = "2016-5-23"
+constant kTSNetVersion = "2016-06-21"
 
 local sEngineDir
 local sWorkDir
@@ -321,9 +322,13 @@ function builderMergExtVersion
    return kMergExtVersion
 end builderMergExtVersion
 
-function builderMergExtFolder
-   return builderRepoFolder() & slash & "MergExt-Unpacked"
-end builderMergExtFolder
+function builderUnpackFolder
+   return builderRepoFolder() & slash & "Unpacked"
+end builderUnpackFolder
+
+function builderTSNetVersion
+   return kTSNetVersion
+end builderTSNetVersion
 
 -- Folder for storing guide Markdown files that are generated as part
 -- of the build process.
@@ -547,6 +552,35 @@ end macPList
 
 ////////////////////////////////////////////////////////////////////////////////
 
+command builderEnsureZip pZipfile, pURL
+   if there is not a file pZipfile then
+      builderLog "message", "Downloading zip file:" && pZipfile
+      get shell(merge("curl -o '[[pPath]]' '[[pUrl]]'"))
+      if the result is not zero then
+         builderLog "error", "Failed to download zip file:" && it
+         throw "failure"
+      end if
+   end if
+end builderEnsureZip
+
+command builderUnpackZip pZipfile, pFolder
+   builderLog "message", "Unpacking zip file:" && pZipfile
+   
+   if there is a folder pFolder then
+      get shell(merge("rm -r '[[pFolder]]'"))
+   end if
+
+   builderEnsureFolder pFolder
+   
+   get shell(merge("cd '[[pFolder]]' && unzip '[[pZipfile]]'"))
+   if the result is not zero then
+      builderLog "error", "Failed to unzip file:" && it
+      throw "failure"
+   end if
+end builderUnpackZip
+
+////////////////////////////////////////////////////////////////////////////////
+
 private function builderMergExtUrl pMergExtVersion, pEdition
    return "https://downloads.livecode.com/mergext/mergExt_" & pEdition & "_" & pMergExtVersion & ".zip"
 end builderMergExtUrl
@@ -555,42 +589,54 @@ private function builderMergExtDownloadedFilePath pMergExtVersion, pEdition
    return builderRepoFolder() & slash & "MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
 end builderMergExtDownloadedFilePath
 
-command builderMergExtEnsureZip pMergExtVersion, pEdition
-   local tZipPath
-   put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tZipPath
-   if there is not a file tZipPath then
-      local tUrl
-      put builderMergExtUrl(pMergExtVersion, pEdition) into tUrl
-      builderLog "message", "Downloading MergExt to" && tZipPath
-      get shell(merge("curl -o '[[tZipPath]]' '[[tUrl]]'"))
-      if the result is not zero then
-         builderLog "error", "Failed to download MergExt zip:" && it
-         throw "failure"
-      end if
-   end if
-end builderMergExtEnsureZip
-
-command builderMergExtUnpack pMergExtVersion, pEdition
-   builderMergExtEnsureZip pMergExtVersion, pEdition
+private command builderMergExtUnpack pMergExtVersion, pEdition
+   local tFolder
+   put builderUnpackFolder() & slash & "Ext" into tFolder
    
-   local tMergExtFolder
-   local tMergExtZip
-   put builderMergExtFolder() into tMergExtFolder
-   put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tMergExtZip
+   local tZipFile
+   put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tZipFile
    
-   if there is a folder tMergExtFolder then
-      get shell(merge("rm -r '[[tMergExtFolder]]'"))
-   end if
+   local tURL
+   put builderMergExtUrl(pMergExtVersion, pEdition) into tURL
    
-   get shell(merge("mkdir -p '[[tMergExtFolder]]/MergExt'"))
-   if the result is not zero then
-      builderLog "error", "Failed to create MergExt folder:" && it
-      throw "failure"
-   end if
+   builderEnsureZip tZipFile, tURL
    
-   get shell(merge("cd '[[tMergExtFolder]]/MergExt' && unzip '[[tMergExtZip]]'"))
-   if the result is not zero then
-      builderLog "error", "Failed to unzip MergExt bundle:" && it
-      throw "failure"
-   end if
+   builderUnpackZip tZipFile, tFolder
 end builderMergExtUnpack
+
+////////////////////////////////////////////////////////////////////////////////
+
+private function builderTSNetUrl pTSNetVersion
+   return "https://downloads.livecode.com/tsNet/tsNet_" & pTSNetVersion & ".zip"
+end builderTSNetUrl
+
+private function builderTSNetDownloadedFilePath pTSNetVersion
+   return builderRepoFolder() & slash & "tsNet_" & pTSNetVersion & ".zip"
+end builderTSNetDownloadedFilePath
+
+private command builderTSNetUnpack pTSNetVersion
+   local tFolder
+   put builderUnpackFolder() & slash & "Ext" & slash & "tsNet" into tFolder
+   
+   local tZipFile
+   put builderTSNetDownloadedFilePath(pTSNetVersion) into tZipFile
+   
+   local tURL
+   put builderTSNetUrl(pTSNetVersion) into tURL
+   
+   builderEnsureZip tZipFile, tURL
+   
+   builderUnpackZip tZipFile, tFolder
+end builderTSNetUnpack
+
+////////////////////////////////////////////////////////////////////////////////
+
+command builderExtUnpack pEdition
+   -- Ensure that the MergExt bundle is downloaded and unpacked
+   builderMergExtUnpack builderMergExtVersion(), (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
+   
+   if pEdition is "community" then
+      -- Ensure that the TSNet bundle is downloaded and unpacked
+      builderTSNetUnpack builderTSNetVersion()
+   end if
+end builderExtUnpack

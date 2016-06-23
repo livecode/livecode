@@ -30,8 +30,6 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    
    logDebug "top", "----- Begin Emscripten standalone"
    
-   start using stack "revSBLibrary"
-   
    -- FIXME
    --dispatch "revIDEDeployEmscriptenInitialize" to stack "revDeployLibrary"
    

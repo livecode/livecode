@@ -81,14 +81,12 @@ private function linkingIsValid pLinkingOutput
    return true
 end linkingIsValid
    
-constant kBuiltInImplementations = "scriptLibraries Internet"
 constant kIosExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter revsecurity"
 private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    if the platform is not "macos" then
       throw "not supported on this platform"
    end if
    
-   start using stack "revSBLibrary"
    revStandaloneResetWarnings
    
    local tSettings
@@ -109,7 +107,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    revSBUpdateForDependencies tSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
-   revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
+   revSBRemoveInclusions pStack, "ios", tConfirm, tSettings
    
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
@@ -198,9 +196,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    delete the last char of tDrivers
    
    -- Compute the stackfiles list
-   local tStackFiles
    lock messages
-   put revIDEDeployRelativeStackFilesList(pStack) into tStackfiles
+   local tStackFiles
+   revSBRelativeStackFilesList pStack, tStackFiles
    unlock messages
    
    -- Make sure the app-bundle isn't already there
@@ -943,62 +941,33 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- Start with an empty redirects list
    put empty into rRedirects
    
+   local tFiles
+   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFiles
+   
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
    -- If <source> is empty then <target> is a folder that needs to be created.
    --
    local tManifest
    set the itemDelimiter to slash
-   repeat for each line tFile in pFiles
-	  local tResolved
-	  put tFile into tResolved
-      revSBResolveIncludedExternal "ios", tResolved
-      
-      if tResolved is not tFile then
-         -- if this was a !-prefixed external and there is a resources 
-         -- folder, add everything in it to the top level of the app 
-         -- bundle
-         local tResources
-         put item 1 to -2 of tResolved & slash & "resources" into tResources
-         if there is a folder tResources then
-            local tContents
-            put revSBEnumerateFolder(tResources, false) into tContents
-            repeat for each line tLine in tContents
-               -- addToManifest deals with subfolders, but we need them sans slash
-               if tLine ends with "/" then
-                  put char 1 to -2 of tLine into tLine
-               end if
-               addToManifest tResources & slash & tLine, item -1 of tLine, pAppBundle, tManifest, rRedirects
-            end repeat
-         end if
-         put tResolved into tFile
-      end if
-      
+   repeat for each line tFile in tFiles
       local tIsAbsolute, tName
       put tFile begins with "/" or char 2 to 3 of tFile is ":/" into tIsAbsolute
       if the last item of tFile is "*" then
          delete the last item of tFile
       end if
-      if tIsAbsolute then
-         put item -1 of tFile into tName
+      if tFile begins with pBaseFolder then
+         put item (the number of items of pBaseFolder + 1) to -1 of tFile  into tName
       else
-         put tFile into tName
-         put pBaseFolder & slash before tFile
+         put item -1 of tFile into tName
       end if
+      
+      revSBEnsureFolder pAppBundle & slash & item 1 to -2 of tName
       
       -- MW-2010-12-16: [[ Bug 9238 ]] Check for 'resources' folder
       if item 1 of tName is "Resources" then
          throw "iOS apps that contain a top-level folder called 'Resources' will fail to run"
       end if
-      
-      local tDir
-      put empty into tDir
-      repeat for each item tFolder in item 1 to -2 of tName
-         put tFolder & "/" after tDir
-         if there is not a folder (pAppBundle & slash & tDir) then
-            create folder pAppBundle & slash & tDir
-         end if
-      end repeat
       
       addToManifest tFile, tName, pAppBundle, tManifest, rRedirects
    end repeat
@@ -1092,7 +1061,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
       if tSource ends with ".lcext" or tSource ends with ".dylib" then         
          next repeat
       end if
-	  
+      	  
       -- MERG-2015-04-24: [[ TemplateAppMetadata ]] If a template plist is found then we use it instead of the default template.
       if tSource ends with "Info.plist" then
          put url ("binfile:" & tSource) into rPlist
