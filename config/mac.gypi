@@ -124,6 +124,7 @@
 							'-Werror=uninitialized',
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
+							'-Werror=logical-not-parentheses',
 						],
 					},
 				},
