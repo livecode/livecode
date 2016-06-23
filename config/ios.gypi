@@ -189,6 +189,7 @@
 							'-Wall', 
 							'-Wextra', 
 							'-Werror=declaration-after-statement',
+							'-Werror=delete-non-virtual-dtor',
 							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
 							'-Werror=return-type',
