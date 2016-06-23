@@ -1,10 +1,12 @@
 # Very basic Travis CI (http://travis-ci.org) control file that allows
 # some basic Linux-based continuous integration testing (for free).
 
-language: c++
+# We currently support running LiveCode on Ubuntu 14.04 and 16.04
+# See https://docs.travis-ci.com/user/ci-environment/
+sudo: required
+dist: trusty
 
-# Use container-based infrastructure
-sudo: false
+language: c++
 
 # Skip vulcan CI branches
 branches:
