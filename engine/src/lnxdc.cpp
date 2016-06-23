@@ -530,13 +530,13 @@ bool MCScreenDC::loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_f
     MCAutoStringRefAsSysString t_font_file;
     t_font_file . Lock(p_path);
     
-    if (!FcConfigAppFontAddFile(t_config, (FcChar8*)*t_font_file) == FcTrue)
+    if (FcFalse == FcConfigAppFontAddFile(t_config, (FcChar8*)*t_font_file))
         return false;
     
-    if (!FcConfigSetCurrent(t_config))
+    if (FcFalse == FcConfigSetCurrent(t_config))
         return false;
     
-    if (!FcConfigBuildFonts(t_config))
+    if (FcFalse == FcConfigBuildFonts(t_config))
         return false;
     
     // We don't actually do anything with the loaded font handle at the moment.
