@@ -93,6 +93,7 @@ void MCEventQueueClearTouches(void);
 class MCCustomEvent
 {
 public:
+	virtual ~MCCustomEvent() {};
 	virtual void Destroy(void) = 0;
 	virtual void Dispatch(void) = 0;
 };
