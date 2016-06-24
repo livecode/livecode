@@ -30,24 +30,42 @@ end TestSetup
 
 
 on TestMergExtURL
-   local tMergExtVersion
-   put builderMergExtVersion() into tMergExtVersion
+   local tVersion
+   put builderMergExtVersion() into tVersion
    
    local tTestVersion
-   put tMergExtVersion into tTestVersion
+   put tVersion into tTestVersion
    replace "-" with comma in tTestVersion
    put ",0,0,0,0" after tTestVersion
    convert tTestVersion to seconds
-   TestAssert "mergext version is a date", the result is empty
+   TestAssert "mergExt version is a date", the result is empty
    
    repeat for each word tEdition in "Community Indy Business"
       local tURL
-      put builderMergExtUrl(tMergExtVersion,tEdition) into tURL
+      put builderMergExtUrl(tVersion,tEdition) into tURL
       
       get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
-      TestAssert "mergext" && tEdition && "url is valid", it is 200
+      TestAssert "mergExt" && tEdition && "url is valid", it is 200
    end repeat
 end TestMergExtURL
+
+on TestTSNetURL
+   local tVersion
+   put builderTSNetVersion() into tVersion
+   
+   local tTestVersion
+   put tVersion into tTestVersion
+   replace "-" with comma in tTestVersion
+   put ",0,0,0,0" after tTestVersion
+   convert tTestVersion to seconds
+   TestAssert "tsNet version is a date", the result is empty
+   
+   local tURL
+   put builderTSNetUrl(tVersion) into tURL
+   
+   get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
+   TestAssert "tsNet url is valid", it is 200
+end TestTSNetURL
 
 
 on TestTeardown

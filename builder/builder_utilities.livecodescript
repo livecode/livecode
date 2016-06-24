@@ -581,7 +581,7 @@ end builderUnpackZip
 
 ////////////////////////////////////////////////////////////////////////////////
 
-private function builderMergExtUrl pMergExtVersion, pEdition
+function builderMergExtUrl pMergExtVersion, pEdition
    return "https://downloads.livecode.com/mergext/mergExt_" & pEdition & "_" & pMergExtVersion & ".zip"
 end builderMergExtUrl
 
@@ -606,7 +606,7 @@ end builderMergExtUnpack
 
 ////////////////////////////////////////////////////////////////////////////////
 
-private function builderTSNetUrl pTSNetVersion
+function builderTSNetUrl pTSNetVersion
    return "https://downloads.livecode.com/tsNet/tsNet_" & pTSNetVersion & ".zip"
 end builderTSNetUrl
 
