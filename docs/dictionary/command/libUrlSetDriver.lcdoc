@@ -2,7 +2,7 @@ Name: libURLSetDriver
 
 Type: command
 
-Syntax: libURLSetDriver <driverName>
+Syntax: libURLSetDriver <driver>
 
 Summary: Sets the driver to be used by the libURL library for network
 transfers.
@@ -18,9 +18,9 @@ Platforms: desktop,server,mobile
 Security: network
 
 Parameters:
-driverName: The name of the external driver that the <Internet library>
-should use for network transfers. Set this to empty to use the internal
-driver.
+driver: The long id of the stack that provides the external driver that
+the <Internet library> should use for network transfers. Set this to
+empty to use the internal driver.
 
 The result: The <libURLSetDriver> command puts empty into the result if
 successful. Otherwise an error string is put into the result

@@ -13,7 +13,7 @@ on revUnloadLibrary
    
    -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
    # remove external library if in use
-   shutdownExternalDriver
+   unloadExternalDriver
 end revUnloadLibrary
 ---------------------------------------------------------------------
 ##shared locals
@@ -86,14 +86,10 @@ on libUrlSetDriver pDriver
    libUrlResetAll
 
    if lvExtDriver is not pDriver then
-      shutdownExternalDriver
-      # We currently don't have multiple external drivers, so no need to remove the external script.
-      ### remove the script of XX from back
+      unloadExternalDriver
 
       if pDriver is not empty then
-         # Loading of the only external driver is handled elsewhere, so no need to insert the external script here.
-         ### insert the script of XX into back
-         return initExternalDriver(pDriver)
+         return loadExternalDriver(pDriver)
       else
          return empty
       end if
@@ -104,24 +100,35 @@ end libUrlSetDriver
 
 -- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
 ## Send initialise command to external library
-private function initExternalDriver pDriver
-   if ulExtInitDriver(pDriver) is true then
+private function loadExternalDriver pDriver
+   local tResult
+
+   # Add the external driver as a behavior for libURL, the script must already be loaded
+   set the behavior of me to pDriver
+
+   put ulExtInitDriver() into tResult
+   if tResult is empty then
       put ulExtIsBlocking() into lvExtIsBlocking
       put pDriver into lvExtDriver
-      return empty
    else
-      return "Failed to load external driver"
+      # External driver initialisation failed, so don't use it as a behavior for libURL
+      set the behavior of me to empty
    end if
-end initExternalDriver
+
+   return tResult
+end loadExternalDriver
 
 ## Send shutdown command to external library
-private command shutdownExternalDriver
+private command unloadExternalDriver
    if lvExtDriver is not empty then
       ulExtRemoveDriver
       put false into lvExtIsBlocking
       put empty into lvExtDriver
    end if
-end shutdownExternalDriver
+
+   # Stop using the external driver as a behavior for libURL
+   set the behavior of me to empty
+end unloadExternalDriver
 ------------------------------------------------
 on initialiseCustomProps
    # initialise ftp codes prop set
