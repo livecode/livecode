@@ -216,7 +216,7 @@ protected:
 #endif
 
 	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
-	MCObjectHandle *m_parent_stack;
+	MCObjectHandle m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -309,6 +309,9 @@ protected:
 	MCStackObjectVisibility m_hidden_object_visibility;
     
 public:
+    
+    enum { kObjectType = CT_STACK };
+    
 	Boolean menuwindow;
 
 	MCStack(void);

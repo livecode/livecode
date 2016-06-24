@@ -481,13 +481,13 @@ private:
 
 struct MCObjectListenerTarget
 {
-	MCObjectHandle *target;
+	MCObjectHandle target;
 	MCObjectListenerTarget *next;
 };
 
 struct MCObjectListener
 {
-	MCObjectHandle *object;
+	MCObjectHandle object;
 	MCObjectListenerTarget *targets;
 	MCObjectListener *next;
 	double last_update_time;
@@ -524,7 +524,7 @@ static void prune_object_listeners()
         t_next_target = nil;
         
         bool t_listener_exists;
-        t_listener_exists = t_listener -> object -> Exists();
+        t_listener_exists = t_listener -> object . IsValid();
         
         // Check all the listener's targets to see if they can be pruned
         while (t_target != nil)
@@ -534,19 +534,17 @@ static void prune_object_listeners()
             // Prune target from listener target list if listener
             // doesn't exist, or if target doesn't exist, or if target
             // has been set to nil.
-            if (!t_listener_exists || t_target -> target == nil
-                || !t_target -> target -> Exists())
+            if (!t_listener_exists || !t_target->target.IsValid())
             {
                 // Release the target if it hasn't already been released
-                if (t_target -> target != nil)
-                    t_target -> target -> Release();
+                t_target->target = nil;
                 
                 if (t_prev_target != nil)
                     t_prev_target -> next = t_next_target;
                 else
                     t_listener -> targets = t_next_target;
                 
-                MCMemoryDelete(t_target);
+                MCMemoryDestroy(t_target);
             }
             else
             {
@@ -560,14 +558,14 @@ static void prune_object_listeners()
         // listener targets is nil, then prune from listener list.
         if (!t_listener_exists || t_listener -> targets == nil)
         {
-            t_listener -> object -> Release();
+            t_listener -> object = nil;
             
             if (t_prev_listener != nil)
                 t_prev_listener -> next = t_next_listener;
             else
                 s_object_listeners = t_next_listener;
             
-            MCMemoryDelete(t_listener);
+            MCMemoryDestroy(t_listener);
         }
         else
         {
@@ -600,19 +598,19 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 		t_listener = s_object_listeners;
 		while(t_listener != nil)
 		{
-			if (!t_listener -> object -> Exists())
+			if (!t_listener -> object.IsValid())
             {
                 t_changed = true;
             }
 			else
 			{
 				uint8_t t_properties_changed;
-				t_properties_changed = t_listener -> object -> Get() -> propertieschanged();
+				t_properties_changed = t_listener -> object -> propertieschanged();
 				if (t_properties_changed != kMCPropertyChangedMessageTypeNone)
                 {
                     MCExecContext ctxt(nil, nil, nil);
 					MCAutoStringRef t_string;
-					t_listener -> object -> Get() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);			
+					t_listener -> object -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_string);
 					MCObjectListenerTarget *t_target;
 					t_target = nil;
 					MCObjectListenerTarget *t_prev_target;
@@ -627,52 +625,51 @@ void MCInternalObjectListenerMessagePendingListeners(void)
                         
 						while (t_target != nil)
 						{
-                            MCObjectHandle *t_obj;
-                            t_obj = t_target -> target;
+                            MCObjectHandle t_obj = t_target -> target;
                             
                             bool t_target_exists;
-                            t_target_exists = t_obj != nil && t_obj -> Exists();
+                            t_target_exists = t_obj.IsValid();
                             
                             // Make sure the target object still exists and is still
                             // being listened to before sending any messages.
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypePropertyChanged)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_property_changed, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_property_changed, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                             
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlStarted)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_resize_control_started, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_resize_control_started, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeResizeControlEnded)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_resize_control_ended, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditStarted)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_gradient_edit_started, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                                 
                             if (t_target_exists
                                 && t_properties_changed & kMCPropertyChangedMessageTypeGradientEditEnded)
                             {
-                                t_obj -> Get() -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
+                                t_obj -> message_with_valueref_args(MCM_gradient_edit_ended, *t_string);
                                 t_obj = t_target -> target;
-                                t_target_exists = t_obj != nil && t_obj -> Exists();
+                                t_target_exists = t_obj.IsValid();
                             }
                             
                             if (!t_target_exists)
@@ -685,7 +682,7 @@ void MCInternalObjectListenerMessagePendingListeners(void)
 						}
 					}
 					else
-						t_listener -> object -> Get() -> signallistenerswithmessage(t_properties_changed);
+						t_listener -> object -> signallistenerswithmessage(t_properties_changed);
 				}
 				
 				t_prev_listener = t_listener;
@@ -704,8 +701,8 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
 {
     prune_object_listeners();
 	
-    MCObjectHandle *t_current_object;
-	t_current_object = ctxt . GetObject() -> gethandle();
+    MCObjectHandle t_current_object;
+	t_current_object = ctxt . GetObject() -> GetHandle();
 	
 	MCObjectListener *t_prev_listener;
 	t_prev_listener = nil;
@@ -723,14 +720,14 @@ void MCInternalObjectListenerGetListeners(MCExecContext& ctxt, MCStringRef*& r_l
         MCObjectListenerTarget *t_prev_target;
         t_prev_target = nil;
         
-        if (t_listener -> object -> Exists())
+        if (t_listener -> object . IsValid())
         {
             MCAutoValueRef t_long_id;
-            t_listener -> object -> Get() -> names(P_LONG_ID, &t_long_id);
+            t_listener -> object -> names(P_LONG_ID, &t_long_id);
         
             for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
             {
-                if (t_target -> target ==  t_current_object)
+                if (t_target -> target == t_current_object)
                 {
                     ctxt . ConvertToString(*t_long_id, t_string);
                     t_listeners . Push(t_string);
@@ -789,8 +786,8 @@ public:
 		MCObjectListener *t_listener;
 		t_listener = nil;
 		
-		MCObjectHandle *t_object_handle;
-		t_object_handle = t_object -> gethandle();
+		MCObjectHandle t_object_handle;
+		t_object_handle = t_object -> GetHandle();
 		
 		for (t_listener = s_object_listeners; t_listener != nil; t_listener = t_listener -> next)
 		{
@@ -800,14 +797,13 @@ public:
 			
 		if (t_listener == nil)
 		{
-			if (!MCMemoryNew(t_listener))
+			if (!MCMemoryCreate(t_listener))
 			{
                 ctxt . LegacyThrow(EE_NO_MEMORY);
                 return;
 			}
 			t_object -> listen();
 			t_listener -> object = t_object_handle;
-			t_listener -> object -> Retain();
 			t_listener -> targets = nil;
 			t_listener -> next = s_object_listeners;
 			t_listener -> last_update_time = 0.0;
@@ -817,7 +813,7 @@ public:
 		MCObjectListenerTarget *t_target;
 		t_target = nil;
 		
-		MCObjectHandle *t_target_object;
+		MCObjectHandle t_target_object;
         t_target_object = ctxt . GetObjectHandle();
 		
 		for (t_target = t_listener -> targets; t_target != nil; t_target = t_target -> next)
@@ -828,13 +824,12 @@ public:
 		
 		if (t_target == nil)
 		{
-			if (!MCMemoryNew(t_target))
+			if (!MCMemoryCreate(t_target))
 			{
                 ctxt . LegacyThrow(EE_NO_MEMORY);
                 return;
 			}
 			t_target -> target = t_target_object;
-			t_target -> target -> Retain();
 			t_target -> next = t_listener -> targets;
 			t_listener -> targets = t_target;						
         }
@@ -896,8 +891,8 @@ public:
 		MCObjectListener *t_listener;
 		t_listener = nil;
 		
-		MCObjectHandle *t_object_handle;
-		t_object_handle = t_object -> gethandle();
+		MCObjectHandle t_object_handle;
+		t_object_handle = t_object -> GetHandle();
 		
 		for (t_listener = s_object_listeners; t_listener != nil; t_listener = t_listener -> next)
 		{
@@ -913,7 +908,7 @@ public:
 			MCObjectListenerTarget *t_prev_target;
 			t_prev_target = nil;
 			
-			MCObjectHandle *t_target_object;
+			MCObjectHandle t_target_object;
             t_target_object = ctxt . GetObjectHandle();
 			
             bool t_changed;
@@ -922,7 +917,6 @@ public:
 			{
 				if (t_target -> target == t_target_object)
 				{
-                    t_target -> target -> Release();
                     t_target -> target = nil;
                     t_changed = true;
                     break;

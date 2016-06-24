@@ -238,7 +238,7 @@ enum MCSoundAudioCategory
 
 bool MCSystemSoundInitialize();
 bool MCSystemSoundFinalize();
-bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object);
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle p_object);
 bool MCSystemStopSoundChannel(MCStringRef p_channel);
 bool MCSystemPauseSoundChannel(MCStringRef p_channel);
 bool MCSystemResumeSoundChannel(MCStringRef p_channel);

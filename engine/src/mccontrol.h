@@ -375,4 +375,17 @@ public:
     void SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
 
 };
+
+
+// MCControl has lots of derived classes so this (fragile!) specialisation is
+// needed to account for them.
+template <>
+inline MCControl* MCObjectCast<MCControl>(MCObject* p_object)
+{
+    Chunk_term t_type = p_object->gettype();
+    MCAssert(t_type != CT_UNDEFINED && t_type != CT_STACK && t_type != CT_CARD);
+    return static_cast<MCControl*> (p_object);
+}
+
+
 #endif
