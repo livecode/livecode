@@ -874,8 +874,6 @@ Boolean MCObject::del(bool p_check_flag)
         m_is_parent_script = false;
     }
     
-    MCModeObjectDeleted(this);
-    
     // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
     //  MCObject::scheduledelete, since a deleted object is no longer something
     //  we want to listen to. In case we undo the deletion, it will be added

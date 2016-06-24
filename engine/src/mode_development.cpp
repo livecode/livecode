@@ -716,7 +716,6 @@ bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
 		if (MCmessageboxredirect -> gettype() == CT_FIELD)
 		{
             MCField *t_msg_field = MCmessageboxredirect.GetAs<MCField>();
-            
 			MCStack *t_msg_stack;
 			t_msg_stack = t_msg_field -> getstack();
 
@@ -792,10 +791,6 @@ MCStatement *MCModeNewCommand(int2 which)
 MCExpression *MCModeNewFunction(int2 which)
 {
 	return NULL;
-}
-
-void MCModeObjectDeleted(MCObject *object)
-{
 }
 
 bool MCModeShouldQueueOpeningStacks(void)
