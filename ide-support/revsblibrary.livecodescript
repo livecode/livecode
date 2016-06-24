@@ -1867,7 +1867,7 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
-command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
+command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
    
    -- auxiliary_stackfiles key might not be empty
@@ -1894,7 +1894,7 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
          appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
-         appendToStringList "revInternal__LoadLibrary" && tLibraryStack, tStartupScript
+         appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
       end if
    end repeat
    
@@ -1906,30 +1906,18 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
       -- check if there are any supporting libraries for the external and add
       if char 1 of tLibrary is "!" then
          local tExtPath
-         put revSBIncludedExternalPath(pPlatform, char 2 to -1 of tLibrary) into tExtPath
-         
+         put revSBIncludedExternalPath(pTarget, char 2 to -1 of tLibrary) into tExtPath
          if tExtPath is not empty then
             set the itemDelimiter to slash
-            local tCurrentFolder
-            put the folder into tCurrentFolder
-            set the folder to item 1 to -2 of tExtPath
+            delete the last item of tExtPath
             
-            local tFiles
-            put the files into tFiles
-            filter tFiles with "*.livecode*"
-            
-            repeat for each line tLibraryStack in tFiles
-               if there is a stack tLibraryStack then
-                  local tStackName
-                  put the short name of stack tLibraryStack into tStackName
-                  -- if it is not currently loaded then don't add as inclusion
-                  if tLoadedLibraries[tStackName] then
-                     appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
-                     appendToStringList "start using stack" && quote & tStackName & quote, tStartupScript
-                  end if
+            -- only include currently loaded libraries
+            repeat for each key tLibrary in tLoadedLibraries
+               if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
+                  appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
+                  appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
                end if
             end repeat
-            set the folder to tCurrentFolder
          end if
       end if
    end repeat

@@ -648,7 +648,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
-      revSBUpdateDeployParams pStack, tSettings, tDeploy
+      revSBUpdateDeployParams pStack, pTarget, tSettings, tDeploy
       
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]

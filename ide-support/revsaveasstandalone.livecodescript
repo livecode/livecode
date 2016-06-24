@@ -538,7 +538,7 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    put pEngineSourceFile into tDeployInfo["engine"]
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
-   revSBUpdateDeployParams pStackSourceFile, sStandaloneSettingsA, tDeployInfo
+   revSBUpdateDeployParams pStackSourceFile, pTarget, sStandaloneSettingsA, tDeployInfo
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
    -- PM-2015-12-07: [[ Bug 15706 ]] Put double quotes around the stack name to avoid confusing the 

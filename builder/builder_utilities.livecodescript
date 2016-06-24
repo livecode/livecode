@@ -555,7 +555,7 @@ end macPList
 command builderEnsureZip pZipfile, pURL
    if there is not a file pZipfile then
       builderLog "message", "Downloading zip file:" && pZipfile
-      get shell(merge("curl -o '[[pPath]]' '[[pUrl]]'"))
+      get shell(merge("curl -o '[[pZipfile]]' '[[pUrl]]'"))
       if the result is not zero then
          builderLog "error", "Failed to download zip file:" && it
          throw "failure"
@@ -635,7 +635,7 @@ command builderExtUnpack pEdition
    -- Ensure that the MergExt bundle is downloaded and unpacked
    builderMergExtUnpack builderMergExtVersion(), (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
    
-   if pEdition is "community" then
+   if pEdition is not "community" then
       -- Ensure that the TSNet bundle is downloaded and unpacked
       builderTSNetUnpack builderTSNetVersion()
    end if

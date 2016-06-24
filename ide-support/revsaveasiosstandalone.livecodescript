@@ -293,7 +293,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget
    
    local tDeploy
    -- Update the deploy params with script library and extension inclusions
-   revSBUpdateDeployParams pStack, tSettings, tDeploy
+   revSBUpdateDeployParams pStack, pTarget, tSettings, tDeploy
    
    -- Link the engine if a device build
    local tLinkEngineFile
