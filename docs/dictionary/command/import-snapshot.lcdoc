@@ -2,7 +2,7 @@ Name: import snapshot
 
 Type: command
 
-Syntax: import snapshot [from rect[angle] <rectangle>] [of <object>] [(with | without) effects] [at size <width>, <height>]
+Syntax: import snapshot [from rect[angle] <rectangle>] [of <object>] [{with | without} effects] [at size <width>, <height>]
 
 Summary: Creates an <image> of a portion of the screen, portion of a stack or a specific object.
 
