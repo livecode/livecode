@@ -38,6 +38,9 @@ public:
 	// Get the argument at the given index as signed
 	index_t GetSignedArgument(uindex_t index) const;
 	
+	// Get the effective definition kind of the specified index
+	MCScriptDefinitionKind GetEffectiveKindOfDefinition(uindex_t index) const;
+	
 	// Validating Methods
 	//
 	// These methods validate various aspects of the bytecode. The context
@@ -60,16 +63,212 @@ public:
 	void CheckRegister(uindex_t register_index);
 	
 	// Check the given index is a valid constant index
-	void CheckConstant(uindex_t constant_index);
+	void CheckValue(uindex_t constant_index);
 	
 	// Check the given index is a valid handler index. A valid handler index
 	// can be of type Handler, ForeignHandler, or DefinitionGroup (of handlers).
 	void CheckHandler(uindex_t handler_index);
+	
+	// Check the given index is a valid fetchable definition index. A fetchable
+	// definition can be of type Constant, Variable or Handler.
+	void CheckFetchable(uindex_t fetchable_index);
+	
+	// Check the given index is a valid variable definition index.
+	void CheckVariable(uindex_t variable_index);
 	
 	// Reporting Methods
 	//
 	// These report the validation errors which can occur.
 	
 	void ReportInvalidArity(void);
+	void ReportInvalidAddress(void);
+	void ReportInvalidRegister(void);
+	void ReportInvalidValue(void);
+	void ReportInvalidDefinition(void);
+	void ReportInvalidHandler(void);
+	void ReportInvalidFetchable(void);
+	void ReportInvalidVariable(void);
+	
+private:
+	bool m_error;
+	
+	MCScriptModuleRef m_module;
+	
+	MCScriptHandlerDefinition *m_handler;
+	
+	uindex_t m_current_address;
+	
+	uindex_t m_argument_count;
+	MCAutoArray<uindex_t> m_arguments;
+	
+	uindex_t m_register_count;
 };
 
+inline uindex_t MCScriptValidateContext::GetAddress(void) const
+{
+	return m_current_address;
+}
+
+inline uindex_t MCScriptValidateContext::GetArity(void) const
+{
+	return m_argument_count;
+}
+
+inline uindex_t MCScriptValidateContext::GetArgument(uindex_t p_index) const
+{
+	__MCScriptAssert__(p_index < m_argument_count, "invalid argument index");
+	return m_arguments[p_index];
+}
+
+inline index_t MCScriptValidateContext::GetSignedArgument(uindex_t p_index) const
+{
+	uindex_t t_unsigned_value = GetArgument(p_index);
+	
+	index_t t_value;
+	if ((t_unsigned_value & 1) == 0)
+		t_value = (signed)(t_unsigned_value >> 1);
+	else
+		t_value = -(signed)(t_unsigned_value >> 1);
+	
+	return t_value;
+}
+
+inline MCScriptDefinitionKind MCScriptValidateContext::GetEffectiveKindOfDefinition(uindex_t p_index) const
+{
+	__MCScriptAssert__(p_index < m_module->definition_count, "invalid definition index");
+	
+	if (m_module->definitions[p_index]->kind == kMCScriptDefinitionKindExternal)
+	{
+		MCScriptExternalDefinition *t_ext_def =
+			static_cast<MCScriptExternalDefinition *>(m_module->definitions[p_index]);
+		
+		return m_module->imported_definitions[t_ext_def->index].kind;
+	}
+	
+	return m_module->definitions[p_index]->kind;
+}
+
+inline void MCScriptValidateContext::CheckArity(uindex_t p_expected_arity)
+{
+	if (m_error)
+		return;
+	
+	if (GetArity() != p_expected_arity)
+	{
+		ReportInvalidArity();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckAddress(uindex_t p_address)
+{
+	if (m_error)
+		return;
+	
+	if (p_address < m_handler->start_address)
+	{
+		ReportInvalidAddress();
+		return;
+	}
+	
+	if (p_address >= m_handler->finish_address)
+	{
+		ReportInvalidAddress();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckRegister(uindex_t p_register)
+{
+	if (m_error)
+	{
+		return;
+	}
+	
+	if (p_register >= m_register_count)
+	{
+		m_register_count = p_register + 1;
+	}
+}
+
+inline void MCScriptValidateContext::CheckValue(uindex_t p_index)
+{
+	if (m_error)
+	{
+		return;
+	}
+	
+	if (p_index > m_module->value_count)
+	{
+		ReportInvalidValue();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckHandler(uindex_t p_index)
+{
+	if (m_error)
+	{
+		return;
+	}
+	
+	if (p_index > m_module->definition_count)
+	{
+		ReportInvalidDefinition();
+		return;
+	}
+	
+	MCScriptDefinitionKind t_kind =
+		GetEffectiveKindOfDefinition(p_index);
+	if (t_kind != kMCScriptDefinitionKindHandler &&
+		t_kind != kMCScriptDefinitionKindForeignHandler)
+	{
+		ReportInvalidHandler();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckFetchable(uindex_t p_index)
+{
+	if (m_error)
+	{
+		return;
+	}
+	
+	if (p_index > m_module->definition_count)
+	{
+		ReportInvalidDefinition();
+		return;
+	}
+	
+	MCScriptDefinitionKind t_kind =
+	GetEffectiveKindOfDefinition(p_index);
+	if (t_kind != kMCScriptDefinitionKindConstant &&
+		t_kind != kMCScriptDefinitionKindVariable &&
+		t_kind != kMCScriptDefinitionKindHandler &&
+		t_kind != kMCScriptDefinitionKindForeignHandler)
+	{
+		ReportInvalidFetchable();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckVariable(uindex_t p_index)
+{
+	if (m_error)
+	{
+		return;
+	}
+	
+	if (p_index > m_module->definition_count)
+	{
+		ReportInvalidDefinition();
+		return;
+	}
+
+	if (GetEffectiveKindOfDefinition(p_index) != kMCScriptDefinitionKindVariable)
+	{
+		ReportInvalidVariable();
+		return;
+	}
+}

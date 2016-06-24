@@ -36,9 +36,13 @@ public:
 	// Return the argument at the given index as signed
 	index_t GetSignedArgument(uindex_t index) const;
 	
-	// Fetch the constant with the given index from the module's constant
+	// Fetch the type of the given register. The type of the register might
+	// be nil, if it has no assigned type.
+	MCTypeInfoRef GetTypeOfRegister(uindex_t index) const;
+	
+	// Fetch the value with the given index from the module's value
 	// pool.
-	MCValueRef FetchConstant(uindex_t index) const;
+	MCValueRef FetchValue(uindex_t index) const;
 	
 	// Fetch from the given register, the result could be nil if the register is
 	// unassigned.
@@ -47,6 +51,29 @@ public:
 	// Store into the given register, the value can be nil to unassign the
 	// register.
 	void StoreRegister(uindex_t index, MCValueRef value);
+	
+	// Fetch the value from the given constant in the specified instance.
+	MCValueRef FetchConstant(MCScriptInstanceRef instance,
+							 MCScriptConstantDefinition *definition) const;
+	
+	// Fetch the handler value from the given definition in the specified
+	// instance.
+	MCValueRef FetchHandler(MCScriptInstanceRef instance,
+							MCScriptHandlerDefinition *definition);
+	
+	// Fetch the foreign handler value from the given definition in the
+	// specified instance.
+	MCValueRef FetchForeignHandler(MCScriptInstanceRef instance,
+								   MCScriptForeignHandlerDefinition *definition);
+	
+	// Fetch the value from the given variable in the specified instance.
+	MCValueRef FetchVariable(MCScriptInstanceRef instance,
+							 MCScriptVariableDefinition *definition) const;
+	
+	// Store the value into the given variable in the specified instance, the
+	// value can be nil to unassign the variable.
+	void StoreVariable(MCScriptInstanceRef instance,
+					   MCScriptVariableDefinition *definition);
 	
 	// Fetch from the given register, checking that it is assigned. If it is
 	// unassigned a runtime error is reported, in this case 'nil' is returned.
@@ -61,6 +88,18 @@ public:
 	// or does not have a 'bool' or 'Boolean' type, a runtime error is reported.
 	// In this case, 'false' is returned.
 	bool CheckedFetchRegisterAsBool(uindex_t index);
+	
+	// Fetch the given variable in the given instance, checking that it is
+	// assigned. If it is unassigned a runtime error is reporte and 'nil' is
+	// returned.
+	MCValueRef CheckedFetchVariable(MCScriptInstanceRef instance,
+									MCScriptVariableDefinition *definition);
+	
+	// Store into the given variable in the given instance, the value must convert
+	// to the register's type. If it does not, a runtime error is reported.
+	void CheckedStoreVariable(MCScriptInstanceRef instance,
+							  MCScriptVariableDefinition *definition,
+							  MCValueRef value);
 	
 	// Change the instruction pointer to:
 	//   GetAddress() + offset;
@@ -110,6 +149,9 @@ public:
 	
 	// Raise a 'value is not a handler' error.
 	void ThrowNotAHandlerValue(MCValueRef actual_value);
+	
+	// Raise a 'value is not a string' error.
+	void ThrowNotAStringValue(MCValueRef actual_value);
 	
 	//////////
 	

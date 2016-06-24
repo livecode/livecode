@@ -148,13 +148,13 @@ struct MCScriptBytecodeOp_AssignConstant
 	{
 		ctxt.CheckArity(2);
 		ctxt.CheckRegister(ctxt.GetArgument(0));
-		ctxt.CheckConstant(ctxt.GetArgument(1));
+		ctxt.CheckValue(ctxt.GetArgument(1));
 	}
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
 	{
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
-								  ctxt.FetchConstant(ctxt.GetArgument(1)));
+								  ctxt.FetchValue(ctxt.GetArgument(1)));
 	}
 };
 const MCScriptBytecodeOp MCScriptBytecodeOp_AssignConstant::kCode = kMCScriptBytecodeOpAssignConstant;
@@ -437,8 +437,11 @@ struct MCScriptBytecodeOp_InvokeIndirect
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
 		if (ctxt.GetArity() < 2)
+		{
 			ctxt.ReportInvalidArity();
-		
+			return;
+		}
+			
 		ctxt.CheckRegister(ctxt.GetArgument(0));
 		
 		for(uindex_t i = 1; i < ctxt.GetArity(); i++)
@@ -579,3 +582,298 @@ private:
 								  *t_result);
 	}
 };
+
+struct MCScriptBytecodeOp_Fetch
+{
+	// fetch <dst-reg>, <index>
+	//
+	// Fetch the value from definition index <index> and place it into <dst-reg>.
+	// The definition can be a variable, constant, handler or foreign handler.
+	
+	static const MCScriptBytecodeOp kCode;
+	static const char *kName;
+	static const char *kFormat;
+	
+	static void Validate(MCScriptValidateContext& ctxt)
+	{
+		ctxt.CheckArity(2);
+		ctxt.CheckRegister(ctxt.GetArgument(0));
+		ctxt.CheckFetchable(ctxt.GetArgument(1));
+	}
+	
+	static void Execute(MCScriptExecuteContext& ctxt)
+	{
+		// Resolve the import definition chain for the specified definition.
+		MCScriptInstanceRef t_instance = nil;
+		MCScriptDefinition *t_definition = nil;
+		ctxt.ResolveDefinition(ctxt.GetArgument(1),
+							   t_instance,
+							   t_definition);
+		
+		MCValueRef t_value = nil;
+		if (t_definition -> kind == kMCScriptDefinitionKindVariable)
+		{
+			MCScriptVariableDefinition *t_variable_def;
+			t_variable_def = static_cast<MCScriptVariableDefinition *>(t_definition);
+			
+			t_value = ctxt.CheckedFetchVariable(t_instance,
+												t_variable_def);
+		}
+		else if (t_definition -> kind == kMCScriptDefinitionKindConstant)
+		{
+			MCScriptConstantDefinition *t_constant_def;
+			t_constant_def = static_cast<MCScriptConstantDefinition *>(t_definition);
+			
+			t_value = ctxt.FetchConstant(t_instance,
+										 t_constant_def);
+		}
+		else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+		{
+			MCScriptHandlerDefinition *t_handler_def;
+			t_handler_def = static_cast<MCScriptHandlerDefinition *>(t_definition);
+			
+			t_value = ctxt.FetchHandler(t_instance,
+										t_handler_def);
+		}
+		else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
+		{
+			MCScriptForeignHandlerDefinition *t_foreign_handler_def;
+			t_foreign_handler_def = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
+			
+			t_value = ctxt.FetchForeignHandler(t_instance,
+											   t_foreign_handler_def);
+		}
+		
+		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
+								  t_value);
+	}
+};
+const MCScriptBytecodeOp MCScriptBytecodeOp_Fetch::kCode = kMCScriptBytecodeOpFetch;
+const char *MCScriptBytecodeOp_Fetch::kFormat = "rd";
+const char *MCScriptBytecodeOp_Fetch::kName = "fetch";
+
+struct MCScriptBytecodeOp_Store
+{
+	// store <src-reg>, <index>
+	//
+	// Store the value from <src-reg> into the variable definition <index>.
+	
+	static const MCScriptBytecodeOp kCode;
+	static const char *kName;
+	static const char *kFormat;
+	
+	static void Validate(MCScriptValidateContext& ctxt)
+	{
+		ctxt.CheckArity(2);
+		ctxt.CheckRegister(ctxt.GetArgument(0));
+		ctxt.CheckVariable(ctxt.GetArgument(1));
+	}
+	
+	static void Execute(MCScriptExecuteContext& ctxt)
+	{
+		// Resolve the import definition chain for the specified definition.
+		MCScriptInstanceRef t_instance = nil;
+		MCScriptDefinition *t_definition = nil;
+		ctxt.ResolveDefinition(ctxt.GetArgument(1),
+							   t_instance,
+							   t_definition);
+		
+		ctxt.CheckedStoreVariable(t_instance,
+								  static_cast<MCScriptVariableDefinition *>(t_definition),
+								  ctxt.CheckedFetchRegister(ctxt.GetArgument(0)));
+	}
+};
+const MCScriptBytecodeOp MCScriptBytecodeOp_Store::kCode = kMCScriptBytecodeOpStore;
+const char *MCScriptBytecodeOp_Store::kFormat = "rd";
+const char *MCScriptBytecodeOp_Store::kName = "store";
+
+struct MCScriptBytecodeOp_AssignList
+{
+	// assign-list <dst-reg>, <element_1-reg>, ..., <element_n-reg>
+	//
+	// Construct a (proper) list value from <element_i-reg>'s and assign to
+	// <dst-reg>.
+	
+	static const MCScriptBytecodeOp kCode;
+	static const char *kName;
+	static const char *kFormat;
+	
+	static void Validate(MCScriptValidateContext& ctxt)
+	{
+		if (ctxt.GetArity() < 1)
+		{
+			ctxt.ReportInvalidArity();
+			return;
+		}
+		
+		ctxt.CheckRegister(ctxt.GetArgument(0));
+		
+		for(uindex_t t_element_idx = 1; t_element_idx < ctxt.GetArity(); t_element_idx++)
+		{
+			ctxt.CheckRegister(ctxt.GetArgument(t_element_idx));
+		}
+	}
+	
+	static void Execute(MCScriptExecuteContext& ctxt)
+	{
+		MCAutoArray<MCValueRef> t_elements;
+		if (!t_elements.Resize(ctxt.GetArgumentCount() - 1))
+		{
+			ctxt.Rethrow();
+			return;
+		}
+		
+		for(uindex_t t_element_idx = 0; t_element_idx < t_elements.Size(); t_element_idx++)
+		{
+			t_elements[t_element_idx] = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_element_idx + 1));
+			if (t_elements[t_element_idx] == nil)
+				return;
+		}
+		
+		MCAutoProperListRef t_list;
+		if (!MCProperListCreate(t_elements.Ptr(),
+								t_elements.Size(),
+								&t_list))
+		{
+			ctxt.Rethrow();
+			return;
+		}
+		
+		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
+								  *t_list);
+	}
+};
+const MCScriptBytecodeOp MCScriptBytecodeOp_AssignList::kCode = kMCScriptBytecodeOpAssignList;
+const char *MCScriptBytecodeOp_AssignList::kFormat = "rr*";
+const char *MCScriptBytecodeOp_AssignList::kName = "assign_list";
+
+struct MCScriptBytecodeOp_AssignArray
+{
+	// assign-array <dst-reg>, <key_1-reg>, <value_1-reg>, ..., <key_n-reg>, <value_n-reg>
+	//
+	// Construct an array value from the <key_i-reg>, <value_i-reg> pairs and
+	// assign to <dst-reg>.
+	
+	static const MCScriptBytecodeOp kCode;
+	static const char *kName;
+	static const char *kFormat;
+	
+	static void Validate(MCScriptValidateContext& ctxt)
+	{
+		if (ctxt.GetArity() < 1 ||
+			((ctxt.GetArity() - 1) % 2) != 0)
+		{
+			ctxt.ReportInvalidArity();
+			return;
+		}
+		
+		ctxt.CheckRegister(ctxt.GetArgument(0));
+		
+		for(uindex_t t_src_idx = 1; t_src_idx < ctxt.GetArity(); t_src_idx++)
+		{
+			ctxt.CheckRegister(ctxt.GetArgument(t_src_idx));
+		}
+	}
+	
+	static void Execute(MCScriptExecuteContext& ctxt)
+	{
+		MCAutoArrayRef t_array;
+		if (!MCArrayCreateMutable(&t_array))
+		{
+			ctxt.Rethrow();
+			return;
+		}
+		
+		for(uindex_t t_arg_idx = 1; t_arg_idx < ctxt.GetArgumentCount(); t_arg_idx += 2)
+		{
+			MCValueRef t_raw_key;
+			t_raw_key = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_arg_idx));
+			if (t_raw_key == nil)
+			{
+				return;
+			}
+			if (MCValueGetTypeCode(t_raw_key) != kMCValueTypeCodeString)
+			{
+				ctxt.ThrowNotAStringValue(t_raw_key);
+				return;
+			}
+			
+			MCNewAutoNameRef t_key;
+			if (!MCNameCreate(reinterpret_cast<MCStringRef>(t_raw_key),
+							  &t_key))
+			{
+				ctxt.Rethrow();
+				return;
+			}
+			
+			MCValueRef t_value;
+			t_value = ctxt.CheckedFetchRegister(ctxt.GetArgument(t_arg_idx + 1));
+			if (t_value == nil)
+			{
+				return;
+			}
+			
+			if (!MCArrayStoreValue(*t_array,
+								   false,
+								   *t_key,
+								   t_value))
+			{
+				ctxt.Rethrow();
+				return;
+			}
+		}
+		
+		if (!t_array.MakeImmutable())
+		{
+			ctxt.Rethrow();
+			return;
+		}
+		
+		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
+								  *t_array);
+	}
+};
+const MCScriptBytecodeOp MCScriptBytecodeOp_AssignArray::kCode = kMCScriptBytecodeOpAssignArray;
+const char *MCScriptBytecodeOp_AssignArray::kFormat = "rr%";
+const char *MCScriptBytecodeOp_AssignArray::kName = "assign_array";
+
+struct MCScriptBytecodeOp_Reset
+{
+	// reset <reg-1>, ..., <reg-n>
+	//
+	// Reset registers to their default (typed) value. If the type does not have
+	// a default value, the register becomes unassigned.
+	
+	static const MCScriptBytecodeOp kCode;
+	static const char *kName;
+	static const char *kFormat;
+	
+	static void Validate(MCScriptValidateContext& ctxt)
+	{
+		for(uindex_t t_reg_idx = 0; t_reg_idx < ctxt.GetArity(); t_reg_idx++)
+		{
+			ctxt.CheckRegister(ctxt.GetArgument(t_reg_idx));
+		}
+	}
+	
+	static void Execute(MCScriptExecuteContext& ctxt)
+	{
+		for(uindex_t t_arg = 0; t_arg < ctxt.GetArgumentCount(); t_arg++)
+		{
+			MCTypeInfoRef t_type =
+				ctxt.GetTypeOfRegister(ctxt.GetArgument(t_arg));
+			
+			MCValueRef t_default_value = nil;
+			if (t_type != nil)
+			{
+				t_default_value = MCTypeInfoGetDefault(t_type);
+			}
+			
+			ctxt.StoreRegister(ctxt.GetArgument(t_arg),
+							   t_default_value);
+		}
+	}
+};
+const MCScriptBytecodeOp MCScriptBytecodeOp_Reset::kCode = kMCScriptBytecodeOpReset;
+const char *MCScriptBytecodeOp_Reset::kFormat = "r*";
+const char *MCScriptBytecodeOp_Reset::kName = "reset";
