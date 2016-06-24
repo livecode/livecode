@@ -1191,7 +1191,6 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
-class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;

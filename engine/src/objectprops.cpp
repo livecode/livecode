@@ -350,8 +350,8 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 			MCnexecutioncontexts--;
 	}
     
-	if (t_stat == ES_NORMAL)
-		t_stat = MCresult -> eval(ctxt, r_value) ? ES_NORMAL : ES_ERROR;
+    if (t_stat == ES_NORMAL)
+        t_stat = MCresult -> eval(ctxt, r_value) ? ES_NORMAL : ES_ERROR;
     
 	return t_stat;
 }

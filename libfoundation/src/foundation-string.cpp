@@ -1547,7 +1547,10 @@ unichar_t MCStringGetCharAtIndex(MCStringRef self, uindex_t p_index)
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
-    
+
+    /* Allow trailing null character */
+    MCAssert(p_index <= MCStringGetLength(self));
+
     if (__MCStringIsNative(self))
         return MCUnicodeCharMapFromNative(self -> native_chars[p_index]);
     
@@ -1561,7 +1564,10 @@ char_t MCStringGetNativeCharAtIndex(MCStringRef self, uindex_t p_index)
 
     if (__MCStringIsIndirect(self))
         self = self -> string;
-    
+
+    /* Allow trailing null character */
+    MCAssert(p_index <= __MCStringGetLength(self));
+
     if (__MCStringIsNative(self))
         return self -> native_chars[p_index];
     

@@ -112,7 +112,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockMessages, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockErrors, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockMessages, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Set, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, Return, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnValue, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnError, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, CaseSensitive, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, CaseSensitive, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, CenturyCutOff, 1)
@@ -840,9 +842,19 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
     }
 }
 
+void MCEngineExecReturn(MCExecContext& ctxt, MCValueRef p_value)
+{
+	ctxt.SetTheResultToValue(p_value);
+}
+
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef p_value)
 {
-	ctxt . SetTheResultToValue(p_value);
+    ctxt.SetTheReturnValue(p_value);
+}
+
+void MCEngineExecReturnError(MCExecContext& ctxt, MCValueRef p_value)
+{
+    ctxt.SetTheReturnError(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

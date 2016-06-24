@@ -282,6 +282,7 @@ extern MCError *MCeerror;
 extern MCVariable *MCmb;
 extern MCVariable *MCeach;
 extern MCVariable *MCresult;
+extern MCExecResultMode MCresultmode;
 extern MCVariable *MCurlresult;
 extern MCVariable *MCglobals;
 extern MCVariable *MCdialogdata;

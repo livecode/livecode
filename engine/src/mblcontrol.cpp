@@ -92,24 +92,18 @@ void MCNativeControlFinalize(void)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-MCNativeControl::MCNativeControl(void)
+MCNativeControl::MCNativeControl(void) :
+  m_references(1),
+  m_id(++s_last_native_control_id),
+  m_name(MCValueRetain(kMCEmptyString)),
+  m_object(nil),
+  m_next(nil),
+  m_deleted(false)
 {
-	m_references = 1;
-	m_id = ++s_last_native_control_id;
-	m_name = MCValueRetain(kMCEmptyString);
-	m_object = nil;
-	m_next = nil;
-    m_deleted = false;
 }
 
 MCNativeControl::~MCNativeControl(void)
 {
-	if (m_object != nil)
-	{
-		m_object -> Release();
-		m_object = nil;
-	}
-	
 	if (!MCStringIsEmpty(m_name))
 	{
 		MCValueRelease(m_name);
@@ -156,14 +150,12 @@ void MCNativeControl::GetName(MCStringRef &r_name)
 
 MCObject *MCNativeControl::GetOwner(void)
 {
-	return m_object != nil ? m_object -> Get() : nil;
+	return m_object.IsValid() ? m_object.Get() : nil;
 }
 
 void MCNativeControl::SetOwner(MCObject *p_owner)
 {
-	if (m_object != nil)
-		m_object -> Release();
-	m_object = p_owner -> gethandle();
+	m_object = p_owner->GetHandle();
 }
 
 bool MCNativeControl::SetName(MCStringRef p_name)

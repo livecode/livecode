@@ -2108,6 +2108,7 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+        {"error", TT_UNDEFINED, SG_ERROR},
         {"extension", TT_UNDEFINED, SG_EXTENSION},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
 		{"failure", TT_UNDEFINED, SG_FAILURE},
@@ -2161,6 +2162,8 @@ static LT sugar_table[] =
 		{"true", TT_UNDEFINED, SG_TRUE},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
+        {"urlresult", TT_UNDEFINED, SG_URL_RESULT},
+        {"value", TT_UNDEFINED, SG_VALUE},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'wildcard'.
 		{"wildcard", TT_UNDEFINED, SG_WILDCARD},
 		{"without", TT_PREP, PT_WITHOUT},

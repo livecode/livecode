@@ -156,6 +156,9 @@ class MCButton : public MCControl
     bool m_animate_posted : 1;
 
 public:
+    
+    enum { kObjectType = CT_BUTTON };
+    
 	MCButton();
 	MCButton(const MCButton &bref);
 	// virtual functions from MCDLlist

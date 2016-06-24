@@ -1217,10 +1217,10 @@ void MCExecContext::UserThrow(MCStringRef p_error)
 	m_stat = ES_ERROR;
 }
 
-MCObjectHandle *MCExecContext::GetObjectHandle(void) const
+MCObjectHandle MCExecContext::GetObjectHandle(void) const
 {
     extern MCExecContext *MCECptr;
-	return MCECptr->GetObject()->gethandle();
+	return MCECptr->GetObject()->GetHandle();
 }
 
 Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
@@ -1231,36 +1231,55 @@ Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
 void MCExecContext::SetTheResultToEmpty(void)
 {
 	MCresult -> clear();
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToValue(MCValueRef p_value)
 {
-	MCresult -> setvalueref(p_value);
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToStaticCString(const char *p_cstring)
 {
-	MCresult -> sets(p_cstring);
+    MCresult -> sets(p_cstring);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToNumber(real64_t p_value)
 {
     MCresult -> setnvalue(p_value);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::GiveCStringToResult(char *p_cstring)
 {
     MCresult -> grab(p_cstring, MCCStringLength(p_cstring));
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToCString(const char *p_string)
 {
     MCresult -> copysvalue(p_string);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToBool(bool p_bool)
 {
     MCresult -> sets(MCU_btos(p_bool));
+    MCresultmode = kMCExecResultModeReturn;
+}
+
+void MCExecContext::SetTheReturnError(MCValueRef p_value)
+{
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturnError;
+}
+
+void MCExecContext::SetTheReturnValue(MCValueRef p_value)
+{
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturnValue;
 }
 
 // SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update

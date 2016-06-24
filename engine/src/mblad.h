@@ -56,10 +56,10 @@ public:
 	bool SetName(MCStringRef name);
 	
 	// Get the owning object of the instance
-	MCObjectHandle *GetOwner(void);
+	MCObjectHandle GetOwner(void);
 	
 	// Set the owning object of the instance
-	void SetOwner(MCObjectHandle *owner);
+	void SetOwner(MCObjectHandle owner);
         
     // Return a pointer to the next ad
     MCAd *GetNext();
@@ -100,7 +100,7 @@ private:
 	// The name of the instance
 	MCStringRef m_name;
 	// The instance's owning object (handle)
-	MCObjectHandle *m_object;
+	MCObjectHandle m_object;
 };
 
 void MCAdInitialize(void);

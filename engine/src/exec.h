@@ -1335,7 +1335,7 @@ public:
 	{
 		abort();
 	}
-
+    
 	//////////
 
 	bool GetCaseSensitive(void) const
@@ -1687,7 +1687,7 @@ public:
 	}
     
     // MM-2011-02-16: Added ability to get handle of current object
-    MCObjectHandle *GetObjectHandle(void) const;
+    MCObjectHandle GetObjectHandle(void) const;
 	void SetTheResultToEmpty(void);
 	void SetTheResultToValue(MCValueRef p_value);
 	void SetTheResultToStaticCString(const char *p_cstring);
@@ -1695,6 +1695,9 @@ public:
     void GiveCStringToResult(char *p_cstring);
     void SetTheResultToCString(const char *p_string);
     void SetTheResultToBool(bool p_bool);
+    
+    void SetTheReturnValue(MCValueRef p_value);
+    void SetTheReturnError(MCValueRef p_value);
 
     // SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update
     void deletestatements(MCStatement* p_statements);
@@ -3781,7 +3784,9 @@ extern MCExecMethodInfo *kMCEngineExecLockMessagesMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecUnlockErrorsMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecUnlockMessagesMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecSetMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecReturnMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecReturnValueMethodInfo;
+extern MCExecMethodInfo *kMCEngineExecReturnErrorMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetCaseSensitiveMethodInfo;
 extern MCExecMethodInfo *kMCEngineGetCaseSensitiveMethodInfo;
 extern MCExecMethodInfo *kMCEngineSetCenturyCutOffMethodInfo;
@@ -3914,7 +3919,9 @@ void MCEngineExecUnlockErrors(MCExecContext& ctxt);
 void MCEngineExecUnlockMessages(MCExecContext& ctxt);
 
 void MCEngineExecSet(MCExecContext& ctxt, MCProperty *target, MCValueRef value);
+void MCEngineExecReturn(MCExecContext& ctxt, MCValueRef value);
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef value);
+void MCEngineExecReturnError(MCExecContext& ctxt, MCValueRef value);
 
 void MCEngineExecLoadExtension(MCExecContext& ctxt, MCStringRef filename, MCStringRef resource_path);
 void MCEngineExecUnloadExtension(MCExecContext& ctxt, MCStringRef filename);
@@ -4418,7 +4425,6 @@ void MCNetworkExecWriteToSocket(MCExecContext& ctxt, MCNameRef p_socket, MCStrin
 void MCNetworkExecPutIntoUrl(MCExecContext& ctxt, MCValueRef value, int prep, MCUrlChunkPtr url);
 
 void MCNetworkExecReturnValueAndUrlResult(MCExecContext& ctxt, MCValueRef value, MCValueRef url_result);
-void MCNetworkExecReturnValueAndUrlResultFromVar(MCExecContext& ctxt, MCValueRef result, MCVarref *variable);
 
 void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value);
 
