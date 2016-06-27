@@ -2376,10 +2376,10 @@ bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char
             
         case kMCChunkTypeCharacter:
             return MCStringMapGraphemeIndices(self, p_char_range, r_cu_range);
+
+        default:
+            MCUnreachableReturn(false);
     }
-    
-    MCAssert(false);
-    return false;
 }
 
 MC_DLLEXPORT_DEF
@@ -2401,10 +2401,10 @@ bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu
             
         case kMCChunkTypeCharacter:
             return MCStringUnmapGraphemeIndices(self, p_cu_range, r_char_range);
+
+        default:
+	        MCUnreachableReturn(false);
     }
-    
-    MCAssert(false);
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
