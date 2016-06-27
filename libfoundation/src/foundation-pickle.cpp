@@ -197,7 +197,7 @@ static bool MCPickleReadTypeInfoRefContents(MCStreamRef stream, uint8_t p_kind, 
         
         for(uindex_t i = 0; t_success && i < t_param_count; i++)
         {
-            uint8_t t_mode, t_type_kind;;
+            uint8_t t_mode;
             t_success = MCStreamReadUInt8(stream, t_mode) &&
                         MCPickleReadTypeInfoRef(stream, t_param_info[i] . type);
             if (t_success)
@@ -582,9 +582,6 @@ static bool MCPickleWriteCompactUInt(MCStreamRef stream, uint32_t p_value)
 
 static bool MCPickleWriteStringRef(MCStreamRef stream, MCStringRef p_value)
 {
-    bool t_success;
-    t_success = true;
-    
     MCAutoStringRefAsUTF8String t_utf8_string;
     if (!t_utf8_string . Lock(p_value))
         return failed();

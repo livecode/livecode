@@ -52,8 +52,7 @@ struct __MCMemoryInputStream
 
 static void __MCMemoryInputStreamDestroy(MCStreamRef p_stream)
 {
-	__MCMemoryInputStream *self;
-	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
+	/* Do nothing because the memory input stream doesn't own its buffer */
 }
 
 static bool __MCMemoryInputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
@@ -182,16 +181,12 @@ static void __MCMemoryOutputStreamDestroy(MCStreamRef p_stream)
 
 static bool __MCMemoryOutputStreamIsFinished(MCStreamRef p_stream, bool& r_finished)
 {
-	__MCMemoryOutputStream *self;
-	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
     r_finished = false;
 	return true;
 }
 
 static bool __MCMemoryOutputStreamGetAvailableForWrite(MCStreamRef p_stream, size_t& r_amount)
 {
-	__MCMemoryOutputStream *self;
-	self = (__MCMemoryOutputStream *)MCStreamGetExtraBytesPtr(p_stream);
 	r_amount = SIZE_MAX;
 	return true;
 }

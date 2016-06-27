@@ -384,7 +384,6 @@ bool MCChunkIterate(MCRange& x_range, MCStringRef p_string, MCStringRef p_delimi
 
 void MCChunkSkipWord(MCStringRef p_string, MCStringRef p_line_delimiter, MCStringOptions p_options, bool p_skip_spaces, uindex_t& x_offset)
 {
-    uindex_t t_space_offset;
     uindex_t t_length = MCStringGetLength(p_string);
     uindex_t t_end_quote_offset = t_length;
     uindex_t t_end_line_offset = t_length;

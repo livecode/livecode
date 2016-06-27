@@ -175,7 +175,6 @@ bool MCDataConvertStringToData(MCStringRef string, MCDataRef& r_data)
     // AL-2014-12-12: [[ Bug 14208 ]] Implement MCDataConvertStringToData reduce the overhead in
     //  converting from non-native string to data.
     
-    uindex_t t_native_length;
     MCStringRef t_native_copy;
     t_native_copy = nil;
     if (!MCStringNativeCopy(string, t_native_copy))
@@ -833,7 +832,6 @@ MCDataLastIndexOf (MCDataRef self,
 		return false;
 
 	const byte_t *t_haystack = MCDataGetBytePtr (self);
-	uindex_t t_haystack_len = MCDataGetLength (self);
 
 	for (uindex_t t_roffset = t_needle_len - 1;
 	     t_roffset < p_range.length;
