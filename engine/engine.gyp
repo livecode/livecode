@@ -22,7 +22,7 @@
 	'targets':
 	[
 		{
-			'target_name': 'encode_environment_stack',
+			'target_name': 'update_liburl_script',
 			'type': 'none',
 			
 			'variables':
@@ -60,7 +60,7 @@
 			[
 				{
 					'action_name': 'update_liburl',
-					'message': 'Updating environment stack liburl',
+					'message': 'Updating environment stack liburl script',
 					
 					'inputs':
 					[
@@ -83,6 +83,20 @@
 						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
 					],
 				},
+			],
+		},
+		
+		{
+			'target_name': 'encode_environment_stack',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				'update_liburl_script',
+			],
+			
+			'actions':
+			[
 				{
 					'action_name': 'encode_environment_stack',
 					'inputs':

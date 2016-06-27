@@ -32,7 +32,7 @@ on updateLibURL
       quit 2
    end if
    
-   set the script of button "libURL" of card "Launch" of stack tInputStack to tScript
+   set the script of button "revLibURL" of card "Launch" of stack tInputStack to tScript
    if the result is not empty then
       write "Error: could not parse script of libURL:" && the result & return to stderr
       quit 3
