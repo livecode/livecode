@@ -493,7 +493,8 @@ static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void
                 MCPickleRecordInfo *t_record_info;
                 t_record_info = nil;
                 for(int j = 0; t_info -> cases[j] . kind != -1; j++)
-                    if (t_kind == t_info -> cases[j] . kind)
+	                if (t_kind < INT_MAX &&
+	                    int(t_kind) == t_info -> cases[j] . kind)
                     {
                         t_record_info = t_info -> cases[j] . record;
                         break;
