@@ -197,7 +197,7 @@ on getUrl x
       return empty  with urlResult laLoadedUrls[newUrl]
    end if
    if newUrl is among the lines of keys(laLoadingUrls) and (lvAuthBlockBypass is not true) then
-      return "error  URL is currently loading" with empty
+      return "error  URL is currently loading" with urlResult empty
    end if
    if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true then
       put newUrl into lvBlockingUrl
@@ -3235,7 +3235,7 @@ on libUrlFtpUpload pData,pUrl,pMessage
   switch
   case newUrl is among the lines of  the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
-    return "error  URL is currently loading" with empty
+    return "error  URL is currently loading" with urlResult empty
     break
   default
     put pData into laPostData[newUrl]
@@ -3292,7 +3292,7 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
   switch
   case newUrl is among the lines of  the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
-    return "error  URL is currently loading" with empty
+    return "error  URL is currently loading" with urlResult empty
     break
     #case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
   default
@@ -3348,7 +3348,7 @@ on libUrlDownloadToFile pUrl,pFile,pMessage
   switch
   case newUrl is among the lines of  the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
-    return "error  URL is currently loading" with empty
+    return "error  URL is currently loading" with urlResult empty
     break
     #case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
  default
