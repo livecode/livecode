@@ -71,6 +71,12 @@
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
 				],
+
+				'cflags_cc':
+				[
+					# Needs GCC 4.7
+					#'-Werror=delete-non-virtual-dtor',
+				],
 			},
 			{
 				'cflags':
