@@ -121,6 +121,7 @@
 							'-Wextra', 
 							'-Werror=declaration-after-statement',
 							'-Werror=delete-non-virtual-dtor',
+							'-Werror=overloaded-virtual',
 							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
 							'-Werror=return-type',
