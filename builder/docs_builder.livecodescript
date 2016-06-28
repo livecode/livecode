@@ -20,7 +20,7 @@ end docsBuilderProgressUpdate
 command logError pError
    local tContext
    // get the context of the calling handler: <handler>:<linenumber>
-   put item 2 to 3 of line -2 of the executionContexts into tContext
+   put item -2 to -1 of line -2 of the executionContexts into tContext
    builderLog "error", pError, tContext
 end logError
 
