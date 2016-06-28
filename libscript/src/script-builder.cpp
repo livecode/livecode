@@ -25,46 +25,39 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Each bytecode which the VM understands is described by its own 'info' entry.
-//
-// The opcode is that which is used in the module file.
-// The name is the human readable form of the opcode.
-// The format is a string describing the parameters to the opcode:
-//   l - label
-//   r - register (param, local or temp)
-//   c - constant pool index
-//   d - fetchable definition (variable, constant, handler)
-//   h - handler definition
-//   v - variable definition
-// The final char of the description string can be one of:
-//   ? - the final parameter is optional
-//   * - the final parameter type is expected 0-n times
-//   % - the final parameter type is expected 0-2n times
-
-struct MCScriptBytecodeInfo
+// Utility functor, used to fetch the bytecode info struct for the given
+// opcode.
+struct MCScriptDescribeBytecodeOp_Impl
 {
-    MCScriptBytecodeOp opcode;
-    const char *name;
-    const char *format;
+public:
+	template<typename OpStruct>
+	bool Visit(void)
+	{
+		m_info = &OpStruct::Describe();
+		return true;
+	}
+	
+	bool operator() (uindex_t p_opcode,
+					 const MCScriptBytecodeOpInfo*& r_info)
+	{
+		if (p_opcode > kMCScriptBytecodeOp__Last ||
+			!MCScriptBytecodeDispatch((MCScriptBytecodeOp)p_opcode, *this))
+			return false;
+		
+		r_info = m_info;
+		
+		return true;
+	}
+	
+private:
+	const MCScriptBytecodeOpInfo* m_info;
 };
 
-static const MCScriptBytecodeInfo kBytecodeInfo[] =
+static bool MCScriptDescribeBytecodeOp(uindex_t p_opcode,
+									   const MCScriptBytecodeOpInfo*& r_info)
 {
-    { kMCScriptBytecodeOpJump,              "jump",             "l" },
-    { kMCScriptBytecodeOpJumpIfFalse,       "jump_if_false",    "rl" },
-    { kMCScriptBytecodeOpJumpIfTrue,        "jump_if_true",     "rl" },
-    { kMCScriptBytecodeOpAssignConstant,    "assign_constant",  "rc" },
-    { kMCScriptBytecodeOpAssign,            "assign",           "rr" },
-    { kMCScriptBytecodeOpReturn,            "return",           "r?" },
-    { kMCScriptBytecodeOpInvoke,            "invoke",           "hrr*" },
-    { kMCScriptBytecodeOpInvokeIndirect,    "invoke_indirect",  "rrr*" },
-    { kMCScriptBytecodeOpFetch,             "fetch",            "rd" },
-    { kMCScriptBytecodeOpStore,             "store",            "rv" },
-    { kMCScriptBytecodeOpAssignList,        "assign_list",      "rr*" },
-    { kMCScriptBytecodeOpAssignArray,       "assign_array",     "rr%" },
-    { kMCScriptBytecodeOpReset,             "reset",            "rr*" },
-};
-static const int kBytecodeCount = sizeof(kBytecodeInfo) / sizeof(kBytecodeInfo[0]);
+	return MCScriptDescribeBytecodeOp_Impl()(p_opcode, r_info);
+}
 
 //////////
 
@@ -75,7 +68,7 @@ public:
 	bool Visit(void)
 	{
 		if (!MCProperListPushElementOntoBack(*m_bytecode_names,
-											 MCSTR(OpStruct::Name())))
+											 MCSTR(OpStruct::Describe().name)))
 			return false;
 		
 		return true;
@@ -111,10 +104,10 @@ public:
 	template<typename OpStruct>
 	bool Visit(void)
 	{
-		if (0 != strcmp(m_name, OpStruct::Name()))
+		if (0 != strcmp(m_name, OpStruct::Describe().name))
 			return false;
 		
-		m_opcode = (uindex_t)OpStruct::Code();
+		m_opcode = (uindex_t)OpStruct::Describe().code;
 		
 		return true;
 	}
@@ -143,49 +136,24 @@ bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 
 //////////
 
-struct MCScriptDescribeBytecode_Impl
-{
-public:
-	template<typename OpStruct>
-	bool Visit(void)
-	{
-		if (m_opcode != (uindex_t)OpStruct::Code())
-			return false;
-		
-		m_name = OpStruct::Name();
-		
-		return true;
-	}
-	
-	const char *operator () (uindex_t p_opcode)
-	{
-		m_opcode = p_opcode;
-		
-		if (!MCScriptBytecodeForEach(*this))
-			return "<unknown>";
-		
-		return m_name;
-	}
-	
-private:
-	uindex_t m_opcode;
-	const char *m_name;
-};
-
 const char *MCScriptDescribeBytecode(uindex_t p_opcode)
 {
-	return MCScriptDescribeBytecode_Impl()(p_opcode);
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info))
+		return "<unknown>";
+	return t_info->name;
 }
 
 //////////
 
 MCScriptBytecodeParameterType MCScriptDescribeBytecodeParameter(uindex_t p_opcode, uindex_t p_index)
 {
-    if (p_opcode >= kBytecodeCount)
-        return kMCScriptBytecodeParameterTypeUnknown;
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info))
+		return kMCScriptBytecodeParameterTypeUnknown;
     
     const char *t_desc;
-    t_desc = kBytecodeInfo[p_opcode].format;
+    t_desc = t_info->format;
     
     size_t t_desc_length;
     t_desc_length = strlen(t_desc);
@@ -237,11 +205,12 @@ MCScriptBytecodeParameterType MCScriptDescribeBytecodeParameter(uindex_t p_opcod
 
 bool MCScriptCheckBytecodeParameterCount(uindex_t p_opcode, uindex_t p_proposed_count)
 {
-    if (p_opcode >= kBytecodeCount)
-        return false;
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info))
+		return kMCScriptBytecodeParameterTypeUnknown;
 
     const char *t_desc;
-    t_desc = kBytecodeInfo[p_opcode].format;
+    t_desc = t_info->format;
     
     size_t t_desc_length;
     t_desc_length = strlen(t_desc);
@@ -1689,13 +1658,14 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
 {
     if (self == nil || !self -> valid)
         return;
-    
-    if (p_opcode >= kBytecodeCount ||
-        !MCScriptCheckBytecodeParameterCount(p_opcode, p_argument_count))
-    {
-        self -> valid = false;
-        return;
-    }
+	
+	const MCScriptBytecodeOpInfo *t_info;
+	if (!MCScriptDescribeBytecodeOp_Impl()(p_opcode, t_info) ||
+		!MCScriptCheckBytecodeParameterCount(p_opcode, p_argument_count))
+	{
+		self -> valid = false;
+		return;
+	}
     
     for(uindex_t i = 0; i < p_argument_count; i++)
     {
@@ -1756,7 +1726,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
     }
     
     __begin_instruction(self,
-                        kBytecodeInfo[p_opcode] . opcode);
+                        t_info->code);
     for(uindex_t i = 0; i < p_argument_count; i++)
         __continue_instruction(self,
                                p_arguments[i]);

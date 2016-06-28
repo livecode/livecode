@@ -60,10 +60,24 @@ struct MCScriptBytecodeOp_Noop
 };
 */
 
+struct MCScriptBytecodeOpInfo
+{
+	MCScriptBytecodeOp code;
+	const char *name;
+	const char *format;
+};
+
 #define MC_SCRIPT_DEFINE_BYTECODE(NameM, LabelM, FormatM) \
-	static MCScriptBytecodeOp Code(void) { return kMCScriptBytecodeOp##NameM; } \
-	static const char *Name(void) {return LabelM; } \
-	static const char *Format(void) {return FormatM; }
+	static const MCScriptBytecodeOpInfo& Describe(void) \
+	{ \
+		static MCScriptBytecodeOpInfo s_info = \
+		{ \
+			kMCScriptBytecodeOp##NameM, \
+			LabelM, \
+			FormatM \
+		}; \
+		return s_info; \
+	}
 
 struct MCScriptBytecodeOp_Jump
 {
@@ -856,7 +870,6 @@ inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp op,
 
 #undef MC_SCRIPT_DISPATCH_BYTECODE
 
-
 template<class Visitor>
 inline bool MCScriptBytecodeForEach(Visitor& visitor)
 {
@@ -869,3 +882,4 @@ inline bool MCScriptBytecodeForEach(Visitor& visitor)
 	
 	return false;
 }
+
