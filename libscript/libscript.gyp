@@ -16,9 +16,9 @@
 		'libscript_private_headers':
 		[
 			'src/script-private.h',
-			'src/script-bytecode.cpp.h',
-			'src/script-execute.cpp.h',
-			'src/script-validate.cpp.h',
+			'src/script-bytecode.hpp',
+			'src/script-execute.hpp',
+			'src/script-validate.hpp',
 		],
 		
 		'libscript_sources':

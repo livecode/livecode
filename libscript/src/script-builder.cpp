@@ -21,7 +21,7 @@
 
 #include "script-private.h"
 
-#include "script-bytecode.cpp.h"
+#include "script-bytecode.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -71,10 +71,8 @@ static const int kBytecodeCount = sizeof(kBytecodeInfo) / sizeof(kBytecodeInfo[0
 class MCScriptCopyBytecodeNames_Impl
 {
 public:
-	template<
-		typename OpStruct
-	>
-	bool operator () (void)
+	template<typename OpStruct>
+	bool Visit(void)
 	{
 		if (!MCProperListPushElementOntoBack(*m_bytecode_names,
 											 MCSTR(OpStruct::Name())))
@@ -83,7 +81,7 @@ public:
 		return true;
 	}
 	
-	bool Do(MCProperListRef& r_bytecode_names)
+	bool operator() (MCProperListRef& r_bytecode_names)
 	{
 		if (!MCProperListCreateMutable(&m_bytecode_names))
 			return false;
@@ -102,7 +100,7 @@ private:
 
 bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 {
-	return MCScriptCopyBytecodeNames_Impl().Do(r_bytecode_names);
+	return MCScriptCopyBytecodeNames_Impl()(r_bytecode_names);
 }
 
 //////////
@@ -110,10 +108,8 @@ bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 struct MCScriptLookupBytecode_Impl
 {
 public:
-	template<
-		typename OpStruct
-	>
-	bool operator () (void)
+	template<typename OpStruct>
+	bool Visit(void)
 	{
 		if (0 != strcmp(m_name, OpStruct::Name()))
 			return false;
@@ -123,7 +119,7 @@ public:
 		return true;
 	}
 	
-	bool Do(const char *p_name, uindex_t& r_opcode)
+	bool operator() (const char *p_name, uindex_t& r_opcode)
 	{
 		m_name = p_name;
 		
@@ -142,7 +138,7 @@ private:
 
 bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 {
-	return MCScriptLookupBytecode_Impl().Do(p_name, r_opcode);
+	return MCScriptLookupBytecode_Impl()(p_name, r_opcode);
 }
 
 //////////
@@ -150,10 +146,8 @@ bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 struct MCScriptDescribeBytecode_Impl
 {
 public:
-	template<
-		typename OpStruct
-	>
-	bool operator () (void)
+	template<typename OpStruct>
+	bool Visit(void)
 	{
 		if (m_opcode != (uindex_t)OpStruct::Code())
 			return false;
@@ -163,7 +157,7 @@ public:
 		return true;
 	}
 	
-	const char *Do(uindex_t p_opcode)
+	const char *operator () (uindex_t p_opcode)
 	{
 		m_opcode = p_opcode;
 		
@@ -180,7 +174,7 @@ private:
 
 const char *MCScriptDescribeBytecode(uindex_t p_opcode)
 {
-	return MCScriptDescribeBytecode_Impl().Do(p_opcode);
+	return MCScriptDescribeBytecode_Impl()(p_opcode);
 }
 
 //////////

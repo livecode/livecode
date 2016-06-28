@@ -27,7 +27,7 @@
 #include <dlfcn.h>
 #endif
 
-#include "script-bytecode.cpp.h"
+#include "script-bytecode.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 
