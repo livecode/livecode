@@ -1,0 +1,1 @@
+# Deprecate liveResizing and metal stack properties
