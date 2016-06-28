@@ -195,17 +195,11 @@ struct MCScriptBytecodeOp_Return
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
-		if (ctxt.GetArity() == 0)
-		{
-			// Nothing to check
-		}
-		else if (ctxt.GetArity() == 1)
+		ctxt.CheckMaximumArity(1);
+	
+		if (ctxt.GetArity() == 1)
 		{
 			ctxt.CheckRegister(ctxt.GetArgument(0));
-		}
-		else
-		{
-			ctxt.ReportInvalidArity();
 		}
 	}
 	
@@ -233,8 +227,7 @@ struct MCScriptBytecodeOp_Invoke
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
-		if (ctxt.GetArity() < 2)
-			ctxt.ReportInvalidArity();
+		ctxt.CheckMinimumArity(2);
 		
 		ctxt.CheckHandler(ctxt.GetArgument(0));
 		
@@ -279,25 +272,33 @@ struct MCScriptBytecodeOp_Invoke
 		if (t_definition == nil)
 			return;
 		
-		if (t_definition -> kind == kMCScriptDefinitionKindHandler)
+		switch(t_definition->kind)
 		{
-			ctxt.PushFrame(t_instance,
-						   static_cast<MCScriptHandlerDefinition *>(t_definition),
-						   t_result_reg,
-						   t_argument_regs,
-						   t_argument_count);
-		}
-		else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
-		{
-			ctxt.InvokeForeign(t_instance,
-							   static_cast<MCScriptForeignHandlerDefinition *>(t_definition),
+			case kMCScriptDefinitionKindHandler:
+			{
+				ctxt.PushFrame(t_instance,
+							   static_cast<MCScriptHandlerDefinition *>(t_definition),
 							   t_result_reg,
 							   t_argument_regs,
 							   t_argument_count);
-		}
-		else
-		{
-			__MCScriptUnreachable__("invalid definition kind in invoke");
+			}
+			break;
+				
+			case kMCScriptDefinitionKindForeignHandler:
+			{
+				ctxt.InvokeForeign(t_instance,
+								   static_cast<MCScriptForeignHandlerDefinition *>(t_definition),
+								   t_result_reg,
+								   t_argument_regs,
+								   t_argument_count);
+			}
+			break;
+				
+			default:
+			{
+				__MCScriptUnreachable__("invalid definition kind in invoke");
+			}
+			break;
 		}
 	}
 	
@@ -418,11 +419,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
-		if (ctxt.GetArity() < 2)
-		{
-			ctxt.ReportInvalidArity();
-			return;
-		}
+		ctxt.CheckMinimumArity(2);
 			
 		ctxt.CheckRegister(ctxt.GetArgument(0));
 		
@@ -490,25 +487,33 @@ private:
 		MCScriptExecuteContext::InternalHandlerContext *t_context;
 		t_context = (MCScriptExecuteContext::InternalHandlerContext *)MCHandlerGetContext((MCHandlerRef)p_handler);
 		
-		if (t_context -> definition -> kind == kMCScriptDefinitionKindHandler)
+		switch(t_context->definition->kind)
 		{
-			ctxt.PushFrame(t_context -> instance,
-						   static_cast<MCScriptHandlerDefinition *>(t_context -> definition),
-						   p_result_reg,
-						   p_argument_regs,
-						   p_argument_count);
-		}
-		else if (t_context -> definition -> kind == kMCScriptDefinitionKindForeignHandler)
-		{
-			ctxt.InvokeForeign(t_context -> instance,
-							   static_cast<MCScriptForeignHandlerDefinition *>(t_context -> definition),
+			case kMCScriptDefinitionKindHandler:
+			{
+				ctxt.PushFrame(t_context -> instance,
+							   static_cast<MCScriptHandlerDefinition *>(t_context -> definition),
 							   p_result_reg,
 							   p_argument_regs,
 							   p_argument_count);
-		}
-		else
-		{
-			__MCScriptUnreachable__("invalid definition kind in internal handler-ref");
+			}
+			break;
+				
+			case kMCScriptDefinitionKindForeignHandler:
+			{
+				ctxt.InvokeForeign(t_context -> instance,
+								   static_cast<MCScriptForeignHandlerDefinition *>(t_context -> definition),
+								   p_result_reg,
+								   p_argument_regs,
+								   p_argument_count);
+			}
+			break;
+				
+			default:
+			{
+				__MCScriptUnreachable__("invalid definition kind in internal handler-ref");
+			}
+			break;
 		}
 	}
 	
@@ -591,37 +596,51 @@ struct MCScriptBytecodeOp_Fetch
 							   t_definition);
 		
 		MCValueRef t_value = nil;
-		if (t_definition -> kind == kMCScriptDefinitionKindVariable)
+		switch(t_definition->kind)
 		{
-			MCScriptVariableDefinition *t_variable_def;
-			t_variable_def = static_cast<MCScriptVariableDefinition *>(t_definition);
+			case kMCScriptDefinitionKindVariable:
+			{
+				MCScriptVariableDefinition *t_variable_def;
+				t_variable_def = static_cast<MCScriptVariableDefinition *>(t_definition);
+				
+				t_value = ctxt.CheckedFetchVariable(t_instance,
+													t_variable_def);
+			}
+			break;
+				
+			case kMCScriptDefinitionKindConstant:
+			{
+				MCScriptConstantDefinition *t_constant_def;
+				t_constant_def = static_cast<MCScriptConstantDefinition *>(t_definition);
+				
+				t_value = ctxt.FetchConstant(t_instance,
+											 t_constant_def);
+			}
+			break;
 			
-			t_value = ctxt.CheckedFetchVariable(t_instance,
-												t_variable_def);
-		}
-		else if (t_definition -> kind == kMCScriptDefinitionKindConstant)
-		{
-			MCScriptConstantDefinition *t_constant_def;
-			t_constant_def = static_cast<MCScriptConstantDefinition *>(t_definition);
-			
-			t_value = ctxt.FetchConstant(t_instance,
-										 t_constant_def);
-		}
-		else if (t_definition -> kind == kMCScriptDefinitionKindHandler)
-		{
-			MCScriptHandlerDefinition *t_handler_def;
-			t_handler_def = static_cast<MCScriptHandlerDefinition *>(t_definition);
-			
-			t_value = ctxt.FetchHandler(t_instance,
-										t_handler_def);
-		}
-		else if (t_definition -> kind == kMCScriptDefinitionKindForeignHandler)
-		{
-			MCScriptForeignHandlerDefinition *t_foreign_handler_def;
-			t_foreign_handler_def = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
-			
-			t_value = ctxt.FetchForeignHandler(t_instance,
-											   t_foreign_handler_def);
+			case kMCScriptDefinitionKindHandler:
+			{
+				MCScriptHandlerDefinition *t_handler_def;
+				t_handler_def = static_cast<MCScriptHandlerDefinition *>(t_definition);
+				
+				t_value = ctxt.FetchHandler(t_instance,
+											t_handler_def);
+			}
+			break;
+				
+			case kMCScriptDefinitionKindForeignHandler:
+			{
+				MCScriptForeignHandlerDefinition *t_foreign_handler_def;
+				t_foreign_handler_def = static_cast<MCScriptForeignHandlerDefinition *>(t_definition);
+				
+				t_value = ctxt.FetchForeignHandler(t_instance,
+												   t_foreign_handler_def);
+			}
+			break;
+				
+			default:
+				__MCScriptUnreachable__("unexpected definition kind for fetch");
+				break;
 		}
 		
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),

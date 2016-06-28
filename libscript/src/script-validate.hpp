@@ -62,8 +62,14 @@ public:
 	// action. This means there is no need to check return values in a
 	// Validate method.
 	
-	// Check the number of arguments is as specified, returning success or not.
+	// Check the number of arguments is as specified.
 	void CheckArity(uindex_t expected_arity);
+	
+	// Check the number of arguments is at least that specified.
+	void CheckMinimumArity(uindex_t minimum_expected_arity);
+	
+	// Check the number of arguments is at most that specified.
+	void CheckMaximumArity(uindex_t maximum_expected_arity);
 	
 	// Check the given address is valid - i.e. is within the current handler
 	// and targets the start of an opcode.
