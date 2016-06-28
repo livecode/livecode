@@ -125,7 +125,8 @@ bool MCGRasterCreateCGDataProvider(const MCGRaster &p_raster, const MCGIntegerRe
 	if (!p_copy)
 	{
 		t_dst_stride = p_raster.stride;
-		t_success = nil != (t_data_provider = CGDataProviderCreateWithData(nil, t_src_ptr, t_height * p_raster.stride, nil));
+		t_data_provider = CGDataProviderCreateWithData(nil, t_src_ptr, t_height * p_raster.stride, nil);
+		t_success = t_data_provider != nil;
 	}
 	else
 	{
@@ -158,7 +159,10 @@ bool MCGRasterCreateCGDataProvider(const MCGRaster &p_raster, const MCGIntegerRe
 			}
 		}
 		if (t_success)
-			t_success = nil != (t_data_provider = CGDataProviderCreateWithData(nil, t_buffer, t_buffer_size, __CGDataProviderDeallocate));
+		{
+			t_data_provider = CGDataProviderCreateWithData(nil, t_buffer, t_buffer_size, __CGDataProviderDeallocate);
+			t_success = t_data_provider != nil;
+		}
 		
 		if (!t_success)
 			MCMemoryDeallocate(t_buffer);
@@ -193,7 +197,10 @@ bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_
 	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, t_alpha);
 	
 	if (t_success)
-		t_success = nil != (t_image = CGImageCreate(p_src_rect.size.width, p_src_rect.size.height, 8, 32, t_dst_stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault));
+	{
+		t_image = CGImageCreate(p_src_rect.size.width, p_src_rect.size.height, 8, 32, t_dst_stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault);
+		t_success = t_image != nil;
+	}
 	
 	CGDataProviderRelease(t_data_provider);
 	
@@ -233,7 +240,8 @@ bool MCGImageCreateCGDataProvider(MCGImageRef p_src, const MCGIntegerRectangle &
 		const void *t_src_ptr;
 		t_src_ptr = MCGRasterGetPixelPtr(t_raster, p_src_rect.origin.x, p_src_rect.origin.y);
 		
-		t_success = nil != (t_data_provider = CGDataProviderCreateWithData(p_src, t_src_ptr, p_src_rect.size.height * t_raster.stride, MCGImageDataProviderReleaseDataCallback));
+		t_data_provider = CGDataProviderCreateWithData(p_src, t_src_ptr, p_src_rect.size.height * t_raster.stride, MCGImageDataProviderReleaseDataCallback);
+		t_success = t_data_provider != nil;
 	}
 	
 	if (t_success)
@@ -272,7 +280,10 @@ bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect,
 	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, t_alpha);
 	
 	if (t_success)
-		t_success = nil != (t_image = CGImageCreate(p_src_rect.size.width, p_src_rect.size.height, 8, 32, t_raster.stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault));
+	{
+		t_image = CGImageCreate(p_src_rect.size.width, p_src_rect.size.height, 8, 32, t_raster.stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault);
+		t_success = t_image != nil;
+	}
 	
 	CGDataProviderRelease(t_data_provider);
 	
