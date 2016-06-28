@@ -1,1 +1,1 @@
-Y-Labels can optionally display decimaals
+Y-Labels can optionally display decimals
