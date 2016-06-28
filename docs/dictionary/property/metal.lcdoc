@@ -10,6 +10,8 @@ Associations: stack
 
 Introduced: 2.1
 
+Deprecated: 6.7
+
 OS: mac
 
 Platforms: desktop,server,web
