@@ -1074,6 +1074,7 @@ private command __nameToKeyAndType pName, @rKey, @rType
       case "Description"
       case "Changes"
       case "Introduced"
+      case "Deprecated"
          put "standard" into rType
          break
       case "Example"
@@ -2260,6 +2261,9 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    
    # Introduced
    put outputElementIfExists("introduced", pLibraryDataA, 3) after tJSON
+   
+   # Deprecated
+   put outputElementIfExists("deprecated", pLibraryDataA, 3) after tJSON
    
    # OS
    put revDocsItemListToJSONArray(pLibraryDataA, "OS") after tJSON
