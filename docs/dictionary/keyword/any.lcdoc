@@ -4,7 +4,7 @@ Type: keyword
 
 Syntax: any
 
-Summary: Designates a <random|randomly> chosen member of a set.
+Summary: Designates a <random(glossary)|randomly> chosen member of a set.
 
 Introduced: 1.0
 
@@ -13,6 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
+local wordOfTheDay
 put any word of field "Dictionary" into wordOfTheDay
 
 Example:
@@ -22,12 +23,16 @@ Example:
 select any button
 
 Description:
-Use the <any> <keyword> to specify a <random> <object(glossary)> of a specified type, or to designate a <random> <chunk> in a <chunk expression>.
+Use the <any> <keyword> to specify a <random(glossary)> <object(glossary)> of a specified type, or to designate a 
+<random(glossary)> <chunk> in a <chunk expression>.
 
-The <any> <keyword> does not examine every member of a set; it specifies just one member of the set, randomly chosen. For example, the expression
-  if myString is in any field
-checks whether myString is in a randomly chosen field, not whether myString is somewhere in one of the fields on the card.
+The <any> <keyword> does not examine every member of a set; it specifies just one member of the set, randomly chosen. 
+For example, the expression
 
-References: first (keyword), random (function), keyword (glossary), random (glossary), chunk expression (glossary), chunk (glossary), object (glossary)
+    if myString is in any field
+checks whether `myString` is in a randomly chosen field, not whether `myString` is somewhere in one of the fields on the card.
+
+References: first (keyword), last (keyword), random (function), keyword (glossary), random (glossary), chunk expression (glossary), 
+chunk (glossary), object (glossary)
 
 Tags: database
