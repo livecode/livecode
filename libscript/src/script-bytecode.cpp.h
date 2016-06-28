@@ -823,10 +823,55 @@ struct MCScriptBytecodeOp_Reset
 
 #define MC_SCRIPT_DISPATCH_BYTECODE_OP(Name) \
 	case kMCScriptBytecodeOp##Name: \
-		if (!Dispatch<MCScriptBytecodeOp_##Name>()(ctxt)) \
+		if (!ctxt.template operator()<MCScriptBytecodeOp_##Name>()) \
 			return false; \
 		break;
 
+template<
+class Context
+>
+inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp op,
+									 Context& ctxt)
+{
+	_Pragma("GCC diagnostic push")
+	_Pragma("GCC diagnostic error \"-Wswitch\"")
+	switch(op)
+	{
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Jump)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfFalse)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfTrue)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignConstant)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Assign)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Return)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Invoke)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(InvokeIndirect)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Fetch)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Store)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignList)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignArray)
+			MC_SCRIPT_DISPATCH_BYTECODE_OP(Reset)
+	}
+	_Pragma("GCC diagnostic pop")
+	
+	return true;
+}
+
+template<
+typename Context
+>
+inline bool MCScriptBytecodeForEach(Context& ctxt)
+{
+	for(MCScriptBytecodeOp t_op = kMCScriptBytecodeOp__First; t_op <= kMCScriptBytecodeOp__Last; t_op = (MCScriptBytecodeOp)((int)t_op + 1))
+	{
+		if (MCScriptBytecodeDispatch<Context>(t_op,
+											  ctxt))
+			return true;
+	}
+	
+	return false;
+}
+
+#if 0
 template<
 typename Context,
 template<typename OpStruct> class Dispatch
@@ -872,3 +917,4 @@ inline bool MCScriptBytecodeForEach(Context& ctxt)
 	
 	return false;
 }
+#endif

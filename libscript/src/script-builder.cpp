@@ -66,63 +66,124 @@ static const MCScriptBytecodeInfo kBytecodeInfo[] =
 };
 static const int kBytecodeCount = sizeof(kBytecodeInfo) / sizeof(kBytecodeInfo[0]);
 
-struct MCScriptCopyBytecodeNames_Context
-{
-	MCAutoProperListRef bytecode_names;
-};
+//////////
 
-template<
-typename OpStruct
->
-class MCScriptCopyBytecodeNames_Do
+class MCScriptCopyBytecodeNames_Impl
 {
 public:
-	bool operator () (MCScriptCopyBytecodeNames_Context& ctxt)
+	template<
+		typename OpStruct
+	>
+	bool operator () (void)
 	{
-		if (!MCProperListPushElementOntoBack(*ctxt.bytecode_names,
+		if (!MCProperListPushElementOntoBack(*m_bytecode_names,
 											 MCSTR(OpStruct::Name())))
 			return false;
 		
 		return true;
 	}
+	
+	bool Do(MCProperListRef& r_bytecode_names)
+	{
+		if (!MCProperListCreateMutable(&m_bytecode_names))
+			return false;
+		
+		if (!MCScriptBytecodeForEach(*this))
+			return false;
+		
+		r_bytecode_names = m_bytecode_names.Take();
+		
+		return true;
+	}
+
+private:
+	MCAutoProperListRef m_bytecode_names;
 };
 
 bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 {
-	MCScriptCopyBytecodeNames_Context ctxt;
-	if (!MCProperListCreateMutable(&ctxt.bytecode_names))
-		return false;
-	
-	if (!MCScriptBytecodeForEach<MCScriptCopyBytecodeNames_Context, MCScriptCopyBytecodeNames_Do>(ctxt))
-		return false;
-	
-	r_bytecode_names = ctxt.bytecode_names.Take();
-	
-	return true;
+	return MCScriptCopyBytecodeNames_Impl().Do(r_bytecode_names);
 }
+
+//////////
+
+struct MCScriptLookupBytecode_Impl
+{
+public:
+	template<
+		typename OpStruct
+	>
+	bool operator () (void)
+	{
+		if (0 != strcmp(m_name, OpStruct::Name()))
+			return false;
+		
+		m_opcode = (uindex_t)OpStruct::Code();
+		
+		return true;
+	}
+	
+	bool Do(const char *p_name, uindex_t& r_opcode)
+	{
+		m_name = p_name;
+		
+		if (!MCScriptBytecodeForEach(*this))
+			return false;
+		
+		r_opcode = m_opcode;
+		
+		return true;
+	}
+	
+private:
+	const char *m_name;
+	uindex_t m_opcode;
+};
 
 bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 {
-    for(uindex_t i = 0; i < kBytecodeCount; i++)
-    {
-        if (0 != strcmp(p_name, kBytecodeInfo[i] . name))
-            continue;
-        
-        r_opcode = i;
-        
-        return true;
-    }
-    
-    return false;
+	return MCScriptLookupBytecode_Impl().Do(p_name, r_opcode);
 }
+
+//////////
+
+struct MCScriptDescribeBytecode_Impl
+{
+public:
+	template<
+		typename OpStruct
+	>
+	bool operator () (void)
+	{
+		if (m_opcode != (uindex_t)OpStruct::Code())
+			return false;
+		
+		m_name = OpStruct::Name();
+		
+		return true;
+	}
+	
+	const char *Do(uindex_t p_opcode)
+	{
+		m_opcode = p_opcode;
+		
+		if (!MCScriptBytecodeForEach(*this))
+			return "<unknown>";
+		
+		return m_name;
+	}
+	
+private:
+	uindex_t m_opcode;
+	const char *m_name;
+};
 
 const char *MCScriptDescribeBytecode(uindex_t p_opcode)
 {
-    if (p_opcode >= kBytecodeCount)
-        return "<unknown>";
-    
-    return kBytecodeInfo[p_opcode].name;
+	return MCScriptDescribeBytecode_Impl().Do(p_opcode);
 }
+
+//////////
 
 MCScriptBytecodeParameterType MCScriptDescribeBytecodeParameter(uindex_t p_opcode, uindex_t p_index)
 {
