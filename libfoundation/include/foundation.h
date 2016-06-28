@@ -418,58 +418,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  FIXED WIDTH INTEGER TYPES
 //
 
-#if !defined(__VISUALC__)
-#	define __HAVE_STDDEF_H__
-#	include <stddef.h>
-#	define __HAVE_STDINT_H__
-#	define __STDC_LIMIT_MACROS
-#	include <stdint.h>
-#   include <stddef.h>
-#   include <limits.h>
-#endif
-
-#if !defined(__HAVE_STDINT_H__)
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned int uint32_t;
-typedef signed int int32_t;
-
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#if !defined(uint64_t)
-#define _UINT64_T
-#ifndef __LP64__
-typedef unsigned long long int uint64_t;
-#else
-typedef unsigned long int uint64_t;
-#endif
-#endif
-#if !defined(int64_t)
-#define _INT64_T
-#ifndef __LP64__
-typedef signed long long int int64_t;
-#else
-typedef signed long int int64_t;
-#endif
-#endif
-
-#define UINT8_MAX (255U)
-#define INT8_MIN (-128)
-#define INT8_MAX (127)
-
-#define UINT16_MAX (65535U)
-#define INT16_MIN (-32768)
-#define INT16_MAX (32767)
-
-#define UINT32_MAX (4294967295U)
-#define INT32_MIN (-2147483647 - 1L)
-#define INT32_MAX (2147483647)
-
-#define UINT64_MAX (18446744073709551615ULL)
-#define INT64_MIN (-9223372036854775808LL)
-#define INT64_MAX (9223372036854775807LL)
-#endif /* !__HAVE_STDINT_H__ */
+#define __STDC_LIMIT_MACROS 1
+#include <stddef.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <limits.h>
 
 #define UINT8_MIN (0U)
 #define UINT16_MIN (0U)
@@ -489,44 +442,12 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if !defined(__HAVE_STDDEF_H__)
-#	if defined(__WINDOWS__)
-typedef unsigned int size_t;
-#	elif defined(__LINUX__) || defined(__ANDROID__)
-typedef unsigned int size_t;
-#	else
-typedef unsigned long size_t;
-#   endif
-#endif /* !__HAVE_STDDEF_H__ */
-
-#if !defined(__HAVE_STDINT_H__)
-#	if defined(__WINDOWS__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	elif defined(__LINUX__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	elif defined(__ANDROID__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	else
-typedef long signed int intptr_t;
-typedef long unsigned int uintptr_t;
-#	endif
-#endif /* !__HAVE_STDINT_H__ */
-
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
 #define UINTPTR_MIN UINT32_MIN
-
-#if !defined(__HAVE_STDINT_H__)
-#define INTPTR_MIN INT32_MIN
-#define INTPTR_MAX INT32_MAX
-#define UINTPTR_MAX UINT32_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #else /* !__32_BIT__ */
 
@@ -536,38 +457,12 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if !defined(__HAVE_STDINT_H__)
-#	ifndef _UINTPTR_T
-#		define _UINTPTR_T
-#		ifdef __LP64__
-typedef uint64_t uintptr_t;
-#		else
-typedef uint32_t uintptr_t;
-#		endif
-#	endif
-
-#	ifndef _INTPTR_T
-#		define _INTPTR_T
-#		ifdef __LP64__
-typedef int64_t intptr_t;
-#		else
-typedef int32_t intptr_t;
-#		endif
-#	endif
-#endif /* !__HAVE_STDINT_H__ */
-
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
 #define UINTPTR_MIN UINT64_MIN
-
-#if !defined(__HAVE_STDINT_H__)
-#define INTPTR_MIN INT64_MIN
-#define INTPTR_MAX INT64_MAX
-#define UINTPTR_MAX UINT64_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #endif /* !__32_BIT__ */
 
@@ -604,14 +499,6 @@ typedef int64_t compare_t;
 #error No memory model defined for this platform and architecture combination
 
 #endif
-
-#if !defined(__HAVE_STDINT_H__)
-typedef uintptr_t size_t;
-typedef intptr_t ssize_t;
-
-#	define SIZE_MAX UINTPTR_MAX
-#	define SSIZE_MAX INTPTR_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #define SIZE_MIN UINTPTR_MIN
 #define SSIZE_MIN INTPTR_MIN
