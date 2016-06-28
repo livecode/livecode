@@ -17,8 +17,9 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include "libscript/script.h"
+#include <libscript/script.h>
 #include <libscript/script-auto.h>
+
 #include "script-private.h"
 
 #include <stddef.h>

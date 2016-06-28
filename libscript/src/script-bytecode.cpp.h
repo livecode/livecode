@@ -60,6 +60,11 @@ struct MCScriptBytecodeOp_Noop
 };
 */
 
+#define MC_SCRIPT_DEFINE_BYTECODE(NameM, LabelM, FormatM) \
+	static MCScriptBytecodeOp Code(void) { return kMCScriptBytecodeOp##NameM; } \
+	static const char *Name(void) {return LabelM; } \
+	static const char *Format(void) {return FormatM; }
+
 struct MCScriptBytecodeOp_Jump
 {
 	// jump <offset>
@@ -67,9 +72,7 @@ struct MCScriptBytecodeOp_Jump
 	// Jump <offset> bytes in the bytecode relative to the jump opcode's
 	// address.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(Jump, "jump", "l")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -83,9 +86,6 @@ struct MCScriptBytecodeOp_Jump
 		ctxt.Jump(ctxt.GetSignedArgument(0));
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Jump::kCode = kMCScriptBytecodeOpJump;
-const char *MCScriptBytecodeOp_Jump::kName = "jump";
-const char *MCScriptBytecodeOp_Jump::kFormat = "l";
 
 template<bool IfTrue>
 struct MCScriptBytecodeOp_JumpIf
@@ -115,23 +115,13 @@ struct MCScriptBytecodeOp_JumpIf
 
 struct MCScriptBytecodeOp_JumpIfFalse: public MCScriptBytecodeOp_JumpIf<false>
 {
-	static const MCScriptBytecodeOp kCode;
-	static const char *kFormat;
-	static const char *kName;
+	MC_SCRIPT_DEFINE_BYTECODE(JumpIfFalse, "jump_if_false", "rl")
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_JumpIfFalse::kCode = kMCScriptBytecodeOpJumpIfFalse;
-const char *MCScriptBytecodeOp_JumpIfFalse::kName = "jump_if_false";
-const char *MCScriptBytecodeOp_JumpIfFalse::kFormat = "rl";
 
 struct MCScriptBytecodeOp_JumpIfTrue: public MCScriptBytecodeOp_JumpIf<true>
 {
-	static const MCScriptBytecodeOp kCode;
-	static const char *kFormat;
-	static const char *kName;
+	MC_SCRIPT_DEFINE_BYTECODE(JumpIfTrue, "jump_if_true", "rl")
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_JumpIfTrue::kCode = kMCScriptBytecodeOpJumpIfTrue;
-const char *MCScriptBytecodeOp_JumpIfTrue::kName = "jump_if_true";
-const char *MCScriptBytecodeOp_JumpIfTrue::kFormat = "rl";
 
 struct MCScriptBytecodeOp_AssignConstant
 {
@@ -140,9 +130,7 @@ struct MCScriptBytecodeOp_AssignConstant
 	// Fetch the constant pool value at <constant-idx> and store into
 	// <dst-reg>. The constant must conform to the type of register.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(AssignConstant, "assign_constant", "rc")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -157,9 +145,6 @@ struct MCScriptBytecodeOp_AssignConstant
 								  ctxt.FetchValue(ctxt.GetArgument(1)));
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_AssignConstant::kCode = kMCScriptBytecodeOpAssignConstant;
-const char *MCScriptBytecodeOp_AssignConstant::kFormat = "rc";
-const char *MCScriptBytecodeOp_AssignConstant::kName = "assign_constant";
 
 struct MCScriptBytecodeOp_Assign
 {
@@ -168,9 +153,7 @@ struct MCScriptBytecodeOp_Assign
 	// Fetch the value from <src-reg> and store it into <dst-reg>. The value
 	// being stored must conform to the type of the register.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(AssignConstant, "assign", "rr")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -185,9 +168,6 @@ struct MCScriptBytecodeOp_Assign
 								  ctxt.CheckedFetchRegister(ctxt.GetArgument(1)));
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Assign::kCode = kMCScriptBytecodeOpAssign;
-const char *MCScriptBytecodeOp_Assign::kFormat = "rr";
-const char *MCScriptBytecodeOp_Assign::kName = "assign";
 
 struct MCScriptBytecodeOp_Return
 {
@@ -197,9 +177,7 @@ struct MCScriptBytecodeOp_Return
 	// contents of <result-reg> if specified, and nothing if not. The return
 	// value must conform to the type of the handler's return value.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(AssignConstant, "return", "r?")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -228,9 +206,6 @@ struct MCScriptBytecodeOp_Return
 		ctxt.PopFrame(t_return_value);
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Return::kCode = kMCScriptBytecodeOpReturn;
-const char *MCScriptBytecodeOp_Return::kFormat = "r?";
-const char *MCScriptBytecodeOp_Return::kName = "return";
 
 struct MCScriptBytecodeOp_Invoke
 {
@@ -240,9 +215,7 @@ struct MCScriptBytecodeOp_Invoke
 	// or a handler group), returning the value into result-reg and using the
 	// arg_i-reg's as the in, out and inout parameters.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(Invoke, "invoke", "hrr*")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -419,9 +392,6 @@ private:
 		r_selected_definition = t_min_score_definition;
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Invoke::kCode = kMCScriptBytecodeOpInvoke;
-const char *MCScriptBytecodeOp_Invoke::kFormat = "hrr*";
-const char *MCScriptBytecodeOp_Invoke::kName = "invoke";
 
 struct MCScriptBytecodeOp_InvokeIndirect
 {
@@ -430,9 +400,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 	// Invoke the handler value in handler-reg, returning the value into
 	// result-reg and using the arg_i-reg's as the in, out and inout parameters.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(InvokeIndirect, "invoke_indirect", "rrr*")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -590,9 +558,7 @@ struct MCScriptBytecodeOp_Fetch
 	// Fetch the value from definition index <index> and place it into <dst-reg>.
 	// The definition can be a variable, constant, handler or foreign handler.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(Invoke, "fetch", "rd")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -648,9 +614,6 @@ struct MCScriptBytecodeOp_Fetch
 								  t_value);
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Fetch::kCode = kMCScriptBytecodeOpFetch;
-const char *MCScriptBytecodeOp_Fetch::kFormat = "rd";
-const char *MCScriptBytecodeOp_Fetch::kName = "fetch";
 
 struct MCScriptBytecodeOp_Store
 {
@@ -658,9 +621,7 @@ struct MCScriptBytecodeOp_Store
 	//
 	// Store the value from <src-reg> into the variable definition <index>.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(Invoke, "store", "rv")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -683,9 +644,6 @@ struct MCScriptBytecodeOp_Store
 								  ctxt.CheckedFetchRegister(ctxt.GetArgument(0)));
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Store::kCode = kMCScriptBytecodeOpStore;
-const char *MCScriptBytecodeOp_Store::kFormat = "rd";
-const char *MCScriptBytecodeOp_Store::kName = "store";
 
 struct MCScriptBytecodeOp_AssignList
 {
@@ -694,9 +652,7 @@ struct MCScriptBytecodeOp_AssignList
 	// Construct a (proper) list value from <element_i-reg>'s and assign to
 	// <dst-reg>.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(AssignList, "assign_list", "rr*")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -743,9 +699,6 @@ struct MCScriptBytecodeOp_AssignList
 								  *t_list);
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_AssignList::kCode = kMCScriptBytecodeOpAssignList;
-const char *MCScriptBytecodeOp_AssignList::kFormat = "rr*";
-const char *MCScriptBytecodeOp_AssignList::kName = "assign_list";
 
 struct MCScriptBytecodeOp_AssignArray
 {
@@ -754,9 +707,7 @@ struct MCScriptBytecodeOp_AssignArray
 	// Construct an array value from the <key_i-reg>, <value_i-reg> pairs and
 	// assign to <dst-reg>.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(AssignArray, "assign_array", "rr%")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -833,9 +784,6 @@ struct MCScriptBytecodeOp_AssignArray
 								  *t_array);
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_AssignArray::kCode = kMCScriptBytecodeOpAssignArray;
-const char *MCScriptBytecodeOp_AssignArray::kFormat = "rr%";
-const char *MCScriptBytecodeOp_AssignArray::kName = "assign_array";
 
 struct MCScriptBytecodeOp_Reset
 {
@@ -844,9 +792,7 @@ struct MCScriptBytecodeOp_Reset
 	// Reset registers to their default (typed) value. If the type does not have
 	// a default value, the register becomes unassigned.
 	
-	static const MCScriptBytecodeOp kCode;
-	static const char *kName;
-	static const char *kFormat;
+	MC_SCRIPT_DEFINE_BYTECODE(AssignArray, "reset", "r*")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -874,6 +820,55 @@ struct MCScriptBytecodeOp_Reset
 		}
 	}
 };
-const MCScriptBytecodeOp MCScriptBytecodeOp_Reset::kCode = kMCScriptBytecodeOpReset;
-const char *MCScriptBytecodeOp_Reset::kFormat = "r*";
-const char *MCScriptBytecodeOp_Reset::kName = "reset";
+
+#define MC_SCRIPT_DISPATCH_BYTECODE_OP(Name) \
+	case kMCScriptBytecodeOp##Name: \
+		if (!Dispatch<MCScriptBytecodeOp_##Name>()(ctxt)) \
+			return false; \
+		break;
+
+template<
+typename Context,
+template<typename OpStruct> class Dispatch
+>
+inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp op,
+									 Context& ctxt)
+{
+	_Pragma("GCC diagnostic push")
+	_Pragma("GCC diagnostic error \"-Wswitch\"")
+	switch(op)
+	{
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Jump)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfFalse)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfTrue)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignConstant)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Assign)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Return)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Invoke)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(InvokeIndirect)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Fetch)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Store)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignList)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignArray)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Reset)
+	}
+	_Pragma("GCC diagnostic pop")
+	
+	return true;
+}
+
+template<
+typename Context,
+template<typename OpStruct> class ForEach
+>
+inline bool MCScriptBytecodeForEach(Context& ctxt)
+{
+	for(MCScriptBytecodeOp t_op = kMCScriptBytecodeOp__First; t_op <= kMCScriptBytecodeOp__Last; t_op = (MCScriptBytecodeOp)((int)t_op + 1))
+	{
+		if (MCScriptBytecodeDispatch<Context, ForEach>(t_op,
+													   ctxt))
+			return true;
+	}
+	
+	return false;
+}

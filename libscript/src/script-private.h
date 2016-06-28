@@ -473,11 +473,13 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCS
 
 enum MCScriptBytecodeOp
 {
+	kMCScriptBytecodeOp__First,
+	
 	// Unconditional jump:
 	//  X: jump <Y-X>
 	// Location is encoded as relative position to jump instruction.
     //
-	kMCScriptBytecodeOpJump,
+	kMCScriptBytecodeOpJump = kMCScriptBytecodeOp__First,
 	
 	// Conditional jumps:
 	//  X: jump* <register>, <Y - X>
@@ -578,6 +580,8 @@ enum MCScriptBytecodeOp
     // Initializes the given slots to default values, if the type of the slot
     // has a default, otherwise makes the slot unassigned.
     kMCScriptBytecodeOpReset,
+	
+	kMCScriptBytecodeOp__Last = kMCScriptBytecodeOpReset
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);

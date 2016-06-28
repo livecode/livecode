@@ -17,8 +17,11 @@
 #include <foundation.h>
 #include <foundation-auto.h>
 
-#include "libscript/script.h"
+#include <libscript/script.h>
+
 #include "script-private.h"
+
+#include "script-bytecode.cpp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,23 +66,39 @@ static const MCScriptBytecodeInfo kBytecodeInfo[] =
 };
 static const int kBytecodeCount = sizeof(kBytecodeInfo) / sizeof(kBytecodeInfo[0]);
 
+struct MCScriptCopyBytecodeNames_Context
+{
+	MCAutoProperListRef bytecode_names;
+};
+
+template<
+typename OpStruct
+>
+class MCScriptCopyBytecodeNames_Do
+{
+public:
+	bool operator () (MCScriptCopyBytecodeNames_Context& ctxt)
+	{
+		if (!MCProperListPushElementOntoBack(*ctxt.bytecode_names,
+											 MCSTR(OpStruct::Name())))
+			return false;
+		
+		return true;
+	}
+};
+
 bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 {
-    MCAutoProperListRef t_bytecode_names;
-    if (!MCProperListCreateMutable(&t_bytecode_names))
-        return false;
-    
-    for(int i = 0; i < kBytecodeCount; i++)
-    {
-        MCNewAutoNameRef t_name;
-        if (!MCProperListPushElementOntoBack(*t_bytecode_names,
-                                             MCSTR(kBytecodeInfo[i].name)))
-            return false;
-    }
-    
-    r_bytecode_names = t_bytecode_names.Take();
-    
-    return true;
+	MCScriptCopyBytecodeNames_Context ctxt;
+	if (!MCProperListCreateMutable(&ctxt.bytecode_names))
+		return false;
+	
+	if (!MCScriptBytecodeForEach<MCScriptCopyBytecodeNames_Context, MCScriptCopyBytecodeNames_Do>(ctxt))
+		return false;
+	
+	r_bytecode_names = ctxt.bytecode_names.Take();
+	
+	return true;
 }
 
 bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)

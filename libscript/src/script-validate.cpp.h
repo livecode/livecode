@@ -21,6 +21,20 @@
 class MCScriptValidateContext
 {
 public:
+	// Constructors
+	//
+	MCScriptValidateContext(MCScriptModuleRef module,
+							MCScriptHandlerDefinition *definition,
+							uindex_t address,
+							uindex_t *arguments,
+							uindex_t argument_count);
+	
+	// Return whether the context is valid.
+	bool IsValid(void) const;
+	
+	// Return the maximum index of register used.
+	uindex_t GetRegisterLimit(void) const;
+	
 	// Quering Methods
 	//
 	// These methods return information about the current bytecode operation
@@ -90,18 +104,29 @@ public:
 	void ReportInvalidVariable(void);
 	
 private:
+	// Whilst validation of bytecode is successful, the error var remains
+	// false. When it becomes true, it means the bytecode at 'current_address'
+	// within the handler is invalid.
 	bool m_error;
 	
+	// The module containins the handler being validated.
 	MCScriptModuleRef m_module;
 	
+	// The handler being validated.
 	MCScriptHandlerDefinition *m_handler;
 	
+	// The offset from the beginning of the module's bytecode to the current
+	// instruction being validated.
 	uindex_t m_current_address;
 	
+	// The current instructions argument count.
 	uindex_t m_argument_count;
-	MCAutoArray<uindex_t> m_arguments;
 	
-	uindex_t m_register_count;
+	// The current instructions list of (decoded) arguments.
+	uindex_t m_arguments[256];
+	
+	// The total number of registers required to run the bytecode.
+	uindex_t m_register_limit;
 };
 
 inline uindex_t MCScriptValidateContext::GetAddress(void) const
@@ -185,9 +210,9 @@ inline void MCScriptValidateContext::CheckRegister(uindex_t p_register)
 		return;
 	}
 	
-	if (p_register >= m_register_count)
+	if (p_register >= m_register_limit)
 	{
-		m_register_count = p_register + 1;
+		m_register_limit = p_register + 1;
 	}
 }
 
