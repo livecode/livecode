@@ -367,6 +367,9 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/fonts"
 		rfolder "ide:Documentation/html_viewer/js"
 
+	into [[ToolsFolder]]/Documentation/html_viewer/resources/ place
+		rfolder "ide:Documentation/html_viewer/resources/media"
+
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
