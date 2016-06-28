@@ -2590,9 +2590,9 @@ private function groupOrder pOrderA, pGuideDataA, pKey
    local tGroup
    put pGuideDataA[pKey]["metadata"]["group"] into tGroup
    if tGroup is among the keys of pOrderA then
-      return pOrderA[tGroup]
+      return tGroup
    else 
-      return pOrderA[kNoGuideGroup]
+      return kNoGuideGroup
    end if
 end groupOrder
 
@@ -2646,7 +2646,19 @@ function revDocsOrderedGuideData pGuideFoldersA, pOrderFileLocation
    # Then sort by group order
    local tGroupOrder
    put revDocsGroupOrder(pOrderFileLocation) into tGroupOrder
-   sort tGuides by groupOrder(tGroupOrder, tGuideDataA, each)
+   repeat for each key tGuide in tGuideDataA
+      local tGroup
+      put groupOrder(tGroupOrder, tGuideDataA, tGuide) into tGroup
+      if tGroup is kNoGuideGroup then
+         put "Other" into tGroup
+      else
+         put toUpper(char 1 of tGroup) & char 2 to -1 of tGroup into tGroup
+      end if
+      
+      put tGroup into tGuideDataA[tGuide]["group"]
+   end repeat
+   
+   sort tGuides by tGroupOrder[tGuideDataA[each]["group"]]
    
    local tOrderedGuideDataA
    repeat for each line tGuideFile in tGuides
@@ -2660,6 +2672,7 @@ function revDocsFormatGuideDataAsJSON pGuideDataA
    put tab & escape("name") & ":" & escape(revDocsModifyForURL(pGuideDataA["name"])) & comma & return after tGuideData 
    put tab & escape("display name") & ":" & escape(pGuideDataA["display name"]) & comma & return after tGuideData 
    put tab & escape("location") & ":" & escape(pGuideDataA["location"]) & comma & return after tGuideData
+   put tab & escape("group") & ":" & escape(pGuideDataA["group"]) & comma & return after tGuideData
    put tab & escape("data") & ":" & escape(pGuideDataA["data"], true)  after tGuideData
    return tGuideData
 end revDocsFormatGuideDataAsJSON
