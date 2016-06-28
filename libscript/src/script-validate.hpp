@@ -216,6 +216,12 @@ inline void MCScriptValidateContext::CheckRegister(uindex_t p_register)
 		return;
 	}
 	
+	if (p_register == UINDEX_MAX)
+	{
+		ReportInvalidRegister();
+		return;
+	}
+	
 	if (p_register >= m_register_limit)
 	{
 		m_register_limit = p_register + 1;
