@@ -22,6 +22,8 @@
 
 #include "script-private.h"
 
+#include "script-bytecode.hpp"
+
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -264,6 +266,7 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
 bool MCScriptValidateModule(MCScriptModuleRef self)
 {
     for(uindex_t i = 0; i < self -> definition_count; i++)
+	{
         if (self -> definitions[i] -> kind == kMCScriptDefinitionKindVariable)
         {
             MCScriptVariableDefinition *t_variable;
@@ -272,141 +275,72 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
         }
         else if (self -> definitions[i] -> kind == kMCScriptDefinitionKindHandler)
         {
-            MCScriptHandlerDefinition *t_handler;
-            t_handler = static_cast<MCScriptHandlerDefinition *>(self -> definitions[i]);
-            
-            // Compute the temporary (register) count from scanning the bytecode.
-            uindex_t t_temporary_count;
-            t_temporary_count = 0;
+			MCScriptHandlerDefinition *t_handler;
+			t_handler = static_cast<MCScriptHandlerDefinition *>(self -> definitions[i]);
+			
+			MCScriptValidateState t_state;
+			t_state.error = false;
+			t_state.module = self;
+			t_state.handler = t_handler;
+			
+			MCTypeInfoRef t_signature;
+			t_signature = self -> types[t_handler -> type] -> typeinfo;
+			t_state.register_limit = MCHandlerTypeInfoGetParameterCount(t_signature) +
+										t_handler -> local_type_count;
             
             byte_t *t_bytecode, *t_bytecode_limit;
             t_bytecode = self -> bytecode + t_handler -> start_address;
             t_bytecode_limit = self -> bytecode + t_handler -> finish_address;
-            
+			
+			// If there is no bytecode, the bytecode is malformed.
+			if (t_bytecode == t_bytecode_limit)
+				goto invalid_bytecode_error;
+			
             while(t_bytecode != t_bytecode_limit)
-            {
-                MCScriptBytecodeOp t_operation;
-                uindex_t t_arity;
-                uindex_t t_operands[256];
-                if (!MCScriptBytecodeIterate(t_bytecode, t_bytecode_limit, t_operation, t_arity, t_operands))
-                    break;
-                
-                switch(t_operation)
-                {
-                    case kMCScriptBytecodeOpJump:
-                        // jump <offset>
-                        if (t_arity != 1)
-                            goto invalid_bytecode_error;
-                        
-                        // check resolved address is within handler
-                        break;
-                    case kMCScriptBytecodeOpJumpIfFalse:
-                    case kMCScriptBytecodeOpJumpIfTrue:
-                        // jumpiftrue <register>, <offset>
-                        // jumpiffalse <register>, <offset>
-                        if (t_arity != 2)
-                            goto invalid_bytecode_error;
-                        
-                        // check resolved address is within handler
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpAssignConstant:
-                        // assignconst <dst>, <index>
-                        if (t_arity != 2)
-                            goto invalid_bytecode_error;
-                        
-                        // check index argument is within value pool range
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpAssign:
-                        // assign <dst>, <src>
-                        if (t_arity != 2)
-                            goto invalid_bytecode_error;
-                        
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[1] + 1);
-                        break;
-                    case kMCScriptBytecodeOpReturn:
-                        // return
-                        // return <value>
-                        if (t_arity != 0 && t_arity != 1)
-                            goto invalid_bytecode_error;
-                        
-                        if (t_arity == 1)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpInvoke:
-                        // invoke <index>, <result>, [ <arg_1>, ..., <arg_n> ]
-                        if (t_arity < 2)
-                            goto invalid_bytecode_error;
-                        
-                        // check index operand is within definition range
-                        // check definition[index] is handler or definition group
-                        // check signature of defintion[index] conforms with invoke arity
-                        for(uindex_t j = 1; j < t_arity; j++)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
-                        break;
-                    case kMCScriptBytecodeOpInvokeIndirect:
-                        // invoke *<src>, <result>, [ <arg_1>, ..., <arg_n> ]
-                        if (t_arity < 2)
-                            goto invalid_bytecode_error;
-                        
-                        for(uindex_t j = 0; j < t_arity; j++)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
-                        break;
-                    case kMCScriptBytecodeOpFetch:
-                    case kMCScriptBytecodeOpStore:
-                        // fetch <dst>, <index>
-                        // store <src>, <index>
-                        if (t_arity != 2)
-                            goto invalid_bytecode_error;
-                        
-                        // check definition[index] is variable or handler
-                        // check level is appropriate.
-                        t_temporary_count = MCMax(t_temporary_count, t_operands[0] + 1);
-                        break;
-                    case kMCScriptBytecodeOpAssignList:
-                        // assignlist <dst>, [ <elem_1>, ..., <elem_n> ]
-                        if (t_arity < 1)
-                            goto invalid_bytecode_error;
-                        
-                        for(uindex_t j = 0; j < t_arity; j++)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
-                        break;
-                    case kMCScriptBytecodeOpAssignArray:
-	                    // assignarray <dst>, [ <key_1>, <value_1>, ..., <key_n>, <value_n> ]
-	                    if (t_arity < 1)
-		                    goto invalid_bytecode_error;
-	                    if (t_arity % 2 != 1) // parameters must come in pairs
-		                    goto invalid_bytecode_error;
-
-	                    for (uindex_t j = 0; j < t_arity; ++j)
-	                    {
-		                    t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
-	                    }
-	                    break;
-                    case kMCScriptBytecodeOpReset:
-                        // create <reg_1>, ..., <reg_n>
-                        for(uindex_t j = 0; j < t_arity; j++)
-                            t_temporary_count = MCMax(t_temporary_count, t_operands[j] + 1);
-                        break;
-                }
+			{
+				t_state.current_address = uindex_t(t_bytecode - self-> bytecode);
+				
+                if (!MCScriptBytecodeIterate(t_bytecode,
+											 t_bytecode_limit,
+											 t_state.operation,
+											 t_state.argument_count,
+											 t_state.arguments))
+				{
+					t_state.error = true;
+					break;
+				}
+				
+				if (t_state.operation > kMCScriptBytecodeOp__Last)
+				{
+					t_state.error = true;
+					break;
+				}
+				
+				MCScriptBytecodeValidate(t_state);
+				if (t_state.error)
+				{
+					break;
+				}
             }
-            
-            // check the last instruction is 'return'.
-            
-            // If we didn't reach the limit, the bytecode is malformed.
-            if (t_bytecode != t_bytecode_limit)
-                goto invalid_bytecode_error;
-            
-            // The total number of slots we need is params (inc result) + temps.
-            MCTypeInfoRef t_signature;
-            t_signature = self -> types[t_handler -> type] -> typeinfo;
-            t_handler -> slot_count = MCHandlerTypeInfoGetParameterCount(t_signature) + t_handler -> local_type_count + t_temporary_count;
+			
+			// If validation failed for a single operation, the bytecode is
+			// malformed.
+			if (t_state.error)
+				goto invalid_bytecode_error;
+			
+			// If we didn't reach the limit, the bytecode is malformed.
+			if (t_bytecode != t_bytecode_limit)
+				goto invalid_bytecode_error;
+			
+            // If the last operation was not return, the bytecode is malformed.
+			if (t_state.operation != kMCScriptBytecodeOpReturn)
+				goto invalid_bytecode_error;
+			
+            // The total number of slots we need is recorded in register_limit.
+            t_handler -> slot_count = t_state.register_limit;
         }
-    
-    // If the module has context
-    
+	}
+	
     return true;
     
 invalid_bytecode_error:

@@ -31,32 +31,26 @@ struct MCScriptDescribeBytecodeOp_Impl
 {
 public:
 	template<typename OpStruct>
-	bool Visit(void)
+	bool Visit(const MCScriptBytecodeOpInfo*& r_info) const
 	{
-		m_info = &OpStruct::Describe();
+		r_info = &OpStruct::Describe();
 		return true;
 	}
-	
-	bool operator() (uindex_t p_opcode,
-					 const MCScriptBytecodeOpInfo*& r_info)
-	{
-		if (p_opcode > kMCScriptBytecodeOp__Last ||
-			!MCScriptBytecodeDispatch((MCScriptBytecodeOp)p_opcode, *this))
-			return false;
-		
-		r_info = m_info;
-		
-		return true;
-	}
-	
-private:
-	const MCScriptBytecodeOpInfo* m_info;
 };
 
-static bool MCScriptDescribeBytecodeOp(uindex_t p_opcode,
-									   const MCScriptBytecodeOpInfo*& r_info)
+static bool
+MCScriptDescribeBytecodeOp(uindex_t p_opcode,
+						   const MCScriptBytecodeOpInfo*& r_info)
 {
-	return MCScriptDescribeBytecodeOp_Impl()(p_opcode, r_info);
+	if (p_opcode > kMCScriptBytecodeOp__Last ||
+		!MCScriptBytecodeDispatchR((MCScriptBytecodeOp)p_opcode,
+								   MCScriptDescribeBytecodeOp_Impl(),
+								   r_info))
+	{
+		return false;
+	}
+	
+	return true;
 }
 
 //////////
@@ -65,35 +59,29 @@ class MCScriptCopyBytecodeNames_Impl
 {
 public:
 	template<typename OpStruct>
-	bool Visit(void)
+	bool Visit(MCProperListRef x_bytecode_names) const
 	{
-		if (!MCProperListPushElementOntoBack(*m_bytecode_names,
+		if (!MCProperListPushElementOntoBack(x_bytecode_names,
 											 MCSTR(OpStruct::Describe().name)))
 			return false;
 		
 		return true;
 	}
-	
-	bool operator() (MCProperListRef& r_bytecode_names)
-	{
-		if (!MCProperListCreateMutable(&m_bytecode_names))
-			return false;
-		
-		if (!MCScriptBytecodeForEach(*this))
-			return false;
-		
-		r_bytecode_names = m_bytecode_names.Take();
-		
-		return true;
-	}
-
-private:
-	MCAutoProperListRef m_bytecode_names;
 };
 
 bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 {
-	return MCScriptCopyBytecodeNames_Impl()(r_bytecode_names);
+	MCAutoProperListRef t_bytecode_names;
+	if (!MCProperListCreateMutable(&t_bytecode_names))
+		return false;
+	
+	if (!MCScriptBytecodeForEach(MCScriptCopyBytecodeNames_Impl(),
+								 *t_bytecode_names))
+		return false;
+	
+	r_bytecode_names = t_bytecode_names.Take();
+	
+	return true;
 }
 
 //////////
@@ -101,37 +89,41 @@ bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 struct MCScriptLookupBytecode_Impl
 {
 public:
+	struct Args
+	{
+		const char *name;
+		uindex_t& _opcode;
+		
+		Args(const char *p_name,
+			 uindex_t& r_opcode)
+			: name(p_name),
+			  _opcode(r_opcode)
+		{
+		}
+	};
+	
 	template<typename OpStruct>
-	bool Visit(void)
+	bool Visit(Args p_args) const
 	{
-		if (0 != strcmp(m_name, OpStruct::Describe().name))
-			return false;
+		if (0 != strcmp(p_args.name, OpStruct::Describe().name))
+			return true;
 		
-		m_opcode = (uindex_t)OpStruct::Describe().code;
+		p_args._opcode = (uindex_t)OpStruct::Describe().code;
 		
-		return true;
+		return false;
 	}
-	
-	bool operator() (const char *p_name, uindex_t& r_opcode)
-	{
-		m_name = p_name;
-		
-		if (!MCScriptBytecodeForEach(*this))
-			return false;
-		
-		r_opcode = m_opcode;
-		
-		return true;
-	}
-	
-private:
-	const char *m_name;
-	uindex_t m_opcode;
 };
 
 bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 {
-	return MCScriptLookupBytecode_Impl()(p_name, r_opcode);
+	// If we get all the way through the bytecodes without returning false, then
+	// it means it wasn't found.
+	if (MCScriptBytecodeForEach(MCScriptLookupBytecode_Impl(),
+								MCScriptLookupBytecode_Impl::Args(p_name,
+																  r_opcode)))
+		return false;
+	
+	return true;
 }
 
 //////////
@@ -1660,7 +1652,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
         return;
 	
 	const MCScriptBytecodeOpInfo *t_info;
-	if (!MCScriptDescribeBytecodeOp_Impl()(p_opcode, t_info) ||
+	if (!MCScriptDescribeBytecodeOp(p_opcode, t_info) ||
 		!MCScriptCheckBytecodeParameterCount(p_opcode, p_argument_count))
 	{
 		self -> valid = false;
@@ -1674,14 +1666,14 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                                                          i);
         switch(t_param_type)
         {
-            case kMCScriptBytecodeParameterTypeUnknown:
+			case kMCScriptBytecodeParameterTypeUnknown:
                 self -> valid = false;
                 return;
                 
             case kMCScriptBytecodeParameterTypeLabel:
                 if (p_arguments[i] == 0 ||
                     p_arguments[i] > self -> label_count)
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1693,7 +1685,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeConstant:
                 if (p_arguments[i] >= self -> module . value_count)
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1701,7 +1693,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeDefinition:
                 if (!__is_valid_definition(self, p_arguments[i]))
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1709,7 +1701,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeVariable:
                 if (!__is_valid_variable_definition(self, p_arguments[i]))
-                {
+				{
                     self -> valid = false;
                     return;
                 }
@@ -1717,7 +1709,7 @@ void MCScriptEmitBytecodeInModuleA(MCScriptModuleBuilderRef self, uindex_t p_opc
                 
             case kMCScriptBytecodeParameterTypeHandler:
                 if (!__is_valid_handler_definition(self, p_arguments[i]))
-                {
+				{
                     self -> valid = false;
                     return;
                 }

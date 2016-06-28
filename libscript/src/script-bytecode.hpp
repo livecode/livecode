@@ -110,7 +110,7 @@ struct MCScriptBytecodeOp_JumpIf
 	// relative to the jump_if*'s opcode's address if the value in <cond-reg>
 	// is IfTrue.
 	
-	static bool Validate(MCScriptValidateContext& ctxt)
+	static void Validate(MCScriptValidateContext& ctxt)
 	{
 		ctxt.CheckArity(2);
 		ctxt.CheckRegister(ctxt.GetArgument(0));
@@ -167,7 +167,7 @@ struct MCScriptBytecodeOp_Assign
 	// Fetch the value from <src-reg> and store it into <dst-reg>. The value
 	// being stored must conform to the type of the register.
 	
-	MC_SCRIPT_DEFINE_BYTECODE(AssignConstant, "assign", "rr")
+	MC_SCRIPT_DEFINE_BYTECODE(Assign, "assign", "rr")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -191,7 +191,7 @@ struct MCScriptBytecodeOp_Return
 	// contents of <result-reg> if specified, and nothing if not. The return
 	// value must conform to the type of the handler's return value.
 	
-	MC_SCRIPT_DEFINE_BYTECODE(AssignConstant, "return", "r?")
+	MC_SCRIPT_DEFINE_BYTECODE(Return, "return", "r?")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -577,7 +577,7 @@ struct MCScriptBytecodeOp_Fetch
 	// Fetch the value from definition index <index> and place it into <dst-reg>.
 	// The definition can be a variable, constant, handler or foreign handler.
 	
-	MC_SCRIPT_DEFINE_BYTECODE(Invoke, "fetch", "rd")
+	MC_SCRIPT_DEFINE_BYTECODE(Fetch, "fetch", "rd")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -654,7 +654,7 @@ struct MCScriptBytecodeOp_Store
 	//
 	// Store the value from <src-reg> into the variable definition <index>.
 	
-	MC_SCRIPT_DEFINE_BYTECODE(Invoke, "store", "rv")
+	MC_SCRIPT_DEFINE_BYTECODE(Store, "store", "rv")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -825,7 +825,7 @@ struct MCScriptBytecodeOp_Reset
 	// Reset registers to their default (typed) value. If the type does not have
 	// a default value, the register becomes unassigned.
 	
-	MC_SCRIPT_DEFINE_BYTECODE(AssignArray, "reset", "r*")
+	MC_SCRIPT_DEFINE_BYTECODE(Reset, "reset", "r*")
 	
 	static void Validate(MCScriptValidateContext& ctxt)
 	{
@@ -856,31 +856,33 @@ struct MCScriptBytecodeOp_Reset
 
 #define MC_SCRIPT_DISPATCH_BYTECODE_OP(Name) \
 	case kMCScriptBytecodeOp##Name: \
-		if (!visitor.template Visit<MCScriptBytecodeOp_##Name>()) \
+		if (!p_visitor.template Visit<MCScriptBytecodeOp_##Name>(p_arg)) \
 			return false; \
 		break;
 
-template<class Visitor>
-inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp op,
-									 Visitor& visitor)
+template<class Visitor,
+		 typename Arg>
+inline bool MCScriptBytecodeDispatchR(MCScriptBytecodeOp p_op,
+									  const Visitor& p_visitor,
+									  Arg& p_arg)
 {
 	_Pragma("GCC diagnostic push")
 	_Pragma("GCC diagnostic error \"-Wswitch\"")
-	switch(op)
+	switch(p_op)
 	{
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Jump)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfFalse)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfTrue)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignConstant)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Assign)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Return)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Invoke)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(InvokeIndirect)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Fetch)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Store)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignList)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignArray)
-			MC_SCRIPT_DISPATCH_BYTECODE_OP(Reset)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Jump)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfFalse)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(JumpIfTrue)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignConstant)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Assign)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Return)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Invoke)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(InvokeIndirect)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Fetch)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Store)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignList)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(AssignArray)
+		MC_SCRIPT_DISPATCH_BYTECODE_OP(Reset)
 	}
 	_Pragma("GCC diagnostic pop")
 	
@@ -889,16 +891,48 @@ inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp op,
 
 #undef MC_SCRIPT_DISPATCH_BYTECODE
 
-template<class Visitor>
-inline bool MCScriptBytecodeForEach(Visitor& visitor)
+template<class Visitor,
+		 typename Arg>
+
+inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp p_op,
+									 const Visitor& p_visitor,
+									 Arg p_arg)
+{
+	return MCScriptBytecodeDispatchR(p_op,
+									 p_visitor,
+									 p_arg);
+}
+
+template<class Visitor,
+		 typename Arg>
+inline bool MCScriptBytecodeForEach(const Visitor& p_visitor,
+									Arg p_arg)
 {
 	for(MCScriptBytecodeOp t_op = kMCScriptBytecodeOp__First; t_op <= kMCScriptBytecodeOp__Last; t_op = (MCScriptBytecodeOp)((int)t_op + 1))
 	{
-		if (MCScriptBytecodeDispatch(t_op,
-									 visitor))
-			return true;
+		if (!MCScriptBytecodeDispatch(t_op,
+									  p_visitor,
+									  p_arg))
+			return false;
 	}
 	
-	return false;
+	return true;
 }
 
+class MCScriptBytecodeValidate_Impl
+{
+public:
+	template<typename OpStruct>
+	bool Visit(MCScriptValidateContext& context) const
+	{
+		OpStruct::Validate(context);
+		return true;
+	}
+};
+
+inline void MCScriptBytecodeValidate(MCScriptValidateState& p_state)
+{
+	MCScriptBytecodeDispatch(p_state.operation,
+							 MCScriptBytecodeValidate_Impl(),
+							 MCScriptValidateContext(p_state));
+}

@@ -18,16 +18,41 @@
 
 #include "script-private.h"
 
+struct MCScriptValidateState
+{
+	// Whilst validation of bytecode is successful, the error var remains
+	// false. When it becomes true, it means the bytecode at 'current_address'
+	// within the handler is invalid.
+	bool error;
+	
+	// The module containins the handler being validated.
+	MCScriptModuleRef module;
+	
+	// The handler being validated.
+	MCScriptHandlerDefinition *handler;
+	
+	// The offset from the beginning of the module's bytecode to the current
+	// instruction being validated.
+	uindex_t current_address;
+	
+	MCScriptBytecodeOp operation;
+	
+	// The current instruction's argument count.
+	uindex_t argument_count;
+	
+	// The current instruction's list of (decoded) arguments.
+	uindex_t arguments[256];
+	
+	// The total number of registers required to run the bytecode.
+	uindex_t register_limit;
+};
+
 class MCScriptValidateContext
 {
 public:
 	// Constructors
 	//
-	MCScriptValidateContext(MCScriptModuleRef module,
-							MCScriptHandlerDefinition *definition,
-							uindex_t address,
-							uindex_t *arguments,
-							uindex_t argument_count);
+	MCScriptValidateContext(MCScriptValidateState& state);
 	
 	// Return whether the context is valid.
 	bool IsValid(void) const;
@@ -110,45 +135,30 @@ public:
 	void ReportInvalidVariable(void);
 	
 private:
-	// Whilst validation of bytecode is successful, the error var remains
-	// false. When it becomes true, it means the bytecode at 'current_address'
-	// within the handler is invalid.
-	bool m_error;
+	void ReportInvalid(void);
 	
-	// The module containins the handler being validated.
-	MCScriptModuleRef m_module;
-	
-	// The handler being validated.
-	MCScriptHandlerDefinition *m_handler;
-	
-	// The offset from the beginning of the module's bytecode to the current
-	// instruction being validated.
-	uindex_t m_current_address;
-	
-	// The current instructions argument count.
-	uindex_t m_argument_count;
-	
-	// The current instructions list of (decoded) arguments.
-	uindex_t m_arguments[256];
-	
-	// The total number of registers required to run the bytecode.
-	uindex_t m_register_limit;
+	MCScriptValidateState& m_state;
 };
+
+inline MCScriptValidateContext::MCScriptValidateContext(MCScriptValidateState& state)
+	: m_state(state)
+{
+}
 
 inline uindex_t MCScriptValidateContext::GetAddress(void) const
 {
-	return m_current_address;
+	return m_state.current_address;
 }
 
 inline uindex_t MCScriptValidateContext::GetArity(void) const
 {
-	return m_argument_count;
+	return m_state.argument_count;
 }
 
 inline uindex_t MCScriptValidateContext::GetArgument(uindex_t p_index) const
 {
-	__MCScriptAssert__(p_index < m_argument_count, "invalid argument index");
-	return m_arguments[p_index];
+	__MCScriptAssert__(p_index < m_state.argument_count, "invalid argument index");
+	return m_state.arguments[p_index];
 }
 
 inline index_t MCScriptValidateContext::GetSignedArgument(uindex_t p_index) const
@@ -166,22 +176,22 @@ inline index_t MCScriptValidateContext::GetSignedArgument(uindex_t p_index) cons
 
 inline MCScriptDefinitionKind MCScriptValidateContext::GetEffectiveKindOfDefinition(uindex_t p_index) const
 {
-	__MCScriptAssert__(p_index < m_module->definition_count, "invalid definition index");
+	__MCScriptAssert__(p_index < m_state.module->definition_count, "invalid definition index");
 	
-	if (m_module->definitions[p_index]->kind == kMCScriptDefinitionKindExternal)
+	if (m_state.module->definitions[p_index]->kind == kMCScriptDefinitionKindExternal)
 	{
 		MCScriptExternalDefinition *t_ext_def =
-			static_cast<MCScriptExternalDefinition *>(m_module->definitions[p_index]);
+			static_cast<MCScriptExternalDefinition *>(m_state.module->definitions[p_index]);
 		
-		return m_module->imported_definitions[t_ext_def->index].kind;
+		return m_state.module->imported_definitions[t_ext_def->index].kind;
 	}
 	
-	return m_module->definitions[p_index]->kind;
+	return m_state.module->definitions[p_index]->kind;
 }
 
 inline void MCScriptValidateContext::CheckArity(uindex_t p_expected_arity)
 {
-	if (m_error)
+	if (m_state.error)
 		return;
 	
 	if (GetArity() != p_expected_arity)
@@ -191,18 +201,42 @@ inline void MCScriptValidateContext::CheckArity(uindex_t p_expected_arity)
 	}
 }
 
-inline void MCScriptValidateContext::CheckAddress(uindex_t p_address)
+inline void MCScriptValidateContext::CheckMinimumArity(uindex_t p_minimum_expected_arity)
 {
-	if (m_error)
+	if (m_state.error)
 		return;
 	
-	if (p_address < m_handler->start_address)
+	if (GetArity() < p_minimum_expected_arity)
+	{
+		ReportInvalidArity();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckMaximumArity(uindex_t p_maximum_expected_arity)
+{
+	if (m_state.error)
+		return;
+	
+	if (GetArity() > p_maximum_expected_arity)
+	{
+		ReportInvalidArity();
+		return;
+	}
+}
+
+inline void MCScriptValidateContext::CheckAddress(uindex_t p_address)
+{
+	if (m_state.error)
+		return;
+	
+	if (p_address < m_state.handler->start_address)
 	{
 		ReportInvalidAddress();
 		return;
 	}
 	
-	if (p_address >= m_handler->finish_address)
+	if (p_address >= m_state.handler->finish_address)
 	{
 		ReportInvalidAddress();
 		return;
@@ -211,7 +245,7 @@ inline void MCScriptValidateContext::CheckAddress(uindex_t p_address)
 
 inline void MCScriptValidateContext::CheckRegister(uindex_t p_register)
 {
-	if (m_error)
+	if (m_state.error)
 	{
 		return;
 	}
@@ -222,20 +256,20 @@ inline void MCScriptValidateContext::CheckRegister(uindex_t p_register)
 		return;
 	}
 	
-	if (p_register >= m_register_limit)
+	if (p_register >= m_state.register_limit)
 	{
-		m_register_limit = p_register + 1;
+		m_state.register_limit = p_register + 1;
 	}
 }
 
 inline void MCScriptValidateContext::CheckValue(uindex_t p_index)
 {
-	if (m_error)
+	if (m_state.error)
 	{
 		return;
 	}
 	
-	if (p_index > m_module->value_count)
+	if (p_index > m_state.module->value_count)
 	{
 		ReportInvalidValue();
 		return;
@@ -244,12 +278,12 @@ inline void MCScriptValidateContext::CheckValue(uindex_t p_index)
 
 inline void MCScriptValidateContext::CheckHandler(uindex_t p_index)
 {
-	if (m_error)
+	if (m_state.error)
 	{
 		return;
 	}
 	
-	if (p_index > m_module->definition_count)
+	if (p_index > m_state.module->definition_count)
 	{
 		ReportInvalidDefinition();
 		return;
@@ -258,7 +292,8 @@ inline void MCScriptValidateContext::CheckHandler(uindex_t p_index)
 	MCScriptDefinitionKind t_kind =
 		GetEffectiveKindOfDefinition(p_index);
 	if (t_kind != kMCScriptDefinitionKindHandler &&
-		t_kind != kMCScriptDefinitionKindForeignHandler)
+		t_kind != kMCScriptDefinitionKindForeignHandler &&
+		t_kind != kMCScriptDefinitionKindDefinitionGroup)
 	{
 		ReportInvalidHandler();
 		return;
@@ -267,12 +302,12 @@ inline void MCScriptValidateContext::CheckHandler(uindex_t p_index)
 
 inline void MCScriptValidateContext::CheckFetchable(uindex_t p_index)
 {
-	if (m_error)
+	if (m_state.error)
 	{
 		return;
 	}
 	
-	if (p_index > m_module->definition_count)
+	if (p_index > m_state.module->definition_count)
 	{
 		ReportInvalidDefinition();
 		return;
@@ -292,12 +327,12 @@ inline void MCScriptValidateContext::CheckFetchable(uindex_t p_index)
 
 inline void MCScriptValidateContext::CheckVariable(uindex_t p_index)
 {
-	if (m_error)
+	if (m_state.error)
 	{
 		return;
 	}
 	
-	if (p_index > m_module->definition_count)
+	if (p_index > m_state.module->definition_count)
 	{
 		ReportInvalidDefinition();
 		return;
@@ -308,4 +343,49 @@ inline void MCScriptValidateContext::CheckVariable(uindex_t p_index)
 		ReportInvalidVariable();
 		return;
 	}
+}
+
+inline void MCScriptValidateContext::ReportInvalidArity(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidAddress(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidRegister(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidValue(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidDefinition(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidHandler(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidFetchable(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalidVariable(void)
+{
+	ReportInvalid();
+}
+
+inline void MCScriptValidateContext::ReportInvalid(void)
+{
+	m_state.error = true;
 }
