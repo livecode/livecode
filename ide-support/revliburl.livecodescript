@@ -10,6 +10,10 @@ end revLoadLibrary
 
 on revUnloadLibrary
    remove the script of stack "revLibUrl" from back
+   
+   -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
+   # remove external library if in use
+   unloadExternalDriver
 end revUnloadLibrary
 ---------------------------------------------------------------------
 ##shared locals
@@ -39,6 +43,9 @@ local lvProxyInitialized       -- If we have already attempted to extract the sy
 local lvUsePACFileForProxy     -- If we should use the configured PAC file for proxy settings
 local lvHTTPProxy              -- The proxy server (if any) configured by the system
 local lvProxyBypassList        -- URLs that bypass any proxy settings
+
+-- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
+local lvExtDriver, lvExtIsBlocking
 
 ---------------------------------------------------------------------
 ##http locals
@@ -72,6 +79,56 @@ on libraryStack
    // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when stack becomes in use
    initialiseCustomProps
 end libraryStack
+------------------------------------------------
+-- CW-2016-06-11: [[ External driver support ]] Add function to select external driver for use with libUrl.
+## Set driver to use for libUrl
+on libUrlSetDriver pDriver
+   libUrlResetAll
+
+   if lvExtDriver is not pDriver then
+      unloadExternalDriver
+
+      if pDriver is not empty then
+         return loadExternalDriver(pDriver)
+      else
+         return empty
+      end if
+   else
+      return empty
+   end if
+end libUrlSetDriver
+
+-- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
+## Send initialise command to external library
+private function loadExternalDriver pDriver
+   local tResult
+
+   # Add the external driver as a behavior for libURL, the script must already be loaded
+   set the behavior of me to pDriver
+
+   put ulExtInitDriver() into tResult
+   if tResult is empty then
+      put ulExtIsBlocking() into lvExtIsBlocking
+      put pDriver into lvExtDriver
+   else
+      # External driver initialisation failed, so don't use it as a behavior for libURL
+      set the behavior of me to empty
+   end if
+
+   return tResult
+end loadExternalDriver
+
+## Send shutdown command to external library
+private command unloadExternalDriver
+   if lvExtDriver is not empty then
+      ulExtRemoveDriver
+      put false into lvExtIsBlocking
+      put empty into lvExtDriver
+   end if
+
+   # Stop using the external driver as a behavior for libURL
+   set the behavior of me to empty
+end unloadExternalDriver
 ------------------------------------------------
 on initialiseCustomProps
    # initialise ftp codes prop set
@@ -199,7 +256,7 @@ on getUrl x
    if newUrl is among the lines of keys(laLoadingUrls) and (lvAuthBlockBypass is not true) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true then
+   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -243,7 +300,7 @@ on postUrl y,x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -289,7 +346,7 @@ on putUrl y,x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -335,7 +392,7 @@ on deleteUrl x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass is true then
+   if lvBlockingUrl is empty  or lvBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -453,8 +510,9 @@ on ulGetFormat pUrl,pCount
          put _proxyForURL(pURL) into laUrlProxy[pURL]
          ulLogIt "Proxy for URL:" && laUrlProxy[pURL] & cr
          
+         -- CW-2016-06-11: [[ External driver support ]] Bypass URL/Proxy manipulation for external drivers.
          -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
-         if laUrlProxy[pURL] is not empty then
+         if laUrlProxy[pURL] is not empty and lvExtDriver is empty then
             ## for now don't allow https connections through proxies
             ## will look at this again later
             put tHost into tURLHost
@@ -486,27 +544,36 @@ on ulGetFormat pUrl,pCount
          end if
          
          break
-      case "ftp"
-         if tFilename is empty then ## require a file or directory path for FTP
-            put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
+      case "sftp"
+         -- CW-2016-06-11: [[ External driver support ]] SFTP is only supported by external drivers.
+         if lvExtDriver is empty then
+            put "sftp protocol not supported in this version" into laUrlErrorStatus[pUrl]
             if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
             exit "ulGetFormat"
          end if
+      case "ftp"
+         -- CW-2016-06-11: [[ External driver support ]] This processing is only needed by the internal driver.
+         if lvExtDriver is empty then
+            if tPort is empty then put ":21" into tPort
          
-         if tPort is empty then put ":21" into tPort
-         
-         if tUser is empty then
-            put "anonymous" into tUser
-            put "guest" into tPass
+            if tUser is empty then
+               put "anonymous" into tUser
+               put "guest" into tPass
+            end if
          end if
          
-         break
+         if tFilename is not empty then
+            break
+         end if
       default
          put "invalid URL: " & quote & pUrl & quote into laUrlErrorStatus[pUrl]
          if laLoadReq[pUrl] then put "error" into laUrlLoadStatus[pUrl]
          exit "ulGetFormat"
          break
    end switch
+   
+   ##store current state of httpHeaders ad use when request is actually processed
+   put the httpHeaders into laCurrentHttpHeaders[pURL]
    
    if laUrlFormat[pUrl]["references"] > 0 then
       add 1 to laUrlFormat[pUrl]["references"]
@@ -523,34 +590,36 @@ on ulGetFormat pUrl,pCount
       put tURLHost into laURLFormat[pURL]["urlhost"]
    end if
    
-   ##store current state of httpHeaders ad use when request is actually processed
-   put the httpHeaders into laCurrentHttpHeaders[pURL]
-   
-   local tResolveHost
-   put merge("[[tHost]]|[[pURL]]") into tResolveHost
-   # clear status before resolving hostname
-   put empty into laStatus[pUrl]
-   
-   ## I.M 2010.03.24  with engine versions < 4.5 calling hostnametoaddress with
-   ## an extra parameter will throw an error, so encase in a try ... catch block
-   ## and call without callback handler
-   try
-      get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
-   catch pError
-      get hostNameToAddress(tResolveHost)
-      if the result is empty then ulHostNameToAddressCallback tResolveHost, it
-   end try
-   ## I.M. 2010-03-11  Need to check result and handle immediate failure where
-   ##  no callback message will be sent
-   if the result is not empty then
-      ulHostNameToAddressCallback tResolveHost, empty
-   end if
-   
-   if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
-      repeat while laStatus[pUrl] is empty
-         if lvJumpOut then exit to top
-         wait for messages
-      end repeat
+   -- CW-2016-06-11: [[ External driver support ]] Call external library to handle request rather than process directly.
+   if lvExtDriver is not empty then
+      ulExtHandleRequest pUrl, laAction[pUrl], laCurrentHttpHeaders[pUrl], laPostData[pUrl], laUrlProxy[pUrl]
+   else
+      local tResolveHost
+      put merge("[[tHost]]|[[pURL]]") into tResolveHost
+      # clear status before resolving hostname
+      put empty into laStatus[pUrl]
+      
+      ## I.M 2010.03.24  with engine versions < 4.5 calling hostnametoaddress with
+      ## an extra parameter will throw an error, so encase in a try ... catch block
+      ## and call without callback handler
+      try
+         get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
+      catch pError
+         get hostNameToAddress(tResolveHost)
+         if the result is empty then ulHostNameToAddressCallback tResolveHost, it
+      end try
+      ## I.M. 2010-03-11  Need to check result and handle immediate failure where
+      ##  no callback message will be sent
+      if the result is not empty then
+         ulHostNameToAddressCallback tResolveHost, empty
+      end if
+      
+      if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
+         repeat while laStatus[pUrl] is empty
+            if lvJumpOut then exit to top
+            wait for messages
+         end repeat
+      end if
    end if
 end ulGetFormat
 
@@ -3156,20 +3225,32 @@ end socketError
 on libUrlResetAll
   local i
   
-  if there is a stack "libUrl" then put empty into fld "log1" of stack "libURL"
-  repeat for each line i in the openSockets
-    close socket i
-  end repeat
-  ulDeleteLocals
-  put true into lvJumpOut
-  send "ulDeleteLocals" to me in 5 milliseconds
+  -- CW-2016-06-11: [[ External driver support ]] Call driver specific reset command if external driver is in use.
+  if lvExtDriver is not empty then
+    ulDeleteLocals
+    ulExtResetDriver
+  else
+    if there is a stack "libUrl" then put empty into fld "log1" of stack "libURL"
+    repeat for each line i in the openSockets
+      close socket i
+    end repeat
+    
+    ulDeleteLocals
+    put true into lvJumpOut
+    send "ulDeleteLocals" to me in 5 milliseconds
+  end if
 end libUrlResetAll
 
 # OK-2008-09-19 : Added for revOnline to allow post commands to be cancelled, 
 # not sure if this works yet...
 
 command libUrlCancel
-   put true into lvJumpOut
+   -- CW-2016-06-11: [[ External driver support ]] Call driver specific reset command if external driver is in use.
+   if lvExtDriver is not empty then
+      ulExtResetDriver
+   else
+      put true into lvJumpOut
+   end if
 end libUrlCancel
 
 --------------------------------------------
@@ -3177,8 +3258,11 @@ on ulDeleteLocals
   local e
   
   repeat for each item e in line 3 of the localNames
-    get "delete" && "local" && e
-    do it
+    -- CW-2016-06-11: [[ External driver support ]] Don't clear locals that determine what driver is in use.
+    if e is not "lvExtDriver" and e is not "lvExtIsBlocking" then
+      get "delete" && "local" && e
+      do it
+    end if
   end repeat
 end ulDeleteLocals
 ----------------------------------------------
@@ -3390,19 +3474,29 @@ end libUrlErrorData
 -----------------------------------------------
 on libUrlSetFtpMode pMode
   ##default to passive
-  if pMode is "active" or pMode is "a" then
-    put "active" into lvFtpMode
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetFtpMode pMode
   else
-    put "passive" into lvFtpMode
+    if pMode is "active" or pMode is "a" then
+      put "active" into lvFtpMode
+    else
+      put "passive" into lvFtpMode
+    end if
   end if
 end libUrlSetFtpMode
 
 ----------------------------
 on libUrlSetFtpListCommand pCommand
-  if pCommand is "NLST" then
-    put "NLST" into lvFtpListCommand
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetFtpListCommand pCommand
   else
-    put "LIST" into lvFtpListCommand
+    if pCommand is "NLST" then
+      put "NLST" into lvFtpListCommand
+    else
+      put "LIST" into lvFtpListCommand
+    end if
   end if
 end libUrlSetFtpListCommand
 -----------------------------
@@ -3431,6 +3525,11 @@ on libUrlSetLogField pField
     put tField into lvLogField
   else
     put empty into lvLogField
+  end if
+
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetLogField lvLogField
   end if
 end libUrlSetLogField
 ---------------------------
@@ -3745,18 +3844,28 @@ function libUrlBasicAuthToken pName, pPass
 end libUrlBasicAuthToken
 ------------------------
 on libUrlSetSSLVerification pWhich
-  if pWhich is false then
-    put false into lvSSLVerification
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtSetSSLVerification pWhich
   else
-    put true into lvSSLVerification
+    if pWhich is false then
+      put false into lvSSLVerification
+    else
+      put true into lvSSLVerification
+    end if
   end if
 end libUrlSetSSLVerification
 -------------------------
 on libUrlFollowHttpRedirects pWhich
-  if pWhich is false then
-    put false into lvFollowHttpRedirects
+  -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+  if lvExtDriver is not empty then
+    ulExtFollowHttpRedirects pWhich
   else
-    put true into lvFollowHttpRedirects
+    if pWhich is false then
+      put false into lvFollowHttpRedirects
+    else
+      put true into lvFollowHttpRedirects
+    end if
   end if
 end libUrlFollowHttpRedirects
 -------------------------
@@ -3994,8 +4103,13 @@ on ulCancelRequest pUrl
   
   put true into laCancelled[pUrl]
   put "error cancelled" into tError
-  ulStopRequest pUrl,tError
   
+  if lvExtDriver is not empty then
+    put tError into laUrlErrorStatus[pUrl]
+    ulExtCancelRequest pURL
+  else
+    ulStopRequest pUrl,tError
+  end if  
 end ulCancelRequest
 -----------------------------
 on ulStopRequest pUrl, pErrMessage
@@ -4198,7 +4312,12 @@ end ulFtpGoodReply
 function libUrlFtpCommand pCommand, pHost, pUser, pPass
    local tHost,tPort,tRegEx,tTempHost,tConnectHost,tDummyUrl,tSocket
    local tLogonReply,tFtpReply
-   
+    
+   -- CW-2016-06-11: [[ External driver support ]] Call the external driver implementation if it is enabled.
+   if lvExtDriver is not empty then
+      return ulExtFtpCommand(pCommand, pHost, pUser, pPass)
+   end if
+
    put false into lvJumpOut
    if lvCount is empty then
       put "6923" into lvCount
@@ -5141,3 +5260,46 @@ private function _proxyfromHTTPProxy pURL, pProxy
 end _proxyFromHTTPProxy
 
 --------------------------------------------------
+-- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
+
+-- Mapping commands for externals to set appropriate local variables as needed by libUrl
+command ulExtSetLoadStatus pUrl, pStatus
+   put pStatus into laUrlLoadStatus[pUrl]
+end ulExtSetLoadStatus
+
+command ulExtSetErrorStatus pUrl, pStatus
+   put pStatus into laUrlErrorStatus[pUrl]
+end ulExtSetErrorStatus
+
+command ulExtSetAsLoaded pUrl pData
+   put pData into laLoadedUrls[pUrl]
+end ulExtSetAsLoaded
+
+command ulExtRemoveLoadingVars pUrl
+   delete local laLoadingUrls[pUrl]
+   delete local laLoadReq[pUrl]
+end ulExtRemoveLoadingVars
+
+command ulExtSetData pUrl pData
+   put pData into laData[pUrl]
+end ulExtSetData
+
+function ulExtIsLoadReq pUrl
+   return laLoadReq[pUrl]
+end ulExtIsLoadReq
+
+function ulExtIsFileTransfer pUrl
+   return laFile[pUrl]
+end ulExtIsFileTransfer
+
+command ulExtSetLastHTTPHeaders pHeaders
+   set the lastHTTPHeaders of me to pHeaders
+end ulExtSetLastHTTPHeaders
+
+command ulExtSetLastRHHeaders pHeaders
+   set the lastRhHeaders of me to pHeaders
+end ulExtSetLastRHHeaders
+
+function ulExtGetMaxPostWithoutExpect
+   return laMaxPostWithoutExpect
+end ulExtGetMaxPostWithoutExpect
