@@ -8,6 +8,8 @@ Summary: Creates an <image>, <EPS>, <audio clip>, or <video clip> and copies the
 
 Introduced: 1.0
 
+Deprecated: 8.1
+
 OS: mac,windows,linux,ios,android
 
 Platforms: desktop,web,mobile
