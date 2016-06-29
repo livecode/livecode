@@ -1383,7 +1383,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["display name"] into tAssociationsDefault["content"]
+   put tParsedA["name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
