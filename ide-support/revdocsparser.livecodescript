@@ -1536,9 +1536,9 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put 1 into tCurrentLine
    put line tCurrentLine of pData into tNameLine
    add 1 to tCurrentLine
-   if line tCurrentLine of pData begins with "deprecate" then
+   if word 1 to -1 of line tCurrentLine of pData begins with "deprecate" then
+      put token 1 to -1 of word 4 of line tCurrentLine of pData into tDeprecated
       add 1 to tCurrentLine
-      put true into tDeprecated
    end if
    
    put line tCurrentLine of pData into tSyntaxLine
@@ -1613,7 +1613,9 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
    put "syntax" into xDataA[tEntryName]["kind"]
    put pComment into xDataA[tEntryName]["comments"]
-   put tDeprecated is true into xDataA[tEntryName]["deprecated"]
+   if tDeprecated is not empty then
+      put tDeprecated into xDataA[tEntryName]["deprecated"]
+   end if
    put tEntryName into xDataA[tEntryName]["name"]
 end revDocsUpdateModularSyntaxDocBlocks
 
