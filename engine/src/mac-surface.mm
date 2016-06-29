@@ -33,8 +33,8 @@
 
 // COCOA-TODO: Clean up external linkage for surface.
 extern MCRectangle MCU_intersect_rect(const MCRectangle&, const MCRectangle&);
-extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
-extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 extern MCGFloat MCResGetDeviceScale(void);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +419,7 @@ static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGIm
 	
 	CGImageRef t_image = nil;
 	
-	t_success = MCGImageToCGImage(p_src, p_src_rect, false, false, t_image);
+	t_success = MCGImageToCGImage(p_src, MCGRectangleGetBounds(p_src_rect), false, t_image);
 	if (t_success)
 	{
 		MCMacRenderCGImage(p_target, p_dst_rect, t_image, p_alpha, p_blend);
@@ -435,7 +435,7 @@ static void MCMacRenderRasterToCG(CGContextRef p_target, CGRect p_dst_rect, cons
 		CGImageRef t_image;
 		t_image = nil;
 		
-		if (MCGRasterToCGImage(p_src, p_src_rect, t_colorspace, false, false, t_image))
+		if (MCGRasterToCGImage(p_src, MCGRectangleGetBounds(p_src_rect), t_colorspace, false, false, t_image))
 		{
 			MCMacRenderCGImage(p_target, p_dst_rect, t_image, p_alpha, p_blend);
 			CGImageRelease(t_image);
