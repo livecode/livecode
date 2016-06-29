@@ -85,12 +85,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifdef _ANDROID_MOBILE
 #include "mblad.h"
 #include "mblcontrol.h"
-#include "mblsensor.h"
-#include "mblsyntax.h"
 #endif
 
-#ifdef _IOS_MOBILE
+#ifdef _MOBILE
 #include "mblsyntax.h"
+#include "mblsensor.h"
 #endif
 
 #include "exec.h"
@@ -853,20 +852,22 @@ void X_clear_globals(void)
     MCcommandarguments = NULL;
     MCcommandname = NULL;
 
+#ifdef _MOBILE
+    MCSensorInitialize();
+    MCSystemSoundInitialize();
+#endif
+    
 #ifdef _ANDROID_MOBILE
     extern void MCAndroidMediaPickInitialize();
     // MM-2012-02-22: Initialize up any static variables as Android static vars are preserved between sessions
     MCAdInitialize();
     MCNativeControlInitialize();
-    MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
-	MCSystemSoundInitialize();
-    MCAndroidMediaPickInitialize();
+	MCAndroidMediaPickInitialize();
 #endif
 	
 #ifdef _IOS_MOBILE
-	MCSystemSoundInitialize();
-    MCReachabilityEventInitialize();    
+    MCReachabilityEventInitialize();
 #endif
 	
 	MCDateTimeInitialize();
