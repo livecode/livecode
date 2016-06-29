@@ -965,10 +965,10 @@ command revSBResaveScriptOnlyStackAsProperStackFile pStackName, pStackFilePath, 
    if there is a stack pStackName then
       set the name of stack pStackName to "__keep_this_around__"
    end if
-   set the scriptOnly of stack pStackFilePath to false
-   set the filename of stack pStackName to pOutputStackFilePath
-   save stack pStackName
-   set the cantDelete of stack pStackName to false
+   create invisible stack "__temp_real_stack__"
+   set the script of stack "__temp_real_stack__" to the script of stack pStackFilePath
+   set the name of stack "__temp_real_stack__" to pStackName
+   save stack pStackName as pOutputStackFilePath
    delete stack pStackName
    if there is a stack "__keep_this_around__" then
       set the name of stack "__keep_this_around__" to pStackName

@@ -323,7 +323,7 @@ function builderMergExtVersion
 end builderMergExtVersion
 
 function builderUnpackFolder
-   return builderRepoFolder() & slash & "Unpacked"
+   return sWorkDir & "/ext/unpacked"
 end builderUnpackFolder
 
 function builderTSNetVersion
@@ -554,6 +554,8 @@ end macPList
 
 command builderEnsureZip pZipfile, pURL
    if there is not a file pZipfile then
+      builderEnsureFolderForFile pZipfile
+      
       builderLog "message", "Downloading zip file:" && pZipfile
       get shell(merge("curl -o '[[pZipfile]]' '[[pUrl]]'"))
       if the result is not zero then
@@ -586,7 +588,7 @@ function builderMergExtUrl pMergExtVersion, pEdition
 end builderMergExtUrl
 
 private function builderMergExtDownloadedFilePath pMergExtVersion, pEdition
-   return builderRepoFolder() & slash & "MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
+   return sWorkDir & "/ext/downloads/MergExt-" & pEdition & "-" & pMergExtVersion & ".zip"
 end builderMergExtDownloadedFilePath
 
 private command builderMergExtUnpack pMergExtVersion, pEdition
@@ -611,7 +613,7 @@ function builderTSNetUrl pTSNetVersion
 end builderTSNetUrl
 
 private function builderTSNetDownloadedFilePath pTSNetVersion
-   return builderRepoFolder() & slash & "tsNet_" & pTSNetVersion & ".zip"
+   return sWorkDir & "/ext/downloads/tsNet_" & pTSNetVersion & ".zip"
 end builderTSNetDownloadedFilePath
 
 private command builderTSNetUnpack pTSNetVersion
