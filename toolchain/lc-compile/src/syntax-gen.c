@@ -1741,6 +1741,10 @@ static void GenerateTokenList(void)
     NameRef *t_tokens;
     long t_token_count;
 	SyntaxRuleGroupRef t_group;
+	long i;
+	unsigned int j;
+	const char *t_string;
+
     t_tokens = NULL;
     t_token_count = 0;
     for(t_group = s_groups; t_group != NULL; t_group = t_group -> next)
@@ -1749,19 +1753,15 @@ static void GenerateTokenList(void)
     fprintf(s_output, "'nonterm' CustomKeywords(-> STRING)\n");
     if (t_token_count != 0 || s_unreserved_keyword_count != 0)
     {
-        long i;
         for(i = 0; i < t_token_count; i++)
         {
-            const char *t_string;
             GetStringOfNameLiteral(t_tokens[i], &t_string);
             fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
             fprintf(s_output, "    \"%s\"\n", t_string);
             fprintf(s_output, "    where(\"%s\" -> String)\n", t_string);
         }
-        unsigned int j;
         for(j = 0; j < s_unreserved_keyword_count; j++)
         {
-            const char *t_string;
             GetStringOfNameLiteral(s_unreserved_keywords[j], &t_string);
             fprintf(s_output, "  'rule' CustomKeywords(-> String):\n");
             fprintf(s_output, "    \"%s\"\n", t_string);
