@@ -2199,9 +2199,6 @@ void MCPlayer::moviefinished(void)
 
 void MCPlayer::SynchronizeUserCallbacks(void)
 {
-    if (MCStringIsEmpty(userCallbackStr))
-        return;
-    
     if (m_platform_player == nil)
         return;
     
@@ -2221,7 +2218,11 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     
     uindex_t t_start_index, t_length;
     
-    t_length = MCStringGetLength(*t_callback);
+	if (MCStringIsEmpty(*t_callback))
+		t_length = 0;
+	else
+		t_length = MCStringGetLength(*t_callback);
+	
     t_start_index = 0;
     
 	while (t_start_index < t_length)
