@@ -434,6 +434,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  DERIVED INTEGER TYPES
 //
 
+#undef __HAVE_SSIZE_T__
+#if !defined(__VISUALC__)
+#	define __HAVE_SSIZE_T__ 1
+#endif /* !__VISUALC__ */
+
 #ifdef __32_BIT__
 
 typedef int32_t integer_t;
@@ -498,6 +503,12 @@ typedef int64_t compare_t;
 
 #error No memory model defined for this platform and architecture combination
 
+#endif
+
+#if !defined(__HAVE_SSIZE_T__)
+typedef intptr_t ssize_t;
+
+#	define SSIZE_MAX INTPTR_MAX
 #endif
 
 #define SIZE_MIN UINTPTR_MIN
