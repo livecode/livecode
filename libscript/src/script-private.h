@@ -586,6 +586,16 @@ enum MCScriptBytecodeOp
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
 
+inline index_t MCScriptBytecodeDecodeSignedArgument(uindex_t p_original_value)
+{
+	index_t t_value;
+	if ((p_original_value & 1) == 0)
+		t_value = (signed)(p_original_value >> 1);
+	else
+		t_value = -(signed)(p_original_value >> 1);
+	return t_value;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Compiled modules are serialized to disk in the following format:

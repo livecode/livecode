@@ -18,6 +18,12 @@
 
 #include "script-private.h"
 
+// The state of the validate context is separated from the context for two
+// reasons:
+//    1. Validating bytecode should just mutate the state via the context
+//       methods, they never need to set up new state and validate recursively
+//    2. The state can be reused between each bytecode validation step by the
+//       caller.
 struct MCScriptValidateState
 {
 	// Whilst validation of bytecode is successful, the error var remains
@@ -163,15 +169,7 @@ inline uindex_t MCScriptValidateContext::GetArgument(uindex_t p_index) const
 
 inline index_t MCScriptValidateContext::GetSignedArgument(uindex_t p_index) const
 {
-	uindex_t t_unsigned_value = GetArgument(p_index);
-	
-	index_t t_value;
-	if ((t_unsigned_value & 1) == 0)
-		t_value = (signed)(t_unsigned_value >> 1);
-	else
-		t_value = -(signed)(t_unsigned_value >> 1);
-	
-	return t_value;
+	return MCScriptBytecodeDecodeSignedArgument(GetArgument(p_index));
 }
 
 inline MCScriptDefinitionKind MCScriptValidateContext::GetEffectiveKindOfDefinition(uindex_t p_index) const

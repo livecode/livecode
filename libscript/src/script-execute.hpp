@@ -21,6 +21,9 @@
 class MCScriptExecuteContext
 {
 public:
+	// Default constructor.
+	MCScriptExecuteContext(void);
+	
 	// Return the address of the current opcode
 	uindex_t GetAddress(void) const;
 	
@@ -30,11 +33,11 @@ public:
 	// Return the argument at the given index as unsigned
 	uindex_t GetArgument(uindex_t index) const;
 	
-	// Return the list of arguments to the current opcode
-	uindex_t *GetArgumentList(void) const;
-	
 	// Return the argument at the given index as signed
 	index_t GetSignedArgument(uindex_t index) const;
+	
+	// Return the list of arguments to the current opcode
+	const uindex_t *GetArgumentList(void) const;
 	
 	// Fetch the type of the given register. The type of the register might
 	// be nil, if it has no assigned type.
@@ -155,6 +158,43 @@ public:
 	
 	//////////
 	
+private:
+	struct Frame
+	{
+		Frame *caller;
+		
+		MCScriptInstanceRef instance;
+		
+		MCScriptHandlerDefinition *handler;
+		
+		uindex_t address;
+		
+		MCValueRef *slots;
+		
+		uindex_t result;
+		uindex_t *mapping;
+	};
+	
+	/////////
+	
+	bool TryToBindForeignHandler(MCScriptInstanceRef instance,
+								 MCScriptForeignHandlerDefinition *handler_def,
+								 bool& r_bound);
+	
+	bool EvaluateHandler(MCScriptInstanceRef instance,
+						 MCScriptCommonHandlerDefinition *handler_def,
+						 MCHandlerRef& r_handler);
+	
+	/////////
+	
+	bool m_error;
+	Frame *m_frame;
+	MCScriptBytecodeOp m_operation;
+	uindex_t m_arguments[256];
+	uindex_t m_argument_count;
+
+	/////////
+	
 	struct InternalHandlerContext
 	{
 		MCScriptInstanceRef instance;
@@ -163,11 +203,185 @@ public:
 	
 	static const MCHandlerCallbacks kInternalHandlerCallbacks;
 	static bool IsInternalHandler(MCHandlerRef handler);
+	static bool InternalHandlerCreate(MCScriptInstanceRef instance,
+									  MCScriptCommonHandlerDefinition *definition,
+									  MCHandlerRef& r_handler);
 	static bool InternalHandlerInvoke(void *context,
 									  MCValueRef *arguments,
 									  uindex_t argument_count,
 									  MCValueRef& r_return_value);
-	static void InternalHandlerRelease(void *context);
 	static bool InternalHandlerDescribe(void *context,
 										MCStringRef& r_description);
 };
+
+inline
+MCScriptExecuteContext::MCScriptExecuteContext(void)
+	: m_frame(nil)
+{
+}
+
+inline uindex_t
+MCScriptExecuteContext::GetAddress(void) const
+{
+	return m_frame->address;
+}
+
+inline uindex_t
+MCScriptExecuteContext::GetArgumentCount(void) const
+{
+	return m_argument_count;
+}
+
+inline uindex_t
+MCScriptExecuteContext::GetArgument(uindex_t p_index) const
+{
+	return m_arguments[p_index];
+}
+
+inline const uindex_t *
+MCScriptExecuteContext::GetArgumentList(void) const
+{
+	return m_arguments;
+}
+
+inline index_t
+MCScriptExecuteContext::GetSignedArgument(uindex_t p_index) const
+{
+	return MCScriptBytecodeDecodeSignedArgument(GetArgument(p_index));
+}
+
+inline MCTypeInfoRef
+MCScriptExecuteContext::GetTypeOfRegister(uindex_t p_index) const
+{
+	MCScriptType **t_module_types;
+	t_module_types = m_frame->instance->module->types;
+	
+	MCTypeInfoRef t_handler_signature;
+	t_handler_signature = t_module_types[m_frame->handler->type]->typeinfo;
+	
+	uindex_t t_parameter_count;
+	t_parameter_count = MCHandlerTypeInfoGetParameterCount(t_handler_signature);
+	
+	if (p_index < t_parameter_count)
+	{
+		return MCHandlerTypeInfoGetParameterType(t_handler_signature,
+												 p_index);
+	}
+	else if (p_index < t_parameter_count + m_frame->handler->local_type_count)
+	{
+		uindex_t t_local_index;
+		t_local_index = p_index - t_parameter_count;
+		
+		uindex_t t_local_type_index;
+		t_local_type_index = m_frame->handler->local_types[t_local_index];
+		
+		return t_module_types[t_local_type_index]->typeinfo;
+	}
+	
+	return nil;
+}
+
+inline MCValueRef
+MCScriptExecuteContext::FetchValue(uindex_t p_index) const
+{
+	return m_frame->instance->module->values[p_index];
+}
+
+inline MCValueRef
+MCScriptExecuteContext::FetchRegister(uindex_t p_index) const
+{
+	return m_frame->slots[p_index];
+}
+
+inline void
+MCScriptExecuteContext::StoreRegister(uindex_t p_index,
+									  MCValueRef p_value)
+{
+	if (m_frame->slots[p_index] != p_value)
+	{
+		MCValueRelease(m_frame->slots[p_index]);
+		if (p_value != nil)
+			MCValueRetain(p_value);
+		m_frame->slots[p_index] = p_value;
+	}
+}
+
+inline MCValueRef
+MCScriptExecuteContext::FetchConstant(MCScriptInstanceRef p_instance,
+									  MCScriptConstantDefinition *p_constant_def) const
+{
+	return p_instance->module->values[p_constant_def->value];
+}
+
+inline MCValueRef
+MCScriptExecuteContext::FetchHandler(MCScriptInstanceRef p_instance,
+									 MCScriptHandlerDefinition *p_handler_def)
+{
+	if (m_error)
+	{
+		return nil;
+	}
+	
+	MCHandlerRef t_handler;
+	if (!EvaluateHandler(p_instance,
+						 p_handler_def,
+						 t_handler))
+	{
+		Rethrow();
+		return nil;
+	}
+	
+	return t_handler;
+}
+
+inline MCValueRef
+MCScriptExecuteContext::FetchForeignHandler(MCScriptInstanceRef p_instance,
+											MCScriptForeignHandlerDefinition *p_handler_def)
+{
+	if (m_error)
+	{
+		return nil;
+	}
+	
+	bool t_bound;
+	if (!TryToBindForeignHandler(p_instance,
+								 p_handler_def,
+								 t_bound))
+	{
+		Rethrow();
+		return nil;
+	}
+
+	if (!t_bound)
+	{
+		return kMCNull;
+	}
+	
+	MCHandlerRef t_handler;
+	if (!EvaluateHandler(p_instance,
+						 p_handler_def,
+						 t_handler))
+	{
+		Rethrow();
+		return nil;
+	}
+	
+	return t_handler;
+}
+
+inline MCValueRef
+MCScriptExecuteContext::FetchVariable(MCScriptInstanceRef p_instance,
+									  MCScriptVariableDefinition *p_variable_def) const
+{
+
+}
+
+#if 0
+	
+	MCTypeInfoRef t_handler_signature;
+	t_handler_signature = p_instance -> module -> types[p_handler_def -> type] -> typeinfo;
+	
+	__MCScriptHandlerContext t_context;
+	t_context.instance = p_instance;
+	t_context.definiiton = p_handler_def;
+#endif
