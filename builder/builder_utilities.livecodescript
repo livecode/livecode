@@ -10,9 +10,9 @@ local sBuiltDocsDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
-command builderLog  pType, pMessage
+command builderLog  pType, pMessage, pContext
    if there is a stack "Builder" then
-      dispatch "__builderLog" to stack "Builder" with  pType, pMessage
+      dispatch "__builderLog" to stack "Builder" with  pType, pMessage, pContext
    end if
 end builderLog
 

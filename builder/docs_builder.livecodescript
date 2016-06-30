@@ -17,10 +17,12 @@ command docsBuilderProgressUpdate pProgress, pMessage
    builderLog "message", pMessage
 end docsBuilderProgressUpdate
 
-command errorShow pError
-   builderLog "error", pError
-   throw pError
-end errorShow
+command logError pError
+   local tContext
+   // get the context of the calling handler: <handler>:<linenumber>
+   put item -2 to -1 of line -2 of the executionContexts into tContext
+   builderLog "error", pError, tContext
+end logError
 
 command docsBuilderRun pEdition, pVersion
    set the itemdelimiter to "."
@@ -1942,7 +1944,7 @@ private command addFolderToListIfExists pFolder, pThrowIfNot, @xArray
    end if
    
    if pThrowIfNot then
-      builderLog "error", "Expected docs folder" && pFolder && "doesn't exist"
+      logError "Expected docs folder" && pFolder && "doesn't exist"
    else 
       builderLog "message", "Folder" && pFolder && "doesn't exist"
    end if
@@ -2149,7 +2151,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    put docsBuilderParseDictionary("LiveCode Script", "LiveCode", tDictionaryFolders, tAdditionalFolders, false) into tLCSDictionaryA
    
    if tLCSDictionaryA is empty then
-      builderLog "error", "Couldn't parse script dictionary data for" && pEdition
+      logError "Couldn't parse script dictionary data for" && pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
@@ -2188,7 +2190,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    put "dictionary" into tLCBDictionaryA["type"]
    
    if tLCBDictionaryA is empty then
-      builderLog "error", "Couldn't parse builder dictionary data for" && pEdition
+      logError "Couldn't parse builder dictionary data for" && pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
@@ -2215,7 +2217,7 @@ on docsBuilderPopulateDatabase pEdition, pLibrariesA
    
    put the result into tConnection
    if tConnection is not a number then
-      builderLog "error", the result
+      logError the result
       exit docsBuilderPopulateDatabase
    end if
    
@@ -2225,7 +2227,7 @@ on docsBuilderPopulateDatabase pEdition, pLibrariesA
       builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
       revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
       if the result is not empty then
-         builderLog "error", the result
+         logError the result
          exit docsBuilderPopulateDatabase
       end if
    end repeat
@@ -2258,7 +2260,7 @@ private command docsBuilderGenerateZip pEdition, pVersion
       put merge("cd $(dirname '[[tDocItem]]') && zip -r '[[tZipPath]]' $(basename '[[tDocItem]]')") into tCmd
       put shell(tCmd) into tCmdOutput
       if the result is not 0 then
-         builderLog "error", "Archiving failed"
+         logError "Archiving failed:" && tCmdOutput
          exit docsBuilderGenerateZip
       end if
    end repeat
