@@ -259,6 +259,7 @@ end BaseReadFile
 
 private command BaseCreateUpdates
    MarkdownAppend "updates", merge("LiveCode [[sVersion]] is now available.") & return
+   MarkdownAppend "updates", merge("The full [[sVersion]] release notes are available on the LiveCode website.") & return
    MarkdownAppend "updates", "Changes in this release include:" & return
 end BaseCreateUpdates
 
@@ -284,15 +285,17 @@ files get their own section in the release notes.
 private command V1NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pReadableType]] release notes")
    
-   MarkdownAppend "notes", merge("# [[pTitle]]")
-   MarkdownAppend "updates", merge("# [[pTitle]]")
-   
    -- First, gather all files, their contents, and their metadata
    local tScannedNotes
    put V1NotesScan(pType) into tScannedNotes
    
    -- Next generate markdown
-   V1NotesGenerate pType, pReadableType, tScannedNotes
+   if V1NotesHaveContent(tScannedNotes) then
+      MarkdownAppend "notes", merge("# [[pTitle]]")
+      MarkdownAppend "updates", merge("# [[pTitle]]")
+      
+      V1NotesGenerate pType, pReadableType, tScannedNotes
+   end if
 end V1NotesCreate
 
 /*
@@ -384,6 +387,29 @@ private command V1NotesScanVersion pType, pVersion, pFiles, @xScan
       put tFileInfo into xScan[tVersion][tFile]
    end repeat
 end V1NotesScanVersion
+
+private function V1NotesHaveContent pScanData
+   local tTagData
+   repeat for each element tTagData in pScanData
+      if V1NotesHaveContentVersion(tTagData) then
+         return true
+      end if
+   end repeat
+   return false
+end V1NotesHaveContent
+
+private function V1NotesHaveContentVersion pScanData
+   local tFileInfo
+   repeat for each element tFileInfo in pScanData
+      if tFileInfo["basename"] contains "feature" then
+         return true
+      end if
+      if tFileInfo["basename"] contains "bugfix" then
+         return true
+      end if
+   end repeat
+   return false
+end V1NotesHaveContentVersion
 
 private command V1NotesGenerate pType, pReadableType, pScanData
    local tBugInfo
@@ -565,18 +591,21 @@ end V1NotesGenerateBlock
 private command V2NotesCreate pType, pReadableType, pTitle
    builderLog "report", merge("Creating [[pReadableType]] release notes")
    
-   MarkdownAppend "notes", merge("# [[pTitle]]")
-   MarkdownAppend "updates", merge("# [[pTitle]]")
-   
    local tScannedNotes
    put V2NotesScan(pType) into tScannedNotes
    
    local tCollated, tBugInfo
    V2NotesCollate pType, tScannedNotes, tCollated, tBugInfo
    
-   V2NotesGenerate pType, tCollated, 1
+   if V2NotesHaveContent(tCollated, tBugInfo) then
+      MarkdownAppend "notes", merge("# [[pTitle]]")
+      MarkdownAppend "updates", merge("# [[pTitle]]")
+      
+      V2NotesGenerate pType, tCollated, 1
+      
+      BugGenerate tBugInfo, pReadableType
+   end if
    
-   BugGenerate tBugInfo, pReadableType
 end V2NotesCreate
 
 -- There isn't actually any difference between the information
@@ -753,23 +782,41 @@ private command V2NotesAppendSection pName, pCollatedSection, @xCollated
    put pName into xCollated[tId]["__name"]
 end V2NotesAppendSection
 
+private function V2NotesHaveContent pCollated, pBugInfo   
+   if (word 1 to -1 of pCollated["__markdown"]) is not empty then
+      return true
+   end if
+   
+   -- Recurse into child nodes
+   local tId
+   repeat with tId = 1 to pCollated["__count"]
+      if V2NotesHaveContent(pCollated[tId]) then
+         return true
+      end if
+   end repeat
+   
+   if the number of elements in pBugInfo > 0 then
+      return true
+   end if
+   
+   return false
+end V2NotesHaveContent
+
 private command V2NotesGenerate pType, pCollated, pLevel
    MarkdownAppend "notes", V2NotesGenerateContent(pType, pCollated, pLevel)
-   MarkdownAppend "updates", V2NotesGenerateContent(pType, pCollated, pLevel, true)
+   MarkdownAppend "updates", V2NotesGenerateContent(pType, pCollated, pLevel)
 end V2NotesGenerate
 
 -- If <pOnlyCurrent> is true, then only generate content that's brand new in
 -- the release that notes are being generated for
-private function V2NotesGenerateContent pType, pCollated, pLevel, pOnlyCurrent
+private function V2NotesGenerateContent pType, pCollated, pLevel
    -- Compute the content from this node + all child nodes
    local tContent
    
-   if not (pOnlyCurrent is true and (pCollated["__version"] is not sVersion)) then
-      if (word 1 to -1 of pCollated["__markdown"]) is not empty then
-         put pCollated["__markdown"] into tContent
-         if the last char of tContent is not return then
-            put return after tContent
-         end if
+   if (word 1 to -1 of pCollated["__markdown"]) is not empty then
+      put pCollated["__markdown"] into tContent
+      if the last char of tContent is not return then
+         put return after tContent
       end if
    end if
    
@@ -777,7 +824,7 @@ private function V2NotesGenerateContent pType, pCollated, pLevel, pOnlyCurrent
    local tSectionContent, tHeader
    
    repeat with tId = 1 to pCollated["__count"]
-      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1, pOnlyCurrent) into tSectionContent
+      put V2NotesGenerateContent(pType, pCollated[tId], pLevel + 1) into tSectionContent
       
       -- Only generate a subsection header if the subsection (and all
       -- the subsections it contains) doesn't contain any notes
@@ -1050,7 +1097,7 @@ private function BugUrl pId
 end BugUrl
 
 private command BugGenerate pBugInfo, pBugCategory
-   V2BugGenerate pBugInfo, pBugCategory
+   V1BugGenerate pBugInfo, pBugCategory
 end BugGenerate
 
 private command V1BugGenerate pBugInfo, pBugCategory
@@ -1060,7 +1107,7 @@ private command V1BugGenerate pBugInfo, pBugCategory
    GitSortTags tTags
    
    local tVersion, tBugs, tCurrent, tLine, tId, tDesc, tUrl
-   local tPrettyVersion
+   local tPrettyVersion, tBugCount
    
    put the number of lines in tTags into tTagCount
    repeat tTagCount times
@@ -1093,12 +1140,20 @@ private command V1BugGenerate pBugInfo, pBugCategory
          
          MarkdownAppend "notes", "<tr><td><a href=" & quote & tUrl & quote & ">" & tId & "</a>" & \
                "</td><td>" & tDesc & "</td></tr>"
+         
+         add 1 to tBugCount
       end repeat
       
       MarkDownAppend "notes", "</table>"
       
       subtract 1 from tTagCount
    end repeat
+   
+   if tBugCount is 1 then
+      MarkDownAppend "updates", merge("1 [[pBugCategory]] bug fix.")
+   else if tBugCount > 1 then
+      MarkDownAppend "updates", merge("[[tBugCount]] [[pBugCategory]] bug fixes.")
+   end if
 end V1BugGenerate
 
 private command V2BugGenerate pBugInfo, pBugCategory
@@ -1314,16 +1369,17 @@ private function GitGetRelevantTags pType
    
    set the itemdelimiter to "."
    
+   put 0 into tStart
    repeat for each line tLine in tTags
-      if tLine begins with item 1 to 2 of sVersion then
+      add 1 to tStart
+      if tLine begins with item 1 to 3 of sVersion then
          exit repeat
       end if
-      add 1 to tStart
    end repeat
-   put line tStart to -1 of tTags into tTags
+   put line (tStart - 1) to -1 of tTags into tTags
    
    repeat for each line tLine in tTags
-      if not (tLine begins with item 1 to 2 of sVersion) then
+      if not (tLine begins with item 1 to 3 of sVersion) then
          if not (tEnd is 0) then
             exit repeat
          end if
@@ -1358,6 +1414,15 @@ end GitGetChangedFiles
 ----------------------------------------------------------------
 -- File helpers
 ----------------------------------------------------------------
+
+private command DeleteByteOrderMarks @xEncoded, pEncoding
+   local tBom
+   put textEncode(numToCodepoint(0xfeff), pEncoding) into tBom
+
+   if xEncoded begins with tBom then
+      delete byte 1 to (the number of bytes in tBom) of xEncoded
+   end if
+end DeleteByteOrderMarks
 
 private function FileGetBasename pPath
    set the itemdelimiter to slash
@@ -1406,6 +1471,7 @@ private function FileGetContents pPath, pEncoding
    end if
    
    if pEncoding is not empty then
+      DeleteByteOrderMarks tContents, pEncoding
       put textDecode(tContents, pEncoding) into tContents
    end if
    

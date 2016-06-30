@@ -1076,6 +1076,14 @@ template <typename T> void inline MCMemoryClear(T&p_struct)
 	MCMemoryClear(&p_struct, sizeof(T));
 }
 
+// Re-initialise an object to its default-constructed state
+template <typename T> void inline MCMemoryReinit(T& p_object)
+{
+    // Run the destructor then default constructor
+    p_object.~T();
+    new (&p_object) T();
+}
+
 extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,6 +1199,29 @@ template<typename T> void MCMemoryDelete(T* p_record)
 	MCMemoryDelete(static_cast<void *>(p_record));
 }
 
+// Allocates a block of memory for an object and default-constructs it
+// (basically, ::operator new)
+template <typename T>
+bool MCMemoryCreate(T*& r_object)
+{
+    // Allocate the memory then default-construct
+    if (!MCMemoryNew(r_object))
+        return false;
+    
+    new (r_object) T();
+    return true;
+}
+
+// De-allocates a block of memory after running the object's destructor
+// (basically, ::operator delete).
+template <typename T>
+void MCMemoryDestroy(T* p_object)
+{
+    // Run the object's destructor then delete it
+    p_object->~T();
+    MCMemoryDelete(p_object);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  RESIZEABLE ARRAY ALLOCATION (INITIALIZED)
@@ -1232,6 +1263,29 @@ template<typename T> bool MCMemoryNewArray(uindex_t p_count, T*& r_array)
 	return false;
 }
 
+// Array allocator that default-constructs all elements
+template <typename T>
+bool MCMemoryNewArrayInit(uindex_t p_count, T*& r_array, uindex_t& r_count)
+{
+    if (MCMemoryNewArray(p_count, r_array, r_count))
+    {
+        // Default-construct all elements in the array
+        for (uindex_t i = 0; i < r_count; i++)
+            new (&r_array[i]) T();
+        return true;
+    }
+    
+    return false;
+}
+
+// Array allocator that default-constructs all elements
+template <typename T>
+bool MCMemoryNewArrayInit(uindex_t p_count, T*& r_array)
+{
+    uindex_t t_alloc_count;
+    return MCMemoryNewArrayInit(p_count, r_array, t_alloc_count);
+}
+
 template<typename T> inline bool MCMemoryResizeArray(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
 {
 	void *t_array;
@@ -1244,9 +1298,37 @@ template<typename T> inline bool MCMemoryResizeArray(uindex_t p_new_count, T*& x
 	return false;
 }
 
+template <typename T>
+bool MCMemoryResizeArrayInit(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
+{
+    // Capture the current count before resizing
+    uindex_t t_current_count = x_count;
+    if (MCMemoryResizeArray(p_new_count, x_array, x_count))
+    {
+        // Default construct any new elements that were allocated
+        for (uindex_t i = t_current_count; i < p_new_count; i++)
+            new (&x_array[i]) T();
+        return true;
+    }
+    
+    return false;
+}
+
 template<typename T> void MCMemoryDeleteArray(T* p_array)
 {
 	MCMemoryDeleteArray(static_cast<void *>(p_array));
+}
+
+// Array deleter that runs the destructor for each element
+template <typename T>
+void MCMemoryDeleteArray(T* p_array, uindex_t N)
+{
+    // Run the destructor for each of the elements
+    for (size_t i = 0; i < N; i++)
+        p_array[i].~T();
+    
+    // Destroy the array
+    MCMemoryDeleteArray(p_array);
 }
 
 extern "C" {

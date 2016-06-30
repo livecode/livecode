@@ -1698,7 +1698,7 @@ public:
 	}
     
     // MM-2011-02-16: Added ability to get handle of current object
-    MCObjectHandle *GetObjectHandle(void) const;
+    MCObjectHandle GetObjectHandle(void) const;
 	void SetTheResultToEmpty(void);
 	void SetTheResultToValue(MCValueRef p_value);
 	void SetTheResultToStaticCString(const char *p_cstring);
@@ -3178,10 +3178,10 @@ void MCInterfaceGetBrushColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_colo
 void MCInterfaceSetBrushColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
 void MCInterfaceGetPenColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
 void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
-void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
-void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t pattern);
-void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
-void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t pattern);
+void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t* pattern);
+void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t* pattern);
 void MCInterfaceGetFilled(MCExecContext& ctxt, bool& r_filled);
 void MCInterfaceSetFilled(MCExecContext& ctxt, bool filled);
 void MCInterfaceGetPolySides(MCExecContext& ctxt, uinteger_t& r_sides);

@@ -1236,10 +1236,10 @@ void MCExecContext::UserThrow(MCStringRef p_error)
 	m_stat = ES_ERROR;
 }
 
-MCObjectHandle *MCExecContext::GetObjectHandle(void) const
+MCObjectHandle MCExecContext::GetObjectHandle(void) const
 {
     extern MCExecContext *MCECptr;
-	return MCECptr->GetObject()->gethandle();
+	return MCECptr->GetObject()->GetHandle();
 }
 
 Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)

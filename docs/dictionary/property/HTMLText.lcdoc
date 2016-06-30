@@ -74,7 +74,7 @@ These properties are represented as attributes of the &lt;p&gt; tag:
 * bgcolor="#NNNNNN" if a <backgroundColor> has been set for the line.
 * bordercolor="#NNNNNN" if a <borderColor> has been set for the line.
 >*Note:* An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, 
-one each for red, green, and blue.
+one each for red, green, and blue. E.g., "#FF9900" represents an orange color.
 
 &lt;sub&gt; &lt;/sub&gt;
 Encloses text whose <textShift> is a positive <integer>. 
@@ -89,12 +89,12 @@ it appears once for a run of superscripted text, regardless of the value of the 
 
 &lt;i&gt; &lt;/i&gt;
 Encloses text whose <textStyle> is "italic".
->*Note:* If a field is set to <HTML> text that includes text wrapped in a &lt;em&gt; &lt;/em&gt;, 
+>*Note:* If a field is set to <HTML> text that includes text enclosed by &lt;em&gt; &lt;/em&gt;, 
 the tag will be converted to &lt;i&gt; &lt;/i&gt;.
 
 &lt;b&gt; &lt;/b&gt;
 Encloses text whose <textStyle> is "bold".
->*Note:* If a field is set to <HTML> text that includes text wrapped in a &lt;strong&gt; &lt;/strong&gt;, 
+>*Note:* If a field is set to <HTML> text that includes text enclosed by &lt;strong&gt; &lt;/strong&gt;, 
 the tag will be converted to &lt;b&gt; &lt;/b&gt;.
 
 &lt;strike&gt; &lt;/strike&gt;
@@ -117,8 +117,8 @@ Encloses text whose <textFont>, <textSize>, <foregroundColor>, or <backgroundCol
 * lang="languageName" appears if the <textFont> includes a <fontLanguage|language> specification.
 * color="#NNNNNN" appears if the <foregroundColor> is not the <default>.
 * bgcolor="#NNNNNN" appears if the <backgroundColor> is not the <default>.
->*Note:* An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, one each for red, green, 
-and blue.
+>*Note:* An <HTML>-style color definition consists of a hash mark (#) followed by three 2-digit hexadecimal numbers, 
+one each for red, green, and blue. E.g., "#FF9900" represents an orange color.
 
 &lt;ol type="lower latin|upper latin|lower roman|upper roman"&gt; &lt;/ol&gt;
 Encloses lines of text whose <listStyle> <property> is one of the following:
@@ -135,7 +135,7 @@ Encloses lines of text whose <listStyle> <property> is one of the following:
 * "skip"
 
 &lt;li&gt; &lt;/li&gt;
-Encloses lines of text whose <listStyle> <property> has been set to one of the <listStyle|listStyles> listed above.
+Encloses a line of text whose <listStyle> <property> has been set to one of the <listStyle|listStyles> listed above.
 
 &lt;a&gt; &lt;/a&gt;
 Encloses text whose <textStyle> is "link" or whose <linkText> <property> is not empty. If the <textStyle> of the text contains "link", 
@@ -146,7 +146,7 @@ Replaces a character whose <imageSource> <property> is not empty. The value of t
 the "src" attribute.
 
 &lt;span metadata="string"&gt; &lt;/span&gt; 
-Encloses text whose <metadata> attribute is set to the string indicated.
+Encloses a run of text whose <metadata> property is set to the string indicated.
 
 When you set the <HTMLText> of a <field(object)>, all tags other than those above are ignored, except heading tags 
 (&lt;h1&gt;--&lt;h6&gt;), which change the size of the text in the heading element:
@@ -171,8 +171,9 @@ Special characters (whose ASCII value is greater than 127) are encoded as <HTML>
 leading ampersand and trailing semicolon; e.g. &amp;agrave; for &agrave; and &amp;euro; for &euro;. LiveCode recognizes all 253 
 entities defined in the XHTML specification at <http://www.w3.org/TR/html4/sgml/entities.html>.
 
-Unicode characters whose numeric value is greater than 255 are encoded as "bignum" entities, with a leading ampersand and trailing 
-semicolon. For example, the Japanese character whose numeric value is 12387 is encoded as "#12387;".
+Unicode characters whose decimal numeric value is greater than 255 are encoded as "bignum" entities, with a leading ampersand 
+and trailing semicolon. For example, the Japanese character whose numeric value is 12387 is encoded as an entity like 
+this: &amp;#12387;.
 
 >*Note:* The <HTMLText> of a <field(object)> or <chunk> includes formatting information for the text, but does not include information 
 about the text <properties> of the <field(object)> itself. If you use the <HTMLText> <property> to transfer text between 
@@ -189,7 +190,9 @@ exist in standard HTML.
 
 Changes:
 The lang attribute, and the ability to encode Unicode characters, was added in version 2.0.
+
 The following enhancements were added in version 5.5: 
+
 * Support for fully representing paragraph formatting by means of &lt;p&gt; tag attributes;
 * Support for representing ordered and unordered lists and list styles by means of &lt;ul&gt; and &lt;ol&gt; tags, and list items
 by means of &lt;li&gt; tag attributes;
@@ -197,6 +200,7 @@ by means of &lt;li&gt; tag attributes;
 * Complete support for HTML entities;
 * Complete support for representing all LiveCode text styles in HTML tags;
 * Improved representation of linkText and imageSource by means of &lt;a&gt; tag attributes and &lt;img&gt; tag attributes respectively.
+
 Support was added for &lt;strong&gt; and &lt;em&gt; tags in version 6.0.
 
 References: ASCII (glossary), backgroundColor (property), borderColor (property), borderWidth (property), character set (glossary), 
@@ -205,7 +209,7 @@ effective (keyword), encode (glossary), field (keyword), field (object), firstIn
 fontLanguage (property), foregroundColor (property), format (function), format (glossary), get (command), hexadecimal (glossary), 
 hGrid (property), hidden (property), HTML (glossary), HTMLText (property), imageSource (property), integer (glossary), 
 leftIndent (property), linkText (property), listStyle (property), metadata (property), mimeText (property), negative (glossary), 
-numToChar (function), property (glossary), rightIndent (property), RTFText (property), set (command), 
+numToChar (function), padding (property), property (glossary), rightIndent (property), RTFText (property), set (command), 
 spaceAbove (property), spaceBelow (property), string (glossary), tabStops (property), textAlign (property), textFont (property), 
 textShift (property), textSize (property), textStyle (property), unicodeText (property), URL (keyword), vGrid (property), 
 Windows (glossary), 

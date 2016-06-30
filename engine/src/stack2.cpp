@@ -474,35 +474,29 @@ Window MCStack::getparentwindow()
 
 void MCStack::setparentstack(MCStack *p_parent)
 {
-	MCStack *t_parent;
-	t_parent = getparentstack();
+	MCStack *t_parent = getparentstack();
 	
 	if (t_parent == p_parent)
 		return;
 	
-	if (m_parent_stack != nil)
-	{
-		m_parent_stack->Release();
-		m_parent_stack = nil;
-	}
-	
 	if (p_parent != nil)
-		m_parent_stack = p_parent->gethandle();
+		m_parent_stack = p_parent->GetHandle();
+    else
+        m_parent_stack = nil;
 }
 
 MCStack *MCStack::getparentstack()
 {
-	if (m_parent_stack == nil)
+	if (!m_parent_stack.IsBound())
 		return nil;
 	
-	if (!m_parent_stack->Exists())
+	if (!m_parent_stack.IsValid())
 	{
-		m_parent_stack->Release();
 		m_parent_stack = nil;
 		return nil;
 	}
 	
-	return (MCStack*)m_parent_stack->Get();
+	return m_parent_stack.GetAs<MCStack>();
 }
 
 static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)

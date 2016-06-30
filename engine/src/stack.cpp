@@ -549,7 +549,7 @@ MCStack::~MCStack()
 		MCObject::close();
 	}
 	
-	if (m_parent_stack != nil)
+	if (m_parent_stack.IsBound())
 		setparentstack(nil);
 
 	delete mnemonics;

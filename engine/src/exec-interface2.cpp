@@ -465,7 +465,12 @@ static void MCInterfaceBackdropParse(MCExecContext& ctxt, MCStringRef p_input, M
 		if (r_backdrop . pattern == 0)
 			r_backdrop . type = kMCInterfaceBackdropTypeNone;
 		else
+        {
 			r_backdrop . type = kMCInterfaceBackdropTypePattern;
+            
+            if (r_backdrop . pattern <= PI_END - PI_PATTERNS)
+                r_backdrop . pattern += PI_PATTERNS;
+        }
 
 		return;
 	}
@@ -492,7 +497,13 @@ static void MCInterfaceBackdropFormat(MCExecContext& ctxt, const MCInterfaceBack
 		MCInterfaceNamedColorFormat(ctxt, p_backdrop . named_color, r_output);
 		return;
 	case kMCInterfaceBackdropTypePattern:
-		if (ctxt . FormatUnsignedInteger(p_backdrop . pattern, r_output))
+        uinteger_t t_backdrop;
+        t_backdrop = p_backdrop . pattern;
+        
+        if (t_backdrop <= PI_END && t_backdrop >= PI_PATTERNS)
+            t_backdrop -= PI_PATTERNS;
+        
+		if (ctxt . FormatUnsignedInteger(t_backdrop, r_output))
 			return;
 		break;
 	}
@@ -988,50 +999,77 @@ void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_
 	set_interface_color(MCpencolor, MCpencolorname, p_color);
 }
 
-void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
+void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
 {
-	if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)
-		r_pattern = MCbrushpmid - PI_PATTERNS;
-	else
-		
-		r_pattern = MCbrushpmid;
+    // PI_PATTERNS should return empty
+    if (MCbrushpmid == PI_PATTERNS)
+        r_pattern = nil;
+    else if (MCbrushpmid <= PI_END && MCbrushpmid > PI_PATTERNS)
+        *r_pattern = MCbrushpmid - PI_PATTERNS;
+    else
+        *r_pattern = MCbrushpmid;
 }
 
-void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t pattern)
+void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t* pattern)
 {
-	MCPatternRef newpm;
-	if (MCbrushpmid < PI_END)
-		MCbrushpmid += PI_PATTERNS;
-	newpm = MCpatternlist->allocpat(MCbrushpmid, ctxt . GetObject());
-	if (newpm == None)
-	{
-		ctxt . LegacyThrow(EE_PROPERTY_BRUSHPATNOIMAGE);
-		return;
-	}
+    MCPatternRef newpm;
+    newpm = nil;
+    
+    // Setting to 0 should clear
+    if (pattern != nil && *pattern != 0)
+    {
+        if (*pattern <= PI_END - PI_PATTERNS)
+            *pattern += PI_PATTERNS;
+        
+        newpm = MCpatternlist->allocpat(*pattern, ctxt . GetObject());
+        if (newpm == None)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_BRUSHPATNOIMAGE);
+            return;
+        }
+        MCbrushpmid = *pattern;
+    }
+    else
+        MCbrushpmid = PI_PATTERNS;
+    
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCbrushpattern);
 	MCbrushpattern = newpm;
 }
 
-void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
+void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
 {
-	if (MCpenpmid < PI_END && MCpenpmid > PI_PATTERNS)
-		r_pattern = MCpenpmid - PI_PATTERNS;
-	else
-		r_pattern = MCpenpmid;
+    // PI_PATTERNS should return empty
+    if (MCpenpmid == PI_PATTERNS)
+        r_pattern = nil;
+    else if (MCpenpmid <= PI_END && MCpenpmid > PI_PATTERNS)
+        *r_pattern = MCpenpmid - PI_PATTERNS;
+    else
+        *r_pattern = MCpenpmid;
 }
 
-void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t pattern)
+void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t* pattern)
 {
-	MCPatternRef newpm;
-	if (MCpenpmid < PI_END)
-		MCpenpmid += PI_PATTERNS;
-	newpm = MCpatternlist->allocpat(MCpenpmid, ctxt . GetObject());
-	if (newpm == nil)
-	{
-		ctxt . LegacyThrow(EE_PROPERTY_PENPATNOIMAGE);
-		return;
-	}
+    MCPatternRef newpm;
+    newpm = nil;
+    
+    // Setting to 0 should clear
+    if (pattern != nil && *pattern != 0)
+    {
+        if (*pattern <= PI_END - PI_PATTERNS)
+            *pattern += PI_PATTERNS;
+        
+        newpm = MCpatternlist->allocpat(*pattern, ctxt . GetObject());
+        if (newpm == nil)
+        {
+            ctxt . LegacyThrow(EE_PROPERTY_PENPATNOIMAGE);
+            return;
+        }
+        MCpenpmid = *pattern;
+    }
+    else
+        MCpenpmid = PI_PATTERNS;
+    
 	MCeditingimage = nil;
 	MCpatternlist->freepat(MCpenpattern);
 	MCpenpattern = newpm;
@@ -3726,10 +3764,10 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 	{
 		// As we call handlers that might invoke messages, we need to take
 		// object handles here.
-		MCObjectHandle *t_source_handle, *t_new_owner_handle, *t_new_target_handle;
-		t_source_handle = p_source . object -> gethandle();
-		t_new_owner_handle = t_new_owner -> gethandle();
-		t_new_target_handle = t_new_target != nil ? t_new_target -> gethandle() : nil;
+		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
+		t_source_handle = p_source . object -> GetHandle();
+		t_new_owner_handle = t_new_owner -> GetHandle();
+		t_new_target_handle = t_new_target != NULL ? t_new_target -> GetHandle() : MCObjectHandle(NULL);
         
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;
@@ -3742,10 +3780,10 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
         
 		// Check the source and new owner objects exist, and if we have a target object
 		// that that exists and is still a child of new owner.
-		if (t_source_handle -> Exists() &&
-			t_new_owner_handle -> Exists() &&
+		if (t_source_handle.IsValid() &&
+			t_new_owner_handle.IsValid() &&
 		    (t_new_target == nil ||
-		     (t_new_target_handle -> Exists() &&
+		     (t_new_target_handle.IsValid() &&
 		      t_new_target -> getparent() == t_new_owner)))
 		{
 			p_source . object -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(p_source . object));
@@ -3765,11 +3803,6 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 			t_card -> kfocus();
 		if (t_was_mfocused)
 			t_card -> mfocus(MCmousex, MCmousey);
-        
-		t_source_handle -> Release();
-		t_new_owner_handle -> Release();
-		if (t_new_target != nil)
-			t_new_target_handle -> Release();
 	}
     
 	if (t_success)

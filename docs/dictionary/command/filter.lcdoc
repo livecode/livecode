@@ -63,6 +63,17 @@ characters to match, which may be combined with any number of the following spec
 - [char-char] : Matches any character whose unicode codepoint is between the first character and the second character.
 - [!chars] : Matches any character which is not one of the characters inside the brackets.
 
+You can match instances of special chars as follows:
+
+- `?` with `[?]`
+- `*` with `[*]`
+- `[` with `[[]`
+- `-` with `-`
+- `!` with `!`
+   
+For example, the wildcard <filterPattern> `[[]A]*` will match any string 
+beginning with `[A]`.
+
 The three bracketed forms can be combined to create more complex character classes, for
 example the pattern [!abcA-C] matches any character which is not a, b or c (upper or lower case)
 

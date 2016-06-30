@@ -75,15 +75,15 @@ class MCMessageEvent : public MCCustomEvent
 {
 public:
 	template <class C>
-	static MCMessageEvent* create(MCObjectHandle *p_object, const char *p_message)
+	static MCMessageEvent* create(MCObjectHandle p_object, const char *p_message)
 	{
 		C *t_event = nil;
-		if (!MCMemoryNew(t_event))
+		if (!MCMemoryCreate(t_event))
 			return nil;
 
 		if (!t_event->setMessage(p_message))
 		{
-			MCMemoryDelete(t_event);
+			MCMemoryDestroy(t_event);
 			return nil;
 		}
 
@@ -92,7 +92,7 @@ public:
 		return t_event;
 	}
     
-    static MCMessageEvent* create(MCObjectHandle *p_object, const char *p_message)
+    static MCMessageEvent* create(MCObjectHandle p_object, const char *p_message)
     {
         return create<MCMessageEvent>(p_object, p_message);
     }
@@ -100,33 +100,28 @@ public:
 	void Dispatch(void)
 	{
         //MCLog("dispatch message \"%@\"", MCNameGetString(m_message));
-		MCObject *t_object;
-		t_object = m_object -> Get();
-		if (t_object != nil)
-			t_object -> message(m_message);
+		if (m_object.IsValid())
+			m_object -> message(m_message);
 	}
 
 	void Destroy(void)
 	{
 		MCNameDelete(m_message);
-		if (m_object != nil)
-			m_object->Release();
 		delete this;
 	}
 
 protected:
 	MCNameRef m_message;
-	MCObjectHandle *m_object;
+	MCObjectHandle m_object;
 
 	bool setMessage(const char *p_message)
 	{
 		return MCNameCreateWithCString(p_message, m_message);
 	}
 
-	bool setObject(MCObjectHandle *p_object)
+	bool setObject(MCObjectHandle p_object)
 	{
 		m_object = p_object;
-		m_object->Retain();
 		return true;
 	}
 };
@@ -462,11 +457,9 @@ public:
 	void Dispatch()
 	{
 		//MCLog("dispatching backPressed event", nil);
-		MCObject *t_object;
-		t_object = m_object -> Get();
-		if (t_object != nil)
+		if (m_object.IsValid())
 		{
-			Exec_stat t_stat = t_object -> message(m_message);
+			Exec_stat t_stat = m_object -> message(m_message);
 			//MCLog("message result: %d", t_stat);
 			if (ES_PASS == t_stat || ES_NOT_HANDLED == t_stat)
 			{
@@ -480,20 +473,18 @@ public:
 void MCAndroidBackPressed()
 {
 	MCMessageEvent *t_event;
-	MCObjectHandle *t_handle;
-	t_handle = MCdefaultstackptr->getcurcard()->gethandle();
+	MCObjectHandle t_handle;
+	t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
 	t_event = MCMessageEvent::create<MCBackPressedEvent>(t_handle, "backKey");
-	t_handle->Release();
 	MCEventQueuePostCustom(t_event);
 }
 
 void MCAndroidMenuKey()
 {
     MCMessageEvent *t_event;
-    MCObjectHandle *t_handle;
-    t_handle = MCdefaultstackptr->getcurcard()->gethandle();
+    MCObjectHandle t_handle;
+    t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
     t_event = MCMessageEvent::create(t_handle, "menuKey");
-    t_handle->Release();
     MCEventQueuePostCustom(t_event);
 }
 
@@ -501,10 +492,9 @@ void MCAndroidSearchKey()
 {
     //MCLog("MCAndroidSearchKey()", nil);
     MCMessageEvent *t_event;
-    MCObjectHandle *t_handle;
-    t_handle = MCdefaultstackptr->getcurcard()->gethandle();
+    MCObjectHandle t_handle;
+    t_handle = MCdefaultstackptr->getcurcard()->GetHandle();
     t_event = MCMessageEvent::create(t_handle, "searchKey");
-    t_handle->Release();
     MCEventQueuePostCustom(t_event);
 }
 

@@ -1,0 +1,34 @@
+﻿script "CoreEngineSend"
+/*
+Copyright (C) 2016 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+on TestSendParams
+	local tScript, tStack
+	put "on testParameters p1, p2; return p2; end testParameters" \
+		into tScript
+	create stack
+	put it into tStack
+	set the script of tStack to tScript
+	
+	local tSendScript
+	put "--ensure this is executed as script not a handler name" \
+		into tSendScript
+	put return & "testParameters 1, 2" after tSendScript
+	
+	send tSendScript to tStack
+	TestAssert "send script with multiple params", the result is "2"
+end TestSendParams
