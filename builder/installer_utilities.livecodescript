@@ -1561,6 +1561,8 @@ command log pMessage
          write "[" && the internet date && "]" && ":" && pMessage & return to file sFacelessLog
          close file sFacelessLog
       end if
+   else
+      write "[" && the internet date && "]" && ":" && pMessage & return to stdout
    end if
 end log
 
