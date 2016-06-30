@@ -167,6 +167,7 @@
 								'-lshlwapi',
 								'-luser32',
 								'-lusp10',
+								'-lversion',
 								'-lwinmm',
 								'-lwinspool',
 								'-lws2_32',
