@@ -568,10 +568,6 @@ end builderEnsureZip
 command builderUnpackZip pZipfile, pFolder
    builderLog "message", "Unpacking zip file:" && pZipfile
    
-   if there is a folder pFolder then
-      get shell(merge("rm -r '[[pFolder]]'"))
-   end if
-
    builderEnsureFolder pFolder
    
    get shell(merge("cd '[[pFolder]]' && unzip '[[pZipfile]]'"))
@@ -634,6 +630,14 @@ end builderTSNetUnpack
 ////////////////////////////////////////////////////////////////////////////////
 
 command builderExtUnpack pEdition
+   local tFolder
+   put builderUnpackFolder() & slash & "Ext" into tFolder
+   
+   if there is a folder tFolder then
+      builderLog "message", "Cleaning unpack folder" && tFolder
+      get shell(merge("rm -r '[[tFolder]]'"))
+   end if
+   
    -- Ensure that the MergExt bundle is downloaded and unpacked
    builderMergExtUnpack builderMergExtVersion(), (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
    
