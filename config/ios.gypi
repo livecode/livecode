@@ -196,6 +196,7 @@
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
 							'-Werror=logical-not-paretheses',
+							'-Werror=conversion-null',
 						],
 					},
 				},

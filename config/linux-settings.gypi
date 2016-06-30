@@ -70,6 +70,8 @@
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
+					# Needs GCC 4.5
+					#'-Werror=conversion-null',
 				],
 
 				'cflags_cc':
