@@ -191,7 +191,7 @@ uindex_t MCTextFilter_DecodeNative::GetMarkedLength() const
 }
 
 MCTextFilter_DecodeNative::MCTextFilter_DecodeNative(const char_t *p_text, uindex_t p_length, bool p_from_end)
-: m_AcceptedIndex(-1), m_ReadIndex(0), m_Data(p_text), m_DataLength(p_length), m_Reverse(p_from_end)
+: m_Data(p_text), m_DataLength(p_length), m_AcceptedIndex(-1), m_ReadIndex(0), m_Reverse(p_from_end)
 {
     ;
 }

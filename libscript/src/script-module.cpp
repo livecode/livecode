@@ -1229,9 +1229,6 @@ bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef self, MCStreamRef stream)
         if (MCNameIsEqualTo(self -> dependencies[i] . name, MCNAME("__builtin__")))
             continue;
         
-        MCStringRef t_string;
-        t_string = MCNameGetString(self -> dependencies[i] . name);
-        
         __writeln(stream, "use %@", self -> dependencies[i] . name);
     }
     for(uindex_t i = 0; i < self -> exported_definition_count; i++)

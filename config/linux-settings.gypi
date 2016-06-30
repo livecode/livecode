@@ -90,6 +90,11 @@
 				[
 					'-Werror=declaration-after-statement',	# Ensure compliance with C89
 				],
+
+				'cflags_cc':
+				[
+					'-Werror=overloaded-virtual',
+				],
 			},
 		],
 	],

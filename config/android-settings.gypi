@@ -43,6 +43,7 @@
 				'cflags_cc':
 				[
 					'-Werror=delete-non-virtual-dtor',
+					'-Werror=overloaded-virtual',
 				]
 			},
 			{

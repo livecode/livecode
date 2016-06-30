@@ -422,7 +422,7 @@ public:
         return True;
     }
     
-    Boolean kdown(const char *string, KeySym key)
+    virtual Boolean kdown(MCStringRef p_string, KeySym key)
     {
         if (key == XK_Escape)
         {
@@ -739,7 +739,7 @@ public:
         return True;
     }
     
-    Boolean kdown(const char *string, KeySym key)
+    virtual Boolean kdown(MCStringRef p_string, KeySym key)
     {
         if (key == XK_Escape)
         {
