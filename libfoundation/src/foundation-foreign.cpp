@@ -138,6 +138,8 @@ void __MCForeignValueDestroy(__MCForeignValue *self)
     t_resolved_typeinfo = __MCTypeInfoResolve(self -> typeinfo);
     
     t_resolved_typeinfo -> foreign . descriptor . finalize(self + 1);
+	
+	MCValueRelease(self -> typeinfo);
 }
 
 hash_t __MCForeignValueHash(__MCForeignValue *self)
