@@ -618,7 +618,7 @@ end builderTSNetDownloadedFilePath
 
 private command builderTSNetUnpack pTSNetVersion
    local tFolder
-   put builderUnpackFolder() & slash & "Ext" & slash & "tsNet" into tFolder
+   put builderUnpackFolder() & slash & "Ext" into tFolder
    
    local tZipFile
    put builderTSNetDownloadedFilePath(pTSNetVersion) into tZipFile
