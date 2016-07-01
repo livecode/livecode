@@ -175,30 +175,40 @@ struct MCObjectVisitor
 #define OBJECT_EXTRA_FONTFLAGS		(1U << 4)
 #define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
-class MCObjectHandle
+
+// Proxy allowing for weak references to MCObjects
+class MCObjectProxy
 {
 public:
-	MCObjectHandle(MCObject *p_object);
-	~MCObjectHandle(void);
-
-	// Increase the reference count.
-	void Retain(void);
-
-	// Decrease the reference count, destroying the object when it reaches 0.
-	void Release(void);
-
-	MCObject *Get(void);
-
-	// Set the handle to nil - the object has been destroyed.
-	void Clear(void);
-
-	// Returns true if the object still exists.
-	bool Exists(void);
-
+    
+    // RAII handle class
+    class Handle;
+    
+    // Create a proxy for the given object
+    MCObjectProxy(MCObject* p_proxy_form);
+    
+    // Inform the proxy that the bound object no longer exists
+    void Clear();
+    
 private:
-	uint32_t m_references;
-	MCObject *m_object;
+    
+    uint32_t    m_refcount;
+    MCObject*   m_object;
+    
+    // The proxy can only be deleted by itself
+    ~MCObjectProxy();
+    
+    void Retain();
+    void Release();
+    
+    MCObject* Get();
+    
+    bool ObjectExists() const;
 };
+
+// Slightly more readable name
+typedef MCObjectProxy::Handle MCObjectHandle;
+
 
 // MW-2012-02-17: [[ LogFonts ]] The font attrs struct for the object.
 struct MCObjectFontAttrs
@@ -231,6 +241,8 @@ void MCDeletedObjectsLeaveWait(bool p_dispatching);
 void MCDeletedObjectsOnObjectCreated(MCObject *object);
 void MCDeletedObjectsOnObjectDeleted(MCObject *object);
 void MCDeletedObjectsOnObjectDestroyed(MCObject *object);
+void MCDeletedObjectsOnObjectSuspendDeletion(MCObject *object, void*& r_cookie);
+void MCDeletedObjectsOnObjectResumeDeletion(MCObject *object, void *cookie);
 
 void MCDeletedObjectsDoDrain(void);
 
@@ -287,7 +299,10 @@ protected:
     
     // If this is true, then this object is in the parentScript resolution table.
     bool m_is_parent_script : 1;
-    
+	
+	// If this is true, then the object is currently suspended from deletion.
+	bool m_deletion_is_suspended : 1;
+	
     // Whether to use legacy theming (or native-like theming)
     MCInterfaceTheme m_theme;
     
@@ -300,7 +315,7 @@ protected:
 	MCParentScriptUse *parent_script;
 
 	// MW-2009-08-25: Pointer to the object's weak reference (if any).
-	MCObjectHandle *m_weak_handle;
+	MCObjectProxy* m_weak_proxy;
 
 	// MW-2011-07-21: For now, make this a uint4 as imageSrc references can make
 	//   it exceed 255 and wrap causing much much badness for the likes of rTree.
@@ -343,6 +358,7 @@ protected:
 	MCNativeLayer* m_native_layer;
 	
 public:
+    
 	MCObject();
 	MCObject(const MCObject &oref);
 	virtual ~MCObject();
@@ -385,19 +401,9 @@ public:
 	void setrect(const MCRectangle &p_rect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
-
-    // FG-2014-11-07: [[ Better theming ]] Gets a propery according to the native UI theme
-    virtual Exec_stat getsystemthemeprop(Properties which, MCExecPoint&);
-#endif
-
 	virtual void select();
 	virtual void deselect();
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 	virtual void undo(Ustruct *us);
 	virtual void freeundo(Ustruct *us);
@@ -441,10 +447,6 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
 
-#ifdef LEGACY_EXEC
-    Exec_stat getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
-    Exec_stat setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective);
-#endif
     
     Exec_stat sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value);
     Exec_stat sendsetprop(MCExecContext& ctxt, MCNameRef set_name, MCNameRef prop_name, MCValueRef p_value);
@@ -502,19 +504,7 @@ public:
 	
 	MCNameRef getdefaultpropsetname(void);
 
-#ifdef LEGACY_EXEC
-	Exec_stat sendgetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-	Exec_stat getcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-
-	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-#endif
     
-#ifdef OLD_EXEC
-	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
-	Exec_stat changeid(uint32_t new_id);
-#endif
-
 	uint4 getid() const
 	{
 		return obj_id;
@@ -752,11 +742,6 @@ public:
 	bool names(Properties which, MCValueRef& r_name);
     bool getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val);
     
-#ifdef LEGACY_EXEC
-	// Wrapper for 'names()' working in the old way (for convenience).
-	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
-#endif
-
 	Boolean parsescript(Boolean report, Boolean force = False);
 	void drawshadow(MCDC *dc, const MCRectangle &drect, int2 soffset);
 	void draw3d(MCDC *dc, const MCRectangle &drect,
@@ -801,15 +786,8 @@ public:
 	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
 	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
 
-#ifdef OLD_EXEC
-	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
-	//   the correct result.
-	// MERG-2013-05-07: [[ RevisedPropsProp ]] Add 'effective' option to enable 'the effective
-	//   properties of object ...'.
-	Exec_stat getproparray(MCExecPoint &ep, uint4 parid, bool effective);
-#endif
-
-	MCObjectHandle *gethandle(void);
+    // Returns a weak reference (handle) to this object
+    MCObjectHandle GetHandle();
 
 	// MW-2011-09-20: [[ Collision ]] Check to see if the two objects touch (exactly).
 	bool intersects(MCObject *other, uint32_t threshold);
@@ -904,7 +882,9 @@ public:
 
 	virtual void scheduledelete(bool p_is_child = false);
 
-	// MW-2012-10-10: [[ IdCache ]]
+    virtual bool isdeletable(bool p_check_flag);
+    
+    // MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
 	{
 		m_in_id_cache = p_value;
@@ -956,7 +936,7 @@ public:
     //  in the parent chain.
     bool isancestorof(MCObject *p_object);
     
-	////////// PROPERTY SUPPORT METHODS
+    ////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
 
@@ -1264,6 +1244,8 @@ public:
     // Object pool instance variable manipulation
     MCDeletedObjectPool *getdeletedobjectpool(void) const { return m_pool; }
     void setdeletedobjectpool(MCDeletedObjectPool *pool) { m_pool = pool; }
+	bool getdeletionissuspended(void) const { return m_deletion_is_suspended; }
+	void setdeletionissuspended(bool value) { m_deletion_is_suspended = value; }
 
 protected:
     IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version);
@@ -1287,11 +1269,6 @@ protected:
 		setscript(*t_script);
 	}
 
-#ifdef OLD_EXEC
-    // MW-2014-09-30: [[ ScriptStack ]] Used by MCStack::setasscriptonly.
-    Exec_stat setscriptprop(MCExecPoint& ep);
-#endif
-
     // FG-2014-11-11: [[ Better theming ]] Fetch the control type/state for theming purposes
     virtual MCPlatformControlType getcontroltype();
     virtual MCPlatformControlPart getcontrolsubpart();
@@ -1302,14 +1279,6 @@ protected:
     MCInterfaceTheme gettheme() const;
     
 private:
-#ifdef OLD_EXEC
-	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
-	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
-	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
-
-	Exec_stat setparentscriptprop(MCExecPoint& ep);
-	Exec_stat setshowfocusborderprop(MCExecPoint& ep);
-#endif
 	bool clonepropsets(MCObjectPropertySet*& r_new_props) const;
 	void deletepropsets(void);
 
@@ -1317,15 +1286,6 @@ private:
 	bool findpropset(MCNameRef name, bool p_empty_is_default, MCObjectPropertySet*& r_set);
 	// Find the propset with the given name, creating it if necessary.
 	/* CAN FAIL */ bool ensurepropset(MCNameRef name, bool p_empty_is_default, MCObjectPropertySet*& r_set);
-#ifdef OLD_EXEC
-	// Set propset to the one corresponding to name, creating it if it does not exist.
-	/* CAN FAIL */ bool setpropset(MCNameRef name);
-
-	// List the available propsets into ep.
-	void listpropsets(MCExecPoint& ep);
-	// Change the available propsets to those listed in ep.
-	/* CAN FAIL */ bool changepropsets(MCExecPoint& ep);
-#endif
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] These are all the legacy propset pickle routines.
 	//   If sfv >= 7000, then they are written out more directly.
@@ -1359,17 +1319,13 @@ private:
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 
-#ifdef LEGACY_EXEC
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
-#endif
-
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
 	//   done via measuretext() in a safe way.
 	bool mapfont(bool recursive = false);
 	void unmapfont(void);
 
-	friend class MCObjectHandle;
+	friend class MCObjectProxy;
 	friend class MCEncryptedStack;
 };
 
@@ -1417,4 +1373,144 @@ public:
 		return (MCObjectList *)MCDLlist::remove((MCDLlist *&)list);
 	}
 };
+
+
+// Utility function for safe(-ish) casting from an MCObject to a derived class
+// without using RTTI.
+template <typename T>
+T* MCObjectCast(MCObject* p_object)
+{
+    // Check that the object's type matches the (static) type of the desired
+    // type. This will break horribly if the desired type has derived types...
+    MCAssert(p_object->gettype() == T::kObjectType);
+    return static_cast<T*> (p_object);
+}
+
+
+// Automatic (RAII) class for storage of object handles
+class MCObjectProxy::Handle
+{
+public:
+    
+    Handle() :
+    m_proxy(NULL)
+    {
+    }
+    
+    Handle(MCObjectProxy* p_proxy)
+    : m_proxy(NULL)
+    {
+        Set(p_proxy);
+    }
+    
+    Handle(const Handle& p_handle) :
+    m_proxy(NULL)
+    {
+        Set(p_handle.m_proxy);
+    }
+    
+    Handle& operator= (MCObjectProxy* p_proxy)
+    {
+        Set(p_proxy);
+        return *this;
+    }
+    
+    Handle& operator= (const Handle& p_handle)
+    {
+        Set(p_handle.m_proxy);
+        return *this;
+    }
+    
+    ~Handle()
+    {
+        if (m_proxy != nil)
+            m_proxy->Release();
+    }
+    
+    // Returns true if this handle refers to an object (even if that object has
+    // since been deleted)
+    bool IsBound() const
+    {
+        return m_proxy != NULL;
+    }
+    
+    // Returns true if this handle refers to a valid object
+    bool IsValid() const
+    {
+        return m_proxy != NULL && m_proxy->ObjectExists();
+    }
+    operator bool() const
+    {
+        return IsValid();
+    }
+    
+    // Pointer-like access
+    MCObject* Get()
+    {
+        MCAssert(IsValid());
+        return m_proxy->m_object;
+    }
+    MCObject* operator-> ()
+    {
+        return Get();
+    }
+    operator MCObject* ()
+    {
+        return Get();
+    }
+    
+    // Checked fetch as the given type
+    template <typename T>
+    T* GetAs()
+    {
+        return MCObjectCast<T> (Get());
+    }
+    
+    // Two Handles are the same if they use the same proxy
+    bool operator==(const Handle& other) const
+    {
+        return m_proxy == other.m_proxy;
+    }
+    bool operator!=(const Handle& other) const
+    {
+        return !(operator==(other));
+    }
+    
+    // Performs a retain on the underlying proxy without an RAII wrapper. This
+    // is only provided for the use of the EventQueue and the ExternalV1
+    // interface.
+    // **DANGEROUS** Will lead to memory leaks if not balanced
+    MCObjectProxy* ExternalRetain()
+    {
+        MCAssert(IsBound());
+        m_proxy->Retain();
+        return m_proxy;
+    }
+    
+    // Performs a release on the underlying proxy without an RAII wrapper. This
+    // is only provided for the use of the EventQueue and the ExternalV1
+    // interface.
+    // **DANGEROUS** Will cause memory corruption if not balanced
+    void ExternalRelease()
+    {
+        MCAssert(IsBound());
+        m_proxy->Release();
+    }
+    
+    
+private:
+    
+    // The proxy for the object this is a handle to
+    MCObjectProxy*  m_proxy;
+    
+    void Set(MCObjectProxy* p_proxy)
+    {
+        if (m_proxy != nil)
+            m_proxy->Release();
+        m_proxy = p_proxy;
+        if (m_proxy != nil)
+            m_proxy->Retain();
+    }
+};
+
 #endif

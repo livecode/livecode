@@ -16,23 +16,17 @@ Security: network
 
 Example:
 local tBrowserId
-put revBrowserOpenCef(the windowId of
-this stack, "http://www.livecode.com") into tBrowserId
-if tBrowserId is
-not an integer then
+put revBrowserOpenCef(the windowId of this stack, "http://www.livecode.com") into tBrowserId
+if tBrowserId is not an integer then
   answer "Failed to open browser"
-end
-if
+end if
 
 Example:
 local tBrowserId, tFile   
-answer file "Please choose a
-file to display"
+answer file "Please choose a file to display"
 if the result is not "cancel" then
-  put it
-into tFile
-  put revBrowserOpenCef(the windowId of this stack,
-"file://" & tFile) into tBrowserId      
+  put it into tFile
+  put revBrowserOpenCef(the windowId of this stack, "file://" & tFile) into tBrowserId      
 end if
 
 Parameters:
@@ -47,10 +41,5 @@ Description:
 The <revBrowserOpenCef> function creates a new Chrome-baseed browser in the window with the given windowId. If a url is given, the browser immediately navigates to this url.
 
 The <revBrowserOpenCef> function creates a new Chrome-baseed browser in the window with the given windowId. If a url is given, the browser immediately navigates to this url.
-
-Example:
-Create a new browser window in the current stack, set to open on the LiveCode homepage:
-
-put revOpenBrowserCef(the windowId of this stack, "http://www.livecode.com") into tMyBrowserId
 
 References: revBrowserStop (command), revBrowserPrint (command), revBrowserSet (command), revBrowserMakeTextBigger (command), revBrowserNavigate (command), revBrowserAddJavaScriptHandler (command), revBrowserRemoveJavaScriptHandler (command), revBrowserClose (command), browserOver (message), browserNewInstance (message), browserNewUrlWindow (message), browserDownloadRequest (message), browserNavigateCompleteFrame (message)

@@ -29,6 +29,7 @@
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
+		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 	},
 	
 	'target_defaults':
@@ -119,10 +120,13 @@
 							'-Wall', 
 							'-Wextra', 
 							'-Werror=declaration-after-statement',
+							'-Werror=delete-non-virtual-dtor',
+							'-Werror=overloaded-virtual',
 							'-Wno-unused-parameter',
 							'-Werror=uninitialized',
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
+							'-Werror=logical-not-parentheses',
 						],
 					},
 				},

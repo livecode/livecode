@@ -19,10 +19,10 @@ Example:
 put byte 12 to 14 of it into tAnswer
 
 Example:
-get the first byte to tString
+get the first byte of tString
 
 Example:
-repeat for each byte tByte of tString
+repeat for each byte tByte in tString
 
 Description:
 Use the byte <keyword> to refer to a specific byte or bytes in a <container>.

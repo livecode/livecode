@@ -26,7 +26,11 @@ set the textPattern of line 2 of field "Cards" to 111
 
 Value:
 The <foregroundPattern> of an <object(glossary)> is a pattern specifier.
-A <patternNumber> is a built-in pattern number between 1 and 164. (These patterns correspond to LiveCode's built-in patterns 136 to 300.)
+A <patternNumber> is a built-in pattern number between 1 and 164. These
+patterns are provided for compatibility with patterns available in
+MetaCard and correspond to LiveCode's built in image id 137 to 300. As
+with MetaCard pattern numbers 105 to 114 and 146 and above are 
+unavailable.
 
 An <imageID> is the ID of an <image> to use for a pattern. LiveCode looks for the specified <image> first in the <current stack>, then in other open <stacks>.
 

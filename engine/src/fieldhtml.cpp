@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "paragraf.h"
 #include "text.h"
 #include "osspec.h"
-//#include "execpt.h"
+
 #include "mcstring.h"
 #include "uidc.h"
 #include "globals.h"
@@ -609,23 +609,6 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 	
 	return true;
 }
-
-#ifdef LEGACY_EXEC
-void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
-{
-	MCAutoStringRef t_string;
-
-	if (exportashtmltext(p_paragraphs, p_start_index, p_finish_index, p_effective, &t_string))
-		/* UNCHECKED */ ep . setvalueref(*t_string);
-	else
-		ep . clear();
-}
-
-void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
-{
-	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
-}
-#endif
 
 bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text)
 {

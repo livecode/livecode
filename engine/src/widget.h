@@ -125,6 +125,9 @@ class MCNativeLayer;
 class MCWidget: public MCControl
 {
 public:
+    
+    enum { kObjectType = CT_WIDGET };
+    
 	MCWidget(void);
 	MCWidget(const MCWidget& p_other);
 	virtual ~MCWidget(void);
@@ -177,7 +180,7 @@ public:
     virtual void layerchanged();
 	virtual void geometrychanged(const MCRectangle &p_rect);
     
-    virtual Boolean del(void);
+    virtual Boolean del(bool p_check_flag);
     
 	virtual void OnOpen();
 	virtual void OnClose();

@@ -156,6 +156,9 @@ class MCButton : public MCControl
     bool m_animate_posted : 1;
 
 public:
+    
+    enum { kObjectType = CT_BUTTON };
+    
 	MCButton();
 	MCButton(const MCButton &bref);
 	// virtual functions from MCDLlist
@@ -191,11 +194,6 @@ public:
 
 	virtual uint2 gettransient() const;
 	virtual void applyrect(const MCRectangle &nrect);
-
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	

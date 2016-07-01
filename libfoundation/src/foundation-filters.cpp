@@ -300,8 +300,8 @@ bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 	zstrm.avail_out = size;
 	int err;
 	if (inflateInit2(&zstrm, -MAX_WBITS) != Z_OK
-        || (err = inflate(&zstrm, Z_FINISH)) != Z_STREAM_END
-        && err != Z_OK && err != Z_BUF_ERROR // bug on OS X returns this error
+	    || ((err = inflate(&zstrm, Z_FINISH)) != Z_STREAM_END
+	        && err != Z_OK && err != Z_BUF_ERROR) // bug on OS X returns this error
         || inflateEnd(&zstrm) != Z_OK)
 		return false;
     

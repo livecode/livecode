@@ -17,7 +17,7 @@ Platforms: desktop,server,web
 Security: printing
 
 Example:
-if "collate" is among the items of the printFeatures then
+if "collate" is among the items of the printerFeatures then
   set the printCollate to true
 end if
 

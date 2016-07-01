@@ -1,5 +1,5 @@
 ﻿script "BuilderUtilities"
-constant kMergExtVersion = "2016-5-18"
+constant kMergExtVersion = "2016-6-24"
 
 local sEngineDir
 local sWorkDir
@@ -547,7 +547,7 @@ end macPList
 
 ////////////////////////////////////////////////////////////////////////////////
 
-private function builderMergExtUrl pMergExtVersion, pEdition
+function builderMergExtUrl pMergExtVersion, pEdition
    return "https://downloads.livecode.com/mergext/mergExt_" & pEdition & "_" & pMergExtVersion & ".zip"
 end builderMergExtUrl
 

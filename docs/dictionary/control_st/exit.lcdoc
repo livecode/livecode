@@ -16,7 +16,10 @@ Example:
 if the seconds &gt; timeLimit then exit mouseUp
 
 Example:
-exit myCustomProperty -- can be used in getProp or setProp handlers
+setProp myCustomProperty pValue
+   -- can be used in getProp or setProp handlers
+   exit myCustomProperty
+end myCustomProperty
 
 Parameters:
 handler: The name of the handler in which the exit control structure appears.

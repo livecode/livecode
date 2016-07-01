@@ -8,6 +8,8 @@ Summary: Creates an <image>, <EPS>, <audio clip>, or <video clip> and copies the
 
 Introduced: 1.0
 
+Deprecated: 8.1
+
 OS: mac,windows,linux,ios,android
 
 Platforms: desktop,web,mobile
@@ -36,7 +38,16 @@ Importing a paint file creates an image object on the current card. The <import>
 Importing an EPS file creates an EPS object on the current card.
 Importing an audioClip or videoClip file creates an audio clip or video clip in the current stack. Audio files can be in WAV, AIFF, or AU format. Video files can be in <QuickTime>, <AVI>, or <MPEG> <format>.
 
->*Note:* The <import> <command> places the data in the <stack file> itself. This assures that the information stays with the <stack> if it's moved, but it also increases the <stack|stack's> size and the amount of memory used by the <stack>. If you prefer to keep the data outside the <stack file>, you can display a picture file without importing it by creating an <image> and setting its <filenameproperty>, or by choosing File menu<img src="202656"/>New Referenced Control<img src="202656"/>Image File. To allow playing a sound or movie without importing it, create a pl and set its filename prop, or choose File menu<img src="202656"/>New Referenced Control<img src="202656"/>QuickTime-Supported File.
+>*Note:* The <import> <command> places the data in the <stack file> itself. This assures that the information stays with the <stack> if it's moved, but it also increases the <stack|stack's> size and the amount of memory used by the <stack>. If you prefer to keep the data outside the <stack file>, you can display a picture file without importing it by creating an <image> and setting its <filenameproperty>, or by choosing File → New Referenced Control → Image File… from the menubar. To allow playing a sound or movie without importing it, create a player and set its filename prop, or choose File → New Referenced Control → Video File… .
+
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 References: defaultStack (property), filename (property), JPEGQuality (property), filenameproperty (property), paintCompression (property), file (keyword), image (keyword), paint (keyword), export (command), import snapshot (command), play (command), EPS (object), object (glossary), stack (object), referenced control (glossary), MPEG (glossary), import (glossary), video clip (glossary), PICT (glossary), property (glossary), command (glossary), Unix (glossary), BMP (glossary), QuickTime (glossary), Mac OS (glossary), PBM (glossary), GIF (glossary), JPEG (glossary), XPM (glossary), PGM (glossary), XWD (glossary), audio clip (glossary), PPM (glossary), XBM (glossary), PNG (glossary), stack file (glossary), Windows (glossary), AVI (glossary), format (function), files (function)
 

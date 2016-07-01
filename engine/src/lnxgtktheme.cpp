@@ -816,13 +816,13 @@ Widget_Part MCNativeTheme::hittestcombobutton(const MCWidgetInfo &winfo,
 	const int btnWidth = getmetric(WTHEME_METRIC_COMBOSIZE);
 
 
-	MCRectangle btnRect = {	drect.x + (drect.width - btnWidth),
+	MCRectangle btnRect = {	int2(drect.x + (drect.width - btnWidth)),
 	                        drect.y,
-	                        btnWidth,
+	                        int2(btnWidth),
 	                        drect.height };
 	MCRectangle txtRect = { drect.x,
 	                        drect.y,
-	                        drect.width - btnWidth,
+	                        int2(drect.width - btnWidth),
 	                        drect.height };
 
 	if(MCU_point_in_rect(btnRect, mx, my))

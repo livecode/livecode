@@ -13,10 +13,10 @@ OS: windows
 Platforms: desktop,server,web
 
 Example:
-read from file COM1: until end
+read from file "COM1:" until end
 
 Example:
-read from file COM5: until end
+read from file "COM5:" until end
 
 Description:
 Use the COM <keyword> to communicate through a COM serial <port>.

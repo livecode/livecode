@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "stack.h"
 #include "tooltip.h"
 #include "dispatch.h"
@@ -148,11 +148,6 @@ void MCStack::resize(uint2 oldw, uint2 oldh)
 		curcard->message_with_args(MCM_resize_stack, rect.width, rect.height + newy, oldw, oldh);
 	}
 	MCRedrawUnlockScreen();
-
-	// MW-2011-08-18: [[ Redraw ]] For now, update the screen here. This should
-	//   really be done 'in general' after event dispatch, but things don't work
-	//   in a suitable way for that... Yet...
-	MCRedrawUpdateScreen();
 }
 
 static bool _MCStackConfigureCallback(MCStack *p_stack, void *p_context)
@@ -479,35 +474,29 @@ Window MCStack::getparentwindow()
 
 void MCStack::setparentstack(MCStack *p_parent)
 {
-	MCStack *t_parent;
-	t_parent = getparentstack();
+	MCStack *t_parent = getparentstack();
 	
 	if (t_parent == p_parent)
 		return;
 	
-	if (m_parent_stack != nil)
-	{
-		m_parent_stack->Release();
-		m_parent_stack = nil;
-	}
-	
 	if (p_parent != nil)
-		m_parent_stack = p_parent->gethandle();
+		m_parent_stack = p_parent->GetHandle();
+    else
+        m_parent_stack = nil;
 }
 
 MCStack *MCStack::getparentstack()
 {
-	if (m_parent_stack == nil)
+	if (!m_parent_stack.IsBound())
 		return nil;
 	
-	if (!m_parent_stack->Exists())
+	if (!m_parent_stack.IsValid())
 	{
-		m_parent_stack->Release();
 		m_parent_stack = nil;
 		return nil;
 	}
 	
-	return (MCStack*)m_parent_stack->Get();
+	return m_parent_stack.GetAs<MCStack>();
 }
 
 static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)
@@ -1394,151 +1383,6 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 	while (cptr != cards);
 	return NULL;
 }
-
-#ifdef OLD_EXEC
-MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
-{
-	if (otype != CT_CARD)
-		return NULL;
-
-	uint2 num = 0;
-
-	if (cards == NULL)
-	{
-		curcard = cards = MCtemplatecard->clone(False, False);
-		cards->setparent(this);
-	}
-
-	// OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
-	MCCard *cptr;
-	if (editing != NULL && savecards != NULL)
-		cptr = savecards;
-	else
-		cptr = cards;
-
-	MCCard *found = NULL;
-	if (etype == CT_EXPRESSION && s == "window")
-		etype = CT_THIS;
-	switch (etype)
-	{
-	case CT_THIS:
-		if (curcard != NULL)
-			return curcard;
-		return cards;
-	case CT_FIRST:
-	case CT_SECOND:
-	case CT_THIRD:
-	case CT_FOURTH:
-	case CT_FIFTH:
-	case CT_SIXTH:
-	case CT_SEVENTH:
-	case CT_EIGHTH:
-	case CT_NINTH:
-	case CT_TENTH:
-		num = etype - CT_FIRST;
-		break;
-	case CT_NEXT:
-		cptr = curcard;
-		do
-		{
-			cptr = cptr->next();
-			if (cptr->countme(backgroundid, (state & CS_MARKED) != 0))
-				return cptr;
-		}
-		while (cptr != curcard);
-		return NULL;
-	case CT_PREV:
-		cptr = curcard;
-		do
-		{
-			cptr = cptr->prev();
-			if (cptr->countme(backgroundid, (state & CS_MARKED) != 0))
-				return cptr;
-		}
-		while (cptr != curcard);
-		return NULL;
-	case CT_LAST:
-	case CT_MIDDLE:
-	case CT_ANY:
-		count(otype, CT_UNDEFINED, NULL, num);
-		switch (etype)
-		{
-		case CT_LAST:
-			num--;
-			break;
-		case CT_MIDDLE:
-			num >>= 1;
-			break;
-		case CT_ANY:
-			num = MCU_any(num);
-			break;
-		default:
-			break;
-		}
-		break;
-	case CT_ID:
-		uint4 inid;
-		if (MCU_stoui4(s, inid))
-		{
-			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
-			MCCard *t_cards;
-			if (editing != NULL && savecards != NULL)
-				t_cards = savecards;
-			else
-				t_cards = cards;
-		
-			// OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
-			if (editing == NULL)
-				found = curcard -> findid(CT_CARD, inid, True);
-			else
-				found = NULL;
-
-			if (found == NULL)
-				do
-				{
-					found = cptr->findid(CT_CARD, inid, True);
-					if (found != NULL
-							&& found->countme(backgroundid, (state & CS_MARKED) != 0))
-						break;
-					cptr = cptr->next();
-				}
-				while (cptr != t_cards);
-		}
-		return found;
-	case CT_EXPRESSION:
-		if (MCU_stoui2(s, num))
-		{
-			if (num < 1)
-				return NULL;
-			num--;
-			break;
-		}
-		else
-		{
-			do
-			{
-				found = cptr->findname(otype, s);
-				if (found != NULL
-				        && found->countme(backgroundid, (state & CS_MARKED) != 0))
-					break;
-				cptr = cptr->next();
-			}
-			while (cptr != cards);
-		}
-		return found;
-	default:
-		return NULL;
-	}
-	do
-	{
-		if (cptr->countme(backgroundid, (state & CS_MARKED) != 0) && num-- == 0)
-			return cptr;
-		cptr = cptr->next();
-	}
-	while (cptr != cards);
-	return NULL;
-}
-#endif
 
 MCCard *MCStack::getchildbyordinal(Chunk_term p_ordinal)
 {

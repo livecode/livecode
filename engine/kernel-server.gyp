@@ -99,15 +99,6 @@
 					},
 				],
 				[
-					'OS == "win"',
-					{
-						'include_dirs':
-						[
-							'<(quicktime_sdk)/CIncludes',
-						],
-					},
-				],
-				[
 					'mobile != 0',
 					{
 						'type': 'none',
@@ -158,11 +149,6 @@
 					[
 						'OS == "win"',
 						{
-							'library_dirs':
-							[
-								'<(quicktime_sdk)/Libraries',
-							],
-							
 							'libraries':
 							[
 								'-ladvapi32',
@@ -181,12 +167,10 @@
 								'-lshlwapi',
 								'-luser32',
 								'-lusp10',
+								'-lversion',
 								'-lwinmm',
 								'-lwinspool',
 								'-lws2_32',
-								
-								'-lQTMLClient',
-								'-lQTVR',
 							],
 						},
 					],

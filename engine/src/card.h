@@ -83,12 +83,7 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
@@ -112,7 +107,9 @@ public:
 
     virtual void scheduledelete(bool p_is_child);
     
-	void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
+    virtual bool isdeletable(bool p_check_flag);
+    
+    void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated);
 
 	MCObject *hittest(int32_t x, int32_t y);
 	
@@ -137,9 +134,6 @@ public:
 	              uint2 &n, Boolean dohc);
 	MCControl *getnumberedchild(integer_t p_number, Chunk_term p_obj_type, Chunk_term p_parent_type);
 	MCControl *getchild(Chunk_term e, MCStringRef p_expression, Chunk_term o, Chunk_term p);
-#ifdef OLD_EXEC
-	MCControl *getchild(Chunk_term e, const MCString &, Chunk_term o, Chunk_term p);
-#endif
     
     MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o, Chunk_term p);
     MCControl *getchildbyid(uinteger_t p_id, Chunk_term o, Chunk_term p);

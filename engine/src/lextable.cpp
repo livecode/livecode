@@ -67,8 +67,8 @@ uint8_t type_table[256] =
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      l       m       n       o
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      p       q       r       s
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      t       u       v       w
-    ST_ID,   ST_ID,   ST_ID,   ST_LB,   //      x       y       z       {
-    ST_OP,   ST_RB,   ST_OP,   ST_ID,   //      |       }       ~       DEL
+    ST_ID,   ST_ID,   ST_ID,   ST_LC,   //      x       y       z       {
+    ST_OP,   ST_RC,   ST_OP,   ST_ID,   //      |       }       ~       DEL
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      0x80    0x81    0x82    0x83
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      0x84    0x85    0x86    0x87
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      0x88    0x89    0x8A    0x8B
@@ -135,8 +135,8 @@ uint8_t unicode_type_table[256] =
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      l       m       n       o
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      p       q       r       s
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      t       u       v       w
-    ST_ID,          ST_ID,          ST_ID,          ST_LB,          //      x       y       z       {
-    ST_OP,          ST_RB,          ST_OP,          ST_ID,          //      |       }       ~       DEL
+    ST_ID,          ST_ID,          ST_ID,          ST_LC,          //      x       y       z       {
+    ST_OP,          ST_RC,          ST_OP,          ST_ID,          //      |       }       ~       DEL
     ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x80    0x81    0x82    0x83
     ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x84    0x85    0x86    0x87
     ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,   ST_UNDEFINED,	//      0x88    0x89    0x8A    0x8B
@@ -885,6 +885,12 @@ LT factor_table[] =
         {"epss", TT_CLASS, CT_EPS},
         {"eraser", TT_PROPERTY, P_ERASER},
 		{"errormode", TT_PROPERTY, P_ERROR_MODE},
+        {"eventaltkey", TT_FUNCTION, F_EVENT_OPTION_KEY},
+        {"eventcapslockkey", TT_FUNCTION, F_EVENT_CAPSLOCK_KEY},
+        {"eventcommandkey", TT_FUNCTION, F_EVENT_COMMAND_KEY},
+        {"eventcontrolkey", TT_FUNCTION, F_EVENT_CONTROL_KEY},
+        {"eventoptionkey", TT_FUNCTION, F_EVENT_OPTION_KEY},
+        {"eventshiftkey", TT_FUNCTION, F_EVENT_SHIFT_KEY},
         {"executioncontexts", TT_PROPERTY, P_EXECUTION_CONTEXTS},
         {"existence", TT_FUNCTION, F_EXISTS},
         {"exists", TT_FUNCTION, F_EXISTS},
@@ -1788,6 +1794,7 @@ LT factor_table[] =
         {"vc", TT_CHUNK, CT_VIDEO_CLIP},
         {"vcplayer", TT_PROPERTY, P_VC_PLAYER},
         {"vcs", TT_CLASS, CT_VIDEO_CLIP},
+        {"vectordotproduct", TT_FUNCTION, F_VECTOR_DOT_PRODUCT},
         {"version", TT_FUNCTION, F_VERSION},
         {"vgrid", TT_PROPERTY, P_VGRID},
         {"videoclip", TT_CHUNK, CT_VIDEO_CLIP},
@@ -2101,6 +2108,7 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+        {"error", TT_UNDEFINED, SG_ERROR},
         {"extension", TT_UNDEFINED, SG_EXTENSION},
 		// MW-2013-11-14: [[ AssertCmd ]] Token for 'failure'
 		{"failure", TT_UNDEFINED, SG_FAILURE},
@@ -2154,6 +2162,8 @@ static LT sugar_table[] =
 		{"true", TT_UNDEFINED, SG_TRUE},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
+        {"urlresult", TT_UNDEFINED, SG_URL_RESULT},
+        {"value", TT_UNDEFINED, SG_VALUE},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'wildcard'.
 		{"wildcard", TT_UNDEFINED, SG_WILDCARD},
 		{"without", TT_PREP, PT_WITHOUT},

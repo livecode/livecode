@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -122,12 +122,19 @@
     PushInMarkArgumentSyntaxMapping
     PushOutMarkArgumentSyntaxMapping
     PushInOutMarkArgumentSyntaxMapping
+    AddUnreservedSyntaxKeyword
 
     IsDependencyCompile
     DependStart
     DependFinish
     DependDefineMapping
     DependDefineDependency
+
+    BytecodeEnumerate
+    BytecodeLookup
+    BytecodeDescribe
+    BytecodeDescribeParameter
+    BytecodeIsValidArgumentCount
 
     EmitStart
     EmitFinish
@@ -146,10 +153,9 @@
     EmitTypeDefinition
     EmitConstantDefinition
     EmitVariableDefinition
-    EmitContextVariableDefinition
     EmitBeginHandlerDefinition
     EmitEndHandlerDefinition
-    EmitBeginContextHandlerDefinition
+    EmitBeginUnsafeHandlerDefinition
     EmitForeignHandlerDefinition
     EmitPropertyDefinition
     EmitEventDefinition
@@ -242,16 +248,21 @@
     EmitStore
     EmitReturn
     EmitReturnNothing
+    EmitReset
     EmitAttachRegisterToExpression
     EmitDetachRegisterFromExpression
     EmitGetRegisterAttachedToExpression
     EmitPosition
+    EmitBeginOpcode
+    EmitContinueOpcode
+    EmitEndOpcode
 
     OutputBeginManifest
     OutputEnd
     OutputWrite
     OutputWriteI
     OutputWriteS
+    OutputWriteXmlS
 
     ErrorsDidOccur
     Fatal_OutOfMemory
@@ -327,6 +338,17 @@
     Error_ConstantArrayKeyIsNotStringLiteral
     Error_ListExpressionTooLong
     Error_ArrayExpressionTooLong
+    Error_UnknownOpcode
+    Error_OpcodeArgumentMustBeLabel
+    Error_OpcodeArgumentMustBeRegister
+    Error_OpcodeArgumentMustBeConstant
+    Error_OpcodeArgumentMustBeHandler
+    Error_OpcodeArgumentMustBeVariable
+    Error_OpcodeArgumentMustBeDefinition
+    Error_IllegalNumberOfArgumentsForOpcode
+    Error_BytecodeNotAllowedInSafeContext
+    Error_UnsafeHandlerCallNotAllowedInSafeContext
+
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
@@ -479,6 +501,8 @@
 'action' PushStringArgumentSyntaxMapping(Value: STRING)
 'action' PushIndexedMarkArgumentSyntaxMapping(MarkIndex: INT, Index: INT)
 
+'action' AddUnreservedSyntaxKeyword(Token: NAME)
+
 --------------------------------------------------------------------------------
 
 'condition' IsDependencyCompile()
@@ -486,6 +510,14 @@
 'action' DependFinish()
 'action' DependDefineMapping(ModuleName: NAME, SourceFile: STRING)
 'action' DependDefineDependency(ModuleName: NAME, RequiredModuleName: NAME)
+
+--------------------------------------------------------------------------------
+
+'condition' BytecodeEnumerate(Index: INT -> Name: NAME)
+'condition' BytecodeLookup(Name: STRING -> Opcode: INT)
+'action' BytecodeDescribe(Opcode: INT -> Name: NAME)
+'condition' BytecodeIsValidArgumentCount(Opcode: INT, Count: INT)
+'action' BytecodeDescribeParameter(Opcode: INT, Index: INT -> Type: INT)
 
 --------------------------------------------------------------------------------
 
@@ -507,15 +539,14 @@
 
 'action' EmitExportedDefinition(Index: INT)
 
-'action' EmitDefinitionIndex(-> Index: INT)
+'action' EmitDefinitionIndex(Kind: STRING -> Index: INT)
 
 'action' EmitTypeDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitConstantDefinition(Index: INT, Position: POS, Name: NAME, ConstIndex: INT)
 'action' EmitVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
-'action' EmitContextVariableDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, DefaultIndex: INT)
 'action' EmitBeginHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
-'action' EmitBeginContextHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitEndHandlerDefinition()
+'action' EmitBeginUnsafeHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
 'action' EmitForeignHandlerDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT, Binding: STRING)
 'action' EmitPropertyDefinition(Index: INT, Position: POS, Name: NAME, GetIndex: INT, SetIndex: INT)
 'action' EmitEventDefinition(Index: INT, Position: POS, Name: NAME, TypeIndex: INT)
@@ -616,7 +647,11 @@
 'action' EmitStore(Register: INT, Var: INT, Level: INT)
 'action' EmitReturn(Register: INT)
 'action' EmitReturnNothing()
+'action' EmitReset(Register: INT)
 'action' EmitPosition(Position: POS)
+'action' EmitBeginOpcode(Opcode: STRING)
+'action' EmitContinueOpcode(Output: INT)
+'action' EmitEndOpcode()
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)
@@ -627,6 +662,7 @@
 'action' OutputWrite(STRING)
 'action' OutputWriteI(STRING, NAME, STRING)
 'action' OutputWriteS(STRING, STRING, STRING)
+'action' OutputWriteXmlS(STRING, STRING, STRING)
 
 --------------------------------------------------------------------------------
 
@@ -721,6 +757,18 @@
 'action' Error_ConstantArrayKeyIsNotStringLiteral(Position: POS)
 'action' Error_ListExpressionTooLong(Position: POS)
 'action' Error_ArrayExpressionTooLong(Position: POS)
+
+'action' Error_UnknownOpcode(Position: POS, Opcode: NAME)
+'action' Error_OpcodeArgumentMustBeLabel(Position: POS)
+'action' Error_OpcodeArgumentMustBeRegister(Position: POS)
+'action' Error_OpcodeArgumentMustBeConstant(Position: POS)
+'action' Error_OpcodeArgumentMustBeHandler(Position: POS)
+'action' Error_OpcodeArgumentMustBeVariable(Position: POS)
+'action' Error_OpcodeArgumentMustBeDefinition(Position: POS)
+'action' Error_IllegalNumberOfArgumentsForOpcode(Position: POS)
+
+'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
+'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
 
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)

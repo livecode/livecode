@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "scriptpt.h"
 #include "dispatch.h"
 #include "stack.h"
@@ -618,7 +618,7 @@ public:
 		if (s_payload_minizip != nil)
 		{
 			ExtractContext t_context;
-			t_context . target = MCtargetptr . object -> gethandle();
+			t_context . target = MCtargetptr . object -> GetHandle();
 			t_context . name = *t_item;
             t_context . var = ctxt . GetIt() -> evalvar(ctxt);
 			t_context . stream = nil;
@@ -639,8 +639,6 @@ public:
 			
 			if (t_context . stream != nil)
 				MCS_close(t_context . stream);
-
-			t_context . target -> Release();
 		}
 		else
 			ctxt . SetTheResultToCString("payload not open");
@@ -649,7 +647,7 @@ public:
 private:
 	struct ExtractContext
 	{
-		MCObjectHandle *target;
+		MCObjectHandle target;
 		MCStringRef name;
 		IO_handle stream;
 		MCVariable *var;
@@ -680,10 +678,8 @@ private:
             context -> var ->setvalueref(t_value);
 			MCValueRelease(t_value);
 		}
-
-		MCObject *t_target;
-		t_target = context -> target -> Get();
-		if (t_target != nil)
+        
+		if (context->target.IsValid())
 		{
 			MCParameter p1, p2, p3;
 			p1 . setnext(&p2);
@@ -694,7 +690,7 @@ private:
 
 			MCAutoNameRef t_message_name;
 			/* UNCHECKED */ t_message_name . CreateWithCString("payloadProgress");
-			t_target -> message(t_message_name, &p1);
+			context->target->message(t_message_name, &p1);
 		}
 
 		return true;
@@ -909,33 +905,6 @@ public:
 		return PS_NORMAL;
 	}
     
-#ifdef LEGACY_EXEC
-	Exec_stat exec(MCExecPoint& ep)
-	{
-		bool t_success;
-		t_success = true;
-
-		if (m_module -> eval(ep) != ES_NORMAL)
-			return ES_ERROR;
-
-		char *t_module;
-		t_module = ep . getsvalue() . clone();
-		
-		ep . clear();
-
-		State t_state;
-		t_state . module = t_module;
-		t_state . ep = &ep;
-		t_state . first = true;
-		MCSystemListProcesses(ListProcessCallback, &t_state);
-
-		MCresult -> set(ep);
-
-		delete t_module;
-
-		return ES_NORMAL;
-	}
-#endif
     
     void exec_ctxt(MCExecContext& ctxt)
 	{
@@ -1176,7 +1145,7 @@ MCInternalVerbInfo MCinternalverbs[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of MCDispatch::startup method for STANDALONE mode.
+//  Implementation of MCDispatch::startup method for INSTALLER mode.
 //
 
 extern IO_stat readheader(IO_handle& stream, char *version);
@@ -1423,20 +1392,8 @@ IO_stat MCDispatch::startup(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of MCStack::mode* hooks for STANDALONE mode.
+//  Implementation of MCStack::mode* hooks for INSTALLER mode.
 //
-
-#ifdef LEGACY_EXEC
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 void MCStack::mode_load(void)
 {
@@ -1504,33 +1461,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 
 #endif
 
-
-#ifdef LEGACY_EXEC
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
-//
-
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCProperty::mode_eval/mode_set for INSTALLER mode.
-//
-
-Exec_stat MCProperty::mode_set(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -1670,10 +1600,6 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
-{
-}
-
 MCObject *MCModeGetU3MessageTarget(void)
 {
 	return MCdefaultstackptr -> getcard();
@@ -1762,6 +1688,11 @@ bool MCModeGetPixelScalingEnabled(void)
 	return true;
 }
 
+void MCModeFinalize(void)
+{
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of remote dialog methods
@@ -1796,7 +1727,7 @@ uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, ui
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Windows-specific mode hooks for STANDALONE mode.
+//  Implementation of Windows-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef TARGET_PLATFORM_WINDOWS
@@ -1831,7 +1762,7 @@ bool MCModeHandleMessage(LPARAM lparam)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Mac OS X-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Mac OS X-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef _MACOSX
@@ -1845,7 +1776,7 @@ bool MCModePreWaitNextEvent(Boolean anyevent)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Linux-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Linux-specific mode hooks for INSTALLER mode.
 //
 
 #ifdef _LINUX

@@ -16,7 +16,7 @@ Platforms: desktop,server,web,mobile
 
 Example:
 on selectionChanged -- display selected char number
-  put word 2 of the selectedChunk into field Character Number
+  put word 2 of the selectedChunk into field "Character Number"
 end selectionChanged
 
 Description:

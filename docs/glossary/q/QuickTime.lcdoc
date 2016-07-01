@@ -9,6 +9,16 @@ System for video, sound, and picture display developed by Apple Computer.
  
 Also, a <file> <format> that can hold video or sound information (a QuickTime <movie>).
 
-References: format (glossary), file (glossary), movie (glossary)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: dontUseQT (property), dontUseQTEffects (property), 
+format (glossary), file (glossary), movie (glossary)
 
 Tags: multimedia

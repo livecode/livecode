@@ -691,7 +691,7 @@ public:
 		m_why = p_why;
 	}
 	
-	const char *what(void)
+	virtual const char *what(void) const throw()
 	{
 		return m_why;
 	}

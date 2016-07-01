@@ -18,7 +18,7 @@ Example:
 the clickV
 
 Example:
-if the clickV &gt; the bottom of stack window then beep
+if the clickV &gt; the bottom of stack "window" then beep
 
 Returns: The <clickV> <function> <return|returns> a positive <integer>.
 

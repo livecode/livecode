@@ -74,7 +74,7 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef menu, uindex_t index);
 void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
 
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
-void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, uint32_t time);
+void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, MCPlatformPlayerDuration time);
 void MCPlatformHandlePlayerCurrentTimeChanged(MCPlatformPlayerRef player);
 void MCPlatformHandlePlayerFinished(MCPlatformPlayerRef player);
 void MCPlatformHandlePlayerBufferUpdated(MCPlatformPlayerRef player);
@@ -394,7 +394,7 @@ void MCPlatformCallbackSendPlayerFrameChanged(MCPlatformPlayerRef p_player)
 	MCPlatformHandlePlayerFrameChanged(p_player);
 }
 
-void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef p_player, uint32_t p_time)
+void MCPlatformCallbackSendPlayerMarkerChanged(MCPlatformPlayerRef p_player, MCPlatformPlayerDuration p_time)
 {
     //MCLog("Player(%p) -> MarkerChanged(%d)", p_player, p_time);
     MCPlatformHandlePlayerMarkerChanged(p_player, p_time);

@@ -6,6 +6,8 @@ Syntax: revVideoGrabDialog [<settingsType>]
 
 Summary: Displays a dialog box for configuring <QuickTime> or <VFW|Video for Windows> <video capture>.
 
+Associations: Video library
+
 Introduced: 2.0
 
 OS: mac,windows
@@ -45,8 +47,23 @@ If you specified "VFW", use the <settingsType> <parameter> to specify which <dia
 
 >*Note:* Some video camera drivers don't support some <settingsType> values.
 
->*Important:*  The <revVideoGrabDialog> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*  The <revVideoGrabDialog> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Video Grabber" 
+> library checkbox is checked.
 
-References: revVideoGrabSettings (command), command (glossary), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), statement (glossary), standalone application (glossary), parameter (glossary), video grabber (glossary), dialog box (glossary), Video library (library), LiveCode custom library (library)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: revVideoGrabSettings (command), command (glossary), video capture (glossary), VFW (glossary), Standalone Application Settings (glossary), QuickTime (glossary), statement (glossary), standalone application (glossary), parameter (glossary), video grabber (glossary), dialog box (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

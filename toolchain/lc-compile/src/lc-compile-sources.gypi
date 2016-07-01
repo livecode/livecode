@@ -50,10 +50,13 @@
 		'lc-compile_source_files':
 		[
 			'literal.c',
+            'literal.h',
 			'main.c',
 			'operator.c',
 			'position.c',
+            'position.h',
 			'report.c',
+            'report.h',
 			'set.c',
 			'syntax-gen.c',
 			'emit.cpp',

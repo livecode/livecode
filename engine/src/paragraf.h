@@ -173,6 +173,7 @@ public:
 	// below to ensure surrogate pairs are handled properly.
 	codepoint_t GetCodepointAtIndex(findex_t p_index)
 	{
+		MCAssert(p_index >= 0);
 		// This assumes that the input string is valid UTF-16 and all surrogate
 		// pairs are matched correctly.
 		unichar_t t_lead, t_tail;
@@ -189,6 +190,8 @@ public:
 	// surrogate pairs when it does so.
 	findex_t IncrementIndex(findex_t p_in)
 	{
+		if (p_in < 0)
+			return 0;
 		unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in);
         // SN-2015-09-08: [[ Bug 15895 ]] A field can end with half of a
         //  surrogate pair - in which case the index only increments by 1.
@@ -201,7 +204,7 @@ public:
 	// surrogate pairs when it does so.
 	findex_t DecrementIndex(findex_t p_in)
 	{
-		if (p_in == 0)
+		if (p_in <= 0)
             return 0;
         unichar_t t_char = MCStringGetCharAtIndex(m_text, p_in - 1);
 		if (0xDC00 <= t_char && t_char < 0xE000)
@@ -460,10 +463,6 @@ public:
 	// Return the text as HTML formatted string.
 	// Called by:
 	//   MCField::gethtmltext
-#ifdef LEGACY_EXEC
-	void gethtmltext(MCExecPoint &ep);
-#endif
-
 	// Clear everything in the current paragraph and set the text to the
 	// given string.
 	// Called by:
@@ -597,9 +596,6 @@ public:
 	//   field indices to char indices.
     // MW-2013-07-31: [[ Bug 10957 ]] Pass in the start of the paragraph as a byte
 	//   offset so that the correct char offset can be calculated.
-#ifdef LEGACY_EXEC
-	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, findex_t si, findex_t ei, int32_t p_delta);
-#endif
     void getflaggedranges(uint32_t p_part_id, findex_t si, findex_t ei, int32_t p_delta, MCInterfaceFieldRanges& r_ranges);
     
 	// Return true if the paragraph completely fits in theight. Otherwise, return
@@ -623,21 +619,11 @@ public:
 	void cleanattrs(void);
     
 	// Sets the given paragraph attribute to the value in ep.
-#ifdef LEGACY_EXEC
-	Exec_stat setparagraphattr(Properties which, MCExecPoint& ep);
-#endif
 	// Gets the given paragraph attribute into the given ep.
-#ifdef LEGACY_EXEC
-    Exec_stat getparagraphattr(Properties which, MCExecPoint& ep, Boolean effective);
-#endif
 	// Copies the given attribute from the given paragraph.
 	void copysingleattr(Properties which, MCParagraph *other);
 	// Copies all the attributes from the given paragraph.
 	void copyattrs(const MCParagraph& other);
-#ifdef LEGACY_EXEC
-	// Stores the paragraph attributes into the dst array.
-	void storeattrs(MCArrayRef dst);
-#endif
 	// Fetches the paragraph attributes from the src array.
     void fetchattrs(MCArrayRef src);
 	// Clears the paragraph attributes.
@@ -820,12 +806,6 @@ public:
 	// Called by:
 	//   MCField::finsert (for charset purposes)
 	//   MCField::gettextatts
-#ifdef LEGACY_EXEC
-	Boolean getatts(uint2 si, uint2 ei, Properties which, Font_textstyle spec_style, const char *&fname, uint2 &size,
-	                uint2 &style, const MCColor *&color,
-	                const MCColor *&backcolor, int2 &shift, bool& specstyle, uint2 &mixed);
-#endif
-
 	// Set the attributes on the given range.
 	// Called by:
 	//   MCField::finsert (for charset change purposes)
@@ -833,10 +813,6 @@ public:
 	//   MCField::htmltoparagraphs
 	//   MCField::settextatts
 	//   MCHcfield::buildf
-#ifdef LEGACY_EXEC
-	void setatts(findex_t si, findex_t ei, Properties which, void *value, bool from_html = false);
-#endif
-
 	void restricttoline(findex_t& si, findex_t& ei);
 	uint2 heightoflinewithindex(findex_t si, uint2 fixedheight);
 	

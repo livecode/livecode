@@ -25,7 +25,7 @@ put "Изучение и обучение иностранных языков" a
 put trueWord 3 of line 3 of tText -- returns "обучение"
 
 Example:
-get trueWord 4 of ("The programme output:" && quote & "Hello World!"  quote) -- yields Hello
+get trueWord 4 of ("The programme output:" && quote & "Hello World!" & quote) -- yields Hello
 
 Description:
 Use the <trueWord> keyword to refer to one or more words, delimited by Unicode word breaks.

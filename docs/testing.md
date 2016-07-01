@@ -2,10 +2,11 @@
 
 Tests are small programs that check that a particular, specific function works correctly.  They are run automatically to check whether LiveCode works properly.  They're really useful for ensuring that changes to one part of LiveCode don't break other things!
 
-The main LiveCode engine repository contains three sets of tests ("test suites"):
+The main LiveCode engine repository contains four sets of tests ("test suites"):
 
-* **LiveCode Script tests:**  script-only stacks that are run using the LiveCode standalone engine.  They test features of the LiveCode Script language.
+* **LiveCode Script tests:** script-only stacks that are run using the LiveCode standalone engine.  They test features of the LiveCode Script language.
 * **LiveCode Builder tests:** LCB modules that are run using the **lc-run** tool.   They test features of the LCB core language and standard library.
+* **LiveCode Builder Compiler Frontend tests:** Fragments of LCB code which are run through the compiler and check that the compile succeeds, or emits the correct warnings or errors.
 * **C++ tests:** low-level tests written in C++ using [Google Test](https://github.com/google/googletest).  These perform low-level checks for things that can't be tested any other way.
 
 ## Running the Tests
@@ -59,17 +60,17 @@ Before running each test command, the test framework inserts a test library stac
 * `TestAssert pDescription, pExpectTrue`: Make a test assertion.  The test is recorded as a failure if *pExpectTrue* is false.  *pDescription* should be a short string that describes the test (e.g. "clipboard is clear").
 * `TestSkip pDescription, pReasonSkipped`: Record a test as having been skipped.  *pReasonSkipped* should be a short explanation of why the test was skipped (e.g. "not supported on Windows").
 * `TestAssertBroken pDescription, pExpectTrue, pReasonBroken`: The same as `TestAssert`, but marking the test as "expected to fail".  *pReasonBroken* should be a short explanation of why the test is currently expected to fail; it should almost always be a reference to a bug report, e.g. "bug 54321".
-* `TestAssertThrow pDescription, pHandlerName, pTarget, pExpectedError`: Assert that a given handler triggers the expected error message. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* within a try/catch structure. *pExpectedError* is the expected script execution error code.
+* `TestAssertThrow pDescription, pHandlerName, pTarget, pExpectedError, pParam`: Assert that a given handler triggers the expected error message. *pHandlerName* is the name of the handler containing the script expected to cause an error; it is dispatched to *pTarget* with *pParam* as a parameter within a try/catch structure. *pExpectedError* is the expected script execution error code.
 * `TestGetEngineRepositoryPath`: A function that returns the path to the main LiveCode engine repository.
 * `TestGetIDERepositoryPath`: A function that returns the path to the LiveCode IDE repository.
-* `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension. 
-* `TestLoadAllExtensions`: Attempt to load all available extensions. 
+* `TestLoadExtension pName`: Attempt to load the extension with name `pName`, eg `TestLoadExtension "json"` will load the JSON library extension.
+* `TestLoadAllExtensions`: Attempt to load all available extensions.
 * `TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray`: Repeatedly check the result of a handler for a test. The test is recorded as a success if the result is ever true before the given time runs out, or a failure otherwise.
 	- `pHandlerName` is the name of the handler which returns a result.
 	- `pTarget` is the object to which `pHandlerName` should be dispatched.
 	- `pTimeOut` is the amount of milliseconds to continue testing the result of the handler.
 	- `pParamsArray` is an array of parameters, keyed by the 1-based index of the required parameter to be passed to the handler.
-	
+
 Tests can have additional setup requirements before running, for example loading custom libraries. If the script test contains a handler called `TestSetup`, this will be run prior to running each test command. For example:
 ````
 on TestSetup
@@ -104,6 +105,63 @@ Just like for the LCS tests described above, new `.lcb` files added to the test 
 Each test module contains a set of `public handler` definitions, with names beginning with `Test`.  Each test command gets run in a fresh LiveCode Builder environment.
 
 The LCB standard library has built-in syntax for writing unit tests, provided by the `com.livecode.unittest` module.  For more information and example code, look up `com.livecode.unittest` in the LiveCode Builder dictionary.
+
+### LiveCode Builder Compiler Frontend Tests
+
+LCB compiler frontend tests live in the 'tests/lcb/compiler/frontend' directory and its subdirectories. Compiler test files all have the extension '.compilertest'.
+
+Unlike LCB and LCS tests, the frontend compiler tests consist of fragments of LCB code which are fed to the compiler to check that it either succeeds, or emits the correct warnings or errors.
+
+The compilertest files use directives beginning with '%' to describe how the different LCB code fragments should behave when passed through the compiler. A single compilertest file can contain as many code fragments to check as necessary. The syntax is as follows:
+
+    CompilerTest
+       : { Line, NEWLINE }
+
+    Line
+       : WHITESPACE+
+       | '%%' ANYTHING_BUT_NEWLINE
+       | Test
+
+    Test
+       : '%TEST' <Name: Identifier> NEWLINE
+             { Code, NEWLINE }
+         '%EXPECT' ('PASS' | 'FAIL' | 'SKIP') [ <Reason: String> ] NEWLINE
+             { Assertion, NEWLINE }
+         '%ENDTEST'
+
+    Code
+       : { ANYTHING_BUT_NEWLINE | '%{' <Position: Identifier> '}' }
+
+    Assertion
+       : '%ERROR' <Message: String> 'AT' <Position: Identifier>
+       | '%WARNING' <Message: String> 'AT' <Position: Identifier>
+       | '%SUCCESS'
+
+Each %TEST clause indicates a separate test. Within the code fragments the '%{...}' clauses indicate named positions within the code which are used to check the position information provided for an error or a warning.
+
+At least one assertion must be present, and you cannot have an %ERROR and %SUCCESS assertion present in the same test.
+
+For each test present in the compilertest file, the code fragment is extracted, the positions of the '%{...}' references are noted and then references are removed. The resulting code is passed to lc-compile and its stderr output evaluated. The output is checked to ensure that each claimed assertion exists, and is in the correct position. When checking for assertion matches, the type (error or warning) must match, the position must match and the asserted string must be within the output message the compiler generates.
+
+For example, to check whether the scope of variables within 'repeat forever' statements blocks is correct, you might use:
+
+    %TEST RepeatForeverScope
+    module compiler_test
+    handler TestHandler()
+      variable tOuterVariable
+      repeat forever
+        variable tInnerVariable
+      end repeat
+      put %{BEFORE_BADINNERVARIABLE}tInnerVariable into tOuterVariable
+    end handler
+    end module
+    %EXPECT PASS
+    %ERROR "Identifier 'tInnerVariable' not declared" AT BEFORE_BADINNERVARIABLE
+    %ENDTEST
+
+When compiled, lc-compile will emit an error on the 'put' line because tInnerVariable is not declared at that point. This matches the specified '%ERROR' assertion and so the test will pass (i.e. the compiler is correctly identifying the fact that tInnerVariable is not declared outside of the scope of the 'repeat forever' construct).
+
+To help debug compiler tests, set the LCC_VERBOSE environment variable to 1 before running the compiler test. This will cause the compiler testrunner to emit diagnostic information, including the full output of the compile command which is being run.
 
 ### C++ tests with Google Test
 

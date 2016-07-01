@@ -264,6 +264,8 @@ class MCField : public MCControl
 	static MCObjectPropertyTable kPropertyTable;
 public:
 
+    enum { kObjectType = CT_FIELD };
+    
     // SN-2014-11-04: [[ Bug 13934 ]] Refactor the laying out the field when setting properties
     friend MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_id, findex_t &si, findex_t &ei, MCFieldLayoutSettings &r_layout_settings);
     // SN-2014-12-18: [[ Bug 14161 ]] Add a parameter to force the re-layout of a paragraph
@@ -298,11 +300,6 @@ public:
 	virtual void select();
 	virtual uint2 gettransient() const;
 	virtual void applyrect(const MCRectangle &nrect);
-
-#ifdef LEGACY_EXEc
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
 
 	virtual void undo(Ustruct *us);
 	virtual void recompute();
@@ -447,28 +444,11 @@ public:
 	
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
     
-#ifdef LEGACY_EXEC
-	// MW-2011-11-23: [[ Array TextStyle ]] Setting/getting text attributes can be indexed by
-	//   specific style if which == P_TEXT_STYLE.
-	// MW-2012-01-25: [[ ParaStyles ]] Add a line chunk parameter for disambiguating things
-	//   like backColor.
-	Exec_stat gettextatts(uint4 parid, Properties which, MCExecPoint &, MCNameRef index, Boolean effective, findex_t si, findex_t ei, bool is_line);
-	// MW-2011-12-08: [[ StyledText ]] Change to pass in an ep so that styledText can fetch
-	//   the array.
-	// MW-2012-01-25: [[ ParaStyles ]] Add a line chunk parameter for disambiguating things
-	//   like backColor.
-	// MW-2013-08-01: [[ Bug 10932 ]] Added dont_layout property which stops layout of paragraphs and
-	//   added P_UNDEFINED support, which just causes a full reflow of the field.
-	Exec_stat settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, findex_t si, findex_t ei, bool is_line, bool dont_layout = false);
-#endif
     
 	Exec_stat seltext(findex_t si, findex_t ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
 	void hilitedlines(vector_t<uint32_t> &r_lines);
 	Exec_stat sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll = True);
-#ifdef LEGACY_EXEC
-	Exec_stat sethilitedlines(const MCString &,Boolean forcescroll = True);
-#endif
 	void hiliteline(int2 x, int2 y);
 
 	bool locchar(Boolean click, MCStringRef& r_string);
@@ -489,9 +469,6 @@ public:
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
 	bool selectedloc(MCStringRef& r_string);
-#ifdef LEGACY_EXEC
-	void selectedtext(MCExecPoint &ep);
-#endif
 	bool selectedtext(MCStringRef& r_string);
 	Boolean selectedmark(Boolean wholeline, findex_t &si, findex_t &ei,
 	                     Boolean force, bool p_char_indices = false);
@@ -499,9 +476,6 @@ public:
 	bool returnchunk(findex_t si, findex_t ei, MCStringRef& r_string, bool p_char_indices = false);
 	bool returnline(findex_t si, findex_t ei, MCStringRef& r_string);
 	bool returnloc(findex_t si, MCStringRef& r_string);
-#ifdef LEGACY_EXEC
-	void returntext(MCExecPoint &ep, findex_t si, findex_t ei);
-#endif
 	bool returntext(findex_t si, findex_t ei, MCStringRef& r_string);
 
 	void charstoparagraphs(findex_t si, findex_t ei, MCParagraph*& sp, MCParagraph*& ep, uint4& sl, uint4& el);
@@ -527,20 +501,9 @@ public:
 	// MCField HTML functions in fieldh.cc
 	Exec_stat sethtml(uint4 parid, MCValueRef data);
 	Exec_stat setrtf(uint4 parid, MCStringRef data);
-#ifdef LEGACY_EXEC
-	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
-#endif
 	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
 	Exec_stat setpartialtext(uint4 parid, MCStringRef p_text);
-#ifdef LEGACY_EXEC
-	Exec_stat gethtml(uint4 parid, MCExecPoint &ep);
-	Exec_stat getparagraphhtml(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
-#endif
-
 #ifdef _MACOSX
-#ifdef LEGACY_EXEC
-	Exec_stat getparagraphmacstyles(MCExecPoint &ep, MCParagraph *start, MCParagraph *end, Boolean isunicode);
-#endif
 	Exec_stat getparagraphmacunicodestyles(MCParagraph *p_start, MCParagraph *p_finish, MCDataRef& r_data);
 	MCParagraph *macstyletexttoparagraphs(const MCString &textdata, const MCString &styledata, Boolean isunicode);
 	MCParagraph *macunicodestyletexttoparagraphs(MCDataRef p_text, MCDataRef p_styles);
@@ -548,9 +511,6 @@ public:
 #endif
 
     MCParagraph *rtftoparagraphs(MCStringRef p_data);
-#ifdef LEGACY_EXEC
-	MCParagraph *styledtexttoparagraphs(MCExecPoint& ep);
-#endif
 	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
 	MCParagraph *texttoparagraphs(MCStringRef p_text);
 	
@@ -574,47 +534,26 @@ public:
 	bool doexport(MCFieldExportFlags flags, MCParagraph *p_paragraphs, int32_t start_index, int32_t end_index, MCFieldExportCallback callback, void *context);
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, either as unicode
 	//   or native encoding.
-#ifdef LEGACY_EXEC
-	void exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-#endif
 	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices. The output is encoded in either unicode or native.
-#ifdef LEGACY_EXEC
-	void exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-	void exportasplaintext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool as_unicode);
-#endif
 	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices and line breaks.
-#ifdef LEGACY_EXEC
-	void exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-#endif
 	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to rtf.
-#ifdef LEGACY_EXEC
-	void exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index);
-	void exportasrtftext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index);
-#endif
 	bool exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 	bool exportasrtftext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to (livecode) html.
-#ifdef LEGACY_EXEC
-	void exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_effective);
-	void exportashtmltext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_effective);
-#endif 
 	bool exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text);
 	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCDataRef& r_text);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
-#ifdef LEGACY_EXEC
-    void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
-#endif
 	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
     bool exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);\
 

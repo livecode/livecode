@@ -216,7 +216,7 @@ protected:
 #endif
 
 	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
-	MCObjectHandle *m_parent_stack;
+	MCObjectHandle m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
@@ -309,6 +309,9 @@ protected:
 	MCStackObjectVisibility m_hidden_object_visibility;
     
 public:
+    
+    enum { kObjectType = CT_STACK };
+    
 	Boolean menuwindow;
 
 	MCStack(void);
@@ -343,12 +346,9 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void applyrect(const MCRectangle &nrect);
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
+    virtual bool isdeletable(bool p_check_flag);
+    
 	virtual void paste(void);
 
 	virtual MCStack *getstack();
@@ -731,9 +731,6 @@ public:
 	void renumber(MCCard *card, uint4 newnumber);
 	MCObject *getAV(Chunk_term etype, MCStringRef, Chunk_term otype);
 	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
-#ifdef OLD_EXEC
-	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
-#endif  
     MCCard *getchildbyordinal(Chunk_term p_ordinal);
     MCCard *getchildbyid(uinteger_t p_id);
     MCCard *getchildbyname(MCNameRef p_name);
@@ -819,15 +816,9 @@ public:
 	                 Find_mode fmode);
 	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
-#ifdef LEGACY_EXEC
-	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
-#endif
 	void find(MCExecContext &ctxt, Find_mode mode, MCStringRef, MCChunk *field);
 	void markfind(MCExecContext &ctxt, Find_mode mode, MCStringRef,
 	              MCChunk *, Boolean mark);
-#ifdef LEGACY_EXEC
-	void mark(MCExecPoint &ep, MCExpression *where, Boolean mark);
-#endif
     void mark(MCExecContext& ctxt, MCExpression *p_where, bool p_mark);
 	Linkatts *getlinkatts();
 	Boolean cantabort()
@@ -1290,6 +1281,9 @@ public:
 #endif
     
 private:
+    /* Explicitly forbid use of the base class's load() method */
+	using MCObject::load;
+
 	void loadexternals(void);
 	void unloadexternals(void);
     
@@ -1297,11 +1291,6 @@ private:
     void updatedocumentfilename(void);
 
 	void mode_load(void);
-
-#ifdef LEGACY_EXEC
-	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef carray, Boolean effective);
-	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, MCStringRef cprop, MCStringRef carray, Boolean effective);
-#endif
 
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);

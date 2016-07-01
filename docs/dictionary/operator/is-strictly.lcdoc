@@ -22,7 +22,7 @@ Example:
 (100 is 100) is strictly a boolean -- evaluates to true
 
 Example:
-the compress of "Hello World!" is a binary string -- evaluates to true
+the compress of "Hello World!" is strictly a binary string -- evaluates to true
 
 Parameters:
 value: The expression to test the type of.

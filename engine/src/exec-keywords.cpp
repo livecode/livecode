@@ -21,7 +21,7 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"

@@ -1,0 +1,65 @@
+Name: mobileGetLocationHistoryLimit
+
+Type: function
+
+Syntax: mobileGetLocationHistoryLimit()
+
+Summary: Get the number of location changes to be retained
+
+Introduced: 8.1
+
+OS: ios,android
+
+Platforms: mobile
+
+Example:
+local tHistoryLimit
+put mobileGetLocationHistoryLimit() into tHistoryLimit
+
+Returns:
+The number of entries to retain from system <locationChanged> events. 
+The default history limit is 1 - meaning that only one sample is ever 
+kept at a time. If an application wants historical access to all 
+samples, then it should set the location history limit using the 
+<mobileSetLocationistoryLimit> <command> to the maximum number of 
+samples it ever wants to record, or 0 to record the entire history 
+(between calls to <mobileGetLocationHistory>).
+
+Description:
+System <locationChanged> events may occur more frequently than the
+<locationChanged> message is sent because messages that were unable to
+be sent as a result of other scripts executing are filtered when a new 
+system <locationChanged> event occurs. 
+
+Whenever a system <locationChanged> event occurs, the location reading
+is pushed onto the front of a list. The list is capped at the length
+set by <mobileSetLocationHistoryLimit>, dropping any old samples over 
+this length.
+
+The <mobileGetLocationHistory> <function> returns a numerically keyed
+<array> of all accumulated samples since the last time it was called
+with lower indices being older samples. Calling the function clears
+the internal history.
+
+Each <element> in the <array> is the same format as the detailed 
+location <array> as returned from the <mobileSensorReading> 
+<function>.
+
+The best way to use the history is to fetch the list in 
+<locationChanged> and process each sample in turn, rather than the 
+sample provided with the <locationChanged> event (which will always be 
+the last sample in the history). e.g.
+
+    on locationChanged
+        local tHistory
+        put mobileGetLocationHistory() into tHistory
+        repeat for each element tSample in tHistory
+            processLocationChanged tSample
+        end repeat
+    end locationChanged
+
+References: mobileGetLocationHistory (function), 
+mobileSetLocationHistoryLimit (command), mobileStopTrackingSensor (command), 
+mobileSensorAvailable (function), mobileSensorReading (function), 
+mobileStartTrackingSensor (command), mobileLocationAuthorizationStatus (function), 
+locationChanged (message), trackingError (message)

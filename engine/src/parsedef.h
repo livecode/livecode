@@ -594,6 +594,14 @@ enum Functions {
     F_NORMALIZE_TEXT,
     
     F_CODEPOINT_PROPERTY,
+    
+    F_VECTOR_DOT_PRODUCT,
+    
+    F_EVENT_CAPSLOCK_KEY,
+    F_EVENT_COMMAND_KEY,
+    F_EVENT_CONTROL_KEY,
+    F_EVENT_OPTION_KEY,
+    F_EVENT_SHIFT_KEY,
 };
 
 enum Handler_type {
@@ -608,9 +616,9 @@ enum Handler_type {
 	HT_BEFORE,
 	HT_AFTER,
 
-		HT_PRIVATE,
+    HT_PRIVATE,
 
-		HT_MAX = HT_PRIVATE
+    HT_MAX = HT_PRIVATE
 };
 
 enum If_format {
@@ -1956,6 +1964,10 @@ enum Sugar_constants {
 	SG_REPLACING,
 	SG_PRESERVING,
 	SG_STYLES,
+    
+    SG_URL_RESULT,
+    SG_ERROR,
+    SG_VALUE,
 };
 
 enum Statements {
@@ -2124,7 +2136,9 @@ enum {
     ST_ID,
     ST_ESC,
     ST_LIT,
-	
+	ST_LC,
+    ST_RC,
+    
 	// MW-2009-03-03: The ST_DATA symbol type is a string that shoudl be treated
 	//   as an echoed literal - it represents the data between <?rev ?> blocks in
 	//   SERVER mode. ST_TAG is the type of '?' so we can identify '?>'.
@@ -2286,6 +2300,13 @@ enum Server_keywords
 	SK_UNICODE,
 	SK_SECURE,
 	SK_HTTPONLY,
+};
+
+enum MCExecResultMode
+{
+    kMCExecResultModeReturn,
+    kMCExecResultModeReturnValue,
+    kMCExecResultModeReturnError,
 };
 
 #include "parseerrors.h"

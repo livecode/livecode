@@ -2812,6 +2812,15 @@ def Load(build_files, variables, includes, depth, generator_input_info, check,
   for target in flat_list:
     target_dict = targets[target]
     build_file = gyp.common.BuildFile(target)
+    if depth:
+		# TODO(dglazkov) The backslash/forward-slash replacement at the end is a
+		# temporary measure. This should really be addressed by keeping all paths
+		# in POSIX until actual project generation.
+		d = gyp.common.RelativePath(depth, os.path.dirname(build_file))
+		if d == '':
+		  variables['DEPTH'] = '.'
+		else:
+		  variables['DEPTH'] = d.replace('\\', '/')
     ProcessVariablesAndConditionsInDict(
         target_dict, PHASE_LATE, variables, build_file)
 

@@ -18,7 +18,7 @@ Example:
 set the threeDHilite of field "Options" to false
 
 Example:
-set the threeDHilite of the fieldTemplate to true
+set the threeDHilite of the templateField to true
 
 Value (bool):The <threeDHilite> of a <field(keyword)> is true or false.
 By default, the <threeDHilite> <property> of newly created <field(object)|fields> is set to false.

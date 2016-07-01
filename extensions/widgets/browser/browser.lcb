@@ -232,7 +232,7 @@ Example:
 	-- content
 	local tHTML
 	put "<html><head><title>My Page Title</title></head>" & \
-	      "<body>My Page Contents</body></html>" into tHTML
+		  "<body>My Page Contents</body></html>" into tHTML
 	set the htmlText of widget "myBrowser" to tHTML
 
 Description:
@@ -339,11 +339,11 @@ Example:
 		-- Do appropriate actions here.
 		-- ...
 	end myJSHandler
-	
+
 	-- Set up the browser javascript handler list
 	-- This code goes in a suitable setup handler
 	set the javascriptHandlers to "myJSHandler" & return & "myOtherJSHandler"
-	
+
 	// Calling the handler from JavaScript within the browser
 	liveCode.myJSHandler("myMessage", 12345);
 
@@ -405,42 +405,42 @@ end handler
 
 --
 
-private handler InitBrowserView()
+private unsafe handler InitBrowserView()
 	variable tParent as Pointer
-	
+
 	// put my native window into tParent
 	MCWidgetGetMyStackNativeView(tParent)
-		
+
 	variable tFactory as MCBrowserFactoryRef
 	if not MCBrowserFactoryGet(the empty string, tFactory) then
 		throw "error getting browser factory"
 	end if
-	
+
 	variable tDisplay as Pointer
 	MCWidgetGetMyStackNativeDisplay(tDisplay)
-	
+
 	if not MCBrowserFactoryCreateBrowser(tFactory, tDisplay, tParent, mBrowser) then
 		throw "error creating browser"
 	end if
-	
+
 	variable tBrowserView as Pointer
 	put MCBrowserGetNativeLayer(mBrowser) into tBrowserView
-	
+
 	// set my native layer to tBrowserView
 	MCWidgetSetMyNativeLayer(tBrowserView)
 	// tell native layer that we can't render a snapshot of the browser view.
 	MCWidgetSetMyNativeLayerCanRenderToContext(false)
-	
+
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
 
-private handler FinalizeBrowserView()
+private unsafe handler FinalizeBrowserView()
 	//set my native layer to nothing
 	MCWidgetSetMyNativeLayer(nothing)
-	
+
 	MCBrowserRelease(mBrowser)
 	put nothing into mBrowser
 end handler
@@ -454,11 +454,15 @@ public handler OnOpen()
 
 	put true into mOpened
 
-	InitBrowserView()
+	unsafe
+		InitBrowserView()
+	end unsafe
 end handler
 
 public handler OnClose()
-	FinalizeBrowserView()
+	unsafe
+		FinalizeBrowserView()
+	end unsafe
 
 	put false into mOpened
 end handler
@@ -469,7 +473,7 @@ private handler Capitalize(in pString as String) returns String
 	if pString is empty then
 		return the empty string
 	end if
-	
+
 	put (the upper of char 1 of pString) into char 1 of pString
 	return pString
 end handler
@@ -479,14 +483,14 @@ end handler
 private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 	variable tType as String
 	put element (pType + 1) of kMCBrowserRequestTypeMap into tType
-	
+
 	variable tState as String
 	put element (pState + 1) of kMCBrowserRequestStateMap into tState
-	
+
 	if pState is kMCBrowserRequestStateFailed then
 		log "Failed: %@" with [pError]
 	end if
-	
+
 	/* Dispatch browser message */
 	variable tMessage as String
 	if tType is "navigate" and tState is "unhandled" then
@@ -498,18 +502,18 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 			put "browser" & Capitalize(tType) & Capitalize(tState) into tMessage
 		end if
 	end if
-	
+
 	variable tArgs as List
 	if pState is kMCBrowserRequestStateFailed then
 		put [pUrl, pError] into tArgs
 	else
 		put [pUrl] into tArgs
 	end if
-	
+
 	if pType is kMCBrowserRequestTypeNavigate and pState is kMCBrowserRequestStateBegin and not pFrame then
 		updateUrlProperty(pUrl)
 	end if
-	
+
 	post tMessage to mScriptObject with tArgs
 end handler
 
@@ -565,9 +569,11 @@ private handler setUrl(in pUrl as String)
 		updateUrlProperty(pUrl)
 
 		if mBrowser is not nothing then
-			if not MCBrowserGoToURL(mBrowser, pUrl) then
-				throw "error launching url " & pUrl
-			end if
+			unsafe
+				if not MCBrowserGoToURL(mBrowser, pUrl) then
+					throw "error launching url " & pUrl
+				end if
+			end unsafe
 		end if
 	end if
 end handler
@@ -665,17 +671,21 @@ end handler
 
 public handler OnGoBack()
 	if mBrowser is not nothing then
-		if not MCBrowserGoBack(mBrowser) then
-			throw "error going back"
-		end if
+		unsafe
+			if not MCBrowserGoBack(mBrowser) then
+				throw "error going back"
+			end if
+		end unsafe
 	end if
 end handler
 
 public handler OnGoForward()
 	if mBrowser is not nothing then
-		if not MCBrowserGoForward(mBrowser) then
-			throw "error going forward"
-		end if
+		unsafe
+			if not MCBrowserGoForward(mBrowser) then
+				throw "error going forward"
+			end if
+		end unsafe
 	end if
 end handler
 
@@ -686,13 +696,15 @@ end handler
 private handler browserEvaluateJavaScript(in pScript as String) returns String
 	if mBrowser is not nothing then
 		variable tResult as String
-		if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
-			throw "error evaluating javascript"
-		end if
-		
+		unsafe
+			if not MCBrowserEvaluateJavaScript(mBrowser, pScript, tResult) then
+				throw "error evaluating javascript"
+			end if
+		end unsafe
+
 		return tResult
 	end if
-	
+
 	return the empty string
 end handler
 
@@ -711,34 +723,34 @@ public handler OnPaint() returns nothing
 	variable tStrokePaint as Paint
 	put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
 	put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-	
+
 	variable tBounds as Rectangle
 	put my bounds into tBounds
-	
+
 	set the paint of this canvas to tFillPaint
 	fill rectangle path of tBounds on this canvas
 	set the paint of this canvas to tStrokePaint
 	set the stroke width of this canvas to kBorderWidth
 	set the join style of this canvas to "bevel"
 	stroke rectangle path of expandRectangle(tBounds, -kBorderWidth / 2) on this canvas
-	
+
 	variable tPath as Path
 	put path kSvgIcon into tPath
 	constrainPathToRect(expandRectangle(tBounds, -2 * kBorderWidth), tPath)
 	fill tPath on this canvas
-	
+
 	// Draw the control name
 	put solid paint with color [1, 1, 1] into tFillPaint
 	put solid paint with color [0.25, 0.25, 0.25] into tStrokePaint
 
 	variable tNameString as String
 	put my name into tNameString
-	
+
 	set the font of this canvas to font "Arial" at size 14
 
 	variable tTextBounds as Rectangle
 	put the image bounds of text tNameString on this canvas into tTextBounds
-	
+
 	translate this canvas by [ the width of tBounds / 2, the height of tBounds / 2]
 	translate this canvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
 	set the paint of this canvas to tFillPaint

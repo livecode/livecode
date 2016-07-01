@@ -13,7 +13,7 @@ OS: ios,android
 Platforms: desktop
 
 Example:
-on touchStart tID <a name="code tag=">-- show popup menu when the control is touched</a>
+on touchStart tID -- show popup menu when the control is touched
   popup button "Configure"
 end touchStart
 

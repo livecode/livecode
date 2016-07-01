@@ -227,9 +227,9 @@ bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAccelerationChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jfloat timestamp) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAccelerationChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jdouble timestamp) __attribute__((visibility("default")));
 
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAccelerationChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jfloat timestamp)
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAccelerationChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jdouble timestamp)
 {
     // MM-2012-03-13: Create first reading value only when we get a callback.  
     //     This means we can properly handle the case where the user requests a reading before one has been taken.
@@ -245,9 +245,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAccelerationChanged(JNIE
     MCSensorPostChangeMessage(kMCSensorTypeAcceleration);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLocationChanged(JNIEnv *env, jobject object, jdouble latitude, jdouble longitude, jdouble altitude, jfloat timestamp, jfloat accuracy, jdouble speed, jdouble course) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLocationChanged(JNIEnv *env, jobject object, jdouble latitude, jdouble longitude, jdouble altitude, jdouble timestamp, jfloat accuracy, jdouble speed, jdouble course) __attribute__((visibility("default")));
 
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLocationChanged(JNIEnv *env, jobject object, jdouble latitude, jdouble longitude, jdouble altitude, jfloat timestamp, jfloat accuracy, jdouble speed, jdouble course)
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLocationChanged(JNIEnv *env, jobject object, jdouble latitude, jdouble longitude, jdouble altitude, jdouble timestamp, jfloat accuracy, jdouble speed, jdouble course)
 {
     // MM-2012-03-13: Create first reading value only when we get a callback.  
     //     This means we can properly handle the case where the user requests a reading before one has been taken.
@@ -266,12 +266,13 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLocationChanged(JNIEnv *
     s_location_reading->speed = speed;
     s_location_reading->course = course;
     
+    MCSensorAddLocationSample(*s_location_reading);
     MCSensorPostChangeMessage(kMCSensorTypeLocation);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doHeadingChanged(JNIEnv *env, jobject object, jdouble heading, jdouble magnetic_heading, jdouble true_heading, jfloat timestamp, jfloat x, jfloat y, jfloat z, jfloat accuracy) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doHeadingChanged(JNIEnv *env, jobject object, jdouble heading, jdouble magnetic_heading, jdouble true_heading, jdouble timestamp, jfloat x, jfloat y, jfloat z, jfloat accuracy) __attribute__((visibility("default")));
 
-JNIEXPORT void JNICALL JNICALL Java_com_runrev_android_Engine_doHeadingChanged(JNIEnv *env, jobject object, jdouble heading, jdouble magnetic_heading, jdouble true_heading, jfloat timestamp, jfloat x, jfloat y, jfloat z, jfloat accuracy)
+JNIEXPORT void JNICALL JNICALL Java_com_runrev_android_Engine_doHeadingChanged(JNIEnv *env, jobject object, jdouble heading, jdouble magnetic_heading, jdouble true_heading, jdouble timestamp, jfloat x, jfloat y, jfloat z, jfloat accuracy)
 {
     // MM-2012-03-13: Create first reading value only when we get a callback.  
     //     This means we can properly handle the case where the user requests a reading before one has been taken.
@@ -291,9 +292,9 @@ JNIEXPORT void JNICALL JNICALL Java_com_runrev_android_Engine_doHeadingChanged(J
     MCSensorPostChangeMessage(kMCSensorTypeHeading);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRotationRateChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jfloat timestamp) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRotationRateChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jdouble timestamp) __attribute__((visibility("default")));
 
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRotationRateChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jfloat timestamp)
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRotationRateChanged(JNIEnv *env, jobject object, jfloat x, jfloat y, jfloat z, jdouble timestamp)
 {
     // MM-2012-03-13: Create first reading value only when we get a callback.  
     //     This means we can properly handle the case where the user requests a reading before one has been taken.

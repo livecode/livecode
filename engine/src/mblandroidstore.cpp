@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "mcerror.h"
-//#include "execpt.h"
+
 #include "globals.h"
 #include "stack.h"
 #include "card.h"
@@ -242,57 +242,6 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
     MCMemoryDelete(t_android_data);
 }
 
-#ifdef /* MCPurchaseGet */ LEGACY_EXEC 
-Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
-{
-    //MCLog("MCPurchaseGet(%p, %d, ...)", p_purchase, p_property);
-    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-    
-    switch (p_property) {
-        case kMCPurchasePropertyProductIdentifier:
-            ep.copysvalue(t_android_data->product_id);
-            return ES_NORMAL;
-            
-        case kMCPurchasePropertyDeveloperPayload:
-            if (t_android_data->developer_payload == nil)
-                ep.clear();
-            else
-                ep.copysvalue(t_android_data->developer_payload);
-            return ES_NORMAL;
-            
-        case kMCPurchasePropertySignedData:
-            if (t_android_data->signed_data == nil)
-                ep.clear();
-            else
-                ep.copysvalue(t_android_data->signed_data);
-            return ES_NORMAL;
-            
-        case kMCPurchasePropertySignature:
-            if (t_android_data->signature == nil)
-                ep.clear();
-            else
-                ep.copysvalue(t_android_data->signature);
-            return ES_NORMAL;
-            
-        case kMCPurchasePropertyTransactionIdentifier:
-            if (t_android_data->order_id == nil)
-                ep.clear();
-            else
-                ep.copysvalue(t_android_data->order_id);
-            return ES_NORMAL;
-            
-        case kMCPurchasePropertyPurchaseDate:
-            ep.setint64(t_android_data->purchase_time);
-            return ES_NORMAL;
-            
-        default:
-            break;
-    }
-    
-    return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseGet */
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 void MCPurchaseGetProductIdentifier(MCExecContext& ctxt,MCPurchase *p_purchase, MCStringRef& r_identifier)
@@ -372,38 +321,6 @@ void MCPurchaseGetSignature(MCExecContext& ctxt,MCPurchase *p_purchase, MCString
     
     ctxt.Throw();
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef /* MCPurchaseSet */ LEGACY_EXEC
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-    /*
-     if (p_purchase->state != kMCPurchaseStateInitialized)
-     return ES_NOT_HANDLED;
-     
-     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-     switch (p_property)
-     {
-     case kMCPurchasePropertyDeveloperPayload:
-     {
-     if (ep.getsvalue().getlength() >= 256)
-     {
-     MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
-     return ES_ERROR;
-     }
-     if (t_android_data->developer_payload != nil)
-     MCCStringFree(t_android_data->developer_payload);
-     MCCStringCloneSubstring(ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_android_data->developer_payload);
-     return ES_NORMAL;
-     }
-     default:
-     break;
-     }
-     */
-    return ES_NOT_HANDLED;
-}
-#endif /* MCPurchaseSet */
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -544,40 +461,6 @@ void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verif
     else
         p_purchase->state = kMCPurchaseStateCancelled;
 }
-
-#ifdef LEGACY_EXEC
-bool MCCStringFromJava(JNIEnv *env, jstring p_jstring, char *&r_cstring)
-{
-    bool t_success = true;
-    
-    if (p_jstring == NULL)
-    {
-        r_cstring = NULL;
-        return true;
-    }
-    
-    const char *t_chars = nil;
-    
-    t_chars = env->GetStringUTFChars(p_jstring, NULL);
-    t_success = t_chars != NULL;
-    
-    if (t_success)
-        t_success = MCCStringClone(t_chars, r_cstring);
-    
-    if (t_chars != NULL)
-        env->ReleaseStringUTFChars(p_jstring, t_chars);
-    
-    return t_success;
-}
-
-void MCCStringReplace(char *&src, char *&dest)
-{
-    if (dest != NULL)
-        MCCStringFree(dest);
-    dest = src;
-    src = NULL;
-}
-#endif
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestoreTransactionsResponse(JNIEnv *env, jobject object, jint responseCode) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRestoreTransactionsResponse(JNIEnv *env, jobject object, jint responseCode)

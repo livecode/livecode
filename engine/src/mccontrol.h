@@ -113,18 +113,9 @@ public:
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
-#ifdef LEGACY_EXEC
-	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
-#endif
-
-
 	virtual void select();
 	virtual void deselect();
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual void undo(Ustruct *us);
@@ -375,4 +366,17 @@ public:
     void SetColorOverlayProperty(MCExecContext& ctxt, MCNameRef index, MCExecValue p_value);
 
 };
+
+
+// MCControl has lots of derived classes so this (fragile!) specialisation is
+// needed to account for them.
+template <>
+inline MCControl* MCObjectCast<MCControl>(MCObject* p_object)
+{
+    Chunk_term t_type = p_object->gettype();
+    MCAssert(t_type != CT_UNDEFINED && t_type != CT_STACK && t_type != CT_CARD);
+    return static_cast<MCControl*> (p_object);
+}
+
+
 #endif

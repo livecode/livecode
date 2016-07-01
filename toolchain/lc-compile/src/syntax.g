@@ -29,7 +29,19 @@
 'action' InitializeSyntax
 
     'rule' InitializeSyntax:
-        -- do nothing
+        -- Add all bytecode names as 'unreserved keywords'
+        GenerateBytecodeUnreservedSyntaxKeywords(0)
+
+'action' GenerateBytecodeUnreservedSyntaxKeywords(INT)
+
+    'rule' GenerateBytecodeUnreservedSyntaxKeywords(Index):
+        BytecodeEnumerate(Index -> Name)
+        AddUnreservedSyntaxKeyword(Name)
+        GenerateBytecodeUnreservedSyntaxKeywords(Index + 1)
+
+    'rule' GenerateBytecodeUnreservedSyntaxKeywords(Index):
+        -- will get here when there are no more keywords to add
+
 
 'sweep' GenerateSyntax(ANY)
 

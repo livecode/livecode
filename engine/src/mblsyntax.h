@@ -142,16 +142,6 @@ struct const_cstring_array_t
     uint32_t length;
 };
 
-#ifdef LEGACY_EXEC
-typedef uint32_t MCChunkType;
-enum
-{
-    kMCWords,
-    kMCLines,
-    kMCItems,    
-};
-#endif
-
 typedef uint32_t MCMediaType;
 enum
 {
@@ -238,7 +228,7 @@ enum MCSoundAudioCategory
 
 bool MCSystemSoundInitialize();
 bool MCSystemSoundFinalize();
-bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object);
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle p_object);
 bool MCSystemStopSoundChannel(MCStringRef p_channel);
 bool MCSystemPauseSoundChannel(MCStringRef p_channel);
 bool MCSystemResumeSoundChannel(MCStringRef p_channel);

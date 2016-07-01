@@ -15,10 +15,10 @@ Platforms: desktop,server,web,mobile
 Security: network
 
 Example:
-decrypt tMessage with public key tPublicKey
+decrypt tMessage using rsa with public key tPublicKey
 
 Example:
-decrypt field 1 with private key tPrivateKey
+decrypt field 1 using rsa with private key tPrivateKey
 
 Parameters:
 source: 

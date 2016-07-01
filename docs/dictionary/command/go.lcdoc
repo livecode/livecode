@@ -2,13 +2,13 @@ Name: go
 
 Type: command
 
-Syntax: go [invisible] [to] <card> [of <stack>] [as <mode> |in [a] new window|in <window>]
+Syntax: go [invisible] [to] <card> [of <stack>] [{as <mode> |in [a] new window|in <window>}]
 
 Syntax: go [invisible] [to] {first | prev[ious]| next | last | any} [marked] [<card>]
 
 Syntax: go [invisible] [to] {recent | start | finish | home} <card> 
 
-Syntax: go {forward | forth | back[ward]} [<number>]}
+Syntax: go {forward | forth | back[ward]} [<number>]
 
 Summary: Navigates to another <card> or <stack>.
 

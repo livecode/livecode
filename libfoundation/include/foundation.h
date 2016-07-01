@@ -418,58 +418,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  FIXED WIDTH INTEGER TYPES
 //
 
-#if !defined(__VISUALC__)
-#	define __HAVE_STDDEF_H__
-#	include <stddef.h>
-#	define __HAVE_STDINT_H__
-#	define __STDC_LIMIT_MACROS
-#	include <stdint.h>
-#   include <stddef.h>
-#   include <limits.h>
-#endif
-
-#if !defined(__HAVE_STDINT_H__)
-typedef unsigned char uint8_t;
-typedef signed char int8_t;
-typedef unsigned short uint16_t;
-typedef signed short int16_t;
-typedef unsigned int uint32_t;
-typedef signed int int32_t;
-
-// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
-#if !defined(uint64_t)
-#define _UINT64_T
-#ifndef __LP64__
-typedef unsigned long long int uint64_t;
-#else
-typedef unsigned long int uint64_t;
-#endif
-#endif
-#if !defined(int64_t)
-#define _INT64_T
-#ifndef __LP64__
-typedef signed long long int int64_t;
-#else
-typedef signed long int int64_t;
-#endif
-#endif
-
-#define UINT8_MAX (255U)
-#define INT8_MIN (-128)
-#define INT8_MAX (127)
-
-#define UINT16_MAX (65535U)
-#define INT16_MIN (-32768)
-#define INT16_MAX (32767)
-
-#define UINT32_MAX (4294967295U)
-#define INT32_MIN (-2147483647 - 1L)
-#define INT32_MAX (2147483647)
-
-#define UINT64_MAX (18446744073709551615ULL)
-#define INT64_MIN (-9223372036854775808LL)
-#define INT64_MAX (9223372036854775807LL)
-#endif /* !__HAVE_STDINT_H__ */
+#define __STDC_LIMIT_MACROS 1
+#include <stddef.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <limits.h>
 
 #define UINT8_MIN (0U)
 #define UINT16_MIN (0U)
@@ -481,6 +434,11 @@ typedef signed long int int64_t;
 //  DERIVED INTEGER TYPES
 //
 
+#undef __HAVE_SSIZE_T__
+#if !defined(__VISUALC__)
+#	define __HAVE_SSIZE_T__ 1
+#endif /* !__VISUALC__ */
+
 #ifdef __32_BIT__
 
 typedef int32_t integer_t;
@@ -489,44 +447,12 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if !defined(__HAVE_STDDEF_H__)
-#	if defined(__WINDOWS__)
-typedef unsigned int size_t;
-#	elif defined(__LINUX__) || defined(__ANDROID__)
-typedef unsigned int size_t;
-#	else
-typedef unsigned long size_t;
-#   endif
-#endif /* !__HAVE_STDDEF_H__ */
-
-#if !defined(__HAVE_STDINT_H__)
-#	if defined(__WINDOWS__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	elif defined(__LINUX__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	elif defined(__ANDROID__)
-typedef signed int intptr_t;
-typedef unsigned int uintptr_t;
-#	else
-typedef long signed int intptr_t;
-typedef long unsigned int uintptr_t;
-#	endif
-#endif /* !__HAVE_STDINT_H__ */
-
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
 #define UINTPTR_MIN UINT32_MIN
-
-#if !defined(__HAVE_STDINT_H__)
-#define INTPTR_MIN INT32_MIN
-#define INTPTR_MAX INT32_MAX
-#define UINTPTR_MAX UINT32_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #else /* !__32_BIT__ */
 
@@ -536,38 +462,12 @@ typedef uint32_t uinteger_t;
 typedef int32_t intenum_t;
 typedef uint32_t intset_t;
 
-#if !defined(__HAVE_STDINT_H__)
-#	ifndef _UINTPTR_T
-#		define _UINTPTR_T
-#		ifdef __LP64__
-typedef uint64_t uintptr_t;
-#		else
-typedef uint32_t uintptr_t;
-#		endif
-#	endif
-
-#	ifndef _INTPTR_T
-#		define _INTPTR_T
-#		ifdef __LP64__
-typedef int64_t intptr_t;
-#		else
-typedef int32_t intptr_t;
-#		endif
-#	endif
-#endif /* !__HAVE_STDINT_H__ */
-
 #define INTEGER_MIN INT32_MIN
 #define INTEGER_MAX INT32_MAX
 #define UINTEGER_MIN UINT32_MIN
 #define UINTEGER_MAX UINT32_MAX
 
 #define UINTPTR_MIN UINT64_MIN
-
-#if !defined(__HAVE_STDINT_H__)
-#define INTPTR_MIN INT64_MIN
-#define INTPTR_MAX INT64_MAX
-#define UINTPTR_MAX UINT64_MAX
-#endif /* !__HAVE_STDINT_H__ */
 
 #endif /* !__32_BIT__ */
 
@@ -605,13 +505,11 @@ typedef int64_t compare_t;
 
 #endif
 
-#if !defined(__HAVE_STDINT_H__)
-typedef uintptr_t size_t;
+#if !defined(__HAVE_SSIZE_T__)
 typedef intptr_t ssize_t;
 
-#	define SIZE_MAX UINTPTR_MAX
 #	define SSIZE_MAX INTPTR_MAX
-#endif /* !__HAVE_STDINT_H__ */
+#endif
 
 #define SIZE_MIN UINTPTR_MIN
 #define SSIZE_MIN INTPTR_MIN
@@ -1076,6 +974,14 @@ template <typename T> void inline MCMemoryClear(T&p_struct)
 	MCMemoryClear(&p_struct, sizeof(T));
 }
 
+// Re-initialise an object to its default-constructed state
+template <typename T> void inline MCMemoryReinit(T& p_object)
+{
+    // Run the destructor then default constructor
+    p_object.~T();
+    new (&p_object) T();
+}
+
 extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,6 +1097,29 @@ template<typename T> void MCMemoryDelete(T* p_record)
 	MCMemoryDelete(static_cast<void *>(p_record));
 }
 
+// Allocates a block of memory for an object and default-constructs it
+// (basically, ::operator new)
+template <typename T>
+bool MCMemoryCreate(T*& r_object)
+{
+    // Allocate the memory then default-construct
+    if (!MCMemoryNew(r_object))
+        return false;
+    
+    new (r_object) T();
+    return true;
+}
+
+// De-allocates a block of memory after running the object's destructor
+// (basically, ::operator delete).
+template <typename T>
+void MCMemoryDestroy(T* p_object)
+{
+    // Run the object's destructor then delete it
+    p_object->~T();
+    MCMemoryDelete(p_object);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  RESIZEABLE ARRAY ALLOCATION (INITIALIZED)
@@ -1232,6 +1161,29 @@ template<typename T> bool MCMemoryNewArray(uindex_t p_count, T*& r_array)
 	return false;
 }
 
+// Array allocator that default-constructs all elements
+template <typename T>
+bool MCMemoryNewArrayInit(uindex_t p_count, T*& r_array, uindex_t& r_count)
+{
+    if (MCMemoryNewArray(p_count, r_array, r_count))
+    {
+        // Default-construct all elements in the array
+        for (uindex_t i = 0; i < r_count; i++)
+            new (&r_array[i]) T();
+        return true;
+    }
+    
+    return false;
+}
+
+// Array allocator that default-constructs all elements
+template <typename T>
+bool MCMemoryNewArrayInit(uindex_t p_count, T*& r_array)
+{
+    uindex_t t_alloc_count;
+    return MCMemoryNewArrayInit(p_count, r_array, t_alloc_count);
+}
+
 template<typename T> inline bool MCMemoryResizeArray(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
 {
 	void *t_array;
@@ -1244,9 +1196,37 @@ template<typename T> inline bool MCMemoryResizeArray(uindex_t p_new_count, T*& x
 	return false;
 }
 
+template <typename T>
+bool MCMemoryResizeArrayInit(uindex_t p_new_count, T*& x_array, uindex_t& x_count)
+{
+    // Capture the current count before resizing
+    uindex_t t_current_count = x_count;
+    if (MCMemoryResizeArray(p_new_count, x_array, x_count))
+    {
+        // Default construct any new elements that were allocated
+        for (uindex_t i = t_current_count; i < p_new_count; i++)
+            new (&x_array[i]) T();
+        return true;
+    }
+    
+    return false;
+}
+
 template<typename T> void MCMemoryDeleteArray(T* p_array)
 {
 	MCMemoryDeleteArray(static_cast<void *>(p_array));
+}
+
+// Array deleter that runs the destructor for each element
+template <typename T>
+void MCMemoryDeleteArray(T* p_array, uindex_t N)
+{
+    // Run the destructor for each of the elements
+    for (size_t i = 0; i < N; i++)
+        p_array[i].~T();
+    
+    // Destroy the array
+    MCMemoryDeleteArray(p_array);
 }
 
 extern "C" {
@@ -3283,6 +3263,7 @@ struct MCPickleVariantInfo
 #define MC_PICKLE_TYPEINFOREF(Field) MC_PICKLE_FIELD(TypeInfoRef, Field, 0)
 
 #define MC_PICKLE_INTENUM(EType, EField) MC_PICKLE_FIELD(IntEnum, EField, k##EType##__Last)
+#define MC_PICKLE_INTSET(SType, SField) MC_PICKLE_FIELD(IntEnum, SField, 0)
 
 #define MC_PICKLE_ARRAY_OF_BYTE(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfByte, Field, CountField, 0)
 #define MC_PICKLE_ARRAY_OF_UINDEX(Field, CountField) MC_PICKLE_FIELD_AUX(ArrayOfUIndex, Field, CountField, 0)

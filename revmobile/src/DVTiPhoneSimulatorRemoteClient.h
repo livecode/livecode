@@ -78,7 +78,7 @@
 - (id)dvt_latestRuntime;
 - (id)dvt_supportedArchs;
 - (id)dvt_supportedArchStrings;
-- (_Bool)dvt_has64BitArch;
+- (bool)dvt_has64BitArch;
 @end
 
 @interface SimDeviceSet (DVTAdditions)

@@ -24,7 +24,7 @@ end cutKey
 Description:
 Handle the <cutKey> <message> if you want to change the normal cut process, or prevent use of the Cut <keyboard equivalent> without changing the menu.
 
-The LiveCode development environment traps the <cutKey> <message>. This means that the <cutKey> <message> is not received by a <stack> if it's running in the <development environment>, To test a <cutKey> <handler>, choose Development menu<img src="202656"/>Suspend Development Tools<important/>.
+The LiveCode development environment traps the <cutKey> <message>. This means that the <cutKey> <message> is not received by a <stack> if it's running in the <development environment>, To test a <cutKey> <handler>, choose Development → Suspend Development Tools from the menubar.
 
 <cutKey> <message> is sent when the user presses Command-X (on <Mac OS|Mac OS systems>), Control-X (on <Windows|Windows systems>), Shift-Delete (on <Unix|Unix systems>), or the keyboard Cut key.
 

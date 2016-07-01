@@ -6,6 +6,8 @@ Syntax: revInitializeVideoGrabber <parentStack>, <videoMethod>, <grabberRect>
 
 Summary: Opens the <video grabber> window.
 
+Associations: Video library
+
 Introduced: 2.0
 
 OS: mac,windows
@@ -37,12 +39,27 @@ You must use the <revInitializeVideoGrabber> <command> before using any of the o
 
 Once the video grabber is open, you can use the revVideoGrabDialog <command> to specify where the video camera (or other video source) is connected. Use the <revRecordVideo> <command> to record video from the camera to a <file>, or use the <revPreviewVideo> command to display video without saving it.
 
-To use QuickTime for video capture (on Mac OS, OS X, or Windows systems), specify "QT" as the <videoMethod>. To use <VFW|Video for Windows> (on <Windows|Windows systems>), specify "VFW".
+To use QuickTime for video capture on Mac OS X specify "QT" as the <videoMethod>. To use <VFW|Video for Windows> (on <Windows|Windows systems>), specify "VFW".
 
 To close the window and unload the video capture code, you should use the <revCloseVideoGrabber> <command> when you're done with <video capture>.
 
->*Important:*  The <revInitializeVideoGrabber> <command> is part of the <Video library>. To ensure that the <command> works in a <standalone application>, you must include this <LiveCode custom library|custom library> when you create your <standalone application|standalone>. In the Inclusions section on the General screen of the <Standalone Application Settings> window, make sure that "Video Grabber" is selected from the list of script libraries.
+>*Important:*  The <revInitializeVideoGrabber> <command> is part of the 
+> <Video library>. To ensure that the <command> works in a 
+> <standalone application>, you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions pane of the 
+> <Standalone Application Settings> window, make sure the "Video Grabber" 
+> library checkbox is checked.
 
-References: properties (property), file (keyword), revCloseVideoGrabber (command), revSetVideoGrabberRect (command), revRecordVideo (command), revPreviewVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), stack window (glossary), video capture (glossary), Windows (glossary), VFW (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), function (glossary), command (glossary), Video library (library), LiveCode custom library (library)
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
+
+References: properties (property), file (keyword), revCloseVideoGrabber (command), revSetVideoGrabberRect (command), revRecordVideo (command), revPreviewVideo (command), revVideoGrabIdle (command), revStopPreviewingVideo (command), stack window (glossary), video capture (glossary), Windows (glossary), VFW (glossary), Standalone Application Settings (glossary), video grabber (glossary), standalone application (glossary), function (glossary), command (glossary), Video library (library), LiveCode custom library (glossary)
 
 Tags: multimedia

@@ -87,6 +87,11 @@ enum
     }
 }
 
+- (bool)windowIsMoving: (MCPlatformWindowRef)window
+{
+    return window == s_moving_window;
+}
+
 - (void)windowStartedMoving: (MCPlatformWindowRef)window
 {
     if (s_moving_window != nil)
@@ -388,7 +393,10 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
     if (m_explicit_quit)
         return NSTerminateNow;
     
-	// There is an NSApplicationTerminateReplyLater result code which will place
+    if ([NSApp pseudoModalFor] != nil)
+        return NSTerminateCancel;
+    
+    // There is an NSApplicationTerminateReplyLater result code which will place
 	// the runloop in a modal loop for exit dialogs. We'll try the simpler
 	// option for now of just sending the callback and seeing what AppKit does
 	// with the (eventual) event loop that will result...
@@ -1060,11 +1068,15 @@ void MCPlatformGetWindowAtPoint(MCPoint p_loc, MCPlatformWindowRef& r_window)
 	
 	NSWindow *t_window;
 	t_window = [NSApp windowWithWindowNumber: t_number];
-	
+	NSRect t_content_rect;
+    if (t_window != nil && [t_window conformsToProtocol:NSProtocolFromString(@"com_runrev_livecode_MCMovingFrame")])
+        t_content_rect = [(NSWindow <com_runrev_livecode_MCMovingFrame>*)t_window movingFrame];
+    else
+        t_content_rect = [t_window frame];
+    
     // MW-2014-05-28: [[ Bug 12437 ]] Seems the window at point uses inclusive co-ords
     //   in the in-rect calculation - so adjust the rect appropriately.
-    NSRect t_content_rect;
-    t_content_rect = [t_window contentRectForFrameRect: [t_window frame]];
+    t_content_rect = [t_window contentRectForFrameRect: t_content_rect];
     
     bool t_is_in_frame;
     t_content_rect . size . width += 1, t_content_rect . size . height += 1;

@@ -38,8 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define FEATURE_TASKBAR_ICON
 #define FEATURE_PLATFORM_PLAYER
 #define FEATURE_RELAUNCH_SUPPORT
-#define FEATURE_QUICKTIME
-#define FEATURE_QUICKTIME_EFFECTS
 #define FEATURE_NOTIFY 1
 
 #elif defined(_MAC_DESKTOP)
@@ -1193,7 +1191,6 @@ class MCPlayer;
 class MCImage;
 class MCField;
 class MCObject;
-class MCObjectHandle;
 class MCObjectList;
 class MCMagnify;
 class MCPrinter;

@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "tooltip.h"
@@ -911,18 +911,6 @@ IO_stat MCDispatch::startup(void)
 //  Implementation of MCStack::mode* hooks for STANDALONE mode.
 //
 
-#ifdef LEGACY_EXEC
-Exec_stat MCStack::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCStack::mode_setprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef cprop, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
-
 void MCStack::mode_load(void)
 {
 }
@@ -988,32 +976,6 @@ MCSysWindowHandle MCStack::getqtwindow(void)
 }
 #endif
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCObject::mode_get/setprop for STANDALONE mode.
-//
-
-#ifdef LEGACY_EXEC
-Exec_stat MCObject::mode_getprop(uint4 parid, Properties which, MCExecPoint &ep, MCStringRef carray, Boolean effective)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Implementation of MCProperty::mode_eval/mode_set for STANDALONE mode.
-//
-#ifdef LEGACY_EXEC
-Exec_stat MCProperty::mode_set(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-
-Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
-{
-	return ES_NOT_HANDLED;
-}
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of mode hooks for STANDALONE mode.
@@ -1161,10 +1123,6 @@ MCExpression *MCModeNewFunction(int2 which)
 	return NULL;
 }
 
-void MCModeObjectDestroyed(MCObject *object)
-{
-}
-
 MCObject *MCModeGetU3MessageTarget(void)
 {
 	return MCdefaultstackptr -> getcard();
@@ -1245,6 +1203,11 @@ bool MCModeCollectEntropy(void)
 bool MCModeHasHomeStack(void)
 {
 	return false;
+}
+
+void MCModeFinalize(void)
+{
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1343,7 +1306,7 @@ bool MCModeGetPixelScalingEnabled()
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Mac OS X-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Mac OS X-specific mode hooks for STANDALONE mode.
 //
 
 #ifdef _MACOSX
@@ -1357,7 +1320,7 @@ bool MCModePreWaitNextEvent(Boolean anyevent)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  Implementation of Linux-specific mode hooks for DEVELOPMENT mode.
+//  Implementation of Linux-specific mode hooks for STANDALONE mode.
 //
 
 #ifdef _LINUX

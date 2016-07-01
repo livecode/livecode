@@ -1,0 +1,40 @@
+Name: vectorDotProduct
+
+Type: function
+
+Syntax: vectorDotProduct(<firstArray>, <secondArray>)
+
+Summary: <return|Returns> the vector dot product of two <array|arrays>.
+
+Introduced: 8.1
+
+OS: mac,windows,linux,ios,android
+
+Platforms: desktop,server,web,mobile
+
+Example:
+put vectorDotProduct(tVector1, tVector2)
+
+Parameters:
+firstArray (array): A single-dimensional array of numbers
+secondArray (array): A single-dimensional array of numbers
+
+The result: The sum of the products of the pair-wise values from both arrays.
+
+Returns: The <vectorDotProduct> <function> <return|returns> a number.
+
+Description:
+Use the <vectorDotProduct> <function> to compute the vector dot product of two arrays.
+
+The vector dot product is the sum of the pair-wise product of matching keys from each array. It is equivalent to the following:
+
+    put 0 into runningTotal
+    repeat for each key currentKey in firstArray
+        add firstArray[currentKey] * secondArray[currentKey] to runningTotal
+    end repeat
+
+The names of the keys in <firstArray> must be the same as names of the keys of <secondArray>.
+
+References: sum (function), matrixMultiply (function), transposeMatrix (function), function (glossary), array (glossary), return (glossary)
+
+Tags: math

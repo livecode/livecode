@@ -7,8 +7,9 @@
 		'ext_suffix': '.so',
 		'exe_suffix': '',
 		'debug_info_suffix': '.dbg',
-		
-		'c++_std': '<!(echo ${CXX_STD:-c++03})',
+
+		# Note: using old name for compatibility with older compilers (like GCC 4.4)
+		'c++_std': '<!(echo ${CXX_STD:-c++0x})',
 	},
 	
 	'defines':
@@ -70,6 +71,12 @@
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
 				],
+
+				'cflags_cc':
+				[
+					# Needs GCC 4.7
+					#'-Werror=delete-non-virtual-dtor',
+				],
 			},
 			{
 				'cflags':
@@ -82,6 +89,11 @@
 				'cflags_c':
 				[
 					'-Werror=declaration-after-statement',	# Ensure compliance with C89
+				],
+
+				'cflags_cc':
+				[
+					'-Werror=overloaded-virtual',
 				],
 			},
 		],

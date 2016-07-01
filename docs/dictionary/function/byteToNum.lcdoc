@@ -21,7 +21,7 @@ Example:
 if byteToNum(nextByte) = 0 then next repeat
 
 Example:
-numToByte(byteToNum("Z")) <a name="code tag=">-- returns Z</a>
+numToByte(byteToNum("Z")) -- returns Z
 
 Parameters:
 byte: Any <expression> that evaluates to a byte. If you specify a <string> containing more than one byte, all bytes but the first are ignored.

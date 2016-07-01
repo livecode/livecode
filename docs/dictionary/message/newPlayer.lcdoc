@@ -20,7 +20,7 @@ on newPlayer -- assign a file
     answer file "Please choose a file to play:"
     set the filename of the target to it
   end if
-end newImage
+end newPlayer
 
 It: The newly-created player's long ID <property> is placed in the <it> <variable>.
 

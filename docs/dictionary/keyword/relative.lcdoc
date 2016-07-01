@@ -15,7 +15,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-seek to relative -20 in file "Input Date"
+seek relative -20 in file "Input Date"
 
 Example:
 move image "Butterfly" relative 10,-10 - 10 pixels right and up

@@ -20,7 +20,9 @@ Platforms: desktop,server
 Security: none
 
 Example:
-put the keys of the commandArguments
+local tArgs
+put the commandArguments into tArgs
+put the keys of tArgs
 
 Example:
 repeat for each element tArgument in the commandArguments

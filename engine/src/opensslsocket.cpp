@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "mcerror.h"
 #include "exec.h"
-//#include "execpt.h"
+
 
 #include "param.h"
 #include "handler.h"
@@ -539,7 +539,7 @@ bool ntoa_callback(void *p_context, bool p_resolved, bool p_final, struct sockad
 
 typedef struct _mc_ntoa_message_callback_info
 {
-	MCObjectHandle *target;
+	MCObjectHandle target;
 	MCStringRef name;
 	MCNameRef message;
 	MCListRef list;
@@ -552,8 +552,6 @@ static void free_ntoa_message_callback_info(MCNToAMessageCallbackInfo *t_info)
 		MCValueRelease(t_info->message);
 		MCValueRelease(t_info->name);
 		MCValueRelease(t_info->list);
-		if (t_info->target)
-			t_info->target->Release();
 		MCMemoryDelete(t_info);
 	}
 }
@@ -567,7 +565,7 @@ bool ntoa_message_callback(void *p_context, bool p_resolved, bool p_final, struc
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
-		MCscreen->delaymessage(t_info->target->Get(), t_info->message, t_info->name, *t_string);
+		MCscreen->delaymessage(t_info->target, t_info->message, t_info->name, *t_string);
 		free_ntoa_message_callback_info(t_info);
 	}
 	return true;
@@ -611,7 +609,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
 
 		if (t_success)
 		{
-			t_info->target = p_target->gethandle();
+			t_info->target = p_target->GetHandle();
 			t_success = MCSocketHostNameResolve(*t_host_cstring, NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
 		}
 		

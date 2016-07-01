@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -133,8 +133,8 @@ MCObject::MCObject()
 	// MW-2008-10-25: Initialize the parent script link to NULL
 	parent_script = NULL;
 
-	// MW-2009-08-25: Initialize the handle to NULL
-	m_weak_handle = NULL;
+	// No proxy initially
+	m_weak_proxy = nil;
 
 	// MW-2012-02-14: [[ Fonts ]] Initialize the font to nil.
 	m_font = nil;
@@ -239,8 +239,8 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	else
 		parent_script = NULL;
 
-	// MW-2009-08-25: Initialize the handle to NULL
-	m_weak_handle = NULL;
+	// No proxy initially
+	m_weak_proxy = nil;
 
 	// MW-2012-02-14: [[ FontRefs ]] As objects start off closed, the font is not
 	//   copied and starts nil.
@@ -282,9 +282,9 @@ MCObject::~MCObject()
 	// MW-2012-02-16: [[ LogFonts ]] Delete the font attrs (if any).
 	clearfontattrs();
 
-	// MW-2009-08-25: Clear the handle.
-	if (m_weak_handle != NULL)
-		m_weak_handle -> Clear();
+	// This object is going away; invalidate the proxy
+	if (m_weak_proxy != NULL)
+        m_weak_proxy->Clear();
 
 	// MW-2008-10-25: Release the parent script use
 	if (parent_script != NULL)
@@ -317,8 +317,6 @@ MCObject::~MCObject()
 	MCMemoryDeleteArray(patterns);
 	deletepropsets();
 	MCValueRelease(tooltip);
-	
-	MCModeObjectDestroyed(this);
 
 	// MW-2012-11-20: [[ IdCache ]] Make sure we delete the object from the cache - not
 	//   all deletions vector through 'scheduledelete'.
@@ -760,12 +758,12 @@ Boolean MCObject::mup(uint2 which, bool p_release)
 		else
 		{
 			MCStack *oldmenu = attachedmenu;
-			closemenu(True, True);
 			MCAutoStringRef t_pick;
 			uint2 menuhistory;
 			MCmenupoppedup = true;
 			oldmenu->menumup(which, &t_pick, menuhistory);
 			MCmenupoppedup = false;
+			closemenu(True, True);
 		}
 		return True;
 	}
@@ -854,7 +852,19 @@ void MCObject::deselect()
 	state &= ~CS_SELECTED;
 }
 
-Boolean MCObject::del()
+bool MCObject::isdeletable(bool p_check_flag)
+{
+    if (parent == NULL || scriptdepth != 0)
+    {
+        MCAutoValueRef t_long_name;
+        getnameproperty(P_LONG_NAME, 0, &t_long_name);
+        MCeerror->add(EE_OBJECT_CANTREMOVE, 0, 0, *t_long_name);
+        return false;
+    }
+    return true;
+}
+
+Boolean MCObject::del(bool p_check_flag)
 {
     // If the object is marked as being used as a parentScript, flush the parentScript
     // table so we don't get any dangling pointers.
@@ -870,11 +880,10 @@ Boolean MCObject::del()
     //  back to the list of listened objects; in case we revert the stack to its
     //  saved state, we will now be left with a list of listened-to objects with
     //  no dangling pointers.
-    if (m_weak_handle != nil)
-    {
-        m_weak_handle -> Clear();
-        m_weak_handle = nil;
-    }
+    
+    // This object is in the process of being deleted; invalidate any weak refs
+    if (m_weak_proxy != nil)
+        m_weak_proxy->Clear();
     
     // MW-2012-10-10: [[ IdCache ]] Remove the object from the stack's id cache
     //   (if it is in it!).
@@ -1663,95 +1672,6 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite, bo
 	}
 }
 
-#ifdef LEGACY_EXEC 
-Boolean MCObject::setcolor(uint2 index, const MCString &data)
-{
-	uint2 i, j;
-	if (data.getlength() == 0)
-	{
-		if (getcindex(index, i))
-			destroycindex(index, i);
-	}
-	else
-	{
-		if (!getcindex(index, i))
-		{
-			i = createcindex(index);
-			colors[i].red = colors[i].green = colors[i].blue = 0;
-		}
-		MCColor oldcolor = colors[i];
-		if (!MCscreen->parsecolor(data, &colors[i], &colornames[i]))
-		{
-			MCeerror->add
-			(EE_OBJECT_BADCOLOR, 0, 0, data);
-			return False;
-		}
-		j = i;
-		if (getpindex(index, j))
-		{
-			if (opened)
-
-				MCpatternlist->freepat(patterns[j].pattern);
-			destroypindex(index, j);
-		}
-	}
-	return True;
-}
-
-Boolean MCObject::setcolors(const MCString &data)
-{
-	uint2 i, j, index;
-	MCColor newcolors[8];
-	char *newcolornames[8];
-	for (i = 0 ; i < 8 ; i++)
-		newcolornames[i] = NULL;
-	if (!MCscreen->parsecolors(data, newcolors, newcolornames, 8))
-	{
-		MCeerror->add
-		(EE_OBJECT_BADCOLORS, 0, 0, data);
-		return False;
-	}
-	for (index = DI_FORE ; index <= DI_FOCUS ; index++)
-	{
-		// MW-2013-02-21: [[ Bug 10683 ]] Only clear the pattern if we are actually
-		//   setting a color.
-		if (newcolors[index] . flags != 0)
-		{
-			if (getpindex(index, j))
-			{
-				if (opened)
-					MCpatternlist->freepat(patterns[j].pattern);
-				destroypindex(index, j);
-			}
-		}
-		if (!getcindex(index, i))
-		{
-			if (newcolors[index].flags)
-			{
-				i = createcindex(index);
-				colors[i] = newcolors[index];
-				colornames[i] = newcolornames[index];
-			}
-		}
-		else
-		{
-			if (newcolors[index].flags)
-			{
-				delete colornames[i];
-				if (opened)
-				{
-					colors[i] = newcolors[index];
-				}
-				colornames[i] = newcolornames[index];
-			}
-			else
-				destroycindex(index, i);
-		}
-	}
-	return True;
-}
-#endif
-
 Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 {
 	uint2 i;
@@ -2164,7 +2084,18 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
     //	MCscreen->addtimer(this, MCM_idle, MCidleRate);
 
 	MCscreen->flush(mystack->getw());
-
+	
+	// Object's cannot be deleted whilst they are executing script. However,
+	// this method will run script when script in the object is *not* running
+	// i.e. during front scripts and passed handlers after the object handler.
+	// Due to this, we need to make sure that the object will not be destroyed
+	// whilst this method is running, but it should still be possible to use
+	// the delete command to delete the target whilst the script which is not
+	// in the object runs. To do this we ask the deleted objects system to
+	// suspend destruction of the object during this method.
+	void *t_deletion_cookie;
+	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
+	
 	MCStack *oldstackptr = MCdefaultstackptr;
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
@@ -2202,17 +2133,30 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 		MCdefaultstackptr = oldstackptr;
 	MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
-
+	
+	MCDeletedObjectsOnObjectResumeDeletion(this, t_deletion_cookie);
+	
 	if (stat == ES_ERROR && !MCerrorlock && !MCtrylock)
 	{
 		if (MCnoui)
 		{
             MCAutoPointer<char> t_mccmd;
-            /* UNCHECKED */ MCStringConvertToCString(MCcmd, &t_mccmd);
+            if (!MCStringConvertToCString(MCcmd, &t_mccmd))
+                return ES_ERROR;
+            
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
-			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        *t_mccmd, line, pos);
+            
+            MCAutoValueRef t_object;
+            if (!names(P_NAME, &t_object))
+                return ES_ERROR;
+            
+            MCAutoPointer<char> t_object_name;
+            if (!MCStringConvertToCString((MCStringRef)*t_object, &t_object_name))
+                return ES_ERROR;
+            
+			fprintf(stderr, "%s: Script execution error at line %d, column %d in %s\n",
+			        *t_mccmd, line, pos, *t_object_name);
 		}
 		else
 			if (!send)
@@ -2356,18 +2300,6 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 
 	MCmessagemessages = True;
 }
-
-#ifdef LEGACY_EXEC
-Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
-{
-	MCAutoValueRef t_name;
-	if (names(which, &t_name) &&
-		ep . setvalueref(*t_name))
-		return ES_NORMAL;
-	/* CHECK MCERROR */
-	return ES_ERROR;
-}
-#endif
 
 bool MCObject::getnameproperty(Properties which, uint32_t p_part_id, MCValueRef& r_name_val)
 {
@@ -4292,129 +4224,17 @@ MCImage *MCObject::resolveimagename(MCStringRef p_name)
 	return resolveimage(p_name, 0);
 }
 
-MCObjectHandle *MCObject::gethandle(void)
+MCObjectHandle MCObject::GetHandle(void)
 {
-	if (m_weak_handle != NULL)
+	if (m_weak_proxy == NULL)
 	{
-		m_weak_handle -> Retain();
-		return m_weak_handle;
+		m_weak_proxy = new MCObjectProxy(this);
+        if (!m_weak_proxy)
+            return MCObjectHandle(NULL);
 	}
 
-	m_weak_handle = new MCObjectHandle(this);
-	if (m_weak_handle == NULL)
-		return NULL;
-
-	m_weak_handle -> Retain();
-
-	return m_weak_handle;
+	return MCObjectHandle(m_weak_proxy);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef OLD_EXEC
-struct MCObjectChangeIdVisitor: public MCObjectVisitor
-{
-	uint32_t old_card_id;
-	uint32_t new_card_id;
-
-	void Process(MCCdata *p_cdata)
-	{
-		if (p_cdata == nil)
-			return;
-
-		MCCdata *t_ptr;
-		t_ptr = p_cdata;
-		do
-		{
-			if (t_ptr -> getid() == old_card_id)
-			{
-				t_ptr -> setid(new_card_id);
-				return;
-			}
-
-			t_ptr = t_ptr -> next();
-		}
-		while(t_ptr != p_cdata);
-	}
-
-	bool OnField(MCField *p_field)
-	{
-		Process(p_field -> getcdata());
-		return true;
-	}
-
-	bool OnButton(MCButton *p_button)
-	{
-		Process(p_button -> getcdata());
-		return true;
-	}
-};
-
-Exec_stat MCObject::changeid(uint32_t p_new_id)
-{
-	if (obj_id == p_new_id)
-		return ES_NORMAL;
-
-	// MW-2010-05-18: (Silently) don't allow id == 0 - this prevents people working around the
-	//   script limits, which don't come into effect on objects with 0 id.
-	if (p_new_id == 0)
-		return ES_NORMAL;
-	
-	// MW-2011-02-08: Don't allow id change if the parent is nil as this means its a template
-	//   object which doesn't really have an id.
-	if (parent == nil)
-		return ES_NORMAL;
-	
-	MCStack *t_stack;
-	t_stack = getstack();
-
-	if (t_stack -> isediting())
-	{
-		MCeerror -> add(EE_OBJECT_NOTWHILEEDITING, 0, 0);
-		return ES_ERROR;
-	}
-
-	// If the stack's id is less than the requested id then we are fine
-	// since the stack id is always greater or equal to the highest numbered
-	// control/card id. Otherwise, check the whole list of controls and cards.
-	if (p_new_id <= t_stack -> getid())
-	{
-		if (t_stack -> getcontrolid(CT_LAYER, p_new_id) != NULL ||
-			t_stack -> findcardbyid(p_new_id) != NULL)
-		{
-			MCeerror->add(EE_OBJECT_IDINUSE, 0, 0, p_new_id);
-			return ES_ERROR;
-		}
-	}
-	else
-		t_stack -> obj_id = p_new_id;
-
-	// If the object is a card, we have to reset all the control's data
-	// id's.
-	// If the object is not a card, but has a card as parent, we need to
-	// reset the card's objptr id for it.
-	if (gettype() == CT_CARD)
-	{
-		MCObjectChangeIdVisitor t_visitor;
-		t_visitor . old_card_id = obj_id;
-		t_visitor . new_card_id = p_new_id;
-		t_stack -> visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
-	}
-	else if (parent -> gettype() == CT_CARD)
-		static_cast<MCCard *>(parent) -> resetid(obj_id, p_new_id);
-
-	// MW-2012-10-10: [[ IdCache ]] If the object is in the cache, then remove
-	//   it since its id is changing.
-	if (m_in_id_cache)
-		t_stack -> uncacheobjectbyid(this);
-
-	uint4 oldid = obj_id;
-	obj_id = p_new_id;
-	message_with_args(MCM_id_changed, oldid, obj_id);
-
-	return ES_NORMAL;
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -5479,43 +5299,52 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectHandle::MCObjectHandle(MCObject *p_object)
-{
-	m_object = p_object;
-	m_references = 0;
-}
-
-MCObjectHandle::~MCObjectHandle(void)
+MCObjectProxy::MCObjectProxy(MCObject *p_object) :
+  m_object(p_object),
+  m_refcount(0)
 {
 }
 
-MCObject *MCObjectHandle::Get(void)
+MCObjectProxy::~MCObjectProxy()
 {
-	return m_object;
+    // Shouldn't get deleted if there are references outstanding!
+    MCAssert(m_refcount == 0);
 }
 
-void MCObjectHandle::Clear(void)
+MCObject* MCObjectProxy::Get()
 {
-	m_object = NULL;
+	MCAssert(m_object != nil);
+    return m_object;
 }
 
-void MCObjectHandle::Retain(void)
+void MCObjectProxy::Clear()
 {
-	m_references += 1;
+	m_object = nil;
 }
 
-void MCObjectHandle::Release(void)
+void MCObjectProxy::Retain()
 {
-	m_references -= 1;
-	if (m_references == 0)
+	m_refcount += 1;
+}
+
+void MCObjectProxy::Release()
+{
+    // Sanity check to prevent over-releases (which implies a bug in the Handle
+    // RAII class) as there shouldn't be another way to get a reference.
+    MCAssert(m_refcount > 0);
+    
+    if (--m_refcount <= 0)
 	{
-		if (m_object != NULL)
-			m_object -> m_weak_handle = NULL;
+        // The object in question no longer has a proxy object as we are being
+        // deleted
+        if (m_object)
+            m_object->m_weak_proxy = nil;
+        
 		delete this;
 	}
 }
 
-bool MCObjectHandle::Exists(void)
+bool MCObjectProxy::ObjectExists() const
 {
 	return m_object != NULL;
 }
@@ -5542,6 +5371,7 @@ struct MCDeletedObjectPool
 
 static MCDeletedObjectPool *MCsparedeletedobjectpool = nil;
 static MCDeletedObjectPool *MCdeletedobjectpool = nil;
+static MCDeletedObjectPool *MCrootdeletedobjectpool = nil;
 
 static bool MCDeletedObjectPoolCreate(MCDeletedObjectPool*& r_pool)
 {
@@ -5582,9 +5412,23 @@ void MCDeletedObjectsSetup(void)
     // Setup occurs before the outer wait loop so if we get here we should not
     // have a deletedobjectpool.
     MCAssert(MCdeletedobjectpool == nil);
-    
-    if (!MCMemoryNew(MCdeletedobjectpool))
+	
+	// First create the root object pool - this is only drained right at the end
+	// and will only ever temporarily contain objects which have deletion suspended
+	// whilst they are executing.
+    if (!MCMemoryNew(MCrootdeletedobjectpool))
         return;
+	
+	// Now create the root object pool which is drained during the top-level
+	// event loop.
+	if (!MCMemoryNew(MCdeletedobjectpool))
+		return;
+	
+	// Set the references to 2 - this is the reference from the active deleted object
+	// pool list, and the reference from the MCrootdeletedobjectpool var. This stops
+	// the root pool getting flushed.
+	MCrootdeletedobjectpool -> references = 2;
+	MCdeletedobjectpool -> parent = MCrootdeletedobjectpool;
 }
 
 void MCDeletedObjectsTeardown(void)
@@ -5596,15 +5440,15 @@ void MCDeletedObjectsTeardown(void)
 	// Teardown occurs in X_close and can occur whilst inside a nested wait.
 	// In particular, on Mac the NSApp willTerminate method will never return
 	// meaning there are inbalanced waits on the stack. Therefore, we must
-	// 'LeaveWait' until the MCdeletedobjetpool has a nil parent.
+	// 'LeaveWait' until the MCdeletedobjetpool is the root pool.
 	while(MCdeletedobjectpool -> parent != nil)
 		MCDeletedObjectsLeaveWait(true);
 	
     // Ensure all objects in the pool are deleted.
     MCDeletedObjectsDoDrain();
     
-    MCMemoryDelete(MCdeletedobjectpool);
-    MCdeletedobjectpool = nil;
+    MCMemoryDelete(MCrootdeletedobjectpool);
+    MCrootdeletedobjectpool = nil;
     
     if (MCsparedeletedobjectpool != nil)
     {
@@ -5682,6 +5526,7 @@ void MCDeletedObjectsOnObjectCreated(MCObject *p_object)
 {
     MCdeletedobjectpool -> references += 1;
     p_object -> setdeletedobjectpool(MCdeletedobjectpool);
+	p_object -> setdeletionissuspended(false);
 }
 
 void MCDeletedObjectsOnObjectDeleted(MCObject *p_object)
@@ -5732,6 +5577,33 @@ void MCDeletedObjectsOnObjectDestroyed(MCObject *p_object)
         t_pool = t_pool -> parent;
         MCDeletedObjectPoolDestroy(t_this_pool);
     }
+}
+
+void MCDeletedObjectsOnObjectSuspendDeletion(MCObject *p_object, void*& r_deletion_cookie)
+{
+	if (p_object -> getdeletionissuspended())
+	{
+		r_deletion_cookie = nil;
+		return;
+	}
+	
+	MCDeletedObjectPool *t_pool;
+	t_pool = p_object -> getdeletedobjectpool();
+	
+	MCAssert(t_pool != nil && t_pool -> parent != nil);
+	
+	r_deletion_cookie = t_pool;
+	p_object -> setdeletedobjectpool(t_pool -> parent);
+	p_object -> setdeletionissuspended(true);
+}
+
+void MCDeletedObjectsOnObjectResumeDeletion(MCObject *p_object, void *p_deletion_cookie)
+{
+	if (p_deletion_cookie == nil)
+		return;
+	
+	p_object -> setdeletedobjectpool((MCDeletedObjectPool *)p_deletion_cookie);
+	p_object -> setdeletionissuspended(false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "filedefs.h"
-//#include "execpt.h"
+
 #include "util.h"
 #include "globals.h"
 

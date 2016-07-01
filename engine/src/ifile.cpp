@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "stack.h"
 #include "sellst.h"
-//#include "execpt.h"
+
 
 #include "globals.h"
 #include "osspec.h"
@@ -55,25 +55,6 @@ bool MCImageParseMetadata(MCExecContext& ctxt, MCArrayRef p_array, MCImageMetada
     
     return true;
 }
-
-#ifdef LEGACY_EXEC
-// MERG-2014-09-18: [[ ImageMetadata ]] Convert image metadata scruct to array
-bool MCImageGetMetadata(MCExecPoint& ep, MCImageMetadata& p_metadata)
-{
-    MCVariableValue *v = new MCVariableValue;
-	v -> assign_new_array(1);
-    
-    if (p_metadata.has_density)
-    {
-        ep . setnvalue(p_metadata.density);
-        v -> store_element(ep, "density");
-    }
-    
-	ep.setarray(v, True);
-    
-    return true;
-}
-#endif
 
 //////////////////////////////////////////////////////////////////////
 

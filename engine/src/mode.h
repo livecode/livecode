@@ -165,13 +165,6 @@ void MCModeSetupCrashReporting(void);
 MCStatement *MCModeNewCommand(int2 which);
 MCExpression *MCModeNewFunction(int2 which);
 
-// This hook is called at the end of the MCObject destructor. It
-// allows the mode to remove any references it has to the object.
-//
-// It is called by MCObject::~MCObject.
-//
-void MCModeObjectDestroyed(MCObject *object);
-
 // This hook is used to determine whether to queue stacks that are wanting to
 // be opened (e.g. via an AppleEvent OpenDoc event).
 //
@@ -255,5 +248,8 @@ void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_
 
 // IM-2014-08-08: [[ Bug 12372 ]] Check if pixel scaling should be enabled.
 bool MCModeGetPixelScalingEnabled(void);
+
+// Hook called in X_close for any mode-specific finalization.
+void MCModeFinalize(void);
 
 #endif

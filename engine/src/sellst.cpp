@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "card.h"
@@ -224,56 +224,50 @@ uint32_t MCSellist::count()
 
 MCControl *MCSellist::clone(MCObject *target)
 {
-	MCObjectHandle **t_selobj_handles = nil;
+	MCObjectHandle *t_selobj_handles = nil;
 	uint32_t t_selobj_count;
 	t_selobj_count = count();
 
-	/* UNCHECKED */ MCMemoryNewArray(t_selobj_count, t_selobj_handles);
+	/* UNCHECKED */ MCMemoryNewArrayInit(t_selobj_count, t_selobj_handles);
 	sort();
 
 	MCSelnode *t_node = objects;
 	for (uint32_t i = 0; i < t_selobj_count; i++)
 	{
-		t_selobj_handles[i] = t_node->ref->gethandle();
+		t_selobj_handles[i] = t_node->ref->GetHandle();
 		t_node = t_node->next();
 	}
 
 	clear(false);
 
-	MCObjectHandle *t_newtarget = nil;
+	MCObjectHandle t_newtarget = nil;
 	for (uint32_t i = 0; i < t_selobj_count; i++)
 	{
-		if (t_selobj_handles[i]->Exists())
+		if (t_selobj_handles[i].IsValid())
 		{
-			MCControl *t_control = (MCControl*)t_selobj_handles[i]->Get();
+			MCControl *t_control = t_selobj_handles[i].GetAs<MCControl>();
 			MCControl *t_clone = t_control->clone(True, OP_NONE, false);
 			t_clone->select();
 			if (t_control == target)
-				t_newtarget = t_clone->gethandle();
+				t_newtarget = t_clone->GetHandle();
 			t_control->deselect();
 			add(t_clone, false);
 		}
-		t_selobj_handles[i]->Release();
 	}
 	
 	MCControl *t_result;
 	t_result = nil;
-	if (t_newtarget != nil)
+	if (t_newtarget.IsValid())
 	{
-		if (t_newtarget->Exists())
-		{
-			t_newtarget->Get()->message(MCM_selected_object_changed);
-			
-			// Note that t_newtarget->Get() can change while executing the above message
-			// hence we re-evaluate here.
-			t_result = (MCControl*)t_newtarget->Get();
-		}			
-		// MW-2010-05-06: Make sure we clean up the handle.  IM-2010-05-06: release even when target doesn't exist
-		t_newtarget -> Release();
+        t_newtarget->message(MCM_selected_object_changed);
+        
+        // Note that t_newtarget->Get() can change while executing the above message
+        // hence we re-evaluate here.
+        t_result = t_newtarget.GetAs<MCControl>();
 	}
 	
 	// MW-2010-05-06: Make sure we clean up the temp array
-	MCMemoryDeleteArray(t_selobj_handles);
+	MCMemoryDeleteArray(t_selobj_handles, t_selobj_count);
 
 	return t_result;
 }
@@ -427,7 +421,7 @@ bool MCSellist::clipboard(bool p_is_cut)
 					//   object if the stack is protected.
 					if (tptr -> ref -> getstack() -> iskeyed())
 					{
-						if (tptr -> ref -> del())
+						if (tptr -> ref -> del(true))
                         {
                             if (tptr -> ref -> gettype() == CT_STACK)
                                 MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
@@ -473,7 +467,7 @@ Boolean MCSellist::del()
 				MCControl *cptr = (MCControl *)tptr->ref;
 				uint2 num = 0;
 				cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
-				if (cptr->del())
+				if (cptr->del(true))
 				{
 					Ustruct *us = new Ustruct;
 					us->type = UT_DELETE;

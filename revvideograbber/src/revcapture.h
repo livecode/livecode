@@ -19,6 +19,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 struct MCCaptureInputDevice
 {
+    virtual ~MCCaptureInputDevice() {}
+
 	virtual bool IsDefaultForAudio(void) = 0;
 	virtual bool IsDefaultForVideo(void) = 0;
 	
@@ -30,6 +32,8 @@ struct MCCaptureInputDevice
 
 struct MCCaptureAudioPreviewDevice
 {
+    virtual ~MCCaptureAudioPreviewDevice() {}
+
 	virtual bool IsDefault(void) = 0;
 	
 	virtual const char *GetName(void) = 0;
@@ -106,6 +110,8 @@ struct MCCaptureImageBuffer
 
 struct MCCaptureSession
 {
+    virtual ~MCCaptureSession() {}
+
 	virtual bool Create(MCCaptureSessionDelegate *delegate) = 0;
 	virtual void Destroy(void) = 0;
 	

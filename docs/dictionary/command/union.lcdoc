@@ -43,7 +43,7 @@ union tLeft with tRight recursively
 # tRight unchanged
 
 Example:
-function ScriptUnion(pLeft, pRight, pRecursive)
+function ScriptUnion pLeft, pRight, pRecursive
 	repeat for each key tKey in pRight
 		if tKey is not among the keys of pLeft then
 			put pRight[tKey] into pLeft[tKey]
@@ -55,7 +55,7 @@ function ScriptUnion(pLeft, pRight, pRecursive)
 	return pLeft
 end ScriptUnion
 
-function EngineUnion(pLeft, pRight, pRecursive)
+function EngineUnion pLeft, pRight, pRecursive
 	if pRecursive then
 		union pLeft with pRight recursively
 	else
@@ -66,9 +66,9 @@ function EngineUnion(pLeft, pRight, pRecursive)
 end EngineUnion
 
 -- This function should return true for all inputs.
-function CheckUnion(pLeft, pRight, pRecursive)
+function CheckUnion pLeft, pRight, pRecursive
 	return ScriptUnion(pLeft, pRight, pRecursive) is EngineUnion(pLeft, pRight, pRecursive)
-end CheckIntersect
+end CheckUnion
 
 Parameters:
 targetArray (array): The value to modify.

@@ -28,7 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "undolst.h"
 #include "image.h"
 #include "uidc.h"
-//#include "execpt.h"
+
 #include "mcio.h"
 
 #include "globals.h"
@@ -70,15 +70,15 @@ void MCImage::shutdown()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageNeed::MCImageNeed(MCObject *p_object)
+MCImageNeed::MCImageNeed(MCObject *p_object) :
+  m_object(p_object->GetHandle()),
+  m_prev(nil),
+  m_next(nil)
 {
-	m_object = p_object->gethandle();
-	m_next = m_prev = nil;
 }
 
 MCImageNeed::~MCImageNeed()
 {
-	m_object->Release();
 }
 
 void MCImageNeed::Add(MCImageNeed *&x_head)
@@ -105,7 +105,10 @@ void MCImageNeed::Remove(MCImageNeed *&x_head)
 
 MCObject *MCImageNeed::GetObject()
 {
-	return m_object->Get();
+	if (m_object.IsValid())
+        return m_object;
+    else
+        return nil;
 }
 
 MCImageNeed *MCImageNeed::GetNext()

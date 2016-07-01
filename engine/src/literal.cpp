@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "literal.h"
 #include "scriptpt.h"
-//#include "execpt.h"
+
 
 #include "syntax.h"
 
@@ -31,13 +31,6 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 	initpoint(sp);
 	return PS_NORMAL;
 }
-
-#ifdef /* MCLiteral::eval */ LEGACY_EXEC
-Exec_stat MCLiteral::eval(MCExecPoint &ep)
-{
-    MCExecValueTraits<MCNameRef>::set(r_value, value);
-}
-#endif /* MCLiteral::eval */ 
 
 void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {

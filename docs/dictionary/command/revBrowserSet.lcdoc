@@ -23,13 +23,10 @@ revBrowserSet tBrowserId, "url", "http://www.livecode.com"
 
 Example:
 answer file "Please choose a file to display"
-if theresult
-is not "cancel" then
+if the result is not "cancel" then
   put it into tFile
-  put revBrowserSet
-tBrowserID,"url","file://" & tFile     
-end
-if
+  put revBrowserSet tBrowserID,"url","file://" & tFile     
+end if
 
 Parameters:
 instanceId: The integer identifier of a browser object.

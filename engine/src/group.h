@@ -83,12 +83,8 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void applyrect(const MCRectangle &nrect);
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
     
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void recompute();
 
 	// MW-2012-02-14: [[ Fonts ]] Recompute the font inheritence hierarchy.
@@ -141,6 +137,8 @@ public:
 	
     virtual void scheduledelete(bool p_is_child);
     
+    virtual bool isdeletable(bool p_check_flag);
+    
     // This call computes the pixel bounds of the group, rather than
     // just its active bounds - transients, bitmap effects and selection
     // handles of a group's children may extend beyond the group's bounds.
@@ -156,9 +154,6 @@ public:
 	void drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawframe);
 	void drawbord(MCDC *dc, const MCRectangle &dirty);
 	MCControl *getchild(Chunk_term etype, MCStringRef p_expression,Chunk_term otype, Chunk_term ptype);
-#ifdef OLD_EXEC
-	MCControl *getchild(Chunk_term etype, const MCString &,Chunk_term otype, Chunk_term ptype);
-#endif
     MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o);
     MCControl *getchildbyid(uinteger_t p_id, Chunk_term o);
     MCControl *getchildbyname(MCNameRef p_name, Chunk_term o);
@@ -173,15 +168,6 @@ public:
 	void clearfocus(MCControl *cptr);
 	void radio(uint4 parid, MCControl *focused);
 	MCButton *gethilitedbutton(uint4 parid);
-#ifdef OLD_EXEC
-	uint2 gethilited(uint4 parid);
-	uint4 gethilitedid(uint4 parid);
-	MCNameRef gethilitedname(uint4 parid);
-	void sethilited(uint4 parid, uint2 toset);
-	void sethilitedid(uint4 parid, uint4 toset);
-	void sethilitedname(uint4 parid, MCNameRef bname);
-	void setchildprops(uint4 parid, Properties which, MCExecPoint &ep);
-#endif
 	MCRectangle getgrect();
 	void computecrect();
 	bool computeminrect(Boolean scrolling);

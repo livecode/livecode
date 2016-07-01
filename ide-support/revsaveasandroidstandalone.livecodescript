@@ -77,6 +77,7 @@ private function badAndroidApiMessage
 end badAndroidApiMessage
 
 constant kBuiltInImplementations = "scriptLibraries Internet"
+constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    start using stack "revSBLibrary"
    
@@ -90,8 +91,15 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    put true into tConfirm
    if tSettings["inclusions"] is "search" then 
       put false into tConfirm
-      dispatch "revSearchForInclusions" to stack "revSaveAsStandalone" with pStack, tSettings
+      -- search for inclusions when building for simulator
+      if pTarget contains "test" then
+         revSBSearchForInclusions pStack, tSettings
+      end if
+      
    end if
+   
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies tSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
    revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
@@ -197,7 +205,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    end if
    
    -- Compute the externals list (includes drivers on Android)
-   repeat for each word tExternal in "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter"
+   repeat for each word tExternal in kAndroidExternals
       if tSettings["android,include" && tExternal] then
          if tExternal begins with "db" then 
             if "revdb" is not among the lines of tExternals then

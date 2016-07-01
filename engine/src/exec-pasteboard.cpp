@@ -1015,7 +1015,7 @@ void MCPasteboardProcessToClipboard(MCExecContext& ctxt, MCObjectPtr *p_targets,
 		{
 			for(uint4 i = 0; i < p_object_count; ++i)
 			{
-				if (p_targets[i] . object -> del())
+				if (p_targets[i] . object -> del(true))
                 {
                     if (p_targets[i] . object -> gettype() == CT_STACK)
                         MCtodestroy -> remove(static_cast<MCStack *>(p_targets[i] . object));
@@ -1881,6 +1881,18 @@ void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r
     if (MCdragdest != nil)
     {
         r_object . object = MCdragdest;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCPasteboardEvalDropChunkAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCdragdest != nil)
+    {
+        r_object . object = MCdropfield;
         r_object . part_id = 0;
         return;
     }

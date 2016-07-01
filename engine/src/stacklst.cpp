@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "objdefs.h"
 
-//#include "execpt.h"
+
 #include "dispatch.h"
 #include "stack.h"
 #include "button.h"
@@ -212,7 +212,8 @@ void MCStacklist::top(MCStack *sptr)
 		tptr = stacks;
 		do
 		{
-			if (tptr->getstack()->getmode() == pass)
+			if (tptr->getstack()->getmode() == pass &&
+                !tptr->getstack()->getstate(CS_DELETE_STACK))
 			{
 				MCtopstackptr = tptr->getstack();
 				return;

@@ -16,7 +16,7 @@ Example:
 revMoveFolder "Backup Folder","/Disk/Backups/"
 
 Example:
-revMoveFolder "My App Prefs",specialFolderPath(Preferences)
+revMoveFolder "My App Prefs",specialFolderPath("Preferences")
 
 Parameters:
 folderToMove: The folderToMove specifies the name and location of the folder. If you specify a name but not a location, LiveCode assumes the folder is in the defaultFolder.

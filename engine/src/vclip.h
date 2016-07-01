@@ -39,12 +39,7 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
-#ifdef LEGACY_EXEC
-	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }

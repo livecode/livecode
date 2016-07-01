@@ -290,9 +290,6 @@ public:
 	virtual void compile(MCSyntaxFactoryRef);
 	
 
-#ifdef LEGACY_EXEC
-	Exec_stat exec_cookie(MCExecPoint &);
-#endif
 };
 
 class MCQuit : public MCStatement
@@ -320,14 +317,22 @@ public:
 
 class MCReturn : public MCStatement
 {
+    enum Kind
+    {
+        kReturn,
+        kReturnValue,
+        kReturnError,
+        kReturnWithUrlResult,
+    };
 	MCExpression *source;
-	MCExpression *url;
-	MCVarref *var;
+	MCExpression *extra_source;
+    Kind kind;
 public:
 	MCReturn()
 	{
-		source = url = NULL;
-		var = NULL;
+        source = NULL;
+        extra_source = NULL;
+        kind = kReturn;
 	}
 	virtual ~MCReturn();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -473,10 +478,6 @@ protected:
 	virtual bool iscut(void) const = 0;
 
 private:
-#ifdef LEGACY_EXEC
-	Exec_errors processtocontainer(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst);
-	Exec_errors processtoclipboard(MCExecPoint& ep, MCObjectRef *p_objects, uint4 p_object_count);
-#endif
 };
 
 class MCCopyCmd: public MCClipboardCmd
@@ -871,9 +872,13 @@ public:
 
 class MCRevert : public MCStatement
 {
+    MCChunk *stack;
 public:
-	virtual void exec_ctxt(MCExecContext &);
-	virtual void compile(MCSyntaxFactoryRef);
+    MCRevert() : stack(NULL) {}
+    virtual ~MCRevert();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    virtual void compile(MCSyntaxFactoryRef);
 };
 
 class MCRotate : public MCStatement
@@ -1454,9 +1459,6 @@ public:
 		discardmatches = False;
 	}
 	virtual ~MCFilter();
-#ifdef LEGACY_EXEC
-    char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
-#endif
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
@@ -1495,7 +1497,6 @@ public:
 		sig = NULL;
 		pname = NULL;
 	}
-	int4 lookup(MCStringRef s);
 	virtual ~MCKill();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
@@ -1575,14 +1576,6 @@ public:
         ;
 	}
 	virtual ~MCRead();
-#ifdef LEGACY_EXEC
-	IO_stat readfor(IO_handle stream, int4 pindex, File_unit unit,
-	                uint4 bytes, MCExecPoint &ep, real8 duration);
-	IO_stat readuntil(IO_handle stream, int4 pindex, uint4 count,
-	                  const char *sptr, MCExecPoint &ep, Boolean words,
-	                  real8 duration);
-	IO_stat readuntil_binary(IO_handle stream, int4 pindex, uint4 count, const MCString &sptr, MCExecPoint &ep,Boolean words, real8 duration);
-#endif
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext &);
 	virtual void compile(MCSyntaxFactoryRef);
@@ -1856,9 +1849,6 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
     virtual void exec_ctxt(MCExecContext &ctxt);
     virtual void compile(MCSyntaxFactoryRef);
-#ifdef OLD_EXEC
-	MCStack *findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr);
-#endif
     MCStack *findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term etype, MCCard *&cptr);
 };
 

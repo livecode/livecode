@@ -28,8 +28,6 @@ The files are executed when the stack is opened, making the externals in them av
 
 >*Important:*  When you install a new <external> by setting a <stack|stack's> <externals> <property>, LiveCode cannot use it until you either quit LiveCode and then reopen the <stack>, or close the <stack> (after setting its <destroyWindow> <property> to true) and then reopen it.
 
-<img src="202654"/> Cross-platform caution! It is not possible to load externals written for PowerPC in an application running natively on an Intel Mac. To get around this limitation either use Universal Binary externals, or run the program under Rosetta.
-
 Changes:
 Support for using the externals property on OS X systems was added in version 2.0.
 

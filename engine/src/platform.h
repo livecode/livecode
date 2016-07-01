@@ -37,6 +37,24 @@ template<typename T> struct array_t
     uindex_t count;
 };
 
+template <typename T>
+inline void MCPlatformArrayClear(array_t<T> &p_array)
+{
+	MCMemoryDeleteArray(p_array.ptr);
+	p_array.count = 0;
+	p_array.ptr = nil;
+}
+
+template <typename T>
+inline bool MCPlatformArrayCopy(const array_t<T> &p_src, array_t<T> &p_dst)
+{
+	if (!MCMemoryAllocateCopy(p_src.ptr, p_src.count * sizeof(T), p_dst.ptr))
+		return false;
+
+	p_dst.count = p_src.count;
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCPlatformCallbackType
@@ -100,6 +118,8 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeUInt16,
 	kMCPlatformPropertyTypeInt32,
 	kMCPlatformPropertyTypeUInt32,
+	kMCPlatformPropertyTypeInt64,
+	kMCPlatformPropertyTypeUInt64,
 	kMCPlatformPropertyTypeFloat,
 	kMCPlatformPropertyTypeDouble,
 	kMCPlatformPropertyTypeRectangle,
@@ -123,6 +143,7 @@ enum MCPlatformPropertyType
 	kMCPlatformPropertyTypeCursorRef,
     
     kMCPlatformPropertyTypeUInt32Array,
+	kMCPlatformPropertyTypeUInt64Array,
 	
 	kMCPlatformPropertyTypePointer,
     
@@ -973,12 +994,19 @@ enum MCPlatformPlayerProperty
 typedef uint32_t MCPlatformPlayerMediaTypes;
 enum MCPlatformPlayerMediaType
 {
-	kMCPlatformPlayerMediaTypeVideo,
-	kMCPlatformPlayerMediaTypeAudio,
-	kMCPlatformPlayerMediaTypeText,
-	kMCPlatformPlayerMediaTypeQTVR,
-	kMCPlatformPlayerMediaTypeSprite,
-	kMCPlatformPlayerMediaTypeFlash,
+	kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlashBit,
+
+	kMCPlatformPlayerMediaTypeVideo = 1 << kMCPlatformPlayerMediaTypeVideoBit,
+	kMCPlatformPlayerMediaTypeAudio = 1 << kMCPlatformPlayerMediaTypeAudioBit,
+	kMCPlatformPlayerMediaTypeText = 1 << kMCPlatformPlayerMediaTypeTextBit,
+	kMCPlatformPlayerMediaTypeQTVR = 1 << kMCPlatformPlayerMediaTypeQTVRBit,
+	kMCPlatformPlayerMediaTypeSprite = 1 << kMCPlatformPlayerMediaTypeSpriteBit,
+	kMCPlatformPlayerMediaTypeFlash = 1 << kMCPlatformPlayerMediaTypeFlashBit,
 };
 
 enum MCPlatformPlayerTrackProperty
@@ -1006,6 +1034,12 @@ struct MCPlatformPlayerQTVRConstraints
 	double y_min, y_max;
 	double z_min, z_max;
 };
+
+typedef uint64_t MCPlatformPlayerDuration;
+typedef array_t<MCPlatformPlayerDuration> MCPlatformPlayerDurationArray;
+#define kMCPlatformPropertyTypePlayerDuration kMCPlatformPropertyTypeUInt64
+#define kMCPlatformPropertyTypePlayerDurationArray kMCPlatformPropertyTypeUInt64Array
+#define MCPlatformPlayerDurationMax UINT64_MAX
 
 void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player);
 

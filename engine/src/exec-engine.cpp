@@ -112,7 +112,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Engine, LockMessages, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockErrors, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, UnlockMessages, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, Set, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, Return, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnValue, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Engine, ReturnError, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, CaseSensitive, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, CaseSensitive, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, CenturyCutOff, 1)
@@ -840,9 +842,19 @@ void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCExecValue p_value, int p
     }
 }
 
+void MCEngineExecReturn(MCExecContext& ctxt, MCValueRef p_value)
+{
+	ctxt.SetTheResultToValue(p_value);
+}
+
 void MCEngineExecReturnValue(MCExecContext& ctxt, MCValueRef p_value)
 {
-	ctxt . SetTheResultToValue(p_value);
+    ctxt.SetTheReturnValue(p_value);
+}
+
+void MCEngineExecReturnError(MCExecContext& ctxt, MCValueRef p_value)
+{
+    ctxt.SetTheReturnError(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -897,17 +909,20 @@ void MCEngineExecQuit(MCExecContext& ctxt, integer_t p_retcode)
 {
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
-	switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-	{
-		case ES_PASS:
-		case ES_NOT_HANDLED:
-			break;
-		default:
-			return;
-	}
-	// IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
-	// here on Android in the same place as (almost) everything else
-	MCdefaultstackptr->getcard()->message(MCM_shut_down);
+    if (MCdefaultstackptr != nil && !MCdefaultstackptr->getstate(CS_DELETE_STACK))
+    {
+        switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+        {
+            case ES_PASS:
+            case ES_NOT_HANDLED:
+                break;
+            default:
+                return;
+        }
+        // IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
+        // here on Android in the same place as (almost) everything else
+        MCdefaultstackptr->getcard()->message(MCM_shut_down);
+    }
 #endif
 
 	MCretcode = p_retcode;
@@ -1369,40 +1384,75 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 	}
 	if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
 	{
+        // The message was not handled by the target object, so this is
+        // just a bunch of script to be executed as if it were in a handler
+        // in the target object (using domess).
+        
 		MCHandler *t_handler;
 		t_handler = optr -> findhandler(HT_MESSAGE, *t_message);
 		if (t_handler != NULL && t_handler -> isprivate())
+        {
 			ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
-		else
-		{
-            MCAutoStringRef tptr;
+            goto cleanup;
+        }
 
-			if (t_params != NULL)
-			{
-                MCAutoValueRef t_value;
-				/* UNCHECKED */ t_params->eval(ctxt, &t_value);
-                MCAutoStringRef t_value_string;
-				ctxt . ConvertToString(*t_value, &t_value_string);
-                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value_string);
-				
-			}
-            else
-                tptr = MCNameGetString(*t_message);
+        // The 'split into message and parameters' function above is used
+        // to ensure that all the parameters are evaluated in the current
+        // context (not the target). Since domess just takes a string, we
+        // convert the entire script back into a string with the params
+        // having been evaluated. This means in particular that variables
+        // containing arrays will not work here - they will be converted to
+        // the empty string.
+        
+        MCAutoListRef t_param_list;
+        MCListCreateMutable(',', &t_param_list);
+        MCParameter *t_param_ptr;
+        t_param_ptr = t_params;
+        
+        bool t_has_params;
+        t_has_params = t_params != nil;
+        while (t_param_ptr != NULL)
+        {
+            MCAutoValueRef t_value;
+            MCAutoStringRef t_value_string;
             
-			if ((stat = optr->domess(*tptr)) == ES_ERROR)
-				ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
-		}
+            if (!t_param_ptr->eval(ctxt, &t_value) ||
+                !ctxt . ConvertToString(*t_value, &t_value_string) ||
+                !MCListAppend(*t_param_list, *t_value_string))
+                goto cleanup;
+
+            t_param_ptr = t_param_ptr -> getnext();
+        }
+        
+        MCAutoStringRef tptr;
+        if (t_has_params)
+        {
+            MCAutoStringRef t_params_string;
+            if (!MCListCopyAsString(*t_param_list, &t_params_string) ||
+                !MCStringCreateWithStringsAndSeparator(&tptr, ' ',
+                                                       MCNameGetString(*t_message),
+                                                       *t_params_string))
+                goto cleanup;
+        }
+        else
+            tptr = MCNameGetString(*t_message);
+        
+        if ((stat = optr->domess(*tptr)) == ES_ERROR)
+            ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
 	}
 	else if (stat == ES_PASS)
 		stat = ES_NORMAL;
 	else if (stat == ES_ERROR)
 		ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
-	while (t_params != NULL)
+
+cleanup:
+    while (t_params != NULL)
 	{
 		MCParameter *tmp = t_params;
 		t_params = t_params->getnext();
 		delete tmp;
 	}
+    
 	if (added)
 		MCnexecutioncontexts--;
 	MClockmessages = oldlock;

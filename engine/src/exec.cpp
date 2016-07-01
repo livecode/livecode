@@ -769,25 +769,6 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error
 	return false;
 }
 
-#ifdef LEGACY_EXEC
-bool MCExecContext::EvaluateExpression(MCExpression *p_expr, MCValueRef& r_result)
-{
-	if (p_expr -> eval(m_ep) != ES_NORMAL)
-	{
-		LegacyThrow(EE_EXPR_EVALERROR);
-		return false;
-	}
-
-	if (!m_ep . copyasvalueref(r_result))
-	{
-		Throw();
-		return false;
-	}
-
-	return true;
-}
-#endif
-
 bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
 {
     MCAssert(p_expr != nil);
@@ -1236,10 +1217,10 @@ void MCExecContext::UserThrow(MCStringRef p_error)
 	m_stat = ES_ERROR;
 }
 
-MCObjectHandle *MCExecContext::GetObjectHandle(void) const
+MCObjectHandle MCExecContext::GetObjectHandle(void) const
 {
     extern MCExecContext *MCECptr;
-	return MCECptr->GetObject()->gethandle();
+	return MCECptr->GetObject()->GetHandle();
 }
 
 Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
@@ -1250,36 +1231,55 @@ Exec_stat MCExecContext::Catch(uint2 p_line, uint2 p_pos)
 void MCExecContext::SetTheResultToEmpty(void)
 {
 	MCresult -> clear();
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToValue(MCValueRef p_value)
 {
-	MCresult -> setvalueref(p_value);
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToStaticCString(const char *p_cstring)
 {
-	MCresult -> sets(p_cstring);
+    MCresult -> sets(p_cstring);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToNumber(real64_t p_value)
 {
     MCresult -> setnvalue(p_value);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::GiveCStringToResult(char *p_cstring)
 {
     MCresult -> grab(p_cstring, MCCStringLength(p_cstring));
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToCString(const char *p_string)
 {
     MCresult -> copysvalue(p_string);
+    MCresultmode = kMCExecResultModeReturn;
 }
 
 void MCExecContext::SetTheResultToBool(bool p_bool)
 {
     MCresult -> sets(MCU_btos(p_bool));
+    MCresultmode = kMCExecResultModeReturn;
+}
+
+void MCExecContext::SetTheReturnError(MCValueRef p_value)
+{
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturnError;
+}
+
+void MCExecContext::SetTheReturnValue(MCValueRef p_value)
+{
+    MCresult -> setvalueref(p_value);
+    MCresultmode = kMCExecResultModeReturnValue;
 }
 
 // SN-2015-06-03: [[ Bug 11277 ]] Refactor MCExecPoint update
@@ -2104,6 +2104,29 @@ void MCExecFetchProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+		case kMCPropertyTypeOptionalDouble:
+		{
+			double t_value;
+			double *t_value_ptr;
+			t_value_ptr = &t_value;
+			((void(*)(MCExecContext&, void *, double *&))prop -> getter)(ctxt, mark, t_value_ptr);
+			if (!ctxt . HasError())
+			{
+				if (t_value_ptr != nil)
+				{
+					r_value . double_value = t_value;
+					r_value . type = kMCExecValueTypeDouble;
+				}
+				else
+				{
+					r_value . stringref_value = MCValueRetain(kMCEmptyString);
+					r_value . type = kMCExecValueTypeStringRef;
+				}
+			}
+
+		}
+			break;
+
         case kMCPropertyTypeOptionalString:
         {
             MCAutoStringRef t_value;
@@ -2982,6 +3005,23 @@ void MCExecStoreProperty(MCExecContext& ctxt, const MCPropertyInfo *prop, void *
         }
             break;
             
+		case kMCPropertyTypeOptionalDouble:
+		{
+			double t_value;
+			double *t_value_ptr;
+			if (p_value . type == kMCExecValueTypeValueRef && MCValueIsEmpty(p_value . valueref_value))
+				t_value_ptr = nil;
+			else
+			{
+				t_value_ptr = &t_value;
+				MCExecTypeConvertAndReleaseAlways(ctxt, p_value . type, &p_value, kMCExecValueTypeDouble, &t_value);
+			}
+
+			if (!ctxt . HasError())
+				((void(*)(MCExecContext&, void *, double*))prop -> setter)(ctxt, mark, t_value_ptr);
+		}
+			break;
+
         case kMCPropertyTypeMixedOptionalString:
         case kMCPropertyTypeOptionalString:
         {

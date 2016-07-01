@@ -22,7 +22,7 @@ typedef unsigned int SetRef;
 
 #define MAX_SET_DEPTH 256
 SetRef s_sets[MAX_SET_DEPTH];
-unsigned int s_set_count = 0;
+int s_set_count = 0;
 
 void InitializeSets(void)
 {

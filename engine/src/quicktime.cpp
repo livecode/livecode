@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -21,13 +21,18 @@
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "graphics.h"
-#include "stack.h"
-#include "execpt.h"
-#include "player.h"
-#include "util.h"
 #include "osspec.h"
 #include "variable.h"
+
+/* Pretty much everything in this file is only needed if quicktime
+ * effects are enabled. */
+#if defined(FEATURE_QUICKTIME_EFFECTS)
+
+#include "graphics.h"
+#include "stack.h"
+
+#include "player.h"
+#include "util.h"
 
 #ifdef _WINDOWS_DESKTOP
 #include "w32prefix.h"
@@ -79,8 +84,6 @@ void UnlockPixels(PixMapHandle pix);
 #endif
 
 #endif
-
-#ifdef FEATURE_QUICKTIME_EFFECTS
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1262,5 +1265,5 @@ void MCQTGetVersion(MCStringRef& r_version)
 }
 
 
-#endif
+#endif /* !FEATURE_QUICKTIME_EFFECTS */
 

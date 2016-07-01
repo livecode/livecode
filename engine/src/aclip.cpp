@@ -22,7 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-//#include "execpt.h"
+
 #include "util.h"
 #include "date.h"
 #include "sellst.h"
@@ -203,76 +203,16 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 	}
 }
 
-#ifdef LEGACY_EXEC
-Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective, bool recursive)
+Boolean MCAudioClip::del(bool p_check_flag)
 {
-	switch (which)
-    {
-#ifdef /* MCAudioClip::getprop */ LEGACY_EXEC
-	case P_SIZE:
-		ep.setint(size);
-		break;
-    // AL-2014-08-12: [[ Bug 13161 ]] Get audioclip instance variable rather than global value
-	case P_PLAY_DESTINATION:
-        if (flags & F_EXTERNAL)
-            ep.setstaticcstring("external");
-        else
-            ep.setstaticcstring("internal");
-		break;
-	case P_PLAY_LOUDNESS:
-        ep.setint(loudness);
-		break;
-#endif /* MCAudioClip::getprop */ 
-	default:
-		return MCObject::getprop_legacy(parid, which, ep, effective, recursive);
-	}
-	return ES_NORMAL;
-}
-#endif
-
-#ifdef LEGACY_EXEC
-Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
-{
-	int2 i1;
-	MCString data = ep.getsvalue();
-
-	switch (p)
-    {
-#ifdef /* MCAudioClip::setprop */ LEGACY_EXEC
-    // AL-2014-08-12: [[ Bug 13161 ]] Setting templateAudioClip properties shouldn't set global ones
-	case P_PLAY_DESTINATION:
-        if (data == "external")
-            flags |= F_EXTERNAL;
-        else
-            flags &= ~F_EXTERNAL;
-        return ES_NORMAL;
-	case P_PLAY_LOUDNESS:
-        if (!MCU_stoi2(data, i1))
-        {
-            MCeerror->add(EE_ACLIP_LOUDNESSNAN, 0, 0, data);
-            return ES_ERROR;
-        }
-        loudness = MCU_max(MCU_min(i1, 100), 0);
-        if (loudness == 100)
-            flags &= ~F_LOUDNESS;
-        else
-            flags |= F_LOUDNESS;
-		return ES_NORMAL;
-#endif /* MCAudioClip::setprop */
-	default:
-		break;
-	}
-	return MCObject::setprop_legacy(parid, p, ep, effective);
-}
-#endif
-
-Boolean MCAudioClip::del()
-{
-	getstack()->removeaclip(this);
+    if (!isdeletable(p_check_flag))
+        return False;
+    
+    getstack()->removeaclip(this);
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.
-	return MCObject::del();
+	return MCObject::del(p_check_flag);
 }
 
 void MCAudioClip::paste(void)

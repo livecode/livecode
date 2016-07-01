@@ -749,7 +749,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				break;
 			case kLCValueOptionAsLCArray:
 				t_options_to_use = kMCOptionAsVariable;
-				t_value_to_use = &t_array_value;
+				t_error = (LCError)MCVariableCreate(&t_array_value);
+				t_value_to_use = t_array_value;
 				break;
                 
             // SN-2014-07-01: [[ ExternalsApiV6 ]] Handling unicode types
@@ -822,7 +823,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
                 if (s_interface -> version < 6)
                 {
                     t_options_to_use = kMCOptionAsVariable;
-                    t_value_to_use = &t_array_value;
+                    t_error = (LCError)MCVariableCreate(&t_array_value);
+                    t_value_to_use = t_array_value;
                 }
                 else
                 {
@@ -834,7 +836,8 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
                 if (s_interface -> version < 6)
                 {
                     t_options_to_use = kMCOptionAsVariable;
-                    t_value_to_use = &t_array_value;
+                    t_error = (LCError)MCVariableCreate(&t_array_value);
+                    t_value_to_use = t_array_value;
                 }
                 else
                 {
@@ -3251,6 +3254,25 @@ static JavaNativeMapping s_native_mappings[] =
 	{ kJavaNativeTypeData, "[B", nil, nil, nil, nil },
 	{ kJavaNativeTypeData, "java/nio/ByteBuffer", "array", "()[B", nil, nil },
 };
+
+LCError LCAttachCurrentThread(void)
+{
+	JNIEnv *t_env;
+
+	t_env = nil;
+	if (s_java_vm -> AttachCurrentThread(&t_env, nil) < 0)
+		return kLCErrorFailed;
+
+	return kLCErrorNone;
+}
+
+LCError LCDetachCurrentThread(void)
+{
+	if (s_java_vm -> DetachCurrentThread() < 0)
+		return kLCErrorFailed;
+
+	return kLCErrorNone;
+}
 
 static bool java__initialize(JNIEnv *env)
 {

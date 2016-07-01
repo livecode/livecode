@@ -1,0 +1,1 @@
+# Check standalone stack for widgets before resolving dependencies

@@ -18,7 +18,7 @@ Example:
 the functionNames
 
 Example:
-if myHandlerName is in the functions then answer "Choose another name."
+if myHandlerName is in the functionNames then answer "Choose another name."
 
 Returns: The <functionNames> function <return|returns> one <function> name per <line>.
 

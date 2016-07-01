@@ -13,7 +13,7 @@ OS: mac,windows,linux,ios,android
 Platforms: desktop,server,web,mobile
 
 Example:
-binaryDecode("h","M",theHex) - converts M to its hex equivalent
+binaryDecode("h","M",theHex) -- converts M to its hex equivalent
 
 Example:
 binaryDecode("a*",receivedData,textData) -- converts data to text

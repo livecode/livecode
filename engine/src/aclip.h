@@ -79,12 +79,7 @@ public:
 	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 
-#ifdef LEGACY_EXEC
-    virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective, bool recursive = false);
-    virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-#endif
-
-	virtual Boolean del();
+	virtual Boolean del(bool p_check_flag);
 	virtual void paste(void);
 
 	// MCAudioClip functions

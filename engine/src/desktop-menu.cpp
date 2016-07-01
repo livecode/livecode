@@ -23,7 +23,7 @@
 #include "parsedef.h"
 #include "objdefs.h"
 
-//#include "execpt.h"
+
 #include "exec.h"
 #include "scriptpt.h"
 #include "mcerror.h"
@@ -531,11 +531,11 @@ bool MCButton::macmenuisopen()
 struct MCMainMenuInfo
 {
 	MCPlatformMenuRef menu;
-	MCObjectHandle *target;
+	MCObjectHandle target;
 };
 
 static MCPlatformMenuRef s_menubar = nil;
-static MCObjectHandle **s_menubar_targets = nil;
+static MCObjectHandle *s_menubar_targets = nil;
 static uindex_t s_menubar_target_count = 0;
 static uindex_t s_menubar_lock_count = 0;
 
@@ -596,7 +596,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 	t_menu_index = 0;
 	
 	// We construct the new menubar as we go along.
-	MCObjectHandle **t_new_menubar_targets;
+	MCObjectHandle *t_new_menubar_targets;
 	uindex_t t_new_menubar_target_count;
 	t_new_menubar_targets = nil;
 	t_new_menubar_target_count = 0;
@@ -645,8 +645,8 @@ void MCScreenDC::updatemenubar(Boolean force)
 		MCPlatformReleaseMenu(t_menu);
 		
 		// Extend the new menubar targets array by one.
-		/* UNCHECKED */ MCMemoryResizeArray(t_new_menubar_target_count + 1, t_new_menubar_targets, t_new_menubar_target_count);
-		t_new_menubar_targets[t_menu_index] = t_menu_button -> gethandle();
+		/* UNCHECKED */ MCMemoryResizeArrayInit(t_new_menubar_target_count + 1, t_new_menubar_targets, t_new_menubar_target_count);
+		t_new_menubar_targets[t_menu_index] = t_menu_button->GetHandle();
 		
 		// Increment the index into the menubar.
 		t_menu_index++;
@@ -656,9 +656,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 	if (s_menubar != nil)
 	{
 		MCPlatformReleaseMenu(s_menubar);
-		for(uindex_t i = 0; i < s_menubar_target_count; i++)
-			s_menubar_targets[i] -> Release();
-		MCMemoryDeleteArray(s_menubar_targets);
+		MCMemoryDeleteArray(s_menubar_targets, s_menubar_target_count);
 	}
 	
 	// Update to the new menubar and targets.
@@ -923,7 +921,7 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
 	// If the button it is 'attached' to still exists, dispatch the menu update
 	// message (currently mouseDown("")). We do this whilst the menubar is locked
 	// from updates as we mustn't fiddle about with it too much in this case!
-	if (t_update_menubar || s_menubar_targets[t_parent_menu_index] -> Exists())
+	if (t_update_menubar || s_menubar_targets[t_parent_menu_index].IsValid())
 	{
         // MW-2014-06-10: [[ Bug 12590 ]] Make sure we lock screen around the menu update message.
         MCRedrawLockScreen();
@@ -940,10 +938,9 @@ void MCPlatformHandleMenuUpdate(MCPlatformMenuRef p_menu)
     // SN-2014-11-10: [[ Bug 13836 ]] Make sure that
 	// Now we've got the menu to update, process the new menu spec, but only if the
 	// menu button still exists!
-	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index] -> Exists())
+	if (!t_update_menubar && s_menubar_targets[t_parent_menu_index].IsValid())
 	{
-		MCButton *t_button;
-		t_button = (MCButton *)s_menubar_targets[t_parent_menu_index] -> Get();
+		MCButton *t_button = s_menubar_targets[t_parent_menu_index].GetAs<MCButton>();
 		
 		MCPlatformRemoveAllMenuItems(p_menu);
 		MCstacks -> deleteaccelerator(t_button, t_button -> getstack());
@@ -995,10 +992,10 @@ void MCPlatformHandleMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_item_index)
 	// will be the current popup menu or icon menu.
 	if (t_current_menu != nil)
 	{
-		if (s_menubar_targets[t_current_menu_index] -> Exists())
+		if (s_menubar_targets[t_current_menu_index].IsValid())
 		{
-			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> setmenuhistoryprop(t_last_menu_index + 1);
-			((MCButton *)s_menubar_targets[t_current_menu_index] -> Get()) -> handlemenupick(*t_result, nil);
+			s_menubar_targets[t_current_menu_index].GetAs<MCButton>()->setmenuhistoryprop(t_last_menu_index + 1);
+            s_menubar_targets[t_current_menu_index].GetAs<MCButton>()->handlemenupick(*t_result, nil);
 		}
 	}
 	else

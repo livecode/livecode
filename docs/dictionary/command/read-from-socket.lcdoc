@@ -13,9 +13,6 @@ OS: mac,windows,linux,iOS,android
 Platforms: desktop,server,web,mobile
 
 Example:
-read from socket "www.example.net:80" -- reads next character
-
-Example:
 read from socket "www.example.net:80" for 50 -- reads next 50 chars
 
 Example:
@@ -38,7 +35,7 @@ It: If you don't specify a <callbackMessage>, the <handler> pauses until the rea
 Description:
 Use the <read from socket> <command> to get data from another system via a <TCP> <socket>.
 
-The until <string> form reads data until the specified string is encountered. The for <amount> form reads data until the specified number of chunks have arrived. If you don't specify a <string> or <amount>, the <read from socket> <command> reads the next <character> of data from the <socket>.
+The until <string> form reads data until the specified string is encountered. The for <amount> form reads data until the specified number of chunks have arrived.
 
 If you specify a <callbackMessage>, the <message> is sent to the <object(glossary)> whose <script> contains the <read from socket> <command>, as soon as the read is finished. This message has two <parameter|parameters>: the <socketID> and the data received from the <socket>.
 

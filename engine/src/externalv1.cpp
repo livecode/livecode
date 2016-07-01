@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-//#include "execpt.h"
+
 #include "param.h"
 #include "scriptpt.h"
 #include "chunk.h"
@@ -1023,6 +1023,10 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		t_old_it = s_external_v1_current_it;
 		s_external_v1_current_it = &t_it;
 		
+		// CW-2016-06-21: [[ Bug 17891 ]] Make sure the 'was_licensed' instance var is true,
+		//   to avoid detecting a previous license check failure.
+		m_was_licensed = true;
+		
 		// Update the current external var.
 		s_current_external = this;
 		
@@ -1220,20 +1224,20 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
     {
         case kMCExternalContextQueryMe:
         {
-            MCObjectHandle *t_handle;
-            t_handle = MCECptr -> GetObject() -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCECptr -> GetObject() -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
         case kMCExternalContextQueryTarget:
         {
-            MCObjectHandle *t_handle;
-            t_handle = MCtargetptr . object -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCtargetptr . object -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
         case kMCExternalContextQueryResult:
@@ -1264,11 +1268,11 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             if (MCdefaultstackptr == nil)
                 return kMCExternalErrorNoDefaultStack;
             
-            MCObjectHandle *t_handle;
-            t_handle = MCdefaultstackptr -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCdefaultstackptr -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
         case kMCExternalContextQueryDefaultCard:
@@ -1276,11 +1280,11 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             if (MCdefaultstackptr == nil)
                 return kMCExternalErrorNoDefaultStack;
             
-            MCObjectHandle *t_handle;
-            t_handle = MCdefaultstackptr -> getcurcard() -> gethandle();
-            if (t_handle == nil)
+            MCObjectHandle t_handle;
+            t_handle = MCdefaultstackptr -> getcurcard() -> GetHandle();
+            if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle **)result = t_handle;
+            *(MCObjectHandle*)result = t_handle;
         }
             break;
             
@@ -2063,22 +2067,6 @@ static MCExternalError MCExternalVariableEdit(MCExternalVariableRef var, MCExter
 
 static MCExternalError MCExternalVariableCountKeys(MCExternalVariableRef var, uint32_t* r_count)
 {
-#ifdef OLD_EXEC
-    if (var == nil)
-        return kMCExternalErrorNoVariable;
-    
-    MCValueRef t_value;
-    t_value = var -> GetValueRef();
-    
-    if (MCValueIsArray(t_value))
-        *r_count = MCArrayGetCount((MCArrayRef)t_value);
-    else if (MCValueIsEmpty(t_value))
-        *r_count = 0;
-    else
-        return kMCExternalErrorNotAnArray;
-    
-    return kMCExternalErrorNone;
-#endif
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
         return kMCExternalErrorNoVariable;
@@ -2101,69 +2089,6 @@ static MCExternalError MCExternalVariableCountKeys(MCExternalVariableRef var, ui
 
 static MCExternalError MCExternalVariableIterateKeys(MCExternalVariableRef var, MCExternalVariableIteratorRef *p_iterator, MCExternalValueOptions p_options, void *p_key, MCExternalVariableRef *r_value)
 {
-#ifdef OLD_EXEC
-    if (var == nil)
-        return kMCExternalErrorNoVariable;
-    
-    if (p_iterator == nil)
-        return kMCExternalErrorNoIterator;
-    
-    MCValueRef t_value;
-    t_value = var -> GetValueRef();
-    
-    // If the var is not an array, we set the iterator to nil to indicate
-    // there are no elements.
-    if (!var -> is_array())
-    {
-        *p_iterator = nil;
-        return var -> is_empty() ? kMCExternalErrorNone : kMCExternalErrorNotAnArray;
-    }
-    
-    // If both key and value are nil, then the iteration is being cleaned up.
-    if (p_key == nil && r_value == nil)
-    {
-        // We don't have anything to clean up at the moment...
-        return kMCExternalErrorNone;
-    }
-    
-    MCHashentry *t_entry;
-    t_entry = var -> get_array() -> getnextkey(static_cast<MCHashentry *>(*p_iterator));
-    
-    // Update the iterator pointer. Note that we do this here to allow iteration
-    // to continue after a value conversion error.
-    *p_iterator = t_entry;
-    
-    // If we have an entry, then extract the key in the form that was requested
-    // and return it's value.
-    if (t_entry != nil)
-    {
-        *r_value = &t_entry -> value;
-        switch(p_options & 0xf)
-        {
-            case kMCExternalValueOptionAsVariable:
-                if (!((MCExternalVariableRef)p_key) -> assign_string(t_entry -> string))
-                    return kMCExternalErrorOutOfMemory;
-                break;
-            case kMCExternalValueOptionAsBoolean:
-                return string_to_boolean(t_entry -> string, p_options, p_key);
-            case kMCExternalValueOptionAsInteger:
-            case kMCExternalValueOptionAsCardinal:
-                return string_to_integer(t_entry -> string, p_options, p_key);
-            case kMCExternalValueOptionAsReal:
-                return string_to_real(t_entry -> string, p_options, p_key);
-            case kMCExternalValueOptionAsString:
-                *(MCString *)p_key = t_entry -> string;
-                return kMCExternalErrorNone;
-            case kMCExternalValueOptionAsCString:
-                *(char **)p_key = t_entry -> string;
-                return kMCExternalErrorNone;
-            default:
-                return kMCExternalErrorInvalidValueType;
-        }
-    }
-    
-    return kMCExternalErrorNone;
-#endif
     
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
@@ -2279,16 +2204,6 @@ static bool MCExternalIsCaseSensitive(MCExternalValueOptions p_options)
 
 static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key)
 {
-#ifdef OLD_EXEC
-    MCExternalError t_error;
-    
-    MCHashentry *t_entry;
-    t_error = fetch_hash_entry(var, p_options, p_key, false, t_entry);
-    if (t_error == kMCExternalErrorNone && t_entry != nil)
-        var -> remove_hash(t_entry);
-    
-    return t_error;
-#endif
     
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
@@ -2329,16 +2244,6 @@ static MCExternalError MCExternalVariableRemoveKey(MCExternalVariableRef var, MC
 
 static MCExternalError MCExternalVariableLookupKey(MCExternalVariableRef var, MCExternalValueOptions p_options, void *p_key, bool p_ensure, MCExternalVariableRef *r_var)
 {
-#ifdef OLD_EXEC
-    MCExternalError t_error;
-    
-    MCHashentry *t_entry;
-    t_error = fetch_hash_entry(var, p_options, p_key, p_ensure, t_entry);
-    if (t_error == kMCExternalErrorNone)
-        *r_var = t_entry != nil ? &t_entry -> value : nil;
-    
-    return t_error;
-#endif
     
     // SN-2014-11-24: [[ Bug 14057 ]] Implement the function
     if (var == nil)
@@ -2472,10 +2377,10 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 	// If we found the object, attempt to create a handle.
 	if (t_error == kMCExternalErrorNone)
 	{
-		MCObjectHandle *t_handle;
-		t_handle = t_object -> gethandle();
-		if (t_handle != NULL)
-			*(MCExternalObjectRef *)r_handle = t_handle;
+		MCObjectHandle t_handle;
+		t_handle = t_object -> GetHandle();
+		if (t_handle)
+			*(MCExternalObjectRef *)r_handle = t_handle.ExternalRetain();
 		else
 			t_error = kMCExternalErrorOutOfMemory;
 	}
@@ -2488,37 +2393,45 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 
 static MCExternalError MCExternalObjectExists(MCExternalObjectRef p_handle, bool *r_exists)
 {
-	if (p_handle == nil)
+	MCObjectHandle t_handle = p_handle;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 
-	*r_exists = p_handle -> Exists();
+	*r_exists = t_handle.IsValid();
 
 	return kMCExternalErrorNone;
 }
 
 static MCExternalError MCExternalObjectRetain(MCExternalObjectRef p_handle)
 {
-	if (p_handle == nil)
+	MCObjectHandle t_handle = p_handle;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 
-	p_handle -> Retain();
+	t_handle.ExternalRetain();
 
 	return kMCExternalErrorNone;
 }
 
 static MCExternalError MCExternalObjectRelease(MCExternalObjectRef p_handle)
 {
-	if (p_handle == nil)
+	MCObjectHandle t_handle = p_handle;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 
-	p_handle -> Release();
+	t_handle.ExternalRelease();
 
 	return kMCExternalErrorNone;
 }
 
 static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MCExternalDispatchType p_type, const char *p_message, MCExternalVariableRef *p_argv, uint32_t p_argc, MCExternalDispatchStatus *r_status)
 {
-	if (p_object == nil)
+	MCObjectHandle t_object = p_object;
+    
+    if (!t_object.IsBound())
 		return kMCExternalErrorNoObject;
 
 	if (p_message == nil)
@@ -2527,7 +2440,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 	if (p_argv == nil && p_argc > 0)
 		return kMCExternalErrorNoObjectArguments;
 
-	if (!p_object -> Exists())
+	if (!t_object.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
 
 	MCExternalError t_error;
@@ -2561,7 +2474,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 	if (t_error == kMCExternalErrorNone)
 	{
 		Exec_stat t_stat;
-		t_stat = p_object -> Get() -> dispatch(p_type == kMCExternalDispatchCommand ? HT_MESSAGE : HT_FUNCTION, t_message_as_name, t_params);
+		t_stat = t_object -> dispatch(p_type == kMCExternalDispatchCommand ? HT_MESSAGE : HT_FUNCTION, t_message_as_name, t_params);
 		if (r_status != nil)
 			switch(t_stat)
 			{
@@ -2620,7 +2533,9 @@ static Properties parse_property_name(MCStringRef p_name)
 // SN-2014-07-01: [[ ExternalsApiV6 ]] p_name and p_key can now be UTF8-encoded
 static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigned int p_options, const char *p_name, const char *p_key, MCExternalVariableRef p_value)
 {
-	if (p_object == nil)
+	MCObjectHandle t_handle = p_object;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 	
 	if (p_name == nil)
@@ -2629,7 +2544,7 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 	if (p_value == nil)
 		return kMCExternalErrorNoObjectPropertyValue;
 	
-	if (!p_object -> Exists())
+	if (!t_handle.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
     
     MCAutoStringRef t_name;
@@ -2642,8 +2557,7 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 	Properties t_prop;
 	t_prop = parse_property_name(*t_name);
 	
-	MCObject *t_object;
-	t_object = p_object -> Get();
+	MCObject *t_object = t_handle;
 	
 	MCExecContext t_ctxt;
 	
@@ -2693,7 +2607,9 @@ static MCExternalError MCExternalObjectSet(MCExternalObjectRef p_object, unsigne
 // SN-2014-07-01: [[ ExternalsApiV6 ]] p_name and p_key can now be UTF8-encoded
 static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigned int p_options, const char *p_name, const char *p_key, MCExternalVariableRef p_value)
 {
-	if (p_object == nil)
+	MCObjectHandle t_handle = p_object;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 	
 	if (p_name == nil)
@@ -2702,7 +2618,7 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 	if (p_value == nil)
 		return kMCExternalErrorNoObjectPropertyValue;
 	
-	if (!p_object -> Exists())
+	if (!t_handle.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
     
     MCAutoStringRef t_name;
@@ -2715,8 +2631,7 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 	Properties t_prop;
 	t_prop = parse_property_name(*t_name);
 	
-	MCObject *t_object;
-	t_object = p_object -> Get();
+	MCObject *t_object = t_handle;
 	
 	MCExecContext t_ctxt;
 	MCExecValue t_value;
@@ -2770,14 +2685,15 @@ static MCExternalError MCExternalObjectGet(MCExternalObjectRef p_object, unsigne
 
 static MCExternalError MCExternalObjectUpdate(MCExternalObjectRef p_object, unsigned int p_options, void *p_region)
 {
-	if (p_object == nil)
+	MCObjectHandle t_handle = p_object;
+    
+    if (!t_handle.IsBound())
 		return kMCExternalErrorNoObject;
 	
-	if (!p_object -> Exists())
+	if (!t_handle.IsValid())
 		return kMCExternalErrorObjectDoesNotExist;
 	
-	MCObject *t_object;
-	t_object = p_object -> Get();
+	MCObject *t_object = t_handle;
 
 	// MW-2011-08-19: [[ Layers ]] Nothing to do if object not a control.
 	if (t_object -> gettype() < CT_GROUP)

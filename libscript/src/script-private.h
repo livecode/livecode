@@ -41,7 +41,6 @@ extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptCannotCallContextHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
 
@@ -256,15 +255,6 @@ struct MCScriptVariableDefinition: public MCScriptDefinition
 	uindex_t slot_index;
 };
 
-struct MCScriptContextVariableDefinition: public MCScriptDefinition
-{
-    uindex_t type;
-    uindex_t default_value;
-    
-    // (computed) The index of the variable in the context slot table - not pickled
-    uindex_t slot_index;
-};
-
 struct MCScriptCommonHandlerDefinition: public MCScriptDefinition
 {
     uindex_t type;
@@ -281,7 +271,7 @@ struct MCScriptHandlerDefinition: public MCScriptCommonHandlerDefinition
 	uindex_t start_address;
 	uindex_t finish_address;
     
-    MCScriptHandlerScope scope;
+    MCScriptHandlerAttributes attributes;
     
     // The number of slots required in a frame in order to execute this handler - computed.
     uindex_t slot_count;
@@ -392,12 +382,6 @@ struct MCScriptModule: public MCScriptObject
     // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
     
-    // (computed) The number of slots needed by this modules context - not pickled
-    uindex_t context_slot_count;
-    
-    // (computed) The index of this module's context info in a frame's context vector - not pickled
-    uindex_t context_index;
-    
     // If this is a non-widget module, then it only has one instance - not pickled
     MCScriptInstanceRef shared_instance;
     
@@ -421,7 +405,6 @@ MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScript
 MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
 MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
 MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
-MCNameRef MCScriptGetNameOfContextVariableInModule(MCScriptModuleRef module, uindex_t index);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -493,6 +476,7 @@ enum MCScriptBytecodeOp
 	// Unconditional jump:
 	//  X: jump <Y-X>
 	// Location is encoded as relative position to jump instruction.
+    //
 	kMCScriptBytecodeOpJump,
 	
 	// Conditional jumps:
@@ -509,12 +493,14 @@ enum MCScriptBytecodeOp
 	//   assign-constant <dst>, <index>
 	// Dst is a register and index is a constant pool index. The value in dst is
     // freed, and the constant value at the specified index is assigned to it.
+    //
 	kMCScriptBytecodeOpAssignConstant,
     
 	// Register assignment:
 	//   assign <dst>, <src>
 	// Dst and Src are registers. The value in dst is freed, and src copied
 	// into it.
+    //
 	kMCScriptBytecodeOpAssign,
     
 	// Return control to caller with value:
@@ -559,7 +545,6 @@ enum MCScriptBytecodeOp
     // The <level> indicates where the definition should be looked up with 0 being
     // the enclosing scope, 1 the next scope and so on.
     //
-    //
 	kMCScriptBytecodeOpFetch,
     
 	// Store:
@@ -577,14 +562,22 @@ enum MCScriptBytecodeOp
     // Dst is a register. The remaining arguments are registers and are used to
     // build a list. (This will be replaced by an invoke when variadic bindings are
     // implemented).
+    //
     kMCScriptBytecodeOpAssignList,
 
 	// Array creation assignment.
 	//   assign-array <dst>, <key_1>, <value_1>, ..., <key_n>, <value_n>
 	// Dst is a register.  The remaining arguments are registers and
 	// are used, pair-wise, to build an array. (This will be replaced by an invoke
-	// when variadic bindings are implemented).
+    // when variadic bindings are implemented).
+    //
 	kMCScriptBytecodeOpAssignArray,
+    
+    // Slot resetting
+    //   reset <reg_1>, ..., <reg_n>
+    // Initializes the given slots to default values, if the type of the slot
+    // has a default, otherwise makes the slot unassigned.
+    kMCScriptBytecodeOpReset,
 };
 
 bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
@@ -609,7 +602,8 @@ bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCSc
 // of each module version.
 
 #define kMCScriptModuleVersion_8_0_0_DP_1 0
-#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_0_0_DP_1
+#define kMCScriptModuleVersion_8_1_0_DP_2 1
+#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_1_0_DP_2
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -7,6 +7,6 @@ Type: library
 Description:
 The <LiveCode custom library|LiveCode custom library> that supports parsing and manipulating <XML> data and creating <XML document|XML files>.
 
-References: XML (glossary), XML document (glossary), LiveCode custom library (library)
+References: XML (glossary), XML document (glossary), LiveCode custom library (glossary)
 
 Tags: multimedia

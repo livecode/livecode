@@ -122,6 +122,11 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, CommandKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ControlKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ShiftKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventCapsLockKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventCommandKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventControlKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventOptionKey, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, EventShiftKey, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, KeysDown, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, MainStacks, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, OpenStacks, 1)
@@ -162,6 +167,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, RemoveGroupFromCard, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResetCursors, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResetTemplate, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, Revert, 0)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, RevertStack, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectEmpty, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectAllTextOfField, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SelectAllTextOfButton, 1)
@@ -1192,6 +1198,36 @@ void MCInterfaceEvalShiftKey(MCExecContext& ctxt, MCNameRef& r_result)
 	MCValueRetain(r_result);
 }
 
+void MCInterfaceEvalEventCapsLockKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_CAPS_LOCK) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventCommandKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_CONTROL) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventControlKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_MAC_CONTROL) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventOptionKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_ALT) != 0);
+    MCValueRetain(r_result);
+}
+
+void MCInterfaceEvalEventShiftKey(MCExecContext& ctxt, MCNameRef& r_result)
+{
+    r_result = MCInterfaceKeyConditionToName((MCmodifierstate & MS_SHIFT) != 0);
+    MCValueRetain(r_result);
+}
+
 void MCInterfaceEvalKeysDown(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	MCAutoListRef t_list;
@@ -1930,32 +1966,54 @@ void MCInterfaceExecUndo(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void MCInterfaceRevertStack(MCExecContext& ctxt, MCStack *p_stack)
+{
+    MCAssert(p_stack != nil);
+    
+    Window_mode oldmode = p_stack->getmode();
+    MCRectangle oldrect = p_stack->getrect();
+    
+    if (!MCdispatcher->ismainstack(p_stack))
+        p_stack = (MCStack *)p_stack->getparent();
+    if (p_stack == MCdispatcher->gethome())
+    {
+        ctxt . LegacyThrow(EE_REVERT_HOME);
+        return;
+    }
+    
+    MCAutoStringRef t_filename;
+    p_stack -> getstringprop(ctxt, 0, P_FILE_NAME, False, &t_filename);
+    
+    MCNewAutoNameRef t_name;
+    if (!MCNameCreate(*t_filename, &t_name))
+        return;
+    
+    // we don't want to check flags on stack revert
+    if (p_stack->del(false))
+    {
+        p_stack -> scheduledelete();
+        p_stack = MCdispatcher->findstackname(*t_name);
+        if (p_stack != NULL)
+            p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+    }
+    else
+        ctxt . Throw();
+}
+
 void MCInterfaceExecRevert(MCExecContext& ctxt)
 {
-	Window_mode oldmode = MCtopstackptr->getmode();
-	MCRectangle oldrect = MCtopstackptr->getrect();
-	MCStack *t_sptr = MCtopstackptr;
-	if (!MCdispatcher->ismainstack(t_sptr))
-		t_sptr = (MCStack *)t_sptr->getparent();
-	if (t_sptr == MCdispatcher->gethome())
-	{
-		ctxt . LegacyThrow(EE_REVERT_HOME);
-		return;
-	}
-	MCAutoStringRef t_filename;
-	t_sptr->getstringprop(ctxt, 0, P_FILE_NAME, False, &t_filename);
-	Boolean oldlock = MClockmessages;
-	MClockmessages = True;
-	MCerrorlock++;
-    if (t_sptr->del())
-        t_sptr -> scheduledelete();
-	MCerrorlock--;
-	MClockmessages = oldlock;
-	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreate(*t_filename, &t_name);
-	t_sptr = MCdispatcher->findstackname(*t_name);
-	if (t_sptr != NULL)
-		t_sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+    MCInterfaceRevertStack(ctxt, MCtopstackptr);
+}
+
+void MCInterfaceExecRevertStack(MCExecContext& ctxt, MCObject *p_stack)
+{
+    if (p_stack == nil || p_stack->gettype() != CT_STACK)
+    {
+        ctxt . LegacyThrow(EE_REVERT_NOSTACK);
+        return;
+    }
+
+    MCInterfaceRevertStack(ctxt, (MCStack *)p_stack);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2202,7 +2260,7 @@ void MCInterfaceExecDeleteObjects(MCExecContext& ctxt, MCObjectPtr *p_objects, u
 {
 	for(uindex_t i = 0; i < p_object_count; i++)
 	{
-		if (!p_objects[i] . object -> del())
+		if (!p_objects[i] . object -> del(true))
 		{
 			ctxt . LegacyThrow(EE_CHUNK_CANTDELETEOBJECT);
 			return;
@@ -3384,16 +3442,22 @@ void MCInterfaceExecPutIntoField(MCExecContext& ctxt, MCStringRef p_string, int 
     // SN-2014-09-03: [[ Bug 13314 ]] MCMarkedText::changed updated to store the number of chars appended
     if (p_chunk . mark . changed != 0)
     {
+        findex_t t_added_start;
+        t_added_start = p_chunk.mark.start - p_chunk.mark.changed;
+        
         MCAutoStringRef t_string;
         // SN-2015-05-05: [[ Bug 15315 ]] Changing the whole text of a field
         //  will delete all the settings of the field, so we only append the
         //  chars which were added (similar to MCExecResolveCharsOfField).
-        if (!MCStringCopySubstring((MCStringRef)p_chunk . mark . text, MCRangeMake(p_chunk.mark.start - p_chunk.mark.changed, p_chunk.mark.changed), &t_string))
+        if (!MCStringCopySubstring((MCStringRef)p_chunk . mark . text,
+                                   MCRangeMake(t_added_start, p_chunk.mark.changed),
+                                   &t_string))
             return;
         
-        //  The insertion position of the added chunk delimiters is right before
-        //  the insertion position for the string.
-        t_field -> settextindex(p_chunk .part_id, p_chunk.mark.start - 1, p_chunk.mark.start - 1, *t_string, False);
+        // The insertion position of the added chunk delimiters is at
+        // the position prior to the added chunk adjustment
+        t_field -> settextindex(p_chunk .part_id, t_added_start,
+                                t_added_start, *t_string, False);
     }
      
     integer_t t_start, t_finish;

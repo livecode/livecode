@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "util.h"
 #include "stacklst.h"
-//#include "execpt.h"
+
 #include "globals.h"
 #include "notify.h"
 

@@ -353,12 +353,12 @@ void MCPlayer::SetDontRefresh(MCExecContext& ctxt, bool setting)
 		Redraw();
 }
 
-void MCPlayer::GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time)
+void MCPlayer::GetCurrentTime(MCExecContext& ctxt, double& r_time)
 {
 	r_time = getmoviecurtime();
 }
 
-void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
+void MCPlayer::SetCurrentTime(MCExecContext& ctxt, double p_time)
 {
 	setcurtime(p_time, false);
 	if (isbuffering())
@@ -370,13 +370,13 @@ void MCPlayer::SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time)
 #endif
 }
 
-void MCPlayer::GetDuration(MCExecContext& ctxt, uinteger_t& r_duration)
+void MCPlayer::GetDuration(MCExecContext& ctxt, double& r_duration)
 {
 	r_duration = getduration();
 }
 
 // PM-2014-11-03: [[ Bug 13920 ]] Make sure we support loadedTime property
-void MCPlayer::GetLoadedTime(MCExecContext& ctxt, uinteger_t& r_loaded_time)
+void MCPlayer::GetLoadedTime(MCExecContext& ctxt, double& r_loaded_time)
 {
 #ifdef FEATURE_PLATFORM_PLAYER
 	r_loaded_time = getmovieloadedtime();
@@ -435,7 +435,7 @@ void MCPlayer::SetPlayRate(MCExecContext& ctxt, double p_rate)
 	setplayrate();
 }
 
-void MCPlayer::GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time)
+void MCPlayer::GetStartTime(MCExecContext& ctxt, double*& r_time)
 {
 	if (starttime == MAXUINT4)
 		r_time = nil;
@@ -443,7 +443,7 @@ void MCPlayer::GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time)
 		*r_time = starttime; //for QT, this is the selection start time
 }
 
-void MCPlayer::SetStartTime(MCExecContext& ctxt, uinteger_t* p_time)
+void MCPlayer::SetStartTime(MCExecContext& ctxt, double* p_time)
 {
 	//for QT, this is the selection start time
 	if (p_time == nil)
@@ -462,7 +462,7 @@ void MCPlayer::SetStartTime(MCExecContext& ctxt, uinteger_t* p_time)
 	setselection(false);
 }
 
-void MCPlayer::GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time)
+void MCPlayer::GetEndTime(MCExecContext& ctxt, double*& r_time)
 {
 	if (endtime == MAXUINT4)
 		r_time = nil;
@@ -470,7 +470,7 @@ void MCPlayer::GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time)
 		*r_time = endtime; //for QT, this is the selection's end time
 }
 
-void MCPlayer::SetEndTime(MCExecContext& ctxt, uinteger_t* p_time)
+void MCPlayer::SetEndTime(MCExecContext& ctxt, double* p_time)
 {
 	//for QT, this is the selection end time
 	if (p_time == nil)
@@ -555,7 +555,7 @@ void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
     setcallbacks(p_callbacks);
 }
 
-void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
+void MCPlayer::GetTimeScale(MCExecContext& ctxt, double& r_scale)
 {
 	r_scale = gettimescale();
 }

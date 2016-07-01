@@ -33,12 +33,12 @@ The contents of an image can reside either in the stack or in a separate file. I
 
 Using an image from a separate file reduces memory use, since the image does not need to be loaded into memory unless it is in use. But it increases the time it takes to go to a card containing the image, since the file must be loaded from the disk it's on or from the Internet. 
 
-The contents of a player must reside in a separate file that is specified in the player's <filename> property. If a player's filename is empty, the player does not display any data. The file specified by the filePath or URL must be in a format supported by QuickTime. 
+The contents of a player must reside in a separate file that is specified in the player's <filename> property. If a player's filename is empty, the player does not display any data. The file specified by the filePath or URL must be in a format supported by AVFoundation on Mac and DirectShow on Windows. 
 
  set the filename of player "My Player" to "SecondMovie. mov"
  set the currentTime of player "My Player" to zero
 
-If you specify a URL for a streaming QuickTime movie file, LiveCode displays the movie sequentially as it downloads. Otherwise, LiveCode must download the entire file before you can play it. To pre-fetch a file from the Internet in order to speed up access to it, use the load command before visiting the card that holds the player or image that references the file's URL. 
+If you specify a URL for a streaming a movie file, LiveCode displays the movie sequentially as it downloads. Otherwise, LiveCode must download the entire file before you can play it. To pre-fetch a file from the Internet in order to speed up access to it, use the load command before visiting the card that holds the player or image that references the file's URL. 
 
 You can use the "New Referenced Control" submenu in the File menu to create a new image or player which references the contents of a file you specify. You can also set the filename to an absolute path or relative path by changing the Source field in the image's or player's property inspector.
 
@@ -55,9 +55,17 @@ When an image is required, the current scale factor is rounded up to the nearest
 Images should be created at appropriately scaled pixel size. If the natural size of an image is x points wide and y points high, the scaled versions should be x scale pixels wide and y scale pixels high in order to have the same natural size. You should take care that the natural size of the image scales to integer pixel sizes, as the logical point size of the image is rounded up to the nearest integer. If this is not practical for a given image, you may need to design your apps to handle slightly different resulting image sizes.
 
 Changes:
-The URL option was introduced in version 1.1. In previous versions, the filename of an image or player always specified a file path on the local system, and files on the Internet could not be used. 
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
+new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
+systems apart from pre OS X 10.8. The Windows build of LiveCode no
+longer supports any <QuickTime> features and setting the <dontUseQT> and
+<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
+not include 64 bit support and therefore can not be supported on OS X 64
+bit builds of LiveCode.
 
 Support for Density Mapped Images was introduced in version 6. In previous versions, the filename of an image would only be able to use that particular image for display. Images with differing resolution are now supported, allowing applications to take full advantage of Hi-DPI.
+
+The URL option was introduced in version 1.1. In previous versions, the filename of an image or player always specified a file path on the local system, and files on the Internet could not be used. 
 
 References: fileType (property), constantMask (property), saveStackRequest (message), import (command), tempName (function), shortFilePath (function)
 
