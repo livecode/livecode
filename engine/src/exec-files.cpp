@@ -157,7 +157,7 @@ void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(false, false, &t_list) && MCListCopyAsString(*t_list, r_string))
+	if (MCS_getentries(nil, false, false, &t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
     // SN-2014-10-07: [[ Bug 13619 ]] 'the folders' should return empty, in case of an error
@@ -172,7 +172,7 @@ void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string)
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(true, false, &t_list) && MCListCopyAsString(*t_list, r_string))
+	if (MCS_getentries(nil, true, false, &t_list) && MCListCopyAsString(*t_list, r_string))
 		return;
 
     // SN-2014-10-07: [[ Bug 13619 ]] 'the files' should return empty, in case of an error
@@ -2796,7 +2796,7 @@ void MCFilesGetFiles(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2808,7 +2808,7 @@ void MCFilesGetDetailedFiles(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(true, true, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, true, true, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2820,7 +2820,7 @@ void MCFilesGetFolders(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2832,7 +2832,7 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(false, true, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, false, true, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();

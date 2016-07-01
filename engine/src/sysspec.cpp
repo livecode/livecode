@@ -1006,7 +1006,10 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	return true;
 }
 
-bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
+bool MCS_getentries(MCStringRef p_folder,
+                    bool p_files,
+                    bool p_detailed,
+                    MCListRef& r_list)
 {    
 	MCAutoListRef t_list;
     
@@ -1026,7 +1029,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 			return false;
 	}
     
-	if (!MCsystem -> ListFolderEntries(nil, MCS_getentries_callback, (void*)&t_state))
+	if (!MCsystem -> ListFolderEntries(p_folder, MCS_getentries_callback, (void*)&t_state))
 		return false;
     
 	if (!MCListCopy(*t_list, r_list))
