@@ -1910,7 +1910,7 @@ void MCUIDC::hidecursoruntilmousemoves(void)
 
 bool MCUIDC::platform_get_display_handle(void *&r_display)
 {
-	return nil;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
