@@ -1,0 +1,1 @@
+# Ensure line endings of utf-8 docs are converted

@@ -304,6 +304,10 @@ command revDoSaveAsStandalone pStack, pFolder
          end if
       end repeat
       
+      -- Add all the widgets that are present on the stack to the 
+      -- extensions settings key
+      revSBUpdateSettingsForWidgets pStack, sStandaloneSettingsA
+      
       -- If we're searching for inclusions, do it here 
       if sStandaloneSettingsA["inclusions"] = "search" then 
          revSearchForInclusions pStack, sStandaloneSettingsA

@@ -2605,7 +2605,12 @@ end groupOrder
 function revDocsUtf8FileContents pFile
    local tContents
    put url ("binfile:" & pFile) into tContents
-   return textDecode(tContents, "utf-8")
+   put textDecode(tContents, "utf-8") into tContents
+   -- Since we are using url(binfile..), we need to convert the 
+   -- line endings of the target file
+   replace CRLF with LF in tContents
+   replace CR with LF in tContents
+   return tContents
 end revDocsUtf8FileContents
 
 constant kGuideOrderFile = "guide-order.yml"
