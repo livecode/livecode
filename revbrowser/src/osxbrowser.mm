@@ -1021,7 +1021,7 @@ void TAltBrowser::Print()
 	[info setVerticalPagination:NSAutoPagination];
 	[info setHorizontallyCentered:NO];
 	[info setVerticallyCentered:NO];
-	[info setOrientation:NSPortraitOrientation];
+	[info setOrientation:NSPaperOrientationPortrait];
 	
 	
 	pView = [[[nativeView mainFrame] frameView] documentView];
