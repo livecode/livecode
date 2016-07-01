@@ -54,6 +54,26 @@ on TestFilesOfFolder
    delete file tTestPath
 end TestFilesOfFolder
 
+on TestFoldersOfFolder
+   local tFolder, tTestFolder, tTestPath
+   put specialFolderPath("temporary") into tFolder
+   put "evalfolderstest" into tTestFolder
+   put tFolder & slash & tTestFolder into tTestPath
+   create folder tTestPath
+   TestDiagnostic the result
+
+   TestAssert "list non-current directory", tTestFolder is among the lines of folders(tFolder)
+
+   local tOldFolder
+   put the defaultFolder into tOldFolder
+   set the defaultFolder to tFolder
+
+   TestAssert "list current directory", tTestFolder is among the lines of folders()
+
+   set the defaultFolder to tOldFolder
+   delete folder tTestPath
+end TestFoldersOfFolder
+
 on TestBugfix12039
    // 12039
    local tOldCwd, tTestFile

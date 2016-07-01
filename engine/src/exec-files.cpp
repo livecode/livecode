@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Files, Directories, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Files, DirectoriesOfDirectory, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Files, Files, 1)
 MC_EXEC_DEFINE_EVAL_METHOD(Files, FilesOfDirectory, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Files, DiskSpace, 1)
@@ -150,7 +151,15 @@ MCExecEnumTypeInfo *kMCFilesEofEnumTypeInfo = &_kMCFilesEofEnumTypeInfo;
 
 //////////
 
-void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
+void MCFilesEvalDirectories(MCExecContext & ctxt,
+                            MCStringRef & r_string)
+{
+	MCFilesEvalDirectoriesOfDirectory(ctxt, nil, r_string);
+}
+
+void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt,
+                                       MCStringRef p_directory,
+                                       MCStringRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
@@ -158,11 +167,14 @@ void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string)
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(nil, false, false, &t_list) && MCListCopyAsString(*t_list, r_string))
-		return;
-
-    // SN-2014-10-07: [[ Bug 13619 ]] 'the folders' should return empty, in case of an error
-    r_string = MCValueRetain(kMCEmptyString);
+	if (MCS_getentries(p_directory, false, false, &t_list))
+	{
+		MCListCopyAsString(*t_list, r_string);
+	}
+	else
+	{
+		MCStringCopy(kMCEmptyString, r_string);
+	}
 }
 
 void MCFilesEvalFiles(MCExecContext & ctxt,

@@ -624,6 +624,63 @@ void MCCommandName::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
         MCExecValueTraits<MCStringRef>::set(r_value, kMCEmptyString);
 }
 
+MCDirectories::~MCDirectories()
+{
+	delete m_folder;
+}
+
+Parse_stat
+MCDirectories::parse(MCScriptPoint & sp, Boolean p_is_the)
+{
+	if (p_is_the)
+	{
+		initpoint(sp);
+	}
+	else
+	{
+		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
+		{
+			MCperror->add(PE_FILES_BADPARAM, sp);
+			return PS_ERROR;
+		}
+	}
+	return PS_NORMAL;
+}
+
+void
+MCDirectories::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
+{
+	if (m_folder) {
+		MCAutoStringRef t_folder;
+		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FILES_BADFOLDER, &t_folder))
+			return;
+
+		r_value.type = kMCExecValueTypeStringRef;
+		MCFilesEvalDirectoriesOfDirectory(ctxt, *t_folder, r_value.stringref_value);
+	}
+	else
+	{
+		r_value.type = kMCExecValueTypeStringRef;
+		MCFilesEvalDirectories(ctxt, r_value.stringref_value);
+	}
+}
+
+void
+MCDirectories::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	if (nil != m_folder)
+	{
+		m_folder -> compile(ctxt);
+		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalDirectoriesOfDirectoryMethodInfo);
+	}
+	else
+	{
+		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalDirectoriesMethodInfo);
+	}
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
 MCDriverNames::~MCDriverNames()
 {
 	delete type;
@@ -709,7 +766,7 @@ MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
 	{
 		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
 		{
-			MCperror->add(PE_FILES_BADPARAM, sp);
+			MCperror->add(PE_FOLDERS_BADPARAM, sp);
 			return PS_ERROR;
 		}
 	}
@@ -721,7 +778,7 @@ MCTheFiles::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
 {
 	if (m_folder) {
 		MCAutoStringRef t_folder;
-		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FILES_BADFOLDER, &t_folder))
+		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FOLDERS_BADFOLDER, &t_folder))
 			return;
 
 		r_value.type = kMCExecValueTypeStringRef;

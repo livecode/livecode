@@ -2725,6 +2725,9 @@ enum Exec_errors
 
 	// {EE-0892} files: error in folder parameter
 	EE_FILES_BADFOLDER,
+
+	// {EE-0893} folders: error in folder parameter
+	EE_FOLDERS_BADFOLDER,
 };
 
 extern const char *MCexecutionerrors;
