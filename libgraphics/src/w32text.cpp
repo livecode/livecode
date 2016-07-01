@@ -89,6 +89,8 @@ static void w32_draw_text_render_transparent_buffer(HDC p_gdi_context, const uni
 	// The text color is the inverse of what the RGB buffer has been set to.
 	SetTextColor(p_gdi_context, p_nearest_white ? RGB(0xff, 0xff, 0xff) : RGB(0x00, 0x00, 0x00));
 
+	SetTextAlign(p_gdi_context, TA_BASELINE | TA_LEFT | TA_NOUPDATECP);
+
 	// Render the text.
     ExtTextOutW(p_gdi_context, 0, 0, p_rtl ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_text_length, NULL);
 
@@ -147,6 +149,8 @@ static void w32_draw_text_render_opaque_buffer(HDC p_gdi_context, const unichar_
 
 	// The text color is the fill color.
 	SetTextColor(p_gdi_context, RGB((p_fill_color >> 16) & 0xFF, (p_fill_color >> 8) & 0xFF, (p_fill_color >> 0) & 0xFF));
+
+	SetTextAlign(p_gdi_context, TA_BASELINE | TA_LEFT | TA_NOUPDATECP);
 
 	// Render the text.
 	ExtTextOutW(p_gdi_context, 0, 0, p_rtl ? ETO_RTLREADING : 0, NULL, (LPCWSTR)p_text, p_text_length, NULL);
@@ -437,7 +441,7 @@ static void __MCGContextDrawPlatformTextScreen(MCGContextRef self, const unichar
 		t_xform . eM21 = t_transform . c;
 		t_xform . eM22 = t_transform . d;
 		t_xform . eDx = t_transform . tx - (t_clipped_bounds . x);
-		t_xform . eDy = t_transform . ty - (t_clipped_bounds . y - t_text_bounds . y);
+		t_xform . eDy = t_transform . ty - (t_clipped_bounds . y);
 		t_success = SetWorldTransform(s_draw_dc, &t_xform);
 	}
 
