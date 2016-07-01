@@ -5,14 +5,18 @@
 # Marcus van Houdt
 
 on revLoadLibrary
-   insert the script of me into back
-   
-   __InitialiseInclusionDependencies
-   __InitialiseBuiltInInclusions
+   if the target is me then
+      insert the script of me into back
+      
+      __InitialiseInclusionDependencies
+      __InitialiseBuiltInInclusions
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of me from back
+   if the target is me then
+      remove the script of me from back
+   end if
 end revUnloadLibrary
 
 -- Some higher level wrappers..
@@ -1797,7 +1801,7 @@ private command __ResolveIncludedExternal pTarget, @xFiles
          set the itemDelimiter to slash
          
          local tResources
-         put item 1 to -2 of tResolved & slash & "resources" into tResources
+         put item 1 to -2 of tExtPath & slash & "resources" into tResources
          if there is a folder tResources then
             local tContents
             put revSBEnumerateFolder(tResources, false) into tContents
@@ -1840,7 +1844,7 @@ command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
             put pBaseFolder & slash before tResolvedFile
          end if
          
-         addToStringList appendToStringList, rFiles
+         appendToStringList, rFiles
       end repeat
    end repeat
 end revSBResolveCopyFilesList

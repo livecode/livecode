@@ -2,14 +2,18 @@ script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
 on revLoadLibrary
-   # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
-   insert the script of stack "revLibUrl" into back
-    // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
-   initialiseCustomProps
+   if the target is me then
+      # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
+      insert the script of stack "revLibUrl" into back
+      // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
+      initialiseCustomProps
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of stack "revLibUrl" from back
+   if the target is me then
+      remove the script of stack "revLibUrl" from back
+   end if
 end revUnloadLibrary
 ---------------------------------------------------------------------
 ##shared locals
@@ -1693,14 +1697,19 @@ command ulDecodeData pUrl
    local tEncoding
    put empty into tEncoding
    
+   local tHeadSize
    --   Only look for the encoding in the head part
    put offset("</head>", laData[pUrl]) into tHeadSize
    
    if tHeadSize is 0 then exit "ulDecodeData"
    
+   local tHead
    put char 1 to tHeadSize of laData[pUrl] into tHead
+   
+   local tCharsetRegex
    put "<meta .*charset=" & quote & "?([a-zA-Z0-9 -]+)" & quote & ".*>" into tCharsetRegex
    
+   local tCharset
    if matchtext(tHead, tCharsetRegex, tCharset) then      
       switch ulNormaliseEncoding(tCharset)
          case "utf8"            
@@ -1715,6 +1724,7 @@ command ulDecodeData pUrl
       end switch
       
       if tEncoding is not empty then
+         local tDecoded
          put uniEncode(laData[pUrl], tEncoding) into tDecoded
          put uniDecode(tDecoded) into laData[pUrl]   
       end if
@@ -1917,15 +1927,27 @@ end ulWhichSocket
 
 private command _AddProxyAuthToRequest pUrl, @pRequest      
    set the itemDel to "|"
+   local tConnectHost
    put item 1 of laConnectHost[pUrl] into tConnectHost
    set the itemDel to comma
+   
+   local tFilter
    put tConnectHost & ",*" into tFilter
+   
+   local tAuthKeys
    put keys(laProxyAuthTokens) into tAuthKeys
    filter tAuthKeys with tFilter
    if tAuthKeys <> empty then
+      local tKey
       put line 1 of tAuthKeys into tKey
+      
+      local tToken
       put item 2 of laProxyAuthTokens[tKey] into tToken
+      
+      local tUseAgain
       put item 1 of laProxyAuthTokens[tKey] into tUseAgain
+      
+      local tHeader
       put "Proxy-Authorization:" && tToken into tHeader
       
       put return & tHeader after pRequest
@@ -1997,7 +2019,11 @@ function ulBuildHttpRequest pUrl
       put  laHost[pUrl]  after line 2 of tRequest
       ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
       ## add port if not default
+      
+      local tPort
       put laUrlFormat[pUrl]["port"] into tPort
+      
+      local tProtocol
       put laUrlFormat[pUrl]["protocol"] into tProtocol
       
       -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support HTTPS URLs over a proxy, so ammend port accordingly.
@@ -4429,24 +4455,28 @@ end ulGetCaller
 
 -- MM-2014-02-27: [[ PAC Support ]]
 private function _extractHost pURL
-    ## http://bob:jones@www.screensteps.com
-    put pURL into theHost
-    set the itemDelimiter to slash
-    put offset("://", theHost) into theCharNo
-    if theCharNo is 0 then
-        put item 1 of pURL into theHost
-    else
-        put item 3 of pURL into theHost
-    end if
-    
-    ## strip username/password
-    put offset("@", theHost) into theCharNo
-    if theCharNo > 0 then delete char 1 to theCharNo of theHost
-    
-    ## clip port
-    put offset(":", theHost) into theCharNo
-    if theCharNo > 0 then delete char theCharNo to -1 of theHost
-    return theHost
+   ## http://bob:jones@www.screensteps.com
+   
+   local tHost
+   put pURL into tHost
+   set the itemDelimiter to slash
+   
+   local tCharNo
+   put offset("://", tHost) into tCharNo
+   if tCharNo is 0 then
+      put item 1 of pURL into tHost
+   else
+      put item 3 of pURL into tHost
+   end if
+   
+   ## strip username/password
+   put offset("@", tHost) into tCharNo
+   if tCharNo > 0 then delete char 1 to tCharNo of tHost
+   
+   ## clip port
+   put offset(":", tHost) into tCharNo
+   if tCharNo > 0 then delete char tCharNo to -1 of tHost
+   return tHost
 end _extractHost
 
 ---------------------------------------------
