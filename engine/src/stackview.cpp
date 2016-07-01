@@ -635,7 +635,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 #ifdef _SERVER
     // We don't have accelerated rendering on Server
     return;
-#endif
+#else
     
 	// If we are turning accelerated rendering off, then destroy the tilecache.
 	if (!p_value)
@@ -663,7 +663,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	t_compositor_type = kMCTileCacheCompositorCoreGraphics;
 	t_tile_size = 32;
 	t_cache_limit = 32 * 1024 * 1024;
-#elif defined(_WINDOWS_DESKTOP) || defined(_LINUX_DESKTOP)
+#elif defined(_WINDOWS_DESKTOP) || defined(_LINUX_DESKTOP) || defined(__EMSCRIPTEN__)
 	t_compositor_type = kMCTileCacheCompositorSoftware;
 	t_tile_size = 32;
 	t_cache_limit = 32 * 1024 * 1024;
@@ -689,6 +689,8 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 		t_tile_size = 64, t_cache_limit = 32 * 1024 * 1024;
 	else
 		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
+#else
+#   error "No tile cache implementation defined for this platform"
 #endif
 	
 	MCTileCacheCreate(t_tile_size, t_cache_limit, m_view_tilecache);
@@ -696,6 +698,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	MCTileCacheSetCompositor(m_view_tilecache, t_compositor_type);
 	
 	view_dirty_all();
+#endif /* !_SERVER */
 }
 
 //////////
