@@ -249,7 +249,7 @@ struct MCScriptBytecodeOp_Invoke
 		t_result_reg = ctxt.GetArgument(1);
 		
 		// The argument list starts at the third argument.
-		uindex_t *t_argument_regs;
+		const uindex_t *t_argument_regs;
 		uindex_t t_argument_count;
 		t_argument_regs = ctxt.GetArgumentList() + 2;
 		t_argument_count = ctxt.GetArgumentCount() - 2;
@@ -306,7 +306,7 @@ private:
 	static void SelectDefinitionFromGroup(MCScriptExecuteContext& ctxt,
 										  MCScriptInstanceRef p_instance,
 										  MCScriptDefinitionGroupDefinition *p_group,
-										  uindex_t *p_arguments,
+										  const uindex_t *p_arguments,
 										  uindex_t p_argument_count,
 										  MCScriptInstanceRef& r_selected_instance,
 										  MCScriptDefinition*& r_selected_definition)
@@ -434,7 +434,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 		t_result_reg = ctxt.GetArgument(1);
 		
 		// The argument list starts at the third argument.
-		uindex_t *t_argument_regs;
+		const uindex_t *t_argument_regs;
 		uindex_t t_argument_count;
 		t_argument_regs = ctxt.GetArgumentList() + 2;
 		t_argument_count = ctxt.GetArgumentCount() - 2;
@@ -476,7 +476,7 @@ private:
 	static void InternalInvoke(MCScriptExecuteContext& ctxt,
 							   MCHandlerRef p_handler,
 							   uindex_t p_result_reg,
-							   uindex_t *p_argument_regs,
+							   const uindex_t *p_argument_regs,
 							   uindex_t p_argument_count)
 	{
 		// An 'internal' handler-ref is nothing more than an instance/definition
@@ -520,7 +520,7 @@ private:
 	static void ExternalInvoke(MCScriptExecuteContext& ctxt,
 							   MCHandlerRef p_handler,
 							   uindex_t p_result_reg,
-							   uindex_t *p_argument_regs,
+							   const uindex_t *p_argument_regs,
 							   uindex_t p_argument_count)
 	{
 		// An 'external' handler-ref could be from anywhere and so we must use

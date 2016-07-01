@@ -113,7 +113,7 @@ public:
 	void PushFrame(MCScriptInstanceRef instance,
 				   MCScriptHandlerDefinition *handler,
 				   uindex_t result_reg,
-				   uindex_t *argument_regs,
+				   const uindex_t *argument_regs,
 				   uindex_t argument_count);
 	
 	// Pop the current activation frame and set the return value.
@@ -127,7 +127,7 @@ public:
 	void InvokeForeign(MCScriptInstanceRef instance,
 					   MCScriptForeignHandlerDefinition *handler,
 					   uindex_t result_reg,
-					   uindex_t *argument_regs,
+					   const uindex_t *argument_regs,
 					   uindex_t argument_count);
 	
 	// Resolve the given definition index to the instance and actual definition
@@ -147,7 +147,7 @@ public:
 	
 	// Raise an 'unable to resolve multi-invoke' error.
 	void ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *group,
-										 uindex_t *arguments,
+										 const uindex_t *arguments,
 										 uindex_t argument_count);
 	
 	// Raise a 'value is not a handler' error.
@@ -157,7 +157,17 @@ public:
 	void ThrowNotAStringValue(MCValueRef actual_value);
 	
 	//////////
-	
+    
+    struct InternalHandlerContext
+    {
+        MCScriptInstanceRef instance;
+        MCScriptCommonHandlerDefinition *definition;
+    };
+
+    // Returns true if the handler-ref is of 'internal' type - i.e. it is
+    // one created by the LCB VM.
+    static bool IsInternalHandler(MCHandlerRef handler);
+    
 private:
 	struct Frame
 	{
@@ -194,15 +204,8 @@ private:
 	uindex_t m_argument_count;
 
 	/////////
-	
-	struct InternalHandlerContext
-	{
-		MCScriptInstanceRef instance;
-		MCScriptCommonHandlerDefinition *definition;
-	};
-	
+		
 	static const MCHandlerCallbacks kInternalHandlerCallbacks;
-	static bool IsInternalHandler(MCHandlerRef handler);
 	static bool InternalHandlerCreate(MCScriptInstanceRef instance,
 									  MCScriptCommonHandlerDefinition *definition,
 									  MCHandlerRef& r_handler);
@@ -373,7 +376,7 @@ inline MCValueRef
 MCScriptExecuteContext::FetchVariable(MCScriptInstanceRef p_instance,
 									  MCScriptVariableDefinition *p_variable_def) const
 {
-
+    return nil;
 }
 
 #if 0
