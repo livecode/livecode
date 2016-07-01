@@ -1,0 +1,1 @@
+# Only save standalone stackfile for current standalone target
