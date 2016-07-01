@@ -510,6 +510,7 @@
 			'src/sysw32network.cpp',
 			'src/sysw32region.cpp',
 			'src/sysw32registry.cpp',
+			'src/mcmanagedpthread.h',
 			
 			# Group "Text"
 			'src/text.h',
