@@ -606,8 +606,8 @@ MCGFloat __MCGContextMeasurePlatformTextScreen(MCGContextRef self, const unichar
 	{
 		XFORM t_xform;
 		t_xform . eM11 = p_transform . a;
-		t_xform . eM12 = 0;
-		t_xform . eM21 = 0;
+		t_xform . eM12 = p_transform . b;
+		t_xform . eM21 = p_transform . c;
 		t_xform . eM22 = p_transform . d;
 		t_xform . eDx = 0;
 		t_xform . eDy = 0;
