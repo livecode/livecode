@@ -693,6 +693,63 @@ void MCExists::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndExpression(ctxt);
 }
 
+MCTheFiles::~MCTheFiles()
+{
+	delete m_folder;
+}
+
+Parse_stat
+MCTheFiles::parse(MCScriptPoint & sp, Boolean p_is_the)
+{
+	if (p_is_the)
+	{
+		initpoint(sp);
+	}
+	else
+	{
+		if (PS_NORMAL != get0or1param(sp, &m_folder, p_is_the))
+		{
+			MCperror->add(PE_FILES_BADPARAM, sp);
+			return PS_ERROR;
+		}
+	}
+	return PS_NORMAL;
+}
+
+void
+MCTheFiles::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
+{
+	if (m_folder) {
+		MCAutoStringRef t_folder;
+		if (!ctxt.EvalExprAsStringRef(m_folder, EE_FILES_BADFOLDER, &t_folder))
+			return;
+
+		r_value.type = kMCExecValueTypeStringRef;
+		MCFilesEvalFilesOfDirectory(ctxt, *t_folder, r_value.stringref_value);
+	}
+	else
+	{
+		r_value.type = kMCExecValueTypeStringRef;
+		MCFilesEvalFiles(ctxt, r_value.stringref_value);
+	}
+}
+
+void
+MCTheFiles::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	if (nil != m_folder)
+	{
+		m_folder -> compile(ctxt);
+		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalFilesOfDirectoryMethodInfo);
+	}
+	else
+	{
+		MCSyntaxFactoryEvalMethod(ctxt, kMCFilesEvalFilesMethodInfo);
+	}
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
 MCFontNames::~MCFontNames()
 {
 	delete type;

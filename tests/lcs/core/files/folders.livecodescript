@@ -34,6 +34,26 @@ on TestFolderInListing
    
 end TestFolderInListing
 
+on TestFilesOfFolder
+   local tFolder, tTempContents, tTestFile, tTestPath
+   put specialFolderPath("temporary") into tFolder
+
+   put "evalfilestest.txt" into tTestFile
+   put tFolder & slash & tTestFile into tTestPath
+   put "some text" into url ("file:" & tTestPath)
+
+   TestAssert "list non-current directory", tTestFile is among the lines of files(tFolder)
+
+   local tOldFolder
+   put the defaultFolder into tOldFolder
+   set the defaultFolder to tFolder
+
+   TestAssert "list current directory", tTestFile is among the lines of files()
+
+   set the defaultFolder to tOldFolder
+   delete file tTestPath
+end TestFilesOfFolder
+
 on TestBugfix12039
    // 12039
    local tOldCwd, tTestFile

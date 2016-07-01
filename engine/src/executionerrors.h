@@ -2722,6 +2722,9 @@ enum Exec_errors
     
     // {EE-0891} vectordot: arrays are not key-wise compatible
     EE_VECTORDOT_MISMATCH,
+
+	// {EE-0892} files: error in folder parameter
+	EE_FILES_BADFOLDER,
 };
 
 extern const char *MCexecutionerrors;

@@ -1768,6 +1768,9 @@ enum Parse_errors
     
     // {PE-0573} return: form not allowed in handler type
     PE_RETURN_BADFOR,
+
+	// {PE-0574} files: bad folder expression
+	PE_FILES_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

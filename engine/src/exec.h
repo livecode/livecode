@@ -4007,6 +4007,7 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalFilesMethodInfo;
+extern MCExecMethodInfo *kMCFilesEvalFilesOfDirectoryMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalDiskSpaceMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalDriverNamesMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalDrivesMethodInfo;
@@ -4101,6 +4102,7 @@ extern MCExecMethodInfo *kMCFilesGetDetailedFoldersMethodInfo;
 
 void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string);
 void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string);
+void MCFilesEvalFilesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
 void MCFilesEvalDiskSpace(MCExecContext& ctxt, real64_t& r_result);
 void MCFilesEvalDriverNames(MCExecContext& ctxt, MCStringRef& r_string);
 void MCFilesEvalDrives(MCExecContext& ctxt, MCStringRef& r_string);
