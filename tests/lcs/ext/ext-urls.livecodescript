@@ -53,13 +53,6 @@ on TestTSNetURL
    local tVersion
    put builderTSNetVersion() into tVersion
    
-   local tTestVersion
-   put tVersion into tTestVersion
-   replace "-" with comma in tTestVersion
-   put ",0,0,0,0" after tTestVersion
-   convert tTestVersion to seconds
-   TestAssert "tsNet version is a date", the result is empty
-   
    local tURL
    put builderTSNetUrl(tVersion) into tURL
    
