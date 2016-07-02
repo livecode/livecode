@@ -836,6 +836,11 @@ public:
 	{
 		m_ptr = nil;
 	}
+    
+    MCAutoPointer(T *p_ptr)
+        : m_ptr(p_ptr)
+    {
+    }
 
 	~MCAutoPointer(void)
 	{
