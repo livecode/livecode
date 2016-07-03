@@ -376,7 +376,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	family = bref.family;
     
     // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
-    m_icon_gravity = kMCGravityNone;
+    m_icon_gravity = bref.m_icon_gravity;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     m_animate_posted = false;
