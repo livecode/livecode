@@ -515,6 +515,9 @@ void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
     {
         // Our return value is empty, and 'the result' remains as it is.
         MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
+        
+        // Make sure we reset the 'return mode' to default.
+        MCresultmode = kMCExecResultModeReturn;
         return;
     }
     
