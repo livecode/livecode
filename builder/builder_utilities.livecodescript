@@ -1,6 +1,6 @@
 ﻿script "BuilderUtilities"
 constant kMergExtVersion = "2016-6-24"
-constant kTSNetVersion = "2016-06-21"
+constant kTSNetVersion = "1.2"
 
 local sEngineDir
 local sWorkDir
@@ -604,23 +604,23 @@ end builderMergExtUnpack
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function builderTSNetUrl pTSNetVersion
-   return "https://downloads.livecode.com/tsNet/tsNet_" & pTSNetVersion & ".zip"
+function builderTSNetUrl pTSNetVersion, pEdition
+   return "https://downloads.livecode.com/tsNet/tsNet_" & pEdition & "_" & pTSNetVersion & ".zip"
 end builderTSNetUrl
 
-private function builderTSNetDownloadedFilePath pTSNetVersion
-   return sWorkDir & "/ext/downloads/tsNet_" & pTSNetVersion & ".zip"
+private function builderTSNetDownloadedFilePath pTSNetVersion, pEdition
+   return sWorkDir & "/ext/downloads/tsNet_" & pEdition & "_" & pTSNetVersion & ".zip"
 end builderTSNetDownloadedFilePath
 
-private command builderTSNetUnpack pTSNetVersion
+private command builderTSNetUnpack pTSNetVersion, pEdition
    local tFolder
    put builderUnpackFolder() & slash & "Ext" into tFolder
    
    local tZipFile
-   put builderTSNetDownloadedFilePath(pTSNetVersion) into tZipFile
+   put builderTSNetDownloadedFilePath(pTSNetVersion, pEdition) into tZipFile
    
    local tURL
-   put builderTSNetUrl(pTSNetVersion) into tURL
+   put builderTSNetUrl(pTSNetVersion, pEdition) into tURL
    
    builderEnsureZip tZipFile, tURL
    
@@ -638,11 +638,13 @@ command builderExtUnpack pEdition
       get shell(merge("rm -r '[[tFolder]]'"))
    end if
    
+   local tEdition
+   put toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition) into tEdition
    -- Ensure that the MergExt bundle is downloaded and unpacked
-   builderMergExtUnpack builderMergExtVersion(), (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
+   builderMergExtUnpack builderMergExtVersion(), tEdition
    
    if pEdition is not "community" then
       -- Ensure that the TSNet bundle is downloaded and unpacked
-      builderTSNetUnpack builderTSNetVersion()
+      builderTSNetUnpack builderTSNetVersion(), tEdition
    end if
 end builderExtUnpack
