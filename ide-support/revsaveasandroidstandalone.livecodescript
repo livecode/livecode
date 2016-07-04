@@ -274,9 +274,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put return after tExternals
       end if
       set the itemDelimiter to "."
-      repeat for each line tFile in tFiles
-         revSBResolveIncludedExternal "android", tFile
-         
+      
+      local tResolvedFiles
+      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFiles
+      
+      repeat for each line tFile in tResolvedFiles
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
