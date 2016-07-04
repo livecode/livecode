@@ -405,7 +405,8 @@ void MCComref::exec_ctxt(MCExecContext& ctxt)
     {
         // Set 'it' to empty
         ctxt.SetItToEmpty();
-        // Leave the result as is
+        // Leave the result as is but make sure we reset the 'return mode' to default.
+        MCresultmode = kMCExecResultModeReturn;
     }
 }
 
