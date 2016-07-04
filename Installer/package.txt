@@ -367,6 +367,9 @@ component Documentation
 		rfolder "ide:Documentation/html_viewer/fonts"
 		rfolder "ide:Documentation/html_viewer/js"
 
+	into [[ToolsFolder]]/Documentation/html_viewer/resources place
+		rfolder "ide:Documentation/html_viewer/resources/media"
+
 	into [[ToolsFolder]]/Documentation/html_viewer/resources/data place
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/api"
 		rfolder "ide:Documentation/html_viewer/resources/data/[[TargetEdition]]/guide"
@@ -743,6 +746,7 @@ component Externals.CEF.Linux
 		file linux-[[TargetArchitecture]]:CEF/cef.pak
 		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
 		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
+		file linux-[[TargetArchitecture]]:CEF/cef_extensions.pak
 		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
 		file linux-[[TargetArchitecture]]:CEF/natives_blob.bin
 		file linux-[[TargetArchitecture]]:CEF/snapshot_blob.bin
@@ -770,6 +774,7 @@ component Externals.CEF.Windows
 		file windows:CEF/cef.pak
 		file windows:CEF/cef_100_percent.pak
 		file windows:CEF/cef_200_percent.pak
+		file windows:CEF/cef_extensions.pak
 		file windows:CEF/icudtl.dat
 		file windows:CEF/natives_blob.bin
 		file windows:CEF/snapshot_blob.bin

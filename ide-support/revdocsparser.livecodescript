@@ -1074,6 +1074,7 @@ private command __nameToKeyAndType pName, @rKey, @rType
       case "Description"
       case "Changes"
       case "Introduced"
+      case "Deprecated"
          put "standard" into rType
          break
       case "Example"
@@ -1382,7 +1383,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["display name"] into tAssociationsDefault["content"]
+   put tParsedA["name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1535,9 +1536,9 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put 1 into tCurrentLine
    put line tCurrentLine of pData into tNameLine
    add 1 to tCurrentLine
-   if line tCurrentLine of pData begins with "deprecate" then
+   if word 1 to -1 of line tCurrentLine of pData begins with "deprecate" then
+      put token 1 to -1 of word 4 of line tCurrentLine of pData into tDeprecated
       add 1 to tCurrentLine
-      put true into tDeprecated
    end if
    
    put line tCurrentLine of pData into tSyntaxLine
@@ -1612,7 +1613,9 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
    put "syntax" into xDataA[tEntryName]["kind"]
    put pComment into xDataA[tEntryName]["comments"]
-   put tDeprecated is true into xDataA[tEntryName]["deprecated"]
+   if tDeprecated is not empty then
+      put tDeprecated into xDataA[tEntryName]["deprecated"]
+   end if
    put tEntryName into xDataA[tEntryName]["name"]
 end revDocsUpdateModularSyntaxDocBlocks
 
@@ -2261,6 +2264,9 @@ function revDocsFormatLibraryDataAsJSON pID, pLibraryDataA
    # Introduced
    put outputElementIfExists("introduced", pLibraryDataA, 3) after tJSON
    
+   # Deprecated
+   put outputElementIfExists("deprecated", pLibraryDataA, 3) after tJSON
+   
    # OS
    put revDocsItemListToJSONArray(pLibraryDataA, "OS") after tJSON
    
@@ -2591,16 +2597,21 @@ private function groupOrder pOrderA, pGuideDataA, pKey
    local tGroup
    put pGuideDataA[pKey]["metadata"]["group"] into tGroup
    if tGroup is among the keys of pOrderA then
-      return pOrderA[tGroup]
+      return tGroup
    else 
-      return pOrderA[kNoGuideGroup]
+      return kNoGuideGroup
    end if
 end groupOrder
 
 function revDocsUtf8FileContents pFile
    local tContents
    put url ("binfile:" & pFile) into tContents
-   return textDecode(tContents, "utf-8")
+   put textDecode(tContents, "utf-8") into tContents
+   -- Since we are using url(binfile..), we need to convert the 
+   -- line endings of the target file
+   replace CRLF with LF in tContents
+   replace CR with LF in tContents
+   return tContents
 end revDocsUtf8FileContents
 
 constant kGuideOrderFile = "guide-order.yml"
@@ -2647,7 +2658,19 @@ function revDocsOrderedGuideData pGuideFoldersA, pOrderFileLocation
    # Then sort by group order
    local tGroupOrder
    put revDocsGroupOrder(pOrderFileLocation) into tGroupOrder
-   sort tGuides by groupOrder(tGroupOrder, tGuideDataA, each)
+   repeat for each key tGuide in tGuideDataA
+      local tGroup
+      put groupOrder(tGroupOrder, tGuideDataA, tGuide) into tGroup
+      if tGroup is kNoGuideGroup then
+         put "Other" into tGroup
+      else
+         put toUpper(char 1 of tGroup) & char 2 to -1 of tGroup into tGroup
+      end if
+      
+      put tGroup into tGuideDataA[tGuide]["group"]
+   end repeat
+   
+   sort tGuides by tGroupOrder[tGuideDataA[each]["group"]]
    
    local tOrderedGuideDataA
    repeat for each line tGuideFile in tGuides
@@ -2661,6 +2684,7 @@ function revDocsFormatGuideDataAsJSON pGuideDataA
    put tab & escape("name") & ":" & escape(revDocsModifyForURL(pGuideDataA["name"])) & comma & return after tGuideData 
    put tab & escape("display name") & ":" & escape(pGuideDataA["display name"]) & comma & return after tGuideData 
    put tab & escape("location") & ":" & escape(pGuideDataA["location"]) & comma & return after tGuideData
+   put tab & escape("group") & ":" & escape(pGuideDataA["group"]) & comma & return after tGuideData
    put tab & escape("data") & ":" & escape(pGuideDataA["data"], true)  after tGuideData
    return tGuideData
 end revDocsFormatGuideDataAsJSON

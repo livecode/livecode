@@ -8,6 +8,8 @@ Summary: Displays the <QuickTime> special effects <dialog box>.
 
 Introduced: 1.1
 
+Deprecated: 8.1
+
 OS: mac
 
 Platforms: desktop

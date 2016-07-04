@@ -1871,6 +1871,20 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
+command revSBUpdateSettingsForWidgets pStack, @xSettings
+   local tExtensions
+   put revSBListWidgetsInUse(pStack) into tExtensions
+   if tExtensions is empty then
+      exit revSBUpdateSettingsForWidgets
+   end if
+   
+   if xSettings["extensions"] is not empty then
+      put return after xSettings["extensions"]
+   end if
+   
+   put tExtensions after xSettings["extensions"] 
+end revSBUpdateSettingsForWidgets
+
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
    
@@ -1879,14 +1893,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    # AL-2015-04-12: [[ Standalone Extensions ]] Add chosen extensions to the standalone inclusions
    # AL-2015-07-21: [[ Standalone Extensions ]] Automatically include dependecies, and load in order
-   local tExtensions
-   put revSBListWidgetsInUse(pStack) into tExtensions
-   if tExtensions is not empty then
-      put return after tExtensions
-   end if
-   put pStandaloneSettings["extensions"] after tExtensions
-   
-   repeat for each line tExtension in revIDEExtensionsOrderByDependency(tExtensions)
+   repeat for each line tExtension in revIDEExtensionsOrderByDependency(pStandaloneSettings["extensions"])
       local tExtensionFile
       put revIDEExtensionModuleFile(tExtension) into tExtensionFile
       appendToStringList tExtensionFile, tModules

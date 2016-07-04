@@ -1,5 +1,5 @@
 ﻿script "BuilderUtilities"
-constant kMergExtVersion = "2016-6-9"
+constant kMergExtVersion = "2016-6-24"
 constant kTSNetVersion = "2016-06-21"
 
 local sEngineDir

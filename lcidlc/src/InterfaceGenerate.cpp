@@ -163,6 +163,8 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
 class TypeMapper
 {
 public:
+	virtual ~TypeMapper() {};
+
 	virtual const char *GetTypedef(ParameterType mode) = 0;
 	
 	virtual void Initialize(CoderRef coder, ParameterType mode, const char *name) = 0;

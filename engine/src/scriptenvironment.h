@@ -22,6 +22,8 @@ typedef char *(*MCScriptEnvironmentCallback)(const char* const* p_arguments, uns
 class MCScriptEnvironment
 {
 public:
+	virtual ~MCScriptEnvironment() {}
+
 	virtual void Retain(void) = 0;
 	virtual void Release(void) = 0;
 

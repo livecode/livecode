@@ -8,6 +8,8 @@ Summary: Displays the <QuickTime> sound-recording settings <dialog box>.
 
 Introduced: 2.0
 
+Deprecated: 8.1
+
 OS: mac
 
 Platforms: desktop

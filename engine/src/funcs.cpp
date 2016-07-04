@@ -2704,7 +2704,7 @@ void MCSetResource::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     if (!ctxt . EvalExprAsStringRef(value, EE_RESOURCES_BADPARAM, &t_value))
         return;
     
-    if (!MCStringGetLength(*t_id) > 0 && !MCStringGetLength(*t_name) > 0)
+    if (MCStringIsEmpty(*t_id) || MCStringIsEmpty(*t_name))
     {
         ctxt . LegacyThrow(EE_RESOURCES_BADPARAM);
         return;

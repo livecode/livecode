@@ -177,9 +177,6 @@ class LibBrowserWebView extends WebView
 			{
 				//Log.i(TAG, "onPageStarted() - " + url);
 				
-				if (m_js_handler_list != null)
-					addJSHandlers(m_js_handler_list);
-					
 				//doStartedLoading(toAPKPath(url));
 				doStartedLoading(url);
 				wakeEngineThread();
@@ -188,6 +185,11 @@ class LibBrowserWebView extends WebView
 			public void onPageFinished(WebView view, String url)
 			{
 				//Log.i(TAG, "onPageFinished() - " + url);
+				
+				// Install jshandlers after page has loaded (before doesn't work!)
+				if (m_js_handler_list != null)
+					addJSHandlers(m_js_handler_list);
+				
 				//doFinishedLoading(toAPKPath(url));
 				doFinishedLoading(url);
 				wakeEngineThread();

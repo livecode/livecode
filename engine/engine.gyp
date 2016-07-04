@@ -22,8 +22,78 @@
 	'targets':
 	[
 		{
+			'target_name': 'update_liburl_script',
+			'type': 'none',
+			
+			'variables':
+			{
+				'conditions':
+				[
+					[
+						'host_os == "linux"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community',
+						},
+					],
+					[
+						'host_os == "mac"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community',
+						},
+					],
+					[
+						'host_os == "win"',
+						{
+							'engine': '<(PRODUCT_DIR)/server-community.exe',
+						},
+					],
+				],
+			},
+			
+			'dependencies':
+			[
+				# Requires a working LiveCode engine
+				'server',
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'update_liburl',
+					'message': 'Updating environment stack liburl script',
+					
+					'inputs':
+					[
+						'src/Environment.rev',
+						'../ide-support/revliburl.livecodescript',
+						'../util/update-liburl.livecodescript',
+					],
+					
+					'outputs':
+					[
+						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
+					],
+					
+					'action':
+					[
+						'<(engine)',
+						'../util/update-liburl.livecodescript',
+						'src/Environment.rev',
+						'../ide-support/revliburl.livecodescript',
+						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
+					],
+				},
+			],
+		},
+		
+		{
 			'target_name': 'encode_environment_stack',
 			'type': 'none',
+			
+			'dependencies':
+			[
+				'update_liburl_script',
+			],
 			
 			'actions':
 			[
@@ -32,7 +102,7 @@
 					'inputs':
 					[
 						'../util/compress_data.pl',
-						'src/Environment.rev',
+						'<(SHARED_INTERMEDIATE_DIR)/src/Environment_LibURL.rev',
 					],
 					'outputs':
 					[

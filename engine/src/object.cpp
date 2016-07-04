@@ -874,8 +874,6 @@ Boolean MCObject::del(bool p_check_flag)
         m_is_parent_script = false;
     }
     
-    MCModeObjectDeleted(this);
-    
     // SN-2015-06-04: [[ Bug 14642 ]] These two blocks have been moved from
     //  MCObject::scheduledelete, since a deleted object is no longer something
     //  we want to listen to. In case we undo the deletion, it will be added
@@ -5333,7 +5331,7 @@ void MCObjectProxy::Release()
 {
     // Sanity check to prevent over-releases (which implies a bug in the Handle
     // RAII class) as there shouldn't be another way to get a reference.
-    MCAssert(m_refcount >= 0);
+    MCAssert(m_refcount > 0);
     
     if (--m_refcount <= 0)
 	{

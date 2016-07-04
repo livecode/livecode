@@ -886,9 +886,9 @@ bool MCProperListIsHomogeneous(MCProperListRef self, MCValueTypeCode& r_type)
         t_contents = self -> contents;
     
     MCValueTypeCode t_type;
-    t_type = MCValueGetTypeCode(self -> list[0]);
+    t_type = MCValueGetTypeCode(t_contents -> list[0]);
     
-    if (MCProperListIsListOfType(self, t_type))
+    if (MCProperListIsListOfType(t_contents, t_type))
     {
         r_type = t_type;
         return true;

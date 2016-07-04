@@ -379,9 +379,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 /* UNCHECKED */ MCStringMapTrueWordIndices(*t_string, kMCBasicLocale, t_range, t_cu_range);
                 
             r_start = t_offset + t_cu_range.offset;
-            r_end = MCU_min(t_offset + t_cu_range.offset + t_cu_range.length, t_length);
-            //r_start = p_first;
-            //r_end = p_first + p_count;
+            r_end = t_offset + t_cu_range.offset + t_cu_range.length;
         }
             break;
             
@@ -475,7 +473,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 MCStringMapIndices(*t_string, p_chunk_type == CT_CHARACTER ? kMCCharChunkTypeGrapheme : kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
         
                 r_start = t_offset + t_cu_range.offset;
-                r_end = MCU_min(t_offset + t_cu_range.offset + t_cu_range.length, t_length);
+                r_end = t_offset + t_cu_range.offset + t_cu_range.length;
             }
             break;
         case CT_CODEUNIT:
@@ -483,21 +481,17 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             if (p_include_chars)
             {
                 r_start = p_first + t_offset;
-                r_end = MCU_min(p_first + t_offset + p_count, t_length);
+                r_end = p_first + t_offset + p_count;
             }
             break;
         default:
             MCAssert(false);
     }
     
-    // SN-2014-04-07 [[ CombiningChars ]] The indices are already returned in codeunit, not codepoints
-    
-    // for line, paragraph, item, word and token, start and end are codepoint indices, so map them back to codeunits.
-//    MCRange t_cp_range, t_cu_range;
-//    t_cp_range = MCRangeMake(r_start, r_end - r_start);
-//    MCStringMapIndices(p_string, kMCCharChunkTypeCodepoint, t_cp_range, t_cu_range);
-//    r_start = t_cu_range . offset;
-//    r_end = t_cu_range . offset + t_cu_range . length;
+    // Ensure the indices are in range
+    MCAssert(r_start >= 0 && r_end >= 0);
+    r_start = MCU_min(r_start, integer_t(t_length));
+    r_end = MCU_min(r_end, integer_t(t_length));
 }
 
 void MCStringsMarkTextChunk(MCExecContext& ctxt, MCStringRef p_string, Chunk_term p_chunk_type, integer_t p_first, integer_t p_count, integer_t& r_start, integer_t& r_end, bool p_whole_chunk, bool p_further_chunks, bool p_include_chars, integer_t& r_add)

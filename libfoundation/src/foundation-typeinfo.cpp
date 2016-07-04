@@ -704,14 +704,14 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
     
     self -> flags |= kMCValueTypeCodeRecord;
 
-	for (uindex_t i = 0; i < p_field_count; ++i)
+	for (index_t i = 0; i < p_field_count; ++i)
 	{
 		__MCAssertIsName(p_fields[i].name);
 		__MCAssertIsTypeInfo(p_fields[i].type);
 		/* Verify that the field names are all caselessly distinct.
 		 * N.b. O(N^2) algorithm is inefficient, but will only be run
 		 * in debug builds and will only happen once per type. */
-		for (uindex_t j = 0; j < i; ++j)
+		for (index_t j = 0; j < i; ++j)
 		{
 			MCAssert(!MCNameIsEqualTo(p_fields[i] . name, p_fields[j] . name));
 		}
@@ -857,7 +857,7 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
     if (p_is_foreign)
         self -> flags |= kMCTypeInfoFlagHandlerIsForeign;
 
-    for (uindex_t i = 0; i < p_field_count; ++i)
+    for (index_t i = 0; i < p_field_count; ++i)
     {
 	    __MCAssertIsTypeInfo(p_fields[i].type);
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
