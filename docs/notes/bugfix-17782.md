@@ -1,0 +1,1 @@
+# Fix incorrect measurement and placement of rotated text on Windows
