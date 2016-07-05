@@ -18,21 +18,34 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 on TestInterface92
-   
    create stack "Test"
    set the defaultstack to "Test"
-   
+
    create button "SelTest"
-   
+
    set the style of button "SelTest" to "menu"
-   
+
    set the menuMode of button "SelTest" to "Option"
-   
+
    set the text of button "SelTest" to "bar" & CR & "foo"
-   
+
    select line 2 of button "SelTest"
-   
+
    TestAssert "test", the label of button "SelTest" is "foo"
 end TestInterface92
 
 // Test all button-specific properties.
+
+on TestIconGravity
+   create stack "Test"
+   set the defaultStack to "Test"
+
+   set the iconGravity of the templateButton to "top"
+   create button "TestButton"
+   TestAssert "create button from template preserves iconGravity", \
+                  the iconGravity of button "TestButton" is "top"
+
+   clone button "TestButton" as "TestButtonClone"
+   TestAssert "clone button preserves iconGravity", \
+                  the iconGravity of button "TestButtonClone" is "top"
+end TestIconGravity
