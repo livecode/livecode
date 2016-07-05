@@ -702,6 +702,80 @@ function revSBTargetToPlatform pTarget
    end if
 end revSBTargetToPlatform
 
+-- item 1 of the architectures should be the default architecture
+constant kWindowsArchitectures = "x86-32"
+constant kMacOSXArchitectures = "x86-32,x86-64"
+constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
+constant kAndroidArchitectures =  "armv6"
+constant kiOSArchitectures =  "armv7,arm64"
+constant kEmscriptenArchitectures =  "javascript"
+
+function revSBPlatformArchitectures pPlatform
+   switch pPlatform
+      case "Windows"
+         return kWindowsArchitectures
+      case "MacOSX"
+         return kMacOSXArchitectures
+      case "Linux"
+         return kLinuxArchitectures
+      case "Android"
+         return kAndroidArchitectures
+      case "iOS"
+         return kiOSArchitectures
+      case "Emscripten"
+         return kEmscriptenArchitectures
+      default
+         return empty
+   end switch
+end revSBPlatformArchitectures
+
+private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
+   local tArchitectures
+   put revSBPlatformArchitectures(pPlatform) into tArchitectures
+   
+   local tFoundArchitecture
+   repeat for each item tArchitecture in tArchitectures
+      if xName ends with tArchitecture or \
+            tArchitecture is "x86-32" and xName ends with "x86" or \
+            tArchitecture is "x86-64" and xName ends with "x64" then
+         put tArchitecture into tFoundArchitecture 
+         set the itemDelimiter to "-"
+         if the number of items of xName > 1 then
+            delete item -(the number of items of tFoundArchitecture) to -1 of xName
+         else
+            set the itemDelimiter to "_"
+            if the number of items of xName > 1 then
+               delete item -(the number of items of tFoundArchitecture) to -1 of xName
+            end if
+         end if
+         set the itemDelimiter to comma
+      end if
+   end repeat
+   
+   if tFoundArchitecture is empty then
+      put item 1 of tArchitectures into tFoundArchitecture
+   end if
+   
+   put tFoundArchitecture into rArchitecture
+end __ExternalArchitecture
+
+private function __TargetArchitecture pTarget
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   local tArchitectures
+   put revSBPlatformArchitectures(tPlatform) into tArchitectures
+   
+   local tArchitecture
+   repeat for each item tArchitecture in tArchitectures
+      if pTarget ends with tArchitecture then
+         return tArchitecture
+      end if
+   end repeat
+   
+   return item 1 of tArchitectures
+end __TargetArchitecture
+
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
 constant kDefaultDocumentExtension   = ""
@@ -1430,7 +1504,18 @@ function revSBAdditionalExternalsList pPlatform
          set the itemdelimiter to "."
          set the linedelimiter to slash
          repeat for each element tExtPath in tRawList
-            put tExtPath into sExternalsLocationA[pPlatform][item 1 of line -1 of tExtPath]
+            local tExtension, tExternalName
+            put item 2 of line -1 of tExtPath into tExtension
+            put item 1 of line -1 of tExtPath into tExternalName
+            
+            local tArchitecture
+            if pPlatform is among the items of kAdditionalTargets then
+               put pPlatform into tArchitecture
+            else
+             __ExternalArchitecture pPlatform, tExternalName, tArchitecture
+           end if
+            
+            put tExtPath into sExternalsLocationA[pPlatform][tExternalName][tArchitecture]
          end repeat
       end repeat
    end if
@@ -1439,12 +1524,22 @@ end revSBAdditionalExternalsList
 
 -- Instead of resolving the path to an included external each time
 -- fetch the stored path from a script local array
-function revSBGetExternalPath pPlatform, pName
-   if sExternalsLocationA is empty then
-      get revSBExternalsList(pPlatform)
+function revSBGetExternalPath pTarget, pName
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   if sExternalsLocationA[tPlatform] is empty then
+      get revSBExternalsList(tPlatform)
    end if
    
-   return sExternalsLocationA[pPlatform][pName]
+   local tArchitecture
+   if tPlatform is among the items of kAdditionalTargets then
+      put tPlatform into tArchitecture
+   else
+      put __TargetArchitecture(pTarget) into tArchitecture
+   end if
+   
+   return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBGetExternalPath
 
 -- Ensure the name used for platforms is consistent
@@ -1778,9 +1873,7 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
 end revSBConvertSettingsForPlatform
 
 function revSBIncludedExternalPath pTarget, pName
-   local tPlatform
-   put revSBTargetToPlatform(pTarget) into tPlatform
-   return revSBGetExternalPath(tPlatform, pName)
+  return revSBGetExternalPath(pTarget, pName)
 end revSBIncludedExternalPath
 
 command revSBResolveIncludedExternal pTarget, @xFile
