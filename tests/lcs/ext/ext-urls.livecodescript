@@ -40,6 +40,7 @@ on TestMergExtURL
    convert tTestVersion to seconds
    TestAssert "mergExt version is a date", the result is empty
    
+   local tEdition
    repeat for each word tEdition in "Community Indy Business"
       local tURL
       put builderMergExtUrl(tVersion,tEdition) into tURL
@@ -53,11 +54,14 @@ on TestTSNetURL
    local tVersion
    put builderTSNetVersion() into tVersion
    
-   local tURL
-   put builderTSNetUrl(tVersion) into tURL
-   
-   get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
-   TestAssert "tsNet url is valid", it is 200
+   local tEdition
+   repeat for each word tEdition in "Indy Business"
+      local tURL
+      put builderTSNetUrl(tVersion, tEdition) into tURL
+      
+      get shell("curl  -s -o /dev/null -IL -w" && quote & "%{http_code}" & quote && tURL)
+      TestAssert "tsNet" && tEdition && "url is valid", it is 200
+   end repeat
 end TestTSNetURL
 
 
