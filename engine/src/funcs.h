@@ -592,12 +592,16 @@ public:
     virtual ~MCDecompress(){}
 };
 
-class MCDirectories : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalDirectories>
+class MCDirectories : public MCFunction
 {
 public:
-	// virtual Exec_stat eval(MCExecPoint &);
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalDirectoriesMethodInfo; }
-
+	MCDirectories() : m_folder(nil) {}
+	virtual ~MCDirectories();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean p_is_the);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+	virtual void compile(MCSyntaxFactoryRef);
+private:
+	MCExpression *m_folder;
 };
 
 class MCDiskSpace : public MCConstantFunctionCtxt<double, MCFilesEvalDiskSpace>
@@ -761,12 +765,16 @@ public:
     virtual ~MCExtents(){}
 };
 
-class MCTheFiles : public MCConstantFunctionCtxt<MCStringRef, MCFilesEvalFiles>
+class MCTheFiles : public MCFunction
 {
 public:
-	// virtual Exec_stat eval(MCExecPoint &);
-	virtual MCExecMethodInfo *getmethodinfo(void) const { return kMCFilesEvalFilesMethodInfo; }
-
+	MCTheFiles() : m_folder(nil) {}
+	virtual ~MCTheFiles();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean p_is_the);
+	virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+	virtual void compile(MCSyntaxFactoryRef);
+private:
+	MCExpression *m_folder;
 };
 
 class MCFlushEvents : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCInterfaceEvalFlushEvents, EE_FLUSHEVENTS_BADTYPE, PE_FLUSHEVENTS_BADPARAM, kMCInterfaceEvalFlushEventsMethodInfo>
