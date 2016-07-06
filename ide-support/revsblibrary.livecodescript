@@ -729,26 +729,44 @@ function revSBPlatformArchitectures pPlatform
    end switch
 end revSBPlatformArchitectures
 
+private function __ArchitectureSynonyms pArchitecture
+   switch pArchitecture
+      case "x86-32"
+         return pArchitecture,"x86,i386"
+      case "x86-64"
+         return pArchitecture,"x64"
+   end switch
+   
+   return pArchitecture
+end __ArchitectureSynonyms
+
 private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
    local tArchitectures
    put revSBPlatformArchitectures(pPlatform) into tArchitectures
    
-   local tFoundArchitecture
+   local tArchitecture,tFoundArchitecture
    repeat for each item tArchitecture in tArchitectures
-      if xName ends with tArchitecture or \
-            tArchitecture is "x86-32" and xName ends with "x86" or \
-            tArchitecture is "x86-64" and xName ends with "x64" then
-         put tArchitecture into tFoundArchitecture 
-         set the itemDelimiter to "-"
-         if the number of items of xName > 1 then
-            delete item -(the number of items of tFoundArchitecture) to -1 of xName
-         else
-            set the itemDelimiter to "_"
+      local tArchitectureIdentifier
+      repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
+         if xName ends with tArchitectureIdentifier then
+            put tArchitecture into tFoundArchitecture 
+            set the itemDelimiter to "-"
             if the number of items of xName > 1 then
-               delete item -(the number of items of tFoundArchitecture) to -1 of xName
+               delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
+            else
+               set the itemDelimiter to "_"
+               if the number of items of xName > 1 then
+                  delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
+               end if
             end if
+            
+            exit repeat
          end if
          set the itemDelimiter to comma
+      end repeat
+      
+      if tFoundArchitecture is not empty then
+         exit repeat
       end if
    end repeat
    
