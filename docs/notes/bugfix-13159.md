@@ -1,1 +1,0 @@
-# Palettes not observing decorations under certain circumstances

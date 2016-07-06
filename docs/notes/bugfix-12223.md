@@ -1,1 +1,0 @@
-# Windows backdrop doesn't cover the full desktop area when displayed on a high-dpi screen.

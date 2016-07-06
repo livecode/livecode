@@ -1,1 +1,0 @@
-# Player: hilite handles do not use fill length of the bar

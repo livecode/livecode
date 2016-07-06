@@ -1,1 +1,0 @@
-# Going to a card forces a stack onscreen

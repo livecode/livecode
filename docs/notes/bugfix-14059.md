@@ -1,1 +1,0 @@
-# The 'format' function does not produce a '0' padded result

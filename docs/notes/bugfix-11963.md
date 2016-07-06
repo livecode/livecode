@@ -1,1 +1,0 @@
-# Dotted border of selection in List control is incorrectly aligned

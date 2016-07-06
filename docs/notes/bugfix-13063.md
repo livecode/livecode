@@ -1,1 +1,0 @@
-#  [[Player]] selection by shift + click Play button delayed start and stop.

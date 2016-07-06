@@ -1,1 +1,0 @@
-#Nested groups can return True in sharedBehavior getter

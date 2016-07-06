@@ -1,1 +1,0 @@
-# Focus border on Windows default button has artefacts. 

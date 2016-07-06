@@ -1,1 +1,0 @@
-#Text - > Align does nothing

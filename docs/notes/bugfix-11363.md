@@ -1,1 +1,0 @@
-# Prevent crash when destroying stack if a popup menu is open

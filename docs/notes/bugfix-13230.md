@@ -1,1 +1,0 @@
-# Polygon markers draw incorrectly

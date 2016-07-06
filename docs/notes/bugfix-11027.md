@@ -1,1 +1,0 @@
-# User Guide entry under Help menu is missing

@@ -1,1 +1,0 @@
-# Setting callbacks in player causes crash

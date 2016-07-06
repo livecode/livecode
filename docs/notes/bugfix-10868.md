@@ -1,1 +1,0 @@
-# Mobile stack saved as iOS retains iOS settings on Windows. As the option is disabled and cannot be unchecked on Windows the standalone builder will disregard this choice on Windows. Selecting another platform to build for will still automatically unselect iOS.

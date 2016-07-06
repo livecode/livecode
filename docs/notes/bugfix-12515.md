@@ -1,1 +1,0 @@
-# crash on clicking linktext (on second click) 

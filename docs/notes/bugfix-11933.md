@@ -1,1 +1,0 @@
-# effective textColor returns empty value for styled text

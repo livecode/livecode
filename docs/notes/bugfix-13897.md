@@ -1,1 +1,0 @@
-# the formattedleft of the clickChunk not working properly in LiveCode 7.0 any more

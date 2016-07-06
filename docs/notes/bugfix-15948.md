@@ -1,1 +1,0 @@
-# Array intersect is completely wrong in LC 7

@@ -1,1 +1,0 @@
-# watchedvariables and breakpoints property parsing too strict

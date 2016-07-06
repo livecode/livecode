@@ -1,1 +1,0 @@
-# Crash while drawing Mac themed controls

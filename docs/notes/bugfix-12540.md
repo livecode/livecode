@@ -1,1 +1,0 @@
-# Clipboarddata should return utf16 data for 'unicode' mode, whilst handling unicode transparently for 'text' mode.

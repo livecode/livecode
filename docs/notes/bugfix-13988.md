@@ -1,1 +1,0 @@
-# put data after or before variable should result in data if variable is empty

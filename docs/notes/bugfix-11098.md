@@ -1,1 +1,0 @@
-# iOS minimum version in standalone builder is 3.1.3 (should be 4.3).
