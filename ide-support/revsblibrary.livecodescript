@@ -708,7 +708,7 @@ constant kMacOSXArchitectures = "x86-32,x86-64"
 constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
 constant kAndroidArchitectures =  "armv6"
 constant kiOSArchitectures =  "armv7,arm64"
-constant kEmscriptenArchitectures =  "javascript"
+constant kEmscriptenArchitectures =  "js"
 
 function revSBPlatformArchitectures pPlatform
    switch pPlatform
