@@ -1814,7 +1814,7 @@ private command __ResolveIncludedExternal pTarget, @xFiles
             end if
             
             if tContents is not empty then
-               put return & tContents after xFiles
+               appendToStringList tContents, xFiles
             end if
          end if
          
@@ -1844,7 +1844,7 @@ command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
             put pBaseFolder & slash before tResolvedFile
          end if
          
-         appendToStringList, rFiles
+         appendToStringList tResolvedFile, rFiles
       end repeat
    end repeat
 end revSBResolveCopyFilesList
