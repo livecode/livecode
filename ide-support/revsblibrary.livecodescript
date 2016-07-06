@@ -1526,12 +1526,14 @@ function revSBAdditionalExternalsList pPlatform
             put item 2 of line -1 of tExtPath into tExtension
             put item 1 of line -1 of tExtPath into tExternalName
             
+            set the itemDelimiter to comma
             local tArchitecture
             if pPlatform is among the items of kAdditionalTargets then
                put pPlatform into tArchitecture
             else
-             __ExternalArchitecture pPlatform, tExternalName, tArchitecture
-           end if
+               __ExternalArchitecture pPlatform, tExternalName, tArchitecture
+            end if
+            set the itemDelimiter to "."
             
             put tExtPath into sExternalsLocationA[pPlatform][tExternalName][tArchitecture]
          end repeat
