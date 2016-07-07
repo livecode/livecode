@@ -1545,26 +1545,6 @@ function revSBAdditionalExternalsList pPlatform
    return the keys of sExternalsLocationA[pPlatform]
 end revSBAdditionalExternalsList
 
--- Instead of resolving the path to an included external each time
--- fetch the stored path from a script local array
-function revSBGetExternalPath pTarget, pName
-   local tPlatform
-   put revSBTargetToPlatform(pTarget) into tPlatform
-   
-   if sExternalsLocationA[tPlatform] is empty then
-      get revSBExternalsList(tPlatform)
-   end if
-   
-   local tArchitecture
-   if tPlatform is among the items of kAdditionalTargets then
-      put tPlatform into tArchitecture
-   else
-      put __TargetArchitecture(pTarget) into tArchitecture
-   end if
-   
-   return sExternalsLocationA[tPlatform][pName][tArchitecture]
-end revSBGetExternalPath
-
 -- Ensure the name used for platforms is consistent
 constant kMacPlatform = "MacOSX"
 constant kWindowsPlatform = "Windows"
@@ -1896,7 +1876,21 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
 end revSBConvertSettingsForPlatform
 
 function revSBIncludedExternalPath pTarget, pName
-  return revSBGetExternalPath(pTarget, pName)
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   if sExternalsLocationA[tPlatform] is empty then
+      get revSBExternalsList(tPlatform)
+   end if
+   
+   local tArchitecture
+   if tPlatform is among the items of kAdditionalTargets then
+      put tPlatform into tArchitecture
+   else
+      put __TargetArchitecture(pTarget) into tArchitecture
+   end if
+   
+   return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
 command revSBResolveIncludedExternal pTarget, @xFile
