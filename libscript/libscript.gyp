@@ -28,6 +28,8 @@
 			'src/script-module.cpp',
 			'src/script-object.cpp',
 			'src/script-package.cpp',
+			'src/script-execute.cpp',
+			'src/script-error.cpp',
 		],
 	},
 	

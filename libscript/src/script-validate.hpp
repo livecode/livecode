@@ -239,6 +239,8 @@ inline void MCScriptValidateContext::CheckAddress(uindex_t p_address)
 		ReportInvalidAddress();
 		return;
 	}
+	
+	// TODO: Validate that p_address is the start of an opcode.
 }
 
 inline void MCScriptValidateContext::CheckRegister(uindex_t p_register)

@@ -288,7 +288,8 @@ bool MCScriptValidateModule(MCScriptModuleRef self)
 			t_state.register_limit = MCHandlerTypeInfoGetParameterCount(t_signature) +
 										t_handler -> local_type_count;
             
-            byte_t *t_bytecode, *t_bytecode_limit;
+			const byte_t *t_bytecode;
+			const byte_t *t_bytecode_limit;
             t_bytecode = self -> bytecode + t_handler -> start_address;
             t_bytecode_limit = self -> bytecode + t_handler -> finish_address;
 			

@@ -205,13 +205,12 @@ struct MCScriptBytecodeOp_Return
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
 	{
-		MCValueRef t_return_value = nil;
-		if (ctxt.GetArgumentCount() == 0)
-			t_return_value = kMCNull;
-		else
-			t_return_value = ctxt.CheckedFetchRegister(ctxt.GetArgument(0));
-		
-		ctxt.PopFrame(t_return_value);
+		// Fetch the return value, this ensures that is it an assigned slot.
+		uindex_t t_return_value_reg = UINDEX_MAX;
+		if (ctxt.GetArgumentCount() != 0)
+			t_return_value_reg = ctxt.GetArgument(0);
+			
+		ctxt.PopFrame(t_return_value_reg);
 	}
 };
 
@@ -364,23 +363,9 @@ private:
 				if (t_arg_type == t_param_type)
 					continue;
 				
-				// Resolve both the source and target types.
-				MCResolvedTypeInfo t_resolved_arg_type, t_resolved_param_type;
-				if (!ctxt.ResolveType(t_arg_type,
-									  t_resolved_arg_type))
-					return;
-				
-				if (!ctxt.ResolveType(t_param_type,
-									  t_resolved_param_type))
-					return;
-				
-				// If the resolved types are the same, then this argument matches.
-				if (t_resolved_arg_type . type == t_resolved_param_type . type)
-					continue;
-				
 				// If the types don't conform, then this method is no good.
-				if (!MCResolvedTypeInfoConforms(t_resolved_arg_type,
-												t_resolved_param_type))
+				if (!MCTypeInfoConforms(t_arg_type,
+										t_param_type))
 				{
 					t_current_score = UINDEX_MAX;
 					break;
@@ -854,6 +839,8 @@ struct MCScriptBytecodeOp_Reset
 	}
 };
 
+//////////
+
 #define MC_SCRIPT_DISPATCH_BYTECODE_OP(Name) \
 	case kMCScriptBytecodeOp##Name: \
 		if (!p_visitor.template Visit<MCScriptBytecodeOp_##Name>(p_arg)) \
@@ -936,3 +923,22 @@ inline void MCScriptBytecodeValidate(MCScriptValidateState& p_state)
 							 MCScriptBytecodeValidate_Impl(),
 							 MCScriptValidateContext(p_state));
 }
+
+class MCScriptBytecodeExecute_Impl
+{
+public:
+	template<typename OpStruct>
+	bool Visit(MCScriptExecuteContext& context) const
+	{
+		OpStruct::Execute(context);
+		return true;
+	}
+};
+
+inline void MCScriptBytecodeExecute(MCScriptExecuteContext& p_context)
+{
+	MCScriptBytecodeDispatch(p_context.GetOperation(),
+							 MCScriptBytecodeExecute_Impl(),
+							 p_context);
+}
+
