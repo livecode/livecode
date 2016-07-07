@@ -1915,21 +1915,19 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    
    repeat for each line tLibrary in pStandaloneSettings["externals"]
       -- check if there are any supporting libraries for the external and add
-      if char 1 of tLibrary is "!" then
-         local tExtPath
-         put revSBIncludedExternalPath(pTarget, char 2 to -1 of tLibrary) into tExtPath
-         if tExtPath is not empty then
-            set the itemDelimiter to slash
-            delete the last item of tExtPath
-            
-            -- only include currently loaded libraries
-            repeat for each key tLibrary in tLoadedLibraries
-               if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
-                  appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
-                  appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
-               end if
-            end repeat
-         end if
+      local tExtPath
+      put revSBIncludedExternalPath(pTarget, tLibrary) into tExtPath
+      if tExtPath is not empty then
+         set the itemDelimiter to slash
+         delete the last item of tExtPath
+         
+         -- only include currently loaded libraries
+         repeat for each key tLibrary in tLoadedLibraries
+            if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
+               appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
+               appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
+            end if
+         end repeat
       end if
    end repeat
    
