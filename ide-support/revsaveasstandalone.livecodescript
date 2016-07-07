@@ -1254,7 +1254,7 @@ private command revCopyResources pStack, pStackFileList, pDirectory
       if tStack is not pStack then 
          close stack tStack
          set the visible of stack tStack to tVisibleA[tStack]
-         put revSaveStackFile(tStack,tSubList,tRelativePath) & return after tCopyFiles
+         put revSaveStackFile(tStack, tSubList, tRelativePath, pDirectory) & return after tCopyFiles
       end if
       add 1 to tCount
    end repeat
@@ -1266,7 +1266,7 @@ private command revCopyResources pStack, pStackFileList, pDirectory
    set the stackFiles of stack pStack to tCopyFiles
    close stack pStack
    set the visible of stack pStack to tVisibleA[pStack]
-   get revSaveStackFile(pStack,tMainStackSubs)
+   get revSaveStackFile(pStack, tMainStackSubs, "", pDirectory)
 end revCopyResources
 
 private command revAddDialogIcons
@@ -1293,7 +1293,7 @@ private command revAddDialogIcons
    end repeat
 end revAddDialogIcons
 
-private function revSaveStackFile pStack, pSubList, pRelativePath
+private function revSaveStackFile pStack, pSubList, pRelativePath, pDirectory
    local tStacksList, tLine, tFileName, tCopyFiles, tStackFileSettingsA, tSave
    revStandaloneProgress "Saving stack files..."
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tStackFileSettingsA
@@ -1306,18 +1306,14 @@ private function revSaveStackFile pStack, pSubList, pRelativePath
       if tStackFileSettingsA["moveSubstacks"] = true then
          set the mainStack of stack tLine to tLine
          --cycle through sDirectoryList and build the files in each directory
-         repeat for each element tPlatformDirs in sPlatformDirectoriesA
-            repeat for each element tDirectory in tPlatformDirs
-               put pRelativePath into tSave
-               if tStackFileSettingsA["substackFolder"] is not "" then
-                  put tStackFileSettingsA["substackFolder"] & "/" after tSave
-               end if
-               
-               put revSaveToFolder(tDirectory & tSave, tLine, tStackFileSettingsA["renameGeneric"]) into tFileName
-               
-               if tLine,tSave & "/" & tFileName is not among the lines of tCopyFiles then put tLine,tSave & "/" & tFileName & return after tCopyFiles
-            end repeat
-         end repeat
+         put pRelativePath into tSave
+         if tStackFileSettingsA["substackFolder"] is not "" then
+            put tStackFileSettingsA["substackFolder"] & "/" after tSave
+         end if
+         
+         put revSaveToFolder(pDirectory & tSave, tLine, tStackFileSettingsA["renameGeneric"]) into tFileName
+         
+         if tLine,tSave & "/" & tFileName is not among the lines of tCopyFiles then put tLine,tSave & "/" & tFileName & return after tCopyFiles
          -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
          set the cantDelete of stack tLine to false
          delete stack tLine
@@ -1337,11 +1333,7 @@ private function revSaveStackFile pStack, pSubList, pRelativePath
    -- OK-2008-03-24 : Bug 6208. The mainstack must be saved after the substacks have 
    -- been saved / deleted, otherwise they remain in the built standalone, causing the wrong
    -- stacks to be used and resulting in the stacks not being saveable.
-   repeat for each element tPlatformDirs in sPlatformDirectoriesA
-      repeat for each element tDirectory in tPlatformDirs
-         put revSaveToFolder(tDirectory & pRelativePath, pStack, false) into tFileName
-      end repeat
-   end repeat
+   put revSaveToFolder(pDirectory & pRelativePath, pStack, false) into tFileName
    
    put pStack,pRelativePath&tFileName & return after tCopyFiles
    if tStackFileSettingsA["moveSubstacks"] is not true then
