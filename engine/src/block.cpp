@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 #define IMAGE_BLOCK_LEADING  2
 static MCRectangle
 MCBlockMakeRectangle(double x, double y,
@@ -181,7 +183,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//   is a font record to read.
 	if (flags & F_FONT)
     {
-		if (version > 1300)
+		if (version > kMCStackFileFormatVersion_1_3)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
@@ -242,7 +244,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
-		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
+		if (version < kMCStackFileFormatVersion_2_0 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
 			//   so load, delete and unset the flag.
@@ -264,7 +266,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (flags & F_HAS_LINK)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
@@ -272,7 +274,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (flags & F_HAS_IMAGE)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
@@ -282,7 +284,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (flags & F_HAS_METADATA)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
@@ -340,7 +342,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	// MW-2012-03-04: [[ StackFile5500 ]] If the block has metadata and 5.5 stackfile
 	//   format has been requested then this is an extended block.
 	bool t_is_ext;
-	if (p_version >= 5500 && getflag(F_HAS_METADATA))
+	if (p_version >= kMCStackFileFormatVersion_5_5 && getflag(F_HAS_METADATA))
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -369,7 +371,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	
     // The "has unicode" flag depends on whether the paragraph is native
 	bool t_is_unicode;
-    if (p_version < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
+    if (p_version < kMCStackFileFormatVersion_7_0 && MCStringIsNative(parent->GetInternalStringRef()))
 	{
 		t_is_unicode = false;
         flags &= ~F_HAS_UNICODE;
@@ -381,7 +383,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	}
 
     // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
-    if (p_version < 7000)
+    if (p_version < kMCStackFileFormatVersion_7_0)
     {
         if (segment && segment != segment -> next())
             flags |= F_HAS_TAB;
@@ -438,11 +440,11 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	//   strings.
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_LINK)
-        if ((stat = IO_write_stringref_new(atts->linktext, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->linktext, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_IMAGE)
-        if ((stat = IO_write_stringref_new(atts->imagesource, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->imagesource, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -451,7 +453,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if (flags & F_HAS_METADATA)
-            if ((stat = IO_write_stringref_new(atts -> metadata, stream, p_version >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(atts -> metadata, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return stat;
 	}
 	
@@ -2073,7 +2075,7 @@ uint32_t measure_stringref(MCStringRef p_string, uint32_t p_version)
     uint32_t t_additional_bytes = 0;
     
 
-    if (p_version < 7000)
+    if (p_version < kMCStackFileFormatVersion_7_0)
         t_encoding = kMCStringEncodingNative;
     else
         t_encoding = kMCStringEncodingUTF8;
@@ -2084,7 +2086,7 @@ uint32_t measure_stringref(MCStringRef p_string, uint32_t p_version)
     uint32_t t_length;
     t_length = MCDataGetLength(*t_data);
     
-    if (p_version < 7000)
+    if (p_version < kMCStackFileFormatVersion_7_0)
     {
         // Full string is written in 5.5 format:
         //  - length is written as a uint2

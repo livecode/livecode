@@ -211,6 +211,7 @@
 			'src/scrolbar.h',
 			'src/sellst.h',
 			'src/stack.h',
+			'src/stackfileformat.h',
 			'src/stacklst.h',
 			'src/styledtext.h',
 			'src/textbuffer.h',

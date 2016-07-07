@@ -57,6 +57,8 @@
 
 #include "native-layer.h"
 
+#include "stackfileformat.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCanvasPush(MCGContextRef gcontext, uintptr_t& r_cookie);
@@ -786,7 +788,7 @@ IO_stat MCWidget::load(IO_handle p_stream, uint32_t p_version)
 IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint32_t p_version)
 {
 	/* If the file format doesn't support widgets, skip the widget */
-	if (p_version < 8000)
+	if (p_version < kMCStackFileFormatVersion_8_0)
 	{
 		return IO_NORMAL;
 	}

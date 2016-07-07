@@ -54,6 +54,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "exec.h"
 
+#include "stackfileformat.h"
+
 uint2 MCGroup::labeloffset = 6;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2529,7 +2531,7 @@ IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 	//   legacy unicode output.
     if (flags & F_LABEL)
 	{
-		if (p_version < 7000)
+		if (p_version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -2622,7 +2624,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 	//   legacy unicode output.
 	if (flags & F_LABEL)
 	{
-		if (version < 7000)
+		if (version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return checkloadstat(stat);
@@ -2826,7 +2828,7 @@ IO_stat MCGroup::load(IO_handle stream, uint32_t version)
 			}
 			break;
 		case OT_GROUPEND:
-			if (version == 1000)
+			if (version == kMCStackFileFormatVersion_1_0)
 			{
 				computecrect();
 				if (rect.x == minrect.x && rect.y == minrect.y

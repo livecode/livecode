@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "graphics_util.h"
 
+#include "stackfileformat.h"
+
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
 #define LICENSED_TIME 1.0
@@ -996,14 +998,14 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t
 		/* If no version was specified, assume that 8.0 format was requested */
 		if (UINT32_MAX == p_version)
 		{
-			p_version = 8000;
+			p_version = kMCStackFileFormatCurrentVersion;
 		}
 
 		/* If the stack doesn't contain widgets, and 8.0 format was requested,
 		 * use 7.0 format. */
-		if (8000 == p_version && !sptr->haswidgets())
+		if (kMCStackFileFormatCurrentVersion == p_version && !sptr->haswidgets())
 		{
-			p_version = 7000;
+			p_version = kMCStackFileFormatVersion_7_0;
 		}
 
         stat = dosavestack(sptr, p_fname, p_version);
@@ -1146,13 +1148,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-    if (p_version >= 8000)
+	if (p_version >= kMCStackFileFormatVersion_8_0)
 		t_header = newheader8000, t_header_size = 8;
-	else if (p_version >= 7000)
+	else if (p_version >= kMCStackFileFormatVersion_7_0)
 		t_header = newheader7000, t_header_size = 8;
-	else if (p_version >= 5500)
+	else if (p_version >= kMCStackFileFormatVersion_5_5)
 		t_header = newheader5500, t_header_size = 8;
-	else if (p_version >= 2700)
+	else if (p_version >= kMCStackFileFormatVersion_2_7)
 		t_header = newheader, t_header_size = 8;
 	else
 		t_header = header, t_header_size = HEADERSIZE;
