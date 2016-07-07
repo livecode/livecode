@@ -702,6 +702,101 @@ function revSBTargetToPlatform pTarget
    end if
 end revSBTargetToPlatform
 
+-- item 1 of the architectures should be the default architecture
+constant kWindowsArchitectures = "x86-32"
+constant kMacOSXArchitectures = "x86-32,x86-64"
+constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
+constant kAndroidArchitectures =  "armv6"
+constant kiOSArchitectures =  "armv7,arm64"
+constant kEmscriptenArchitectures =  "js"
+
+function revSBPlatformArchitectures pPlatform
+   switch pPlatform
+      case "Windows"
+         return kWindowsArchitectures
+      case "MacOSX"
+         return kMacOSXArchitectures
+      case "Linux"
+         return kLinuxArchitectures
+      case "Android"
+         return kAndroidArchitectures
+      case "iOS"
+         return kiOSArchitectures
+      case "Emscripten"
+         return kEmscriptenArchitectures
+      default
+         return empty
+   end switch
+end revSBPlatformArchitectures
+
+private function __ArchitectureSynonyms pArchitecture
+   switch pArchitecture
+      case "x86-32"
+         return pArchitecture,"x86,i386"
+      case "x86-64"
+         return pArchitecture,"x64"
+   end switch
+   
+   return pArchitecture
+end __ArchitectureSynonyms
+
+private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
+   local tArchitectures
+   put revSBPlatformArchitectures(pPlatform) into tArchitectures
+   
+   local tArchitecture,tFoundArchitecture
+   repeat for each item tArchitecture in tArchitectures
+      local tArchitectureIdentifier
+      repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
+         if xName ends with tArchitectureIdentifier then
+            put tArchitecture into tFoundArchitecture 
+            set the itemDelimiter to "-"
+            if the number of items of xName > 1 then
+               delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
+            else
+               set the itemDelimiter to "_"
+               if the number of items of xName > 1 then
+                  delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
+               end if
+            end if
+            set the itemDelimiter to comma
+            
+            exit repeat
+         end if
+      end repeat
+      
+      if tFoundArchitecture is not empty then
+         exit repeat
+      end if
+   end repeat
+   
+   if tFoundArchitecture is empty then
+      put item 1 of tArchitectures into tFoundArchitecture
+   end if
+   
+   put tFoundArchitecture into rArchitecture
+end __ExternalArchitecture
+
+private function __TargetArchitecture pTarget
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   local tArchitectures
+   put revSBPlatformArchitectures(tPlatform) into tArchitectures
+   
+   local tArchitecture
+   repeat for each item tArchitecture in tArchitectures
+      local tArchitectureIdentifier
+      repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
+         if pTarget ends with tArchitectureIdentifier then
+            return tArchitecture
+         end if
+      end repeat
+   end repeat
+   
+   return item 1 of tArchitectures
+end __TargetArchitecture
+
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
 constant kDefaultDocumentExtension   = ""
@@ -1396,6 +1491,17 @@ private function revSBFilterExternalsForDesktop pList, pPlatform
    return pList
 end revSBFilterExternalsForDesktop
 
+function revSBExternalNameFromFile pPlatform, pFile
+   local tName
+   set the itemdel to "."
+   put item 1 of pFile into tName
+   
+   local tArch
+   __ExternalArchitecture pPlatform, tName, tArch
+   
+   return tName
+end revSBExternalNameFromFile
+
 -- This is currently just used for externals that are present in the
 -- 'mergExt' folder in the app bundle or equivalent
 local sExternalsLocationA
@@ -1430,22 +1536,25 @@ function revSBAdditionalExternalsList pPlatform
          set the itemdelimiter to "."
          set the linedelimiter to slash
          repeat for each element tExtPath in tRawList
-            put tExtPath into sExternalsLocationA[pPlatform][item 1 of line -1 of tExtPath]
+            local tExtension, tExternalName
+            put item -1 of line -1 of tExtPath into tExtension
+            put item 1 to -2 of line -1 of tExtPath into tExternalName
+            
+            set the itemDelimiter to comma
+            local tArchitecture
+            if pPlatform is among the items of kAdditionalTargets then
+               put pPlatform into tArchitecture
+            else
+               __ExternalArchitecture pPlatform, tExternalName, tArchitecture
+            end if
+            set the itemDelimiter to "."
+            
+            put tExtPath into sExternalsLocationA[pPlatform][tExternalName][tArchitecture]
          end repeat
       end repeat
    end if
    return the keys of sExternalsLocationA[pPlatform]
 end revSBAdditionalExternalsList
-
--- Instead of resolving the path to an included external each time
--- fetch the stored path from a script local array
-function revSBGetExternalPath pPlatform, pName
-   if sExternalsLocationA is empty then
-      get revSBExternalsList(pPlatform)
-   end if
-   
-   return sExternalsLocationA[pPlatform][pName]
-end revSBGetExternalPath
 
 -- Ensure the name used for platforms is consistent
 constant kMacPlatform = "MacOSX"
@@ -1780,7 +1889,19 @@ end revSBConvertSettingsForPlatform
 function revSBIncludedExternalPath pTarget, pName
    local tPlatform
    put revSBTargetToPlatform(pTarget) into tPlatform
-   return revSBGetExternalPath(tPlatform, pName)
+   
+   if sExternalsLocationA[tPlatform] is empty then
+      get revSBExternalsList(tPlatform)
+   end if
+   
+   local tArchitecture
+   if tPlatform is among the items of kAdditionalTargets then
+      put tPlatform into tArchitecture
+   else
+      put __TargetArchitecture(pTarget) into tArchitecture
+   end if
+   
+   return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
 command revSBResolveIncludedExternal pTarget, @xFile

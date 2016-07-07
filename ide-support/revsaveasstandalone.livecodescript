@@ -2368,9 +2368,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       
       // AL-2015-05-07: [[ Bug 15320 ]] Make sure universal external name is used.
       local tExternal
-      set the itemdel to "."
-      put item 1 of tSourceExternal into tExternal
-      set the itemDel to slash 
+      put revSBExternalNameFromFile(tPlatform, tSourceExternal) into tExternal
+      
       revCopyModule tPlatform, tExternal, tSourceExternal, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote
