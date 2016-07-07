@@ -525,6 +525,12 @@ bool MCImageScaleBitmap(MCImageBitmap *p_src_bitmap, uindex_t p_width, uindex_t 
 	if (!MCImageBitmapCreate(p_width, p_height, r_scaled))
 		return false;
 
+	/* If the target bitmap has 0 pixels, then no scaling is required. */
+	if (0 == p_width || 0 == p_height)
+	{
+		return true;
+	}
+
 	uindex_t owidth = p_src_bitmap->width;
 	uindex_t oheight = p_src_bitmap->height;
 
