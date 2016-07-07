@@ -759,10 +759,10 @@ private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
                   delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
                end if
             end if
+            set the itemDelimiter to comma
             
             exit repeat
          end if
-         set the itemDelimiter to comma
       end repeat
       
       if tFoundArchitecture is not empty then
@@ -1537,8 +1537,8 @@ function revSBAdditionalExternalsList pPlatform
          set the linedelimiter to slash
          repeat for each element tExtPath in tRawList
             local tExtension, tExternalName
-            put item 2 of line -1 of tExtPath into tExtension
-            put item 1 of line -1 of tExtPath into tExternalName
+            put item -1 of line -1 of tExtPath into tExtension
+            put item 1 to -2 of line -1 of tExtPath into tExternalName
             
             set the itemDelimiter to comma
             local tArchitecture
