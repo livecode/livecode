@@ -1491,6 +1491,17 @@ private function revSBFilterExternalsForDesktop pList, pPlatform
    return pList
 end revSBFilterExternalsForDesktop
 
+function revSBExternalNameFromFile pPlatform, pFile
+   local tName
+   set the itemdel to "."
+   put item 1 of pFile into tName
+   
+   local tArch
+   __ExternalArchitecture pPlatform, tName, tArch
+   
+   return tName
+end revSBExternalNameFromFile
+
 -- This is currently just used for externals that are present in the
 -- 'mergExt' folder in the app bundle or equivalent
 local sExternalsLocationA
