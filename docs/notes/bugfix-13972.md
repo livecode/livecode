@@ -1,1 +1,0 @@
-# open card treats string as variable breaking old code

@@ -1,1 +1,0 @@
-# Script editor opens revmenubar script when no other stack is open

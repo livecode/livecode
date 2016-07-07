@@ -1,1 +1,0 @@
-# Selecting regular polygon graphic fails to update title of Property Inspector, This was due to an error in the property list for regular polygons which prevented the Property Inpsector updating correctly.

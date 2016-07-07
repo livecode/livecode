@@ -1,1 +1,0 @@
-# Older versions of LiveCode report a corrupt stack when opening a file from newer version

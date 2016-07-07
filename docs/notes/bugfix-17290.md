@@ -1,1 +1,0 @@
-# Correct position of trueWord chunk in hierarchy

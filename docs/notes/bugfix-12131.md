@@ -1,1 +1,0 @@
-# Tool Palette location forgotten between launches

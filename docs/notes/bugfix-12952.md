@@ -1,1 +1,0 @@
-# tabbed date incorrectly displayed when vertical lines on

@@ -1,1 +1,0 @@
-# Copy command crashes in release mode

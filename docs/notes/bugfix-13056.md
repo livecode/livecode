@@ -1,1 +1,0 @@
-# arrayDecode no longer throws an error on invalid input

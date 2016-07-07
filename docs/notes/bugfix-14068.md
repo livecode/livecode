@@ -1,1 +1,0 @@
-#    MobileBusyIndicatorStart crashes iOS app

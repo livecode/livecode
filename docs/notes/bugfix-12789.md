@@ -1,1 +1,0 @@
-# Clicking on stack listed in Application Browser causes crash

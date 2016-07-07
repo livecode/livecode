@@ -1,1 +1,0 @@
-# A card with many (>80) text fields causes a crash on android device when made visible

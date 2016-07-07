@@ -1,1 +1,0 @@
-# messagebox syntax for invoking functions is broken

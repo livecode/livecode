@@ -1,1 +1,0 @@
-# Variables not being resolved in the script debugger.

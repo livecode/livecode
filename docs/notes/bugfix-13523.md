@@ -1,2 +1,0 @@
-# Fix OSX specialFolderPath("asup")
-

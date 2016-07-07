@@ -1,1 +1,0 @@
-#     Intermittent crash on MCPlatformWindowMaskRelease()

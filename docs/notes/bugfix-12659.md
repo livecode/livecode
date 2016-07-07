@@ -1,1 +1,0 @@
-# Error on Android when reading files list from the stack folder path

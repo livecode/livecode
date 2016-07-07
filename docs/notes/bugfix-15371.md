@@ -1,1 +1,0 @@
-# mobileGetContactData fails when there are multiple labels of the same property

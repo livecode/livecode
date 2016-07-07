@@ -1,1 +1,0 @@
-# Preferences show wrong panel

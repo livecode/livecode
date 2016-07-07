@@ -1,1 +1,0 @@
-# long system time yields empty on linux in various locales

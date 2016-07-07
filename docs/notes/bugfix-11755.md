@@ -1,1 +1,0 @@
-# flip graphic gives erroneous results with complex graphics

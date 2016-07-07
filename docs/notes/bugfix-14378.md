@@ -1,1 +1,0 @@
-#  Crash when pasting text

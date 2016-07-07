@@ -1,2 +1,0 @@
-# Various fixes to binaryDecode
-

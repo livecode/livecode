@@ -1,1 +1,0 @@
-# Crash exporting image as png
