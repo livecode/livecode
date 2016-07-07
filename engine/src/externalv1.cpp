@@ -1104,7 +1104,6 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 #else
 static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p_callback_state, MCExternalRunOnMainThreadOptions p_options)
 {
-#if defined(_DESKTOP)
     // MW-2014-10-30: [[ Bug 13875 ]] If either 'JumpTo' flag is specified, we just execute the callback direct.
     if ((p_options & kMCExternalRunOnMainThreadJumpTo) != 0)
     {
@@ -1134,9 +1133,6 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
-#else
-	return kMCExternalErrorNotImplemented;
-#endif
 }
 #endif
 
