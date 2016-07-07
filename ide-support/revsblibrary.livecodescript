@@ -786,9 +786,12 @@ private function __TargetArchitecture pTarget
    
    local tArchitecture
    repeat for each item tArchitecture in tArchitectures
-      if pTarget ends with tArchitecture then
-         return tArchitecture
-      end if
+      local tArchitectureIdentifier
+      repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
+         if pTarget ends with tArchitectureIdentifier then
+            return tArchitecture
+         end if
+      end repeat
    end repeat
    
    return item 1 of tArchitectures
