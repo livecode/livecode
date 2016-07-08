@@ -352,7 +352,6 @@
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
-    Warning_UndefinedConstantDeprecated
     Warning_DeprecatedSyntax
 
 --------------------------------------------------------------------------------
@@ -773,7 +772,6 @@
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
-'action' Warning_UndefinedConstantDeprecated(Position: POS)
 'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
 
 --------------------------------------------------------------------------------

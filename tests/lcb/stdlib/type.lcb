@@ -17,15 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 module com.livecode.type.tests
 
-public handler TestDefined()
-	variable tBool as optional Boolean
-
-	test "is undefined" when tBool is undefined
-	test "is not defined" when tBool is not defined
-	test "is defined" when not (tBool is defined)
-	test "is not undefined" when not (tBool is not undefined)
-end handler
-
 public handler TestDefaultNothing()
     variable tNothing as optional Boolean
     test "optional default is nothing" when tNothing is nothing

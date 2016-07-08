@@ -347,7 +347,6 @@ DEFINE_WARNING(EmptyUnicodeEscape, "Unicode escape sequence specified with no ni
 DEFINE_WARNING(UnicodeEscapeTooBig, "Unicode escape sequence too big, replaced with U+FFFD");
 DEFINE_WARNING_S(DeprecatedTypeName, "Deprecated type name: use '%s'")
 DEFINE_WARNING_I(UnsuitableNameForDefinition, "All-lowercase name '%s' may cause future syntax error")
-DEFINE_WARNING(UndefinedConstantDeprecated, "Deprecated keyword: use 'nothing' rather than 'undefined'");
 DEFINE_WARNING_S(DeprecatedSyntax, "Deprecated syntax: %s")
 
 ////////////////////////////////////////////////////////////////////////////////
