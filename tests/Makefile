@@ -1,9 +1,3 @@
-ifeq ($(V),)
-_PRINT_RULE ?= > /dev/null
-else
-_PRINT_RULE ?=
-endif
-
 MODE ?= release
 top_srcdir ?= ..
 
