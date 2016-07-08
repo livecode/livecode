@@ -40,7 +40,7 @@ MCObjectInputStream::MCObjectInputStream(IO_handle p_stream, uint32_t p_remainin
 
 MCObjectInputStream::~MCObjectInputStream(void)
 {
-	delete (char *)m_buffer;
+	delete[] (char *)m_buffer; /* Allocated with new[] */
 }
 
 // Flushing reads and discards the rest of the stream
@@ -265,14 +265,14 @@ IO_stat MCObjectInputStream::ReadStringRefNew(MCStringRef &r_value, bool p_suppo
 	if (ReadU32(t_length) != IO_NORMAL)
 		return IO_ERROR;
 	
-	MCAutoPointer<char> t_bytes;
-	if (!MCMemoryNewArray(t_length, &t_bytes))
+	MCAutoArray<char> t_bytes;
+	if (!t_bytes.New(t_length))
 		return IO_ERROR;
 	
-	if (Read(*t_bytes, t_length) != IO_NORMAL)
+	if (Read(t_bytes.Ptr(), t_length) != IO_NORMAL)
 		return IO_ERROR;
 	
-	if (!MCStringCreateWithBytes((const uint8_t *)*t_bytes, t_length, kMCStringEncodingUTF8, false, r_value))
+	if (!MCStringCreateWithBytes((const uint8_t *)t_bytes.Ptr(), t_length, kMCStringEncodingUTF8, false, r_value))
 		return IO_ERROR;
 	
 	return IO_NORMAL;
@@ -430,7 +430,7 @@ MCObjectOutputStream::MCObjectOutputStream(IO_handle p_stream)
 
 MCObjectOutputStream::~MCObjectOutputStream(void)
 {
-	delete (char *)m_buffer;
+	delete[] (char *)m_buffer; /* Allocated with new[] */
 }
 
 IO_stat MCObjectOutputStream::WriteTag(uint32_t p_flags, uint32_t p_length)

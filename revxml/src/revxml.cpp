@@ -576,7 +576,7 @@ void XML_NewDocumentFromFile(char *args[], int nargs, char **retstring,
 		}
 		free(tfile);
 		free(t_native_path);
-		free(t_resolved_path);
+		delete[] t_resolved_path; /* Allocated with new[] */
 		
 	}
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));

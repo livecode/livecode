@@ -65,7 +65,7 @@ MCAnswer::~MCAnswer()
 			delete file . filter;
 			for(uint4 t_type = 0; t_type < file . type_count; ++t_type)
 				delete file . types[t_type];
-			delete file . types;
+			delete[] file . types; /* Allocated with new[] */
 		break;
 		
 		case AT_FOLDER:
@@ -78,7 +78,7 @@ MCAnswer::~MCAnswer()
 			delete notify . prompt;
 			for(uint4 t_button = 0; t_button < notify . button_count; ++t_button)
 				delete notify . buttons[t_button];
-			delete notify . buttons;
+			delete[] notify . buttons; /* Allocated with new[] */
 		break;
 	}
 }

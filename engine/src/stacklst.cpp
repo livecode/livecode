@@ -71,7 +71,7 @@ MCStacklist::~MCStacklist()
 	if (menus != NULL)
 		delete menus;
 	if (accelerators != NULL)
-		delete accelerators;
+		delete[] accelerators; /* Allocated with new[] */
 }
 
 void MCStacklist::add(MCStack *sptr)

@@ -178,8 +178,8 @@ MCDispatch::~MCDispatch()
 	}
 	delete fonts;
 	
-	delete startdir;
-	delete enginedir;
+	MCMemoryDeleteArray(startdir); /* Allocated by MCStringConvertToCString() */
+	MCMemoryDeleteArray(enginedir); /* Allocated by MCStringConvertToCString() */
 	
 	delete m_externals;
     // AL-2015-02-10: [[ Standalone Inclusions ]] Delete library mapping

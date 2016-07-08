@@ -1395,7 +1395,7 @@ public:
             }
         }
 
-		delete t_entry_path;
+        delete[] t_entry_path; /* Allocated with new[] */
         closedir(dirptr);
 
         return t_success;

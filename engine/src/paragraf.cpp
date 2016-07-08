@@ -477,7 +477,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (version < 7000)
 	{
 		uint32_t t_length;
-		MCAutoPointer<char> t_text_data;
+		MCAutoCustomPointer<char,MCMemoryDeleteArray> t_text_data;
         
 		// This string can contain a mixture of Unicode and native - t_length is the number
         // of bytes.

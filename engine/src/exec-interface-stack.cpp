@@ -1485,7 +1485,7 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 		MCValueRelease(stackfiles[nstackfiles].stackname);
 		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
-	delete stackfiles;
+	delete[] stackfiles; /* Allocated with new[] */
 
     if (stringtostackfiles(p_files, &stackfiles, nstackfiles))
         return;

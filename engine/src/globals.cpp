@@ -1297,9 +1297,9 @@ int X_close(void)
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
 	if (MCfiles != NULL)
-		delete MCfiles;
+		delete[] MCfiles; /* Allocated with new[] */
 	if (MCprocesses != NULL)
-		delete MCprocesses;
+		delete[] MCprocesses; /* Allocated with new[] */
 	if (MCnsockets)
 		while (MCnsockets)
 			delete MCsockets[--MCnsockets];
@@ -1359,7 +1359,7 @@ int X_close(void)
 	delete MCdialogdata;
 	MCValueRelease(MChcstat);
 
-	delete MCusing;
+	delete[] MCusing; /* Allocated with new[] */
 	MCValueRelease(MChttpheaders);
 	MCValueRelease(MCscriptfont);
 	MCValueRelease(MClinkatts . colorname);
@@ -1499,7 +1499,7 @@ int X_close(void)
 	MCU_finalize_names();
 	
 	if (MCsysencoding != nil)
-		MCMemoryDelete(MCsysencoding);
+		delete[] MCsysencoding; /* Allocated with new[] */
 
     if (kMCSystemLocale != nil)
         MCLocaleRelease(kMCSystemLocale);

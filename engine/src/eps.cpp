@@ -98,8 +98,8 @@ MCEPS::MCEPS(const MCEPS &sref) : MCControl(sref)
 
 MCEPS::~MCEPS()
 {
-	delete postscript;
-	delete prolog;
+	delete[] postscript; /* Allocated with new[] */
+	delete[] prolog; /* Allocated with new [] */
 	delete pageIndex;
 	delete image;
 }
