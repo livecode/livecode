@@ -421,8 +421,9 @@ char *MCU_strtok(char *s, const char *delim)
 {
 	Boolean t_converted;
 	uint4 l = MCStringGetLength(p_string);
-    MCAutoPointer<char> t_string;
-    /* UNCHECKED */ MCStringConvertToCString(p_string, &t_string);
+	MCAutoStringRefAsCString t_string;
+	if (!t_string.Lock(p_string))
+		return false;
     const char *sptr = *t_string;
 	r_l = MCU_strtol(sptr, l, '\0', t_converted);
 	return True == t_converted;
