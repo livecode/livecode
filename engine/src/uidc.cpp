@@ -1228,8 +1228,10 @@ bool MCUIDC::listmessages(MCExecContext& ctxt, MCListRef& r_list)
 			if (!MCListAppendUnsignedInteger(*t_msg_info, messages[i].id))
 				return false;
 
-			if (!ctxt.FormatReal(messages[i].time, &t_time_string)
-				|| !MCListAppend(*t_msg_info, *t_time_string))
+			if (!ctxt.FormatReal(messages[i].time, &t_time_string))
+				return false;
+
+			if (!MCListAppend(*t_msg_info, *t_time_string))
 				return false;
 
 			if (!MCListAppend(*t_msg_info, messages[i].message))
