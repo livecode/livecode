@@ -1575,9 +1575,9 @@ void MCUIDC::siguser()
 
 Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-    // SN-2015-11-26: [[ Bug 16501 ]] Do not use GetOldString (nativises)
-    MCAutoPointer<char> t_cstring;
-    MCStringConvertToCString(s, &t_cstring);
+	MCAutoStringRefAsCString t_cstring;
+	if (!t_cstring.Lock(s))
+		return false;
 
     uint4 slength = strlen(*t_cstring);
     MCAutoPointer<char> startptr;
