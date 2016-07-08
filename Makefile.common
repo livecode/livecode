@@ -17,6 +17,12 @@
 # This file consists of some common functionality required by various 
 # Makefiles
 
+ifeq ($(V),)
+_PRINT_RULE ?= > /dev/null
+else
+_PRINT_RULE ?=
+endif
+
 ifeq ($(MODE),debug)
   export BUILDTYPE ?= Debug
 else ifeq ($(MODE),release)
