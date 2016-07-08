@@ -1911,11 +1911,7 @@ end escape
 command docsBuilderGenerateDocsNew pEdition, pVersion   
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
    
-   -- Ensure we have downloaded and extracted all the mergExt data 
-   -- needed to build the docs for this edition
-   local tEditionCased
-   put (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition)) into tEditionCased
-   builderMergExtUnpack builderMergExtVersion(), tEditionCased
+   builderExtUnpack pEdition
    
    builderLog "report", "Building guide into" && builderGuideFolder(pEdition) & slash & "distributed_guide.js"
    pathEnsure (builderGuideFolder(pEdition))
@@ -1980,12 +1976,12 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
    addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
 end docsBuilderGetGuideFolders
 
-private command docsBuilderAddMergExtFolders pEdition, @xFolders
+private command docsBuilderAddExtFolders pEdition, @xFolders
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
    
    local tTargetFolder
-   put builderMergExtFolder() & "/" & "MergExt" into tTargetFolder
+   put builderUnpackFolder() & slash & "Ext" into tTargetFolder
    set the defaultFolder to tTargetFolder
    
    repeat for each line tFolder in the folders
@@ -1994,11 +1990,11 @@ private command docsBuilderAddMergExtFolders pEdition, @xFolders
    end repeat
    
    set the defaultFolder to tDefaultFolder
-end docsBuilderAddMergExtFolders
+end docsBuilderAddExtFolders
 
-private command docsBuilderGetAdditionalDictionaryFolders pEdition, @xFolders
-   docsBuilderAddMergExtFolders pEdition, xFolders
-end docsBuilderGetAdditionalDictionaryFolders
+private command docsBuilderGetAdditionalFolders pEdition, @xFolders
+   docsBuilderAddExtFolders pEdition, xFolders
+end docsBuilderGetAdditionalFolders
 
 private command docsBuilderGetDictionaryFolders pEdition, @xFolders
    local tCommunityDocs
@@ -2017,6 +2013,7 @@ end docsBuilderGetDictionaryFolders
 command docsBuilderGenerateDistributedGuide pEdition
    local tGuideFoldersA
    docsBuilderGetGuideFolders pEdition, tGuideFoldersA
+   docsBuilderGetAdditionalFolders  pEdition, tGuideFoldersA
    
    local tGuideFoldersWithLocationA
    repeat for each element tElement in tGuideFoldersA
@@ -2141,7 +2138,7 @@ end docsBuilderParseDictionary
 command docsBuilderGenerateDistributedAPI pEdition
    local tDictionaryFolders, tAdditionalFolders
    docsBuilderGetDictionaryFolders pEdition, tDictionaryFolders
-   docsBuilderGetAdditionalDictionaryFolders pEdition, tAdditionalFolders
+   docsBuilderGetAdditionalFolders pEdition, tAdditionalFolders
    
    local tLibrariesA
    
@@ -2320,4 +2317,3 @@ function revDocumentationRetrieve pType, pTag, pFolder
    -- We've got the doc's compressed data, uncompress and return
    return the decompress of tDocData
 end revDocumentationRetrieve
-

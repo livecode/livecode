@@ -138,8 +138,6 @@ private function getBuildFolder pStack, pFolder, pSettings
 end getBuildFolder
 
 on revSaveAsStandalone pStack, pFolder, pPreview
-   start using stack "revSBLibrary"
-   
    global gREVStackStatus
    
    if pStack = empty then
@@ -260,8 +258,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
 end revSaveAsStandalone
 
 command revDoSaveAsStandalone pStack, pFolder
-   start using stack "revSBLibrary"
-   
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
    lock cursor
@@ -476,7 +472,7 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
       put sStandaloneSettingsA["name"] & tCount into sStandaloneSettingsA["name"]
    end if
    
-   local tStackFileName, tStackName, tStackFileList
+   local tStackFileName, tStackName
    put the effective filename of stack pStack into tStackFileName
    
    set the itemdelimiter to slash
@@ -489,8 +485,8 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
       put ".livecode" after tStackName
    end if
    
-   -- get all the stackfiles
-   put revRelativeStackFilesList(pStack) into tStackFileList
+   local tStackFileList
+   revSBRelativeStackFilesList pStack, tStackFileList
    
    -- close the open stacks (ask to save if need be)
    revCloseOpenStacks tStackFileList, pStack
@@ -546,7 +542,7 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    put pEngineSourceFile into tDeployInfo["engine"]
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
-   revSBUpdateDeployParams pStackSourceFile, sStandaloneSettingsA, tDeployInfo
+   revSBUpdateDeployParams pStackSourceFile, pTarget, sStandaloneSettingsA, tDeployInfo
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
    -- PM-2015-12-07: [[ Bug 15706 ]] Put double quotes around the stack name to avoid confusing the 

@@ -2572,6 +2572,7 @@ function revDocsListGuides pFolder
    local tGuides
    put the files into tGuides
    filter tGuides with "*.md"
+   filter tGuides without "README.md"
    
    set the defaultFolder to tDefaultFolder
    

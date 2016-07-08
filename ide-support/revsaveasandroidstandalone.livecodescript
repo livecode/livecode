@@ -76,11 +76,8 @@ private function badAndroidApiMessage
    return "Not a valid Android API"
 end badAndroidApiMessage
 
-constant kBuiltInImplementations = "scriptLibraries Internet"
 constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
-   start using stack "revSBLibrary"
-   
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
    local tSettings
@@ -102,7 +99,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    revSBUpdateForDependencies tSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
-   revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
+   revSBRemoveInclusions pStack, "android", tConfirm, tSettings
    
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
@@ -220,11 +217,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    delete the last char of tExternals
    
    -- Compute the stackfiles list
-   local tStackFiles, tFunction
    lock messages
-   // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
-   put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
-   put value(tFunction, stack "revStandaloneSettings") into tStackFiles
+   local tStackFiles
+   revSBRelativeStackFilesList pStack, tStackFiles
    unlock messages
    
    -- Make sure the app-bundle isn't already there
@@ -279,9 +274,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put return after tExternals
       end if
       set the itemDelimiter to "."
-      repeat for each line tFile in tFiles
-         revSBResolveIncludedExternal "android", tFile
-         
+      
+      local tResolvedFiles
+      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFiles
+      
+      repeat for each line tFile in tResolvedFiles
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
@@ -653,7 +650,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
-      revSBUpdateDeployParams pStack, tSettings, tDeploy
+      revSBUpdateDeployParams pStack, "android", tSettings, tDeploy
       
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]

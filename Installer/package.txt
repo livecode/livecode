@@ -33,7 +33,7 @@ installer LiveCode
 	include Documentation
 	include Toolchain.[[TargetPlatform]]
 	include Extensions
-	include MergExt
+	include Ext
 	codesign
 		include Engine.[[TargetPlatform]]
 		with TargetFolder as [[ToolsFolder]] do
@@ -106,9 +106,9 @@ component Externals
 	emit externals to "[[TargetFolder]]/Externals/Externals.txt"
 	emit dbdrivers to "[[TargetFolder]]/Externals/Database Drivers/Database Drivers.txt"
 
-component MergExt
+component Ext
 	into [[ToolsFolder]] place
-		rfolder "mergext:MergExt"
+		rfolder "ext:Ext"
 
 component Uninstaller
 	if TargetPlatform is "Windows" then
