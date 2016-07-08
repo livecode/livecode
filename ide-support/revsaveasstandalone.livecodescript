@@ -331,15 +331,15 @@ command revDoSaveAsStandalone pStack, pFolder
                   next repeat
                end if
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device"
+                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device", sStandaloneSettingsA
                break
             case "Android"
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build", sStandaloneSettingsA
                break
             case "Emscripten"
                dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                     pStack, tTargetFolder, "Build"
+                     pStack, tTargetFolder, "Build", sStandaloneSettingsA
                break
             case "MacOSX"
                revSaveAsMacStandalone pStack, tTargetFolder
