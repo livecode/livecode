@@ -693,14 +693,15 @@ IO_stat IO_read_stringref_new(MCStringRef& r_string, IO_handle p_stream, bool p_
 	if (IO_read_uint2or4(&t_length, p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	MCAutoPointer<char> t_utf8_string;
-	if (!MCMemoryNewArray(t_length, &t_utf8_string))
+	MCAutoArray<byte_t> t_utf8_string;
+	if (!t_utf8_string.New(t_length))
 		return IO_ERROR;
 	
-	if (MCStackSecurityRead(*t_utf8_string, t_length, p_stream) != IO_NORMAL)
+	if (MCStackSecurityRead(reinterpret_cast<char *>(t_utf8_string.Ptr()),
+	                        t_length, p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	if (!MCStringCreateWithBytes((byte_t *)*t_utf8_string, t_length, kMCStringEncodingUTF8, false, r_string))
+	if (!MCStringCreateWithBytes(t_utf8_string.Ptr(), t_length, kMCStringEncodingUTF8, false, r_string))
 		return IO_ERROR;
 	
 	return IO_NORMAL;
@@ -727,15 +728,14 @@ IO_stat IO_write_stringref_new(MCStringRef p_string, IO_handle p_stream, bool p_
 	if (!p_supports_unicode)
 		return IO_write_stringref_legacy(p_string, p_stream, false, p_size);
 	
-	MCAutoPointer<char> t_utf8_string;
-	uindex_t t_utf8_string_length;
-	if (!MCStringConvertToUTF8(p_string, &t_utf8_string, t_utf8_string_length))
+	MCAutoStringRefAsUTF8String t_utf8_string;
+	if (!t_utf8_string.Lock(p_string))
 		return IO_ERROR;
 	
-	if (IO_write_uint2or4(t_utf8_string_length, p_stream) != IO_NORMAL)
+	if (IO_write_uint2or4(t_utf8_string.Size(), p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	if (MCStackSecurityWrite(*t_utf8_string, t_utf8_string_length, p_stream) != IO_NORMAL)
+	if (MCStackSecurityWrite(*t_utf8_string, t_utf8_string.Size(), p_stream) != IO_NORMAL)
 		return IO_ERROR;
 		
 	return IO_NORMAL;
