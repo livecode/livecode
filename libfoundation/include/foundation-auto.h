@@ -726,106 +726,54 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCAutoStringRefAsCString
+class MCAutoStringRefAsNativeChars
 {
 public:
-    MCAutoStringRefAsCString(void)
-    {
-        m_ref = nil;
-        m_cstring = nil;
-    }
-    
-    ~MCAutoStringRefAsCString(void)
-    {
-        Unlock();
-    }
-    
-    bool Lock(MCStringRef p_string)
-    {
-        if (!MCStringIsNative(p_string))
-        {
-            m_ref = nil;
-            return MCStringConvertToCString(p_string, m_cstring);
-        }
-
-        m_ref = MCValueRetain(p_string);
-        m_cstring = nil;
-
-        return true;
-    }
-    
-    void Unlock(void)
-    {
-        if (m_ref != nil)
-        {
-            MCValueRelease(m_ref);
-            m_ref = nil;
-        }
-        else
-            MCMemoryDeleteArray(m_cstring);
-        m_cstring = nil;
-    }
-    
-    const char *operator * (void)
-    {
-        if (m_ref != nil)
-            return (const char*)MCStringGetNativeCharPtr(m_ref);
-        else
-            return (const char*)m_cstring;
-    }
-    
+	MCAutoStringRefAsNativeChars() {}
+	~MCAutoStringRefAsNativeChars() {}
+	bool Lock(MCStringRef p_string)
+	{
+		return MCStringNativeCopy(p_string, &m_string);
+	}
+	bool Lock(MCStringRef p_string,
+	          const char_t * & r_buffer,
+	          uindex_t & r_length)
+	{
+		if (!Lock(p_string))
+			return false;
+		r_buffer = MCStringGetNativeCharPtrAndLength(*m_string,
+		                                             r_length);
+		return true;
+	}
+	void Unlock()
+	{
+		m_string.Reset();
+	}
+	const char_t * operator*() const
+	{
+		MCAssert(MCStringIsNative(*m_string));
+		return MCStringGetNativeCharPtr(*m_string);
+	}
+	uindex_t Size() const
+	{
+		MCAssert(MCStringIsNative(*m_string));
+		uindex_t t_length;
+		(void) MCStringGetNativeCharPtrAndLength(*m_string, t_length);
+		return t_length;
+	}
 private:
-    MCStringRef m_ref;
-    char *m_cstring;
+	MCAutoStringRef m_string;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCAutoStringRefAsNativeChars
+class MCAutoStringRefAsCString : public MCAutoStringRefAsNativeChars
 {
 public:
-    MCAutoStringRefAsNativeChars(void)
-    {
-        m_string = nil;
-    }
-
-    ~MCAutoStringRefAsNativeChars(void)
-    {
-        Unlock();
-    }
-
-    bool Lock(MCStringRef p_string, char_t *&r_chars, uindex_t &r_length)
-    {
-        bool t_success;
-        t_success = true;
-
-        uindex_t t_length;
-        if (MCStringIsNative(p_string))
-        {
-            t_length = MCStringGetLength(p_string);
-            t_success =  MCMemoryNewArray(t_length, m_string);
-            memcpy(m_string, (const char*)MCStringGetNativeCharPtr(p_string), t_length);
-        }
-        else
-            t_success =  MCStringConvertToNative(p_string, (char_t*&)m_string, t_length);
-
-        if (t_success)
-        {
-            r_chars = (char_t*)m_string;
-            r_length = t_length;
-        }
-
-        return t_success;
-    }
-
-    void Unlock(void)
-    {
-        MCMemoryDeleteArray(m_string);
-        m_string = nil;
-    }
-
-private:
-    char *m_string;
+	const char * operator* () const
+	{
+		return reinterpret_cast<const char *>(MCAutoStringRefAsNativeChars::operator*());
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////

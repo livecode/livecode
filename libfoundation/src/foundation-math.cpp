@@ -51,7 +51,7 @@ bool MCMathConvertToBase10(MCStringRef p_source, integer_t p_source_base, bool& 
     t_negative = false;
     
     MCAutoStringRefAsNativeChars t_auto_native;
-    char_t* t_native;
+    const char_t* t_native;
     uindex_t t_length;
     
     if (!t_auto_native . Lock(p_source, t_native, t_length))
