@@ -1925,7 +1925,7 @@ private command __ResolveIncludedExternal pTarget, @xFiles
          put item 1 to -2 of tExtPath & slash & "resources" into tResources
          if there is a folder tResources then
             local tContents
-            put revSBEnumerateFolder(tResources, false) into tContents
+            put __revSBEnumerateFolder(tResources, tResources & slash, false) into tContents
             
             local tPlatform
             put revSBTargetToPlatform(pTarget) into tPlatform
