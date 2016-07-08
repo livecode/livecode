@@ -304,7 +304,7 @@
         OutputWrite("any")
 
     'rule' GenerateManifestTypeBody(undefined(_)):
-        OutputWrite("undefined")
+        OutputWrite("nothing")
 
     'rule' GenerateManifestTypeBody(boolean(_)):
         OutputWrite("boolean")

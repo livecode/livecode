@@ -719,10 +719,6 @@
         "List" @(-> Position) OptionalElementType(-> ElementType)
 
     'rule' Type(-> undefined(Position)):
-        "undefined" @(-> Position)
-        Warning_DeprecatedTypeName(Position, "nothing")
-
-    'rule' Type(-> undefined(Position)):
         "nothing" @(-> Position)
 
 'nonterm' OptionalElementType(-> TYPE)
@@ -1045,10 +1041,6 @@
 'nonterm' ConstantTermExpression(-> EXPRESSION)
 
     'rule' ConstantTermExpression(-> undefined(Position)):
-        "undefined" @(-> Position)
-        Warning_UndefinedConstantDeprecated(Position)
-        
-    'rule' ConstantTermExpression(-> undefined(Position)):
         "nothing" @(-> Position)
 
     'rule' ConstantTermExpression(-> true(Position)):
@@ -1191,7 +1183,7 @@
 'nonterm' Constant(-> SYNTAXCONSTANT)
 
     'rule' Constant(-> undefined(Position)):
-        "undefined" @(-> Position)
+        "nothing" @(-> Position)
         
     'rule' Constant(-> true(Position)):
         "true" @(-> Position)
