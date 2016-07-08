@@ -1737,9 +1737,10 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	
 	int2 i1, i2, i3;
     Boolean done;
-    MCAutoPointer<char> temp;
-    /* UNCHECKED */ MCStringConvertToCString(s, &temp);
-    const char *sptr = *temp;
+	MCAutoStringRefAsCString t_cstring;
+	if (!t_cstring.Lock(s))
+		return false;
+	const char *sptr = *t_cstring;
     uint4 l = strlen(sptr);
 	
 	// check for numeric first argument
