@@ -10,7 +10,7 @@ Introduced: 8.0
 
 OS: mac,windows,linux,ios,android
 
-Platforms: desktop,web,modile
+Platforms: desktop,web,mobile
 
 Example:
 import widget from array tMyArray
