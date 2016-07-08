@@ -254,7 +254,7 @@ MCUIDC::~MCUIDC()
 {
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
-	delete messages;
+	delete[] messages; /* Allocated with new[] */
 
 #if defined(FEATURE_NOTIFY)
 	MCNotifyFinalize();
@@ -1580,7 +1580,7 @@ Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
     MCStringConvertToCString(s, &t_cstring);
 
     uint4 slength = strlen(*t_cstring);
-    MCAutoPointer<char> startptr;
+    MCAutoPointer<char[]> startptr;
     startptr = new char[slength + 1];
 
     MCU_lower(*startptr, *t_cstring);

@@ -353,9 +353,9 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
     if (args != NULL)
     {
         while (nargs--)
-            delete args[nargs];
+	        MCMemoryDeleteArray(args[nargs]); /* Allocated with MCStringNormalizeAndConvertToCString */
         
-        delete args;
+        delete[] args; /* Allocated with new[] */
     }
     
     if (Xerr)

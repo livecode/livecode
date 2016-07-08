@@ -1032,8 +1032,10 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
             if (t_stat == IO_NORMAL)
 			{
-				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_colors);
-				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_color_names);
+				s_control_colors = new MCColor[s_control_color_count];
+				s_control_color_names = new MCStringRef[s_control_color_count];
+				if (nil == s_control_colors || nil == s_control_color_names)
+					t_stat = checkloadstat(IO_ERROR);
 			}
 
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
@@ -1078,6 +1080,12 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
 
 	if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedload(p_stream, p_version, p_remaining);
+
+	if (t_stat != IO_NORMAL)
+	{
+		delete[] s_control_colors;
+		delete[] s_control_color_names;
+	}
 
 	return t_stat;
 }
@@ -1426,10 +1434,10 @@ IO_stat MCImage::load(IO_handle stream, uint32_t version)
 	// MW-2013-09-05: [[ Bug 11127 ]] At this point the color/pixmap fields in the object
 	//   will pertain to the image colors. This isn't what we want anymore, so free them
 	//   (an RLE compressed rep will already have extracted the info it needs).
-	MCMemoryDeleteArray(colors);
+	delete[] colors; /* Allocated with new[] */
 	for (uint32_t i = 0; i < ncolors; i++)
 		MCValueRelease(colornames[i]);
-	MCMemoryDeleteArray(colornames);
+	delete[] colornames; /* Allocated with new[] */
 	MCMemoryDeleteArray(patterns);
 	ncolors = 0;
 	npatterns = 0;

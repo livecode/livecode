@@ -961,7 +961,7 @@ bool MCArraysCopyExtents(MCArrayRef self, array_extent_t*& r_extents, uindex_t& 
 
 	while (MCArrayIterate(self, t_index, t_key, t_value))
 	{
-		MCAutoPointer<index_t> t_indexes;
+		MCAutoCustomPointer<index_t,MCMemoryDeleteArray> t_indexes;
 		uindex_t t_index_count;
 		bool t_all_integers;
 		if (!MCArraysSplitIndexes(t_key, &t_indexes, t_index_count, t_all_integers))

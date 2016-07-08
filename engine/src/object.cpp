@@ -304,13 +304,13 @@ MCObject::~MCObject()
 	MCundos->freeobject(this);
 	delete hlist;
 	MCNameDelete(_name);
-	delete colors;
+	delete[] colors; /* Allocated with new[] */
 	if (colornames != nil)
 	{
 		while (ncolors--)
 			if (colornames[ncolors] != nil)
 				MCValueRelease(colornames[ncolors]);
-		delete colornames;
+		delete[] colornames; /* Allocated with new[] */
 	}
 
 	MCValueRelease(_script);
@@ -1784,8 +1784,8 @@ uint2 MCObject::createcindex(uint2 di)
 	}
 	if (oldcolors != NULL)
 	{
-		delete oldcolors;
-		delete oldnames;
+		delete[] oldcolors; /* Allocated with new[] */
+		delete[] oldnames; /* Allocated with new[] */
 	}
 	return ri;
 }
@@ -4846,7 +4846,7 @@ void MCObject::clearfontattrs(void)
 		return;
 
 	MCNameDelete(m_font_attrs -> name);
-	delete m_font_attrs;
+	MCMemoryDelete(m_font_attrs); /* Allocated with MCMemoryNew() */
 	m_font_attrs = nil;
 
 	// MW-2012-02-19: [[ SplitTextAttrs ]] Unset all the individual fontattr flags.

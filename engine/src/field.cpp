@@ -370,7 +370,7 @@ MCField::~MCField()
 	else
 		delete vscrollbar;
 
-	delete tabs;
+	delete[] tabs; /* Allocated with new[] */
 
 	MCValueRelease(label);
 }

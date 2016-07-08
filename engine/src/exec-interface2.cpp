@@ -564,7 +564,7 @@ void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, 
 	char *t_version;
 	/* UNCHECKED */ MCStringConvertToCString(p_input, t_version);
     count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
-	delete t_version;
+    MCMemoryDeleteArray(t_version);
 	
 	version = major * 1000 + minor * 100 + revision * 10;
 	

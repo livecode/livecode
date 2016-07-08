@@ -200,9 +200,9 @@ void MCGraphic::initialise(void)
 
 void MCGraphic::finalise(void)
 {
-	delete dashes;
-	delete points;
-	delete realpoints;
+	delete[] dashes; /* Allocated with new[] */
+	delete[] points; /* Allocated with new[] */
+	delete[] realpoints; /* Allocated with new[] */
 	delete markerpoints;
 	delete oldpoints;
 	MCValueRelease(label);
