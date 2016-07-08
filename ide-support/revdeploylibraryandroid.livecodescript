@@ -44,8 +44,11 @@ command deployDo pTargetStack, pTargetDevice
    local tError
    put empty into tError
    
+   local tSettings
+   put the customProperties["cRevStandaloneSettings"] of stack pTargetStack into tSettings
+   
    local tIdentifier
-   put the cRevStandaloneSettings["android,identifier"] of stack pTargetStack into tIdentifier
+   put tSettings["android,identifier"] into tIdentifier
    if tIdentifier is empty then
       put "com.yourcompany.yourapp" into tIdentifier
    end if
@@ -56,7 +59,7 @@ command deployDo pTargetStack, pTargetDevice
       put tempName() & ".apk" into tTempApkFIle
       try
          dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-               pTargetStack, tTempApkFile, "Test"
+               pTargetStack, tTempApkFile, "Test", tSettings
       catch tException
          put "Unable to build app for testing:" && tException into tError
       end try

@@ -26,16 +26,12 @@ end logDebug
 -- Standalone generation
 ----------------------------------------------------------------
 
-command revSaveAsEmscriptenStandalone pStack, pOutputFolder
+command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    
    logDebug "top", "----- Begin Emscripten standalone"
    
    -- FIXME
    --dispatch "revIDEDeployEmscriptenInitialize" to stack "revDeployLibrary"
-   
-   local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pStack \
-         into tSettings
    
    ---------- Pre-compute standalone build parameters
    
@@ -51,10 +47,10 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder
    
    -- Other parameters
    local tName, tFiles, tAuxStackFiles, tExtensions
-   put tSettings["name"] into tName
-   put tSettings["files"] into tFiles
-   put tSettings["auxiliary_stackfiles"] into tAuxStackFiles
-   put tSettings["extensions"] into tExtensions
+   put pSettings["name"] into tName
+   put pSettings["files"] into tFiles
+   put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
+   put pSettings["extensions"] into tExtensions
 
    -- If the datagrid is used, then include the library as an aux stack
    if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
