@@ -217,7 +217,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # OK-2009-05-22 : Added ability to remember default folder. We now do the folder check before saving the stack,
    # so that if the user chose a different folder, it can be remembered for next time.
    local tFolder
-   put getBuildFolder(pStack, pFolder, sStandaloneSettingsA) into tFolder
+   put getBuildFolder(pStack, pFolder, tSettings) into tFolder
    if tFolder is empty then
       exit to top
    end if
