@@ -226,9 +226,9 @@ static IO_stat MCS_lnx_shellread(int fd, char *&buffer, uint4 &buffersize, uint4
         readsize += READ_PIPE_SIZE;
         if (size + readsize > buffersize)
         {
-            MCU_realloc((char **)&buffer, buffersize,
-                        buffersize + readsize + 1, sizeof(char));
-            buffersize += readsize;
+	        if (!MCMemoryResizeArray(buffersize + readsize + 1,
+	                                 buffer, buffersize))
+		        return IO_ERROR;
         }
         errno = 0;
         int4 amount = read(fd, &buffer[size], readsize);
