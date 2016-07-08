@@ -2287,7 +2287,7 @@ void MCField::fmove(Field_translations function, MCStringRef p_string, KeySym ke
 			drect.x = -textx;
 			if (indent < 0)
 				drect.x += indent;
-				break;
+			break;
 		case FT_END:
 		case FT_EOL:
 			drect.x = textwidth + leftmargin + indent + rect.width;
