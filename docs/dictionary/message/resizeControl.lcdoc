@@ -28,12 +28,8 @@ It is not sent if a <handler> changes the size of a <control(glossary)> by chang
 The <resizeControl> <message> is sent after the resizing is finished. This means that you cannot prevent a 
 <control(glossary)|control's> size from being changed by <trap|trapping> this <message>.
 
-<<<<<<< HEAD
-References: control (keyword), properties (property), width (property), height (property), moveStack (message), resizeStack (message), revCacheGeometry (command), control (object), object (glossary), trap (glossary), handler (glossary), message (glossary)
-=======
 References: control (glossary), control (keyword), handler (glossary), height (property), message (glossary), 
 moveStack (message), object (glossary), properties (property), resizeStack (message), revCacheGeometry (command), 
 trap (glossary), width (property)
->>>>>>> upstream/release-8.0.0
 
 Tags: ui
