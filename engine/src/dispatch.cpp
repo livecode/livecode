@@ -954,12 +954,9 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t
 			p_version = kMCStackFileFormatCurrentVersion;
 		}
 
-		/* If the stack doesn't contain widgets, and 8.0 format was requested,
-		 * use 7.0 format. */
-		if (kMCStackFileFormatCurrentVersion == p_version && !sptr->haswidgets())
-		{
+		/* If the stack doesn't contain any features requiring a more recent version, use 7.0 format. */
+		if (p_version > kMCStackFileFormatVersion_7_0 && sptr->geteffectiveminimumstackfileversion() <= kMCStackFileFormatVersion_7_0)
 			p_version = kMCStackFileFormatVersion_7_0;
-		}
 
         stat = dosavestack(sptr, p_fname, p_version);
         

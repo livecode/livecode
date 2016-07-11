@@ -232,7 +232,18 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
     // MW-2014-12-17: [[ Widgets ]] If the object is or contains widgets, we can
     //   only produce 8.0 version data.
     uint4 t_chunk_start;
-    if (p_object -> haswidgets())
+	
+	bool t_include_legacy;
+	t_include_legacy = p_context->include_legacy;
+	
+	uint32_t t_min_version;
+	t_min_version = p_object->geteffectiveminimumstackfileversion();
+	
+	// Cut off point for legacy versions
+	if (t_min_version > kMCStackFileFormatVersion_7_0)
+		t_include_legacy = false;
+	
+    if (!t_include_legacy)
     {
 		const char *t_header;
 		uint32_t t_header_size;
@@ -255,9 +266,9 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
     }
     else
     {
-        // Write the version header - either 2.7 or 5.5 depending on the setting of include_2700.
+		// Legacy - write version header for 2.7
         if (t_stat == IO_NORMAL)
-            t_stat = IO_write(p_context -> include_legacy ? "REVO2700" : "REVO7000", 8, 1, t_stream);
+            t_stat = IO_write(kMCStackFileVersionString_2_7, kMCStackFileVersionStringLength, 1, t_stream);
 
         // Write the space for the chunk size field
         if (t_stat == IO_NORMAL)
@@ -268,11 +279,11 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
             t_chunk_start = MCS_tell(t_stream);
 
         if (t_stat == IO_NORMAL)
-            t_stat = pickle_object_to_stream(t_stream, p_context -> include_legacy ? 2700 : 7000, p_object, p_part);
+            t_stat = pickle_object_to_stream(t_stream, kMCStackFileFormatVersion_2_7, p_object, p_part);
 
         // MW-2012-03-04: [[ UnicodeFileFormat ]] If we are including 2.7, 5.5 and 7.0, now write
         //   out the 5.5 and 7.0 versions.
-        if (t_stat == IO_NORMAL && p_context -> include_legacy)
+        if (t_stat == IO_NORMAL)
         {
             t_stat = pickle_object_to_stream(t_stream, kMCStackFileFormatVersion_5_5, p_object, p_part);
             
