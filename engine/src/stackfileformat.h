@@ -27,9 +27,10 @@
 #define kMCStackFileFormatVersion_5_5 (5500)
 #define kMCStackFileFormatVersion_7_0 (7000)
 #define kMCStackFileFormatVersion_8_0 (8000)
+#define kMCStackFileFormatVersion_8_1 (8100)
 
 #define kMCStackFileFormatMinimumExportVersion kMCStackFileFormatVersion_2_4
-#define kMCStackFileFormatCurrentVersion kMCStackFileFormatVersion_8_0
+#define kMCStackFileFormatCurrentVersion kMCStackFileFormatVersion_8_1
 
 
 #define kMCStackFileVersionStringPrefix "REVO"
@@ -39,6 +40,7 @@
 #define kMCStackFileVersionString_5_5 "REVO5500"
 #define kMCStackFileVersionString_7_0 "REVO7000"
 #define kMCStackFileVersionString_8_0 "REVO8000"
+#define kMCStackFileVersionString_8_1 "REVO8100"
 #define kMCStackFileVersionStringLength 8
 
 #define kMCStackFileMetaCardVersionString "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n"

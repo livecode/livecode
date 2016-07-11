@@ -63,6 +63,9 @@ bool MCStackFileParseVersionNumber(const char *p_buffer, uint32_t &r_version)
 // map the version to one of the supported stack file versions
 uint32_t MCStackFileMapToSupportedVersion(uint32_t p_version)
 {
+	if (p_version >= kMCStackFileFormatVersion_8_1)
+		return kMCStackFileFormatVersion_8_1;
+	
 	if (p_version >= kMCStackFileFormatVersion_8_0)
 		return kMCStackFileFormatVersion_8_0;
 	
@@ -82,6 +85,11 @@ void MCStackFileGetHeaderForVersion(uint32_t p_version, const char *&r_header, u
 {
 	switch (MCStackFileMapToSupportedVersion(p_version))
 	{
+		case kMCStackFileFormatVersion_8_1:
+			r_header = kMCStackFileVersionString_8_1;
+			r_size = kMCStackFileVersionStringLength;
+			break;
+			
 		case kMCStackFileFormatVersion_8_0:
 			r_header = kMCStackFileVersionString_8_0;
 			r_size = kMCStackFileVersionStringLength;

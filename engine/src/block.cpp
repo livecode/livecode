@@ -145,8 +145,23 @@ bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectV
 	return p_visitor -> OnBlock(this);
 }
 
+// IM-2016-07-06: [[ Bug 17690 ]] Test if block sizes or offsets require 32bit
+//   values to store (stack file format v8.1).
 uint32_t MCBlock::getminimumstackfileversion(void)
 {
+	bool t_is_unicode;
+	// paragraph text is always unicode when saving as version 7.0 or greater.
+	//    since we can't know which version will be used at this point, the
+	//    best we can do is assume unicode text.
+	/* t_is_unicode = !MCStringIsNative(parent->GetInternalStringRef()); */
+	t_is_unicode = true;
+	
+	uint32_t t_index_size;
+	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
+	
+	if (m_index * t_index_size > UINT16_MAX || m_size * t_index_size > UINT16_MAX)
+		return kMCStackFileFormatVersion_8_1;
+	else
 		return kMCStackFileFormatMinimumExportVersion;
 }
 
@@ -310,13 +325,33 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//
 	// Helpfully, the paragraph loading code makes a SetRanges call to inform
 	// the block of the correct offsets as soon as it knows them.
-	uint2 index, size;
-	if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
-		return checkloadstat(stat);
-	if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
-		return checkloadstat(stat);
-	m_index = index;
-	m_size = size;
+
+	// IM-2016-07-11: [[ Bug 17690 ]] change storage format for index & size from
+	//   16bit to 32bit in stack file format v8.1.
+	if (version >= kMCStackFileFormatVersion_8_1)
+	{
+		uint32_t t_index, t_size;
+		stat = IO_read_uint4(&t_index, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+		
+		stat = IO_read_uint4(&t_size, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+		
+		m_index = t_index;
+		m_size = t_size;
+	}
+	else
+	{
+		uint2 index, size;
+		if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
+			return checkloadstat(stat);
+		if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
+			return checkloadstat(stat);
+		m_index = index;
+		m_size = size;
+	}
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Adjust the flags to their in-memory
 	//   representation. We ditch F_FONT because it is superceeded by the HAS_F*
@@ -465,10 +500,25 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	uint32_t t_index_size;
 	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
 	
-	if ((stat = IO_write_uint2(m_index * t_index_size, stream)) != IO_NORMAL)
-		return stat;
-	if ((stat = IO_write_uint2(m_size * t_index_size, stream)) != IO_NORMAL)
-		return stat;
+	// IM-2016-07-11: [[ Bug 17690 ]] change storage format for index & size from
+	//   16bit to 32bit in stack file format v8.1.
+	if (p_version >= kMCStackFileFormatVersion_8_1)
+	{
+		stat = IO_write_uint4(m_index * t_index_size, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+		
+		stat = IO_write_uint4(m_size * t_index_size, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+	}
+	else
+	{
+		if ((stat = IO_write_uint2(m_index * t_index_size, stream)) != IO_NORMAL)
+			return stat;
+		if ((stat = IO_write_uint2(m_size * t_index_size, stream)) != IO_NORMAL)
+			return stat;
+	}
 
 	return IO_NORMAL;
 }
