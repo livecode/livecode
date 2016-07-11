@@ -418,7 +418,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  FIXED WIDTH INTEGER TYPES
 //
 
-#define __STDC_LIMIT_MACROS 1
+#if !defined(__STDC_LIMIT_MACROS)
+#	define __STDC_LIMIT_MACROS 1
+#endif
 #include <stddef.h>
 #include <stdint.h>
 #include <stddef.h>
