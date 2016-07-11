@@ -918,10 +918,6 @@ public:
     // as appropriate.
     void copyfont(MCFontRef& r_font);
     
-    // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
-    //   a widget.
-    virtual bool haswidgets(void);
-    
 	// IM-2016-07-06: [[ Bug 17690 ]] Return the minimum stack file version that can fully
 	//   encode this object and its properties.
 	virtual uint32_t getminimumstackfileversion(void);

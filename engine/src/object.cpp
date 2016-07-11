@@ -5117,25 +5117,6 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     return t_bounds;
 }
 
-struct MCHasWidgetsObjectVisitor: public MCObjectVisitor
-{
-    bool found_widget;
-    
-    bool OnWidget(MCWidget *p_widget)
-    {
-        found_widget = true;
-        return false;
-    }
-};
-
-bool MCObject::haswidgets(void)
-{
-    MCHasWidgetsObjectVisitor t_visitor;
-    t_visitor . found_widget = false;
-    visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
-    return t_visitor . found_widget;
-}
-
 struct MCRequiredStackFileVersionVisitor : public MCObjectVisitor
 {
 	uint32_t required_version;
