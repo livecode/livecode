@@ -145,6 +145,11 @@ bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectV
 	return p_visitor -> OnBlock(this);
 }
 
+uint32_t MCBlock::getminimumstackfileversion(void)
+{
+		return kMCStackFileFormatMinimumExportVersion;
+}
+
 // MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then the record is an extended
 //   record.
 IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)

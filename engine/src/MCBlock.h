@@ -85,6 +85,8 @@ public:
 	// MCBlock functions
 	void copy(MCBlock *bptr);
 	
+	uint32_t getminimumstackfileversion(void);
+	
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this block has
 	//   an extension style attribute section.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);

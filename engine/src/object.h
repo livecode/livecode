@@ -922,6 +922,14 @@ public:
     //   a widget.
     virtual bool haswidgets(void);
     
+	// IM-2016-07-06: [[ Bug 17690 ]] Return the minimum stack file version that can fully
+	//   encode this object and its properties.
+	virtual uint32_t getminimumstackfileversion(void);
+	
+	// IM-2016-07-06: [[ Bug 17690 ]] Returns the minimum stack file version of this object
+	//   and any child objects.
+	uint32_t geteffectiveminimumstackfileversion(void);
+	
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
     

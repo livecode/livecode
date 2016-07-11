@@ -64,6 +64,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 #include "stackfileformat.h"
 
+#include "paragraf.h"
+#include "MCBlock.h"
+
 #include "exec.h"
 #include "graphicscontext.h"
 
@@ -5131,6 +5134,50 @@ bool MCObject::haswidgets(void)
     t_visitor . found_widget = false;
     visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
     return t_visitor . found_widget;
+}
+
+struct MCRequiredStackFileVersionVisitor : public MCObjectVisitor
+{
+	uint32_t required_version;
+	
+	bool OnObject(MCObject *p_object)
+	{
+		required_version = MCMax(required_version, p_object->getminimumstackfileversion());
+		
+		// keep looking if current required version is less than the maximum
+		return required_version < kMCStackFileFormatCurrentVersion;
+	}
+	
+	// make sure blocks and paragraphs are checked
+	bool OnParagraph(MCParagraph *p_paragraph)
+	{
+		required_version = MCMax(required_version, p_paragraph->getminimumstackfileversion());
+		
+		// keep looking if current required version is less than the maximum
+		return required_version < kMCStackFileFormatCurrentVersion;
+	}
+	
+	bool OnBlock(MCBlock *p_block)
+	{
+		required_version = MCMax(required_version, p_block->getminimumstackfileversion());
+		
+		// keep looking if current required version is less than the maximum
+		return required_version < kMCStackFileFormatCurrentVersion;
+	}
+};
+
+uint32_t MCObject::geteffectiveminimumstackfileversion(void)
+{
+	MCRequiredStackFileVersionVisitor t_visitor;
+	t_visitor.required_version = kMCStackFileFormatMinimumExportVersion;
+	visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	return t_visitor.required_version;
+}
+
+uint32_t MCObject::getminimumstackfileversion(void)
+{
+	// Default minimum stack file version
+	return kMCStackFileFormatMinimumExportVersion;
 }
 
 // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus

@@ -162,6 +162,9 @@ public:
     
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *, MCObject *pass_from);
 
+	// IM-2016-07-07: [[ Bug 17690 ]] Override - widgets not available before v8.0
+	virtual uint32_t getminimumstackfileversion(void);
+	
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t p_version);
 	virtual IO_stat load(IO_handle stream, uint32_t p_version);
 

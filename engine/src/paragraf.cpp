@@ -464,6 +464,11 @@ bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObj
 	return t_continue;
 }
 
+uint32_t MCParagraph::getminimumstackfileversion(void)
+{
+	return kMCStackFileFormatMinimumExportVersion;
+}
+
 // **** mutate blocks
 IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 {
