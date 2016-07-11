@@ -294,6 +294,7 @@
 			'src/stack3.cpp',
 			'src/stackcache.cpp',
 			'src/stacke.cpp',
+			'src/stackfileformat.cpp',
 			'src/stacklst.cpp',
 			'src/stackview.cpp',
 			'src/styledtext.cpp',

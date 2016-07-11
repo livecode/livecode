@@ -2405,7 +2405,7 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     t_stack = nil;
     t_binary_fail = false;
     
-    if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
+    if (MCStringFirstIndexOf(p_data, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
     {
         char_t* t_string;
         uindex_t t_length;
@@ -2482,7 +2482,7 @@ void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObje
 {
     uint4 offset;
    
-    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
+    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
