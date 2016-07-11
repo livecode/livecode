@@ -40,7 +40,7 @@ Use the layerMode property to specify if an object is static or dynamic. The Liv
 
 If you specify the effective keyword, getting the <layerMode> returns how the engine is actually treating the layer, rather than what you requested it to be. There can be a difference for a number of reasons:
 
-1) You are not using a compositor (set using <compositorType property>) - effective layerMode is set to 'static'. 
+1) You are not using a compositor (set using <compositorType>) - effective layerMode is set to 'static'. 
 2) You have a static <layerMode> object with a non-copy/blendSrcOver ink set - effective layerMode is set to 'dynamic'.
 3) You have a scrolling <layerMode> on a non-group or an adorned group - effective layerMode is set to 'dynamic'.
 
@@ -56,8 +56,8 @@ Take a platform game as an example. The main character, any animated elements an
 NON-GAME DRAG EXAMPLE
 Consider a drag-drop interface where a user can 'pick' something up and drop it elsewhere. While the object is being dragged across the stack the <layerMode> can be set to 'dynamic' (particularly important if it has graphic effects applied). Once in its final location the <layerMode> can be returned to 'static'
 
->*Warning:* The <layerMode> only has an effect if the <compositorType property> of the stack is not empty.
+>*Warning:* The <layerMode> only has an effect if the <compositorType> of the stack is not empty.
 
-References: compositorTileSize (property), compositorType property (property), compositorType (property), compositorCacheLimit (property)
+References: compositorTileSize (property), compositorType (property), compositorCacheLimit (property)
 
 Tags: windowing

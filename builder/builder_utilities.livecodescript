@@ -1,5 +1,5 @@
 ﻿script "BuilderUtilities"
-constant kMergExtVersion = "2016-6-24"
+constant kMergExtVersion = "2016-7-4"
 constant kTSNetVersion = "1.2"
 
 local sEngineDir
@@ -11,9 +11,9 @@ local sBuiltDocsDir
 
 ////////////////////////////////////////////////////////////////////////////////
 
-command builderLog  pType, pMessage
+command builderLog  pType, pMessage, pContext
    if there is a stack "Builder" then
-      dispatch "__builderLog" to stack "Builder" with  pType, pMessage
+      dispatch "__builderLog" to stack "Builder" with  pType, pMessage, pContext
    end if
 end builderLog
 

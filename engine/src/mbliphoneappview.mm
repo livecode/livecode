@@ -45,16 +45,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 	m_in_deactivate_keyboard = false;
 	m_animate_autorotation = true;
 	
-	m_text_view = [[UITextView alloc] initWithFrame: CGRectNull];
+	m_text_view = [[UITextView alloc] initWithFrame: CGRectZero];
 	[m_text_view setHidden: YES];
 	[m_text_view setEditable: YES];
 	[m_text_view setDelegate: self];
 	[m_text_view setAutocorrectionType: UITextAutocorrectionTypeNo];
 	[m_text_view setAutocapitalizationType: UITextAutocapitalizationTypeNone];
 	
-	m_main_view = [[MCIPhoneMainView alloc] initWithFrame: CGRectNull];
+	m_main_view = [[MCIPhoneMainView alloc] initWithFrame: CGRectZero];
 	
-	m_display_view = [[MCIPhoneUIKitDisplayView alloc] initWithFrame: CGRectNull];
+	m_display_view = [[MCIPhoneUIKitDisplayView alloc] initWithFrame: CGRectZero];
 
 	[self addSubview: m_display_view];
 	[self addSubview: m_text_view];

@@ -329,8 +329,11 @@ void MCEngineGetLoadedExtensions(MCExecContext& ctxt, MCProperListRef& r_list)
 Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_parameters)
 {
     if (MCextensionschanged)
+	{
         __rebuild_library_handler_list();
-    
+		MCextensionschanged = false;
+	}
+	
     if (MCextensionshandlermap == nil)
         return ES_NOT_HANDLED;
     
