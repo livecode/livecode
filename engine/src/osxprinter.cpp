@@ -77,8 +77,8 @@ extern void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_
 // SN-2014-12-22: [[ Bug 14278 ]] Parameter added to choose a UTF-8 string.
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true, bool p_utf8_string = false);
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
-extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
-extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_src_rect, bool p_invert, CGImageRef &r_image);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1178,9 +1178,9 @@ bool MCGImageToCGImage(MCGImageRef p_src, CGImageRef &r_image)
 	if (t_success)
 		t_success = nil != (t_colorspace = OSX_CGColorSpaceCreateGenericRGB());
 	
-	MCGRectangle t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
+	MCGIntegerRectangle t_src_rect = MCGIntegerRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
 	if (t_success)
-		t_success = MCGImageToCGImage(p_src, t_src_rect, t_colorspace, true, true, r_image);
+		t_success = MCGImageToCGImage(p_src, t_src_rect, t_colorspace, true, r_image);
 	
 	if (t_colorspace != nil)
 		CGColorSpaceRelease(t_colorspace);
@@ -1814,7 +1814,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			
 			// MW-2013-10-01: [[ ImprovedPrint ]] If we didn't manage to use the input data, use the bitmap instead.
 			if (t_image == nil)
-				/* UNCHECKED */ MCGImageToCGImage(p_mark->image.descriptor.image, MCGRectangleMake(0, 0, t_dst_width, t_dst_height), false, false, t_image);
+				/* UNCHECKED */ MCGImageToCGImage(p_mark->image.descriptor.image, MCGIntegerRectangleMake(0, 0, t_dst_width, t_dst_height), false, t_image);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
@@ -1913,7 +1913,7 @@ void MCQuartzMetaContext::endcomposite(MCRegionRef p_clip_region)
 	m_composite_context = nil;
 	
 	CGImageRef t_cgimage = nil;
-	/* UNCHECKED */ MCGImageToCGImage(t_image, MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image)), false, true, t_cgimage);
+	/* UNCHECKED */ MCGImageToCGImage(t_image, MCGIntegerRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image)), true, t_cgimage);
 	
 	CGContextDrawImage(m_context, CGRectMake(m_composite_rect . x, m_composite_rect . y, m_composite_rect . width, m_composite_rect . height), t_cgimage);
 	CGImageRelease(t_cgimage);

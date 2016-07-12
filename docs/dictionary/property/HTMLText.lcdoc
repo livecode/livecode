@@ -40,7 +40,7 @@ Instead, it can be understood as a way to faithfully represent the entire conten
 using HTML-style tags and attributes.
 
 The <HTMLText> of a <field(object)> or <chunk> is a <string>.
-If the <effective> keyword is specified the <htmlText> property returns the <HTML> of the field with explicit formatting. 
+If the <effective> keyword is specified the <HTMLText> property returns the <HTML> of the field with explicit formatting. 
 For example if the <textFont> of the stack is set this is not included in the <HTMLText> but is included in the <effective> <HTMLText>.
 
 The <HTMLText> <property> is a representation of the styled text and paragraph formatting of the <field(object)>. 
@@ -205,13 +205,13 @@ Support was added for &lt;strong&gt; and &lt;em&gt; tags in version 6.0.
 
 References: ASCII (glossary), backgroundColor (property), borderColor (property), borderWidth (property), character set (glossary), 
 charToNum (function), chunk (glossary), colorNames (function), default (glossary), dontWrap (property), dragData (property), 
-effective (keyword), encode (glossary), field (keyword), field (object), firstIndent (property), firstIndent (property), 
+effective (keyword), encode (glossary), field (keyword), field (object), firstIndent (property), 
 fontLanguage (property), foregroundColor (property), format (function), format (glossary), get (command), hexadecimal (glossary), 
 hGrid (property), hidden (property), HTML (glossary), HTMLText (property), imageSource (property), integer (glossary), 
 leftIndent (property), linkText (property), listStyle (property), metadata (property), mimeText (property), negative (glossary), 
 numToChar (function), padding (property), property (glossary), rightIndent (property), RTFText (property), set (command), 
 spaceAbove (property), spaceBelow (property), string (glossary), tabStops (property), textAlign (property), textFont (property), 
 textShift (property), textSize (property), textStyle (property), unicodeText (property), URL (keyword), vGrid (property), 
-Windows (glossary), 
+Windows (glossary)
 
 Tags: text processing
