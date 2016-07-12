@@ -665,18 +665,8 @@ bool MCValueConvertToStringForSave(MCValueRef self, MCStringRef& r_string)
 		r_string = MCValueRetain(MCNameGetString((MCNameRef)self));
 		break;
 	case kMCValueTypeCodeNumber:
-		{
-			char *t_buffer;
-			uint32_t t_buffer_length;
-			t_buffer = nil;
-			t_buffer_length = 0;
-
-			uint32_t t_length;
-			t_length = MCU_r8tos(t_buffer, t_buffer_length, MCNumberFetchAsReal((MCNumberRef)self), 8, 6, 0);
-
-			t_success = MCStringCreateWithNativeChars((char_t *)t_buffer, t_length, r_string);
-            delete[] t_buffer;
-		}
+		t_success = MCU_r8tos(MCNumberFetchAsReal(static_cast<MCNumberRef>(self)),
+		                      8, 6, 0, r_string);
 		break;
 	case kMCValueTypeCodeString:
 		t_success = MCStringCopy((MCStringRef)self, r_string);
