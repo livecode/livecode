@@ -5,8 +5,10 @@ Synonyms: word
 Type: glossary
 
 Description:
-A <chunk> of text that is <delimit|delimited> by spaces, tabs, or returns.
+A <chunk> of text that is <delimit|delimited> by spaces, tabs, or
+returns. 
 
 References: chunk (glossary), delimit (glossary)
 
 Tags: text processing
+

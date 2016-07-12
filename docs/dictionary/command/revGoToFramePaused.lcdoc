@@ -4,13 +4,15 @@ Type: command
 
 Syntax: revGoToFramePaused <animationName>,{<keyFrameName> | <frameNumber>}
 
-Summary: No longer supported, and included for backwards compatibility only. Moves an animation created in the Animation Builder to the specified frame.
+Summary: No longer supported, and included for backwards compatibility
+only. Moves an animation created in the Animation Builder to the
+specified frame.
 
-Associations: Animation library
+Associations: animation library
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revGoToFramePaused "Fireworks",25 -- go to frame 25
@@ -19,25 +21,38 @@ Example:
 revGoToFramePaused (field "Current Animation"),(field "current Frame")
 
 Parameters:
-animationName: An expression that evaluates to the name of an animation on the current card.
+animationName: An expression that evaluates to the name of an animation
+on the current card.
+
 keyFrameName: The name of a key frame in the animation.
+
 frameNumber: The number of any frame.
 
 Description:
-The revGoToFramePaused command operates on animations created with the Animation Builder, which was included in versions of LiveCode older than 2.5. It is no longer supported.
+The revGoToFramePaused command operates on animations created with the
+Animation Builder, which was included in versions of LiveCode older than
+2.5. It is no longer supported.
 
-Use the <revGoToFramePaused> <command> to move an animation to its starting <frame> before playing, or to restore it to a <frame> after playing.
+Use the <revGoToFramePaused> <command> to move an animation to its
+starting <frame> before playing, or to restore it to a <frame> after
+playing. 
 
-Animations were created with the Animation Builder, which is no longer available. It was removed in LiveCode 2.5.
+Animations were created with the Animation Builder, which is no longer
+available. It was removed in LiveCode 2.5.
 
-The <animationName> must be an animation that was created on the <current card> of the <defaultStack>.
+The <animationName> must be an animation that was created on the
+<current card> of the <defaultStack>.
 
-To play an animation while allowing other handlers to execute, use the revGoToFramePause <command> repeatedly for each frame, using the <send> <command> :
+To play an animation while allowing other handlers to execute, use the
+revGoToFramePause <command> repeatedly for each frame, using the <send>
+<command> :
 
-  on goNextFrame theFrame -- 1 frame every 20th of a second
+    on goNextFrame theFrame -- 1 frame every 20th of a second
     revGoToFramePaused "My Animation",theFrame  
     send ("goNextFrame" && (theFrame + 1)) to me in 3 ticks
-  end goNextFrame
+
+    end goNextFrame
+
 
 >*Important:*  The <revGoToFramePaused> <command> is part of the 
 > <Animation library>. To ensure that the <command> works in a 
@@ -47,6 +62,15 @@ To play an animation while allowing other handlers to execute, use the revGoToFr
 > <Standalone Application Settings> window, make sure the "Animation" 
 > library checkbox is checked.
 
-References: defaultStack (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), revStopAnimation (command), group (command), current card (glossary), main stack (glossary), handler (glossary), frame (glossary), message (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), application (glossary), LiveCode custom library (glossary), Animation library (library), send (library), library (library)
+References: revStopAnimation (command), group (command),
+current card (glossary), main stack (glossary), handler (glossary),
+frame (glossary), message (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+application (glossary), LiveCode custom library (glossary),
+Animation library (library), send (library), library (library),
+startup (message), openBackground (message), preOpenStack (message),
+openStack (message), preOpenCard (message), defaultStack (property)
 
 Tags: multimedia
+

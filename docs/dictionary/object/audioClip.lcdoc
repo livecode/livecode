@@ -1,18 +1,18 @@
 Name: audioClip
 
+Synonyms: ac
+
 Type: object
 
 Syntax: audioClip
 
 Summary: An <object type> that contains sound data.
 
-Synonyms: ac
-
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 play audioClip theCurrentSoundtrack
@@ -30,16 +30,19 @@ separated from the stack file and lost.
 Audio clips can be in WAV, AIFF, or AU format
 
 An audio clip is contained in a stack. Audio clips cannot contain other 
-objects. (An audio clip is not a control, since it has no user interface 
-and cannot be owned by a <card>.)
+objects. (An audio clip is not a control, since it has no user
+interface and cannot be owned by a <card>.)
 
 To play an audioClip, use the syntax 
 
-	play audioClip <filename_of_audioclip>
-	
+    play audioClip <filename_of_audioclip>
+
+
 To stop an audioClip, use the syntax 
 
-	play stop
+    play stop
 
-References: card (keyword), templateAudioClip (keyword), 
-object type (glossary), stack (object)
+
+References: object type (glossary), card (keyword),
+templateAudioClip (keyword), stack (object)
+

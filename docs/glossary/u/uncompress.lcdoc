@@ -1,6 +1,7 @@
 Name: uncompress
 
-Synonyms: uncompressed,uncompressing,uncompress,decompressed,decompressing,decompress
+Synonyms: uncompressed, uncompressing, uncompress, decompressed,
+decompressing, decompress
 
 Type: glossary
 
@@ -10,3 +11,4 @@ To return <compress|compressed> data to its original state.
 References: compress (glossary)
 
 Tags: text processing
+

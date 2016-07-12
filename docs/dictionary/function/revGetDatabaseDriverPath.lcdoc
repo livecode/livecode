@@ -4,17 +4,18 @@ Type: function
 
 Syntax: revGetDatabaseDriverPath()
 
-Summary: Returns the folder where the Database library looks for database drivers
+Summary: Returns the folder where the Database library looks for
+database drivers
 
-Associations: Database library
+Associations: database library
 
 Introduced: 2.9
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
-Security: disk,network
+Security: disk, network
 
 Example:
 if revGetDatabaseDriverPath is not tCustomDriverFolder then
@@ -23,9 +24,9 @@ end if
 
 Description:
 Use the <revGetDatabaseDriverPath> <function> if you need to know where 
-the <Database library> is currently loading drivers from. This is useful 
-if you are using custom database drivers or if you want to obtain a list 
-of available drivers.
+the <Database library> is currently loading drivers from. This is
+useful if you are using custom database drivers or if you want to obtain
+a list of available drivers.
 
 >*Important:*  The <revGetDatabaseDriverPath> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -35,7 +36,8 @@ of available drivers.
 > <Standalone Application Settings> window, make sure the "Database" 
 > library checkbox is checked.
 
-References: revSetDatabaseDriverPath (command), 
-Standalone Application Settings (glossary), 
-standalone application (glossary), function (glossary), 
-Database library (library), LiveCode custom library (glossary)
+References: revSetDatabaseDriverPath (command),
+Standalone Application Settings (glossary),
+standalone application (glossary), function (glossary),
+LiveCode custom library (glossary), Database library (library)
+

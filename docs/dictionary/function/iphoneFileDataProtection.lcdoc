@@ -2,7 +2,7 @@ Name: iphoneFileDataProtection
 
 Type: function
 
-Syntax: iphoneFileDataProtection <filename> 
+Syntax: iphoneFileDataProtection <filename>
 
 Summary: Retrieves the data protection level of a file.
 
@@ -20,15 +20,24 @@ end if
 Parameters:
 filename (string): A string containing the path to the file.
 
-Returns (enum):
-- none:
-- complete:
-- complete unless open: (iOS 5 and later only)
-- complete until first user authentication: (iOS 5 and later only)
+Returns (enum): 
+
+-   none: 
+-   complete: 
+-   complete unless open: 
+-   complete until first user authentication: 
+
 
 Description:
-Use the <iphoneFileDataProtection> function to query the current level of protection of a particular file set using the command <iphoneSetFileDataProtection>.
+Use the <iphoneFileDataProtection> function to query the current level
+of protection of a particular file set using the command
+<iphoneSetFileDataProtection>. 
 
-References: iphoneSetFileDataProtection (command), iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function), iphoneDoNotBackupFile (function), protectedDataWillBecomeUnavailable (message), protectedDataDidBecomeAvailable (message)
+References: iphoneSetFileDataProtection (command),
+iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function),
+iphoneDoNotBackupFile (function),
+protectedDataWillBecomeUnavailable (message),
+protectedDataDidBecomeAvailable (message)
 
 Tags: ui
+

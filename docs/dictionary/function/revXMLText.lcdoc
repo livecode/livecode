@@ -6,13 +6,13 @@ Syntax: revXMLText(<treeID> [, <startNode>] [, <formatted>])
 
 Summary: <return|Returns> the contents of an <XML tree> as XML text.
 
-Associations: XML library
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -26,16 +26,26 @@ Example:
 put revXMLText(tTreeId, ,true) into URL "file:New Customers.xml"
 
 Parameters:
-treeID: The the number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
-startNode: The path to the node where you want to start. If you don't specify a startNode, the revXMLText function starts at the root node and returns the entire XML tree.
-formatted: Whether or not to produce xml with indenting and line breaks, i.e. "pretty-printed". If you don't specify a formatted value, the default is not to format the text, this will  result in the xml being output as a single block with no line breaks.
+treeID: The the number returned by the revXMLCreateTree or
+revXMLCreateTreeFromFile function when you created the XML tree.
+
+startNode: The path to the node where you want to start. If you don't
+specify a startNode, the revXMLText function starts at the root node and
+returns the entire XML tree.
+
+formatted: Whether or not to produce xml with indenting and line breaks,
+i.e. "pretty-printed". If you don't specify a formatted value, the
+default is not to format the text, this will result in the xml being
+output as a single block with no line breaks.
 
 Returns: The <revXMLText> function returns XML text.
 
 Description:
-Use the <revXMLText> <function> to turn an <XML tree> back into an <XML document>.
+Use the <revXMLText> <function> to turn an <XML tree> back into an <XML
+document>. 
 
-If the <revXMLText> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLText> <function> encounters an error, it <return|returns>
+an error message starting with "xmlerr".
 
 >*Important:*  The <revXMLText> <function> is part of the 
 > <XML library>. To ensure that the <function> works in a 
@@ -45,6 +55,12 @@ If the <revXMLText> <function> encounters an error, it <return|returns> an error
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), revXMLAppend (command), revXMLChildNames (function), revXMLAttributes (function), revXMLTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML document (glossary), XML library (library), LiveCode custom library (glossary)
+References: revXMLAppend (command), function (control structure),
+revXMLChildNames (function), revXMLAttributes (function),
+revXMLTree (function), Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary), return (glossary),
+XML document (glossary), LiveCode custom library (glossary),
+XML library (library)
 
 Tags: text processing
+

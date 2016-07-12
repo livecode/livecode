@@ -2,17 +2,18 @@ Name: standaloneSaved
 
 Type: message
 
-Syntax: standaloneSaved <folderSavedIn> 
+Syntax: standaloneSaved <folderSavedIn>
 
-Summary: Sent to the mainstack after it has been saved as a standalone application.
+Summary: Sent to the mainstack after it has been saved as a standalone
+application. 
 
 Associations: stack
 
 Introduced: 2.2
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 on standaloneSaved pFolder
@@ -27,9 +28,13 @@ on standaloneSaved pFolder
 end standaloneSaved
 
 Parameters:
-folderSavedIn: folderSavedIn is a string variable containing the folder that the standalone application was saved in.
+folderSavedIn: folderSavedIn is a string variable containing the folder
+that the standalone application was saved in.
 
 Description:
-After a stack has been saved as a standalone application it is reopened. This mesage is then sent to the mainstack to allow custom build time automation.
+After a stack has been saved as a standalone application it is reopened.
+This mesage is then sent to the mainstack to allow custom build time
+automation. 
 
 References: savingStandalone (message)
+

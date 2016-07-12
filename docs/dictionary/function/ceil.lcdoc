@@ -2,17 +2,18 @@ Name: ceil
 
 Type: function
 
-Syntax: the ceil of <number> 
+Syntax: the ceil of <number>
 
 Syntax: ceil(<number>)
 
-Summary: <return|Returns> the smallest integer greater than or equal to number.
+Summary: <return|Returns> the smallest integer greater than or equal to
+number. 
 
 Introduced: 6.7
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 ceil(33.567) -- result is 34
@@ -26,10 +27,19 @@ number: Any number, or expression that evaluates to a number.
 Returns: The <ceil> <function> <return|returns> an <integer>.
 
 Description:
-Use the <ceil> <function> to return the greatest integer less than or equal to a number.
+Use the <ceil> <function> to return the greatest integer less than or
+equal to a number.
 
-The <ceil> function does not always <return(constant)> the <integer> closest to the <number>.. For example, ceil(5.1) <return(glossary)|returns> 6, but  ceil(4.99) <return(glossary)|returns> 5.
+The <ceil> function does not always <return(constant)> the <integer>
+closest to the <number>.. For example, ceil(5.1)
+<return(glossary)|returns> 6, but ceil(4.99) <return(glossary)|returns>
 
-References: integer (keyword), return (constant), trunc (function), abs (function), floor (function), return (glossary), function (control structure)
+5. 
+
+
+References: return (constant), function (control structure),
+trunc (function), abs (function), floor (function), return (glossary),
+integer (keyword)
 
 Tags: math
+

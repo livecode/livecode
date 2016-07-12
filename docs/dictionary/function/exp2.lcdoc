@@ -2,7 +2,7 @@ Name: exp2
 
 Type: function
 
-Syntax: the exp2 of <number> 
+Syntax: the exp2 of <number>
 
 Syntax: exp2(<number>)
 
@@ -10,9 +10,9 @@ Summary: <return|Returns> the <binary> exponential of a number.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 exp2(8) -- returns 256
@@ -33,3 +33,4 @@ The expression exp2(number) is equal to 2^number.
 References: exp (function), binary (glossary), return (glossary)
 
 Tags: math
+

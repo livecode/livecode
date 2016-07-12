@@ -4,13 +4,14 @@ Type: command
 
 Syntax: intersect <targetArray> with <templateArray> [recursively]
 
-Summary: Removes <element(glossary)|elements> from an <array> if they have no corresponding <element(keyword)> in another <array>.
+Summary: Removes <element(glossary)|elements> from an <array> if they
+have no corresponding <element(keyword)> in another <array>.
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 local tLeft, tRight
@@ -44,58 +45,68 @@ intersect tLeft with tRight recursively
 
 Example:
 function ScriptIntersect pLeft, pRight, pRecursive
-	repeat for each key tKey in pLeft
-		if tKey is not among the keys of pRight then
-			delete variable pLeft[tKey]
-		else if pRecursive then
-			put ScriptIntersect(pLeft[tKey], pRight[tKey], true) into pLeft[tKey]
-		end if
-	end repeat
-	
-	return pLeft
+  repeat for each key tKey in pLeft
+    if tKey is not among the keys of pRight then
+      delete variable pLeft[tKey]
+    else if pRecursive then
+      put ScriptIntersect(pLeft[tKey], pRight[tKey], true) \
+         into pLeft[tKey]
+    end if
+  end repeat
+
+  return pLeft
 end ScriptIntersect
 
 function EngineIntersect pLeft, pRight, pRecursive
-	if pRecursive then
-		intersect pLeft with pRight recursively
-	else
-		intersect pLeft with pRight
-	end if
-	
-	return pLeft
+  if pRecursive then
+    intersect pLeft with pRight recursively
+  else
+    intersect pLeft with pRight
+  end if
+
+  return pLeft
 end EngineIntersect
 
 -- This function should return true for all inputs.
 function CheckIntersect pLeft, pRight, pRecursive
-	return ScriptIntersect(pLeft, pRight, pRecursive) is EngineIntersect(pLeft, pRight, pRecursive)
+  return ScriptIntersect(pLeft, pRight, pRecursive) \
+     is EngineIntersect(pLeft, pRight, pRecursive
 end CheckIntersect
 
 Parameters:
 targetArray (array): The value to modify.
+
+
 templateArray (array): The array to intersect <array> with.
 
+
 Description:
-Use the <intersect> <command> to filter out <element(glossary)|elements> from an <array> 
-according to the contents of another <array>.
+Use the <intersect> <command> to filter out <element(glossary)|elements>
+from an <array> according to the contents of another <array>.
 
-The recursively adverb controls whether the intersection recurses through nested arrays or 
-not.
+The recursively adverb controls whether the intersection recurses
+through nested arrays or not.
 
-Each key of <targetArray> is checked to see whether there is a matching <key> in 
-<templateArray>. The <element(glossary)|elements> of <targetArray> that do not match an 
-<element(keyword)> of the <templateArray> are removed from <targetArray>.
+Each key of <targetArray> is checked to see whether there is a matching
+<key> in <templateArray>. The <element(glossary)|elements> of
+<targetArray> that do not match an <element(keyword)> of the
+<templateArray> are removed from <targetArray>.
 
-After the <intersection> <command> is <execute|executed>, the <keys> of <targetArray> 
-consists of the logical intersection of the <keys> of the original <targetArray> and the 
-keys of <templateArray>.
+After the <intersection> <command> is <execute|executed>, the <keys> of
+<targetArray> consists of the logical intersection of the <keys> of the
+original <targetArray> and the keys of <templateArray>.
 
-The content of individual elements of the <templateArray> does not affect the final result. 
-Only which <element(glossary)|elements> exist in the <templateArray>, not their content, 
-controls which <element(glossary)|elements> of <targetArray> are retained and which are 
-removed. If <targetArray> and <templateArray> have the same set of 
-<element(glossary)|elements> but different content in each <element(keyword)>, the 
-<intersect> <command> does not change the value of <targetArray>.
+The content of individual elements of the <templateArray> does not
+affect the final result. Only which <element(glossary)|elements> exist
+in the <templateArray>, not their content, controls which
+<element(glossary)|elements> of <targetArray> are retained and which are
+removed. If <targetArray> and <templateArray> have the same set of
+<element(glossary)|elements> but different content in each
+<element(keyword)>, the <intersect> <command> does not change the value
+of <targetArray>.
 
-References: split (command), union (command), element (keyword), element (glossary), array (glossary), command (glossary), key (glossary)
+References: split (command), union (command), element (glossary),
+array (glossary), command (glossary), key (glossary), element (keyword)
 
 Tags: properties
+

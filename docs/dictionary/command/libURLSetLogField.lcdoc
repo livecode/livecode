@@ -2,19 +2,20 @@ Name: libURLSetLogField
 
 Type: command
 
-Syntax: libURLSetLogField <longFieldDescriptor> 
+Syntax: libURLSetLogField <longFieldDescriptor>
 
 Syntax: libURLSetLogField "none"
 
-Summary: Specifies a field for logging information about uploads and downloads.
+Summary: Specifies a field for logging information about uploads and
+downloads. 
 
-Associations: Internet library
+Associations: internet library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -26,26 +27,39 @@ libURLSetLogField(the cLogField of me)
 
 Parameters:
 longFieldDescriptor: 
-fieldDescriptor: Any expression that evaluates to a field reference.>*Important:* The libURLSetLogField command does not accept direct field references. For example, the following statement causes an error message:   libURLSetLogField field "Log" -- CAN'T USE THIS FORM Instead, use a form that evaluates to a field reference, like this:
-: libURLSetLogField the name of field "Log" -- use this form instead  libURLSetLogField ("field" && quote & "Log" & quote) -- or this
+
+fieldDescriptor: Any expression that evaluates to a field
+reference.>*Important:* The libURLSetLogField command does not accept
+direct field references. For example, the following statement causes an
+error message: libURLSetLogField field "Log" -- CAN'T USE THIS FORM
+Instead, use a form that evaluates to a field reference, like this: :
+libURLSetLogField the name of field "Log" -- use this form instead
+libURLSetLogField ("field" && quote & "Log" & quote) -- or this
 
 Description:
 Use the <libURLSetLogField> <command> to <debug> file transfers.
 
->*Important:*  The <libURLSetLogField> <command> does not accept direct <object reference|field references>. For example, the following <statement> causes an error message:
+>*Important:*  The <libURLSetLogField> <command> does not accept direct
+<object reference|field references>. For example, the following
+<statement> causes an error message:
 
-  libURLSetLogField field "Log" -- CAN'T USE THIS FORM
+    libURLSetLogField field "Log" -- CAN'T USE THIS FORM
+
 
 Instead, use a form that evaluates to a field reference, like this:
 
-  libURLSetLogField the name of field "Log" -- use this form instead
-  libURLSetLogField ("field" && quote & "Log" & quote) -- or this
+    libURLSetLogField the name of field "Log" -- use this form instead
+    libURLSetLogField ("field" && quote & "Log" & quote) -- or this
 
-During ftp and <http> transfers, LiveCode logs the data sent from the <server>. If a log field has been set, this data is placed after the log <field|field's> contents.
+
+During ftp and <http> transfers, LiveCode logs the data sent from the
+<server>. If a log field has been set, this data is placed after the log
+<field|field's> contents.
 
 To stop logging, use the following statement:
 
-  libURLSetLogField "none"
+    libURLSetLogField "none"
+
 
 >*Important:* The <libURLSetLogField> <command> is part of the 
 > <Internet library>. To ensure that the <command> works in a 
@@ -55,6 +69,17 @@ To stop logging, use the following statement:
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: ID (property), name (property), application (glossary), standalone application (glossary), debug (glossary), object reference (glossary), command (glossary), main stack (glossary), group (glossary), Standalone Application Settings (glossary), server (glossary), HTTP (glossary), message (glossary), statement (glossary), handler (glossary), startup (message), openBackground (message), preOpenStack (message), openStack (message), Internet library (library), library (library), LiveCode custom library (glossary), long (keyword), field (object), libURLErrorData (function), get (command), post (command), function (control structure)
+References: get (command), post (command), function (control structure),
+libURLErrorData (function), application (glossary),
+standalone application (glossary), debug (glossary),
+object reference (glossary), command (glossary), main stack (glossary),
+group (glossary), Standalone Application Settings (glossary),
+server (glossary), HTTP (glossary), message (glossary),
+statement (glossary), handler (glossary),
+LiveCode custom library (glossary), long (keyword),
+Internet library (library), library (library), startup (message),
+openBackground (message), preOpenStack (message), openStack (message),
+field (object), ID (property), name (property)
 
 Tags: networking
+

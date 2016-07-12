@@ -1,18 +1,18 @@
 Name: card
 
+Synonyms: cd
+
 Type: object
 
 Syntax: card
 
 Summary: An <object type> that is a single page of a <stack>.
 
-Synonyms: cd
-
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go to first card
@@ -29,7 +29,8 @@ can be seen at a time. Each stack contains one or more cards.
 
 Cards are contained in stacks, and may contain any kind of control.
 
-References: templateCard (keyword), stack window (glossary), 
-object type (glossary), stack (object), control (object)
+References: stack window (glossary), object type (glossary),
+templateCard (keyword), stack (object), control (object)
 
 Tags: objects
+

@@ -15,9 +15,14 @@ Platforms: mobile
 Example:
 get iphoneGetNotificationBadgeValue()
 
-Returns: The <iphoneGetNotificationBadgeValue> function returns the badge value of the application. If the value is positive, then the bade is displayed on the application, if the value is 0 (zero), then the badge is not displayed.
+Returns: The <iphoneGetNotificationBadgeValue> function returns the
+badge value of the application. If the value is positive, then the bade
+is displayed on the application, if the value is 0 (zero), then the
+badge is not displayed.
 
 Description:
-Use the <iphoneGetNotificationBadgeValue> function to return the badge value of the application.
+Use the <iphoneGetNotificationBadgeValue> function to return the badge
+value of the application.
 
 References: iphoneSetNotificationBadgeValue (command)
+

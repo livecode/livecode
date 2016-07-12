@@ -2,19 +2,19 @@ Name: revXMLRPC_AddParam
 
 Type: command
 
-Syntax: revXMLRPC_AddParam <XML-RPC document>, <dataType>, <dataValue> 
+Syntax: revXMLRPC_AddParam <XML-RPC document>, <dataType>, <dataValue>
 
 Summary: Adds a single parameter to an XML-RPC document structure.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 revXMLRPC_AddParam theRequest, "int", 55
@@ -22,7 +22,7 @@ revXMLRPC_AddParam theRequest, "int", 55
 Example:
 revXMLRPC_AddParam theRequest, "base64", base64Encode(theBinaryData)
 
-Example :
+Example:
 put "<struct>" & \
     "<member><name>left</name>" & \
     "<value><int>10</int></value></member>" & \
@@ -36,14 +36,14 @@ put "<struct>" & \
 revXMLRPC_AddParam theDocID, "xml", theStruct
 
 Parameters:
-dataType: The type of data contained in the <dataValue> parameter. 
+dataType: The type of data contained in the <dataValue> parameter.
 
 dataValue: The content of the data you want to add as a new parameter.
 
-documentID: The number returned by the revXMLRPC_CreateRequest when you 
+documentID: The number returned by the revXMLRPC_CreateRequest when you
 created the XML-RPC request.
 
-The result: If the <revXMLRPC_AddParam> <command> encounters an error, 
+The result: If the <revXMLRPC_AddParam> <command> encounters an error,
 the <result> is set to an error message beginning with "xmlerr" or 
 "xmlrpcerr".
 
@@ -52,6 +52,7 @@ Use the <revXMLRPC_AddParam> <command> to add a single parameter of a
 given type to an existing <XML-RPC document>.
 
 The <dataType> can be any of the following:
+
  - "base64": the value is base64-encoded
  - "boolean": the value is true or false
  - "dateTime.iso8601": the value is an Internet date
@@ -61,17 +62,22 @@ The <dataType> can be any of the following:
  - "array": the value is an array of data (see below)
  - "xml": the value is data in xml-format (see below)
 
+
 To pass an array of data, you have to pass the type as well, in the 
 following format:
 
-	array[:element type]
+    array[:element type]
+
 
 For example:
-	local theArray
-	repeat with i = 1 to 10
-	  put random(100) into theArray[i]
+
+    local theArray
+    repeat with i = 1 to 10
+
+    put random(100) into theArray[i]
 	end repeat
 	revXMLRPC_AddParam theDocID, "array:int", theArray
+
 
 If you do not specify an element type, the <revXMLRPC_AddParam> 
 <command> assumes you're passing an array of strings.
@@ -87,6 +93,13 @@ or structs) you can specify a <dataType> of xml, and pass raw xml.
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary), revXMLRPC_GetParamType (function), revXMLRPC_GetParam (function), result (function), revXMLRPC_GetParamCount (function), XML-RPC library (library), LiveCode custom library (glossary)
+References: revXMLRPC_GetParamType (function),
+revXMLRPC_GetParam (function), result (function),
+revXMLRPC_GetParamCount (function),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+XML-RPC document (glossary), LiveCode custom library (glossary),
+XML-RPC library (library)
 
 Tags: networking
+

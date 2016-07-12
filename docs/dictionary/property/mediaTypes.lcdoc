@@ -2,7 +2,7 @@ Name: mediaTypes
 
 Type: property
 
-Syntax: get the mediaTypes of <player> 
+Syntax: get the mediaTypes of <player>
 
 Summary: Specifies one or more types of media used in a movie.
 
@@ -10,33 +10,42 @@ Associations: player
 
 Introduced: 1.0
 
-OS: mac,windows
+OS: mac, windows
 
 Platforms: desktop
 
 Example:
 if the mediaTypes of player 1 contains "audio" then increaseLoudness
 
-Value (set):
-- video:
+Value (set): - video:
+
 - audio:
 - text:
 - qtvr:
 - sprite:
 - flash:
 
+
 This property is read:only and cannot be set
 
 Description:
-Use the <mediaTypes> <property> to find out what kinds of media a movie contains.
+Use the <mediaTypes> <property> to find out what kinds of media a movie
+contains. 
 
-Most movies provide more than one media type. For example, a typical movie might provide one video and one audio track.
+Most movies provide more than one media type. For example, a typical
+movie might provide one video and one audio track.
 
-If more than one track in the movie uses the same media type, the media type is specified only once in the <mediaTypes> property. For example, "audio" appears only once in the <mediaTypes>, even if the movie contains more than one audio track.
+If more than one track in the movie uses the same media type, the media
+type is specified only once in the <mediaTypes> property. For example,
+"audio" appears only once in the <mediaTypes>, even if the movie
+contains more than one audio track.
 
 Changes:
-This document was updated in version 8.1.0 to remove references to QuickTime, as this property is now also supported by the Windows DirectShow-based player.
+This document was updated in version 8.1.0 to remove references to
+QuickTime, as this property is now also supported by the Windows
+DirectShow-based player.
 
-References: trackCount (property), property (glossary)
+References: property (glossary), trackCount (property)
 
 Tags: multimedia
+

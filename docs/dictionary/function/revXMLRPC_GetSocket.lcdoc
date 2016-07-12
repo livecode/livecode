@@ -6,28 +6,36 @@ Syntax: revXMLRPC_GetSocket(<XML-RPC document>)
 
 Summary: This function returns the socket of an XML-RPC document.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 put revXMLRPC_GetSocket(theRequest) into theSocket
 
 Parameters:
-documentID: The number returned by the revXMLRPC_CreateRequest when you created the XML-RPC request, or the successful revXMLRPC_Execute function when you executed an XML-RPC request.
+documentID: The number returned by the revXMLRPC_CreateRequest when you
+created the XML-RPC request, or the successful revXMLRPC_Execute
+function when you executed an XML-RPC request.
 
-Returns: The revXMLRPC_GetProtocol <function> returns the socket connection that is established with the <host>. By default, XML-RPC uses the <post command> to execute an <XML-RPC request>, but this has the overhead of opening and closing a new socket every time. You can avoid this by re-using an already opened <socket>.
+Returns: The revXMLRPC_GetProtocol <function> returns the socket
+connection that is established with the <host>. By default, XML-RPC uses
+the <post command> to execute an <XML-RPC request>, but this has the
+overhead of opening and closing a new socket every time. You can avoid
+this by re-using an already opened <socket>.
 
 Description:
-Use the <revXMLRPC_GetSocket> <function> to retrieve the network socket used in the execution of an <XML-RPC request>.
+Use the <revXMLRPC_GetSocket> <function> to retrieve the network socket
+used in the execution of an <XML-RPC request>.
 
-If the <revXMLRPC_GetSocket> <function> encounters an error, it <return|returns> an error message starting with "xmlrpcerr"..
+If the <revXMLRPC_GetSocket> <function> encounters an error, it
+<return|returns> an error message starting with "xmlrpcerr" ..
 
 >*Important:*  The <revXMLRPC_GetSocket> <function> is part of the 
 > <XML-RPC library>. To ensure that the <function> works in a 
@@ -37,6 +45,11 @@ If the <revXMLRPC_GetSocket> <function> encounters an error, it <return|returns>
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_SetSocket (command), post command (command), function (control structure), return (glossary), host (glossary), XML-RPC request (glossary), Standalone Application Settings (glossary), socket (glossary), standalone application (glossary), function (glossary), XML-RPC library (library), LiveCode custom library (glossary)
+References: revXMLRPC_SetSocket (command), post command (command),
+function (control structure), return (glossary), host (glossary),
+XML-RPC request (glossary), Standalone Application Settings (glossary),
+socket (glossary), standalone application (glossary), function (glossary),
+LiveCode custom library (glossary), XML-RPC library (library)
 
 Tags: networking
+

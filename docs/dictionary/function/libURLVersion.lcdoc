@@ -6,13 +6,13 @@ Syntax: libURLVersion()
 
 Summary: <return|Returns> the version of the Internet library.
 
-Associations: Internet library
+Associations: internet library
 
 Introduced: 1.1.1
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -22,12 +22,15 @@ get libURLVersion()
 Example:
 if libURLVersion is field "Latest" then go next card
 
-Returns: The <libURLVersion> <function> <return|returns> a <string> indicating the version of the <Internet library>.
+Returns: The <libURLVersion> <function> <return|returns> a <string>
+indicating the version of the <Internet library>.
 
 Description:
-Use the <libURLVersion> <function> to check whether the Internet library supports a given feature, or when reporting problems.
+Use the <libURLVersion> <function> to check whether the Internet library
+supports a given feature, or when reporting problems.
 
-There is no special significance to the version number returned by <libURLVersion>.
+There is no special significance to the version number returned by
+<libURLVersion>. 
 
 >*Important:* The <libURLVersion> <function> is part of the 
 > <Internet library>. To ensure that the <function> works in a 
@@ -37,6 +40,15 @@ There is no special significance to the version number returned by <libURLVersio
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: Internet library (library), LiveCode custom library (glossary), library (library), string (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), version (function), revAppVersion (function), systemVersion (function), return (glossary), main stack (glossary), handler (glossary), Standalone Application Settings (glossary), message (glossary), group (glossary), standalone application (glossary), application (glossary), function (control structure)
+References: function (control structure), version (function),
+revAppVersion (function), systemVersion (function),
+LiveCode custom library (glossary), return (glossary),
+main stack (glossary), handler (glossary),
+Standalone Application Settings (glossary), message (glossary),
+group (glossary), standalone application (glossary),
+application (glossary), string (keyword), Internet library (library),
+library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message)
 
 Tags: networking
+

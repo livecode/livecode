@@ -8,7 +8,7 @@ Summary: Get the number of location changes to be retained
 
 Introduced: 8.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -16,10 +16,9 @@ Example:
 local tHistoryLimit
 put mobileGetLocationHistoryLimit() into tHistoryLimit
 
-Returns:
-The number of entries to retain from system <locationChanged> events. 
-The default history limit is 1 - meaning that only one sample is ever 
-kept at a time. If an application wants historical access to all 
+Returns: The number of entries to retain from system <locationChanged>
+events. The default history limit is 1 - meaning that only one sample is
+ever kept at a time. If an application wants historical access to all
 samples, then it should set the location history limit using the 
 <mobileSetLocationistoryLimit> <command> to the maximum number of 
 samples it ever wants to record, or 0 to record the entire history 
@@ -51,15 +50,21 @@ sample provided with the <locationChanged> event (which will always be
 the last sample in the history). e.g.
 
     on locationChanged
-        local tHistory
-        put mobileGetLocationHistory() into tHistory
-        repeat for each element tSample in tHistory
-            processLocationChanged tSample
-        end repeat
+
+    local tHistory
+    put mobileGetLocationHistory() into tHistory
+    repeat for each element tSample in tHistory
+
+    processLocationChanged tSample
+
+    end repeat
     end locationChanged
 
-References: mobileGetLocationHistory (function), 
-mobileSetLocationHistoryLimit (command), mobileStopTrackingSensor (command), 
-mobileSensorAvailable (function), mobileSensorReading (function), 
-mobileStartTrackingSensor (command), mobileLocationAuthorizationStatus (function), 
-locationChanged (message), trackingError (message)
+
+References: mobileSetLocationHistoryLimit (command),
+mobileStopTrackingSensor (command), mobileStartTrackingSensor (command),
+mobileGetLocationHistory (function), mobileSensorAvailable (function),
+mobileSensorReading (function),
+mobileLocationAuthorizationStatus (function), locationChanged (message),
+trackingError (message)
+

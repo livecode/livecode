@@ -6,22 +6,23 @@ Syntax: revGetSpeechVolume()
 
 Summary: Returns the current speech volume
 
-Associations: Speech library
+Associations: speech library
 
 Introduced: 2.8.1
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 put revGetSpeechVolume() into tVolume
 
-Returns:
-The <revGetSpeechVolume> function returns a number between 0 and 100.
+Returns: The <revGetSpeechVolume> function returns a number between 0
+and 100.
 
 Description:
-Use the <revGetSpeechVolume> function to find out what the current volume that LiveCode will speak at is.
+Use the <revGetSpeechVolume> function to find out what the current
+volume that LiveCode will speak at is.
 
 The default volume is 100 on both Windows and Mac OS X.
 
@@ -33,7 +34,8 @@ The default volume is 100 on both Windows and Mac OS X.
 > <Standalone Application Settings> window, make sure the "Speech" 
 > library checkbox is checked.
 
-References: revSetSpeechSpeed (command), revSetSpeechVolume (command), 
-function (control structure), Standalone Application Settings (glossary), 
-standalone application (glossary), Speech library (library), 
-LiveCode custom library (glossary)
+References: revSetSpeechSpeed (command), revSetSpeechVolume (command),
+function (control structure), Standalone Application Settings (glossary),
+standalone application (glossary), LiveCode custom library (glossary),
+Speech library (library)
+

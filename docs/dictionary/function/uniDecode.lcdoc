@@ -2,7 +2,7 @@ Name: uniDecode
 
 Type: function
 
-Syntax: the uniDecode of <stringToDecode> 
+Syntax: the uniDecode of <stringToDecode>
 
 Syntax: uniDecode(<stringToDecode> [, <language>])
 
@@ -10,9 +10,9 @@ Summary: Converts a string from <Unicode> to single-byte text.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 uniDecode("A" & numToChar(zero)) -- returns "A" (on PPC)
@@ -24,53 +24,92 @@ Example:
 uniDecode(field "JIS Input","Japanese") -- converts to JIS
 
 Parameters:
-stringToDecode (string): any string, or expression that evaluates to a string.
-language (enum):
-- ANSI: synonym for "English"
-- Arabic:
-- Bulgarian:
-- Chinese:
-- English: synonym for "ANSI"
-- Greek:
-- Hebrew:
-- Japanese: (Shift-JIS)
-- Korean:
-- Polish:
-- Roman:
-- Russian: (Cyrillic)
-- Thai:
-- Turkish:
-- SimplifiedChinese:
-- Unicode: (UTF-16)
-- UTF8:
-- w: synonym for "Unicode"
+stringToDecode (string): any string, or expression that evaluates to a
+string. 
 
-The result: As of LiveCode 7.0 the uniDecode function has been deprecated. It will continue to work as in previous versions but should not be used in new code as the existing behaviour is incompatible with the new, transparent Unicode handling (the resulting value will be treated as binary data rather than text). This functions is only useful in combination with the also-deprecated uniEncode function and unicodeText field property.
+language (enum): 
 
-Returns:
-If you don't specify a <language>, the <uniDecode> <function> <return|returns> the <stringToDecode>, with every second <byte> removed.
-If a <language> is specified, the <uniDecode> <function> encodes the <stringToDecode> into single-byte text, using the appropriate method for the specified <language>.
+-   ANSI: 
+-   Arabic: 
+-   Bulgarian: 
+-   Chinese: 
+-   English: 
+-   Greek: 
+-   Hebrew: 
+-   Japanese: 
+-   Korean: 
+-   Polish: 
+-   Roman: 
+-   Russian: 
+-   Thai: 
+-   Turkish: 
+-   SimplifiedChinese: 
+-   Unicode: 
+-   UTF8: 
+-   w: 
+
+
+Returns: If you don't specify a <language>, the <uniDecode> <function>
+<return|returns> the <stringToDecode>, with every second <byte> removed.
+If a <language> is specified, the <uniDecode> <function> encodes the
+<stringToDecode> into single-byte text, using the appropriate method for
+the specified <language>.
+
+The result: As of LiveCode 7.0 the uniDecode function has been
+deprecated. It will continue to work as in previous versions but should
+not be used in new code as the existing behaviour is incompatible with
+the new, transparent Unicode handling (the resulting value will be
+treated as binary data rather than text). This functions is only useful
+in combination with the also-deprecated uniEncode function and
+unicodeText field property.
 
 Description:
-Use the <uniDecode> <function(control structure)> to convert double-byte characters to single-byte characters.
+Use the <uniDecode> <function(control structure)> to convert double-byte
+characters to single-byte characters.
 
 >*Important:* 
 
-The <uniDecode> function is the <inverse> of the <uniEncode> function and removes the <null> <byte|bytes> inserted for <Unicode> compatibility. In other words, it turns double-byte <characters> into their closest single-byte equivalent.
+The <uniDecode> function is the <inverse> of the <uniEncode> function
+and removes the <null> <byte|bytes> inserted for <Unicode>
+compatibility. In other words, it turns double-byte <characters> into
+their closest single-byte equivalent.
 
-If the <stringToDecode> contains an odd number of <byte|bytes>, the last <byte> is ignored.
+If the <stringToDecode> contains an odd number of <byte|bytes>, the last
+<byte> is ignored.
 
->*Note:* You can use the UTF8 encoding only with the <uniDecode> and <uniEncode> <function(glossary)|functions>. You cannot set an <object|object's> <textFont> <property> to use UTF-8. To display Unicode text in an <object(glossary)>, use either "Unicode" or a language name as the second item of the <object|object's> <textFont>.
+>*Note:* You can use the UTF8 encoding only with the <uniDecode> and
+<uniEncode> <function(glossary)|functions>. You cannot set an
+<object|object's> <textFont> <property> to use UTF-8. To display Unicode
+text in an <object(glossary)>, use either "Unicode" or a language name
+as the second item of the <object|object's> <textFont>.
 
->*Important:* The <format> expected by the <uniDecode> <function(control structure)> is processor-dependent. On "little-endian" processors, where the first <byte> is least significant (such as Intel and Alpha processors), the <uniDecode> <function(control structure)> removes the second byte of each <character>. On "big-endian" processors, where the last <byte> is least significant (such as PowerPC processors), the <uniDecode> <function(control structure)> removes the first <byte> of each <character>.
+>*Important:* The <format> expected by the <uniDecode> <function(control
+structure)> is processor-dependent. On "little-endian" processors, where
+the first <byte> is least significant (such as Intel and Alpha
+processors), the <uniDecode> <function(control structure)> removes the
+second byte of each <character>. On "big-endian" processors, where the
+last <byte> is least significant (such as PowerPC processors), the
+<uniDecode> <function(control structure)> removes the first <byte> of
+each <character>.
 
-The ability to handle double-byte characters on "little-endian" processors was added in version 2.0. In previous versions, the <uniDecode> <function(control structure)> always removed the second <byte> of each pair of <byte|bytes>, regardless of <platform>.
+The ability to handle double-byte characters on "little-endian"
+processors was added in version 2.0. In previous versions, the
+<uniDecode> <function(control structure)> always removed the second
+<byte> of each pair of <byte|bytes>, regardless of <platform>.
 
-The ability to convert Unicode text into language-specific encodings was added in version 2.0. In previous versions, the <uniDecode> <function(control structure)> simply removed every other <byte>.
+The ability to convert Unicode text into language-specific encodings was
+added in version 2.0. In previous versions, the <uniDecode>
+<function(control structure)> simply removed every other <byte>.
 
 Changes:
 The ability to encode text in Polish was added in version 2.1.1.
 
-References: textFont (property), unicodeText (property), object (glossary), inverse (keyword), characters (keyword), character (keyword), null (constant), format (function), uniEncode (function), uniDecode (function), platform (function), property (glossary), Unicode (glossary), function (glossary), byte (glossary), return (glossary), function (control structure)
+References: null (constant), function (control structure),
+format (function), uniEncode (function), uniDecode (function),
+platform (function), object (glossary), property (glossary),
+Unicode (glossary), function (glossary), byte (glossary),
+return (glossary), inverse (keyword), characters (keyword),
+character (keyword), textFont (property), unicodeText (property)
 
 Tags: text processing
+

@@ -10,9 +10,9 @@ Summary: List the files in a folder.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android,html5
+OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -87,6 +87,7 @@ attributes, as follows:
 10. **Permissions**. (Linux and OS X only; see note).
 11. **Creator and <fileType|file type>**.  (OS X only).
 
+
 Any attribute that is not relevant to the current <platform> is left
 empty.
 
@@ -100,14 +101,12 @@ The long form was introduced in version 1.1.
 The optional <targetFolder> argument for the function call form was
 introduced in version 8.1.
 
-References:
-sort(command),
-return(constant),
-folders(function), specialFolderPath(function),
-defaultFolder(property), umask(property),
-alias(glossary), current folder(glossary), data fork(glossary),
-folder(glossary), function(glossary), platform(glossary),
-return(glossary), resource fork(glossary), shortcut(glossary),
-symbolic link(glossary),
+References: sort (command), return (constant), folders (function),
+specialFolderPath (function), alias (glossary), current folder (glossary),
+data fork (glossary), folder (glossary), function (glossary),
+platform (glossary), return (glossary), resource fork (glossary),
+shortcut (glossary), symbolic link (glossary), defaultFolder (property),
+umask (property)
 
 Tags: file system
+

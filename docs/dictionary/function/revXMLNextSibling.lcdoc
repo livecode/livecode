@@ -4,15 +4,16 @@ Type: function
 
 Syntax: revXMLNextSibling(<treeID>, <siblingNode>, [incText] )
 
-Summary: <return|Returns> the path to a <child node|child node's> next <sibling node>.
+Summary: <return|Returns> the path to a <child node|child node's> next
+<sibling node>.
 
-Associations: XML library
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -23,17 +24,28 @@ Example:
 put revXMLNextSibling(the currTree of me,thisNode) into nextNode
 
 Parameters:
-treeID: The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile function when you created the XML tree.
+treeID: The number returned by the revXMLCreateTree or
+revXMLCreateTreeFromFile function when you created the XML tree.
+
 siblingNode: The path to the node where you want to start.
 
-Returns: The <revXMLNextSibling> <function> returns a string consisting of the path to the next node with the same parent as the <siblingNode>. If there is no next sibling node, the <revXMLNextSibling> <function> returns empty.
+Returns: The <revXMLNextSibling> <function> returns a string consisting
+of the path to the next node with the same parent as the <siblingNode>.
+If there is no next sibling node, the <revXMLNextSibling> <function>
+returns empty.
 
 Description:
-Use the <revXMLNextSibling> <function> to go forward through the list of <nodes> on the current level.
+Use the <revXMLNextSibling> <function> to go forward through the list of
+<nodes> on the current level.
 
-If the <revXMLNextSibling> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLNextSibling> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
->*Note:* If the incText form is specified and is true the function will return text nodes in processing. Text nodes can be accessed using the revXMLNodeContents function with the extended path format where text only nodes are numerically indexed eg summary/command/[1] is the first text node of the summary/command node.  
+>*Note:* If the incText form is specified and is true the function will
+return text nodes in processing. Text nodes can be accessed using the
+revXMLNodeContents function with the extended path format where text
+only nodes are numerically indexed eg summary/command/[1] is the first
+text node of the summary/command node.
 
 >*Important:* The incText form is experimental.
 
@@ -45,6 +57,11 @@ If the <revXMLNextSibling> <function> encounters an error, it <return|returns> a
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: nodes (property), XML library (library), LiveCode custom library (glossary), revXMLRootNode (function), revXMLFirstChild (function), sibling node (glossary), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), child node (glossary), function (control structure)
+References: function (control structure), revXMLRootNode (function),
+revXMLFirstChild (function), LiveCode custom library (glossary),
+sibling node (glossary), Standalone Application Settings (glossary),
+standalone application (glossary), return (glossary),
+child node (glossary), XML library (library), nodes (property)
 
 Tags: text processing
+

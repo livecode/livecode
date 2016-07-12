@@ -4,13 +4,14 @@ Type: keyword
 
 Syntax: ;
 
-Summary: The <character> <;> is used to place more than one <statement> on a single <line>.
+Summary: The <character> <;> is used to place more than one <statement>
+on a single <line>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go next card; wait 1 second; go previous card
@@ -20,16 +21,22 @@ local x
 repeat with x = 1 to 10; put x after field 1; end repeat
 
 Description:
-Use the ; character to compress code into fewer visible <line|lines> for easier reading.
+Use the ; character to compress code into fewer visible <line|lines> for
+easier reading.
 
-Lines that are split with <;> are shown in the <script editor> as a single <line>, 
-but when <execute|executed>, are treated as multiple <line|lines> of code. The 
-following line counts as three <statement|statements>:
+Lines that are split with <;> are shown in the <script editor> as a
+single <line>, but when <execute|executed>, are treated as multiple
+<line|lines> of code. The following line counts as three
+<statement|statements>: 
 
     go card 1; beep 2; answer the date
 
-A <;> character which is used within a <literal string> does not signal a new <line>, 
-because the <;> is treated as part of the <string> instead of being treated as a line break.
 
-References: character (keyword), \ (keyword), line (glossary), string (glossary), 
-literal string (glossary), statement (glossary), script editor (glossary), execute (glossary)
+A <;> character which is used within a <literal string> does not signal
+a new <line>, because the <;> is treated as part of the <string> instead
+of being treated as a line break.
+
+References: line (glossary), string (glossary), literal string (glossary),
+statement (glossary), script editor (glossary), execute (glossary),
+character (keyword), \ (keyword)
+

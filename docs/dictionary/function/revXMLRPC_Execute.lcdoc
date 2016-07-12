@@ -4,19 +4,22 @@ Type: function
 
 Syntax: revXMLRPC_Execute(<XML-RPC document>)
 
-Summary: Executes an XML-RPC request and returns the result as an XML-RPC document structure.
+Summary: Executes an XML-RPC request and returns the result as an
+XML-RPC document structure.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 put revXMLRPC_Execute(theRequest) into theResponse
 
-References: revXMLRPC_DeleteAllDocuments (command), revXMLRPC_GetResponse (function)
+References: revXMLRPC_DeleteAllDocuments (command),
+revXMLRPC_GetResponse (function)
+

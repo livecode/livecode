@@ -4,17 +4,18 @@ Type: function
 
 Syntax: revCurrentRecordIsLast(<recordSetID>)
 
-Summary: <return|Returns> whether the current <record> is the last <record> in a <record set (database cursor)(glossary)>.
+Summary: <return|Returns> whether the current <record> is the last
+<record> in a <record set (database cursor)(glossary)>.
 
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revCurrentRecordIsLast(3)
@@ -23,14 +24,19 @@ Example:
 if revCurrentRecordIsLast(testMySQL) then exit repeat
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID: The number returned by the revQueryDatabase function when
+the record set was created.
 
-Returns: The <revCurrentRecordIsLast> <function> returns true if there are no more <record|records>, false otherwise.
+Returns: The <revCurrentRecordIsLast> <function> returns true if there
+are no more <record|records>, false otherwise.
 
 Description:
-Use the <revCurrentRecordIsLast> <function> to stop when you reach the end of the <record|records>.
+Use the <revCurrentRecordIsLast> <function> to stop when you reach the
+end of the <record|records>.
 
-If the operation is not successful, the <revCurrentRecordIsLast> <function> returns an error message that begins with the <string> "revdberr".
+If the operation is not successful, the <revCurrentRecordIsLast>
+<function> returns an error message that begins with the <string>
+"revdberr". 
 
 >*Important:*  The <revCurrentRecordIsLast> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -44,6 +50,14 @@ If the operation is not successful, the <revCurrentRecordIsLast> <function> retu
 Changes:
 The revCurrentRecordIsLast synonym was added in version 2.0.
 
-References: string (keyword), Database library (library), LiveCode custom library (glossary), revMoveToNextRecord (command), revdb_movefirst (function), revdb_moveprev (function), revdb_movelast (function), revdb_movenext (function), record (glossary), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), function (control structure)
+References: revMoveToNextRecord (command), function (control structure),
+revdb_movefirst (function), revdb_moveprev (function),
+revdb_movelast (function), revdb_movenext (function),
+LiveCode custom library (glossary), record (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), return (glossary),
+string (keyword), Database library (library)
 
 Tags: database
+

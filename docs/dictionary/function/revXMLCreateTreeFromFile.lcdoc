@@ -6,13 +6,13 @@ Syntax: revXMLCreateTreeFromFile(<filePath>, <parseBadData>, <createTree>, <send
 
 Summary: Reads an <XML> <file>, optionally creating an <XML tree>.
 
-Associations: XML library
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -24,24 +24,41 @@ if revXMLCreateTreeFromFile(it,true,true,false) then next repeat
 
 Parameters:
 filePath: The name and location of a file containing XML text.
+
 parseBadData (bool): 
+
 createTree (bool): 
+
 sendMessages (bool): 
 
-Returns:
-The <revXMLCreateTreeFromFile> <function(control structure)> returns a tree ID which can be used to refer to the tree in other <XML library> <command|commands> and <function(glossary)|functions>. The tree ID is always a positive <integer>. (If the <createTree> is false, the <function(control structure)> <return|returns> zero.)
-If the function encounters an error while parsing the file, it returns an error message beginning with "xmlerr".
+Returns: The <revXMLCreateTreeFromFile> <function(control structure)>
+returns a tree ID which can be used to refer to the tree in other <XML
+library> <command|commands> and <function(glossary)|functions>. The tree
+ID is always a positive <integer>. (If the <createTree> is false, the
+<function(control structure)> <return|returns> zero.) If the function
+encounters an error while parsing the file, it returns an error message
+beginning with "xmlerr".
 
 Description:
-Use the <revXMLCreateTreeFromFile> <function> to read the contents of an <XML document> and create an <XML tree> from it in memory.
+Use the <revXMLCreateTreeFromFile> <function> to read the contents of an
+<XML document> and create an <XML tree> from it in memory.
 
-If the <parseBadData> is true, the <revXMLCreateTreeFromFile> <function> tries to parse <XML> data even if it is not well-formed. Otherwise, the <function> stops executing as soon as it encounters data that is not well-formed <XML>.
+If the <parseBadData> is true, the <revXMLCreateTreeFromFile> <function>
+tries to parse <XML> data even if it is not well-formed. Otherwise, the
+<function> stops executing as soon as it encounters data that is not
+well-formed <XML>.
 
-If the <createTree> is true, the <function> creates a tree structure in memory. Otherwise, the <function> simply parses the <XML> data without creating an <XML tree>.
+If the <createTree> is true, the <function> creates a tree structure in
+memory. Otherwise, the <function> simply parses the <XML> data without
+creating an <XML tree>.
 
-If the <sendMessages> is true, the <revXMLStartTree>, <revStartXMLNode>, <revStartXMLData>, <revEndXMLNode>, and <revXMLEndTree> <message|messages> are sent while the <file> is being parsed. Otherwise, these <message|messages> are not sent.
+If the <sendMessages> is true, the <revXMLStartTree>, <revStartXMLNode>,
+<revStartXMLData>, <revEndXMLNode>, and <revXMLEndTree>
+<message|messages> are sent while the <file> is being parsed. Otherwise,
+these <message|messages> are not sent.
 
-If the <revXMLCreateTreeFromFile> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLCreateTreeFromFile> <function> encounters an error, it
+<return|returns> an error message starting with "xmlerr".
 
 >*Important:*  The <revXMLCreateTreeFromFile> <function> is part of the 
 > <XML library>. To ensure that the <function> works in a 
@@ -51,6 +68,17 @@ If the <revXMLCreateTreeFromFile> <function> encounters an error, it <return|ret
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revStartXMLData (message), revStartXMLNode (message), revEndXMLNode (message), revXMLStartTree (message), revXMLEndTree (message), XML library (library), LiveCode custom library (glossary), file (keyword), integer (keyword), return (glossary), XML tree (glossary), Standalone Application Settings (glossary), message (glossary), standalone application (glossary), XML (glossary), XML document (glossary), command (glossary), function (glossary), revXMLValidateDTD (function), revXMLTrees (function), revXMLDeleteAllTrees (command), revXMLAppend (command), function (control structure)
+References: revXMLDeleteAllTrees (command), revXMLAppend (command),
+function (control structure), revXMLValidateDTD (function),
+revXMLTrees (function), LiveCode custom library (glossary),
+return (glossary), XML tree (glossary),
+Standalone Application Settings (glossary), message (glossary),
+standalone application (glossary), XML (glossary),
+XML document (glossary), command (glossary), function (glossary),
+file (keyword), integer (keyword), XML library (library),
+revStartXMLData (message), revStartXMLNode (message),
+revEndXMLNode (message), revXMLStartTree (message),
+revXMLEndTree (message)
 
 Tags: text processing
+

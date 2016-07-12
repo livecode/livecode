@@ -1,12 +1,14 @@
 Name: DNS
 
-Synonyms: DNS,Domain Name Service
+Synonyms: dns, domain name service
 
 Type: glossary
 
 Description:
-Domain Name Service. The service that translates <domain name|domain names> into the corresponding Internet addresses.
+Domain Name Service. The service that translates <domain name|domain
+names> into the corresponding Internet addresses.
 
 References: domain name (glossary)
 
 Tags: networking
+

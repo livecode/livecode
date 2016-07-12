@@ -10,11 +10,16 @@ Summary: Removed in version 2.0.
 
 Introduced: 1.1
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Description:
-The <recordFormats> <function> reported information about the most recent <execution error>.
+The <recordFormats> <function> reported information about the most
+recent <execution error>.
 
-For the information formerly returned by the <recordFormats> <function>, see the <recordCompressionTypes> <function>.
+For the information formerly returned by the <recordFormats> <function>,
+see the <recordCompressionTypes> <function>.
 
-References: function (control structure), recordCompressionTypes (function), QTVersion (function), execution error (glossary)
+References: function (control structure),
+recordCompressionTypes (function), QTVersion (function),
+execution error (glossary)
+

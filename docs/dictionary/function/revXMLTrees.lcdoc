@@ -6,13 +6,13 @@ Syntax: revXMLTrees()
 
 Summary: <return|Returns> a list of all <XML tree|XML trees> in memory.
 
-Associations: XML library
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -22,14 +22,19 @@ revXMLTrees()
 Example:
 if myTree is not among the lines of revXMLTrees() then loadTree myTree
 
-Returns: The <revXMLTrees> <function> returns a list of tree IDs, one per <line>.
+Returns: The <revXMLTrees> <function> returns a list of tree IDs, one
+per <line>.
 
 Description:
-Use the <revXMLTrees> <function> to find out which <XML tree|XML trees> have been created, or when you want to perform an action on all the <XML tree|XML trees> you're working with.
+Use the <revXMLTrees> <function> to find out which <XML tree|XML trees>
+have been created, or when you want to perform an action on all the <XML
+tree|XML trees> you're working with.
 
-Each tree ID is the number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile> <function> when you created the <XML tree>.
+Each tree ID is the number returned by the <revXMLCreateTree> or
+<revXMLCreateTreeFromFile> <function> when you created the <XML tree>.
 
-If the <revXMLTrees> <function> encounters an error, it <return|returns> an error message starting with "xmlerr".
+If the <revXMLTrees> <function> encounters an error, it <return|returns>
+an error message starting with "xmlerr".
 
 >*Important:*  The <revXMLTrees> <function> is part of the 
 > <XML library>. To ensure that the <function> works in a 
@@ -39,6 +44,11 @@ If the <revXMLTrees> <function> encounters an error, it <return|returns> an erro
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: function (control structure), line (keyword), revXMLDeleteAllTrees (command), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), return (glossary), XML library (library), LiveCode custom library (glossary)
+References: revXMLDeleteAllTrees (command), function (control structure),
+revXMLCreateTreeFromFile (function), revXMLCreateTree (function),
+Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary), return (glossary),
+LiveCode custom library (glossary), line (keyword), XML library (library)
 
 Tags: text processing
+

@@ -6,29 +6,35 @@ Syntax: revXMLRPC_SetMethod <XML-RPC document>,<method name>
 
 Summary: Sets the name of the method in an XML-RPC document structure.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 revXMLRPC_SetMethod theRequest,"sample.elizabethanInsult"
 
 Parameters:
-documentID: The number returned by the revXMLRPC_CreateRequest when you created the XML-RPC request.
-method name: The the method name to be called upon execution of the XML-RPC document documentID.
+documentID: The number returned by the revXMLRPC_CreateRequest when you
+created the XML-RPC request. method name: The the method name to be
+called upon execution of the XML-RPC document documentID.
 
-The result: If the <revXMLRPC_SetMethod> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr" or "xmlrpcerr".
+The result: If the <revXMLRPC_SetMethod> <command> encounters an error,
+the <result> is set to an error message beginning with "xmlerr" or
+"xmlrpcerr". 
 
 Description:
-Use the <revXMLRPC_SetMethod> <command> to set the method name to be called upon execution of an existing <XML-RPC document>.
+Use the <revXMLRPC_SetMethod> <command> to set the method name to be
+called upon execution of an existing <XML-RPC document>.
 
-Where the path of the <XML-RPC document> tells the server which resource will handle the request, the <method name> tells that resource which method is being called specifically within that resource.
+Where the path of the <XML-RPC document> tells the server which resource
+will handle the request, the <method name> tells that resource which
+method is being called specifically within that resource.
 
 >*Important:*  The <revXMLRPC_SetMethod> <command> is part of the 
 > <XML-RPC library>. To ensure that the <command> works in a 
@@ -38,4 +44,9 @@ Where the path of the <XML-RPC document> tells the server which resource will ha
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_SetPath (command), revXMLRPC_GetMethod (command), result (function), XML-RPC library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
+References: revXMLRPC_SetPath (command), revXMLRPC_GetMethod (command),
+result (function), LiveCode custom library (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+XML-RPC document (glossary), XML-RPC library (library)
+

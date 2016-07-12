@@ -1,18 +1,18 @@
 Name: /**/
 
+Synonyms: /*, */
+
 Type: keyword
 
 Syntax: /**/
 
 Summary: <delimit|Delimits> a <block comment>.
 
-Synonyms: /*,*/
-
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 local whichPrompt
@@ -23,7 +23,8 @@ Example:
 /* This entire block, although it is two lines
    long, is a single comment. */
 
-Description: Anything between /&ast; and &ast;/ is treated as a
+Description:
+Anything between /&ast; and &ast;/ is treated as a
 <comment> and is ignored by LiveCode when <execute|executing> the
 <handler>.
 
@@ -33,8 +34,8 @@ either for others who might need to read and modify it, or for yourself.
 glad you included <comment|comments>.)
 
 The <block comment|block comments> created by </&ast;&ast;/> differ from
-the line <comment|comments> created by <--> because a <block comment> can
-span multiple <line(glossary)|lines>, as well as a single
+the line <comment|comments> created by <--> because a <block comment>
+can span multiple <line(glossary)|lines>, as well as a single
 <line(glossary)> or part of a <line(glossary)>. (A <comment> marked by
 <--> extends only to the end of the <line(glossary)>.) A <comment> that
 starts with /&ast; does not end until &ast;/, even if there are several
@@ -53,6 +54,7 @@ of LiveCode scripting. If the code is within a <comment>, it's ignored.
 You can temporarily remove sections of code for debugging by putting
 those sections inside a <comment>.
 
-References: -- (keyword), line (keyword), line (glossary), 
-handler (glossary), comment (glossary), delimit (glossary), 
-block comment (glossary), execute (glossary), script (glossary)
+References: line (glossary), handler (glossary), comment (glossary),
+delimit (glossary), block comment (glossary), execute (glossary),
+script (glossary), -- (keyword), line (keyword)
+

@@ -10,7 +10,7 @@ Associations: stack
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -29,6 +29,11 @@ ad: The name of the ad.
 Returns: Returns true if the ad is visible, otherwise it returns false.
 
 Description:
-Use the <mobileAdGetVisible> function to check if an ad created with <mobileAdCreate> is visible.
+Use the <mobileAdGetVisible> function to check if an ad created with
+<mobileAdCreate> is visible.
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdSetVisible (command), mobileAdSetTopLeft (command), mobileAdGetTopLeft (function), mobileAds (function), adLoaded (message), adLoadFailed (message), adClicked (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdSetVisible (command), mobileAdSetTopLeft (command),
+mobileAdGetTopLeft (function), mobileAds (function), adLoaded (message),
+adLoadFailed (message), adClicked (message)
+

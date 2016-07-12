@@ -1,33 +1,39 @@
 Name: revXMLRPC_DeleteDocument
 
+Synonyms: revxmlrpc_free
+
 Type: command
 
 Syntax: revXMLRPC_DeleteDocument <XML-RPC document>
 
-Summary: Deletes an XML-RPC document structure, freeing up the memory of its associated resources.
+Summary: Deletes an XML-RPC document structure, freeing up the memory of
+its associated resources.
 
-Synonyms: revXMLRPC_Free
-
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 revXMLRPC_DeleteDocument theRequest
 
 Parameters:
-documentID: The number returned by the revXMLRPC_CreateRequest when you created the XML-RPC request, or the successful revXMLRPC_Execute function when you executed an XML-RPC request.
+documentID: The number returned by the revXMLRPC_CreateRequest when you
+created the XML-RPC request, or the successful revXMLRPC_Execute
+function when you executed an XML-RPC request.
 
-The result: If the <revXMLRPC_DeleteDocument> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr" or "xmlrpcerr".
+The result: If the <revXMLRPC_DeleteDocument> <command> encounters an
+error, the <result> is set to an error message beginning with "xmlerr"
+or "xmlrpcerr".
 
 Description:
-Use the <revXMLRPC_DeleteDocument> <command> to free up memory when you're finished using an <XML-RPC document>.
+Use the <revXMLRPC_DeleteDocument> <command> to free up memory when
+you're finished using an <XML-RPC document>.
 
 >*Important:*  The <revXMLRPC_DeleteDocument> <command> is part of the 
 > <XML-RPC library>. To ensure that the <command> works in a 
@@ -37,6 +43,11 @@ Use the <revXMLRPC_DeleteDocument> <command> to free up memory when you're finis
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_DeleteAllDocuments (command), result (function), XML-RPC library (library), LiveCode custom library (glossary), Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC document (glossary)
+References: revXMLRPC_DeleteAllDocuments (command), result (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+XML-RPC document (glossary), XML-RPC library (library)
 
 Tags: networking
+

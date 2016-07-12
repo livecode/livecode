@@ -2,9 +2,10 @@ Name: recordInput
 
 Type: property
 
-Syntax: set the recordInput to <soundSource> 
+Syntax: set the recordInput to <soundSource>
 
-Summary: Specifies where the <record sound> <command> should listen when recording a sound file.
+Summary: Specifies where the <record sound> <command> should listen when
+recording a sound file.
 
 Introduced: 2.0
 
@@ -21,28 +22,34 @@ set the recordInput to "cd"
 Example:
 if the recordInput is not in permittedDevices then exit mouseUp
 
-Value:
-The <recordInput> is a four-character <string>.
+Value: The <recordInput> is a four-character <string>.
 The default value for the <recordInput> <property> is "dflt".
 
 Description:
-Use the <recordInput> <property> to record sound from the system's microphone, a CD player, or other sources.
+Use the <recordInput> <property> to record sound from the system's
+microphone, a CD player, or other sources.
 
-The <recordInput> <property> determines which input device is used as the sound source when you use the <record sound> <command> to record sound.
+The <recordInput> <property> determines which input device is used as
+the sound source when you use the <record sound> <command> to record
+sound. 
 
-The value "dflt" indicates that the <record sound> <command> should use the sound input device chosen in the user's system settings. If a different <soundSource> is specified, that input device is used instead.
+The value "dflt" indicates that the <record sound> <command> should use
+the sound input device chosen in the user's system settings. If a
+different <soundSource> is specified, that input device is used instead.
 
-The possible soundSources vary, depending on the QuickTime version installed and on the system's hardware configuration. QuickTime 3.0 and later supports the following:
-    imic - records from the internal microphone
-    emic -records from the external sound input jack
-    cd - records from an internal CD player
-    irca - records from an RCA input jack
+The possible soundSources vary, depending on the QuickTime version
+installed and on the system's hardware configuration. QuickTime 3.0 and
+later supports the following: imic - records from the internal
+microphone emic -records from the external sound input jack cd - records
+from an internal CD player irca - records from an RCA input jack
+
     tvfm - records from an FM radio tuner
     idav - records from a DAV analog input port
     mbay - records from a media-bay device
     modm - records from the modem
     zvpc - records from zoom video input
     none - does not record.
+
 
 Changes:
 The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
@@ -53,4 +60,7 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
-References: playDestination (property), string (keyword), open driver (command), record sound (command), command (glossary), property (glossary)
+References: open driver (command), record sound (command),
+command (glossary), property (glossary), string (keyword),
+playDestination (property)
+

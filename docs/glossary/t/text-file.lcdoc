@@ -1,6 +1,6 @@
 Name: text file
 
-Synonyms: ASCII file,text file
+Synonyms: ascii file, text file
 
 Type: glossary
 
@@ -10,3 +10,4 @@ A <file> that contains only plain, unformatted text.
 References: file (glossary)
 
 Tags: file system
+

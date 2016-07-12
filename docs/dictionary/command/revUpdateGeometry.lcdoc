@@ -4,15 +4,16 @@ Type: command
 
 Syntax: revUpdateGeometry
 
-Summary: Moves and resizes <object|objects> according to their Geometry pane settings.
+Summary: Moves and resizes <object|objects> according to their Geometry
+pane settings.
 
-Associations: Geometry library
+Associations: geometry library
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 revUpdateGeometry
@@ -21,15 +22,29 @@ Example:
 if the width of this stack &gt; 100 then revUpdateGeometry
 
 Description:
-The LiveCode development environment automatically executes the <revUpdateGeometry> <command> when a <resizeStack> <message> is sent. Use the <revUpdateGeometry> <command> if your stack <handle|handles> the <resizeStack> <message> without passing it.
+The LiveCode development environment automatically executes the
+<revUpdateGeometry> <command> when a <resizeStack> <message> is sent.
+Use the <revUpdateGeometry> <command> if your stack <handle|handles> the
+<resizeStack> <message> without passing it.
 
-Normally, you do not need to use the <revUpdateGeometry> <command> at all, since LiveCode automatically updates geometry when a <stack> is resized. Use it only if both the following conditions are true:
+Normally, you do not need to use the <revUpdateGeometry> <command> at
+all, since LiveCode automatically updates geometry when a <stack> is
+resized. Use it only if both the following conditions are true:
 
-1. Your stack uses the Geometry pane of the property inspector to automate object positioning and sizing when the stack window is resized, and
+1. Your stack uses the Geometry pane of the property inspector to
+   automate object positioning and sizing when the stack window is
+   resized, and
 
-2. Either a handler in your stack locks messages and then moves or resizes the stack window, or a resizeStack <handler> in your <stack> does not pass the <resizeStack> <message> at the end of the <handler>.
 
-If both these conditions are true, execute the <revUpdateGeometry> <command> in the <handler>, after the resizing is performed, to perform Geometry tasks.
+2. Either a handler in your stack locks messages and then moves or
+   resizes the stack window, or a resizeStack <handler> in your <stack>
+   does not pass the <resizeStack> <message> at the end of the
+   <handler>. 
+
+
+If both these conditions are true, execute the <revUpdateGeometry>
+<command> in the <handler>, after the resizing is performed, to perform
+Geometry tasks.
 
 >*Important:*  The <revCacheGeometry> <command> is part of the 
 > <Geometry library>. To ensure that the <command> works in a 
@@ -39,6 +54,15 @@ If both these conditions are true, execute the <revUpdateGeometry> <command> in 
 > <Standalone Application Settings> window, make sure the "Geometry" 
 > library checkbox is checked.
 
-References: resizeStack (message), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), revCacheGeometry (command), lock messages (command), stack (object), object (glossary), Geometry library (library), LiveCode custom library (glossary), library (library), main stack (glossary), handler (glossary), handle (glossary), message (glossary), group (glossary), standalone application (glossary), Standalone Application Settings (glossary), command (glossary), application (glossary)
+References: revCacheGeometry (command), lock messages (command),
+object (glossary), LiveCode custom library (glossary),
+main stack (glossary), handler (glossary), handle (glossary),
+message (glossary), group (glossary), standalone application (glossary),
+Standalone Application Settings (glossary), command (glossary),
+application (glossary), Geometry library (library), library (library),
+resizeStack (message), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message),
+stack (object)
 
 Tags: ui
+

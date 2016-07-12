@@ -4,30 +4,37 @@ Type: command
 
 Syntax: revXMLRPC_GetMethod(<XML-RPC document>)
 
-Summary: Returns the name of the method in an XML-RPC document structure.
+Summary: Returns the name of the method in an XML-RPC document
+structure. 
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 put revXMLRPC_GetMethod(theRequest) into theMethodName
 
 Parameters:
-documentID: The number returned by the revXMLRPC_CreateRequest when you created the XML-RPC request.
+documentID: The number returned by the revXMLRPC_CreateRequest when you
+created the XML-RPC request.
 
 Description:
-Use the <revXMLRPC_GetMethod> <function> to retrieve the method name to be called upon execution of an existing <XML-RPC document>.
+Use the <revXMLRPC_GetMethod> <function> to retrieve the method name to
+be called upon execution of an existing <XML-RPC document>.
 
-Where the path of the <XML-RPC document> tells the server which resource will handle the request, the method name tells that resource which method is being called specifically within that resource.
+Where the path of the <XML-RPC document> tells the server which resource
+will handle the request, the method name tells that resource which
+method is being called specifically within that resource.
 
-If the <revXMLRPC_GetMethod> <function> encounters an error, it <return|returns> an error message beginning with "xmlerr" or "xmlrpcerr".
+If the <revXMLRPC_GetMethod> <function> encounters an error, it
+<return|returns> an error message beginning with "xmlerr" or
+"xmlrpcerr". 
 
 >*Important:*  The <revXMLRPC_GetMethod> <function> is part of the 
 > <XML-RPC library>. To ensure that the <function> works in a 
@@ -37,4 +44,9 @@ If the <revXMLRPC_GetMethod> <function> encounters an error, it <return|returns>
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function), Standalone Application Settings (glossary), standalone application (glossary), return (glossary), function (glossary), XML-RPC document (glossary), XML-RPC library (library), LiveCode custom library (glossary)
+References: revXMLRPC_SetMethod (command), revXMLRPC_GetPath (function),
+Standalone Application Settings (glossary),
+standalone application (glossary), return (glossary), function (glossary),
+XML-RPC document (glossary), LiveCode custom library (glossary),
+XML-RPC library (library)
+

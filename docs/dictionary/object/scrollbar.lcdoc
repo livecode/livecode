@@ -1,18 +1,18 @@
 Name: scrollbar
 
+Synonyms: sb
+
 Type: object
 
 Syntax: scrollbar
 
 Summary: A <control> that indicates a position or setting.
 
-Synonyms: sb
-
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the style of scrollbar "Progress" to progress
@@ -32,9 +32,9 @@ horizontal, depending on whether their <height> or <width> is greater.
 A scrollbar is contained in a card, group, or background. Scrollbars 
 cannot contain other objects.
 
-References: templateScrollbar (keyword), control (keyword), 
-height (property), width (property), scrollbarDrag (message), 
-scrollbar (object), property (glossary), object type (glossary),
-style (property)
+References: property (glossary), object type (glossary),
+templateScrollbar (keyword), control (keyword), scrollbarDrag (message),
+scrollbar (object), height (property), width (property), style (property)
 
 Tags: objects
+

@@ -6,28 +6,33 @@ Syntax: revdb_rollback(<databaseID>)
 
 Summary: <execute|Executes> the <revRollBackDatabase> <command>.
 
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revdb_rollback(monthlyExpensesConnection)
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
+databaseID: The number returned by the revOpenDatabase function when the
+database was opened.
 
-Returns: The <revdb_rollback> <function> <return|returns> empty if the changes were successfully rolled back.
+Returns: The <revdb_rollback> <function> <return|returns> empty if the
+changes were successfully rolled back.
 
 Description:
 Use the <revdb_rollback> <function> to discard changes to a <database>.
 
-Evaluating the <revdb_rollback> <function> has the same effect as <execute|executing> the <revRollBackDatabase> <command>. The only difference is that one is a <function call> and the other is a <command>.
+Evaluating the <revdb_rollback> <function> has the same effect as
+<execute|executing> the <revRollBackDatabase> <command>. The only
+difference is that one is a <function call> and the other is a
+<command>. 
 
 >*Important:*  The <revdb_rollback> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -38,6 +43,13 @@ Evaluating the <revdb_rollback> <function> has the same effect as <execute|execu
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
-References: revert (command), revRollBackDatabase (command), revCloseDatabase (command), revCommitDatabase (command), function (control structure), return (glossary), database (glossary), execute (glossary), Standalone Application Settings (glossary), function call (glossary), standalone application (glossary), command (glossary), Database library (library), LiveCode custom library (glossary)
+References: revert (command), revRollBackDatabase (command),
+revCloseDatabase (command), revCommitDatabase (command),
+function (control structure), return (glossary), database (glossary),
+execute (glossary), Standalone Application Settings (glossary),
+function call (glossary), standalone application (glossary),
+command (glossary), LiveCode custom library (glossary),
+Database library (library)
 
 Tags: database
+

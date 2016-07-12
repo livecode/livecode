@@ -8,9 +8,9 @@ Summary: Sent when the user moves the mouse during a <drag and drop>.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Example:
 on dragMove -- in a field script
@@ -21,10 +21,17 @@ on dragMove -- in a field script
 end dragMove
 
 Description:
-Handle the <dragMove> <message> if you want to perform some action (such as updating a status display) when the user moves the mouse while dragging, or if you want to keep continuous track of the <mouse pointer|mouse pointer's> position during a <drag and drop>.
+Handle the <dragMove> <message> if you want to perform some action (such
+as updating a status display) when the user moves the mouse while
+dragging, or if you want to keep continuous track of the <mouse
+pointer|mouse pointer's> position during a <drag and drop>.
 
-The <dragMove> <message> is sent to the <control> the <mouse pointer> is over, or to the <card> if no <control> is under the <mouse pointer>.
+The <dragMove> <message> is sent to the <control> the <mouse pointer> is
+over, or to the <card> if no <control> is under the <mouse pointer>.
 
-References: card (keyword), dragEnter (message), drag and drop (glossary), message (glossary), mouse pointer (glossary), control (glossary)
+References: drag and drop (glossary), message (glossary),
+mouse pointer (glossary), control (glossary), card (keyword),
+dragEnter (message)
 
 Tags: ui
+

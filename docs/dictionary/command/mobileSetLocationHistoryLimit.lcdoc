@@ -8,7 +8,7 @@ Summary: Set the number of location changes to be retained
 
 Introduced: 8.1
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -55,15 +55,21 @@ sample provided with the <locationChanged> event (which will always be
 the last sample in the history). e.g.
 
     on locationChanged
-        local tHistory
-        put mobileGetLocationHistory() into tHistory
-        repeat for each element tSample in tHistory
-            processLocationChanged tSample
-        end repeat
+
+    local tHistory
+    put mobileGetLocationHistory() into tHistory
+    repeat for each element tSample in tHistory
+
+    processLocationChanged tSample
+
+    end repeat
     end locationChanged
 
-References: mobileGetLocationHistory (function), 
-mobileGetLocationHistoryLimit (function), mobileStopTrackingSensor (command), 
-mobileSensorAvailable (function), mobileSensorReading (function), 
-mobileStartTrackingSensor (command), mobileLocationAuthorizationStatus (function), 
-locationChanged (message), trackingError (message)
+
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileGetLocationHistory (function),
+mobileGetLocationHistoryLimit (function),
+mobileSensorAvailable (function), mobileSensorReading (function),
+mobileLocationAuthorizationStatus (function), locationChanged (message),
+trackingError (message)
+
