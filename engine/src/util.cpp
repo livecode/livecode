@@ -592,23 +592,26 @@ real8 MCU_fwrap(real8 p_x, real8 p_y)
 
 bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string)
 {
+	bool t_success = true;
 	char *t_str = nil;
 	uint4 t_s = 0;
-	if (MCU_r8tos(t_str, t_s, n, fw, trailing, force) == 0)
-	{
-		delete[] t_str;
-		return false;
-	}
+	if (t_success)
+		t_success = (0 != MCU_r8tos(t_str, t_s, n, fw, trailing, force));
 	
-	MCStringRef t_string;
-	if (!MCStringCreateWithCStringAndRelease(t_str, t_string))
-	{
+	MCAutoStringRef t_string;
+	if (t_success)
+		t_success = MCStringCreateWithCStringAndRelease(t_str, &t_string);
+
+	if (t_success)
+		t_success = MCStringSetNumericValue(*t_string, n);
+
+	if (t_success)
+		t_success = MCStringCopy(*t_string, r_string);
+
+	if (!t_success)
 		delete[] t_str;
-		return false;
-	}
-	
-	r_string = t_string;
-	return true;
+
+	return t_success;
 }
 
 uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
