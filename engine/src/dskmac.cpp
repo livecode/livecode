@@ -3016,8 +3016,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 		if (t_len)
 		{
-			char *t_model;
-			if (!MCMemoryNewArray(t_len, t_model))
+			char *t_model = new char[t_len];
+			if (nil == t_model)
 				return false;
 			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
 

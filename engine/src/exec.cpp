@@ -84,35 +84,16 @@ bool MCExecContext::ConvertToString(MCValueRef p_value, MCStringRef& r_string)
         return MCListCopyAsString((MCListRef)p_value, r_string);
     case kMCValueTypeCodeNumber:
     {
-        if (MCNumberIsInteger((MCNumberRef)p_value))
+	    MCNumberRef t_number = reinterpret_cast<MCNumberRef>(p_value);
+	    if (MCNumberIsInteger(t_number))
             // SN-2014-04-28 [[ StonCache ]]
             // Stores the numeric value in the string
-            return MCStringFormat(r_string, "%d", MCNumberFetchAsInteger((MCNumberRef)p_value)) && MCStringSetNumericValue(r_string, MCNumberFetchAsReal((MCNumberRef)p_value));
-
-        char *t_buffer;
-        uint32_t t_buffer_size;
-        t_buffer = nil;
-        t_buffer_size = 0;
-
-        uint32_t t_length;
-        t_length = MCU_r8tos(t_buffer, t_buffer_size, MCNumberFetchAsReal((MCNumberRef)p_value), m_nffw, m_nftrailing, m_nfforce);
-
-        if (!MCStringCreateWithNativeCharBufferAndRelease((char_t *)t_buffer,
-                                                          t_length,
-                                                          t_buffer_size,
-                                                          r_string))
-        {
-	        delete[] t_buffer;
-	        return false;
-        }
-
-        if (!MCStringSetNumericValue(r_string,
-                                     MCNumberFetchAsReal((MCNumberRef)p_value)))
-        {
-	        return false;
-        }
-
-        return true;
+		    return
+			    MCStringFormat(r_string, "%d", MCNumberFetchAsInteger(t_number)) &&
+			    MCStringSetNumericValue(r_string, MCNumberFetchAsReal(t_number));
+	    else
+		    return MCU_r8tos(MCNumberFetchAsReal(t_number),
+		                     m_nffw, m_nftrailing, m_nfforce, r_string);
     }
     break;
     default:

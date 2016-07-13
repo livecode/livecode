@@ -248,7 +248,7 @@ bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
 
 	if (MCStringCreateWithNativeChars((const char_t *)p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string))
     {
-        delete p_cstring;
+        delete[] p_cstring;
         return true;
     }
     

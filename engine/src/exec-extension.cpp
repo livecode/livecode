@@ -974,23 +974,28 @@ static bool __script_try_to_convert_to_string(MCExecContext& ctxt, MCValueRef& x
     // If it is a number then, format it as a string.
     if (MCValueGetTypeCode(x_value) == kMCValueTypeCodeNumber)
     {
-        char t_backing_buffer[R8L];
-        char *t_buffer;
-        uint4 t_length;
-        t_buffer = t_backing_buffer;
-        t_length = R8L;
-        t_length = MCU_r8tos(t_buffer, t_length, MCNumberFetchAsReal((MCNumberRef)x_value), ctxt . GetNumberFormatWidth(), ctxt . GetNumberFormatTrailing(), ctxt . GetNumberFormatForce());
-        
-        MCStringRef t_string;
-        if (!MCStringCreateWithNativeChars((const char_t *)t_buffer, t_length, t_string))
-            return false;
-        
-        MCValueRelease(x_value);
-        x_value = t_string;
-        
-        r_converted = true;
-        
-        return true;
+		MCNumberRef t_number = static_cast<MCNumberRef>(x_value);
+		MCAutoStringRef t_string;
+		if (MCNumberIsInteger(t_number))
+		{
+			if (!MCStringFormat(&t_string, "%d", MCNumberFetchAsInteger(t_number)))
+				return false;
+			if (!MCStringSetNumericValue(*t_string, MCNumberFetchAsReal(t_number)))
+				return false;
+		}
+		else
+		{
+			if (!MCU_r8tos(MCNumberFetchAsReal(t_number),
+			               ctxt.GetNumberFormatWidth(),
+			               ctxt.GetNumberFormatTrailing(),
+			               ctxt.GetNumberFormatForce(),
+			               &t_string))
+				return false;
+		}
+		MCValueRelease(x_value);
+		x_value = MCValueRetain(*t_string);
+		r_converted = true;
+		return true;
     }
     
     // If it is an array, then decode as the empty string.
