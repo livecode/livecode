@@ -397,7 +397,6 @@ static bool s_lock_responder_change = false;
 //   frame sizes).
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
 {
-    NSLog(@"windowWillResize");
     MCRectangle t_frame;
     t_frame = MCRectangleMake(0, 0, frameSize . width, frameSize . height);
     
