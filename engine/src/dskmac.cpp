@@ -3016,7 +3016,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 		if (t_len)
 		{
-			auto t_model = new char[t_len];
+			char *t_model = new char[t_len];
 			if (nil == t_model)
 				return false;
 			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
