@@ -438,6 +438,16 @@ MCScriptCallHandlerOfInstanceDirect(MCScriptInstanceRef instance,
 									uindex_t argument_count,
 									MCValueRef& r_result);
 
+bool
+MCScriptEvaluateHandlerOfInstance(MCScriptInstanceRef instance,
+								  MCScriptCommonHandlerDefinition *handler,
+								  MCValueRef& r_handler);
+
+bool
+MCScriptTryToBindForeignHandlerOfInstance(MCScriptInstanceRef instance,
+										  MCScriptForeignHandlerDefinition *handler,
+										  bool& r_bound);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool

@@ -906,15 +906,6 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 }
 
 inline void
-MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
-									  MCScriptForeignHandlerDefinition *p_definition,
-									  uindex_t p_result_reg,
-									  const uindex_t *p_argument_regs,
-									  uindex_t p_argument_count)
-{
-}
-
-inline void
 MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 							  MCScriptHandlerDefinition *p_handler_def,
 							  MCValueRef *p_arguments,
@@ -1074,6 +1065,8 @@ MCScriptExecuteContext::IsInternalHandler(MCHandlerRef p_handler)
 {
 	return MCHandlerGetCallbacks(p_handler) == &kInternalHandlerCallbacks;
 }
+
+//////////
 
 inline void
 MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *p_group,

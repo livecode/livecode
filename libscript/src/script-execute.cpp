@@ -29,14 +29,7 @@
 
 #include "script-execute.hpp"
 
-const MCHandlerCallbacks MCScriptExecuteContext::kInternalHandlerCallbacks =
-{
-	sizeof(MCScriptExecuteContext::InternalHandlerContext),
-	MCScriptExecuteContext::InternalHandlerRelease,
-	MCScriptExecuteContext::InternalHandlerInvoke,
-	MCScriptExecuteContext::InternalHandlerDescribe,
-	
-};
+//////////
 
 bool
 MCScriptExecuteContext::TryToBindForeignHandler(MCScriptInstanceRef p_instance,
@@ -46,13 +39,42 @@ MCScriptExecuteContext::TryToBindForeignHandler(MCScriptInstanceRef p_instance,
 	return false;
 }
 
+
+void
+MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
+									  MCScriptForeignHandlerDefinition *p_definition,
+									  uindex_t p_result_reg,
+									  const uindex_t *p_argument_regs,
+									  uindex_t p_argument_count)
+{
+}
+
+//////////
+
+// Hander values are stored in a table in the instance, and are owned
+// by the instance - this is so that the lifetime of the handler value
+// is known, and so if a C function ptr (closure) is generated for one
+// it will last as long as the instance to which it points (the
+// maximum length it can).
 bool
 MCScriptExecuteContext::EvaluateHandler(MCScriptInstanceRef p_instance,
 										MCScriptCommonHandlerDefinition *p_handler_def,
 										MCHandlerRef& r_handler)
 {
+	// Compute the index in the handler table of p_handler; then, if it is the
+	// definition we are looking for, return its previously computed value.
+	uindex_t t_index =
+		ComputeHandlerIndexInInstance(p_instance,
+									  p_handler_def);
+	if (t_index < p_instance->handler_count &&
+		p_instance->handlers[t_index].definition == p_handler_def)
+	{
+		r_handler = p_instance->handlers[t_index].value;
+	}
 	return false;
 }
+
+//////////
 
 void
 MCScriptExecuteContext::Unwind(void)
@@ -141,6 +163,17 @@ MCScriptExecuteContext::Unwind(void)
 	// Rethrow the error that we have unwound.
 	MCErrorThrow(*t_error);
 }
+
+//////////
+
+const MCHandlerCallbacks MCScriptExecuteContext::kInternalHandlerCallbacks =
+{
+	sizeof(MCScriptExecuteContext::InternalHandlerContext),
+	MCScriptExecuteContext::InternalHandlerRelease,
+	MCScriptExecuteContext::InternalHandlerInvoke,
+	MCScriptExecuteContext::InternalHandlerDescribe,
+	
+};
 
 bool
 MCScriptExecuteContext::InternalHandlerInvoke(void *p_context,
