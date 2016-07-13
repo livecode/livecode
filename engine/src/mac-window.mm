@@ -420,6 +420,11 @@ static bool s_lock_responder_change = false;
 
 - (void)windowWillMove:(NSNotification *)notification
 {
+    
+    NSWindow * t_window = m_window -> GetHandle();
+    if ([t_window respondsToSelector: @selector(setMovingFrame:)])
+        [((NSWindow <com_runrev_livecode_MCMovingFrame> *)t_window) setMovingFrame:[t_window frame]];
+    
     if (!m_window -> IsSynchronizing())
     {
         // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
