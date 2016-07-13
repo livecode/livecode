@@ -213,21 +213,6 @@ public:
     void ThrowInvalidValueForReturnValue(MCScriptInstanceRef instance,
                                          MCScriptCommonHandlerDefinition *handler_def,
                                          MCValueRef value);
-
-	// Raise an 'error expected' error.
-	void ThrowErrorExpected(void);
-	
-	//////////
-    
-    struct InternalHandlerContext
-    {
-        MCScriptInstanceRef instance;
-        MCScriptCommonHandlerDefinition *definition;
-    };
-
-    // Returns true if the handler-ref is of 'internal' type - i.e. it is
-    // one created by the LCB VM.
-    static bool IsInternalHandler(MCHandlerRef handler);
     
 private:
 	struct Frame
@@ -250,18 +235,6 @@ private:
 	
 	/////////
 	
-	bool TryToBindForeignHandler(MCScriptInstanceRef instance,
-								 MCScriptForeignHandlerDefinition *handler_def,
-								 bool& r_bound);
-	
-	bool EvaluateHandler(MCScriptInstanceRef instance,
-						 MCScriptCommonHandlerDefinition *handler_def,
-						 MCHandlerRef& r_handler);
-	
-	void Unwind(void);
-	
-	/////////
-	
 	bool m_error;
 	Frame *m_frame;
     const byte_t *m_bytecode_ptr;
@@ -272,20 +245,6 @@ private:
 	
 	MCValueRef *m_root_arguments;
 	MCValueRef *m_root_result;
-    
-	/////////
-		
-	static const MCHandlerCallbacks kInternalHandlerCallbacks;
-	static bool InternalHandlerCreate(MCScriptInstanceRef instance,
-									  MCScriptCommonHandlerDefinition *definition,
-									  MCHandlerRef& r_handler);
-	static void InternalHandlerRelease(void *context);
-	static bool InternalHandlerInvoke(void *context,
-									  MCValueRef *arguments,
-									  uindex_t argument_count,
-									  MCValueRef& r_return_value);
-	static bool InternalHandlerDescribe(void *context,
-										MCStringRef& r_description);
 };
 
 inline
@@ -440,9 +399,9 @@ MCScriptExecuteContext::FetchHandler(MCScriptInstanceRef p_instance,
 	}
 	
 	MCHandlerRef t_handler;
-	if (!EvaluateHandler(p_instance,
-						 p_handler_def,
-						 t_handler))
+	if (!MCScriptEvaluateHandlerOfInstanceInternal(p_instance,
+												   p_handler_def,
+												   t_handler))
 	{
 		Rethrow();
 		return nil;
@@ -461,9 +420,9 @@ MCScriptExecuteContext::FetchForeignHandler(MCScriptInstanceRef p_instance,
 	}
 	
 	bool t_bound;
-	if (!TryToBindForeignHandler(p_instance,
-								 p_handler_def,
-								 t_bound))
+	if (!MCScriptTryToBindForeignHandlerOfInstanceInternal(p_instance,
+														   p_handler_def,
+														   t_bound))
 	{
 		Rethrow();
 		return nil;
@@ -475,9 +434,9 @@ MCScriptExecuteContext::FetchForeignHandler(MCScriptInstanceRef p_instance,
 	}
 	
 	MCHandlerRef t_handler;
-	if (!EvaluateHandler(p_instance,
-						 p_handler_def,
-						 t_handler))
+	if (!MCScriptEvaluateHandlerOfInstanceInternal(p_instance,
+												   p_handler_def,
+												   t_handler))
 	{
 		Rethrow();
 		return nil;
@@ -995,7 +954,87 @@ MCScriptExecuteContext::Leave(void)
 	// If an error occurred, we must unwind the LCB stack.
 	if (m_error)
 	{
-		Unwind();
+		// Catch the pending error on the thread. If there is no pending error
+		// it means that something has failed to actually throw an error when
+		// the error state arose.
+		MCAutoErrorRef t_error;
+		if (!MCErrorCatch(&t_error))
+		{
+			// If this call fails then it will be due to oom, there is nothing
+			// more we can do so we just return.
+			if (!MCScriptCreateErrorExpectedError(&t_error))
+			{
+				return false;
+			}
+		}
+		
+		// Now we loop back through the frames, adding the backtrace
+		// information as we go.
+		
+		// Position information is stored in modules as a list of triples
+		// (address, file, line) sorted by address. The address is that
+		// of the first instruction generated for a given source line. Each
+		// frame stores the return_address which is the address of the
+		// instruction after the invoke which caused the new frame. Therefore
+		// to find the position corresponding to each frame, we look
+		// for the last position whose address is strictly less than the
+		// return_address.
+		
+		// As the address of the current frame is stored in the context,
+		// we fetch it here, and replace by the return_address as we step
+		// back up the frames.
+		uindex_t t_address;
+		t_address = GetNextAddress();
+		while(m_frame != nil)
+		{
+			const MCScriptModuleRef t_module =
+			m_frame->instance->module;
+			
+			// If the module of the frame has debug info then we add the
+			// source info, otherwise we just skip the frame.
+			if (t_module->position_count > 0)
+			{
+				uindex_t t_index;
+				for(t_index = 0; t_index < t_module->position_count - 1; t_index++)
+				{
+					if (t_module->positions[t_index + 1].address >= t_address)
+					{
+						break;
+					}
+				}
+				
+				const MCScriptPosition *t_position =
+				&t_module->positions[t_index];
+				
+				// If unwinding fails (due to oom), then we cease processing
+				// and drop the error, allowing the new error to be propagate.
+				if (!MCErrorUnwind(*t_error,
+								   t_module->source_files[t_position->file],
+								   t_position->line,
+								   1))
+				{
+					t_error.Reset();
+					break;
+				}
+			}
+			
+			// Move to the calling frame.
+			Frame *t_current_frame = m_frame;
+			m_frame = m_frame->caller;
+			t_address = t_current_frame->return_address;
+			delete t_current_frame;
+		}
+		
+		// If an error occurred whilst unwinding, another error will have been
+		// thrown, so we just return.
+		if (*t_error == nil)
+		{
+			return false;
+		}
+		
+		// Rethrow the error that we have unwound.
+		MCErrorThrow(*t_error);
+		
 		return false;
 	}
 	
@@ -1058,12 +1097,6 @@ inline void
 MCScriptExecuteContext::Rethrow(void)
 {
 	m_error = true;
-}
-
-inline bool
-MCScriptExecuteContext::IsInternalHandler(MCHandlerRef p_handler)
-{
-	return MCHandlerGetCallbacks(p_handler) == &kInternalHandlerCallbacks;
 }
 
 //////////
@@ -1161,12 +1194,6 @@ MCScriptExecuteContext::ThrowInvalidValueForReturnValue(MCScriptInstanceRef p_in
 	m_error = MCScriptThrowInvalidValueForReturnValueError(p_instance,
 														   p_handler_def,
 														   p_value);
-}
-
-inline void
-MCScriptExecuteContext::ThrowErrorExpected(void)
-{
-	m_error = MCScriptThrowErrorExpectedError();
 }
 
 //////////

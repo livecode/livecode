@@ -128,7 +128,7 @@ MCScriptThrowUnableToResolveMultiInvokeError(MCScriptInstanceRef instance,
 }
 
 bool
-MCScriptThrowErrorExpectedError(void)
+MCScriptCreateErrorExpectedError(MCErrorRef& r_error)
 {
 	return false;
 }

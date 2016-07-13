@@ -432,21 +432,33 @@ void
 MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
 bool
-MCScriptCallHandlerOfInstanceDirect(MCScriptInstanceRef instance,
-									MCScriptHandlerDefinition *handler,
-									MCValueRef *arguments,
-									uindex_t argument_count,
-									MCValueRef& r_result);
+MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+									  MCScriptHandlerDefinition *handler,
+									  MCValueRef *arguments,
+									  uindex_t argument_count,
+									  MCValueRef& r_result);
 
 bool
-MCScriptEvaluateHandlerOfInstance(MCScriptInstanceRef instance,
-								  MCScriptCommonHandlerDefinition *handler,
-								  MCValueRef& r_handler);
+MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+										  MCScriptCommonHandlerDefinition *handler,
+										  MCHandlerRef& r_handler);
 
 bool
-MCScriptTryToBindForeignHandlerOfInstance(MCScriptInstanceRef instance,
-										  MCScriptForeignHandlerDefinition *handler,
-										  bool& r_bound);
+MCScriptTryToBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+												  MCScriptForeignHandlerDefinition *handler,
+												  bool& r_bound);
+
+bool
+MCScriptBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+											 MCScriptForeignHandlerDefinition *handler);
+
+bool
+MCScriptHandlerIsInternal(MCHandlerRef handler);
+
+void
+MCScriptInternalHandlerQuery(MCHandlerRef handler,
+							 MCScriptInstanceRef& r_instance,
+							 MCScriptCommonHandlerDefinition*& r_definition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -513,7 +525,7 @@ MCScriptThrowUnableToResolveMultiInvokeError(MCScriptInstanceRef instance,
 											 uindex_t argument_count);
 
 bool
-MCScriptThrowErrorExpectedError(void);
+MCScriptCreateErrorExpectedError(MCErrorRef& r_error);
 
 ////////////////////////////////////////////////////////////////////////////////
 

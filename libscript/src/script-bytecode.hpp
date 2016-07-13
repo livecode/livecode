@@ -439,7 +439,7 @@ struct MCScriptBytecodeOp_InvokeIndirect
 		// pair) then we can invoke directly; otherwise the handler-ref must
 		// be wrapping some other sort of invokable handler and thus we must
 		// use the MCHandlerRef API.
-		if (ctxt.IsInternalHandler((MCHandlerRef)t_handler))
+		if (MCScriptHandlerIsInternal((MCHandlerRef)t_handler))
 		{
 			InternalInvoke(ctxt,
 						   (MCHandlerRef)t_handler,
@@ -469,15 +469,18 @@ private:
 		// avoids packing/unpacking the argument list as MCValueRefs and we can
 		// use the register file directly.
 		
-		MCScriptExecuteContext::InternalHandlerContext *t_context;
-		t_context = (MCScriptExecuteContext::InternalHandlerContext *)MCHandlerGetContext((MCHandlerRef)p_handler);
+		MCScriptInstanceRef t_handler_instance;
+		MCScriptCommonHandlerDefinition *t_handler_def;
+		MCScriptInternalHandlerQuery(p_handler,
+									 t_handler_instance,
+									 t_handler_def);
 		
-		switch(t_context->definition->kind)
+		switch(t_handler_def->kind)
 		{
 			case kMCScriptDefinitionKindHandler:
 			{
-				ctxt.PushFrame(t_context -> instance,
-							   static_cast<MCScriptHandlerDefinition *>(t_context -> definition),
+				ctxt.PushFrame(t_handler_instance,
+							   static_cast<MCScriptHandlerDefinition *>(t_handler_def),
 							   p_result_reg,
 							   p_argument_regs,
 							   p_argument_count);
@@ -486,8 +489,8 @@ private:
 				
 			case kMCScriptDefinitionKindForeignHandler:
 			{
-				ctxt.InvokeForeign(t_context -> instance,
-								   static_cast<MCScriptForeignHandlerDefinition *>(t_context -> definition),
+				ctxt.InvokeForeign(t_handler_instance,
+								   static_cast<MCScriptForeignHandlerDefinition *>(t_handler_def),
 								   p_result_reg,
 								   p_argument_regs,
 								   p_argument_count);
