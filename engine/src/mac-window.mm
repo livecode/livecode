@@ -441,7 +441,6 @@ static bool s_lock_responder_change = false;
 {
     // IM-2014-10-29: [[ Bug 13814 ]] Make sure we unset the user reshape flag once dragging is finished.
 	m_user_reshape = false;
-    m_window -> ProcessDidMove();
 }
 
 - (void)windowDidMove:(NSNotification *)notification
