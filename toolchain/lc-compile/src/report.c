@@ -355,11 +355,7 @@ void yyerror(const char *p_text)
 {
     long t_position;
     GetCurrentPosition(&t_position);
-    
-    _PrintPosition(t_position);
-    fprintf(stderr, "Parsing error - %s\n", p_text);
-    
-    s_error_count += 1;
+    _ErrorS(t_position, "Parsing error: %s", p_text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
