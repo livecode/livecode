@@ -433,7 +433,7 @@ static bool s_lock_responder_change = false;
         
         // MW-2014-08-14: [[ Bug 13016 ]] Ask our NSApp to start sending us windowMoved
         //   messages.
-        [NSApp windowStartedMoving: m_window];
+        [(com_runrev_livecode_MCApplication *)NSApp windowStartedMoving: m_window];
     }
 }
 
