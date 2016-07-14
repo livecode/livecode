@@ -448,11 +448,6 @@ static bool s_lock_responder_change = false;
     m_window -> ProcessDidMove();
 }
 
-- (void)windowDidChangeScreen:(NSNotification *)notification
-{
-    m_window -> ProcessDidMove();
-}
-
 - (void)windowWillStartLiveResize:(NSNotification *)notification
 {
     // MW-2014-04-23: [[ Bug 12270 ]] The user has started sizing the window
