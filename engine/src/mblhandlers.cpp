@@ -4518,7 +4518,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
     {false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
     
-	{nil, nil, nil}    
+	{false, nil, nil, nil}
 };
 
 bool MCIsPlatformMessage(MCNameRef handler_name)

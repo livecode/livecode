@@ -360,7 +360,7 @@ inline MCGFloat MCGAffineTransformGetEffectiveScale(const MCGAffineTransform &p_
 bool MCGPointParse(MCStringRef p_string, MCGPoint &r_point)
 {
 	bool t_success;
-	t_success = nil;
+	t_success = false;
 	
 	MCProperListRef t_items;
 	t_items = nil;

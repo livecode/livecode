@@ -588,7 +588,7 @@ static void dopopupaskdialog_postwait(void *p_context)
 bool MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	if (s_in_modal)
-		return nil;
+		return false;
 	
 	popupaskdialog_t ctxt;
 	ctxt . type = p_type;
