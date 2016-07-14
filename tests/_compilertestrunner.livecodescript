@@ -356,7 +356,7 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
       put item 2 of tOutputLine into tLine
       put item 3 of tOutputLine into tColumn
       put word 1 of item 4 of tOutputLine into tType
-      put item 5 of tOutputLine into tMessage
+      put item 5 to -1 of tOutputLine into tMessage
 
       -- If the assertion type doesn't match, continue
       if tAssertionType is not tType then
