@@ -520,7 +520,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
                      reportCompilerTestError pScriptFile, tLineNumber, format("unknown position '%s'", word 4 of tLine)
                   end if
 
-                  reportCompilerTestDiag format("found assert error %s for position %s at line %d", word 2 of tLine, word 4 of tLine, word 6 of tLine, tLineNumber)
+                  reportCompilerTestDiag format("found assert error %s for position %s at line %d", word 2 of tLine, word 4 of tLine, tLineNumber)
 
                   put "error", word 2 of tLine, word 4 of tLine & return after tAssertions
                else
