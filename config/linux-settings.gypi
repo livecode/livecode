@@ -70,6 +70,8 @@
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
+					'-Werror=uninitialized',
+					'-Wno-error=maybe-uninitialized',
 				],
 
 				'cflags_cc':
@@ -127,7 +129,6 @@
 			[
 				'-O0',
 				'-g3',
-				'-Werror=uninitialized',
 			],
 			
 			'defines':
@@ -157,7 +158,6 @@
 			[
 				'-O0',
 				'-g0',
-				'-Werror=uninitialized',
 			],
 			
 			'defines':
