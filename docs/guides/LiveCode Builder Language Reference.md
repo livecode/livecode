@@ -58,6 +58,16 @@ Strings use backslash ('\') as an escape - the following are understood:
 
 > **Note:** Source files are presumed to be in UTF-8 encoding.
 
+## Line continuation
+
+A LiveCode builder statement or declaration can be continued onto
+multiple lines of code by placing the line continuation character `\`
+at the end each line.
+
+- **Line continuation**: \\(\n|\r\n|\r)
+
+> **Note:** A line continuation cannot occur within a comment.
+
 ### Case-Sensitivity
 
 At the moment, due to the nature of the parser being used, keywords are
