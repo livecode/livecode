@@ -1105,9 +1105,13 @@ bool MCCard::isdeletable(bool p_check_flag)
         MCObjptr *t_object_ptr = objptrs;
         do
         {
-            // if it's a background group then don't check flags
-            if (!((t_object_ptr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(t_object_ptr->getref())->isshared())) &&
-                t_object_ptr->getref()->isdeletable(true))
+            MCGroup * t_group = t_object_ptr->getrefasgroup();
+            
+            if (t_group != nil && t_group->isshared())
+            {
+                // if it's a shared group then don't check deletability because the object won't be deleted
+            }
+            else if (!t_object_ptr->getref()->isdeletable(true))
                 return false;
             
             t_object_ptr = t_object_ptr->next();
