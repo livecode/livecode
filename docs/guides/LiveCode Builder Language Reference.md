@@ -58,6 +58,19 @@ Strings use backslash ('\') as an escape - the following are understood:
 
 > **Note:** Source files are presumed to be in UTF-8 encoding.
 
+## Comments
+
+LiveCode Builder supports single line comments, which begin with `//`
+or `--` and extend to the end of the line.  There are also block
+comments, which begin with `/*` and end with `*/`, and can span
+multiple lines.
+
+- **Single-line comment**: (--|//)[^\n\r]*
+- **Block comment**: /\*([^*](\*[^/])?)*\*/
+
+> **Note:** A block comment that spans multiple lines terminates the
+> line of code that it begins on.
+
 ## Line continuation
 
 A LiveCode builder statement or declaration can be continued onto
