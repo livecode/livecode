@@ -41,7 +41,7 @@ bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst)
     
     uint32_t l;
     MCAutoStringRefAsNativeChars t_native;
-    char_t *s = nil;
+    const char_t *s = nil;
     byte_t *p = nil;
     
     if (!t_native . Lock(p_src, s, l))

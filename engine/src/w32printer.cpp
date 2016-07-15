@@ -138,7 +138,7 @@ static HANDLE Win32OpenPrinter(MCStringRef p_name)
 	t_defaults . pDevMode = NULL;
 	t_defaults . DesiredAccess = PRINTER_ACCESS_USE;
 
-	MCAutoStringRefAsWString t_name_wstr;
+	MCAutoStringRefAsLPWSTR t_name_wstr;
 	/* UNCHECKED */ t_name_wstr.Lock(p_name);
 
 	if (OpenPrinterW(*t_name_wstr, &t_printer, &t_defaults) == 0)

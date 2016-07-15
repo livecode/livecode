@@ -151,10 +151,10 @@ bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntries
 	t_entry . permissions = t_stat . st_mode & 0444;
 
     char* t_next_entry;
-    MCAutoStringRefAsUTF8String t_utf8_files;
-    
-    t_success = t_utf8_files . Lock(*t_list);
-    
+    MCAutoCustomPointer<char, MCMemoryDeleteArray> t_utf8_files;
+    if (t_success)
+	    t_success = MCStringConvertToUTF8String(*t_list, &t_utf8_files);
+
     if (t_success)
         t_next_entry = *t_utf8_files;
     
