@@ -76,8 +76,7 @@
 
 				'cflags_cc':
 				[
-					# Needs GCC 4.7
-					#'-Werror=delete-non-virtual-dtor',
+					'-Werror=delete-non-virtual-dtor',
 				],
 			},
 			{
