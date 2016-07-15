@@ -397,8 +397,15 @@ public:
             MCMemoryDeleteArray(m_wstring);
         m_wstring = nil;
     }
-    
-    unichar_t *operator * (void)
+
+    /* FIXME Unlike many of the other MCAutoStringRefAs* classes, this
+     * operator*() implementation does _not_ return a const T*.  It's
+     * common to use this class when invoking Win32 API functions that
+     * require an LPWSTR which is notably _not_ `const`. It may be a
+     * good idea to modify this implementation to _always_ use a
+     * temporary buffer, so as to ensure there's no danger of
+     * mutations to the locked MCStringRef. */
+    unichar_t *operator * (void) const
     {
         return m_wstring;
     }
@@ -435,7 +442,7 @@ public:
         m_utf8string = nil;
     }
     
-    char *operator * (void)
+    const char *operator * (void) const
     {
         return m_utf8string;
     }
@@ -616,7 +623,7 @@ public:
         m_pascal_string = nil;
     }
     
-    unsigned char* operator * (void)
+    const unsigned char* operator * (void) const
     {
         return m_pascal_string;
     }
