@@ -791,7 +791,7 @@ static bool __MCArrayCreateIndirect(__MCArray *p_contents, __MCArray*& r_array)
 
 	r_array = self;
 	return true;
-};
+}
 
 static uindex_t __MCArrayGetTableSizeIndex(__MCArray *self)
 {
