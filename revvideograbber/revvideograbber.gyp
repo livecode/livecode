@@ -129,6 +129,17 @@
 				# we also need to compile that file on Windows. Force using Objective-C++
 				'OTHER_CPLUSPLUSFLAGS': '-x objective-c++',
 			},
+			
+			'configurations':
+			{
+				'Debug':
+				{
+					'xcode_settings':
+					{
+						'ONLY_ACTIVE_ARCH': 'NO',
+					},
+				},
+			},
 		},
 	],
 }
