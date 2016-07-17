@@ -30,6 +30,7 @@
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
 		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
+		'COMBINE_HIDPI_IMAGES': 'YES',
 	},
 	
 	'target_defaults':
@@ -137,6 +138,7 @@
 						'WARNING_CFLAGS':
 						[
 							'-Wno-return-type',
+							'-w',
 						],
 					},
 				},
@@ -182,6 +184,7 @@
 				'ARCHS': 'i386 x86_64',
 				'ONLY_ACTIVE_ARCH': 'YES',
 				'GCC_OPTIMIZATION_LEVEL': '0',
+				'ENABLE_TESTABILITY': 'YES',
 			},
 		},
 		
