@@ -591,7 +591,7 @@ uindex_t MCTextChunkIterator_Codeunit::ChunkOffset(MCStringRef p_needle, uindex_
     if (MCStringFind(m_text, t_in_range, p_needle, m_options, &t_range))
     {
         if (!p_whole_matches || t_range . length == 1)
-            return t_range . offset;
+            return t_range . offset + 1;
     }
     
     return 0;
