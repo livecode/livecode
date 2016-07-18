@@ -181,10 +181,10 @@ MCGRectangleGetIntegerRect(const MCGRectangle &p_rect)
 		t_height = LowerAdjust(p_rect.size.height);
 	}
 
-	return MCRectangleMake( int16_t(MCClamp(t_left,   INT16_MIN,  INT16_MAX)),
-	                        int16_t(MCClamp(t_top,    INT16_MIN,  INT16_MAX)),
-	                       uint16_t(MCClamp(t_width,  0,         UINT16_MAX)),
-	                       uint16_t(MCClamp(t_height, 0,         UINT16_MAX)));
+	return MCRectangleMake(MCClamp<MCGFloat>(t_left,   INT16_MIN,  INT16_MAX),
+	                       MCClamp<MCGFloat>(t_top,    INT16_MIN,  INT16_MAX),
+	                       MCClamp<MCGFloat>(t_width,  0,         UINT16_MAX),
+	                       MCClamp<MCGFloat>(t_height, 0,         UINT16_MAX));
 }
 
 inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
@@ -225,8 +225,8 @@ static inline MCPoint MCPointMake(int16_t x, int16_t y)
 
 static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
 {
-	return MCPointMake(int16_t(MCClamp(p_point.x, INT16_MIN, INT16_MAX)),
-	                   int16_t(MCClamp(p_point.y, INT16_MIN, INT16_MAX)));
+	return MCPointMake(MCClamp<MCGFloat>(p_point.x, INT16_MIN, INT16_MAX),
+	                   MCClamp<MCGFloat>(p_point.y, INT16_MIN, INT16_MAX));
 }
 
 inline MCGPoint MCPointToMCGPoint(MCPoint p_point, MCGFloat p_adjustment = 0.0f)
