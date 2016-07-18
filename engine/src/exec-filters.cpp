@@ -1126,8 +1126,6 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
                     uindex_t t_cu_pos = 0;
                     uindex_t t_char_pos = 0;
                     
-                    byte_t* t_byte_string;
-                    
                     bool t_char_offsets = false;
                     
                     // Loop until we have reached either the output byte-amount specified by the user

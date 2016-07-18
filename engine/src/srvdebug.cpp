@@ -57,7 +57,10 @@ enum MCDebugActionTag
 };
 
 static bool s_debugging = false;
+
+#ifdef _IREVIAM
 static uint32_t s_interrupts = 0;
+#endif
 
 static MCDebugActionTag s_action = kMCDebugActionNone;
 static uint32_t s_current_context = 0;

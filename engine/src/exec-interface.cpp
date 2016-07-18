@@ -369,7 +369,9 @@ static MCExecCustomTypeInfo _kMCInterfaceVisualEffectTypeInfo =
 
 MCExecEnumTypeInfo *kMCInterfaceWindowPositionTypeInfo = &_kMCInterfaceWindowPositionTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAlignmentTypeInfo;
-
+MCExecCustomTypeInfo *kMCInterfaceImagePaletteSettingsTypeInfo = &_kMCInterfaceImagePaletteSettingsTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo = &_kMCInterfaceVisualEffectTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo = &_kMCInterfaceVisualEffectArgumentTypeInfo;
 //////////
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)

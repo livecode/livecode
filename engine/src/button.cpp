@@ -210,23 +210,6 @@ typedef struct
 	const char *token;
 } ModKeyToken;
 
-static ModKeyToken modifier_tokens[] =
-	{
-		{MS_SHIFT, 5, "shift"},
-		{MS_SHIFT, 1, "@"},
-		{MS_ALT, 6, "option"},
-		{MS_ALT, 3, "opt"},
-		{MS_ALT, 3, "alt"},
-		{MS_ALT, 1, "#"},
-		{MS_MAC_CONTROL, 7, "control"},
-		{MS_MAC_CONTROL, 4, "ctrl"},
-		{MS_MAC_CONTROL, 1, "%"},
-		{MS_CONTROL, 7, "command"},
-		{MS_CONTROL, 3, "cmd"},
-		{MS_CONTROL, 1, "^"},
-		{0, 0, NULL}
-	};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCButton::kProperties[] =
@@ -3801,8 +3784,6 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if ((stat = IO_read_stringref_new(acceltext, stream, true)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}
-
-	uint4 tacceltextsize;
 
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
 		return checkloadstat(stat);

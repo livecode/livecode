@@ -346,8 +346,6 @@ bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 			t_success = IO_NORMAL == IO_write(t_color, sizeof(uint8_t), 4, p_stream);
 		}
 
-		uint32_t t_first_shift = 8 - t_depth;
-
 		// bmp row order is bottom to top, so point to last row
 		uint8_t *t_src_ptr = (uint8_t*)t_indexed->data + (t_height - 1) * t_indexed->stride;
 		while (t_success && t_src_ptr >= t_indexed->data)
@@ -731,8 +729,6 @@ bool bmp_read_rle8_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 			else
 			{
 				// absolute mode
-				uint8_t t_byte, t_upper, t_lower;
-				
 				uint8_t t_run_buffer[256];
 				uint32_t t_run_bytes;
 				t_run_bytes = (t_value + 1) & ~0x1;
@@ -790,9 +786,8 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 				uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 				
 				uint32_t t_current_shift = t_first_shift;
-				uint8_t t_byte = 0;
-
-				for (uint32_t x = 0; x < p_bitmap->width; x++)
+				
+                for (uint32_t x = 0; x < p_bitmap->width; x++)
 				{
 					*t_dst_row++ = p_color_table[(*t_src_row >> t_current_shift) & t_pixel_mask];
 					if (t_current_shift == 0)
@@ -2120,8 +2115,7 @@ static bool xpm_next_color(const char *p_line, uindex_t p_line_start, uindex_t p
 {
 	uindex_t t_next_token_start, t_next_token_end;
 	uindex_t t_key;
-	bool t_have_color = false;
-
+	
 	r_color_end = r_color_start = p_line_start;
 
 	if (!xpm_next_token(p_line, p_line_start, p_line_end, r_color_start, r_color_end))
@@ -2186,7 +2180,6 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 	if (p_color_end - p_color_start < 6)
 		return false;
 	
-	uint32_t t_value = 0;
 	uint8_t t_color[3];
 	for (uint32_t i = 0; i < 3; i++)
 	{
@@ -2202,8 +2195,6 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 
 static bool xpm_parse_v3_color_line(const char *p_line, uint32_t p_chars_per_pixel, uint32_t &r_color, uint32_t &r_color_char)
 {
-	bool t_success = true;
-
 	uindex_t t_line_start, t_line_end;
 	
 	if (!c_get_string_content_bounds(p_line, t_line_start, t_line_end))
@@ -2310,8 +2301,6 @@ bool xpm_read_v3_header(IO_handle p_stream, uindex_t &r_width, uindex_t &r_heigh
 
 static bool xpm_parse_v1_color_line(const char *p_line, uint32_t p_chars_per_pixel, uint32_t &r_color, uint32_t &r_color_char)
 {
-	bool t_success = true;
-
 	uindex_t t_line_start, t_line_end;
 	
 	if (!c_get_string_content_bounds(p_line, t_line_start, t_line_end))

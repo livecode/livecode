@@ -242,7 +242,6 @@ void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id)
 
 void MCStoreExecMakePurchase(MCExecContext& ctxt, MCStringRef p_product_id, MCStringRef p_quantity, MCStringRef p_payload)
 {
-    MCPurchase *t_purchase = nil;
     bool t_success;
 	t_success = true;
     

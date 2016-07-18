@@ -1688,8 +1688,7 @@ coord_t MCBlock::getsubwidth(MCDC *dc, coord_t x /* IGNORED */, findex_t i, find
 	else
 	{
 		findex_t sptr = i;
-        findex_t t_length = l;
-		
+        
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
         if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
 			l--;

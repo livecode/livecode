@@ -2492,7 +2492,6 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 		t_matrix = self->layer->canvas->getTotalMatrix();
 
 		MCGRectangle t_tmp_src;
-		MCGFloat t_src_width, t_src_height;
 		if (p_src != nil)
 			t_tmp_src = *p_src;
 		else

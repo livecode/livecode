@@ -200,23 +200,6 @@ static MCExecCustomTypeInfo _kMCInterfaceFieldRangesTypeInfo =
 
 //////////
 
-static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
-{
-	{ "static", kMCLayerModeHintStatic, false },
-	{ "dynamic", kMCLayerModeHintDynamic, false },
-	{ "scrolling", kMCLayerModeHintScrolling, false },
-	{ "container", kMCLayerModeHintContainer, false },
-};
-
-static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
-{
-	"Interface.LayerMode",
-	sizeof(_kMCInterfaceLayerModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCInterfaceLayerModeElementInfo
-};
-
-//////////
-
 static void MCInterfaceFieldTabAlignmentsParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldTabAlignments& r_output)
 {
     MCAutoArrayRef t_array;

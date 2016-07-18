@@ -956,8 +956,6 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 	t_icosw += -t_isinh + (p_src->width << 7);
 	t_isinw += t_icosh + (p_src->height << 7);
 
-	uint1 t_byte;
-	uint1 t_bit = 0x80;
 	uint8_t *t_dst_ptr = (uint8_t*)r_rotated->data;
 	for (uint2 t_y=0; t_y < t_height; t_y++)
 	{
@@ -1246,7 +1244,6 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 {
 	bool t_success = true;
 	
-	MCImageBitmap *t_bitmap = nil;
 	IO_handle t_stream = nil;
 	
 	void *t_bytes = nil;
