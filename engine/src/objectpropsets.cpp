@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "objectpropsets.h"
 
+#include "stackfileformat.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_delimiter, MCStringRef*& r_array, uindex_t& r_count);
@@ -291,7 +293,7 @@ void MCObject::deletepropsets(void)
 
 IO_stat MCObject::savepropsets(IO_handle stream, uint32_t p_version)
 {
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 		return savepropsets_legacy(stream);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Emit all the propsets in
@@ -314,7 +316,7 @@ IO_stat MCObject::savepropsets(IO_handle stream, uint32_t p_version)
 
 IO_stat MCObject::loadpropsets(IO_handle stream, uint32_t version)
 {
-	if (version < 7000)
+	if (version < kMCStackFileFormatVersion_7_0)
 		return loadpropsets_legacy(stream);
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Read all the propsets in

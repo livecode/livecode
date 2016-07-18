@@ -18,10 +18,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 constant kTestDirectory = "__CoreFilesSave"
 constant kTestFile = "__CoreFilesSave/Save.livecode"
-constant kVersions = "8.0:7000,7.0:7000,5.5:5500,2.7:2700"
-constant kVersionsWidget = "8.0:8000,7.0:7000,5.5:5500,2.7:2700"
+constant kVersions = "8.1:7000,8.0:7000,7.0:7000,5.5:5500,2.7:2700"
+constant kVersionsWidget = "8.1:8100,8.0:8000,7.0:7000,5.5:5500,2.7:2700"
+constant kVersionsBlockOverflow = "8.1:8100,8.0:8000,7.0:7000,5.5:5500,2.7:2700"
 
-local sTestStack, sTestStackWidget
+local sTestStack, sTestStackWidget, sTestStackBlockOverflow
 
 command TestSetup
    create folder kTestDirectory
@@ -34,6 +35,16 @@ command TestSetup
    set the defaultstack to sTestStackWidget
    TestLoadExtension "com.livecode.widget.clock"
    create widget as "com.livecode.widget.clock"
+   
+   create invisible stack "block overflow"
+   put it into sTestStackBlockOverflow
+   set the defaultstack to sTestStackBlockOverflow
+   create field
+   local tText
+   repeat 40000 times
+      put "a" after tText
+   end repeat
+   set the text of field 1 to tText
 end TestSetup
 
 command TestTearDown
@@ -116,6 +127,9 @@ on TestSaveAsFormat
    repeat for each item tVersion in kVersionsWidget
       __TestSaveAsFormat sTestStackWidget, tVersion
    end repeat
+   repeat for each item tVersion in kVersionsBlockOverflow
+      __TestSaveAsFormat sTestStackBlockOverflow, tVersion
+   end repeat
 end TestSaveAsFormat
 
 on TestSaveAsNewestFormat
@@ -124,6 +138,7 @@ on TestSaveAsNewestFormat
    set the itemdelimiter to ","
    __TestSaveAsNewestFormat sTestStack, item 1 of kVersions
    __TestSaveAsNewestFormat sTestStackWidget, item 1 of kVersionsWidget
+   __TestSaveAsNewestFormat sTestStackBlockOverflow, item 1 of kVersionsBlockOverflow
 end TestSaveAsNewestFormat
 
 on TestSaveAsGlobalFormat
@@ -136,6 +151,9 @@ on TestSaveAsGlobalFormat
    repeat for each item tVersion in kVersionsWidget
       __TestSaveAsGlobalFormat sTestStackWidget, tVersion
    end repeat
+   repeat for each item tVersion in kVersionsBlockOverflow
+      __TestSaveAsGlobalFormat sTestStackBlockOverflow, tVersion
+   end repeat
 end TestSaveAsGlobalFormat
 
 on TestSaveAsDefaultFormat
@@ -143,4 +161,5 @@ on TestSaveAsDefaultFormat
    set the itemdelimiter to ","
    __TestSaveAsDefaultFormat sTestStack, item 1 of kVersions
    __TestSaveAsDefaultFormat sTestStackWidget, item 1 of kVersionsWidget
+   __TestSaveAsDefaultFormat sTestStackBlockOverflow, item 1 of kVersionsBlockOverflow
 end TestSaveAsDefaultFormat

@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 const char *ER_reverse[256] =
     {
         "&#0;", "&#1;", "&#2;", "&#3;", "&#4;",
@@ -462,6 +464,11 @@ bool MCParagraph::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObj
 	return t_continue;
 }
 
+uint32_t MCParagraph::getminimumstackfileversion(void)
+{
+	return kMCStackFileFormatMinimumExportVersion;
+}
+
 // **** mutate blocks
 IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 {
@@ -474,7 +481,7 @@ IO_stat MCParagraph::load(IO_handle stream, uint32_t version, bool is_ext)
 
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] Prior to 7.0, paragraphs were mixed runs
 	//   of UTF-16 and native text. 7.0 plus they are just a stringref.
-	if (version < 7000)
+	if (version < kMCStackFileFormatVersion_7_0)
 	{
 		uint32_t t_length;
 		MCAutoCustomPointer<char,MCMemoryDeleteArray> t_text_data;
@@ -714,7 +721,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph has attributes and 5.5
 	//   stackfile format has been requested, then output an extended paragraph.
 	bool t_is_ext;
-	if (p_version >= 5500 && attrs != nil)
+	if (p_version >= kMCStackFileFormatVersion_5_5 && attrs != nil)
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -722,7 +729,7 @@ IO_stat MCParagraph::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	if ((stat = IO_write_uint1(t_is_ext ? OT_PARAGRAPH_EXT : OT_PARAGRAPH, stream)) != IO_NORMAL)
 		return stat;
 	
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 	{
 		// The string data that will get written out. It can't be just done as a
 		// StringRef without breaking file format compatibility.

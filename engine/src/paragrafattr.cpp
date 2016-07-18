@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 #include <stddef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,7 +284,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-            t_stat = checkloadstat(IO_read_stringref_new(attrs -> metadata, stream, version >= 7000));
+            t_stat = checkloadstat(IO_read_stringref_new(attrs -> metadata, stream, version >= kMCStackFileFormatVersion_7_0));
 
 		if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
 			t_stat = checkloadstat(IO_read_uint2(&attrs -> list_index, stream));
@@ -387,7 +389,7 @@ IO_stat MCParagraph::saveattrs(IO_handle stream, uint32_t p_version)
 	// MW-2012-11-13: [[ ParaMetadata ]] Write out the metadata, if any.
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_METADATA) != 0)
-        t_stat = IO_write_stringref_new(attrs -> metadata, stream, p_version >= 7000);
+        t_stat = IO_write_stringref_new(attrs -> metadata, stream, p_version >= kMCStackFileFormatVersion_7_0);
 
 	// MW-2012-11-13: [[ ParaListIndex ]] Write out the list index, if any.
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LIST_INDEX) != 0)
