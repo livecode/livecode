@@ -305,13 +305,13 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
-	{"", kMCStackFullscreenResize},
-	{"exactfit", kMCStackFullscreenExactFit},
-	{"letterbox", kMCStackFullscreenLetterbox},
-	{"noborder", kMCStackFullscreenNoBorder},
-	{"noscale", kMCStackFullscreenNoScale},
+	{"", kMCStackFullscreenResize, false},
+	{"exactfit", kMCStackFullscreenExactFit, false},
+	{"letterbox", kMCStackFullscreenLetterbox, false},
+	{"noborder", kMCStackFullscreenNoBorder, false},
+	{"noscale", kMCStackFullscreenNoScale, false},
     // AL-2014-05-27: [[ Bug 12509 ]] showAll not added to refactored fullscreen modes
-    {"showAll", kMCStackFullscreenShowAll},
+    {"showAll", kMCStackFullscreenShowAll, false},
 	{"", kMCStackFullscreenModeNone, true},
 };
 
