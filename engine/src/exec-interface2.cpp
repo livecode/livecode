@@ -669,10 +669,10 @@ static MCExecEnumTypeInfo _kMCInterfaceLookAndFeelTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfacePaintCompressionElementInfo[] =
 {
-	{ "png", EX_PNG },
-	{ "jpeg", EX_JPEG },
-	{ "gif", EX_GIF },
-	{ "rle", EX_PBM },
+	{ "png", EX_PNG, false },
+	{ "jpeg", EX_JPEG, false },
+	{ "gif", EX_GIF, false },
+	{ "rle", EX_PBM, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
@@ -686,8 +686,8 @@ static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceProcessTypeElementInfo[] =
 {
-	{ "background", 0 },
-	{ "foreground", 1 },
+	{ "background", 0, false },
+	{ "foreground", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
@@ -701,8 +701,8 @@ static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceSelectionModeElementInfo[] =
 {
-	{ "surround", 0 },
-	{ "intersect", 1 },
+	{ "surround", 0, false },
+	{ "intersect", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =

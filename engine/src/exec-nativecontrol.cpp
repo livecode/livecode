@@ -314,10 +314,10 @@ static MCExecCustomTypeInfo _kMCNativeControlIdentifierTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlIndicatorStyleElementInfo[] =
 {
-    { "", kMCNativeControlIndicatorStyleEmpty },
-    { "default", kMCNativeControlIndicatorStyleDefault },
-    { "white", kMCNativeControlIndicatorStyleWhite },
-    { "black", kMCNativeControlIndicatorStyleBlack }
+    { "", kMCNativeControlIndicatorStyleEmpty, false },
+    { "default", kMCNativeControlIndicatorStyleDefault, false },
+    { "white", kMCNativeControlIndicatorStyleWhite, false },
+    { "black", kMCNativeControlIndicatorStyleBlack, false }
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlIndicatorStyleTypeInfo =
@@ -348,13 +348,13 @@ static MCExecSetTypeInfo _kMCNativeControlLoadStateTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlPlaybackStateElementInfo[] =
 {
-    { "", kMCNativeControlPlaybackStateNone },
-	{ "stopped", kMCNativeControlPlaybackStateStopped },
-	{ "playing", kMCNativeControlPlaybackStatePlaying },
-	{ "paused", kMCNativeControlPlaybackStatePaused },
-	{ "interrupted", kMCNativeControlPlaybackStateInterrupted },
-	{ "seeking forward", kMCNativeControlPlaybackStateSeekingForward },
-	{ "seeking backward", kMCNativeControlPlaybackStateSeekingBackward },
+    { "", kMCNativeControlPlaybackStateNone, false },
+	{ "stopped", kMCNativeControlPlaybackStateStopped, false },
+	{ "playing", kMCNativeControlPlaybackStatePlaying, false },
+	{ "paused", kMCNativeControlPlaybackStatePaused, false },
+	{ "interrupted", kMCNativeControlPlaybackStateInterrupted, false },
+	{ "seeking forward", kMCNativeControlPlaybackStateSeekingForward, false },
+	{ "seeking backward", kMCNativeControlPlaybackStateSeekingBackward, false },
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlPlaybackStateTypeInfo =
@@ -368,10 +368,10 @@ static MCExecEnumTypeInfo _kMCNativeControlPlaybackStateTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputCapitalizationTypeElementInfo[] =
 {
-    {"none", kMCNativeControlInputCapitalizeNone},
-    {"words", kMCNativeControlInputCapitalizeWords},
-    {"sentences", kMCNativeControlInputCapitalizeSentences},
-    {"all characters", kMCNativeControlInputCapitalizeCharacters},
+    {"none", kMCNativeControlInputCapitalizeNone, false},
+    {"words", kMCNativeControlInputCapitalizeWords, false},
+    {"sentences", kMCNativeControlInputCapitalizeSentences, false},
+    {"all characters", kMCNativeControlInputCapitalizeCharacters, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputCapitalizationTypeTypeInfo =
@@ -385,9 +385,9 @@ static MCExecEnumTypeInfo _kMCNativeControlInputCapitalizationTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputAutocorrectionTypeElementInfo[] =
 {
-    {"default", kMCNativeControlInputAutocorrectionDefault},
-    {"no", kMCNativeControlInputAutocorrectionNo},
-    {"yes", kMCNativeControlInputAutocorrectionYes},
+    {"default", kMCNativeControlInputAutocorrectionDefault, false},
+    {"no", kMCNativeControlInputAutocorrectionNo, false},
+    {"yes", kMCNativeControlInputAutocorrectionYes, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputAutocorrectionTypeTypeInfo =
@@ -401,15 +401,15 @@ static MCExecEnumTypeInfo _kMCNativeControlInputAutocorrectionTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputKeyboardTypeElementInfo[] =
 {
-    { "default", kMCNativeControlInputKeyboardTypeDefault},
-    { "alphabet", kMCNativeControlInputKeyboardTypeAlphabet},
-    { "numeric", kMCNativeControlInputKeyboardTypeNumeric},
-    { "url", kMCNativeControlInputKeyboardTypeURL},
-    { "number", kMCNativeControlInputKeyboardTypeNumber},
-    { "phone", kMCNativeControlInputKeyboardTypePhone},
-    { "contact", kMCNativeControlInputKeyboardTypeContact},
-    { "email", kMCNativeControlInputKeyboardTypeEmail},
-    { "decimal", kMCNativeControlInputKeyboardTypeDecimal},
+    { "default", kMCNativeControlInputKeyboardTypeDefault, false},
+    { "alphabet", kMCNativeControlInputKeyboardTypeAlphabet, false},
+    { "numeric", kMCNativeControlInputKeyboardTypeNumeric, false},
+    { "url", kMCNativeControlInputKeyboardTypeURL, false},
+    { "number", kMCNativeControlInputKeyboardTypeNumber, false},
+    { "phone", kMCNativeControlInputKeyboardTypePhone, false},
+    { "contact", kMCNativeControlInputKeyboardTypeContact, false},
+    { "email", kMCNativeControlInputKeyboardTypeEmail, false},
+    { "decimal", kMCNativeControlInputKeyboardTypeDecimal, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputKeyboardTypeTypeInfo =
@@ -423,8 +423,8 @@ static MCExecEnumTypeInfo _kMCNativeControlInputKeyboardTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputKeyboardStyleElementInfo[] =
 {
-    { "default", kMCNativeControlInputKeyboardStyleDefault},
-    { "alert", kMCNativeControlInputKeyboardStyleAlert},
+    { "default", kMCNativeControlInputKeyboardStyleDefault, false},
+    { "alert", kMCNativeControlInputKeyboardStyleAlert, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputKeyboardStyleTypeInfo =
@@ -438,12 +438,12 @@ static MCExecEnumTypeInfo _kMCNativeControlInputKeyboardStyleTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputReturnKeyTypeElementInfo[] =
 {
-	{"default", kMCNativeControlInputReturnKeyTypeDefault},
-	{"go", kMCNativeControlInputReturnKeyTypeGo},
-	{"next", kMCNativeControlInputReturnKeyTypeNext},
-	{"search", kMCNativeControlInputReturnKeyTypeSearch},
-	{"send", kMCNativeControlInputReturnKeyTypeSend},
-    {"done", kMCNativeControlInputReturnKeyTypeDone},
+	{"default", kMCNativeControlInputReturnKeyTypeDefault, false},
+	{"go", kMCNativeControlInputReturnKeyTypeGo, false},
+	{"next", kMCNativeControlInputReturnKeyTypeNext, false},
+	{"search", kMCNativeControlInputReturnKeyTypeSearch, false},
+	{"send", kMCNativeControlInputReturnKeyTypeSend, false},
+    {"done", kMCNativeControlInputReturnKeyTypeDone, false},
 #if defined(TARGET_SUBPLATFORM_IPHONE)
     {"route", kMCNativeControlInputReturnKeyTypeRoute},
 	{"yahoo", kMCNativeControlInputReturnKeyTypeYahoo},
@@ -464,8 +464,8 @@ static MCExecEnumTypeInfo _kMCNativeControlInputReturnKeyTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputContentTypeElementInfo[] =
 {
-    { "plain", kMCNativeControlInputContentTypePlain},
-    { "password", kMCNativeControlInputContentTypePassword},
+    { "plain", kMCNativeControlInputContentTypePlain, false},
+    { "password", kMCNativeControlInputContentTypePassword, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputContentTypeTypeInfo =
@@ -499,9 +499,9 @@ static MCExecSetTypeInfo _kMCNativeControlInputDataDetectorTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputTextAlignElementInfo[] =
 {
-    { "center", kMCNativeControlInputTextAlignCenter },
-    { "left", kMCNativeControlInputTextAlignLeft },
-    { "right", kMCNativeControlInputTextAlignRight },
+    { "center", kMCNativeControlInputTextAlignCenter, false },
+    { "left", kMCNativeControlInputTextAlignLeft, false },
+    { "right", kMCNativeControlInputTextAlignRight, false },
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputTextAlignTypeInfo =
@@ -515,9 +515,9 @@ static MCExecEnumTypeInfo _kMCNativeControlInputTextAlignTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlInputVerticalAlignElementInfo[] =
 {
-    { "center", kMCNativeControlInputVerticalAlignCenter },
-    { "top", kMCNativeControlInputVerticalAlignTop },
-    { "bottom", kMCNativeControlInputVerticalAlignBottom },
+    { "center", kMCNativeControlInputVerticalAlignCenter, false },
+    { "top", kMCNativeControlInputVerticalAlignTop, false },
+    { "bottom", kMCNativeControlInputVerticalAlignBottom, false },
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlInputVerticalAlignTypeInfo =
@@ -531,10 +531,10 @@ static MCExecEnumTypeInfo _kMCNativeControlInputVerticalAlignTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlClearButtonModeElementInfo[] =
 {
-	{"never", kMCNativeControlClearButtonModeNever},
-	{"while editing", kMCNativeControlClearButtonModeWhileEditing},
-	{"unless editing", kMCNativeControlClearButtonModeUnlessEditing},
-	{"always", kMCNativeControlClearButtonModeAlways},
+	{"never", kMCNativeControlClearButtonModeNever, false},
+	{"while editing", kMCNativeControlClearButtonModeWhileEditing, false},
+	{"unless editing", kMCNativeControlClearButtonModeUnlessEditing, false},
+	{"always", kMCNativeControlClearButtonModeAlways, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlClearButtonModeTypeInfo =
@@ -548,10 +548,10 @@ static MCExecEnumTypeInfo _kMCNativeControlClearButtonModeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCNativeControlBorderStyleElementInfo[] =
 {
-	{"none", kMCNativeControlBorderStyleNone},
-	{"line", kMCNativeControlBorderStyleLine},
-	{"bezel", kMCNativeControlBorderStyleBezel},
-	{"rounded", kMCNativeControlBorderStyleRoundedRect},
+	{"none", kMCNativeControlBorderStyleNone, false},
+	{"line", kMCNativeControlBorderStyleLine, false},
+	{"bezel", kMCNativeControlBorderStyleBezel, false},
+	{"rounded", kMCNativeControlBorderStyleRoundedRect, false},
 };
 
 static MCExecEnumTypeInfo _kMCNativeControlBorderStyleTypeInfo =
