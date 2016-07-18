@@ -2115,8 +2115,7 @@ Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParameter *p_params)
 {
 	// Fetch current default stack and target settings
-	MCStack *t_old_stack;
-	t_old_stack = MCdefaultstackptr;
+	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
@@ -2140,9 +2139,10 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 
 	// Reset the default stack pointer and target - note that we use 'send'esque
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
-	if (MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_stack;
-
+    if (MCdefaultstackptr == t_this_stack
+                && t_old_defaultstack.IsValid())
+        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+	
 	// Reset target pointer
 	MCtargetptr = t_old_target;
 	MCdynamicpath = olddynamic;
@@ -2173,7 +2173,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	void *t_deletion_cookie;
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
-	MCStack *oldstackptr = MCdefaultstackptr;
+	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
@@ -2206,9 +2206,11 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 				stat = ES_PASS;
 		}
 	}
-	if (!send || !changedefault || MCdefaultstackptr == mystack)
-		MCdefaultstackptr = oldstackptr;
-	MCtargetptr = oldtargetptr;
+	if ((!send || !changedefault || MCdefaultstackptr == mystack)
+                && t_old_defaultstack.IsValid())
+		MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+	
+    MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
 	
 	MCDeletedObjectsOnObjectResumeDeletion(this, t_deletion_cookie);
