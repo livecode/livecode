@@ -578,6 +578,8 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 	case CT_CHARACTER:
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalOffsetMethodInfo);
 		break;
+    default:
+        break;
 	}
 }
 

@@ -2153,6 +2153,8 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 			case kMCGImageFilterHigh:
                 r_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 				break;
+            default:
+                break;
 		}
 	}
 	

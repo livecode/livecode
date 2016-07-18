@@ -578,6 +578,8 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 		MCdefaultstackptr -> getcurcard() -> message(t_event -> location . error == nil ? MCM_heading_changed : MCM_heading_error);
 		break;
 #endif
+    default:
+        break;
 	}
 }
 

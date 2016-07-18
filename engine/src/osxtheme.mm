@@ -152,6 +152,8 @@ Boolean MCNativeTheme::iswidgetsupported(Widget_Type w)
 	case WTHEME_TYPE_TAB:
 		return True;
 		break;
+    default:
+        break;
 
 	}
 	return True;
@@ -181,6 +183,8 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
 		break;
     case WTHEME_METRIC_TABBUTTON_HEIGHT:
         return 21;
+        break;
+    default:
         break;
 	}
 	return 0;
@@ -273,6 +277,8 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 			else
 				drect = srect;
 		}
+    default:
+        break;
 	}
 	MCTheme::getwidgetrect(winfo,wmetric,srect,drect);
 }
@@ -384,6 +390,8 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCR
 			dc -> drawtheme(THEME_DRAW_TYPE_GROUP, &t_info);
 		}
 		break;
+    default:
+        break;
 	}
 	
 	return True;
@@ -409,7 +417,7 @@ Widget_Part MCNativeTheme::hittest(const MCWidgetInfo &winfo, int2 mx,int2 my, c
 static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR)
 {
 	MCRectangle trect = drect;
-	ThemeButtonKind themebuttonkind;
+	ThemeButtonKind themebuttonkind = 0;
 	switch (widgetinfo.type)
 	{
 	case WTHEME_TYPE_CHECKBOX:
@@ -434,6 +442,8 @@ static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeBu
 	case WTHEME_TYPE_PULLDOWN:
 		themebuttonkind = kThemeBevelButton;
 		break;
+    default:
+        break;
 	}
 	//set state stuff
 
@@ -1067,6 +1077,8 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			HIThemeDrawFocusRect(&t_bounds, p_info . focus_rect . focused, t_context, kHIThemeOrientationNormal);
 		}
 			break;
+        default:
+            break;
 	}
 }
 

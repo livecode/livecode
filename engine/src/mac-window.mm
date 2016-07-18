@@ -2048,6 +2048,8 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 				RealizeAndNotify();
 			*(void**)r_value = m_window_handle;
 			return true;
+        default:
+            break;
 	}
 	
 	return false;

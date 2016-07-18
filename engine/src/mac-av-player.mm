@@ -1153,6 +1153,8 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(MCPlatformPlayerDuration));
         }
         break;
+        default:
+            break;
 	}
     
     m_synchronizing = false;
@@ -1277,6 +1279,8 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyScalefactor:
             *(double *)r_value = m_scale;
 			break;
+        default:
+            break;
 	}
 }
 

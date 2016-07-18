@@ -369,6 +369,9 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 	case MARK_TYPE_LINK:
 		// We can always render links natively - even if this is a no-op.
 		return true;
+            
+    default:
+        break;
 	}
 
 	// Unknown mark so return false.
@@ -2061,6 +2064,9 @@ private:
 			case kMCCustomPrinterPathClose:
 				Print("close");
 				break;
+                    
+            default:
+                break;
 			}
 		}
 	}

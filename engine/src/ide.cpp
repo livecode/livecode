@@ -2545,6 +2545,8 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 
             }
             break;
+            default:
+                break;
         }
 
         if (t_accept)

@@ -862,7 +862,6 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADLEFT, &t_value))
             return;
         
-        bool t_result;
         switch(valid)
         {
             case IV_UNDEFINED:
@@ -906,6 +905,8 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                     MCEngineEvalIsStrictlyAnArray(ctxt, *t_value, t_result);
                 else
                     MCEngineEvalIsNotStrictlyAnArray(ctxt, *t_value, t_result);
+                break;
+            default:
                 break;
         }
         

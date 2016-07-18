@@ -1902,6 +1902,9 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 						case kMCDefineYHot:
 							t_yhot = t_value;
 							break;
+                                
+                        default:
+                            break;
 						}
 					}
 				}
@@ -2388,6 +2391,9 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 					case kMCDefineCharsPerPixel:
 						t_chars_per_pixel = t_value;
 						break;
+                            
+                    default:
+                        break;
 					}
 				}
 			}
@@ -2902,6 +2908,8 @@ bool MCImageEncodeRawTrueColor(MCImageBitmap *p_bitmap, IO_handle p_stream, Expo
 		case EX_RAW_ABGR:
 			MCBitmapConvertRow<EX_RAW_ABGR>(t_row_buffer, (uint32_t*)t_src_ptr, p_bitmap->width);
 			break;
+        default:
+            break;
 		}
 		t_success = IO_NORMAL == IO_write(t_row_buffer, sizeof(uint8_t), t_stride, p_stream);
 		t_byte_count += t_stride;

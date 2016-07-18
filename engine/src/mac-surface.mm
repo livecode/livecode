@@ -396,6 +396,8 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 			return kCGBlendModeColor;
 		case kMCGBlendModeLuminosity:
 			return kCGBlendModeLuminosity;
+        default:
+            break;
 	}
 	
 	MCUnreachableReturn(kCGBlendModeNormal); // unknown blend mode

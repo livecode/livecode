@@ -861,7 +861,7 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 	case PRINTER_ORIENTATION_REVERSE_LANDSCAPE:
 		t_err = PMSetOrientation(m_page_format, kPMReverseLandscape, False);
 		break;
-	}
+    }
 
 	// Configure the output mode
 	if (p_include_output && GetDeviceOutputType() != PRINTER_OUTPUT_SYSTEM)
@@ -887,7 +887,11 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			CFRelease(t_output_file);
 			t_output_type = kPMDestinationFile;
 		}
-		break;
+        break;
+        default:
+            t_output_type = kPMDestinationInvalid;
+            t_output_url = NULL;
+            break;
 		}
 
 		t_err = PMSessionSetDestination(m_session, m_settings, t_output_type, kPMDocumentFormatPDF, t_output_url);
@@ -1859,6 +1863,8 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				executegroup(p_mark);
 		}
 		break;
+        default:
+            break;
 	}
 	
 	CGContextRestoreGState(m_context);

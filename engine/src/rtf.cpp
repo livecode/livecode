@@ -395,6 +395,8 @@ RTFStatus RTFReader::Parse(void)
 		case kRTFDestinationFldInst:
 			t_status = ParseFldInst(t_token, t_value);
 		break;
+        default:
+            break;
 		}
 	}
 	
