@@ -21,9 +21,9 @@ include "/home/mark/www/scripts/foo.lc"
 
 Parameters:
 path (enum): The path to the file containing the script to include.
-- An <absolute path|absolute file path> to the file. For example
+- An <absolute file path|absolute path> to the file. For example
 "/home/user/www/scripts/foo.lc".
-- A <relative path|relative file path> to the file. Relative paths are
+- A <relative file path|relative path> to the file. Relative paths are
 resolved relative to the current folder. For example "includes/foo.lc"
 where folder 'includes' is in the current folder.
 
