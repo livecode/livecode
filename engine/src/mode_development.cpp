@@ -1424,7 +1424,7 @@ void MCModeQueueEvents(void)
 	// MW-2013-03-20: [[ MainStacksChanged ]]
 	if (MCmainstackschanged)
 	{
-		MCdefaultstackptr -> message(MCM_main_stacks_changed);
+        MCdispatcher -> gethome() -> message(MCM_main_stacks_changed);
 		MCmainstackschanged = False;
 	}
 #endif
