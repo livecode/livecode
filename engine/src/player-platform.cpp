@@ -175,7 +175,6 @@ public:
     
     void drawControllerVolumeWellButton(MCGContextRef p_gcontext, const MCRectangle& dirty)
     {
-        MCRectangle t_volume_bar_rect = dirty;
         MCRectangle t_volume_well;
         t_volume_well = getVolumeBarPartRect(dirty, kMCPlayerControllerPartVolumeWell);
         
@@ -291,7 +290,6 @@ public:
             {
                 MCRectangle t_volume_well_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeWell);
                 MCRectangle t_volume_selector_rect = getVolumeBarPartRect(p_volume_bar_rect, kMCPlayerControllerPartVolumeSelector);
-                int32_t t_bar_height = t_volume_well_rect . height;
                 int32_t t_bar_width = t_volume_well_rect . width;
                 
                 // Adjust y by 2 pixels
@@ -350,7 +348,6 @@ public:
             case kMCPlayerControllerPartVolumeWell:
             case kMCPlayerControllerPartVolumeBar:
             {
-                MCRectangle t_part_volume_selector_rect = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeSelector);
                 MCRectangle t_volume_well;
                 t_volume_well = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeWell);
                 int32_t t_new_volume, t_height;
@@ -393,11 +390,10 @@ public:
         {
             case kMCPlayerControllerPartVolumeSelector:
             {
-                MCRectangle t_part_volume_selector_rect = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeSelector);
                 MCRectangle t_volume_well;
                 t_volume_well = getVolumeBarPartRect(m_volume_rect, kMCPlayerControllerPartVolumeWell);
                 
-                int32_t t_new_volume, t_height;
+                int32_t t_new_volume;
                 
                 t_new_volume = (t_volume_well. y + t_volume_well . height - MCmousey ) * 100 / (t_volume_well . height);
                 
@@ -525,7 +521,6 @@ public:
     
     void drawControllerRateWellButton(MCGContextRef p_gcontext, const MCRectangle& dirty)
     {
-        MCRectangle t_rate_bar_rect = dirty;
         MCRectangle t_rate_well;
         t_rate_well = getRateBarPartRect(dirty, kMCPlayerControllerPartRateWell);
         
@@ -618,8 +613,6 @@ public:
             {
                 int32_t t_height = 2 * CONTROLLER_HEIGHT / 5;
                 
-                int32_t t_x_offset = (p_rate_bar_rect . width - t_height) / 2;
-                
                 return MCRectangleMake(p_rate_bar_rect . x + 5, p_rate_bar_rect . y + t_height, p_rate_bar_rect . width - 2 * 5, p_rate_bar_rect . height - 2 * t_height);
             }
                 break;
@@ -676,7 +669,6 @@ public:
             case kMCPlayerControllerPartRateBar:
             {
             
-                MCRectangle t_part_rate_selector_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateSelector);
                 MCRectangle t_part_rate_well_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateWell);
                 real8 t_new_rate;
                 int32_t t_width;
@@ -715,7 +707,6 @@ public:
         {
             case kMCPlayerControllerPartRateSelector:
             {
-                MCRectangle t_part_rate_selector_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateSelector);
                 MCRectangle t_part_rate_well_rect = getRateBarPartRect(m_rate_rect, kMCPlayerControllerPartRateWell);
                 real8 t_new_rate;
                 int32_t t_width;
@@ -1567,7 +1558,7 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	
 	resize(t_movie_rect);
 	
-	bool t_looping, t_play_selection, t_show_controller, t_show_selection, t_mirrored;
+	bool t_looping, t_play_selection, t_show_selection, t_mirrored;
 	
 	t_looping = getflag(F_LOOPING);
 	t_show_selection = getflag(F_SHOW_SELECTION);
@@ -2234,7 +2225,6 @@ void MCPlayer::SynchronizeUserCallbacks(void)
 			return;
 		}
 		
-        uindex_t t_callback2_index;
         // AL-2014-07-31: [[ Bug 12936 ]] Callbacks are one per line
         if (!MCStringFirstIndexOfChar(*t_callback, '\n', t_comma_index + 1, kMCStringOptionCompareExact, t_end_index))
             t_end_index = MCStringGetLength(*t_callback);

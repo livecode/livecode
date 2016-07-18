@@ -1938,7 +1938,6 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 // MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this read is encrypted, rather than checking against socket.
 int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 {
-	int4 rc = 0;
 	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;

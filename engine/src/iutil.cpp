@@ -306,7 +306,6 @@ void MCImage::copyimage()
 {
 	bool t_success = true;
 	
-	MCImageBitmap *t_bitmap = nil;
 	MCAutoDataRef t_image_data;
 	
 	if (isediting())
@@ -377,7 +376,6 @@ void MCImage::pasteimage(MCImage *clipimage)
 
 void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 {
-	MCImageBitmap *t_bitmap = nil;
 	uint16_t t_width, t_height;
 	t_width = m_current_width;
 	t_height = m_current_height;

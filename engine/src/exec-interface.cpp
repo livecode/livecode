@@ -3297,7 +3297,6 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     if (t_widget == NULL)
         return;
     t_widget -> bind(p_kind, nil);
-    Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
     

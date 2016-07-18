@@ -698,7 +698,6 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
         case 'u':
         case 'U':
             {
-                MCStringRef t_output;
                 
                 if (count == BINARY_ALL)
                     count = length - offset;
@@ -727,7 +726,6 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
                         else
                         {
                             bool t_is_space = true;
-                            uindex_t t_consucutive_fails = 0;
                             
                             // Compare the encoded spaces
                             for (uindex_t i = 0; i < t_space_length && t_is_space; ++i)

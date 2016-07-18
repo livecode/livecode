@@ -620,7 +620,6 @@ Bool CXMLElement::GoChildByPath(char *tpath)
 	CXMLElement telement;
 	telement.CopyElement(this);
 	if (*sptr == '/') sptr++; //skip first slash
-	Bool foundmatch = False;
 	const char *endptr = sptr + strlen(sptr);
 	while (sptr < endptr)
 	{

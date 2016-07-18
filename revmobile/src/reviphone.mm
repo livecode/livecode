@@ -250,7 +250,6 @@ bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef 
 		{
 			char *t_sdk_cstring = nil;
 			
-			MCError t_status;
 			t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_sdk_cstring));
 			if (t_success)
 			{

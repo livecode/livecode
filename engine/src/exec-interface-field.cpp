@@ -1118,7 +1118,7 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
 void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFieldRanges& p_ranges)
 {
     // MW-2012-02-08: [[ FlaggedField ]] Special case the 'flaggedRanges' property.
-    int4 t_line_index, t_char_index, si, ei;
+    int4 si, ei;
     si = 0;
     ei = INT32_MAX;
     
@@ -1280,7 +1280,6 @@ void MCField::GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_range
         uint4 tstart = 1;
         uint4 tend = 0;
         MCLine *lastline = NULL;
-        uint2 j = 0;
         while (True)
         {
             MCInterfaceFieldRange t_range;

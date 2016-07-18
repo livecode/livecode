@@ -118,7 +118,6 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 {
     // TODO
     uint2 decorations;
-    uint4 flags;
     decorations = WD_CLEAR;
     
     if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))

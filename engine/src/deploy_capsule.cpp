@@ -187,7 +187,6 @@ bool MCDeployCapsuleDefineString(MCDeployCapsuleRef self, MCCapsuleSectionType p
 {
     MCAutoStringRefAsCString t_auto_cstring;
     uindex_t t_length;
-    char_t* t_native;
     /* UNCHECKED */ t_auto_cstring . Lock(p_string);
     return MCDeployCapsuleDefine(self, p_type, *t_auto_cstring, strlen(*t_auto_cstring) + 1);
 }

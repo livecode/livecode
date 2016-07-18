@@ -787,7 +787,6 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
 	MCString *value = (MCString *)arg3;
-	Boolean array = False;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
@@ -1329,7 +1328,6 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
                                   const char *arg3, int *retval, Bool p_is_text)
 {
 	MCString *value = (MCString *)arg3;
-	Boolean array = False;
 	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{

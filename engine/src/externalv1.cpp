@@ -1780,7 +1780,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSNumber:
     case kMCExternalValueOptionAsCFNumber:
     {
-        CFNumberRef t_number;
         real64_t t_real;
         
         t_error = var -> GetReal(p_options, t_real);

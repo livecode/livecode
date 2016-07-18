@@ -405,7 +405,6 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 	{
 		CIContext *t_context = nil;
 		rei_boolean_t t_result = true;
-		Rect t_rect;
 		
 		OBJC_ENTER(false)
 		

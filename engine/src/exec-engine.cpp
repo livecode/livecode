@@ -1907,8 +1907,6 @@ void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
     // refers to the derived object context, otherwise it is the object
     // we were compiled in.
     
-    MCObjectPtr t_object;
-    
     if (ctxt . GetParentScript() == NULL)
         r_object . object = nil; // destobj!
     else

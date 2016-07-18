@@ -733,8 +733,6 @@ bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef
 
 bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 {
-	bool t_success = true;
-	
 	MCCachedImageRep *t_rep = nil;
 	
 	if (MCCachedImageRep::FindWithKey(p_filename, t_rep))

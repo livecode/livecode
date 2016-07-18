@@ -106,7 +106,8 @@ enum AdvancedImagingOperation
     LAST_ADVANCED_IMAGING_OPERATION = OPERATION_BLEND_EXCLUSION,
 };
 
-static uint16_t s_sqrt_table[1024] = 
+#ifdef __VISUALC__
+static uint16_t s_sqrt_table[1024] =
 {
     0,
     2048,2896,3547,4096,4579,5017,5418,5793,6144,6476,6792,7094,7384,7663,7932,8192,8444,
@@ -183,7 +184,7 @@ static uint16_t s_sqrt_table[1024] =
     64731,64763,64796,64828,64861,64893,64925,64957,64990,65022,65054,65086,65119,65151,
     65183,65215,65247,65279,65312,65344,65376,65408,65440,65472,65504
 };
-
+#endif
 ////////////////////////////////////////////////////////////////////////////////
 
 static INLINE uint32_t _combine(uint32_t u, uint32_t v)

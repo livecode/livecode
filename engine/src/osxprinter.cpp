@@ -357,7 +357,6 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	t_printer = NULL;
 	if (t_success)
 	{
-		OSErr t_err;
 		for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
 		{
 			PMPrinter t_printer_to_test;
@@ -653,7 +652,6 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 		else if (t_type == kPMDestinationFile && (t_output_format == NULL || CFStringCompare(t_output_format, kPMDocumentFormatPDF, 0) == 0))
 		{
 			PDEBUG(stderr, "SetProperties: Output location is file\n");
-			CFStringRef t_output_format;
 			t_output_type = PRINTER_OUTPUT_FILE;
             // SN-2014-12-22: [[ Bug 14278 ]] Get a UTF-8-encoded filename
 			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true, true);

@@ -346,7 +346,6 @@ bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 			t_success = IO_NORMAL == IO_write(t_color, sizeof(uint8_t), 4, p_stream);
 		}
 
-		uint32_t t_pixel_mask = (1 << t_depth) - 1;
 		uint32_t t_first_shift = 8 - t_depth;
 
 		// bmp row order is bottom to top, so point to last row

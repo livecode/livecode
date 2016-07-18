@@ -1630,20 +1630,13 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool mo
     }
 
 	findex_t i = m_index;
-	coord_t cwidth;
-	findex_t tlen = 0;
-	coord_t twidth = 0;
-	coord_t toldwidth = 0;
-
+	
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
 	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
 	//   platform.
 	coord_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
-    
-    MCRange t_char_range;
-    MCRange t_cp_range;
     
     coord_t t_pos = t_last_width;
     while(i < m_index + m_size)

@@ -1380,7 +1380,6 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                     // Check whether the click was inside the menu (the rect
                     // that we need to check is the rect of the stack containing
                     // the menu).
-                    MCRectangle t_rect = t_menu->getstack()->getrect();
                     t_outside = !MCU_point_in_rect(rect, mx, my);
                     
                     // Move to the parent menu, if it exists
@@ -2555,7 +2554,6 @@ public:
 
 Boolean MCButton::findmenu(bool p_just_for_accel)
 {
-	Boolean isunicode = hasunicode();
 	if (!MCNameIsEmpty(menuname))
 	{
 		if (menu == NULL)

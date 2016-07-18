@@ -367,7 +367,6 @@ void MCButton::macopenmenu(void)
 		return;
 	
 	MCRectangle trect;
-	long result;
 	
 	int4 tmenux,tmenuy;
 	tmenux = tmenuy = 0;

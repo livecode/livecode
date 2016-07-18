@@ -447,9 +447,7 @@ void MCBitmapEffectFastGaussianBlur::Process(uint8_t *mask)
 				uint32_t *t_buffer_ptr;
 				t_buffer_ptr = t_buffer;
 
-				int32_t t_y = t_top + y;
-
-				for (int32_t k = 0; k < t_vcount; k++)//, t_y++)
+                for (int32_t k = 0; k < t_vcount; k++)
 				{
 					uint32_t t_weighted = t_kernel_ptr[k] * (t_buffer_ptr[x] >> 16);
 					if ((0xFFFFFFFF - t_alpha) > t_weighted)

@@ -1023,7 +1023,7 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	{
 		case kMCGBlurTypeNormal:
 		{
-			uint8_t *t_blur_ptr, *t_mask_ptr;
+			uint8_t *t_blur_ptr;
 			t_blur_ptr = t_blurred_mask . fImage;
 			
 			// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
