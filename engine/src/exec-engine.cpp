@@ -1176,8 +1176,7 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 		t_object = ctxt . GetObjectPtr();
 		
 	// Fetch current default stack and target settings
-	MCStack *t_old_stack;
-	t_old_stack = MCdefaultstackptr;
+	MCObjectHandle t_old_stack(MCdefaultstackptr->GetHandle());
 	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
@@ -1249,8 +1248,9 @@ void MCEngineExecDispatch(MCExecContext& ctxt, int p_handler_type, MCNameRef p_m
 	
 	// Reset the default stack pointer and target - note that we use 'send'esque
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
-	if (MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_stack;
+	if (t_old_stack.IsValid() &&
+		MCdefaultstackptr == t_this_stack)
+		MCdefaultstackptr = t_old_stack.GetAs<MCStack>();
 
 	// Reset target pointer
 	MCtargetptr = t_old_target;
