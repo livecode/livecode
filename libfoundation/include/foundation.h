@@ -661,6 +661,16 @@ typedef struct __MCLocale* MCLocaleRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  EXPLICIT CONVERSIONS
+//
+
+// TODO(C++11): constexpr
+// TODO(C++11): define only for numeric types
+template <typename TO, typename FROM=TO>
+inline TO MCNarrow(const FROM& x) { return TO(x); }
+
+////////////////////////////////////////////////////////////////////////////////
+//
 //  MINIMUM FUNCTIONS
 //
 
