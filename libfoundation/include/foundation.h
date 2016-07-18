@@ -714,8 +714,10 @@ template <typename T> inline compare_t MCCompare(T a, T b) { return ((a < b) ? -
 
 template <typename T> inline bool MCIsPowerOfTwo(T x) { return (x & (x - 1)) == 0; }
 
-template <typename T, typename U, typename V>
-inline T MCClamp(T value, U min, V max) {
+// TODO(C++11) constexpr
+template <typename TO, typename FROM=TO>
+inline TO MCClamp(const FROM& value, const TO& min, const TO& max)
+{
 	return MCMax(MCMin(value, max), min);
 }
 
