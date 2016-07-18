@@ -1691,8 +1691,8 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	// Next we check that there are at least two sections, and they are the
 	// right ones.
 	if (t_success &&
-		(MCStringIsEmpty(p_params . payload) && t_section_count < 2 ||
-			!MCStringIsEmpty(p_params . payload) && t_section_count < 3))
+		((MCStringIsEmpty(p_params . payload) && t_section_count < 2) ||
+			(!MCStringIsEmpty(p_params . payload) && t_section_count < 3)))
 		t_success = MCDeployThrow(kMCDeployErrorWindowsMissingSections);
 	if (t_success && memcmp(t_resource_section -> Name, ".rsrc", 6) != 0)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoResourceSection);

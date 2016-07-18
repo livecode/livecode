@@ -130,6 +130,7 @@
 							'-Werror=conversion-null',
 							'-Werror=missing-declarations',
 							'-Werror=mismatched-new-delete',
+							'-Werror=parentheses',
 							'-Werror=unused-variable',
 							'-Werror=constant-logical-operand',
 							'-Werror=unknown-pragmas',

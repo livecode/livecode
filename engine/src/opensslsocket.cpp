@@ -330,8 +330,8 @@ bool MCSocketsAddToFileDescriptorSets(int4 &r_maxfd, fd_set &r_rmaskfd, fd_set &
         if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
             MCsockets[i]->resolve_state == kMCSocketStateError)
             continue;
-        if (MCsockets[i]->connected && !MCsockets[i]->closing
-            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+        if ((MCsockets[i]->connected && !MCsockets[i]->closing
+             && !MCsockets[i]->shared) || MCsockets[i]->accepting)
             FD_SET(fd, &r_rmaskfd);
         if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
             FD_SET(fd, &r_wmaskfd);
