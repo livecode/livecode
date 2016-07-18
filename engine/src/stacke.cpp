@@ -51,7 +51,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static uint2 Checkersize = 64;
 static uint2 Venetiansize = 64;
+#if 0
 static uint2 Zoomsize = 16;
+#endif
 
 static Boolean barneffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
 static Boolean checkerboardeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
