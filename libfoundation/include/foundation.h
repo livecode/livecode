@@ -1,4 +1,5 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/*                                                                     -*-C++-*-
+Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -663,16 +664,24 @@ typedef struct __MCLocale* MCLocaleRef;
 //  MINIMUM FUNCTIONS
 //
 
-// TODO: re-write when we adopt C++11
-template <class T, class U> inline T MCMin(T a, U b) { return a < b ? a : T(b); }
+// TODO(C++11): constexpr
+template <typename TO, typename FROM=TO>
+inline TO MCMin(const FROM& a, const TO& b)
+{
+	return TO{a} < b ? TO{a} : b;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  MAXIMUM FUNCTIONS
 //
 
-// TODO: re-write when we adopt C++11
-template <class T, class U> inline T MCMax(T a, U b) { return a > b ? a : T(b); }
+// TODO(C++11): constexpr
+template <typename TO, typename FROM=TO>
+inline TO MCMax(const FROM& a, const TO& b)
+{
+	return TO{a} > b ? TO{a} : b;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
