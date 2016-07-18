@@ -1034,7 +1034,7 @@ static bool __MCProperListCreateIndirect(__MCProperList *p_contents, __MCProperL
 
 	r_list = self;
 	return true;
-};
+}
 
 
 static bool __MCProperListIsIndirect(__MCProperList *self)
