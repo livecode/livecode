@@ -1,1 +1,1 @@
-# Ensure _mainStacksChanged message isn't sent to a deleted stack
+# Ensure the defaultStack hasn't been deleted before resetting it
