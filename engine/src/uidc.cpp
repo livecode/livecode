@@ -1531,10 +1531,12 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 				moving = mptr->prev();
 				mptr->remove(moving);
 				if (!mptr->waiting)
+                {
 					if (MClockmessages)
 						delaymessage(mptr->object, MCM_move_stopped);
 					else
 						mptr->object->message(MCM_move_stopped);
+                }
 				delete mptr;
 				if (moving == NULL)
 					mptr = NULL;

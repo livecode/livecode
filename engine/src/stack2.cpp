@@ -600,13 +600,17 @@ void MCStack::kfocusset(MCControl *target)
 	{
 		MCactivefield->unselect(False, True);
 		if (MCactivefield != NULL)
+        {
 			if (MCactivefield->getstack() == this)
 				curcard->kunfocus();
 			else
+            {
 				if (MCactivefield->getstack()->state & CS_KFOCUSED)
 					MCactivefield->getstack()->kunfocus();
 				else
 					MCactivefield->unselect(True, True);
+            }
+        }
 	}
 	if (MCactivefield != NULL && target != NULL)
 	{
@@ -1968,13 +1972,17 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
     
     MCtodestroy -> remove(this);
 	if (wm == WM_LAST)
+    {
 		if (opened)
 			wm = mode;
 		else
+        {
 			if (getstyleint(flags) == 0)
 				wm = WM_TOP_LEVEL;
 			else
 				wm = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
+        }
+    }
 	if (wm == WM_TOP_LEVEL
 	        && (flags & F_CANT_MODIFY || getextendedstate(ECS_IDE) || !MCdispatcher->cut(True)))
 		wm = WM_TOP_LEVEL_LOCKED;
@@ -2384,7 +2392,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		// Just do a little more adjusting for Full Screen Menus that are cascaded.
 		// We need to pull the Y co-ord up again to be level (a little above in fact) of
 		// the control we are bound to.
-		if (( mode == WM_CASCADE ) && t_fullscreen_menu ) 
+		if (( mode == WM_CASCADE ) && t_fullscreen_menu )
+        {
 			if ( t_menu_downwards )
 				rect.y = ( rel.y - 2) ;
 			else
@@ -2394,6 +2403,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				//   adjust the y-coord.
 				rect.y += rel.height + 2 ;
 			}
+        }
 	
 	}
 

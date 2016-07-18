@@ -318,10 +318,12 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, -borderwidth);
 	if (flags & F_SHOW_BORDER)
+    {
 		if (flags & F_3D)
 			draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, trect, borderwidth);
+    }
 	if (getstate(CS_KFOCUSED))
 		drawfocus(dc, dirty);
 }

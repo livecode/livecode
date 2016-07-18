@@ -917,6 +917,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
 		if (MCmodifierstate & MS_SHIFT)
+        {
 			if (MCactiveimage != NULL)
 			{
 				MCactiveimage->cutimage();
@@ -924,6 +925,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			}
 			else
 				return MCselected->cut();
+        }
 		if (MCactiveimage != NULL)
 		{
 			MCactiveimage->delimage();

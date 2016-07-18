@@ -2277,6 +2277,7 @@ void MCStack::checksharedgroups(void)
 	do
 	{
 		if (t_control -> gettype() == CT_GROUP && !static_cast<MCGroup *>(t_control) -> isshared())
+        {
 			if (MCMemoryResizeArray(t_group_count + 1, t_groups, t_group_count))
 			{
 				t_groups[t_group_count - 1] . id = t_control -> getid();
@@ -2290,7 +2291,7 @@ void MCStack::checksharedgroups(void)
 				checksharedgroups_slow();
 				return;
 			}
-		
+        }
 		t_control = t_control -> next();
 	}
 	while(t_control != controls);
