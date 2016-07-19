@@ -188,7 +188,7 @@ static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t *r_orientatio
 	jpeg_saved_marker_ptr t_marker;
 	t_marker = nil;
 	for(t_marker = cinfo -> marker_list; t_marker != nil; t_marker = t_marker -> next)
-		if ((t_marker->marker == (JPEG_APP0 + 1)))
+		if (t_marker->marker == (JPEG_APP0 + 1))
 			break;
 	
 	if (t_marker == nil)
