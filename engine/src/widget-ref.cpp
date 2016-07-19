@@ -882,8 +882,8 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 
 bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_arg_count, MCValueRef *r_result)
 {
-	MCStack *t_old_default_stack, *t_this_stack;
-	t_old_default_stack = MCdefaultstackptr;
+	MCStack *t_this_stack;
+	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	
 	// Preserve the host ptr we get across the dispatch so that
 	// we definitely return things to the way they were.
@@ -910,8 +910,8 @@ bool MCWidgetBase::Dispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_ar
 	if (t_host != nil)
 	{
 		MCtargetptr = t_old_target;
-		if (MCdefaultstackptr == t_this_stack)
-			MCdefaultstackptr = t_old_default_stack;
+        if (MCdefaultstackptr == t_this_stack && t_old_defaultstack.IsValid())
+            MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
 	}
 	else
 		MCEngineScriptObjectAllowAccess();
