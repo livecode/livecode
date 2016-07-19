@@ -397,7 +397,6 @@ static bool s_lock_responder_change = false;
 //   frame sizes).
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize
 {
-    NSLog(@"windowWillResize");
     MCRectangle t_frame;
     t_frame = MCRectangleMake(0, 0, frameSize . width, frameSize . height);
     
@@ -421,6 +420,11 @@ static bool s_lock_responder_change = false;
 
 - (void)windowWillMove:(NSNotification *)notification
 {
+    
+    NSWindow * t_window = m_window -> GetHandle();
+    if ([t_window respondsToSelector: @selector(setMovingFrame:)])
+        [((NSWindow <com_runrev_livecode_MCMovingFrame> *)t_window) setMovingFrame:[t_window frame]];
+    
     if (!m_window -> IsSynchronizing())
     {
         // MW-2014-04-23: [[ Bug 12270 ]] The user has started moving the window
@@ -429,7 +433,7 @@ static bool s_lock_responder_change = false;
         
         // MW-2014-08-14: [[ Bug 13016 ]] Ask our NSApp to start sending us windowMoved
         //   messages.
-        [NSApp windowStartedMoving: m_window];
+        [(com_runrev_livecode_MCApplication *)NSApp windowStartedMoving: m_window];
     }
 }
 
@@ -437,15 +441,9 @@ static bool s_lock_responder_change = false;
 {
     // IM-2014-10-29: [[ Bug 13814 ]] Make sure we unset the user reshape flag once dragging is finished.
 	m_user_reshape = false;
-    m_window -> ProcessDidMove();
 }
 
 - (void)windowDidMove:(NSNotification *)notification
-{
-    m_window -> ProcessDidMove();
-}
-
-- (void)windowDidChangeScreen:(NSNotification *)notification
 {
     m_window -> ProcessDidMove();
 }
