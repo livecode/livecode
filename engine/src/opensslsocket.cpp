@@ -1506,7 +1506,7 @@ void MCSocket::readsome()
 		if ((l = recvfrom(fd, dbuffer, l, 0,
 						  (struct sockaddr *)&addr, &addrsize)) < 0)
 		{
-			delete dbuffer;
+			delete[] dbuffer;
 			if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 			{
 				error = new char[21 + I4L];
@@ -1518,7 +1518,7 @@ void MCSocket::readsome()
 		else
 		{
 			if (message == NULL)
-				delete dbuffer;
+				delete[] dbuffer;
 			else
 			{
 				char *t = inet_ntoa(addr.sin_addr);

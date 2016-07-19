@@ -662,7 +662,7 @@ IO_stat MCHctext::parse(char *sptr)
 		strncpy(newstring, &sptr[offset], tsize);
 		newstring[tsize] = '\0';
 		string = convert_string(newstring);
-		delete newstring;
+		delete[] newstring;
 	}
 	return IO_NORMAL;
 }
@@ -2056,7 +2056,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				delete name;
 				name = new char[uint1ptr[0] + 1];
 				strcpy(name, &tbuffer[1]);
-				delete tbuffer;
+				delete[] tbuffer;
 
 				uint2 toffset = uint1ptr[0] + 2;
 				if (!strnequal(&fullbuffer[toffset], "STAK", 4))
