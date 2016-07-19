@@ -676,7 +676,7 @@ Boolean MCU_stor8(const MCString &s, real8 &d, Boolean convertoctals)
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (l == 0 || (l > 1 && ((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2]))
+	if (l == 0 || (l > 1 && (((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2])))
 	        || (sptr[1] == '+' || sptr[1] == '-')))))
 		return False;
 	char buff[R8L];
@@ -711,7 +711,7 @@ real8 MCU_strtor8(const char *&r_str, uint4 &r_len, int1 p_delim, Boolean &r_don
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (r_len == 0 || (r_len > 1 && ((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2]))
+	if (r_len == 0 || (r_len > 1 && (((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2])))
 	        || (r_str[1] == '+' || r_str[1] == '-')))))
 	{
 		r_done = False;

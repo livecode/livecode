@@ -1099,7 +1099,7 @@ Boolean MCStack::mfocus(int2 x, int2 y)
 	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 	{
 		MCControl *cptr = curcard->getmfocused();
-		if (x < rect.width || cptr != NULL && !cptr->getstate(CS_SUBMENU))
+		if (x < rect.width || (cptr != NULL && !cptr->getstate(CS_SUBMENU)))
 		{
 			uint1 oldmode = scrollmode;
 			if (menuy < 0 && y < MENU_ARROW_SIZE >> 1)

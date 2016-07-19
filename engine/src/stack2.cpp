@@ -639,7 +639,7 @@ MCStack *MCStack::clone()
 	/* UNCHECKED */ MCStackSecurityCopyStack(this, newsptr);
 	MCdispatcher->appendstack(newsptr);
 	newsptr->parent = MCdispatcher->gethome();
-	if (this != MCtemplatestack || rect.x == 0 && rect.y == 0)
+	if (this != MCtemplatestack || (rect.x == 0 && rect.y == 0))
 	{
 		newsptr->positionrel(MCdefaultstackptr->rect, OP_CENTER, OP_MIDDLE);
 		newsptr->rect.x += MCcloneoffset;
@@ -727,7 +727,7 @@ MCStack *MCStack::findname(Chunk_term type, MCNameRef p_name)
 
 MCStack *MCStack::findid(Chunk_term type, uint4 inid, Boolean alt)
 {
-	if (type == CT_STACK && (inid == obj_id || alt && inid == altid))
+	if (type == CT_STACK && (inid == obj_id || (alt && inid == altid)))
 		return this;
 	else
 		return NULL;
@@ -900,9 +900,9 @@ void MCStack::updatemenubar()
 {
 	if (opened && state & CS_KFOCUSED && !MClockmenus)
 	{
-		if (!hasmenubar() || state & CS_EDIT_MENUS
-		        && mode < WM_PULLDOWN && mode != WM_PALETTE
-		        || gettool(this) != T_BROWSE && MCdefaultmenubar != NULL)
+        if (!hasmenubar() || (state & CS_EDIT_MENUS
+                              && mode < WM_PULLDOWN && mode != WM_PALETTE)
+		        || (gettool(this) != T_BROWSE && MCdefaultmenubar != NULL))
 			MCmenubar = NULL;
 		else
 			MCmenubar = (MCGroup *)getobjname(CT_GROUP, (getmenubar()));
@@ -1994,7 +1994,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	//   it might not be.
 	if (opened)
 	{
-		if (window == NULL && !MCModeMakeLocalWindows() && (wm != WM_MODAL && wm != WM_SHEET || wm == mode))
+		if (window == NULL && !MCModeMakeLocalWindows() && ((wm != WM_MODAL && wm != WM_SHEET) || wm == mode))
 			return ES_NORMAL;
 
 		if (wm == mode && parentptr == NULL)

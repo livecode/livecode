@@ -1483,7 +1483,7 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 		MCRectangle newrect = rect;
 		real8 dt = 0.0;
 		if (curtime >= mptr->starttime + mptr->duration
-		        || rect.x == mptr->donex && rect.y == mptr->doney)
+		        || (rect.x == mptr->donex && rect.y == mptr->doney))
 		{
 			newrect.x = mptr->donex;
 			newrect.y = mptr->doney;

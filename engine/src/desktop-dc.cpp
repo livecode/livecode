@@ -821,7 +821,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// Handle pending events
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch) ||
-            dispatch && MCEventQueueDispatch())
+            (dispatch && MCEventQueueDispatch()))
 		{
 			if (anyevent)
 				done = True;
