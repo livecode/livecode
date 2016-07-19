@@ -3421,7 +3421,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_PATTERNS, "patterns" },
 };
 
-void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props)
+void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef p_props)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 	MCRedrawLockScreen();
@@ -3437,7 +3437,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
     {
 		// MERG-2013-06-24: [[ RevisedPropsProp ]] Make sure we do a case-insensitive search
 		//   for the property name.
-        if (!MCArrayFetchValue(props, false, MCNAME(s_preprocess_props[j].tag), t_value))
+        if (!MCArrayFetchValue(p_props, false, MCNAME(s_preprocess_props[j].tag), t_value))
             continue;
 
         // MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
@@ -3456,7 +3456,7 @@ void MCObject::SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef prop
 	uintptr_t t_iterator;
 	t_iterator = 0;
     MCNameRef t_key;
-	while(MCArrayIterate(props, t_iterator, t_key, t_value))
+	while(MCArrayIterate(p_props, t_iterator, t_key, t_value))
 	{
 		MCScriptPoint sp(MCNameGetString(t_key));
 		Symbol_type type;

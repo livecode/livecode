@@ -166,7 +166,7 @@ bool MCCustomPrinterImageFromMCGImage(MCGImageRef p_image, MCCustomPrinterImage 
 			uint32_t *t_dst_row;
 			t_dst_row = (uint32_t*)t_dst;
 			
-			for (uint32_t i = 0; i < t_raster.width; i++)
+			for (uint32_t j = 0; j < t_raster.width; j++)
 				*t_dst_row++ = MCGPixelFromNative(kMCCustomPrinterImagePixelFormat, *t_src_row++);
 			
 			t_src += t_raster.stride;

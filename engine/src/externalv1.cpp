@@ -1616,8 +1616,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
-        MCExternalError t_error;
-        
         MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
@@ -1641,7 +1639,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
-        MCExternalError t_error;
         MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
@@ -1835,7 +1832,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSArray:
     case kMCExternalValueOptionAsCFArray:
     {
-        MCExternalError t_error;
         CFArrayRef t_value;
         
         t_error = kMCExternalErrorNone;
@@ -1862,7 +1858,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSDictionary:
     case kMCExternalValueOptionAsCFDictionary:
     {
-        MCExternalError t_error;
         CFDictionaryRef t_value;
         
         t_error = kMCExternalErrorNone;

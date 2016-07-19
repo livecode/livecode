@@ -722,12 +722,12 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
-	real8 angle = atan2(dy, dx);
-	real8 a1 = angle + 3.0 * M_PI / 4.0;
-	real8 a2 = angle - 3.0 * M_PI / 4.0;
+	real8 t_angle = atan2(dy, dx);
+	real8 a1 = t_angle + 3.0 * M_PI / 4.0;
+	real8 a2 = t_angle - 3.0 * M_PI / 4.0;
 	real8 size = get_arrow_size();
-	pts[0].x = p2.x + (int2)(cos(angle) * size);
-	pts[0].y = p2.y + (int2)(sin(angle) * size);
+	pts[0].x = p2.x + (int2)(cos(t_angle) * size);
+	pts[0].y = p2.y + (int2)(sin(t_angle) * size);
 	pts[1].x = p2.x + (int2)(cos(a1) * size);
 	pts[1].y = p2.y + (int2)(sin(a1) * size);
 	pts[2].x = p2.x + (int2)(cos(a2) * size);
