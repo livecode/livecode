@@ -586,12 +586,12 @@ MCExternalError MCExternalVariable::GetBoolean(MCExternalValueOptions p_options,
 	else
 	{
 		MCExternalError t_error;
-		MCAutoStringRef t_value;
-		t_error = GetString(p_options, &t_value);
+		MCAutoStringRef t_string_value;
+		t_error = GetString(p_options, &t_string_value);
 		if (t_error != kMCExternalErrorNone)
 			return t_error;
 		
-		return string_to_boolean(*t_value, p_options, &r_value);
+		return string_to_boolean(*t_string_value, p_options, &r_value);
 	}
 	
 	return kMCExternalErrorNone;

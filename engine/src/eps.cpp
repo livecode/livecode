@@ -404,11 +404,11 @@ void MCEPS::setextents()
 	{
 		MCswapbytes = !MCswapbytes;
 		uint4 *uint4ptr = (uint4 *)postscript;
-		uint4 offset = swap_uint4(&uint4ptr[1]);
+		uint4 t_offset = swap_uint4(&uint4ptr[1]);
 		size = swap_uint4(&uint4ptr[2]);
 		MCswapbytes = !MCswapbytes;
 		char *newps = new char[size];
-		memcpy(newps, &postscript[offset], size);
+		memcpy(newps, &postscript[t_offset], size);
 		delete postscript;
 		postscript = newps;
 	}

@@ -150,13 +150,13 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 {
 	Parse_stat stat;
-	Symbol_type type;
+	Symbol_type t_type;
 	
 	firstline = sp.getline();
 	hlist = sp.gethlist();
 	prop = isprop;
 
-	if (sp.next(type) != PS_NORMAL)
+	if (sp.next(t_type) != PS_NORMAL)
 	{
 		MCperror->add(PE_HANDLER_NONAME, sp);
 		return PS_ERROR;
@@ -166,7 +166,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier
-	if (type != ST_ID ||
+	if (t_type != ST_ID ||
 			sp.lookup(SP_COMMAND, te) != PS_NO_MATCH ||
 			(sp.lookup(SP_FACTOR, te) != PS_NO_MATCH &&
 			te -> type == TT_FUNCTION))
@@ -176,11 +176,11 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	}
 	if (prop)
 	{
-		if (sp.next(type) == PS_NORMAL)
+		if (sp.next(t_type) == PS_NORMAL)
 		{
-			if (type == ST_LB)
+			if (t_type == ST_LB)
 			{
-				if (sp.next(type) != PS_NORMAL || type != ST_ID)
+				if (sp.next(t_type) != PS_NORMAL || t_type != ST_ID)
 				{
 					MCperror->add(PE_HANDLER_BADPARAM, sp);
 					return PS_ERROR;
@@ -189,7 +189,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				if (newparam(sp) != PS_NORMAL)
 					return PS_ERROR;
 
-				if (sp.next(type) != PS_NORMAL || type != ST_RB)
+				if (sp.next(t_type) != PS_NORMAL || t_type != ST_RB)
 				{
 					MCperror->add(PE_HANDLER_BADPARAM, sp);
 					return PS_ERROR;
@@ -204,14 +204,15 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
     bool t_needs_it;
     t_needs_it = true;
     
-	while (sp.next(type) == PS_NORMAL)
+	while (sp.next(t_type) == PS_NORMAL)
 	{
-		if (type == ST_SEP)
+		if (t_type == ST_SEP)
 			continue;
-		const LT *te;
-		MCExpression *newfact = NULL;
-		if (type != ST_ID
-		        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+		const LT *t_te;
+		
+        MCExpression *newfact = NULL;
+		if (t_type != ST_ID
+		        || sp.lookup(SP_FACTOR, t_te) != PS_NO_MATCH
 		        || sp.lookupconstant(&newfact) == PS_NORMAL)
 		{
 			delete newfact;
@@ -241,7 +242,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	MCStatement *newstatement = NULL;
 	while (True)
 	{
-		if ((stat = sp.next(type)) != PS_NORMAL)
+		if ((stat = sp.next(t_type)) != PS_NORMAL)
 		{
 			if (stat == PS_EOL)
 			{
@@ -259,11 +260,11 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				return PS_ERROR;
 			}
 		}
-		if (type == ST_DATA)
+		if (t_type == ST_DATA)
 			newstatement = new MCEcho;
 		else if (sp.lookup(SP_COMMAND, te) != PS_NORMAL)
 		{
-			if (type != ST_ID)
+			if (t_type != ST_ID)
 			{
 				MCperror->add(PE_HANDLER_NOCOMMAND, sp);
 				return PS_ERROR;
@@ -278,7 +279,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 				newstatement = MCN_new_statement(te->which);
 				break;
 			case TT_END:
-				if ((stat = sp.next(type)) != PS_NORMAL)
+				if ((stat = sp.next(t_type)) != PS_NORMAL)
 				{
 					MCperror->add(PE_HANDLER_NOEND, sp);
 					return PS_ERROR;

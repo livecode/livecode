@@ -306,7 +306,7 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos)
 		MCControl *controls = NULL;
 		while (objects != NULL)
 		{
-			MCSelnode *tptr = objects->remove(objects);
+			tptr = objects->remove(objects);
 			MCControl *cptr = (MCControl *)tptr->ref;
 			delete tptr;
 			if (parent->gettype() == CT_CARD)

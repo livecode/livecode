@@ -283,10 +283,10 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 				real8 dx = (real8)(mx - startx);
 				real8 dy = (real8)(my - starty);
 				real8 length = sqrt(dx * dx + dy * dy);
-				real8 angle = atan2(dy, dx);
+				real8 t_angle = atan2(dy, dx);
 				real8 quanta = M_PI * 2.0 / (real8)MCslices;
-				angle = floor((angle + quanta / 2.0) / quanta) * quanta;
-				mx = startx + (int2)(cos(angle) * length);
+				angle = floor((t_angle + quanta / 2.0) / quanta) * quanta;
+				mx = startx + (int2)(cos(t_angle) * length);
 				my = starty + (int2)(sin(angle) * length);
 			}
 			realpoints[nrealpoints - 1].x = mx;

@@ -1098,11 +1098,11 @@ void MCControl::continuesize(int2 x, int2 y)
 		}
 		else
 		{
-			int2 newwidth;
-			newwidth = (int2)(newrect.height / aspect);
+			int2 t_newwidth;
+			t_newwidth = (int2)(newrect.height / aspect);
 			if (state & CS_SIZEL)
-				newrect.x += newrect.width - newwidth;
-			newrect.width = newwidth;
+				newrect.x += newrect.width - t_newwidth;
+			newrect.width = t_newwidth;
 		}
 	}
 	else if (MCmodifierstate & MS_MOD1)

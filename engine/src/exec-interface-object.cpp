@@ -2687,7 +2687,7 @@ void MCObject::GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns)
 	ctxt . Throw();
 }
 
-void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
+void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef p_patterns)
 {
 	bool t_success;
 	t_success = true;
@@ -2695,18 +2695,18 @@ void MCObject::SetPatterns(MCExecContext& ctxt, MCStringRef patterns)
 	uindex_t t_old_offset = 0;
 	uindex_t t_new_offset = 0;
 	uindex_t t_length;
-	t_length = MCStringGetLength(patterns);
+	t_length = MCStringGetLength(p_patterns);
 
 	for (uint2 p = P_FORE_PATTERN; p <= P_FOCUS_PATTERN; p++)
 	{
 		MCAutoStringRef t_pattern;
 		uint4 t_id;
-		if (!MCStringFirstIndexOfChar(patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
+		if (!MCStringFirstIndexOfChar(p_patterns, '\n', t_old_offset, kMCCompareExact, t_new_offset))
 			t_new_offset = t_length;
 		
 		if (t_new_offset > t_old_offset)
 		{
-			t_success = MCStringCopySubstring(patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
+			t_success = MCStringCopySubstring(p_patterns, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_pattern);
 			if (t_success)
 				t_success = MCU_stoui4(*t_pattern, t_id);
 			if (t_success)
@@ -4160,9 +4160,9 @@ void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool 
         
         MCF_changetextstyle(t_style_set, t_style, p_setting);
         
-        MCInterfaceTextStyle t_style;
-        t_style . style = t_style_set;
-        SetTextStyle(ctxt, t_style);
+        MCInterfaceTextStyle t_interface_style;
+        t_interface_style . style = t_style_set;
+        SetTextStyle(ctxt, t_interface_style);
         return;
     }
     

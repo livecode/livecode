@@ -2147,8 +2147,7 @@ void MCStringsExecFilterDelimited(MCExecContext& ctxt, MCStringRef p_source, boo
     MCStringOptions t_options = ctxt . GetStringComparisonType();
 	while (t_found && t_success)
 	{
-        MCAutoStringRef t_line;
-		t_found = MCStringFind(p_source, MCRangeMake(t_last_offset, UINDEX_MAX), p_delimiter, t_options, &t_found_range);
+        t_found = MCStringFind(p_source, MCRangeMake(t_last_offset, UINDEX_MAX), p_delimiter, t_options, &t_found_range);
 		if (!t_found) //last line or item
         {
             t_chunk_range . offset = t_last_offset;

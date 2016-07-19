@@ -335,8 +335,8 @@ extern void MCU_initialize_names();
 
 bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	int i;
-	MCstackbottom = (char *)&i;
+	int t_bottom;
+	MCstackbottom = (char *)&t_bottom;
 
     ////
 
@@ -659,9 +659,9 @@ int platform_main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
-	for (int i = 0; i < argc; i++)
+	for (int t_arg = 0; t_arg < argc; t_arg++)
 	{
-		MCValueRelease(t_new_argv[i]);
+		MCValueRelease(t_new_argv[t_arg]);
 	}
 	MCMemoryDeleteArray(t_new_argv);
 

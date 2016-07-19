@@ -2168,8 +2168,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         {
                             import_html_begin(ctxt, nil);
                             
-                            MCFieldCharacterStyle t_char_style;
-                            t_char_style = ctxt . styles[ctxt . style_index] . style;
+                            MCFieldCharacterStyle t_tag_style;
+                            t_tag_style = ctxt . styles[ctxt . style_index] . style;
                             
                             uint32_t t_font_size, t_font_style;
                             t_font_size = 0;
@@ -2200,11 +2200,11 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                             }
                             
                             if (t_font_style != 0)
-                                t_char_style . has_text_style = true, t_char_style . text_style = t_font_style;
+                                t_tag_style . has_text_style = true, t_tag_style . text_style = t_font_style;
                             if (t_font_size != 0)
-                                t_char_style . has_text_size = true, t_char_style . text_size = t_font_size;
+                                t_tag_style . has_text_size = true, t_tag_style . text_size = t_font_size;
 							
-                            import_html_push_tag(ctxt, t_tag . type, t_char_style);
+                            import_html_push_tag(ctxt, t_tag . type, t_tag_style);
                         }
                         else
                             import_html_pop_tag(ctxt, t_tag . type, true);

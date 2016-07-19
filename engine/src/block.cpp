@@ -1332,10 +1332,10 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			if (IsMacLF() && !f->isautoarm())
 			{
 				MCPatternRef t_pattern;
-				int2 x, y;
+				int2 t_x, t_y;
 				MCColor fc, hc;
-				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), f);
-				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), f);
+				f->getforecolor(DI_FORE, False, True, fc, t_pattern, t_x, t_y, dc -> gettype(), f);
+				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, t_x, t_y, dc -> gettype(), f);
 				if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 					f->setforeground(dc, DI_BACK, False, True);
                 else
