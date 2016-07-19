@@ -212,7 +212,6 @@ class MCMacPlatformSurface;
 
 - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize;
 - (void)windowDidMove:(NSNotification *)notification;
-- (void)windowDidChangeScreen:(NSNotification *)notification;
 
 - (void)windowWillStartLiveResize:(NSNotification *)notification;
 - (void)windowDidEndLiveResize:(NSNotification *)notification;

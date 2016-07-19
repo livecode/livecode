@@ -21,22 +21,17 @@ LiveCode supports Linux installations which meet the following requirements:
 
 * Supported CPU architectures:
   * 32-bit or 64-bit Intel/AMD or compatible processor
-  * 32-bit ARMv6 with hardware floating-point (e.g. RaspberryPi)
 
-* Common requirements for GUI functionality:
+* Required dependencies for core functionality:
+  * glibc 2.13 or later
+
+* Optional requirements for GUI functionality:
   * GTK/GDK/Glib 2.24 or later
   * Pango with Xft support
   * esd (optional, needed for audio output)
   * mplayer (optional, needed for media player functionality)
   * lcms (optional, required for color profile support in images)
   * gksu (optional, required for privilege elevation support)
-
-* Requirements for 32-bit Intel/AMD:
-  * glibc 2.11 or later
-* Requirements for 64-bit Intel/AMD:
-  * glibc 2.13 or later
-* Requirements for ARMv6:
-  * glibc 2.7 or later
 
 **Note:** If the optional requirements are not present then LiveCode will still run but the specified features will be disabled.
 
