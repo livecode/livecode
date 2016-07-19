@@ -176,19 +176,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 		added = True;
 	}
     
-    if (global_handler)
-    {
-        if (!MCRunGlobalHandler(name, params, stat))
-            stat = ES_NOT_HANDLED;
-		
-		// AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
-		//  is returned. Error info is returned via the result.
-#ifdef _MOBILE
-		if (stat != ES_NOT_HANDLED)
-			stat = ES_NORMAL;
-#endif
-    }
-	else if (handler != nil)
+    if (handler != nil)
 	{
         // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
         //   parent, then use a special method.
@@ -238,8 +226,11 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
                     case ES_NOT_FOUND:
                     case ES_NOT_HANDLED:
                     case ES_PASS:
-                        MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, name);
-                        stat = ES_ERROR;
+                        if (!global_handler)
+                        {
+                            MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, name);
+                            stat = ES_ERROR;
+                        }
                         break;
                     case ES_EXIT_HANDLER:
                         stat = ES_NORMAL;
@@ -247,6 +238,19 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
                     default:
                         break;
                 }
+            }
+            
+            if (global_handler && (stat == ES_NOT_FOUND || stat == ES_NOT_HANDLED))
+            {
+                if (!MCRunGlobalHandler(name, params, stat))
+                    stat = ES_NOT_HANDLED;
+                
+                // AL-2014-03-14: Currently no mobile handler's execution is halted when ES_ERROR
+                //  is returned. Error info is returned via the result.
+#ifdef _MOBILE
+                if (stat != ES_NOT_HANDLED)
+                    stat = ES_NORMAL;
+#endif
             }
         }
 		

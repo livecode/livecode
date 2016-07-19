@@ -330,8 +330,8 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		MCParameter p1;
 		p1.setvalueref_argument(t_param_name);
         
-		MCStack *oldstackptr = MCdefaultstackptr;
-		MCdefaultstackptr = getstack();
+        MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+        MCdefaultstackptr = getstack();
 		MCObjectPtr oldtargetptr = MCtargetptr;
 		MCtargetptr . object = this;
         MCtargetptr . part_id = 0;
@@ -344,8 +344,11 @@ Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
 		if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
 			t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
-		MCdefaultstackptr = oldstackptr;
-		MCtargetptr = oldtargetptr;
+        
+        if (t_old_defaultstack.IsValid())
+            MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+        
+        MCtargetptr = oldtargetptr;
 		if (added)
 			MCnexecutioncontexts--;
 	}
@@ -417,7 +420,7 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
 		p1.setvalueref_argument(t_param_name);
 		p2.setvalueref_argument(p_value);
 		
-		MCStack *oldstackptr = MCdefaultstackptr;
+		MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 		MCdefaultstackptr = getstack();
 		MCObjectPtr oldtargetptr = MCtargetptr;
 		MCtargetptr . object = this;
@@ -435,8 +438,11 @@ Exec_stat MCObject::sendsetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNam
         
 		if (added)
 			MCnexecutioncontexts--;
-		MCdefaultstackptr = oldstackptr;
-		MCtargetptr = oldtargetptr;
+        
+        if (t_old_defaultstack.IsValid())
+            MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+        
+        MCtargetptr = oldtargetptr;
 	}
     
 	return t_stat;

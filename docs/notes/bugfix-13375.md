@@ -1,1 +1,0 @@
-# setting tabWidths results in erroneous tabstops in LC7RC1

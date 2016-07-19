@@ -982,9 +982,9 @@ MCSwitch::~MCSwitch()
 	delete cond;
 	while (ncases--)
 		delete cases[ncases];
-	delete cases;
+	delete[] cases; /* Allocated with new[] */
 	deletestatements(statements);
-	delete caseoffsets;
+	delete[] caseoffsets; /* Allocated with new[] */
 }
 
 Parse_stat MCSwitch::parse(MCScriptPoint &sp)

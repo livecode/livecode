@@ -1,1 +1,0 @@
-# Putting into bytes takes a long time 

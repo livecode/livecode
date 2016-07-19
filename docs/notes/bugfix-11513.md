@@ -1,1 +1,0 @@
-# If a stack has font attributes set, then ideal text layout is not used in fullscreen mode.

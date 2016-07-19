@@ -1,1 +1,0 @@
-# Quicktime using stacks crash on open 

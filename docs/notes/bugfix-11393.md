@@ -1,2 +1,0 @@
-# Fullscreen modes cause clipped text on Windows
-In order for fullscreen scaling to work on Windows it is necessary to use device-independent text metrics - the same as when using formatForPrinting. Therefore, on Windows, when you set the fullscreenmode to something other than resize, the stack will change to using device-independent metrics for all text (similar to when setting formatForPrinting).

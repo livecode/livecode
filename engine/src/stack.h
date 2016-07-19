@@ -584,14 +584,6 @@ public:
     
 	//////////
 	
-    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
-    bool substackhaswidgets();
-
-    /* Return true iff the stack or one of its substacks has widgets. */
-    virtual bool haswidgets();
-    
-	//////////
-    
 	void setgeom();
 	
 	//////////
@@ -1281,6 +1273,9 @@ public:
 #endif
     
 private:
+    /* Explicitly forbid use of the base class's load() method */
+	using MCObject::load;
+
 	void loadexternals(void);
 	void unloadexternals(void);
     

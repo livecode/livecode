@@ -1,1 +1,0 @@
-# textDirection does not survive save & load

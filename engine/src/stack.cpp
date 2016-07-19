@@ -552,7 +552,7 @@ MCStack::~MCStack()
 	if (m_parent_stack.IsBound())
 		setparentstack(nil);
 
-	delete mnemonics;
+	delete[] mnemonics; /* Allocated with new[] */
 	MCValueRelease(title);
 	MCValueRelease(titlestring);
 
@@ -620,7 +620,7 @@ MCStack::~MCStack()
 			MCValueRelease(stackfiles[nstackfiles].stackname);
 			MCValueRelease(stackfiles[nstackfiles].filename);
 		}
-		delete stackfiles;
+		delete[] stackfiles; /* Allocated with new[] */
 	}
 	if (linkatts != NULL)
 	{

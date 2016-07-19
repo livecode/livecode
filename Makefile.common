@@ -1,0 +1,70 @@
+# Copyright (C) 2016 LiveCode Ltd.
+#
+# This file is part of LiveCode.
+#
+# LiveCode is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License v3 as published by the Free
+# Software Foundation.
+#
+# LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+# This file consists of some common functionality required by various 
+# Makefiles
+
+ifeq ($(V),)
+_PRINT_RULE ?= > /dev/null
+else
+_PRINT_RULE ?=
+endif
+
+ifeq ($(MODE),debug)
+  export BUILDTYPE ?= Debug
+else ifeq ($(MODE),release)
+  export BUILDTYPE ?= Release
+else ifeq ($(MODE),fast)
+  export BUILDTYPE ?= Fast
+else
+  $(error "Mode must be 'debug' or 'release'")
+endif
+
+################################################################
+# Attempt to guess where to find various tools and libraries
+################################################################
+
+top_srcdir ?= .
+
+guess_linux_arch_script := \
+	case `uname -p` in \
+	    x86_64) echo x86_64 ;; \
+	    x86|i*86) echo x86 ;; \
+	esac
+guess_linux_arch := $(shell $(guess_linux_arch_script))
+
+guess_platform_script := \
+	case `uname -s` in \
+	    Linux) echo linux-$(guess_linux_arch) ;; \
+	    Darwin) echo mac ;; \
+	esac
+guess_platform := $(shell $(guess_platform_script))
+	
+guess_engine_flags_script := \
+	if echo $(guess_platform) | grep "^linux" >/dev/null 2>&1 && \
+	        ! xset -q >/dev/null 2>&1 ; then \
+	    echo "-ui"; \
+	fi
+guess_engine_flags := $(shell $(guess_engine_flags_script))
+
+ifeq ($(guess_platform),mac)
+	bin_dir ?= $(top_srcdir)/_build/mac/$(BUILDTYPE)
+else
+	bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
+endif
+
+guess_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
+guess_dev_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community,$(bin_dir)/LiveCode-Community)

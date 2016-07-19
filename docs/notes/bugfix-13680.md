@@ -1,1 +1,0 @@
-# item delimiter not deleted in target string if longer than 1 character

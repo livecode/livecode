@@ -1,1 +1,0 @@
-# Crash when using dictation

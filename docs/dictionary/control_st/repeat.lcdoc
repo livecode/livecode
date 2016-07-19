@@ -56,8 +56,12 @@ The <loopForm> is one of the following forms:
 statementList: One or more LiveCode statements, and can also include `if`, `switch`, 
 `try`, or `repeat` <control structure|control structures>.
 condition (bool): Any <expression> that <evaluate|evaluates> to true or false.
-number, startValue, endValue, and increment: Numbers or <expression|expressions> that evaluate to numbers.
-counter or labelVariable: A legal <variable> name.
+number (number): A numbers or an <expression|expressions> that evaluates to a number.
+startValue (number): A numbers or an <expression|expressions> that evaluates to a number.
+endValue (number): A numbers or an <expression|expressions> that evaluates to a number.
+increment (number): A numbers or an <expression|expressions> that evaluates to a number.
+counter: A legal <variable> name.
+labelVariable: A legal <variable> name.
 chunkType: One of these text chunk types: byte, codeunit, codepoint, character (or char), 
 token, trueword, word (or segment), item, sentence, paragraph or line.
 container: Any existing <container>; e.g. a <variable> or a <field>.
@@ -225,7 +229,7 @@ Use the `for each`*`element`* form if you want to perform an action on
 each <element(glossary)> in an <array>. The following example gets only
 the multi-word entries in an <array> of phrases:
 
-    repeat for each element thisIndexTerm in listOfTerms
+    repeat for each element thisIndexTerm in arrayOfTerms
       if the number of words in thisIndexTerm > 1 then
         put thisIndexTerm & return after multiWordTerms
       end if

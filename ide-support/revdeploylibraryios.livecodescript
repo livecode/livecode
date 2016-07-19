@@ -105,6 +105,9 @@ command deployDo pTargetStack, pSimulator, pAppBundle
    local tError, tRunningTest
    put empty into tError
    
+   local tSettings
+   put the customProperties["cRevStandaloneSettings"] of stack pTargetStack into tSettings
+   
    put revTestEnvironment() into tRunningTest
    
    -- First attempt to rebuild the current top-stack
@@ -124,15 +127,15 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       put word 1 of pSimulator into tFamily
       
       -- First make sure the minimum version is adhered to
-      if tVersion < the cRevStandaloneSettings["ios,minimum version"] of stack pTargetStack then
-         put the cRevStandaloneSettings["ios,minimum version"] of stack pTargetStack into tVersion
+      if tVersion < tSettings["ios,minimum version"] then
+         put tSettings["ios,minimum version"] into tVersion
          if tFamily is not among the lines of deployGetSimulatorFamilies(tVersion) then
             put line 1 of deployGetSimulatorFamilies(tVersion) into tFamily
          end if
       end if
       
       -- If the app is only for iPad, then force to iPad family
-      if the cRevStandaloneSettings["ios,device family"] of stack pTargetStack is 2 then
+      if tSettings["ios,device family"] is 2 then
          put "iPad" into tFamily
          if tFamily is not among the lines of deployGetSimulatorFamilies(tVersion) then
             put empty into tVersion
@@ -151,7 +154,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       end if
       
       -- Finally check we have a suitable minimum version
-      if tVersion < the cRevStandaloneSettings["ios,minimum version"] of stack pTargetStack then
+      if tVersion < tSettings["ios,minimum version"] then
          put "No simulators matching specified family or minimum version are installed." into tError
       end if
    end if
@@ -159,10 +162,10 @@ command deployDo pTargetStack, pSimulator, pAppBundle
    local tTempAppBundle
    if tError is empty then
       if pAppBundle is empty then
-         put tTempFolder & slash & the cREVStandaloneSettings["name"] of stack pTargetStack & ".app" into tTempAppBundle
+         put tTempFolder & slash & tSettings["name"] & ".app" into tTempAppBundle
          try
             dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                  pTargetStack, tTempAppBundle, "Simulator" && tVersion
+                  pTargetStack, tTempAppBundle, "Simulator" && tVersion, tSettings
          catch tException
             put "Unable to build app for simulation:" && tException into tError
          end try

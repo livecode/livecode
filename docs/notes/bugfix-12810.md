@@ -1,1 +1,0 @@
-# [[Player]] controller icons not updated when keyboard shortcuts used to control playback

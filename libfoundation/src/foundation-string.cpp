@@ -248,7 +248,7 @@ bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
 
 	if (MCStringCreateWithNativeChars((const char_t *)p_cstring, p_cstring == nil ? 0 : strlen((const char*)p_cstring), r_string))
     {
-        delete p_cstring;
+        delete[] p_cstring;
         return true;
     }
     
@@ -1669,29 +1669,45 @@ void MCStringNativize(MCStringRef self)
 	/* UNCHECKED */ __MCStringNativize(self);
 }
 
-MC_DLLEXPORT_DEF
-bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy)
+static bool __MCStringConvertCopy(MCStringRef p_string, bool p_to_unicode,
+                                  MCStringRef& r_copy)
 {
 	__MCAssertIsString(p_string);
 
-    // AL-2014-12-12: [[ Bug 14208 ]] Implement a native copy function to aid conversion to data
-    if (MCStringIsNative(p_string))
-        return MCStringCopy(p_string, r_copy);
-    
-    MCStringRef t_string;
-    t_string = nil;
-    
-    if (!MCStringMutableCopy(p_string, t_string))
-        return false;
+	if (MCStringIsNative(p_string) ^ p_to_unicode)
+		return MCStringCopy(p_string, r_copy);
 
-	if (!__MCStringNativize(t_string))
+	MCAutoStringRef t_string;
+	if (!MCStringMutableCopy(p_string, &t_string))
 		return false;
-    
-    __MCStringMakeImmutable(t_string);
-    t_string -> flags &= ~kMCStringFlagIsMutable;
-    
-    r_copy = t_string;
-    return true;
+
+	if (p_to_unicode)
+	{
+		if (!__MCStringUnnativize(*t_string))
+			return false;
+	}
+	else
+	{
+		if (!__MCStringNativize(*t_string))
+			return false;
+	}
+
+    __MCStringMakeImmutable(*t_string);
+    (*t_string) -> flags &= ~kMCStringFlagIsMutable;
+
+    return MCStringCopy(*t_string, r_copy);
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy)
+{
+	return __MCStringConvertCopy(p_string, false, r_copy);
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringUnicodeCopy(MCStringRef p_string, MCStringRef& r_copy)
+{
+	return __MCStringConvertCopy(p_string, true, r_copy);
 }
 
 MC_DLLEXPORT_DEF
@@ -2376,10 +2392,10 @@ bool MCStringMapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_char
             
         case kMCChunkTypeCharacter:
             return MCStringMapGraphemeIndices(self, p_char_range, r_cu_range);
+
+        default:
+            MCUnreachableReturn(false);
     }
-    
-    MCAssert(false);
-    return false;
 }
 
 MC_DLLEXPORT_DEF
@@ -2401,10 +2417,10 @@ bool MCStringUnmapIndices(MCStringRef self, MCCharChunkType p_type, MCRange p_cu
             
         case kMCChunkTypeCharacter:
             return MCStringUnmapGraphemeIndices(self, p_cu_range, r_char_range);
+
+        default:
+	        MCUnreachableReturn(false);
     }
-    
-    MCAssert(false);
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

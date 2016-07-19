@@ -129,6 +129,7 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 	MCAssert(self != nil);
     __MCAssertIsValue(self);
     
+	MCAssert(self -> references != UINT32_MAX);
 	self -> references += 1;
 
 	return self;

@@ -1099,9 +1099,9 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
 
             MCAutoStringRef t_substring;
             MCAutoStringRefAsNativeChars t_auto_native;
-            char_t* t_native_format;
+            const char_t* t_native_format;
             uindex_t t_cformat_length;
-            char_t* t_cstart;
+            const char_t* t_cstart;
 
             /* UNCHECKED */ MCStringCreateWithChars(t_unicode_start, format - t_start, &t_substring);
             /* UNCHECKED */ t_auto_native . Lock(*t_substring, t_native_format, t_cformat_length);

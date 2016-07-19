@@ -1,1 +1,0 @@
-# thumposition returns decimal value in LC7 dp6

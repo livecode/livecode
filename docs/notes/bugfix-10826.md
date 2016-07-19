@@ -1,1 +1,0 @@
-# Menu Text > Font > Size > Other... does nothing. Now asks the user to input a text size.

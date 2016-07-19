@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "objptr.h"
 
+#include "stackfileformat.h"
+
 #include "exec-interface.h"
 #include "resolution.h"
 
@@ -564,14 +566,14 @@ void MCInterfaceStackFileVersionParse(MCExecContext& ctxt, MCStringRef p_input, 
 	char *t_version;
 	/* UNCHECKED */ MCStringConvertToCString(p_input, t_version);
     count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
-	delete t_version;
+    MCMemoryDeleteArray(t_version);
 	
 	version = major * 1000 + minor * 100 + revision * 10;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] Allow versions up to 7000 to be set.
     // MW-2014-12-17: [[ Widgets ]] Allow versions up to 8000 to be set.
-	if (count < 2 || version < 2400 || version > 8000)
+	if (count < 2 || version < kMCStackFileFormatMinimumExportVersion || version > kMCStackFileFormatCurrentVersion)
 	{
 		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
 		return;
@@ -2403,7 +2405,7 @@ static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_bina
     t_stack = nil;
     t_binary_fail = false;
     
-    if (MCStringFirstIndexOf(p_data, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
+    if (MCStringFirstIndexOf(p_data, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
     {
         char_t* t_string;
         uindex_t t_length;
@@ -2480,7 +2482,7 @@ void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObje
 {
     uint4 offset;
    
-    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
+    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;

@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 
+#include "stackfileformat.h"
+
 real8 MCEPS::xf;
 real8 MCEPS::yf;
 
@@ -98,8 +100,8 @@ MCEPS::MCEPS(const MCEPS &sref) : MCControl(sref)
 
 MCEPS::~MCEPS()
 {
-	delete postscript;
-	delete prolog;
+	delete[] postscript; /* Allocated with new[] */
+	delete[] prolog; /* Allocated with new [] */
 	delete pageIndex;
 	delete image;
 }
@@ -372,7 +374,7 @@ IO_stat MCEPS::load(IO_handle stream, uint32_t version)
 		if ((stat = image->load(stream, version)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}
-	if (version > 1300)
+	if (version > kMCStackFileFormatVersion_1_3)
 	{
 		if ((stat = IO_read_uint2(&curpage, stream)) != IO_NORMAL)
 			return checkloadstat(stat);

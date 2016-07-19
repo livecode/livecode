@@ -100,9 +100,10 @@ void MCPSPrinter::DoInitialize(void)
 void MCPSPrinter::DoFinalize(void)
 {
     delete m_pdf_printer;
-    
-	if ( m_printersettings . printername != NULL ) 
-		delete m_printersettings . printername ;
+
+    /* Allocated by MCStringConvertToCString() */
+	if ( m_printersettings . printername != NULL )
+		MCMemoryDeleteArray(m_printersettings . printername);
 
 	if ( m_printersettings . outputfilename != NULL ) 
 		delete (m_printersettings . outputfilename -7);	// Need to subtract 7 here as we added 7 to skip the "file://" part

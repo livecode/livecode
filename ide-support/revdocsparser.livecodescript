@@ -1383,7 +1383,7 @@ function revDocsParseDocText pText, pFilename
    
    local tAssociationsDefault
    put "Associations" into tAssociationsDefault["name"]
-   put tParsedA["display name"] into tAssociationsDefault["content"]
+   put tParsedA["name"] into tAssociationsDefault["content"]
    repeat with tElementNum = tStartNum to the number of elements in tElementsA
       add 1 to tEntryElementCount
       local tElementA
@@ -1536,9 +1536,9 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put 1 into tCurrentLine
    put line tCurrentLine of pData into tNameLine
    add 1 to tCurrentLine
-   if line tCurrentLine of pData begins with "deprecate" then
+   if word 1 to -1 of line tCurrentLine of pData begins with "deprecate" then
+      put token 1 to -1 of word 4 of line tCurrentLine of pData into tDeprecated
       add 1 to tCurrentLine
-      put true into tDeprecated
    end if
    
    put line tCurrentLine of pData into tSyntaxLine
@@ -1613,7 +1613,9 @@ command revDocsUpdateModularSyntaxDocBlocks pData, pComment, pHandlersA, pPhrase
    put word -1 of xDataA[tEntryName]["type"] into xDataA[tEntryName]["type"]
    put "syntax" into xDataA[tEntryName]["kind"]
    put pComment into xDataA[tEntryName]["comments"]
-   put tDeprecated is true into xDataA[tEntryName]["deprecated"]
+   if tDeprecated is not empty then
+      put tDeprecated into xDataA[tEntryName]["deprecated"]
+   end if
    put tEntryName into xDataA[tEntryName]["name"]
 end revDocsUpdateModularSyntaxDocBlocks
 
@@ -2570,6 +2572,7 @@ function revDocsListGuides pFolder
    local tGuides
    put the files into tGuides
    filter tGuides with "*.md"
+   filter tGuides without "README.md"
    
    set the defaultFolder to tDefaultFolder
    
@@ -2603,7 +2606,12 @@ end groupOrder
 function revDocsUtf8FileContents pFile
    local tContents
    put url ("binfile:" & pFile) into tContents
-   return textDecode(tContents, "utf-8")
+   put textDecode(tContents, "utf-8") into tContents
+   -- Since we are using url(binfile..), we need to convert the 
+   -- line endings of the target file
+   replace CRLF with LF in tContents
+   replace CR with LF in tContents
+   return tContents
 end revDocsUtf8FileContents
 
 constant kGuideOrderFile = "guide-order.yml"

@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "syntax.h"
 #include "variable.h"
+#include "stackfileformat.h"
 
 MCCompact::~MCCompact()
 {
@@ -448,7 +449,7 @@ MCStack *MCGo::findstack(MCExecContext &ctxt, MCStringRef p_value, Chunk_term et
 {
 	MCStack *sptr = NULL;
     uint4 offset;
-    if (MCStringFirstIndexOf(p_value, MCSTR(SIGNATURE), 0, kMCCompareExact, offset)
+    if (MCStringFirstIndexOf(p_value, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset)
             || (MCStringGetLength(p_value) > 8 && MCStringBeginsWithCString(p_value, (char_t*)"REVO", kMCCompareExact)))
     {
         char_t* t_cstring_value;

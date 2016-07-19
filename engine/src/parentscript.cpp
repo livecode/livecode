@@ -154,7 +154,7 @@ void MCParentScriptUse::ClearVars(void)
 		delete m_locals[i];
 
 	// Finally delete the locals array
-	delete m_locals;
+	delete[] m_locals; /* Allocated with new[] */
 	
 	m_locals = NULL;
 	m_local_count = 0;

@@ -22,8 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "typedefs.h"
 
-#define SIGNATURE "# MetaCard "
-
 #define READ_PIPE_SIZE 16384
 
 #define SAVE_ENCRYPTED 0x80000000

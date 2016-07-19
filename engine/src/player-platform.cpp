@@ -48,6 +48,8 @@
 
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 //////////////////////////////////////////////////////////////////////
 
 //// PLATFORM PLAYER
@@ -422,7 +424,7 @@ public:
         return True;
     }
     
-    Boolean kdown(const char *string, KeySym key)
+    virtual Boolean kdown(MCStringRef p_string, KeySym key)
     {
         if (key == XK_Escape)
         {
@@ -739,7 +741,7 @@ public:
         return True;
     }
     
-    Boolean kdown(const char *string, KeySym key)
+    virtual Boolean kdown(MCStringRef p_string, KeySym key)
     {
         if (key == XK_Escape)
         {
@@ -1207,7 +1209,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(filename, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(filename, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1218,7 +1220,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(userCallbackStr, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(userCallbackStr, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream, p_version);
@@ -1230,7 +1232,7 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
     
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return checkloadstat(stat);
-	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_stringref_new(filename, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		return checkloadstat(stat);
@@ -1249,7 +1251,7 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 	rate = (real8)trate * 10.0 / MAXINT4;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
@@ -2199,9 +2201,6 @@ void MCPlayer::moviefinished(void)
 
 void MCPlayer::SynchronizeUserCallbacks(void)
 {
-    if (MCStringIsEmpty(userCallbackStr))
-        return;
-    
     if (m_platform_player == nil)
         return;
     
@@ -2221,7 +2220,11 @@ void MCPlayer::SynchronizeUserCallbacks(void)
     
     uindex_t t_start_index, t_length;
     
-    t_length = MCStringGetLength(*t_callback);
+	if (MCStringIsEmpty(*t_callback))
+		t_length = 0;
+	else
+		t_length = MCStringGetLength(*t_callback);
+	
     t_start_index = 0;
     
 	while (t_start_index < t_length)

@@ -197,7 +197,7 @@ static bool MCPickleReadTypeInfoRefContents(MCStreamRef stream, uint8_t p_kind, 
         
         for(uindex_t i = 0; t_success && i < t_param_count; i++)
         {
-            uint8_t t_mode, t_type_kind;;
+            uint8_t t_mode;
             t_success = MCStreamReadUInt8(stream, t_mode) &&
                         MCPickleReadTypeInfoRef(stream, t_param_info[i] . type);
             if (t_success)
@@ -493,7 +493,8 @@ static bool MCPickleReadField(MCStreamRef stream, MCPickleFieldType p_kind, void
                 MCPickleRecordInfo *t_record_info;
                 t_record_info = nil;
                 for(int j = 0; t_info -> cases[j] . kind != -1; j++)
-                    if (t_kind == t_info -> cases[j] . kind)
+	                if (t_kind < INT_MAX &&
+	                    int(t_kind) == t_info -> cases[j] . kind)
                     {
                         t_record_info = t_info -> cases[j] . record;
                         break;
@@ -582,9 +583,6 @@ static bool MCPickleWriteCompactUInt(MCStreamRef stream, uint32_t p_value)
 
 static bool MCPickleWriteStringRef(MCStreamRef stream, MCStringRef p_value)
 {
-    bool t_success;
-    t_success = true;
-    
     MCAutoStringRefAsUTF8String t_utf8_string;
     if (!t_utf8_string . Lock(p_value))
         return failed();

@@ -162,11 +162,11 @@ void MCHandlerlist::reset(void)
 
 	for(uint32_t i = 0; i < nvars; i++)
 		MCValueRelease(vinits[i]);
-	delete vinits;
+	delete[] vinits; /* Allocated with new[] */
 	vinits = NULL;
 	nvars = 0;
 
-	delete globals;
+	delete[] globals; /* Allocated with new[] */
 	globals = NULL;
 	nglobals = 0;
 
@@ -175,7 +175,7 @@ void MCHandlerlist::reset(void)
 		MCNameDelete(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
-	delete cinfo;
+	delete[] cinfo; /* Allocated with new[] */
 	cinfo = NULL;
 	nconstants = 0;
 }

@@ -76,38 +76,48 @@ end toolsBuilderRunBundle
 
 ////////////////////////////////////////////////////////////////////////////////
 
+private command toolsBuilderFilterExternals pFolder, pPlatform
+   -- Enter the extension directory
+   set the defaultFolder to pFolder
+
+   local tFiles
+   -- Remove any iOS code if we're not building the OSX installer
+   if pPlatform is not "macosx" then
+      put the files into tFiles
+      filter lines of tFiles with "*.lcext"
+      
+      -- Don't remove lcext files ith Android externals in them
+      local tLCExt
+      repeat for each line tLCExt in tFiles
+         revZipOpenArchive pFolder & slash & tLCExt, "read"
+         if the result is not empty then
+            builderLog "error", "Cannot open lcext file" && tLCExt
+            exit toolsBuilderFilterExternals
+         end if
+         
+         local tArchiveFiles
+         put revZipEnumerateItems(pFolder & slash & tLCExt) into tArchiveFiles
+         filter tArchiveFiles with "Android/External-*"
+         revZipCloseArchive pFolder & slash & tLCExt
+         
+         if tArchiveFiles is not empty then
+            get shell(merge("rm -f '[[ tLCExt ]]'"))
+         end if
+      end repeat
+   end if
+
+   -- If the directory contains no code any more, remove it
+   put the files & return & the folders into tFiles
+   filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
+   
+   return tFiles is not empty
+end toolsBuilderFilterExternals
+
 private command toolsBuilderPrepareMergExt pMergExtVersion, pEdition, pPlatform
    -- Ensure that the MergExt bundle is downloaded and unpacked
    builderMergExtUnpack pMergExtVersion, (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
    
-   -- Remove un-needed files from the unpacked MergExt collection
-   local tOldFolder
-   local tCollectionFolder
-   put builderMergExtFolder() & "/" & "MergExt" into tCollectionFolder
-   put the defaultFolder into tOldFolder
-   set the defaultFolder to tCollectionFolder
-   repeat for each line tExtension in the folders
-      -- Skip special names
-      if tExtension is empty or tExtension is "." or tExtension is ".." then next repeat
-      
-      -- Enter the extension directory
-      set the defaultFolder to tCollectionFolder & "/" & tExtension
-      
-      -- Remove any iOS code if we're not building the OSX installer
-      if pPlatform is not "macosx" then
-         get shell("rm -rf *.lcext")
-      end if
-      
-      -- If the directory contains no code any more, remove it
-      local tFiles
-      put the files & return & the folders into tFiles
-      filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
-      if tFiles is empty then
-         set the defaultFolder to tCollectionFolder
-         get shell(merge("rm -rf '[[tExtension]]'"))
-      end if
-   end repeat
-   set the defaultFolder to tOldFolder
+   toolsBuilderFilterExternals builderMergExtFolder() & "/" & "MergExt", pPlatform
 end toolsBuilderPrepareMergExt
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,8 +152,8 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    put builderWorkFolder() & slash & "tools-" & pPlatform & "-" & pVersion & ".zip" into tPackageFile
    builderEnsureFolderForFile tPackageFile
    
-   -- Ensure that MergExt is available for inclusion
-   toolsBuilderPrepareMergExt builderMergExtVersion(), pEdition, pPlatform
+   -- Ensure that Ext is available for inclusion
+   toolsBuilderPrepareExt pEdition, pPlatform
    
    --return tPackageFile
    
@@ -170,7 +180,7 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSOurce tPackager, "emscripten", pEngineFolders["emscripten"]
    packageCompilerConfigureSource tPackager, "prebuilt", builderRepoFolder() & slash & "prebuilt"
    packageCompilerConfigureSource tPackager, "repo", builderRepoFolder()
-   packageCompilerConfigureSource tPackager, "mergext", builderMergExtFolder()
+   packageCompilerConfigureSource tPackager, "ext", builderUnpackFolder()
    if tEditionType is among the items of "indy,business" then
       packageCompilerConfigureSource tPackager, "private", builderPrivateRepoFolder()
    end if
@@ -841,4 +851,3 @@ function loadTextFile pFile
    replace numToChar(13) with return in it
    return it
 end loadTextFile
-

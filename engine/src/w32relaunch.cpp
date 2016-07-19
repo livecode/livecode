@@ -450,7 +450,7 @@ bool relaunch_startup(MCStringRef p_stack_name)
 	{
 		for(unsigned int t_instance = 0; t_instance < t_existing_instance_count; ++t_instance)
 		{
-			MCAutoStringRefAsWString t_cmdline_wstr;
+			MCAutoStringRefAsLPWSTR t_cmdline_wstr;
 			/* UNCHECKED */ t_cmdline_wstr.Lock(MCcmdline);
 			
 			message_t t_message;

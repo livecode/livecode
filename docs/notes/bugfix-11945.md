@@ -1,1 +1,0 @@
-# The number of paragraphs reported value is incorrect

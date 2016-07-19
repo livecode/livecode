@@ -3016,8 +3016,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 		if (t_len)
 		{
-			char *t_model;
-			if (!MCMemoryNewArray(t_len, t_model))
+			char *t_model = new char[t_len];
+			if (nil == t_model)
 				return false;
 			sysctlbyname("hw.model", t_model, &t_len, NULL, 0);
 
@@ -5819,15 +5819,16 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
                 // [[ Bug 13622 ]] Make sure environ is appropriate (on Yosemite it can
                 //    be borked).
                 environ = fix_environ();
-                
-				MCAutoStringRefAsUTF8String t_utf8_string;
-                /* UNCHECKED */ t_utf8_string . Lock(MCNameGetString(name));
-				
+
+                char *t_utf8_string = nil;
+                /* UNCHECKED */ MCStringConvertToUTF8String(MCNameGetString(name),
+                                                            t_utf8_string);
+
 				// The pid is 0, so here we are in the child process.
 				// Construct the argument string to pass to the process..
 				char **argv = NULL;
 				uint32_t argc = 0;
-				startprocess_create_argv(*t_utf8_string, t_doc, argc, argv);
+				startprocess_create_argv(t_utf8_string, t_doc, argc, argv);
 				
 				// The parent is reading, so we (we are child) are writing.
 				if (reading)

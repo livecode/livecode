@@ -1,1 +1,0 @@
-# Referenced image doesn't draw stippled background when file missing

@@ -1,1 +1,0 @@
-# Effective patterns return random numbers

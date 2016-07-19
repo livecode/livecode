@@ -356,7 +356,7 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
       put item 2 of tOutputLine into tLine
       put item 3 of tOutputLine into tColumn
       put word 1 of item 4 of tOutputLine into tType
-      put item 5 of tOutputLine into tMessage
+      put item 5 to -1 of tOutputLine into tMessage
 
       -- If the assertion type doesn't match, continue
       if tAssertionType is not tType then
@@ -520,7 +520,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
                      reportCompilerTestError pScriptFile, tLineNumber, format("unknown position '%s'", word 4 of tLine)
                   end if
 
-                  reportCompilerTestDiag format("found assert error %s for position %s at line %d", word 2 of tLine, word 4 of tLine, word 6 of tLine, tLineNumber)
+                  reportCompilerTestDiag format("found assert error %s for position %s at line %d", word 2 of tLine, word 4 of tLine, tLineNumber)
 
                   put "error", word 2 of tLine, word 4 of tLine & return after tAssertions
                else

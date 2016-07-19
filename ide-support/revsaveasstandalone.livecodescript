@@ -138,8 +138,6 @@ private function getBuildFolder pStack, pFolder, pSettings
 end getBuildFolder
 
 on revSaveAsStandalone pStack, pFolder, pPreview
-   start using stack "revSBLibrary"
-   
    global gREVStackStatus
    
    if pStack = empty then
@@ -219,7 +217,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview
    # OK-2009-05-22 : Added ability to remember default folder. We now do the folder check before saving the stack,
    # so that if the user chose a different folder, it can be remembered for next time.
    local tFolder
-   put getBuildFolder(pStack, pFolder, sStandaloneSettingsA) into tFolder
+   put getBuildFolder(pStack, pFolder, tSettings) into tFolder
    if tFolder is empty then
       exit to top
    end if
@@ -260,8 +258,6 @@ on revSaveAsStandalone pStack, pFolder, pPreview
 end revSaveAsStandalone
 
 command revDoSaveAsStandalone pStack, pFolder
-   start using stack "revSBLibrary"
-   
    # OK-2007-12-18 : Bug 3612  Changed sGenericNumber from 1 to 0.
    put 0 into sGenericNumber
    lock cursor
@@ -304,6 +300,10 @@ command revDoSaveAsStandalone pStack, pFolder
          end if
       end repeat
       
+      -- Add all the widgets that are present on the stack to the 
+      -- extensions settings key
+      revSBUpdateSettingsForWidgets pStack, sStandaloneSettingsA
+      
       -- If we're searching for inclusions, do it here 
       if sStandaloneSettingsA["inclusions"] = "search" then 
          revSearchForInclusions pStack, sStandaloneSettingsA
@@ -331,15 +331,15 @@ command revDoSaveAsStandalone pStack, pFolder
                   next repeat
                end if
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device"
+                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".app", "Device", sStandaloneSettingsA
                break
             case "Android"
                dispatch "revSaveAsMobileStandalone" to stack "revSaveAsAndroidStandalone" with \
-                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build"
+                     pStack, tTargetFolder & slash & sStandaloneSettingsA["name"] & ".apk", "Build", sStandaloneSettingsA
                break
             case "Emscripten"
                dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                     pStack, tTargetFolder, "Build"
+                     pStack, tTargetFolder, "Build", sStandaloneSettingsA
                break
             case "MacOSX"
                revSaveAsMacStandalone pStack, tTargetFolder
@@ -472,7 +472,7 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
       put sStandaloneSettingsA["name"] & tCount into sStandaloneSettingsA["name"]
    end if
    
-   local tStackFileName, tStackName, tStackFileList
+   local tStackFileName, tStackName
    put the effective filename of stack pStack into tStackFileName
    
    set the itemdelimiter to slash
@@ -485,8 +485,8 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
       put ".livecode" after tStackName
    end if
    
-   -- get all the stackfiles
-   put revRelativeStackFilesList(pStack) into tStackFileList
+   local tStackFileList
+   revSBRelativeStackFilesList pStack, tStackFileList
    
    -- close the open stacks (ask to save if need be)
    revCloseOpenStacks tStackFileList, pStack
@@ -542,7 +542,7 @@ private function revStandaloneInitialDeployParams pTarget, pStackSourceFile, pSt
    put pEngineSourceFile into tDeployInfo["engine"]
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add the library inclusions to the deploy parameters
-   revSBUpdateDeployParams pStackSourceFile, sStandaloneSettingsA, tDeployInfo
+   revSBUpdateDeployParams pStackSourceFile, pTarget, sStandaloneSettingsA, tDeployInfo
    
    # AL-2015-01-29: [[ Scriptify IDE ]] Add user script libraries to deploy parameters
    -- PM-2015-12-07: [[ Bug 15706 ]] Put double quotes around the stack name to avoid confusing the 
@@ -1250,7 +1250,7 @@ private command revCopyResources pStack, pStackFileList, pDirectory
       if tStack is not pStack then 
          close stack tStack
          set the visible of stack tStack to tVisibleA[tStack]
-         put revSaveStackFile(tStack,tSubList,tRelativePath) & return after tCopyFiles
+         put revSaveStackFile(tStack, tSubList, tRelativePath, pDirectory) & return after tCopyFiles
       end if
       add 1 to tCount
    end repeat
@@ -1262,7 +1262,7 @@ private command revCopyResources pStack, pStackFileList, pDirectory
    set the stackFiles of stack pStack to tCopyFiles
    close stack pStack
    set the visible of stack pStack to tVisibleA[pStack]
-   get revSaveStackFile(pStack,tMainStackSubs)
+   get revSaveStackFile(pStack, tMainStackSubs, "", pDirectory)
 end revCopyResources
 
 private command revAddDialogIcons
@@ -1289,7 +1289,7 @@ private command revAddDialogIcons
    end repeat
 end revAddDialogIcons
 
-private function revSaveStackFile pStack, pSubList, pRelativePath
+private function revSaveStackFile pStack, pSubList, pRelativePath, pDirectory
    local tStacksList, tLine, tFileName, tCopyFiles, tStackFileSettingsA, tSave
    revStandaloneProgress "Saving stack files..."
    put the customProperties["cRevStandaloneSettings"] of stack pStack into tStackFileSettingsA
@@ -1302,18 +1302,14 @@ private function revSaveStackFile pStack, pSubList, pRelativePath
       if tStackFileSettingsA["moveSubstacks"] = true then
          set the mainStack of stack tLine to tLine
          --cycle through sDirectoryList and build the files in each directory
-         repeat for each element tPlatformDirs in sPlatformDirectoriesA
-            repeat for each element tDirectory in tPlatformDirs
-               put pRelativePath into tSave
-               if tStackFileSettingsA["substackFolder"] is not "" then
-                  put tStackFileSettingsA["substackFolder"] & "/" after tSave
-               end if
-               
-               put revSaveToFolder(tDirectory & tSave, tLine, tStackFileSettingsA["renameGeneric"]) into tFileName
-               
-               if tLine,tSave & "/" & tFileName is not among the lines of tCopyFiles then put tLine,tSave & "/" & tFileName & return after tCopyFiles
-            end repeat
-         end repeat
+         put pRelativePath into tSave
+         if tStackFileSettingsA["substackFolder"] is not "" then
+            put tStackFileSettingsA["substackFolder"] & "/" after tSave
+         end if
+         
+         put revSaveToFolder(pDirectory & tSave, tLine, tStackFileSettingsA["renameGeneric"]) into tFileName
+         
+         if tLine,tSave & "/" & tFileName is not among the lines of tCopyFiles then put tLine,tSave & "/" & tFileName & return after tCopyFiles
          -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
          set the cantDelete of stack tLine to false
          delete stack tLine
@@ -1333,11 +1329,7 @@ private function revSaveStackFile pStack, pSubList, pRelativePath
    -- OK-2008-03-24 : Bug 6208. The mainstack must be saved after the substacks have 
    -- been saved / deleted, otherwise they remain in the built standalone, causing the wrong
    -- stacks to be used and resulting in the stacks not being saveable.
-   repeat for each element tPlatformDirs in sPlatformDirectoriesA
-      repeat for each element tDirectory in tPlatformDirs
-         put revSaveToFolder(tDirectory & pRelativePath, pStack, false) into tFileName
-      end repeat
-   end repeat
+   put revSaveToFolder(pDirectory & pRelativePath, pStack, false) into tFileName
    
    put pStack,pRelativePath&tFileName & return after tCopyFiles
    if tStackFileSettingsA["moveSubstacks"] is not true then
@@ -2364,9 +2356,8 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
       
       // AL-2015-05-07: [[ Bug 15320 ]] Make sure universal external name is used.
       local tExternal
-      set the itemdel to "."
-      put item 1 of tSourceExternal into tExternal
-      set the itemDel to slash 
+      put revSBExternalNameFromFile(tPlatform, tSourceExternal) into tExternal
+      
       revCopyModule tPlatform, tExternal, tSourceExternal, item 1 to -2 of tExternalPath, tCurrentLocation, "Externals", tPlatform is "MacOSX"
       if the result is not empty then
          revStandaloneAddWarning tPlatform && tArch & ", external" && the result & ":" && quote & tExternalPath & quote

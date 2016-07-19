@@ -1,1 +1,0 @@
-# Prevent User Samples stack hanging due to resize error

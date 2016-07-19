@@ -1,4 +1,5 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/*                                                                     -*-C++-*-
+Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -354,59 +355,85 @@ typedef MCAutoValueRefArrayBase<MCNameRef> MCAutoNameRefArray;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCAutoStringRefAsWString
+class MCAutoStringRefAsUTF16String
 {
 public:
-    MCAutoStringRefAsWString(void)
-    {
-        m_ref = nil;
-        m_wstring = nil;
-    }
-    
-    ~MCAutoStringRefAsWString(void)
-    {
-        Unlock();
-    }
-    
-    bool Lock(MCStringRef p_string)
-    {
-        if (p_string == nil)
-			return false;
-		
-		if (MCStringIsNative(p_string))
-        {
-            m_ref = nil;
-            return MCStringConvertToWString(p_string, m_wstring);
-        }
-        
-        m_ref = MCValueRetain(p_string);
-        // The pointer returned is not const-declared but rather cast as const before
-        // being returned, so that casting away the const is safe.
-        m_wstring = const_cast<unichar_t*>(MCStringGetCharPtr(p_string));
-        return true;
-    }
-    
-    void Unlock(void)
-    {
-        if (m_ref != nil)
-        {
-            MCValueRelease(m_ref);
-            m_ref = nil;
-        }
-        else
-            MCMemoryDeleteArray(m_wstring);
-        m_wstring = nil;
-    }
-    
-    unichar_t *operator * (void)
-    {
-        return m_wstring;
-    }
-    
+	MCAutoStringRefAsUTF16String() {}
+	~MCAutoStringRefAsUTF16String() {}
+	bool Lock(MCStringRef p_string)
+	{
+		return MCStringUnicodeCopy(p_string, &m_string);
+	}
+	void Unlock()
+	{
+		m_string.Reset();
+	}
+	const unichar_t *Ptr() const
+	{
+		MCAssert(!MCStringIsNative(*m_string));
+		return MCStringGetCharPtr(*m_string);
+	}
+	uindex_t Size() const
+	{
+		MCAssert(!MCStringIsNative(*m_string));
+		return MCStringGetLength(*m_string);
+	}
+	const unichar_t *operator*() const
+	{
+		return Ptr();
+	}
 private:
-    MCStringRef m_ref;
-    unichar_t *m_wstring;
+	MCAutoStringRef m_string;
 };
+
+typedef MCAutoStringRefAsUTF16String MCAutoStringRefAsWString;
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__WINDOWS__)
+typedef MCAutoStringRefAsUTF16String MCAutoStringRefAsLPCWSTR;
+
+/* Always ensures that its internal string buffer is always owned by
+ * the auto class, so that it's safe to pass to Windows API functions
+ * that take an LPWSTR rather than an LPCWSTR. */
+class MCAutoStringRefAsLPWSTR
+{
+public:
+	MCAutoStringRefAsLPWSTR() {}
+	~MCAutoStringRefAsLPWSTR()
+	{
+		Unlock();
+	}
+	bool Lock(MCStringRef p_string)
+	{
+		MCAssert(nil == m_buffer);
+		m_size = MCStringGetLength(p_string);
+		return MCStringConvertToWString(p_string, m_buffer);
+	}
+	void Unlock()
+	{
+		MCMemoryDeleteArray(m_buffer);
+		m_buffer = nil;
+	}
+	unichar_t *Ptr()
+	{
+		MCAssert(nil != m_buffer);
+		return m_buffer;
+	}
+	uindex_t Size() const
+	{
+		MCAssert(nil != m_buffer);
+		return m_size;
+	}
+	unichar_t *operator*()
+	{
+		return Ptr();
+	}
+private:
+	unichar_t *m_buffer;
+	uindex_t m_size;
+};
+#endif /* __WINDOWS__ */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -435,7 +462,7 @@ public:
         m_utf8string = nil;
     }
     
-    char *operator * (void)
+    const char *operator * (void) const
     {
         return m_utf8string;
     }
@@ -448,92 +475,6 @@ public:
 private:
     char *m_utf8string;
     uindex_t m_size;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class MCAutoStringRefAsUTF16String
-{
-public:
-	MCAutoStringRefAsUTF16String(void)
-		: m_string(nil), m_buf(nil), m_length(0)
-	{
-	}
-
-	~MCAutoStringRefAsUTF16String(void)
-	{
-		Unlock();
-	}
-
-	bool Lock(MCStringRef p_string)
-	{
-		if (nil == p_string)
-		{
-			return false;
-		}
-
-		m_length = MCStringGetLength(p_string);
-
-		if (MCStringIsNative(p_string))
-		{
-			m_string = nil;
-			return MCStringConvertToWString(p_string, m_buf);
-		}
-		else
-		{
-			m_string = MCValueRetain(p_string);
-			m_buf = nil;
-			return true;
-		}
-	}
-
-	void Unlock(void)
-	{
-		if (nil != m_string)
-		{
-			MCValueRelease(m_string);
-		}
-		else
-		{
-			MCMemoryDeleteArray(m_buf);
-		}
-
-		m_string = nil;
-		m_buf = nil;
-		m_length = 0;
-	}
-
-	const unichar_t *Ptr(void)
-	{
-		if (nil != m_buf)
-		{
-			return m_buf;
-		}
-		else if (nil != m_string)
-		{
-			return MCStringGetCharPtr(m_string);
-		}
-		else
-		{
-			MCUnreachable();
-			return nil;
-		}
-	}
-
-	uindex_t Size(void)
-	{
-		return m_length;
-	}
-
-	const unichar_t *operator * (void)
-	{
-		return Ptr();
-	}
-
-private:
-	MCStringRef m_string;
-	unichar_t *m_buf;
-	uindex_t m_length;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -616,7 +557,7 @@ public:
         m_pascal_string = nil;
     }
     
-    unsigned char* operator * (void)
+    const unsigned char* operator * (void) const
     {
         return m_pascal_string;
     }
@@ -719,106 +660,54 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCAutoStringRefAsCString
+class MCAutoStringRefAsNativeChars
 {
 public:
-    MCAutoStringRefAsCString(void)
-    {
-        m_ref = nil;
-        m_cstring = nil;
-    }
-    
-    ~MCAutoStringRefAsCString(void)
-    {
-        Unlock();
-    }
-    
-    bool Lock(MCStringRef p_string)
-    {
-        if (!MCStringIsNative(p_string))
-        {
-            m_ref = nil;
-            return MCStringConvertToCString(p_string, m_cstring);
-        }
-
-        m_ref = MCValueRetain(p_string);
-        m_cstring = nil;
-
-        return true;
-    }
-    
-    void Unlock(void)
-    {
-        if (m_ref != nil)
-        {
-            MCValueRelease(m_ref);
-            m_ref = nil;
-        }
-        else
-            MCMemoryDeleteArray(m_cstring);
-        m_cstring = nil;
-    }
-    
-    const char *operator * (void)
-    {
-        if (m_ref != nil)
-            return (const char*)MCStringGetNativeCharPtr(m_ref);
-        else
-            return (const char*)m_cstring;
-    }
-    
+	MCAutoStringRefAsNativeChars() {}
+	~MCAutoStringRefAsNativeChars() {}
+	bool Lock(MCStringRef p_string)
+	{
+		return MCStringNativeCopy(p_string, &m_string);
+	}
+	bool Lock(MCStringRef p_string,
+	          const char_t * & r_buffer,
+	          uindex_t & r_length)
+	{
+		if (!Lock(p_string))
+			return false;
+		r_buffer = MCStringGetNativeCharPtrAndLength(*m_string,
+		                                             r_length);
+		return true;
+	}
+	void Unlock()
+	{
+		m_string.Reset();
+	}
+	const char_t * operator*() const
+	{
+		MCAssert(MCStringIsNative(*m_string));
+		return MCStringGetNativeCharPtr(*m_string);
+	}
+	uindex_t Size() const
+	{
+		MCAssert(MCStringIsNative(*m_string));
+		uindex_t t_length;
+		(void) MCStringGetNativeCharPtrAndLength(*m_string, t_length);
+		return t_length;
+	}
 private:
-    MCStringRef m_ref;
-    char *m_cstring;
+	MCAutoStringRef m_string;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCAutoStringRefAsNativeChars
+class MCAutoStringRefAsCString : public MCAutoStringRefAsNativeChars
 {
 public:
-    MCAutoStringRefAsNativeChars(void)
-    {
-        m_string = nil;
-    }
-
-    ~MCAutoStringRefAsNativeChars(void)
-    {
-        Unlock();
-    }
-
-    bool Lock(MCStringRef p_string, char_t *&r_chars, uindex_t &r_length)
-    {
-        bool t_success;
-        t_success = true;
-
-        uindex_t t_length;
-        if (MCStringIsNative(p_string))
-        {
-            t_length = MCStringGetLength(p_string);
-            t_success =  MCMemoryNewArray(t_length, m_string);
-            memcpy(m_string, (const char*)MCStringGetNativeCharPtr(p_string), t_length);
-        }
-        else
-            t_success =  MCStringConvertToNative(p_string, (char_t*&)m_string, t_length);
-
-        if (t_success)
-        {
-            r_chars = (char_t*)m_string;
-            r_length = t_length;
-        }
-
-        return t_success;
-    }
-
-    void Unlock(void)
-    {
-        MCMemoryDeleteArray(m_string);
-        m_string = nil;
-    }
-
-private:
-    char *m_string;
+	const char * operator* () const
+	{
+		return reinterpret_cast<const char *>(MCAutoStringRefAsNativeChars::operator*());
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,1 +1,0 @@
-# Can't quit LiveCode after setting the securityPermissions to "network"

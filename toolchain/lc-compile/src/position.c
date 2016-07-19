@@ -42,7 +42,7 @@ void FinalizePosition(void)
 
 void AdvanceCurrentPosition(long p_delta)
 {
-    long t_column, t_row;
+    long t_column;
     GetColumnOfPosition(s_current_position, &t_column);
     t_column += p_delta;
     if (t_column > COLUMNS_PER_ROW)

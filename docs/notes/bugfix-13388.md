@@ -1,1 +1,0 @@
-# Put text after a buttons text causes LC7 RC1 to crash

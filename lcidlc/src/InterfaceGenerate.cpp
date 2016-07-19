@@ -1575,10 +1575,14 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			CoderWriteLine(p_coder, "\tenv . argv = argv;");
 			CoderWriteLine(p_coder, "\tenv . argc = argc;");
 			CoderWriteLine(p_coder, "\tenv . result = result;");
+			CoderWriteLine(p_coder, "#if defined(__IOS__) || defined(__ANDROID__)");
 			CoderWriteLine(p_coder, "\tif (s_interface -> version >= 4)");
 			CoderWriteLine(p_coder, "\t\ts_interface -> engine_run_on_main_thread((void *)do_handler__%s, &env, kMCRunOnMainThreadJumpToUI);", NameGetCString(t_handler -> name));
 			CoderWriteLine(p_coder, "\telse");
 			CoderWriteLine(p_coder, "\t\tdo_handler__%s(&env);", NameGetCString(t_handler -> name));
+			CoderWriteLine(p_coder, "#else");
+			CoderWriteLine(p_coder, "\t\tdo_handler__%s(&env);", NameGetCString(t_handler -> name));
+			CoderWriteLine(p_coder, "#endif");
 			CoderWriteLine(p_coder, "\treturn env . return_value;");
 			CoderWriteLine(p_coder, "}");
 		}

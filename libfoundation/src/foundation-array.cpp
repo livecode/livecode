@@ -791,7 +791,7 @@ static bool __MCArrayCreateIndirect(__MCArray *p_contents, __MCArray*& r_array)
 
 	r_array = self;
 	return true;
-};
+}
 
 static uindex_t __MCArrayGetTableSizeIndex(__MCArray *self)
 {
@@ -1065,12 +1065,12 @@ void __MCArrayDump(MCArrayRef array)
 		t_contents = array -> contents;
 
 	uindex_t t_size;
-	t_size = __MCArrayGetTableSize(array);
+	t_size = __MCArrayGetTableSize(t_contents);
 
 	for(uindex_t i = 0; i < t_size; i++)
 	{
 		__MCArrayKeyValue *t_entry;
-		t_entry = &array -> key_values[i];
+		t_entry = &t_contents -> key_values[i];
 
 		if (t_entry -> value != UINTPTR_MIN && t_entry -> value != UINTPTR_MAX)
 		{

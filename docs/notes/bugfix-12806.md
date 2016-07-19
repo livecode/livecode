@@ -1,1 +1,0 @@
-# message box is slow

@@ -49,7 +49,7 @@ extern UIView *MCIPhoneGetView(void);
 extern float MCIPhoneGetResolutionScale(void);
 extern float MCIPhoneGetDeviceScale(void);
 
-extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, const MCGIntegerRectangle &p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCImageGetCGColorSpace(CGColorSpaceRef &r_colorspace);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -366,7 +366,7 @@ protected:
 		// IM-2014-07-01: [[ GraphicsPerformance ]] Clip the output context to only those areas we've had to redraw
 		MCMacClipCGContextToRegion(t_context, m_region, m_height);
 		
-		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, p_area.size.width, p_area.size.height), t_colorspace, false, false, t_image))
+		if (MCGRasterToCGImage(t_raster, MCGIntegerRectangleMake(0, 0, p_area.size.width, p_area.size.height), t_colorspace, false, false, t_image))
 		{
 			CGContextDrawImage(t_context, CGRectMake((float)p_area.origin.x, (float)(m_height - (p_area.origin.y + p_area.size.height)), (float)p_area.size.width, (float)p_area.size.height), t_image);
 			CGImageRelease(t_image);

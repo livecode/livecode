@@ -1018,7 +1018,7 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		// MW-2014-01-22: [[ CompatV1 ]] Make a reference var to hold it (should it be needed).
 		//   We then store the previous global value of the it extvar, and set this one.
 		//   As external calls are recursive, this should be fine :)
-		MCReferenceExternalVariable t_it(MCECptr -> GetHandler() -> getit() -> evalvar(*MCECptr));
+		MCReferenceExternalVariable t_it(MCECptr -> GetIt() -> evalvar(*MCECptr));
 		MCReferenceExternalVariable *t_old_it;
 		t_old_it = s_external_v1_current_it;
 		s_external_v1_current_it = &t_it;
@@ -1104,7 +1104,6 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 #else
 static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p_callback_state, MCExternalRunOnMainThreadOptions p_options)
 {
-#if defined(_DESKTOP)
     // MW-2014-10-30: [[ Bug 13875 ]] If either 'JumpTo' flag is specified, we just execute the callback direct.
     if ((p_options & kMCExternalRunOnMainThreadJumpTo) != 0)
     {
@@ -1134,9 +1133,6 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
-#else
-	return kMCExternalErrorNotImplemented;
-#endif
 }
 #endif
 

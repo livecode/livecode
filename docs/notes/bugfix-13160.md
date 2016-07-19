@@ -1,1 +1,0 @@
-# playloudness does not update when the user presses the mute button on keyboard

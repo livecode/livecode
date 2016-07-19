@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Keys, 2)
@@ -756,7 +758,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
     
     // AL-2014-05-22: [[ Bug 12547 ]] Make arrayEncode encode in 7.0 format by default.
     bool t_legacy;
-    t_legacy = p_version != nil && t_version . version < 7000;
+    t_legacy = p_version != nil && t_version . version < kMCStackFileFormatVersion_7_0;
     
     if (t_legacy)
     {
@@ -961,7 +963,7 @@ bool MCArraysCopyExtents(MCArrayRef self, array_extent_t*& r_extents, uindex_t& 
 
 	while (MCArrayIterate(self, t_index, t_key, t_value))
 	{
-		MCAutoPointer<index_t> t_indexes;
+		MCAutoCustomPointer<index_t,MCMemoryDeleteArray> t_indexes;
 		uindex_t t_index_count;
 		bool t_all_integers;
 		if (!MCArraysSplitIndexes(t_key, &t_indexes, t_index_count, t_all_integers))

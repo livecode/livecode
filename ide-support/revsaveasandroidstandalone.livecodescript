@@ -6,7 +6,7 @@ constant kArchs = "armeabi"
 
 ################################################################################
 
-command revSaveAsMobileStandalone pStack, pApkFile, pTarget
+command revSaveAsMobileStandalone pStack, pApkFile, pTarget, pSettings
    local tTargetType
    if pTarget contains "build" then
       put "android release" into tTargetType
@@ -20,7 +20,7 @@ command revSaveAsMobileStandalone pStack, pApkFile, pTarget
    end try
    
    try
-      revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
+      revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettings
    catch tError
    end try
    
@@ -76,37 +76,31 @@ private function badAndroidApiMessage
    return "Not a valid Android API"
 end badAndroidApiMessage
 
-constant kBuiltInImplementations = "scriptLibraries Internet"
 constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
-private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
-   start using stack "revSBLibrary"
-   
+private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettings
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
-   
-   local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pStack into tSettings
    
    -- If we're searching for inclusions, do it here 
    local tConfirm
    put true into tConfirm
-   if tSettings["inclusions"] is "search" then 
+   if pSettings["inclusions"] is "search" then 
       put false into tConfirm
       -- search for inclusions when building for simulator
       if pTarget contains "test" then
-         revSBSearchForInclusions pStack, tSettings
+         revSBSearchForInclusions pStack, pSettings
       end if
       
    end if
    
    -- Make sure all dependencies are included
-   revSBUpdateForDependencies tSettings
+   revSBUpdateForDependencies pSettings
    
    -- Manually remove built-in implementations from detected script library inclusions
-   revSBRemoveInclusions pStack, kBuiltInImplementations, tConfirm, tSettings
+   revSBRemoveInclusions pStack, "android", tConfirm, pSettings
    
    -- Make sure old-style keys are retained, and updated with new information
    -- from inclusions pane of standalone settings GUI
-   revSBConvertSettingsForPlatform tSettings, "android"
+   revSBConvertSettingsForPlatform pSettings, "android"
    
    -- Compute the base folder
    local tBaseFolder
@@ -116,28 +110,28 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    
    -- Fetch the various options we need to initially build the app-bundle
    local tName, tFiles, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
-   put tSettings["name"] into tName
-   put tSettings["files"] into tFiles
-   put tSettings["android,icon"] into tIcon
-   put tSettings["android,key"] into tKey
+   put pSettings["name"] into tName
+   put pSettings["files"] into tFiles
+   put pSettings["android,icon"] into tIcon
+   put pSettings["android,key"] into tKey
    
-   if tSettings["android,label"] is empty then
-      put tName into tSettings["android,label"]
+   if pSettings["android,label"] is empty then
+      put tName into pSettings["android,label"]
    end if
-   if tSettings["android,identifier"] is empty then
-      put "com.yourcompany.yourapp" into tSettings["android,identifier"]
+   if pSettings["android,identifier"] is empty then
+      put "com.yourcompany.yourapp" into pSettings["android,identifier"]
    end if
-   if tSettings["android,version name"] is empty then
-      put "1.0.0" into tSettings["android,version name"]
+   if pSettings["android,version name"] is empty then
+      put "1.0.0" into pSettings["android,version name"]
    end if
-   if tSettings["android,version code"] is empty then
-      put "1" into tSettings["android,version code"]
+   if pSettings["android,version code"] is empty then
+      put "1" into pSettings["android,version code"]
    end if
-   if tSettings["android,initial orientation"] is empty then
-      put "portrait" into tSettings["android,initial orientation"]
+   if pSettings["android,initial orientation"] is empty then
+      put "portrait" into pSettings["android,initial orientation"]
    end if
-   if tSettings["android,status bar hidden"] is empty then
-      put "false" into tSettings["android,status bar hidden"]
+   if pSettings["android,status bar hidden"] is empty then
+      put "false" into pSettings["android,status bar hidden"]
    end if
    
    // SN-2015-05-13: [[ AndroidVersions ]] Make sure that the minimum version is
@@ -146,25 +140,25 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    put item 1 of revIDEDeployAndroidGetApisList() into tMinimumVersion
    put last item of revIDEDeployAndroidGetApisList() into tMaximumVersion
    
-   if tSettings["android,minimum version"] is empty then
-      put tMinimumVersion into tSettings["android,minimum version"]
-   else if tSettings["android,minimum version"] < tMinimumVersion then
+   if pSettings["android,minimum version"] is empty then
+      put tMinimumVersion into pSettings["android,minimum version"]
+   else if pSettings["android,minimum version"] < tMinimumVersion then
       // In case the minimum version is still 2.2 (for instance), we warn the user
       //  that we want to update it, before doing so.
-      if updateMinimumAPI(tSettings["android,minimum version"], tMinimumVersion) then
-         put tMinimumVersion into tSettings["android,minimum version"]
+      if updateMinimumAPI(pSettings["android,minimum version"], tMinimumVersion) then
+         put tMinimumVersion into pSettings["android,minimum version"]
       else
          throw badAndroidAPIMessage()
       end if
-   else if tSettings["android,minimum version"] > tMaximumVersion then
-      if updateMinimumAPI(tSettings["android,minimum version"], tMaximumVersion) then
-         put tMaximumVersion into tSettings["android,minimum version"]
+   else if pSettings["android,minimum version"] > tMaximumVersion then
+      if updateMinimumAPI(pSettings["android,minimum version"], tMaximumVersion) then
+         put tMaximumVersion into pSettings["android,minimum version"]
       else
          throw badAndroidAPIMessage()
       end if
    end if
    
-   put tSettings["android,statusBarIcon"] into tStatusBarIcon
+   put pSettings["android,statusBarIcon"] into tStatusBarIcon
    if tStatusBarIcon is empty then
       // put default sb icon path into tStatusBarIcon
       // SN-2015-01-22: [[ Bug 13213 ]] If mapFilePath returns empty, an error will be triggered
@@ -172,7 +166,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "notify_icon.png") into tStatusBarIcon
    end if
    
-   switch tSettings["android,signing"]
+   switch pSettings["android,signing"]
       case "sign with my key"
          put true into tUnsigned
          break
@@ -206,7 +200,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    
    -- Compute the externals list (includes drivers on Android)
    repeat for each word tExternal in kAndroidExternals
-      if tSettings["android,include" && tExternal] then
+      if pSettings["android,include" && tExternal] then
          if tExternal begins with "db" then 
             if "revdb" is not among the lines of tExternals then
                put "revdb" & return after tExternals
@@ -220,11 +214,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
    delete the last char of tExternals
    
    -- Compute the stackfiles list
-   local tStackFiles, tFunction
    lock messages
-   // SN-2014-10-16: [[ ScriptifiedStack ]] revRelativeStackFilesList is no longer in the messagePath
-   put "revRelativeStackFilesList(" & quote & pStack & quote & ")" into tFunction
-   put value(tFunction, stack "revStandaloneSettings") into tStackFiles
+   local tStackFiles
+   revSBRelativeStackFilesList pStack, tStackFiles
    unlock messages
    
    -- Make sure the app-bundle isn't already there
@@ -279,9 +271,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          put return after tExternals
       end if
       set the itemDelimiter to "."
-      repeat for each line tFile in tFiles
-         revSBResolveIncludedExternal "android", tFile
-         
+      
+      local tResolvedFiles
+      revSBResolveCopyFilesList tBaseFolder, "android", tFiles, tResolvedFiles
+      
+      repeat for each line tFile in tResolvedFiles
          local tFilePath, tFileName
          computeAssetLocation tBaseFolder, tFile, tFilePath, tFileName
          
@@ -326,36 +320,36 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       if the result is not empty then
          throw "Cannot find the template Manifest"
       end if
-      replace "${LABEL}" with tSettings["android,label"] in tManifest
+      replace "${LABEL}" with pSettings["android,label"] in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
-      replace "${IDENTIFIER}" with tSettings["android,identifier"] in tManifest
-      replace "${VERSION_NAME}" with tSettings["android,version name"] in tManifest
-      replace "${VERSION_CODE}" with tSettings["android,version code"] in tManifest
+      replace "${IDENTIFIER}" with pSettings["android,identifier"] in tManifest
+      replace "${VERSION_NAME}" with pSettings["android,version name"] in tManifest
+      replace "${VERSION_CODE}" with pSettings["android,version code"] in tManifest
       if there is a file tIcon then
          replace "${ICON}" with "android:icon=" & quote & "@drawable/icon" & quote in tManifest
       else
          replace "${ICON}" with empty in tManifest
       end if
       
-      if tSettings["android,status bar hidden"] then
+      if pSettings["android,status bar hidden"] then
          replace "${THEME}" with "@android:style/Theme.NoTitleBar.Fullscreen" in tManifest
       else
          replace "${THEME}" with "@android:style/Theme.NoTitleBar" in tManifest
       end if
-      replace "${ORIENTATION}" with tSettings["android,initial orientation"] in tManifest
-      replace "${MIN_SDK_VERSION}" with tSettings["android,minimum version"] in tManifest
+      replace "${ORIENTATION}" with pSettings["android,initial orientation"] in tManifest
+      replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
       
       local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
-      repeat for each line tFeature in the keys of tSettings["android,device capabilities"]
+      repeat for each line tFeature in the keys of pSettings["android,device capabilities"]
          put "  <uses-feature android:name="&quote&"android."&tFeature&quote&" android:required="&quote&"${REQUIRED}"&quote&" />" into tUsesFeature
-         replace "${REQUIRED}" with tSettings["android,device capabilities"][tFeature] in tUsesFeature
+         replace "${REQUIRED}" with pSettings["android,device capabilities"][tFeature] in tUsesFeature
          put tUsesFeature & return after tFeatures
       end repeat
-      repeat for each line tPermission in the keys of tSettings["android,capability permissions"]
+      repeat for each line tPermission in the keys of pSettings["android,capability permissions"]
          put "  <uses-permission android:name="&quote&"android.permission."&tPermission&quote&" />" into tUsesPermission
          put tUsesPermission & return after tPermissions
       end repeat
-      repeat for each line tPermission in the keys of tSettings["android,application permissions"]
+      repeat for each line tPermission in the keys of pSettings["android,application permissions"]
          if tPermission is "AD" then
             put true into tAd
             put "  <uses-permission android:name="&quote&"android.permission.ACCESS_NETWORK_STATE"&quote&"/>" & return into tUsesPermission
@@ -386,8 +380,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       put "</receiver>" after tReceiver
       
       -- PM-2014-03-17: [[ In App Purchasing Updates ]] Include new store setting in manifest.
-      if tSettings["android,inAppPurchasing"] then
-         get tSettings["android,billingProvider"]
+      if pSettings["android,inAppPurchasing"] then
+         get pSettings["android,billingProvider"]
          if it is "Google" then
             put "  <uses-permission android:name="&quote&"com.android.vending.BILLING"&quote&" />" & return after tPermissions
          end if
@@ -417,7 +411,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end if
       
       local tInstallLocation
-      switch tSettings["android,installLocation"]
+      switch pSettings["android,installLocation"]
          case "Internal Storage Only"
          case empty
             put empty into tInstallLocation
@@ -432,12 +426,12 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       replace "${INSTALL_LOCATION}" with tInstallLocation in tManifest
       
       local tCustomUrlFilter
-      if tSettings["android,customUrlScheme"] is not empty then
+      if pSettings["android,customUrlScheme"] is not empty then
          put "<intent-filter>" & \
                "<action android:name="&quote&"android.intent.action.VIEW"&quote&" />" & \
                "<category android:name="&quote&"android.intent.category.DEFAULT"&quote&" />" & \
                "<category android:name="&quote&"android.intent.category.BROWSABLE"&quote&" />" & \
-               "<data android:scheme="&quote&tSettings["android,customUrlScheme"]&quote&" />" & \
+               "<data android:scheme="&quote&pSettings["android,customUrlScheme"]&quote&" />" & \
                "</intent-filter>" into tCustomUrlFilter
       else
          put empty into tCustomUrlFilter
@@ -446,19 +440,19 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       local tPushPermissions
       local tPushReceiver
-      if tSettings["android,pushSenderID"] is not empty then
-         put "<permission android:name="&quote&tSettings["android,identifier"]&".permission.C2D_MESSAGE"&quote&" android:protectionLevel="&quote&"signature"&quote&" />" & \
-               "<uses-permission android:name="&quote&tSettings["android,identifier"]&".permission.C2D_MESSAGE"&quote&" />" & \
+      if pSettings["android,pushSenderID"] is not empty then
+         put "<permission android:name="&quote&pSettings["android,identifier"]&".permission.C2D_MESSAGE"&quote&" android:protectionLevel="&quote&"signature"&quote&" />" & \
+               "<uses-permission android:name="&quote&pSettings["android,identifier"]&".permission.C2D_MESSAGE"&quote&" />" & \
                "<uses-permission android:name="&quote&"com.google.android.c2dm.permission.RECEIVE"&quote&" />" into tPushPermissions
          
          put "<receiver android:name="&quote&"PushReceiver"&quote&" android:permission="&quote&"com.google.android.c2dm.permission.SEND"&quote&">" & \
                "<intent-filter>" & \
                "<action android:name="&quote&"com.google.android.c2dm.intent.RECEIVE"&quote&" />" & \
-               "<category android:name="&quote&tSettings["android,identifier"]&quote&" />" & \
+               "<category android:name="&quote&pSettings["android,identifier"]&quote&" />" & \
                "</intent-filter>" & \
                "<intent-filter>" & \
                "<action android:name="&quote&"com.google.android.c2dm.intent.REGISTRATION"&quote&" />" & \
-               "<category android:name="&quote&tSettings["android,identifier"]&quote&" />" & \
+               "<category android:name="&quote&pSettings["android,identifier"]&quote&" />" & \
                "</intent-filter>" & \
                "</receiver>" into tPushReceiver
       else
@@ -471,8 +465,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       -- SN-2014-02-07: Add the email attachments provider in the manifest
       local tProvider
       put "<provider " & return into tProvider
-      put "      android:name=" & quote & tSettings["android,identifier"] & ".AppProvider" & quote & return after tProvider
-      put "      android:authorities=" & quote & tSettings["android,identifier"] & ".attachmentprovider" & quote & return after tProvider
+      put "      android:name=" & quote & pSettings["android,identifier"] & ".AppProvider" & quote & return after tProvider
+      put "      android:authorities=" & quote & pSettings["android,identifier"] & ".attachmentprovider" & quote & return after tProvider
       put "      android:exported=" & quote & "true" & quote & return after tProvider
       put "      android:grantUriPermissions=" & quote & "true" & quote & " >" & return after tProvider
       put "    </provider>" & return after tProvider
@@ -483,14 +477,14 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       //  Otherwise the app restarts on orientation change.
       local tConfigChangesProp
       put "keyboardHidden|orientation" into tConfigChangesProp
-      if tSettings["android,minimum version"] > 12 then
+      if pSettings["android,minimum version"] > 12 then
          put "|screenSize" after tConfigChangesProp
       end if
       replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
       
       // SN-2015-09-30: [[ Bug 10267 ]] Hardware Acceleration option added
       local tHardwareAccelerated
-      if tSettings["android,hardware accelerated"] then
+      if pSettings["android,hardware accelerated"] then
          put "true" into tHardwareAccelerated
       else
          put "false" into tHardwareAccelerated
@@ -509,12 +503,12 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       -- MW-2012-07-05: Make sure we record all classes we build so we can clean up.
       local tCompiledClassFilePath, tBuiltClassFiles
       put empty into tBuiltClassFiles
-      put tSettings["android,identifier"] into tCompiledClassFilePath
+      put pSettings["android,identifier"] into tCompiledClassFilePath
       replace "." with "/" in tCompiledClassFilePath
       
       local tClass, tClassFile
       put tBuildFolder & slash  & "classes_app/mblandroid.java" into tClassFile
-      put "package" && tSettings["android,identifier"] & ";" & return into tClass
+      put "package" && pSettings["android,identifier"] & ";" & return into tClass
       put "import com.runrev.android.LiveCodeActivity;" & return after tClass
       put "public class mblandroid extends LiveCodeActivity {}" & return after tClass
       put tClass into url ("binfile:" & tClassFile)
@@ -546,7 +540,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       -- IM-2012-02-28: need barebones receiver for local notifications
       // build receiver class
       put tBuildFolder & slash & "classes_app/AppReceiver.java" into tClassFile
-      put "package" && tSettings["android,identifier"] & ";" & return into tClass
+      put "package" && pSettings["android,identifier"] & ";" & return into tClass
       put "import com.runrev.android.EngineReceiver;" & return after tClass
       put "public class AppReceiver extends EngineReceiver {}" & return after tClass
       put tClass into url ("binfile:" & tClassFile)
@@ -567,7 +561,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       --         // build service class
       --         put tBuildFolder & slash & "classes_app/AppService.java" into tBillingClassFile
-      --         put "package" && tSettings["android,identifier"] & ";" & return into tBillingClass
+      --         put "package" && pSettings["android,identifier"] & ";" & return into tBillingClass
       --         put "import com.runrev.android.billing.BillingService;" & return after tBillingClass
       --         put "public class AppService extends BillingService {}" & return after tBillingClass
       --         put tBillingClass into url ("binfile:" & tBillingClassFile)
@@ -584,11 +578,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       --      end if
       
       // IM-2012-02-24: Generate push notification listener class
-      if tSettings["android,pushSenderID"] is not empty then
+      if pSettings["android,pushSenderID"] is not empty then
          local tPushReceiverClass, tPushReceiverClassFile
          put tBuildFolder & slash & "classes_app/PushReceiver.java" into tPushReceiverClassFile
          
-         put "package" && tSettings["android,identifier"] & ";" & return into tPushReceiverClass
+         put "package" && pSettings["android,identifier"] & ";" & return into tPushReceiverClass
          put "import com.runrev.android.*;" & return after tPushReceiverClass
          put "public class PushReceiver extends com.runrev.android.PushReceiver {}" & return after tPushReceiverClass
          put tPushReceiverClass into url ("binfile:" & tPushReceiverClassFile)
@@ -608,7 +602,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       local tAttachmentClass, tAttachmentClassFile      
       put tBuildFolder & slash & "classes_app/AppProvider.java" into tAttachmentClassFile
       
-      put "package" && tSettings["android,identifier"] & ";" & return into tAttachmentClass
+      put "package" && pSettings["android,identifier"] & ";" & return into tAttachmentClass
       put "import android.content.*;" & return after tAttachmentClass
       put "import android.net.Uri;" & return after tAttachmentClass
       put "import android.app.*;" & return after tAttachmentClass
@@ -618,8 +612,8 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       put "import android.os.ParcelFileDescriptor;" & return after tAttachmentClass
       put "import com.runrev.android.AttachmentProvider;" & return after tAttachmentClass
       put "public class AppProvider extends ContentProvider {" & return after tAttachmentClass
-      put "public static final String URI = " & quote & "content://" & tSettings["android,identifier"] & ".attachmentprovider" & quote & ";" & return after tAttachmentClass
-      put "public static final String AUTHORITY = " & quote & tSettings["android,identifier"] & ".attachmentprovider" & quote & ";" & return after tAttachmentClass
+      put "public static final String URI = " & quote & "content://" & pSettings["android,identifier"] & ".attachmentprovider" & quote & ";" & return after tAttachmentClass
+      put "public static final String AUTHORITY = " & quote & pSettings["android,identifier"] & ".attachmentprovider" & quote & ";" & return after tAttachmentClass
       put "private com.runrev.android.AttachmentProvider m_attachments;" & return after tAttachmentClass
       put "@Override" & return & "public boolean onCreate() { m_attachments = new AttachmentProvider(getContext()); return true; }" & return after tAttachmentClass
       put "@Override" & return & "public ParcelFileDescriptor openFile(Uri uri, String mode) throws FileNotFoundException { Log.i(" & quote & "revandroid" & quote & ", uri.toString()); return m_attachments.doOpenFile(uri); }" & return after tAttachmentClass
@@ -653,7 +647,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       
       local tDeploy
       -- Update the deploy params with script library and extension inclusions
-      revSBUpdateDeployParams pStack, tSettings, tDeploy
+      revSBUpdateDeployParams pStack, "android", pSettings, tDeploy
       
       -- Engine to use
       put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "Standalone") into tDeploy["engine"]
@@ -676,10 +670,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       -- Splash to use (if non-commercial)
       if line 3 of the revLicenseInfo is among the words of "Educational Personal" then
          -- MW-2011-03-17: Make sure absolute paths work correctly
-         if tSettings["android,splash"] is not empty and pathIsRelative(tSettings["android,splash"]) then
-            put tBaseFolder & slash & tSettings["android,splash"] into tDeploy["splash"]
+         if pSettings["android,splash"] is not empty and pathIsRelative(pSettings["android,splash"]) then
+            put tBaseFolder & slash & pSettings["android,splash"] into tDeploy["splash"]
          else
-            put tSettings["android,splash"] into tDeploy["splash"]
+            put pSettings["android,splash"] into tDeploy["splash"]
          end if
       end if
       
@@ -749,7 +743,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
          throw "could not open asset archive"
       end if
       
-      addAssetsToArchive tFiles, tBaseFolder, tAssetArchive
+      addAssetsToArchive tResolvedFiles, tBaseFolder, tAssetArchive
       
       revZipCloseArchive tAssetArchive
       if the result is not empty then
@@ -766,7 +760,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget
       end if
       
       -- MM-2014-01-29: [[ OpenSSL ]] Include the revsecurity library.
-      if tSettings["android,include revsecurity"] then
+      if pSettings["android,include revsecurity"] then
          put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "revsecurity")) into url ("binfile:" & tArmLibsBuildFolder & slash & "librevsecurity.so")
          
          // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occured
