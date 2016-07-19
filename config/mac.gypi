@@ -130,6 +130,7 @@
 							'-Werror=conversion-null',
 							'-Werror=missing-declarations',
 							'-Werror=mismatched-new-delete',
+							'-Werror=constant-logical-operand',
 						],
 					},
 				},
