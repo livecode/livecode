@@ -1187,9 +1187,9 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			bool t_was_mainstack;
 			if (tsub == nil)
 			{
-				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_name);
-				MCStack *toclone = MCdispatcher -> findstackname(*t_name);
+				MCNewAutoNameRef t_stack_name;
+				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_stack_name);
+				MCStack *toclone = MCdispatcher -> findstackname(*t_stack_name);
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)

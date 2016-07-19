@@ -552,7 +552,7 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
 			return True;
         break;
     default:
-		MCAutoStringRef t_string;
+		MCAutoStringRef t_key_string;
 			
 		// Special keys as their number converted to a string, the rest by value
         // SN-2014-12-08: [[ Bug 12681 ]] Avoid to print the keycode in case we have a
@@ -560,26 +560,26 @@ Boolean MCObject::kdown(MCStringRef p_string, KeySym key)
         // SN-2015-05-05: [[ Bug 15305 ]] Ensure that the keys are not printing
         //  their numeric value, if not wanted.
         if (key > 0xFF && (key & XK_Class_mask) == XK_Class_compat && (key < XK_KP_Space || key > XK_KP_Equal))
-            /* UNCHECKED */ MCStringFormat(&t_string, "%ld", key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%ld", key);
         else if (MCmodifierstate & MS_CONTROL)
-            /* UNCHECKED */ MCStringFormat(&t_string, "%c", (char)key);
+            /* UNCHECKED */ MCStringFormat(&t_key_string, "%c", (char)key);
 		else
-			t_string = p_string;
+			t_key_string = p_string;
 			
 		if (MCmodifierstate & MS_CONTROL)
         {
-			if (message_with_valueref_args(MCM_command_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_command_key_down, *t_key_string) == ES_NORMAL)
 				return True;
 		}
 		else if (MCmodifierstate & MS_MOD1)
         {
-				if (message_with_valueref_args(MCM_option_key_down, *t_string) == ES_NORMAL)
+				if (message_with_valueref_args(MCM_option_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #ifdef _MACOSX
 		else if (MCmodifierstate & MS_MAC_CONTROL)
         {
-			if (message_with_valueref_args(MCM_control_key_down, *t_string) == ES_NORMAL)
+			if (message_with_valueref_args(MCM_control_key_down, *t_key_string) == ES_NORMAL)
 				return True;
         }
 #endif
@@ -953,9 +953,9 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 		//   differently.
 		if (hptr -> getfileindex() == 0)
         {
-            MCExecContext ctxt(this, nil, nil);
+            MCExecContext ctxt2(this, nil, nil);
             MCAutoStringRef t_id;
-			getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+			getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
             MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 		}
 		else
@@ -1005,9 +1005,9 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 		stat = hptr->exec(ctxt, params);
 	if (stat == ES_ERROR)
     {
-        MCExecContext ctxt(this, nil, nil);
+        MCExecContext ctxt2(this, nil, nil);
         MCAutoStringRef t_id;
-        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt, 0, P_LONG_ID, False, &t_id);
+        parentscript -> GetParent() -> GetObject() -> getstringprop(ctxt2, 0, P_LONG_ID, False, &t_id);
         MCeerror->add(EE_OBJECT_NAME, 0, 0, *t_id);
 	}
 	unlockforexecution();

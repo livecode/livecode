@@ -1582,10 +1582,10 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					if (IsMacLF() && !parent->isautoarm())
 					{
 						MCPatternRef t_pattern;
-						int2 x, y;
+						int2 t_x, t_y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), parent);
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, t_x, t_y, dc -> gettype(), parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, t_x, t_y, dc -> gettype(), parent);
 						if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 							parent->setforeground(dc, DI_BACK, False, True);
 					}
@@ -1715,17 +1715,17 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			t_limit = parent -> getrect() . x + parent -> getrect() . width;
 
 			uint2 ct = 0; 
-			int4 x = t[0] + t_delta;
-			while (x <= t_limit)
+			int4 t_x = t[0] + t_delta;
+			while (t_x <= t_limit)
 			{
-				dc->drawline(x, t_inner_border_rect . y, x, t_inner_border_rect . y + t_inner_border_rect . height);
+				dc->drawline(t_x, t_inner_border_rect . y, t_x, t_inner_border_rect . y + t_inner_border_rect . height);
 				
 				if (ct < nt - 1)
-					x = t_delta + t[++ct];
+					t_x = t_delta + t[++ct];
 				else if (nt == 1)
-					x += t[0];
+					t_x += t[0];
 				else
-					x += t[nt - 1] - t[nt - 2];
+					t_x += t[nt - 1] - t[nt - 2];
 
 				// MW-2012-02-10: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.

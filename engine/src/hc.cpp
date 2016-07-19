@@ -2019,9 +2019,9 @@ IO_stat MCHcstak::read(IO_handle stream)
 				uint1 *eptr = uint1ptr + boffset;
 				while (uint1ptr < eptr)
 				{
-					uint1 byte = *uint1ptr++;
+					uint1 t_byte = *uint1ptr++;
 					uint2 count = 1;
-					if (byte == 0x90 && *uint1ptr == 0)
+					if (t_byte == 0x90 && *uint1ptr == 0)
 						uint1ptr++;
 					else
 						if (*uint1ptr == 0x90)
@@ -2031,7 +2031,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 							if (count == 0)
 							{
 								fullbuffer[doffset++] = byte;
-								byte = 0x90;
+								t_byte = 0x90;
 								if (*uint1ptr == 0x90)
 								{
 									uint1ptr++;
@@ -2044,7 +2044,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 							}
 						}
 					while (count--)
-						fullbuffer[doffset++] = byte;
+						fullbuffer[doffset++] = t_byte;
 					if (doffset > fullsize - 256)
 					{
 						MCU_realloc((char **)&fullbuffer, fullsize,
@@ -2077,14 +2077,14 @@ IO_stat MCHcstak::read(IO_handle stream)
 	}
 	uint2 i;
 	uint4 type = 0;
-	char *buffer;
+	char *t_buffer;
 	while (type != HC_TAIL)
 	{
 		if (filetype == HC_BINHEX)
 		{
-			buffer = &fullbuffer[boffset];
-			uint2buff = (uint2 *)buffer;
-			uint4buff = (uint4 *)buffer;
+			t_buffer = &fullbuffer[boffset];
+			uint2buff = (uint2 *)t_buffer;
+			uint4buff = (uint4 *)t_buffer;
 			type = swap_uint4(&uint4buff[1]);
 			size = swap_uint4(&uint4buff[0]);
 			boffset += size;
@@ -2099,15 +2099,15 @@ IO_stat MCHcstak::read(IO_handle stream)
 			fullbuffer = new char[size];
 			if (IO_read(&fullbuffer[8], size - 8, stream) != IO_NORMAL)
 				return IO_ERROR;
-			buffer = fullbuffer;
-			uint2buff = (uint2 *)buffer;
-			uint4buff = (uint4 *)buffer;
+			t_buffer = fullbuffer;
+			uint2buff = (uint2 *)t_buffer;
+			uint4buff = (uint4 *)t_buffer;
 		}
 		uint2 offset;
 		switch (type)
 		{
 		case HC_STAK:
-			version = buffer[108];
+			version = t_buffer[108];
 			if (version > 2)
 				return IO_ERROR;
 			if (version == 0)
@@ -2119,7 +2119,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				rect.width = 512;
 				rect.height = 342;
 			}
-			script = convert_script(&buffer[1536]);
+			script = convert_script(&t_buffer[1536]);
 			break;
 		case HC_LIST:
 			if (version == 1)
@@ -2134,7 +2134,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			            npbuffers + 1, sizeof(uint2));
 			pbuffersizes[npbuffers] = size;
 			pbuffers[npbuffers] = new char[size];
-			memcpy(pbuffers[npbuffers++], buffer, size);
+			memcpy(pbuffers[npbuffers++], t_buffer, size);
 			break;
 		case HC_BKGD:
 			{
@@ -2148,7 +2148,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			{
 				MCHccard *newcard = new MCHccard;
 				newcard->appendto(hccards);
-				if (newcard->parse(buffer) != IO_NORMAL)
+				if (newcard->parse(t_buffer) != IO_NORMAL)
 					return IO_ERROR;
 			}
 			break;
@@ -2183,8 +2183,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 				for (i = 0 ; i < nfonts ; i++)
 				{
 					fonts[i].id = swap_uint2(&uint2buff[offset]);
-					fonts[i].name = convert_font(&buffer[(offset + 1) * 2]);
-					offset += (strlen(&buffer[(offset + 1) * 2]) + 4) >> 1;
+					fonts[i].name = convert_font(&t_buffer[(offset + 1) * 2]);
+					offset += (strlen(&t_buffer[(offset + 1) * 2]) + 4) >> 1;
 				}
 			}
 			break;
@@ -2226,16 +2226,16 @@ IO_stat MCHcstak::read(IO_handle stream)
 	else
 		memcpy(fullbuffer, &fullbuffer[roffset], rsize);
 	iconx = icony = cursorx = cursory = 0;
-	buffer = fullbuffer;
-	uint4buff = (uint4 *)buffer;
-	char *rdata = &buffer[swap_uint4(&uint4buff[0])];
+	t_buffer = fullbuffer;
+	uint4buff = (uint4 *)t_buffer;
+	char *rdata = &t_buffer[swap_uint4(&uint4buff[0])];
 	char *rheader = rdata + swap_uint4(&uint4buff[2]);
 	uint2 typecount = get_uint2(&rheader[28]) + 1;
 	char *strings = rheader + get_uint2(&rheader[26]);
 	char *objects = &rheader[typecount * 8 + 30];
 	for (i = 0 ; i < typecount ; i++)
 	{
-		uint4 type = get_uint4(&rheader[i * 8 + 30]);
+		uint4 t_type = get_uint4(&rheader[i * 8 + 30]);
 		uint2 count = get_uint2(&rheader[i * 8 + 34]) + 1;
 		while (count--)
 		{
@@ -2254,7 +2254,7 @@ IO_stat MCHcstak::read(IO_handle stream)
             
 			uint4 offset = get_uint4(&objects[4]);
 			offset &= 0xFFFFFF;
-			switch (type)
+			switch (t_type)
 			{
 			case HC_ICON:
 				{
@@ -2281,7 +2281,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 				break;
 			default:
 				hcstat_append("Not converting %4.4s id %5d \"%s\"",
-				        (char *)&type, id, MCNameGetCString(*t_name));
+				        (char *)&t_type, id, MCNameGetCString(*t_name));
 				break;
 			}
 			objects += 12;

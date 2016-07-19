@@ -1693,8 +1693,8 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 	int2 y = p_start . y;
 	while (x != p_end . x || y != p_end . y)
 	{
-		int2 oldx = x;
-		int2 oldy = y;
+		int2 t_oldx = x;
+		int2 t_oldy = y;
 		x = p_start . x + (int2)(ix * (dx * (curtime - starttime) / duration));
 		y = p_start . y + (int2)(iy * (dy * (curtime - starttime) / duration));
 		if (MCscreen->wait((real8)MCsyncrate / 1000.0, False, True))
@@ -1709,7 +1709,7 @@ void MCInterfaceExecDrag(MCExecContext& ctxt, uint2 p_which, MCPoint p_start, MC
 			y = p_end . y;
 			curtime = endtime;
 		}
-		if (x != oldx || y != oldy)
+		if (x != t_oldx || y != t_oldy)
 			MCdefaultstackptr->mfocus(x, y);
 	}
 	MCdefaultstackptr->mup(p_which, false);

@@ -715,7 +715,7 @@ void MCBitmapEffectBoxBlur::CalculateRows(uint32_t p_pass)
 			CalculateRows(p_pass - 1);
 
 			uint32_t *t_buff_top, *t_buff_bottom;
-			int32_t t_nextbufferrow = t_y + t_top - 1;
+            t_nextbufferrow = t_y + t_top - 1;
 			while (t_nextbufferrow < 0)
 				t_nextbufferrow += t_prev_pass->buffer_height;
 			t_buff_top = t_prev_pass->buffer + (t_prev_pass->stride * (t_nextbufferrow % t_prev_pass->buffer_height));

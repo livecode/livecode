@@ -236,7 +236,7 @@ static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t *r_orientatio
 	
 	for(uindex_t i = 0; i < t_count; i++)
 	{
-		uint16_t t_tag, t_format;
+		uint16_t t_format;
 		uint32_t t_components;
 		memcpy(&t_tag, t_ifd_ptr + 0, 2);
 		memcpy(&t_format, t_ifd_ptr + 2, 2);

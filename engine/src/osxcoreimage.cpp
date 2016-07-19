@@ -199,22 +199,22 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
                 }
 				if (t_image != NULL)
 				{
-					MCRectangle t_rect;
-					t_rect = t_image -> getrect();
+					MCRectangle t_image_rect;
+					t_image_rect = t_image -> getrect();
 					
 					rei_uint32_t *t_data;
-					t_data = (rei_uint32_t *)malloc(t_rect . width * t_rect . height * 4);
+					t_data = (rei_uint32_t *)malloc(t_image_rect . width * t_image_rect . height * 4);
 					if (t_data != NULL)
 					{
 						MCImageBitmap *t_bitmap = nil;
 						if (t_image->lockbitmap(t_bitmap, true))
-							MCImageBitmapPremultiplyRegion(t_bitmap, 0, 0, t_bitmap->width, t_bitmap->height, t_rect.width * sizeof(uint32_t), t_data);
+							MCImageBitmapPremultiplyRegion(t_bitmap, 0, 0, t_bitmap->width, t_bitmap->height, t_image_rect.width * sizeof(uint32_t), t_data);
 						else
-							MCMemoryClear(t_data, t_rect.width * sizeof(uint32_t) * t_rect.height);
+							MCMemoryClear(t_data, t_image_rect.width * sizeof(uint32_t) * t_image_rect.height);
 						t_image->unlockbitmap(t_bitmap);
 						
-						t_parameters -> entries[t_index] . value . image . width = t_rect . width;
-						t_parameters -> entries[t_index] . value . image . height = t_rect . height;
+						t_parameters -> entries[t_index] . value . image . width = t_image_rect . width;
+						t_parameters -> entries[t_index] . value . image . height = t_image_rect . height;
 						t_parameters -> entries[t_index] . value . image . data = t_data;
 					}
 					else
