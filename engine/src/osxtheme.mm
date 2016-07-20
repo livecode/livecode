@@ -153,10 +153,9 @@ Boolean MCNativeTheme::iswidgetsupported(Widget_Type w)
 		return True;
 		break;
     default:
+        return True;
         break;
-
 	}
-	return True;
 }
 
 int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
@@ -185,9 +184,9 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
         return 21;
         break;
     default:
+        return 0;
         break;
 	}
-	return 0;
 }
 
 int4 MCNativeTheme::getwidgetmetric(const MCWidgetInfo &winfo, Widget_Metric wmetric)
@@ -417,7 +416,7 @@ Widget_Part MCNativeTheme::hittest(const MCWidgetInfo &winfo, int2 mx,int2 my, c
 static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR)
 {
 	MCRectangle trect = drect;
-	ThemeButtonKind themebuttonkind = 0;
+	ThemeButtonKind themebuttonkind = kThemePushButton;
 	switch (widgetinfo.type)
 	{
 	case WTHEME_TYPE_CHECKBOX:

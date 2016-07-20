@@ -1816,7 +1816,8 @@ static bool cgi_send_headers(void)
 			case kMCSOutputTextEncodingUTF8:
 				sprintf(t_content_header, "Content-Type: text/html; charset=utf-8\n");
 				break;
-            default:
+            case kMCSOutputTextEncodingUndefined:
+                sprintf(t_content_header, "Content-Type: text/html\n");
                 break;
 		}
 		

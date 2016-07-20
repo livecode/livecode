@@ -319,7 +319,7 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
             dx = r . x;
             dw = r . width;
             break;
-        default:
+        case kMCGravityNone:
             break;
     }
     
@@ -352,7 +352,7 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
             dy = r . y;
             dh = r . height;
             break;
-        default:
+        case kMCGravityNone:
             break;
     }
     

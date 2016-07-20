@@ -579,6 +579,7 @@ void MCChunkOffset::compile(MCSyntaxFactoryRef ctxt)
 		MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalOffsetMethodInfo);
 		break;
     default:
+        MCUnreachable();
         break;
 	}
 }

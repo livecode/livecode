@@ -2547,7 +2547,7 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 
             }
             break;
-            default:
+            case kMCIdeFilterOperatorNone:
                 break;
         }
 

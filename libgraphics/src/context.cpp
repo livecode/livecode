@@ -2153,9 +2153,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 			case kMCGImageFilterHigh:
                 r_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 				break;
-            default:
-                break;
-		}
+        }
 	}
 	
 	if (t_shader != NULL)
@@ -2551,8 +2549,6 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 					t_paint . setAntiAlias(true);
 					t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 					break;
-                default:
-                    break;
             }
 		}
 		

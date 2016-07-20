@@ -413,6 +413,7 @@ Boolean MCImage::mdown(uint2 which)
 
 							return True;
 						}
+                        break;
                     default:
                         break;
 					}

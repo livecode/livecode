@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 #include "edittool.h"
 
-#define kInvalidEditPoint MAXUINT4
+static const uint4 kInvalidEditPoint = MAXUINT4;
 
 MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic,
                                        MCGradientFill *p_gradient,

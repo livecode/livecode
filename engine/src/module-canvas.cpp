@@ -523,6 +523,8 @@ MCCanvasFloat MCCanvasColorGetAlpha(MCCanvasColorRef color);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static const uint8_t kMCGImageFilterCount = 4;
+
 static MCNameRef s_blend_mode_map[kMCGBlendModeCount];
 static MCNameRef s_transform_matrix_keys[9];
 static MCNameRef s_effect_type_map[_MCCanvasEffectTypeCount];
