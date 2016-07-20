@@ -2056,7 +2056,7 @@ int platform_main(int argc, char *argv[], char *envp[])
 	MCStringRef *t_new_envp;
 	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
 	
-	int i = 0;
+	uindex_t i = 0;
 	uindex_t t_envp_count = 0;
 	
 	while (envp[i] != NULL)

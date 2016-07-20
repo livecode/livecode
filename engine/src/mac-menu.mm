@@ -148,7 +148,7 @@ enum MCShadowedItemTags
 	
 	// If we are the last item, then remove the separator before
 	// us - if any.
-	if (t_index == t_item_count - 1 &&
+	if ((NSUInteger)t_index == t_item_count - 1 &&
 		[[menu itemAtIndex: t_index - 1] isSeparatorItem])
 	{
 		[[menu itemAtIndex: t_index - 1] setHidden: YES];
