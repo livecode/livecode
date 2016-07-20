@@ -4,29 +4,54 @@ Type: property
 
 Syntax: set the lockCursor to {true | false}
 
-Summary: Specifies whether the <cursor> shape changes depending on the current <tool> and what the <mouse pointer> is over.
+Summary:
+Specifies whether the <cursor> shape changes depending on the current
+<tool> and what the <mouse pointer> is over.
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the lockCursor to true
 
-Value (bool):The <lockCursor> is true or false.
+Value (bool):
+The <lockCursor> is true or false.
 By default, the <lockCursor> <property> is set to false.
 
 Description:
-Use the <lockCursor> <property> to set a custom <cursor> that persists after the <handler> <exit|exits>.
+Use the <lockCursor> <property> to set a custom <cursor> that persists
+after the <handler> <exit|exits>.
 
-If the <lockCursor> <property> is set to true, the <cursor> shape can be set only by a <handler>, and does not change shape automatically as the mouse moves. (For example, the <cursor> normally turns into an arrow over a <menu>, an I-beam over an editable <field(keyword)>, and so on.) If the <lockCursor> is false, the <cursor> automatically changes shape according to its location.
+If the <lockCursor> <property> is set to true, the <cursor> shape can be
+set only by a <handler>, and does not change shape automatically as the
+mouse moves. (For example, the <cursor> normally turns into an arrow
+over a <menu>, an I-beam over an editable <field(keyword)>, and so on.)
+If the <lockCursor> is false, the <cursor> automatically changes shape
+according to its location.
 
-For example, to set a custom cursor while the mouse pointer is over a certain field, set the <lockCursor> to true and then set the <cursor> to the desired shape in a <mouseEnter> <handler>. In the <field(object)|field's> <mouseLeave> <handler>, set the <lockCursor> to false to allow the <cursor> to automatically change shape.
+For example, to set a custom cursor while the mouse pointer is over a
+certain field, set the <lockCursor> to true and then set the <cursor> to
+the desired shape in a <mouseEnter> <handler>. In the
+<field(object)|field's> <mouseLeave> <handler>, set the <lockCursor> to
+false to allow the <cursor> to automatically change shape.
 
->*Important:*  If the <lockCursor> is true, changes made by a <handler> to the <cursor> still take effect. This means that if a stack locks the <cursor> and a <handler> in another stack sets the <cursor> to another shape, the <cursor> changes to that shape and does not change back until the <cursor> is changed or the <lockCursor> is set to false. If you <lock> the <cursor>, make sure to unlock it as soon as the <stack> no longer needs it.
+>*Important:*  If the <lockCursor> is true, changes made by a <handler>
+> to the <cursor> still take effect. This means that if a stack locks
+> the <cursor> and a <handler> in another stack sets the <cursor> to
+> another shape, the <cursor> changes to that shape and does not change
+> back until the <cursor> is changed or the <lockCursor> is set to
+> false. If you <lock> the <cursor>, make sure to unlock it as soon as
+> the <stack> no longer needs it.
 
-References: cursor (property), defaultCursor (property), lockLocation (property), lockScreen (property), mouseEnter (message), mouseLeave (message), field (keyword), menu (keyword), property (glossary), handler (glossary), mouse pointer (glossary), exit (glossary), lock (glossary), tool (function), unlock cursor (command), lock cursor (command), field (object), stack (object)
+References: unlock cursor (command), lock cursor (command),
+tool (function), property (glossary), handler (glossary),
+mouse pointer (glossary), exit (glossary), lock (glossary),
+field (keyword), menu (keyword), mouseEnter (message),
+mouseLeave (message), field (object), stack (object), cursor (property),
+defaultCursor (property), lockLocation (property), lockScreen (property)
 
 Tags: ui
+

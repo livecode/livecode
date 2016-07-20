@@ -4,7 +4,9 @@ Type: message
 
 Syntax: protectedDataWillBecomeUnavailable
 
-Summary: Sent when the device is locked and protected data files will become unavailable.
+Summary:
+Sent when the device is locked and protected data files will become
+unavailable. 
 
 Introduced: 5.5.1
 
@@ -19,10 +21,19 @@ on protectedDataWillBecomeUnavailable
 end protectedDataWillBecomeUnavailable
 
 Description:
-Handle the <protectedDataWillBecomeUnavailable> message if you have open file handles related to files that have been protected using the <iphoneFileDataProtection> function. These handles should be closed. Connections to sqlite databases should also be closed where the database file has been set to protected.
+Handle the <protectedDataWillBecomeUnavailable> message if you have open
+file handles related to files that have been protected using the
+<iphoneFileDataProtection> function. These handles should be closed.
+Connections to sqlite databases should also be closed where the database
+file has been set to protected.
 
-The <protectedDataWillBecomeUnavailable> message is sent to the current card of the default stack when the device is locked.
+The <protectedDataWillBecomeUnavailable> message is sent to the current
+card of the default stack when the device is locked.
 
-References: iphoneSetFileDataProtection (command), iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function), iphoneDoNotBackupFile (function), protectedDataDidBecomeAvailable (message)
+References: iphoneSetFileDataProtection (command),
+iphoneSetDoNotBackupFile (command), iphoneFileDataProtection (function),
+iphoneDoNotBackupFile (function),
+protectedDataDidBecomeAvailable (message)
 
 Tags: ui
+

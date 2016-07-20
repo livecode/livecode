@@ -6,13 +6,16 @@ Syntax: the result
 
 Syntax: result()
 
-Summary: Is a global property returning the last value returned by return from a handler, from an engine function, or from an engine command which sets the result.
+Summary:
+Is a global property returning the last value returned by return from a
+handler, from an engine function, or from an engine command which sets
+the result.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 the result
@@ -20,7 +23,8 @@ the result
 Example:
 if the result is not empty then exit mouseUp
 
-The result: The <result> <function> <return|returns> a <string>.
+The result:
+The <result> <function> <return|returns> a <string>.
 
 Description:
 Use the <result> <function> to check whether the last <command> 
@@ -44,12 +48,14 @@ If the <return> <control structure> appears within an <on> <handler>,
 the <result> <function> is set to the <return value>. If a <handler> 
 contains the lines
 
-	myMessage
-	put the result
+    myMessage
+    put the result
+
 
 and the "myMessage" handler contains the line
 
-	return "some value"
+    return "some value"
+
 
 the text "some value" appears in the message box when the handler runs. 
 You can use this capability to return an error message if a custom 
@@ -64,4 +70,11 @@ finishes <execute|executing>.
 > ensures that the result you are checking is the correct one, not a 
 > value set by a later <statement>.
 
-References: string (keyword), catch (keyword), find (command), sysError (function), value (function), on (control structure), return (control structure), function (control structure), return (glossary), variable (glossary), handler (glossary), return value (glossary), execute (glossary), statement (glossary), error (glossary), control structure (glossary), command (glossary)
+References: find (command), on (control structure),
+return (control structure), function (control structure),
+sysError (function), value (function), return (glossary),
+variable (glossary), handler (glossary), return value (glossary),
+execute (glossary), statement (glossary), error (glossary),
+control structure (glossary), command (glossary), string (keyword),
+catch (keyword)
+

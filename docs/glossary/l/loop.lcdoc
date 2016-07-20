@@ -1,6 +1,6 @@
 Name: loop
 
-Synonyms: repeat loop,looping,loop,looped
+Synonyms: repeat loop, looping, loop, looped
 
 Type: glossary
 
@@ -8,3 +8,4 @@ Description:
 A <control structure> that repeats a set of <statement|statements>.
 
 References: statement (glossary), control structure (glossary)
+

@@ -4,26 +4,40 @@ Type: function
 
 Syntax: revXMLRPC_Error(<XML-RPC document>)
 
-Summary: If an error occurred during the execution of an XML-RPC request, this function returns the error.
+Summary:
+If an error occurred during the execution of an XML-RPC request, this
+function returns the error.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 put revXMLRPC_Error(theRequest) into theError
 
 Parameters:
-documentID: The number returned by the revXMLRPC_CreateRequest function when you created the XML-RPC request. If the revXMLRPC_Error function encounters an error, it returns an error message starting with "xmlrpcerr".. If no error was encountered during the execution of the XML-RPC request, you can retrieve the XML-RPC document ID of the response, by calling the revXMLRPC_GetResponse function.>*Important:* The revXMLRPC_Error function is part of the XML-RPC library. To ensure that the function works in a standalone application, you must include this custom library when you create your standalone. In the Inclusions section on the General screen of the Standalone Application Settings window, make sure "XML-RPC Library" is selected in the list of script libraries.
+documentID:
+The number returned by the revXMLRPC_CreateRequest function when you
+created the XML-RPC request. If the revXMLRPC_Error function encounters
+an error, it returns an error message starting with "xmlrpcerr" .. If no
+error was encountered during the execution of the XML-RPC request, you
+can retrieve the XML-RPC document ID of the response, by calling the
+revXMLRPC_GetResponse function.>*Important:* The revXMLRPC_Error
+function is part of the XML-RPC library. To ensure that the function
+works in a standalone application, you must include this custom library
+when you create your standalone. In the Inclusions section on the
+General screen of the Standalone Application Settings window, make sure
+"XML-RPC Library" is selected in the list of script libraries.
 
 Description:
-Use the <revXMLRPC_Error> <function> to check if an error occurred during the execution of an <XML-RPC request>.
+Use the <revXMLRPC_Error> <function> to check if an error occurred
+during the execution of an <XML-RPC request>.
 
 >*Important:*  The <revXMLRPC_Error> <function> is part of the 
 > <XML-RPC library>. To ensure that the <function> works in a 
@@ -33,6 +47,11 @@ Use the <revXMLRPC_Error> <function> to check if an error occurred during the ex
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: XML-RPC library (library), LiveCode custom library (glossary), revXMLRPC_GetResponse (function), Standalone Application Settings (glossary), standalone application (glossary), function (glossary), XML-RPC request (glossary)
+References: revXMLRPC_GetResponse (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary), function (glossary),
+XML-RPC request (glossary), XML-RPC library (library)
 
 Tags: networking
+

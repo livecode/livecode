@@ -4,7 +4,8 @@ Type: message
 
 Syntax: playerMovieChanged
 
-Summary: Sent when the content of the player has changed.
+Summary:
+Sent when the content of the player has changed.
 
 Introduced: 4.6
 
@@ -18,8 +19,14 @@ on playerMovieChanged
 end playerMovieChanged
 
 Description:
-Handle the <playerMovieChanged> message when the content of the movie player has changed.
+Handle the <playerMovieChanged> message when the content of the movie
+player has changed.
 
-You can probe the filename or URL of the movie by using the function <mobileControlGet>.
+You can probe the filename or URL of the movie by using the function
+<mobileControlGet>. 
 
-References: playerFinished (message), playerError (message), playerLeaveFullscreen (message), playerStopped (message), playerProgressChanged (message), playerPropertyAvailable (message), playerEnterFullscreen (message), mobileControlGet (function)
+References: mobileControlGet (function), playerFinished (message),
+playerError (message), playerLeaveFullscreen (message),
+playerStopped (message), playerProgressChanged (message),
+playerPropertyAvailable (message), playerEnterFullscreen (message)
+

@@ -1,14 +1,18 @@
 Name: command line
 
-Synonyms: command line,command line interface,command-line,command-line interface,CLI
+Synonyms: command line, command line interface, command-line,
+command-line interface, cli
 
 Type: glossary
 
 Description:
-A type of <user interface> controlled by typing commands and waiting for responses. 
- 
-Also, the statement you type into a command-line interface to start up a program.
+A type of <user interface> controlled by typing commands and waiting for
+responses. 
+
+Also, the statement you type into a command-line interface to start up a
+program. 
 
 References: user interface (glossary)
 
 Tags: ui
+

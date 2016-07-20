@@ -4,13 +4,14 @@ Type: function
 
 Syntax: the commandName
 
-Summary: Returns the command name used to start the execution of the application
+Summary:
+Returns the command name used to start the execution of the application
 
 Introduced: 7.1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server
+Platforms: desktop, server
 
 Security: none
 
@@ -22,8 +23,11 @@ set the itemdelimiter to slash
 put the last item of the commandName into field "log"
 
 Description:
-Returns the full command name that has been used to start the executable.
+Returns the full command name that has been used to start the
+executable. 
 
-The <commandName> is only available for standalone applications and server scripts. It returns empty for mobile platforms and in the IDE.
+The <commandName> is only available for standalone applications and
+server scripts. It returns empty for mobile platforms and in the IDE.
 
 References: $ (keyword)
+

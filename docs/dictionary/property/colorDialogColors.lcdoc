@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the colorDialogColors to listOfColors
 
-Summary: Provides access to the custom colors the user sets in the color dialog.
+Summary:
+Provides access to the custom colors the user sets in the color dialog.
 
 Introduced: 6.5
 
@@ -19,10 +20,15 @@ Example:
 put the colorDialogColors into theUsersColorsToSave
 
 Description:
-On Windows systems the user can define custom colors in the color dialog. The <colorDialogColors> provides a way to access the colors the user created in the dialog allowing a program to save them for the next session.
-	
-The colorDialogColors is a list of up to 16 colors. There may be empty lines in the list representing an unset color.
+On Windows systems the user can define custom colors in the color
+dialog. The <colorDialogColors> provides a way to access the colors the
+user created in the dialog allowing a program to save them for the next
+session. 
+
+The colorDialogColors is a list of up to 16 colors. There may be empty
+lines in the list representing an unset color.
 
 References: answer color (command)
 
 Tags: windowing
+

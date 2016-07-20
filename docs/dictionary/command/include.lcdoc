@@ -2,14 +2,15 @@ Name: include
 
 Type: command
 
-Syntax: include <path> 
+Syntax: include <path>
 
-Summary: The <include> command executes the given script in the context
+Summary:
+The <include> command executes the given script in the context
 of the global environment.
 
 Introduced: 4.6.3
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: server
 
@@ -20,12 +21,18 @@ Example:
 include "/home/mark/www/scripts/foo.lc"
 
 Parameters:
-path (enum): The path to the file containing the script to include.
+path (enum):
+The path to the file containing the script to include.
+
 - An <absolute file path|absolute path> to the file. For example
+
 "/home/user/www/scripts/foo.lc".
+
 - A <relative file path|relative path> to the file. Relative paths are
+
 resolved relative to the current folder. For example "includes/foo.lc"
 where folder 'includes' is in the current folder.
+
 
 Description:
 Use the <include> command to load scripts contained in other files.
@@ -44,6 +51,6 @@ Use the <include> command to load scripts contained in other files.
 >of where it is run from; e.g. if it is run from a handler in a stack,
 >it only affect the <global> script environment (home stack).
 
-References:
-absolute file path (glossary), relative file path (glossary),
+References: absolute file path (glossary), relative file path (glossary),
 CGI (glossary), defaultFolder (glossary), global (glossary)
+

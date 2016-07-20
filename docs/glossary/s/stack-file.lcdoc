@@ -1,12 +1,14 @@
 Name: stack file
 
-Synonyms: stack file,stackfile
+Synonyms: stack file, stackfile
 
 Type: glossary
 
 Description:
-A LiveCode <file>, containing a <main stack> and (optionally) one or more <substack|substacks>.
+A LiveCode <file>, containing a <main stack> and (optionally) one or
+more <substack|substacks>.
 
 References: file (glossary), substack (glossary), main stack (glossary)
 
 Tags: file system
+
