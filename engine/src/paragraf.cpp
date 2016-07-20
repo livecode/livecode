@@ -1703,7 +1703,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 			int4 t_x = t[0] + t_delta;
 			while (t_x <= t_limit)
 			{
-				dc->drawline(x, t_inner_border_rect . y, t_x, t_inner_border_rect . y + t_inner_border_rect . height);
+				dc->drawline(t_x, t_inner_border_rect . y, t_x, t_inner_border_rect . y + t_inner_border_rect . height);
 				
 				if (ct < nt - 1)
 					t_x = t_delta + t[++ct];
