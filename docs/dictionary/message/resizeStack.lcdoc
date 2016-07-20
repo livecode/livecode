@@ -2,17 +2,18 @@ Name: resizeStack
 
 Type: message
 
-Syntax: resizeStack <newWidth>, <newHeight>, <oldWidth>, <oldHeight> 
+Syntax: resizeStack <newWidth>, <newHeight>, <oldWidth>, <oldHeight>
 
-Summary: Sent to the <current card> when the <stack window> is resized.
+Summary:
+Sent to the <current card> when the <stack window> is resized.
 
 Associations: card
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on resizeStack newWidth,newHeight -- put an object in the middle
@@ -22,23 +23,31 @@ on resizeStack newWidth,newHeight -- put an object in the middle
 end resizeStack
 
 Parameters:
-newWidth: The stack's new width in pixels.
-newHeight: The stack's new height in pixels.
-oldWidth: The stack's original width in pixels.
-oldHeight: The stack's original height in pixels.
+newWidth:
+The stack's new width in pixels.
+
+newHeight:
+The stack's new height in pixels.
+
+oldWidth:
+The stack's original width in pixels.
+
+oldHeight:
+The stack's original height in pixels.
 
 Description:
-Handle the <resizeStack> <message> if you want to update the position of 
-<object|objects> or do other tasks when the <stack window> changes size.
+Handle the <resizeStack> <message> if you want to update the position
+of <object|objects> or do other tasks when the <stack window> changes
+size. 
 
-The <resizeStack> <message> is sent when the user resizes the <stack> by 
-dragging its size box. It is also sent if a <handler> changes the size 
-of the <stack> by changing its <properties> (<width>, <height>, and so 
-on).
+The <resizeStack> <message> is sent when the user resizes the <stack>
+by dragging its size box. It is also sent if a <handler> changes the
+size of the <stack> by changing its <properties> (<width>, <height>, and
+so on).
 
-The <resizeStack> <message> is sent after the resizing is finished. This 
-means that you cannot prevent a <stack|stack's> size from being changed 
-by <trap|trapping> this <message>.
+The <resizeStack> <message> is sent after the resizing is finished.
+This means that you cannot prevent a <stack|stack's> size from being
+changed by <trap|trapping> this <message>.
 
 The <oldWidth> and <oldHeight> for each <resizeStack> <message> is the 
 same as the <newWidth> and <newHeight> for the previous <resizeStack>. 
@@ -53,16 +62,18 @@ true.)
 >*Note:* If the stack's <vScroll> property is nonzero, the amount of 
 > scroll is not included in the <newHeight> and <oldHeight>. This means 
 > that the <parameter|parameters> of the <resizeStack> 
-> <message(keyword)> are always equal to the stack's <height> before and 
+> <message(keyword)> are always equal to the stack's <height> before
+> and 
 > after resizing, regardless of the <vScroll> setting.
 
-References: maxWidth (property), width (property), height (property), 
-minHeight (property), resizable (property), lockScreen (property), 
-properties (property), vScroll (property), moveStack (message), 
-resizeControl (message), unIconifyStack (message), 
-revChangeWindowSize (command), lock screen (command), stack (object), 
-object (glossary), property (glossary), current card (glossary), 
-stack window (glossary), handler (glossary), message (glossary), 
-parameter (glossary), command (glossary), trap (glossary)
+References: revChangeWindowSize (command), lock screen (command),
+object (glossary), property (glossary), current card (glossary),
+stack window (glossary), handler (glossary), message (glossary),
+parameter (glossary), command (glossary), trap (glossary),
+moveStack (message), resizeControl (message), unIconifyStack (message),
+stack (object), maxWidth (property), width (property), height (property),
+minHeight (property), resizable (property), lockScreen (property),
+properties (property), vScroll (property)
 
 Tags: windowing
+

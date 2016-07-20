@@ -1,27 +1,32 @@
 Name: milliseconds
 
+Synonyms: millisecond, millisecs, millisec
+
 Type: keyword
 
 Syntax: milliseconds
 
-Summary: Designates the number of milliseconds in a time period.
-
-Synonyms: millisecond,millisecs,millisec
+Summary:
+Designates the number of milliseconds in a time period.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 send "choose browse tool" to me in 20 milliseconds -- 1/50th of a second
 
 Description:
-Use the <milliseconds> <keyword> to designate a time period with the <wait> or <send> <command|commands>. 
+Use the <milliseconds> <keyword> to designate a time period with the
+<wait> or <send> <command|commands>.
 
-When used with the wait or <send> <command|commands>, the <milliseconds> <keyword> designates a time period measured in thousandths of a second.
+When used with the wait or <send> <command|commands>, the <milliseconds>
+<keyword> designates a time period measured in thousandths of a second.
 
-References: seconds (keyword), wait (command), send (command), milliseconds (function), keyword (glossary), command (glossary)
+References: wait (command), send (command), milliseconds (function),
+keyword (glossary), command (glossary), seconds (keyword)
 
 Tags: math
+

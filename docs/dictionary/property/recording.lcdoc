@@ -4,13 +4,14 @@ Type: property
 
 Syntax: set the recording to {true | false}
 
-Summary: Reports whether a sound is currently being recorded.
+Summary:
+Reports whether a sound is currently being recorded.
 
 Introduced: 1.1
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the recording to false
@@ -18,15 +19,22 @@ set the recording to false
 Example:
 wait until the recording is true
 
-Value (bool): The <recording> <property> is true or false.
+Value (bool):
+The <recording> <property> is true or false.
 
 Description:
-Use the <recording> <property> to determine whether a recording is being made or to stop recording.
+Use the <recording> <property> to determine whether a recording is being
+made or to stop recording.
 
-The <recording> <property> is true if sound is currently being recorded with the <record sound> <command>, false if it is not.
+The <recording> <property> is true if sound is currently being recorded
+with the <record sound> <command>, false if it is not.
 
-If a recording is currently being made, you can set the <recording> <property> to false to stop recording. This is equivalent to using the <stop recording> <command>.
+If a recording is currently being made, you can set the <recording>
+<property> to false to stop recording. This is equivalent to using the
+<stop recording> <command>.
 
-References: record sound (command), stop recording (command), recordLoudness (function), property (glossary), command (glossary)
+References: record sound (command), stop recording (command),
+recordLoudness (function), property (glossary), command (glossary)
 
 Tags: multimedia
+

@@ -5,8 +5,10 @@ Synonyms: database driver
 Type: glossary
 
 Description:
-Software that acts as a translator between an application and a <SQL> <database>.
+Software that acts as a translator between an application and a <SQL>
+<database>. 
 
 References: SQL (glossary), database (glossary)
 
 Tags: database
+

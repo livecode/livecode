@@ -1,12 +1,14 @@
 Name: data fork
 
-Synonyms: datafork,data fork
+Synonyms: datafork, data fork
 
 Type: glossary
 
 Description:
-The part of a <Mac OS> <file> that holds unstructured data (as opposed to the <resource fork>).
+The part of a <Mac OS> <file> that holds unstructured data (as opposed
+to the <resource fork>).
 
 References: Mac OS (glossary), file (glossary), resource fork (glossary)
 
 Tags: file system
+

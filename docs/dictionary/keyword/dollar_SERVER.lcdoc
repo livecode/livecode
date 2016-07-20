@@ -4,11 +4,13 @@ Type: keyword
 
 Syntax: $_SERVER
 
-Summary: <$_SERVER> is an array variable containing the CGI interface related variables, along with any HTTP_* variables that are available.
+Summary:
+<$_SERVER> is an array variable containing the CGI interface related
+variables, along with any HTTP_* variables that are available.
 
 Introduced: 4.6.3
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: server
 
@@ -24,7 +26,8 @@ if $_SERVER['SERVER_ADDR'] is "" then
 end if
 
 Description:
-Use the <$_SERVER> keyword to access the CGI interface related variables, along with any HTTP_* variables that are available.
+Use the <$_SERVER> keyword to access the CGI interface related
+variables, along with any HTTP_* variables that are available.
 
 <$_SERVER> is only available when running in CGI mode (Server).
 
@@ -56,6 +59,8 @@ SCRIPT_FILENAME
 CONTENT_TYPE
 CONTENT_LENGTH
 
->*Note:* $_SERVER can be modified doing so has no effect and should be avoided (indeed, it might become read-only in future).
+>*Note:* $_SERVER can be modified doing so has no effect and should be
+> avoided (indeed, it might become read-only in future).
 
 References: $_POST (keyword), $_GET (keyword)
+

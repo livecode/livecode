@@ -1,12 +1,13 @@
 Name: mobileIsVoiceOverRunning
 
+Synonyms: iphoneisvoiceoverrunning
+
 Type: function
 
 Syntax: mobileIsVoiceOverRunning
 
-Summary: Returns true if Voice Over is turned on (iOS only)
-
-Synonyms: iphoneIsVoiceOverRunning
+Summary:
+Returns true if Voice Over is turned on (iOS only)
 
 Introduced: 6.7.1
 
@@ -20,4 +21,7 @@ if mobileIsVoiceOverRunning() then
 end if
 
 Description:
-Use the <mobileIsVoiceOverRunning> function if you need to know if Voice Over is turned on or not.
+Use the <mobileIsVoiceOverRunning> function if you need to know if Voice
+Over is turned on or not.
+
+

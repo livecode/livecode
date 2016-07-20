@@ -4,7 +4,8 @@ Type: property
 
 Syntax: set the maskPixmapID of <image> to {empty | <windowID>}
 
-Summary: Specifies the window ID of the X11 <pixmap> used to <mask> an <image>.
+Summary:
+Specifies the window ID of the X11 <pixmap> used to <mask> an <image>.
 
 Associations: image
 
@@ -12,7 +13,7 @@ Introduced: 1.0
 
 OS: linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 set the maskPixmapID of image ID 4500 to empty
@@ -22,12 +23,23 @@ The <maskPixmapID> of a <stack> is an <integer>.
 By default, the <maskPixmapID> of newly created <image|images> is empty.
 
 Description:
-Use the <maskPixmapID> <property> to pass to an <external> that needs to manipulate the <image> <mask>.
+Use the <maskPixmapID> <property> to pass to an <external> that needs to
+manipulate the <image> <mask>.
 
-The <maskPixmapID> is provided by the operating system and indicates the <pixmap> used to <mask> an <image>. The <mask> is a 1-bit <image> map. <Pixels> in the <image> that correspond to a <value> of zero in the <mask> are transparent to mouse clicks, and <pixels(property)> corresponding to a <value> of 1 can receive mouse clicks. If the <maskPixmapID> is empty, all the <pixels(property)> in the <image> can receive mouse clicks (as though the <mask> consisted of all 1s).
+The <maskPixmapID> is provided by the operating system and indicates the
+<pixmap> used to <mask> an <image>. The <mask> is a 1-bit <image> map.
+<Pixels> in the <image> that correspond to a <value> of zero in the
+<mask> are transparent to mouse clicks, and <pixels(property)>
+corresponding to a <value> of 1 can receive mouse clicks. If the
+<maskPixmapID> is empty, all the <pixels(property)> in the <image> can
+receive mouse clicks (as though the <mask> consisted of all 1s).
 
 This property is not supported on Mac OS and Windows systems.
 
-References: pixels (property), imagePixmapID (property), image (keyword), integer (keyword), value (function), property (glossary), pixmap (glossary), external (glossary), mask (glossary), stack (object), image (object)
+References: value (function), property (glossary), pixmap (glossary),
+external (glossary), mask (glossary), image (keyword), integer (keyword),
+stack (object), image (object), pixels (property),
+imagePixmapID (property)
 
 Tags: multimedia
+

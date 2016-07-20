@@ -2,17 +2,19 @@ Name: add
 
 Type: command
 
-Syntax: add <number> to [<chunk> of] <container> 
+Syntax: add <number> to [<chunk> of] <container>
 
-Syntax: add {<number> | <array>} to <arrayContainer> 
+Syntax: add {<number> | <array>} to <arrayContainer>
 
-Summary: Adds a number to a <container> and places the resulting <value> in the <container>.
+Summary:
+Adds a number to a <container> and places the resulting <value> in the
+<container>. 
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 add 7 to field 1
@@ -42,11 +44,22 @@ on mouseUp
 end mouseUp
 
 Parameters:
-number: An expression that evaluates to a number.
-chunk: A chunk expression specifying a portion of the container.
-container: A field, button, or variable, or the message box.
-array (array): An array variable each of whose elements is a number.
-arrayContainer (array): An array variable each of whose elements is a number.
+number:
+An expression that evaluates to a number.
+
+chunk:
+A chunk expression specifying a portion of the container.
+
+container:
+A field, button, or variable, or the message box.
+
+array (array):
+An array variable each of whose elements is a number.
+
+
+arrayContainer (array):
+An array variable each of whose elements is a number.
+
 
 Description:
 Use the <add> <command> to add a number to a <container> or a portion of
@@ -67,11 +80,12 @@ empty, the <add> <command> treats its contents as zero.
 If <container> is a <field> or <button>, the <format> of the sum is
 determined by the <numberFormat> <property>.
 
-References: array (glossary), button (object), combine (command), 
-command (glossary), container (glossary), element (glossary), 
-element (keyword), evaluate (glossary), expression (glossary), 
-field (object), format (glossary), multiply (command), 
-numberFormat (property), property (glossary), split (command), 
-sum (function), union (command), value (function)
+References: combine (command), multiply (command), split (command),
+union (command), sum (function), value (function), array (glossary),
+command (glossary), container (glossary), element (glossary),
+evaluate (glossary), expression (glossary), format (glossary),
+property (glossary), element (keyword), button (object), field (object),
+numberFormat (property)
 
 Tags: math
+

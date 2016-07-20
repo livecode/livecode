@@ -4,15 +4,16 @@ Type: command
 
 Syntax: revLoadSpeech
 
-Summary: Loads the operating system's text-to-speech software from memory.
+Summary:
+Loads the operating system's text-to-speech software from memory.
 
-Associations: Speech library
+Associations: speech library
 
 Introduced: 2.0
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 revLoadSpeech
@@ -22,8 +23,8 @@ if field "Speak Next" is not empty then revLoadSpeech
 
 Description:
 Load the text-to-speech software into memory when its needed by any of 
-the commands and functions in the <Speech library>.  The software should 
-be removed from memory when it is no longer needed by using the 
+the commands and functions in the <Speech library>.  The software
+should be removed from memory when it is no longer needed by using the
 <revUnloadSpeech>.
 
 >*Important:*  The <revLoadSpeech> <command> is part of the 
@@ -34,6 +35,8 @@ be removed from memory when it is no longer needed by using the
 > <Standalone Application Settings> window, make sure the "Speech" 
 > library checkbox is checked.
 
-References: revUnloadSpeech (command), revUnloadSpeech (command), 
-Standalone Application Settings (glossary), standalone application (glossary), 
-command (glossary), Speech library (library), LiveCode custom library (glossary)
+References: revUnloadSpeech (command), revUnloadSpeech (command),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+LiveCode custom library (glossary), Speech library (library)
+

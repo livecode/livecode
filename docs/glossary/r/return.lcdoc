@@ -1,12 +1,15 @@
 Name: return
 
-Synonyms: return,returning,returned,return
+Synonyms: return, returning, returned, return
 
 Type: glossary
 
 Description:
-To send a <value> back to the <handler> that <call|called> a <function>. 
- 
+To send a <value> back to the <handler> that <call|called> a
+<function>. 
+
 Also, the carriage return character, ASCII 13.
 
-References: handler (glossary), function (glossary), value (glossary), call (glossary)
+References: handler (glossary), function (glossary), value (glossary),
+call (glossary)
+

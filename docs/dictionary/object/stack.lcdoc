@@ -1,18 +1,19 @@
 Name: stack
 
+Synonyms: window, wd
+
 Type: object
 
 Syntax: stack
 
-Summary: The basic LiveCode <object(glossary)>: a window.
-
-Synonyms: window,wd
+Summary:
+The basic LiveCode <object(glossary)>: a window.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 go to stack "Help"
@@ -36,12 +37,12 @@ backgrounds.
 <stack|stack's> <style> <property> and whether the <stack> was opened 
 with the <go>, <topLevel>, <palette>, <modal>, or <modeless> <command>.
 
-References: templateStack (keyword), mode (property), 
-stack version (glossary), defaultStack (property), style (property), 
-topLevel (command), go (command), modal (command), 
-palette (command), modeless (command), revLoadedStacks (function), 
-mouseStack (function), stack (object), object (glossary), 
-property (glossary), dialog box (glossary), command (glossary), 
-object type (glossary)
+References: topLevel (command), go (command), modal (command),
+palette (command), modeless (command), revLoadedStacks (function),
+mouseStack (function), stack version (glossary), object (glossary),
+property (glossary), dialog box (glossary), command (glossary),
+object type (glossary), templateStack (keyword), stack (object),
+mode (property), defaultStack (property), style (property)
 
 Tags: objects
+
