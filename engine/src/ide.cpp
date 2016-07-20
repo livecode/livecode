@@ -2488,6 +2488,8 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
             case kMCIdeFilterPropertyType:
                 MCStringCreateWithNativeChars((char_t*)p_object -> gettypestring(), strlen(p_object -> gettypestring()), (MCStringRef&)&t_left_value);
                 break;
+            default:
+                break;
         }
 
         bool t_accept;

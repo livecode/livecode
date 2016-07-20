@@ -2551,7 +2551,9 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 					t_paint . setAntiAlias(true);
 					t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 					break;
-			}
+                default:
+                    break;
+            }
 		}
 		
 		SkRect t_src_rect;

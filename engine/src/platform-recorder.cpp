@@ -122,6 +122,8 @@ void MCPlatformSoundRecorder::GetProperty(MCPlatformSoundRecorderProperty p_prop
 		case kMCPlatformSoundRecorderPropertyCompressionType:
             *(unsigned int *)r_value = m_configuration . compression_type;
 			break;
+        default:
+            break;
     }
 }
 
