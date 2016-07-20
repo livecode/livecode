@@ -120,7 +120,7 @@ static bool __MCMemoryInputStreamSeek(MCStreamRef p_stream, filepos_t p_position
 {
 	__MCMemoryInputStream *self;
 	self = (__MCMemoryInputStream *)MCStreamGetExtraBytesPtr(p_stream);
-	if (p_position < 0 || p_position > self -> length)
+	if (p_position < 0 || (size_t)p_position > self -> length)
 		return false;
 	self -> pointer = (size_t)p_position;
 	return true;
