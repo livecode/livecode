@@ -536,7 +536,8 @@ inline bool MCGSizeIsEqual(const MCGSize &p_a, const MCGSize &p_b)
 
 inline MCGColor MCGColorComponentFromFloat(MCGFloat p_component)
 {
-    return MCGColor(MCClamp(p_component * UINT8_MAX, 0, UINT8_MAX));
+	return MCClamp<MCGColor>(MCNarrow<MCGColor>(p_component * UINT8_MAX),
+	                         0, UINT8_MAX);
 }
 
 inline MCGFloat MCGColorComponentToFloat(MCGColor p_component)
