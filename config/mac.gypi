@@ -136,11 +136,14 @@
 <<<<<<< 183262100ed8e784feb7f5a639c48c340adeccaf
 							'-Werror=missing-field-initializers',
 							'-Werror=objc-literal-compare',
+<<<<<<< aae8eb3c430f6d834f9d8be17f14471cb7a92a3d
 =======
 >>>>>>> Turn on -Werror=unknown-pragmas
 =======
 							'-Werror=missing-field-initializers',
 >>>>>>> Turn on -Werror=missing-field-initializers
+=======
+>>>>>>> Turn on -Werror=objc-literal-compare
 						],
 					},
 				},
