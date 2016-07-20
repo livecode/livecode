@@ -22,13 +22,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "stack.h"
+#include "foundation.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#define UINDEX_MAX UINT32_MAX
-#define UINDEX_MIN UINT32_MIN
-#define UINTPTR_MAX UINT32_MAX
-#define UINTPTR_MIN UINT32_MIN
 
 class MCStackIdCache
 {
