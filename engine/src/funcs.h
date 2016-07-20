@@ -454,6 +454,15 @@ public:
 	}
 };
 
+class MCTokenOffset : public MCChunkOffset
+{
+public:
+    MCTokenOffset()
+    {
+        delimiter = CT_TOKEN;
+    }
+};
+
 class MCClickChar : public MCConstantFunctionCtxt<MCStringRef, MCInterfaceEvalClickChar>
 {
 public:
