@@ -1459,7 +1459,7 @@ int X_close(void)
 
 
 	// Cleanup the startup stacks list
-	for(uint4 i = 0; i < MCnstacks; ++i)
+	for(int2 i = 0; i < MCnstacks; ++i)
 		MCValueRelease(MCstacknames[i]);
 
 	delete MCstacknames;

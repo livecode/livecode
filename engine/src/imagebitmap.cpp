@@ -361,11 +361,11 @@ void MCImageBitmapPremultiplyRegion(MCImageBitmap *p_bitmap, int32_t p_sx, int32
 
 	uint8_t *t_src_ptr = (uint8_t*)p_bitmap->data + t_src_x * 4 + t_src_y * p_bitmap -> stride;
 	uint8_t *t_dst_ptr = (uint8_t*)p_pixel_ptr + t_dst_x * 4 + t_dst_y * p_pixel_stride;
-	for (uindex_t y = 0; y < t_height; y++)
+	for (uindex_t y = 0; y < (uindex_t)t_height; y++)
 	{
 		uint32_t *t_src_row = (uint32_t*)t_src_ptr;
 		uint32_t *t_dst_row = (uint32_t *)t_dst_ptr;
-		for (uindex_t x = 0; x < t_width; x++)
+		for (uindex_t x = 0; x < (uindex_t)t_width; x++)
 		{
 			uint32_t t_pixel = *t_src_row++;
 			uint8_t t_alpha = t_pixel >> 24;

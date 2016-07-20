@@ -977,14 +977,14 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 
 			if (quality == INTERPOLATION_BOX)
 			{
-				if (t_ix < 0 || t_ix >= p_src->width || t_iy < 0 || t_iy >= p_src->height)
+				if (t_ix < 0 || (uint32_t)t_ix >= p_src->width || t_iy < 0 || (uint32_t)t_iy >= p_src->height)
 					t_pixel = p_backing_color;
 				else
 					t_pixel = MCImageBitmapGetPixel(p_src, t_ix, t_iy);
 			}
 			else
 			{
-				if (t_ix < -1 || t_ix >= p_src->width || t_iy < -1 || t_iy >= p_src->height)
+				if (t_ix < -1 || (uint32_t)t_ix >= p_src->width || t_iy < -1 || (uint32_t)t_iy >= p_src->height)
 					t_pixel = p_backing_color;
 				else
 				{
@@ -998,7 +998,7 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 							t_p2 = p_backing_color;
 							t_p4 = MCImageBitmapGetPixel(p_src, t_ix + 1, t_iy + 1);
 						}
-						else if (t_iy == p_src->height - 1)
+						else if ((uint32_t)t_iy == p_src->height - 1)
 						{
 							t_p2 = MCImageBitmapGetPixel(p_src, t_ix + 1, t_iy);
 							t_p4 = p_backing_color;
@@ -1014,7 +1014,7 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 					else if (t_iy == -1)
 					{
 						t_pleft = p_backing_color;
-						if (t_ix == p_src->width -1)
+						if ((uint32_t)t_ix == p_src->width -1)
 						{
 							t_p3 = MCImageBitmapGetPixel(p_src, t_ix, t_iy + 1);
 							t_p4 = p_backing_color;
@@ -1027,10 +1027,10 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 						t_pright = packed_bilinear_bounded(t_p3, 255 - t_rem_x, t_p4, t_rem_x);
 						t_pixel = packed_bilinear_bounded(t_pleft, 255 - t_rem_y, t_pright, t_rem_y);
 					}
-					else if (t_ix == p_src->width - 1)
+					else if ((uint32_t)t_ix == p_src->width - 1)
 					{
 						t_pright = p_backing_color;
-						if (t_iy == p_src->height - 1)
+						if ((uint32_t)t_iy == p_src->height - 1)
 						{
 							t_p1 = MCImageBitmapGetPixel(p_src, t_ix, t_iy);
 							t_p3 = p_backing_color;
@@ -1043,7 +1043,7 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 						t_pleft = packed_bilinear_bounded(t_p1, 255 - t_rem_y, t_p3, t_rem_y);
 						t_pixel = packed_bilinear_bounded(t_pleft, 255 - t_rem_x, t_pright, t_rem_x);
 					}
-					else if (t_iy == p_src->height - 1)
+					else if ((uint32_t)t_iy == p_src->height - 1)
 					{
 						t_pright = p_backing_color;
 						t_p1 = MCImageBitmapGetPixel(p_src, t_ix, t_iy);

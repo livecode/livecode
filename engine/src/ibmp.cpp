@@ -2239,7 +2239,8 @@ bool xpm_read_v3_header(IO_handle p_stream, uindex_t &r_width, uindex_t &r_heigh
 {
 	bool t_success = true;
 
-	int32_t t_width, t_height, t_color_count, t_chars_per_pixel;
+	int32_t t_width, t_height, t_chars_per_pixel;
+    uindex_t t_color_count;
 	uint32_t *t_colors = nil;
 	uint32_t *t_color_chars = nil;
 

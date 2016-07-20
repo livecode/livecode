@@ -85,7 +85,7 @@ void MCImage::advanceframe()
 
 	int32_t t_newframe = currentframe + (((state & CS_REVERSE) == 0) ? 1 : -1);
 
-	if (t_newframe < 0 || t_newframe >= t_framecount)
+	if (t_newframe < 0 || (uindex_t)t_newframe >= t_framecount)
 	{
 		if (irepeatcount > 0)
 			irepeatcount--;
