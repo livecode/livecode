@@ -212,23 +212,6 @@ typedef struct
 	const char *token;
 } ModKeyToken;
 
-static ModKeyToken modifier_tokens[] =
-	{
-		{MS_SHIFT, 5, "shift"},
-		{MS_SHIFT, 1, "@"},
-		{MS_ALT, 6, "option"},
-		{MS_ALT, 3, "opt"},
-		{MS_ALT, 3, "alt"},
-		{MS_ALT, 1, "#"},
-		{MS_MAC_CONTROL, 7, "control"},
-		{MS_MAC_CONTROL, 4, "ctrl"},
-		{MS_MAC_CONTROL, 1, "%"},
-		{MS_CONTROL, 7, "command"},
-		{MS_CONTROL, 3, "cmd"},
-		{MS_CONTROL, 1, "^"},
-		{0, 0, NULL}
-	};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCPropertyInfo MCButton::kProperties[] =
@@ -1383,7 +1366,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
                     // that we need to check is the rect of the stack containing
                     // the menu).
                     MCRectangle t_rect = t_menu->getstack()->getrect();
-                    t_outside = !MCU_point_in_rect(rect, mx, my);
+                    t_outside = !MCU_point_in_rect(t_rect, mx, my);
                     
                     // Move to the parent menu, if it exists
                     if (t_menu->getstack()->getparent()    // Stack's parent
@@ -2557,7 +2540,6 @@ public:
 
 Boolean MCButton::findmenu(bool p_just_for_accel)
 {
-	Boolean isunicode = hasunicode();
 	if (!MCNameIsEmpty(menuname))
 	{
 		if (menu == NULL)
@@ -3805,8 +3787,6 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		if ((stat = IO_read_stringref_new(acceltext, stream, true)) != IO_NORMAL)
 			return checkloadstat(stat);
 	}
-
-	uint4 tacceltextsize;
 
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
 		return checkloadstat(stat);

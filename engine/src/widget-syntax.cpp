@@ -734,7 +734,6 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetNativeLayerCanRenderToContext(MCWidg
 	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
 		return;
 	
-	void *t_view;
 	if (MCWidgetGetHost(p_widget)->getNativeLayer() == nil)
 	{
 		// TODO - throw error: no native layer
@@ -749,7 +748,6 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetSetNativeLayerCanRenderToContext(bool p
 	if (!MCWidgetEnsureCanManipulateWidget(p_widget))
 		return;
 	
-	void *t_view;
 	if (MCWidgetGetHost(p_widget)->getNativeLayer() == nil)
 	{
 		// TODO - throw error: no native layer

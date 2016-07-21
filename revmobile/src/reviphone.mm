@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static NSTask *s_simulator_task = nil;
 static NSDistantObject *s_simulator_proxy = nil;
-static uint32_t s_session_id = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -252,7 +251,6 @@ bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef 
 		{
 			char *t_sdk_cstring = nil;
 			
-			MCError t_status;
 			t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_sdk_cstring));
 			if (t_success)
 			{

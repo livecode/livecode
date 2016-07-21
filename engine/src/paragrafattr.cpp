@@ -42,29 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct {const char *name; Properties prop; } kMCParagraphAttrsProps[] =
-{
-	{"textAlign", P_TEXT_ALIGN},
-	{"listStyle", P_LIST_STYLE},
-	{"listDepth", P_LIST_DEPTH},
-	{"listIndent", P_LIST_INDENT},
-	{"firstIndent", P_FIRST_INDENT},
-	{"leftIndent", P_LEFT_INDENT},
-	{"rightIndent", P_RIGHT_INDENT},
-	{"spaceAbove", P_SPACE_ABOVE},
-	{"spaceBelow", P_SPACE_BELOW},
-	{"tabStops", P_TAB_STOPS},
-	{"backgroundColor", P_BACK_COLOR},
-	{"borderWidth", P_BORDER_WIDTH},
-	{"borderColor", P_BORDER_COLOR},
-	{"hGrid", P_HGRID},
-	{"vGrid", P_VGRID},
-	{"dontWrap", P_DONT_WRAP},
-	{"padding", P_PADDING},
-    {"listIndex", P_LIST_INDEX},
-	{nil, P_UNDEFINED},
-};
-
 bool MCParagraph::hasattrs(void)
 {
 	return attrs != nil;

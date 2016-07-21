@@ -369,7 +369,9 @@ static MCExecCustomTypeInfo _kMCInterfaceVisualEffectTypeInfo =
 
 MCExecEnumTypeInfo *kMCInterfaceWindowPositionTypeInfo = &_kMCInterfaceWindowPositionTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo = &_kMCInterfaceWindowAlignmentTypeInfo;
-
+MCExecCustomTypeInfo *kMCInterfaceImagePaletteSettingsTypeInfo = &_kMCInterfaceImagePaletteSettingsTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo = &_kMCInterfaceVisualEffectTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo = &_kMCInterfaceVisualEffectArgumentTypeInfo;
 //////////
 
 bool MCInterfaceTryToResolveObject(MCExecContext& ctxt, MCStringRef long_id, MCObjectPtr& r_object)
@@ -3320,7 +3322,6 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
     if (t_widget == NULL)
         return;
     t_widget -> bind(p_kind, nil);
-    Boolean wasvisible = t_widget->isvisible();
     if (p_force_invisible)
         t_widget->setflag(!p_force_invisible, F_VISIBLE);
     

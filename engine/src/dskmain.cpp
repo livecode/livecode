@@ -78,8 +78,6 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
 extern void X_clear_globals(void);
 extern void MCU_initialize_names();
 
-static char apppath[PATH_MAX];
-
 bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	int i;

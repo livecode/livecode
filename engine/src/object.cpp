@@ -1730,8 +1730,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 Boolean MCObject::setpatterns(MCStringRef data)
 {
 	uint2 p;
-	Boolean done = False;
-    uindex_t t_start_pos, t_end_pos;
+	uindex_t t_start_pos, t_end_pos;
     t_start_pos = 0;
     t_end_pos = t_start_pos;
 	for (p = P_FORE_PATTERN ; p <= P_FOCUS_PATTERN ; p++)
@@ -2635,8 +2634,7 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	int2 rx = drect.x + drect.width;
 	int2 ty = drect.y;
 	int2 by = drect.y + drect.height;
-	uint2 i;
-
+	
 	Boolean reversed = style == ETCH_SUNKEN || style == ETCH_SUNKEN_BUTTON;
 	switch (MClook)
 	{

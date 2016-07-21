@@ -6508,7 +6508,6 @@ bool MCStringConvertToSysString(MCStringRef p_string, char *& r_system_string, s
 {
 	__MCAssertIsString(p_string);
 
-    bool t_success;
     uindex_t t_byte_count;
     if (!MCStringConvertToUTF8(p_string, r_system_string, t_byte_count))
         return false;
