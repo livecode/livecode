@@ -134,6 +134,7 @@
                             '-Werror=objc-literal-compare',
                             #'-Werror=switch', can't enable due to sqlite header
 							'-Werror=missing-field-initializers',
+							'-Werror=missing-declarations',
 						],
 					},
 				},
