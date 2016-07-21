@@ -623,6 +623,8 @@ static MCValueCustomCallbacks kMCScriptObjectCustomValueCallbacks =
     __MCScriptObjectEqual,
     __MCScriptObjectHash,
     __MCScriptObjectDescribe,
+    nil,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

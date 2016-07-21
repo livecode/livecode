@@ -126,7 +126,11 @@ xmlSAXHandler CXMLDocument::SAXHandlerTable = {
     getParameterEntity,
     elementCDataCallback,//cdataBlock,
     externalSubset,
-	1
+	1,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 void CXMLDocument::startDocumentCallback(void *ctx)
