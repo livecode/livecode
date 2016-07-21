@@ -39,7 +39,7 @@ char *string_to_utf8(const char *p_string)
 	if (s_text_to_unicode_info != NULL)
 	{
 		unsigned int t_string_length;
-		t_string_length = strlen(p_string);
+		t_string_length = (unsigned int)strlen(p_string);
 		
 		t_result = (char *)malloc(t_string_length * 2 + 1);
 		
@@ -70,7 +70,7 @@ char *string_from_utf8(const char *p_utf8_string)
 	if (s_unicode_to_text_info != NULL)
 	{
 		unsigned int t_utf8_length;
-		t_utf8_length = strlen(p_utf8_string);
+		t_utf8_length = (unsigned int)strlen(p_utf8_string);
 		
 		t_result = (char *)malloc(t_utf8_length + 1);
 		
@@ -227,7 +227,7 @@ char *os_path_resolve(const char *p_native_path)
 	struct stat buf;
 	if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
 		return tildepath;
-	int4 size;
+	ssize_t size;
 	char *newname = (char *)malloc(PATH_MAX + 2);
 	if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
 	{

@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static bool cstring_to_integer(const char *p_string, int& r_value)
 {
 	char *t_end_ptr;
-	r_value = strtol(p_string, &t_end_ptr, 10);
+	r_value = (int)strtol(p_string, &t_end_ptr, 10);
 	if (t_end_ptr != p_string + strlen(p_string))
 		return false;
 	return true;
