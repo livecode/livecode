@@ -616,7 +616,6 @@ Bool CXMLElement::GoChildByPath(char *tpath)
 {
 	if (!isinited()) return False;
 	const char *sptr = tpath;
-	char *childpointer = NULL;
 	CXMLElement telement;
 	telement.CopyElement(this);
 	if (*sptr == '/') sptr++; //skip first slash
@@ -826,7 +825,6 @@ char *CXMLElement::GetAttributeValue(char *attname, Bool isbuffered)
 		CXMLAttribute tattribute;
 		if (GetFirstAttribute(&tattribute))
 		{
-			int attributecount = 1;
 			do 
 			{
 				if (!attname || util_strnicmp(tattribute.GetName(), attname, strlen(attname)) == 0)

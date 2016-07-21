@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static NSTask *s_simulator_task = nil;
 static NSDistantObject *s_simulator_proxy = nil;
-static uint32_t s_session_id = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 

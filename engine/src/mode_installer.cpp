@@ -170,6 +170,10 @@ static MCMiniZipRef s_payload_minizip = nil;
 static void *s_payload_loaded_data = nil;
 static void *s_payload_mapped_data = nil;
 static uint32_t s_payload_mapped_size = 0;
+#else
+#ifdef _DEBUG
+static void *s_payload_data = nil;
+#endif
 #endif
 
 #ifdef _WINDOWS
@@ -178,10 +182,6 @@ static uint32_t s_payload_mapped_size = 0;
 HANDLE s_payload_file_handle = nil;
 HANDLE s_payload_file_map = nil;
 static void *s_payload_mapped_data = nil;
-#endif
-
-#ifdef _DEBUG
-static void *s_payload_data = nil;
 #endif
 
 class MCInternalPayloadOpen: public MCStatement
