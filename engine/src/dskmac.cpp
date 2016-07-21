@@ -5540,11 +5540,18 @@ static bool startprocess_write_uint32_to_fd(int fd, uint32_t value)
 
 static bool startprocess_write_cstring_to_fd(int fd, char *string)
 {
-	if (!startprocess_write_uint32_to_fd(fd, uint32_t(strlen(string) + 1)))
-		return false;
-    if (write(fd, string, strlen(string) + 1) != (ssize_t)strlen(string) + 1)
-		return false;
-	return true;
+    size_t t_len = strlen(string) + 1;
+    if (t_len > UINT32_MAX)
+        return false;
+    
+    if (!startprocess_write_uint32_to_fd(fd, uint32_t(t_len)))
+        return false;
+    
+    ssize_t t_status = write(fd, string, t_len);
+    
+    /* This verifies that t_status is positive, at which point you _know_
+     * that it will fit into a size_t losslessly */
+    return (t_status >= 0 && size_t(t_status) == t_len);
 }
 
 static bool startprocess_read_uint32_t_from_fd(int fd, uint32_t& r_value)

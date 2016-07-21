@@ -38,9 +38,11 @@ char *string_to_utf8(const char *p_string)
 	
 	if (s_text_to_unicode_info != NULL)
 	{
-		unsigned int t_string_length;
-		t_string_length = (unsigned int)strlen(p_string);
-		
+		size_t t_string_length;
+		t_string_length = strlen(p_string);
+		if (t_string_length > SSIZE_MAX)
+            t_string_length = SSIZE_MAX;
+        
 		t_result = (char *)malloc(t_string_length * 2 + 1);
 		
 		ByteCount t_utf8_length, t_processed;
