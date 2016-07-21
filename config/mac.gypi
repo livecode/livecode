@@ -31,11 +31,6 @@
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
 		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 		'COMBINE_HIDPI_IMAGES': 'YES',
-		
-		'OTHER_LDFLAGS':
-		[
-			'-Wl,-no_compact_unwind',
-		],
 	},
 	
 	'target_defaults':
