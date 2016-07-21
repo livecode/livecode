@@ -579,7 +579,8 @@ command builderMergExtUnpack pMergExtVersion, pEdition
    put builderMergExtDownloadedFilePath(pMergExtVersion, pEdition) into tMergExtZip
    
    if there is a folder tMergExtFolder then
-      get shell(merge("rm -r '[[tMergExtFolder]]'"))
+      get shell(merge("rm -rvf '[[tMergExtFolder]]'"))
+      builderLog "message", it
    end if
    
    get shell(merge("mkdir -p '[[tMergExtFolder]]/MergExt'"))
