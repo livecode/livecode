@@ -1479,7 +1479,11 @@ template<MCExternalHandlerProc u_handler> bool MCExternalHandlerWrapper(MCVariab
 	{ 2, m_name, m_function },
 
 #define MC_EXTERNAL_HANDLERS_END \
+<<<<<<< 62c5e5d24d97a4358ffe0e964901f0a2e5516a6a
 	{ 0, nil, nil } }; }
+=======
+    }; }
+>>>>>>> Turn on -Werror=missing-field-initializers
 
 #endif
 
