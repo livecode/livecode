@@ -132,6 +132,7 @@
 							'-Werror=mismatched-new-delete',
 							'-Werror=constant-logical-operand',
 							'-Werror=unknown-pragmas',
+							'-Werror=missing-field-initializers',
 						],
 					},
 				},
