@@ -708,7 +708,6 @@ IO_stat MCDispatch::startup(void)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = t_mccmd; //point to MCcmd string
 
 #ifdef _DEBUG
 	// MW-2013-06-13: [[ CloneAndRun ]] When compiling in DEBUG mode, first check
