@@ -562,7 +562,7 @@ void MCLine::SegmentLine()
             // There was previously a comment here saying that creating the
             // empty block was a good thing. I have no idea why I wrote that...
             // Removed that behaviour as it breaks some things.
-            if ((t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
+            if (findex_t(t_offset + 1) < bptr->GetOffset() + bptr->GetLength())
             {
                 bptr->split(t_offset + 1);
                 if (bptr == lastblock)

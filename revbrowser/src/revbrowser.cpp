@@ -1406,7 +1406,7 @@ void revBrowserGetProp(CWebBrowserBase *p_instance, char *args[], int nargs, cha
 
 	BrowserProperty whichprop = BROWSERPROP_UNDEFINED;
 
-	for (int i = 0; i < sizeof(browserProperties) / sizeof(BrowserProp); i++)
+	for (uindex_t i = 0; i < sizeof(browserProperties) / sizeof(BrowserProp); i++)
 	{
 		if (strcasecmp(args[0], browserProperties[i].str) == 0)
 		{

@@ -180,6 +180,17 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorJavaImpliesNonIndirectReturn:
 		fprintf(stderr, "Java mapped methods cannot have indirect return value\n");
 		break;
+    case kInterfaceErrorMethodsCannotHaveVariants:
+        fprintf(stderr, "Java mapped methods cannot have variants\n");
+        break;
+    case kInterfaceErrorMethodsMustBeJava:
+        fprintf(stderr, "Mapped methods must be java\n");
+        break;
+    case kInterfaceErrorMethodsAreAlwaysTail:
+        fprintf(stderr, "Mapped methods are always tail\n");
+        break;
+    case kInterfaceErrorNone:
+        break;
 	}
 
 	self -> invalid = true;

@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 struct MCMenuItem
 {
-	int4 depth;
+	uindex_t depth;
 	MCStringRef label;
 	bool is_disabled: 1;
 	bool is_radio: 1;

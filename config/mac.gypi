@@ -127,7 +127,12 @@
 							'-Werror=uninitialized',
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
-							'-Werror=logical-not-parentheses',
+							'-Werror=constant-logical-operand',
+							#'-Werror=sign-compare', can't enable due to MCMin
+							'-Werror=shadow',
+							'-Werror=parentheses',
+                            '-Werror=objc-literal-compare',
+                            #'-Werror=switch', can't enable due to sqlite header
 						],
 					},
 				},

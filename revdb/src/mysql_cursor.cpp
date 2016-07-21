@@ -206,7 +206,7 @@ Bool DBCursor_MYSQL::getFieldsInformation()
 {
 	MYSQL_FIELD *field_prop;
 	fields = new DBField *[fieldCount];
-	for (unsigned int i=0; i< fieldCount; i++)
+	for (int i=0; i< fieldCount; i++)
 	{
 		DBField *tfield = new DBField();
 		fields[i] = tfield;

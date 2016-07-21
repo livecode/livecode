@@ -582,7 +582,7 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 			// Each device has a plist with a state entry. A state of 3 appears to suggest it's the last run.
 			for (t_device in t_devices)
 			{
-				if (!(t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
+				if (!((t_is_ipad && [[t_device name] hasPrefix: @"iPad"]) || (!t_is_ipad && [[t_device name] hasPrefix: @"iPhone"])))
 					continue;
 				
 				NSString *t_dev_plist_path;
@@ -607,7 +607,7 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 			// If the last run device is not suitable or not found, then just choose the first device in the list of the desired type.
 			if (!t_found_device)
 				for (t_device in t_devices)
-					if ((t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"])
+					if (((t_is_ipad && [[t_device name] hasPrefix: @"iPad"]) || (!t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
 						&& [t_device runtime] == s_simulator_runtime)
 					{
 						t_found_device = true;

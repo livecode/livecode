@@ -1288,7 +1288,7 @@ bool MCArrayIsNumericSequence(MCArrayRef self, int32_t &r_start_index)
     ctxt . maximum = INDEX_MIN;
     
     if (MCArrayApply(self, get_array_extent, &ctxt) &&
-            (ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self))
+            uindex_t(ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self))
     {
         r_start_index = ctxt . minimum;
         return true;

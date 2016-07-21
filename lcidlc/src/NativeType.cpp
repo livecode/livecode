@@ -121,9 +121,9 @@ const char *NativeTypeGetSecondaryPrefix(NativeType p_type)
         case kNativeTypeObjcArray:
         case kNativeTypeObjcDictionary:
             return "*";
-	}
-	
-	return "";
+        default:
+            return "";
+	}	
 }
 
 const char *NativeTypeGetTag(NativeType p_type)

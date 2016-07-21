@@ -38,8 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 #include "edittool.h"
 
-static const uint4 kInvalidEditPoint = MAXUINT4;
-
 MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic,
                                        MCGradientFill *p_gradient,
                                        MCEditMode p_mode) :
@@ -71,7 +69,7 @@ uint4 MCGradientEditTool::handle_under_point(int2 x, int2 y)
 		if (MCU_point_in_rect(rects[i], x, y))
 			return i;
 
-	return -1;
+	return kInvalidEditPoint;
 }
 
 
@@ -333,7 +331,7 @@ uint4 MCPolygonEditTool::handle_under_point(int2 x, int2 y)
 		if (MCU_point_in_rect(t_rects[i], x, y))
 			return i;
 
-	return -1;
+	return kInvalidEditPoint;
 }
 
 bool MCPolygonEditTool::mdown(int2 x, int2 y, uint2 which)

@@ -55,9 +55,9 @@ void MCImage::setframe(int32_t p_newframe)
 		return;
 	}
 
-	if (p_newframe < 0)
+	if (p_newframe < 0 || t_framecount == 0)
 		p_newframe = 0;
-	else if (p_newframe >= t_framecount)
+	else if (p_newframe >= (int32_t)t_framecount)
 		p_newframe = t_framecount - 1;
 
 	if (p_newframe == currentframe)
@@ -123,7 +123,7 @@ static uint32_t gif_color_to_pixel(GifColorType& p_color)
 static void gif_draw_image_into_canvas(MCImageBitmap *p_canvas, GifByteType *p_raster, int32_t p_left, int32_t p_top, int32_t p_width, int32_t p_height, ColorMapObject *p_colors, int32_t p_transparency, bool t_overlay)
 {
 	// If the bounds are outside of the target, ignore.
-	if (p_left < 0 || p_top < 0 || (p_left + p_width) > p_canvas -> width || (p_top + p_height) > p_canvas -> height)
+	if (p_left < 0 || p_top < 0 || (p_left + p_width) > int32_t(p_canvas -> width) || (p_top + p_height) > int32_t(p_canvas -> height))
 		return;
 
 	// Compute the dst and src ptrs.
@@ -168,14 +168,14 @@ void gif_fill_image_region(MCImageBitmap *p_bitmap, MCRectangle &p_region, uinde
 	t_right = t_left + p_region.width;
 	t_bottom = t_top + p_region.height;
 
-	if (t_left < 0 || t_top < 0 || t_right > p_bitmap -> width || t_bottom > p_bitmap -> height)
+	if (t_left < 0 || t_top < 0 || t_right > int32_t(p_bitmap -> width) || t_bottom > int32_t(p_bitmap -> height))
 		return;
 
 	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data + t_top * p_bitmap->stride + t_left * sizeof(uint32_t);
-	for (uindex_t y = t_top; y < t_bottom; y++)
+	for (int32_t y = t_top; y < t_bottom; y++)
 {
 		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
-		for (uindex_t x = t_left; x < t_right; x++)
+		for (int32_t x = t_left; x < t_right; x++)
 			*t_dst_row++ = p_pixel;
 		t_dst_ptr += p_bitmap->stride;
 	}
@@ -191,13 +191,13 @@ static void gif_paste_image(MCImageBitmap *p_dst, MCImageBitmap *p_src, int32_t 
 	uint8_t *t_src_ptr = (uint8_t*)p_src->data;
 	uint8_t *t_dst_ptr = (uint8_t*)p_dst->data + p_y_offset * p_dst->stride + p_x_offset * sizeof(uint32_t);
 	uindex_t t_row_bytes = p_src->width * sizeof(uint32_t);
-	for(int32_t y = 0; y < p_src->height; y++)
+	for(uindex_t y = 0; y < p_src->height; y++)
 	{
 		MCMemoryCopy(t_dst_ptr, t_src_ptr, t_row_bytes);
 		t_src_ptr += p_src->stride;
 		t_dst_ptr += p_dst->stride;
 	}
-		}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -318,7 +318,7 @@ bool MCGIFImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 	t_overlay = false;
 	
 	// Loop through all the images, making frames as we go.
-	for(uindex_t i = 0; t_success && i < m_gif -> ImageCount; i++)
+	for(index_t i = 0; t_success && i < m_gif -> ImageCount; i++)
 	{
 		// Process the disposal.
 		switch (t_disposal_mode)

@@ -602,7 +602,7 @@ Boolean MCGraphic::maskrect(const MCRectangle &srect)
 		return False;
 	if (state & CS_SELECTED || drect.width > 2 || drect.height > 2)
 		return True;
-	if (m_edit_tool != NULL && m_edit_tool->handle_under_point(drect.x, drect.y) != -1)
+	if (m_edit_tool != NULL && m_edit_tool->handle_under_point(drect.x, drect.y) != kInvalidEditPoint)
 		return True;
 	switch (getstyleint(flags))
 	{

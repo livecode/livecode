@@ -166,7 +166,7 @@ class XMLDocumentList
 	}
 	VXMLDocList *getList() {return &doclist;}
 	//remove document from list by document id.
-	Bool erase(const int fid) 
+	Bool erase(const unsigned int fid)
 	{
 		VXMLDocList::iterator theIterator;
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
@@ -180,7 +180,7 @@ class XMLDocumentList
 		return False;
 	}
 	//find CXMLDocument by document id
-	CXMLDocument *find(const int fid) 
+	CXMLDocument *find(const unsigned int fid)
 	{
 		VXMLDocList::iterator theIterator;
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
@@ -457,20 +457,24 @@ void XML_AddDTD(char *args[], int nargs, char **retstring,
 	static int dtdcounter = 0;
 	char *result = NULL;
 	if (dtdcounter)
-	if (nargs != 2){
-		*error = True;
-		result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else{
-		int docid = atoi(args[0]);
-		CXMLDocument *tdoc = doclist.find(docid);
-		if (!tdoc)
-			result = istrdup(xmlerrors[XMLERR_BADDOCID]);
-		else  if (!tdoc->AddDTD(args[1], strlen(args[1]))) {
-			result = (char *)malloc(1024);
-			sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADDTD],tdoc->GetError());
-		}
-	}
+    {
+        if (nargs != 2){
+            *error = True;
+            result = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+        }
+        else
+        {
+            int docid = atoi(args[0]);
+            CXMLDocument *tdoc = doclist.find(docid);
+            if (!tdoc)
+                result = istrdup(xmlerrors[XMLERR_BADDOCID]);
+            else if (!tdoc->AddDTD(args[1], strlen(args[1])))
+            {
+                result = (char *)malloc(1024);
+                sprintf(result,"%s\n%s",xmlerrors[XMLERR_BADDTD],tdoc->GetError());
+            }
+        }
+    }
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 
@@ -724,7 +728,7 @@ void XML_Documents(char *args[], int nargs, char **retstring,
 	if (!vdoclist->empty()){
 		result = (char *)malloc(vdoclist->size() * INTSTRSIZE);
 		result[0] = '\0';
-		int numdocs = 0;
+		size_t numdocs = 0;
 		for (theIterator = vdoclist->begin(); theIterator != vdoclist->end(); theIterator++){
 			CXMLDocument *tdoc = (CXMLDocument *)(*theIterator);
 			char idbuffer[INTSTRSIZE];
@@ -2493,7 +2497,7 @@ xpathNodeBufGetContent(xmlBufferPtr buffer, xmlNodePtr cur, char *cDelimiter)
  */
 static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *pLineDelimiter)
 {
-	int iBufferSize = 8192;
+	size_t iBufferSize = 8192;
 	if (NULL != pObject)
 	{
 		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
@@ -2543,7 +2547,7 @@ static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *pLineDelim
  */
 static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *pElementDelimiter, char *pLineDelimiter)
 {
-	int iBufferSize = 8192;
+	size_t iBufferSize = 8192;
 	if (NULL != pObject)
 	{
 		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
@@ -2883,7 +2887,7 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 {
 	*pass = False;
 	*error = False;
-	xmlDocPtr xmlDoc, res;
+	xmlDocPtr res;
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];
@@ -2901,7 +2905,7 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
 			if (NULL != xmlDoc)
 			{
-				int docID = atoi(args[1]);
+                docID = atoi(args[1]);
 				CXMLDocument *xsltDocument = doclist.find(docID);
 				
 				// MW-2013-09-11: [[ RevXmlXslt ]] Only try to fetch the xsltContext if
@@ -2957,7 +2961,7 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 {
 	*pass = False;
 	*error = False;
-	xmlDocPtr xmlDoc, res;
+	xmlDocPtr res;
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];

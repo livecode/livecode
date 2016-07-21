@@ -151,6 +151,7 @@ void CXMLDocument::startElementCallback(void *ctx,
     if (allowcallbacks)
 		CB_startElement((const char *)fullname,(const char **)atts);
 	if (buildtree)
+    {
         //HS-2010-10-11: [[ Bug 7586 ]] Reinstate libxml2 to create name spaces. Implement new liveCode commands to suppress name space creation.
         if (XML_ProcessNameSpaces)
         {
@@ -160,6 +161,7 @@ void CXMLDocument::startElementCallback(void *ctx,
         {
             xmlSAX2StartElementNoNS(ctx,fullname,atts);
         }
+    }
 }
 
 void CXMLDocument::endElementCallback(void *ctx,
@@ -423,9 +425,11 @@ Bool CXMLDocument::GetElementByPath(CXMLElement *telement, char *tpath)
 	else
 			nameend = nextname;
 	if (!util_strnicmp(telement->GetName(),sptr,nameend-sptr))
+    {
 		if (isroot)
 			return True;
 		else
 			return telement->GoChildByPath(nextname+1);
+    }
 	return False;
 }

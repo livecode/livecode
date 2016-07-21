@@ -63,7 +63,6 @@ static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_na
 	CIFilter *t_filter = nil;
 	NSArray *t_parameters = nil;
 	NSDictionary *t_attributes = nil;
-	int t_index;
 	
 	/* UNCHECKED */ MCMemoryNew(t_effect);
 	
@@ -83,7 +82,7 @@ static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_na
 	{
 		t_info -> handle = (void *)t_effect;
 		t_info -> parameter_count = 0;
-		for(t_index = 0; t_index < [t_parameters count]; ++t_index)
+		for(NSUInteger t_index = 0; t_index < [t_parameters count]; ++t_index)
 		{
 			NSString *t_name;
 			NSString *t_class;

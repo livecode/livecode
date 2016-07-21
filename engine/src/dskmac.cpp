@@ -513,7 +513,7 @@ typedef struct
 {
 	MCNameRef *token;
 	unsigned long macfolder;
-	OSType domain;
+	int32_t domain;
 	unsigned long mactag;
 }
 sysfolders;
@@ -523,21 +523,21 @@ sysfolders;
 // http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
 
 static sysfolders sysfolderlist[] = {
-    {&MCN_desktop, 'desk', OSType(kOnAppropriateDisk), 'desk'},
-    {&MCN_fonts,'font', OSType(kOnAppropriateDisk), 'font'},
-    {&MCN_preferences,'pref', OSType(kUserDomain), 'pref'},
-    {&MCN_temporary,'temp', OSType(kUserDomain), 'temp'},
-    {&MCN_system, 'macs', OSType(kOnAppropriateDisk), 'macs'},
+    {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
+    {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
+    {&MCN_preferences,'pref', kUserDomain, 'pref'},
+    {&MCN_temporary,'temp', kUserDomain, 'temp'},
+    {&MCN_system, 'macs', kOnAppropriateDisk, 'macs'},
     // TS-2007-08-20: Added to allow a common notion of "home" between all platforms
-    {&MCN_home, 'cusr', OSType(kUserDomain), 'cusr'},
+    {&MCN_home, 'cusr', kUserDomain, 'cusr'},
     // MW-2007-09-11: Added for uniformity across platforms
-    {&MCN_documents, 'docs', OSType(kUserDomain), 'docs'},
+    {&MCN_documents, 'docs', kUserDomain, 'docs'},
     // MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
     // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
-    {&MCN_support, 0, OSType(kUserDomain), 'asup'},
+    {&MCN_support, 0, kUserDomain, 'asup'},
 };
 
-static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
+static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, int32_t& r_domain)
 {
 	for (uindex_t i = 0; i < ELEMENTS(sysfolderlist); i++)
 	{
@@ -668,7 +668,7 @@ static void configureSerialPort(int sRefNum)
     /* UNCHECKED */ MCStringSplit(MCserialcontrolsettings, MCSTR(" "), nil, kMCCompareExact, &t_settings);
     uindex_t nsettings = MCArrayGetCount(*t_settings);
     
-    for (int i = 0 ; i < nsettings ; i++)
+    for (uindex_t i = 0 ; i < nsettings ; i++)
     {
         // Note: 't_settings' is an array of strings
         MCValueRef t_settingval = nil;
@@ -1956,7 +1956,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 errno = ResError();
                 t_success = false;
             }
-            for (uindex_t i = 1; t_success && i <= typeCount; i++)
+            for (index_t i = 1; t_success && i <= typeCount; i++)
             {
                 Get1IndType(&type, i);
                 if (ResError() != noErr || type == 0)
@@ -3480,7 +3480,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
     {
         uint32_t t_mac_folder = 0;
-        OSType t_domain = kOnAppropriateDisk;
+        int32_t t_domain = kOnAppropriateDisk;
         bool t_found_folder = false;
         
         
@@ -4278,7 +4278,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         {
 //            (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
             // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
-            static int oldcharset = -1;
+            static uint32_t oldcharset = UINT32_MAX;
             if (!p_buffer_length)
             {
                 return p_string_length << 1;
@@ -5453,7 +5453,7 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
                             uint4 &destlen, uint1 charset)
 {
 	// MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
-	static int oldcharset = -1;
+	static uint32_t oldcharset = UINT32_MAX;
 	if (!destbufferlength)
 	{
 		destlen = len << 1;
@@ -5540,9 +5540,9 @@ static bool startprocess_write_uint32_to_fd(int fd, uint32_t value)
 
 static bool startprocess_write_cstring_to_fd(int fd, char *string)
 {
-	if (!startprocess_write_uint32_to_fd(fd, strlen(string) + 1))
+	if (!startprocess_write_uint32_to_fd(fd, uint32_t(strlen(string) + 1)))
 		return false;
-	if (write(fd, string, strlen(string) + 1) != strlen(string) + 1)
+    if (write(fd, string, strlen(string) + 1) != (ssize_t)strlen(string) + 1)
 		return false;
 	return true;
 }

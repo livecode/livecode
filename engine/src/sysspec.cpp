@@ -1684,7 +1684,7 @@ IO_stat MCS_sync(IO_handle p_stream)
 
 Boolean MCS_eof(IO_handle p_stream)
 {
-	return (p_stream -> Tell() == p_stream ->  GetFileSize());
+	return (uint64_t(p_stream -> Tell()) == p_stream ->  GetFileSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

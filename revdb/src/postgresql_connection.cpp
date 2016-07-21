@@ -451,13 +451,12 @@ void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
 	{
 		char *result = buffer;
 		char *resultptr = result;
-		unsigned int colsize = 0;
 		if (!newcursor->getEOF())
 		{
 			while (True){
 				unsigned int colsize;
 				char *coldata = newcursor->getFieldDataBinary(1,colsize);
-				colsize = strlen(coldata);
+				colsize = (unsigned int)strlen(coldata);
 				if (((resultptr-result) + (int)colsize + rowseplen + 16 ) > *bufsize)
 					break;
 				memcpy(resultptr,coldata,colsize);

@@ -176,8 +176,8 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			              && (flags & F_SHOW_ICON || !indicator))
 			              || (white && state & CS_KFOCUSED && !(state & CS_SUBMENU))
 			              || (macoption && state & CS_SUBMENU),
-			              (white || (state & CS_ARMED && !(flags & F_SHOW_BORDER))
-			              && !macoption));
+                          (white || ((state & CS_ARMED && !(flags & F_SHOW_BORDER))
+                                     && !macoption)));
 			switch (style)
 			{
 			case F_MENU:

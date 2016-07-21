@@ -707,7 +707,7 @@ static bool MCDeploySignCopyFileAt(BIO *p_output, MCDeployFileRef p_input, uint3
 		if (!MCDeployFileRead(p_input, t_buffer, t_size))
 			return MCDeployThrow(kMCDeployErrorBadRead);
 		
-		if (BIO_write(p_output, t_buffer, t_size) != t_size)
+		if (uint32_t(BIO_write(p_output, t_buffer, t_size)) != t_size)
 			return MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 
 		p_amount -= t_size;
@@ -779,7 +779,7 @@ static bool MCDeploySignHashWindowsExecutable(MCDeployFileRef p_input, BIO *p_ou
 		uint32_t t_pad_length;
 		t_pad_length = 8 - (p_cert_offset % 8);
 
-		if (BIO_write(t_hash, t_pad, t_pad_length) != t_pad_length)
+		if (uint32_t(BIO_write(t_hash, t_pad, t_pad_length)) != t_pad_length)
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 	}
 
@@ -1218,7 +1218,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 		BIO *t_stream;
 		t_stream = PKCS7_dataInit(t_signature, nil);
 		if (t_stream == nil ||
-			BIO_write(t_stream, t_content_data + 2, t_content_size - 2) != t_content_size - 2 ||
+			uint32_t(BIO_write(t_stream, t_content_data + 2, t_content_size - 2)) != t_content_size - 2 ||
 			!PKCS7_dataFinal(t_signature, t_stream))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadSignature);
 
@@ -1285,7 +1285,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 
 		// Write out the certificate data
-		if (BIO_write(t_output, t_signature_data, t_signature_size) != t_signature_size)
+		if (uint32_t(BIO_write(t_output, t_signature_data, t_signature_size)) != t_signature_size)
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 
 		// Write out the padding
@@ -1295,7 +1295,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 			uint32_t t_pad_length;
 			t_pad_length = 8 - (t_signature_size % 8);
 			MCMemoryClear(t_pad, t_pad_length);
-			if (BIO_write(t_output, t_pad, t_pad_length) != t_pad_length)
+			if (uint32_t(BIO_write(t_output, t_pad, t_pad_length)) != t_pad_length)
 				t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 		}
 	}
@@ -1441,7 +1441,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 		if (t_success)
 			t_success = MCMemoryNewArray(t_header . salt_length, t_salt);
 		if (t_success)
-			if (BIO_read(t_input, t_salt, t_header . salt_length) != t_header . salt_length)
+			if (uint32_t(BIO_read(t_input, t_salt, t_header . salt_length)) != t_header . salt_length)
 				t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadPrivateKey);
 	}
 
@@ -1467,7 +1467,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 		t_success = MCMemoryNewArray(t_key_length, t_key_data);
 	}
 	if (t_success)
-		if (BIO_read(t_input, t_key_data, t_key_length) != t_key_length)
+		if (uint32_t(BIO_read(t_input, t_key_data, t_key_length)) != t_key_length)
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadPrivateKey);
 
 	// We now have everything we need to attempt to decrypt the key (if necessary).

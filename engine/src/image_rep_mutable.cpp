@@ -1029,7 +1029,7 @@ bool MCMutableImageRep::bucket_line(MCImageBitmap *p_src, uint4 color,
                              int2 x, int2 y, int2 &l, int2 &r)
 {
 	l = r = x;
-	if (y < 0 || y >= p_src->height || x < 0 || x >= p_src->width)
+	if (y < 0 || y >= int64_t(p_src->height) || x < 0 || x >= int64_t(p_src->width))
 		return false;
 
 	uint32_t *t_src_row = (uint32_t*)((uint8_t*)p_src->data + y * p_src->stride) + x ;
@@ -1042,10 +1042,10 @@ bool MCMutableImageRep::bucket_line(MCImageBitmap *p_src, uint4 color,
 			;
 		l++;
 	}
-	if (r < p_src->width - 1)
+	if (r < int64_t(p_src->width) - 1)
 	{
 		uint32_t *t_right_ptr = t_src_row;
-		while (r++ < p_src->width - 1 && *++t_right_ptr == color)
+		while (r++ < int64_t(p_src->width) - 1 && *++t_right_ptr == color)
 			;
 		r--;
 	}

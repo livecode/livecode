@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static bool check_point(MCImageBitmap *p_bitmap, int32_t x, int32_t y)
 {
-	return (x >= 0) && (x < p_bitmap->width) && (y >= 0) && (y < p_bitmap->height);
+	return (x >= 0) && (x < int64_t(p_bitmap->width)) && (y >= 0) && (y < int64_t(p_bitmap->height));
 }
 
 static bool check_bounds(MCImageBitmap *p_bitmap, int32_t x, int32_t y, uint32_t width, uint32_t height)

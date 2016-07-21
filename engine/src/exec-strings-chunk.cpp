@@ -285,7 +285,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                     r_end += t_found_range . length;
                 // If we didn't, and this operation does not force additional delimiters, then include the previous delimiter in the mark.
                 // e.g. mark item 3 of a,b,c -> a,b(,c) so that delete item 3 of a,b,c -> a,b
-                else if (r_start > p_range . offset && !r_add)
+                else if (uindex_t(r_start) > p_range . offset && !r_add)
                     r_start -= t_found_range . length;
             }
         }
@@ -355,7 +355,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             {
 	            if (r_end >= 0 && (uindex_t) r_end < t_length)
                     r_end++;
-                else if (r_start > p_range . offset && !r_add)
+                else if (uindex_t(r_start) > p_range . offset && !r_add)
                     r_start--;
             }
         }
@@ -415,7 +415,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 //  and word chunk range goes to the end of the string. 
 	            if (r_end >= 0 && (uindex_t) r_end == t_length)
                 {
-                    while (r_start > p_range . offset && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
+                    while (uindex_t(r_start) > p_range . offset && MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, r_start - 1)))
                         r_start--;
                 }
                 return;
