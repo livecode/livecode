@@ -131,6 +131,7 @@
 							'-Werror=missing-declarations',
 							'-Werror=mismatched-new-delete',
 							'-Werror=constant-logical-operand',
+							'-Werror=unknown-pragmas',
 						],
 					},
 				},
