@@ -132,8 +132,11 @@
 							'-Werror=mismatched-new-delete',
 							'-Werror=constant-logical-operand',
 							'-Werror=unknown-pragmas',
+<<<<<<< 183262100ed8e784feb7f5a639c48c340adeccaf
 							'-Werror=missing-field-initializers',
 							'-Werror=objc-literal-compare',
+=======
+>>>>>>> Turn on -Werror=unknown-pragmas
 						],
 					},
 				},
