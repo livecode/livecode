@@ -572,7 +572,7 @@ inline uint32_t MCSwapInt32NetworkToHost(uint32_t i)
 inline uint16_t MCSwapInt16HostToNetwork(uint16_t i)
 {
 #ifdef __LITTLE_ENDIAN__
-	return ((i & 0xff) << 8) | ((i & 0xff00) >> 8);
+	return uint16_t(((i & 0xff) << 8) | ((i & 0xff00) >> 8));
 #else
 	return i;
 #endif
@@ -581,7 +581,7 @@ inline uint16_t MCSwapInt16HostToNetwork(uint16_t i)
 inline uint16_t MCSwapInt16NetworkToHost(uint16_t i)
 {
 #ifdef __LITTLE_ENDIAN__
-	return ((i & 0xff) << 8) | ((i & 0xff00) >> 8);
+	return uint16_t(((i & 0xff) << 8) | ((i & 0xff00) >> 8));
 #else
 	return i;
 #endif
