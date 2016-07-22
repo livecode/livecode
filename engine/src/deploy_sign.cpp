@@ -1568,7 +1568,7 @@ bool MCDeploySignLoadPVK(MCStringRef p_filename, MCStringRef p_passphrase, EVP_P
 		t_key_byte_length = t_rsa_header . length >> 3;
 
 	// Now check that we have enough data for all the parts of the key.
-	if (t_success && t_key_length < 12 + (t_key_byte_length / 2) * 9)
+	if (t_success && (t_key_length < 0 || uint32_t(t_key_length) < 12 + t_key_byte_length / 2) * 9)
 		t_success = MCDeployThrow(kMCDeployErrorBadPrivateKey);
 
 	// Now we can happily start extracting all the numbers. These are stored as
