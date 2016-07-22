@@ -19,10 +19,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef __VISUALC__
 #pragma optimize("agt", on)
 #pragma optimize("y", off)
-
-#ifdef __VISUALC__
 #define INLINE __forceinline
 #else
 #define INLINE inline

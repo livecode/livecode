@@ -136,6 +136,7 @@
 							'-Werror=missing-field-initializers',
 							'-Werror=missing-declarations',
 							'-Werror=unused-variable',
+							'-Werror=unknown-pragmas',
 						],
 					},
 				},
