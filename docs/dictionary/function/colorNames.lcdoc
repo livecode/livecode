@@ -32,5 +32,5 @@ References: hiliteColor (property), shadowColor (property), foregroundColor (pro
 Tags: ui
 
 Changes:
-In LiveCode 8.1 the Gray1-100 colors were corrected to match the shades of gray from the [X11 color names]
-(https://en.wikipedia.org/wiki/X11_color_names).
+In LiveCode 8.1 the Gray1-100 colors were corrected to match the shades of gray 
+from the [X11 color names](https://en.wikipedia.org/wiki/X11_color_names).
