@@ -275,8 +275,8 @@ int _stricmp(const char *s1, const char *s2)
     char c1, c2;
    while (1)
     {
-    	c1 = tolower(*s1++);
-    	c2 = tolower(*s2++);
+    	c1 = (char)tolower(*s1++);
+    	c2 = (char)tolower(*s2++);
         if (c1 < c2) return -1;
         if (c1 > c2) return 1;
         if (c1 == 0) return 0;
@@ -289,8 +289,8 @@ int _strnicmp(const char *s1, const char *s2, int n)
     char c1, c2;
     for (i=0; i<n; i++)
     {
-        c1 = tolower(*s1++);
-        c2 = tolower(*s2++);
+        c1 = (char)tolower(*s1++);
+        c2 = (char)tolower(*s2++);
         if (c1 < c2) return -1;
         if (c1 > c2) return 1;
         if (!c1) return 0;

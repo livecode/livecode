@@ -177,7 +177,7 @@ static char *strlwr(char *str)
 {
     while (*str)
     {
-        *str = tolower(*str);
+        *str = (char)tolower(*str);
         str++;
     }
     return str;
@@ -210,8 +210,8 @@ int util_stringcompare(const char *s1, const char *s2, int n)
     char c1, c2;
     for (i=0; i<n; i++)
     {
-        c1 = tolower(*s1++);
-        c2 = tolower(*s2++);
+        c1 = (char)tolower(*s1++);
+        c2 = (char)tolower(*s2++);
         if (c1 < c2) return -1;
         if (c1 > c2) return 1;
         if (!c1) return 0;

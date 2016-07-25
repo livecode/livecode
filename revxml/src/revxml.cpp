@@ -56,7 +56,7 @@ char *strlwr(char *str)
 {
     while (*str)
     {
-        *str = tolower(*str);
+        *str = (char)tolower(*str);
         str++;
     }
     return str;
@@ -90,7 +90,7 @@ char *strlwr(char *str)
 {
     while (*str)
     {
-        *str = tolower(*str);
+        *str = (char)tolower(*str);
         str++;
     }
     return str;
@@ -307,7 +307,7 @@ static int computehash(char *keystr)
 	int length = strlen(keystr);
 	const char *sptr = keystr;
 	while (length--){
-		value += tolower(*sptr++);
+		value += (char)tolower(*sptr++);
 		value = value * 3;
 	}
 	return value & 96000 -1;

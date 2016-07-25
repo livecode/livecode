@@ -30,8 +30,8 @@ int util_strnicmp(const char *one, const char *two, int n)
   const char *tptr = (const char *)two;
   while (n--) {
     if (*optr != *tptr) {
-      char o = tolower(*optr);
-      char t = tolower(*tptr);
+      char o = (char)tolower(*optr);
+      char t = (char)tolower(*tptr);
       if (o != t || o == '\0' || t == '\0')
 	return o - t;
     }
