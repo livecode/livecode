@@ -124,12 +124,27 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
    return tFiles is not empty
 end toolsBuilderFilterExternals
 
-private command toolsBuilderPrepareMergExt pMergExtVersion, pEdition, pPlatform
-   -- Ensure that the MergExt bundle is downloaded and unpacked
-   builderMergExtUnpack pMergExtVersion, (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
+private command toolsBuilderPrepareExt pEdition, pPlatform
+   builderExtUnpack pEdition
    
-   toolsBuilderFilterExternals builderMergExtFolder() & "/" & "MergExt", pPlatform
-end toolsBuilderPrepareMergExt
+   -- Remove un-needed files from the unpacked Ext collection
+   local tOldFolder
+   local tCollectionFolder
+   put builderUnpackFolder() & slash & "Ext" into tCollectionFolder
+   put the defaultFolder into tOldFolder
+   set the defaultFolder to tCollectionFolder
+   repeat for each line tExtension in the folders
+      -- Skip special names
+      if tExtension is empty or tExtension is "." or tExtension is ".." then next repeat
+      
+      toolsBuilderFilterExternals tCollectionFolder & "/" & tExtension, pPlatform
+      if the result is false then
+         set the defaultFolder to tCollectionFolder
+         get shell(merge("rm -rf '[[tExtension]]'"))
+      end if
+   end repeat
+   set the defaultFolder to tOldFolder
+end toolsBuilderPrepareExt
 
 ////////////////////////////////////////////////////////////////////////////////
 
