@@ -224,8 +224,12 @@ public handler OnSave(out rProperties as Array)
 end handler
 
 public handler OnLoad(in pProperties as Array)
-	put pProperties["highlight"] into mSwitchIsOn
-	put pProperties["showBorder"] into mShowFrameBorder
+	if "highlight" is among the keys of pProperties then
+		setSwitch(pProperties["highlight"])
+	end if
+	if "showBorder" is among the keys of pProperties then
+		setShowFrameBorder(pProperties["showBorder"])
+	end if
 end handler
 
 public handler OnCreate() returns nothing
