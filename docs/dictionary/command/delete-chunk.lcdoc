@@ -1,18 +1,19 @@
 Name: delete chunk
 
+Synonyms: clear chunk
+
 Type: command
 
-Syntax: delete [<chunk> of] <container> 
+Syntax: delete [<chunk> of] <container>
 
-Summary: Removes text from a <container>.
-
-Synonyms: clear chunk
+Summary:
+Removes text from a <container>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 delete word 2 of field 1
@@ -21,8 +22,11 @@ Example:
 delete line 6 to 8 of tVariable
 
 Parameters:
-chunk: A chunk expression specifying a portion of the container.
-container: A field, button or variable.
+chunk:
+A chunk expression specifying a portion of the container.
+
+container:
+A field, button or variable.
 
 Description:
 Use the <delete chunk> command to change the contents of a container.
@@ -34,3 +38,4 @@ put empty into chunk of container
 References: delete (command), container (glossary)
 
 Tags: text processing
+

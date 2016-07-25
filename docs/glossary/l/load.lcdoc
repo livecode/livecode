@@ -1,6 +1,6 @@
 Name: load
 
-Synonyms: loaded,loading,load
+Synonyms: loaded, loading, load
 
 Type: glossary
 
@@ -10,3 +10,4 @@ To receive and display a <file>.
 References: file (glossary)
 
 Tags: networking
+

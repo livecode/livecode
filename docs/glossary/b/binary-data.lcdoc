@@ -1,6 +1,6 @@
 Name: binary data
 
-Synonyms: binary data,binary (non-text) data
+Synonyms: binary data, binary (non-text) data
 
 Type: glossary
 
@@ -10,3 +10,4 @@ Data consisting of a <string> of <bit|bits>. Non-text data.
 References: string (glossary), bit (glossary)
 
 Tags: text processing
+

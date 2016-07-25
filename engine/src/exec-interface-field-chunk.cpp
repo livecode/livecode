@@ -179,6 +179,9 @@ struct PodFieldPropType<MCInterfaceNamedColor>
     static void init(MCInterfaceNamedColor& self)
     {
         self . name = MCValueRetain(kMCEmptyString);
+        self . color . red = 0;
+        self . color . green = 0;
+        self . color . blue = 0;
     }
 
     static void input(MCInterfaceNamedColor p_value, MCInterfaceNamedColor& r_value)

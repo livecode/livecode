@@ -1,0 +1,56 @@
+Name: metadata of field
+
+Type: property
+
+Syntax: set the metadata of <fieldChunk> to <string>
+
+Summary:
+The <metadata> property of a field chunk specifies additional
+information stored with the field chunk but not visible to the user.
+
+Associations: field
+
+Introduced: 5.5
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+set the metadata of word 6 of field 1 to "extra information hidden from the user"
+
+Example:
+get the metadata of char 1 to 100 of field 1
+
+Example:
+set the metadata of line 3 field "description" to "extra information"
+
+Example:
+put "ben is 5 years old" into field 1
+set the metadata of word 1 of field 1 to "noun"
+repeat with x = 1 to the number of words of field 1
+   if the metadata of word x of field 1 is "noun" then 
+      put toUpper(word x of field 1) into word x of field 1
+   end if
+end repeat
+
+Parameters:
+string (string):
+A string of text.
+
+Description:
+Use the <metadata> property to store additional information in a field
+that is not visible to a user. Metadata can be specified for any field
+chunk; char, word and line as well as ranges (e.g. word 2 to 5).
+
+The ability to add metadata at the paragraph level was added in version
+6.0. Like metadata at the char level, you can now 'set the metadata of
+line ... of ...' and it will be attached to the paragraph, a level above
+the char properties. This means if you want to set the metadata on the
+char level for a whole line you must do 'set the metadata of char 1 to
+-1 of line .. of ...', rather than just 'of line'.
+
+References: styledText (property), flagged (property)
+
+Tags: text processing
+

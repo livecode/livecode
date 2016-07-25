@@ -1,14 +1,17 @@
 Name: movie
 
-Synonyms: movie,movie file
+Synonyms: movie, movie file
 
 Type: glossary
 
 Description:
-A <file> that can be displayed by the LiveCode player. Movies can contain video tracks, sound tracks, or both.
- 
+A <file> that can be displayed by the LiveCode player. Movies can
+contain video tracks, sound tracks, or both.
+
 Any movie can be displayed in a <player> <object(glossary)>.
 
-References: QuickTime (glossary), file (glossary), QuickTime VR (glossary), object (glossary), player (glossary)
+References: QuickTime (glossary), file (glossary),
+QuickTime VR (glossary), object (glossary), player (glossary)
 
 Tags: multimedia
+

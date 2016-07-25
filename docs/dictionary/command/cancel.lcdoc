@@ -2,16 +2,17 @@ Name: cancel
 
 Type: command
 
-Syntax: cancel <messageQueueID> 
+Syntax: cancel <messageQueueID>
 
-Summary: Removes a <message> that was queued with the <send> <command> 
+Summary:
+Removes a <message> that was queued with the <send> <command>
 and is waiting to be sent.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 cancel 2298
@@ -36,7 +37,8 @@ on cancelBeep
 end cancelBeep
 
 Parameters:
-messageQueueID (integer): The ID number of the message.
+messageQueueID (integer):
+The ID number of the message.
 
 Description:
 Use the <cancel> <command> to get rid of <message|messages> that were
@@ -49,26 +51,32 @@ corresponding to the message in the <pendingMessages> <function>.
 All <pendingMessages|pending messages> are automatically canceled when 
 the application quits.
 
-It is common to need to <cancel> a number of <message|messages> when leaving a <card>
-or <stack>, if the <message|messages> only pertain to that card or stack. For
-example, you might have queued a number of <message|messages> that create an
-animated display on the current <card>, and need to <cancel> them when the
-user goes to another <card>. The best solution in a case like this is to
-place each <messageQueueID> in a <script local variable>, a <global> <variable>, 
-or a <custom property> at the time the <message> is sent. Then you can <cancel> all those
-<message|messages> in a <repeat> <loop> :
+It is common to need to <cancel> a number of <message|messages> when
+leaving a <card> or <stack>, if the <message|messages> only pertain to
+that card or stack. For example, you might have queued a number of
+<message|messages> that create an animated display on the current
+<card>, and need to <cancel> them when the user goes to another <card>.
+The best solution in a case like this is to place each <messageQueueID>
+in a <script local variable>, a <global> <variable>, or a <custom
+property> at the time the <message> is sent. Then you can <cancel> all
+those <message|messages> in a <repeat> <loop> :
 
     global myPendingMessages # you've stored the message IDs here
     on closeCard
-      repeat for each line thisMessageID in myPendingMessages
-        cancel thisMessageID
-      end repeat
+
+    repeat for each line thisMessageID in myPendingMessages
+
+    cancel thisMessageID
+
+    end repeat
     end closeCard
 
-References: card (object), command (glossary), custom property (glossary),
-flushEvents (function), function (control structure), global (glossary),
-item (keyword), loop (glossary), message (glossary), pendingMessages
-(function), repeat (control structure), result (function), script local variable
-(glossary), send (command), stack (object), variable (glossary)
+
+References: send (command), function (control structure),
+repeat (control structure), flushEvents (function),  (function),
+result (function), command (glossary), custom property (glossary),
+global (glossary), loop (glossary), message (glossary),  (glossary),
+variable (glossary), item (keyword), card (object), stack (object)
 
 Tags: messages
+

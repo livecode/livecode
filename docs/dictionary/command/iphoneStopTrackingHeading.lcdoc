@@ -4,7 +4,8 @@ Type: command
 
 Syntax: iphoneStopTrackingHeading
 
-Summary: Stops tracking the heading of the device.
+Summary:
+Stops tracking the heading of the device.
 
 Introduced: 4.6.1
 
@@ -21,10 +22,17 @@ if tTrackingOn is "false" then
 end if
 
 Description:
-Use the <iphoneStopTrackingHeading> command to stop tracking the current heading of the device.
+Use the <iphoneStopTrackingHeading> command to stop tracking the current
+heading of the device.
 
-The <iphoneStopTrackingHeading> command stops tracking the heading of the device using the digital compass.
+The <iphoneStopTrackingHeading> command stops tracking the heading of
+the device using the digital compass.
 
 >*Note:* The digital compass is only supported in iOS 4.0 and later.
 
-References: iphoneSetHeadingCalibrationTimeout (command), iphoneStartTrackingHeading (command), mobileCanTrackHeading (function), mobileCanTrackLocation (function), mobileCurrentHeading (function), iphoneHeadingCalibrationTimeout (function), trackingError (message), headingChanged (message)
+References: iphoneSetHeadingCalibrationTimeout (command),
+iphoneStartTrackingHeading (command), mobileCanTrackHeading (function),
+mobileCanTrackLocation (function), mobileCurrentHeading (function),
+iphoneHeadingCalibrationTimeout (function), trackingError (message),
+headingChanged (message)
+

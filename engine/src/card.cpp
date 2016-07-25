@@ -63,6 +63,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
+#include "stackfileformat.h"
+
 MCRectangle MCCard::selrect;
 int2 MCCard::startx;
 int2 MCCard::starty;
@@ -1105,9 +1107,13 @@ bool MCCard::isdeletable(bool p_check_flag)
         MCObjptr *t_object_ptr = objptrs;
         do
         {
-            // if it's a background group then don't check flags
-            if (!((t_object_ptr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(t_object_ptr->getref())->isshared())) &&
-                t_object_ptr->getref()->isdeletable(true))
+            MCGroup * t_group = t_object_ptr->getrefasgroup();
+            
+            if (t_group != nil && t_group->isshared())
+            {
+                // if it's a shared group then don't check deletability because the object won't be deleted
+            }
+            else if (!t_object_ptr->getref()->isdeletable(true))
                 return false;
             
             t_object_ptr = t_object_ptr->next();
@@ -3085,7 +3091,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 //---- 2.7+:
 //  . F_OPAQUE is now valid - default true
 //  . ink is now valid - default GXcopy
-	if (version < 2700)
+	if (version < kMCStackFileFormatVersion_2_7)
 	{
 		flags |= F_OPAQUE;
 		ink = GXcopy;
@@ -3203,7 +3209,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t 
 //---- 2.7+: 
 //  . F_OPAQUE valid - must be true in older versions
 //  . ink valid - must be GXcopy in older versions
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		t_old_flags = flags;
 		t_old_ink = GXcopy;
@@ -3215,7 +3221,7 @@ IO_stat MCCard::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t 
 		return stat;
 
 //---- 2.7+
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		flags = t_old_flags;
 		ink = t_old_ink;

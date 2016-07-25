@@ -2,39 +2,53 @@ Name: printFontTable
 
 Type: property
 
-Syntax: set the printFontTable to <fontCorrespondencesList> 
+Syntax: set the printFontTable to <fontCorrespondencesList>
 
-Summary: Specifies the <PostScript> <font|fonts> that are substituted for screen <font|fonts> when you print on a <PostScript> printer.
+Summary:
+Specifies the <PostScript> <font|fonts> that are substituted for screen
+<font|fonts> when you print on a <PostScript> printer.
 
 Introduced: 1.0
 
 OS: linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: printing
 
 Example:
 set the printFontTable to bookmanFonts & return & arialFonts
 
-Value: The <printFontTable> is a list of <font> names and their print equivalents, one per <line>.
+Value:
+The <printFontTable> is a list of <font> names and their print
+equivalents, one per <line>.
 
 Description:
-Use the <printFontTable> <property> to specify substitution mappings for nonstandard <font|fonts> you use, or to change the standard <font> substitutions for better results.
+Use the <printFontTable> <property> to specify substitution mappings for
+nonstandard <font|fonts> you use, or to change the standard <font>
+substitutions for better results.
 
-Each line of the <printFontTable> corresponds to one screen <font> and contains the following <items>, separated by commas:
+Each line of the <printFontTable> corresponds to one screen <font> and
+contains the following <items>, separated by commas:
 
         * The name of an X11 screen font
-        * The name of the PostScript font to use in its place for printing
+        * The name of the PostScript font to use in its place for
+          printing 
         * The name of the normal style for that font
         * The name of the bold style for that font
         * The name of the italic style for that font
         * The name of the bold italic style for that font
 
-By default, the <printFontTable> <property> uses a mapping between the standard MIT X11R4 <font|fonts> and the PS35 <font> set.
 
-The setting of this property has no effect on Mac OS and Windows systems.
+By default, the <printFontTable> <property> uses a mapping between the
+standard MIT X11R4 <font|fonts> and the PS35 <font> set.
 
-References: textFont (property), printColors (property), postScript (property), items (keyword), line (keyword), print (command), property (glossary), font (glossary)
+The setting of this property has no effect on Mac OS and Windows
+systems. 
+
+References: print (command), property (glossary), font (glossary),
+items (keyword), line (keyword), textFont (property),
+printColors (property), postScript (property)
 
 Tags: printing
+

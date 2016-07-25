@@ -4,15 +4,16 @@ Type: command
 
 Syntax: revXMLDeleteAllTrees
 
-Summary: Removes all <XML tree> structures in memory.
+Summary:
+Removes all <XML tree> structures in memory.
 
-Associations: XML library
+Associations: xml library
 
 Introduced: 2.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: disk
 
@@ -22,10 +23,13 @@ revXMLDeleteAllTrees
 Example:
 if revXMLTrees() is not empty then revXMLDeleteAllTrees
 
-The result: If the <revXMLDeleteAllTrees> <command> encounters an error, the <result> is set to an error message beginning with "xmlerr".
+The result:
+If the <revXMLDeleteAllTrees> <command> encounters an error, the
+<result> is set to an error message beginning with "xmlerr".
 
 Description:
-Use the <revXMLDeleteAllTrees> <command> to free up memory after you finish using the <XML library>.
+Use the <revXMLDeleteAllTrees> <command> to free up memory after you
+finish using the <XML library>.
 
 >*Important:*  The <revXMLDeleteAllTrees> <command> is part of the 
 > <XML library>. To ensure that the <command> works in a 
@@ -35,6 +39,12 @@ Use the <revXMLDeleteAllTrees> <command> to free up memory after you finish usin
 > <Standalone Application Settings> window, make sure the "XML" 
 > checkbox is checked.
 
-References: revXMLDeleteTree (command), result (function), revXMLTrees (function), revXMLCreateTreeFromFile (function), revXMLCreateTree (function), Standalone Application Settings (glossary), standalone application (glossary), XML tree (glossary), command (glossary), XML library (library), LiveCode custom library (glossary)
+References: revXMLDeleteTree (command), result (function),
+revXMLTrees (function), revXMLCreateTreeFromFile (function),
+revXMLCreateTree (function), Standalone Application Settings (glossary),
+standalone application (glossary), XML tree (glossary),
+command (glossary), LiveCode custom library (glossary),
+XML library (library)
 
 Tags: text processing
+

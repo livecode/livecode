@@ -89,9 +89,19 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
       -- Don't remove lcext files ith Android externals in them
       local tLCExt
       repeat for each line tLCExt in tFiles
-         get shell(merge("unzip -l '[[ tLCExt ]]'"))
-         if "Android/External-" is not in it then
-            get shell(merge("rm -rf '[[ tLCExt ]]'"))
+         revZipOpenArchive pFolder & slash & tLCExt, "read"
+         if the result is not empty then
+            builderLog "error", "Cannot open lcext file" && tLCExt
+            exit toolsBuilderFilterExternals
+         end if
+         
+         local tArchiveFiles
+         put revZipEnumerateItems(pFolder & slash & tLCExt) into tArchiveFiles
+         filter tArchiveFiles with "Android/External-*"
+         revZipCloseArchive pFolder & slash & tLCExt
+         
+         if tArchiveFiles is not empty then
+            get shell(merge("rm -f '[[ tLCExt ]]'"))
          end if
       end repeat
    end if
@@ -103,27 +113,12 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
    return tFiles is not empty
 end toolsBuilderFilterExternals
 
-private command toolsBuilderPrepareExt pEdition, pPlatform
-   builderExtUnpack pEdition
+private command toolsBuilderPrepareMergExt pMergExtVersion, pEdition, pPlatform
+   -- Ensure that the MergExt bundle is downloaded and unpacked
+   builderMergExtUnpack pMergExtVersion, (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition))
    
-   -- Remove un-needed files from the unpacked Ext collection
-   local tOldFolder
-   local tCollectionFolder
-   put builderUnpackFolder() & slash & "Ext" into tCollectionFolder
-   put the defaultFolder into tOldFolder
-   set the defaultFolder to tCollectionFolder
-   repeat for each line tExtension in the folders
-      -- Skip special names
-      if tExtension is empty or tExtension is "." or tExtension is ".." then next repeat
-      
-      toolsBuilderFilterExternals tCollectionFolder & "/" & tExtension, pPlatform
-      if the result is false then
-         set the defaultFolder to tCollectionFolder
-         get shell(merge("rm -rf '[[tExtension]]'"))
-      end if
-   end repeat
-   set the defaultFolder to tOldFolder
-end toolsBuilderPrepareExt
+   toolsBuilderFilterExternals builderMergExtFolder() & "/" & "MergExt", pPlatform
+end toolsBuilderPrepareMergExt
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -856,4 +851,3 @@ function loadTextFile pFile
    replace numToChar(13) with return in it
    return it
 end loadTextFile
-

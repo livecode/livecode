@@ -2,15 +2,16 @@ Name: mobileAdSetVisible
 
 Type: command
 
-Syntax: mobileAdSetVisible <ad>, <visible> 
+Syntax: mobileAdSetVisible <ad>, <visible>
 
-Summary: Specifies whether an ad can be seen or is hidden.
+Summary:
+Specifies whether an ad can be seen or is hidden.
 
 Associations: stack
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -24,10 +25,18 @@ if mobileAdGetVisible("bannerAd") is true then
 end if
 
 Parameters:
-ad: The name of the ad.
-visible (boolean): True to set the ad to visible, false to make the ad invisible.
+ad:
+The name of the ad.
+
+visible (boolean):
+True to set the ad to visible, false to make the ad invisible.
 
 Description:
-Use the <mobileAdSetVisible> command to set the visibility of an ad created using the mobileAdCreate command.
+Use the <mobileAdSetVisible> command to set the visibility of an ad
+created using the mobileAdCreate command.
 
-References: mobileAdCreate (command), mobileAdRegister (command), mobileAdSetTopLeft (command), mobileAdGetTopLeft (function), mobileAdGetVisible (function), mobileAds (function), adLoaded (message), adLoadFailed (message), adClicked (message)
+References: mobileAdCreate (command), mobileAdRegister (command),
+mobileAdSetTopLeft (command), mobileAdGetTopLeft (function),
+mobileAdGetVisible (function), mobileAds (function), adLoaded (message),
+adLoadFailed (message), adClicked (message)
+

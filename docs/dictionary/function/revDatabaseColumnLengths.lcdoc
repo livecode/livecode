@@ -1,37 +1,47 @@
 Name: revDatabaseColumnLengths
 
+Synonyms: revdb_columnlengths
+
 Type: function
 
 Syntax: revDatabaseColumnLengths(<recordSetID>)
 
-Summary: <return|Returns> the maximum field sizes in a <record set (database cursor)(glossary)>.
+Summary:
+<return|Returns> the maximum field sizes in a <record set (database
+cursor)(glossary)>. 
 
-Synonyms: revdb_columnlengths
-
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseColumnLengths(storedSet)
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set (database cursor) was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+(database cursor) was created.
 
-Returns: The <revDatabaseColumnLengths> <function> returns a list of maximum lengths, separated by commas.
+Returns:
+The <revDatabaseColumnLengths> <function> returns a list of maximum
+lengths, separated by commas.
 
 Description:
-Use the <revDatabaseColumnLengths> <function> to find out how large a database field is.
+Use the <revDatabaseColumnLengths> <function> to find out how large a
+database field is.
 
-Each item in the <revDatabaseColumnLengths> is the maximum size of a <database field>.
+Each item in the <revDatabaseColumnLengths> is the maximum size of a
+<database field>.
 
-If the operation is not successful, the <revDatabaseColumnLengths> <function> returns an error message that begins with the <string> "revdberr".
+If the operation is not successful, the <revDatabaseColumnLengths>
+<function> returns an error message that begins with the <string>
+"revdberr". 
 
 >*Important:*  The <revDatabaseColumnLengths> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -45,6 +55,14 @@ If the operation is not successful, the <revDatabaseColumnLengths> <function> re
 Changes:
 The revDatabaseColumnLengths synonym was added in version 2.0.
 
-References: string (keyword), Database library (library), LiveCode custom library (glossary), revDatabaseColumnNamed (function), revDatabaseColumnTypes (function), revDatabaseColumnIsNull (function), revDatabaseColumnNumbered (function), Standalone Application Settings (glossary), database field (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), function (control structure)
+References: function (control structure),
+revDatabaseColumnNamed (function), revDatabaseColumnTypes (function),
+revDatabaseColumnIsNull (function), revDatabaseColumnNumbered (function),
+LiveCode custom library (glossary),
+Standalone Application Settings (glossary), database field (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), return (glossary),
+string (keyword), Database library (library)
 
 Tags: database
+

@@ -554,6 +554,7 @@ enum Functions {
     F_TIME,
     F_TO_LOWER,
     F_TO_UPPER,
+    F_TOKEN_OFFSET,
     F_TOP_STACK,
     F_TRANSPOSE,
     F_TRUEWORD_OFFSET,

@@ -1728,6 +1728,7 @@ LT factor_table[] =
         {"to", TT_TO, PT_TO},
         {"togglehilites", TT_PROPERTY, P_TOGGLE_HILITE},
         {"token", TT_CHUNK, CT_TOKEN},
+        {"tokenoffset", TT_FUNCTION, F_TOKEN_OFFSET},
         {"tokens", TT_CLASS, CT_TOKEN},
         {"tolower", TT_FUNCTION, F_TO_LOWER},
         {"tool", TT_PROPERTY, P_TOOL},

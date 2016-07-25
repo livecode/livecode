@@ -1,18 +1,19 @@
 Name: unhilite
 
+Synonyms: dehilite
+
 Type: command
 
-Syntax: unhilite <button> 
+Syntax: unhilite <button>
 
-Summary: Sets a <button|button's> <hilite> <property> to false.
-
-Synonyms: dehilite
+Summary:
+Sets a <button|button's> <hilite> <property> to false.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 unhilite button 1
@@ -21,13 +22,20 @@ Example:
 unhilite button 1 of group 1
 
 Parameters:
-button: Any button reference.
+button:
+Any button reference.
 
 Description:
-Use the <unhilite> <command> to turn off the <highlight|highlighting> of a button and restore it to its normal unhighlighted state, or to turn off a <checkbox> or <radio button>.
+Use the <unhilite> <command> to turn off the <highlight|highlighting> of
+a button and restore it to its normal unhighlighted state, or to turn
+off a <checkbox> or <radio button>.
 
-The <unhilite> <command> sets the <button|button's> <hilite> <property> to false.
+The <unhilite> <command> sets the <button|button's> <hilite> <property>
+to false.
 
-References: hilite (command), button (object), property (glossary), highlight (glossary), radio button (glossary), command (glossary), checkbox (glossary)
+References: hilite (command), property (glossary), highlight (glossary),
+radio button (glossary), command (glossary), checkbox (glossary),
+button (object)
 
 Tags: ui
+

@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 #define IMAGE_BLOCK_LEADING  2
 static MCRectangle
 MCBlockMakeRectangle(double x, double y,
@@ -143,6 +145,26 @@ bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectV
 	return p_visitor -> OnBlock(this);
 }
 
+// IM-2016-07-06: [[ Bug 17690 ]] Test if block sizes or offsets require 32bit
+//   values to store (stack file format v8.1).
+uint32_t MCBlock::getminimumstackfileversion(void)
+{
+	bool t_is_unicode;
+	// paragraph text is always unicode when saving as version 7.0 or greater.
+	//    since we can't know which version will be used at this point, the
+	//    best we can do is assume unicode text.
+	/* t_is_unicode = !MCStringIsNative(parent->GetInternalStringRef()); */
+	t_is_unicode = true;
+	
+	uint32_t t_index_size;
+	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
+	
+	if (m_index * t_index_size > UINT16_MAX || m_size * t_index_size > UINT16_MAX)
+		return kMCStackFileFormatVersion_8_1;
+	else
+		return kMCStackFileFormatMinimumExportVersion;
+}
+
 // MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then the record is an extended
 //   record.
 IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
@@ -181,7 +203,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//   is a font record to read.
 	if (flags & F_FONT)
     {
-		if (version > 1300)
+		if (version > kMCStackFileFormatVersion_1_3)
 		{
 			uint2 t_font_index;
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
@@ -242,7 +264,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 		atts->backcolor = new MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
-		if (version < 2000 || flags & F_HAS_BACK_COLOR_NAME)
+		if (version < kMCStackFileFormatVersion_2_0 || flags & F_HAS_BACK_COLOR_NAME)
 		{
 			// MW-2012-01-06: [[ Block Changes ]] We no longer use the backcolor name
 			//   so load, delete and unset the flag.
@@ -264,7 +286,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (flags & F_HAS_LINK)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(atts->linktext, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
@@ -272,7 +294,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (flags & F_HAS_IMAGE)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(atts->imagesource, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
@@ -282,7 +304,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	if (flags & F_HAS_METADATA)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(atts->metadata, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
@@ -303,13 +325,33 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	//
 	// Helpfully, the paragraph loading code makes a SetRanges call to inform
 	// the block of the correct offsets as soon as it knows them.
-	uint2 index, size;
-	if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
-		return checkloadstat(stat);
-	if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
-		return checkloadstat(stat);
-	m_index = index;
-	m_size = size;
+
+	// IM-2016-07-11: [[ Bug 17690 ]] change storage format for index & size from
+	//   16bit to 32bit in stack file format v8.1.
+	if (version >= kMCStackFileFormatVersion_8_1)
+	{
+		uint32_t t_index, t_size;
+		stat = IO_read_uint4(&t_index, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+		
+		stat = IO_read_uint4(&t_size, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+		
+		m_index = t_index;
+		m_size = t_size;
+	}
+	else
+	{
+		uint2 index, size;
+		if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
+			return checkloadstat(stat);
+		if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
+			return checkloadstat(stat);
+		m_index = index;
+		m_size = size;
+	}
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Adjust the flags to their in-memory
 	//   representation. We ditch F_FONT because it is superceeded by the HAS_F*
@@ -340,7 +382,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	// MW-2012-03-04: [[ StackFile5500 ]] If the block has metadata and 5.5 stackfile
 	//   format has been requested then this is an extended block.
 	bool t_is_ext;
-	if (p_version >= 5500 && getflag(F_HAS_METADATA))
+	if (p_version >= kMCStackFileFormatVersion_5_5 && getflag(F_HAS_METADATA))
 		t_is_ext = true;
 	else
 		t_is_ext = false;
@@ -369,7 +411,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	
     // The "has unicode" flag depends on whether the paragraph is native
 	bool t_is_unicode;
-    if (p_version < 7000 && MCStringIsNative(parent->GetInternalStringRef()))
+    if (p_version < kMCStackFileFormatVersion_7_0 && MCStringIsNative(parent->GetInternalStringRef()))
 	{
 		t_is_unicode = false;
         flags &= ~F_HAS_UNICODE;
@@ -381,7 +423,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	}
 
     // SN-2014-12-04: [[ Bug 14149 ]] Add the F_HAS_TAB flag, for legacy saving
-    if (p_version < 7000)
+    if (p_version < kMCStackFileFormatVersion_7_0)
     {
         if (segment && segment != segment -> next())
             flags |= F_HAS_TAB;
@@ -438,11 +480,11 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	//   strings.
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_LINK)
-        if ((stat = IO_write_stringref_new(atts->linktext, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->linktext, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
     if (flags & F_HAS_IMAGE)
-        if ((stat = IO_write_stringref_new(atts->imagesource, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(atts->imagesource, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -451,17 +493,32 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part, uint32_t p_version)
 	{
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if (flags & F_HAS_METADATA)
-            if ((stat = IO_write_stringref_new(atts -> metadata, stream, p_version >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(atts -> metadata, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return stat;
 	}
 	
 	uint32_t t_index_size;
 	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
 	
-	if ((stat = IO_write_uint2(m_index * t_index_size, stream)) != IO_NORMAL)
-		return stat;
-	if ((stat = IO_write_uint2(m_size * t_index_size, stream)) != IO_NORMAL)
-		return stat;
+	// IM-2016-07-11: [[ Bug 17690 ]] change storage format for index & size from
+	//   16bit to 32bit in stack file format v8.1.
+	if (p_version >= kMCStackFileFormatVersion_8_1)
+	{
+		stat = IO_write_uint4(m_index * t_index_size, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+		
+		stat = IO_write_uint4(m_size * t_index_size, stream);
+		if (stat != IO_NORMAL)
+			return checkloadstat(stat);
+	}
+	else
+	{
+		if ((stat = IO_write_uint2(m_index * t_index_size, stream)) != IO_NORMAL)
+			return stat;
+		if ((stat = IO_write_uint2(m_size * t_index_size, stream)) != IO_NORMAL)
+			return stat;
+	}
 
 	return IO_NORMAL;
 }
@@ -2065,7 +2122,7 @@ uint32_t measure_stringref(MCStringRef p_string, uint32_t p_version)
     uint32_t t_additional_bytes = 0;
     
 
-    if (p_version < 7000)
+    if (p_version < kMCStackFileFormatVersion_7_0)
         t_encoding = kMCStringEncodingNative;
     else
         t_encoding = kMCStringEncodingUTF8;
@@ -2076,7 +2133,7 @@ uint32_t measure_stringref(MCStringRef p_string, uint32_t p_version)
     uint32_t t_length;
     t_length = MCDataGetLength(*t_data);
     
-    if (p_version < 7000)
+    if (p_version < kMCStackFileFormatVersion_7_0)
     {
         // Full string is written in 5.5 format:
         //  - length is written as a uint2

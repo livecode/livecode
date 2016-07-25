@@ -1,16 +1,17 @@
 Name: mobileCanSendMail
 
+Synonyms: iphonecansendmail
+
 Type: function
 
 Syntax: mobileCanSendMail ()
 
-Summary: Determines if a devices can be used to send emails.
-
-Synonyms: iphoneCanSendMail
+Summary:
+Determines if a devices can be used to send emails.
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -22,11 +23,17 @@ if mobileCanSendMail () is false then
 answer "This device does not support e-mail" with "Okay"
 end if
 
-Returns (enum): Returns a boolean result:
-- true : the device supports email submission
-- false : the device does not support email submission
+Returns (enum):
+Returns a boolean result:
+
+-   true: the device supports email submission
+-   false: the device does not support email submission
+
 
 Description:
-Use the <mobileCanSendMail> function to determine if a particular mobile device is configured to send email.
+Use the <mobileCanSendMail> function to determine if a particular mobile
+device is configured to send email.
 
-References: mobileComposeUnicodeMail (command), mobileComposeMail (command), mobileComposeHtmlMail (command)
+References: mobileComposeUnicodeMail (command),
+mobileComposeMail (command), mobileComposeHtmlMail (command)
+

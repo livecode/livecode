@@ -1,22 +1,24 @@
 Name: revDatabaseID
 
+Synonyms: revdb_cursorconnection
+
 Type: function
 
 Syntax: revDatabaseID(<recordSetID>)
 
-Summary: <return|Returns> the database ID of the <database> that opened a <record set (database cursor)(glossary)>.
+Summary:
+<return|Returns> the database ID of the <database> that opened a <record
+set (database cursor)(glossary)>.
 
-Synonyms: revdb_cursorconnection
-
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseID(weeklyOccupancy)
@@ -27,16 +29,22 @@ if revDatabaseID(currentCursor) is not field "DB ID" then
 end if
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-Returns: The <revDatabaseID> <function> returns a positive <integer>.
+Returns:
+The <revDatabaseID> <function> returns a positive <integer>.
 
 Description:
-Use the <revDatabaseID> <function> to find out which <database> a <record set (database cursor)|record set> belongs to.
+Use the <revDatabaseID> <function> to find out which <database> a
+<record set (database cursor)|record set> belongs to.
 
-The returned value is the same as the value returned by the <revOpenDatabase> <function> when the <database> was first opened.
+The returned value is the same as the value returned by the
+<revOpenDatabase> <function> when the <database> was first opened.
 
-You can use the returned value to close a database after your stack is finished with it.
+You can use the returned value to close a database after your stack is
+finished with it.
 
 >*Important:*  The <revDatabaseID> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -50,6 +58,12 @@ You can use the returned value to close a database after your stack is finished 
 Changes:
 The revDatabaseID synonym was added in version 2.0.
 
-References: function (control structure), integer (keyword), revCloseDatabase (command), revOpenDatabase (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), Database library (library), LiveCode custom library (glossary)
+References: revCloseDatabase (command), function (control structure),
+revOpenDatabase (function), Standalone Application Settings (glossary),
+database (glossary), standalone application (glossary),
+record set (database cursor) (glossary), return (glossary),
+LiveCode custom library (glossary), integer (keyword),
+Database library (library)
 
 Tags: database
+

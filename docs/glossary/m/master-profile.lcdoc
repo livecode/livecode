@@ -1,12 +1,17 @@
 Name: master profile
 
-Synonyms: master profile,master property profile
+Synonyms: master profile, master property profile
 
 Type: glossary
 
 Description:
-The default <property profile> of an <object(glossary)>. The master profile holds the <default> settings for the <object|object's> <property|properties>, which are used if no other <property profile|profile> is active.
+The default <property profile> of an <object(glossary)>. The master
+profile holds the <default> settings for the <object|object's>
+<property|properties>, which are used if no other <property
+profile|profile> is active.
 
-References: default (glossary), property (glossary), property profile (glossary), object (glossary)
+References: default (glossary), property (glossary),
+property profile (glossary), object (glossary)
 
 Tags: properties
+

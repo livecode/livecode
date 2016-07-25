@@ -4,13 +4,14 @@ Type: command
 
 Syntax: record resume
 
-Summary: Resumes the pasued sound recording.
+Summary:
+Resumes the pasued sound recording.
 
 Introduced: 6.7
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 if the hilite of button "pause" is false then
@@ -18,10 +19,14 @@ if the hilite of button "pause" is false then
 end if
 
 Description:
-Use the <record resume> command to resume a recording that has been paused.
+Use the <record resume> command to resume a recording that has been
+paused. 
 
-The <record resume> command resumes a recording paused with the <record pause> command.
+The <record resume> command resumes a recording paused with the <record
+pause> command.
 
-References: record pause (command), record sound (command), stop recording (command), recording (property)
+References: record pause (command), record sound (command),
+stop recording (command), recording (property)
 
 Tags: multimedia
+

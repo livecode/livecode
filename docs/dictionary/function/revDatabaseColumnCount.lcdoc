@@ -1,22 +1,24 @@
 Name: revDatabaseColumnCount
 
+Synonyms: revdb_columncount
+
 Type: function
 
 Syntax: revDatabaseColumnCount(<recordSetID>)
 
-Summary: <return|Returns> the number of <database field|database fields> in a <record set (database cursor)(glossary)>.
+Summary:
+<return|Returns> the number of <database field|database fields> in a
+<record set (database cursor)(glossary)>.
 
-Synonyms: revdb_columncount
-
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseColumnCount(12)
@@ -25,16 +27,28 @@ Example:
 revDatabaseColumnCount(the savedResultsPointer of this card)
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-Returns: The <revDatabaseColumnCount> <function> returns either positive <integer> or the number -1.
+Returns:
+The <revDatabaseColumnCount> <function> returns either positive
+<integer> or the number -1.
 
 Description:
-Use the <revDatabaseColumnCount> <function> to find out how many <database field|database fields> you must deal with in a <record set (database cursor)(glossary)>.
+Use the <revDatabaseColumnCount> <function> to find out how many
+<database field|database fields> you must deal with in a <record set
+(database cursor)(glossary)>.
 
-If the operation is not successful, the <revDatabaseColumnCount> <function> returns an error message that begins with the <string> "revdberr".
+If the operation is not successful, the <revDatabaseColumnCount>
+<function> returns an error message that begins with the <string>
+"revdberr". 
 
->*Note:* Some database systems will not give the columm count until all the records in a record set have been fetched. This is for efficiency reasons. When the column count is not available the <revDatabaseColumnCount> will return a value of -1. This is currently applicable to Oracle databases and certain ODBC data sources.
+>*Note:* Some database systems will not give the columm count until all
+> the records in a record set have been fetched. This is for efficiency
+> reasons. When the column count is not available the
+> <revDatabaseColumnCount> will return a value of -1. This is currently
+> applicable to Oracle databases and certain ODBC data sources.
 
 >*Important:*  The <revDatabaseColumnCount> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -48,6 +62,13 @@ If the operation is not successful, the <revDatabaseColumnCount> <function> retu
 Changes:
 The revDatabaseColumnCount synonym was added in version 2.0.
 
-References: string (keyword), integer (keyword), Database library (library), LiveCode custom library (glossary), revDatabaseColumnNames (function), revDatabaseColumnNumbered (function), database field (glossary), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), function (control structure)
+References: function (control structure),
+revDatabaseColumnNames (function), revDatabaseColumnNumbered (function),
+LiveCode custom library (glossary), database field (glossary),
+Standalone Application Settings (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), return (glossary),
+string (keyword), integer (keyword), Database library (library)
 
 Tags: database
+

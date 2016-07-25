@@ -1,6 +1,6 @@
 Name: XPM
 
-Synonyms: XPM,.XPM
+Synonyms: xpm, .xpm
 
 Type: glossary
 
@@ -10,3 +10,4 @@ X Pix Map. A color icon <format> used on some <Unix|Unix systems>.
 References: format (glossary), Unix (glossary)
 
 Tags: multimedia
+

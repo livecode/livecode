@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
+#include "stackfileformat.h"
+
 real8 MCScrollbar::markpos;
 uint2 MCScrollbar::mode = SM_CLEARED;
 
@@ -1110,10 +1112,10 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint
 		{
             // MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_write_stringref_new(startstring, stream, p_version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_new(startstring, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return stat;
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-            if ((stat = IO_write_stringref_new(endstring, stream, p_version >= 7000)) != IO_NORMAL)
+            if ((stat = IO_write_stringref_new(endstring, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1151,14 +1153,14 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_read_stringref_new(startstring, stream, version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_new(startstring, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return checkloadstat(stat);
 			if (!MCStringToDouble(startstring, startvalue))
 				startvalue = 0.0;
 			
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_read_stringref_new(endstring, stream, version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_new(endstring, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				return checkloadstat(stat);
 			if (!MCStringToDouble(endstring, endvalue))
 				endvalue = 0.0;
@@ -1176,7 +1178,7 @@ IO_stat MCScrollbar::load(IO_handle stream, uint32_t version)
 				return checkloadstat(stat);
 		}
 	}
-	if (version <= 2000)
+	if (version <= kMCStackFileFormatVersion_2_0)
 	{
 		if (flags & F_TRAVERSAL_ON)
 			rect = MCU_reduce_rect(rect, MCfocuswidth);

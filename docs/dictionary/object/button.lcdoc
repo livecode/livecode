@@ -4,13 +4,14 @@ Type: object
 
 Syntax: button
 
-Summary: A <control> that is clickable.
+Summary:
+A <control> that is clickable.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the hilite of button "Warning" to false
@@ -37,9 +38,11 @@ LiveCode. Changing certain properties of such a button will cause the
 button to stop honouring the native theme. Properties that affect the 
 button's colour and border may cause this issue.
 
-References: templateButton (keyword), control (keyword), 
-button (keyword), menu (keyword), menuMode (property), popup (command), 
-property (glossary), tabbed button (glossary), style (property),
-contextual menu (glossary), object type (glossary), combo box (glossary)
+References: popup (command), property (glossary),
+tabbed button (glossary), contextual menu (glossary),
+object type (glossary), combo box (glossary), templateButton (keyword),
+control (keyword), button (keyword), menu (keyword), menuMode (property),
+style (property)
 
 Tags: objects
+
