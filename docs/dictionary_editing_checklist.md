@@ -22,7 +22,7 @@ There are several ways of doing this. Let me suggest a few here:
 
 ### [ ] Find and fork the appropriate document [*from the correct branch*](https://github.com/livecode/livecode/blob/community-docs/docs/contributing_to_docs.md#making-your-dictionary-change) on Github
 
-I can't stress this enough. This is where I tripped up early on. You should just always start at <https://github.com/livecode/livecode/tree/community-docs/docs/dictionary>. From there drill down into the category and specific entry you want to edit. For example, if I want to change something in the documentation for the absolute value function `abs()`, click on **function** then **abs.lcdoc**.
+This is very important. Note that this has changed from when Ali first posted his instructions on how to edit dictionary docs. You should now always start at <https://github.com/livecode/livecode/tree/develop/docs/dictionary>. From there drill down into the category and specific entry you want to edit. For example, if I want to change something in the documentation for the absolute value function `abs()`, click on **function** then **abs.lcdoc**.
 
 ### [ ] Edit the document by clicking the pencil icon to the right of the Raw | Blame | History buttons.
 
