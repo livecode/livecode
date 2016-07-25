@@ -345,7 +345,7 @@ CQTVideoGrabber::CQTVideoGrabber()
 	videowindow = NULL;
 	parentwindow = NULL;
 	destvideobuffer = NULL;
-	QTNewGWorld(&destvideobuffer, k32BGRAPixelFormat, &destvideorect, NULL, NULL, NULL);
+	QTNewGWorld(&destvideobuffer, k32BGRAPixelFormat, &destvideorect, NULL, NULL, 0);
 	buffervideo = True;
 	Init();
 }

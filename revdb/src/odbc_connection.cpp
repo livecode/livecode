@@ -335,7 +335,7 @@ char * getDiagnosticRecord(SQLHSTMT p_statement)
 bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count, SQLHSTMT &p_statement, SQLRETURN &p_result)
 {
 	if (!isConnected)
-		return NULL;
+		return false;
 	
 	unsigned int t_query_length;
 	t_query_length = strlen(p_query);
