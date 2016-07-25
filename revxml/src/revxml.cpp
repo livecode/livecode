@@ -291,7 +291,7 @@ void CB_elementData(const char *data, int length)
 	memcpy(buffer, data, length);
 	buffer[length] = '\0';
 	DispatchMetaCardMessage("revStartXMLData",(char *)buffer);
-	delete buffer;
+	delete[] buffer;
 }
 
 
