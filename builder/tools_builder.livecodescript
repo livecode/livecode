@@ -78,7 +78,13 @@ end toolsBuilderRunBundle
 
 private command toolsBuilderFilterExternals pFolder, pPlatform
    -- Enter the extension directory
+   local tOldFolder
+   put the defaultFolder into tOldFolder
    set the defaultFolder to pFolder
+   if the result is not empty then
+      builderLog "error", merge("Failed to enter '[[pFolder]]': [[the result]]")
+      exit toolsBuilderFilterExternals
+   end if
 
    local tFiles
    -- Remove any iOS code if we're not building the OSX installer
@@ -101,7 +107,7 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
          revZipCloseArchive pFolder & slash & tLCExt
          
          if tArchiveFiles is not empty then
-            get shell(merge("rm -f '[[ tLCExt ]]'"))
+            get shell(merge("rm -fv '[[ tLCExt ]]'"))
          end if
       end repeat
    end if
@@ -109,7 +115,12 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
    -- If the directory contains no code any more, remove it
    put the files & return & the folders into tFiles
    filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
-   
+
+   set the defaultFolder to tOldFolder
+   if the result is not empty then
+      builderLog "error", merge("Failed to enter '[[tOldFolder]]': [[the result]]")
+   end if
+
    return tFiles is not empty
 end toolsBuilderFilterExternals
 
