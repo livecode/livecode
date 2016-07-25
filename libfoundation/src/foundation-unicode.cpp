@@ -1293,7 +1293,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
         
         while (t_filter->HasData())
         {
-            unichar_t t_char;
+            codepoint_t t_char;
             t_char = t_filter->GetNextCodepoint();
             t_filter->AdvanceCursor();
             
@@ -1318,7 +1318,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
         
         while (t_filter->HasData())
         {
-            unichar_t t_char;
+            codepoint_t t_char;
             t_char = t_filter->GetNextCodepoint();
             t_filter->AdvanceCursor();
             
