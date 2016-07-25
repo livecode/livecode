@@ -586,7 +586,7 @@ void DBConnection_ODBC::transRollback()
 	SQLEndTran(SQL_HANDLE_DBC, hdbc, SQL_ROLLBACK);
 }
 
-void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
+void DBConnection_ODBC::getTables(char *buffer, size_t *bufsize)
 {
 	int rowseplen = 1;
 	char rowsep[] = "\n";
@@ -614,7 +614,7 @@ void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
 				{
 					while (True)
 					{
-						unsigned int colsize;
+						size_t colsize;
 						char *coldata = newcursor -> getFieldDataBinary(3, colsize);
 						if (newcursor -> getFieldType(3) == FT_WSTRING)
 						{
@@ -624,7 +624,7 @@ void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
 						else
 							coldata = strdup(coldata);
 
-						if (buffer != NULL && ((resultptr - result) + (int)colsize + rowseplen ) > *bufsize)
+						if (buffer != NULL && ((resultptr - result) + colsize + rowseplen ) > *bufsize)
 						{
 							free(coldata);
 							break;

@@ -522,7 +522,7 @@ char *DBConnection_SQLITE::BindVariables(char *p_query, int p_query_length, DBSt
 	return t_parsed_query;
 }
 
-void DBConnection_SQLITE::getTables(char *buffer, int *bufsize)
+void DBConnection_SQLITE::getTables(char *buffer, size_t *bufsize)
 {
 	int rowseplen = 1;
 	char rowsep[] = "\n";

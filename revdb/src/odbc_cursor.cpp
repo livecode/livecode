@@ -562,7 +562,7 @@ char *DBCursor_ODBC::getErrorMessage()
 }
 
 
-char *DBCursor_ODBC::getFieldDataBinary(unsigned int fieldnum,unsigned int &fdlength)
+char *DBCursor_ODBC::getFieldDataBinary(unsigned int fieldnum, size_t &fdlength)
 {
 	fieldnum--;
 	if (fieldnum >= fieldCount)

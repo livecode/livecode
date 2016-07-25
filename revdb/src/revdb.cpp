@@ -682,7 +682,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 //utility function to get column data by number
 void GetColumnByNumber(DBCursor *thecursor, char *&result, int columnid, char *varname)
 {
-	unsigned int colsize;
+	size_t colsize;
 	colsize = 0;
 
 	// OK-2007-06-18 : Part of fix for bug 4211
@@ -1271,7 +1271,7 @@ void REVDB_QueryList(char *p_arguments[], int p_argument_count, char **p_return_
 		{
 			for (int i = 1; i <= t_field_count; i++)
 			{
-				unsigned int t_column_size;
+				size_t t_column_size;
 				char *t_column_data;
 				t_column_data = t_cursor -> getFieldDataBinary(i, t_column_size);
 
@@ -2219,7 +2219,7 @@ void REVDB_TableNames(char *args[], int nargs, char **retstring, Bool *pass, Boo
 		DBConnection *theconnection = (DBConnection *)connectionlist.find(connectionid);
 		if (theconnection)
 		{
-			int bufsize;
+			size_t bufsize;
 			theconnection->getTables( NULL, &bufsize);
 			result = (char *)malloc(bufsize);
 			result[0] = 0;

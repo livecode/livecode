@@ -395,7 +395,7 @@ Input:
 fieldnum - number of field to get data from
 fdlength - will recieve length of data
 Output: pointer to fields data, NULL on error*/ 
-char *CDBCursor::getFieldDataBinary(unsigned int fieldnum,unsigned int &fdlength)
+char *CDBCursor::getFieldDataBinary(unsigned int fieldnum, size_t &fdlength)
 {
 	fieldnum--;
 	if ((int)fieldnum >= fieldCount)
@@ -423,7 +423,7 @@ Output: copy of fields data as null terminated string,
 NULL on error*/ 
 char *CDBCursor::getFieldDataString(unsigned int fieldnum)
 {
-	unsigned int fdlength = 0;
+	size_t fdlength = 0;
 	char *fdata = getFieldDataBinary(fieldnum, fdlength);
 	if (fdata == NULL)
 		return NULL;

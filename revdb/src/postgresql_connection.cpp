@@ -437,7 +437,7 @@ char *DBConnection_POSTGRESQL::getErrorMessage(Bool p_last)
 }
 
 
-void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
+void DBConnection_POSTGRESQL::getTables(char *buffer, size_t *bufsize)
 {
 	int rowseplen = 1;
 	char rowsep[] = "\n";
@@ -454,10 +454,10 @@ void DBConnection_POSTGRESQL::getTables(char *buffer, int *bufsize)
 		if (!newcursor->getEOF())
 		{
 			while (True){
-				unsigned int colsize;
+				size_t colsize;
 				char *coldata = newcursor->getFieldDataBinary(1,colsize);
-				colsize = (unsigned int)strlen(coldata);
-				if (((resultptr-result) + (int)colsize + rowseplen + 16 ) > *bufsize)
+				colsize = strlen(coldata);
+				if (((resultptr-result) + colsize + rowseplen + 16 ) > *bufsize)
 					break;
 				memcpy(resultptr,coldata,colsize);
 				resultptr+=colsize;

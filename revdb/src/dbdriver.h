@@ -177,7 +177,7 @@ public:
 	virtual DBCursor *findCursor(int fid) = 0;
 	virtual DBCursor *findCursorIndex(int fid) = 0;
 	virtual int countCursors() = 0;
-	virtual	void getTables(char *buffer, int *bufsize) = 0;
+	virtual	void getTables(char *buffer, size_t *bufsize) = 0;
 
 protected:
 	virtual void addCursor(DBCursor *newcursor) = 0;
@@ -221,7 +221,7 @@ public:
 	virtual unsigned int getFieldLength(unsigned int fieldnum) = 0;
 	virtual char* getFieldName(unsigned int fieldnum) = 0;
 
-	virtual char* getFieldDataBinary(unsigned int fieldnum,unsigned int &fdlength) = 0;
+	virtual char* getFieldDataBinary(unsigned int fieldnum, size_t &fdlength) = 0;
 	virtual char* getFieldDataString(unsigned int fieldnum) = 0;
 	virtual Bool getFieldIsNull(unsigned int fieldnum) = 0;
 };
