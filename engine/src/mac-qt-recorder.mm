@@ -141,9 +141,7 @@ private:
 
 - (void)idleTimer:(NSTimer*)timer
 {
-    OSStatus err = noErr;
-    
-    if (m_stop_requested == YES)
+if (m_stop_requested == YES)
     {
         [timer invalidate];
 		[timer release];
@@ -679,7 +677,6 @@ bool MCQTSoundRecorder::StartRecording(MCStringRef p_filename)
         NSString *t_capture_path;
         t_capture_path = [NSString stringWithMCStringRef:m_temp_file];
         
-        OSStatus err = noErr;
         Handle t_data_ref = nil;
         OSType t_data_ref_type = 0;
         
