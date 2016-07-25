@@ -149,15 +149,11 @@ bool MCBlock::visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectV
 //   values to store (stack file format v8.1).
 uint32_t MCBlock::getminimumstackfileversion(void)
 {
-	bool t_is_unicode;
 	// paragraph text is always unicode when saving as version 7.0 or greater.
 	//    since we can't know which version will be used at this point, the
 	//    best we can do is assume unicode text.
-	/* t_is_unicode = !MCStringIsNative(parent->GetInternalStringRef()); */
-	t_is_unicode = true;
-	
 	uint32_t t_index_size;
-	t_index_size = t_is_unicode ? sizeof(unichar_t) : sizeof(char_t);
+	t_index_size = sizeof(unichar_t);
 	
 	if (m_index * t_index_size > UINT16_MAX || m_size * t_index_size > UINT16_MAX)
 		return kMCStackFileFormatVersion_8_1;
