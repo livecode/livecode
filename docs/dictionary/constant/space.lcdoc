@@ -4,13 +4,14 @@ Type: constant
 
 Syntax: space
 
-Summary: Equivalent to the space <character> (<ASCII> 32).
+Summary:
+Equivalent to the space <character> (<ASCII> 32).
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 "a" & space & "b"
@@ -21,6 +22,7 @@ put firstName & space & lastName into fullName
 Description:
 Use the <space> <constant> as an easier-to-read substitute for " ".
 
-References: constant (command), character (keyword), ASCII (glossary)
+References: constant (command), ASCII (glossary), character (keyword)
 
 Tags: text processing
+

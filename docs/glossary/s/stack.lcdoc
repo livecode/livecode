@@ -5,8 +5,11 @@ Synonyms: stack
 Type: glossary
 
 Description:
-An <object(glossary)> that contains <card|cards>, which may contain other <object|objects>. Each <object(glossary)> in LiveCode is part of a specific stack.
+An <object(glossary)> that contains <card|cards>, which may contain
+other <object|objects>. Each <object(glossary)> in LiveCode is part of a
+specific stack.
 
 References: card (glossary), object (glossary)
 
 Tags: objects
+

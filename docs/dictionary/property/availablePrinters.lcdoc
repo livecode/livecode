@@ -4,13 +4,14 @@ Type: property
 
 Syntax: get the availablePrinters
 
-Summary: Reports a list of all the printers available on the current system.
+Summary:
+Reports a list of all the printers available on the current system.
 
 Introduced: 2.9
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: printing
 
@@ -22,13 +23,17 @@ end if
 Example:
 set the printerName to (line 1 of the availablePrinters)
 
-Value: The <availablePrinters> is a return-delimited list of printer names (i.e. one per line).
+Value:
+The <availablePrinters> is a return-delimited list of printer names
+(i.e. one per line).
 
 Description:
-Use the <availablePrinters> property to find out the names of the printers installed on the current system.
+Use the <availablePrinters> property to find out the names of the
+printers installed on the current system.
 
 The <availablePrinters> property is read-only and cannot be set.
 
 References: answer printer (command)
 
 Tags: printing
+

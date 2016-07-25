@@ -2,15 +2,16 @@ Name: pixelScale
 
 Type: property
 
-Syntax: set the pixelScale to <scale> 
+Syntax: set the pixelScale to <scale>
 
-Summary: Determines the scaling factor between logical and device pixels.
+Summary:
+Determines the scaling factor between logical and device pixels.
 
 Introduced: 6.5
 
-OS: ios,android
+OS: ios, android
 
-Platforms: desktop,mobile
+Platforms: desktop, mobile
 
 Example:
 on preOpenStack
@@ -21,19 +22,33 @@ Example:
 set the pixelScale to the systemPixelScale -- Reset the pixelScale to the device pixel scale
 
 Parameters:
-scale: Any positive real number.
+scale:
+Any positive real number.
 
 Description:
-Use the pixelScale property to set the scale at which your stack is rendered on mobile devices.
+Use the pixelScale property to set the scale at which your stack is
+rendered on mobile devices.
 
-Modern mobile devices have screens of varying densities. For example, the iPad and iPad retina both have a logical screen size of 1024x768 pixels. However, the iPad retina has 2048x1536 device pixels. The intention of higher density is not to provide the developer with more screen real estate to work with, but rather to make text and other assets appear crisper.
+Modern mobile devices have screens of varying densities. For example,
+the iPad and iPad retina both have a logical screen size of 1024x768
+pixels. However, the iPad retina has 2048x1536 device pixels. The
+intention of higher density is not to provide the developer with more
+screen real estate to work with, but rather to make text and other
+assets appear crisper.
 
-LiveCode reports the <screenRect> of both iPad and iPad retina in logical pixels (1024x768). When your app runs on the iPad Retina, LiveCode renders text, graphics and image assets according to the pixelScale.
+LiveCode reports the <screenRect> of both iPad and iPad retina in
+logical pixels (1024x768). When your app runs on the iPad Retina,
+LiveCode renders text, graphics and image assets according to the
+pixelScale. 
 
-The <pixelScale> property enables you to change the standard behavior and use the additional pixels provided by higher density devices.
+The <pixelScale> property enables you to change the standard behavior
+and use the additional pixels provided by higher density devices.
 
->*Note:*  The <pixelScale> is initialised to the systemPixelScale property on startup but can be modified at any point.
+>*Note:*  The <pixelScale> is initialised to the systemPixelScale
+> property on startup but can be modified at any point.
 
-References: iphoneUseDeviceResolution (command), usePixelScaling (property), systemPixelScale (property), screenRect (function)
+References: iphoneUseDeviceResolution (command), screenRect (function),
+usePixelScaling (property), systemPixelScale (property)
 
 Tags: windowing
+

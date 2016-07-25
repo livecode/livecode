@@ -1,10 +1,14 @@
 Name: XCMD
 
-Synonyms: XCMD
+Synonyms: xcmd
 
 Type: glossary
 
 Description:
-<external|External command> for <Mac OS> and <OS X|OS X systems>. A <custom command> that has been written in a programming language and compiled into a <resource> of type XCMD.
+<external|External command> for <Mac OS> and <OS X|OS X systems>. A
+<custom command> that has been written in a programming language and
+compiled into a <resource> of type XCMD.
 
-References: external (glossary), resource (glossary), Mac OS (glossary), custom command (glossary), OS X (glossary)
+References: external (glossary), resource (glossary), Mac OS (glossary),
+custom command (glossary), OS X (glossary)
+

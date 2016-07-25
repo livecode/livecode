@@ -1,8 +1,14 @@
-Name: Open Scripting Architecture (OSA)
+Name: Open Scripting Architecture
 
-Synonyms: open scripting architecture,OSA,OSA language
+Synonyms: open scripting architecture, osa, osa language
 
 Type: glossary
 
+Deprecated:
+OSA
+
 Description:
-System for creating and integrating system-wide scripting languages, developed by Apple Computer.
+System for creating and integrating system-wide scripting languages,
+developed by Apple Computer.
+
+

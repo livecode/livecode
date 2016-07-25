@@ -1,22 +1,23 @@
 Name: revDatabaseConnectResult
 
+Synonyms: revdb_connectionerr
+
 Type: function
 
 Syntax: revDatabaseConnectResult(<databaseID>)
 
-Summary: <return|Returns> the most recent error message for a <database>.
+Summary:
+<return|Returns> the most recent error message for a <database>.
 
-Synonyms: revdb_connectionerr
-
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revDatabaseConnectResult(line x of revOpenDatabases())
@@ -25,14 +26,21 @@ Example:
 if revDatabaseConnectResult(myReservations) is empty then exit repeat
 
 Parameters:
-databaseID: The number returned by the revOpenDatabase function when the database was opened.
+databaseID:
+The number returned by the revOpenDatabase function when the database
+was opened.
 
-Returns: The <revDatabaseConnectResult> <function> <return|returns> a <string>.
+Returns:
+The <revDatabaseConnectResult> <function> <return|returns> a <string>.
 
 Description:
-Use the <revDatabaseConnectResult> <function> to check for successful completion of commands.
+Use the <revDatabaseConnectResult> <function> to check for successful
+completion of commands.
 
-If there were no errors on the specified database connection, the <revDatabaseConnectResult> <function> <return|returns> empty. Otherwise the <revDatabaseConnectResult> function returns the database specific error message for the most recent database operation that failed.
+If there were no errors on the specified database connection, the
+<revDatabaseConnectResult> <function> <return|returns> empty. Otherwise
+the <revDatabaseConnectResult> function returns the database specific
+error message for the most recent database operation that failed.
 
 >*Important:*  The <revDatabaseConnectResult> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -46,6 +54,12 @@ If there were no errors on the specified database connection, the <revDatabaseCo
 Changes:
 The revDatabaseConnectResult synonym was added in version 2.0.
 
-References: function (control structure), string (keyword), revCloseDatabase (command), revQueryResult (function), revOpenDatabase (function), revOpenDatabases (function), Standalone Application Settings (glossary), database (glossary), standalone application (glossary), return (glossary), Database library (library), LiveCode custom library (glossary)
+References: revCloseDatabase (command), function (control structure),
+revQueryResult (function), revOpenDatabase (function),
+revOpenDatabases (function), Standalone Application Settings (glossary),
+database (glossary), standalone application (glossary), return (glossary),
+LiveCode custom library (glossary), string (keyword),
+Database library (library)
 
 Tags: database
+

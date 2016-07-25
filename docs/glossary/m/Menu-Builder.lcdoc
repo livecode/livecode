@@ -1,14 +1,17 @@
 Name: Menu Builder
 
-Synonyms: Menu Builder,Menu Manager
+Synonyms: menu builder, menu manager
 
 Type: glossary
 
 Description:
-Part of the LiveCode <development environment>, the window where you create a cross-platform menu bar. 
- 
-To display the Menu Builder, choose Tools → Menu Builder from the menubar.
+Part of the LiveCode <development environment>, the window where you
+create a cross-platform menu bar.
+
+To display the Menu Builder, choose Tools → Menu Builder from the
+menubar. 
 
 References: development environment (glossary)
 
 Tags: menus
+

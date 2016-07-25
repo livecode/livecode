@@ -1,14 +1,19 @@
 Name: SQL
 
-Synonyms: SQL,Structured Query Language
+Synonyms: sql, structured query language
 
 Type: glossary
 
 Description:
-Structured Query Language. A standard language for specifying, retrieving, and updating data in a <database>. You use the <Database library> to communicate with <database|databases> using SQL. 
- 
- >*Note:*>*Important:*   This documentation pronounces SQL as "sequel". Your pronunciation may vary.
+Structured Query Language. A standard language for specifying,
+retrieving, and updating data in a <database>. You use the <Database
+library> to communicate with <database|databases> using SQL.
+
+    >*Note:*>*Important:*   This documentation pronounces SQL as
+    > "sequel". Your pronunciation may vary.
+
 
 References: database (glossary), Database library (library)
 
 Tags: database
+

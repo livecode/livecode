@@ -4,13 +4,14 @@ Type: command
 
 Syntax: record pause
 
-Summary: Pauses the current sound recording.
+Summary:
+Pauses the current sound recording.
 
 Introduced: 6.7
 
-OS: mac,windows
+OS: mac, windows
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 if the hilite of button "pause" then
@@ -20,10 +21,13 @@ end if
 Description:
 Use the <record pause> command to pause a recording being made. 
 
-The <record pause> command pauses a recording started with the <record sound> command.
+The <record pause> command pauses a recording started with the <record
+sound> command.
 
 The <recording> property remains true while a recording is paused.
 
-References: record resume (command), record sound (command), stop recording (command), recording (property)
+References: record resume (command), record sound (command),
+stop recording (command), recording (property)
 
 Tags: multimedia
+

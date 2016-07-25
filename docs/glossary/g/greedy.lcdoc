@@ -1,10 +1,12 @@
 Name: greedy
 
-Synonyms: greedy,greediness
+Synonyms: greedy, greediness
 
 Type: glossary
 
 Description:
-A form of regular expression that tries to include as long a string of text as possible while still matching the pattern.
+A form of regular expression that tries to include as long a string of
+text as possible while still matching the pattern.
 
 Tags: text processing
+

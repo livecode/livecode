@@ -5,8 +5,10 @@ Synonyms: flag
 Type: glossary
 
 Description:
-A <parameter> that can take one of two <value|values> and indicates whether a setting is on or off.
+A <parameter> that can take one of two <value|values> and indicates
+whether a setting is on or off.
 
 References: value (glossary), parameter (glossary)
 
 Tags: properties
+

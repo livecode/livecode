@@ -7,12 +7,13 @@ Type: glossary
 Description:
 The <stack> that's being worked on, usually the <active window>. The 
 current stack is specified by the <defaultStack> <property>. 
- 
+
 Also, the <stack> that contains the <object(glossary)> whose <script> 
 is currently <execute|executing>.
 
-References: property (glossary), script (glossary), 
-active window (glossary), execute (glossary), stack (glossary), 
+References: property (glossary), script (glossary),
+active window (glossary), execute (glossary), stack (glossary),
 object (glossary), defaultStack (property)
 
 Tags: windowing
+

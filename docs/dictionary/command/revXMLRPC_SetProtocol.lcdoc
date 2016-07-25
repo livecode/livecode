@@ -2,28 +2,38 @@ Name: revXMLRPC_SetProtocol
 
 Type: command
 
-Syntax: revXMLRPC_SetProtocol <XML-RPC document>, <protocol> 
+Syntax: revXMLRPC_SetProtocol <XML-RPC document>, <protocol>
 
-Summary: Sets the protocol of an XML-RPC document structure.
+Summary:
+Sets the protocol of an XML-RPC document structure.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Parameters:
-protocol: The protocol determines the type of connection that is established with the host. By default, XML-RPC uses HTTP connections, but for added security you can use HTTPS connections, if the host supports it.
-documentID: The number returned by the revXMLRPC_CreateRequest when you created the XML-RPC request.
+protocol:
+The protocol determines the type of connection that is established with
+the host. By default, XML-RPC uses HTTP connections, but for added
+security you can use HTTPS connections, if the host supports it.
 
-The result: If the <revXMLRPC_SetProtocol> <command> encounters an error, the <result> is set to an error message beginning with "xmlrpcerr".
+documentID:
+The number returned by the revXMLRPC_CreateRequest when you created the
+XML-RPC request.
+
+The result:
+If the <revXMLRPC_SetProtocol> <command> encounters an error, the
+<result> is set to an error message beginning with "xmlrpcerr".
 
 Description:
-Use the <revXMLRPC_SetProtocol> <command> to set the protocol that is used for the connection during the execution of an <XML-RPC request>.
+Use the <revXMLRPC_SetProtocol> <command> to set the protocol that is
+used for the connection during the execution of an <XML-RPC request>.
 
 >*Important:*  The <revXMLRPC_SetProtocol> <command> is part of the 
 > <XML-RPC library>. To ensure that the <command> works in a 
@@ -33,6 +43,12 @@ Use the <revXMLRPC_SetProtocol> <command> to set the protocol that is used for t
 > <Standalone Application Settings> window, make sure the "XML-RPC" 
 > library checkbox is checked.
 
-References: Standalone Application Settings (glossary), standalone application (glossary), command (glossary), XML-RPC request (glossary), result (function), revXMLRPC_GetProtocol (function), revXMLRPC_CreateRequest (function), XML-RPC library (library), LiveCode custom library (glossary)
+References: result (function), revXMLRPC_GetProtocol (function),
+revXMLRPC_CreateRequest (function),
+Standalone Application Settings (glossary),
+standalone application (glossary), command (glossary),
+XML-RPC request (glossary), LiveCode custom library (glossary),
+XML-RPC library (library)
 
 Tags: networking
+

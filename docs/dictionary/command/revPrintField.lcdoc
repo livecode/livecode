@@ -2,17 +2,18 @@ Name: revPrintField
 
 Type: command
 
-Syntax: revPrintField <fieldDescriptor> 
+Syntax: revPrintField <fieldDescriptor>
 
-Summary: Prints the contents of a <field>.
+Summary:
+Prints the contents of a <field>.
 
-Associations: Printing library
+Associations: printing library
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,web
+Platforms: desktop
 
 Security: printing
 
@@ -26,30 +27,46 @@ Example:
 revPrintField ("field" && 5) -- prints field 5
 
 Parameters:
-fieldDescriptor: Any expression that evaluates to a field reference.>*Important:* The revPrintField command does not accept direct field references. For example, the following statement causes an error message:   revPrintField field "My Field" -- CAN'T USE THIS FORM Instead, use a form that evaluates to a field reference, like this:
-: revPrintField the name of field "My Field" -- use this form instead  revPrintField ("field" && quote & "My Field" & quote) -- or this
+fieldDescriptor:
+Any expression that evaluates to a field reference.>*Important:* The
+revPrintField command does not accept direct field references. For
+example, the following statement causes an error message: revPrintField
+field "My Field" -- CAN'T USE THIS FORM Instead, use a form that
+evaluates to a field reference, like this: : revPrintField the name of
+field "My Field" -- use this form instead revPrintField ("field" &&
+quote & "My Field" & quote) -- or this
 
 Description:
-Use the <revPrintField> <command> to print the formatted contents of a <field> from within a <handler>.
+Use the <revPrintField> <command> to print the formatted contents of a
+<field> from within a <handler>.
 
->*Important:*  The <revPrintField> <command> does not accept direct <object reference|field references>. For example, the following <statement> causes an error message:
+>*Important:*  The <revPrintField> <command> does not accept direct
+> <object reference|field references>. For example, the following
+> <statement> causes an error message:
 
-  revPrintField field "My Field" -- CAN'T USE THIS FORM
+    revPrintField field "My Field" -- CAN'T USE THIS FORM
+
 
 Instead, use a form that evaluates to a field reference, like this:
 
-  revPrintField the name of field "My Field" -- use this form instead
-  revPrintField ("field" && quote & "My Field" & quote) -- or this
+    revPrintField the name of field "My Field" -- use this form instead
+    revPrintField ("field" && quote & "My Field" & quote) -- or this
 
-The <revPrintField> <command> is equivalent to <select|selecting> the <field> and choosing File → Print Field… from the menubar.
 
-If the field contains any expressions of the form &expression%&gt;, the expression is <evaluate|evaluated> and replaced with the value before the <field> is printed. For example, if the <field> contains the text
-	Today's date is &lt;%the long date%&gt;
-the printed text reads
-	Today's date is Friday, February 15, 2002
-(This assumes, of course, that the <revPrintField> <command> is <execute|executed> on that date). You can also use the special value &lt;%pageNumber%&gt; in the field: this value is replaced with the page number.
+The <revPrintField> <command> is equivalent to <select|selecting> the
+<field> and choosing File → Print Field… from the menubar.
 
-To show the standard print dialog box, use the revShowPrintDialog <command> before the <revPrintField> <command>.
+If the field contains any expressions of the form &expression%&gt;, the
+expression is <evaluate|evaluated> and replaced with the value before
+the <field> is printed. For example, if the <field> contains the text
+Today's date is &lt;%the long date%&gt; the printed text reads Today's
+date is Friday, February 15, 2002 (This assumes, of course, that the
+<revPrintField> <command> is <execute|executed> on that date). You can
+also use the special value &lt;%pageNumber%&gt; in the field: this value
+is replaced with the page number.
+
+To show the standard print dialog box, use the revShowPrintDialog
+<command> before the <revPrintField> <command>.
 
 >*Important:*  The <revPrintField> <command> is part of the 
 > <Printing library>. To ensure that the <command> works in a 
@@ -59,6 +76,15 @@ To show the standard print dialog box, use the revShowPrintDialog <command> befo
 > <Standalone Application Settings> window, make sure the "Printing" 
 > library checkbox is checked.
 
-References: field (keyword), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), revPrintReport (command), answer printer (command), application (glossary), standalone application (glossary), evaluate (glossary), execute (glossary), object reference (glossary), command (glossary), main stack (glossary), group (glossary), select (glossary), Standalone Application Settings (glossary), message (glossary), statement (glossary), handler (glossary), library (library), LiveCode custom library (glossary), Printing library (library)
+References: revPrintReport (command), answer printer (command),
+application (glossary), standalone application (glossary),
+evaluate (glossary), execute (glossary), object reference (glossary),
+command (glossary), main stack (glossary), group (glossary),
+select (glossary), Standalone Application Settings (glossary),
+message (glossary), statement (glossary), handler (glossary),
+LiveCode custom library (glossary), field (keyword), library (library),
+Printing library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message)
 
 Tags: printing
+

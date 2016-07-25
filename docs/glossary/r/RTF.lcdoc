@@ -1,12 +1,15 @@
 Name: RTF
 
-Synonyms: RTF,RTF format,rich text format,RTF file
+Synonyms: rtf, rtf format, rich text format, rtf file
 
 Type: glossary
 
 Description:
-Rich Text Format. A <format> for text files, codified by Microsoft Corporation, that includes information about text styles in plain text format.
+Rich Text Format. A <format> for text files, codified by Microsoft
+Corporation, that includes information about text styles in plain text
+format. 
 
 References: format (glossary)
 
 Tags: text processing
+

@@ -947,13 +947,16 @@ private function __elementRegex
    return "^ *([tT]he [rR]esult|\w+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __elementRegex
 
-/*
-Utility function to extract any elements matching the docs element style
-*/
-function revDocsExtractElements pText
-   # Get the element-matching regex
+private function __arrayElementRegex
+   # Regex used to extract sub-array elements
+   # Essentially the same as the element regex except quotation marks are allowed
+   # as keys can obviously be string literals.
+   return "^ *([\w" & quote & "]+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
+end __arrayElementRegex
+
+function revDocsExtractElementsWithRegex pText, pRegex
    local tElementRegex
-   put __elementRegex() into tElementRegex
+   put pRegex into tElementRegex
    
    # Array to store the elements
    local tElementsA
@@ -1064,6 +1067,14 @@ function revDocsExtractElements pText
    end if
    
    return tElementsA
+end revDocsExtractElementsWithRegex
+
+/*
+Utility function to extract any elements matching the docs element style
+*/
+function revDocsExtractElements pText
+   # Use the element-matching regex
+   return revDocsExtractElementsWithRegex(pText, __elementRegex())
 end revDocsExtractElements
 
 private command __nameToKeyAndType pName, @rKey, @rType
@@ -1722,18 +1733,23 @@ function revDocsParseKeyValuePair pToParse
    local tOptional 
    put false into tOptional
    
-   local tElementsA
-   put revDocsExtractElements(line 1 to 2 of pToParse) into tElementsA
+   local tElementsA, tToParse
+   repeat with x = 1 to 2
+      put word 1 to -1 of line x of pToParse & return after tToParse
+   end repeat
+   put revDocsExtractElementsWithRegex(tToParse, __arrayElementRegex()) into tElementsA
    
    // flush out key value pair into tArray
    if word 1 of tElementsA[1]["type"] is "optional" then
       put true into tOptional
       put word 2 to -1 of tElementsA[1]["type"] into tElementsA[1]["type"]
    end if
+   put tElementsA[1]["name"] into tArray["key"]["name"]
    put tElementsA[1]["type"] into tArray["key"]["type"]
    put tElementsA[1]["content"] into tArray["key"]["description"]
    put tOptional into tArray["key"]["optional"]
    
+   put tElementsA[2]["name"] into tArray["value"]["name"]
    put tElementsA[2]["type"] into tArray["value"]["type"]
    put tElementsA[2]["content"] into tArray["value"]["description"]
    return tArray
@@ -1970,6 +1986,7 @@ function revDocsArrayParamToJSON pParamA, pDepth
    repeat for each element tKeyValue in pParamA
       put "{" after tOutput
       put tPrefix & tab & escape("key") & ": {"  after tOutput
+      put tPrefix & tab & tab & keyValue("name", tKeyValue["key"]["name"]) & comma after tOutput
       put tPrefix & tab & tab & keyValue("type", tKeyValue["key"]["type"]) & comma after tOutput
       put tPrefix & tab & tab & keyValue("description", tKeyValue["key"]["description"]) & "}" & comma after tOutput
       put tPrefix & tab & escape("value") & ": {"  after tOutput

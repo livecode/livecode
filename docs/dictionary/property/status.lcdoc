@@ -4,7 +4,8 @@ Type: property
 
 Syntax: put the status of player "myPlayer" into tStatus
 
-Summary: Specifies the current status of a player object
+Summary:
+Specifies the current status of a player object
 
 Associations: player
 
@@ -25,15 +26,20 @@ else
 end if
 
 Value (enum):
-- loading: for remote multimedia files only
-- playing:
-- paused:
-
 This property is read-only and cannot be set.
 
-Description:
-Use the <status> <property> to find out the current status of a player object.
+-   loading: for remote multimedia files only
+-   playing: 
+-   paused: 
 
-References: looping (property), showSelection (property), callbacks (property), startTime (property), duration (property), property (glossary), player (keyword)
+
+Description:
+Use the <status> <property> to find out the current status of a player
+object. 
+
+References: property (glossary), player (keyword), looping (property),
+showSelection (property), callbacks (property), startTime (property),
+duration (property)
 
 Tags: multimedia
+

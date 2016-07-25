@@ -2,17 +2,19 @@ Name: orientation
 
 Type: property
 
-Syntax: get the orientation of <scrollbar> 
+Syntax: get the orientation of <scrollbar>
 
-Summary: Reports whether  a <scrollbar> is vertical or horizontal--that is, whether its <height> or <width> <property> is greater.
+Summary:
+Reports whether  a <scrollbar> is vertical or horizontal--that is,
+whether its <height> or <width> <property> is greater.
 
 Associations: scrollbar
 
 Introduced: 1.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 if the orientation of scrollbar 2 is vertical then beep
@@ -22,12 +24,18 @@ The <orientation> of a scrollbar is "vertical" or "horizontal".
 This property is read-only and cannot be set.
 
 Description:
-Use the <orientation> <property> to find out whether a <scrollbar> is horizontal or vertical.
+Use the <orientation> <property> to find out whether a <scrollbar> is
+horizontal or vertical.
 
-If the scrollbar's <height> is greater than or equal to its <width>, the <scrollbar> is vertical. If the <width> is greater than the <height>, the <scrollbar> is horizontal.
+If the scrollbar's <height> is greater than or equal to its <width>, the
+<scrollbar> is vertical. If the <width> is greater than the <height>,
+the <scrollbar> is horizontal.
 
-To change a scrollbar's <orientation>, change its <width> and <height> <properties>.
+To change a scrollbar's <orientation>, change its <width> and <height>
+<properties>. 
 
-References: height (property), properties (property), rectangle (property), width (property), scrollbar (keyword), property (glossary)
+References: property (glossary), scrollbar (keyword), height (property),
+properties (property), rectangle (property), width (property)
 
 Tags: ui
+

@@ -1,6 +1,6 @@
 Name: MPEG
 
-Synonyms: MPEG,mpg
+Synonyms: mpeg, mpg
 
 Type: glossary
 
@@ -10,3 +10,4 @@ Moving Pictures Experts Group. A video file <format>.
 References: format (glossary)
 
 Tags: file system
+

@@ -4,15 +4,17 @@ Type: message
 
 Syntax: releaseStack
 
-Summary: Sent to a <stack> when the <stack> is removed from the <message path> with the <stop using> <command>.
+Summary:
+Sent to a <stack> when the <stack> is removed from the <message path>
+with the <stop using> <command>.
 
 Associations: stack
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 on releaseStack
@@ -22,10 +24,17 @@ on releaseStack
 end releaseStack
 
 Description:
-Handle the <releaseStack> <message> if you want to perform some task or set a configuration when a <stack> is no longer in use.
+Handle the <releaseStack> <message> if you want to perform some task or
+set a configuration when a <stack> is no longer in use.
 
-The <releaseStack> <message> is sent to the <stack> being released with the <stop using> <command>, even if the <stack> was not in use before the <stop using> <command> was <execute|executed>.
+The <releaseStack> <message> is sent to the <stack> being released with
+the <stop using> <command>, even if the <stack> was not in use before
+the <stop using> <command> was <execute|executed>.
 
-References: stacksInUse (property), libraryStack (message), stop using (command), start using (command), stack (object), message (glossary), command (glossary), execute (glossary), message path (glossary)
+References: stop using (command), start using (command),
+message (glossary), command (glossary), execute (glossary),
+message path (glossary), libraryStack (message), stack (object),
+stacksInUse (property)
 
 Tags: objects
+

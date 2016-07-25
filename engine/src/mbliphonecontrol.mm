@@ -244,7 +244,7 @@ void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
 void MCiOSControl::GetVisible(MCExecContext& ctxt, bool& r_visible)
 {
     if (m_view != nil)
-        r_visible = ![m_view isHidden] == True;
+        r_visible = [m_view isHidden] != True;
     else
         r_visible = false;
 }
