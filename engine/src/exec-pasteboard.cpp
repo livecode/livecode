@@ -915,6 +915,10 @@ void MCPasteboardEvalIsAmongTheKeysOfTheFullClipboardOrDragData(MCExecContext& c
         case TRANSFER_TYPE_FILES:
             r_result = p_clipboard->HasFileList();
             break;
+        
+        case TRANSFER_TYPE_PRIVATE:
+            r_result = p_clipboard->HasPrivateData();
+            break;
             
         case TRANSFER_TYPE_NULL:
         case TRANSFER_TYPE_UNICODE_TEXT:    // Legacy only - not supported
