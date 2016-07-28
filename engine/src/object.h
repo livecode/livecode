@@ -1557,11 +1557,14 @@ private:
     
     void Set(MCObjectProxy* p_proxy)
     {
-        if (m_proxy != nil)
-            m_proxy->Release();
-        m_proxy = p_proxy;
-        if (m_proxy != nil)
-            m_proxy->Retain();
+	    if (m_proxy != p_proxy)
+	    {
+		    if (m_proxy != nil)
+			    m_proxy->Release();
+		    m_proxy = p_proxy;
+		    if (m_proxy != nil)
+			    m_proxy->Retain();
+	    }
     }
 };
 

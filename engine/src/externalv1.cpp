@@ -1224,7 +1224,8 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             t_handle = MCECptr -> GetObject() -> GetHandle();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle*)result = t_handle;
+            
+            *(static_cast<MCExternalObjectRef*>(result)) = t_handle.ExternalRetain();
         }
             break;
         case kMCExternalContextQueryTarget:
@@ -1233,7 +1234,8 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             t_handle = MCtargetptr . object -> GetHandle();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle*)result = t_handle;
+            
+            *(static_cast<MCExternalObjectRef*>(result)) = t_handle.ExternalRetain();
         }
             break;
         case kMCExternalContextQueryResult:
@@ -1268,7 +1270,8 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             t_handle = MCdefaultstackptr -> GetHandle();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle*)result = t_handle;
+            
+            *(static_cast<MCExternalObjectRef*>(result)) = t_handle.ExternalRetain();
         }
             break;
         case kMCExternalContextQueryDefaultCard:
@@ -1280,7 +1283,8 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             t_handle = MCdefaultstackptr -> getcurcard() -> GetHandle();
             if (!t_handle)
                 return kMCExternalErrorOutOfMemory;
-            *(MCObjectHandle*)result = t_handle;
+            
+            *(static_cast<MCExternalObjectRef*>(result)) = t_handle.ExternalRetain();
         }
             break;
             

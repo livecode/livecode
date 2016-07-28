@@ -5501,7 +5501,11 @@ MCObject* MCObjectProxy::Get()
 
 void MCObjectProxy::Clear()
 {
-	m_object = nil;
+	if (m_object)
+	{
+		m_object->m_weak_proxy = nil;
+		m_object = nil;
+	}
 }
 
 void MCObjectProxy::Retain()
@@ -5519,8 +5523,7 @@ void MCObjectProxy::Release()
 	{
         // The object in question no longer has a proxy object as we are being
         // deleted
-        if (m_object)
-            m_object->m_weak_proxy = nil;
+		Clear();
         
 		delete this;
 	}
