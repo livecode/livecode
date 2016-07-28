@@ -81,10 +81,20 @@ static void DisplayStartupErrorAndExit(void)
 	MCAutoStringRef mcap;
 	MCAutoStringRef mtext;
 	MCModeGetStartupErrorMessage(&mcap, &mtext);
-	MCAutoStringRefAsWString t_cap_wstr, t_text_wstr;
-	/* UNCHECKED */ t_cap_wstr.Lock(*mcap);
-	/* UNCHECKED */ t_text_wstr.Lock(*mtext);
-	MessageBoxW(HWND_DESKTOP, *t_text_wstr, *t_cap_wstr, MB_APPLMODAL | MB_OK);
+	if (!MCnoui)
+	{
+		MCAutoStringRefAsWString t_cap_wstr, t_text_wstr;
+		/* UNCHECKED */ t_cap_wstr.Lock(*mcap);
+		/* UNCHECKED */ t_text_wstr.Lock(*mtext);
+		MessageBoxW(HWND_DESKTOP, *t_text_wstr, *t_cap_wstr, MB_APPLMODAL | MB_OK);
+	}
+	else
+	{
+		MCAutoStringRefAsSysString t_cap_sys, t_text_sys;
+		/* UNCHECKED */ t_cap_sys.Lock(*mcap);
+		/* UNCHECKED */ t_text_sys.Lock(*mtext);
+		fprintf(stderr, "ERROR: %s: %s\n", *t_cap_sys, *t_text_sys);
+	}
 	exit(-1);
 }
 
