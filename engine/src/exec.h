@@ -3476,6 +3476,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceScriptStatusTypeInfo;
 
 ///////////
 

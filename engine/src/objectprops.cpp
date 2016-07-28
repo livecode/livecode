@@ -242,6 +242,8 @@ MCPropertyInfo MCObject::kProperties[] =
     
     DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
     DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_THEME_CONTROL_TYPE, InterfaceThemeControlType, MCObject, ThemeControlType)
+
+    DEFINE_RO_OBJ_ENUM_PROPERTY(P_SCRIPT_STATUS, InterfaceScriptStatus, MCObject, ScriptStatus)
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
