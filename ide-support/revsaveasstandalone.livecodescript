@@ -339,7 +339,7 @@ command revDoSaveAsStandalone pStack, pFolder
                break
             case "Emscripten"
                dispatch "revSaveAsEmscriptenStandalone" to stack "revSaveAsEmscriptenStandalone" with \
-                     pStack, tTargetFolder, "Build", sStandaloneSettingsA
+                     pStack, tTargetFolder, sStandaloneSettingsA
                break
             case "MacOSX"
                revSaveAsMacStandalone pStack, tTargetFolder
