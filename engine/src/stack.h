@@ -308,6 +308,8 @@ protected:
 	// IM-2016-02-26: [[ Bug 16244 ]] Determines whether or not to show hidden objects.
 	MCStackObjectVisibility m_hidden_object_visibility;
     
+    bool m_is_ide_stack : 1;
+    
 public:
     
     enum { kObjectType = CT_STACK };

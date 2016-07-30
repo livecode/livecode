@@ -530,7 +530,7 @@ void MCStack::mode_load(void)
 		bool t_treat_as_ide;
         MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);
         if (!ctxt . HasError() && t_treat_as_ide)
-			setextendedstate(true, ECS_IDE);
+			m_is_ide_stack = true;
 	}
 }
 
@@ -1696,12 +1696,12 @@ void MCStack::GetUnplacedGroupIds(MCExecContext& ctxt, uindex_t& r_count, uinteg
 
 void MCStack::GetIdeOverride(MCExecContext& ctxt, bool& r_value)
 {
-    r_value = getextendedstate(ECS_IDE);
+    r_value = m_is_ide_stack;
 }
 
 void MCStack::SetIdeOverride(MCExecContext& ctxt, bool p_value)
 {
-    setextendedstate(p_value, ECS_IDE);
+    m_is_ide_stack = p_value;
 }
 
 void MCObject::GetRevAvailableHandlers(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_handlers)
