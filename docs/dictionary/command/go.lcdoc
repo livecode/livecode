@@ -75,8 +75,8 @@ open a stack and go to a card within it, or to move backward and forward
 among recently visited cards.
 
 If the stack is open, is closed but loaded into memory, or is listed in
-the current stack's stackFiles property, you can specify it simply by
-name: 
+the current stack's stackFiles property, you can specify it simply
+by name:
 
 go stack "My Stack"
 
