@@ -1294,6 +1294,7 @@ end HtmlEscape
 
 private function GitRunInPath pPath, pCommand
    local tOutput, tExitCode
+   builderLog "debug", merge("git [[pCommand]]")
    put shell(merge("cd '[[pPath]]' && git [[pCommand]]")) into tOutput
    put the result into tExitCode
    if tExitCode is not 0 then
@@ -1401,6 +1402,11 @@ private function GitGetRelevantTags pType
       put return & "HEAD" after tTags
    end if
    
+   local tDebug
+   put tTags into tDebug
+   replace return with space in tDebug
+   builderLog "debug", merge("Relevant tags: [[tDebug]]")
+
    return tTags
 end GitGetRelevantTags
 
