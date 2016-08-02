@@ -1374,22 +1374,24 @@ private command GitSortTags @xTags
 end GitSortTags
 
 private function GitGetRelevantTags pType
-   local tTags, tStart, tEnd
+   local tTags, tStart, tEnd, sNumericVersion
    put GitGetTags(pType) into tTags
    
-   set the itemdelimiter to "."
+   -- Ignore a pre-release version suffix (e.g. -rc-1)
+   set the itemdelimiter to "-"
+   put item 1 of sVersion into sNumericVersion
    
    put 0 into tStart
    repeat for each line tLine in tTags
       add 1 to tStart
-      if tLine begins with item 1 to 3 of sVersion then
+      if tLine begins with sNumericVersion then
          exit repeat
       end if
    end repeat
    put line (tStart - 1) to -1 of tTags into tTags
    
    repeat for each line tLine in tTags
-      if not (tLine begins with item 1 to 3 of sVersion) then
+      if not (tLine begins with sNumericVersion) then
          if not (tEnd is 0) then
             exit repeat
          end if
