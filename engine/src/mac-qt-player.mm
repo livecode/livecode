@@ -71,6 +71,7 @@ public:
     virtual ~MCQTKitPlayer(void);
     
 	virtual bool GetNativeView(void *& r_view);
+	virtual bool SetNativeParentView(void *p_view);
 	
     virtual bool IsPlaying(void);
     // PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
@@ -280,6 +281,12 @@ bool MCQTKitPlayer::GetNativeView(void *& r_view)
 		return false;
 	
 	r_view = m_view;
+	return true;
+}
+
+bool MCQTKitPlayer::SetNativeParentView(void *p_view)
+{
+	// Not used
 	return true;
 }
 

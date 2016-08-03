@@ -59,6 +59,7 @@ public:
 	virtual ~MCWin32DSPlayer(void);
 	
 	virtual bool GetNativeView(void *&r_view);
+	virtual bool SetNativeParentView(void *p_view);
 	
 	virtual bool IsPlaying(void);
 	// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property
@@ -275,13 +276,13 @@ bool CreateEventWindow(MCWin32DSPlayer *p_player, HWND &r_window)
 	return true;
 }
 
-bool CreateVideoWindow(MCWin32DSPlayer *p_player, HWND &r_window)
+bool CreateVideoWindow(MCWin32DSPlayer *p_player, HWND p_parent_hwnd, HWND &r_window)
 {
 	if (!RegisterVideoWindowClass())
 		return false;
 
 	HWND t_window;
-	t_window = CreateWindow(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, (HWND)MCdefaultstackptr->getrealwindow(), nil, MChInst, p_player);
+	t_window = CreateWindow(kMCDSVideoWindowClass, "VideoWindow", WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, p_parent_hwnd, nil, MChInst, p_player);
 
 	if (t_window == nil)
 		return false;
@@ -415,24 +416,17 @@ bool MCWin32DSPlayer::Initialize()
 	if (t_success)
 		t_success = CreateEventWindow(this, t_event_window);
 
-	HWND t_video_window = nil;
-	if (t_success)
-		t_success = CreateVideoWindow(this, t_video_window);
-
 	if (t_success)
 	{
 		m_event_window = t_event_window;
-		m_video_window = t_video_window;
 	}
 	else
 	{
 		if (t_event_window != nil)
 			DestroyWindow(t_event_window);
-		if (t_video_window != nil)
-			DestroyWindow(t_video_window);
 	}
 
-	return true;
+	return t_success;
 }
 
 bool MCWin32DSPlayer::HasVideo()
@@ -1170,6 +1164,26 @@ bool MCWin32DSPlayer::GetNativeView(void *&r_view)
 		return false;
 
 	r_view = m_video_window;
+	return true;
+}
+
+bool MCWin32DSPlayer::SetNativeParentView(void *p_view)
+{
+	if (m_video_window != nil)
+		return true;
+
+	HWND t_video_window = nil;
+	if (!CreateVideoWindow(this, (HWND)p_view, t_video_window))
+		return false;
+
+	if (m_graph && !SetVideoWindow(t_video_window))
+	{
+		DestroyWindow(t_video_window);
+		return false;
+	}
+
+	m_video_window = t_video_window;
+
 	return true;
 }
 

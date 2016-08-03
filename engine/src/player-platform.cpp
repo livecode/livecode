@@ -1532,6 +1532,11 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	if (m_platform_player == nil)
 		return False;
 		
+#if defined(TARGET_PLATFORM_WINDOWS)
+	if (!MCPlatformPlayerSetNativeParentView(m_platform_player, getstack()->getrealwindow()))
+		return False;
+#endif
+	
     // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder
     //  to the filename property. Use resolved_filename to set the "internal" absolute path
     MCAutoStringRef t_resolved_filename;

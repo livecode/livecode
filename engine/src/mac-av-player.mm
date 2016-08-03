@@ -65,6 +65,7 @@ public:
 	virtual ~MCAVFoundationPlayer(void);
     
 	virtual bool GetNativeView(void *&r_view);
+	virtual bool SetNativeParentView(void *p_view);
 	
 	virtual bool IsPlaying(void);
 	virtual void Start(double rate);
@@ -343,6 +344,12 @@ bool MCAVFoundationPlayer::GetNativeView(void *& r_view)
 		return false;
 	
 	r_view = m_view;
+	return true;
+}
+
+bool MCAVFoundationPlayer::SetNativeParentView(void *p_view)
+{
+	// Not used
 	return true;
 }
 

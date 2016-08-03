@@ -3040,7 +3040,7 @@ bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
 	if (getNativeLayer() == nil)
 	{
 		void *t_view;
-		if (!MCNativeLayer::CreateNativeContainer(t_view))
+		if (!MCNativeLayer::CreateNativeContainer(this, t_view))
 			return false;
 		if (!SetNativeView(t_view))
 		{
