@@ -115,7 +115,8 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
 	
     if (!ctxt . EvaluateExpression(source, EE_ADD_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
-    {
+	{
+		ctxt.LegacyThrow(EE_ADD_BADSOURCE);
         return;
     }
 	
@@ -154,7 +155,8 @@ void MCAdd::exec_ctxt(MCExecContext &ctxt)
     {
         MCExecTypeRelease(t_src);
         MCExecTypeRelease(t_dst);
-        return;
+		ctxt.LegacyThrow(EE_ADD_BADDEST);
+		return;
     }
 
 	MCExecValue t_result;
@@ -277,7 +279,8 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
     
     if (!ctxt . EvaluateExpression(source, EE_DIVIDE_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
-    {
+	{
+		ctxt.LegacyThrow(EE_DIVIDE_BADSOURCE);
         return;
     }
 	
@@ -314,7 +317,8 @@ void MCDivide::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
         MCExecTypeRelease(t_src);
-        MCExecTypeRelease(t_dst);
+		MCExecTypeRelease(t_dst);
+		ctxt.LegacyThrow(EE_DIVIDE_BADDEST);
         return;
     }
 	
@@ -443,7 +447,8 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
 
     if(!ctxt . EvaluateExpression(source, EE_MULTIPLY_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
-    {
+	{
+		ctxt.LegacyThrow(EE_MULTIPLY_BADSOURCE);
         return;
     }
 	
@@ -480,7 +485,8 @@ void MCMultiply::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
         MCExecTypeRelease(t_src);
-        MCExecTypeRelease(t_dst);
+		MCExecTypeRelease(t_dst);
+		ctxt.LegacyThrow(EE_MULTIPLY_BADDEST);
         return;
     }
 	
@@ -609,7 +615,8 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
 
     if (!ctxt . EvaluateExpression(source, EE_SUBTRACT_BADSOURCE, t_src)
             || !ctxt . ConvertToNumberOrArray(t_src))
-    {
+	{
+		ctxt.LegacyThrow(EE_SUBTRACT_BADSOURCE);
         return;
     }
 	
@@ -646,7 +653,8 @@ void MCSubtract::exec_ctxt(MCExecContext &ctxt)
     if (!ctxt . ConvertToNumberOrArray(t_dst))
     {
         MCExecTypeRelease(t_src);
-        MCExecTypeRelease(t_dst);
+		MCExecTypeRelease(t_dst);
+		ctxt.LegacyThrow(EE_SUBTRACT_BADDEST);
         return;
     }
 	
