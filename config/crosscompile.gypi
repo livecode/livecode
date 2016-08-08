@@ -60,6 +60,9 @@
 				},
 			],
 		],
+		
+		'target_abi%': '',
+		'host_abi%': '',
 	},
 	
 	'target_defaults':
@@ -81,10 +84,12 @@
 								{
 									'toolset_os': '<(host_os)',
 									'toolset_arch': '<(host_arch)',
+									'toolset_abi': '<(host_abi)',
 								},
 								{
 									'toolset_os': '<(OS)',
 									'toolset_arch': '<(target_arch)',
+									'toolset_abi': '<(target_abi)',
 								},
 							],
 						],
@@ -92,6 +97,7 @@
 					{
 						'toolset_os': '<(OS)',
 						'toolset_arch': '<(target_arch)',
+						'toolset_abi': '<(target_abi)',
 					},
 				],
 			],
