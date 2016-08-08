@@ -2080,12 +2080,32 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
         gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
     else
         gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
-    gptr->makegroup(controls, t_card);
+	gptr->makegroup(controls, t_card);
+	
+	MCAutoValueRef t_id;
+	gptr -> names(P_LONG_ID, &t_id);
+	ctxt . SetItToValue(*t_id);
 }
 
 void MCInterfaceExecGroupSelection(MCExecContext& ctxt)
 {
-	MCselected->group();
+	MCGroup *t_group = nil;
+	if (MCselected->group(ctxt.GetLine(), ctxt.GetPos(), t_group) != ES_NORMAL)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
+	if (t_group != nil)
+	{
+		MCAutoValueRef t_id;
+		t_group -> names(P_LONG_ID, &t_id);
+		ctxt.SetItToValue(*t_id);
+	}
+	else
+	{
+		ctxt.SetItToEmpty();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

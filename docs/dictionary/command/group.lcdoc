@@ -11,6 +11,8 @@ Associations: group
 
 Introduced: 1.0
 
+Changed: 8.1
+
 OS: mac, windows, linux, ios, android
 
 Platforms: desktop, server, mobile
@@ -28,6 +30,10 @@ Parameters:
 objectList:
 A list of object references, separated by the word "and".
 
+It:
+The <group> command places the ID property of the newly created
+object in the it variable.
+
 Description:
 Use the <group> <command> after <select|selecting> <object|objects> to
 make a <group> out of them.
@@ -39,11 +45,12 @@ or <object|objects> are placed in the <group>.
 As with any group on a card, you can use the place <command> to make the
 newly-created <group> appear on other <card|cards>.
 
->*Tip:*  To refer to the newly-created <group>, use the <last> <keyword>
-> : 
+>*Tip:*  To refer to the newly-created <group>, use the it variable immediately
+> after the 'group' command
+> :
 
     group button "Yes" and button "No"
-    set the name of last group to "Do It"
+    set the name of it to "Do It"
 
 
 References: group (command), start editing (command),
@@ -53,4 +60,3 @@ card (object), selected (property), relayerGroupedControls (property),
 layer (property)
 
 Tags: objects
-

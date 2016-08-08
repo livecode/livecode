@@ -272,7 +272,7 @@ MCControl *MCSellist::clone(MCObject *target)
 	return t_result;
 }
 
-Exec_stat MCSellist::group(uint2 line, uint2 pos)
+Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 {
 	MCresult->clear(False);
 	if (objects != NULL && objects->ref->gettype() <= CT_LAST_CONTROL
@@ -330,7 +330,14 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos)
 		gptr->makegroup(controls, parent);
 		objects = new MCSelnode(gptr);
 		gptr->message(MCM_selected_object_changed);
+		
+		r_group_ptr = gptr;
 	}
+	else
+	{
+		r_group_ptr = nil;
+	}
+	
     return ES_NORMAL;
 }
 
