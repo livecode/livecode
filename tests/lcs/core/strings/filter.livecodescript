@@ -119,6 +119,7 @@ on __testFilterWildcard pIsNative, pString
 	put any char of pString into tChar
 		
 	put tChar into tSource
+	filter tSource with tPattern
 	TestAssert "filter single char wildcard matches single char" && tTestType, tSource is tChar
 	
 	put tChar & tChar into tSource
@@ -128,6 +129,7 @@ on __testFilterWildcard pIsNative, pString
 	put pString into tPattern
 	put "?" into any char of tPattern
 	put pString into tSource
+	filter tSource with tPattern
 	TestAssert "filter single char wildcard matches in string" && tTestType, tSource is pString
 
 	# Asterisk
