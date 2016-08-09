@@ -168,12 +168,12 @@ property).
 allow the user to choose AirPlay-enabled hardware for playback (maps to
 the native allowsAirPlay property). Note: This property is only
 supported on iOS 4.3 and later.
-- "duration" (iOS Only): returns the duration of a movie, measured in
-milliseconds (maps to the native duration property). This is an integer
+- "duration": returns the duration of a movie, measured in
+milliseconds (maps to the native duration property on iOS). This is an integer
 value.
-- "playableDuration" (iOS Only): returns the amount of currently
+- "playableDuration": returns the amount of currently
 playable content, measured in milliseconds (maps to the native
-playableDuration property). This is an integer value.
+playableDuration property on iOS). This is an integer value.
 - "startTime" (iOS Only): returns the position at which playback starts,
 measured in milliseconds (maps to the native initialPlaybackTime
 property). This is an integer value.
