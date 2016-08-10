@@ -212,7 +212,7 @@ bool MCImageQuantizeImageBitmap(MCImageBitmap *p_bitmap, MCColor *p_colors, uind
 			while (width--)
 			{
 				uint32_t t_pixel = *t_src_row;
-				if ((t_pixel >> 24) == 0 && p_add_transparency_index)
+				if (MCGPixelGetNativeAlpha(t_pixel) == 0 && p_add_transparency_index)
 				{
 					t_success = MCImageIndexedBitmapAddTransparency(t_indexed);
 					if (t_success)
