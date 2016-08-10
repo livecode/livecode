@@ -91,13 +91,6 @@ bool MCModeHasCommandLineArguments(void);
 //
 bool MCModeHasEnvironmentVariables(void);
 
-// This hook is used to determine if any stacks on the command-line
-// should be opened on startup.
-//
-// This hook is called by X_init.
-//
-bool MCModeShouldLoadStacksOnStartup(void);
-
 // This hook is used to generate the alert message on Windows, should
 // initialization fail.
 //

@@ -644,12 +644,6 @@ MCModeHasEnvironmentVariables()
 	return true;
 }
 
-// In development mode, we always automatically open stacks.
-bool MCModeShouldLoadStacksOnStartup(void)
-{
-	return true;
-}
-
 // In development mode, we just issue a generic error.
 void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {

@@ -293,21 +293,6 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 
 	if (!X_open(argc, argv, envp))
 		return false;
-
-	if (MCstacknames != NULL && MCModeShouldLoadStacksOnStartup())
-	{
-		for(int i = 0 ; i < MCnstacks ; i++)
-		{
-			MCStack *sptr;
-			if (MCdispatcher->loadfile(MCstacknames[i], sptr) == IO_NORMAL)
-				sptr->open();
-            MCValueRelease(MCstacknames[i]);
-		}
-        MCnstacks = 0;
-		delete MCstacknames;
-		MCstacknames = NULL;
-		MCeerror->clear();
-	}
 	
 	return true;
 }

@@ -1054,13 +1054,6 @@ MCModeHasEnvironmentVariables()
 	return true;
 }
 
-// In standalone mode, we only automatically open stacks if there isn't an
-// embedded stack.
-bool MCModeShouldLoadStacksOnStartup(void)
-{
-	return false;
-}
-
 // In standalone mode, we try to work out what went wrong...
 void MCModeGetStartupErrorMessage(MCStringRef& r_caption, MCStringRef& r_text)
 {
