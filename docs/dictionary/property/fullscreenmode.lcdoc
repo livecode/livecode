@@ -35,6 +35,24 @@ end mouseUp
 Value:
 The <fullscreenmode> returns the mode to which this property is set.
 
+- empty - The stack is resized (not scaled) to fit the screen. (default)
+ This is the legacy behavior.
+- "exactFit" - Scale the stack to fill the screen. This stretches the
+stack if the aspect ratio of the screen does not match that of the
+stack.
+- "letterbox" - Scale the stack, preserving the aspect ratio, so all
+content is visible. Some blank space may remain if the screen and stack
+aspect ratios do not match.
+- "noBorder" - Scale the stack to fill the screen, preserving the aspect
+ratio. If the stack and screen aspect ratios do not match, the left /
+right or top / bottom extremes of the stack are not visible.
+- "noScale" - The stack is not scaled, but is centered on the screen
+instead.
+- "showAll" - Scale the stack preserving aspect ratio so all content
+within the stack rect is visible. Portions of the stack outside the
+stack rect will be visible if the scaled stack does not fit the screen
+exactly.
+
 Description:
 Use the <fullscreenmode> property to choose the most appropriate full
 screen scaling mode for the application.
