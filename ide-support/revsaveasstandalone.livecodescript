@@ -654,6 +654,8 @@ command revSaveAsMacStandalone pStack, pFolder
       revSetMacOS tStandalonePath, tTarget, tEngineSourceFile
       
       revRedirectMacOSResources tStandalonePath
+      
+      __ReloadOriginalStackFile tStackFileName
    end repeat
    
    revStandalonePostBuild tStackFileName, pFolder
@@ -818,6 +820,8 @@ command revSaveAsWindowsStandalone pStack, pFolder
       end if
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
+      
+      __ReloadOriginalStackFile tStackFileName
    end repeat
    
    revStandalonePostBuild tStackFileName, pFolder
@@ -874,12 +878,25 @@ command revSaveAsLinuxStandalone pStack, pFolder
             tStandalonePath, tEngineSourceFile) into tDeployInfo
       
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
+      
+      __ReloadOriginalStackFile tStackFileName
    end repeat
    
    revStandalonePostBuild tStackFileName, pFolder
    
    return empty
 end revSaveAsLinuxStandalone
+
+
+private command  __ReloadOriginalStackFile pStackPath
+   local tError
+   try
+      get the short name of stack pStackPath
+   catch tError
+      return "Could not reload stack file" for error
+   end try
+   return it for value
+end __ReloadOriginalStackFile
 
 #####################################################################
 # Check for open stacks, ask to save if need be then close them
@@ -1043,9 +1060,11 @@ private command revOutputDirectories pFolder
          if tPlatform is "MacOSX" then
             if tOSXCount is 0 then next repeat
             put 0 into tOSXCount -- Reset the count to zero to force other OSX platforms to be ignored
+            # As we are doing Universal builds or single slice then use platform as folder name for Mac
+            put revSBStandaloneOutputDirectory(sStandaloneSettingsA["name"], tCount, pFolder, tPlatform, tPlatforms > 1) into tDirectory
+         else
+            put revSBStandaloneOutputDirectory(sStandaloneSettingsA["name"], tCount, pFolder, tTarget, tPlatforms > 1) into tDirectory
          end if
-         
-         put revSBStandaloneOutputDirectory(sStandaloneSettingsA["name"], tCount, pFolder, tPlatform, tPlatforms > 1) into tDirectory
          
          put tDirectory into sPlatformDirectoriesA[tPlatform][tTarget]
       end if
