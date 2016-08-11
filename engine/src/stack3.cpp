@@ -1212,7 +1212,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 			// MW-2007-09-11: [[ Bug 5139 ]] Don't add activity to recent cards if the stack is an
 			//   IDE stack.
-			if (recent && !getextendedstate(ECS_IDE))
+			if (recent && !m_is_ide_stack)
 				MCrecent->addcard(curcard);
 		}
 
