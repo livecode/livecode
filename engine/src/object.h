@@ -115,6 +115,15 @@ enum MCInterfaceTheme
     kMCInterfaceThemeLegacy = 2         // Backwards-compatibility theming
 };
 
+enum MCInterfaceScriptStatus
+{
+    kMCInterfaceScriptStatusCompiled,
+    kMCInterfaceScriptStatusUncompiled,
+    kMCInterfaceScriptStatusWarning,
+    kMCInterfaceScriptStatusError,
+};
+
+
 struct MCObjectShape
 {
 	// The type of shape.
@@ -1222,6 +1231,8 @@ public:
     void GetThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
     void SetThemeControlType(MCExecContext& ctxt, intenum_t  p_type);
     void GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
+    
+    void GetScriptStatus(MCExecContext& ctxt, intenum_t& r_status);
     
 	////////// ARRAY PROPS
     

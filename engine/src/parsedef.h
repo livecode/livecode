@@ -1732,6 +1732,8 @@ enum Properties {
     P_THEME,
     P_THEME_CONTROL_TYPE,
     
+    P_SCRIPT_STATUS,
+    
     __P_LAST,
 };
 

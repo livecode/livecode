@@ -1,0 +1,48 @@
+Name: scriptStatus
+
+Type: property
+
+Syntax: get the scriptStatus of <object>
+
+Summary:
+Determine the status of the last script compilation of an object.
+
+Associations: object
+
+Introduced: 8.1
+
+OS: mac, windows, linux, ios, android, html5
+
+Platforms: desktop, mobile, server
+
+Example:
+if the scriptStatus of stack "MyStack" is "error" then
+   edit the script of stack "MyStack"
+end if
+
+Parameters:
+object:
+The name or ID of the object.
+
+Value (enum): The status of the last compile
+
+- "uncompiled": The LiveCode engine compiles scripts on demand,
+  therefore, if an object is loaded into memory but has not been sent
+  any messages it will be in an uncompiled state.
+- "compiled": Compiled with no errors. Any handlers will be in the
+  message path.
+- "warning": One or more warnings. Currently unused but reserved for
+  future use.
+- "error": One or more errors in the script causing the script to
+  remain in an uncompiled state.
+
+Description:
+Use the scriptStatus property to determine the success of the
+last compilation of the object's script. Compilation of scripts occurs
+when a stack is loaded into memory and when the script property is set.
+
+>*Note:* The LiveCode IDE script editor uses an intermediate object to
+test compilation, therefore, the script editor may display compilation
+errors when the scriptStatus returns empty.
+
+References: script (property)

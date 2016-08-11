@@ -753,7 +753,7 @@ LT factor_table[] =
         {"commandkey", TT_FUNCTION, F_COMMAND_KEY},
         {"commandname", TT_FUNCTION, F_COMMAND_NAME},
         {"commandnames", TT_FUNCTION, F_COMMAND_NAMES},
-		// MW-2011-09-10: [[ TileCache ]] The maximum number of bytes to use for the tile cache
+        // MW-2011-09-10: [[ TileCache ]] The maximum number of bytes to use for the tile cache
 		{"compositorcachelimit", TT_PROPERTY, P_COMPOSITOR_CACHE_LIMIT},
 		// MW-2011-09-10: [[ TileCache ]] Read-only statistics about recent composites
 		{"compositorstatistics", TT_PROPERTY, P_COMPOSITOR_STATISTICS},
@@ -1526,6 +1526,7 @@ LT factor_table[] =
         {"scriptlimits", TT_FUNCTION, F_SCRIPT_LIMITS},
         {"scriptonly", TT_PROPERTY, P_SCRIPT_ONLY},
         {"scriptparsingerrors", TT_PROPERTY, P_SCRIPT_PARSING_ERRORS},
+        {"scriptstatus", TT_PROPERTY, P_SCRIPT_STATUS},
         {"scripttextfont", TT_PROPERTY, P_SCRIPT_TEXT_FONT},
         {"scripttextsize", TT_PROPERTY, P_SCRIPT_TEXT_SIZE},		
         {"scroll", TT_PROPERTY, P_VSCROLL},
