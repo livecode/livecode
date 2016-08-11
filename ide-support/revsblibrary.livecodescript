@@ -228,7 +228,7 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
    end if
    
    local tTotalNumber
-   put __revSBEnumerateFolder(pSource) into tResourceList
+   put __EnumerateFolder(pSource) into tResourceList
    put the number of lines of tResourceList into tTotalNumber
    
    if there is no folder pTarget then
@@ -447,48 +447,38 @@ private command __revSBEnsureFolder pFolder
 end __revSBEnsureFolder
 
 function revSBEnumerateFolder pFolder, pRecursive
-   return __revSBEnumerateFolder(pFolder, "", pRecursive)
+   return __EnumerateFolder(pFolder, "", pRecursive)
 end revSBEnumerateFolder
 
-private function __revSBEnumerateFolder pFolder, pPrefix, pRecursive
+private function __EnumerateFolder pFolder, pPrefix, pRecursive
    local tRecursive
    -- recursive by default
    put pRecursive is not false into tRecursive
    
-   local tOldFolder, tResult
-   put the folder into tOldFolder
-   set the folder to pFolder
+   local tResult
+   local tSubFolder
    
-   # OK-2008-09-10 : Bug 7147 - Prevent the possibility of an infinite loop by
-   # returning empty if the folder cannot be set to pFolder
-   if the folder is not pFolder then
-      return empty
-   end if
-   
-   repeat for each line tSubFolder in the folders
+   repeat for each line tSubFolder in folders(pFolder)
       if tSubFolder is among the items of ".,.." then
          next repeat
       end if
       # For our purposes we need the folder first, so it can be created ahead of file creation..
-      put pPrefix & tSubFolder & "/" & return after tResult
+      appendToStringList pPrefix & tSubFolder & "/", tResult
       if tRecursive then
-         get __revSBEnumerateFolder(pFolder & "/" & tSubFolder, pPrefix & tSubFolder & "/")
+         get __EnumerateFolder(pFolder & "/" & tSubFolder, pPrefix & tSubFolder & "/")
          if it is not empty then
-            put it & return after tResult
+            appendToStringList it, tResult
          end if
       end if
    end repeat
-   local tFileSize
-   repeat for each line tFile in the files
-      #put (item 2 of tFile) + (item 3 of tFile) into tFileSize
-      #add tFileSize to pTotalSize
-      put pPrefix & tFile & return after tResult
-      #put pPrefix & (the urlDecode of item 1 of tFile) & tab & tFileSize & return after tResult
+   
+   local tFile
+   repeat for each line tFile in files(pFolder)
+      appendToStringList pPrefix & tFile, tResult
    end repeat
-   set the folder to tOldFolder
-   delete the last char of tResult
+   
    return tResult
-end __revSBEnumerateFolder
+end __EnumerateFolder
 
 function revSBCalculateRelativePath pRoot, pFile
    local tResult, tCount
@@ -773,7 +763,11 @@ private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
    end repeat
    
    if tFoundArchitecture is empty then
-      put item 1 of tArchitectures into tFoundArchitecture
+      if pPlatform is "MacOSX" then
+         put tArchitectures into tFoundArchitecture
+      else
+         put item 1 of tArchitectures into tFoundArchitecture
+      end if
    end if
    
    put tFoundArchitecture into rArchitecture
@@ -1463,7 +1457,7 @@ function revSBLcextFileIsMobileExternal pFile, pPlatform
          revSBLcextExternalHasFolder(pFile, pPlatform)
 end revSBLcextFileIsMobileExternal
 
-private function revSBFilterExternalsForMobile pList, pPlatform
+private function __FilterExternalsForMobile pList, pPlatform
    filter pList with "*.lcext"
    
    local tList, tError
@@ -1478,10 +1472,10 @@ private function revSBFilterExternalsForMobile pList, pPlatform
       end if
    end repeat
    return tList
-end revSBFilterExternalsForMobile
+end __FilterExternalsForMobile
 
 -- filter file (and folder!) list by expected file extension
-private function revSBFilterExternalsForDesktop pList, pPlatform
+private function __FilterExternalsForDesktop pList, pPlatform
    local tExtension
    switch pPlatform
       case "MacOSX" 
@@ -1498,7 +1492,7 @@ private function revSBFilterExternalsForDesktop pList, pPlatform
    filter pList with "*." & tExtension
    
    return pList
-end revSBFilterExternalsForDesktop
+end __FilterExternalsForDesktop
 
 function revSBExternalNameFromFile pPlatform, pFile
    local tName
@@ -1522,43 +1516,53 @@ function revSBAdditionalExternalsList pPlatform
       -- For these externals we have to go by the file extensions that exist
       -- to check if the platform is supported
       repeat for each line tFolder in tFolders
-         local tContents
-         put __revSBEnumerateFolder(tFolder, tFolder & slash) into tContents
-         
-         local tRawList
-         switch pPlatform
-            case "ios"
-            case "android"
-               put revSBFilterExternalsForMobile(tContents, pPlatform) into tRawList
-               break
-            case "windows"
-            case "macosx"
-            case "linux"
-               put revSBFilterExternalsForDesktop(tContents, pPlatform) into tRawList
-               break
-            default
-               put empty into tRawList
-               break
-         end switch
-         
-         split tRawList by return
-         set the itemdelimiter to "."
-         set the linedelimiter to slash
-         repeat for each element tExtPath in tRawList
-            local tExtension, tExternalName
-            put item -1 of line -1 of tExtPath into tExtension
-            put item 1 to -2 of line -1 of tExtPath into tExternalName
+         local tExternalFolder
+         repeat for each line tExternalFolder in folders(tFolder)
+            if tExternalFolder begins with "." then next repeat
+           
+            local tContents
+            put __EnumerateFolder(tFolder & slash & tExternalFolder, tFolder & slash & tExternalFolder & slash, false) into tContents
             
-            set the itemDelimiter to comma
-            local tArchitecture
-            if pPlatform is among the items of kAdditionalTargets then
-               put pPlatform into tArchitecture
-            else
-               __ExternalArchitecture pPlatform, tExternalName, tArchitecture
-            end if
-            set the itemDelimiter to "."
+            local tRawList
+            switch pPlatform
+               case "ios"
+               case "android"
+                  put __FilterExternalsForMobile(tContents, pPlatform) into tRawList
+                  break
+               case "windows"
+               case "macosx"
+               case "linux"
+                  put __FilterExternalsForDesktop(tContents, pPlatform) into tRawList
+                  break
+               default
+                  put empty into tRawList
+                  break
+            end switch
             
-            put tExtPath into sExternalsLocationA[pPlatform][tExternalName][tArchitecture]
+            split tRawList by return
+            set the itemdelimiter to "."
+            set the linedelimiter to slash
+            repeat for each element tExtPath in tRawList
+               local tExtension, tExternalName
+               put item -1 of line -1 of tExtPath into tExtension
+               put item 1 to -2 of line -1 of tExtPath into tExternalName
+               
+               set the itemDelimiter to comma
+               local tArchitectures
+               if pPlatform is among the items of kAdditionalTargets then
+                  put pPlatform into tArchitectures
+               else
+                  __ExternalArchitecture pPlatform, tExternalName, tArchitectures
+               end if
+               
+               local tArchitecture
+               repeat for each item tArchitecture in tArchitectures
+                  put tExtPath into sExternalsLocationA[pPlatform][tExternalName][tArchitecture]
+               end repeat
+               
+               set the itemDelimiter to "."
+            end repeat
+            set the linedelimiter to return
          end repeat
       end repeat
    end if
@@ -1925,7 +1929,7 @@ private command __ResolveIncludedExternal pTarget, @xFiles
          put item 1 to -2 of tExtPath & slash & "resources" into tResources
          if there is a folder tResources then
             local tContents
-            put __revSBEnumerateFolder(tResources, tResources & slash, false) into tContents
+            put __EnumerateFolder(tResources, tResources & slash, false) into tContents
             
             local tPlatform
             put revSBTargetToPlatform(pTarget) into tPlatform
