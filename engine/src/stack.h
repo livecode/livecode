@@ -294,6 +294,8 @@ protected:
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
 	
+	bool m_is_ide_stack : 1;
+	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
     
@@ -307,8 +309,6 @@ protected:
 	
 	// IM-2016-02-26: [[ Bug 16244 ]] Determines whether or not to show hidden objects.
 	MCStackObjectVisibility m_hidden_object_visibility;
-    
-    bool m_is_ide_stack : 1;
     
 public:
     
