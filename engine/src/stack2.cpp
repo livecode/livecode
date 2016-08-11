@@ -1977,7 +1977,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			else
 				wm = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
 	if (wm == WM_TOP_LEVEL
-	        && (flags & F_CANT_MODIFY || getextendedstate(ECS_IDE) || !MCdispatcher->cut(True)))
+	        && (flags & F_CANT_MODIFY || m_is_ide_stack || !MCdispatcher->cut(True)))
 		wm = WM_TOP_LEVEL_LOCKED;
 
 	Boolean oldlock = MClockmessages;
@@ -2411,7 +2411,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		
 		// MW-2007-09-11: [[ Bug 5139 ]] Don't add activity to recent cards if the stack is an
 		//   IDE stack.
-		if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && !getextendedstate(ECS_IDE))
+		if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && !m_is_ide_stack)
 			MCrecent->addcard(curcard);
 
 		// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
