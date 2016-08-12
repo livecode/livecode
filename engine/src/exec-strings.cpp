@@ -859,9 +859,16 @@ void MCStringsEvalMatchChunk(MCExecContext& ctxt, MCStringRef p_string, MCString
     {
         if (r_match && t_compiled->matchinfo[t_match_index].rm_so != -1)
         {
-            t_success = MCStringFormat(r_results[i], "%d", t_compiled->matchinfo[t_match_index].rm_so + 1);
+			MCRange t_cu_range, t_char_range;
+			t_cu_range.offset = t_compiled->matchinfo[t_match_index].rm_so;
+			t_cu_range.length = t_compiled->matchinfo[t_match_index].rm_eo - t_compiled->matchinfo[t_match_index].rm_so;
+			MCStringUnmapIndices(p_string,
+								 kMCCharChunkTypeGrapheme,
+								 t_cu_range,
+								 t_char_range);
+            t_success = MCStringFormat(r_results[i], "%d", t_char_range.offset + 1);
             if (t_success)
-                t_success = MCStringFormat(r_results[i + 1], "%d", t_compiled->matchinfo[t_match_index].rm_eo);
+                t_success = MCStringFormat(r_results[i + 1], "%d", t_char_range.offset + t_char_range.length);
         }
         else
         {
