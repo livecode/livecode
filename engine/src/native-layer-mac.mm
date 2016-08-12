@@ -136,7 +136,12 @@ bool MCNativeLayerMac::doPaint(MCGContextRef p_context)
 NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 {
 	int32_t t_gp_height;
-	t_gp_height = m_object->getcard()->getrect().height;
+	
+	NSWindow *t_window = getStackWindow();
+	if (t_window != nil)
+		t_gp_height = (int32_t)[[t_window contentView] frame].size.height;
+	else
+		t_gp_height = m_object->getcard()->getrect().height;
 	
 	NSRect t_rect;
 	t_rect = NSMakeRect(p_rect.x, t_gp_height - (p_rect.y + p_rect.height), p_rect.width, p_rect.height);
