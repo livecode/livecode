@@ -1873,6 +1873,11 @@ extern MCExecMethodInfo *kMCArraysEvalIsAnArrayMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsNotAnArrayMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsAmongTheKeysOfMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterWildcardMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterRegexMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterWildcardIntoItMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterRegexIntoItMethodInfo;
+
 
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysEvalExtents(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
@@ -1899,6 +1904,12 @@ void MCArraysEvalIsAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_resu
 void MCArraysEvalIsNotAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 void MCArraysEvalIsAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef p_array, bool& r_result);
 void MCArraysEvalIsNotAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef p_array, bool& r_result);
+
+void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCArrayRef &r_result);
+void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCArrayRef &r_result);
+void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
+void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
+
 
 ///////////
 
