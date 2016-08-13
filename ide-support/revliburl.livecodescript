@@ -3333,7 +3333,7 @@ on libUrlFtpUpload pData,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" then
+  if char 1 to 3 of newUrl <> "ftp" and char 1 to 4 of newUrl <> "sftp" then
     return "invalid url"
   end if
   if lvCount is empty then
@@ -3382,7 +3382,7 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" then
+  if char 1 to 3 of newUrl <> "ftp" and char 1 to 4 of newUrl <> "sftp" then
     return "invalid url"
   end if
   
