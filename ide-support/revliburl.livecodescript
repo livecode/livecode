@@ -513,36 +513,46 @@ on ulGetFormat pUrl,pCount
          put _proxyForURL(pURL) into laUrlProxy[pURL]
          ulLogIt "Proxy for URL:" && laUrlProxy[pURL] & cr
          
-         -- CW-2016-06-11: [[ External driver support ]] Bypass URL/Proxy manipulation for external drivers.
-         -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
-         if laUrlProxy[pURL] is not empty and lvExtDriver is empty then
-            ## for now don't allow https connections through proxies
-            ## will look at this again later
-            put tHost into tURLHost
-            put laUrlProxy[pURL] into tHost
-            replace "http://" with "" in tHost ##not sure if this is possible but just in case
-            if tPort <> empty then
-               put tPort into tUrlPort ##save this for setting laFilename below
-            else if tPre is "https" then
-               put ":443" into tUrlPort
-            else
-               put ":80" into tUrlPort
+         -- CW-2016-08-14: [[ External driver support ]] Bypass URL/Proxy manipulation and async check for external drivers.
+         if lvExtDriver is empty then
+            -- CW-2016-08-14: If we are not using an external driver, asynchronous HTTP uploads are not supported.
+            if laAction[pUrl] is "putData" and laLoadReq[pUrl] is true then
+               put "HTTP async uploads not supported in this version" into laUrlErrorStatus[pUrl]
+               put "error" into laUrlLoadStatus[pUrl]
+               delete local laLoadingUrls[pUrl]
+               exit "ulGetFormat"
             end if
-            #get the proxy port
-            put the itemdel into tSavedDel
-            set the itemdel to ":"
-            if the number of items of tHost > 1 and item -1 of tHost is a number then
-               put ":" &  item -1 of tHost into tPort
-               delete item -1 of tHost #remove port for now
-            else
-               put ":80" into tPort
-            end if
-            set the itemDel to tSavedDel
-         else if tPort is empty then
-            if tPre is "https" then
-               put ":443" into tPort
-            else
-               put ":80" into tPort
+            
+            -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
+            if laUrlProxy[pURL] is not empty then
+               ## for now don't allow https connections through proxies
+               ## will look at this again later
+               put tHost into tURLHost
+               put laUrlProxy[pURL] into tHost
+               replace "http://" with "" in tHost ##not sure if this is possible but just in case
+               if tPort <> empty then
+                  put tPort into tUrlPort ##save this for setting laFilename below
+               else if tPre is "https" then
+                  put ":443" into tUrlPort
+               else
+                  put ":80" into tUrlPort
+               end if
+               #get the proxy port
+               put the itemdel into tSavedDel
+               set the itemdel to ":"
+               if the number of items of tHost > 1 and item -1 of tHost is a number then
+                  put ":" &  item -1 of tHost into tPort
+                  delete item -1 of tHost #remove port for now
+               else
+                  put ":80" into tPort
+               end if
+               set the itemDel to tSavedDel
+            else if tPort is empty then
+               if tPre is "https" then
+                  put ":443" into tPort
+               else
+                  put ":80" into tPort
+               end if
             end if
          end if
          
@@ -3333,9 +3343,6 @@ on libUrlFtpUpload pData,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" and char 1 to 4 of newUrl <> "sftp" then
-    return "invalid url"
-  end if
   if lvCount is empty then
     put "6923" into lvCount
   else
@@ -3382,9 +3389,6 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" and char 1 to 4 of newUrl <> "sftp" then
-    return "invalid url"
-  end if
   
   #removed from here in 1.1.6b1
   #  open file pFile for binary read
