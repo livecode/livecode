@@ -1,22 +1,23 @@
 Name: revOpenDatabases
 
+Synonyms: revdb_connections
+
 Type: function
 
 Syntax: revOpenDatabases()
 
-Summary: <return|Returns> a list of open <database|databases>.
+Summary:
+<return|Returns> a list of open <database|databases>.
 
-Synonyms: revdb_connections
-
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revOpenDatabases()
@@ -27,14 +28,22 @@ repeat for each item thisConnection in revOpenDatabases()
 Example:
 if revOpenDatabases is empty then cleanUp
 
-Returns: The <revOpenDatabases> <function> <return|returns> a list of database IDs separated by commas.
+Returns:
+The <revOpenDatabases> <function> <return|returns> a list of database
+IDs separated by commas.
 
 Description:
-Use the <revOpenDatabases> <function> to find out how many <database|databases> are open, or in a <repeat> <loop> to access all the open <database|databases> in turn.
+Use the <revOpenDatabases> <function> to find out how many
+<database|databases> are open, or in a <repeat> <loop> to access all the
+open <database|databases> in turn.
 
-The database ID returned by the <revOpenDatabases> <function> is the same as the number <return|returned> by the <revOpenDatabase> <function> when the <database> was opened.
+The database ID returned by the <revOpenDatabases> <function> is the
+same as the number <return|returned> by the <revOpenDatabase> <function>
+when the <database> was opened.
 
-If the operation is not successful, the <revOpenDatabases> <function> <return|returns> an error message that begins with the <string> "revdberr".
+If the operation is not successful, the <revOpenDatabases> <function>
+<return|returns> an error message that begins with the <string>
+"revdberr". 
 
 >*Important:*  The <revOpenDatabases> <command> is part of the 
 > <Database library>. To ensure that the <command> works in a 
@@ -48,6 +57,12 @@ If the operation is not successful, the <revOpenDatabases> <function> <return|re
 Changes:
 The revOpenDatabases synonym was added in version 2.0.
 
-References: string (keyword), Database library (library), LiveCode custom library (glossary), revDatabaseConnectResult (function), revOpenDatabase (function), revDatabaseType (function), Standalone Application Settings (glossary), database (glossary), loop (glossary), return (glossary), standalone application (glossary), command (glossary), function (control structure), repeat (control structure)
+References: function (control structure), repeat (control structure),
+revDatabaseConnectResult (function), revOpenDatabase (function),
+revDatabaseType (function), LiveCode custom library (glossary),
+Standalone Application Settings (glossary), database (glossary),
+loop (glossary), return (glossary), standalone application (glossary),
+command (glossary), string (keyword), Database library (library)
 
 Tags: database
+

@@ -743,7 +743,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          throw "could not open asset archive"
       end if
       
-      addAssetsToArchive tFiles, tBaseFolder, tAssetArchive
+      addAssetsToArchive tResolvedFiles, tBaseFolder, tAssetArchive
       
       revZipCloseArchive tAssetArchive
       if the result is not empty then

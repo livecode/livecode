@@ -1,13 +1,15 @@
 Name: QuickTime
 
-Synonyms: QT,QTI,QuickTime
+Synonyms: qt, qti, quicktime
 
 Type: glossary
 
 Description:
-System for video, sound, and picture display developed by Apple Computer. 
- 
-Also, a <file> <format> that can hold video or sound information (a QuickTime <movie>).
+System for video, sound, and picture display developed by Apple
+Computer. 
+
+Also, a <file> <format> that can hold video or sound information (a
+QuickTime <movie>).
 
 Changes:
 The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
@@ -18,7 +20,8 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
-References: dontUseQT (property), dontUseQTEffects (property), 
-format (glossary), file (glossary), movie (glossary)
+References: format (glossary), file (glossary), movie (glossary),
+dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
+

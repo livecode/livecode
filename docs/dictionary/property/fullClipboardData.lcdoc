@@ -3,13 +3,15 @@ Name: fullClipboardData
 Type: property
 
 Syntax: set the fullClipboardData[<key>] to <data>
+
 Syntax: set the fullClipboardData to empty
 
-Summary: Provides access to the contents of the <clipboard(glossary)>.
+Summary:
+Provides access to the contents of the <clipboard(glossary)>.
 
 Introduced: 8.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
 Platforms: desktop
 
@@ -33,6 +35,7 @@ the <clipboard(glossary)>. It can only be accessed while the
 Description:
 Use the <fullClipboardData> to gain access to the system 
 <clipboard(glossary)>. The keys for the <fullClipboardData> are:
+
   - "text": plain text
   - "rtftext": LiveCode rich text format data
   - "htmltext": LiveCode HTML text
@@ -47,7 +50,8 @@ Use the <fullClipboardData> to gain access to the system
   - "objects": LiveCode objects
   - "files": List of newline-separated file paths
   - "private": available for in-app use
-  
+
+
 >*Note:* More keys and data types may be added in the future.
 
 If the contents of the <clipboard(glossary)> were placed there by 
@@ -67,9 +71,9 @@ If you require lower-level access to the <clipboard(glossary)>, see the
 >*Tip:* It is good practice to lock the <clipboard(glossary)> before 
 accessing it to prevent data corruption.
 
-References: lock clipboard (command), unlock clipboard (command), 
-clipboard (function), clipboardData (property), 
-rawClipboardData (property), fullDragData (property),
-clipboard (glossary)
+References: lock clipboard (command), unlock clipboard (command),
+clipboard (function), clipboard (glossary), clipboardData (property),
+rawClipboardData (property), fullDragData (property)
 
 Tags: ui, clipboard
+

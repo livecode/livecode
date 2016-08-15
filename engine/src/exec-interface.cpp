@@ -2080,12 +2080,32 @@ void MCInterfaceExecGroupControls(MCExecContext& ctxt, MCObjectPtr *p_controls, 
         gptr = (MCGroup *)MCtemplategroup->clone(False, OP_NONE, false);
     else
         gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
-    gptr->makegroup(controls, t_card);
+	gptr->makegroup(controls, t_card);
+	
+	MCAutoValueRef t_id;
+	gptr -> names(P_LONG_ID, &t_id);
+	ctxt . SetItToValue(*t_id);
 }
 
 void MCInterfaceExecGroupSelection(MCExecContext& ctxt)
 {
-	MCselected->group();
+	MCGroup *t_group = nil;
+	if (MCselected->group(ctxt.GetLine(), ctxt.GetPos(), t_group) != ES_NORMAL)
+	{
+		ctxt.Throw();
+		return;
+	}
+	
+	if (t_group != nil)
+	{
+		MCAutoValueRef t_id;
+		t_group -> names(P_LONG_ID, &t_id);
+		ctxt.SetItToValue(*t_id);
+	}
+	else
+	{
+		ctxt.SetItToEmpty();
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2155,9 +2175,8 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 		{
 			if (!p_cut)
 			{
-				MCStack *t_old_default;
-				t_old_default = MCdefaultstackptr;
-				MCdefaultstackptr = static_cast<MCStack *>(p_dst . object);
+                MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+                MCdefaultstackptr = static_cast<MCStack *>(p_dst . object);
 				MCdefaultstackptr -> stopedit();
 
 				MCCard *t_card;
@@ -2165,7 +2184,9 @@ void MCInterfaceProcessToContainer(MCExecContext& ctxt, MCObjectPtr *p_objects, 
 
 				t_new_object = t_card -> clone(True, True);
 
-				MCdefaultstackptr = t_old_default;
+                if (t_old_defaultstack.IsValid())
+                    MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+
 			}
 		}
 		break;
@@ -2933,9 +2954,8 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
         
 	// MW-2007-05-01: Reverting this as it causes problems :o(
 	//stackptr -> setflag(True, F_VISIBLE);
-
-	MCStack *olddefault = MCdefaultstackptr;
-	Boolean oldtrace = MCtrace;
+    MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+    Boolean oldtrace = MCtrace;
 	MCtrace = False;
 	if (p_mode >= WM_MODELESS)
 		MCRedrawForceUnlockScreen();
@@ -2962,8 +2982,8 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
     
 	MCtrace = oldtrace;
     
-	if (p_mode > WM_TOP_LEVEL)
-		MCdefaultstackptr = olddefault;
+	if (p_mode > WM_TOP_LEVEL && t_old_defaultstack.IsValid())
+		MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
 }
 
 void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
@@ -3115,7 +3135,7 @@ void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_name, MCPo
 
 void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStringRef p_new_name, bool p_force_invisible, bool p_with_group)
 {
-	MCStack *odefaultstackptr = MCdefaultstackptr;
+	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	Boolean wasvisible = MCtemplatestack->isvisible();
 
 	/* Check that a specified parent stack has a usable name before
@@ -3158,8 +3178,10 @@ void MCInterfaceExecCreateStack(MCExecContext& ctxt, MCObject *p_object, MCStrin
 
 	MCtemplatestack->setflag(wasvisible, F_VISIBLE);
 	MCObject *t_object = MCdefaultstackptr;
-	MCdefaultstackptr = odefaultstackptr;
-
+    
+    if (t_old_defaultstack.IsValid())
+        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+	
 	if (p_new_name != nil)
 		t_object->setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
@@ -3324,8 +3346,8 @@ void MCInterfaceExecCreateWidget(MCExecContext& ctxt, MCStringRef p_new_name, MC
 
 void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p_new_name, bool p_force_invisible)
 {
-	MCStack *odefaultstackptr = MCdefaultstackptr;
-
+    MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+    
 	MCObject *t_object = nil;
 	switch (p_target->gettype())
 	{
@@ -3421,7 +3443,8 @@ void MCInterfaceExecClone(MCExecContext& ctxt, MCObject *p_target, MCStringRef p
 	t_object->names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 
-	MCdefaultstackptr = odefaultstackptr;
+    if (t_old_defaultstack.IsValid())
+        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

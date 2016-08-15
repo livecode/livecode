@@ -6,9 +6,14 @@ Type: glossary
 
 Description:
 An <object(glossary)> you click to control some aspect of <behavior>. 
- 
-LiveCode <button|buttons> include push buttons, <radio button|radio buttons>, <checkbox|checkboxes>, <menu item|menu items>, and <menu|menus>.
 
-References: checkbox (glossary), radio button (glossary), behavior (glossary), menu item (glossary), menu (glossary), object (glossary), button (glossary)
+LiveCode <button|buttons> include push buttons, <radio button|radio
+buttons>, <checkbox|checkboxes>, <menu item|menu items>, and
+<menu|menus>. 
+
+References: checkbox (glossary), radio button (glossary),
+behavior (glossary), menu item (glossary), menu (glossary),
+object (glossary), button (glossary)
 
 Tags: objects
+

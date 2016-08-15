@@ -4,13 +4,17 @@ Type: keyword
 
 Syntax: without
 
-Summary: Used with the <move> and <send to program> <command|commands> to allow the <handler> to continue <execute|executing> at once. Also used with the <move> <command> to prevent <message|messages> from being sent as a result of the move.
+Summary:
+Used with the <move> and <send to program> <command|commands> to allow
+the <handler> to continue <execute|executing> at once. Also used with
+the <move> <command> to prevent <message|messages> from being sent as a
+result of the move.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 move graphic 3 to 100,100 without waiting
@@ -22,8 +26,14 @@ Example:
 send myMessage to program "FileMaker" without reply
 
 Description:
-Use the <without> <keyword> to change the way the <move> and <send to program> <command|commands> operate.
+Use the <without> <keyword> to change the way the <move> and <send to
+program> <command|commands> operate.
 
-If you use the move...without waiting form of the <move> <command> or the send...to program...without reply form of the <send to program> <command>, the current <handler> continues immediately.
+If you use the move...without waiting form of the <move> <command> or
+the send...to program...without reply form of the <send to program>
+<command>, the current <handler> continues immediately.
 
-References: send to program (command), move (command), with (keyword), handler (glossary), keyword (glossary), message (glossary), command (glossary), execute (glossary)
+References: send to program (command), move (command), handler (glossary),
+keyword (glossary), message (glossary), command (glossary),
+execute (glossary), with (keyword)
+

@@ -4,7 +4,9 @@ Type: object
 
 Syntax: AndroidScroller
 
-Summary: A native Android scroller control that is used as an overlay on the part of the screen you wish to interact with the Android scrollbars.
+Summary:
+A native Android scroller control that is used as an overlay on the part
+of the screen you wish to interact with the Android scrollbars.
 
 Introduced: 5.5.1
 
@@ -21,10 +23,19 @@ put the result into sScrollerID
 mobileControlSet sScrollerID, "contentRect", (10,10,100,700)
 
 Description:
-An Android scroller control is created using a control type of "scroller". 
+An Android scroller control is created using a control type of
+"scroller". 
 
-Rather than act as a container for other controls the AndroidScroller is intended to be used as an overlay on the part of the screen you wish to interact with the proper Android scrollbars. By responding to the various AndroidScroller messages, you can move LiveCode controls or set the appropriate scroll properties of groups and fields to get a native scrolling effect.
+Rather than act as a container for other controls the AndroidScroller is
+intended to be used as an overlay on the part of the screen you wish to
+interact with the proper Android scrollbars. By responding to the
+various AndroidScroller messages, you can move LiveCode controls or set
+the appropriate scroll properties of groups and fields to get a native
+scrolling effect.
 
-References: mobileControlDelete (command), mobileControlDo (command), mobileControlSet (command), mobileControlCreate (command), mobileControlGet (function), mobileControlTarget (function)
+References: mobileControlDelete (command), mobileControlDo (command),
+mobileControlSet (command), mobileControlCreate (command),
+mobileControlGet (function), mobileControlTarget (function)
 
 Tags: objects
+

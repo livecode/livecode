@@ -115,6 +115,15 @@ enum MCInterfaceTheme
     kMCInterfaceThemeLegacy = 2         // Backwards-compatibility theming
 };
 
+enum MCInterfaceScriptStatus
+{
+    kMCInterfaceScriptStatusCompiled,
+    kMCInterfaceScriptStatusUncompiled,
+    kMCInterfaceScriptStatusWarning,
+    kMCInterfaceScriptStatusError,
+};
+
+
 struct MCObjectShape
 {
 	// The type of shape.
@@ -918,10 +927,14 @@ public:
     // as appropriate.
     void copyfont(MCFontRef& r_font);
     
-    // MW-2014-12-17: [[ Widgets ]] Returns true if the object is a widget or contains
-    //   a widget.
-    virtual bool haswidgets(void);
-    
+	// IM-2016-07-06: [[ Bug 17690 ]] Return the minimum stack file version that can fully
+	//   encode this object and its properties.
+	virtual uint32_t getminimumstackfileversion(void);
+	
+	// IM-2016-07-06: [[ Bug 17690 ]] Returns the minimum stack file version of this object
+	//   and any child objects.
+	uint32_t geteffectiveminimumstackfileversion(void);
+	
     // Currently non-functional: always returns false
     bool is_rtl() const { return false; }
     
@@ -1219,6 +1232,8 @@ public:
     void SetThemeControlType(MCExecContext& ctxt, intenum_t  p_type);
     void GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_type);
     
+    void GetScriptStatus(MCExecContext& ctxt, intenum_t& r_status);
+    
 	////////// ARRAY PROPS
     
     void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);
@@ -1505,11 +1520,14 @@ private:
     
     void Set(MCObjectProxy* p_proxy)
     {
-        if (m_proxy != nil)
-            m_proxy->Release();
-        m_proxy = p_proxy;
-        if (m_proxy != nil)
-            m_proxy->Retain();
+	    if (m_proxy != p_proxy)
+	    {
+		    if (m_proxy != nil)
+			    m_proxy->Release();
+		    m_proxy = p_proxy;
+		    if (m_proxy != nil)
+			    m_proxy->Retain();
+	    }
     }
 };
 

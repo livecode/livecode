@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
 #define GRAPHIC_EXTRA_FILLGRADIENT		(1UL << 1)
@@ -1748,7 +1750,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined, default false
 	uint4 t_old_flags;
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		t_old_flags = flags;
 		flags &= ~F_G_ANTI_ALIASED;
@@ -1762,7 +1764,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 		return stat;
 
 //---- 2.7+:
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 		flags = t_old_flags;
 //----
 
@@ -1828,7 +1830,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32
 	//   legacy unicode output.
     if (flags & F_G_LABEL)
 	{
-		if (p_version < 7000)
+		if (p_version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -1854,7 +1856,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 
 //---- 2.7+:
 //  . F_G_ANTI_ALIASED now defined
-	if (version < 2700)
+	if (version < kMCStackFileFormatVersion_2_7)
 		flags &= ~F_G_ANTI_ALIASED;
 //----
 
@@ -1917,9 +1919,9 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 					return checkloadstat(stat);
 			}
 		}
-		if (version < 1400)
+		if (version < kMCStackFileFormatVersion_1_4)
 			loaddashes = True;
-		if (version <= 1400)
+		if (version <= kMCStackFileFormatVersion_1_4)
 			arrowsize = DEFAULT_ARROW_SIZE;
 		break;
 	}
@@ -1952,7 +1954,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 	//   legacy unicode output.
 	if (flags & F_G_LABEL)
 	{
-		if (version < 7000)
+		if (version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return checkloadstat(stat);

@@ -314,6 +314,8 @@ MCStack::MCStack()
     m_attachments = nil;
     
 	view_init();
+    
+    m_is_ide_stack = false;
 }
 
 MCStack::MCStack(const MCStack &sref) : MCObject(sref)
@@ -520,6 +522,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     m_document_filename = MCValueRetain(kMCEmptyString);
     
 	view_copy(sref);
+    
+    m_is_ide_stack = sref.m_is_ide_stack;
 }
 
 MCStack::~MCStack()
@@ -829,7 +833,7 @@ void MCStack::kfocus()
 
 	// MW-2007-09-11: [[ Bug 5139 ]] Don't add activity to recent cards if the stack is an
 	//   IDE stack.
-	if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && editing == NULL && !getextendedstate(ECS_IDE))
+	if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && editing == NULL && !m_is_ide_stack)
 		MCrecent->addcard(curcard);
 
 	if (state & CS_SUSPENDED)

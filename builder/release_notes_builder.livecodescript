@@ -1006,8 +1006,13 @@ private command DictionaryScan @xAdded, @xModified
 end DictionaryScan
 
 private command DictionaryScanFile pFile, @xAdded, @xModified
-   local tContents
-   put FileGetUTF8Contents(pFile) into tContents
+   local tContents, tError
+   try
+      put FileGetUTF8Contents(pFile) into tContents
+   catch tError
+      BuilderLog "report", tError
+      exit DictionaryScanFile
+   end try
    
    -- Extract basic metadata from the dictionary entry
    local tName, tType, tVersion

@@ -294,6 +294,8 @@ protected:
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
 	
+	bool m_is_ide_stack : 1;
+	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
     
@@ -584,14 +586,6 @@ public:
     
 	//////////
 	
-    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
-    bool substackhaswidgets();
-
-    /* Return true iff the stack or one of its substacks has widgets. */
-    virtual bool haswidgets();
-    
-	//////////
-    
 	void setgeom();
 	
 	//////////

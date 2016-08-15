@@ -62,6 +62,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "mode.h"
 #include "stacksecurity.h"
+#include "stackfileformat.h"
+
+#include "paragraf.h"
+#include "MCBlock.h"
 
 #include "exec.h"
 #include "graphicscontext.h"
@@ -2038,8 +2042,7 @@ Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParameter *p_params)
 {
 	// Fetch current default stack and target settings
-	MCStack *t_old_stack;
-	t_old_stack = MCdefaultstackptr;
+	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
@@ -2063,9 +2066,10 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 
 	// Reset the default stack pointer and target - note that we use 'send'esque
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
-	if (MCdefaultstackptr == t_this_stack)
-		MCdefaultstackptr = t_old_stack;
-
+    if (MCdefaultstackptr == t_this_stack
+                && t_old_defaultstack.IsValid())
+        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+	
 	// Reset target pointer
 	MCtargetptr = t_old_target;
 	MCdynamicpath = olddynamic;
@@ -2096,7 +2100,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	void *t_deletion_cookie;
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
-	MCStack *oldstackptr = MCdefaultstackptr;
+	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
@@ -2129,9 +2133,11 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 				stat = ES_PASS;
 		}
 	}
-	if (!send || !changedefault || MCdefaultstackptr == mystack)
-		MCdefaultstackptr = oldstackptr;
-	MCtargetptr = oldtargetptr;
+	if ((!send || !changedefault || MCdefaultstackptr == mystack)
+                && t_old_defaultstack.IsValid())
+		MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+	
+    MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
 	
 	MCDeletedObjectsOnObjectResumeDeletion(this, t_deletion_cookie);
@@ -3153,7 +3159,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	MCNameRef t_name;
-	if ((stat = IO_read_nameref_new(t_name, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_nameref_new(t_name, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
 	MCNameDelete(_name);
 	_name = t_name;
@@ -3177,7 +3183,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	t_has_font_index = false;
 	if (flags & F_FONT)
 	{
-		if (version > 1300)
+		if (version > kMCStackFileFormatVersion_1_3)
 		{
 			if ((stat = IO_read_uint2(&t_font_index, stream)) != IO_NORMAL)
 				return checkloadstat(stat);
@@ -3214,7 +3220,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_SCRIPT)
 	{
-		if ((stat = IO_read_stringref_new(_script, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(_script, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
         
         // SN-2014-11-07: [[ Bug 13957 ]] It's possible to get a NULL script but having the
@@ -3237,7 +3243,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
 				break;
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if ((stat = IO_read_stringref_new(colornames[i], stream, version >= 7000)) != IO_NORMAL)
+			if ((stat = IO_read_stringref_new(colornames[i], stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 				break;
 			if (MCStringIsEmpty(colornames[i]))
 			{
@@ -3273,7 +3279,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000, then we have just the unnamed
 	//   propset here.
-	if (version < 7000 && addflags & AF_CUSTOM_PROPS)
+	if (version < kMCStackFileFormatVersion_7_0 && addflags & AF_CUSTOM_PROPS)
 		if ((stat = loadunnamedpropset_legacy(stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 	if (addflags & AF_BORDER_WIDTH)
@@ -3289,7 +3295,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 		//   is older.
 		// MW-2012-03-13: [[ UnicodeToolTip ]] If the file format is older than 5.5
 		//   then convert native to utf-8.
-		if (version < 5500)
+		if (version < kMCStackFileFormatVersion_5_5)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] This code path is only hit if sfv < 5500
 			//   so leave as legacy.
@@ -3297,7 +3303,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			if ((stat = IO_read_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
 				return checkloadstat(stat);
 		}
-		else if (version < 7000)
+		else if (version < kMCStackFileFormatVersion_7_0)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format, read in as UTF-8
 			//   formatted.
@@ -3337,8 +3343,8 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 			MCObjectInputStream *t_stream = nil;
             // SN-2014-03-27 [[ Bug 11993 ]] 7.0 file format doesn't put the nil byte needed for decryption
             // We need to provide the information to the ObjectInputStream
-			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, version >= 7000, t_stream);
-			if (version < 7000)
+			/* UNCHECKED */ MCStackSecurityCreateObjectInputStream(stream, t_length, version >= kMCStackFileFormatVersion_7_0, t_stream);
+			if (version < kMCStackFileFormatVersion_7_0)
 			{
 				t_length -= 1;
 				
@@ -3363,7 +3369,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 				stat = extendedload(*t_stream, version, t_length);
 
 			// Read the implicit nul byte
-			if (version < 7000 && stat == IO_NORMAL)
+			if (version < kMCStackFileFormatVersion_7_0 && stat == IO_NORMAL)
 			{
 				uint1 t_byte;
 				stat = checkloadstat(t_stream -> ReadU8(t_byte));
@@ -3385,7 +3391,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 	{
 		MCAutoStringRef t_script_string;
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_read_stringref_new(&t_script_string, stream, version >= 7000, 4)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(&t_script_string, stream, version >= kMCStackFileFormatVersion_7_0, 4)) != IO_NORMAL)
 			return checkloadstat(stat);
 		
 		setscript(*t_script_string);
@@ -3399,7 +3405,7 @@ IO_stat MCObject::load(IO_handle stream, uint32_t version)
 
 	// MW-2013-03-28: The restrictions byte is no longer relevant due to new
 	//   licensing.
-	if (version >= 2700)
+	if (version >= kMCStackFileFormatVersion_2_7)
 	{
 		uint1 t_restrictions;
 		if ((stat = IO_read_uint1(&t_restrictions, stream)) != IO_NORMAL)
@@ -3434,10 +3440,10 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	IO_stat stat;
 	uint2 i;
 	bool t_extended;
-	t_extended = p_version >= 2700 && p_force_ext;
+	t_extended = p_version >= kMCStackFileFormatVersion_2_7 && p_force_ext;
 
 	// Check whether there are any custom properties with array values and if so, force extension
-	if (p_version < 7000 && hasarraypropsets_legacy())
+	if (p_version < kMCStackFileFormatVersion_7_0 && hasarraypropsets_legacy())
 		t_extended = true;
 
 	// MW-2008-10-28: [[ ParentScripts ]] Make sure we mark this as extended if there
@@ -3476,7 +3482,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(_name, stream, p_version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(_name, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	if (!MCStringIsEmpty(_script))
@@ -3495,7 +3501,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000 then we need to encode for
 	//   long scripts, and put extended data after it.
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 	{
 		if ((flags & F_SCRIPT && MCStringGetLength(_script) >= MAXUINT2) || t_extended)
 		{
@@ -3506,7 +3512,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	
 	stat = IO_write_uint4(flags, stream);
 	
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 	{
 		if (addflags & AF_LONG_SCRIPT && !MCStringIsEmpty(_script))
 			flags |= F_SCRIPT;
@@ -3532,7 +3538,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
         getstack() -> unsecurescript(this);
-        stat = IO_write_stringref_new(_script, stream, p_version >= 7000);
+        stat = IO_write_stringref_new(_script, stream, p_version >= kMCStackFileFormatVersion_7_0);
 		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3547,7 +3553,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL)
 			return stat;
 		// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if ((stat = IO_write_stringref_new(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream, p_version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	}
 	if (props != NULL)
@@ -3564,7 +3570,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		addflags |= AF_INK;
 
 //---- New in 2.7
-	if (p_version >= 2700)
+	if (p_version >= kMCStackFileFormatVersion_2_7)
 	{
 		if (blendlevel != 100)
 			addflags |= AF_BLEND_LEVEL;
@@ -3592,7 +3598,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		return stat;
 	if ((stat = IO_write_uint2(rect.height, stream)) != IO_NORMAL)
 		return stat;
-	if (p_version < 7000 && addflags & AF_CUSTOM_PROPS)
+	if (p_version < kMCStackFileFormatVersion_7_0 && addflags & AF_CUSTOM_PROPS)
 		if ((stat = saveunnamedpropset_legacy(stream)) != IO_NORMAL)
 			return stat;
 	if (addflags & AF_BORDER_WIDTH)
@@ -3608,14 +3614,14 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		//   versions.
 		// MW-2012-03-13: [[ UnicodeToolTip ]] If the file format is older than 5.5
 		//   then convert utf-8 to native before saving.
-		if (p_version < 5500)
+		if (p_version < kMCStackFileFormatVersion_5_5)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] sfv < 5500, so native output.
             // Tooltip is encoded in the native format
             if ((stat = IO_write_stringref_legacy(tooltip, stream, false)) != IO_NORMAL)
 				return stat;
 		}
-		else if (p_version < 7000)
+		else if (p_version < kMCStackFileFormatVersion_7_0)
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] Special-case 5.5 format - uses UTF-8.
 			// Tooltip is encoded as UTF-8
@@ -3635,7 +3641,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 
 //---- New in 2.7
 	uint1 t_converted_ink;
-	if (p_version >= 2700)
+	if (p_version >= kMCStackFileFormatVersion_2_7)
 		t_converted_ink = ink;
 	else
 		t_converted_ink = ink >= 0x19 ? GXcopy : ink;
@@ -3647,7 +3653,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 
 	// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv < 7000 then here we write
 	//   longscript or script+extended. Otherwise we just write out the extended area.
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 	{
 		if (t_extended)
 		{
@@ -3691,7 +3697,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 		{
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 			getstack() -> unsecurescript(this);
-			stat = IO_write_stringref_new(_script, stream, p_version >= 7000, 4);
+			stat = IO_write_stringref_new(_script, stream, p_version >= kMCStackFileFormatVersion_7_0, 4);
 			getstack() -> securescript(this);
 			if (stat != IO_NORMAL)
 				return stat;
@@ -3731,7 +3737,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	}
 
 //---- New in 2.7
-	if (p_version >= 2700)
+	if (p_version >= kMCStackFileFormatVersion_2_7)
 	{
 		if (addflags & AF_BLEND_LEVEL)
 			if ((stat = IO_write_uint1(blendlevel, stream)) != IO_NORMAL)
@@ -3798,7 +3804,7 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
 	uint32_t t_prop_size;
 	t_prop_size = 0;
 	
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 		t_prop_size += measurearraypropsets_legacy();
 
 	// Calculate the tag to write out
@@ -3835,8 +3841,8 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
         // here from the char count of the string.
         // SN-2014-10-27: [[ Bug 13554 ]] String length calculation refactored
         t_size += 1 + 1 + 4
-                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), p_version >= 7000)
-                + p_stream . MeasureStringRefNew(kMCEmptyString, p_version >= 7000);
+                + p_stream . MeasureStringRefNew(MCNameGetString(parent_script -> GetParent() -> GetObjectStack()), p_version >= kMCStackFileFormatVersion_7_0)
+                + p_stream . MeasureStringRefNew(kMCEmptyString, p_version >= kMCStackFileFormatVersion_7_0);
 	}
 
 	// MW-2009-09-24: Slight oversight on my part means that there is no record
@@ -3881,13 +3887,13 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
         MCExecFormatEnum(ctxt, kMCInterfaceThemeTypeInfo, m_theme, t_value);
         if (t_value.type != kMCExecValueTypeStringRef)
             return IO_ERROR;
-        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= 7000);
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= kMCStackFileFormatVersion_7_0);
         t_theme_string.Give(t_value.stringref_value);
         
         MCExecFormatEnum(ctxt, kMCInterfaceThemeControlTypeTypeInfo, m_theme_type, t_value);
         if (t_value.type != kMCExecValueTypeStringRef)
             return IO_ERROR;
-        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= 7000);
+        t_size += p_stream.MeasureStringRefNew(t_value.stringref_value, p_version >= kMCStackFileFormatVersion_7_0);
         t_theme_type_string.Give(t_value.stringref_value);
     }
 
@@ -3911,10 +3917,10 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
 			t_stat = p_stream . WriteU32(parent_script -> GetParent() -> GetObjectId());
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteNameRefNew(parent_script -> GetParent() -> GetObjectStack(), p_version >= 7000);
+			t_stat = p_stream . WriteNameRefNew(parent_script -> GetParent() -> GetObjectStack(), p_version >= kMCStackFileFormatVersion_7_0);
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteStringRefNew(kMCEmptyString, p_version >= 7000); // was mainstack reference
+			t_stat = p_stream . WriteStringRefNew(kMCEmptyString, p_version >= kMCStackFileFormatVersion_7_0); // was mainstack reference
 	}
 
 	if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_BITMAPEFFECTS) != 0)
@@ -3936,9 +3942,9 @@ IO_stat MCObject::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uin
     if (t_stat == IO_NORMAL && (t_flags & OBJECT_EXTRA_THEME_INFO))
     {
         // Write out the theme name and theming type
-        t_stat = p_stream.WriteStringRefNew(*t_theme_string, p_version >= 7000);
+        t_stat = p_stream.WriteStringRefNew(*t_theme_string, p_version >= kMCStackFileFormatVersion_7_0);
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream.WriteStringRefNew(*t_theme_type_string, p_version >= 7000);
+            t_stat = p_stream.WriteStringRefNew(*t_theme_type_string, p_version >= kMCStackFileFormatVersion_7_0);
     }
 
 	return IO_NORMAL;
@@ -3977,13 +3983,13 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
 		MCNameRef t_stack;
 		t_stack = NULL;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadNameRefNew(t_stack, version >= 7000);
+			t_stat = p_stream . ReadNameRefNew(t_stack, version >= kMCStackFileFormatVersion_7_0);
 		
 		// MW-2013-12-05: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		// This is no longer used, but might remain in older stackfiles.
 		MCAutoStringRef t_mainstack;
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . ReadStringRefNew(&t_mainstack, version >= 7000);
+			t_stat = p_stream . ReadStringRefNew(&t_mainstack, version >= kMCStackFileFormatVersion_7_0);
 
 		if (t_stat == IO_NORMAL)
 		{
@@ -4032,9 +4038,9 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, uint32_t version, 
     {
         MCAutoStringRef t_theme_string;
         MCAutoStringRef t_theme_type_string;
-        t_stat = p_stream.ReadStringRefNew(&t_theme_string, version >= 7000);
+        t_stat = p_stream.ReadStringRefNew(&t_theme_string, version >= kMCStackFileFormatVersion_7_0);
         if (t_stat == IO_NORMAL)
-            t_stat = p_stream.ReadStringRefNew(&t_theme_type_string, version >= 7000);
+            t_stat = p_stream.ReadStringRefNew(&t_theme_type_string, version >= kMCStackFileFormatVersion_7_0);
         
         if (t_stat == IO_NORMAL)
         {
@@ -5113,23 +5119,48 @@ MCRectangle MCObject::measuretext(MCStringRef p_text, bool p_is_unicode)
     return t_bounds;
 }
 
-struct MCHasWidgetsObjectVisitor: public MCObjectVisitor
+struct MCRequiredStackFileVersionVisitor : public MCObjectVisitor
 {
-    bool found_widget;
-    
-    bool OnWidget(MCWidget *p_widget)
-    {
-        found_widget = true;
-        return false;
-    }
+	uint32_t required_version;
+	
+	bool OnObject(MCObject *p_object)
+	{
+		required_version = MCMax(required_version, p_object->getminimumstackfileversion());
+		
+		// keep looking if current required version is less than the maximum
+		return required_version < kMCStackFileFormatCurrentVersion;
+	}
+	
+	// make sure blocks and paragraphs are checked
+	bool OnParagraph(MCParagraph *p_paragraph)
+	{
+		required_version = MCMax(required_version, p_paragraph->getminimumstackfileversion());
+		
+		// keep looking if current required version is less than the maximum
+		return required_version < kMCStackFileFormatCurrentVersion;
+	}
+	
+	bool OnBlock(MCBlock *p_block)
+	{
+		required_version = MCMax(required_version, p_block->getminimumstackfileversion());
+		
+		// keep looking if current required version is less than the maximum
+		return required_version < kMCStackFileFormatCurrentVersion;
+	}
 };
 
-bool MCObject::haswidgets(void)
+uint32_t MCObject::geteffectiveminimumstackfileversion(void)
 {
-    MCHasWidgetsObjectVisitor t_visitor;
-    t_visitor . found_widget = false;
-    visit(VISIT_STYLE_DEPTH_FIRST, 0, &t_visitor);
-    return t_visitor . found_widget;
+	MCRequiredStackFileVersionVisitor t_visitor;
+	t_visitor.required_version = kMCStackFileFormatMinimumExportVersion;
+	visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	return t_visitor.required_version;
+}
+
+uint32_t MCObject::getminimumstackfileversion(void)
+{
+	// Default minimum stack file version
+	return kMCStackFileFormatMinimumExportVersion;
 }
 
 // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
@@ -5319,7 +5350,11 @@ MCObject* MCObjectProxy::Get()
 
 void MCObjectProxy::Clear()
 {
-	m_object = nil;
+	if (m_object)
+	{
+		m_object->m_weak_proxy = nil;
+		m_object = nil;
+	}
 }
 
 void MCObjectProxy::Retain()
@@ -5337,8 +5372,7 @@ void MCObjectProxy::Release()
 	{
         // The object in question no longer has a proxy object as we are being
         // deleted
-        if (m_object)
-            m_object->m_weak_proxy = nil;
+		Clear();
         
 		delete this;
 	}

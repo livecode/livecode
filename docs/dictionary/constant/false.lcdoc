@@ -4,13 +4,14 @@ Type: constant
 
 Syntax: false
 
-Summary: Equivalent to the <string> "false".
+Summary:
+Equivalent to the <string> "false".
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the showLines of field "Tryout" to false
@@ -19,8 +20,12 @@ Example:
 if the filled is false then set the filled to true
 
 Description:
-Use the <false> <constant> to indicate that a <property> is turned off or that a <logical> <expression> <evaluate|evaluates> to false.
+Use the <false> <constant> to indicate that a <property> is turned off
+or that a <logical> <expression> <evaluate|evaluates> to false.
 
-References: string (keyword), not (operator), and (operator), true (constant), constant (command), property (glossary), logical (glossary), evaluate (glossary), expression (glossary)
+References: constant (command), true (constant), property (glossary),
+logical (glossary), evaluate (glossary), expression (glossary),
+string (keyword), not (operator), and (operator)
 
 Tags: math
+

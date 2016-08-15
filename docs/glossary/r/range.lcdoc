@@ -5,8 +5,10 @@ Synonyms: range
 Type: glossary
 
 Description:
-The allowable extent of a <value>, from the least possible <value> to the greatest.
+The allowable extent of a <value>, from the least possible <value> to
+the greatest.
 
 References: value (glossary)
 
 Tags: properties
+

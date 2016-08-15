@@ -38,6 +38,21 @@ on TestDeleteObjectInNestedGroup
    TestAssertThrow "Delete object executing script in nested group", "DeleteIt", the long id of button "test" of stack "test", 347
 end TestDeleteObjectInNestedGroup
 
+on TestDeleteThisCard
+   set the defaultStack to "test"
+   create group "test"
+   create button "test" in group "test"
+   set the script of button "test" to \
+         "on DeleteIt" & return & \
+         "delete this card" & return & \
+         "end DeleteIt"
+   TestAssertThrow "Delete card from button on card", "DeleteIt", the long id of button "test" of stack "test", 347
+   
+   set the sharedBehavior of group "test" to true
+   dispatch "DeleteIt" to button "test"
+   TestAssert "Delete card from button in shared group on card", there is not a button "test" of card 1 of stack "test"
+end TestDeleteThisCard
+
 on TestTeardown
    delete stack "test"
 end TestTeardown

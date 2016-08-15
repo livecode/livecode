@@ -173,6 +173,8 @@
 			'src/unicode.cpp',
 			'src/util.cpp',
 			'src/uuid.cpp',
+			'src/patternmatcher.h',
+			'src/patternmatcher.cpp',
 			
 			# Group "Core - Objects"
 			'src/aclip.h',
@@ -211,6 +213,7 @@
 			'src/scrolbar.h',
 			'src/sellst.h',
 			'src/stack.h',
+			'src/stackfileformat.h',
 			'src/stacklst.h',
 			'src/styledtext.h',
 			'src/textbuffer.h',
@@ -293,6 +296,7 @@
 			'src/stack3.cpp',
 			'src/stackcache.cpp',
 			'src/stacke.cpp',
+			'src/stackfileformat.cpp',
 			'src/stacklst.cpp',
 			'src/stackview.cpp',
 			'src/styledtext.cpp',

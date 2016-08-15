@@ -65,6 +65,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "graphics_util.h"
 
+#include "stackfileformat.h"
+
 #define STACK_EXTRA_ORIGININFO (1U << 0)
 
 IO_stat MCStack::load_substacks(IO_handle stream, uint32_t version)
@@ -172,7 +174,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	
 //---- 2.7+:
 //  . F_OPAQUE now valid - default true
-	if (version < 2700)
+	if (version < kMCStackFileFormatVersion_2_7)
 	{
 		flags |= F_OPAQUE;
 	}
@@ -182,17 +184,17 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		state |= CS_TRANSLATED;
 	if ((stat = IO_read_uint4(&iconid, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
-	if (version > 1000)
+	if (version > kMCStackFileFormatVersion_1_0)
 	{
 		if (flags & F_TITLE)
 		{
 			// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-			if (version >= 7000)
+			if (version >= kMCStackFileFormatVersion_7_0)
 			{
 				if ((stat = IO_read_stringref_new(title, stream, true)) != IO_NORMAL)
 					return checkloadstat(stat);
 			}
-			else if (version >= 5500)
+			else if (version >= kMCStackFileFormatVersion_5_5)
 			{
 				// MW-2012-03-04: [[ StackFile5500 ]] If the version is 5.5 or above, then the
 				//   stack title will be UTF-8 already.
@@ -217,7 +219,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	}
 	else
 		flags &= ~(F_TITLE | F_DECORATIONS);
-	if (version < 2300)
+	if (version < kMCStackFileFormatVersion_2_3)
 		flags &= ~(F_SHOW_BORDER | F_3D | F_OPAQUE | F_FORMAT_FOR_PRINTING);
 	if (flags & F_RESIZABLE)
 	{
@@ -234,10 +236,10 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	}
 	
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_read_stringref_new(externalfiles, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_stringref_new(externalfiles, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
 	
-	if (version > 1300)
+	if (version > kMCStackFileFormatVersion_1_3)
 	{
 		if ((stat = MCLogicalFontTableLoad(stream, version)) != IO_NORMAL)
 			return checkloadstat(stat);
@@ -257,7 +259,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	if (flags & F_STACK_FILES)
 	{
 		MCAutoStringRef sf;
-		if ((stat = IO_read_stringref_new(&sf, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_stringref_new(&sf, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		setstackfiles(*sf);
 		
@@ -267,7 +269,7 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 	if (flags & F_MENU_BAR)
 	{
 		MCNameRef t_menubar;
-		if ((stat = IO_read_nameref_new(t_menubar, stream, version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_read_nameref_new(t_menubar, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		MCNameDelete(_menubar);
 		_menubar = t_menubar;
@@ -280,17 +282,17 @@ IO_stat MCStack::load_stack(IO_handle stream, uint32_t version)
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_read_stringref_new(linkatts->colorname, stream, version >= 7000)) != IO_NORMAL)
+		        || (stat = IO_read_stringref_new(linkatts->colorname, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return checkloadstat(stat);
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref_new(linkatts->hilitecolorname, stream, version >= 7000))!=IO_NORMAL)
+		        || (stat=IO_read_stringref_new(linkatts->hilitecolorname, stream, version >= kMCStackFileFormatVersion_7_0))!=IO_NORMAL)
 			return checkloadstat(stat);
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref_new(linkatts->visitedcolorname, stream, version >= 7000))!=IO_NORMAL)
+		        || (stat=IO_read_stringref_new(linkatts->visitedcolorname, stream, version >= kMCStackFileFormatVersion_7_0))!=IO_NORMAL)
 			return checkloadstat(stat);
 		
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
@@ -570,7 +572,7 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 //---- 2.7+:
 //  . F_OPAQUE now valid -  previous versions must be true
 	uint4 t_old_flags;
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		t_old_flags = flags;
 		flags |= F_OPAQUE;
@@ -605,7 +607,7 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
 		return stat;
 
 //---- 2.7+:
-	if (p_version < 2700)
+	if (p_version < kMCStackFileFormatVersion_2_7)
 	{
 		flags = t_old_flags;
 	}
@@ -625,12 +627,12 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, ui
 	if (flags & F_TITLE)
 	{
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-		if (p_version >= 7000)
+		if (p_version >= kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_write_stringref_new(title, stream, true)) != IO_NORMAL)
 				return stat;
 		}
-		else if (p_version >= 5500)
+		else if (p_version >= kMCStackFileFormatVersion_5_5)
 		{
 			// MW-2012-03-04: [[ StackFile5500 ]] If the stackfile version is 5.5, then
 			//   write out UTF-8 directly.
@@ -664,7 +666,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, ui
     }
 	
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-    if ((stat = IO_write_stringref_new(externalfiles, stream, p_version >= 7000)) != IO_NORMAL)
+    if ((stat = IO_write_stringref_new(externalfiles, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
@@ -677,13 +679,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, ui
 		MCAutoStringRef t_sf;
 		if (!getstackfiles(&t_sf))
 			return IO_ERROR;
-		if ((stat = IO_write_stringref_new(*t_sf, stream, p_version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_write_stringref_new(*t_sf, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	}
 	
 	// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 	if (flags & F_MENU_BAR)
-		if ((stat = IO_write_nameref_new(_menubar, stream, p_version >= 7000)) != IO_NORMAL)
+		if ((stat = IO_write_nameref_new(_menubar, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	
 	if (flags & F_LINK_ATTS)
@@ -692,17 +694,17 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext, ui
         
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-            || (stat = IO_write_stringref_new(linkatts->colorname != nil ? linkatts->colorname : kMCEmptyString, stream, p_version >= 7000)) != IO_NORMAL)
+            || (stat = IO_write_stringref_new(linkatts->colorname != nil ? linkatts->colorname : kMCEmptyString, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-                || (stat=IO_write_stringref_new(linkatts->hilitecolorname != nil ? linkatts->hilitecolorname : kMCEmptyString, stream, p_version >= 7000))!=IO_NORMAL)
+                || (stat=IO_write_stringref_new(linkatts->hilitecolorname != nil ? linkatts->hilitecolorname : kMCEmptyString, stream, p_version >= kMCStackFileFormatVersion_7_0))!=IO_NORMAL)
 			return stat;
 		
 		// MW-2013-11-20: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
         if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-                || (stat=IO_write_stringref_new(linkatts->visitedcolorname != nil ? linkatts->visitedcolorname : kMCEmptyString, stream, p_version >= 7000))!=IO_NORMAL)
+                || (stat=IO_write_stringref_new(linkatts->visitedcolorname != nil ? linkatts->visitedcolorname : kMCEmptyString, stream, p_version >= kMCStackFileFormatVersion_7_0))!=IO_NORMAL)
 			return stat;
 		
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
@@ -1210,7 +1212,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 			// MW-2007-09-11: [[ Bug 5139 ]] Don't add activity to recent cards if the stack is an
 			//   IDE stack.
-			if (recent && !getextendedstate(ECS_IDE))
+			if (recent && !m_is_ide_stack)
 				MCrecent->addcard(curcard);
 		}
 

@@ -4,19 +4,24 @@ Type: function
 
 Syntax: revXMLRPC_GetParamNode(<XML-RPC document>,<param number>)
 
-Summary: Returns the node of a single parameter from an XML-RPC document structure, so you can parse the data using the <XML library> <command|commands> and <function|functions>.
+Summary:
+Returns the node of a single parameter from an XML-RPC document
+structure, so you can parse the data using the <XML library>
+<command|commands> and <function|functions>.
 
-Associations: XML-RPC library
+Associations: xml-rpc library
 
 Introduced: 2.5
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,process
+Security: disk, process
 
 Example:
 put revXMLRPC_GetParamNode(theResponse,1) into theParamNode
 
-References: command (glossary), function (glossary), XML library (library)
+References: command (glossary), function (glossary),
+XML library (library)
+

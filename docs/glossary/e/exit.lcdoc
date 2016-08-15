@@ -1,6 +1,6 @@
 Name: exit
 
-Synonyms: exiting,exited,exit
+Synonyms: exiting, exited, exit
 
 Type: glossary
 
@@ -8,3 +8,4 @@ Description:
 To stop <execute|execution> of a <handler> or program.
 
 References: execute (glossary), handler (glossary)
+

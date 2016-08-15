@@ -1,6 +1,6 @@
 Name: image
 
-Synonyms: image,image object
+Synonyms: image, image object
 
 Type: glossary
 
@@ -10,3 +10,4 @@ An <object(glossary)> that contains a <bitmap|bitmapped> picture.
 References: object (glossary), bitmap (glossary)
 
 Tags: multimedia
+

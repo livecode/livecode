@@ -4,11 +4,12 @@ Type: command
 
 Syntax: mobileBusyIndicatorStop
 
-Summary: Stops a running busy indicator.
+Summary:
+Stops a running busy indicator.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -16,10 +17,16 @@ Example:
 mobileBusyIndicatorStop
 
 Description:
-Use the mobileBusyIndicatorStop command to stop a native busy indicator on iOS and Android.
+Use the mobileBusyIndicatorStop command to stop a native busy indicator
+on iOS and Android.
 
-Use the <mobileBusyIndicatorStop> command to stop and remove a native busy indicator from the screen.
+Use the <mobileBusyIndicatorStop> command to stop and remove a native
+busy indicator from the screen.
 
-The <mobileBusyIndicatorStop> command does not do anything if a busy indicator is not running. You can start an activity indicator by calling <mobileBusyIndicatorStart.>
+The <mobileBusyIndicatorStop> command does not do anything if a busy
+indicator is not running. You can start an activity indicator by calling
+<mobileBusyIndicatorStart.> 
 
-References: mobileBusyIndicatorStart. (command), mobileBusyIndicatorStart (command)
+References: mobileBusyIndicatorStart. (command),
+mobileBusyIndicatorStart (command)
+

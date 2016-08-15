@@ -4,13 +4,14 @@ Type: function
 
 Syntax: uuid ([<uuidType>, [<namespace>, <uuidName>]])
 
-Summary: Genrates a universally unique identifier (UUID)
+Summary:
+Genrates a universally unique identifier (UUID)
 
 Introduced: 6.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 get uuid()
@@ -19,19 +20,26 @@ Example:
 put uuid("random") into tRandomUUID
 
 Parameters:
-uuidType (enum): A string. The type of UUID to be generated, one of:
+uuidType (enum):
+A string. The type of UUID to be generated, one of:
+
 - empty
 - "random"
 - "md5"
 - "sha1"
-uuidName (string): Any string, where type is "md5" or "sha1"
-namespace: Where type is "md5" or "sha1", the UUID of the namespace in 
+
+
+uuidName (string):
+Any string, where type is "md5" or "sha1"
+
+namespace:
+Where type is "md5" or "sha1", the UUID of the namespace in
 which the <uuidName> sits
 
 Returns:
 If the <uuidType> is empty or "random" a version 4 (random) UUID is 
-returned. A cryptographic quality pseudo-random number generator is used 
-to generate the randomness.
+returned. A cryptographic quality pseudo-random number generator is
+used to generate the randomness.
 
 If the <uuidType> is md5 a version 3 UUID is returned.
 
@@ -47,3 +55,4 @@ version 5 (sha1) UUID. Here <namespace> should be the UUID of the
 namespace in which name sits, and <uuidName> can be any string.
 
 References: md5Digest (function)
+

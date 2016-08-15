@@ -1,12 +1,15 @@
 Name: key binding
 
-Synonyms: key binding,keybinding,key mapping,keymapping,keyboard mapping
+Synonyms: key binding, keybinding, key mapping, keymapping,
+keyboard mapping
 
 Type: glossary
 
 Description:
-The mapping between keys (or <key combination|key combinations>) and the action that pressing the key performs.
+The mapping between keys (or <key combination|key combinations>) and the
+action that pressing the key performs.
 
 References: key combination (glossary)
 
 Tags: ui
+

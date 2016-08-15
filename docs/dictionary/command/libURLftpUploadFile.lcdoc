@@ -4,15 +4,17 @@ Type: command
 
 Syntax: libURLftpUploadFile <filePath>, <uploadURL> [, <callbackMessage>]
 
-Summary: <upload|Uploads> a file to an Internet <server> asynchronously via <FTP>.
+Summary:
+<upload|Uploads> a file to an Internet <server> asynchronously via
+<FTP>. 
 
-Associations: Internet library
+Associations: internet library
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Security: network
 
@@ -23,18 +25,34 @@ Example:
 libURLftpUploadFile myFile,field "FTP URL","uploadDone"
 
 Parameters:
-filePath: The filePath specifies the name and location of the file you want to upload. If you specify a name but not a location, LiveCode     assumes the file is in the defaultFolder.
-uploadURL: The uploadURL specifies the server and location to upload to, in the form of an FTP URL.
-callbackMessage: The name of a message to send after the file is uploaded.
+filePath:
+The filePath specifies the name and location of the file you want to
+upload. If you specify a name but not a location, LiveCode assumes the
+file is in the defaultFolder.
+
+uploadURL:
+The uploadURL specifies the server and location to upload to, in the
+form of an FTP URL.
+
+callbackMessage:
+The name of a message to send after the file is uploaded.
 
 Description:
 Use the <libURLftpUploadFile> <command> to put a <file> on a <server>.
 
-The <libURLftpUploadFile> <command> transfers the data directly from the <file> to the <server>. Unlike <libURLftpUpload> (or the <put> <command> used with an <FTP> <URL>), the data does not all need to be in memory at once, so this <command> is a better choice for large <files>.
+The <libURLftpUploadFile> <command> transfers the data directly from the
+<file> to the <server>. Unlike <libURLftpUpload> (or the <put> <command>
+used with an <FTP> <URL>), the data does not all need to be in memory at
+once, so this <command> is a better choice for large <files>.
 
 The <libURLftpUploadFile> <command> transfers the file in <binary> mode.
 
-The <callbackMessage> is sent to the <object(glossary)> whose <script> contains the <libURLftpUpload> <command>, after the <upload> is complete, so you can handle the <callbackMessage> to perform any tasks you want to delay until the file has been <upload|uploaded>. Two <parameter|parameters> are sent with the <message> : the <URL> and the <URLStatus> of the <file>.
+The <callbackMessage> is sent to the <object(glossary)> whose <script>
+contains the <libURLftpUpload> <command>, after the <upload> is
+complete, so you can handle the <callbackMessage> to perform any tasks
+you want to delay until the file has been <upload|uploaded>. Two
+<parameter|parameters> are sent with the <message> : the <URL> and the
+<URLStatus> of the <file>.
 
 >*Important:* The <libURLftpUploadFile> <command> is part of the 
 > <Internet library>. To ensure that the <command> works in a 
@@ -44,6 +62,17 @@ The <callbackMessage> is sent to the <object(glossary)> whose <script> contains 
 > <Standalone Application Settings> window, make sure the "Internet" 
 > script library is selected.
 
-References: script (property), startup (message), openBackground (message), preOpenStack (message), openStack (message), preOpenCard (message), Internet library (library), library (library), LiveCode custom library (glossary), URL (keyword), ftp (keyword), file (keyword), application (glossary), main stack (glossary), handler (glossary), upload (glossary), Standalone Application Settings (glossary), message (glossary), standalone application (glossary), binary (glossary), parameter (glossary), server (glossary), command (glossary), files (function), URLStatus (function), libURLftpUpload (command), libURLDownloadToFile (command), put (command), group (command), object (glossary)
+References: libURLftpUpload (command), libURLDownloadToFile (command),
+put (command), group (command), files (function), URLStatus (function),
+LiveCode custom library (glossary), application (glossary),
+main stack (glossary), handler (glossary), upload (glossary),
+Standalone Application Settings (glossary), message (glossary),
+standalone application (glossary), binary (glossary),
+parameter (glossary), server (glossary), command (glossary),
+object (glossary), URL (keyword), ftp (keyword), file (keyword),
+Internet library (library), library (library), startup (message),
+openBackground (message), preOpenStack (message), openStack (message),
+preOpenCard (message), script (property)
 
 Tags: networking
+

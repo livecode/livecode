@@ -78,7 +78,13 @@ end toolsBuilderRunBundle
 
 private command toolsBuilderFilterExternals pFolder, pPlatform
    -- Enter the extension directory
+   local tOldFolder
+   put the defaultFolder into tOldFolder
    set the defaultFolder to pFolder
+   if the result is not empty then
+      builderLog "error", merge("Failed to enter '[[pFolder]]': [[the result]]")
+      exit toolsBuilderFilterExternals
+   end if
 
    local tFiles
    -- Remove any iOS code if we're not building the OSX installer
@@ -89,9 +95,19 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
       -- Don't remove lcext files ith Android externals in them
       local tLCExt
       repeat for each line tLCExt in tFiles
-         get shell(merge("unzip -l '[[ tLCExt ]]'"))
-         if "Android/External-" is not in it then
-            get shell(merge("rm -rf '[[ tLCExt ]]'"))
+         revZipOpenArchive pFolder & slash & tLCExt, "read"
+         if the result is not empty then
+            builderLog "error", "Cannot open lcext file" && tLCExt
+            exit toolsBuilderFilterExternals
+         end if
+         
+         local tArchiveFiles
+         put revZipEnumerateItems(pFolder & slash & tLCExt) into tArchiveFiles
+         filter tArchiveFiles with "Android/External-*"
+         revZipCloseArchive pFolder & slash & tLCExt
+         
+         if tArchiveFiles is not empty then
+            get shell(merge("rm -fv '[[ tLCExt ]]'"))
          end if
       end repeat
    end if
@@ -99,7 +115,12 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
    -- If the directory contains no code any more, remove it
    put the files & return & the folders into tFiles
    filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
-   
+
+   set the defaultFolder to tOldFolder
+   if the result is not empty then
+      builderLog "error", merge("Failed to enter '[[tOldFolder]]': [[the result]]")
+   end if
+
    return tFiles is not empty
 end toolsBuilderFilterExternals
 
@@ -856,4 +877,3 @@ function loadTextFile pFile
    replace numToChar(13) with return in it
    return it
 end loadTextFile
-

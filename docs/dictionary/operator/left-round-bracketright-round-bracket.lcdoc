@@ -4,13 +4,14 @@ Type: operator
 
 Syntax: (<expression>)
 
-Summary: <group|Groups> <operand|operands> together.
+Summary:
+<group|Groups> <operand|operands> together.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 local quantity, priceEach, shippingCost
@@ -23,7 +24,8 @@ Example:
 23 * ((4 / 17) + 60) + (- 7)
 
 Parameters:
-expression: Any LiveCode expression.
+expression:
+Any LiveCode expression.
 
 Description:
 Use parentheses ( ) to group <operand|operands> together in order to
@@ -42,9 +44,13 @@ division to be done first, as in this <expression>: `the sin of (1/4)`.
 Even when they are not needed to change operator precedence, parentheses
 are useful in making complex <expression|expressions> more readable. For
 example, 
+
     (quantity * priceEach) + (shippingCost * weight) 
+
 evaluates to the same number as 
+
     quantity * priceEach + shippingCost * weight
+
 But the first example is easier to understand, because the parentheses 
 break down the <expression> logically for the reader.
 
@@ -52,10 +58,12 @@ Parentheses in <expression|expressions> must be used in pairs, each (
 with a matching ). Use of <matched|unmatched> parentheses will cause a
 <compile error>.
 
-References: [] (keyword), + (operator), - (operator), * (operator), 
-/ (operator), value (function), matched (glossary), operand (glossary),
-operation (glossary), operator (glossary), group (glossary), 
-expression (glossary), control structure (glossary), evaluate (glossary), 
-compile error (glossary), function (control structure), sin (function)
+References: function (control structure), value (function),
+sin (function), matched (glossary), operand (glossary),
+operation (glossary), operator (glossary), group (glossary),
+expression (glossary), control structure (glossary), evaluate (glossary),
+compile error (glossary), [] (keyword), + (operator), - (operator),
+* (operator), / (operator)
 
 Tags: math
+

@@ -1252,6 +1252,24 @@ MCExecEnumTypeInfo _kMCInterfaceThemeControlTypeTypeInfo =
     _kMCInterfaceThemeControlTypeElementInfo
 };
 
+//////////
+
+MCExecEnumTypeElementInfo _kMCInterfaceScriptStatusElementInfo[] =
+{
+    { "compiled", kMCInterfaceScriptStatusCompiled, false },
+    { "uncompiled", kMCInterfaceScriptStatusUncompiled, false },
+    { "warning", kMCInterfaceScriptStatusWarning, false },
+    { "error", kMCInterfaceScriptStatusError, false },
+};
+
+MCExecEnumTypeInfo _kMCInterfaceScriptStatusTypeInfo =
+{
+    "Interface.ScriptStatus",
+    sizeof(_kMCInterfaceScriptStatusElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceScriptStatusElementInfo
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCInterfaceLayerTypeInfo = &_kMCInterfaceLayerTypeInfo;
@@ -1264,6 +1282,7 @@ MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo = &_kMCInterfaceTriStateTypeI
 MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo = &_kMCInterfaceListStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo = &_kMCInterfaceThemeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo = &_kMCInterfaceThemeControlTypeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceScriptStatusTypeInfo = &_kMCInterfaceScriptStatusTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4347,4 +4366,14 @@ void MCObject::SetThemeControlType(MCExecContext& ctxt, intenum_t p_theme)
 void MCObject::GetEffectiveThemeControlType(MCExecContext& ctxt, intenum_t& r_theme)
 {
     r_theme = getcontroltype();
+}
+
+void MCObject::GetScriptStatus(MCExecContext& ctxt, intenum_t& r_status)
+{
+    if (hashandlers & HH_DEAD_SCRIPT)
+        r_status = kMCInterfaceScriptStatusError;
+    else if (hlist == nil && flags & F_SCRIPT)
+        r_status = kMCInterfaceScriptStatusUncompiled;
+    else
+        r_status = kMCInterfaceScriptStatusCompiled;
 }

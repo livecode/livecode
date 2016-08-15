@@ -1,16 +1,17 @@
 Name: mobileSetKeyboardType
 
+Synonyms: iphonesetkeyboardtype
+
 Type: command
 
-Syntax: mobileSetKeyboardType <type> 
+Syntax: mobileSetKeyboardType <type>
 
-Summary: Configures the type of keyboard that is to be displayed.
-
-Synonyms: iphoneSetKeyboardType
+Summary:
+Configures the type of keyboard that is to be displayed.
 
 Introduced: 4.5.3
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,18 +22,26 @@ Example:
 mobileSetKeyboardType "numeric"
 
 Parameters:
-type (enum): The type of keyboard to use. One of:
-- "default": the alphabetic keyboard
-- "numeric": the numeric keyboard with punctuation
-- "url": the url entry keyboard (iOS only)
-- "number": the number pad keyboard
-- "phone": the phone number pad keyboard
-- "contact": the phone contact pad keyboard (iOS only)
-- "email": the email keyboard
+type (enum):
+The type of keyboard to use. One of:
+
+-   "default": the alphabetic keyboard
+-   "numeric": the numeric keyboard with punctuation
+-   "url": the url entry keyboard (iOS only)
+-   "number": the number pad keyboard
+-   "phone": the phone number pad keyboard
+-   "contact": the phone contact pad keyboard (iOS only)
+-   "email": the email keyboard
+
 
 Description:
-Use the <mobileSetKeyboardType> command to configure the type of keyboard that is to be displayed.
+Use the <mobileSetKeyboardType> command to configure the type of
+keyboard that is to be displayed.
 
-The keyboard type setting takes affect the next time the keyboard is shown. It does not affect the current keyboard, if it is being displayed.
+The keyboard type setting takes affect the next time the keyboard is
+shown. It does not affect the current keyboard, if it is being
+displayed. 
 
-References: iphoneSetKeyboardReturnKey (command), keyboardDeactivated (message), keyboardActivated (message)
+References: iphoneSetKeyboardReturnKey (command),
+keyboardDeactivated (message), keyboardActivated (message)
+

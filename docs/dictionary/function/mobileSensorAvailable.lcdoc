@@ -4,11 +4,12 @@ Type: function
 
 Syntax: mobileSensorAvailable(<sensor>)
 
-Summary: Returns the availability of the given sensor.
+Summary:
+Returns the availability of the given sensor.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -19,17 +20,25 @@ Example:
 put mobileSensorAvailable("heading") into tHeadingSensorAvailable
 
 Parameters:
-sensor (enum): The name of the sensor
-- "location": the location sensor of the device
-- "heading": the heading sensor of the device
-- "acceleration": the acceleration sensor of the device
-- "rotation rate": the rotation sensor of the device
+sensor (enum):
+The name of the sensor
 
-Returns: Returns true is the sensor is available, false otherwise.
+-   "location": the location sensor of the device
+-   "heading": the heading sensor of the device
+-   "acceleration": the acceleration sensor of the device
+-   "rotation rate": the rotation sensor of the device
+
+
+Returns:
+Returns true is the sensor is available, false otherwise.
 
 Description:
-Use the <mobileSensorAvailable> function to find out if a sensor is available.
+Use the <mobileSensorAvailable> function to find out if a sensor is
+available. 
 
-The <mobileSensorAvailable> function returns the availability of the named sensor.
+The <mobileSensorAvailable> function returns the availability of the
+named sensor.
 
-References: mobileStopTrackingSensor (command), mobileStartTrackingSensor (command), mobileSensorReading (function)
+References: mobileStopTrackingSensor (command),
+mobileStartTrackingSensor (command), mobileSensorReading (function)
+

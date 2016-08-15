@@ -483,7 +483,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ECS_MEDIA_ORIGIN		(1UL << 28)
 #define ECS_EXTERNALS_RESOLVED	(1UL << 27)
 #define ECS_DURING_STARTUP		(1UL << 26)
-#define ECS_IDE					(1UL << 25)
 #define ECS_FULLSCREEN			(1UL << 24)
 
 // MW-2008-10-28: [[ ParentScripts ]] If this extended state flag is set it

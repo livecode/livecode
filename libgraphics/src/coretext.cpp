@@ -215,7 +215,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		
 		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
 		
-		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
+		if (t_clipped_bounds . width <= 0 || t_clipped_bounds . height <= 0)
         {
             if (t_line != NULL)
                 CFRelease(t_line);
