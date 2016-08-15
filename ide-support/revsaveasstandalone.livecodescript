@@ -2462,23 +2462,14 @@ command revRedirectMacOSResources pStandalonePath
    create folder (tOldRFolder & slash & "../Resources")
    create folder (tOldRFolder & slash & "../Resources/_MacOS")
    
-   local tOldFolder
-   put the folder into tOldFolder
-   
    revRedirectMacOSResourcesRecurse tOldRFolder, tNewRFolder
-   
-   set the folder to tOldFolder
 end revRedirectMacOSResources
 
 command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
-   set the folder to pSourceFolder
    create folder pTargetFolder
    
    local tFiles
-   repeat for each line tFile in the files
-      if tFile begins with "." then
-         next repeat
-      end if
+   repeat for each line tFile in files(pSourceFolder)
       if tFile ends with ".dylib" then
          next repeat
       end if
@@ -2489,8 +2480,8 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
    end repeat
    
    local tFolder
-   repeat for each line tFolder in the folders
-      if tFolder begins with "." then
+   repeat for each line tFolder in folders(pSourceFolder)
+      if tFolder is ".." then
          next repeat
       end if
       if tFolder ends with ".bundle" then
@@ -2501,6 +2492,10 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
       end if
       revRedirectMacOSResourcesRecurse pSourceFolder & slash & tFolder, pTargetFolder & slash & tFolder
    end repeat
+   
+   if files(pSourceFolder) is empty and folders(pSourceFolder) is ".." then
+      delete folder pSourceFolder
+   end if
 end revRedirectMacOSResourcesRecurse
 
 function revRedirectMacOSResourcesIsExecutable pFile
