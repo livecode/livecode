@@ -1006,44 +1006,157 @@ static bool __index_of_definition(MCScriptModuleRef self, MCScriptDefinition *p_
     return false;
 }
 
-MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef self, MCScriptDefinition *p_definition)
+static MCTypeInfoRef
+__MCScriptGetTypeWithIndexInModule(MCScriptModuleRef self,
+								   uindex_t p_index)
+{
+	return self->types[p_index]->typeinfo;
+}
+
+MCNameRef
+MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef self,
+									MCScriptDefinition *p_definition)
 {
     uindex_t t_index;
     if (__index_of_definition(self, p_definition, t_index) &&
-        self -> definition_name_count > 0)
-        return self -> definition_names[t_index];
+        self->definition_name_count > 0)
+        return self->definition_names[t_index];
     return kMCEmptyName;
 }
 
-MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef self, MCScriptDefinition *p_definition, uindex_t p_index)
+MCTypeInfoRef
+MCScriptGetTypeOfPropertyInModule(MCScriptModuleRef self,
+								  MCScriptPropertyDefinition *p_property_def)
 {
-    MCScriptHandlerDefinition *t_handler;
-    t_handler = static_cast<MCScriptHandlerDefinition *>(p_definition);
+	MCScriptDefinition *t_getter =
+			p_property_def->getter != 0 ? self->definitions[p_property_def->getter - 1] : nil;
+	
+	switch(t_getter->kind)
+	{
+		case kMCScriptDefinitionKindVariable:
+		{
+			return __MCScriptGetTypeWithIndexInModule(self,
+													  static_cast<MCScriptVariableDefinition*>(t_getter)->type);
+		}
+		break;
+			
+		case kMCScriptDefinitionKindHandler:
+		{
+			return MCScriptGetTypeOfReturnValueInModule(self,
+														static_cast<MCScriptCommonHandlerDefinition*>(t_getter));
+		}
+		break;
+		
+		default:
+		{
+			/* LOAD CHECK */
+			__MCScriptUnreachable__("property getter is not a variable or handler");
+		}
+		break;
+	}
+	
+	return kMCNullTypeInfo;
+}
+
+MCNameRef
+MCScriptGetNameOfParameterInModule(MCScriptModuleRef self,
+								   MCScriptCommonHandlerDefinition *p_handler_def,
+								   uindex_t p_index)
+{
+    MCScriptHandlerType *t_type =
+			static_cast<MCScriptHandlerType *>(self->types[p_handler_def->type]);
     
-    MCScriptHandlerType *t_type;
-    t_type = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
+    if (t_type->parameter_name_count == 0)
+	{
+		return kMCEmptyName;
+		
+	}
+	
+	return t_type->parameter_names[p_index];
+}
+
+MCTypeInfoRef
+MCScriptGetTypeOfParameterInModule(MCScriptModuleRef self,
+									   MCScriptCommonHandlerDefinition *p_handler_def,
+									   uindex_t p_index)
+{
+	MCScriptHandlerType *t_handler_type =
+			static_cast<MCScriptHandlerType *>(self->types[p_handler_def->type]);
+	
+	if (p_index >= t_handler_type->parameter_count)
+	{
+		return kMCNullTypeInfo;
+	}
+	
+	return __MCScriptGetTypeWithIndexInModule(self,
+											  t_handler_type->parameters[p_index].type);
+}
+
+MCTypeInfoRef
+MCScriptGetTypeOfReturnValueInModule(MCScriptModuleRef self,
+										 MCScriptCommonHandlerDefinition *p_handler_def)
+{
+	MCScriptHandlerType *t_handler_type =
+			static_cast<MCScriptHandlerType *>(self->types[p_handler_def->type]);
+	
+	return __MCScriptGetTypeWithIndexInModule(self,
+												t_handler_type->return_type);
+}
+
+MCNameRef
+MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef self,
+									   MCScriptHandlerDefinition *p_handler_def,
+									   uindex_t p_index)
+{
+    MCScriptHandlerType *t_type =
+			static_cast<MCScriptHandlerType *>(self -> types[p_handler_def -> type]);
     
-    if (t_type -> parameter_name_count != 0)
-        return t_type -> parameter_names[p_index];
+    if (p_index < t_type->parameter_count)
+        return t_type->parameter_names[p_index];
+    
+    if (p_index - t_type->parameter_count < p_handler_def->local_name_count)
+        return p_handler_def->local_names[p_index - t_type->parameter_count];
     
     return kMCEmptyName;
 }
 
-MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef self, MCScriptDefinition *p_definition, uindex_t p_index)
+MCTypeInfoRef
+MCScriptGetTypeOfLocalVariableInModule(MCScriptModuleRef self,
+										   MCScriptHandlerDefinition *p_handler_def,
+										   uindex_t p_index)
 {
-    MCScriptHandlerDefinition *t_handler;
-    t_handler = static_cast<MCScriptHandlerDefinition *>(p_definition);
-    
-    MCScriptHandlerType *t_type;
-    t_type = static_cast<MCScriptHandlerType *>(self -> types[t_handler -> type]);
-    
-    if (p_index < t_type -> parameter_name_count)
-        return t_type -> parameter_names[p_index];
-    
-    if (p_index - t_type -> parameter_name_count < t_handler -> local_name_count)
-        return t_handler -> local_names[p_index - t_type -> parameter_name_count];
-    
-    return kMCEmptyName;
+	MCScriptHandlerType *t_type =
+			static_cast<MCScriptHandlerType *>(self->types[p_handler_def->type]);
+	
+	if (p_index < t_type->parameter_count)
+	{
+		return __MCScriptGetTypeWithIndexInModule(self,
+												  t_type->parameters[p_index].type);
+	}
+	
+	if (p_index - t_type->parameter_count < p_handler_def->local_type_count)
+	{
+		return __MCScriptGetTypeWithIndexInModule(self,
+												  p_handler_def->local_types[p_index - t_type->parameter_count]);
+	}
+	
+	return kMCNullTypeInfo;
+}
+
+MCNameRef
+MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef self,
+										MCScriptVariableDefinition *p_variable_def)
+{
+	return MCScriptGetNameOfDefinitionInModule(self,
+											   p_variable_def);
+}
+
+MCTypeInfoRef
+MCScriptGetTypeOfGlobalVariableInModule(MCScriptModuleRef self,
+										MCScriptVariableDefinition *p_variable_def)
+{
+	return __MCScriptGetTypeWithIndexInModule(self,
+											  p_variable_def->type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

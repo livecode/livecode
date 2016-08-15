@@ -26,9 +26,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptVariableUsedBeforeAssignedErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
@@ -39,6 +37,7 @@ extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
@@ -402,9 +401,21 @@ bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition);
 
 MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScriptDefinition *definition);
-MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
-MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
-MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
+MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+
+MCTypeInfoRef MCScriptGetTypeOfPropertyInModule(MCScriptModuleRef module, MCScriptPropertyDefinition *definition);
+MCTypeInfoRef MCScriptGetTypeOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCTypeInfoRef MCScriptGetTypeOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
+MCTypeInfoRef MCScriptGetTypeOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+MCTypeInfoRef MCScriptGetTypeOfReturnValueInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition);
+
+MCNameRef MCScriptGetNameOfPropertyTypeInModule(MCScriptModuleRef module, MCScriptPropertyDefinition *definition);
+MCNameRef MCScriptGetNameOfLocalVariableTypeInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfReturnValueTypeInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterTypeInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableTypeInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -507,22 +518,55 @@ MCScriptThrowGlobalVariableUsedBeforeAssignedError(MCScriptInstanceRef instance,
 
 bool
 MCScriptThrowInvalidValueForGlobalVariableError(MCScriptInstanceRef instance,
-												MCScriptVariableDefinition *variable_def);
+												MCScriptVariableDefinition *variable_def,
+												MCValueRef provided_value);
 
 bool
 MCScriptThrowLocalVariableUsedBeforeAssignedError(MCScriptInstanceRef instance,
+												  MCScriptHandlerDefinition *handler,
 												  uindex_t index);
 
 bool
 MCScriptThrowInvalidValueForLocalVariableError(MCScriptInstanceRef instance,
+											   MCScriptHandlerDefinition *handler,
 											   uindex_t index,
 											   MCValueRef provided_value);
 
 bool
 MCScriptThrowUnableToResolveMultiInvokeError(MCScriptInstanceRef instance,
 											 MCScriptDefinitionGroupDefinition *group,
-											 const uindex_t *arguments,
-											 uindex_t argument_count);
+											 MCProperListRef argument_values);
+
+bool
+MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef instance,
+												MCScriptForeignHandlerDefinition *handler);
+
+bool
+MCScriptThrowUnknownForeignCallingConventionError(void);
+
+bool
+MCScriptThrowMissingFunctionInForeignBindingError(void);
+
+bool
+MCScriptThrowClassNotAllowedInCBindingError(void);
+
+bool
+MCScriptThrowUnableToLoadForiegnLibraryError(void);
+
+bool
+MCScriptThrowCXXBindingNotImplemented(void);
+
+bool
+MCScriptThrowObjCBindingNotImplemented(void);
+
+bool
+MCScriptThrowJavaBindingNotImplemented(void);
+
+bool
+MCScriptThrowJavaBindingNotSupported(void);
+
+bool
+MCScriptThrowObjCBindingNotSupported(void);
 
 bool
 MCScriptCreateErrorExpectedError(MCErrorRef& r_error);

@@ -384,7 +384,9 @@ private:
 		}
 		if (t_min_score_definition == NULL)
 		{
-			ctxt.ThrowUnableToResolveMultiInvoke(p_group, p_arguments, p_argument_count);
+			ctxt.ThrowUnableToResolveMultiInvoke(p_group,
+												 p_arguments,
+												 p_argument_count);
 			return;
 		}
 		

@@ -508,7 +508,8 @@ MCScriptExecuteContext::CheckedStoreRegister(uindex_t p_index,
         !MCTypeInfoConforms(MCValueGetTypeInfo(p_value),
                             t_type))
     {
-        ThrowInvalidValueForLocalVariable(p_index, p_value);
+        ThrowInvalidValueForLocalVariable(p_index,
+										  p_value);
         return;
     }
     
@@ -1106,10 +1107,28 @@ MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupD
 														const uindex_t *p_arguments,
 														uindex_t p_argument_count)
 {
+	MCAutoProperListRef t_args;
+	if (!MCProperListCreateMutable(&t_args))
+		return;
+	
+	for(uindex_t i = 0; i < p_argument_count; i++)
+	{
+		MCValueRef t_value;
+		t_value = FetchRegister(p_arguments[i]);
+		
+		if (t_value == nil)
+		{
+			t_value = kMCNull;
+		}
+		
+		if (!MCProperListPushElementOntoBack(*t_args,
+											 t_value))
+			return;
+	}
+	
 	m_error = MCScriptThrowUnableToResolveMultiInvokeError(m_frame->instance,
 														   p_group,
-														   p_arguments,
-														   p_argument_count);
+														   *t_args);
 }
 
 inline void
@@ -1134,6 +1153,7 @@ inline void
 MCScriptExecuteContext::ThrowLocalVariableUsedBeforeAssigned(uindex_t p_index)
 {
 	m_error = MCScriptThrowLocalVariableUsedBeforeAssignedError(m_frame->instance,
+																m_frame->handler,
 																p_index);
 }
 
@@ -1142,6 +1162,7 @@ MCScriptExecuteContext::ThrowInvalidValueForLocalVariable(uindex_t p_index,
 														  MCValueRef p_value)
 {
 	m_error = MCScriptThrowInvalidValueForLocalVariableError(m_frame->instance,
+															 m_frame->handler,
 															 p_index,
 															 p_value);
 }
@@ -1161,7 +1182,8 @@ MCScriptExecuteContext::ThrowInvalidValueForGlobalVariable(MCScriptInstanceRef p
 														   MCValueRef p_value)
 {
 	m_error = MCScriptThrowInvalidValueForGlobalVariableError(p_instance,
-															  p_variable_def);
+															  p_variable_def,
+															  p_value);
 }
 
 inline void
