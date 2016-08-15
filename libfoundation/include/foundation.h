@@ -2832,9 +2832,23 @@ MC_DLLEXPORT extern MCTypeInfoRef kMCUnboundTypeErrorTypeInfo;
 MC_DLLEXPORT extern MCTypeInfoRef kMCUnimplementedErrorTypeInfo;
 
 MC_DLLEXPORT bool MCErrorCreate(MCTypeInfoRef typeinfo, MCArrayRef info, MCErrorRef& r_error);
+MC_DLLEXPORT bool MCErrorCreateS(MCErrorRef& r_error,
+								 MCTypeInfoRef typeinfo,
+								 ...);
+MC_DLLEXPORT bool MCErrorCreateV(MCErrorRef& r_error,
+								 MCTypeInfoRef typeinfo,
+								 va_list args);
 
 MC_DLLEXPORT bool MCErrorCreateWithMessage(MCTypeInfoRef typeinfo, MCStringRef message, MCArrayRef info, MCErrorRef & r_error);
-
+MC_DLLEXPORT bool MCErrorCreateWithMessageS(MCErrorRef& r_error,
+											MCTypeInfoRef typeinfo,
+											MCStringRef message,
+											...);
+MC_DLLEXPORT bool MCErrorCreateWithMessageV(MCErrorRef& r_error,
+											MCTypeInfoRef typeinfo,
+											MCStringRef message,
+											va_list args);
+	
 MC_DLLEXPORT bool MCErrorUnwind(MCErrorRef error, MCValueRef target, uindex_t row, uindex_t column);
 
 MC_DLLEXPORT MCNameRef MCErrorGetDomain(MCErrorRef error);
