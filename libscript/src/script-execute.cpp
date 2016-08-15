@@ -29,6 +29,17 @@
 
 #include "script-execute.hpp"
 
+// Bridging rules:
+//   ForeignValue -> ForeignValue
+//	   foreign value contents
+//   ForeignValue -> ValueRef
+//     if src has import, then import else box contents
+//   ValueRef -> ForeignValue
+//      export
+//   ValueRef -> ValueRef
+//      if dst is foreign handler type then export function ptr
+//      else copy box
+
 typedef void (*__MCScriptValueDrop)(void *);
 
 class MCScriptForeignInvocation
