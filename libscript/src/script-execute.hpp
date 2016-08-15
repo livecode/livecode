@@ -27,6 +27,9 @@ public:
 	// Destructor.
 	~MCScriptExecuteContext(void);
 	
+	// Returns true if an error has occurred
+	bool IsError(void) const;
+	
 	// Return the current operation
 	MCScriptBytecodeOp GetOperation(void) const;
 	
@@ -896,8 +899,8 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 	
 	// Fetch the handler signature.
 	MCTypeInfoRef t_signature =
-		GetSignatureOfHandler(p_instance,
-							  p_handler_def);
+			GetSignatureOfHandler(p_instance,
+								  p_handler_def);
 	
 	// Check the parameter count.
 	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
@@ -912,8 +915,8 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 	for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); ++i)
 	{
 		MCHandlerTypeFieldMode t_param_mode =
-			MCHandlerTypeInfoGetParameterMode(t_signature,
-											  i);
+				MCHandlerTypeInfoGetParameterMode(t_signature,
+												  i);
 	
 		if (t_param_mode == kMCHandlerTypeFieldModeOut)
 		{
@@ -921,8 +924,8 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 		}
 		
 		MCTypeInfoRef t_param_type =
-		MCHandlerTypeInfoGetParameterType(t_signature,
-										  i);
+				MCHandlerTypeInfoGetParameterType(t_signature,
+												  i);
 		
 		if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_arguments[i]),
 								t_param_type))
