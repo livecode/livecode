@@ -178,11 +178,11 @@ on loadUrl x,y
       put "6923" into lvCount
    end if
    switch
-      case newUrl is among the lines of  the keys of laLoadingUrls
+      case newUrl is among the keys of laLoadingUrls
          ##don't allow loads if the same url is waiting to load
          return "error  URL is currently loading" ##with empty
          break
-      case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
+      case newUrl is not among the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
          
          ##  put the long id of the target &","& item 2 of the params into laMessg[newUrl]
          ##dc 081104
@@ -216,7 +216,7 @@ on loadUrl x,y
          end if
          -----------------------
          break
-      case newUrl is among the lines of  the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" #url is in cache
+      case newUrl is among the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" #url is in cache
          
          ## put the long id of the target &","& item 2 of the params into laMessg[newUrl]
          ##dc 081104
@@ -231,12 +231,12 @@ end loadUrl
 on unloadUrl pUrl
    put ulStripUrl(pUrl) into pUrl
    ##need to check if it is loading or in loadQ
-   if pUrl is among the lines of keys(laLoadingUrls) then
+   if pUrl is among the keys of laLoadingUrls then
       delete local laLoadingUrls[pUrl]
       ulCancelRequest pUrl ##stop any current downloads
       delete local laData[pUrl] ##in case download hasn't started
       return empty
-   else if pUrl is among the lines of keys(laUrlLoadStatus) then
+   else if pUrl is among the keys of laUrlLoadStatus then
       delete local laLoadedUrls[pUrl]
       delete local laUrlLoadStatus[pUrl]
       delete local laUrlErrorStatus[pUrl]
@@ -253,10 +253,10 @@ on getUrl x
    local newUrl,tRetResult,tRetData
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
-   if newUrl is among the lines of the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
+   if newUrl is among the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
       return empty  with urlResult laLoadedUrls[newUrl]
    end if
-   if newUrl is among the lines of keys(laLoadingUrls) and (lvAuthBlockBypass is not true) then
+   if newUrl is among the keys of laLoadingUrls and (lvAuthBlockBypass is not true) then
       return "error  URL is currently loading" with urlResult empty
    end if
    if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
@@ -3349,7 +3349,7 @@ on libUrlFtpUpload pData,pUrl,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
     return "error  URL is currently loading" with urlResult empty
     break
@@ -3403,7 +3403,7 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
     return "error  URL is currently loading" with urlResult empty
     break
@@ -3459,7 +3459,7 @@ on libUrlDownloadToFile pUrl,pFile,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
     return "error  URL is currently loading" with urlResult empty
     break

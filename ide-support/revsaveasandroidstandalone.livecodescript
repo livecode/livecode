@@ -340,16 +340,16 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
       
       local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
-      repeat for each line tFeature in the keys of pSettings["android,device capabilities"]
+      repeat for each key tFeature in pSettings["android,device capabilities"]
          put "  <uses-feature android:name="&quote&"android."&tFeature&quote&" android:required="&quote&"${REQUIRED}"&quote&" />" into tUsesFeature
          replace "${REQUIRED}" with pSettings["android,device capabilities"][tFeature] in tUsesFeature
          put tUsesFeature & return after tFeatures
       end repeat
-      repeat for each line tPermission in the keys of pSettings["android,capability permissions"]
+      repeat for each key tPermission in pSettings["android,capability permissions"]
          put "  <uses-permission android:name="&quote&"android.permission."&tPermission&quote&" />" into tUsesPermission
          put tUsesPermission & return after tPermissions
       end repeat
-      repeat for each line tPermission in the keys of pSettings["android,application permissions"]
+      repeat for each key tPermission in pSettings["android,application permissions"]
          if tPermission is "AD" then
             put true into tAd
             put "  <uses-permission android:name="&quote&"android.permission.ACCESS_NETWORK_STATE"&quote&"/>" & return into tUsesPermission
