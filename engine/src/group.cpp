@@ -283,6 +283,38 @@ void MCGroup::toolchanged(Tool p_new_tool)
 	}
 }
 
+void MCGroup::OnAttach()
+{
+	MCControl::OnAttach();
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->OnAttach();
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
+void MCGroup::OnDetach()
+{
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->OnDetach();
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+	MCControl::OnDetach();
+}
+
 MCRectangle MCGroup::getviewportgeometry()
 {
 	MCRectangle t_viewport;

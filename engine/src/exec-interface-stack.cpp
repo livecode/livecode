@@ -1916,7 +1916,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             if (window != NULL)
             {
                 stop_externals();
-                MCscreen->destroywindow(window);
+                destroywindow();
 				MCValueAssign(titlestring, kMCEmptyString);
             }
         }

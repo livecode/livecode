@@ -358,6 +358,9 @@ public:
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
     
 	// MW-2011-09-20: [[ Collision ]] Compute shape of stack.
 	virtual bool lockshape(MCObjectShape& r_shape);
@@ -877,6 +880,9 @@ public:
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
     
+	bool createwindow();
+	void destroywindow();
+	
 	void destroywindowshape();
     void updatewindowshape(MCWindowShape *shape);
 

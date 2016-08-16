@@ -513,6 +513,9 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	if (window == NULL && haswindow())
 		return False;
 
+	// IM-2016-08-16: [[ Bug 18153 ]] send OnDetach to closing stack
+	sptr->OnDetach();
+	
 	// MW-2008-10-31: [[ ParentScripts ]] Send closeControl messages appropriately
 	if (sptr -> curcard -> closecontrols() == ES_ERROR ||
 		sptr->curcard->message(MCM_close_card) == ES_ERROR ||
@@ -523,7 +526,7 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	if (window != NULL)
 	{
 		stop_externals();
-		MCscreen->destroywindow(window);
+		destroywindow();
 		cursor = None;
 		MCValueAssign(titlestring, kMCEmptyString);
 	}
@@ -578,6 +581,9 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	openwindow(False);
 #endif
     
+	// IM-2016-08-16: [[ Bug 18153 ]] send OnAttach to this stack
+	OnAttach();
+
 	return True;
 }
 
@@ -590,6 +596,30 @@ Boolean MCStack::setwindow(Window w)
 	window = w;
 	state |= CS_FOREIGN_WINDOW;
 	return True;
+}
+
+bool MCStack::createwindow()
+{
+	if (window != nil)
+		return true;
+	
+	realize();
+	if (window == nil)
+		return false;
+	
+	OnAttach();
+	
+	return true;
+}
+
+void MCStack::destroywindow()
+{
+	if (window == nil)
+		return;
+	
+	OnDetach();
+	
+	MCscreen->destroywindow(window);
 }
 
 void MCStack::kfocusset(MCControl *target)
@@ -1929,7 +1959,7 @@ void MCStack::reopenwindow()
 	if (getflag(F_VISIBLE))
 		MCscreen->closewindow(window);
 
-	MCscreen->destroywindow(window);
+	destroywindow();
 	MCValueAssign(titlestring, kMCEmptyString);
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
@@ -1947,7 +1977,7 @@ void MCStack::reopenwindow()
 
 	// MW-2011-08-18: [[ Redraw ]] Use global screen lock
 	MCRedrawLockScreen();
-	realize();
+	createwindow();
 	sethints();
 	
 	// IM-2014-01-16: [[ StackScale ]] Call configure to update the stack rect after fullscreen change
@@ -2057,7 +2087,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	if ((wm != mode || parentptr != NULL) && window != NULL)
 	{
 		stop_externals();
-		MCscreen->destroywindow(window);
+		destroywindow();
 		MCValueAssign(titlestring, kMCEmptyString);
 	}
 	mode = wm;
@@ -2073,7 +2103,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	view_setstackviewport(rect);
 	
 	if (window == NULL)
-		realize();
+		createwindow();
 
 	if (substacks != NULL)
 		opened++;

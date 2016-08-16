@@ -444,6 +444,12 @@ public:
 	virtual void OnOpen();
 	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it will be closed.
 	virtual void OnClose();
+	
+	// IM-2016-08-16: [[ Bug 18153 ]] Inform the object that the stack has been attached to the window
+	virtual void OnAttach();
+	
+	// IM-2016-08-16: [[ Bug 18153 ]] Inform the object that the stack will be removed from the window
+	virtual void OnDetach();
     
 	// MW-2011-09-20: [[ Collision ]] Compute the shape of the object's mask.
 	virtual bool lockshape(MCObjectShape& r_shape);
