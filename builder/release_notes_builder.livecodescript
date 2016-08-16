@@ -852,8 +852,6 @@ constant kExtensionStrings = "widget,library,module"
 
 private command ExtensionsCreate
    BuilderLog "report", "Creating extension release notes"
-   MarkdownAppend "notes", "# LiveCode extension changes"
-   MarkdownAppend "updates", "# LiveCode extension changes"
    
    local tType, tTypePath, tFolder
    local tCollated, tBugInfo
@@ -865,9 +863,14 @@ private command ExtensionsCreate
       end repeat
       
    end repeat
-   
-   V2NotesGenerate "extensions", tCollated, 1
-   BugGenerate tBugInfo, "extension"
+
+   if V2NotesHaveContent(tCollated, tBugInfo) then
+      MarkdownAppend "notes", "# LiveCode extension changes"
+      MarkdownAppend "updates", "# LiveCode extension changes"
+      
+      V2NotesGenerate "extensions", tCollated, 1
+      BugGenerate tBugInfo, "extension"
+   end if
 end ExtensionsCreate
 
 private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
