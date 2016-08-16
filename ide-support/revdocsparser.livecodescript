@@ -457,9 +457,6 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tIsScript
    put there is a pSource into tIsScript
    
-   # Keep track of whether we should warn about the comment style
-   local tNumCommentStars
-   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -556,14 +553,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
-               if tFirstWord begins with "/*" then
-                  
-                  # Warn when docs are contained in /* comments instead of /**                  
-                  if tFirstWord begins with "/**" then
-                     put 2 into tNumCommentStars
-                  else
-                     put 1 into tNumCommentStars
-                  end if
+               if tFirstWord begins with "/**" then
                   
                   # If this is script, and this is an initial block of comments,
                   # then treat as the library description
@@ -577,8 +567,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   put empty into tComment
                   local tCommentOffset
                   put true into tInComment
-                  put offset("/*", tLine) into tCommentOffset
-                  put char (tCommentOffset + tNumCommentStars + 1) to -1 of tLine into tLine
+                  put offset("/**", tLine) into tCommentOffset
+                  put char (tCommentOffset + 3) to -1 of tLine into tLine
                   
                   # If there's nothing else on this line, don't add it.
                   if word 1 of tLine is empty then next repeat
@@ -651,12 +641,6 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
                   break
             end switch
-            
-            # Warn about comment format if appropriate
-            if tNumCommentStars is 1 then
-               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pSource
-            end if	
-            put empty into tNumCommentStars
             
          else
             if tEntryData["need_docs"] then
