@@ -687,6 +687,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
       end if
       
+      -- clear extended attributes from bundle files
+      get shell("xattr -cr" && quote & pAppBundle & quote)
+      
       --try
       -- Perform the codesigning of the main bundle
       local tResult
