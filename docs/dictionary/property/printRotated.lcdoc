@@ -10,6 +10,8 @@ Specifies whether LiveCode prints in <landscape|landscape mode> or
 
 Introduced: 1.0
 
+Deprecated: 2.9
+
 OS: ios
 
 Platforms: desktop, server, mobile

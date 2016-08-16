@@ -9,6 +9,8 @@ Returns the device's unique system identifier.
 
 Introduced: 4.6
 
+Deprecated: 6.0
+
 OS: ios
 
 Platforms: mobile
