@@ -1229,6 +1229,7 @@ LT factor_table[] =
         {"min", TT_FUNCTION, F_MIN},
         {"minheight", TT_PROPERTY, P_MIN_HEIGHT},
         {"minimizebox", TT_PROPERTY, P_MINIMIZE_BOX},
+        {"minstackfileversion", TT_PROPERTY, P_MIN_STACK_FILE_VERSION},
         {"minwidth", TT_PROPERTY, P_MIN_WIDTH},
         {"mirrored", TT_PROPERTY, P_MIRRORED},
 		{"miterlimit", TT_PROPERTY, P_MITER_LIMIT},

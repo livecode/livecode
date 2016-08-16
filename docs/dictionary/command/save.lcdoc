@@ -69,7 +69,7 @@ the LiveCode stack file format.
   <stackFormat> should be the particular <stack version> you want the
   stack to be saved as.
 * If you do not specify a format to use, the current value of the
-  <stackFileFormat> property is used.
+  <stackFileVersion> property is used.
 
 
 **Warning:** If you save in an older <stack version> that doesn't
@@ -77,12 +77,16 @@ support all of the features used in the stack, then some of contents of
 the stack may be lost. In general, you are recommended to use the `with
 newest format` form of the <save> command.
 
+>*Note:* You can use the <minStackFileVersion> <property> to determine
+if your stack will lose data when <save|saved> with a particular
+<stack version>.
+
 References: create stack (command), function (control structure),
 stacks (function), substack (glossary), stack file (glossary),
 command (glossary), standalone application (glossary),
 main stack (glossary), stack version (glossary), as (keyword),
 file (keyword), stack (object), substacks (property),
-defaultFolder (property), stackFileFormat (property)
+defaultFolder (property), stackFileVersion (property), 
+minStackFileVersion (property)
 
 Tags: file system
-

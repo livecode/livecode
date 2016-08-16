@@ -20,12 +20,15 @@ These are the <stack version|stack file format versions> that can be
 used with the <save> command, and the versions of LiveCode that they are
 compatible with:
 
-* "8.0": (Default) LiveCode 8.0.0 and later
+* "8.1": (Default) LiveCode 8.1.0 and later
+* "8.0": LiveCode 8.0.0 up to LiveCode 8.1.0
 * "7.0": LiveCode 7.0.0 up to LiveCode 8.0.0
 * "5.5": LiveCode 5.5.0 up to LiveCode 7.0
 * "2.7": LiveCode 2.6.1 up to LiveCode 5.5.0
 * "2.4": LiveCode older than 2.6.1
 
+When saving in the **8.0 format** paragraphs will be truncated where
+length exceeds 32767 characters.
 
 When saving in the **7.0 format**, all <widget|widgets> will be lost.
 
@@ -62,5 +65,5 @@ stack (glossary), Unicode (glossary), field (glossary), button (glossary),
 script (glossary), custom property (glossary), card (glossary),
 widget (glossary), blendLevel (property), ink (property),
 textFont (property), textStyle (property), textSize (property),
-unicodeToolTip (property), antialiased (property), opaque (property)
-
+unicodeToolTip (property), antialiased (property), opaque (property),
+minStackFileVersion (property)
