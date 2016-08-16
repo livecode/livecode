@@ -1330,7 +1330,9 @@ void MCCard::OnAttach()
 		MCObjptr *optr = objptrs;
 		do
 		{
-			optr->getref()->OnAttach();
+			MCObject *t_obj = optr->getref();
+			if (t_obj != nil)
+				t_obj->OnAttach();
 			optr = optr->next();
 		}
 		while (optr != objptrs);
@@ -1344,7 +1346,9 @@ void MCCard::OnDetach()
 		MCObjptr *optr = objptrs;
 		do
 		{
-			optr->getref()->OnDetach();
+			MCObject *t_obj = optr->getref();
+			if (t_obj != nil)
+				t_obj->OnDetach();
 			optr = optr->next();
 		}
 		while (optr != objptrs);
