@@ -275,12 +275,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- Copy in the resource rules and provisioning profile
    if pTarget is "Device" then
-      put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "ResourceRules.plist")) into \
-            url ("binfile:" & pAppBundle & slash & "ResourceRules.plist")
-      if the result is not empty then
-         throw "unable to create ResourceRules.plist file"
-      end if
-      
       put url ("binfile:~/Library/MobileDevice/Provisioning Profiles/" & pSettings["ios,profile"] & ".mobileprovision") into \
             url ("binfile:" & pAppBundle & slash & "embedded.mobileprovision")
       if the result is not empty then
@@ -697,7 +691,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       -- Perform the codesigning of the main bundle
       local tResult
       put shell("/usr/bin/codesign --verbose -f -s" && quote & tCertificate & quote && \
-            "--resource-rules=" & quote & pAppBundle & slash & "ResourceRules.plist" & quote && \
             "--entitlements" && quote & tEntitlementsFile & quote && \
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
@@ -1645,9 +1638,6 @@ function mapFilePath pPath
          else
             put tRepo & slash & "engine/rsrc/mobile-template.plist" into tPath
          end if
-         break
-      case "ResourceRules.plist"
-         put tRepo & slash & "engine/rsrc/template-ResourceRules.plist" into tPath
          break
       case "Entitlements.xcent"
          put tRepo & slash & "engine/rsrc/template-entitlements.xcent" into tPath
