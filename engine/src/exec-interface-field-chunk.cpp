@@ -1763,13 +1763,7 @@ void MCField::SetImageSourceOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id,
     if (si == ei)
         return;
 
-    // MW-2007-07-05: [[ Bug 5099 ]] If this is an image source property we
-    //   force to one character here to ensure unicode chars are rounded
-    //   up and down correctly.
-    findex_t t_ei;
-    t_ei = si + 1;
-
-    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, true, p_part_id, si, t_ei, &MCBlock::SetImageSource, value);
+    SetCharPropOfCharChunk< PodFieldPropType<MCStringRef> >(ctxt, this, true, p_part_id, si, ei, &MCBlock::SetImageSource, value);
 }
 
 void MCField::GetVisitedOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_value)
