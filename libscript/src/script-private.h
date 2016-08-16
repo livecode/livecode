@@ -787,7 +787,7 @@ MCScriptBytecodeDecode(const byte_t*& x_bytecode_ptr,
 							 r_argument_count);
 	for(uindex_t i = 0; i < r_argument_count; i++)
 	{
-		MCScriptBytecodeDecodeArgument(x_bytecode_ptr);
+		r_arguments[i] = MCScriptBytecodeDecodeArgument(x_bytecode_ptr);
 	}
 }
 

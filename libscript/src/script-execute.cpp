@@ -29,6 +29,595 @@
 
 #include "script-execute.hpp"
 
+typedef void (*__MCScriptValueDrop)(void *);
+
+class MCScriptForeignInvocation
+{
+public:
+	MCScriptForeignInvocation(void)
+		: m_argument_count(0),
+		  m_storage_frontier(0),
+		  m_storage_limit(sizeof(m_stack_storage))
+	{
+	}
+	
+	~MCScriptForeignInvocation(void)
+	{
+		// Drop any slots which have a drop method (those whose
+		// value have been taken will have had their drop reset
+		// to nil).
+		for(uindex_t i = 0; i < m_argument_count; i++)
+		{
+			if (m_argument_drops[i] != nil)
+			{
+				m_argument_drops[i](m_argument_slots[i]);
+			}
+		}
+	}
+	
+	// Allocate temporary storage for the invocation
+	bool Allocate(size_t p_amount,
+				  size_t p_align,
+				  void*& r_ptr)
+	{
+		// Compute any padding needed for alignment (t_align_delta will
+		// be the number of pad bytes).
+		size_t t_align_delta;
+		t_align_delta = p_align - (m_storage_frontier % p_align);
+		
+		// If there is not enough space then throw.
+		if (m_storage_limit - m_storage_frontier < p_amount + t_align_delta)
+		{
+			return MCErrorThrowOutOfMemory();
+		}
+		
+		// Round the frontier up to the required alignment.
+		m_storage_frontier += t_align_delta;
+		
+		// Compute the returned pointer into the actual storage array
+		r_ptr = m_stack_storage + m_storage_frontier;
+		
+		// Bump the frontier by the amount allocated.
+		m_storage_frontier += p_amount;
+		
+		return true;
+	}
+	
+	// Append a non-reference argument - this takes contents_ptr
+	bool Argument(void *p_slot_ptr,
+				  __MCScriptValueDrop p_slot_drop)
+	{
+		if (m_argument_count == kMaxArguments)
+		{
+			return MCErrorThrowOutOfMemory();
+		}
+		
+		// For normal arguments, the slot is passed directly.
+		m_argument_values[m_argument_count] = p_slot_ptr;
+		
+		// Store the slot ptr and its drop.
+		m_argument_slots[m_argument_count] = p_slot_ptr;
+		m_argument_drops[m_argument_count] = p_slot_drop;
+		
+		// Bump the number of arguments
+		m_argument_count++;
+		
+		return true;
+	}
+	
+	// Append a reference argument - this takes contents_ptr
+	bool ReferenceArgument(void *p_slot_ptr,
+						   __MCScriptValueDrop p_slot_drop)
+	{
+		if (m_argument_count == kMaxArguments ||
+			!Allocate(sizeof(void *),
+					  __alignof__(void *),
+					  m_argument_values[m_argument_count]))
+		{
+			return MCErrorThrowOutOfMemory();
+		}
+		
+		// Store the slot ptr and its drop.
+		m_argument_slots[m_argument_count] = p_slot_ptr;
+		m_argument_drops[m_argument_count] = p_slot_drop;
+		
+		return true;
+	}
+	
+	// Call
+	bool Call(void *p_function_cif,
+			  void *p_function,
+			  void *p_result_slot_ptr)
+	{
+		
+		ffi_call((ffi_cif *)p_function_cif,
+				 (void(*)())p_function,
+				 p_result_slot_ptr,
+				 m_argument_values);
+		
+		return true;
+	}
+	
+	// Take the contents of a slot - this stops the invocation
+	// cleaning up the taken slot.
+	void *TakeArgument(uindex_t p_index)
+	{
+		void *t_slot_ptr;
+		t_slot_ptr = m_argument_slots[p_index];
+		m_argument_slots[p_index] = nil;
+		m_argument_drops[p_index] = nil;
+		return t_slot_ptr;
+	}
+	
+private:
+	enum
+	{
+		kMaxArguments = 32,
+		kMaxStorage = 4096,
+	};
+	
+	// The number of arguments currently accumulated.
+	uindex_t m_argument_count;
+	// The array of pointers which will be passed to libffi - this will
+	// be the pointers in m_argument_slots for normal parameters and
+	// a pointer to the points in m_argument_slots for reference
+	// parameters.
+	void *m_argument_values[kMaxArguments];
+	// The drops for the slot values in m_argument_slots.
+	__MCScriptValueDrop m_argument_drops[kMaxArguments];
+	// The actual values in the slots (not indirected for references).
+	void *m_argument_slots[kMaxArguments];
+	
+	size_t m_storage_frontier;
+	size_t m_storage_limit;
+	char m_stack_storage[kMaxStorage];
+};
+
+inline void
+__MCScriptComputeSlotAttributes(MCTypeInfoRef p_slot_type,
+								size_t& r_slot_size,
+								size_t& r_slot_align,
+								__MCScriptValueDrop& r_slot_drop)
+{
+	MCResolvedTypeInfo t_resolved_slot_type;
+	r_slot_size = 0;
+	r_slot_align = sizeof(void*);
+	r_slot_drop = nil;
+}
+
+void
+MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
+									  MCScriptForeignHandlerDefinition *p_handler_def,
+									  uindex_t p_result_reg,
+									  const uindex_t *p_argument_regs,
+									  uindex_t p_argument_count)
+{
+	if (m_error)
+	{
+		return;
+	}
+	
+	if (p_handler_def->function == nil)
+	{
+		if (!MCScriptBindForeignHandlerOfInstanceInternal(p_instance,
+														  p_handler_def))
+		{
+			Rethrow();
+			return;
+		}
+	}
+	
+	// Fetch the handler signature.
+	MCTypeInfoRef t_signature =
+			GetSignatureOfHandler(p_instance,
+								  p_handler_def);
+	
+	// Check the parameter count.
+	if (MCHandlerTypeInfoGetParameterCount(t_signature) != p_argument_count)
+	{
+		ThrowWrongNumberOfArguments(p_instance,
+									p_handler_def,
+									p_argument_count);
+		return;
+	}
+	
+	MCScriptForeignInvocation t_invocation;
+	for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); ++i)
+	{
+		// Fetch the parameter mode and type
+		
+		MCHandlerTypeFieldMode t_param_mode =
+				MCHandlerTypeInfoGetParameterMode(t_signature,
+												  i);
+		
+		MCTypeInfoRef t_param_type =
+				MCHandlerTypeInfoGetParameterType(t_signature,
+												  i);
+		
+		// Compute the parameter's slot size and allocate storage for it
+		
+		size_t t_slot_size = 0;
+		size_t t_slot_align = 0;
+		__MCScriptValueDrop t_slot_drop = nil;
+		__MCScriptComputeSlotAttributes(t_param_type,
+										t_slot_size,
+										t_slot_align,
+										t_slot_drop);
+		
+		void *t_slot_ptr = nil;
+		if (!t_invocation.Allocate(t_slot_size,
+								   t_slot_align,
+								   t_slot_ptr))
+		{
+			Rethrow();
+			return;
+		}
+		
+		// If the mode is not out, then we have an initial value to initialize
+		// it with; otherwise we must initialize it directly.
+		MCValueRef t_arg_value = nil;
+		if (t_param_mode != kMCHandlerTypeFieldModeOut)
+		{
+			t_arg_value = CheckedFetchRegister(i);
+			
+			if (t_arg_value == nil)
+			{
+				return;
+			}
+		}
+
+		// Convert the value to an unboxed one.
+		if (!UnboxingConvert(t_arg_value,
+							 t_param_type,
+							 t_slot_ptr))
+		{
+			return;
+		}
+		
+		if (t_slot_ptr == nil)
+		{
+			ThrowInvalidValueForArgument(p_instance,
+										 p_handler_def,
+										 i,
+										 t_arg_value);
+			return;
+		}
+		
+		if (t_param_mode == kMCHandlerTypeFieldModeIn)
+		{
+			if (!t_invocation.Argument(t_slot_ptr,
+									   t_slot_drop))
+			{
+				Rethrow();
+				return;
+			}
+		}
+		else
+		{
+			if (!t_invocation.ReferenceArgument(t_slot_ptr,
+												t_slot_drop))
+			{
+				Rethrow();
+				return;
+			}
+		}
+	}
+	
+	// Fetch the return value type.
+	MCTypeInfoRef t_return_value_type =
+			MCHandlerTypeInfoGetReturnType(t_signature);
+	
+	// Compute the return value slot size (which will be zero for nothing).
+	size_t t_return_value_slot_size = 0;
+	size_t t_return_value_slot_align = 0;
+	__MCScriptValueDrop t_return_value_slot_drop = nil;
+	__MCScriptComputeSlotAttributes(t_return_value_type,
+									t_return_value_slot_size,
+									t_return_value_slot_align,
+									t_return_value_slot_drop);
+	
+	// Alloate the return value slot storage (which will do nothing for
+	// zero size).
+	void *t_return_value_slot_ptr = nil;
+	if (!t_invocation.Allocate(t_return_value_slot_size,
+							   t_return_value_slot_align,
+							   t_return_value_slot_ptr))
+	{
+		Rethrow();
+		return;
+	}
+	
+	// Call the function - we assume here that if the invocation succeeds
+	// then the result slot will be valid unless an LC error has been
+	// raised.
+	if (!t_invocation.Call(p_handler_def->function_cif,
+						   p_handler_def->function,
+						   t_return_value_slot_ptr) ||
+		MCErrorIsPending())
+	{
+		Rethrow();
+		return;
+	}
+	
+	// Box the return value - this operation 'releases' the contents of
+	// the slot (i.e. the value is taken by the box).
+	MCAutoValueRef t_return_value;
+	if (!BoxingConvert(t_return_value_type,
+					   t_return_value_slot_ptr,
+					   &t_return_value))
+	{
+		return;
+	}
+	
+	// Store the boxed return value into the result reg (if required).
+	if (p_result_reg != UINDEX_MAX)
+	{
+		if (!CheckedStoreRegister(p_result_reg,
+								  *t_return_value))
+		{
+			return;
+		}
+	}
+	
+	for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(t_signature); ++i)
+	{
+		// Fetch the parameter mode and type
+		
+		MCHandlerTypeFieldMode t_param_mode =
+				MCHandlerTypeInfoGetParameterMode(t_signature,
+												  i);
+		
+		MCTypeInfoRef t_param_type =
+				MCHandlerTypeInfoGetParameterType(t_signature,
+												  i);
+		
+		// If the mode is in, there is nothing to do for this parameter.
+		if (t_param_mode == kMCHandlerTypeFieldModeIn)
+		{
+			continue;
+		}
+		
+		// Do a boxing convert - note that we take the slot value from the
+		// invocation as BoxingConvert will release regardless of successs.
+		MCAutoValueRef t_arg_value;
+		if (!BoxingConvert(t_param_type,
+						   t_invocation.TakeArgument(i),
+						   &t_arg_value))
+		{
+			return;
+		}
+		
+		// Finally do a checked store to register.
+		if (!CheckedStoreRegister(p_argument_regs[i],
+								  *t_arg_value))
+		{
+			return;
+		}
+	}
+}
+
+bool
+MCScriptExecuteContext::Convert(MCValueRef p_value,
+								MCTypeInfoRef p_to_type,
+								MCValueRef& r_new_value)
+{
+	// If the to type is nil, then its a pass through conversion
+	if (p_to_type == nil)
+	{
+		r_new_value = MCValueRetain(p_value);
+		return true;
+	}
+	
+	// Get resolved typeinfos.
+	
+	MCResolvedTypeInfo t_resolved_from_type;
+	if (!ResolveTypeInfo(MCValueGetTypeInfo(p_value),
+						 t_resolved_from_type))
+	{
+		return false;
+	}
+	
+	MCResolvedTypeInfo t_resolved_to_type;
+	if (!ResolveTypeInfo(p_to_type,
+						 t_resolved_to_type))
+	{
+		return false;
+	}
+	
+	// Check conformance - if this fails, then there is no conversion.
+	if (!MCResolvedTypeInfoConforms(t_resolved_from_type,
+									t_resolved_to_type))
+	{
+		r_new_value = nil;
+		return true;
+	}
+	
+	// The only case which requires a value conversion is when
+	// one side is foreign - which is a bridging operation. In
+	// other cases, it is a cast towards root which doesn't require
+	// a value conversion.
+	
+	const MCForeignTypeDescriptor *t_from_desc = nil;
+	if (MCTypeInfoIsForeign(t_resolved_from_type.type))
+	{
+		t_from_desc = MCForeignTypeInfoGetDescriptor(t_resolved_from_type.type);
+	}
+	
+	const MCForeignTypeDescriptor *t_to_desc = nil;
+	if (MCTypeInfoIsForeign(t_resolved_to_type.type))
+	{
+		t_to_desc = MCForeignTypeInfoGetDescriptor(t_resolved_to_type.type);
+	}
+	
+	if (t_from_desc != nil)
+	{
+		// Import the contents of the foreign value as its bridge type.
+		if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
+								   false,
+								   r_new_value))
+		{
+			Rethrow();
+			return false;
+		}
+	}
+	else if (t_to_desc != nil)
+	{
+		// Export the foreign value
+		if (!MCForeignValueExport(t_resolved_to_type.type,
+								  p_value,
+								  (MCForeignValueRef&)r_new_value))
+		{
+			Rethrow();
+			return false;
+		}
+	}
+	else
+	{
+		r_new_value = MCValueRetain(p_value);
+	}
+	
+	return true;
+}
+
+bool
+MCScriptExecuteContext::BoxingConvert(MCTypeInfoRef p_slot_type,
+									  void *p_slot_ptr,
+									  MCValueRef& r_new_value)
+{
+	MCResolvedTypeInfo t_resolved_slot_type;
+	if (!ResolveTypeInfo(p_slot_type,
+						 t_resolved_slot_type))
+	{
+		return false;
+	}
+	
+	if (MCTypeInfoIsForeign(t_resolved_slot_type.type))
+	{
+		// This is a foreign slot type.
+		if (!MCForeignValueCreateAndRelease(p_slot_type,
+											p_slot_ptr,
+											(MCForeignValueRef&)r_new_value))
+		{
+			Rethrow();
+			return false;
+		}
+	}
+	else
+	{
+		// This is not a foreign slot type, so we just take the valueref value.
+		r_new_value = *(MCValueRef *)p_slot_ptr;
+	}
+	
+	return true;
+}
+
+bool
+MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
+										MCTypeInfoRef p_slot_type,
+										void*& x_slot_ptr)
+{
+	MCResolvedTypeInfo t_resolved_slot_type;
+	if (!ResolveTypeInfo(p_slot_type,
+						 t_resolved_slot_type))
+	{
+		return false;
+	}
+	
+	// If the input value is nil then this is a slot init.
+	if (p_value == nil)
+	{
+		if (MCTypeInfoIsForeign(t_resolved_slot_type.type))
+		{
+			// The value is foreign, so if it has an initializer - use it.
+			const MCForeignTypeDescriptor *t_desc =
+					MCForeignTypeInfoGetDescriptor(t_resolved_slot_type.type);
+			
+			if (t_desc->initialize != nil)
+			{
+				if (!t_desc->initialize(x_slot_ptr))
+				{
+					Rethrow();
+					return false;
+				}
+			}
+		}
+		else
+		{
+			// If it is not foreign, then it is a valueref which always
+			// initialize to unassigned.
+			*(MCValueRef *)x_slot_ptr = nil;
+		}
+		
+		return true;
+	}
+	
+	MCResolvedTypeInfo t_resolved_from_type;
+	if (!ResolveTypeInfo(MCValueGetTypeInfo(p_value),
+						 t_resolved_from_type))
+	{
+		return false;
+	}
+	
+	// Check conformance - if this fails, then there is no conversion.
+	if (!MCResolvedTypeInfoConforms(t_resolved_from_type,
+									t_resolved_slot_type))
+	{
+		x_slot_ptr = nil;
+		return true;
+	}
+	
+	if (MCTypeInfoIsForeign(t_resolved_slot_type.type))
+	{
+		const MCForeignTypeDescriptor *t_slot_desc =
+				MCForeignTypeInfoGetDescriptor(t_resolved_slot_type.type);
+		
+		// If the source is foreign then we just copy the contents, otherwise
+		// it is a bridging conversion so we must export.
+		if (MCTypeInfoIsForeign(t_resolved_from_type.type))
+		{
+			if (!t_slot_desc->copy(MCForeignValueGetContentsPtr(p_value),
+								   x_slot_ptr))
+			{
+				Rethrow();
+				return false;
+			}
+		}
+		else
+		{
+			if (!t_slot_desc->doexport(p_value,
+									   false,
+									   x_slot_ptr))
+			{
+				Rethrow();
+				return false;
+			}
+		}
+		
+	}
+	else if (MCTypeInfoIsHandler(t_resolved_slot_type.type) &&
+			 MCHandlerTypeInfoIsForeign(t_resolved_slot_type.type))
+	{
+		// If the slot type is a foreign handler, then we fetch a closure
+		// from the handler value.
+		void *t_function_ptr;
+		if (!MCHandlerGetFunctionPtr((MCHandlerRef)p_value,
+									 t_function_ptr))
+		{
+			Rethrow();
+			return false;
+		}
+		
+		*(void **)x_slot_ptr = t_function_ptr;
+	}
+	else
+	{
+		*(MCValueRef *)x_slot_ptr = MCValueRetain(p_value);
+	}
+	
+	return true;
+}
+
+#if 0
 // Bridging rules:
 //   ForeignValue -> ForeignValue
 //	   foreign value contents
@@ -352,3 +941,4 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 	
 	
 }
+#endif

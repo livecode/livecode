@@ -101,7 +101,7 @@ public:
 	
 	// Store into the given register, the value must convert to the register's
 	// type. If it does not, a runtime error is reported.
-	void CheckedStoreRegister(uindex_t index,
+	bool CheckedStoreRegister(uindex_t index,
 							  MCValueRef value);
 	
 	// Fetch the given register's value as a bool. If the register is unassigned
@@ -162,6 +162,32 @@ public:
 	// returned, otherwise false is returned.
 	bool Leave(void);
 	
+	// Attempt to convert the input value to the specified type. If the conversion
+	// cannot be performed because the type does not conform, then 'true' will
+	// be returned, but r_new_value will be nil; allowing the context to throw
+	// a more appropriate error.
+	bool Convert(MCValueRef value,
+				 MCTypeInfoRef to_type,
+				 MCValueRef& r_new_value);
+	
+	// Attempt to unbox the given valueref. Unboxing will only succeed for types
+	// which represent native types (e.g. foreign values, foreign handler types).
+	// If value is nil, then it will initialize the slot appropriately to work
+	// correctly with the slot type's drop. If a typecheck error occurs, then
+	// slot_ptr is set to nil.
+	bool UnboxingConvert(MCValueRef value,
+						 MCTypeInfoRef slot_type,
+						 void*& x_slot_ptr);
+	
+	// Attempt to box the given slot as a valueref.
+	bool BoxingConvert(MCTypeInfoRef slot_type,
+					   void *slot_ptr,
+					   MCValueRef& r_value);
+	
+	// Resolve the typeinfo, throws an error if that fails.
+	bool ResolveTypeInfo(MCTypeInfoRef typeinfo,
+						 MCResolvedTypeInfo& r_resolved_typeinfo);
+	
 	// Resolve the given definition index to the instance and actual definition
 	// it references (i.e. resolve the import-def chain).
 	void ResolveDefinition(uindex_t index,
@@ -169,7 +195,7 @@ public:
 						   MCScriptDefinition*& r_definition) const;
 	
 	// Adopt the current thread's pending error as the context's error.
-	void Rethrow(void);
+	void Rethrow(bool error = true);
 	
 	// Raise an 'unable to resolve multi-invoke' error.
 	void ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupDefinition *group,
@@ -252,7 +278,8 @@ private:
 
 inline
 MCScriptExecuteContext::MCScriptExecuteContext(void)
-	: m_frame(nil),
+	: m_error(false),
+	  m_frame(nil),
 	  m_bytecode_ptr(nil),
 	  m_next_bytecode_ptr(nil),
 	  m_root_arguments(nil),
@@ -495,29 +522,37 @@ MCScriptExecuteContext::CheckedFetchRegister(uindex_t p_index)
     return t_value;
 }
 
-inline void
+inline bool
 MCScriptExecuteContext::CheckedStoreRegister(uindex_t p_index,
                                              MCValueRef p_value)
 {
 	if (m_error)
 	{
-		return;
+		return false;
 	}
 	
     MCTypeInfoRef t_type;
     t_type = GetTypeOfRegister(p_index);
-    
-    if (t_type != nil &&
-        !MCTypeInfoConforms(MCValueGetTypeInfo(p_value),
-                            t_type))
+	
+	MCAutoValueRef t_converted_value;
+    if (!Convert(p_value,
+				 t_type,
+				 &t_converted_value))
     {
+		return false;
+	}
+	
+	if (*t_converted_value == nil)
+	{
         ThrowInvalidValueForLocalVariable(p_index,
 										  p_value);
-        return;
+        return false;
     }
     
     StoreRegister(p_index,
-                  p_value);
+                  *t_converted_value);
+	
+	return true;
 }
 
 inline bool
@@ -581,11 +616,18 @@ MCScriptExecuteContext::CheckedStoreVariable(MCScriptInstanceRef p_instance,
 	
     MCTypeInfoRef t_type;
     t_type = p_instance->module->types[p_definition->type]->typeinfo;
-    
-    if (t_type != nil &&
-        !MCTypeInfoConforms(MCValueGetTypeInfo(p_value),
-                            t_type))
-    {
+	
+	MCAutoValueRef t_converted_value;
+	if (!Convert(p_value,
+				 t_type,
+				 &t_converted_value))
+	{
+		return;
+	}
+	
+	if (*t_converted_value == nil)
+	{
+
         ThrowInvalidValueForGlobalVariable(p_instance,
                                            p_definition,
                                            p_value);
@@ -673,41 +715,48 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
         {
             t_needs_mapping = true;
         }
-        
-        // If we have an in or inout argument we need to check the incoming
-        // value type conforms, and that is used to initialize the slot.
-        // Otherwise, we do nothing as the initialization of out parameters
-        // and local variables is done in bytecode directly.
-        MCValueRef t_initial_value = nil;
-        if (t_param_mode != kMCHandlerTypeFieldModeOut)
-        {
-            MCValueRef t_incoming_value =
-                CheckedFetchRegister(p_argument_regs[i]);
-            if (t_incoming_value == nil)
-            {
-                return;
-            }
-            
-            if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_incoming_value),
-                                    t_param_type))
-            {
-                ThrowInvalidValueForArgument(p_instance,
-                                             p_handler_def,
-                                             i,
-                                             t_incoming_value);
-                return;
-            }
+		
+		// If we have an out parameter, then there is no initial value to
+		// assign - default init is done in bytecode directly.
+		if (t_param_mode == kMCHandlerTypeFieldModeOut)
+		{
+			continue;
+		}
+		
+		// Ensure the value we pass into the new frame is of the correct
+		// type.
+		MCValueRef t_incoming_value =
+				CheckedFetchRegister(p_argument_regs[i]);
+		
+		// If nil, then the value is unassigned and thus an error has already
+		// occurred.
+		if (t_incoming_value == nil)
+		{
+			return;
+		}
+		
+		// Attempt to convert the value to the required slot type.
+		MCAutoValueRef t_initial_value;
+		if (!Convert(t_incoming_value,
+					 t_param_type,
+					 &t_initial_value))
+		{
+			return;
+		}
+		
+		// If the converted value is nil, then it is an invalid conversion.
+		if (*t_initial_value == nil)
+		{
+			ThrowInvalidValueForArgument(p_instance,
+										 p_handler_def,
+										 i,
+										 t_incoming_value);
+			return;
         }
-        else
-        {
-            continue;
-        }
         
-        // We now have the initial value, the type of which we *know*
-        // conforms to the parameter type, so we can store into the
-        // slot.
-		// BRIDGE: This should bridge (convert) the type if necessary.
-        t_new_frame->slots[i] = MCValueRetain(t_initial_value);
+        // We now have the initial value, in the type required for the target
+		// parameter slot.
+		t_new_frame->slots[i] = t_initial_value.Take();
     }
     
     //
@@ -793,9 +842,16 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 		}
 	}
 	
-	// Check the return value type conforms, and copy it back if it does.
-	if (!MCTypeInfoConforms(MCValueGetTypeInfo(t_return_value),
-							MCHandlerTypeInfoGetReturnType(t_signature)))
+	// Convert the return value to the required type.
+	MCAutoValueRef t_converted_return_value;
+	if (!Convert(t_return_value,
+				MCHandlerTypeInfoGetReturnType(t_signature),
+				&t_converted_return_value))
+	{
+		return;
+	}
+	
+	if (*t_converted_return_value == nil)
 	{
 		ThrowInvalidValueForReturnValue(m_frame->instance,
 										m_frame->handler,
@@ -814,8 +870,11 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 	if (m_frame != nil)
 	{
 		// Copy back the return value.
-		// BRIDGE: This should bridge (convert) the type if necessary.
-		CheckedStoreRegister(t_popped_frame->result, t_return_value);
+		if (!CheckedStoreRegister(t_popped_frame->result,
+								  *t_converted_return_value))
+		{
+			return;
+		}
 		
 		// Now copy back the out parameters - if any.
 		if (m_frame->mapping != nil)
@@ -832,9 +891,11 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 					continue;
 				}
 				
-				// BRIDGE: This should bridge (convert) the type if necessary.
-				CheckedStoreRegister(t_popped_frame->mapping[i],
-									 t_popped_frame->slots[i]);
+				if (!CheckedStoreRegister(t_popped_frame->mapping[i],
+										   t_popped_frame->slots[i]))
+				{
+					return;
+				}
 			}
 		}
 		
@@ -927,8 +988,17 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 				MCHandlerTypeInfoGetParameterType(t_signature,
 												  i);
 		
-		if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_arguments[i]),
-								t_param_type))
+		// Attempt to convert the value to the required slot type.
+		MCAutoValueRef t_initial_value;
+		if (!Convert(p_arguments[i],
+					 t_param_type,
+					 &t_initial_value))
+		{
+			return;
+		}
+		
+		// If the converted value is nil, then it is an invalid conversion.
+		if (*t_initial_value == nil)
 		{
 			ThrowInvalidValueForArgument(p_instance,
 										 p_handler_def,
@@ -937,9 +1007,9 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 			return;
 		}
 		
-		// BRIDGE: This should bridge (convert) the type if necessary.
-		MCValueAssign(t_new_frame->slots[i],
-					  p_arguments[i]);
+		// We now have the initial value, in the type required for the target
+		// parameter slot.
+		t_new_frame->slots[i] = t_initial_value.Take();
 	}
 	
 	// Setup the execution state.
@@ -988,7 +1058,7 @@ MCScriptExecuteContext::Leave(void)
 		// we fetch it here, and replace by the return_address as we step
 		// back up the frames.
 		uindex_t t_address;
-		t_address = GetNextAddress();
+		t_address = m_frame != nil ? GetNextAddress() : 0;
 		while(m_frame != nil)
 		{
 			const MCScriptModuleRef t_module =
@@ -1065,7 +1135,20 @@ MCScriptExecuteContext::Step(void)
 						   m_arguments,
 						   m_argument_count);
 	
-	return m_error;
+	return !m_error;
+}
+
+inline bool
+MCScriptExecuteContext::ResolveTypeInfo(MCTypeInfoRef p_typeinfo,
+										MCResolvedTypeInfo& r_resolved_typeinfo)
+{
+	if (!MCTypeInfoResolve(p_typeinfo, r_resolved_typeinfo))
+	{
+		Rethrow(MCErrorThrowUnboundType(p_typeinfo));
+		return false;
+	}
+	
+	return true;
 }
 
 inline void
@@ -1098,7 +1181,7 @@ MCScriptExecuteContext::ResolveDefinition(uindex_t p_index,
 }
 
 inline void
-MCScriptExecuteContext::Rethrow(void)
+MCScriptExecuteContext::Rethrow(bool /*ignored*/)
 {
 	m_error = true;
 }
@@ -1129,45 +1212,45 @@ MCScriptExecuteContext::ThrowUnableToResolveMultiInvoke(MCScriptDefinitionGroupD
 			return;
 	}
 	
-	m_error = MCScriptThrowUnableToResolveMultiInvokeError(m_frame->instance,
-														   p_group,
-														   *t_args);
+	Rethrow(MCScriptThrowUnableToResolveMultiInvokeError(m_frame->instance,
+														 p_group,
+														 *t_args));
 }
 
 inline void
 MCScriptExecuteContext::ThrowNotAHandlerValue(MCValueRef p_actual_value)
 {
-	m_error = MCScriptThrowNotAHandlerValueError(p_actual_value);
+	Rethrow(MCScriptThrowNotAHandlerValueError(p_actual_value));
 }
 
 inline void
 MCScriptExecuteContext::ThrowNotAStringValue(MCValueRef p_actual_value)
 {
-	m_error = MCScriptThrowNotAStringValueError(p_actual_value);
+	Rethrow(MCScriptThrowNotAStringValueError(p_actual_value));
 }
 
 inline void
 MCScriptExecuteContext::ThrowNotABooleanOrBoolValue(MCValueRef p_actual_value)
 {
-	m_error = MCScriptThrowNotABooleanOrBoolValueError(p_actual_value);
+	Rethrow(MCScriptThrowNotABooleanOrBoolValueError(p_actual_value));
 }
 
 inline void
 MCScriptExecuteContext::ThrowLocalVariableUsedBeforeAssigned(uindex_t p_index)
 {
-	m_error = MCScriptThrowLocalVariableUsedBeforeAssignedError(m_frame->instance,
-																m_frame->handler,
-																p_index);
+	Rethrow(MCScriptThrowLocalVariableUsedBeforeAssignedError(m_frame->instance,
+															  m_frame->handler,
+															  p_index));
 }
 
 inline void
 MCScriptExecuteContext::ThrowInvalidValueForLocalVariable(uindex_t p_index,
 														  MCValueRef p_value)
 {
-	m_error = MCScriptThrowInvalidValueForLocalVariableError(m_frame->instance,
-															 m_frame->handler,
-															 p_index,
-															 p_value);
+	Rethrow(MCScriptThrowInvalidValueForLocalVariableError(m_frame->instance,
+														   m_frame->handler,
+														   p_index,
+														   p_value));
 }
 
 
@@ -1175,8 +1258,8 @@ inline void
 MCScriptExecuteContext::ThrowGlobalVariableUsedBeforeAssigned(MCScriptInstanceRef p_instance,
 															  MCScriptVariableDefinition *p_variable_def)
 {
-	m_error = MCScriptThrowGlobalVariableUsedBeforeAssignedError(p_instance,
-																 p_variable_def);
+	Rethrow(MCScriptThrowGlobalVariableUsedBeforeAssignedError(p_instance,
+															   p_variable_def));
 }
 
 inline void
@@ -1184,9 +1267,9 @@ MCScriptExecuteContext::ThrowInvalidValueForGlobalVariable(MCScriptInstanceRef p
 														   MCScriptVariableDefinition *p_variable_def,
 														   MCValueRef p_value)
 {
-	m_error = MCScriptThrowInvalidValueForGlobalVariableError(p_instance,
-															  p_variable_def,
-															  p_value);
+	Rethrow(MCScriptThrowInvalidValueForGlobalVariableError(p_instance,
+															p_variable_def,
+															p_value));
 }
 
 inline void
@@ -1194,9 +1277,9 @@ MCScriptExecuteContext::ThrowWrongNumberOfArguments(MCScriptInstanceRef p_instan
 													MCScriptCommonHandlerDefinition *p_handler_def,
 													uindex_t p_argument_count)
 {
-	m_error = MCScriptThrowWrongNumberOfArgumentsError(p_instance,
-													   p_handler_def,
-													   p_argument_count);
+	Rethrow(MCScriptThrowWrongNumberOfArgumentsError(p_instance,
+													 p_handler_def,
+													 p_argument_count));
 }
 
 inline void
@@ -1205,10 +1288,10 @@ MCScriptExecuteContext::ThrowInvalidValueForArgument(MCScriptInstanceRef p_insta
 													 uindex_t p_argument,
 													 MCValueRef p_value)
 {
-	m_error = MCScriptThrowInvalidValueForArgumentError(p_instance,
-														p_handler_def,
-														p_argument,
-														p_value);
+	Rethrow(MCScriptThrowInvalidValueForArgumentError(p_instance,
+													  p_handler_def,
+													  p_argument,
+													  p_value));
 }
 
 inline void
@@ -1216,9 +1299,9 @@ MCScriptExecuteContext::ThrowInvalidValueForReturnValue(MCScriptInstanceRef p_in
 														MCScriptCommonHandlerDefinition *p_handler_def,
 														MCValueRef p_value)
 {
-	m_error = MCScriptThrowInvalidValueForReturnValueError(p_instance,
-														   p_handler_def,
-														   p_value);
+	Rethrow(MCScriptThrowInvalidValueForReturnValueError(p_instance,
+														 p_handler_def,
+														 p_value));
 }
 
 //////////

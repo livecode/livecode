@@ -75,8 +75,9 @@ bool MCScriptCopyBytecodeNames(MCProperListRef& r_bytecode_names)
 	if (!MCProperListCreateMutable(&t_bytecode_names))
 		return false;
 	
+	MCProperListRef t_bytecode_names_arg = *t_bytecode_names;
 	if (!MCScriptBytecodeForEach(MCScriptCopyBytecodeNames_Impl(),
-								 *t_bytecode_names))
+								 t_bytecode_names_arg))
 		return false;
 	
 	r_bytecode_names = t_bytecode_names.Take();
@@ -118,9 +119,10 @@ bool MCScriptLookupBytecode(const char *p_name, uindex_t& r_opcode)
 {
 	// If we get all the way through the bytecodes without returning false, then
 	// it means it wasn't found.
+	MCScriptLookupBytecode_Impl::Args t_args(p_name,
+											 r_opcode);
 	if (MCScriptBytecodeForEach(MCScriptLookupBytecode_Impl(),
-								MCScriptLookupBytecode_Impl::Args(p_name,
-																  r_opcode)))
+								t_args))
 		return false;
 	
 	return true;

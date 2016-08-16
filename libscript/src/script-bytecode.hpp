@@ -888,7 +888,7 @@ template<class Visitor,
 
 inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp p_op,
 									 const Visitor& p_visitor,
-									 Arg p_arg)
+									 Arg& p_arg)
 {
 	return MCScriptBytecodeDispatchR(p_op,
 									 p_visitor,
@@ -898,7 +898,7 @@ inline bool MCScriptBytecodeDispatch(MCScriptBytecodeOp p_op,
 template<class Visitor,
 		 typename Arg>
 inline bool MCScriptBytecodeForEach(const Visitor& p_visitor,
-									Arg p_arg)
+									Arg& p_arg)
 {
 	for(MCScriptBytecodeOp t_op = kMCScriptBytecodeOp__First; t_op <= kMCScriptBytecodeOp__Last; t_op = (MCScriptBytecodeOp)((int)t_op + 1))
 	{
@@ -924,9 +924,10 @@ public:
 
 inline void MCScriptBytecodeValidate(MCScriptValidateState& p_state)
 {
+	MCScriptValidateContext ctxt(p_state);
 	MCScriptBytecodeDispatch(p_state.operation,
 							 MCScriptBytecodeValidate_Impl(),
-							 MCScriptValidateContext(p_state));
+							 ctxt);
 }
 
 class MCScriptBytecodeExecute_Impl
