@@ -1363,25 +1363,26 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
 
 static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr *p_target, bool p_is_send)
 {
-	MCNewAutoNameRef t_message;
-	MCParameter *t_params;
-	MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
-	
-	MCObject *optr;
-	if (p_target == nil)
-		optr = ctxt . GetObject();
-	else
-		optr = p_target -> object;
-	
-	Boolean oldlock = MClockmessages;
-	MClockmessages = False;
-	Exec_stat stat;
-	Boolean added = False;
-	if (MCnexecutioncontexts < MAX_CONTEXTS)
-	{
-		MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
-		added = True;
-	}
+    MCObject *optr;
+    if (p_target == nil)
+        optr = ctxt . GetObject();
+    else
+        optr = p_target -> object;
+    
+    Boolean oldlock = MClockmessages;
+    MClockmessages = False;
+    Boolean added = False;
+    if (MCnexecutioncontexts < MAX_CONTEXTS)
+    {
+        MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+        added = True;
+    }
+    
+    MCNewAutoNameRef t_message;
+    MCParameter *t_params;
+    MCEngineSplitScriptIntoMessageAndParameters(ctxt, p_script, &t_message, t_params);
+    
+    Exec_stat stat;
 	if ((stat = optr->message(*t_message, t_params, p_is_send, True)) == ES_NOT_HANDLED)
 	{
         // The message was not handled by the target object, so this is
@@ -1393,59 +1394,19 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 		if (t_handler != NULL && t_handler -> isprivate())
         {
 			ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
-            goto cleanup;
-        }
-
-        // The 'split into message and parameters' function above is used
-        // to ensure that all the parameters are evaluated in the current
-        // context (not the target). Since domess just takes a string, we
-        // convert the entire script back into a string with the params
-        // having been evaluated. This means in particular that variables
-        // containing arrays will not work here - they will be converted to
-        // the empty string.
-        
-        MCAutoListRef t_param_list;
-        MCListCreateMutable(',', &t_param_list);
-        MCParameter *t_param_ptr;
-        t_param_ptr = t_params;
-        
-        bool t_has_params;
-        t_has_params = t_params != nil;
-        while (t_param_ptr != NULL)
-        {
-            MCAutoValueRef t_value;
-            MCAutoStringRef t_value_string;
-            
-            if (!t_param_ptr->eval(ctxt, &t_value) ||
-                !ctxt . ConvertToString(*t_value, &t_value_string) ||
-                !MCListAppend(*t_param_list, *t_value_string))
-                goto cleanup;
-
-            t_param_ptr = t_param_ptr -> getnext();
-        }
-        
-        MCAutoStringRef tptr;
-        if (t_has_params)
-        {
-            MCAutoStringRef t_params_string;
-            if (!MCListCopyAsString(*t_param_list, &t_params_string) ||
-                !MCStringCreateWithStringsAndSeparator(&tptr, ' ',
-                                                       MCNameGetString(*t_message),
-                                                       *t_params_string))
-                goto cleanup;
         }
         else
-            tptr = MCNameGetString(*t_message);
-        
-        if ((stat = optr->domess(*tptr)) == ES_ERROR)
-            ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
+        {
+            // Just send the original script off to domess
+            if ((stat = optr->domess(p_script)) == ES_ERROR)
+                ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, p_script);
+        }
 	}
 	else if (stat == ES_PASS)
 		stat = ES_NORMAL;
 	else if (stat == ES_ERROR)
 		ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
 
-cleanup:
     while (t_params != NULL)
 	{
 		MCParameter *tmp = t_params;
