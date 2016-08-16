@@ -11,6 +11,8 @@ The version of the stack file format to use when saving stacks
 
 Introduced: 2.7
 
+Deprecated: 8.0
+
 OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
@@ -19,7 +21,7 @@ Value:
 The name of a <stack version>.
 
 Description:
-**Note**: The <stackFileVersion> is deprecated.  Instead, please specify
+>*Note:* The <stackFileVersion> is deprecated.  Instead, please specify
 the <stack version> directly, as an optional parameter of the <save>
 <command>. 
 

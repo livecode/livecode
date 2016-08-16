@@ -32,7 +32,8 @@ Description:
 Use the <nativeCharToNum> function to translate native characters to
 their 8-bit numerical value.
 
-The <> </a> function is the inverse of the <numToNativeChar> function.
+The <nativeCharToNum> function is the inverse of the <numToNativeChar> 
+function.
 
 These functions convert between text and native characters and are
 replacements for the deprecated <numToChar> and <charToNum> functions.
@@ -46,7 +47,7 @@ character (?).
 Unless needed for compatibility reasons, it is recommended that you use
 the <numToCodepoint> and <codepointToNum> functions instead.
 
-References: nativeCharToNum (function), numToChar (function),
-charToNum (function), numToNativeChar (function),
-numToCodepoint (function),  (function), codepointToNum (function)
+References: numToChar (function), charToNum (function), 
+numToNativeChar (function), numToCodepoint (function), 
+codepointToNum (function)
 
