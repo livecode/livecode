@@ -16,23 +16,32 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+local nameToSave
 put the filename of this stack into nameToSave
 
 Example:
+local savedName
 if the effective filename of this stack is savedName then beep
 
 Example:
-set the filename of this stack to "Test.rev"
+set the filename of this stack to "Test.livecode"
 
 Example:
-set the filename of this stack to "/Volumes/Lizards/Godzilla.rev"
+set the filename of this stack to "/Volumes/Lizards/Godzilla.livecode"
+
+Example:
+# set the defaultFolder to the folder containing the stackfile
+set the itemDelimiter to slash
+get the effective filename of this stack
+set the defaultFolder to item 1 to -2 of it
+
 
 Value:
 The <filename of stack> of a <stack> specifies the <file path|name and
 location> of the <stack file>. If you specify a name but not a location,
 LiveCode assumes the <file> is in the <defaultFolder>. By default, the
 <filename of stack> <property> of newly created <stacks> is set to
-empty. 
+<empty>. 
 
 Description:
 Use the <filename of stack> <property> to specify where a <stack file>
@@ -51,7 +60,7 @@ the effective filename of stack. You cannot set the <filename of stack>
 error being thrown.
 
 If the stack has not yet been saved, its <filename of stack> <property>
-is empty.
+is <empty>.
 
 >*Cross-platform note:*  On <OS X|OS X systems>, <standalone
 > application|standalone applications> are stored as <application
@@ -64,12 +73,14 @@ is empty.
 > path> is "/Volumes/Disk/MyApp.app/", the filename of the application's
 > <main stack> might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
 
-References: stacks (function), property (glossary), OS X (glossary),
-main stack (glossary), stack file (glossary), substack (glossary),
-standalone application (glossary), file path (glossary),
-folder (glossary), application bundle (glossary), effective (keyword),
-file (keyword), saveStackRequest (message), stack (object),
-defaultFolder (property), stackFiles (property)
+References: application bundle (glossary), defaultFolder (property),
+defaultFolder (property), effective (keyword), empty (constant), 
+execution error (glossary), file (glossary), file path (glossary), 
+folder (glossary), item (keyword), itemDelimiter (property), 
+main stack (glossary), OS X (glossary), property (glossary), 
+saveStackRequest (message), slash (constant), stack (object),
+stack file (glossary), stackFiles (property), stacks (function), 
+standalone application (glossary), substack (glossary)
 
 Tags: file system
 
