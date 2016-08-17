@@ -6955,6 +6955,10 @@ bool MCSVGParse(MCStringRef p_string, MCSVGParseCallback p_callback, void *p_con
 		
 		if (!p_callback(p_context, t_command, t_params, t_param_count))
 			return false;
+        
+        // Skip any trailing whitespace in the string
+        MCSVGSkipWhitespace(*t_native_string, t_range);
+        
 	}
 	
 	return true;
