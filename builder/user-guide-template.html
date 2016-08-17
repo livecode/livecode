@@ -753,16 +753,6 @@ table{border-spacing:1em 2px;}
 				img_no_pg_break += '&nbsp;</div>';
 				return img_no_pg_break;
 			}
-		
-			renderer.code = function (code, language, callback)
-			{
-				return '<pre><code>' + code + '</code></pre>';
-			}
-			
-			renderer.codespan = function (code)
-			{
-				return '<code class="inline">' + code + '</code>';
-			}
 			
 			var content_html = marked(prefix, { renderer: renderer });
 
