@@ -1,5 +1,6 @@
 script "Command Line Builder"
 local sWarnAsError
+local sDebug -- True if the builder should run in debugging mode
 
 on startup
    set the itemdelimiter to slash
@@ -11,6 +12,7 @@ on startup
    __loadExternal "revdb"
    
    put false into sWarnAsError
+   put ($BUILDER_DEBUG is not empty) into sDebug
    
    local tArgs, tArgIndex
    repeat with tArgIndex = 1 to $# - 1
@@ -97,6 +99,8 @@ on startup
          add 1 to tArgIndex
       else if tArgs[tArgIndex] is "--warn-as-error" then
          put true into sWarnAsError
+      else if tArgs[tArgIndex] is "--debug" then
+         put true into sDebug
       end if
       add 1 to tArgIndex
    end repeat
@@ -164,6 +168,10 @@ end __loadExternal
 
 command __builderLog pType, pMessage
    local tLine
+
+   if pType is "debug" and not sDebug then
+      exit __builderLog
+   end if
 
    -- Promote builder warnings to errors, if requested
    if pType is "warning" and sWarnAsError then
