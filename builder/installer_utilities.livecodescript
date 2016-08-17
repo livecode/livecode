@@ -729,7 +729,7 @@ private command installCopyUninstaller pTarget
          get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
          if it is not empty then
             log "CopyUninstaller:    setting executable permission failed - " & it
-            reportError "Unable to copy uninstaller at '" & pTarget * "'."
+            reportError "Unable to copy uninstaller at '" & pTarget & "'."
          end if
       end if
    end if
