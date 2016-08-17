@@ -711,7 +711,7 @@ private command installCopyUninstaller pTarget
       installCopyUninstallerFolder item 1 to - 4 of the effective filename of stack "Installer", pTarget
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
-         reportError "Unable to installer uninstaller at '" & pTarget & "'."
+         reportError "Unable to copy uninstaller to '" & pTarget & "'."
       end if
       set the itemDel to comma
    else
@@ -719,7 +719,7 @@ private command installCopyUninstaller pTarget
       
       if the result is not empty then
          log "CopyUninstaller:    copying failed -" && the result
-         reportError "Unable to installer uninstaller at '" & pTarget & "'."
+         reportError "Unable to copy uninstaller to '" & pTarget & "'."
       end if
       
       // SN-2014-10-28: [[ Bug 16410 ]] The uninstaller needs the execution permission
@@ -729,7 +729,7 @@ private command installCopyUninstaller pTarget
          get shell("chmod +x " & quote & installShortenPath(pTarget) & quote)
          if it is not empty then
             log "CopyUninstaller:    setting executable permission failed - " & it
-            reportError "Unable to install uninstaller at '" & pTarget * "'."
+            reportError "Unable to copy uninstaller to '" & pTarget & "'."
          end if
       end if
    end if
