@@ -73,9 +73,9 @@ is <empty>.
 > path> is "/Volumes/Disk/MyApp.app/", the filename of the application's
 > <main stack> might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
 
-References: application bundle (glossary), defaultFolder (property),
-defaultFolder (property), effective (keyword), empty (constant), 
-execution error (glossary), file (glossary), file path (glossary), 
+References: application bundle (glossary), defaultFolder (property), 
+effective (keyword), empty (constant), execution error (glossary), 
+file (glossary), file path (glossary), 
 folder (glossary), item (keyword), itemDelimiter (property), 
 main stack (glossary), OS X (glossary), property (glossary), 
 saveStackRequest (message), slash (constant), stack (object),
