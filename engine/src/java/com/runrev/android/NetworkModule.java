@@ -145,7 +145,7 @@ public class NetworkModule
 			public void onURLStart()
 			{
 				final int t_id = getID();
-				m_engine.post(new Runnable() {
+				m_engine.runOnUiThread(new Runnable() {
 					public void run() {
 						m_engine.onUrlDidStart(t_id);
 					}
@@ -156,7 +156,7 @@ public class NetworkModule
 			{
 				final int t_id = getID();
 				final int t_content_length = getContentLength();
-				m_engine.post(new Runnable() {
+				m_engine.runOnUiThread(new Runnable() {
 					public void run() {
 						m_engine.onUrlDidConnect(t_id, t_content_length);
 					}
@@ -168,7 +168,7 @@ public class NetworkModule
 				final URLLoader t_loader = this;
 				final int t_id = getID();
 				final int t_sent = p_sent;
-				m_engine.post(new Runnable() {
+				m_engine.runOnUiThread(new Runnable() {
 					public void run() {
 						m_engine.onUrlDidSendData(t_id, t_sent);
 					}
@@ -178,7 +178,7 @@ public class NetworkModule
 			{
 				final URLLoader t_loader = this;
 				final int t_id = getID();		
-				m_engine.post(new Runnable() {
+				m_engine.runOnUiThread(new Runnable() {
 					public void run() {
 						byte[] t_bytes;
 						t_bytes = t_loader . popBytes();
@@ -191,7 +191,7 @@ public class NetworkModule
 			public void onURLComplete()
 			{
 				final int t_id = getID();
-				m_engine.post(new Runnable() {
+				m_engine.runOnUiThread(new Runnable() {
 					public void run() {
 						m_engine.onUrlDidFinish(t_id);
 					}
@@ -203,7 +203,7 @@ public class NetworkModule
 			{
 				final int t_id = getID();
 				final String t_err_msg = getErrorString();
-				m_engine.post(new Runnable() {
+				m_engine.runOnUiThread(new Runnable() {
 					public void run() {
 						m_engine.onUrlError(t_id, t_err_msg);
 					}
