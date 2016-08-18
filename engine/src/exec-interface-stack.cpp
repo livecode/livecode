@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 #include "osspec.h"
+#include "stackfileformat.h"
 
 //////////
 
@@ -2257,4 +2258,25 @@ void MCStack::SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibl
 void MCStack::GetEffectiveShowInvisibleObjects(MCExecContext& ctxt, bool& r_value)
 {
 	r_value = geteffectiveshowinvisibleobjects();
+}
+
+void MCStack::GetMinStackFileVersion(MCExecContext &ctxt, MCStringRef& r_stack_file_version)
+{
+    uint32_t t_version = geteffectiveminimumstackfileversion();
+    
+    if (t_version < kMCStackFileFormatVersion_7_0)
+        t_version = kMCStackFileFormatVersion_7_0;
+    
+    if (t_version % 100 == 0)
+    {
+        if (MCStringFormat(r_stack_file_version, "%d.%d", t_version / 1000, (t_version % 1000) / 100))
+            return;
+    }
+    else
+    {
+        if (MCStringFormat(r_stack_file_version, "%d.%d.%d", t_version / 1000, (t_version % 1000) / 100, (t_version % 100) / 10))
+            return;
+    }
+    
+    ctxt . Throw();    
 }

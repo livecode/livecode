@@ -33,6 +33,10 @@ version> could result in data being lost when stacks are saved. For
 example, setting the <stackFileVersion> to 7.0 will cause any widgets in
 the stack to be lost, along with their scripts and properties.
 
+>*Note:* You can use the <minStackFileVersion> <property> to determine
+if your stack will lose data when <save|saved> with a particular
+<stackFileVersion>.
+
 Remember to set the <stackFileVersion> back to its previous value after
 changing it, otherwise LiveCode may save your stacks in unexpected
 formats. 
@@ -49,5 +53,5 @@ Changes:
 Deprecated from version 8.0.0.
 
 
-References: save (command), stack version (glossary)
-
+References: save (command), stack version (glossary),
+minStackFileVersion (property)

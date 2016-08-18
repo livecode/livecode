@@ -205,6 +205,8 @@ MCPropertyInfo MCStack::kProperties[] =
 	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, Bool, MCStack, ShowInvisibleObjects)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_MIN_STACK_FILE_VERSION, String, MCStack, MinStackFileVersion)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =

@@ -1243,6 +1243,8 @@ public:
 	void SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles);
 	void GetEffectiveShowInvisibleObjects(MCExecContext &ctxt, bool &r_show_invisibles);
     
+    void GetMinStackFileVersion(MCExecContext &ctxt, MCStringRef& r_stack_file_version);
+    
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
