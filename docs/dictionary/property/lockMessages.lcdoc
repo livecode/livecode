@@ -28,16 +28,14 @@ Use the <lockMessages> <property> to prevent unwanted <handler|handlers>
 from being <trigger|triggered>,or to speed up operations when
 <handler|handlers> that are normally run automatically are not needed.
 
-If the <lockMessages> <property> is set to true, the following are not
-sent: 
+If the <lockMessages> <property> is set to true, the following are not sent:  
 
-        * Navigation <message|messages> (such as openCard, <closeStack>, 
-        and so on) 
-        * Object creation <message|messages> (such as newCard, <newButton>, 
-        and so on) 
-        * getProp calls
-        * setProp triggers
-
+* Navigation <message|messages> (such as openCard, <closeStack>, 
+and so on) 
+* Object creation <message|messages> (such as newCard, <newButton>, 
+and so on) 
+* getProp calls
+* setProp triggers
 
 It is useful to set this property if a <handler> temporarily visits a card
 and you don't want the normal <message|messages> to be triggered.
