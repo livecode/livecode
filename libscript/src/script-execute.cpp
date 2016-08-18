@@ -31,6 +31,11 @@
 
 typedef void (*__MCScriptValueDrop)(void *);
 
+static void __MCScriptDropValueRef(void *p_value)
+{
+	MCValueRelease(*(MCValueRef *)p_value);
+}
+
 class MCScriptForeignInvocation
 {
 public:
@@ -117,9 +122,15 @@ public:
 			return MCErrorThrowOutOfMemory();
 		}
 		
+		// Store the slot into the reference slot we just created.
+		*(void **)m_argument_values[m_argument_count] = p_slot_ptr;
+		
 		// Store the slot ptr and its drop.
 		m_argument_slots[m_argument_count] = p_slot_ptr;
 		m_argument_drops[m_argument_count] = p_slot_drop;
+		
+		// Bump the number of arguments
+		m_argument_count++;
 		
 		return true;
 	}
@@ -174,15 +185,37 @@ private:
 };
 
 inline void
-__MCScriptComputeSlotAttributes(MCTypeInfoRef p_slot_type,
+__MCScriptComputeSlotAttributes(const MCResolvedTypeInfo& p_slot_type,
 								size_t& r_slot_size,
 								size_t& r_slot_align,
 								__MCScriptValueDrop& r_slot_drop)
 {
-	MCResolvedTypeInfo t_resolved_slot_type;
-	r_slot_size = 0;
-	r_slot_align = sizeof(void*);
-	r_slot_drop = nil;
+	// If the slot is foreign then we interrogate the foreign descriptor.
+	if (MCTypeInfoIsForeign(p_slot_type.type))
+	{
+		const MCForeignTypeDescriptor *t_desc =
+				MCForeignTypeInfoGetDescriptor(p_slot_type.type);
+		
+		r_slot_size = t_desc->size;
+		r_slot_align = t_desc->size;
+		r_slot_drop = t_desc->finalize;
+		
+		return;
+	}
+	
+	// If the slot is a foreign handler then it is pointer sized.
+	if (MCTypeInfoIsHandler(p_slot_type.type) &&
+		MCHandlerTypeInfoIsForeign(p_slot_type.type))
+	{
+		r_slot_size = sizeof(void*);
+		r_slot_align = __alignof__(void *);
+		r_slot_drop = nil;
+		return;
+	}
+	
+	r_slot_size = sizeof(void*);
+	r_slot_align = __alignof__(void*);
+	r_slot_drop = __MCScriptDropValueRef;
 }
 
 void
@@ -236,10 +269,17 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		
 		// Compute the parameter's slot size and allocate storage for it
 		
+		MCResolvedTypeInfo t_resolved_param_type;
+		if (!ResolveTypeInfo(t_param_type,
+							 t_resolved_param_type))
+		{
+			return;
+		}
+		
 		size_t t_slot_size = 0;
 		size_t t_slot_align = 0;
 		__MCScriptValueDrop t_slot_drop = nil;
-		__MCScriptComputeSlotAttributes(t_param_type,
+		__MCScriptComputeSlotAttributes(t_resolved_param_type,
 										t_slot_size,
 										t_slot_align,
 										t_slot_drop);
@@ -258,7 +298,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 		MCValueRef t_arg_value = nil;
 		if (t_param_mode != kMCHandlerTypeFieldModeOut)
 		{
-			t_arg_value = CheckedFetchRegister(i);
+			t_arg_value = CheckedFetchRegister(p_argument_regs[i]);
 			
 			if (t_arg_value == nil)
 			{
@@ -268,7 +308,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 
 		// Convert the value to an unboxed one.
 		if (!UnboxingConvert(t_arg_value,
-							 t_param_type,
+							 t_resolved_param_type,
 							 t_slot_ptr))
 		{
 			return;
@@ -304,27 +344,36 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 	}
 	
 	// Fetch the return value type.
-	MCTypeInfoRef t_return_value_type =
-			MCHandlerTypeInfoGetReturnType(t_signature);
+	MCResolvedTypeInfo t_return_value_type;
 	
-	// Compute the return value slot size (which will be zero for nothing).
+	if (!ResolveTypeInfo(MCHandlerTypeInfoGetReturnType(t_signature),
+						 t_return_value_type))
+	{
+		return;
+	}
+	
+	// Compute the return value slot size, but only if the return type is not
+	// nothing.
 	size_t t_return_value_slot_size = 0;
 	size_t t_return_value_slot_align = 0;
 	__MCScriptValueDrop t_return_value_slot_drop = nil;
-	__MCScriptComputeSlotAttributes(t_return_value_type,
-									t_return_value_slot_size,
-									t_return_value_slot_align,
-									t_return_value_slot_drop);
-	
-	// Alloate the return value slot storage (which will do nothing for
-	// zero size).
 	void *t_return_value_slot_ptr = nil;
-	if (!t_invocation.Allocate(t_return_value_slot_size,
-							   t_return_value_slot_align,
-							   t_return_value_slot_ptr))
+	if (t_return_value_type.named_type != kMCNullTypeInfo)
 	{
-		Rethrow();
-		return;
+		__MCScriptComputeSlotAttributes(t_return_value_type,
+										t_return_value_slot_size,
+										t_return_value_slot_align,
+										t_return_value_slot_drop);
+		
+		// Alloate the return value slot storage (which will do nothing for
+		// zero size).
+		if (!t_invocation.Allocate(t_return_value_slot_size,
+								   t_return_value_slot_align,
+								   t_return_value_slot_ptr))
+		{
+			Rethrow();
+			return;
+		}
 	}
 	
 	// Call the function - we assume here that if the invocation succeeds
@@ -377,10 +426,17 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 			continue;
 		}
 		
+		MCResolvedTypeInfo t_resolved_param_type;
+		if (!ResolveTypeInfo(t_param_type,
+							 t_resolved_param_type))
+		{
+			return;
+		}
+		
 		// Do a boxing convert - note that we take the slot value from the
 		// invocation as BoxingConvert will release regardless of successs.
 		MCAutoValueRef t_arg_value;
-		if (!BoxingConvert(t_param_type,
+		if (!BoxingConvert(t_resolved_param_type,
 						   t_invocation.TakeArgument(i),
 						   &t_arg_value))
 		{
@@ -401,20 +457,10 @@ MCScriptExecuteContext::Convert(MCValueRef p_value,
 								MCTypeInfoRef p_to_type,
 								MCValueRef& r_new_value)
 {
-	// If the to type is nil, then its a pass through conversion
 	if (p_to_type == nil)
 	{
 		r_new_value = MCValueRetain(p_value);
 		return true;
-	}
-	
-	// Get resolved typeinfos.
-	
-	MCResolvedTypeInfo t_resolved_from_type;
-	if (!ResolveTypeInfo(MCValueGetTypeInfo(p_value),
-						 t_resolved_from_type))
-	{
-		return false;
 	}
 	
 	MCResolvedTypeInfo t_resolved_to_type;
@@ -424,9 +470,27 @@ MCScriptExecuteContext::Convert(MCValueRef p_value,
 		return false;
 	}
 	
+	return ConvertToResolvedType(p_value,
+								 t_resolved_to_type,
+								 r_new_value);
+}
+
+bool
+MCScriptExecuteContext::ConvertToResolvedType(MCValueRef p_value,
+											  const MCResolvedTypeInfo& p_to_type,
+											  MCValueRef& r_new_value)
+{
+	// Get resolved typeinfos.
+	MCResolvedTypeInfo t_resolved_from_type;
+	if (!ResolveTypeInfo(MCValueGetTypeInfo(p_value),
+						 t_resolved_from_type))
+	{
+		return false;
+	}
+	
 	// Check conformance - if this fails, then there is no conversion.
 	if (!MCResolvedTypeInfoConforms(t_resolved_from_type,
-									t_resolved_to_type))
+									p_to_type))
 	{
 		r_new_value = nil;
 		return true;
@@ -444,9 +508,9 @@ MCScriptExecuteContext::Convert(MCValueRef p_value,
 	}
 	
 	const MCForeignTypeDescriptor *t_to_desc = nil;
-	if (MCTypeInfoIsForeign(t_resolved_to_type.type))
+	if (MCTypeInfoIsForeign(p_to_type.type))
 	{
-		t_to_desc = MCForeignTypeInfoGetDescriptor(t_resolved_to_type.type);
+		t_to_desc = MCForeignTypeInfoGetDescriptor(p_to_type.type);
 	}
 	
 	if (t_from_desc != nil)
@@ -463,7 +527,7 @@ MCScriptExecuteContext::Convert(MCValueRef p_value,
 	else if (t_to_desc != nil)
 	{
 		// Export the foreign value
-		if (!MCForeignValueExport(t_resolved_to_type.type,
+		if (!MCForeignValueExport(p_to_type.type,
 								  p_value,
 								  (MCForeignValueRef&)r_new_value))
 		{
@@ -480,32 +544,47 @@ MCScriptExecuteContext::Convert(MCValueRef p_value,
 }
 
 bool
-MCScriptExecuteContext::BoxingConvert(MCTypeInfoRef p_slot_type,
+MCScriptExecuteContext::BoxingConvert(const MCResolvedTypeInfo& p_slot_type,
 									  void *p_slot_ptr,
 									  MCValueRef& r_new_value)
 {
-	MCResolvedTypeInfo t_resolved_slot_type;
-	if (!ResolveTypeInfo(p_slot_type,
-						 t_resolved_slot_type))
+	if (MCTypeInfoIsForeign(p_slot_type.type))
 	{
-		return false;
-	}
-	
-	if (MCTypeInfoIsForeign(t_resolved_slot_type.type))
-	{
-		// This is a foreign slot type.
-		if (!MCForeignValueCreateAndRelease(p_slot_type,
-											p_slot_ptr,
-											(MCForeignValueRef&)r_new_value))
+		// This is a foreign slot type. If the foreign value has the notion
+		// of 'defined', then we map to Null if it is not defined.
+		
+		const MCForeignTypeDescriptor *t_desc =
+				MCForeignTypeInfoGetDescriptor(p_slot_type.type);
+		
+		if (t_desc->defined != nil &&
+			!t_desc->defined(p_slot_ptr))
+		{
+			r_new_value = MCValueRetain(kMCNull);
+		}
+		else if (!MCForeignValueCreateAndRelease(p_slot_type.named_type,
+												 p_slot_ptr,
+												 (MCForeignValueRef&)r_new_value))
 		{
 			Rethrow();
 			return false;
 		}
 	}
+	else if (p_slot_type.named_type == kMCNullTypeInfo)
+	{
+		r_new_value = MCValueRetain(kMCNull);
+	}
 	else
 	{
 		// This is not a foreign slot type, so we just take the valueref value.
-		r_new_value = *(MCValueRef *)p_slot_ptr;
+		// Since we bridge null to nil, we need to check that here.
+		if (*(MCValueRef *)p_slot_ptr != nil)
+		{
+			r_new_value = *(MCValueRef *)p_slot_ptr;
+		}
+		else
+		{
+			r_new_value = MCValueRetain(kMCNull);
+		}
 	}
 	
 	return true;
@@ -513,24 +592,17 @@ MCScriptExecuteContext::BoxingConvert(MCTypeInfoRef p_slot_type,
 
 bool
 MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
-										MCTypeInfoRef p_slot_type,
+										const MCResolvedTypeInfo& p_slot_type,
 										void*& x_slot_ptr)
 {
-	MCResolvedTypeInfo t_resolved_slot_type;
-	if (!ResolveTypeInfo(p_slot_type,
-						 t_resolved_slot_type))
-	{
-		return false;
-	}
-	
 	// If the input value is nil then this is a slot init.
 	if (p_value == nil)
 	{
-		if (MCTypeInfoIsForeign(t_resolved_slot_type.type))
+		if (MCTypeInfoIsForeign(p_slot_type.type))
 		{
 			// The value is foreign, so if it has an initializer - use it.
 			const MCForeignTypeDescriptor *t_desc =
-					MCForeignTypeInfoGetDescriptor(t_resolved_slot_type.type);
+					MCForeignTypeInfoGetDescriptor(p_slot_type.type);
 			
 			if (t_desc->initialize != nil)
 			{
@@ -560,16 +632,16 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
 	
 	// Check conformance - if this fails, then there is no conversion.
 	if (!MCResolvedTypeInfoConforms(t_resolved_from_type,
-									t_resolved_slot_type))
+									p_slot_type))
 	{
 		x_slot_ptr = nil;
 		return true;
 	}
 	
-	if (MCTypeInfoIsForeign(t_resolved_slot_type.type))
+	if (MCTypeInfoIsForeign(p_slot_type.type))
 	{
 		const MCForeignTypeDescriptor *t_slot_desc =
-				MCForeignTypeInfoGetDescriptor(t_resolved_slot_type.type);
+				MCForeignTypeInfoGetDescriptor(p_slot_type.type);
 		
 		// If the source is foreign then we just copy the contents, otherwise
 		// it is a bridging conversion so we must export.
@@ -584,18 +656,45 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
 		}
 		else
 		{
-			if (!t_slot_desc->doexport(p_value,
-									   false,
-									   x_slot_ptr))
+			// If the source value is null, then it must mean the target type
+			// is nullable.
+			if (p_value == kMCNull)
+			{
+				if (!t_slot_desc->initialize(x_slot_ptr))
+				{
+					Rethrow();
+					return false;
+				}
+			}
+			else if (!t_slot_desc->doexport(p_value,
+											false,
+											x_slot_ptr))
 			{
 				Rethrow();
 				return false;
 			}
 		}
-		
 	}
-	else if (MCTypeInfoIsHandler(t_resolved_slot_type.type) &&
-			 MCHandlerTypeInfoIsForeign(t_resolved_slot_type.type))
+	else if (MCTypeInfoIsForeign(t_resolved_from_type.type))
+	{
+		const MCForeignTypeDescriptor *t_from_desc =
+				MCForeignTypeInfoGetDescriptor(t_resolved_from_type.type);
+		
+		// If the source is foreign, then it must be the bridge type
+		// of the slot, so we must import.
+		MCValueRef t_bridged_value;
+		if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
+								   false,
+								   t_bridged_value))
+		{
+			Rethrow();
+			return false;
+		}
+		
+		*(MCValueRef *)x_slot_ptr = t_bridged_value;
+	}
+	else if (MCTypeInfoIsHandler(p_slot_type.type) &&
+			 MCHandlerTypeInfoIsForeign(p_slot_type.type))
 	{
 		// If the slot type is a foreign handler, then we fetch a closure
 		// from the handler value.
@@ -611,7 +710,15 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
 	}
 	else
 	{
-		*(MCValueRef *)x_slot_ptr = MCValueRetain(p_value);
+		// If the valueref is Null, then we map to nil.
+		if (p_value != kMCNull)
+		{
+			*(MCValueRef *)x_slot_ptr = MCValueRetain(p_value);
+		}
+		else
+		{
+			*(MCValueRef *)x_slot_ptr = nil;
+		}
 	}
 	
 	return true;

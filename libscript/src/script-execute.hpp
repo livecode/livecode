@@ -169,6 +169,9 @@ public:
 	bool Convert(MCValueRef value,
 				 MCTypeInfoRef to_type,
 				 MCValueRef& r_new_value);
+	bool ConvertToResolvedType(MCValueRef value,
+							   const MCResolvedTypeInfo& t_to_type,
+							   MCValueRef& r_new_value);
 	
 	// Attempt to unbox the given valueref. Unboxing will only succeed for types
 	// which represent native types (e.g. foreign values, foreign handler types).
@@ -176,11 +179,11 @@ public:
 	// correctly with the slot type's drop. If a typecheck error occurs, then
 	// slot_ptr is set to nil.
 	bool UnboxingConvert(MCValueRef value,
-						 MCTypeInfoRef slot_type,
+						 const MCResolvedTypeInfo& slot_type,
 						 void*& x_slot_ptr);
 	
 	// Attempt to box the given slot as a valueref.
-	bool BoxingConvert(MCTypeInfoRef slot_type,
+	bool BoxingConvert(const MCResolvedTypeInfo& slot_type,
 					   void *slot_ptr,
 					   MCValueRef& r_value);
 	
@@ -401,7 +404,11 @@ MCScriptExecuteContext::StoreRegister(uindex_t p_index,
 	{
 		return;
 	}
-
+	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Store %p into register %u", p_value, p_index);
+#endif
+	
     MCValueRef& t_slot_ref = m_frame->slots[p_index];
 	if (t_slot_ref == p_value)
         return;
@@ -491,6 +498,10 @@ MCScriptExecuteContext::StoreVariable(MCScriptInstanceRef p_instance,
 	{
 		return;
 	}
+	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Store %p into variable %u", p_value, p_variable_def->slot_index);
+#endif
 	
     MCValueRef& t_slot_ref = p_instance->slots[p_variable_def->slot_index];
     if (t_slot_ref == p_value)
@@ -647,6 +658,10 @@ MCScriptExecuteContext::Jump(index_t p_offset)
         return;
 	}
 	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Jump from %u to %u", GetAddress(), GetAddress() + p_offset);
+#endif
+	
     m_next_bytecode_ptr = m_bytecode_ptr + p_offset;
 }
 
@@ -661,6 +676,10 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
 	{
         return;
 	}
+	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Push frame for handler %u", p_handler_def->index);
+#endif
 	
     MCAutoPointer<Frame> t_new_frame;
     if (!MCMemoryNew(&t_new_frame) ||
@@ -780,7 +799,7 @@ MCScriptExecuteContext::PushFrame(MCScriptInstanceRef p_instance,
     // Finally, make the new frame the current frame and set the
     // new bytecode ptr.
     t_new_frame.Take(m_frame);
-    m_bytecode_ptr = p_instance->module->bytecode + p_handler_def->start_address;
+    m_next_bytecode_ptr = p_instance->module->bytecode + p_handler_def->start_address;
 }
 
 inline void
@@ -790,6 +809,10 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 	{
 		return;
 	}
+	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Pop frame");
+#endif
 	
 	///// Process callee side of the frame.
 	
@@ -845,8 +868,8 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 	// Convert the return value to the required type.
 	MCAutoValueRef t_converted_return_value;
 	if (!Convert(t_return_value,
-				MCHandlerTypeInfoGetReturnType(t_signature),
-				&t_converted_return_value))
+				 MCHandlerTypeInfoGetReturnType(t_signature),
+				 &t_converted_return_value))
 	{
 		return;
 	}
@@ -899,7 +922,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 			}
 		}
 		
-		m_bytecode_ptr = m_frame->instance->module->bytecode + t_popped_frame->return_address;
+		m_next_bytecode_ptr = m_frame->instance->module->bytecode + t_popped_frame->return_address;
 	}
 	else
 	{
@@ -925,7 +948,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 			}
 		}
 		
-		m_bytecode_ptr = nil;
+		m_next_bytecode_ptr = nil;
 	}
 }
 
@@ -940,6 +963,10 @@ MCScriptExecuteContext::Enter(MCScriptInstanceRef p_instance,
 	{
 		return;
 	}
+	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Enter frame for handler %u", p_handler_def->index);
+#endif
 	
 	MCAutoPointer<Frame> t_new_frame;
 	if (!MCMemoryNew(&t_new_frame) ||
@@ -1111,6 +1138,10 @@ MCScriptExecuteContext::Leave(void)
 		
 		return false;
 	}
+	
+#ifdef MCSCRIPT_DEBUG_EXECUTE
+	MCLog("Leave frame for handler %u", p_handler_def->index);
+#endif
 	
 	return true;
 }

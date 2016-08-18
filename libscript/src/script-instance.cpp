@@ -447,8 +447,8 @@ MCScriptSetPropertyOfInstance(MCScriptInstanceRef self,
 	
 	// Check the type passed in conforms to the required type of the
 	// property here so that it generates a more useful error message.
-	if (MCTypeInfoConforms(MCValueGetTypeInfo(p_value),
-						   t_property_type))
+	if (!MCTypeInfoConforms(MCValueGetTypeInfo(p_value),
+							t_property_type))
 	{
 		return MCScriptThrowInvalidValueForPropertyError(self,
 														 t_property_def,
@@ -955,7 +955,9 @@ static bool __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 	// Ask the handler typeinfo to construct its ffi 'cif'. If this fails
 	// then it will already have thrown (either OOM, or there was a problem
 	// with libffi!).
-	if (!MCHandlerTypeInfoGetLayoutType(t_signature, t_abi, p_handler->function_cif))
+	if (!MCHandlerTypeInfoGetLayoutType(t_signature,
+										t_abi,
+										p_handler->function_cif))
 	{
 		return false;
 	}

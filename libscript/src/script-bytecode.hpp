@@ -21,6 +21,8 @@
 #include "script-validate.hpp"
 #include "script-execute.hpp"
 
+#undef DEBUG_EXECUTION
+
 /*
 struct MCScriptBytecodeOp_Noop
 {
@@ -97,6 +99,10 @@ struct MCScriptBytecodeOp_Jump
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
 	{
+#ifdef DEBUG_EXECUTION
+		MCLog("Jump to %u", ctxt.GetAddress() + ctxt.GetSignedArgument(0));
+#endif
+		
 		ctxt.Jump(ctxt.GetSignedArgument(0));
 	}
 };
@@ -122,6 +128,10 @@ struct MCScriptBytecodeOp_JumpIf
 	{
 		if (IfTrue != ctxt.CheckedFetchRegisterAsBool(ctxt.GetArgument(0)))
 			return;
+		
+#ifdef DEBUG_EXECUTION
+		MCLog("Jump to %u", ctxt.GetAddress() + ctxt.GetSignedArgument(2));
+#endif
 		
 		ctxt.Jump(ctxt.GetSignedArgument(1));
 	}
@@ -155,6 +165,12 @@ struct MCScriptBytecodeOp_AssignConstant
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
 	{
+#ifdef DEBUG_EXECUTION
+		MCLog("Assign constant %p to register %u",
+				ctxt.FetchValue(ctxt.GetArgument(1)),
+				ctxt.GetArgument(0));
+#endif
+		
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
 								  ctxt.FetchValue(ctxt.GetArgument(1)));
 	}
@@ -178,6 +194,13 @@ struct MCScriptBytecodeOp_Assign
 	
 	static void Execute(MCScriptExecuteContext& ctxt)
 	{
+#ifdef DEBUG_EXECUTION
+		MCLog("Assign value %p from register %u to register %u",
+			  ctxt.CheckedFetchRegister(ctxt.GetArgument(1)),
+			  ctxt.GetArgument(1),
+			  ctxt.GetArgument(0));
+#endif
+		
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
 								  ctxt.CheckedFetchRegister(ctxt.GetArgument(1)));
 	}
@@ -209,7 +232,12 @@ struct MCScriptBytecodeOp_Return
 		uindex_t t_return_value_reg = UINDEX_MAX;
 		if (ctxt.GetArgumentCount() != 0)
 			t_return_value_reg = ctxt.GetArgument(0);
-			
+		
+#ifdef DEBUG_EXECUTION
+		MCLog("Return with value in register %u",
+			  t_return_value_reg);
+#endif
+		
 		ctxt.PopFrame(t_return_value_reg);
 	}
 };
@@ -252,10 +280,17 @@ struct MCScriptBytecodeOp_Invoke
 		uindex_t t_argument_count;
 		t_argument_regs = ctxt.GetArgumentList() + 2;
 		t_argument_count = ctxt.GetArgumentCount() - 2;
-		
+
+#ifdef DEBUG_EXECUTION
+		MCLog("Select handler into register %u", t_result_reg);
+		for(uindex_t i = 0; i < t_argument_count; i++)
+			MCLog("  argument register %u", t_argument_regs[i]);
+#endif
 		
 		// If the definition kind is a group, then we must select which handler
 		// in the group is appropriate based on the in-mode argument types.
+		MCScriptInstanceRef t_resolved_instance = nil;
+		MCScriptDefinition *t_resolved_definition = nil;
 		if (t_definition -> kind == kMCScriptDefinitionKindDefinitionGroup)
 		{
 			SelectDefinitionFromGroup(ctxt,
@@ -263,20 +298,29 @@ struct MCScriptBytecodeOp_Invoke
 									  static_cast<MCScriptDefinitionGroupDefinition *>(t_definition),
 									  t_argument_regs,
 									  t_argument_count,
-									  t_instance,
-									  t_definition);
+									  t_resolved_instance,
+									  t_resolved_definition);
 		}
-		
+		else
+		{
+			t_resolved_instance = t_instance;
+			t_resolved_definition = t_definition;
+		}
+	
 		// If we have no definition (due to failure), we return,
-		if (t_definition == nil)
+		if (t_resolved_definition == nil)
 			return;
 		
-		switch(t_definition->kind)
+#ifdef DEBUG_EXECUTION
+		MCLog("  handler is %@", MCScriptGetNameOfDefinitionInModule(t_resolved_instance->module, t_resolved_definition));
+#endif
+		
+		switch(t_resolved_definition->kind)
 		{
 			case kMCScriptDefinitionKindHandler:
 			{
-				ctxt.PushFrame(t_instance,
-							   static_cast<MCScriptHandlerDefinition *>(t_definition),
+				ctxt.PushFrame(t_resolved_instance,
+							   static_cast<MCScriptHandlerDefinition *>(t_resolved_definition),
 							   t_result_reg,
 							   t_argument_regs,
 							   t_argument_count);
@@ -285,8 +329,8 @@ struct MCScriptBytecodeOp_Invoke
 				
 			case kMCScriptDefinitionKindForeignHandler:
 			{
-				ctxt.InvokeForeign(t_instance,
-								   static_cast<MCScriptForeignHandlerDefinition *>(t_definition),
+				ctxt.InvokeForeign(t_resolved_instance,
+								   static_cast<MCScriptForeignHandlerDefinition *>(t_resolved_definition),
 								   t_result_reg,
 								   t_argument_regs,
 								   t_argument_count);
@@ -437,6 +481,12 @@ struct MCScriptBytecodeOp_InvokeIndirect
 			return;
 		}
 		
+#ifdef DEBUG_EXECUTION
+		MCLog("Invoke handler value %p from register %u into %u", t_handler, t_result_reg);
+		for(uindex_t i = 0; i < t_argument_count; i++)
+			MCLog("  argument register %u", t_argument_regs[i]);
+#endif
+
 		// If the handler-ref is of 'internal' kind (i.e. a instance/definition
 		// pair) then we can invoke directly; otherwise the handler-ref must
 		// be wrapping some other sort of invokable handler and thus we must
@@ -633,6 +683,10 @@ struct MCScriptBytecodeOp_Fetch
 				break;
 		}
 		
+#ifdef DEBUG_EXECUTION
+		MCLog("Fetch value %p from definition %@ into register %u", t_value, MCScriptGetNameOfDefinitionInModule(t_instance->module, t_definition), ctxt.GetArgument(0));
+#endif
+		
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
 								  t_value);
 	}
@@ -662,9 +716,16 @@ struct MCScriptBytecodeOp_Store
 							   t_instance,
 							   t_definition);
 		
+		MCValueRef t_value =
+				ctxt.CheckedFetchRegister(ctxt.GetArgument(0));
+		
+#ifdef DEBUG_EXECUTION
+		MCLog("Store value %p from register %u into definition %@", t_value, ctxt.GetArgument(0), MCScriptGetNameOfDefinitionInModule(t_instance->module, t_definition));
+#endif
+		
 		ctxt.CheckedStoreVariable(t_instance,
 								  static_cast<MCScriptVariableDefinition *>(t_definition),
-								  ctxt.CheckedFetchRegister(ctxt.GetArgument(0)));
+								  t_value);
 	}
 };
 
@@ -717,6 +778,10 @@ struct MCScriptBytecodeOp_AssignList
 			ctxt.Rethrow();
 			return;
 		}
+		
+#ifdef DEBUG_EXECUTION
+		MCLog("Assign list %p to register %u", *t_list, ctxt.GetArgument(0));
+#endif
 		
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
 								  *t_list);
@@ -803,6 +868,10 @@ struct MCScriptBytecodeOp_AssignArray
 			return;
 		}
 		
+#ifdef DEBUG_EXECUTION
+		MCLog("Assign array %p to register %u", *t_array, ctxt.GetArgument(0));
+#endif
+		
 		ctxt.CheckedStoreRegister(ctxt.GetArgument(0),
 								  *t_array);
 	}
@@ -837,6 +906,10 @@ struct MCScriptBytecodeOp_Reset
 			{
 				t_default_value = MCTypeInfoGetDefault(t_type);
 			}
+			
+#ifdef DEBUG_EXECUTION
+			MCLog("Reset register %u to value %p", ctxt.GetArgument(t_arg), t_default_value);
+#endif
 			
 			ctxt.StoreRegister(ctxt.GetArgument(t_arg),
 							   t_default_value);
