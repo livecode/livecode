@@ -43,10 +43,13 @@ first <object> in the <backScripts> receives <message|messages> before
 the second <object>. This order is the reverse of the order in which 
 the objects were added with the <insert script> command.
 
-References: remove script (command), insert script (command),
-message (glossary), pass (control structure), object (glossary),
-message path (glossary), return (glossary), send (command), 
-script (glossary), stacksInUse (property)
+References: backScript (glossary), behavior (property), call (command), 
+dispatch(command), frontScripts (function), 
+insert script (command), message (glossary), 
+message path (glossary), object (glossary), 
+pass (control structure), remove script (command), 
+return (glossary), script (glossary), send (command), 
+stacksInUse (property), start using (command)
 
 Tags: objects, messages
 
