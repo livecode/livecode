@@ -5153,7 +5153,7 @@ uint32_t MCObject::geteffectiveminimumstackfileversion(void)
 {
 	MCRequiredStackFileVersionVisitor t_visitor;
 	t_visitor.required_version = kMCStackFileFormatMinimumExportVersion;
-	visit(kMCObjectVisitorRecursive, 0, &t_visitor);
+	visit(kMCObjectVisitorHeirarchical | kMCObjectVisitorRecursive, 0, &t_visitor);
 	return t_visitor.required_version;
 }
 
