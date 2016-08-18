@@ -90,6 +90,9 @@ public:
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
     
 	// MW-2011-09-20: [[ Collision ]] Compute shape of card.
 	virtual bool lockshape(MCObjectShape& r_shape);

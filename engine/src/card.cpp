@@ -1323,6 +1323,38 @@ void MCCard::toolchanged(Tool p_new_tool)
     }
 }
 
+void MCCard::OnAttach()
+{
+	if (objptrs != NULL)
+	{
+		MCObjptr *optr = objptrs;
+		do
+		{
+			MCObject *t_obj = optr->getref();
+			if (t_obj != nil)
+				t_obj->OnAttach();
+			optr = optr->next();
+		}
+		while (optr != objptrs);
+	}
+}
+
+void MCCard::OnDetach()
+{
+	if (objptrs != NULL)
+	{
+		MCObjptr *optr = objptrs;
+		do
+		{
+			MCObject *t_obj = optr->getref();
+			if (t_obj != nil)
+				t_obj->OnDetach();
+			optr = optr->next();
+		}
+		while (optr != objptrs);
+	}
+}
+
 void MCCard::kfocusset(MCControl *target)
 {
 	if (objptrs != NULL)

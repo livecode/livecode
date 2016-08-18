@@ -1244,6 +1244,18 @@ void MCObject::OnClose()
 		getNativeLayer()->OnDetach();
 }
 
+void MCObject::OnAttach()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnAttach();
+}
+
+void MCObject::OnDetach()
+{
+	if (getNativeLayer() != nil)
+		getNativeLayer()->OnDetach();
+}
+
 const MCRectangle& MCObject::getrect(void) const
 {
 	return rect;

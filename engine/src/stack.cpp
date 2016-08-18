@@ -563,7 +563,7 @@ MCStack::~MCStack()
 	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		stop_externals();
-		MCscreen->destroywindow(window);
+		destroywindow();
 	}
 
 	while (controls != NULL)
@@ -803,7 +803,7 @@ void MCStack::close()
 		if (flags & F_DESTROY_WINDOW && MCdispatcher -> gethome() != this)
 		{
 			stop_externals();
-			MCscreen->destroywindow(window);
+			destroywindow();
 			window = NULL;
 			cursor = None;
 			MCValueAssign(titlestring, kMCEmptyString);
@@ -1491,7 +1491,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 		{
 			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 			view_setstackviewport(rect);
-			realize();
+			createwindow();
 		}
 	}
 
@@ -1562,6 +1562,18 @@ void MCStack::toolchanged(Tool p_new_tool)
 {
     if (curcard != NULL)
         curcard->toolchanged(p_new_tool);
+}
+
+void MCStack::OnAttach()
+{
+	if (curcard != nil)
+		curcard->OnAttach();
+}
+
+void MCStack::OnDetach()
+{
+	if (curcard != nil)
+		curcard->OnDetach();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
