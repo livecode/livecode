@@ -129,9 +129,14 @@ void *load_module(const char *p_path)
     char *t_section_data;
     t_section_data = getsectdata("__DATA", "__libs", &t_section_data_size);
     if (t_section_data != nil)
-    {  
+    {
+#ifdef TARGET_OS_SIMULATOR
+		// The first image in the simulator is dyld_sim - so we skip it.
+		t_section_data += (unsigned long)_dyld_get_image_vmaddr_slide(1);
+#else
         t_section_data += (unsigned long)_dyld_get_image_vmaddr_slide(0);
-        
+#endif
+		
         LibInfo **t_libs;
 		t_libs = (LibInfo **)t_section_data;
 		for(uint32_t k = 0; k < t_section_data_size / sizeof(void *); k++)
