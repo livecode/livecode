@@ -17,10 +17,10 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-set the defaultFolder to "/Applications/GetIt" --MacOS, Linux-style file path"
+set the defaultFolder to "/Applications/GetIt" --MacOS, Linux-style file path
 
 Example:
-set the defaultFolder to "c:/Program Files/GetIt" -- Windows-style file path
+set the defaultFolder to "C:/Program Files/GetIt" -- Windows-style file path
 
 Example:
 # set the defaultFolder to the folder containing the stackfile
