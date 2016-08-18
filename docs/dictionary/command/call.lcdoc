@@ -5,7 +5,7 @@ Type: command
 Syntax: call <handlerName> [of <objectRef>]
 
 Summary:
-<execute|Executes> the specified <handler> in any <object|object's>
+<execute|Executes> the specified <handler> in any <object(glossary)|object's>
 <script>. 
 
 Introduced: 1.0
@@ -35,9 +35,9 @@ Use the <call> <command> to use a <handler> that's not in the normal
 <message path>.
 
 The <call> <command> sends a <handler> <message> to the 
-<object>. If the <script> of the <object> doesn't 
+<object(glossary)>. If the <script> of the <object(glossary)> doesn't 
 <trap> the <handler> <message>, the <message> is <pass|passed> to the 
-next <object> in the <object|object's> <message path>.
+next <object(glossary)> in the <object(glossary)|object's> <message path>.
 
 When executing a <handler> invoked by the <call> <command> the <defaultStack> 
 remains the same as it was when the <call> <command> was issued. Therefore 
@@ -48,7 +48,7 @@ from which the target <handler> was called.
 
 This differs from the <send> <command> which temporarily changes the 
 context so that <object reference|object references> are evaluated 
-in the context of the object containing the target <handler>.
+in the context of the <object(glossary)> containing the target <handler>.
 
 >*Tip:* If a <handler> contains complex <parameter|parameters>, 
 especially if some <parameter|parameters> contain 
