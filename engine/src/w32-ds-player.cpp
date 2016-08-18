@@ -666,13 +666,9 @@ bool MCWin32DSPlayer::OpenFile(MCStringRef p_filename)
 	if (t_success)
 		t_success = S_OK == t_graph.CoCreateInstance(CLSID_FilterGraph);
 
-	MCAutoStringRef t_native_filename;
-	if (t_success)
-		t_success = MCS_pathtonative(p_filename, &t_native_filename);
-
 	MCAutoCustomPointer<OLECHAR, MCWin32BSTRFree> t_filename;
 	if (t_success)
-		t_success = MCStringConvertToBSTR(*t_native_filename, &t_filename);
+		t_success = MCStringConvertToBSTR(p_filename, &t_filename);
 
 	CComPtr<IBaseFilter> t_source_filter;
 
