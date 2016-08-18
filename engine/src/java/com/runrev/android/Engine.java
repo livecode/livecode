@@ -262,6 +262,11 @@ public class Engine extends View implements EngineApi
         return s_engine_instance;
     }
 
+	public void runOnUiThread(Runnable p_runnable)
+	{
+		((Activity)getContext()).runOnUiThread(p_runnable);
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////
 
 	public void showSplashScreen()
