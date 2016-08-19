@@ -2474,7 +2474,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          # Allow regex search patterns
          local tRegex
          repeat for each item tRegex in sPatternsA[tLib]["Regex"]
-            if matchText(tScript,tRegex) then
+            if matchText(tScript,"(?i)"&tRegex) then
                revSBAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
