@@ -2,11 +2,11 @@ Name: combine
 
 Type: command
 
-Syntax: combine array {using | by | with} <primaryDelimiter> [and <secondaryDelimiter>]
+Syntax: combine <arrayName> {using | by | with} <primaryDelimiter> [and <secondaryDelimiter>]
 
-Syntax: combine array {using | by | with} <primaryDelimiter> as set
+Syntax: combine <arrayName> {using | by | with} <primaryDelimiter> as set
 
-Syntax: combine array {using | by | with} {row | column}
+Syntax: combine <arrayName> {using | by | with} {row | column}
 
 Summary:
 Transforms an <array> into a list.
@@ -24,6 +24,7 @@ Example:
 combine myArray by row
 
 Example:
+local tArray
 put "apple" into tArray[1]
 put "banana" into tArray[2]
 combine tArray using return and ":"
@@ -39,62 +40,60 @@ A character or expression that resolves to a character.
 secondaryDelimiter:
 A character or expression that resolves to a character.
 
-arrayName (array):
-
-
-The result:
-If you specify a <secondaryDelimiter>, the key corresponding to each
-element is added to the element's content, separated from the content by
-the <secondaryDelimiter>. For example, if the <primaryDelimiter> is
-return and the <secondaryDelimiter> is tab, each line of the resulting
-variable contains an element's key, a tab character, and the element's
-content. If you don't specify a <secondaryDelimiter>, then the keys are
-lost in the transformation.Combining an array by row converts the array
-into a table with rows separated by the <rowDelimiter property>. Each
-row in the resulting string is the contents of the corresponding key in
-the array.Combining an array by column converts the array into a table
-with columns separated by the <columnDelimiter property>. Each column of
-the resulting string is the contents of the corresponding key in the
-array. 
+arrayName (array): An array variable.
 
 Description:
-Use the <combine> command to display an array in a field or to process
-an array using string operators, functions, and chunk expressions.
+Use the <combine> command to display an <array> in a field or to process
+an <array> using string operators, functions, and chunk expressions.
 
-The <combine> command combines the elements of the array into a single
+The <combine> command combines the <element|elements> of the <array> into a single
 variable. After the command is finished executing, the variable
-specified by array is no longer an array.
+specified by <arrayName> is no longer an <array>.
 
-If the first form of the command is used, the elements of the original
-array are separated by the <primaryDelimiter>. For example, if the
-<primaryDelimiter> is return, the content of each element of the
-original array appears on a separate line.
+If the first form of the command is used, the <element|elements> of the original
+<array> are separated by the <primaryDelimiter>. For example, if the
+<primaryDelimiter> is return, the content of each <element> of the
+original <array> appears on a separate line.
 
-If you use the as set form the <combine> command rebuilds the list using
-the delimiter passed, the values of the array are ignored.
+If you specify a <secondaryDelimiter>, the <key> corresponding to each
+<element> is added to the <element|element's> content, separated from the content by
+the <secondaryDelimiter>. For example, if the <primaryDelimiter> is
+return and the <secondaryDelimiter> is tab, each line of the resulting
+variable contains an <element|element's> <key>, a tab character, and the <element|element's>
+content. If you don't specify a <secondaryDelimiter>, then the <key|keys> are
+lost in the transformation.
+
+If you use the `as set` form the <combine> command rebuilds the list using
+the delimiter passed; the values of the <array> are ignored.
 
 >*Note:*  The order of the elements is not alphabetical or
-> chronological; it is based on the internal hash order of the array. To
-> alphabetize the list, use the sort command:
+> chronological; it is based on the internal hash order of the <array>. To
+> alphabetize the list, use the <sort> command:
 
     combine monthlyReceivables using return and comma
     sort lines of monthlyReceivables by item 2 of each
 
 
 If the second form of the <combine> command is used, the elements of the
-original array are considered to be either columns or rows, separated by
-the <columnDelimiter property> or <rowDelimiter property> respectively.
+original <array> are considered to be either columns or rows, separated by
+the <columnDelimiter> or <rowDelimiter> property respectively.
+
+Combining an <array> by row converts the <array> into a table with rows 
+separated by the <rowDelimiter>. Each row in the resulting string is 
+the contents of the corresponding <key> in the <array>.
+
+Combining an <array> by column converts the <array> into a table
+with columns separated by the <columnDelimiter property>. Each column of
+the resulting string is the contents of the corresponding <key> in the
+<array>.
 
 >*Note:*  The combine by row and combine by column forms can only be
-> used with numerically keyed arrays
+> used with numerically <key|keyed> arrays
 
 Changes:
 The combine by row / column form was added in 2.8.1
 
-References: split (command), extents (function), keys (function),
-array (glossary), [] (keyword), using (keyword),
-columnDelimiter (property), columnDelimiter property (property),
-rowDelimiter property (property), rowDelimiter (property)
-
-Tags: properties
+References: [] (keyword), array (glossary), columnDelimiter (property), 
+element (glossary), extents (function), key (glossary), keys (function), 
+rowDelimiter (property), sort (command), split (command), using (keyword)
 
