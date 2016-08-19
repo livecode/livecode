@@ -310,23 +310,32 @@ class SensorModule
             m_use_gps = !p_loosely;
             try
             {
-                m_location_manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, m_network_location_listener);
+				if (m_location_manager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER))
+				{
+					m_location_manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, m_network_location_listener);
+				}
                 m_registered = true;
             }
             catch (SecurityException e)
             {
+				m_registered = false;
             }
             
             
             if (m_use_gps)
             {
                 try
-                {
-                    m_location_manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, m_gps_location_listener);
-                    m_registered = true;
+				{
+					if (m_location_manager.getAllProviders().contains(LocationManager.GPS_PROVIDER))
+					{
+						m_location_manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, m_gps_location_listener);
+					}
+					m_registered = true;
                 }
                 catch (SecurityException e)
                 {
+					if (!m_registered)
+						m_registered = false;
                 }
             }
 
@@ -671,14 +680,14 @@ class SensorModule
     
     public void onPause()
     {
-        m_accel_tracker.pause();
-        m_location_tracker.pause();
+        //m_accel_tracker.pause();
+        //m_location_tracker.pause();
     }
     
     public void onResume()
     {
-        m_accel_tracker.resume();
-        m_location_tracker.resume();
+        //m_accel_tracker.resume();
+        //m_location_tracker.resume();
     }
     
     // MM-2012-03-19: [[ Bug 10104 ]] Stop tracking any sensors on shutdown - not doing so prevents a restart for some reason.
