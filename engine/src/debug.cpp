@@ -68,8 +68,6 @@ uint2 MCnexecutioncontexts = 0;
 uint2 MCdebugcontext = MAXUINT2;
 Boolean MCmessagemessages = False;
 
-static int2 depth;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(_SERVER)
@@ -199,15 +197,14 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	if (ctxt.GetObject() -> message(mess, p, True, False, True) == ES_NORMAL)
 	{
 		MCcheckstack = oldcheck;
-		//  if (depth++ > 1)
-		//   fprintf(stderr, "Debug depth %d\n", depth);
-		 while (!MCtracereturn)
+		
+        while (!MCtracereturn)
 		{
 			MCU_resetprops(True);
 			MCscreen->wait(REFRESH_INTERVAL, True, True);
 		}
-		//  depth--;
-		if (MCtracedobject == NULL)
+		
+        if (MCtracedobject == NULL)
 			MCtracedobject = ctxt.GetObject();
 		if (MCtraceabort)
 		{

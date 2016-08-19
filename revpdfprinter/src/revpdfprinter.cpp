@@ -1092,7 +1092,7 @@ bool MCPDFPrintingDevice::create_surface_from_image(const MCCustomPrinterImage &
 					{
 						uint32_t t_alpha;
 						t_alpha = *t_in_ptr >> 24;
-						*t_out_ptr++ = (packed_scale_bounded(*t_in_ptr++, t_alpha) & 0x00FFFFFF) | (t_alpha << 24);
+						*t_out_ptr++ = (packed_scale_bounded(*t_in_ptr++, (uint8_t)t_alpha) & 0x00FFFFFF) | (t_alpha << 24);
 					}
 				}
 				t_image_surface = cairo_image_surface_create_for_data(t_data, CAIRO_FORMAT_ARGB32, p_image.width, p_image.height, t_stride);
@@ -1175,7 +1175,7 @@ bool MCPDFPrintingDevice::create_mask_surface_from_image(const MCCustomPrinterIm
 					t_in_ptr = (uint32_t*) p_image.data + y * (p_image.data_size / p_image . height) / 4;
 					t_out_ptr = (uint8_t*) (t_data + y * t_stride);
 
-					uint32_t t_bit = 0x01;
+					uint8_t t_bit = 0x01;
 					uint32_t t_width;
 					t_width = p_image.width;
 
@@ -1225,7 +1225,7 @@ bool MCPDFPrintingDevice::create_mask_surface_from_image(const MCCustomPrinterIm
 
 					while (t_width--)
 					{
-						uint32_t t_alpha;
+						uint8_t t_alpha;
 						t_alpha = *t_in_ptr++ >> 24;
 						*t_out_ptr++ = t_alpha;
 					}

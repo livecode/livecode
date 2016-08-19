@@ -419,7 +419,7 @@ extern "C" MC_DLLEXPORT_DEF void MCMathEvalConvertToBase10(MCStringRef p_operand
     bool t_error = false;
     if (MCMathConvertToBase10(p_operand, p_source_base, t_negative, t_result, t_error))
     {
-        if ((t_negative && t_result > INTEGER_MAX) || (!t_negative && t_result > abs(INTEGER_MIN)))
+        if ((t_negative && t_result > (uinteger_t)INTEGER_MAX) || (!t_negative && t_result > (uinteger_t)abs(INTEGER_MIN)))
             MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("integer overflow"), nil);
         else
             r_output = t_negative ? -t_result : t_result;

@@ -241,7 +241,7 @@ public:
 	virtual DBFieldType getFieldType(unsigned int fieldnum);
 	virtual unsigned int getFieldLength(unsigned int fieldnum);
 	virtual char* getFieldName(unsigned int fieldnum);
-	virtual char* getFieldDataBinary(unsigned int fieldnum, unsigned int &fdlength);
+	virtual char* getFieldDataBinary(unsigned int fieldnum, size_t &fdlength);
 	virtual char* getFieldDataString(unsigned int fieldnum);
 	virtual Bool getFieldIsNull(unsigned int fieldnum);
 	virtual	DBConnection* getConnection();

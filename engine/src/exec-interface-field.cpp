@@ -200,23 +200,6 @@ static MCExecCustomTypeInfo _kMCInterfaceFieldRangesTypeInfo =
 
 //////////
 
-static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
-{
-	{ "static", kMCLayerModeHintStatic, false },
-	{ "dynamic", kMCLayerModeHintDynamic, false },
-	{ "scrolling", kMCLayerModeHintScrolling, false },
-	{ "container", kMCLayerModeHintContainer, false },
-};
-
-static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
-{
-	"Interface.LayerMode",
-	sizeof(_kMCInterfaceLayerModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCInterfaceLayerModeElementInfo
-};
-
-//////////
-
 static void MCInterfaceFieldTabAlignmentsParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldTabAlignments& r_output)
 {
     MCAutoArrayRef t_array;
@@ -1118,7 +1101,7 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
 void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFieldRanges& p_ranges)
 {
     // MW-2012-02-08: [[ FlaggedField ]] Special case the 'flaggedRanges' property.
-    int4 t_line_index, t_char_index, si, ei;
+    int4 si, ei;
     si = 0;
     ei = INT32_MAX;
     
@@ -1280,7 +1263,6 @@ void MCField::GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_range
         uint4 tstart = 1;
         uint4 tend = 0;
         MCLine *lastline = NULL;
-        uint2 j = 0;
         while (True)
         {
             MCInterfaceFieldRange t_range;

@@ -888,6 +888,9 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 				t_path -> release();
 			}
 			break;
+                
+            default:
+                break;
 		}
 	}
 

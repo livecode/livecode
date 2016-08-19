@@ -528,7 +528,7 @@ int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, char *p_dst, i
 				if (t_made + 1 > p_dst_count)
 					break;
 				
-				p_dst[t_made] = t_codepoint;
+				p_dst[t_made] = (char)t_codepoint;
 			}
 			
 			t_made += 1;
@@ -540,8 +540,8 @@ int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, char *p_dst, i
 				if (t_made + 2 > p_dst_count)
 					break;
 				
-				p_dst[t_made + 0] = 0xc0 | (t_codepoint >> 6);
-				p_dst[t_made + 1] = 0x80 | (t_codepoint & 0x3f);
+				p_dst[t_made + 0] = (char)(0xc0 | (t_codepoint >> 6));
+				p_dst[t_made + 1] = (char)(0x80 | (t_codepoint & 0x3f));
 			}
 			
 			t_made += 2;
@@ -553,9 +553,9 @@ int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, char *p_dst, i
 				if (t_made + 3 > p_dst_count)
 					break;
 				
-				p_dst[t_made + 0] = 0xe0 | (t_codepoint >> 12);
-				p_dst[t_made + 1] = 0x80 | ((t_codepoint >> 6) & 0x3f);
-				p_dst[t_made + 2] = 0x80 | (t_codepoint & 0x3f);
+				p_dst[t_made + 0] = (char)(0xe0 | (t_codepoint >> 12));
+				p_dst[t_made + 1] = (char)(0x80 | ((t_codepoint >> 6) & 0x3f));
+				p_dst[t_made + 2] = (char)(0x80 | (t_codepoint & 0x3f));
 			}
 			
 			t_made += 3;
@@ -567,10 +567,10 @@ int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, char *p_dst, i
 				if (t_made + 4 > p_dst_count)
 					break;
 				
-				p_dst[t_made + 0] = 0xf0 | (t_codepoint >> 18);
-				p_dst[t_made + 1] = 0x80 | ((t_codepoint >> 12) & 0x3f);
-				p_dst[t_made + 2] = 0x80 | ((t_codepoint >> 6) & 0x3f);
-				p_dst[t_made + 3] = 0x80 | (t_codepoint & 0x3f);
+				p_dst[t_made + 0] = (char)(0xf0 | (t_codepoint >> 18));
+				p_dst[t_made + 1] = (char)(0x80 | ((t_codepoint >> 12) & 0x3f));
+				p_dst[t_made + 2] = (char)(0x80 | ((t_codepoint >> 6) & 0x3f));
+				p_dst[t_made + 3] = (char)(0x80 | (t_codepoint & 0x3f));
 			}
 			
 			t_made += 4;
@@ -1288,7 +1288,7 @@ bool MCArrayIsNumericSequence(MCArrayRef self, int32_t &r_start_index)
     ctxt . maximum = INDEX_MIN;
     
     if (MCArrayApply(self, get_array_extent, &ctxt) &&
-            (ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self))
+            uindex_t(ctxt . maximum - ctxt . minimum + 1) == MCArrayGetCount(self))
     {
         r_start_index = ctxt . minimum;
         return true;

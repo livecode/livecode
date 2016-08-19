@@ -447,9 +447,7 @@ void MCBitmapEffectFastGaussianBlur::Process(uint8_t *mask)
 				uint32_t *t_buffer_ptr;
 				t_buffer_ptr = t_buffer;
 
-				int32_t t_y = t_top + y;
-
-				for (int32_t k = 0; k < t_vcount; k++)//, t_y++)
+                for (int32_t k = 0; k < t_vcount; k++)
 				{
 					uint32_t t_weighted = t_kernel_ptr[k] * (t_buffer_ptr[x] >> 16);
 					if ((0xFFFFFFFF - t_alpha) > t_weighted)
@@ -717,7 +715,7 @@ void MCBitmapEffectBoxBlur::CalculateRows(uint32_t p_pass)
 			CalculateRows(p_pass - 1);
 
 			uint32_t *t_buff_top, *t_buff_bottom;
-			int32_t t_nextbufferrow = t_y + t_top - 1;
+            t_nextbufferrow = t_y + t_top - 1;
 			while (t_nextbufferrow < 0)
 				t_nextbufferrow += t_prev_pass->buffer_height;
 			t_buff_top = t_prev_pass->buffer + (t_prev_pass->stride * (t_nextbufferrow % t_prev_pass->buffer_height));

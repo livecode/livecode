@@ -335,8 +335,8 @@ extern void MCU_initialize_names();
 
 bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	int i;
-	MCstackbottom = (char *)&i;
+	int t_bottom;
+	MCstackbottom = (char *)&t_bottom;
 
     ////
 
@@ -627,28 +627,28 @@ int platform_main(int argc, char *argv[], char *envp[])
 	MCStringRef *t_new_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_new_argv);
 	
-	for (int i = 0; i < argc; i++)
+	for (int t_arg_num = 0; t_arg_num < argc; t_arg_num++)
 	{
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[i], strlen(argv[i]), kMCStringEncodingUTF8, false, t_new_argv[i]);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)argv[t_arg_num], strlen(argv[t_arg_num]), kMCStringEncodingUTF8, false, t_new_argv[t_arg_num]);
 	}
 	
 	MCStringRef *t_new_envp;
 	/* UNCHECKED */ MCMemoryNewArray(1, t_new_envp);
 	
-	int i = 0;
+	uindex_t t_env_num = 0;
 	uindex_t t_envp_count = 0;
 	
-	while (envp[i] != NULL)
+	while (envp[t_env_num] != NULL)
 	{
 		t_envp_count++;
-		uindex_t t_count = i;
-		/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_count);
-		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[i], strlen(envp[i]), kMCStringEncodingUTF8, false, t_new_envp[i]);
-		i++;
+		uindex_t t_count = t_env_num;
+		/* UNCHECKED */ MCMemoryResizeArray(t_env_num + 1, t_new_envp, t_count);
+		/* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)envp[t_env_num], strlen(envp[t_env_num]), kMCStringEncodingUTF8, false, t_new_envp[t_env_num]);
+		t_env_num++;
 	}
 	
-	/* UNCHECKED */ MCMemoryResizeArray(i + 1, t_new_envp, t_envp_count);
-	t_new_envp[i] = nil;
+	/* UNCHECKED */ MCMemoryResizeArray(t_env_num + 1, t_new_envp, t_envp_count);
+	t_new_envp[t_env_num] = nil;
 // END MAC SPECIFIC	
 
 	if (!X_init(argc, t_new_argv, t_new_envp))
@@ -659,15 +659,15 @@ int platform_main(int argc, char *argv[], char *envp[])
 	int t_exit_code;
 	t_exit_code = X_close();
 
-	for (int i = 0; i < argc; i++)
+	for (int t_arg_num = 0; t_arg_num < argc; t_arg_num++)
 	{
-		MCValueRelease(t_new_argv[i]);
+		MCValueRelease(t_new_argv[t_arg_num]);
 	}
 	MCMemoryDeleteArray(t_new_argv);
 
-	for (uindex_t i = 0; i < t_envp_count; i++)
+	for (t_env_num = 0; t_env_num < t_envp_count; t_env_num++)
 	{
-		MCValueRelease(t_new_envp[i]);
+		MCValueRelease(t_new_envp[t_env_num]);
 	}
 	MCMemoryDeleteArray(t_new_envp);
 

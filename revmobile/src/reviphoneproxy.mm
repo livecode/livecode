@@ -258,8 +258,8 @@ int main(int argc, char *argv[])
 		s_SimRuntime_class = NSClassFromString(@"SimRuntime");
 		
 		s_keep_running = YES;
-		while(s_keep_running && 
-			  [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]] ||
+        while((s_keep_running && 
+               [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode beforeDate: [NSDate distantFuture]]) ||
 			  [NSConnection currentConversation] != nil)
 			;
 		

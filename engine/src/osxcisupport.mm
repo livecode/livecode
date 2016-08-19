@@ -47,8 +47,6 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_sr
 #define OBJC_LEAVE \
 	[__t_pool release];
 
-static bool s_coreimage_present = false;
-
 typedef struct __coreimage_visualeffect_t coreimage_visualeffect_t;
 typedef coreimage_visualeffect_t *coreimage_visualeffect_ref_t;
 struct __coreimage_visualeffect_t
@@ -65,7 +63,6 @@ static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_na
 	CIFilter *t_filter = nil;
 	NSArray *t_parameters = nil;
 	NSDictionary *t_attributes = nil;
-	int t_index;
 	
 	/* UNCHECKED */ MCMemoryNew(t_effect);
 	
@@ -85,7 +82,7 @@ static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_na
 	{
 		t_info -> handle = (void *)t_effect;
 		t_info -> parameter_count = 0;
-		for(t_index = 0; t_index < [t_parameters count]; ++t_index)
+		for(NSUInteger t_index = 0; t_index < [t_parameters count]; ++t_index)
 		{
 			NSString *t_name;
 			NSString *t_class;
@@ -405,7 +402,6 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 	{
 		CIContext *t_context = nil;
 		rei_boolean_t t_result = true;
-		Rect t_rect;
 		
 		OBJC_ENTER(false)
 		

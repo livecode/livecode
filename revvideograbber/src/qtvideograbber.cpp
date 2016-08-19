@@ -345,7 +345,7 @@ CQTVideoGrabber::CQTVideoGrabber()
 	videowindow = NULL;
 	parentwindow = NULL;
 	destvideobuffer = NULL;
-	QTNewGWorld(&destvideobuffer, k32BGRAPixelFormat, &destvideorect, NULL, NULL, NULL);
+	QTNewGWorld(&destvideobuffer, k32BGRAPixelFormat, &destvideorect, NULL, NULL, 0);
 	buffervideo = True;
 	Init();
 }
@@ -702,7 +702,7 @@ void CQTVideoGrabber::SetRect(short left, short top, short right, short bottom)
 	::MacSetRect(&videochannelrect,0,0,right-left,bottom-top);
 	if (!videowindow){
 		DisposeGWorld(destvideobuffer);
-		QTNewGWorld(&destvideobuffer, k32BGRAPixelFormat, &destvideorect, NULL, NULL, NULL);
+		QTNewGWorld(&destvideobuffer, k32BGRAPixelFormat, &destvideorect, NULL, NULL, 0);
 		SGSetGWorld(videograbber, destvideobuffer, NULL);
 	}
 	else

@@ -335,7 +335,7 @@ char * getDiagnosticRecord(SQLHSTMT p_statement)
 bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p_argument_count, SQLHSTMT &p_statement, SQLRETURN &p_result)
 {
 	if (!isConnected)
-		return NULL;
+		return false;
 	
 	unsigned int t_query_length;
 	t_query_length = strlen(p_query);
@@ -345,8 +345,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 	
 	SQLHSTMT t_statement;
 	SQLAllocStmt(hdbc,&t_statement);
-	
-	DBCursor_ODBC *t_cursor = NULL;
 	
 	SQLRETURN t_result;
 	if (t_success)
@@ -369,8 +367,6 @@ bool DBConnection_ODBC::ExecuteQuery(char *p_query, DBString *p_arguments, int p
 
 	char *t_parsed_query;
 	t_parsed_query = p_query;
-
-	int *t_param_sizes = NULL;
 
 	// The placeholder map contains a mapping from bind to argument.
 	PlaceholderMap t_placeholder_map;
@@ -590,7 +586,7 @@ void DBConnection_ODBC::transRollback()
 	SQLEndTran(SQL_HANDLE_DBC, hdbc, SQL_ROLLBACK);
 }
 
-void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
+void DBConnection_ODBC::getTables(char *buffer, size_t *bufsize)
 {
 	int rowseplen = 1;
 	char rowsep[] = "\n";
@@ -618,7 +614,7 @@ void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
 				{
 					while (True)
 					{
-						unsigned int colsize;
+						size_t colsize;
 						char *coldata = newcursor -> getFieldDataBinary(3, colsize);
 						if (newcursor -> getFieldType(3) == FT_WSTRING)
 						{
@@ -628,7 +624,7 @@ void DBConnection_ODBC::getTables(char *buffer, int *bufsize)
 						else
 							coldata = strdup(coldata);
 
-						if (buffer != NULL && ((resultptr - result) + (int)colsize + rowseplen ) > *bufsize)
+						if (buffer != NULL && ((resultptr - result) + colsize + rowseplen ) > *bufsize)
 						{
 							free(coldata);
 							break;

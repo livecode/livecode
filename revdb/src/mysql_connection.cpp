@@ -58,7 +58,7 @@ Bool DBConnection_MYSQL::connect(char **args, int numargs)
 	if (t_delimiter != NULL)
 	{
 		t_port_string = (t_delimiter + (1 * sizeof(char)));
-		*t_delimiter = NULL;
+		*t_delimiter = '\0';
 	}
 
 	int t_port;
@@ -310,7 +310,7 @@ bool DBConnection_MYSQL::ExecuteQuery(char *p_query, DBString *p_arguments, int 
 	int t_error_code;
 	if (t_success)
 	{
-		if (t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length))
+		if ((t_error_code = mysql_real_query(getMySQL(), t_parsed_query, t_query_length)))
 			t_success = false;
 	}
 
@@ -377,7 +377,7 @@ bool DBConnection_MYSQL::BindVariables(MYSQL_STMT *p_statement, DBString *p_argu
 	return t_result;
 }
 
-void DBConnection_MYSQL::getTables(char *buffer, int *bufsize)
+void DBConnection_MYSQL::getTables(char *buffer, size_t *bufsize)
 {
 	int rowseplen = 1;
 	char rowsep[] = "\n";
@@ -392,7 +392,7 @@ void DBConnection_MYSQL::getTables(char *buffer, int *bufsize)
 		char *resultptr = result;
 		if (!newcursor->getEOF()){
 			while (True){
-				unsigned int colsize;
+				size_t colsize;
 				char *coldata = newcursor->getFieldDataBinary(1,colsize);
 				colsize = strlen(coldata);
 				if (((resultptr-result) + colsize + rowseplen + 16 ) 

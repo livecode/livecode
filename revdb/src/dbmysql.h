@@ -63,7 +63,7 @@ public:
 	void transRollback();
 	char *getErrorMessage(Bool p_last);
 	Bool IsError();
-	void getTables(char *buffer, int *bufsize);
+	void getTables(char *buffer, size_t *bufsize);
 	int getConnectionType(void) { return -1; }
 	int getVersion(void) { return 2; }
 protected:

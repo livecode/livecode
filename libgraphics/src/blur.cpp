@@ -176,7 +176,7 @@ static int boxBlur(const uint8_t* src, int src_y_stride, uint8_t* dst,
             RIGHT_BORDER_ITER
         }
 #undef RIGHT_BORDER_ITER
-        for (int x = 0; x < leftRadius - rightRadius; x++) {
+        for (int t_x = 0; t_x < leftRadius - rightRadius; t_x++) {
             *dptr = 0;
             dptr += dst_x_stride;
         }
@@ -246,7 +246,7 @@ static int boxBlurInterp(const uint8_t* src, int src_y_stride, uint8_t* dst,
             LEFT_BORDER_ITER
         }
 #undef LEFT_BORDER_ITER
-        for (int x = width; x < diameter; ++x) {
+        for (int t_x = width; t_x < diameter; ++t_x) {
             *dptr = (outer_sum * outer_scale + inner_sum * inner_scale) >> 24;
             dptr += dst_x_stride;
         }

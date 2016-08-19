@@ -1403,7 +1403,7 @@ T* MCObjectCast(MCObject* p_object)
 {
     // Check that the object's type matches the (static) type of the desired
     // type. This will break horribly if the desired type has derived types...
-    MCAssert(p_object->gettype() == T::kObjectType);
+    MCAssert(p_object->gettype() == (Chunk_term) T::kObjectType);
     return static_cast<T*> (p_object);
 }
 

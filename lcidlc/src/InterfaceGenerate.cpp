@@ -152,6 +152,8 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
             return kNativeTypeJavaUTF8Data;
         case kNativeTypeUTF16CData:
             return kNativeTypeJavaUTF16Data;
+        default:
+            break;
 		}
 	}
 	
@@ -1186,8 +1188,9 @@ static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mappin
     case kNativeTypeJavaUTF8Data:
     case kNativeTypeJavaUTF16Data:
         return new JavaDataTypeMapper(t_type);
+    default:
+        return nil;
 	}
-	return nil;
 }
 
 static void map_parameter(InterfaceRef self, HandlerMapping p_mapping, HandlerParameter *p_parameter, uint32_t k, MappedParameter& r_param)

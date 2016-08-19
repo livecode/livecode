@@ -81,14 +81,6 @@ static MCPlatformMenuRef s_menubar = nil;
 // The delegate for the app menu.
 static com_runrev_livecode_MCAppMenuDelegate *s_app_menu_delegate = nil;
 
-// The services menu that gets populated by Cocoa.
-static NSMenu *s_services_menu = nil;
-
-// The depth of 'keyEquivalent' calls we are in. If non-zero it means the item
-// selection has occured as a result of a key-press and so must be dispatched as
-// such.
-static uint32_t s_key_equivalent_depth = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCShadowedItemTags
@@ -156,7 +148,7 @@ enum MCShadowedItemTags
 	
 	// If we are the last item, then remove the separator before
 	// us - if any.
-	if (t_index == t_item_count - 1 &&
+	if ((NSUInteger)t_index == t_item_count - 1 &&
 		[[menu itemAtIndex: t_index - 1] isSeparatorItem])
 	{
 		[[menu itemAtIndex: t_index - 1] setHidden: YES];
@@ -850,6 +842,8 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			}
 		}
 		break;
+        default:
+            break;
 	}
 }
 

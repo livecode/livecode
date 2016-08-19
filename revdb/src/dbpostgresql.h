@@ -127,7 +127,7 @@ public:
 	void disconnect();
 	Bool sqlExecute(char *query, DBString *args, int numargs, unsigned int &affectedrows);
 	DBCursor *sqlQuery(char *query, DBString *args, int numargs, int p_rows);
-	void getTables(char *buffer, int *bufsize);
+	void getTables(char *buffer, size_t *bufsize);
 	const char *getconnectionstring();
 	void transBegin();
 	void transCommit();

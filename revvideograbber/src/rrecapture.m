@@ -1309,7 +1309,7 @@ void rreCaptureResumeRecording(void)
 int32_t rreCaptureGetRecordFrameRate(void)
 {
 	if (!CaptureSessionExists())
-		return nil;
+		return 0;
 	
 	return [g_session maxFrameRate];
 }

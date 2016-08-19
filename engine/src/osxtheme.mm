@@ -152,9 +152,10 @@ Boolean MCNativeTheme::iswidgetsupported(Widget_Type w)
 	case WTHEME_TYPE_TAB:
 		return True;
 		break;
-
+    default:
+        return True;
+        break;
 	}
-	return True;
 }
 
 int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
@@ -182,8 +183,10 @@ int4 MCNativeTheme::getmetric(Widget_Metric wmetric)
     case WTHEME_METRIC_TABBUTTON_HEIGHT:
         return 21;
         break;
+    default:
+        return 0;
+        break;
 	}
-	return 0;
 }
 
 int4 MCNativeTheme::getwidgetmetric(const MCWidgetInfo &winfo, Widget_Metric wmetric)
@@ -243,11 +246,9 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 		{
 			if (wmetric == WTHEME_METRIC_PARTSIZE)
 			{
-				MCRectangle twidgetrect;
 				MCRectangle combobuttonrect = srect;
 				combobuttonrect.x += srect.width - 22 - 2;
 				combobuttonrect.width = 18;
-				uint1 comboframesize = 2;
 				if (winfo.part == WTHEME_PART_COMBOTEXT)
 				{
 					HIThemeButtonDrawInfo bNewInfo;
@@ -275,6 +276,8 @@ void MCNativeTheme::getwidgetrect(const MCWidgetInfo &winfo, Widget_Metric wmetr
 			else
 				drect = srect;
 		}
+    default:
+        break;
 	}
 	MCTheme::getwidgetrect(winfo,wmetric,srect,drect);
 }
@@ -386,6 +389,8 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCR
 			dc -> drawtheme(THEME_DRAW_TYPE_GROUP, &t_info);
 		}
 		break;
+    default:
+        break;
 	}
 	
 	return True;
@@ -411,7 +416,7 @@ Widget_Part MCNativeTheme::hittest(const MCWidgetInfo &winfo, int2 mx,int2 my, c
 static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect, HIRect &macR)
 {
 	MCRectangle trect = drect;
-	ThemeButtonKind themebuttonkind;
+	ThemeButtonKind themebuttonkind = kThemePushButton;
 	switch (widgetinfo.type)
 	{
 	case WTHEME_TYPE_CHECKBOX:
@@ -436,6 +441,8 @@ static void getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo, HIThemeBu
 	case WTHEME_TYPE_PULLDOWN:
 		themebuttonkind = kThemeBevelButton;
 		break;
+    default:
+        break;
 	}
 	//set state stuff
 
@@ -1069,6 +1076,8 @@ void MCMacDrawTheme(MCThemeDrawType p_type, MCThemeDrawInfo& p_info, CGContextRe
 			HIThemeDrawFocusRect(&t_bounds, p_info . focus_rect . focused, t_context, kHIThemeOrientationNormal);
 		}
 			break;
+        default:
+            break;
 	}
 }
 

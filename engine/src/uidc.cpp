@@ -1089,7 +1089,7 @@ void MCUIDC::doaddmessage(MCObject *optr, MCNameRef mptr, real8 time, uint4 id, 
 }
 
 // MW-2014-04-16: [[ Bug 11690 ]] Shift a message to a new time in the future.
-int MCUIDC::doshiftmessage(int index, real8 newtime)
+uindex_t MCUIDC::doshiftmessage(uindex_t index, real8 newtime)
 {
     assert(index < nmessages);
     
@@ -1168,21 +1168,21 @@ void MCUIDC::cancelsubtimer(MCObject *optr, MCNameRef mptr, MCValueRef suboptr)
     cancelmessageobject(optr, mptr, suboptr);
 }
 
-void MCUIDC::cancelmessageindex(uint2 i, Boolean dodelete)
+void MCUIDC::cancelmessageindex(uindex_t p_index, Boolean dodelete)
 {
 	if (dodelete)
 	{
-		while (messages[i].params != NULL)
+		while (messages[p_index].params != NULL)
 		{
-			MCParameter *tmp = messages[i].params;
-			messages[i].params = messages[i].params->getnext();
+			MCParameter *tmp = messages[p_index].params;
+			messages[p_index].params = messages[p_index].params->getnext();
 			delete tmp;
 		}
-		MCNameDelete(messages[i] . message);
+		MCNameDelete(messages[p_index] . message);
 	}
     
     // MW-2014-05-14: [[ Bug 12294 ]] Use a memmove here (more efficient as the MCMessageList struct can be moved).
-    MCMemoryMove(&messages[i], &messages[i + 1], (nmessages - (i + 1)) * sizeof(MCMessageList));
+    MCMemoryMove(&messages[p_index], &messages[p_index + 1], (nmessages - (p_index + 1)) * sizeof(MCMessageList));
     
 	nmessages--;
 }
@@ -1483,7 +1483,7 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 		MCRectangle newrect = rect;
 		real8 dt = 0.0;
 		if (curtime >= mptr->starttime + mptr->duration
-		        || rect.x == mptr->donex && rect.y == mptr->doney)
+		        || (rect.x == mptr->donex && rect.y == mptr->doney))
 		{
 			newrect.x = mptr->donex;
 			newrect.y = mptr->doney;
@@ -1531,10 +1531,12 @@ void MCUIDC::handlemoves(real8 &curtime, real8 &eventtime)
 				moving = mptr->prev();
 				mptr->remove(moving);
 				if (!mptr->waiting)
+                {
 					if (MClockmessages)
 						delaymessage(mptr->object, MCM_move_stopped);
 					else
 						mptr->object->message(MCM_move_stopped);
+                }
 				delete mptr;
 				if (moving == NULL)
 					mptr = NULL;
@@ -1911,7 +1913,7 @@ void MCUIDC::hidecursoruntilmousemoves(void)
 
 bool MCUIDC::platform_get_display_handle(void *&r_display)
 {
-	return nil;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

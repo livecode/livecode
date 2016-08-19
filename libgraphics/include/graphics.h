@@ -397,8 +397,6 @@ enum MCGImageFilter
 	kMCGImageFilterLow,
 	kMCGImageFilterMedium,
     kMCGImageFilterHigh,
-    
-    kMCGImageFilterCount
 };
 
 enum MCGGradientFunction

@@ -426,7 +426,7 @@ bool queryCallback(void *p_context, int p_placeholder, DBBuffer& p_output)
 			
 			*t_buffer++ = 'X';
 			*t_buffer++ = '\'';
-			for(size_t i = 0; i < t_parameter_value . length; i++)
+			for(int i = 0; i < t_parameter_value . length; i++)
 			{
 				char t_high_nibble, t_low_nibble;
 				t_high_nibble = num2nibble(((unsigned)t_parameter_value . sptr[i] & 0xff) >> 4);
@@ -522,7 +522,7 @@ char *DBConnection_SQLITE::BindVariables(char *p_query, int p_query_length, DBSt
 	return t_parsed_query;
 }
 
-void DBConnection_SQLITE::getTables(char *buffer, int *bufsize)
+void DBConnection_SQLITE::getTables(char *buffer, size_t *bufsize)
 {
 	int rowseplen = 1;
 	char rowsep[] = "\n";

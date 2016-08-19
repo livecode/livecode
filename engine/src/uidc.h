@@ -595,12 +595,12 @@ public:
     //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
-	void cancelmessageindex(uint2 i, Boolean dodelete);
+	void cancelmessageindex(uindex_t p_index, Boolean dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name, MCValueRef param = nil);
     bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
     void doaddmessage(MCObject *optr, MCNameRef name, real8 time, uint4 id, MCParameter *params = nil);
-    int doshiftmessage(int index, real8 newtime);
+    uindex_t doshiftmessage(uindex_t index, real8 newtime);
     
     void addsubtimer(MCObject *target, MCValueRef subtarget, MCNameRef name, uint4 delay);
     void cancelsubtimer(MCObject *target, MCNameRef name, MCValueRef subtarget);

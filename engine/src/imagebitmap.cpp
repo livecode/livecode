@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 static bool check_point(MCImageBitmap *p_bitmap, int32_t x, int32_t y)
 {
-	return (x >= 0) && (x < p_bitmap->width) && (y >= 0) && (y < p_bitmap->height);
+	return (x >= 0) && (x < int64_t(p_bitmap->width)) && (y >= 0) && (y < int64_t(p_bitmap->height));
 }
 
 static bool check_bounds(MCImageBitmap *p_bitmap, int32_t x, int32_t y, uint32_t width, uint32_t height)
@@ -111,7 +111,6 @@ bool MCImageCopyBitmapRegion(MCImageBitmap *p_bitmap, MCRectangle &p_region, MCI
 	if (!MCImageBitmapCreate(p_region.width, p_region.height, r_copy))
 		return false;
 
-	MCPoint t_dst_offset = {0, 0};
 	MCImageBitmapCopyRegionToBitmap(p_bitmap, r_copy, p_region.x, p_region.y, 0, 0, p_region.width, p_region.height);
 
 	if (p_bitmap->has_transparency)
@@ -362,11 +361,11 @@ void MCImageBitmapPremultiplyRegion(MCImageBitmap *p_bitmap, int32_t p_sx, int32
 
 	uint8_t *t_src_ptr = (uint8_t*)p_bitmap->data + t_src_x * 4 + t_src_y * p_bitmap -> stride;
 	uint8_t *t_dst_ptr = (uint8_t*)p_pixel_ptr + t_dst_x * 4 + t_dst_y * p_pixel_stride;
-	for (uindex_t y = 0; y < t_height; y++)
+	for (index_t y = 0; y < t_height; y++)
 	{
 		uint32_t *t_src_row = (uint32_t*)t_src_ptr;
 		uint32_t *t_dst_row = (uint32_t *)t_dst_ptr;
-		for (uindex_t x = 0; x < t_width; x++)
+		for (index_t x = 0; x < t_width; x++)
 		{
 			uint32_t t_pixel = *t_src_row++;
 			uint8_t t_alpha = t_pixel >> 24;
@@ -472,7 +471,6 @@ void MCImageBitmapFixPremultiplied(MCImageBitmap *p_bitmap)
 				t_pixel = 0;
 			else if (t_alpha != 255)
 			{
-				uint4 t_brokenbits = 0;
 				if ((t_pixel & 0xFF) > t_alpha)
 					t_pixel = (t_pixel & ~0xFF) | t_alpha;
 				if (((t_pixel >> 8) & 0xFF) > t_alpha)
@@ -773,7 +771,6 @@ bool MCImageForceBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_dither, MCImage
 {
 	bool t_success = true;
 
-	MCImageIndexedBitmap *t_indexed = nil;
 	if (MCImageConvertBitmapToIndexed(p_bitmap, false, r_indexed))
 		return true;
 

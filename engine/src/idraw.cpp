@@ -285,8 +285,10 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
 	t_old_opacity = dc -> getopacity();
 	dc -> setopacity(blendlevel * 255 / 100);
 
-    int2 dx, dy;
-    uint2 dw, dh;
+    int2 dx = 0;
+    int2 dy = 0;
+    uint2 dw = 0;
+    uint2 dh = 0;
     
     switch(p_gravity)
     {
@@ -316,6 +318,8 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
         case kMCGravityResizeAspectFill:
             dx = r . x;
             dw = r . width;
+            break;
+        case kMCGravityNone:
             break;
     }
     
@@ -347,6 +351,8 @@ void MCImage::drawwithgravity(MCDC *dc, MCRectangle r, MCGravity p_gravity)
         case kMCGravityResizeAspectFill:
             dy = r . y;
             dh = r . height;
+            break;
+        case kMCGravityNone:
             break;
     }
     

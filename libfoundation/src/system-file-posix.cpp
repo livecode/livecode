@@ -364,9 +364,9 @@ __MCSFileSetContents (MCStringRef p_native_path,
 
 	if (0 != rename (*t_temp_path_sys, *t_path_sys))
 	{
-		int t_save_errno = errno;
-
-		/* UNCHECKED */ unlink (*t_temp_path_sys);
+		t_save_errno = errno;
+        
+        /* UNCHECKED */ unlink (*t_temp_path_sys);
 
 		/* Report rename error */
 		MCAutoStringRef t_description, t_path, t_temp_path;

@@ -304,7 +304,7 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 				t_rsa_func = RSA_private_decrypt;
 			else
 				t_rsa_func = RSA_public_decrypt;
-			if (p_message_in_length != t_rsa_size)
+			if (int32_t(p_message_in_length) != t_rsa_size)
 			{
 				t_success = false;
 				MCCStringClone("error: invalid message size", r_result);
@@ -446,8 +446,6 @@ char *SSL_encode(Boolean isdecrypt, const char *ciphername,
 	}
 
 	static const char magic[]="Salted__";
-
-	int4 res = 0;
 
 	//set up cipher context
 	EVP_CIPHER_CTX ctx;

@@ -330,8 +330,8 @@ bool MCSocketsAddToFileDescriptorSets(int4 &r_maxfd, fd_set &r_rmaskfd, fd_set &
         if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
             MCsockets[i]->resolve_state == kMCSocketStateError)
             continue;
-        if (MCsockets[i]->connected && !MCsockets[i]->closing
-            && !MCsockets[i]->shared || MCsockets[i]->accepting)
+        if ((MCsockets[i]->connected && !MCsockets[i]->closing
+             && !MCsockets[i]->shared) || MCsockets[i]->accepting)
             FD_SET(fd, &r_rmaskfd);
         if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
             FD_SET(fd, &r_wmaskfd);
@@ -1506,7 +1506,7 @@ void MCSocket::readsome()
 		if ((l = recvfrom(fd, dbuffer, l, 0,
 						  (struct sockaddr *)&addr, &addrsize)) < 0)
 		{
-			delete dbuffer;
+			delete[] dbuffer;
 			if (!doread && errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
 			{
 				error = new char[21 + I4L];
@@ -1518,7 +1518,7 @@ void MCSocket::readsome()
 		else
 		{
 			if (message == NULL)
-				delete dbuffer;
+				delete[] dbuffer;
 			else
 			{
 				char *t = inet_ntoa(addr.sin_addr);
@@ -1938,7 +1938,6 @@ int4 MCSocket::write(const char *buffer, uint4 towrite, Boolean securewrite)
 // MM-2014-02-12: [[ SecureSocket ]] Updated to pass in if this read is encrypted, rather than checking against socket.
 int4 MCSocket::read(char *buffer, uint4 toread, Boolean secureread)
 {
-	int4 rc = 0;
 	if (secureread)
 	{
 		sslstate &= ~SSTATE_RETRYREAD;

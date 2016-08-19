@@ -326,7 +326,7 @@ bool MCPNGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 
 	if (t_success)
 	{
-		for (uindex_t t_pass = 0; t_pass < t_interlace_passes; t_pass++)
+		for (int t_pass = 0; t_pass < t_interlace_passes; t_pass++)
 		{
 			png_bytep t_data_ptr = (png_bytep)t_frame->image->data;
 			for (uindex_t i = 0; i < t_height; i++)

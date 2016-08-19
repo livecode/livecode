@@ -402,8 +402,6 @@ bool MCUnicodeGetProperty(const unichar_t *p_chars, uindex_t p_char_count, MCUni
             {
                 int32_t t_prop;
                 t_prop = MCUnicodeGetIntegerProperty(t_char, p_property);
-                if (t_prop < 0 || t_prop > UINT32_MAX)
-                    return false;
                 ((uint32_t*)x_result_array)[t_offset] = uint32_t(t_prop);
                 if (t_advance == 2)
                     ((uint32_t*)x_result_array)[t_offset + 1] = uint32_t(t_prop);
@@ -1295,7 +1293,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
         
         while (t_filter->HasData())
         {
-            unichar_t t_char;
+            codepoint_t t_char;
             t_char = t_filter->GetNextCodepoint();
             t_filter->AdvanceCursor();
             
@@ -1320,7 +1318,7 @@ hash_t MCUnicodeHash(const unichar_t *p_string, uindex_t p_string_length, MCUnic
         
         while (t_filter->HasData())
         {
-            unichar_t t_char;
+            codepoint_t t_char;
             t_char = t_filter->GetNextCodepoint();
             t_filter->AdvanceCursor();
             

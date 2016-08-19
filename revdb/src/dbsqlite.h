@@ -80,7 +80,7 @@ class DBConnection_SQLITE : public CDBConnection
 
 		void disconnect();
 
-		void getTables(char *buffer, int *bufsize);
+		void getTables(char *buffer, size_t *bufsize);
 
 		Bool sqlExecute(char *query, DBString *args, int numargs, unsigned int &affectedrows);
 

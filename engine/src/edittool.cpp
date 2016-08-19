@@ -38,14 +38,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 #include "edittool.h"
 
-
 MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic,
                                        MCGradientFill *p_gradient,
                                        MCEditMode p_mode) :
     mode(p_mode),
     graphic(p_graphic),
     gradient(p_gradient),
-    m_gradient_edit_point(-1),
+    m_gradient_edit_point(kInvalidEditPoint),
     xoffset(0),
     yoffset(0)
 
@@ -70,7 +69,7 @@ uint4 MCGradientEditTool::handle_under_point(int2 x, int2 y)
 		if (MCU_point_in_rect(rects[i], x, y))
 			return i;
 
-	return -1;
+	return kInvalidEditPoint;
 }
 
 
@@ -112,7 +111,7 @@ bool MCGradientEditTool::mdown(int2 x, int2 y, uint2 which)
 
 bool MCGradientEditTool::mfocus(int2 x, int2 y)
 {
-	if (m_gradient_edit_point == -1)
+	if (m_gradient_edit_point == MAXUINT4)
 	{
 		if (gradient != NULL)
 		{
@@ -203,9 +202,9 @@ bool MCGradientEditTool::mup(int2 x, int2 y, uint2 which)
 	// MM-2012-11-06: [[ Property Listener ]]
 	graphic -> signallistenerswithmessage(kMCPropertyChangedMessageTypeGradientEditEnded);
 	
-	if (m_gradient_edit_point != -1)
+	if (m_gradient_edit_point != kInvalidEditPoint)
 	{
-		m_gradient_edit_point = -1;
+		m_gradient_edit_point = kInvalidEditPoint;
 		return true;
 	}
 	else
@@ -305,7 +304,7 @@ MCRectangle MCGradientEditTool::minrect()
 
 MCPolygonEditTool::MCPolygonEditTool(MCGraphic *p_graphic) :
     graphic(p_graphic),
-    m_polygon_edit_point(-1),
+    m_polygon_edit_point(kInvalidEditPoint),
     m_path_start_point(0),
     xoffset(0),
     yoffset(0)
@@ -332,7 +331,7 @@ uint4 MCPolygonEditTool::handle_under_point(int2 x, int2 y)
 		if (MCU_point_in_rect(t_rects[i], x, y))
 			return i;
 
-	return -1;
+	return kInvalidEditPoint;
 }
 
 bool MCPolygonEditTool::mdown(int2 x, int2 y, uint2 which)
@@ -346,7 +345,7 @@ bool MCPolygonEditTool::mdown(int2 x, int2 y, uint2 which)
 
 	point_rects(t_rects . Ptr());
 
-	m_path_start_point = -1;
+	m_path_start_point = kInvalidEditPoint;
 
 	uint4 i = 0;
 
@@ -373,12 +372,12 @@ bool MCPolygonEditTool::mdown(int2 x, int2 y, uint2 which)
 			break;
 		}
 	}
-	return (m_polygon_edit_point != -1);
+	return (m_polygon_edit_point != kInvalidEditPoint);
 }
 
 bool MCPolygonEditTool::mfocus(int2 x, int2 y)
 {
-	if (m_polygon_edit_point == -1)
+	if (m_polygon_edit_point == kInvalidEditPoint)
 	{
 		bool t_focus = false;
 		int t_npts;
@@ -403,7 +402,7 @@ bool MCPolygonEditTool::mfocus(int2 x, int2 y)
 		return t_focus;
 	}
 
-	bool closed = (m_path_start_point != -1);
+	bool closed = (m_path_start_point != kInvalidEditPoint);
 	graphic->setpoint(m_polygon_edit_point, x - xoffset, y - yoffset, !closed);
 	if (closed)
 		graphic->setpoint(m_path_start_point, x - xoffset, y - yoffset, true);
@@ -413,9 +412,9 @@ bool MCPolygonEditTool::mfocus(int2 x, int2 y)
 
 bool MCPolygonEditTool::mup(int2 x, int2 y, uint2 which)
 {
-	if (m_polygon_edit_point != -1)
+	if (m_polygon_edit_point != kInvalidEditPoint)
 	{
-		m_polygon_edit_point = -1;
+		m_polygon_edit_point = kInvalidEditPoint;
 		return true;
 	}
 	else

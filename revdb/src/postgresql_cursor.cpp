@@ -183,7 +183,7 @@ Output: False on error*/
 Bool DBCursor_POSTGRESQL::getFieldsInformation()
 {
 	fields = new DBField *[fieldCount];
-	for (unsigned int i=0; i< fieldCount; i++) 
+	for (int i=0; i< fieldCount; i++)
 	{
 		DBField *tfield = new DBField();
 		fields[i] = tfield;
@@ -345,7 +345,7 @@ Bool DBCursor_POSTGRESQL::getFieldsInformation()
 Output: False on error*/
 Bool DBCursor_POSTGRESQL::getRowData()
 {
-	for (unsigned int i=0; i<fieldCount; i++)
+	for (int i=0; i<fieldCount; i++)
 	{
 		fields[i] -> dataSize = PQgetlength(POSTGRESQL_res, recordNum, i); 
 		fields[i] -> isNull = PQgetisnull(POSTGRESQL_res, recordNum, i);

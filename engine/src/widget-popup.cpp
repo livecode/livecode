@@ -245,7 +245,6 @@ private:
 	
 	void getwidgetgeometry(uint32_t &r_width, uint32_t &r_height)
 	{
-		MCPoint t_size;
 		if (!getwidgetpreferredsize(r_width, r_height))
 		{
 			MCRectangle t_rect;

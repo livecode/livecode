@@ -550,7 +550,7 @@ void revZipExtractItemToVariable(char *p_arguments[], int p_argument_count, char
 	char *t_data = NULL;
 	if (t_result == NULL)
 	{
-		t_data = (char *)malloc(t_stat . size);
+		t_data = (char *)malloc((size_t)t_stat . size);
 		if (t_data == NULL)
 		{
 			t_result = strdup("ziperr,out of memory");
@@ -1266,7 +1266,6 @@ void revZipEnumerateItems(char *p_arguments[], int p_argument_count, char **r_re
 	
 		for( int i = 0; i < t_num_files; ++i )
 		{
-			const char* t_line = NULL;
 			struct zip_stat t_stat;
 
 			// SN-2015-03-11: [[ Bug 14413 ]] We want to get the bitflags

@@ -30,7 +30,7 @@ int MakeIntegerLiteral(const char *token, long *r_literal);
 void MakeDoubleLiteral(const char *token, long *r_literal);
 void MakeStringLiteral(const char *token, long *r_literal);
 void MakeNameLiteral(const char *token, NameRef *r_literal);
-void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal);
+void MakeNameLiteralN(const char *p_token, unsigned long p_token_length, NameRef *r_literal);
 int IsNameEqualToName(NameRef p_left, NameRef p_right);
     
 void GetStringOfNameLiteral(NameRef literal, const char** r_string);

@@ -119,7 +119,6 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
 {
     // TODO
     uint2 decorations;
-    uint4 flags;
     decorations = WD_CLEAR;
     
     if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))
@@ -306,13 +305,13 @@ static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceStackFullscreenModeElementInfo[] =
 {
-	{"", kMCStackFullscreenResize},
-	{"exactfit", kMCStackFullscreenExactFit},
-	{"letterbox", kMCStackFullscreenLetterbox},
-	{"noborder", kMCStackFullscreenNoBorder},
-	{"noscale", kMCStackFullscreenNoScale},
+	{"", kMCStackFullscreenResize, false},
+	{"exactfit", kMCStackFullscreenExactFit, false},
+	{"letterbox", kMCStackFullscreenLetterbox, false},
+	{"noborder", kMCStackFullscreenNoBorder, false},
+	{"noscale", kMCStackFullscreenNoScale, false},
     // AL-2014-05-27: [[ Bug 12509 ]] showAll not added to refactored fullscreen modes
-    {"showAll", kMCStackFullscreenShowAll},
+    {"showAll", kMCStackFullscreenShowAll, false},
 	{"", kMCStackFullscreenModeNone, true},
 };
 
@@ -1188,9 +1187,9 @@ void MCStack::SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks)
 			bool t_was_mainstack;
 			if (tsub == nil)
 			{
-				MCNewAutoNameRef t_name;
-				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_name);
-				MCStack *toclone = MCdispatcher -> findstackname(*t_name);
+				MCNewAutoNameRef t_stack_name;
+				/* UNCHECKED */ MCNameCreate(*t_name_string, &t_stack_name);
+				MCStack *toclone = MCdispatcher -> findstackname(*t_stack_name);
 				t_was_mainstack = MCdispatcher -> ismainstack(toclone) == True;	
 
 				if (toclone != nil)

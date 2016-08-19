@@ -20,6 +20,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "typedefs.h"
 #include "graphic.h"
 
+static const uint4 kInvalidEditPoint = MAXUINT4;
+
 enum MCEditMode
 {
 	kMCEditModeNone,

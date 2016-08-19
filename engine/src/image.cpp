@@ -415,6 +415,9 @@ Boolean MCImage::mdown(uint2 which)
 
 							return True;
 						}
+                        break;
+                    default:
+                        break;
 					}
 
 					if (isediting() &&
@@ -744,7 +747,7 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 		t_height = MCGImageGetHeight(t_frame.image);
 
 		uint32_t t_pixel = 0;
-		if (t_x >= 0 && t_y >= 0 && t_x < t_width && t_y < t_height)
+		if (t_x >= 0 && t_y >= 0 && t_x < int64_t(t_width) && t_y < int64_t(t_height))
 			MCGImageGetPixel(t_frame.image, t_x, t_y, t_pixel);
 
 		m_rep->UnlockImageFrame(currentframe, t_frame);

@@ -62,7 +62,7 @@ public:
 	Bool last();
 	Bool next();
 	Bool prev();
-	virtual char *getFieldDataBinary(unsigned int fieldnum,unsigned int &fdlength);
+	virtual char *getFieldDataBinary(unsigned int fieldnum, size_t &fdlength);
 	virtual char *getErrorMessage();
 	cursor_type_t m_type;
 	Bool move(int p_record_index);
@@ -84,7 +84,7 @@ public:
 	void disconnect();
 	Bool sqlExecute(char *query, DBString *args, int numargs, unsigned int &affectedrows);
 	DBCursor *sqlQuery(char *query, DBString *args, int numargs, int p_rows);
-	void getTables(char *buffer, int *bufsize);
+	void getTables(char *buffer, size_t *bufsize);
 	HDBC getHDBC() {return hdbc;}
 	HENV getHENV() {return henv;}
 	void transBegin();

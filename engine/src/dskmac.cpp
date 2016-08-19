@@ -265,8 +265,6 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 		if (aeclass == kAEMiscStandards
             && (aeid == kAEDoScript || aeid == 'eval'))
 		{
-			DescType rType;
-			Size rSize;  //actual size returned
 			if ((err = AEGetParamPtr(aePtr, keyDirectObject, typeUTF8Text, &rType, NULL, 0, &rSize)) == noErr)
 			{
 				byte_t *sptr = new byte_t[rSize + 1];
@@ -303,7 +301,7 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 			err = errAEEventNotHandled;
 	// do nothing if the AE is not handled,
 	// let the standard AE dispacher to dispatch this AE
-	delete p3val;
+	delete[] p3val;
 	return err;
 }
 
@@ -515,7 +513,7 @@ typedef struct
 {
 	MCNameRef *token;
 	unsigned long macfolder;
-	OSType domain;
+	int32_t domain;
 	unsigned long mactag;
 }
 sysfolders;
@@ -525,21 +523,21 @@ sysfolders;
 // http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
 
 static sysfolders sysfolderlist[] = {
-    {&MCN_desktop, 'desk', OSType(kOnAppropriateDisk), 'desk'},
-    {&MCN_fonts,'font', OSType(kOnAppropriateDisk), 'font'},
-    {&MCN_preferences,'pref', OSType(kUserDomain), 'pref'},
-    {&MCN_temporary,'temp', OSType(kUserDomain), 'temp'},
-    {&MCN_system, 'macs', OSType(kOnAppropriateDisk), 'macs'},
+    {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
+    {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
+    {&MCN_preferences,'pref', kUserDomain, 'pref'},
+    {&MCN_temporary,'temp', kUserDomain, 'temp'},
+    {&MCN_system, 'macs', kOnAppropriateDisk, 'macs'},
     // TS-2007-08-20: Added to allow a common notion of "home" between all platforms
-    {&MCN_home, 'cusr', OSType(kUserDomain), 'cusr'},
+    {&MCN_home, 'cusr', kUserDomain, 'cusr'},
     // MW-2007-09-11: Added for uniformity across platforms
-    {&MCN_documents, 'docs', OSType(kUserDomain), 'docs'},
+    {&MCN_documents, 'docs', kUserDomain, 'docs'},
     // MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
     // FG-2014-09-26: [[ Bug 13523 ]] This entry must not match a request for "asup"
-    {&MCN_support, 0, OSType(kUserDomain), 'asup'},
+    {&MCN_support, 0, kUserDomain, 'asup'},
 };
 
-static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
+static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, int32_t& r_domain)
 {
 	for (uindex_t i = 0; i < ELEMENTS(sysfolderlist); i++)
 	{
@@ -670,7 +668,7 @@ static void configureSerialPort(int sRefNum)
     /* UNCHECKED */ MCStringSplit(MCserialcontrolsettings, MCSTR(" "), nil, kMCCompareExact, &t_settings);
     uindex_t nsettings = MCArrayGetCount(*t_settings);
     
-    for (int i = 0 ; i < nsettings ; i++)
+    for (uindex_t i = 0 ; i < nsettings ; i++)
     {
         // Note: 't_settings' is an array of strings
         MCValueRef t_settingval = nil;
@@ -777,7 +775,7 @@ static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_p
 {
     kern_return_t	kernResult;
     CFMutableDictionaryRef classesToMatch;
-    if ((kernResult = IOMasterPort(NULL, masterPort)) != KERN_SUCCESS)
+    if ((kernResult = IOMasterPort(0, masterPort)) != KERN_SUCCESS)
         return kernResult;
     if ((classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue)) == NULL)
         return kernResult;
@@ -1078,11 +1076,6 @@ static char **fix_environ(void)
 // Thus, we will fork two methods - and dispatch from MCS_startprocess
 static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
 static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
-
-///////////////////////////////////////////////////////////////////////////////
-
-static Boolean hasPPCToolbox = False;
-static Boolean hasAppleEvents = False;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1449,7 +1442,6 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 	short rid;
 	ResType rtype;
 	Str255 rname;  //Pascal string
-	char cstr[256];  //C string
 	char typetmp[5]; //buffer for storing type string in c format
 	SInt16 total = Count1Resources(searchType);
 	if (ResError() != noErr)
@@ -1457,7 +1449,6 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 		errno = ResError();
 		return false;
 	}
-	char buffer[4 + U2L + 255 + U4L + 6];
 	for (SInt16 i = 1 ; i <= total ; i++)
 	{
 		if ((rh = Get1IndResource(searchType, i)) == NULL)
@@ -1965,7 +1956,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 errno = ResError();
                 t_success = false;
             }
-            for (uindex_t i = 1; t_success && i <= typeCount; i++)
+            for (index_t i = 1; t_success && i <= typeCount; i++)
             {
                 Get1IndType(&type, i);
                 if (ResError() != noErr || type == 0)
@@ -2385,7 +2376,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             return;
         }
         if (p_reply == True)
@@ -2595,7 +2586,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             
             r_value = MCValueRetain(kMCEmptyString);
             return false;
@@ -2718,15 +2709,15 @@ static bool MCS_getentries_for_folder(MCStringRef p_folder, MCSystemListFolderEn
             {
                 FileInfo *t_file_info;
                 t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
-                uint4 t_creator;
-                t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
-                uint4 t_type;
-                t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
+                uint4 t_file_creator;
+                t_file_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+                uint4 t_file_type;
+                t_file_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
                 
                 if (t_file_info != NULL)
                 {
-                    memcpy(t_filetype, (char*)&t_creator, 4);
-                    memcpy(&t_filetype[4], (char *)&t_type, 4);
+                    memcpy(t_filetype, (char*)&t_file_creator, 4);
+                    memcpy(&t_filetype[4], (char *)&t_file_type, 4);
                     t_filetype[8] = '\0';
                 }
                 else
@@ -3346,7 +3337,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_icon_family = NULL;
         if (!t_error && t_src_icon != NULL)
         {
-            OSErr t_os_error;
             IconRefToIconFamily(t_src_icon, kSelectorAllAvailableData, &t_icon_family);
         }
         
@@ -3476,7 +3466,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
 	virtual Boolean SetCurrentFolder(MCStringRef p_path)
     {
-        bool t_success;
         MCAutoStringRefAsUTF8String t_utf8_string;
         if (!t_utf8_string.Lock(p_path))
             return False;
@@ -3491,7 +3480,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	virtual Boolean GetStandardFolder(MCNameRef p_type, MCStringRef& r_folder)
     {
         uint32_t t_mac_folder = 0;
-        OSType t_domain = kOnAppropriateDisk;
+        int32_t t_domain = kOnAppropriateDisk;
         bool t_found_folder = false;
         
         
@@ -3722,15 +3711,15 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     virtual Boolean GetDevices(MCStringRef& r_devices)
     {
         MCAutoListRef t_list;
-        io_iterator_t SerialPortIterator = NULL;
-        mach_port_t masterPort = NULL;
+        io_iterator_t SerialPortIterator = 0;
+        mach_port_t masterPort = 0;
         io_object_t thePort;
         if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
         {
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             return false;
         }
         if (!MCListCreateMutable('\n', &t_list))
@@ -4289,7 +4278,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         {
 //            (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
             // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
-            static int oldcharset = -1;
+            static uint32_t oldcharset = UINT32_MAX;
             if (!p_buffer_length)
             {
                 return p_string_length << 1;
@@ -5464,7 +5453,7 @@ void MCS_multibytetounicode(const char *s, uint4 len, char *d,
                             uint4 &destlen, uint1 charset)
 {
 	// MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
-	static int oldcharset = -1;
+	static uint32_t oldcharset = UINT32_MAX;
 	if (!destbufferlength)
 	{
 		destlen = len << 1;
@@ -5551,11 +5540,18 @@ static bool startprocess_write_uint32_to_fd(int fd, uint32_t value)
 
 static bool startprocess_write_cstring_to_fd(int fd, char *string)
 {
-	if (!startprocess_write_uint32_to_fd(fd, strlen(string) + 1))
-		return false;
-	if (write(fd, string, strlen(string) + 1) != strlen(string) + 1)
-		return false;
-	return true;
+    size_t t_len = strlen(string) + 1;
+    if (t_len > UINT32_MAX)
+        return false;
+    
+    if (!startprocess_write_uint32_to_fd(fd, uint32_t(t_len)))
+        return false;
+    
+    ssize_t t_status = write(fd, string, t_len);
+    
+    /* This verifies that t_status is positive, at which point you _know_
+     * that it will fit into a size_t losslessly */
+    return (t_status >= 0 && size_t(t_status) == t_len);
 }
 
 static bool startprocess_read_uint32_t_from_fd(int fd, uint32_t& r_value)
@@ -5951,9 +5947,9 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 			// Split the arguments
 			uint32_t t_argc;
 			char **t_argv;
-			char *t_doc;
-			/* UNCHECKED */ MCStringConvertToUTF8String(doc, t_doc);
-			startprocess_create_argv(t_name_dup, t_doc, t_argc, t_argv);
+			char *t_document;
+			/* UNCHECKED */ MCStringConvertToUTF8String(doc, t_document);
+			startprocess_create_argv(t_name_dup, t_document, t_argc, t_argv);
 			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
 			for(uint32_t i = 0; i < t_argc; i++)
 				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
@@ -5961,7 +5957,7 @@ static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mod
 				t_status = errAuthorizationToolExecuteFailure;
 			
 			delete t_name_dup;
-			delete t_doc;
+			delete t_document;
 			delete[] t_argv;
 		}
 		

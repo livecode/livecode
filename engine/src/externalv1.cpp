@@ -586,12 +586,12 @@ MCExternalError MCExternalVariable::GetBoolean(MCExternalValueOptions p_options,
 	else
 	{
 		MCExternalError t_error;
-		MCAutoStringRef t_value;
-		t_error = GetString(p_options, &t_value);
+		MCAutoStringRef t_string_value;
+		t_error = GetString(p_options, &t_string_value);
 		if (t_error != kMCExternalErrorNone)
 			return t_error;
 		
-		return string_to_boolean(*t_value, p_options, &r_value);
+		return string_to_boolean(*t_string_value, p_options, &r_value);
 	}
 	
 	return kMCExternalErrorNone;
@@ -1620,8 +1620,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
-        MCExternalError t_error;
-        
         MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
@@ -1645,7 +1643,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
-        MCExternalError t_error;
         MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
@@ -1784,7 +1781,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSNumber:
     case kMCExternalValueOptionAsCFNumber:
     {
-        CFNumberRef t_number;
         real64_t t_real;
         
         t_error = var -> GetReal(p_options, t_real);
@@ -1840,7 +1836,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSArray:
     case kMCExternalValueOptionAsCFArray:
     {
-        MCExternalError t_error;
         CFArrayRef t_value;
         
         t_error = kMCExternalErrorNone;
@@ -1867,7 +1862,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSDictionary:
     case kMCExternalValueOptionAsCFDictionary:
     {
-        MCExternalError t_error;
         CFDictionaryRef t_value;
         
         t_error = kMCExternalErrorNone;

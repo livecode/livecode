@@ -951,7 +951,7 @@ MCGradientAffineCombiner *MCGradientFillCreateCombiner(MCGGradientRef p_gradient
 			}
 			break;
 		}
-	}
+    }
 	
 	return NULL;
 }

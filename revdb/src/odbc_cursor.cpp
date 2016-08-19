@@ -549,15 +549,20 @@ Bool DBCursor_ODBC::getRowData()
 
 char *DBCursor_ODBC::getErrorMessage()
 {
-		SQLINTEGER	error;        /* Not used */
-		SWORD	errormsgsize; /* Not used */
-		DBConnection_ODBC * odbcconn = (DBConnection_ODBC *)connection;
-		SQLRETURN err = SQLErrorA(odbcconn->getHENV(), odbcconn->getHDBC(), ODBC_res, NULL, &error, (SQLCHAR *)errmsg, SQL_MAX_MESSAGE_LENGTH-1, &errormsgsize);
+    SQLINTEGER	error;        /* Not used */
+    SWORD	errormsgsize; /* Not used */
+    DBConnection_ODBC * odbcconn = (DBConnection_ODBC *)connection;
+    SQLRETURN err = SQLErrorA(odbcconn->getHENV(), odbcconn->getHDBC(), ODBC_res, NULL, &error, (SQLCHAR *)errmsg, SQL_MAX_MESSAGE_LENGTH-1, &errormsgsize);
+    
+    if (err == SQL_SUCCESS)
 		return errmsg;
+    else
+        return (char *)DBNullValue;
+    
 }
 
 
-char *DBCursor_ODBC::getFieldDataBinary(unsigned int fieldnum,unsigned int &fdlength)
+char *DBCursor_ODBC::getFieldDataBinary(unsigned int fieldnum, size_t &fdlength)
 {
 	fieldnum--;
 	if (fieldnum >= fieldCount)

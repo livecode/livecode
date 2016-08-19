@@ -345,7 +345,6 @@ static MCColourizeStyle *s_script_styles = NULL;
 static uint4 s_script_style_count = 0;
 
 static uint1 *s_script_class_styles = NULL;
-static uint1 *s_script_operator_styles = NULL;
 static uint1 *s_script_keyword_styles = NULL;
 
 #define SCRIPT_STYLE_ATTRIBUTE_COUNT 7
@@ -2489,6 +2488,8 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
             case kMCIdeFilterPropertyType:
                 MCStringCreateWithNativeChars((char_t*)p_object -> gettypestring(), strlen(p_object -> gettypestring()), (MCStringRef&)&t_left_value);
                 break;
+            default:
+                break;
         }
 
         bool t_accept;
@@ -2546,6 +2547,8 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 
             }
             break;
+            case kMCIdeFilterOperatorNone:
+                break;
         }
 
         if (t_accept)

@@ -336,7 +336,7 @@ bool MCArrayIterate(MCArrayRef self, uintptr_t& x_iterator, MCNameRef& r_key, MC
 	if (x_iterator == t_count)
 		return false;
 
-	for(uindex_t i = x_iterator; i < t_count; i += 1)
+	for(uintptr_t i = x_iterator; i < t_count; i += 1)
 	{
 		x_iterator += 1;
 		if (t_contents -> key_values[i] . value != UINTPTR_MIN && t_contents -> key_values[i] . value != UINTPTR_MAX)

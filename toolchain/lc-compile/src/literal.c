@@ -125,28 +125,28 @@ void append_utf8_char(char *p_string, int *x_index, int p_char)
 	}
 	else if (p_char < 128)
     {
-        p_string[*x_index] = p_char;
+        p_string[*x_index] = (char)p_char;
         (*x_index) += 1;
     }
     else if (p_char >= 0x10000)
     {
-        p_string[*x_index] = 0xf0 | (p_char >> 18);
-        p_string[*x_index + 1] = 0x80 | ((p_char >> 12) & 0x3f);
-        p_string[*x_index + 2] = 0x80 | ((p_char >> 6) & 0x3f);
-        p_string[*x_index + 3] = 0x80 | ((p_char >> 0) & 0x3f);
+        p_string[*x_index] = (char)(0xf0 | (p_char >> 18));
+        p_string[*x_index + 1] = (char)(0x80 | ((p_char >> 12) & 0x3f));
+        p_string[*x_index + 2] = (char)(0x80 | ((p_char >> 6) & 0x3f));
+        p_string[*x_index + 3] = (char)(0x80 | ((p_char >> 0) & 0x3f));
         (*x_index) += 4;
     }
     else if (p_char >= 0x0800)
     {
-        p_string[*x_index] = 0xe0 | (p_char >> 12);
-        p_string[*x_index + 1] = 0x80 | ((p_char >> 6) & 0x3f);
-        p_string[*x_index + 2] = 0x80 | ((p_char >> 0) & 0x3f);
+        p_string[*x_index] = (char)(0xe0 | (p_char >> 12));
+        p_string[*x_index + 1] = (char)(0x80 | ((p_char >> 6) & 0x3f));
+        p_string[*x_index + 2] = (char)(0x80 | ((p_char >> 0) & 0x3f));
         (*x_index) += 3;
     }
     else
     {
-        p_string[*x_index] = 0xc0 | (p_char >> 6);
-        p_string[*x_index + 1] = 0x80 | ((p_char >> 0) & 0x3f);
+        p_string[*x_index] = (char)(0xc0 | (p_char >> 6));
+        p_string[*x_index + 1] = (char)(0x80 | ((p_char >> 0) & 0x3f));
         (*x_index) += 2;
     }
 }
@@ -276,7 +276,7 @@ void MakeStringLiteral(const char *p_token, long *r_literal)
     *r_literal = (long)t_value;
 }
 
-void MakeNameLiteralN(const char *p_token, int p_token_length, NameRef *r_literal)
+void MakeNameLiteralN(const char *p_token, unsigned long p_token_length, NameRef *r_literal)
 {
     NameRef t_name;
     NameRef t_key;

@@ -61,12 +61,6 @@ extern uint32_t MCSystemPerformTextConversion(const char *string, uint32_t strin
 
 MCSystemInterface *MCsystem;
 
-#ifdef TARGET_SUBPLATFORM_ANDROID
-static volatile int *s_mainthread_errno;
-#else
-static int *s_mainthread_errno;
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCSystemInterface *MCDesktopCreateMacSystem(void);
@@ -454,13 +448,11 @@ void MCS_utf8tonative(const char *p_utf8, uint4 p_utf8_length, char *&r_native, 
 
 void MCS_seterrno(int value)
 {
-//	*s_mainthread_errno = value;
     MCsystem -> SetErrno(value);
 }
 
 int MCS_geterrno(void)
 {
-//	return *s_mainthread_errno;
     return MCsystem -> GetErrno();
 }
 
@@ -1692,7 +1684,7 @@ IO_stat MCS_sync(IO_handle p_stream)
 
 Boolean MCS_eof(IO_handle p_stream)
 {
-	return (p_stream -> Tell() == p_stream ->  GetFileSize());
+	return (uint64_t(p_stream -> Tell()) == p_stream ->  GetFileSize());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

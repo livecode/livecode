@@ -1023,7 +1023,7 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	{
 		case kMCGBlurTypeNormal:
 		{
-			uint8_t *t_blur_ptr, *t_mask_ptr;
+			uint8_t *t_blur_ptr;
 			t_blur_ptr = t_blurred_mask . fImage;
 			
 			// MW-2013-10-31: [[ Bug 11325 ]] Attenuate the mask appropriately, including
@@ -2153,7 +2153,7 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGContextRef self, MCGColor p
 			case kMCGImageFilterHigh:
                 r_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 				break;
-		}
+        }
 	}
 	
 	if (t_shader != NULL)
@@ -2492,7 +2492,6 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 		t_matrix = self->layer->canvas->getTotalMatrix();
 
 		MCGRectangle t_tmp_src;
-		MCGFloat t_src_width, t_src_height;
 		if (p_src != nil)
 			t_tmp_src = *p_src;
 		else
@@ -2550,7 +2549,7 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 					t_paint . setAntiAlias(true);
 					t_paint . setFilterLevel(SkPaint::kHigh_FilterLevel);
 					break;
-			}
+            }
 		}
 		
 		SkRect t_src_rect;

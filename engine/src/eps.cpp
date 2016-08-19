@@ -320,10 +320,12 @@ void MCEPS::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_spr
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, -borderwidth);
 	if (flags & F_SHOW_BORDER)
+    {
 		if (flags & F_3D)
 			draw3d(dc, trect, ETCH_SUNKEN, borderwidth);
 		else
 			drawborder(dc, trect, borderwidth);
+    }
 	if (getstate(CS_KFOCUSED))
 		drawfocus(dc, dirty);
 }
@@ -404,11 +406,11 @@ void MCEPS::setextents()
 	{
 		MCswapbytes = !MCswapbytes;
 		uint4 *uint4ptr = (uint4 *)postscript;
-		uint4 offset = swap_uint4(&uint4ptr[1]);
+		uint4 t_offset = swap_uint4(&uint4ptr[1]);
 		size = swap_uint4(&uint4ptr[2]);
 		MCswapbytes = !MCswapbytes;
 		char *newps = new char[size];
-		memcpy(newps, &postscript[offset], size);
+		memcpy(newps, &postscript[t_offset], size);
 		delete postscript;
 		postscript = newps;
 	}

@@ -53,13 +53,13 @@ static MCExecSetTypeInfo _kMCOrientationOrientationsTypeInfo =
 // AL-2014-09-22: [[ Bug 13426 ]] Don't use bit-shifted values for orientation state enum
 static MCExecEnumTypeElementInfo _kMCOrientationOrientationElementInfo[] =
 {
-	{ "unknown", ORIENTATION_UNKNOWN_BIT },
-	{ "portrait", ORIENTATION_PORTRAIT_BIT },
-	{ "portrait upside down", ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT },
-	{ "landscape right", ORIENTATION_LANDSCAPE_RIGHT_BIT },
-	{ "landscape left", ORIENTATION_LANDSCAPE_LEFT_BIT },
-	{ "face up", ORIENTATION_FACE_UP_BIT },
-	{ "face down", ORIENTATION_FACE_DOWN_BIT },
+	{ "unknown", ORIENTATION_UNKNOWN_BIT, false },
+	{ "portrait", ORIENTATION_PORTRAIT_BIT, false },
+	{ "portrait upside down", ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT, false },
+	{ "landscape right", ORIENTATION_LANDSCAPE_RIGHT_BIT, false },
+	{ "landscape left", ORIENTATION_LANDSCAPE_LEFT_BIT, false },
+	{ "face up", ORIENTATION_FACE_UP_BIT, false },
+	{ "face down", ORIENTATION_FACE_DOWN_BIT, false },
 };
 
 static MCExecEnumTypeInfo _kMCOrientationOrientationTypeInfo =

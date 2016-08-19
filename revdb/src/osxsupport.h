@@ -71,8 +71,10 @@ extern "C"
 #include <sys/fcntl.h>
 
 extern int lstat(const char *path, struct stat *sb);
+#ifndef S_ISLNK
 #define	S_ISLNK(m)	((m & 0170000) == 0120000)
-
+#endif
+    
 #include <sys/stat.h>
 #include <sys/utsname.h>
 }

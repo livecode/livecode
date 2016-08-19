@@ -2315,7 +2315,6 @@ void MCGroup::drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawfra
 		Boolean showtextlabel = flags & F_SHOW_NAME && (!isunnamed() || !MCStringIsEmpty(label));
 		MCRectangle textrect;
 		MCStringRef t_label;
-		bool isunicode;
 		MCWidgetInfo winfo;
 		int32_t fascent;
 		winfo.type = WTHEME_TYPE_GROUP_FRAME;
@@ -2365,7 +2364,6 @@ void MCGroup::drawbord(MCDC *dc, const MCRectangle &dirty)
 		MCRectangle trect = rect;
 		if (flags & F_SHOW_NAME && (!isunnamed() || label != NULL))
 		{
-			uint2 halfwidth = borderwidth >> 1;
 			int32_t fascent, fdescent;
 			fascent = MCFontGetAscent(m_font);
 			fdescent = MCFontGetDescent(m_font);

@@ -30,6 +30,7 @@
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
 		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
+		'COMBINE_HIDPI_IMAGES': 'YES',
 	},
 	
 	'target_defaults':
@@ -126,7 +127,16 @@
 							'-Werror=uninitialized',
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
-							'-Werror=logical-not-parentheses',
+							'-Werror=constant-logical-operand',
+							#'-Werror=sign-compare', can't enable due to MCMin
+							'-Werror=shadow',
+							'-Werror=parentheses',
+                            '-Werror=objc-literal-compare',
+                            #'-Werror=switch', can't enable due to sqlite header
+							'-Werror=missing-field-initializers',
+							'-Werror=missing-declarations',
+							'-Werror=unused-variable',
+							'-Werror=unknown-pragmas',
 						],
 					},
 				},
@@ -137,6 +147,7 @@
 						'WARNING_CFLAGS':
 						[
 							'-Wno-return-type',
+							'-w',
 						],
 					},
 				},
@@ -182,6 +193,7 @@
 				'ARCHS': 'i386 x86_64',
 				'ONLY_ACTIVE_ARCH': 'YES',
 				'GCC_OPTIMIZATION_LEVEL': '0',
+				'ENABLE_TESTABILITY': 'YES',
 			},
 		},
 		

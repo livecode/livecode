@@ -37,7 +37,6 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-static NSDragOperation s_drag_operation_result = NSDragOperationNone;
 static bool s_inside_focus_event = false;
 
 //static MCMacPlatformWindow *s_focused_window = nil;
@@ -2047,6 +2046,8 @@ bool MCMacPlatformWindow::DoGetProperty(MCPlatformWindowProperty p_property, MCP
 				RealizeAndNotify();
 			*(void**)r_value = m_window_handle;
 			return true;
+        default:
+            break;
 	}
 	
 	return false;

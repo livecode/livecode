@@ -395,6 +395,8 @@ RTFStatus RTFReader::Parse(void)
 		case kRTFDestinationFldInst:
 			t_status = ParseFldInst(t_token, t_value);
 		break;
+        default:
+            break;
 		}
 	}
 	
@@ -848,7 +850,7 @@ RTFStatus RTFReader::ParseDocument(RTFToken p_token, int4 p_value)
 			{
 				uint4 t_charset_index;
 				for(t_charset_index = 0; s_charset_mapping[t_charset_index] . charset != -1; ++t_charset_index)
-					if (s_charset_mapping[t_charset_index] . charset == t_new_charset)
+					if (uint4(s_charset_mapping[t_charset_index] . charset) == t_new_charset)
 						break;
 				t_new_encoding = s_charset_mapping[t_charset_index] . encoding;
 			}

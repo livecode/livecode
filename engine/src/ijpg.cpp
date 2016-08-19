@@ -188,7 +188,7 @@ static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t *r_orientatio
 	jpeg_saved_marker_ptr t_marker;
 	t_marker = nil;
 	for(t_marker = cinfo -> marker_list; t_marker != nil; t_marker = t_marker -> next)
-		if ((t_marker->marker == (JPEG_APP0 + 1)))
+		if (t_marker->marker == (JPEG_APP0 + 1))
 			break;
 	
 	if (t_marker == nil)
@@ -236,7 +236,7 @@ static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t *r_orientatio
 	
 	for(uindex_t i = 0; i < t_count; i++)
 	{
-		uint16_t t_tag, t_format;
+		uint16_t t_format;
 		uint32_t t_components;
 		memcpy(&t_tag, t_ifd_ptr + 0, 2);
 		memcpy(&t_format, t_ifd_ptr + 2, 2);
@@ -315,13 +315,13 @@ static bool apply_exif_orientation(uint32_t p_orientation, MCImageBitmap *p_bitm
 	t_stride = p_bitmap -> stride / 4;
 	
 	if (t_flip_x)
-		for(int32_t y = 0; y < p_bitmap -> height; y++)
-			for(int32_t x = 0; x < p_bitmap -> width / 2; x++)
+		for(uint32_t y = 0; y < p_bitmap -> height; y++)
+			for(uint32_t x = 0; x < p_bitmap -> width / 2; x++)
 				swap(t_data[y * t_stride + x], t_data[y * t_stride + (p_bitmap -> width - x - 1)]);
 	
 	if (t_flip_y)
-		for(int32_t y = 0; y < p_bitmap -> height / 2; y++)
-			for(int32_t x = 0; x < p_bitmap -> width; x++)
+		for(uint32_t y = 0; y < p_bitmap -> height / 2; y++)
+			for(uint32_t x = 0; x < p_bitmap -> width; x++)
 				swap(t_data[y * t_stride + x], t_data[(p_bitmap -> height - y - 1) * t_stride + x]);
 	
 	if (!t_invert)
@@ -334,8 +334,8 @@ static bool apply_exif_orientation(uint32_t p_orientation, MCImageBitmap *p_bitm
 	
 	uint32_t t_new_stride;
 	t_new_stride = p_bitmap -> height;
-	for(int32_t y = 0; y < p_bitmap -> width; y++)
-		for(int32_t x = 0; x < p_bitmap -> height; x++)
+	for(uint32_t y = 0; y < p_bitmap -> width; y++)
+		for(uint32_t x = 0; x < p_bitmap -> height; x++)
 			t_new_data[y * t_new_stride + x] = t_data[x * t_stride + y];
 	
 	MCMemoryDeallocate(p_bitmap -> data);

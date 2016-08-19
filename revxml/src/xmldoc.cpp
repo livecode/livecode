@@ -30,8 +30,8 @@ int util_strnicmp(const char *one, const char *two, int n)
   const char *tptr = (const char *)two;
   while (n--) {
     if (*optr != *tptr) {
-      char o = tolower(*optr);
-      char t = tolower(*tptr);
+      char o = (char)tolower(*optr);
+      char t = (char)tolower(*tptr);
       if (o != t || o == '\0' || t == '\0')
 	return o - t;
     }
@@ -66,7 +66,6 @@ const char *util_strchr(const char *sptr, char target, int l)
 {
   if (!l) l = strlen(sptr);
   const char *eptr = sptr + l;
-  const char *startptr = sptr;
   while (sptr < eptr) {
     if (*sptr == target) 
       return sptr;
@@ -127,7 +126,11 @@ xmlSAXHandler CXMLDocument::SAXHandlerTable = {
     getParameterEntity,
     elementCDataCallback,//cdataBlock,
     externalSubset,
-	1
+	1,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 void CXMLDocument::startDocumentCallback(void *ctx)
@@ -152,6 +155,7 @@ void CXMLDocument::startElementCallback(void *ctx,
     if (allowcallbacks)
 		CB_startElement((const char *)fullname,(const char **)atts);
 	if (buildtree)
+    {
         //HS-2010-10-11: [[ Bug 7586 ]] Reinstate libxml2 to create name spaces. Implement new liveCode commands to suppress name space creation.
         if (XML_ProcessNameSpaces)
         {
@@ -161,6 +165,7 @@ void CXMLDocument::startElementCallback(void *ctx,
         {
             xmlSAX2StartElementNoNS(ctx,fullname,atts);
         }
+    }
 }
 
 void CXMLDocument::endElementCallback(void *ctx,
@@ -424,9 +429,11 @@ Bool CXMLDocument::GetElementByPath(CXMLElement *telement, char *tpath)
 	else
 			nameend = nextname;
 	if (!util_strnicmp(telement->GetName(),sptr,nameend-sptr))
+    {
 		if (isroot)
 			return True;
 		else
 			return telement->GoChildByPath(nextname+1);
+    }
 	return False;
 }

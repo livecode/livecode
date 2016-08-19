@@ -245,6 +245,8 @@ void MCGraphic::SetEditMode(MCExecContext& ctxt, intenum_t mode)
 		case kMCEditModePolygon:
 			t_new_tool = new MCPolygonEditTool(this);
 			break;
+        default:
+            break;
 		}
 		m_edit_tool = t_new_tool;
 
@@ -267,10 +269,10 @@ void MCGraphic::SetCapStyle(MCExecContext& ctxt, intenum_t style)
 	t_new_style = (uint2)style;
 	if (t_new_style != getcapstyle())
 	{
-		MCRectangle oldrect = rect;
+		MCRectangle t_oldrect = rect;
 		setcapstyle(t_new_style);
 		compute_minrect();
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 	}
 }
 
@@ -287,10 +289,10 @@ void MCGraphic::SetJoinStyle(MCExecContext& ctxt, intenum_t style)
 	t_new_style = (uint2)style;
 	if (t_new_style != getjoinstyle())
 	{
-		MCRectangle oldrect = rect;
+		MCRectangle t_oldrect = rect;
 		setjoinstyle(t_new_style);
 		compute_minrect();
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 	}
 }
 
@@ -305,10 +307,10 @@ void MCGraphic::SetMiterLimit(MCExecContext& ctxt, double limit)
 	t_new_limit = MCU_fmax(1, limit);
 	if (m_stroke_miter_limit != t_new_limit)
 	{
-		MCRectangle oldrect = rect;
+		MCRectangle t_oldrect = rect;
 		m_stroke_miter_limit = (real4)t_new_limit;
 		compute_minrect();
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 	}
 }
 
@@ -319,11 +321,11 @@ void MCGraphic::GetLineSize(MCExecContext& ctxt, integer_t& r_size)
 
 void MCGraphic::SetLineSize(MCExecContext& ctxt, integer_t size)
 {
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	linesize = size;
 	compute_minrect();
 	delpoints();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetPolySides(MCExecContext& ctxt, integer_t& r_sides)
@@ -402,10 +404,10 @@ void MCGraphic::GetArrowSize(MCExecContext& ctxt, integer_t& r_size)
 
 void MCGraphic::SetArrowSize(MCExecContext& ctxt, integer_t p_size)
 {
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	arrowsize = p_size;
 	compute_minrect();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetStartArrow(MCExecContext& ctxt, bool& r_setting)
@@ -418,10 +420,10 @@ void MCGraphic::SetStartArrow(MCExecContext& ctxt, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_START_ARROW);
 
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	compute_minrect();
 	if (t_dirty)
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 }
 
 void MCGraphic::GetEndArrow(MCExecContext& ctxt, bool& r_setting)
@@ -434,10 +436,10 @@ void MCGraphic::SetEndArrow(MCExecContext& ctxt, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_END_ARROW);
 
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	compute_minrect();
 	if (t_dirty)
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 }
 
 void MCGraphic::GetMarkerLineSize(MCExecContext& ctxt, integer_t& r_size)
@@ -447,10 +449,10 @@ void MCGraphic::GetMarkerLineSize(MCExecContext& ctxt, integer_t& r_size)
 
 void MCGraphic::SetMarkerLineSize(MCExecContext& ctxt, integer_t size)
 {
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	markerlsize = size;
 	compute_minrect();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetMarkerDrawn(MCExecContext& ctxt, bool& r_setting)
@@ -463,10 +465,10 @@ void MCGraphic::SetMarkerDrawn(MCExecContext& ctxt, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_MARKER_DRAWN);
 
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 	compute_minrect();
 	if (t_dirty)
-		Redraw(oldrect);
+		Redraw(t_oldrect);
 }
 
 void MCGraphic::GetMarkerOpaque(MCExecContext& ctxt, bool& r_setting)
@@ -520,7 +522,7 @@ void MCGraphic::GetStyle(MCExecContext& ctxt, intenum_t& r_style)
 void MCGraphic::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 {
 	flags &= ~F_STYLE;
-	MCRectangle oldrect = rect;
+	MCRectangle t_oldrect = rect;
 
 	if (p_style == kMCGraphicStyleText)
 	{
@@ -547,7 +549,7 @@ void MCGraphic::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 		}
 	}
 	delpoints();
-	Redraw(oldrect);
+	Redraw(t_oldrect);
 }
 
 void MCGraphic::GetShowName(MCExecContext& ctxt, bool& r_setting)
@@ -722,9 +724,9 @@ void MCGraphic::SetMarkerPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* 
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // Ensure that the functions which might change the size of the graphic redraw the former rectangle
-    MCRectangle oldrect = rect;
+    MCRectangle t_oldrect = rect;
     compute_minrect();
-    Redraw(oldrect);
+    Redraw(t_oldrect);
 }
 
 void MCGraphic::GetDashes(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_dashes)
@@ -828,9 +830,9 @@ void MCGraphic::SetPoints(MCExecContext& ctxt, uindex_t p_count, MCPoint* p_poin
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // The rectangle might change, we need to redraw what was the previous size.
-    MCRectangle oldrect = rect;
+    MCRectangle t_oldrect = rect;
     compute_minrect();
-    Redraw(oldrect);
+    Redraw(t_oldrect);
 }
 
 void MCGraphic::GetRelativePoints(MCExecContext& ctxt, uindex_t& r_count, MCPoint*& r_points)
@@ -877,9 +879,9 @@ void MCGraphic::SetRelativePoints(MCExecContext& ctxt, uindex_t p_count, MCPoint
     
     // SN-2014-06-02 [[ Bug 12576 ]] drawing_bug_when_rotating_graphic
     // Ensure that the functions which might change the size of the graphic redraw the former rectangle
-    MCRectangle oldrect = rect;
+    MCRectangle t_oldrect = rect;
     compute_minrect();
-    Redraw(oldrect);
+    Redraw(t_oldrect);
 }
 
 // SN-2014-06-25: [[ MERGE-6.7 ]] Effective points getter udpated

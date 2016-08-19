@@ -56,9 +56,12 @@ bool MCNSDictionaryToBrowserDictionary(NSDictionary *p_dictionary, MCBrowserDict
 	
 	__block MCBrowserDictionaryRef t_dict;
 	t_dict = nil;
+    
+    if (t_success)
+        t_success = [p_dictionary count] <= UINT32_MAX;
 	
 	if (t_success)
-		t_success = MCBrowserDictionaryCreate(t_dict, [p_dictionary count]);
+		t_success = MCBrowserDictionaryCreate(t_dict, uint32_t([p_dictionary count]));
 	
 	if (t_success)
 		[p_dictionary enumerateKeysAndObjectsUsingBlock: ^(id p_key, id p_obj, BOOL *r_stop) {
@@ -94,9 +97,12 @@ bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
 	
 	__block MCBrowserListRef t_list;
 	t_list = nil;
+    
+    if (t_success)
+        t_success = [p_array count] <= UINT32_MAX;
 	
 	if (t_success)
-		t_success = MCBrowserListCreate(t_list, [p_array count]);
+		t_success = MCBrowserListCreate(t_list, uint32_t([p_array count]));
 	
 	if (t_success)
 		[p_array enumerateObjectsUsingBlock: ^(id p_obj, NSUInteger p_index, BOOL *r_stop) {
@@ -106,7 +112,7 @@ bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
 			t_success = MCNSObjectToBrowserValue(p_obj, t_value);
 			
 			if (t_success)
-				t_success = MCBrowserListSetValue(t_list, p_index, t_value);
+				t_success = MCBrowserListSetValue(t_list, uint32_t(p_index), t_value);
 			
 			if (!t_success)
 				*r_stop = YES;
@@ -124,9 +130,9 @@ bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
 
 bool MCNSNumberToBrowserValue(NSNumber *p_number, MCBrowserValue &r_value)
 {
-	if (p_number == @(YES))
+	if ([p_number isEqual:@YES])
 		return MCBrowserValueSetBoolean(r_value, true);
-	else if (p_number == @(NO))
+	else if ([p_number isEqual:@NO])
 		return MCBrowserValueSetBoolean(r_value, false);
 	else if (MCCStringEqual([p_number objCType], @encode(int)))
 		return MCBrowserValueSetInteger(r_value, [p_number intValue]);
@@ -200,7 +206,7 @@ bool MCJSNumberToBrowserValue(JSContextRef p_context, JSValueRef p_value, MCBrow
 
 bool MCJSStringToUTF8String(JSStringRef p_string, char *&r_utf8_string)
 {
-	uint32_t t_bytes;
+	size_t t_bytes;
 	t_bytes = JSStringGetMaximumUTF8CStringSize(p_string);
 	
 	char *t_string;
@@ -282,7 +288,7 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 		t_success = t_prop_names != nil;
 	}
 	
-	uint32_t t_count;
+	size_t t_count;
 	t_count = 0;
 	
 	if (t_success)
@@ -795,10 +801,10 @@ bool MCWebViewBrowser::GetRect(MCBrowserRect &r_rect)
 	
 	MCBrowserRunBlockOnMainFiber(^{
 		NSRect t_frame = [t_view frame];
-		r_rect.left = t_frame.origin.x;
-		r_rect.top = t_frame.origin.y;
-		r_rect.right = t_frame.origin.x + t_frame.size.width;
-		r_rect.bottom = t_frame.origin.y + t_frame.size.height;
+		r_rect.left = int32_t(t_frame.origin.x);
+		r_rect.top = int32_t(t_frame.origin.y);
+		r_rect.right = int32_t(t_frame.origin.x + t_frame.size.width);
+		r_rect.bottom = int32_t(t_frame.origin.y + t_frame.size.height);
 	});
 	
 	return true;

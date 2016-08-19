@@ -125,8 +125,8 @@ void MCCard::GetPropList(MCExecContext& ctxt, Properties which, uint32_t part_id
         t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
         
 		MCObjptr *optr = objptrs;
-		uint2 i = 0;
-		do
+		
+        do
 		{
             MCObject *t_object;
             t_object = optr -> getref();

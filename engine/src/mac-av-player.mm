@@ -101,7 +101,7 @@ private:
 	void Switch(bool new_offscreen);
     
     CMTime CMTimeFromLCTime(uint32_t lc_time);
-    uint32_t CMTimeToLCTime(CMTime cm_time);
+    int64_t CMTimeToLCTime(CMTime cm_time);
     
     void SeekToTimeAndWait(uint32_t p_lc_time);
     
@@ -149,7 +149,7 @@ private:
     
 	MCPlatformPlayerDuration *m_markers;
     uindex_t m_marker_count;
-    uint32_t m_last_marker;
+    uint64_t m_last_marker;
     
 	MCRectangle m_rect;
 	bool m_visible : 1;
@@ -439,12 +439,12 @@ void MCAVFoundationPlayer::MovieFinished(void)
 
 void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
 {
-    int32_t t_current_time;
+    int64_t t_current_time;
     t_current_time = CMTimeToLCTime([m_player currentTime]);
     
     // PM-2014-10-28: [[ Bug 13773 ]] If the thumb is after the first marker and the user drags it before the first marker, then we have to reset m_last marker, so as to be dispatched
-    if (t_current_time < m_last_marker)
-        m_last_marker = -1;
+    if (t_current_time < (int64_t)m_last_marker)
+        m_last_marker = UINT64_MAX;
     
     // PM-2014-08-12: [[ Bug 13156 ]] When clicked'n'hold the back button of the controller, t_current_time was negative after returning to the start of the video, and this was causing the last callback of the queue to be invoked after the first one. So make sure that t_current_time is valid.
     
@@ -458,7 +458,7 @@ void MCAVFoundationPlayer::HandleCurrentTimeChanged(void)
         // dispatch it.
         uindex_t t_index;
         for(t_index = 0; t_index < m_marker_count; t_index++)
-            if (m_markers[t_index] > t_current_time)
+            if (m_markers[t_index] > (uint64_t)t_current_time)
                 break;
         
         // t_index is now the first marker greater than the current time.
@@ -1160,12 +1160,14 @@ void MCAVFoundationPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPl
             MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(MCPlatformPlayerDuration));
         }
         break;
+        default:
+            break;
 	}
     
     m_synchronizing = false;
 }
 
-uint32_t MCAVFoundationPlayer::CMTimeToLCTime(CMTime p_cm_time)
+int64_t MCAVFoundationPlayer::CMTimeToLCTime(CMTime p_cm_time)
 {
     return CMTimeConvertScale(p_cm_time, m_time_scale, kCMTimeRoundingMethod_QuickTime) . value;
 }
@@ -1284,6 +1286,8 @@ void MCAVFoundationPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPl
 		case kMCPlatformPlayerPropertyScalefactor:
             *(double *)r_value = m_scale;
 			break;
+        default:
+            break;
 	}
 }
 

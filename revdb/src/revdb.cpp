@@ -177,7 +177,7 @@ static char *strlwr(char *str)
 {
     while (*str)
     {
-        *str = tolower(*str);
+        *str = (char)tolower(*str);
         str++;
     }
     return str;
@@ -210,8 +210,8 @@ int util_stringcompare(const char *s1, const char *s2, int n)
     char c1, c2;
     for (i=0; i<n; i++)
     {
-        c1 = tolower(*s1++);
-        c2 = tolower(*s2++);
+        c1 = (char)tolower(*s1++);
+        c2 = (char)tolower(*s2++);
         if (c1 < c2) return -1;
         if (c1 > c2) return 1;
         if (!c1) return 0;
@@ -646,7 +646,6 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 			t_name += 2;
 		}	
 
-		int t_return_value;
 		ExternalString t_value;
 		t_value . buffer = NULL;
 		t_value . length = 0;
@@ -683,7 +682,7 @@ DBString *BindVariables(char *p_arguments[],int p_argument_count, int &r_value_c
 //utility function to get column data by number
 void GetColumnByNumber(DBCursor *thecursor, char *&result, int columnid, char *varname)
 {
-	unsigned int colsize;
+	size_t colsize;
 	colsize = 0;
 
 	// OK-2007-06-18 : Part of fix for bug 4211
@@ -1272,7 +1271,7 @@ void REVDB_QueryList(char *p_arguments[], int p_argument_count, char **p_return_
 		{
 			for (int i = 1; i <= t_field_count; i++)
 			{
-				unsigned int t_column_size;
+				size_t t_column_size;
 				char *t_column_data;
 				t_column_data = t_cursor -> getFieldDataBinary(i, t_column_size);
 
@@ -2220,7 +2219,7 @@ void REVDB_TableNames(char *args[], int nargs, char **retstring, Bool *pass, Boo
 		DBConnection *theconnection = (DBConnection *)connectionlist.find(connectionid);
 		if (theconnection)
 		{
-			int bufsize;
+			size_t bufsize;
 			theconnection->getTables( NULL, &bufsize);
 			result = (char *)malloc(bufsize);
 			result[0] = 0;

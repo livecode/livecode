@@ -247,7 +247,7 @@ static void MCPrintingPrinterPageRangeParse(MCExecContext& ctxt, MCStringRef p_i
 	while (t_pos != MCStringGetLength(p_input) && !t_error)
 	{
 		int t_from, t_to;
-		bool t_found_comma, t_found_dash;
+		bool t_found_comma;
 		t_found_comma = MCStringFirstIndexOfChar(p_input, ',', t_pos, kMCCompareExact, t_comma);
 		if (t_found_comma)
 		{
@@ -754,7 +754,6 @@ void MCPrintingExecAnswerPageSetup(MCExecContext &ctxt, bool p_is_sheet)
 		return;
 	}
 
-	bool t_success = true;
 	MCAutoStringRef t_result;
 	if (MCsystemPS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_PRINT_DIALOGS))
 	{
@@ -789,7 +788,6 @@ void MCPrintingExecAnswerPrinter(MCExecContext &ctxt, bool p_is_sheet)
 		return;
 	}
 
-	bool t_success = true;
 	MCAutoStringRef t_result;
 	if (MCsystemPS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_PRINT_DIALOGS))
 	{

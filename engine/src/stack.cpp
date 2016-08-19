@@ -923,6 +923,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 		if (MCmodifierstate & MS_MOD1)
 			return MCundos->undo();
 		if (MCmodifierstate & MS_SHIFT)
+        {
 			if (MCactiveimage != NULL)
 			{
 				MCactiveimage->cutimage();
@@ -930,6 +931,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 			}
 			else
 				return MCselected->cut();
+        }
 		if (MCactiveimage != NULL)
 		{
 			MCactiveimage->delimage();
@@ -1103,7 +1105,7 @@ Boolean MCStack::mfocus(int2 x, int2 y)
 	if (m_is_menu && menuheight && (rect.height != menuheight || menuy != 0))
 	{
 		MCControl *cptr = curcard->getmfocused();
-		if (x < rect.width || cptr != NULL && !cptr->getstate(CS_SUBMENU))
+		if (x < rect.width || (cptr != NULL && !cptr->getstate(CS_SUBMENU)))
 		{
 			uint1 oldmode = scrollmode;
 			if (menuy < 0 && y < MENU_ARROW_SIZE >> 1)
@@ -1691,10 +1693,10 @@ bool MCStack::resolve_relative_path_to_default_folder(MCStringRef p_path, MCStri
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
+bool MCStack::resolve_filename(MCStringRef p_filename, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_filename;
-    if (resolve_relative_path(filename, &t_filename))
+    if (resolve_relative_path(p_filename, &t_filename))
     {
         if (MCS_exists(*t_filename, True))
         {
@@ -1703,7 +1705,7 @@ bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
         }
     }
     
-	r_resolved = MCValueRetain(filename);
+	r_resolved = MCValueRetain(p_filename);
 	return true;
 }
 
