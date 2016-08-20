@@ -2400,11 +2400,6 @@ private command revSmartChecking pStackFilesList, @xSettings
 end revSmartChecking
 
 private command revCheckObject pObject,pUserLibraries, @xSettings
-   -- Should never get here if the stack is password protected
-   if the password of stack (revTargetStack(pObject)) then
-      exit revCheckObject
-   end if
-   
    -- Keep the progress indicator updated
    revStandaloneProgress "Auto detecting library inclusions..."
    
