@@ -2282,12 +2282,12 @@ on initialiseSearchForInclusions
    # Database
    put "cRevDatabase" into sPatternsA["Database"]["Property"]
    put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
-   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
    put "scriptLibraries" into sPatternsA["Database"]["Key"]
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "URL,resetAll" into sPatternsA["Internet"]["Script"]
    put "scriptLibraries" into sPatternsA["Internet"]["Key"]
    
    # XML
