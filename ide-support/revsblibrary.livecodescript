@@ -2291,8 +2291,12 @@ on initialiseSearchForInclusions
    put "scriptLibraries" into sPatternsA["Internet"]["Key"]
    
    # XML
-   put "revXML" into sPatternsA["XMLRPC"]["Root"]
-   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
+   put "revXML" into sPatternsA["XML"]["Root"]
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XML"]["Script"]
+   put "scriptLibraries" into sPatternsA["XML"]["Key"]
+   
+    # XMLRPC
+   put "revXMLRPC_" into sPatternsA["XMLRPC"]["Root"]
    put "scriptLibraries" into sPatternsA["XMLRPC"]["Key"]
    
    # Speech
