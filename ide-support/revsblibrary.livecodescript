@@ -1996,20 +1996,6 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
-command revSBUpdateSettingsForWidgets pStack, @xSettings
-   local tExtensions
-   put revSBListWidgetsInUse(pStack) into tExtensions
-   if tExtensions is empty then
-      exit revSBUpdateSettingsForWidgets
-   end if
-   
-   if xSettings["extensions"] is not empty then
-      put return after xSettings["extensions"]
-   end if
-   
-   put tExtensions after xSettings["extensions"] 
-end revSBUpdateSettingsForWidgets
-
 command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
    
