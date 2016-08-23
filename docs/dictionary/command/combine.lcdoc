@@ -13,7 +13,7 @@ Transforms an <array> into a list.
 
 Introduced: 1.1
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -94,6 +94,8 @@ Changes:
 The combine by row / column form was added in 2.8.1
 
 References: [] (keyword), array (glossary), columnDelimiter (property), 
-element (glossary), extents (function), key (glossary), keys (function), 
-rowDelimiter (property), sort (command), split (command), using (keyword)
+element (glossary), extents (function), intersect (command), key (glossary), 
+keys (function), rowDelimiter (property), sort (command), split (command), 
+union (command), using (keyword)
 
+Tags: arrays
