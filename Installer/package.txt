@@ -423,7 +423,9 @@ component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
 		executable windows:lc-compile.exe as lc-compile.exe
 		executable windows:lc-run.exe as lc-run.exe
-		rfolder windows:modules
+		// Temporarily use the mac interface files until they are 
+		// all generated correctly on windows.
+		rfolder macosx:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
