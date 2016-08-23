@@ -1,0 +1,32 @@
+Name: currentCard
+
+Type: property
+
+Syntax: the currentCard
+
+Summary:
+A stack property that is set to the short name of the card in a given stack that is selected for display.
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+ -— the following results in the same value as ”put the short name of the current card of this stack”
+ 
+put currentCard of this stack
+
+-- even if the stack is invisible, in the background, or offscreen
+
+set the visible of stack "my palette stack" to false
+
+put currentCard of stack "my palette stack"
+
+Description:
+<currentCard> <property> is a stack property that is set to the short name of the card that is currently selected
+
+for display in a given stack, not neccessarly the front most stack nor necessarily a visible stack.
+
+References: current card (glossary)
+
+Tags: card, stack, property, this, current
