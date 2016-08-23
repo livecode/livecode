@@ -175,7 +175,7 @@ component Resources
 		stack "ide:Resources/Sample Projects/Simple Calculator.rev"
 		stack "ide:Resources/Sample Projects/Video Capture.rev"
 	into "[[SupportFolder]]/Resources" place
-		file ide:Resources/Sample.mov
+		file ide:Resources/Sample.mpg
 	into "[[SupportFolder]]/Resources/Object Libraries" place
 		stack "ide:Resources/Object Libraries/revObjectLibrary.rev"
 	into "[[SupportFolder]]/Resources/Start Center/samples/sample_1" place
