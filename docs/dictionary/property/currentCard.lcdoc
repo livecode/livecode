@@ -12,15 +12,15 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
- -— the following results in the same value as ”put the short name of the current card of this stack”
+ -- the following results in the same value as put the short name of the current card of this stack
  
+put the currentCard of this stack
+
+ -- even if the stack is invisible, in the background, or offscreen
+
+set the visible of this stack to false
+
 put currentCard of this stack
-
--- even if the stack is invisible, in the background, or offscreen
-
-set the visible of stack "my palette stack" to false
-
-put currentCard of stack "my palette stack"
 
 Description:
 <currentCard> <property> is a stack property that is set to the short name of the card that is currently selected
