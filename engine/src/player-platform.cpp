@@ -1933,7 +1933,10 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 	
 	// MW-2011-10-24: [[ Bug 9800 ]] If the rect has changed, notify the layer.
 	if (!MCU_equal_rect(rect, t_old_rect))
+	{
 		layer_rectchanged(t_old_rect, true);
+		geometrychanged(rect);
+	}
 	
 	return trect;
 }
