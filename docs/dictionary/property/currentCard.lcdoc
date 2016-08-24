@@ -23,6 +23,7 @@ set the visible of this stack to false
 put currentCard of this stack
 
 -- can be retrieved or set for a stack file that is not currently opened (provided the stack file is writeable)
+
 set currentCard of stack "/Users/admin/Desktop/example.livecode" to "ExampleOfCardNameThatsNotTheFirstCard"
 
 Description:
