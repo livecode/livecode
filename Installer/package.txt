@@ -73,7 +73,7 @@ installer LiveCode
 		include Runtime.Android
 		include Runtime.Emscripten
 		shortcut "Desktop/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
-		shortcut "Programs/RunRev/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
+		shortcut "Programs/LiveCode/[[ProductTitle]]" to "[[TargetFolder]]/[[ProductName]].exe"
 	if TargetPlatform is Linux then
 		include Mobile.Linux
 		include Runtime.Android
