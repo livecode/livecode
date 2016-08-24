@@ -3198,14 +3198,15 @@ void MCInterfaceExecCreateScriptOnlyStack(MCExecContext& ctxt, MCStringRef p_new
     t_new_stack -> setparent(MCdispatcher -> gethome());
     t_new_stack -> message(MCM_new_stack);
     t_new_stack -> setflag(False, F_VISIBLE);
-    // PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
-    t_new_stack -> open();
     t_new_stack -> setasscriptonly(kMCEmptyString);
     
 	if (p_new_name != nil)
 		t_new_stack -> setstringprop(ctxt, 0, P_NAME, False, p_new_name);
 	
-	MCAutoValueRef t_id;
+    // PM-2015-10-26: [[ Bug 16283 ]] Automatically update project browser to show newly created script only stacks
+    t_new_stack -> open();
+    
+    MCAutoValueRef t_id;
 	t_new_stack -> names(P_LONG_ID, &t_id);
 	ctxt . SetItToValue(*t_id);
 }
