@@ -1,0 +1,42 @@
+Name: open stack
+
+Type: command
+
+Syntax: open stack <filePath>
+
+Summary:
+Opens a stack so its contents can be accessed or modified.
+
+Introduced: 1.0
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Security: disk
+
+Example:
+open stack "temp.livecode"
+
+Example:
+put the filename of me into tMe
+set the itemdelimiter to "/"
+put item 1 to -2 of tMe into tMeShort
+set the defaultFolder to tMeShort
+open stack tFileName
+
+Parameters:
+filePath:
+Specifies the name and location of the stack you want to open or create.
+If you specify a name but not a location, LiveCode assumes the file is
+in the defaultFolder. 
+
+encoding:
+
+The result:
+
+Description:
+
+References: close (command), go (command)
+
+Tags: file system
