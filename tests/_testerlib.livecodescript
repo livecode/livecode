@@ -200,6 +200,7 @@ function TesterTapAnalyse pTapData
             add 1 to tStats["xfail"]
          else
             add 1 to tStats["fail"]
+            put tLine & return after tStats["failures"]
          end if
       end if
 
@@ -233,7 +234,7 @@ function TesterTapCombine pAnalysisA, pAnalysisB
 
    if pAnalysisA is an array and pAnalysisB is an array then
       repeat for each key tKey in pAnalysisB
-         if tKey is "log" then
+         if tKey is among the words of "log failures" then
             put pAnalysisA[tKey] & pAnalysisB[tKey] into tCombined[tKey]
          else
             put pAnalysisA[tKey] + pAnalysisB[tKey] into tCombined[tKey]
@@ -320,5 +321,9 @@ command TesterLogSummaryLine pTapResults, pTestName
    put TesterTapGetWorstResult(pTapResults) into tWorst
    put pTestName into tMessage
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
+   if pTapResults["failures"] is not empty then
+      put return & pTapResults["failures"] after tMessage
+   end if
+
    TesterLog tWorst, tMessage
 end TesterLogSummaryLine

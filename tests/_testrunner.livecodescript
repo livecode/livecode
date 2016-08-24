@@ -239,7 +239,7 @@ private command runTestProcessOutput pScriptfile, pCommand, pOutput
    put "###" && TesterGetPrettyTestName(pScriptFile) && pCommand \
          & return & return into tTestLog
    put pOutput & return after tTestLog
-
+   
    -- Analyse the results and print a summary line
    local tTapResults
    put TesterTapAnalyse(tTestLog) into tTapResults
