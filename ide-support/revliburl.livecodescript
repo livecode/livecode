@@ -48,7 +48,7 @@ local lvHTTPProxy              -- The proxy server (if any) configured by the sy
 local lvProxyBypassList        -- URLs that bypass any proxy settings
 
 -- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
-local lvExtDriver, lvExtIsBlocking
+local lvExtDriver
 
 ---------------------------------------------------------------------
 ##http locals
@@ -111,7 +111,6 @@ private function loadExternalDriver pDriver
 
    put ulExtInitDriver() into tResult
    if tResult is empty then
-      put ulExtIsBlocking() into lvExtIsBlocking
       put pDriver into lvExtDriver
    else
       # External driver initialisation failed, so don't use it as a behavior for libURL
@@ -125,7 +124,6 @@ end loadExternalDriver
 private command unloadExternalDriver
    if lvExtDriver is not empty then
       ulExtRemoveDriver
-      put false into lvExtIsBlocking
       put empty into lvExtDriver
    end if
 
@@ -259,7 +257,7 @@ on getUrl x
    if newUrl is among the keys of laLoadingUrls and (lvAuthBlockBypass is not true) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -303,7 +301,7 @@ on postUrl y,x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -349,7 +347,7 @@ on putUrl y,x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty  or lvBlockBypass or lvAuthBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -395,7 +393,7 @@ on deleteUrl x
    if newUrl is among the lines of keys(laLoadingUrls) then
       return "error  URL is currently loading" with urlResult empty
    end if
-   if lvBlockingUrl is empty  or lvBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
+   if lvBlockingUrl is empty  or lvBlockBypass is true or (lvExtDriver is not empty and ulExtIsBlocked() is false) then
       put newUrl into lvBlockingUrl
       if lvCount is empty then
          put "6923" into lvCount
@@ -3294,7 +3292,7 @@ on ulDeleteLocals
   
   repeat for each item e in line 3 of the localNames
     -- CW-2016-06-11: [[ External driver support ]] Don't clear locals that determine what driver is in use.
-    if e is not "lvExtDriver" and e is not "lvExtIsBlocking" then
+    if e is not "lvExtDriver" then
       get "delete" && "local" && e
       do it
     end if
