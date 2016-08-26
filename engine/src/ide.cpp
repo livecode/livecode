@@ -1462,8 +1462,8 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_last_line = t_end;
 	}
 	
-	uint4 t_old_nesting, t_new_nesting;
-	t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
+	uint4 t_new_nesting;
+    t_new_nesting = t_state -> GetCommentNesting(t_first_line);
 
 	MCParagraph *t_paragraph;
 	t_paragraph = t_first_paragraph;
@@ -1480,8 +1480,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	 * deal with comment nesting. */
 	for (t_line = t_first_line, t_paragraph = t_first_paragraph;
 	     t_line <= t_last_line ||
-		     (p_mutate && t_paragraph != t_sentinal_paragraph &&
-		      t_new_nesting != t_old_nesting);
+		     (p_mutate && t_paragraph != t_sentinal_paragraph);
 	     ++t_line, t_paragraph = t_paragraph -> next())
 	{
 		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
@@ -1493,7 +1492,6 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		                   t_new_nesting, t_nesting, t_min_nesting,
 		                   p_callback, t_paragraph);
 
-		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
 		t_new_nesting = t_nesting;
 	}
