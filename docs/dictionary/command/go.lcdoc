@@ -36,6 +36,13 @@ go back 7
 Example:
 go invisible stack "Preferences"
 
+Example:
+put the filename of me into tStackFile
+set the itemDelimiter to "/"
+put item 1 to -2 of tStackFile into tStackFolder
+set the defaultFolder to tStackFolder
+go stack somethingElse.livecode
+
 Parameters:
 card:
 Any card reference. Cards can be described by their name, number, or ID
@@ -81,6 +88,10 @@ by name:
 go stack "My Stack"
 
 Otherwise, you must include the stack's file path.
+
+If you don't include a file path the <go> command will look in
+the defaultFolder. If you're in the IDE (not a standalone) the
+defaultFolder will probably start off as a system folder.
 
 When going to a previously-unopened stack, if you don't specify a card,
 the <go> command displays the first card of the stack. If the stack is
