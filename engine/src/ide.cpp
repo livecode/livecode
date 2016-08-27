@@ -61,6 +61,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // script colorize (char|line) x to y of <field chunk>
 // script complete at char x of <field chunk>
 // script tokenize <container>
+// script commentnesting at line x of <field chunk>
 
 class MCIdeState
 {
@@ -1462,8 +1463,11 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_last_line = t_end;
 	}
 	
-	uint4 t_new_nesting;
-    t_new_nesting = t_state -> GetCommentNesting(t_first_line);
+	uint4 t_old_nesting, t_new_nesting;
+    if (t_first_line > 0)
+        t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line-1);
+    else
+        t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
 
 	MCParagraph *t_paragraph;
 	t_paragraph = t_first_paragraph;
@@ -1479,8 +1483,8 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	/* It may be necessary to go beyond the last requested line in order to
 	 * deal with comment nesting. */
 	for (t_line = t_first_line, t_paragraph = t_first_paragraph;
-	     t_line <= t_last_line ||
-		     (p_mutate && t_paragraph != t_sentinal_paragraph);
+	     t_line <= t_last_line || (p_mutate && t_paragraph != t_sentinal_paragraph &&
+		      t_new_nesting == t_old_nesting && t_line <= t_last_line);
 	     ++t_line, t_paragraph = t_paragraph -> next())
 	{
 		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
@@ -1492,6 +1496,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		                   t_new_nesting, t_nesting, t_min_nesting,
 		                   p_callback, t_paragraph);
 
+		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
 		t_new_nesting = t_nesting;
 	}
@@ -1631,6 +1636,65 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+MCIdeScriptCommentNesting::MCIdeScriptCommentNesting(void)
+: f_line(NULL), f_target(NULL)
+{
+}
+
+MCIdeScriptCommentNesting::~MCIdeScriptCommentNesting(void)
+{
+    delete f_target;
+    delete f_line;
+}
+
+Parse_stat MCIdeScriptCommentNesting::parse(MCScriptPoint& p_script)
+{
+    Parse_stat t_status;
+    t_status = PS_NORMAL;
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . skip_token(SP_FACTOR, TT_OF, PT_OF);
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . skip_token(SP_FACTOR, TT_CHUNK, CT_LINE);
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . parseexp(False, False, &f_line);
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . skip_token(SP_FACTOR, TT_OF, PT_OF);
+    
+    if (t_status == PS_NORMAL)
+        t_status = parse_target(p_script, f_target);
+    
+    return t_status;
+}
+
+void MCIdeScriptCommentNesting::exec_ctxt(MCExecContext & ctxt)
+{
+    int t_line;
+    if (!ctxt . EvalExprAsStrictInt(f_line, EE_OBJECT_NAN, t_line))
+        return;
+
+    MCField *t_target;
+    
+    if (!eval_target(ctxt, f_target, t_target))
+        return;
+    
+    MCIdeState *t_state;
+    t_state = MCIdeState::Find(t_target);
+    
+    uint32_t t_nesting = t_state -> GetCommentNesting(t_line);
+    
+    MCAutoNumberRef t_value;
+    MCNumberCreateWithUnsignedInteger(t_nesting, &t_value);
+    
+    ctxt . SetItToValue(*t_value);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 MCIdeScriptDescribe::MCIdeScriptDescribe(void)
 	: f_type(TYPE_NONE)
