@@ -2,11 +2,11 @@ Name: libURLMultipartFormData
 
 Type: function
 
-Syntax: libURLMultipartFormData(form data, key_1, value_1, ..., key_n, value_n)
+Syntax: libURLMultipartFormData(<formData>, key_1, value_1, ..., key_n, value_n)
 
-Syntax: libURLMultipartFormData(form data, array)
+Syntax: libURLMultipartFormData(<formData>, array)
 
-Syntax: libURLMultipartFormData(<form data>)
+Syntax: libURLMultipartFormData(<formData>)
 
 Summary:
 <libURLMultipartFormData> formats data in the way described in RFC 1867.
@@ -22,14 +22,17 @@ Platforms: desktop, server
 Security: network
 
 Example:
+local tForm, tError, tUrl, tName, tMessage, tFile
 put empty into tForm
 put "http://www.someserver.com/cgi-bin/form.cgi" into tUrl
-put "dave" into tName put "hello" into tMessage
+put "dave" into tName 
+put "hello" into tMessage
 put "&lt;file&gt;" & "C:/myfile.txt" into tFile
 put libURLMultipartFormData \
- (tForm, "name", tName, "message", tMessage, "file", tFile) into tError
+ (tForm, "name", tName, "message", tMessage, "file", tFile) \
+ into tError
 if tError is not empty then
- answer tError ##error
+ answer tError
 else
  set the httpHeaders to line 1 of tForm
  post line 2 to -1 of tForm to url tUrl
@@ -37,53 +40,59 @@ else
  set the httpHeaders to empty
 end if
 
+Parameters:
+formData: A variable, which will be filled with the form data.
+
+Returns:
+The function will return empty if successful, or an error message
+if it fails (for example, if it couldn't open a file). If successful the 
+form data is returned to the <formData> variable.
+
 Description:
 The function can be called in a number of ways depending on the
-parameters passed. In all cases, the first parameter must be a variable
-which will be filled with the form data. The function will return empty
-if successful, or an error message if it fails (for example, if it
-couldn't open a file).
+<parameter|parameters> passed. In all cases, the first <parameter> must 
+be a variable which will be filled with the form data. The function will 
+return empty if successful, or an error message if it fails (for example, 
+if it couldn't open a file).
 
->*Note:* When you need to supply a file as the value of a parameter, you
+>*Note:* When you need to supply a file as the value of a <parameter>, you
 > must pass the file name preceeded by the text "&lt;file&gt;".
 
->*Note:* In all cases, the first line of the data returned in the form
-> data variable is the Content-Type header that must be included in the
+>*Note:* In all cases, the first line of the data returned in the <formData>
+> variable is the Content-Type header that must be included in the
 > httpHeaders of the url request. Lines 2 to the end of the data is the
 > data that must be posted to the url.
 
 The standard way to call the function is with pairs of name/value
-parameters. 
+<parameter|parameters>. 
 
-You can also pass in an array instead of pairs of parameters. This could
-be useful if there are many parts to a form. The array must be
+You can also pass in an array instead of pairs of <parameter|parameters>. 
+This could be useful if there are many parts to a form. The array must be
 numerically indexed, and each element should contain the part name and
-part value, separated by a comma. So (using the above example):
+part value, separated by a comma. So (modifying the above example):
 
-put empty into tForm
-put "dave" into tName
-put "hello" into tMessage
-put "&lt;file&gt;" & "C:/myfile.txt" into tFile
-put "name," & tName into tArray[1]
-put "message," & tMessage into tArray[2]
-put "file," & tFile into tArray[3]
-if libURLMultipartFormData(tForm, tArray) is not empty then
+    local tForm, tError, tUrl, tName, tMessage, tArray, tFile
+    put empty into tForm
+    put "dave" into tName
+    put "hello" into tMessage
+    put "&lt;file&gt;" & "C:/myfile.txt" into tFile
+    put "name," & tName into tArray[1]
+    put "message," & tMessage into tArray[2]
+    put "file," & tFile into tArray[3]
+    put libURLMultipartFormData(tForm, tArray) into tError
+    if tError is not empty then
+      answer tError 
+    else
+      set the httpHeaders to line 1 of tForm
+      post line 2 to -1 of tForm to url tUrl
+      set the httpHeaders to empty
+    end if
 
-    answer it ##error
-
-else
-
-    set the httpHeaders to line 1 of tForm
-    post line 2 to -1 of tForm to url 
-    set the httpHeaders to empty
-
-end if
-
-    You can also call the function with no arguments except the form
-    data. This will return an "empty" form. Basically, line 1 is the
-    header, and line 2 is the final boundary mark of the form. It is of
-    no use by itself, but it can be used with
-    <libURLMultipartFormAddPart>. 
+You can also call the function with no <argument|arguments> except 
+<formData>. This will return an "empty" form. Basically, line 1 is the
+header, and line 2 is the final boundary mark of the form. It is of
+no use by itself, but it can be used with
+<libURLMultipartFormAddPart>. 
 
 
 >*Important:* The <libURLMultipartFormData> <function> is part of the 
@@ -96,13 +105,10 @@ end if
 
 See also [RFC 1867](https://tools.ietf.org/html/rfc1867).
 
-References: post (command), libURLSetExpect100 (command),
-libURLMultipartFormAddPart (function), libURLFormData (function),
-LiveCode custom library (glossary), main stack (glossary),
-handler (glossary), Standalone Application Settings (glossary),
-message (glossary), group (glossary), standalone application (glossary),
-keyword (glossary), function (glossary), application (glossary),
-Internet library (library), library (library), startup (message),
-openBackground (message), preOpenStack (message), openStack (message),
-preOpenCard (message)
-
+References: $_POST (keyword), $_POST_BINARY (keyword), 
+$_POST_RAW (keyword), argument (glossary), function (glossary), 
+Internet library (library), library (library), 
+libURLFormData (function), libURLMultipartFormAddPart (function), 
+libURLSetExpect100 (command), LiveCode custom library (glossary), 
+parameter (glossary), post (command), standalone application (glossary), 
+Standalone Application Settings (glossary)
