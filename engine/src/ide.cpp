@@ -1464,10 +1464,7 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 	}
 	
 	uint4 t_old_nesting, t_new_nesting;
-    if (t_first_line > 0)
-        t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line-1);
-    else
-        t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
+    t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
 
 	MCParagraph *t_paragraph;
 	t_paragraph = t_first_paragraph;
@@ -1482,12 +1479,10 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 
 	/* It may be necessary to go beyond the last requested line in order to
 	 * deal with comment nesting. */
-	for (t_line = t_first_line, t_paragraph = t_first_paragraph;
-	     t_line <= t_last_line || (p_mutate && t_paragraph != t_sentinal_paragraph &&
-		      t_new_nesting == t_old_nesting && t_line <= t_last_line);
+	for (t_line = t_first_line, t_paragraph = t_first_paragraph;;
 	     ++t_line, t_paragraph = t_paragraph -> next())
 	{
-		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
+        t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
 
 		uint32_t t_nesting, t_min_nesting;
 
@@ -1499,6 +1494,19 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
 		t_new_nesting = t_nesting;
+        
+        if (t_line >= t_last_line)
+        {
+            if (p_mutate)
+            {
+                if (t_paragraph == t_sentinal_paragraph || t_new_nesting == t_old_nesting)
+                    break;
+            }
+            else
+                break;
+        }
+        
+        
 	}
 
 	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all
