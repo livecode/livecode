@@ -643,7 +643,6 @@ component Runtime.iOS
 		file ios:iphoneos8.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos8.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos8.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos8.2/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos8.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos8.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos8.2/fontmap as "fontmap"
@@ -664,7 +663,6 @@ component Runtime.iOS
 		file ios:iphoneos9.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos9.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos9.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos9.2/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos9.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos9.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos9.2/fontmap as "fontmap"
@@ -685,7 +683,6 @@ component Runtime.iOS
 		file ios:iphoneos9.3/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos9.3/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos9.3/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
-		file ios:iphoneos9.3/template-ResourceRules.plist as "ResourceRules.plist"
 		file ios:iphoneos9.3/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos9.3/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos9.3/fontmap as "fontmap"
