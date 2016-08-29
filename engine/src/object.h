@@ -185,6 +185,10 @@ struct MCObjectVisitor
 #define OBJECT_EXTRA_THEME_INFO     (1U << 5)       // "theme" and/or "themeClass" properties are present
 
 
+// Forward declaration of MCObjectCast safe-casting utility function
+template <typename T>
+inline T* MCObjectCast(MCObject*);
+
 // Proxy allowing for weak references to MCObjects
 class MCObjectProxy
 {
@@ -1405,6 +1409,13 @@ T* MCObjectCast(MCObject* p_object)
     // type. This will break horribly if the desired type has derived types...
     MCAssert(p_object->gettype() == T::kObjectType);
     return static_cast<T*> (p_object);
+}
+
+// Casting to an MCObject* is always safe
+template <>
+inline MCObject* MCObjectCast<MCObject>(MCObject* p_object)
+{
+    return p_object;
 }
 
 
