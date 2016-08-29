@@ -496,7 +496,7 @@ MCStack *MCStack::getparentstack()
 		return nil;
 	}
 	
-	return m_parent_stack.GetAs<MCStack>();
+	return m_parent_stack;
 }
 
 static bool _MCStackTakeWindowCallback(MCStack *p_stack, void *p_context)

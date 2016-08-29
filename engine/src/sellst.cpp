@@ -240,7 +240,7 @@ MCControl *MCSellist::clone(MCObject *target)
 
 	clear(false);
 
-	MCObjectHandle t_newtarget = nil;
+	MCControlHandle t_newtarget = nil;
 	for (uint32_t i = 0; i < t_selobj_count; i++)
 	{
 		if (t_selobj_handles[i].IsValid())
@@ -263,7 +263,7 @@ MCControl *MCSellist::clone(MCObject *target)
         
         // Note that t_newtarget->Get() can change while executing the above message
         // hence we re-evaluate here.
-        t_result = t_newtarget.GetAs<MCControl>();
+        t_result = t_newtarget;
 	}
 	
 	// MW-2010-05-06: Make sure we clean up the temp array

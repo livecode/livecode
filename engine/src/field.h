@@ -192,11 +192,14 @@ enum MCFieldStylingMode
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCField : public MCControl
+typedef MCObjectProxy<MCField>::Handle MCFieldHandle;
+
+class MCField : public MCControl, public MCMixinObjectHandle<MCField>
 {
 public:
     
     enum { kObjectType = CT_FIELD };
+    using MCMixinObjectHandle<MCField>::GetHandle;
     
 private:
     

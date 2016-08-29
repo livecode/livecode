@@ -2054,7 +2054,7 @@ Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParameter *p_params)
 {
 	// Fetch current default stack and target settings
-	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr t_old_target;
 	t_old_target = MCtargetptr;
 	
@@ -2080,7 +2080,7 @@ Exec_stat MCObject::dispatch(Handler_type p_type, MCNameRef p_message, MCParamet
 	// semantics here. i.e. If the default stack has been changed, the change sticks.
     if (MCdefaultstackptr == t_this_stack
                 && t_old_defaultstack.IsValid())
-        MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+        MCdefaultstackptr = t_old_defaultstack;
 	
 	// Reset target pointer
 	MCtargetptr = t_old_target;
@@ -2112,7 +2112,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	void *t_deletion_cookie;
 	MCDeletedObjectsOnObjectSuspendDeletion(this, t_deletion_cookie);
 	
-	MCObjectHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
+	MCStackHandle t_old_defaultstack = MCdefaultstackptr->GetHandle();
 	MCObjectPtr oldtargetptr = MCtargetptr;
 	if (changedefault)
 	{
@@ -2147,7 +2147,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 	}
 	if ((!send || !changedefault || MCdefaultstackptr == mystack)
                 && t_old_defaultstack.IsValid())
-		MCdefaultstackptr = t_old_defaultstack.GetAs<MCStack>();
+		MCdefaultstackptr = t_old_defaultstack;
 	
     MCtargetptr = oldtargetptr;
 	MCdynamicpath = olddynamic;
@@ -4242,18 +4242,6 @@ MCImage *MCObject::resolveimagename(MCStringRef p_name)
 	return resolveimage(p_name, 0);
 }
 
-MCObjectHandle MCObject::GetHandle(void)
-{
-	if (m_weak_proxy == NULL)
-	{
-		m_weak_proxy = new MCObjectProxy(this);
-        if (!m_weak_proxy)
-            return MCObjectHandle(NULL);
-	}
-
-	return MCObjectHandle(m_weak_proxy);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 // IM-2013-10-17: [[ FullscreenMode ]] Removed struct fields not related to image masks
@@ -5342,58 +5330,59 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectProxy::MCObjectProxy(MCObject *p_object) :
-  m_object(p_object),
-  m_refcount(0)
+MCObjectProxyBase::MCObjectProxyBase(MCObject *p_object) :
+m_object(p_object),
+m_refcount(0)
 {
 }
 
-MCObjectProxy::~MCObjectProxy()
+MCObjectProxyBase::~MCObjectProxyBase()
 {
     // Shouldn't get deleted if there are references outstanding!
     MCAssert(m_refcount == 0);
 }
 
-MCObject* MCObjectProxy::Get()
+MCObject* MCObjectProxyBase::Get()
 {
-	MCAssert(m_object != nil);
+    MCAssert(m_object != nil);
     return m_object;
 }
 
-void MCObjectProxy::Clear()
+void MCObjectProxyBase::Clear()
 {
-	if (m_object)
-	{
-		m_object->m_weak_proxy = nil;
-		m_object = nil;
-	}
+    if (m_object)
+    {
+        m_object->m_weak_proxy = nil;
+        m_object = nil;
+    }
 }
 
-void MCObjectProxy::Retain()
+void MCObjectProxyBase::Retain()
 {
-	m_refcount += 1;
+    m_refcount += 1;
 }
 
-void MCObjectProxy::Release()
+void MCObjectProxyBase::Release()
 {
     // Sanity check to prevent over-releases (which implies a bug in the Handle
     // RAII class) as there shouldn't be another way to get a reference.
     MCAssert(m_refcount > 0);
     
     if (--m_refcount <= 0)
-	{
+    {
         // The object in question no longer has a proxy object as we are being
         // deleted
-		Clear();
+        Clear();
         
-		delete this;
-	}
+        delete this;
+    }
 }
 
-bool MCObjectProxy::ObjectExists() const
+bool MCObjectProxyBase::ObjectExists() const
 {
-	return m_object != NULL;
+    return m_object != NULL;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

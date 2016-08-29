@@ -156,11 +156,14 @@ struct MCStackAttachment
     MCStackAttachmentCallback callback;
 };
 
-class MCStack : public MCObject
+typedef MCObjectProxy<MCStack>::Handle MCStackHandle;
+
+class MCStack : public MCObject, public MCMixinObjectHandle<MCStack>
 {
 public:
     
     enum { kObjectType = CT_STACK };
+    using MCMixinObjectHandle<MCStack>::GetHandle;
 
 protected:
     
@@ -220,7 +223,7 @@ protected:
 #endif
 
 	// IM-2014-07-23: [[ Bug 12930 ]] The stack whose window is parent to this stack
-	MCObjectHandle m_parent_stack;
+	MCStackHandle m_parent_stack;
 	
 	MCExternalHandlerList *m_externals;
 
