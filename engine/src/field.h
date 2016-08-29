@@ -194,6 +194,12 @@ enum MCFieldStylingMode
 
 class MCField : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_FIELD };
+    
+private:
+    
 	friend class MCHcfield;
 	MCCdata *fdata;
 	MCCdata *oldfdata;
@@ -263,8 +269,6 @@ class MCField : public MCControl
 	static MCPropertyInfo kProperties[];
 	static MCObjectPropertyTable kPropertyTable;
 public:
-
-    enum { kObjectType = CT_FIELD };
     
     // SN-2014-11-04: [[ Bug 13934 ]] Refactor the laying out the field when setting properties
     friend MCParagraph* PrepareLayoutSettings(bool all, MCField *p_field, uint32_t p_part_id, findex_t &si, findex_t &ei, MCFieldLayoutSettings &r_layout_settings);
