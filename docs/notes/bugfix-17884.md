@@ -1,0 +1,1 @@
+# Fix stacks not fully drawn if windowshape and size set while hidden.

@@ -994,6 +994,7 @@ MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 		return p_rect;
 	}
 	
+	view_dirty_all();
 	return view_platform_setgeom(p_rect);
 }
 
