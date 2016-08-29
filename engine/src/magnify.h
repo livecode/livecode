@@ -24,6 +24,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCMagnify : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_MAGNIFY };
+    
 protected:
 	uint2 inside;
 public:

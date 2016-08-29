@@ -105,6 +105,12 @@ class ButtonMenuCallback;
 
 class MCButton : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_BUTTON };
+    
+private:
+    
 	friend class MCHcbutton;
 	MCCdata *bdata;
 	iconlist *icons;
@@ -156,8 +162,6 @@ class MCButton : public MCControl
     bool m_animate_posted : 1;
 
 public:
-    
-    enum { kObjectType = CT_BUTTON };
     
 	MCButton();
 	MCButton(const MCButton &bref);
