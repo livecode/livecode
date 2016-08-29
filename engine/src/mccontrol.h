@@ -374,7 +374,7 @@ template <>
 inline MCControl* MCObjectCast<MCControl>(MCObject* p_object)
 {
     Chunk_term t_type = p_object->gettype();
-    MCAssert(t_type != CT_UNDEFINED && t_type != CT_STACK && t_type != CT_CARD);
+    MCAssert(t_type != CT_UNDEFINED && t_type != CT_STACK && t_type != CT_CARD && t_type != CT_AUDIO_CLIP && t_type != CT_VIDEO_CLIP);
     return static_cast<MCControl*> (p_object);
 }
 
