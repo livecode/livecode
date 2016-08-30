@@ -11,11 +11,6 @@ os:
   - linux
   - osx
 
-matrix:
-  # Treat the OSX build as experimental for now
-  allow_failures:
-    - os: osx
-
 language: c++
 
 # Skip vulcan CI branches
