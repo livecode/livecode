@@ -4,11 +4,12 @@ Type: function
 
 Syntax: mobileCanComposeTextMessage()
 
-Summary: Returns true if the device can compose text messages, false otherwise.
+Summary:
+Returns true if the device can compose text messages, false otherwise.
 
 Introduced: 5.5
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -20,9 +21,13 @@ if mobileCanComposeTextMessage() is "true" then
   answer "Text Messages can be sent"
 end if
 
-Returns: The <mobileCanComposeTextMessage> function returns true if the device can send text messages and false otherwise.
+Returns:
+The <mobileCanComposeTextMessage> function returns true if the device
+can send text messages and false otherwise.
 
 Description:
-Use the <mobileCanComposeTextMessage> function to check whether the device can send text messages.
+Use the <mobileCanComposeTextMessage> function to check whether the
+device can send text messages.
 
 References: mobileComposeTextMessage (command)
+

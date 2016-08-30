@@ -17,10 +17,12 @@ command docsBuilderProgressUpdate pProgress, pMessage
    builderLog "message", pMessage
 end docsBuilderProgressUpdate
 
-command errorShow pError
-   builderLog "error", pError
-   throw pError
-end errorShow
+command logError pError
+   local tContext
+   // get the context of the calling handler: <handler>:<linenumber>
+   put item -2 to -1 of line -2 of the executionContexts into tContext
+   builderLog "error", pError, tContext
+end logError
 
 command docsBuilderRun pEdition, pVersion
    set the itemdelimiter to "."
@@ -1911,11 +1913,7 @@ end escape
 command docsBuilderGenerateDocsNew pEdition, pVersion   
    start using stack (builderRepoFolder() & slash & "ide-support" & slash & "revdocsparser.livecodescript")
    
-   -- Ensure we have downloaded and extracted all the mergExt data 
-   -- needed to build the docs for this edition
-   local tEditionCased
-   put (toUpper(char 1 of pEdition) & toLower(char 2 to -1 of pEdition)) into tEditionCased
-   builderMergExtUnpack builderMergExtVersion(), tEditionCased
+   builderExtUnpack pEdition
    
    builderLog "report", "Building guide into" && builderGuideFolder(pEdition) & slash & "distributed_guide.js"
    pathEnsure (builderGuideFolder(pEdition))
@@ -1942,7 +1940,7 @@ private command addFolderToListIfExists pFolder, pThrowIfNot, @xArray
    end if
    
    if pThrowIfNot then
-      builderLog "error", "Expected docs folder" && pFolder && "doesn't exist"
+      logError "Expected docs folder" && pFolder && "doesn't exist"
    else 
       builderLog "message", "Folder" && pFolder && "doesn't exist"
    end if
@@ -1980,12 +1978,12 @@ private command docsBuilderGetGuideFolders pEdition, @xFolders
    addFolderToListIfExists builderBuiltGuidesFolder(), false, xFolders
 end docsBuilderGetGuideFolders
 
-private command docsBuilderAddMergExtFolders pEdition, @xFolders
+private command docsBuilderAddExtFolders pEdition, @xFolders
    local tDefaultFolder
    put the defaultFolder into tDefaultFolder
    
    local tTargetFolder
-   put builderMergExtFolder() & "/" & "MergExt" into tTargetFolder
+   put builderUnpackFolder() & slash & "Ext" into tTargetFolder
    set the defaultFolder to tTargetFolder
    
    repeat for each line tFolder in the folders
@@ -1994,11 +1992,11 @@ private command docsBuilderAddMergExtFolders pEdition, @xFolders
    end repeat
    
    set the defaultFolder to tDefaultFolder
-end docsBuilderAddMergExtFolders
+end docsBuilderAddExtFolders
 
-private command docsBuilderGetAdditionalDictionaryFolders pEdition, @xFolders
-   docsBuilderAddMergExtFolders pEdition, xFolders
-end docsBuilderGetAdditionalDictionaryFolders
+private command docsBuilderGetAdditionalFolders pEdition, @xFolders
+   docsBuilderAddExtFolders pEdition, xFolders
+end docsBuilderGetAdditionalFolders
 
 private command docsBuilderGetDictionaryFolders pEdition, @xFolders
    local tCommunityDocs
@@ -2017,6 +2015,7 @@ end docsBuilderGetDictionaryFolders
 command docsBuilderGenerateDistributedGuide pEdition
    local tGuideFoldersA
    docsBuilderGetGuideFolders pEdition, tGuideFoldersA
+   docsBuilderGetAdditionalFolders  pEdition, tGuideFoldersA
    
    local tGuideFoldersWithLocationA
    repeat for each element tElement in tGuideFoldersA
@@ -2141,7 +2140,7 @@ end docsBuilderParseDictionary
 command docsBuilderGenerateDistributedAPI pEdition
    local tDictionaryFolders, tAdditionalFolders
    docsBuilderGetDictionaryFolders pEdition, tDictionaryFolders
-   docsBuilderGetAdditionalDictionaryFolders pEdition, tAdditionalFolders
+   docsBuilderGetAdditionalFolders pEdition, tAdditionalFolders
    
    local tLibrariesA
    
@@ -2149,7 +2148,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    put docsBuilderParseDictionary("LiveCode Script", "LiveCode", tDictionaryFolders, tAdditionalFolders, false) into tLCSDictionaryA
    
    if tLCSDictionaryA is empty then
-      builderLog "error", "Couldn't parse script dictionary data for" && pEdition
+      logError "Couldn't parse script dictionary data for" && pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
@@ -2188,7 +2187,7 @@ command docsBuilderGenerateDistributedAPI pEdition
    put "dictionary" into tLCBDictionaryA["type"]
    
    if tLCBDictionaryA is empty then
-      builderLog "error", "Couldn't parse builder dictionary data for" && pEdition
+      logError "Couldn't parse builder dictionary data for" && pEdition
       exit docsBuilderGenerateDistributedAPI
    end if
    
@@ -2229,7 +2228,7 @@ on docsBuilderPopulateDatabase pEdition, pLibrariesA
    
    put the result into tConnection
    if tConnection is not a number then
-      builderLog "error", the result
+      logError the result
       exit docsBuilderPopulateDatabase
    end if
    
@@ -2239,7 +2238,7 @@ on docsBuilderPopulateDatabase pEdition, pLibrariesA
       builderLog "message", "adding library" && pLibrariesA[tKey]["display name"] && "to docs database"
       revDocsUpdateDatabase tConnection, pLibrariesA[tKey]
       if the result is not empty then
-         builderLog "error", the result
+         logError the result
          exit docsBuilderPopulateDatabase
       end if
    end repeat
@@ -2272,7 +2271,7 @@ private command docsBuilderGenerateZip pEdition, pVersion
       put merge("cd $(dirname '[[tDocItem]]') && zip -r '[[tZipPath]]' $(basename '[[tDocItem]]')") into tCmd
       put shell(tCmd) into tCmdOutput
       if the result is not 0 then
-         builderLog "error", "Archiving failed"
+         logError "Archiving failed:" && tCmdOutput
          exit docsBuilderGenerateZip
       end if
    end repeat
@@ -2320,4 +2319,3 @@ function revDocumentationRetrieve pType, pTag, pFolder
    -- We've got the doc's compressed data, uncompress and return
    return the decompress of tDocData
 end revDocumentationRetrieve
-

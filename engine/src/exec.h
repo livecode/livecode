@@ -1873,6 +1873,11 @@ extern MCExecMethodInfo *kMCArraysEvalIsAnArrayMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsNotAnArrayMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsAmongTheKeysOfMethodInfo;
 extern MCExecMethodInfo *kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterWildcardMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterRegexMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterWildcardIntoItMethodInfo;
+extern MCExecMethodInfo *kMCArraysExecFilterRegexIntoItMethodInfo;
+
 
 void MCArraysEvalKeys(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
 void MCArraysEvalExtents(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef& r_string);
@@ -1899,6 +1904,12 @@ void MCArraysEvalIsAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_resu
 void MCArraysEvalIsNotAnArray(MCExecContext& ctxt, MCValueRef p_value, bool& r_result);
 void MCArraysEvalIsAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef p_array, bool& r_result);
 void MCArraysEvalIsNotAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef p_array, bool& r_result);
+
+void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCArrayRef &r_result);
+void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines, MCArrayRef &r_result);
+void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
+void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_lines);
+
 
 ///////////
 
@@ -3476,6 +3487,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceEncodingTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceListStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceThemeTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceThemeControlTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceScriptStatusTypeInfo;
 
 ///////////
 
@@ -4006,7 +4018,9 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 ///////////
 
 extern MCExecMethodInfo *kMCFilesEvalDirectoriesMethodInfo;
+extern MCExecMethodInfo *kMCFilesEvalDirectoriesOfDirectoryMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalFilesMethodInfo;
+extern MCExecMethodInfo *kMCFilesEvalFilesOfDirectoryMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalDiskSpaceMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalDriverNamesMethodInfo;
 extern MCExecMethodInfo *kMCFilesEvalDrivesMethodInfo;
@@ -4100,7 +4114,9 @@ extern MCExecMethodInfo *kMCFilesGetFoldersMethodInfo;
 extern MCExecMethodInfo *kMCFilesGetDetailedFoldersMethodInfo;
 
 void MCFilesEvalDirectories(MCExecContext& ctxt, MCStringRef& r_string);
+void MCFilesEvalDirectoriesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
 void MCFilesEvalFiles(MCExecContext& ctxt, MCStringRef& r_string);
+void MCFilesEvalFilesOfDirectory(MCExecContext& ctxt, MCStringRef p_directory, MCStringRef& r_string);
 void MCFilesEvalDiskSpace(MCExecContext& ctxt, real64_t& r_result);
 void MCFilesEvalDriverNames(MCExecContext& ctxt, MCStringRef& r_string);
 void MCFilesEvalDrives(MCExecContext& ctxt, MCStringRef& r_string);

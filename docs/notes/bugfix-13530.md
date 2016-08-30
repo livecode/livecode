@@ -1,1 +1,0 @@
-# revXMLCreateTreeFromFile does not work with decomposed accented characters in filename

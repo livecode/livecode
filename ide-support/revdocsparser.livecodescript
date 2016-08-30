@@ -457,9 +457,6 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
    local tIsScript
    put there is a pSource into tIsScript
    
-   # Keep track of whether we should warn about the comment style
-   local tNumCommentStars
-   
    repeat for each line tLine in pText
       # Check to see if this is the start of a handler / syntax or a block of comments 
       put word 1 of tLine into tFirstWord
@@ -556,14 +553,7 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                # This is not a new entry
                put false into tInEntry
                # Check if this is a new comment block
-               if tFirstWord begins with "/*" then
-                  
-                  # Warn when docs are contained in /* comments instead of /**                  
-                  if tFirstWord begins with "/**" then
-                     put 2 into tNumCommentStars
-                  else
-                     put 1 into tNumCommentStars
-                  end if
+               if tFirstWord begins with "/**" then
                   
                   # If this is script, and this is an initial block of comments,
                   # then treat as the library description
@@ -577,8 +567,8 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   put empty into tComment
                   local tCommentOffset
                   put true into tInComment
-                  put offset("/*", tLine) into tCommentOffset
-                  put char (tCommentOffset + tNumCommentStars + 1) to -1 of tLine into tLine
+                  put offset("/**", tLine) into tCommentOffset
+                  put char (tCommentOffset + 3) to -1 of tLine into tLine
                   
                   # If there's nothing else on this line, don't add it.
                   if word 1 of tLine is empty then next repeat
@@ -651,12 +641,6 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                   revDocsUpdateDocBlocksForProperty tData, tComment, tAPIData
                   break
             end switch
-            
-            # Warn about comment format if appropriate
-            if tNumCommentStars is 1 then
-               logWarning "Docs comments for" && tEntryData["type"] && tEntryData["name"] && "should be contained in /** comments", pSource
-            end if	
-            put empty into tNumCommentStars
             
          else
             if tEntryData["need_docs"] then
@@ -947,13 +931,16 @@ private function __elementRegex
    return "^ *([tT]he [rR]esult|\w+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
 end __elementRegex
 
-/*
-Utility function to extract any elements matching the docs element style
-*/
-function revDocsExtractElements pText
-   # Get the element-matching regex
+private function __arrayElementRegex
+   # Regex used to extract sub-array elements
+   # Essentially the same as the element regex except quotation marks are allowed
+   # as keys can obviously be string literals.
+   return "^ *([\w" & quote & "]+) *(?:\(( *(?:optional |in |out |inout )?<?\w*>?) *\))? *: *(.*)"
+end __arrayElementRegex
+
+function revDocsExtractElementsWithRegex pText, pRegex
    local tElementRegex
-   put __elementRegex() into tElementRegex
+   put pRegex into tElementRegex
    
    # Array to store the elements
    local tElementsA
@@ -1064,6 +1051,14 @@ function revDocsExtractElements pText
    end if
    
    return tElementsA
+end revDocsExtractElementsWithRegex
+
+/*
+Utility function to extract any elements matching the docs element style
+*/
+function revDocsExtractElements pText
+   # Use the element-matching regex
+   return revDocsExtractElementsWithRegex(pText, __elementRegex())
 end revDocsExtractElements
 
 private command __nameToKeyAndType pName, @rKey, @rType
@@ -1722,18 +1717,23 @@ function revDocsParseKeyValuePair pToParse
    local tOptional 
    put false into tOptional
    
-   local tElementsA
-   put revDocsExtractElements(line 1 to 2 of pToParse) into tElementsA
+   local tElementsA, tToParse
+   repeat with x = 1 to 2
+      put word 1 to -1 of line x of pToParse & return after tToParse
+   end repeat
+   put revDocsExtractElementsWithRegex(tToParse, __arrayElementRegex()) into tElementsA
    
    // flush out key value pair into tArray
    if word 1 of tElementsA[1]["type"] is "optional" then
       put true into tOptional
       put word 2 to -1 of tElementsA[1]["type"] into tElementsA[1]["type"]
    end if
+   put tElementsA[1]["name"] into tArray["key"]["name"]
    put tElementsA[1]["type"] into tArray["key"]["type"]
    put tElementsA[1]["content"] into tArray["key"]["description"]
    put tOptional into tArray["key"]["optional"]
    
+   put tElementsA[2]["name"] into tArray["value"]["name"]
    put tElementsA[2]["type"] into tArray["value"]["type"]
    put tElementsA[2]["content"] into tArray["value"]["description"]
    return tArray
@@ -1970,6 +1970,7 @@ function revDocsArrayParamToJSON pParamA, pDepth
    repeat for each element tKeyValue in pParamA
       put "{" after tOutput
       put tPrefix & tab & escape("key") & ": {"  after tOutput
+      put tPrefix & tab & tab & keyValue("name", tKeyValue["key"]["name"]) & comma after tOutput
       put tPrefix & tab & tab & keyValue("type", tKeyValue["key"]["type"]) & comma after tOutput
       put tPrefix & tab & tab & keyValue("description", tKeyValue["key"]["description"]) & "}" & comma after tOutput
       put tPrefix & tab & escape("value") & ": {"  after tOutput
@@ -2572,6 +2573,7 @@ function revDocsListGuides pFolder
    local tGuides
    put the files into tGuides
    filter tGuides with "*.md"
+   filter tGuides without "README.md"
    
    set the defaultFolder to tDefaultFolder
    

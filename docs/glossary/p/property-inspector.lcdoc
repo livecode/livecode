@@ -1,12 +1,17 @@
 Name: property inspector
 
-Synonyms: property inspector,Properties palette,Properties window
+Synonyms: property inspector, properties palette, properties window
 
 Type: glossary
 
 Description:
-Part of the LiveCode <development environment>, a <palette> window that displays the <property|properties> of an <object(glossary)>. 
- 
-To display an <object|object's> property inspector, <select> the <object(glossary)> and choose Object → Object Inspector from the menubar.
+Part of the LiveCode <development environment>, a <palette> window that
+displays the <property|properties> of an <object(glossary)>.
 
-References: property (glossary), select (glossary), palette (glossary), development environment (glossary), object (glossary)
+To display an <object|object's> property inspector, <select> the
+<object(glossary)> and choose Object → Object Inspector from the
+menubar. 
+
+References: property (glossary), select (glossary), palette (glossary),
+development environment (glossary), object (glossary)
+

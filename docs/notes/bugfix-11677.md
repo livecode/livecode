@@ -1,1 +1,0 @@
-# Slider with a width < 3 x height loses its thumb

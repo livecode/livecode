@@ -23,18 +23,20 @@ on TestSetup
 end TestSetup
 
 on TestCutVar
+	create stack
+	set the defaultStack to the short name of it
+	
+	local tField
 	create field
-	put "a" & return & "b" into field 1
+	put it into tField
+	set the text of tField to ("a" & return & "b")
 	
 	local tToCut
-	put "line 1 of field 1" into tToCut
+	put "line 1 of" && tField into tToCut
 	
 	cut tToCut
 	
-	TestDiagnostic the text of field 1
-	TestDiagnostic the clipboardData["text"]
-	
-	TestAssert "cut obj text chunk in variable", field 1 is "b"
+	TestAssert "cut obj text chunk in variable", the text of tField is "b"
 	TestAssert "clipboard after cut obj text chunk in variable", \ 
-		the clipboardData["text"] is ("a")
+		the clipboardData["text"] is ("a" & return)
 end TestCutVar

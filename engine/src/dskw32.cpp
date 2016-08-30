@@ -2821,7 +2821,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         // SN-2014-06-16 [[ Bug 12648 ]] Shell command does not accept spaces despite being quoted (Windows)
         // Fix for 7
 		/* UNCHECKED */ MCStringFormat(t_cmd, "%@ /C \"%@\"", MCshellcmd, p_command);
-		MCAutoStringRefAsWString t_wcmd;
+		MCAutoStringRefAsLPWSTR t_wcmd;
 		t_wcmd . Lock(t_cmd);
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
                     MCnprocesses + 1, sizeof(Streamnode));
@@ -3092,7 +3092,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                     siStartInfo.hStdOutput = hChildStdoutWr;
                     siStartInfo.hStdError = hChildStderrWr;
 
-					MCAutoStringRefAsWString t_cmdline_wstr;
+					MCAutoStringRefAsLPWSTR t_cmdline_wstr;
 					/* UNCHECKED */ t_cmdline_wstr.Lock(*t_cmdline);
 
                     if (CreateProcessW(NULL, *t_cmdline_wstr, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))

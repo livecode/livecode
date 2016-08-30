@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
  
  This file is part of LiveCode.
  
@@ -532,8 +532,10 @@ The result:	<Operand> formatted as a string.
 
 Example:
 	variable tNum as Number
+	variable tString as String
 	put 5 into tNum
-	format tNum as string -- the result contains "5"
+	format tNum as string into tString
+	-- tString contains "5"
 
 Description:
 Use <FormatNumberAsString> when you want to manipulate a numeric value as text.
@@ -591,11 +593,11 @@ Example:
 	parse tString as Number -- the result is 5.6
 
 Example:
-	variable tResult as String
+	variable tResult as optional String
 	variable tNum as optional Number
-	parse "aaaa" as Number
+	parse "aaaa" as Number into tNum
 	
-	if the result is nothing then
+	if tNum is nothing then
 		put "unable to parse string" into tResult
 	end if
 
@@ -658,7 +660,8 @@ Example:
 	variable tListOfString as List
 	variable tListOfNum as List
 	split "1,2,3,4" by "," into tListOfString
-	parse tListOfString as list of number -- the result contains [ 1, 2, 3, 4 ]
+	parse tListOfString as list of number into tListOfNum
+	-- tListOfNum contains [ 1, 2, 3, 4 ]
 
 Description:
 Use <ParseListOfStringAsListOfNumber> when you want to interpret pieces of text numerically. If the input list contains elements which cannot be parsed as numbers, the corresponding element will be nothing.

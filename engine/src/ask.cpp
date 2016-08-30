@@ -67,7 +67,7 @@ MCAsk::~MCAsk(void)
 		delete file . filter;
 		for(uint4 t_type = 0; t_type < file . type_count; ++t_type)
 			delete file . types[t_type];
-		delete file . types;
+		delete[] file . types; /* Allocated with new[] */
 	break;
 
 	default:

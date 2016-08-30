@@ -1,16 +1,18 @@
 Name: mobileEnableAccelerometer
 
+Synonyms: iphoneenableaccelerometer
+
 Type: command
 
 Syntax: mobileEnableAccelerometer [<interval>]
 
-Summary: Enables the accelerometer so that accelerationChanged events are delivered.
-
-Synonyms: iphoneEnableAccelerometer
+Summary:
+Enables the accelerometer so that accelerationChanged events are
+delivered. 
 
 Introduced: 4.5.2
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -18,15 +20,23 @@ Example:
 mobileEnableAccelerometer 100
 
 Parameters:
-interval: Specified in seconds and is the approximate time between delivery of messages.
+interval:
+Specified in seconds and is the approximate time between delivery of
+messages. 
 
 Description:
-The <mobileEnableAccelerometer> command enables the accelerometer on the device.
+The <mobileEnableAccelerometer> command enables the accelerometer on the
+device. 
 
-The <mobileEnableAccelerometer> command will cause <accelerationChanged> events to be delivered to the current card of the <defaultStack> at the specified interval. 
+The <mobileEnableAccelerometer> command will cause <accelerationChanged>
+events to be delivered to the current card of the <defaultStack> at the
+specified interval.
 
->*Note:* The <interval> is constrained by hardware-specific minimums and maximums (which are left unspecified by Apple).
+>*Note:* The <interval> is constrained by hardware-specific minimums and
+> maximums (which are left unspecified by Apple).
 
-References: mobileDisableAccelerometer (command), accelerationChanged (message), defaultStack (property)
+References: mobileDisableAccelerometer (command),
+accelerationChanged (message), defaultStack (property)
 
 Tags: ui
+

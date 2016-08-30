@@ -1,6 +1,6 @@
 Name: boolean
 
-Synonyms: boolean,boolean value
+Synonyms: boolean, boolean value
 
 Type: glossary
 
@@ -8,3 +8,4 @@ Description:
 A value that can be either true or false.
 
 Tags: math
+

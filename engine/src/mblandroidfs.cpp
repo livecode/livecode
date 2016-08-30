@@ -119,12 +119,11 @@ bool apk_set_current_folder(MCStringRef p_apk_path)
 
 bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntriesCallback p_callback, void *p_context)
 {
-	bool t_success = true;
 	MCAutoStringRef t_list;
 
 	MCAndroidEngineCall("getAssetFolderEntryList", "xx", &(&t_list), p_apk_folder);
-
-	t_success = *t_list != nil;
+	if (*t_list == nil)
+		return false;
 
 	// getAssetFolderEntryList returns entries in the following format:
 	// each entry comprises two lines - the filename on the first line,
@@ -141,9 +140,11 @@ bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntries
 	// get stat info from bundle file
 	struct stat t_stat;
     MCAutoStringRefAsUTF8String t_utf8_mccmd;
-    /* UNCHECKED */ t_utf8_mccmd . Lock(MCcmd);
-	stat(*t_utf8_mccmd, &t_stat);
-	
+	if (!t_utf8_mccmd . Lock(MCcmd))
+		return false;
+	if (0 != stat(*t_utf8_mccmd, &t_stat))
+		return false;
+
 	t_entry . modification_time = t_stat . st_mtime;
 	t_entry . access_time = t_stat . st_atime;
 	t_entry . user_id = t_stat . st_uid;
@@ -151,17 +152,16 @@ bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntries
 	t_entry . permissions = t_stat . st_mode & 0444;
 
     char* t_next_entry;
-    MCAutoStringRefAsUTF8String t_utf8_files;
-    
-    t_success = t_utf8_files . Lock(*t_list);
-    
-    if (t_success)
-        t_next_entry = *t_utf8_files;
+    MCAutoCustomPointer<char, MCMemoryDeleteArray> t_utf8_files;
+    if (!MCStringConvertToUTF8String(*t_list, &t_utf8_files))
+	    return false;
+
+    t_next_entry = *t_utf8_files;
     
     bool t_more_entries;
     t_more_entries = true;
     
-	while (t_success && t_more_entries)
+	while (t_more_entries)
 	{
 		uint32_t t_next_index = 0;
 		uint32_t t_size_index = 0;
@@ -170,50 +170,47 @@ bool apk_list_folder_entries(MCStringRef p_apk_folder, MCSystemListFolderEntries
 		Boolean t_is_folder;
 
 		t_fname = t_next_entry;
-		t_success = MCCStringFirstIndexOf(t_fname, '\n', t_size_index);
+		if (!MCCStringFirstIndexOf(t_fname, '\n', t_size_index))
+			return false;
 
-		if (t_success)
+		t_fsize = t_fname + t_size_index;
+		*t_fsize++ = '\0';
+
+		if (!MCCStringFirstIndexOf(t_fsize, ',', t_folder_index))
+			return false;
+
+		t_ffolder = t_fsize + t_folder_index;
+		*t_ffolder++ = '\0';
+
+		if (MCCStringFirstIndexOf(t_ffolder, '\n', t_next_index))
 		{
-			t_fsize = t_fname + t_size_index;
-			*t_fsize++ = '\0';
-
-			t_success = MCCStringFirstIndexOf(t_fsize, ',', t_folder_index);
+			t_next_entry = t_ffolder + t_next_index;
+			*t_next_entry++ = '\0';
 		}
-		if (t_success)
+		else
 		{
-			t_ffolder = t_fsize + t_folder_index;
-			*t_ffolder++ = '\0';
-
-			if (MCCStringFirstIndexOf(t_ffolder, '\n', t_next_index))
-			{
-				t_next_entry = t_ffolder + t_next_index;
-				*t_next_entry++ = '\0';
-			}
-			else
-            {
-				t_next_entry = t_ffolder + MCCStringLength(t_ffolder);
-                // AL-2014-06-25: [[ Bug 12659 ]] If there are no more lines, this is the last entry.
-                t_more_entries = false;
-            }
-
-			t_success = MCU_stoi4(t_fsize, t_size) && MCU_stob(t_ffolder, t_is_folder);
+			t_next_entry = t_ffolder + MCCStringLength(t_ffolder);
+			// AL-2014-06-25: [[ Bug 12659 ]] If there are no more lines, this is the last entry.
+			t_more_entries = false;
 		}
-		if (t_success)
-		{
-            // SN-2014-01-13: [[ RefactorUnicode ]] Asset filenames are in ASCII
-            MCStringRef t_assetFile;
-            MCStringCreateWithCString(t_fname, t_assetFile);
+
+		if (!MCU_stoi4(t_fsize, t_size) && MCU_stob(t_ffolder, t_is_folder))
+			return false;
+
+		// SN-2014-01-13: [[ RefactorUnicode ]] Asset filenames are in ASCII
+		MCAutoStringRef t_assetFile;
+		if (!MCStringCreateWithCString(t_fname, &t_assetFile))
+			return false;
             
-			t_entry.name = t_assetFile;
-			t_entry.data_size = t_size;
-			t_entry.is_folder = t_is_folder;
+		t_entry.name = *t_assetFile;
+		t_entry.data_size = t_size;
+		t_entry.is_folder = t_is_folder;
 
-			t_success = p_callback(p_context, &t_entry);
-            MCValueRelease(t_assetFile);
-		}
+		if (!p_callback(p_context, &t_entry))
+			return false;
 	}
 
-	return t_success;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

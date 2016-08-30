@@ -1,1 +1,0 @@
-# mobileVibrate not vibrating when passed a variable

@@ -205,6 +205,8 @@ MCPropertyInfo MCStack::kProperties[] =
 	// IM-2016-02-26: [[ Bug 16244 ]] Add stack showInvisibles property
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, OptionalBool, MCStack, ShowInvisibleObjects)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHOW_INVISIBLES, Bool, MCStack, ShowInvisibleObjects)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_MIN_STACK_FILE_VERSION, String, MCStack, MinStackFileVersion)
 };
 
 MCObjectPropertyTable MCStack::kPropertyTable =
@@ -314,6 +316,8 @@ MCStack::MCStack()
     m_attachments = nil;
     
 	view_init();
+    
+    m_is_ide_stack = false;
 }
 
 MCStack::MCStack(const MCStack &sref) : MCObject(sref)
@@ -520,6 +524,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
     m_document_filename = MCValueRetain(kMCEmptyString);
     
 	view_copy(sref);
+    
+    m_is_ide_stack = sref.m_is_ide_stack;
 }
 
 MCStack::~MCStack()
@@ -552,14 +558,14 @@ MCStack::~MCStack()
 	if (m_parent_stack.IsBound())
 		setparentstack(nil);
 
-	delete mnemonics;
+	delete[] mnemonics; /* Allocated with new[] */
 	MCValueRelease(title);
 	MCValueRelease(titlestring);
 
 	if (window != NULL && !(state & CS_FOREIGN_WINDOW))
 	{
 		stop_externals();
-		MCscreen->destroywindow(window);
+		destroywindow();
 	}
 
 	while (controls != NULL)
@@ -620,7 +626,7 @@ MCStack::~MCStack()
 			MCValueRelease(stackfiles[nstackfiles].stackname);
 			MCValueRelease(stackfiles[nstackfiles].filename);
 		}
-		delete stackfiles;
+		delete[] stackfiles; /* Allocated with new[] */
 	}
 	if (linkatts != NULL)
 	{
@@ -799,7 +805,7 @@ void MCStack::close()
 		if (flags & F_DESTROY_WINDOW && MCdispatcher -> gethome() != this)
 		{
 			stop_externals();
-			MCscreen->destroywindow(window);
+			destroywindow();
 			window = NULL;
 			cursor = None;
 			MCValueAssign(titlestring, kMCEmptyString);
@@ -829,7 +835,7 @@ void MCStack::kfocus()
 
 	// MW-2007-09-11: [[ Bug 5139 ]] Don't add activity to recent cards if the stack is an
 	//   IDE stack.
-	if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && editing == NULL && !getextendedstate(ECS_IDE))
+	if ((mode == WM_TOP_LEVEL || mode == WM_TOP_LEVEL_LOCKED) && editing == NULL && !m_is_ide_stack)
 		MCrecent->addcard(curcard);
 
 	if (state & CS_SUSPENDED)
@@ -1487,7 +1493,7 @@ Exec_stat MCStack::handle(Handler_type htype, MCNameRef message, MCParameter *pa
 		{
 			// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
 			view_setstackviewport(rect);
-			realize();
+			createwindow();
 		}
 	}
 
@@ -1558,6 +1564,18 @@ void MCStack::toolchanged(Tool p_new_tool)
 {
     if (curcard != NULL)
         curcard->toolchanged(p_new_tool);
+}
+
+void MCStack::OnAttach()
+{
+	if (curcard != nil)
+		curcard->OnAttach();
+}
+
+void MCStack::OnDetach()
+{
+	if (curcard != nil)
+		curcard->OnDetach();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

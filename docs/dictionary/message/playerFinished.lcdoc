@@ -4,11 +4,12 @@ Type: message
 
 Syntax: playerFinished
 
-Summary: Sent when the content has finished playing.
+Summary:
+Sent when the content has finished playing.
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -18,8 +19,14 @@ on playerFinished
 end playerFinished
 
 Description:
-Handle the <playerFinished> message when the content of the movie player has finished playing.
+Handle the <playerFinished> message when the content of the movie player
+has finished playing.
 
-You can test the playbackState of the player by using the <mobileControlGet> function.
+You can test the playbackState of the player by using the
+<mobileControlGet> function.
 
-References: playerMovieChanged (message), playerError (message), playerLeaveFullscreen (message), playerStopped (message), playerProgressChanged (message), playerPropertyAvailable (message), playerEnterFullscreen (message), mobileControlGet (function)
+References: mobileControlGet (function), playerMovieChanged (message),
+playerError (message), playerLeaveFullscreen (message),
+playerStopped (message), playerProgressChanged (message),
+playerPropertyAvailable (message), playerEnterFullscreen (message)
+

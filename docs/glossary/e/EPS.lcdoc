@@ -1,12 +1,15 @@
 Name: EPS
 
-Synonyms: EPS,Encapsulated Postscript,EPS object
+Synonyms: eps, encapsulated postscript, eps object
 
 Type: glossary
 
 Description:
-Encapsulated PostScript. A file that contains <PostScript> commands and a non- <PostScript> preview image (used for display on non- <PostScript> devices).
+Encapsulated PostScript. A file that contains <PostScript> commands and
+a non- <PostScript> preview image (used for display on non- <PostScript>
+devices). 
 
 References: PostScript (glossary)
 
 Tags: multimedia
+

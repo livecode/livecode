@@ -1,1 +1,0 @@
-# The Project Browser does not update when a group is ungrouped.

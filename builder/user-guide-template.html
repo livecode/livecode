@@ -563,9 +563,9 @@ Author URI: http://www.livecode.com/
 a{ text-decoration:none; color:#799327; } /* aecf36 */
 a:hover{ color:#585858}
 
-h1,h2,h3,h4{ font-family:FontAwesome; font-style:normal; font-weight:normal}
-h1{ font-weight:normal}
-h2{ margin:2em 0 0.5em 0; font-weight:normal}
+h1,h2,h3,h4{ font-family:FontAwesome; font-style:normal; font-weight:bold}
+h1{ font-weight:bold}
+h2{ margin:2em 0 0.5em 0; font-weight:bold}
 h3{ margin:1.5em 0 0.1em 0}
 p{ font-size:13px;line-height:135%}
 
@@ -752,16 +752,6 @@ table{border-spacing:1em 2px;}
 				img_no_pg_break += '/guides/images/' + image_file + '" />';
 				img_no_pg_break += '&nbsp;</div>';
 				return img_no_pg_break;
-			}
-		
-			renderer.code = function (code, language, callback)
-			{
-				return '<pre><code>' + code + '</code></pre>';
-			}
-			
-			renderer.codespan = function (code)
-			{
-				return '<code class="inline">' + code + '</code>';
 			}
 			
 			var content_html = marked(prefix, { renderer: renderer });

@@ -154,7 +154,7 @@ MCAudioClip::~MCAudioClip()
 		stop(True);
 		MCacptr = NULL;
 	}
-	delete samples;
+	delete[] samples; /* Allocated with new[] */
 	delete osamples;
 #ifdef TARGET_PLATFORM_LINUX
 	if ( x11audio != NULL )

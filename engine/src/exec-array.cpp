@@ -31,6 +31,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+#include "patternmatcher.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EVAL_METHOD(Arrays, Keys, 2)
@@ -756,7 +759,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
     
     // AL-2014-05-22: [[ Bug 12547 ]] Make arrayEncode encode in 7.0 format by default.
     bool t_legacy;
-    t_legacy = p_version != nil && t_version . version < 7000;
+    t_legacy = p_version != nil && t_version . version < kMCStackFileFormatVersion_7_0;
     
     if (t_legacy)
     {
@@ -961,7 +964,7 @@ bool MCArraysCopyExtents(MCArrayRef self, array_extent_t*& r_extents, uindex_t& 
 
 	while (MCArrayIterate(self, t_index, t_key, t_value))
 	{
-		MCAutoPointer<index_t> t_indexes;
+		MCAutoCustomPointer<index_t,MCMemoryDeleteArray> t_indexes;
 		uindex_t t_index_count;
 		bool t_all_integers;
 		if (!MCArraysSplitIndexes(t_key, &t_indexes, t_index_count, t_all_integers))
@@ -1301,6 +1304,89 @@ void MCArraysEvalIsNotAmongTheKeysOf(MCExecContext& ctxt, MCNameRef p_key, MCArr
 {
 	MCArraysEvalIsAmongTheKeysOf(ctxt, p_key, p_array, r_result);
 	r_result = !r_result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCArraysExecFilter(MCExecContext& ctxt, MCArrayRef p_source, bool p_without, MCPatternMatcher *p_matcher, bool p_match_key, MCArrayRef &r_result)
+{
+    MCAutoArrayRef t_result;
+    if (!MCArrayMutableCopy(p_source, &t_result))
+        return;
+    
+    MCNameRef t_key;
+    MCValueRef t_value;
+    uintptr_t t_iterator;
+    t_iterator = 0;
+    
+    while(MCArrayIterate(p_source, t_iterator, t_key, t_value))
+    {
+        bool t_match = p_matcher -> match(ctxt, t_key, p_match_key);
+        
+        if ((t_match && p_without) || (!t_match && !p_without))
+        {
+            if (!MCArrayRemoveValue(*t_result, ctxt . GetCaseSensitive(), t_key))
+            {
+                ctxt . Throw();
+                return;
+            }
+
+        }
+    }
+    
+    r_result = MCValueRetain(*t_result);
+}
+
+void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys, MCArrayRef &r_result)
+{
+    // Create the pattern matcher
+    MCPatternMatcher *t_matcher;
+    t_matcher = new MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    
+    MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
+    
+    delete t_matcher;
+}
+
+void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys, MCArrayRef &r_result)
+{
+    // Create the pattern matcher
+    MCPatternMatcher *t_matcher;
+    t_matcher = new MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    
+    MCAutoStringRef t_regex_error;
+    if (!t_matcher -> compile(&t_regex_error))
+    {
+        delete t_matcher;
+        ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
+        return;
+    }
+    
+    MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
+    
+    delete t_matcher;
+}
+
+void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
+{
+    MCAutoArrayRef t_result;
+    MCArraysExecFilterWildcard(ctxt, p_source, p_pattern, p_without, p_match_keys, &t_result);
+    
+    if (*t_result != nil)
+        ctxt . SetItToValue(*t_result);
+    else
+        ctxt . SetItToEmpty();
+}
+
+void MCArraysExecFilterRegexIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
+{
+    MCAutoArrayRef t_result;
+    MCArraysExecFilterRegex(ctxt, p_source, p_pattern, p_without, p_match_keys, &t_result);
+    
+    if (*t_result != nil)
+        ctxt . SetItToValue(*t_result);
+    else
+        ctxt . SetItToEmpty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

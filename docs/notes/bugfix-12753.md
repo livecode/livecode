@@ -1,1 +1,0 @@
-# Player: Click outside of a selection allows video to be played outside selection

@@ -1,1 +1,0 @@
-# dragData with a private content extracted from a string by using a chunk keyword (word, char, etc)

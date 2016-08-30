@@ -107,6 +107,7 @@ _cache/
 build/
 /_tests/
 *-bin/
+mac-bin
 build-*/
 
 # SDKs          #

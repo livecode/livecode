@@ -240,6 +240,7 @@ public:
 	void Release(void);
 	
 	virtual bool GetNativeView(void *&r_view) = 0;
+	virtual bool SetNativeParentView(void *p_parent_view) = 0;
 	
 	virtual bool IsPlaying(void) = 0;
 	// PM-2014-05-28: [[ Bug 12523 ]] Take into account the playRate property

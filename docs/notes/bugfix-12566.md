@@ -1,1 +1,0 @@
-# Tunnelled proxies do not authenticate correctly

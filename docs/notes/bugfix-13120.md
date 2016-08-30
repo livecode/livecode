@@ -1,1 +1,0 @@
-#   [[Player]] cmd key + click on step forward and step backward button for rewind, play not implemented

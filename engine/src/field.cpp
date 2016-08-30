@@ -47,6 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 int2 MCField::clickx;
 int2 MCField::clicky;
 int2 MCField::goalx;
@@ -370,7 +372,7 @@ MCField::~MCField()
 	else
 		delete vscrollbar;
 
-	delete tabs;
+	delete[] tabs; /* Allocated with new[] */
 
 	MCValueRelease(label);
 }
@@ -2693,7 +2695,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
 				return checkloadstat(stat);
 	}
-	if (version <= 2000)
+	if (version <= kMCStackFileFormatVersion_2_0)
 	{
 		rect = MCU_reduce_rect(rect, MCfocuswidth);
 		if (flags & F_LIST_BEHAVIOR)

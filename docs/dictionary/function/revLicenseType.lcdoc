@@ -4,16 +4,20 @@ Type: function
 
 Syntax: revLicenseType()
 
-Summary: Deprecated and will be removed in a future release.
+Summary:
+Deprecated and will be removed in a future release.
 
 Introduced: 2.0
 
-OS: mac,windows,linux
+OS: mac, windows, linux
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
 Example:
 if "Enterprise" is not in revLicenseType() then useODBC
 
 Description:
-The <revLicenseType> function always returns Enterprise and should not be used in new code. It will be removed entirely in a future release.
+The <revLicenseType> function always returns Enterprise and should not
+be used in new code. It will be removed entirely in a future release.
+
+

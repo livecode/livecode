@@ -282,7 +282,7 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_nati
     return new MCNativeLayerX11(p_object, (x11::Window)p_native_view);
 }
 
-bool MCNativeLayer::CreateNativeContainer(void *&r_view)
+bool MCNativeLayer::CreateNativeContainer(MCObject *p_object, void *&r_view)
 {
 	return false;
 }

@@ -1,25 +1,31 @@
 Name: behavior
 
+Synonyms: parentscript
+
 Type: property
 
 Syntax: set the behavior of <object> to [<button> | <stack>]
 
-Summary: Allows an <object(glossary)> to inherit its <script> <handler|handlers> from another <object(glossary)>
+Summary:
+Allows an <object(glossary)> to inherit its <script> <handler|handlers>
+from another <object(glossary)>
 
-Synonyms: parentScript
-
-Associations: stack, card, field, button, graphic, scrollbar, player, image, widget
+Associations: stack, card, field, button, graphic, scrollbar, player,
+image, widget
 
 Introduced: 3.5
 
 OS: mac, windows, linux, ios, android, html5
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Example:
 set the behavior of tNewGroup to the long id of button "Widget" of card "Behaviors"
 
-Value: A <object reference|reference> to a <button> or <stack> containing the <script> to use as a <behavior>, or <empty> if the control should have no <behavior>.
+Value:
+A <object reference|reference> to a <button> or <stack> containing the
+<script> to use as a <behavior>, or <empty> if the control should have
+no <behavior>.
 
 Description:
 Behaviors are a method to create common functionality between
@@ -28,12 +34,12 @@ Behaviors are a method to create common functionality between
 The value of the <behavior> <property> is a <object reference|reference>
 to a <button> or <stack> containing the script to
 use.  The format stored in the object it's assigned to is similar to a
-<id(property)|long ID>.  The main difference is that where a long ID includes
-the full path to the <stack file>, the form stored in the <behavior>
-includes only the stack <name>, allowing the reference to continue to
-work after the stack file has been moved to another computer. If you
-set the <behavior> to a long ID, LiveCode converts it to a rugged form
-without the stack <file path>.
+<id(property)|long ID>.  The main difference is that where a long ID
+includes the full path to the <stack file>, the form stored in the
+<behavior> includes only the stack <name>, allowing the reference to
+continue to work after the stack file has been moved to another
+computer. If you set the <behavior> to a long ID, LiveCode converts it
+to a rugged form without the stack <file path>.
 
 By default, the <behavior> of newly created objects is <empty>.
 
@@ -54,7 +60,9 @@ file.  The engine acts as though it is resolving a control reference
 of the form:
 
     button id <id> of stack <stack name> \
-          [ of stack <mainstack name> ]
+
+    [ of stack <mainstack name> ]
+
 
 Thus the <stackFiles> property will be searched and stacks loaded into
 memory as appropriate.
@@ -66,28 +74,37 @@ will be broken. This apparent strictness is necessary to ensure that
 behaviors act consistently while LiveCode is running.
 
 For example, let's say you have the following setup:
+
 * <field> "Action" - <behavior> set to button "Derived"
 * button "Derived" - <behavior> set to button "Root"
 * button "Root"
 
+
 Then the <message path> will be:
+
 1. field "Action"
 2. button "Derived"
 3. button "Root"
 
-**Note:** The synonym `parentScript` is deprecated and should not be used.
+
+**Note:** The synonym `parentScript` is deprecated and should not be
+used. 
 
 Changes:
 From version 6.7.5, a stack can be used as a behavior.
 From version 6.1, the behavior property of a control currently
-  being used as a behavior will now be taken into account and result
-  in the child behavior deferring to the parent behavior in the same
-  way a control defers to its behavior.
 
-References:
-empty (constant),
-dispatch (command),
-button (object), field (object), object (glossary), stack (object),
-control (glossary), file path (glossary), handler (glossary), message path (glossary), object reference (glossary), script (glossary), script local variable (glossary), stack file (glossary), substack (glossary),
-ID (property), name (property), password (property), stackFiles (property),
-me (keyword)
+    being used as a behavior will now be taken into account and result
+    in the child behavior deferring to the parent behavior in the same
+    way a control defers to its behavior.
+
+
+References: dispatch (command), empty (constant), object (glossary),
+control (glossary), file path (glossary), handler (glossary),
+message path (glossary), object reference (glossary), script (glossary),
+script local variable (glossary), stack file (glossary),
+substack (glossary), me (keyword), button (object), field (object),
+stack (object), ID (property), name (property), password (property),
+stackFiles (property)
+
+Tags: messages

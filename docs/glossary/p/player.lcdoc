@@ -5,8 +5,11 @@ Synonyms: player
 Type: glossary
 
 Description:
-An <object(glossary)> that presents a file containing a movie, or audio or video data in one of the <format|formats> supported by AVFoundation on Mac or DirectShow on Windows.
+An <object(glossary)> that presents a file containing a movie, or audio
+or video data in one of the <format|formats> supported by AVFoundation
+on Mac or DirectShow on Windows.
 
 References: object (glossary), QuickTime (glossary), format (glossary)
 
 Tags: multimedia
+

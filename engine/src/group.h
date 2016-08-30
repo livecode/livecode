@@ -126,6 +126,9 @@ public:
 	virtual void relayercontrol_insert(MCControl *control, MCControl *target);
 
 	virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
 
 	virtual void geometrychanged(const MCRectangle &p_rect);
 

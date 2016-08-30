@@ -1,1 +1,0 @@
-# Inconsistent Ask/Answer fonts/text.

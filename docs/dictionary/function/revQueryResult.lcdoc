@@ -1,36 +1,44 @@
 Name: revQueryResult
 
+Synonyms: revdb_cursorerr
+
 Type: function
 
 Syntax: revQueryResult(<recordSetID>)
 
-Summary: <return|Returns> the most recent error message associated with a <record set (database cursor)(glossary)>.
+Summary:
+<return|Returns> the most recent error message associated with a <record
+set (database cursor)(glossary)>.
 
-Synonyms: revdb_cursorerr
-
-Associations: Database library
+Associations: database library
 
 Introduced: 1.1
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
-Security: disk,network
+Security: disk, network
 
 Example:
 revQueryResult(field "Current Set")
 if revQueryResult(thisCursor) is not empty then beep 2
 
 Parameters:
-recordSetID: The number returned by the revQueryDatabase function when the record set was created.
+recordSetID:
+The number returned by the revQueryDatabase function when the record set
+was created.
 
-Returns: The <revQueryResult> <function> returns a <string>.
+Returns:
+The <revQueryResult> <function> returns a <string>.
 
 Description:
-Use the <revQueryResult> <function> to check for successful completion of <SQL> commands.
+Use the <revQueryResult> <function> to check for successful completion
+of <SQL> commands.
 
-If there were no errors associated with the specified record set, the <revQueryResult> <function> returns empty. If there was an error, then a database-specific string will be returned describing the error.
+If there were no errors associated with the specified record set, the
+<revQueryResult> <function> returns empty. If there was an error, then a
+database-specific string will be returned describing the error.
 
 >*Important:*  The <revQueryResult> <function> is part of the 
 > <Database library>. To ensure that the <function> works in a 
@@ -44,6 +52,13 @@ If there were no errors associated with the specified record set, the <revQueryR
 Changes:
 The revQueryResult synonym was added in version 2.0.
 
-References: function (control structure), string (keyword), revCommitDatabase (command), revdb_commit (function), revDatabaseConnectResult (function), Standalone Application Settings (glossary), standalone application (glossary), record set (database cursor) (glossary), return (glossary), SQL (glossary), Database library (library), LiveCode custom library (glossary)
+References: revCommitDatabase (command), function (control structure),
+revdb_commit (function), revDatabaseConnectResult (function),
+Standalone Application Settings (glossary),
+standalone application (glossary),
+record set (database cursor) (glossary), return (glossary),
+SQL (glossary), LiveCode custom library (glossary), string (keyword),
+Database library (library)
 
 Tags: database
+

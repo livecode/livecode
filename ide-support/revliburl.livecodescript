@@ -2,18 +2,21 @@ script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
 on revLoadLibrary
-   # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
-   insert the script of stack "revLibUrl" into back
-    // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
-   initialiseCustomProps
+   if the target is me then
+      # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
+      insert the script of stack "revLibUrl" into back
+      // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
+      initialiseCustomProps
+   end if
 end revLoadLibrary
 
 on revUnloadLibrary
-   remove the script of stack "revLibUrl" from back
-   
-   -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
-   # remove external library if in use
-   unloadExternalDriver
+   if the target is me then
+      remove the script of stack "revLibUrl" from back
+      -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
+      # remove external library if in use
+      unloadExternalDriver
+   end if
 end revUnloadLibrary
 ---------------------------------------------------------------------
 ##shared locals
@@ -175,11 +178,11 @@ on loadUrl x,y
       put "6923" into lvCount
    end if
    switch
-      case newUrl is among the lines of  the keys of laLoadingUrls
+      case newUrl is among the keys of laLoadingUrls
          ##don't allow loads if the same url is waiting to load
          return "error  URL is currently loading" ##with empty
          break
-      case newUrl is not among the lines of  the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
+      case newUrl is not among the keys of laLoadedUrls OR laUrlLoadStatus[newUrl] is not "cached"
          
          ##  put the long id of the target &","& item 2 of the params into laMessg[newUrl]
          ##dc 081104
@@ -213,7 +216,7 @@ on loadUrl x,y
          end if
          -----------------------
          break
-      case newUrl is among the lines of  the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" #url is in cache
+      case newUrl is among the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" #url is in cache
          
          ## put the long id of the target &","& item 2 of the params into laMessg[newUrl]
          ##dc 081104
@@ -228,12 +231,12 @@ end loadUrl
 on unloadUrl pUrl
    put ulStripUrl(pUrl) into pUrl
    ##need to check if it is loading or in loadQ
-   if pUrl is among the lines of keys(laLoadingUrls) then
+   if pUrl is among the keys of laLoadingUrls then
       delete local laLoadingUrls[pUrl]
       ulCancelRequest pUrl ##stop any current downloads
       delete local laData[pUrl] ##in case download hasn't started
       return empty
-   else if pUrl is among the lines of keys(laUrlLoadStatus) then
+   else if pUrl is among the keys of laUrlLoadStatus then
       delete local laLoadedUrls[pUrl]
       delete local laUrlLoadStatus[pUrl]
       delete local laUrlErrorStatus[pUrl]
@@ -250,10 +253,10 @@ on getUrl x
    local newUrl,tRetResult,tRetData
    put false into lvJumpOut
    put ulStripUrl(x) into newUrl
-   if newUrl is among the lines of the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
+   if newUrl is among the keys of laLoadedUrls and laUrlLoadStatus[newUrl] is "cached" then
       return empty  with urlResult laLoadedUrls[newUrl]
    end if
-   if newUrl is among the lines of keys(laLoadingUrls) and (lvAuthBlockBypass is not true) then
+   if newUrl is among the keys of laLoadingUrls and (lvAuthBlockBypass is not true) then
       return "error  URL is currently loading" with urlResult empty
    end if
    if lvBlockingUrl is empty or lvBlockBypass is true or lvAuthBlockBypass is true or (lvExtDriver is not empty and lvExtIsBlocking is false) then
@@ -510,36 +513,46 @@ on ulGetFormat pUrl,pCount
          put _proxyForURL(pURL) into laUrlProxy[pURL]
          ulLogIt "Proxy for URL:" && laUrlProxy[pURL] & cr
          
-         -- CW-2016-06-11: [[ External driver support ]] Bypass URL/Proxy manipulation for external drivers.
-         -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
-         if laUrlProxy[pURL] is not empty and lvExtDriver is empty then
-            ## for now don't allow https connections through proxies
-            ## will look at this again later
-            put tHost into tURLHost
-            put laUrlProxy[pURL] into tHost
-            replace "http://" with "" in tHost ##not sure if this is possible but just in case
-            if tPort <> empty then
-               put tPort into tUrlPort ##save this for setting laFilename below
-            else if tPre is "https" then
-               put ":443" into tUrlPort
-            else
-               put ":80" into tUrlPort
+         -- CW-2016-08-14: [[ External driver support ]] Bypass URL/Proxy manipulation and async check for external drivers.
+         if lvExtDriver is empty then
+            -- CW-2016-08-14: If we are not using an external driver, asynchronous HTTP uploads are not supported.
+            if laAction[pUrl] is "putData" and laLoadReq[pUrl] is true then
+               put "HTTP async uploads not supported in this version" into laUrlErrorStatus[pUrl]
+               put "error" into laUrlLoadStatus[pUrl]
+               delete local laLoadingUrls[pUrl]
+               exit "ulGetFormat"
             end if
-            #get the proxy port
-            put the itemdel into tSavedDel
-            set the itemdel to ":"
-            if the number of items of tHost > 1 and item -1 of tHost is a number then
-               put ":" &  item -1 of tHost into tPort
-               delete item -1 of tHost #remove port for now
-            else
-               put ":80" into tPort
-            end if
-            set the itemDel to tSavedDel
-         else if tPort is empty then
-            if tPre is "https" then
-               put ":443" into tPort
-            else
-               put ":80" into tPort
+            
+            -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support fetching https URLs through a proxy.
+            if laUrlProxy[pURL] is not empty then
+               ## for now don't allow https connections through proxies
+               ## will look at this again later
+               put tHost into tURLHost
+               put laUrlProxy[pURL] into tHost
+               replace "http://" with "" in tHost ##not sure if this is possible but just in case
+               if tPort <> empty then
+                  put tPort into tUrlPort ##save this for setting laFilename below
+               else if tPre is "https" then
+                  put ":443" into tUrlPort
+               else
+                  put ":80" into tUrlPort
+               end if
+               #get the proxy port
+               put the itemdel into tSavedDel
+               set the itemdel to ":"
+               if the number of items of tHost > 1 and item -1 of tHost is a number then
+                  put ":" &  item -1 of tHost into tPort
+                  delete item -1 of tHost #remove port for now
+               else
+                  put ":80" into tPort
+               end if
+               set the itemDel to tSavedDel
+            else if tPort is empty then
+               if tPre is "https" then
+                  put ":443" into tPort
+               else
+                  put ":80" into tPort
+               end if
             end if
          end if
          
@@ -1762,14 +1775,19 @@ command ulDecodeData pUrl
    local tEncoding
    put empty into tEncoding
    
+   local tHeadSize
    --   Only look for the encoding in the head part
    put offset("</head>", laData[pUrl]) into tHeadSize
    
    if tHeadSize is 0 then exit "ulDecodeData"
    
+   local tHead
    put char 1 to tHeadSize of laData[pUrl] into tHead
+   
+   local tCharsetRegex
    put "<meta .*charset=" & quote & "?([a-zA-Z0-9 -]+)" & quote & ".*>" into tCharsetRegex
    
+   local tCharset
    if matchtext(tHead, tCharsetRegex, tCharset) then      
       switch ulNormaliseEncoding(tCharset)
          case "utf8"            
@@ -1784,6 +1802,7 @@ command ulDecodeData pUrl
       end switch
       
       if tEncoding is not empty then
+         local tDecoded
          put uniEncode(laData[pUrl], tEncoding) into tDecoded
          put uniDecode(tDecoded) into laData[pUrl]   
       end if
@@ -1986,15 +2005,27 @@ end ulWhichSocket
 
 private command _AddProxyAuthToRequest pUrl, @pRequest      
    set the itemDel to "|"
+   local tConnectHost
    put item 1 of laConnectHost[pUrl] into tConnectHost
    set the itemDel to comma
+   
+   local tFilter
    put tConnectHost & ",*" into tFilter
+   
+   local tAuthKeys
    put keys(laProxyAuthTokens) into tAuthKeys
    filter tAuthKeys with tFilter
    if tAuthKeys <> empty then
+      local tKey
       put line 1 of tAuthKeys into tKey
+      
+      local tToken
       put item 2 of laProxyAuthTokens[tKey] into tToken
+      
+      local tUseAgain
       put item 1 of laProxyAuthTokens[tKey] into tUseAgain
+      
+      local tHeader
       put "Proxy-Authorization:" && tToken into tHeader
       
       put return & tHeader after pRequest
@@ -2066,7 +2097,11 @@ function ulBuildHttpRequest pUrl
       put  laHost[pUrl]  after line 2 of tRequest
       ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
       ## add port if not default
+      
+      local tPort
       put laUrlFormat[pUrl]["port"] into tPort
+      
+      local tProtocol
       put laUrlFormat[pUrl]["protocol"] into tProtocol
       
       -- MM-2014-02-27: [[ HTTPS Proxy ]] We now support HTTPS URLs over a proxy, so ammend port accordingly.
@@ -3308,16 +3343,13 @@ on libUrlFtpUpload pData,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" then
-    return "invalid url"
-  end if
   if lvCount is empty then
     put "6923" into lvCount
   else
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
     return "error  URL is currently loading" with urlResult empty
     break
@@ -3357,9 +3389,6 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
   
   put false into lvJumpOut
   put ulStripUrl(pUrl) into newUrl
-  if char 1 to 3 of newUrl <> "ftp" then
-    return "invalid url"
-  end if
   
   #removed from here in 1.1.6b1
   #  open file pFile for binary read
@@ -3374,7 +3403,7 @@ on libUrlFtpUploadFile pFile,pUrl,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
     return "error  URL is currently loading" with urlResult empty
     break
@@ -3430,7 +3459,7 @@ on libUrlDownloadToFile pUrl,pFile,pMessage
     #add 1 to lvCount
   end if
   switch
-  case newUrl is among the lines of  the keys of laLoadingUrls
+  case newUrl is among the keys of laLoadingUrls
     ##don't allow loads if the same url is waiting to load
     return "error  URL is currently loading" with urlResult empty
     break
@@ -4548,24 +4577,28 @@ end ulGetCaller
 
 -- MM-2014-02-27: [[ PAC Support ]]
 private function _extractHost pURL
-    ## http://bob:jones@www.screensteps.com
-    put pURL into theHost
-    set the itemDelimiter to slash
-    put offset("://", theHost) into theCharNo
-    if theCharNo is 0 then
-        put item 1 of pURL into theHost
-    else
-        put item 3 of pURL into theHost
-    end if
-    
-    ## strip username/password
-    put offset("@", theHost) into theCharNo
-    if theCharNo > 0 then delete char 1 to theCharNo of theHost
-    
-    ## clip port
-    put offset(":", theHost) into theCharNo
-    if theCharNo > 0 then delete char theCharNo to -1 of theHost
-    return theHost
+   ## http://bob:jones@www.screensteps.com
+   
+   local tHost
+   put pURL into tHost
+   set the itemDelimiter to slash
+   
+   local tCharNo
+   put offset("://", tHost) into tCharNo
+   if tCharNo is 0 then
+      put item 1 of pURL into tHost
+   else
+      put item 3 of pURL into tHost
+   end if
+   
+   ## strip username/password
+   put offset("@", tHost) into tCharNo
+   if tCharNo > 0 then delete char 1 to tCharNo of tHost
+   
+   ## clip port
+   put offset(":", tHost) into tCharNo
+   if tCharNo > 0 then delete char tCharNo to -1 of tHost
+   return tHost
 end _extractHost
 
 ---------------------------------------------

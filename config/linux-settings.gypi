@@ -8,8 +8,7 @@
 		'exe_suffix': '',
 		'debug_info_suffix': '.dbg',
 
-		# Note: using old name for compatibility with older compilers (like GCC 4.4)
-		'c++_std': '<!(echo ${CXX_STD:-c++0x})',
+		'c++_std': '<!(echo ${CXX_STD:-c++11})',
 	},
 	
 	'defines':
@@ -70,12 +69,13 @@
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
 					'-Werror=return-type',
+					'-Werror=uninitialized',
+					'-Wno-error=maybe-uninitialized',
 				],
 
 				'cflags_cc':
 				[
-					# Needs GCC 4.7
-					#'-Werror=delete-non-virtual-dtor',
+					'-Werror=delete-non-virtual-dtor',
 				],
 			},
 			{
@@ -127,7 +127,6 @@
 			[
 				'-O0',
 				'-g3',
-				'-Werror=uninitialized',
 			],
 			
 			'defines':
@@ -157,7 +156,6 @@
 			[
 				'-O0',
 				'-g0',
-				'-Werror=uninitialized',
 			],
 			
 			'defines':

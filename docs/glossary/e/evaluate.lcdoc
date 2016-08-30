@@ -1,10 +1,12 @@
 Name: evaluate
 
-Synonyms: evaluation,evaluating,evaluated,evaluate
+Synonyms: evaluation, evaluating, evaluated, evaluate
 
 Type: glossary
 
 Description:
-To calculate the final result of an <expression>; to turn an <expression> into a single <value>.
+To calculate the final result of an <expression>; to turn an
+<expression> into a single <value>.
 
 References: expression (glossary), value (glossary)
+

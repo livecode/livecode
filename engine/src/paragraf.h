@@ -279,6 +279,8 @@ public:
 	
 	bool visit(MCObjectVisitorOptions p_options, uint32_t p_part, MCObjectVisitor* p_visitor);
 
+	uint32_t getminimumstackfileversion(void);
+	
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this paragraph
 	//   has an attribute extension.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);

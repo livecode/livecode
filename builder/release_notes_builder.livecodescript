@@ -852,8 +852,6 @@ constant kExtensionStrings = "widget,library,module"
 
 private command ExtensionsCreate
    BuilderLog "report", "Creating extension release notes"
-   MarkdownAppend "notes", "# LiveCode extension changes"
-   MarkdownAppend "updates", "# LiveCode extension changes"
    
    local tType, tTypePath, tFolder
    local tCollated, tBugInfo
@@ -865,9 +863,14 @@ private command ExtensionsCreate
       end repeat
       
    end repeat
-   
-   V2NotesGenerate "extensions", tCollated, 1
-   BugGenerate tBugInfo, "extension"
+
+   if V2NotesHaveContent(tCollated, tBugInfo) then
+      MarkdownAppend "notes", "# LiveCode extension changes"
+      MarkdownAppend "updates", "# LiveCode extension changes"
+      
+      V2NotesGenerate "extensions", tCollated, 1
+      BugGenerate tBugInfo, "extension"
+   end if
 end ExtensionsCreate
 
 private command ExtensionsCreatePath pExtPath, @xCollated, @xBugInfo
@@ -1006,8 +1009,13 @@ private command DictionaryScan @xAdded, @xModified
 end DictionaryScan
 
 private command DictionaryScanFile pFile, @xAdded, @xModified
-   local tContents
-   put FileGetUTF8Contents(pFile) into tContents
+   local tContents, tError
+   try
+      put FileGetUTF8Contents(pFile) into tContents
+   catch tError
+      BuilderLog "report", tError
+      exit DictionaryScanFile
+   end try
    
    -- Extract basic metadata from the dictionary entry
    local tName, tType, tVersion
@@ -1289,6 +1297,7 @@ end HtmlEscape
 
 private function GitRunInPath pPath, pCommand
    local tOutput, tExitCode
+   builderLog "debug", merge("git [[pCommand]]")
    put shell(merge("cd '[[pPath]]' && git [[pCommand]]")) into tOutput
    put the result into tExitCode
    if tExitCode is not 0 then
@@ -1368,22 +1377,24 @@ private command GitSortTags @xTags
 end GitSortTags
 
 private function GitGetRelevantTags pType
-   local tTags, tStart, tEnd
+   local tTags, tStart, tEnd, sNumericVersion
    put GitGetTags(pType) into tTags
    
-   set the itemdelimiter to "."
+   -- Ignore a pre-release version suffix (e.g. -rc-1)
+   set the itemdelimiter to "-"
+   put item 1 of sVersion into sNumericVersion
    
    put 0 into tStart
    repeat for each line tLine in tTags
       add 1 to tStart
-      if tLine begins with item 1 to 3 of sVersion then
+      if tLine begins with sNumericVersion then
          exit repeat
       end if
    end repeat
    put line (tStart - 1) to -1 of tTags into tTags
    
    repeat for each line tLine in tTags
-      if not (tLine begins with item 1 to 3 of sVersion) then
+      if not (tLine begins with sNumericVersion) then
          if not (tEnd is 0) then
             exit repeat
          end if
@@ -1396,6 +1407,11 @@ private function GitGetRelevantTags pType
       put return & "HEAD" after tTags
    end if
    
+   local tDebug
+   put tTags into tDebug
+   replace return with space in tDebug
+   builderLog "debug", merge("Relevant tags: [[tDebug]]")
+
    return tTags
 end GitGetRelevantTags
 

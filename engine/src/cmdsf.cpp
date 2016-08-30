@@ -1090,8 +1090,8 @@ MCFilter::~MCFilter()
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
 	// Syntax :
-	//   filter [ ( lines | items ) of ] <container_or_exp>
-	//          ( with | without | [ not ] matching )
+	//   filter [ { lines | items | keys | elements } of ] <container_or_exp>
+	//          { with | without | [ not ] matching }
 	//          [ { wildcard | regex } [ pattern ] ] <pattern>
 	//          [ into <container> ]
 	//
@@ -1108,15 +1108,19 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 			chunktype = CT_LINE;
 		else if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_ITEM) == PS_NORMAL)
 			chunktype = CT_ITEM;
-		// If we parsed a chunk then ensure there's an 'of'
+        else if (sp.skip_token(SP_FACTOR, TT_FUNCTION, F_KEYS) == PS_NORMAL)
+            chunktype = CT_KEY;
+        else if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_ELEMENT) == PS_NORMAL)
+            chunktype = CT_ELEMENT;
+        // If we parsed a chunk then ensure there's an 'of'
 		if (chunktype != CT_UNDEFINED && sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
 			t_error = PE_FILTER_BADDEST;
-	}
-
-	// If there was no error and no chunk type then default to line
-	if (t_error == PE_UNDEFINED && chunktype == CT_UNDEFINED)
-		chunktype = CT_LINE;
-
+    }
+    
+    // If there was no error and no chunk type then default to line
+    if (t_error == PE_UNDEFINED && chunktype == CT_UNDEFINED)
+        chunktype = CT_LINE;
+    
 	// Next parse the source container or expression
 	if (t_error == PE_UNDEFINED)
 	{
@@ -1133,10 +1137,10 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 			{
 				t_error = PE_FILTER_BADDEST;
 			}
-		}
+        }
 		else
-			MCerrorlock--;
-	}
+            MCerrorlock--;
+    }
 
 	// Now look for the filter mode
 	if (t_error == PE_UNDEFINED)
@@ -1194,56 +1198,115 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 // JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new syntax.
 void MCFilter::exec_ctxt(MCExecContext &ctxt)
 {
-    MCAutoStringRef t_source;
+    MCValueRef t_source;
     MCAutoStringRef t_pattern;
-    MCAutoStringRef t_output;
-    bool stat;
     
-	// Evaluate the container or source expression
-	if (container != NULL)
+    if (container != NULL)
     {
-        if (!ctxt . EvalExprAsStringRef(container, EE_FILTER_CANTGET, &t_source))
+        if (!ctxt . EvalExprAsValueRef(container, EE_FILTER_CANTGET, t_source))
             return;
-    }
-	else
-    {
-        if (!ctxt . EvalExprAsStringRef(source, EE_FILTER_CANTGET, &t_source))
-            return;
-    }
-
-    if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
-        return;
-    
-    if (container == nil && target == nil)
-    {
-        if (matchmode == MA_REGEX)
-            MCStringsExecFilterRegexIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
-        else
-            MCStringsExecFilterWildcardIntoIt(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE);
     }
     else
     {
-        if (matchmode == MA_REGEX)
-            MCStringsExecFilterRegex(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
-        else
-            MCStringsExecFilterWildcard(ctxt, *t_source, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output);
+        if (!ctxt . EvalExprAsValueRef(source, EE_FILTER_CANTGET, t_source))
+            return;
     }
     
-    
-    if ((target != nil || container != nil) && *t_output != nil)
-    {
-        if (target != nil)
-            stat = target -> set(ctxt, PT_INTO, *t_output);
-        else
-            stat = container -> set(ctxt, PT_INTO, *t_output);
+    if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
+        return;
         
-        if (!stat)
+    MCAutoStringRef t_source_string;
+    MCAutoArrayRef t_source_array;
+    
+    if (chunktype == CT_LINE || chunktype == CT_ITEM)
+    {
+        if (!ctxt . ConvertToString(t_source, &t_source_string))
         {
-            ctxt . LegacyThrow(EE_FILTER_CANTSET);
+            ctxt . LegacyThrow(EE_FILTER_CANTGET);
             return;
         }
     }
+    else
+    {
+        if (!ctxt . ConvertToArray(t_source, &t_source_array))
+        {
+            ctxt . LegacyThrow(EE_FILTER_CANTGET);
+            return;
+        }
+    }
+    
+    bool stat;
+    
+    if (container == nil && target == nil)
+    {
+        
+        if (chunktype == CT_LINE || chunktype == CT_ITEM)
+        {
+            if (matchmode == MA_REGEX)
+                MCStringsExecFilterRegexIntoIt(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+            else
+                MCStringsExecFilterWildcardIntoIt(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE);
+        }
+        else
+        {
+            if (matchmode == MA_REGEX)
+                MCArraysExecFilterRegexIntoIt(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY);
+            else
+                MCArraysExecFilterWildcardIntoIt(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY);
+        }
+    }
+    else
+    {
+        if (chunktype == CT_LINE || chunktype == CT_ITEM)
+        {
+            MCAutoStringRef t_output_string;
+            
+            if (matchmode == MA_REGEX)
+                MCStringsExecFilterRegex(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
+            else
+                MCStringsExecFilterWildcard(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
+            
+            if ((target != nil || container != nil) && *t_output_string != nil)
+            {
+                if (target != nil)
+                    stat = target -> set(ctxt, PT_INTO, *t_output_string);
+                else
+                    stat = container -> set(ctxt, PT_INTO, *t_output_string);
+                
+                if (!stat)
+                {
+                    ctxt . LegacyThrow(EE_FILTER_CANTSET);
+                    return;
+                }
+            }
 
+        }
+        else
+        {
+            MCAutoArrayRef t_output_array;
+            
+            if (matchmode == MA_REGEX)
+                MCArraysExecFilterRegex(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
+            else
+                MCArraysExecFilterWildcard(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
+            
+            if ((target != nil || container != nil) && *t_output_array != nil)
+            {
+                if (target != nil)
+                    stat = target -> set(ctxt, PT_INTO, *t_output_array);
+                else
+                    stat = container -> set(ctxt, PT_INTO, *t_output_array);
+                
+                if (!stat)
+                {
+                    ctxt . LegacyThrow(EE_FILTER_CANTSET);
+                    return;
+                }
+            }
+
+        }
+    }
+    
     if (ctxt . HasError())
         ctxt . LegacyThrow(EE_FILTER_CANTSET);
 }

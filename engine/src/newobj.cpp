@@ -788,7 +788,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCTicks;
 	case F_TIME:
 		return new MCTheTime;
-	case F_TOP_STACK:
+    case F_TOKEN_OFFSET:
+        return new MCTokenOffset;
+    case F_TOP_STACK:
 		return new MCTopStack;
 	case F_TO_LOWER:
 		return new MCToLower;

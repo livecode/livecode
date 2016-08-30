@@ -1,6 +1,6 @@
 Name: encode
 
-Synonyms: encoded,encoding,encode
+Synonyms: encoded, encoding, encode
 
 Type: glossary
 
@@ -10,3 +10,4 @@ To translate data into a different <format>.
 References: format (glossary)
 
 Tags: text processing
+

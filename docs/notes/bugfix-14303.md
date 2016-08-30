@@ -1,1 +1,0 @@
-# Problem saving stack with custom properties

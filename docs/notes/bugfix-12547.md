@@ -1,1 +1,0 @@
-# Make arrayEncode encode in 7.0 format by default

@@ -52,6 +52,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
+#include "stackfileformat.h"
+
 uint2 MCButton::mnemonicoffset = 1;
 MCRectangle MCButton::optionrect = {0, 0, 12, 8};
 uint4 MCButton::clicktime;
@@ -376,7 +378,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	family = bref.family;
     
     // MW-2014-06-19: [[ IconGravity ]] Copy the other buttons gravity
-    m_icon_gravity = kMCGravityNone;
+    m_icon_gravity = bref.m_icon_gravity;
     
     // MM-2014-07-31: [[ ThreadedRendering ]] Used to ensure the default button animate message is only posted from a single thread.
     m_animate_posted = false;
@@ -3569,7 +3571,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
     //  we need to rely on the F_LABEL flag
     if (flags & F_LABEL)
 	{
-		if (p_version < 7000)
+		if (p_version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_write_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3595,13 +3597,13 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 			return stat;
 	}
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_write_nameref_new(menuname, stream, p_version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_write_nameref_new(menuname, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return stat;
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
     if (flags & F_MENU_STRING)
 	{
-		if (p_version < 7000)
+		if (p_version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_write_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
 				return stat;
@@ -3630,7 +3632,7 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
-	if (p_version < 7000)
+	if (p_version < kMCStackFileFormatVersion_7_0)
 	{
 		if ((stat = IO_write_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
 			return stat;
@@ -3676,7 +3678,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
 		m_font_flags |= FF_HAS_UNICODE;
 
-	if (version <= 2300)
+	if (version <= kMCStackFileFormatVersion_2_3)
 	{
 		uint4 iconid;
 		uint4 hiliteiconid = 0;
@@ -3719,7 +3721,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	//   legacy unicode output.
 	if (flags & F_LABEL)
 	{
-		if (version < 7000)
+		if (version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_read_stringref_legacy(label, stream, hasunicode())) != IO_NORMAL)
 				return checkloadstat(stat);
@@ -3753,14 +3755,14 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	}
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_read_nameref_new(menuname, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_nameref_new(menuname, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
 	if (flags &  F_MENU_STRING)
 	{
-		if (version < 7000)
+		if (version < kMCStackFileFormatVersion_7_0)
 		{
 			if ((stat = IO_read_stringref_legacy(menustring, stream, hasunicode())) != IO_NORMAL)
 				return checkloadstat(stat);
@@ -3793,7 +3795,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode; otherwise use
 	//   legacy unicode output.
-	if (version < 7000)
+	if (version < kMCStackFileFormatVersion_7_0)
 	{
 		if ((stat = IO_read_stringref_legacy(acceltext, stream, hasunicode())) != IO_NORMAL)
 			return checkloadstat(stat);
@@ -3819,7 +3821,7 @@ IO_stat MCButton::load(IO_handle stream, uint32_t version)
 		return checkloadstat(stat);
 	if ((stat = IO_read_uint1(&mnemonic, stream)) != IO_NORMAL)
 		return checkloadstat(stat);
-	if (version <= 2000)
+	if (version <= kMCStackFileFormatVersion_2_0)
 	{
 		if (flags & F_DEFAULT)
 			rect = MCU_reduce_rect(rect, MOTIF_DEFAULT_WIDTH);

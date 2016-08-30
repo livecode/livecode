@@ -418,7 +418,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  FIXED WIDTH INTEGER TYPES
 //
 
-#define __STDC_LIMIT_MACROS 1
+#if !defined(__STDC_LIMIT_MACROS)
+#	define __STDC_LIMIT_MACROS 1
+#endif
 #include <stddef.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -1980,7 +1982,7 @@ MC_DLLEXPORT bool MCStringCreateWithNativeCharBufferAndRelease(char_t* buffer, u
 
 // Create an immutable string from the given (native) c-string.
 MC_DLLEXPORT bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
-MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(char *cstring, MCStringRef& r_string);
+MC_DLLEXPORT bool MCStringCreateWithCStringAndRelease(char *cstring /*delete[]*/, MCStringRef& r_string);
 
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
@@ -2134,6 +2136,9 @@ MC_DLLEXPORT void MCStringNativize(MCStringRef string);
 
 // Create a native copy of p_string
 MC_DLLEXPORT bool MCStringNativeCopy(MCStringRef p_string, MCStringRef& r_copy);
+
+// Create a Unicode copy of p_string
+MC_DLLEXPORT bool MCStringUnicodeCopy(MCStringRef p_string, MCStringRef& r_copy);
 
 // Maps from a codepoint (character) range to a code unit (StringRef) range
 MC_DLLEXPORT bool MCStringMapCodepointIndices(MCStringRef, MCRange p_codepoint_range, MCRange& r_string_range);

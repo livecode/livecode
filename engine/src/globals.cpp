@@ -75,6 +75,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "widget-events.h"
 
+#include "stackfileformat.h"
+
 #define HOLD_SIZE1 65535
 #define HOLD_SIZE2 16384
 
@@ -382,8 +384,8 @@ Boolean MCrecording;
 MCPlatformSoundRecorderRef MCrecorder;
 #endif
 
-// AL-2014-18-02: [[ UnicodeFileFormat ]] Make stackfile version 7.0 the default.
-uint4 MCstackfileversion = 8000;
+// AL-2014-18-02: [[ UnicodeFileFormat ]] Make current stackfile version the default.
+uint4 MCstackfileversion = kMCStackFileFormatCurrentVersion;
 uint2 MClook;
 MCStringRef MCttbgcolor;
 MCStringRef MCttfont;
@@ -760,8 +762,8 @@ void X_clear_globals(void)
     MCrecorder = nil;
 #endif
     
-	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make 7.0 stackfile version the default.
-	MCstackfileversion = 8000;
+	// AL-2014-18-02: [[ UnicodeFileFormat ]] Make current stackfile version the default.
+	MCstackfileversion = kMCStackFileFormatCurrentVersion;
 
     MClook = LF_MOTIF;
     MCttbgcolor = MCSTR("255,255,207");
@@ -1297,9 +1299,9 @@ int X_close(void)
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
 	if (MCfiles != NULL)
-		delete MCfiles;
+		delete[] MCfiles; /* Allocated with new[] */
 	if (MCprocesses != NULL)
-		delete MCprocesses;
+		delete[] MCprocesses; /* Allocated with new[] */
 	if (MCnsockets)
 		while (MCnsockets)
 			delete MCsockets[--MCnsockets];
@@ -1359,7 +1361,7 @@ int X_close(void)
 	delete MCdialogdata;
 	MCValueRelease(MChcstat);
 
-	delete MCusing;
+	delete[] MCusing; /* Allocated with new[] */
 	MCValueRelease(MChttpheaders);
 	MCValueRelease(MCscriptfont);
 	MCValueRelease(MClinkatts . colorname);
@@ -1499,7 +1501,7 @@ int X_close(void)
 	MCU_finalize_names();
 	
 	if (MCsysencoding != nil)
-		MCMemoryDelete(MCsysencoding);
+		delete[] MCsysencoding; /* Allocated with new[] */
 
     if (kMCSystemLocale != nil)
         MCLocaleRelease(kMCSystemLocale);

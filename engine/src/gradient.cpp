@@ -708,7 +708,7 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 	if (t_stat == IO_NORMAL)
 	{
 		if (p_gradient != NULL)
-			delete p_gradient -> ramp;
+			delete[] p_gradient -> ramp; /* Allocated with new[] */
 		p_gradient -> ramp = new MCGradientFillStop[p_gradient -> ramp_length];
 		for(int i = 0; i < p_gradient -> ramp_length && t_stat == IO_NORMAL; ++i)
 		{

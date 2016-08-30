@@ -4,10 +4,14 @@ Type: property
 
 Syntax: ftpProxy
 
-Summary: The ftpProxy <property> is not implemented and is <reserved word|reserved>.
+Summary:
+The ftpProxy <property> is not implemented and is <reserved
+word|reserved>. 
 
 Introduced: 1.0
 
-Platforms: desktop,server,web
+Platforms: desktop, server
 
-References: HTTPProxy (property), property (glossary), reserved word (glossary)
+References: property (glossary), reserved word (glossary),
+HTTPProxy (property)
+

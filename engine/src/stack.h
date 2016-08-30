@@ -294,6 +294,8 @@ protected:
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
 	
+	bool m_is_ide_stack : 1;
+	
 	// IM-2014-05-27: [[ Bug 12321 ]] Indicate if we need to purge fonts when reopening the window
 	bool m_purge_fonts;
     
@@ -356,6 +358,9 @@ public:
 	virtual void recompute();
 	
     virtual void toolchanged(Tool p_new_tool);
+	
+	virtual void OnAttach();
+	virtual void OnDetach();
     
 	// MW-2011-09-20: [[ Collision ]] Compute shape of stack.
 	virtual bool lockshape(MCObjectShape& r_shape);
@@ -584,14 +589,6 @@ public:
     
 	//////////
 	
-    // MW-2014-12-17: [[ Widgets ]] Returns true if one of the stacks substacks have widgets.
-    bool substackhaswidgets();
-
-    /* Return true iff the stack or one of its substacks has widgets. */
-    virtual bool haswidgets();
-    
-	//////////
-    
 	void setgeom();
 	
 	//////////
@@ -883,6 +880,9 @@ public:
 	// IM-2013-10-08: [[ FullscreenMode ]] Separate out window sizing hints
 	void setsizehints();
     
+	bool createwindow();
+	void destroywindow();
+	
 	void destroywindowshape();
     void updatewindowshape(MCWindowShape *shape);
 
@@ -1242,6 +1242,8 @@ public:
 	void GetShowInvisibleObjects(MCExecContext &ctxt, bool *&r_show_invisibles);
 	void SetShowInvisibleObjects(MCExecContext &ctxt, bool *p_show_invisibles);
 	void GetEffectiveShowInvisibleObjects(MCExecContext &ctxt, bool &r_show_invisibles);
+    
+    void GetMinStackFileVersion(MCExecContext &ctxt, MCStringRef& r_stack_file_version);
     
     virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
 	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);

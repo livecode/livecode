@@ -4,15 +4,17 @@ Type: command
 
 Syntax: load [URL] <url> [with message <callbackMessage>]
 
-Summary: <download|Downloads> the <file> specified by a <URL> to a <cache> where it can be used by another <handler>.
+Summary:
+<download|Downloads> the <file> specified by a <URL> to a <cache> where
+it can be used by another <handler>.
 
-Associations: Internet library
+Associations: internet library
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,server,web,mobile
+Platforms: desktop, server, mobile
 
 Security: network
 
@@ -31,16 +33,19 @@ on myUrlDownloadFinished
 end myUrlDownloadFinished
 
 Parameters:
-url: Any valid http or ftp URL.
-callbackMessage: The name of a message to send after the URL is loaded.
+url:
+Any valid http or ftp URL.
+
+callbackMessage:
+The name of a message to send after the URL is loaded.
 
 Description:
 Use the <load> <command> to pre-fetch a <file> from the Internet in 
 order to speed up access when using it in an <expression> with the 
 <URL> <keyword>.
 
-To use a file that has been downloaded by the <load> <command>, refer to 
-it using the <URL> <keyword> as usual. When you request the original 
+To use a file that has been downloaded by the <load> <command>, refer
+to it using the <URL> <keyword> as usual. When you request the original
 <URL>, LiveCode uses the <cache|cached> <file> automatically.
 
 The <callbackMessage> is sent to the <object(glossary)> whose <script> 
@@ -55,8 +60,9 @@ while the <load> <command> downloads the <URL> in the background. You
 can monitor the download by checking the <URLStatus> <function> 
 periodically.
 
-  load URL myURL
-  wait until the URLStatus of myURL is cached -- DON'T DO THIS
+    load URL myURL
+    wait until the URLStatus of myURL is cached -- DON'T DO THIS
+
 
 The file is downloaded into a local cache. It does not remain available 
 after the application quits; the purpose of the cache is to speed up 
@@ -64,7 +70,8 @@ access to the specified URL, not to store it permanently. You can use a
 URL even if it is not in the cache, so use of the <load> <command> is 
 optional.
 
->*Note:* Cached <files> consume memory. To release this memory after you 
+>*Note:* Cached <files> consume memory. To release this memory after
+> you 
 are finished with a <URL>, use the <unload (command)> <command> to 
 remove it from the <cache>.
 
@@ -88,20 +95,22 @@ remove it from the <cache>.
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
-References: script (property), object (glossary), startup (message), 
-openBackground (message), preOpenStack (message), openStack (message), 
-preOpenCard (message), Internet library (library), library (library), 
-LiveCode custom library (glossary), url (keyword), file (keyword), 
-application (glossary), standalone application (glossary), 
-load (glossary), cache (glossary), command (glossary), 
-standalone desktop application (glossary), main stack (glossary), 
-expression (glossary), keyword (glossary), 
-Standalone Application Settings (glossary), download (glossary), 
-message (glossary), parameter (glossary), handler (glossary), 
-libURLLastRHHeaders (function), URLEncode (function), files (function), 
-libURLErrorData (function), URLStatus (function), cachedURLs (function), 
-unload (command), libURLftpUpload (command), 
-libURLDownloadToFile (command), get (command), load (command), 
-group (command), function (control structure)
+References: unload (command), libURLftpUpload (command),
+libURLDownloadToFile (command), get (command), load (command),
+group (command), function (control structure),
+libURLLastRHHeaders (function), URLEncode (function), files (function),
+libURLErrorData (function), URLStatus (function), cachedURLs (function),
+object (glossary), LiveCode custom library (glossary),
+application (glossary), standalone application (glossary),
+load (glossary), cache (glossary), command (glossary),
+standalone desktop application (glossary), main stack (glossary),
+expression (glossary), keyword (glossary),
+Standalone Application Settings (glossary), download (glossary),
+message (glossary), parameter (glossary), handler (glossary),
+url (keyword), file (keyword), Internet library (library),
+library (library), startup (message), openBackground (message),
+preOpenStack (message), openStack (message), preOpenCard (message),
+script (property)
 
 Tags: networking
+

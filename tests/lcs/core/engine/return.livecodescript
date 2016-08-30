@@ -16,9 +16,68 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+--------
+
 private command SetTheResultTo pValue
    return pValue
 end SetTheResultTo
+
+-------- Test behavior of no return statement
+
+-- Engine behavior is that script handlers reset 'the result' to empty before
+-- they execute, so this should be seen outside the handler if there is no
+-- return.
+
+private command DoNothingThenNoReturnInCommand
+end DoNothingThenNoReturnInCommand
+
+private function DoNothingThenNoReturnInFunction
+end DoNothingThenNoReturnInFunction
+
+-- Engine behavior is that 'the result' is not touched if there is no return
+-- statement, so the last value 'the result' was set to in the handler should
+-- be its value after the handler has finished executing.
+
+private command DoTailThenNoReturnInCommand pValue
+   SetTheResultTo pValue
+end DoTailThenNoReturnInCommand
+
+private function DoTailThenNoReturnInFunction pValue
+   SetTheResultTo pValue
+end DoTailThenNoReturnInFunction
+
+on TestNoReturn
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   DoNothingThenNoReturnInCommand
+   TestAssert "no return in command leaves it and sets the result to empty", \
+                  it is "TheIt" and \
+                  the result is empty
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   TestAssert "no return in function leaves it, returns empty and sets the result to empty", \
+                  DoNothingThenNoReturnInFunction() is empty and \
+                  it is "TheIt" and \
+                  the result is empty
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   DoTailThenNoReturnInCommand "NewResult"
+   TestAssert "no return in tail command leaves it and sets the result to the result of the tail", \
+                  it is "TheIt" and \
+                  the result is "NewResult"
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   TestAssert "no return in tail function leaves it, returns the result of the tail and sets the result to the tail", \
+                  DoTailThenNoReturnInFunction("NewResult") is "NewResult" and \
+                  it is "TheIt" and \
+                  the result is "NewResult"
+end TestNoReturn
+
+
+-------- Test behavior of the return statement
 
 private command DoReturnInCommand pValue
    return pValue
@@ -29,21 +88,23 @@ private function DoReturnInFunction pValue
 end DoReturnInFunction
 
 on TestReturn
-   SetTheResultTo empty
+   SetTheResultTo "TheResult"
    get "TheIt"
-   DoReturnInCommand "TheResult"
+   DoReturnInCommand "NewResult"
    TestAssert "return in command leaves it and sets the result", \
                   it is "TheIt" and \
-                  the result is "TheResult"
+                  the result is "NewResult"
 
    local tFu
-   SetTheResultTo empty
+   SetTheResultTo "TheResult"
    get "TheIt"
    TestAssert "return in function leaves it, sets the result to return value and returns the return value", \
-                  DoReturnInFunction("TheResult") is "TheResult" and \
-                  the result is "TheResult" and \
+                  DoReturnInFunction("NewResult") is "NewResult" and \
+                  the result is "NewResult" and \
                   it is "TheIt"
 end TestReturn
+
+-------- Test behavior of the return for value statement
 
 private command DoReturnValueInCommand pValue
    return pValue for value
@@ -55,11 +116,11 @@ end DoReturnValueInFunction
 
 on TestReturnValue
    SetTheResultTo "TheResult"
-   get empty
-   DoReturnValueInCommand "TheIt"
+   get "TheIt"
+   DoReturnValueInCommand "NewIt"
    TestAssert "return value in command sets it and clears the result", \
                   the result is empty and \
-                  it is "TheIt"
+                  it is "NewIt"
 
    SetTheResultTo "TheResult"
    get "TheIt"
@@ -68,6 +129,8 @@ on TestReturnValue
                   the result is empty and \
                   it is "TheIt"
 end TestReturnValue
+
+-------- Test behavior of the return for error statement
 
 private command DoReturnErrorInCommand pValue
    return pValue for error
@@ -78,17 +141,91 @@ private function DoReturnErrorInFunction pValue
 end DoReturnErrorInFunction
 
 on TestReturnError
-   SetTheResultTo empty
+   SetTheResultTo "TheResult"
    get "TheIt"
-   DoReturnErrorInCommand "TheResult"
+   DoReturnErrorInCommand "NewResult"
    TestAssert "return error in command clears it and sets the result", \
-                  the result is "TheResult" and \
+                  the result is "NewResult" and \
                   it is empty
 
-   SetTheResultTo empty
+   SetTheResultTo "TheResult"
    get "TheIt"
    TestAssert "return error in function leaves it, sets the result to the return value and returns empty", \
                   DoReturnErrorInFunction("ReturnValue") is empty and \
                   the result is "ReturnValue" and \
                   it is "TheIt"
 end TestReturnError
+
+-------- Test that nested uses of 'return for' don't affect the return action
+-------- of a caller.
+
+private command DoReturnInNestedCommand pValue
+   DoReturnInCommand pValue
+end DoReturnInNestedCommand
+
+private command DoReturnValueInNestedCommand pValue
+   DoReturnValueInCommand pValue
+end DoReturnValueInNestedCommand
+
+private command DoReturnErrorInNestedCommand pValue
+  DoReturnErrorInCommand pValue
+end DoReturnErrorInNestedCommand
+
+private function DoReturnInNestedFunction pValue
+   get DoReturnInFunction(pValue)
+end DoReturnInNestedFunction
+
+private function DoReturnValueInNestedFunction pValue
+   get DoReturnValueInFunction(pValue)
+end DoReturnValueInNestedFunction
+
+private function DoReturnErrorInNestedFunction pValue
+  get DoReturnErrorInFunction(pValue)
+end DoReturnErrorInNestedFunction
+
+-- This checks that the absence of a return clause is not affected by any
+-- return clause present in a handler called by the handler with no return
+-- clause.
+on TestReturnNested
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   DoReturnInNestedCommand "NewResult"
+   TestAssert "return handler called in no-return handler leaves it and sets the result", \
+                  the result is "NewResult" and \
+                  it is "TheIt"
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   DoReturnValueInNestedCommand "NewResult"
+   TestAssert "return value handler called in no-return handler leaves it and sets the result to empty", \
+                  the result is empty and \
+                  it is "TheIt"
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   DoReturnErrorInNestedCommand "NewResult"
+   TestAssert "return error handler called in no-return handler leaves it and sets the result", \
+                  the result is "NewResult" and \
+                  it is "TheIt"
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   TestAssert "return function called in no-return function leaves it, sets the result to the return value and returns the return value", \
+                  DoReturnInNestedFunction("ReturnValue") is "ReturnValue" and \
+                  the result is "ReturnValue" and \
+                  it is "TheIt"
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   TestAssert "return value function called in no-return function leaves it, sets the result to the return value and returns the return value", \
+                  DoReturnValueInNestedFunction("ReturnValue") is empty and \
+                  the result is empty and \
+                  it is "TheIt"
+
+   SetTheResultTo "TheResult"
+   get "TheIt"
+   TestAssert "return error function called in no-return function leaves it, sets the result to the return value and returns the return value", \
+                  DoReturnErrorInNestedFunction("ReturnValue") is "ReturnValue" and \
+                  the result is "ReturnValue" and \
+                  it is "TheIt"
+end TestReturnNested

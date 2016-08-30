@@ -753,7 +753,7 @@ LT factor_table[] =
         {"commandkey", TT_FUNCTION, F_COMMAND_KEY},
         {"commandname", TT_FUNCTION, F_COMMAND_NAME},
         {"commandnames", TT_FUNCTION, F_COMMAND_NAMES},
-		// MW-2011-09-10: [[ TileCache ]] The maximum number of bytes to use for the tile cache
+        // MW-2011-09-10: [[ TileCache ]] The maximum number of bytes to use for the tile cache
 		{"compositorcachelimit", TT_PROPERTY, P_COMPOSITOR_CACHE_LIMIT},
 		// MW-2011-09-10: [[ TileCache ]] Read-only statistics about recent composites
 		{"compositorstatistics", TT_PROPERTY, P_COMPOSITOR_STATISTICS},
@@ -1229,6 +1229,7 @@ LT factor_table[] =
         {"min", TT_FUNCTION, F_MIN},
         {"minheight", TT_PROPERTY, P_MIN_HEIGHT},
         {"minimizebox", TT_PROPERTY, P_MINIMIZE_BOX},
+        {"minstackfileversion", TT_PROPERTY, P_MIN_STACK_FILE_VERSION},
         {"minwidth", TT_PROPERTY, P_MIN_WIDTH},
         {"mirrored", TT_PROPERTY, P_MIRRORED},
 		{"miterlimit", TT_PROPERTY, P_MITER_LIMIT},
@@ -1526,6 +1527,7 @@ LT factor_table[] =
         {"scriptlimits", TT_FUNCTION, F_SCRIPT_LIMITS},
         {"scriptonly", TT_PROPERTY, P_SCRIPT_ONLY},
         {"scriptparsingerrors", TT_PROPERTY, P_SCRIPT_PARSING_ERRORS},
+        {"scriptstatus", TT_PROPERTY, P_SCRIPT_STATUS},
         {"scripttextfont", TT_PROPERTY, P_SCRIPT_TEXT_FONT},
         {"scripttextsize", TT_PROPERTY, P_SCRIPT_TEXT_SIZE},		
         {"scroll", TT_PROPERTY, P_VSCROLL},
@@ -1728,6 +1730,7 @@ LT factor_table[] =
         {"to", TT_TO, PT_TO},
         {"togglehilites", TT_PROPERTY, P_TOGGLE_HILITE},
         {"token", TT_CHUNK, CT_TOKEN},
+        {"tokenoffset", TT_FUNCTION, F_TOKEN_OFFSET},
         {"tokens", TT_CLASS, CT_TOKEN},
         {"tolower", TT_FUNCTION, F_TO_LOWER},
         {"tool", TT_PROPERTY, P_TOOL},

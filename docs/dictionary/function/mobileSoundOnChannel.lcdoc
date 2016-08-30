@@ -1,16 +1,18 @@
 Name: mobileSoundOnChannel
 
+Synonyms: iphonesoundonchannel
+
 Type: function
 
 Syntax: mobileSoundOnChannel(<channel>)
 
-Summary: Returns the sound that is currently playing (if any) on the given channel.
-
-Synonyms: iphoneSoundOnChannel
+Summary:
+Returns the sound that is currently playing (if any) on the given
+channel. 
 
 Introduced: 4.6
 
-OS: ios,android
+OS: ios, android
 
 Platforms: mobile
 
@@ -21,13 +23,24 @@ Example:
 put mobileSoundOnChannel("current") into tCurrentSound
 
 Parameters:
-channel: The name of the channel.
+channel:
+The name of the channel.
 
 Returns:
-The <mobileSoundOnChannel> function returns the name of the sound file that is currently playing on the given channel.
-If no sound is playing or the channel doesn't exit then empty is returned.
+The <mobileSoundOnChannel> function returns the name of the sound file
+that is currently playing on the given channel. If no sound is playing
+or the channel doesn't exit then empty is returned.
 
 Description:
-Use the <mobileSoundOnChannel> function to find what sound (if any) is playing on the current channel.
+Use the <mobileSoundOnChannel> function to find what sound (if any) is
+playing on the current channel.
 
-References: mobileDeleteSoundChannel (command), mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command), mobilePausePlayingOnChannel (command), mobileStopPlayingOnChannel (command), mobileResumePlayingOnChannel (command), mobileSoundChannelVolume (function), mobileNextSoundOnChannel (function), mobileSoundChannels (function), mobileSoundChannelStatus (function), soundFinishedOnChannel (message)
+References: mobileDeleteSoundChannel (command),
+mobilePlaySoundOnChannel (command), mobileSetSoundChannelVolume (command),
+mobilePausePlayingOnChannel (command),
+mobileStopPlayingOnChannel (command),
+mobileResumePlayingOnChannel (command),
+mobileSoundChannelVolume (function), mobileNextSoundOnChannel (function),
+mobileSoundChannels (function), mobileSoundChannelStatus (function),
+soundFinishedOnChannel (message)
+

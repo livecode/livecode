@@ -1042,7 +1042,7 @@ public foreign handler MCWidgetGetRectangleOfWidget(in pWidget as Widget, out rR
 public foreign handler MCWidgetSetRectangleOfWidget(in pRect as Rectangle, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetWidthOfWidget(in pWidget as Widget, out rWidth as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetWidthOfWidget(in pWidth as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
-public foreign handler MCWidgetGetHeightOfWidget(in pWidget as Widget, out rHeight as Point) returns nothing binds to "<builtin>"
+public foreign handler MCWidgetGetHeightOfWidget(in pWidget as Widget, out rHeight as CanvasFloat) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetHeightOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetLocationOfWidget(in pWidget as Widget, out rHeight as Point) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetLocationOfWidget(in pHeight as CanvasFloat, in pWidget as Widget) returns nothing binds to "<builtin>"

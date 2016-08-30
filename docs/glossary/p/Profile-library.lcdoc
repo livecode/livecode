@@ -1,10 +1,15 @@
 Name: Profile library
 
-Synonyms: Profiles library,Profiles libraries,Profile library,Profile libraries
+Synonyms: profiles library, profiles libraries, profile library,
+profile libraries
 
 Type: library
 
 Description:
-The <LiveCode custom library|LiveCode custom library> that supports <property profile|property profiles>. The <property profile|profile> <property> is part of the Profile library.
+The <LiveCode custom library|LiveCode custom library> that supports
+<property profile|property profiles>. The <property profile|profile>
+<property> is part of the Profile library.
 
-References: property (glossary), property profile (glossary), LiveCode custom library (glossary)
+References: property (glossary), property profile (glossary),
+LiveCode custom library (glossary)
+

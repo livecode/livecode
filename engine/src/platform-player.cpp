@@ -66,6 +66,12 @@ void *MCPlatformPlayerGetNativeView(MCPlatformPlayerRef player)
 	return t_view;
 }
 
+bool MCPlatformPlayerSetNativeParentView(MCPlatformPlayerRef p_player, void *p_parent_view)
+{
+	return p_player -> SetNativeParentView(p_parent_view);
+}
+
+
 bool MCPlatformPlayerIsPlaying(MCPlatformPlayerRef player)
 {
 	return player -> IsPlaying();

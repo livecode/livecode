@@ -4,13 +4,15 @@ Type: command
 
 Syntax: unlock screen [with visual [effect] <effectName> [<speed>] \  [to <finalImag> e] [with sound <audioClip>]]
 
-Summary: Sets the <lockScreen> <property> to false, updating the screen and displaying any changes made since the screen was <lock|locked>.
+Summary:
+Sets the <lockScreen> <property> to false, updating the screen and
+displaying any changes made since the screen was <lock|locked>.
 
 Introduced: 1.0
 
-OS: mac,windows,linux,ios,android
+OS: mac, windows, linux, ios, android
 
-Platforms: desktop,web,mobile
+Platforms: desktop, mobile
 
 Example:
 unlock screen
@@ -27,15 +29,27 @@ lock screen
 unlock screen
 
 Parameters:
-effectName: The effectName, speed, finalImage, and audioClip are described in the visual effect command. These three parameters operate the same way as they do with the visual effect command.
-speed: 
-finalImag: 
-audioClip: 
+effectName:
+The effectName, speed, finalImage, and audioClip are described in the
+visual effect command. These three parameters operate the same way as
+they do with the visual effect command.
+
+speed:
+
+
+finalImag:
+
+
+audioClip:
+
 
 Description:
-Use the <unlock screen> <command> to allow changes to the screen appearance to be seen.
+Use the <unlock screen> <command> to allow changes to the screen
+appearance to be seen.
 
-The <unlock screen> <command> sets the <lockScreen> <property> to false. When all pending <handler|handlers> are finished <execute|executing>, the <lockScreen> <property> is automatically set to false.
+The <unlock screen> <command> sets the <lockScreen> <property> to false.
+When all pending <handler|handlers> are finished <execute|executing>,
+the <lockScreen> <property> is automatically set to false.
 
 Changes:
 The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
@@ -46,6 +60,12 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
-References: dontUseQT (property), dontUseQTEffects (property), unlock colorMap (command), unlock cursor (command), unlock error dialogs (command), unlock moves (command), unlock recent (command), allowFieldRedraw (property), lockScreen (property), property (glossary), handler (glossary), lock (glossary), lockScreen (glossary), command (glossary), execute (glossary)
+References: unlock colorMap (command), unlock cursor (command),
+unlock error dialogs (command), unlock moves (command),
+unlock recent (command), property (glossary), handler (glossary),
+lock (glossary), lockScreen (glossary), command (glossary),
+execute (glossary), dontUseQT (property), dontUseQTEffects (property),
+allowFieldRedraw (property), lockScreen (property)
 
 Tags: ui
+

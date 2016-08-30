@@ -254,7 +254,7 @@ MCUIDC::~MCUIDC()
 {
 	while (nmessages != 0)
 		cancelmessageindex(0, True);
-	delete messages;
+	delete[] messages; /* Allocated with new[] */
 
 #if defined(FEATURE_NOTIFY)
 	MCNotifyFinalize();
@@ -1575,12 +1575,12 @@ void MCUIDC::siguser()
 
 Boolean MCUIDC::lookupcolor(MCStringRef s, MCColor *color)
 {
-    // SN-2015-11-26: [[ Bug 16501 ]] Do not use GetOldString (nativises)
-    MCAutoPointer<char> t_cstring;
-    MCStringConvertToCString(s, &t_cstring);
+	MCAutoStringRefAsCString t_cstring;
+	if (!t_cstring.Lock(s))
+		return false;
 
     uint4 slength = strlen(*t_cstring);
-    MCAutoPointer<char> startptr;
+    MCAutoPointer<char[]> startptr;
     startptr = new char[slength + 1];
 
     MCU_lower(*startptr, *t_cstring);
@@ -1737,9 +1737,10 @@ Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 	
 	int2 i1, i2, i3;
     Boolean done;
-    MCAutoPointer<char> temp;
-    /* UNCHECKED */ MCStringConvertToCString(s, &temp);
-    const char *sptr = *temp;
+	MCAutoStringRefAsCString t_cstring;
+	if (!t_cstring.Lock(s))
+		return false;
+	const char *sptr = *t_cstring;
     uint4 l = strlen(sptr);
 	
 	// check for numeric first argument

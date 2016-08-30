@@ -1,1 +1,0 @@
-# Entries in the Project Browser won't expand 

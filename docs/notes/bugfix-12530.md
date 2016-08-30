@@ -1,1 +1,0 @@
-# embedded wav sound crashes Project Browser and Properties inspector in LC 7 dp5 

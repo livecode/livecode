@@ -86,20 +86,20 @@ MCHandler::~MCHandler()
 		MCNameDelete(vinfo[i] . name);
 		MCValueRelease(vinfo[i] . init);
 	}
-	delete vinfo;
+	delete[] vinfo; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < npnames; i++)
 		MCNameDelete(pinfo[i] . name);
-	delete pinfo;
+	delete[] pinfo; /* Allocated with new[] */
 
-	delete globals;
+	delete[] globals; /* Allocated with new[] */
 
 	for(uint32_t i = 0; i < nconstants; i++)
 	{
 		MCNameDelete(cinfo[i] . name);
 		MCValueRelease(cinfo[i] . value);
 	}
-	delete cinfo;
+	delete[] cinfo; /* Allocated with new[] */
 	
 	// MW-2013-11-08: [[ RefactorIt ]] Delete the it varref.
 	delete m_it;
@@ -523,7 +523,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
                 delete params[i];
             }
         }
-		delete params;
+		delete[] params; /* Allocated with new[] */
 	}
 	if (vars != NULL)
 	{
@@ -536,7 +536,7 @@ Exec_stat MCHandler::exec(MCExecContext& ctxt, MCParameter *plist)
 			}
 			delete vars[nvnames];
 		}
-		delete vars;
+		delete[] vars; /* Allocated with new[] */
 	}
 	params = oldparams;
 	nparams = oldnparams;

@@ -4,18 +4,20 @@
 #?author
 # Marcus van Houdt
 
-on libraryStack
-   initialise
-end libraryStack
-
-local sInitialised
-private command initialise
-   if sInitialised then
-      exit initialise
+on revLoadLibrary
+   if the target is me then
+      insert the script of me into back
+      
+      __InitialiseInclusionDependencies
+      __InitialiseBuiltInInclusions
    end if
-   
-   initialiseInclusionDependencies
-end initialise
+end revLoadLibrary
+
+on revUnloadLibrary
+   if the target is me then
+      remove the script of me from back
+   end if
+end revUnloadLibrary
 
 -- Some higher level wrappers..
 
@@ -24,182 +26,182 @@ end initialise
 #?author
 # Marcus van Houdt
 on revSBCopyFileToFolder pSourceFile, pTargetFolder, pCallback, pCallbackTarget
-  if there is no folder pTargetFolder then
-    return "target folder not found"
-  end if
-  set the itemDelimiter to "/"
-  local tTargetFile
-  put pTargetFolder & "/" & item -1 of pSourceFile into tTargetFile
-  __revSBCopyFile pSourceFile, tTargetFile, pCallback, pCallbackTarget
-  return the result
+   if there is no folder pTargetFolder then
+      return "target folder not found"
+   end if
+   set the itemDelimiter to "/"
+   local tTargetFile
+   put pTargetFolder & "/" & item -1 of pSourceFile into tTargetFile
+   __revSBCopyFile pSourceFile, tTargetFile, pCallback, pCallbackTarget
+   return the result
 end revSBCopyFileToFolder
 
 on revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
-  __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
-  return the result
+   __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
+   return the result
 end revSBCopyFile
 
 on revSBCopyFileToFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
-  __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
-  return the result
+   __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
+   return the result
 end revSBCopyFileToFile
 
 on revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
-  __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
-  return the result
+   __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
+   return the result
 end revSBCopyFolder
- 
+
 # Slightly unfortunate naming, perhaps, but what do I call it folderToFolder?!
 on revSBCopyFolderToDestination pSourceFolder, pDestinationFolder, pCallback, pCallbackTarget
-  if there is no folder pDestinationFolder then
-    return "destination folder not found"
-  end if
-  set the itemDelimiter to "/"
-  local tTargetFolder
-  put pDestinationFolder & "/" & item -1 of pSourceFolder into tTargetFolder
-  __revSBCopyFolder pSourceFolder, tTargetFolder, pCallback, pCallbackTarget
-  return the result
+   if there is no folder pDestinationFolder then
+      return "destination folder not found"
+   end if
+   set the itemDelimiter to "/"
+   local tTargetFolder
+   put pDestinationFolder & "/" & item -1 of pSourceFolder into tTargetFolder
+   __revSBCopyFolder pSourceFolder, tTargetFolder, pCallback, pCallbackTarget
+   return the result
 end revSBCopyFolderToDestination
 
 on revSBReadFile pFile, pMode, @rData, pCallback, pCallbackTarget
-  local tResult
-  
-  if tResult is empty then
-    if there is no file pFile then
-      put "file not found" into tResult
-    end if
-  end if
-  
-  local tTotalSize
-  if tResult is empty then
-    local tOldFolder
-    put the defaultFolder into tOldFolder
-    set the itemDelimiter to "/"
-    set the defaultFolder to item 1 to -2 of pFile
-    get the detailed files
-    filter it with (the urlEncode of item -1 of pFile) & "*"
-    set the itemDelimiter to ","
-    put item 2 of it into tTotalSize
-    set the defaultFolder to tOldFolder
-  end if
-  
-  if tResult is empty then
-    if pMode is "binary" then
-      open file pFile for binary read
-    else
-      open file pFile for text read
-    end if
-  end if
-  put the result into tResult
-  
-  local tAmountRead
-  if tResult is empty then
-    if pCallbackTarget is not empty and there is a pCallbackTarget then
-      send pCallback to pCallbackTarget
-    end if
-    repeat forever
-      read from file pFile for 524288
-      if the result is not empty and the result is not "eof" then
-        put the result into tResult
-        exit repeat
+   local tResult
+   
+   if tResult is empty then
+      if there is no file pFile then
+         put "file not found" into tResult
       end if
-      put it after rData
-      if the result is "eof" or it is empty then
-        exit repeat
+   end if
+   
+   local tTotalSize
+   if tResult is empty then
+      local tOldFolder
+      put the defaultFolder into tOldFolder
+      set the itemDelimiter to "/"
+      set the defaultFolder to item 1 to -2 of pFile
+      get the detailed files
+      filter it with (the urlEncode of item -1 of pFile) & "*"
+      set the itemDelimiter to ","
+      put item 2 of it into tTotalSize
+      set the defaultFolder to tOldFolder
+   end if
+   
+   if tResult is empty then
+      if pMode is "binary" then
+         open file pFile for binary read
+      else
+         open file pFile for text read
       end if
-      add 524288 to tAmountRead
+   end if
+   put the result into tResult
+   
+   local tAmountRead
+   if tResult is empty then
       if pCallbackTarget is not empty and there is a pCallbackTarget then
-        send pCallback && tAmountRead, tTotalSize to pCallbackTarget
+         send pCallback to pCallbackTarget
       end if
-    end repeat
-  end if
-  if tResult is empty then
-    if pCallbackTarget is not empty and there is a pCallbackTarget then
-      send pCallback && tAmountRead, tTotalSize to pCallbackTarget
-    end if
-  end if
-  
-  if tResult is empty then
-    close file pFile
-  end if
-  
-  return tResult
+      repeat forever
+         read from file pFile for 524288
+         if the result is not empty and the result is not "eof" then
+            put the result into tResult
+            exit repeat
+         end if
+         put it after rData
+         if the result is "eof" or it is empty then
+            exit repeat
+         end if
+         add 524288 to tAmountRead
+         if pCallbackTarget is not empty and there is a pCallbackTarget then
+            send pCallback && tAmountRead, tTotalSize to pCallbackTarget
+         end if
+      end repeat
+   end if
+   if tResult is empty then
+      if pCallbackTarget is not empty and there is a pCallbackTarget then
+         send pCallback && tAmountRead, tTotalSize to pCallbackTarget
+      end if
+   end if
+   
+   if tResult is empty then
+      close file pFile
+   end if
+   
+   return tResult
 end revSBReadFile
 
 
 local sLog = "false"
 
 private command log pMessage
-  #put pMessage & return after msg
+   #put pMessage & return after msg
 end log
 
 
 
 # This handler has not been tested..
 on revSBWriteFile pFile, pMode, @pData, pCallback, pCallbackTarget, pLog
-  local tResult
-  
-  put pLog into sLog
-  
-  if tResult is empty then
-    if "binary" is in pMode then
-      if "update" is in pMode then
-        open file pFile for binary update
+   local tResult
+   
+   put pLog into sLog
+   
+   if tResult is empty then
+      if "binary" is in pMode then
+         if "update" is in pMode then
+            open file pFile for binary update
+         else
+            open file pFile for binary write
+         end if
       else
-        open file pFile for binary write
+         if "update" is in pMode then
+            open file pFile for text update
+         else
+            open file pFile for text write
+         end if
       end if
-    else
-      if "update" is in pMode then
-        open file pFile for text update
-      else
-        open file pFile for text write
-      end if
-    end if
-  end if
-  put the result into tResult
-  
-  log "Result of opening file: " & tResult
-  
-  local tTotalSize
-  local tCurrentCount
-  if tResult is empty then
-    put the number of chars of pData into tTotalSize
-    put 1 into tCurrentCount
-    if pCallbackTarget is not empty and there is a pCallbackTarget then
-      send pCallback to pCallbackTarget
-    end if
-    repeat forever
-      get char tCurrentCount to (tCurrentCount + 524288 - 1) of pData
-      if it is empty then
-        exit repeat
-      end if
-      write it to file pFile
-      if the result is not empty then
-        put the result into tResult
-        exit repeat
-      end if
-      add 524288 to tCurrentCount
+   end if
+   put the result into tResult
+   
+   log "Result of opening file: " & tResult
+   
+   local tTotalSize
+   local tCurrentCount
+   if tResult is empty then
+      put the number of chars of pData into tTotalSize
+      put 1 into tCurrentCount
       if pCallbackTarget is not empty and there is a pCallbackTarget then
-        send pCallback && tCurrentCount, tTotalSize to pCallbackTarget
+         send pCallback to pCallbackTarget
       end if
-    end repeat
-  end if
-  if tResult is not empty then
-    if pCallbackTarget is not empty and there is a pCallbackTarget then
-      send pCallback && tTotalSize, tTotalSize to pCallbackTarget
-    end if
-  end if
+      repeat forever
+         get char tCurrentCount to (tCurrentCount + 524288 - 1) of pData
+         if it is empty then
+            exit repeat
+         end if
+         write it to file pFile
+         if the result is not empty then
+            put the result into tResult
+            exit repeat
+         end if
+         add 524288 to tCurrentCount
+         if pCallbackTarget is not empty and there is a pCallbackTarget then
+            send pCallback && tCurrentCount, tTotalSize to pCallbackTarget
+         end if
+      end repeat
+   end if
+   if tResult is not empty then
+      if pCallbackTarget is not empty and there is a pCallbackTarget then
+         send pCallback && tTotalSize, tTotalSize to pCallbackTarget
+      end if
+   end if
    
-  if tResult is empty then
-    close file pFile
-  end if
+   if tResult is empty then
+      close file pFile
+   end if
    
-  return tResult
+   return tResult
 end revSBWriteFile
 
- 
+
 ---
- 
+
 #?semantics
 # Copies a folder and all it's contents, under which we understand:
 # - (sub)folders
@@ -226,7 +228,7 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget
    end if
    
    local tTotalNumber
-   put __revSBEnumerateFolder(pSource) into tResourceList
+   put __EnumerateFolder(pSource) into tResourceList
    put the number of lines of tResourceList into tTotalNumber
    
    if there is no folder pTarget then
@@ -297,130 +299,130 @@ end __revSBCopyFolder
 #?author
 # Marcus van Houdt
 private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTarget
-  -- Stat the source file
-  local tOldFolder, tDataForkSize, tRsrcForkSize, tPermissions, tUser, tGroup, tFileType
-  local tResult
-  
-  if tResult is empty then
-    if there is no file pSourceFile then
-      put "cannot find source file" into tResult
-    end if
-  end if
-  
-  if tResult is empty then
-    put the defaultFolder into tOldFolder
-    set the itemDelimiter to "/"
-    set the defaultFolder to item 1 to -2 of pSourceFile
-     
-    get the detailed files
-    filter it with (the urlEncode of item -1 of pSourceFile) & "*"
-    set the itemDelimiter to ","
-    put item 2 of it into tDataForkSize
-    put item 3 of it into tRsrcForkSize
-    put item 8 of it into tUser
-    put item 9 of it into tGroup
-    put item 10 of it into tPermissions
-    put item 11 of it into tFileType
-     
-    local tTotalSize
-    put tDataForkSize + tRsrcForkSize into tTotalSize
-     
-    if there is a file pTargetFile then
-      delete file pTargetFile
-      if the result is not empty then
-        put "cannot overwrite existing target file" into tResult
-      end if
-    end if
-     
-    local tOldFileType
-    if tResult is empty then
-      put the fileType into tOldFileType
-      if tFileType is not empty then
-        set the fileType to tFileType
-      else
-        set the fileType to "????????"
-      end if
-    end if
-  end if
-  
-  if tResult is empty then
-    open file pTargetFile for binary write
-    if the result is not empty then
-      put "cannot create target file" into tResult
-    end if
-  end if
-  
-  if tResult is empty then
-    open file pSourceFile for binary read
-    if the result is not empty then
-      put "cannot read from source file", the result into tResult
-    end if
-  end if
-  
-  local tAmountCopied
-  if tResult is empty then
-    if pCallbackTarget is not empty and there is a pCallbackTarget then
-      send pCallback && 0, tTotalSize to pCallbackTarget
-    end if
-    repeat forever
-      read from file pSourceFile for 1048576
-      if the result is not empty and the result is not "eof" then
-        put "cannot read from source file", the result into tResult
-        exit repeat
-      end if
-      if it is empty then
-        exit repeat
-      end if
-      write it to file pTargetFile
-      if the result is not empty then
-        put "cannot write to target file" into tResult
-        exit repeat
-      end if
-      add the number of chars of it to tAmountCopied
-      if pCallbackTarget is not empty and there is a pCallbackTarget then
-        send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
-      end if
-    end repeat
-  end if
-  
-  if pTargetFile is among the lines of the openFiles then
-    close file pTargetFile
-  end if
-  if pSourceFile is among the lines of the openFiles then
-    close file pSourceFile
-  end if
+   -- Stat the source file
+   local tOldFolder, tDataForkSize, tRsrcForkSize, tPermissions, tUser, tGroup, tFileType
+   local tResult
    
-  if tResult is empty then
-    if tRsrcForkSize is not 0 and tRsrcForkSize is not empty and the platform is "macos" then
+   if tResult is empty then
+      if there is no file pSourceFile then
+         put "cannot find source file" into tResult
+      end if
+   end if
+   
+   if tResult is empty then
+      put the defaultFolder into tOldFolder
+      set the itemDelimiter to "/"
+      set the defaultFolder to item 1 to -2 of pSourceFile
+      
+      get the detailed files
+      filter it with (the urlEncode of item -1 of pSourceFile) & "*"
       set the itemDelimiter to ","
-      repeat for each line tRsrcDetails in getResources(pSourceFile)
-        get copyResource(pSourceFile, pTargetFile, item 1 of tRsrcDetails, item 2 of tRsrcDetails, item 2 of tRsrcDetails)
-        add item 4 of tRsrcDetails to tAmountCopied
-        if pCallbackTarget is not empty and there is a pCallbackTarget then
-          send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
-        end if
+      put item 2 of it into tDataForkSize
+      put item 3 of it into tRsrcForkSize
+      put item 8 of it into tUser
+      put item 9 of it into tGroup
+      put item 10 of it into tPermissions
+      put item 11 of it into tFileType
+      
+      local tTotalSize
+      put tDataForkSize + tRsrcForkSize into tTotalSize
+      
+      if there is a file pTargetFile then
+         delete file pTargetFile
+         if the result is not empty then
+            put "cannot overwrite existing target file" into tResult
+         end if
+      end if
+      
+      local tOldFileType
+      if tResult is empty then
+         put the fileType into tOldFileType
+         if tFileType is not empty then
+            set the fileType to tFileType
+         else
+            set the fileType to "????????"
+         end if
+      end if
+   end if
+   
+   if tResult is empty then
+      open file pTargetFile for binary write
+      if the result is not empty then
+         put "cannot create target file" into tResult
+      end if
+   end if
+   
+   if tResult is empty then
+      open file pSourceFile for binary read
+      if the result is not empty then
+         put "cannot read from source file", the result into tResult
+      end if
+   end if
+   
+   local tAmountCopied
+   if tResult is empty then
+      if pCallbackTarget is not empty and there is a pCallbackTarget then
+         send pCallback && 0, tTotalSize to pCallbackTarget
+      end if
+      repeat forever
+         read from file pSourceFile for 1048576
+         if the result is not empty and the result is not "eof" then
+            put "cannot read from source file", the result into tResult
+            exit repeat
+         end if
+         if it is empty then
+            exit repeat
+         end if
+         write it to file pTargetFile
+         if the result is not empty then
+            put "cannot write to target file" into tResult
+            exit repeat
+         end if
+         add the number of chars of it to tAmountCopied
+         if pCallbackTarget is not empty and there is a pCallbackTarget then
+            send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
+         end if
       end repeat
-    end if
-  end if
-  
-  # OK-2007-11-30 : Modified to work for Linux too
-  if tResult is empty and the platform is "macos" or the platform is "Linux" then
-    if tPermissions is not empty then
-      get shell("chmod" && tPermissions && quote & pTargetfile & quote)
-    end if
-    if tUser is not empty or tGroup is not empty then
-      get shell("chown" && tUser & ":" & tGroup && quote & pTargetFile & quote)
-    end if
-  end if
+   end if
    
-  if tOldFolder is not empty then
-    set the defaultFolder to tOldFolder
-  end if
-  if tOldFileType is not empty then
-    set the fileType to tOldFileType
-  end if
+   if pTargetFile is among the lines of the openFiles then
+      close file pTargetFile
+   end if
+   if pSourceFile is among the lines of the openFiles then
+      close file pSourceFile
+   end if
    
-  return tResult
+   if tResult is empty then
+      if tRsrcForkSize is not 0 and tRsrcForkSize is not empty and the platform is "macos" then
+         set the itemDelimiter to ","
+         repeat for each line tRsrcDetails in getResources(pSourceFile)
+            get copyResource(pSourceFile, pTargetFile, item 1 of tRsrcDetails, item 2 of tRsrcDetails, item 2 of tRsrcDetails)
+            add item 4 of tRsrcDetails to tAmountCopied
+            if pCallbackTarget is not empty and there is a pCallbackTarget then
+               send pCallback && tAmountCopied, tTotalSize to pCallbackTarget
+            end if
+         end repeat
+      end if
+   end if
+   
+   # OK-2007-11-30 : Modified to work for Linux too
+   if tResult is empty and the platform is "macos" or the platform is "Linux" then
+      if tPermissions is not empty then
+         get shell("chmod" && tPermissions && quote & pTargetfile & quote)
+      end if
+      if tUser is not empty or tGroup is not empty then
+         get shell("chown" && tUser & ":" & tGroup && quote & pTargetFile & quote)
+      end if
+   end if
+   
+   if tOldFolder is not empty then
+      set the defaultFolder to tOldFolder
+   end if
+   if tOldFileType is not empty then
+      set the fileType to tOldFileType
+   end if
+   
+   return tResult
 end __revSBCopyFile
 
 #?semantics
@@ -428,152 +430,142 @@ end __revSBCopyFile
 #?author
 # Marcus van Houdt
 on revSBEnsureFolder pFolder
-  __revSBEnsureFolder pFolder
-  return the result
+   __revSBEnsureFolder pFolder
+   return the result
 end revSBEnsureFolder
 
 private command __revSBEnsureFolder pFolder
-  set the itemDel to "/"
-  if there is no folder pFolder and pFolder is not empty then
-    __revSBEnsureFolder item 1 to -2 of pFolder
-    if the result is not empty then
+   set the itemDel to "/"
+   if there is no folder pFolder and pFolder is not empty then
+      __revSBEnsureFolder item 1 to -2 of pFolder
+      if the result is not empty then
+         return the result
+      end if
+      create folder pFolder
       return the result
-    end if
-    create folder pFolder
-    return the result
-  end if
+   end if
 end __revSBEnsureFolder
 
 function revSBEnumerateFolder pFolder, pRecursive
-  return __revSBEnumerateFolder(pFolder, "", pRecursive)
+   return __EnumerateFolder(pFolder, "", pRecursive)
 end revSBEnumerateFolder
 
-private function __revSBEnumerateFolder pFolder, pPrefix, pRecursive
+private function __EnumerateFolder pFolder, pPrefix, pRecursive
    local tRecursive
    -- recursive by default
    put pRecursive is not false into tRecursive
    
-   local tOldFolder, tResult
-   put the folder into tOldFolder
-   set the folder to pFolder
+   local tResult
+   local tSubFolder
    
-   # OK-2008-09-10 : Bug 7147 - Prevent the possibility of an infinite loop by
-   # returning empty if the folder cannot be set to pFolder
-   if the folder is not pFolder then
-      return empty
-   end if
-   
-   repeat for each line tSubFolder in the folders
+   repeat for each line tSubFolder in folders(pFolder)
       if tSubFolder is among the items of ".,.." then
          next repeat
       end if
       # For our purposes we need the folder first, so it can be created ahead of file creation..
-      put pPrefix & tSubFolder & "/" & return after tResult
+      appendToStringList pPrefix & tSubFolder & "/", tResult
       if tRecursive then
-         get __revSBEnumerateFolder(pFolder & "/" & tSubFolder, pPrefix & tSubFolder & "/")
+         get __EnumerateFolder(pFolder & "/" & tSubFolder, pPrefix & tSubFolder & "/")
          if it is not empty then
-            put it & return after tResult
+            appendToStringList it, tResult
          end if
       end if
    end repeat
-   local tFileSize
-   repeat for each line tFile in the files
-      #put (item 2 of tFile) + (item 3 of tFile) into tFileSize
-      #add tFileSize to pTotalSize
-      put pPrefix & tFile & return after tResult
-      #put pPrefix & (the urlDecode of item 1 of tFile) & tab & tFileSize & return after tResult
+   
+   local tFile
+   repeat for each line tFile in files(pFolder)
+      appendToStringList pPrefix & tFile, tResult
    end repeat
-   set the folder to tOldFolder
-   delete the last char of tResult
+   
    return tResult
-end __revSBEnumerateFolder
+end __EnumerateFolder
 
 function revSBCalculateRelativePath pRoot, pFile
-  local tResult, tCount
-  set the itemDel to "/"
-  put 1 into tCount
-  local tIsFolder
-  put there is a folder pFile into tIsFolder
-  repeat for each item tNode in pRoot
-    if item 1 to tCount of pRoot is item 1 to tCount of pFile then
-    else
-      put "../" before tResult
-      if item tCount of pFile is not empty then
-        put item tCount of pFile & "/" after tResult
+   local tResult, tCount
+   set the itemDel to "/"
+   put 1 into tCount
+   local tIsFolder
+   put there is a folder pFile into tIsFolder
+   repeat for each item tNode in pRoot
+      if item 1 to tCount of pRoot is item 1 to tCount of pFile then
+      else
+         put "../" before tResult
+         if item tCount of pFile is not empty then
+            put item tCount of pFile & "/" after tResult
+         end if
       end if
-    end if
-    add 1 to tCount
-  end repeat
-  put "./" before tResult
-  put item tCount to -1 of pFile after tResult
-  
-  if char -1 of tResult is "/" then
-    delete char -1 of tResult
-  end if
-  
-  return tResult
+      add 1 to tCount
+   end repeat
+   put "./" before tResult
+   put item tCount to -1 of pFile after tResult
+   
+   if char -1 of tResult is "/" then
+      delete char -1 of tResult
+   end if
+   
+   return tResult
 end revSBCalculateRelativePath
 
 function revSBCalculateAbsolutePath pRoot, pRelativeFile
-  if pRelativeFile is empty then
-    return __revSBCalculateAbsolutePath(pRoot)
-  else
-    local tRoot
-    put pRoot into tRoot
-    if char -1 of tRoot is "/" then
-      delete char -1 of tRoot
-    end if
-    if char 1 of pRelativeFile is "/" then
-      return __revSBCalculateAbsolutePath(tRoot & pRelativeFile)
-    else
-      return __revSBCalculateAbsolutePath(tRoot & "/" & pRelativeFile)
-    end if
-  end if
+   if pRelativeFile is empty then
+      return __revSBCalculateAbsolutePath(pRoot)
+   else
+      local tRoot
+      put pRoot into tRoot
+      if char -1 of tRoot is "/" then
+         delete char -1 of tRoot
+      end if
+      if char 1 of pRelativeFile is "/" then
+         return __revSBCalculateAbsolutePath(tRoot & pRelativeFile)
+      else
+         return __revSBCalculateAbsolutePath(tRoot & "/" & pRelativeFile)
+      end if
+   end if
 end revSBCalculateAbsolutePath
 
 private function __revSBCalculateAbsolutePath pPath
-  local tPath
-  set the itemDelimiter to "/"
-  repeat for each item tPart in pPath
-    switch tPart
-    case "."
-      next repeat
-    case ".."
-      delete the last item of tPath
-      break
-    default
-      put tPart & "/" after tPath
-    end switch
-  end repeat
-  if tPath is not "/" then
-    delete the last char of tPath
-  end if
-  return tPath
+   local tPath
+   set the itemDelimiter to "/"
+   repeat for each item tPart in pPath
+      switch tPart
+         case "."
+            next repeat
+         case ".."
+            delete the last item of tPath
+            break
+         default
+            put tPart & "/" after tPath
+      end switch
+   end repeat
+   if tPath is not "/" then
+      delete the last char of tPath
+   end if
+   return tPath
 end __revSBCalculateAbsolutePath
 
 
 #?Semantics
 # Returns "absolute" or "relative" depending on the type of path.
 function revSBPathType pPath
-  if the platform is "macos" then
-    if char 1 of pPath is "/" then
-      return "absolute"
-    else
-      return "relative"
-    end if
-  end if
-  if the platform is "win32" then
-    if char 2 of pPath is ":" then
-      return "absolute"
-    else
-      return "relative"
-    end if
-  end if
+   if the platform is "macos" then
+      if char 1 of pPath is "/" then
+         return "absolute"
+      else
+         return "relative"
+      end if
+   end if
+   if the platform is "win32" then
+      if char 2 of pPath is ":" then
+         return "absolute"
+      else
+         return "relative"
+      end if
+   end if
 end revSBPathType
 
 function revSBGenerateUUID
-  _internal call "generate_uuid"
-  return the result
+   _internal call "generate_uuid"
+   return the result
 end revSBGenerateUUID
 
 private function __readlink pPath
@@ -621,9 +613,9 @@ function revStandaloneGetWarnings
 end revStandaloneGetWarnings
 
 command revStandaloneAddWarning pWarning
-  if pWarning is not among the lines of sWarnings then
-    put pWarning & return after sWarnings
-  end if
+   if pWarning is not among the lines of sWarnings then
+      put pWarning & return after sWarnings
+   end if
 end revStandaloneAddWarning
 
 ----------
@@ -653,7 +645,7 @@ end revStandaloneProgressFinished
 function revFolderNameIllegalChars
    return "\/:*?<>|" & quote & return
 end revFolderNameIllegalChars
-      
+
 function revFolderNameIsIllegal pName
    repeat for each char tChar in revFolderNameIllegalChars()
       if pName contains tChar then
@@ -701,6 +693,105 @@ function revSBTargetToPlatform pTarget
       return pTarget
    end if
 end revSBTargetToPlatform
+
+-- item 1 of the architectures should be the default architecture
+constant kWindowsArchitectures = "x86-32"
+constant kMacOSXArchitectures = "x86-32,x86-64"
+constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
+constant kAndroidArchitectures =  "armv6"
+constant kiOSArchitectures =  "armv7,arm64"
+constant kEmscriptenArchitectures =  "js"
+
+function revSBPlatformArchitectures pPlatform
+   switch pPlatform
+      case "Windows"
+         return kWindowsArchitectures
+      case "MacOSX"
+         return kMacOSXArchitectures
+      case "Linux"
+         return kLinuxArchitectures
+      case "Android"
+         return kAndroidArchitectures
+      case "iOS"
+         return kiOSArchitectures
+      case "Emscripten"
+         return kEmscriptenArchitectures
+      default
+         return empty
+   end switch
+end revSBPlatformArchitectures
+
+private function __ArchitectureSynonyms pArchitecture
+   switch pArchitecture
+      case "x86-32"
+         return pArchitecture,"x86,i386"
+      case "x86-64"
+         return pArchitecture,"x64"
+   end switch
+   
+   return pArchitecture
+end __ArchitectureSynonyms
+
+private command __ExternalArchitecture pPlatform, @xName, @rArchitecture
+   local tArchitectures
+   put revSBPlatformArchitectures(pPlatform) into tArchitectures
+   
+   local tArchitecture,tFoundArchitecture
+   repeat for each item tArchitecture in tArchitectures
+      local tArchitectureIdentifier
+      repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
+         if xName ends with tArchitectureIdentifier then
+            put tArchitecture into tFoundArchitecture 
+            set the itemDelimiter to "-"
+            if the number of items of xName > 1 then
+               delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
+            else
+               set the itemDelimiter to "_"
+               if the number of items of xName > 1 then
+                  delete item -(the number of items of tArchitectureIdentifier) to -1 of xName
+               end if
+            end if
+            set the itemDelimiter to comma
+            
+            exit repeat
+         end if
+      end repeat
+      
+      if tFoundArchitecture is not empty then
+         exit repeat
+      end if
+   end repeat
+   
+   if tFoundArchitecture is empty then
+      if pPlatform is "MacOSX" then
+         put tArchitectures into tFoundArchitecture
+      else
+         put item 1 of tArchitectures into tFoundArchitecture
+      end if
+   end if
+   
+   put tFoundArchitecture into rArchitecture
+end __ExternalArchitecture
+
+private function __TargetArchitecture pTarget
+   local tPlatform
+   put revSBTargetToPlatform(pTarget) into tPlatform
+   
+   local tArchitectures
+   put revSBPlatformArchitectures(tPlatform) into tArchitectures
+   
+   local tArchitecture
+   repeat for each item tArchitecture in tArchitectures
+      local tArchitectureIdentifier
+      repeat for each item tArchitectureIdentifier in __ArchitectureSynonyms(tArchitecture)
+         if pTarget ends with tArchitectureIdentifier then
+            return tArchitecture
+         end if
+      end repeat
+   end repeat
+   
+   return item 1 of tArchitectures
+end __TargetArchitecture
 
 constant kDefaultCreator             = "????"
 constant kDefaultDocumentType        = ""
@@ -760,10 +851,10 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    if xSettingsA["UNIX,pageSetup"] = "" then put true into xSettingsA["UNIX,pageSetup"]
    if xSettingsA["UNIX,fileSelector"] = "" then put true into xSettingsA["UNIX,fileSelector"]
    -- build for every platform we have engines for
-
+   
    repeat for each item tTarget in kInitialTargets
       if xSettingsA[tTarget] = "" then
-            put revEngineCheck(tTarget) into xSettingsA[tTarget]
+         put revEngineCheck(tTarget) into xSettingsA[tTarget]
       end if
    end repeat
    
@@ -787,47 +878,54 @@ on revSBDefaultStandaloneSettings pStack, @xSettingsA
    end if
 end revSBDefaultStandaloneSettings
 
-local sStackFiles
+command revSBRelativeStackFilesList pStack, @rStackFiles
+   local tLine,tChars,tMainStackPath
+   
+   local tFullStackFiles
+   revSBGetStackFilesList pStack, tFullStackFiles
+   
+   local tRelativeStackFiles
+   set the itemDelimiter to slash
+   put item 1 to -2 of line 1 of tFullStackFiles & "/" into tMainStackPath
+   put the number of chars of tMainStackPath into tChars
+   repeat for each line tLine in tFullStackFiles
+      appendToStringList tLine, tRelativeStackFiles
+   end repeat
+   
+   put tFullStackFiles into rStackFiles["full"]
+   put tRelativeStackFiles into rStackFiles["relative"]
+end revSBRelativeStackFilesList
 
-function revRelativeStackFilesList pStack
-  local tLine,tChars,tStackFiles,tMainStackPath
-  put revGetStackFilesList(pStack) into tStackFiles["full"]
-  set the itemDel to "/"
-  put item 1 to -2 of line 1 of tStackFiles["full"] & "/" into tMainStackPath
-  put the number of chars of tMainStackPath into tChars
-  repeat for each line tLine in tStackFiles["full"]
-    if char 1 to tChars of tLine = tMainStackPath then delete char 1 to tChars of tLine
-    put tLine & cr after tStackFiles["relative"]
-  end repeat
-  delete char -1 of tStackFiles["relative"]
-  return tStackFiles
-end revRelativeStackFilesList
+command revSBGetStackFilesList pStack, @rStackFiles
+   local tStackFiles
+   put the effective fileName of stack pStack into tStackFiles
+   __RecursiveStackFileList pStack, tStackFiles
+   
+   put tStackFiles into rStackFiles
+end revSBGetStackFilesList
 
-function revGetStackFilesList pStack
-  put "" into sStackFiles
-  put the effective fileName of stack pStack into sStackFiles
-  revRecursiveStackFileList pStack
-  return sStackFiles
-end revGetStackFilesList
-
-on revRecursiveStackFileList pStack
-  local tLine,tFileName
-  set the itemDel to "/"
-  put item 1 to -2 of the fileName of stack pStack&"/" into tFileName
-  set the itemDel to ","
-  repeat for each line tLine in the stackFiles of stack pStack
-    if there is not a stack item 2 of tLine then put tFileName before item 2 of tLine
-    if there is a stack item 2 of tLine then
-      if the effective fileName of stack item 2 of tLine is not among the lines of sStackFiles then 
-        put cr& the effective fileName of stack item 2 of tLine after sStackFiles
-        revRecursiveStackFileList item 2 of tLine
+private command __RecursiveStackFileList pStack, @xStackFiles
+   local tFileName
+   set the itemDelimiter to slash
+   put item 1 to -2 of the fileName of stack pStack & slash into tFileName
+   
+   local tStackFiles
+   put the stackFiles of stack pStack into tStackFiles
+   split tStackFiles by return and comma
+   
+   set the itemDel to comma
+   local tStack
+   repeat for each key tStack in tStackFiles
+      if there is not a stack tStackFiles[tStack] then put tFileName before tStackFiles[tStack]
+      if there is a stack tStackFiles[tStack] then
+         appendToList the effective fileName of stack tStackFiles[tStack], xStackFiles
+         __RecursiveStackFileList tStack, xStackFiles
       end if
-    end if
-  end repeat
-  repeat for each line tLine in the substacks of stack pStack
-    revRecursiveStackFileList tLine
-  end repeat
-end revRecursiveStackFileList
+   end repeat
+   repeat for each line tStack in the substacks of stack pStack
+      __RecursiveStackFileList tStack, xStackFiles
+   end repeat
+end __RecursiveStackFileList
 
 function revDownloadEngine pEngine
   if revEngineCheck(pEngine) then
@@ -1359,7 +1457,7 @@ function revSBLcextFileIsMobileExternal pFile, pPlatform
          revSBLcextExternalHasFolder(pFile, pPlatform)
 end revSBLcextFileIsMobileExternal
 
-private function revSBFilterExternalsForMobile pList, pPlatform
+private function __FilterExternalsForMobile pList, pPlatform
    filter pList with "*.lcext"
    
    local tList, tError
@@ -1374,10 +1472,10 @@ private function revSBFilterExternalsForMobile pList, pPlatform
       end if
    end repeat
    return tList
-end revSBFilterExternalsForMobile
+end __FilterExternalsForMobile
 
 -- filter file (and folder!) list by expected file extension
-private function revSBFilterExternalsForDesktop pList, pPlatform
+private function __FilterExternalsForDesktop pList, pPlatform
    local tExtension
    switch pPlatform
       case "MacOSX" 
@@ -1394,10 +1492,21 @@ private function revSBFilterExternalsForDesktop pList, pPlatform
    filter pList with "*." & tExtension
    
    return pList
-end revSBFilterExternalsForDesktop
+end __FilterExternalsForDesktop
+
+function revSBExternalNameFromFile pPlatform, pFile
+   local tName
+   set the itemdel to "."
+   put item 1 of pFile into tName
+   
+   local tArch
+   __ExternalArchitecture pPlatform, tName, tArch
+   
+   return tName
+end revSBExternalNameFromFile
 
 -- This is currently just used for externals that are present in the
--- 'mergExt' folder in the app bundle or equivalent
+-- 'Ext' folder in the app bundle or equivalent
 local sExternalsLocationA
 function revSBAdditionalExternalsList pPlatform
    if sExternalsLocationA[pPlatform] is empty then
@@ -1407,45 +1516,58 @@ function revSBAdditionalExternalsList pPlatform
       -- For these externals we have to go by the file extensions that exist
       -- to check if the platform is supported
       repeat for each line tFolder in tFolders
-         local tContents
-         put __revSBEnumerateFolder(tFolder, tFolder & slash) into tContents
-         
-         local tRawList
-         switch pPlatform
-            case "ios"
-            case "android"
-               put revSBFilterExternalsForMobile(tContents, pPlatform) into tRawList
-               break
-            case "windows"
-            case "macosx"
-            case "linux"
-               put revSBFilterExternalsForDesktop(tContents, pPlatform) into tRawList
-               break
-            default
-               put empty into tRawList
-               break
-         end switch
-         
-         split tRawList by return
-         set the itemdelimiter to "."
-         set the linedelimiter to slash
-         repeat for each element tExtPath in tRawList
-            put tExtPath into sExternalsLocationA[pPlatform][item 1 of line -1 of tExtPath]
+         local tExternalFolder
+         repeat for each line tExternalFolder in folders(tFolder)
+            if tExternalFolder begins with "." then next repeat
+           
+            local tContents
+            put __EnumerateFolder(tFolder & slash & tExternalFolder, tFolder & slash & tExternalFolder & slash, false) into tContents
+            
+            local tRawList
+            switch pPlatform
+               case "ios"
+               case "android"
+                  put __FilterExternalsForMobile(tContents, pPlatform) into tRawList
+                  break
+               case "windows"
+               case "macosx"
+               case "linux"
+                  put __FilterExternalsForDesktop(tContents, pPlatform) into tRawList
+                  break
+               default
+                  put empty into tRawList
+                  break
+            end switch
+            
+            split tRawList by return
+            set the itemdelimiter to "."
+            set the linedelimiter to slash
+            repeat for each element tExtPath in tRawList
+               local tExtension, tExternalName
+               put item -1 of line -1 of tExtPath into tExtension
+               put item 1 to -2 of line -1 of tExtPath into tExternalName
+               
+               set the itemDelimiter to comma
+               local tArchitectures
+               if pPlatform is among the items of kAdditionalTargets then
+                  put pPlatform into tArchitectures
+               else
+                  __ExternalArchitecture pPlatform, tExternalName, tArchitectures
+               end if
+               
+               local tArchitecture
+               repeat for each item tArchitecture in tArchitectures
+                  put tExtPath into sExternalsLocationA[pPlatform][tExternalName][tArchitecture]
+               end repeat
+               
+               set the itemDelimiter to "."
+            end repeat
+            set the linedelimiter to return
          end repeat
       end repeat
    end if
    return the keys of sExternalsLocationA[pPlatform]
 end revSBAdditionalExternalsList
-
--- Instead of resolving the path to an included external each time
--- fetch the stored path from a script local array
-function revSBGetExternalPath pPlatform, pName
-   if sExternalsLocationA is empty then
-      get revSBExternalsList(pPlatform)
-   end if
-   
-   return sExternalsLocationA[pPlatform][pName]
-end revSBGetExternalPath
 
 -- Ensure the name used for platforms is consistent
 constant kMacPlatform = "MacOSX"
@@ -1540,7 +1662,7 @@ end revSBAvailableResources
 
 -- Additional in-IDE external paths can be added here
 private function revSBAdditionalExternalFolders
-   return revEnvironmentToolsPath() & "/MergExt"
+   return revEnvironmentExtPath()
 end revSBAdditionalExternalFolders
 
 -- Use the specified getter to fetch all the data about the inclusions
@@ -1755,11 +1877,7 @@ command revSBConvertSettingsForPlatform @xSettings, pPlatform
    put revSBAdditionalExternalsList(pPlatform) into tAvailableExternals
    repeat for each line tLine in xSettings["externals"]
       if tLine is among the lines of tAvailableExternals then
-         if xSettings["files"] is empty then
-            put "!" & tLine into xSettings["files"]
-         else
-            put return & "!" & tLine after xSettings["files"]
-         end if
+         appendToStringList "!" & tLine, xSettings["files"]
       end if
    end repeat
    
@@ -1780,20 +1898,81 @@ end revSBConvertSettingsForPlatform
 function revSBIncludedExternalPath pTarget, pName
    local tPlatform
    put revSBTargetToPlatform(pTarget) into tPlatform
-   return revSBGetExternalPath(tPlatform, pName)
+   
+   if sExternalsLocationA[tPlatform] is empty then
+      get revSBExternalsList(tPlatform)
+   end if
+   
+   local tArchitecture
+   if tPlatform is among the items of kAdditionalTargets then
+      put tPlatform into tArchitecture
+   else
+      put __TargetArchitecture(pTarget) into tArchitecture
+   end if
+   
+   return sExternalsLocationA[tPlatform][pName][tArchitecture]
 end revSBIncludedExternalPath
 
-command revSBResolveIncludedExternal pTarget, @xFile
-   -- Added to support mergExt inclusion
-   if xFile begins with "!" then
+private command __ResolveIncludedExternal pTarget, @xFiles
+   -- Added to support Ext inclusion
+   if xFiles begins with "!" then
+      
       local tExtPath
-      put revSBIncludedExternalPath (pTarget, char 2 to -1 of xFile) into tExtPath
+      put revSBIncludedExternalPath(pTarget, char 2 to -1 of xFiles) into tExtPath
       -- if the file prefixed with ! was not a named external, treat normally
       if tExtPath is not empty then
-         put tExtPath into xFile
+         put tExtPath into xFiles
+         
+         set the itemDelimiter to slash
+         
+         local tResources
+         put item 1 to -2 of tExtPath & slash & "resources" into tResources
+         if there is a folder tResources then
+            local tContents
+            put __EnumerateFolder(tResources, tResources & slash, false) into tContents
+            
+            local tPlatform
+            put revSBTargetToPlatform(pTarget) into tPlatform
+            if tPlatform is not "iOS" then
+               -- remove nib files as we don't need them on anything but iOS
+               filter tContents without "*.nib"
+            end if
+            
+            if tContents is not empty then
+               appendToStringList tContents, xFiles
+            end if
+         end if
+         
       end if
    end if
-end revSBResolveIncludedExternal
+end __ResolveIncludedExternal
+
+command revSBResolveCopyFilesList pBaseFolder, pTarget, pFiles, @rFiles
+   local tManifest
+   set the itemDelimiter to slash
+   repeat for each line tFile in pFiles
+      local tResolvedFile
+      __ResolveIncludedExternal pTarget, tFile
+      -- tFile may now list multiple files if it was an external with a resources directory
+      repeat for each line tResolvedFile in tFile
+         if tResolvedFile ends with "/" then
+            delete char -1 of tResolvedFile
+         end if
+         
+         if the last item of tResolvedFile is "*" then
+            delete the last item of tFile
+         end if
+         
+         local tIsAbsolute, tName
+         put tResolvedFile begins with "/" or char 2 to 3 of tResolvedFile is ":/" into tIsAbsolute
+         if not tIsAbsolute then
+            put pBaseFolder & slash before tResolvedFile
+         end if
+         
+         appendToStringList tResolvedFile, rFiles
+      end repeat
+   end repeat
+end revSBResolveCopyFilesList
 
 private command addToStringList pAppend, pValue, @xList
    if pValue is among the lines of xList then
@@ -1817,21 +1996,7 @@ private command prependToStringList pValue, @xList
    addToStringList false, pValue, xList
 end prependToStringList
 
-command revSBUpdateSettingsForWidgets pStack, @xSettings
-   local tExtensions
-   put revSBListWidgetsInUse(pStack) into tExtensions
-   if tExtensions is empty then
-      exit revSBUpdateSettingsForWidgets
-   end if
-   
-   if xSettings["extensions"] is not empty then
-      put return after xSettings["extensions"]
-   end if
-   
-   put tExtensions after xSettings["extensions"] 
-end revSBUpdateSettingsForWidgets
-
-command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
+command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployParams
    local tModules, tAuxiliaryStackfiles, tStartupScript
    
    -- auxiliary_stackfiles key might not be empty
@@ -1845,13 +2010,35 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
       appendToStringList tExtensionFile, tModules
    end repeat
    
+   local tLibraryStack
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
       # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
-      local tLibraryStack
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
          appendToStringList the effective filename of stack tLibraryStack, tAuxiliaryStackfiles
-         appendToStringList "revInternal__LoadLibrary" && tLibraryStack, tStartupScript
+         appendToStringList "revInternal__LoadLibrary" && quote & tLibraryStack & quote, tStartupScript
+      end if
+   end repeat
+   
+   local tLoadedLibraries
+   put revInternal__ListLoadedLibraries() into tLoadedLibraries
+   split tLoadedLibraries by return as set
+   
+   repeat for each line tLibrary in pStandaloneSettings["externals"]
+      -- check if there are any supporting libraries for the external and add
+      local tExtPath
+      put revSBIncludedExternalPath(pTarget, tLibrary) into tExtPath
+      if tExtPath is not empty then
+         set the itemDelimiter to slash
+         delete the last item of tExtPath
+         
+         -- only include currently loaded libraries
+         repeat for each key tLibrary in tLoadedLibraries
+            if there is a stack tLibrary and the filename of stack tLibrary begins with tExtPath then
+               appendToStringList the effective filename of stack tLibrary, tAuxiliaryStackfiles
+               appendToStringList "revInternal__LoadLibrary" && quote & tLibrary & quote, tStartupScript
+            end if
+         end repeat
       end if
    end repeat
    
@@ -1886,34 +2073,49 @@ command revSBUpdateDeployParams pStack, pStandaloneSettings, @xDeployParams
    put tModules into xDeployParams["modules"]
 end revSBUpdateDeployParams
 
-command revSBRemoveInclusions pStack, pInclusions, pConfirm, @xSettings
+local sBuiltInInclusions
+
+private command __InitialiseBuiltInInclusions
+   revSBAddBuiltInInclusion "ios", "scriptLibraries", "Internet"
+   revSBAddBuiltInInclusion "android", "scriptLibraries", "Internet"
+end __InitialiseBuiltInInclusions
+
+command revSBAddBuiltInInclusion pPlatform, pInclusionType, pInclusion
+   put true into sBuiltInInclusions[pPlatform][pInclusionType][pInclusion]
+end revSBAddBuiltInInclusion
+
+command revSBOverrideBuiltInInclusion pPlatform, pInclusionType, pInclusion
+   delete variable  sBuiltInInclusions[pPlatform][pInclusionType][pInclusion]
+end revSBOverrideBuiltInInclusion
+
+command revSBRemoveInclusions pStack, pPlatform, pConfirm, @xSettings
    local tName, tKey
-   repeat for each item tItem in pInclusions
-      put word 1 of tItem into tKey
-      put word 2 to -1 of tItem into tName
-      
-      local tInclude
-      put xSettings["overrideInclusions"][tName] into tInclude
-      if pConfirm and xSettings["overrideInclusions"][tName] is empty then
-         local tSilenceWarning
-         dispatch "revConfirmInclusion" to stack "revStandaloneSettings" with tName, tInclude, tSilenceWarning
+   repeat for each key tKey in sBuiltInInclusions[pPlatform]
+      repeat for each key tName in sBuiltInInclusions[pPlatform][tKey]
          
-         if tSilenceWarning then
-            local tOverride
-            put xSettings["overrideInclusions"] into tOverride
-            put tInclude into tOverride[tName]
-            set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
-            revSetEdited the short name of stack pStack
+         local tInclude
+         put xSettings["overrideInclusions"][tName] into tInclude
+         if pConfirm and xSettings["overrideInclusions"][tName] is empty then
+            local tSilenceWarning
+            dispatch "revConfirmInclusion" to stack "revStandaloneSettings" with tName, tInclude, tSilenceWarning
+            
+            if tSilenceWarning then
+               local tOverride
+               put xSettings["overrideInclusions"] into tOverride
+               put tInclude into tOverride[tName]
+               set the cRevStandaloneSettings["overrideInclusions"] of stack pStack to tOverride
+               revSetEdited the short name of stack pStack
+            end if
          end if
-      end if
-      
-      if tInclude is not true then
-         local tLineNo
-         put lineOffset(tName, xSettings[tKey]) into tLineNo
-         if tLineNo is not 0 then
-            delete line tLineNo of xSettings[tKey]
+         
+         if tInclude is not true then
+            local tLineNo
+            put lineOffset(tName, xSettings[tKey]) into tLineNo
+            if tLineNo is not 0 then
+               delete line tLineNo of xSettings[tKey]
+            end if
          end if
-      end if
+      end repeat
    end repeat
 end revSBRemoveInclusions
 
@@ -1931,7 +2133,7 @@ end revSBListWidgetsOfStack
 
 function revSBListWidgetsInUse pStack
    local tStackFilesList, tStacksList, tWidgetKindsA
-   put revGetStackFilesList(pStack) into tStackFilesList
+   revSBGetStackFilesList pStack, tStackFilesList
    repeat for each line tStackFile in tStackFilesList
       put the short name of stack tStackFile & return \ 
             & the substacks of stack tStackFile into tStacksList
@@ -1980,20 +2182,28 @@ command revSBAddInclusion pInclusion, pKey, @xSettings
 end revSBAddInclusion
 
 local sDependencies
-private command initialiseInclusionDependencies
+private command __InitialiseInclusionDependencies
    // CEF requires revbrowser
-   put "Browser" into sDependencies["scriptLibraries"]["Browser (CEF)"]["scriptLibraries"]
+   revSBAddDependencyForInclusion "scriptLibraries", "Browser (CEF)", "scriptLibraries", "Browser"
    
    // Database drivers require revdb
    local tDBName
    repeat for each item tDatabaseDriver in revSBDatabaseDriversMapping()
       put word 2 to -1 of tDatabaseDriver into tDBName
-      put "Database" into sDependencies["databaseDrivers"][tDBName]["scriptLibraries"]
+      revSBAddDependencyForInclusion "databaseDrivers", tDBName, "scriptLibraries", "Database"
    end repeat
    
    // XMLRPC requires revxml
-   put "XML" into sDependencies["scriptLibraries"]["XMLRPC"]["scriptLibraries"]
-end initialiseInclusionDependencies
+   revSBAddDependencyForInclusion "scriptLibraries", "XMLRPC", "scriptLibraries", "XML"
+end __InitialiseInclusionDependencies
+
+command revSBAddDependencyForInclusion pInclusionType, pInclusion, pDependenyType, pDependeny
+   put true into sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
+end revSBAddDependencyForInclusion
+
+command revSBRemoveDependencyForInclusion pInclusion, pInclusionType, pDependeny, pDependenyType
+   delete variable sDependencies[pInclusionType][pInclusion][pDependenyType][pDependeny]
+end revSBRemoveDependencyForInclusion
 
 command revSBUpdateForDependencies @xSettings
    local tDependencies
@@ -2002,7 +2212,7 @@ command revSBUpdateForDependencies @xSettings
          if tDependent is among the lines of xSettings[tDependentKey] then
             put sDependencies[tDependentKey][tDependent] into tDependencies
             repeat for each key tRequiredKey in tDependencies
-               repeat for each line tRequired in tDependencies[tRequiredKey]
+               repeat for each key tRequired in tDependencies[tRequiredKey]
                   revSBAddInclusion tRequired, tRequiredKey, xSettings
                end repeat
             end repeat
@@ -2064,17 +2274,21 @@ on initialiseSearchForInclusions
    # Database
    put "cRevDatabase" into sPatternsA["Database"]["Property"]
    put "revDatabase,revdb_" into sPatternsA["Database"]["Root"]
-   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revCurrentRecordIsFirst,revCurrentRecordIsLast,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revOpenDatabases,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
+   put "revCloseCursor,revCloseDatabase,revCommitDatabase,revCurrentRecord,revDataFromQuery,revExecuteSQL,revMoveToFirstRecord,revMoveToLastRecord,revMoveToNextRecord,revMoveToPreviousRecord,revNumberOfRecords,revOpenDatabase,revQueryDatabase,revQueryDatabaseBLOB,revQueryResult,revRollBackDatabase" into sPatternsA["Database"]["Script"]
    put "scriptLibraries" into sPatternsA["Database"]["Key"]
    
    # Internet
    put "libUrl" into sPatternsA["Internet"]["Root"]
-   put "cachedURL,cachedURLs,ftp,http,https,load,post,resetAll,URL,URLStatus" into sPatternsA["Internet"]["Script"]
+   put "URL,resetAll" into sPatternsA["Internet"]["Script"]
    put "scriptLibraries" into sPatternsA["Internet"]["Key"]
    
    # XML
-   put "revXML" into sPatternsA["XMLRPC"]["Root"]
-   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XMLRPC"]["Script"]
+   put "revXML" into sPatternsA["XML"]["Root"]
+   put "revSetDatabaseDriverPath,revAddXMLNode,revAppendXML,revCreateXMLTree,revCreateXMLTreeFromFile,revDeleteAllXMLTrees,revDeleteXMLNode,revDeleteXMLTree,revPutIntoXMLNode,revSetXMLAttribute" into sPatternsA["XML"]["Script"]
+   put "scriptLibraries" into sPatternsA["XML"]["Key"]
+   
+    # XMLRPC
+   put "revXMLRPC_" into sPatternsA["XMLRPC"]["Root"]
    put "scriptLibraries" into sPatternsA["XMLRPC"]["Key"]
    
    # Speech
@@ -2121,7 +2335,10 @@ end initialiseSearchForInclusions
 command revSBSearchForInclusions pStack, @xSettings
    -- Ensure all properties and patterns are initialised
    initialiseSearchForInclusions
-   revSmartChecking revGetStackFilesList(pStack), xSettings
+   local tStackFilesList
+   revSBGetStackFilesList pStack, tStackFilesList
+   
+   revSmartChecking tStackFilesList, xSettings
 end revSBSearchForInclusions
 
 private command revSmartChecking pStackFilesList, @xSettings
@@ -2129,59 +2346,76 @@ private command revSmartChecking pStackFilesList, @xSettings
    put xSettings into tNewSettings
    local tPath,tLine,tStack,tList,tHandler,tUserLibs,tStackFile,tCard,tControl,tSave,tStacksList,tDB,tProps,tCardNum,tControlNum,tBg,tEnvironmentIcons, tUserIcons
    local tFiles
-   revStandaloneProgress "Auto detecting library inclusions..."
+   
    lock messages
    
-   put empty into tNewSettings["scriptLibraries"]
-   put true into tNewSettings["cursors"]
-   put false into tNewSettings["answerDialog"]
-   put false into tNewSettings["askDialog"]
-   put false into tNewSettings["brushes"]   --LG-2007-12-13: Bug 4370
-   put false into tNewSettings["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
-   put false into tNewSettings["pdfPrinter"]
+   if tNewSettings["inclusions"] is "search" then
+      
+      revStandaloneProgress "Auto detecting library inclusions..."
+      
+      put empty into tNewSettings["scriptLibraries"]
+      put true into tNewSettings["cursors"]
+      put false into tNewSettings["answerDialog"]
+      put false into tNewSettings["askDialog"]
+      put false into tNewSettings["brushes"]   --LG-2007-12-13: Bug 4370
+      put false into tNewSettings["Magnify"]  -- PM-2015-06-24: [[ Bug 15535 ]] Make possible to include magnify palette in standalones
+      put false into tNewSettings["pdfPrinter"]
+      
+      # OK-2007-11-13 : Support for LiveCode print dialogs
+      put false into tNewSettings["revolutionPrintDialogs"]
+      
+      put empty into tNewSettings["databaseDrivers"]
+      put empty into tNewSettings["externals"]
+      
+      put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
+      put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
+      
+   end if
    
-   # OK-2007-11-13 : Support for LiveCode print dialogs
-   put false into tNewSettings["revolutionPrintDialogs"]
-   
-   put empty into tNewSettings["databaseDrivers"]
-   put empty into tNewSettings["externals"]
-   
-   put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
-   put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
+   local tWidgetKinds
+   put xSettings["extensions"] into tWidgetKinds
+   split tWidgetKinds by return as set
    
    repeat for each line tStackFile in pStackFilesList
       put the short name of stack tStackFile & return & the substacks of stack tStackFile into tStacksList
       repeat for each line tStack in tStacksList
-         # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
-         if the password of stack tStack then
-            revStandaloneAddWarning "Could not auto-detect inclusions or security categories because stack is password protected"
-            exit revSmartChecking
+         if tNewSettings["inclusions"] is "search" then
+            # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
+            if the password of stack tStack then
+               revStandaloneAddWarning "Could not auto-detect inclusions or security categories because stack is password protected"
+               exit revSmartChecking
+            end if
          end if
          
-         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings
+         revCheckObject the long name of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
          put the number of cards of stack tStack into tCardNum
          repeat with tCard=1 to tCardNum
-            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings
+            revCheckObject the long id of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
             put the number of controls of cd tCard of stack tStack into tControlNum
             repeat with tControl = 1 to tControlNum
-               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings
+               revCheckObject the long id of control tControl of cd tCard of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
             end repeat
          end repeat
          repeat for each line tBg in the backgroundIDs of stack tStack
-            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings
+            revCheckObject the long id of bg id tBg of stack tStack, tUserLibs, tNewSettings, tWidgetKinds
          end repeat
       end repeat
    end repeat
    
+   put the keys of tWidgetKinds into tNewSettings["extensions"]
    -- Update the output settings
    put tNewSettings into xSettings
    unlock messages
 end revSmartChecking
 
-private command revCheckObject pObject,pUserLibraries, @xSettings
-   -- Should never get here if the stack is password protected
-   if the password of stack (revTargetStack(pObject)) then
-      exit revCheckObject
+private command revCheckObject pObject,pUserLibraries, @xSettings, @xWidgetKinds
+   
+   if word 1 of pObject is "widget" then
+      put true into xWidgetKinds[the kind of pObject]
+   end if
+   
+   if xSettings["inclusions"] is not "search" then
+      return empty
    end if
    
    -- Keep the progress indicator updated
@@ -2247,7 +2481,7 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
          # Allow regex search patterns
          local tRegex
          repeat for each item tRegex in sPatternsA[tLib]["Regex"]
-            if matchText(tScript,tRegex) then
+            if matchText(tScript,"(?i)"&tRegex) then
                revSBAddInclusion tLib, tSettingsKey, xSettings
                # AL-2015-01-29: If we are including this lib then go on to the next one
                exit repeat
@@ -2257,12 +2491,12 @@ private command revCheckObject pObject,pUserLibraries, @xSettings
       
       -- Detect widgets created in script
       repeat for each key tWidget in revIDEExtensions("widget","installed", false)
-         if tWidget is among the lines of xSettings["extensions"] then
+         if xWidgetKinds[tWidget] then
             next repeat
          end if
          
          if lineOffset(tWidget, tScript) is not 0 then
-            revSBAddInclusion tWidget, "extensions", xSettings
+            put true into xWidgetKinds[tWidget]
          end if
       end repeat
       

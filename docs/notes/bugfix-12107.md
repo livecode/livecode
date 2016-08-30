@@ -1,1 +1,0 @@
-# exit causes livecode server to crash

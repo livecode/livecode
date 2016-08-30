@@ -1,1 +1,0 @@
-# Use the system certificate store for Win32 server SSL verification

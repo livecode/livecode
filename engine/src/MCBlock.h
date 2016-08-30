@@ -85,6 +85,10 @@ public:
 	// MCBlock functions
 	void copy(MCBlock *bptr);
 	
+	// IM-2016-07-06: [[ Bug 17690 ]] Test if block sizes or offsets require 32bit
+	//   values to store (stack file format v8.1).
+	uint32_t getminimumstackfileversion(void);
+	
 	// MW-2012-03-04: [[ StackFile5500 ]] If 'is_ext' is true then this block has
 	//   an extension style attribute section.
 	IO_stat load(IO_handle stream, uint32_t version, bool is_ext);

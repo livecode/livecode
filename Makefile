@@ -34,15 +34,6 @@ IOS_SDKS ?= \
 
 # Choose the correct build type
 MODE ?= debug
-ifeq ($(MODE),debug)
-  export BUILDTYPE ?= Debug
-else ifeq ($(MODE),release)
-  export BUILDTYPE ?= Release
-else ifeq ($(MODE),fast)
-  export BUILDTYPE ?= Fast
-else
-  $(error "Mode must be 'debug' or 'release'")
-endif
 
 # Where to run the build command depends on community vs commercial
 ifeq ($(BUILD_EDITION),commercial)
@@ -61,16 +52,11 @@ else
   XCODEBUILD_FILTER :=
 endif 
 
+include Makefile.common
+
 ################################################################
 
 .DEFAULT: all
-
-guess_platform_script := \
-	case `uname -s` in \
-		Linux) echo linux ;; \
-		Darwin) echo mac ;; \
-	esac
-guess_platform := $(shell $(guess_platform_script))
 
 all: all-$(guess_platform)
 check: check-$(guess_platform)
@@ -85,14 +71,6 @@ check-common-%:
 ################################################################
 
 LINUX_ARCHS = x86_64 x86
-
-guess_linux_arch_script := \
-	case `uname -p` in \
-		x86_64) echo x86_64 ;; \
-		x86|i*86) echo x86 ;; \
-	esac
-
-guess_linux_arch := $(shell $(guess_linux_arch_script))
 
 config-linux-%:
 	./config.sh --platform linux-$*

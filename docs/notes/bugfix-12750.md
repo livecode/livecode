@@ -1,1 +1,0 @@
-# Player: Progress circle and end hilite don't light up

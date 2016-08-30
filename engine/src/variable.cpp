@@ -1249,7 +1249,7 @@ MCVarref::~MCVarref()
     {
         for(uint4 i = 0; i < dimensions; ++i)
             delete exps[i];
-        delete exps;
+        MCMemoryDeleteArray(exps); /* Allocated with MCMemoryNewArray() */
     }
 }
 
@@ -1477,26 +1477,21 @@ Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
 		}
 		else if (dimensions == 1)
 		{
-			MCExpression *t_current_exp;
-			t_current_exp = exp;
-			exps = (MCExpression **)malloc(sizeof(MCExpression *) * 2);
-			if (exps != NULL)
-			{
-				exps[0] = t_current_exp;
-				exps[1] = t_new_dimension;
-				dimensions += 1;
-			}
+			MCExpression *t_current_exp = exp;
+			uindex_t t_dimensions = dimensions;
+			if (!MCMemoryNewArray(2, exps, t_dimensions))
+				return PS_ERROR;
+			exps[0] = t_current_exp;
+			exps[1] = t_new_dimension;
+			dimensions = t_dimensions;
 		}
 		else
 		{
-			MCExpression **t_new_exps;
-			t_new_exps = (MCExpression **)realloc(exps, sizeof(MCExpression *) * (dimensions + 1));
-			if (t_new_exps != NULL)
-			{
-				t_new_exps[dimensions] = t_new_dimension;
-				exps = t_new_exps;
-				dimensions += 1;
-			}
+			uindex_t t_dimensions = dimensions;
+			if (!MCMemoryResizeArray(t_dimensions + 1, exps, t_dimensions))
+				return PS_ERROR;
+			exps[dimensions] = t_new_dimension;
+			dimensions = t_dimensions;
 		}
 	}
 

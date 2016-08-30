@@ -859,7 +859,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 					break;
                                 
                 MCAutoStringRefAsNativeChars t_auto_native;
-                char_t* t_native;
+                const char_t* t_native;
                 uindex_t t_length;
                 /* UNCHECKED */ t_auto_native . Lock(*t_string, t_native, t_length);
 

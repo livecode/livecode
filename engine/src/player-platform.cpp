@@ -48,6 +48,8 @@
 
 #include "exec-interface.h"
 
+#include "stackfileformat.h"
+
 //////////////////////////////////////////////////////////////////////
 
 //// PLATFORM PLAYER
@@ -1207,7 +1209,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(filename, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(filename, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1218,7 +1220,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_
 			return stat;
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-        if ((stat = IO_write_stringref_new(userCallbackStr, stream, p_version >= 7000)) != IO_NORMAL)
+        if ((stat = IO_write_stringref_new(userCallbackStr, stream, p_version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream, p_version);
@@ -1230,7 +1232,7 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
     
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return checkloadstat(stat);
-	if ((stat = IO_read_stringref_new(filename, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_stringref_new(filename, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
         
         // MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
 		return checkloadstat(stat);
@@ -1249,7 +1251,7 @@ IO_stat MCPlayer::load(IO_handle stream, uint32_t version)
 	rate = (real8)trate * 10.0 / MAXINT4;
 	
 	// MW-2013-11-19: [[ UnicodeFileFormat ]] If sfv >= 7000, use unicode.
-	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= 7000)) != IO_NORMAL)
+	if ((stat = IO_read_stringref_new(userCallbackStr, stream, version >= kMCStackFileFormatVersion_7_0)) != IO_NORMAL)
 		return checkloadstat(stat);
 	return loadpropsets(stream, version);
 }
@@ -1530,6 +1532,11 @@ Boolean MCPlayer::prepare(MCStringRef options)
 	if (m_platform_player == nil)
 		return False;
 		
+#if defined(TARGET_PLATFORM_WINDOWS)
+	if (!MCPlatformPlayerSetNativeParentView(m_platform_player, getstack()->getrealwindow()))
+		return False;
+#endif
+	
     // PM-2015-01-26: [[ Bug 14435 ]] Avoid prepending the defaultFolder or the stack folder
     //  to the filename property. Use resolved_filename to set the "internal" absolute path
     MCAutoStringRef t_resolved_filename;
@@ -1926,7 +1933,10 @@ MCRectangle MCPlayer::resize(MCRectangle movieRect)
 	
 	// MW-2011-10-24: [[ Bug 9800 ]] If the rect has changed, notify the layer.
 	if (!MCU_equal_rect(rect, t_old_rect))
+	{
 		layer_rectchanged(t_old_rect, true);
+		geometrychanged(rect);
+	}
 	
 	return trect;
 }

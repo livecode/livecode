@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "graphics_util.h"
 
+#include "stackfileformat.h"
+
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
 #define LICENSED_TIME 1.0
@@ -69,20 +71,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 MCImage *MCDispatch::imagecache;
-
-#define VERSION_OFFSET 11
-
-#define HEADERSIZE 255
-static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The following is not ASCII text,\n# so now would be a good time to q out of more\f\nexec mc $0 \"$@\"\n";
-
-#define NEWHEADERSIZE 8
-#define HEADERPREFIXSIZE 4
-static const char *newheader = "REVO2700";
-static const char *newheader5500 = "REVO5500";
-static const char *newheader7000 = "REVO7000";
-static const char *newheader8000 = "REVO8000";
-
-#define MAX_STACKFILE_VERSION 8000
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -178,8 +166,8 @@ MCDispatch::~MCDispatch()
 	}
 	delete fonts;
 	
-	delete startdir;
-	delete enginedir;
+	MCMemoryDeleteArray(startdir); /* Allocated by MCStringConvertToCString() */
+	MCMemoryDeleteArray(enginedir); /* Allocated by MCStringConvertToCString() */
 	
 	delete m_externals;
     // AL-2015-02-10: [[ Standalone Inclusions ]] Delete library mapping
@@ -429,66 +417,33 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 
 IO_stat readheader(IO_handle& stream, uint32_t& r_version)
 {
-	char tnewheader[NEWHEADERSIZE];
-	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
+	char tnewheader[kMCStackFileVersionStringLength];
+	if (IO_read(tnewheader, kMCStackFileVersionStringLength, stream) != IO_NORMAL)
+		return IO_ERROR;
+	
+	// AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
+	if (!MCStackFileParseVersionNumber(tnewheader, r_version))
 	{
-        // AL-2014-10-27: [[ Bug 12558 ]] Check for valid header prefix
-		if (strncmp(tnewheader, "REVO", HEADERPREFIXSIZE) == 0)
+		char theader[kMCStackFileMetaCardVersionStringLength + 1];
+		theader[kMCStackFileMetaCardVersionStringLength] = '\0';
+		uint4 offset;
+		strncpy(theader, tnewheader, kMCStackFileVersionStringLength);
+		if (IO_read(theader + kMCStackFileVersionStringLength, kMCStackFileMetaCardVersionStringLength - kMCStackFileVersionStringLength, stream) == IO_NORMAL
+			&& MCU_offset(kMCStackFileMetaCardSignature, theader, offset))
 		{
-            // The header version can now consist of any alphanumeric characters
-            // They map to numbers as follows:
-            // 0-9 -> 0-9
-            // A-Z -> 10-35
-            // a-z -> 36-61
-            uint1 versionnum[4];
-            for (uint1 i = 0; i < 4; i++)
-            {
-                char t_char = tnewheader[i + 4];
-                if ('0' <= t_char && t_char <= '9')
-                    versionnum[i] = (uint1)(t_char - '0');
-                else if ('A' <= t_char && t_char <= 'Z')
-                    versionnum[i] = (uint1)(t_char - 'A' + 10);
-                else if ('a' <= t_char && t_char <= 'z')
-                    versionnum[i] = (uint1)(t_char - 'a' + 36);
-                else
-                    return IO_ERROR;
-            }
+			if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
+			{
+				MCresult->sets("stack was corrupted by a non-binary file transfer");
+				return IO_ERROR;
+			}
 
-            // Future file format versions will always still compare greater than MAX_STACKFILE_VERSION,
-            // so it is ok that r_version does not accurately reflect future version values.
-            // TODO: change this, and comparisons for version >= 7000 / 5500, etc 
-			r_version = versionnum[0] * 1000;
-			r_version += versionnum[1] * 100;
-			r_version += versionnum[2] * 10;
-            r_version += versionnum[3];
+			r_version = (theader[offset + kMCStackFileMetaCardSignatureLength] - '0') * 1000;
+			r_version += (theader[offset + kMCStackFileMetaCardSignatureLength + 2] - '0') * 100;
 		}
 		else
-		{
-			char theader[HEADERSIZE + 1];
-			theader[HEADERSIZE] = '\0';
-			uint4 offset;
-			strncpy(theader, tnewheader, NEWHEADERSIZE);
-			if (IO_read(theader + NEWHEADERSIZE, HEADERSIZE - NEWHEADERSIZE, stream) == IO_NORMAL
-		        && MCU_offset(SIGNATURE, theader, offset))
-			{
-				if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
-				{
-					MCresult->sets("stack was corrupted by a non-binary file transfer");
-					return IO_ERROR;
-				}
-
-				r_version = (theader[offset + VERSION_OFFSET] - '0') * 1000;
-				r_version += (theader[offset + VERSION_OFFSET + 2] - '0') * 100;
-			}
-			else
-				return IO_ERROR;
-		}
+			return IO_ERROR;
 	}
-    else
-    {
-        // Could not read header
-        return IO_ERROR;
-    }
+
 	return IO_NORMAL;
 }
 
@@ -595,7 +550,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     // MW-2014-09-30: [[ ScriptOnlyStack ]] First see if it is a binary stack.
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (version > MAX_STACKFILE_VERSION)
+		if (version > kMCStackFileFormatCurrentVersion)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return checkloadstat(IO_ERROR);
@@ -993,18 +948,15 @@ IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname, uint32_t
     }
     else
     {
-		/* If no version was specified, assume that 8.0 format was requested */
+		/* If no version was specified, assume that current format was requested */
 		if (UINT32_MAX == p_version)
 		{
-			p_version = 8000;
+			p_version = kMCStackFileFormatCurrentVersion;
 		}
 
-		/* If the stack doesn't contain widgets, and 8.0 format was requested,
-		 * use 7.0 format. */
-		if (8000 == p_version && !sptr->haswidgets())
-		{
-			p_version = 7000;
-		}
+		/* If the stack doesn't contain any features requiring a more recent version, use 7.0 format. */
+		if (p_version > kMCStackFileFormatVersion_7_0 && sptr->geteffectiveminimumstackfileversion() <= kMCStackFileFormatVersion_7_0)
+			p_version = kMCStackFileFormatVersion_7_0;
 
         stat = dosavestack(sptr, p_fname, p_version);
         
@@ -1146,16 +1098,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
 	const char *t_header;
 	uint32_t t_header_size;
-    if (p_version >= 8000)
-		t_header = newheader8000, t_header_size = 8;
-	else if (p_version >= 7000)
-		t_header = newheader7000, t_header_size = 8;
-	else if (p_version >= 5500)
-		t_header = newheader5500, t_header_size = 8;
-	else if (p_version >= 2700)
-		t_header = newheader, t_header_size = 8;
-	else
-		t_header = header, t_header_size = HEADERSIZE;
+	MCStackFileGetHeaderForVersion(p_version, t_header, t_header_size);
 	
 	if (IO_write(t_header, sizeof(char), t_header_size, stream) != IO_NORMAL
 	        || IO_write_uint1(CHARSET, stream) != IO_NORMAL)
