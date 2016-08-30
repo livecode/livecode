@@ -1,6 +1,8 @@
 Name: currentCard
 Type: property
 
+Introduced: 2.7.2
+
 Syntax: 
 get the currentCard of <stack>
 set the currentCard of <stack> to <cardName>
