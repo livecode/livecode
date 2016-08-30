@@ -1,36 +1,28 @@
 Name: currentCard
-
 Type: property
 
-Syntax: the currentCard
+Syntax: 
+get the currentCard of <stack>
+set the currentCard of <stack> to <cardName>
 
 Summary:
-A stack property that is set to the short name of the card in a given stack that is selected for display.
+The short name of the <current card> of a stack
 
 OS: mac, windows, linux, ios, android
-
 Platforms: desktop, server, mobile
 
 Example:
- -- the following results in the same value as put the short name of the current card of this stack
- 
-put the currentCard of this stack
-
- -- even if the stack is invisible, in the background, or offscreen
-
+ --The following results in the same value as put the short name of the current card of this stack
+ put the currentCard of this stack
+ --This property is useful if the stack is invisible, not in the foreground or offscreen
 set the visible of this stack to false
-
-put currentCard of this stack
-
--- can be retrieved or set for a stack file that is not currently opened (provided the stack file is writeable)
-
-set currentCard of stack "/Users/admin/Desktop/example.livecode" to "ExampleOfCardNameThatsNotTheFirstCard"
+put the currentCard of this stack
+--The currentCard property can be retrieved or set for a stack that is not currently an opened file
+set currentCard of stack "/Users/admin/Desktop/example.livecode" to "ExampleOfCardNamedFoo"
 
 Description:
-<currentCard> <property> is a stack property that is set to the short name of the card that is currently selected
+Use the <currentCard> property to change the <current card> of a stack, or find out which card is the <current card> of a stack. The taget stack does not need to be the frontmost stack, visible and the stack file need need not be open (file write access is needed in order to set the property).
 
-for display in a given stack, not neccessarly the front most stack nor necessarily a visible stack or even open stack.
+References: current card (glossary), card, stack, property, this
 
-References: current card (glossary)
-
-Tags: card, stack, property, this, current
+Tags: navigation
