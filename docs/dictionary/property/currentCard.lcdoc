@@ -12,9 +12,9 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
- --The following results in the same value as put the short name of the current card of this stack
+--The following results in the same value as put the short name of the current card of this stack
  put the currentCard of this stack
- --This property is useful if the stack is invisible, not in the foreground or offscreen
+--This property is useful if the stack is invisible, not in the foreground or offscreen
 set the visible of this stack to false
 put the currentCard of this stack
 --The currentCard property can be retrieved or set for a stack that is not currently an opened file
