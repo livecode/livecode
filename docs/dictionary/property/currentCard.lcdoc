@@ -7,8 +7,12 @@ Syntax:
 get the currentCard of <stack>
 set the currentCard of <stack> to <cardName>
 
+Value: short name of a card in a stack
+
 Summary:
 The short name of the <current card> of a stack
+
+Associations: stack
 
 OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
