@@ -1315,9 +1315,9 @@ public:
 	bool getdeletionissuspended(void) const { return m_deletion_is_suspended; }
 	void setdeletionissuspended(bool value) { m_deletion_is_suspended = value; }
 
-    // Because C++11 support is universal amongst our supported platforms, auto-
-    // conversion between MC???Handle types is not possible so there needs to be
-    // an easy mechanism to get an object handle as a specific type.
+    // Because C++11 support is not universal amongst our supported platforms,
+    // auto-conversion between MC???Handle types is not possible so there needs
+    // to be an easy mechanism to get an object handle as a specific type.
     template <class T>
     typename MCObjectProxy<T>::Handle GetHandleAs()
     {
