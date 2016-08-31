@@ -4242,7 +4242,7 @@ MCImage *MCObject::resolveimagename(MCStringRef p_name)
 	return resolveimage(p_name, 0);
 }
 
-MCObjectHandle MCObject::GetHandle(void)
+MCObjectHandle MCObject::GetHandle(void) const
 {
 	if (m_weak_proxy == NULL)
 	{
@@ -5342,9 +5342,9 @@ bool MCObjectVisitor::OnBlock(MCBlock *p_block)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCObjectProxy::MCObjectProxy(MCObject *p_object) :
-  m_object(p_object),
-  m_refcount(0)
+MCObjectProxy::MCObjectProxy(const MCObject *p_object) :
+  m_refcount(0),
+  m_object(const_cast<MCObject*>(p_object))
 {
 }
 
