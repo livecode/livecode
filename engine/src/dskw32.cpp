@@ -1519,7 +1519,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCS_query_registry(t_key, &t_value, &t_type, &t_error);
         
         MCAutoNumberRef t_enabled;
-        if (*t_value != nil && ctxt.ConvertToNumber(*t_value, &t_enabled) && MCNumberFetchAsInteger(t_enabled) == 1)
+        if (*t_value != nil && ctxt.ConvertToNumber(*t_value, &t_enabled) && MCNumberFetchAsInteger(*t_enabled) == 1)
 		{
             MCStringRef t_key2;
             t_key2 = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
