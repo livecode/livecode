@@ -230,7 +230,7 @@ public:
     {
     }
     
-    explicit Handle(MCObjectProxy* p_proxy) :
+    Handle(MCObjectProxy* p_proxy) :
       m_proxy(nullptr)
     {
         Set(p_proxy);
