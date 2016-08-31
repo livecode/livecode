@@ -44,13 +44,23 @@ LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
 
 LCC_LOG = _compiler_test_suite.log
 
+########## Java FFI DSL test parameters
+
+JAVA_DSL_PARSER ?= $(bin_dir)/java-dsl-parse
+
+JAVA_DSL_PARSER_TESTRUNNER ?= $(top_srcdir)/tests/_javadslparsertestrunner.livecodescript
+
+JAVA_DSL_PARSER_CMD = $(LCS_ENGINE) -ui $(JAVA_DSL_PARSER_TESTRUNNER) run
+
+JAVA_DSL_PARSER_LOG = _java_dsl_parser_test_suite.log
+
 ################################################################
 # Top-level targets
 ################################################################
 
 .DEFAULT: check
 
-check: lcs-check lcb-check compiler-check
+check: lcs-check lcb-check compiler-check java-ffi-dsl-check
 
 clean:
 	-rm -rf $(TEST_DIR) $(LCS_LOG) $(LCB_LOG)
@@ -146,3 +156,15 @@ lcb-check: lcm_compile
 	    $(LC_RUN) $(LC_RUN_FLAGS) --handler RunModuleTests -- $(LCB_TESTRUNNER) --lc-run "$(LC_RUN) $(LC_RUN_FLAGS)" $$lcmfile > $$logfile; \
 	done; \
 	$(LC_RUN) $(LC_RUN_FLAGS) --handler SummarizeTests -- $(LCB_TESTRUNNER) --summary-log $(LCB_LOG) $(LCB_TEST_LOGS)
+
+################################################################
+# Java FFI DSL parser tests
+################################################################
+
+java-ffi-dsl-check: $(JAVA_DSL_PARSE)
+	@rm -f $(JAVA_DSL_PARSER_LOG)
+	@export JAVA_DSL_PARSER="$(JAVA_DSL_PARSER)"; \
+	export JAVA_DSL_PARSE_VERBOSE="$(JAVA_DSL_PARSE_VERBOSE)"; \
+	cmd="$(JAVA_DSL_PARSER_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
