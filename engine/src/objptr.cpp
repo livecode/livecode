@@ -91,7 +91,12 @@ MCObjectHandle MCObjptr::Get()
 
 MCControl* MCObjptr::getref()
 {
-    return Get().GetAs<MCControl>();
+    // A number of callers expect this method to return null when not valid
+    MCObjectHandle t_handle = Get();
+    if (!Get().IsValid())
+        return nullptr;
+    
+    return t_handle.GetAs<MCControl>();
 }
 
 void MCObjptr::setref(MCControl *optr)
