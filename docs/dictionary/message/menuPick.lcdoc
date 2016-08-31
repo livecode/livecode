@@ -68,6 +68,36 @@ menuHistory <property>.
 > <parameter> is the text that appears in the menu as displayed, not the
 > text of that line of the <button menu|menu button>.
 
+The menu item specification allows a tag to be specified using the form:
+
+    <label> [ '/' [ <accelerator> ] [ '|' <tag> ] ]
+    
+Note that the <tag> is optional as is the <accelerator> however, if you
+want an item with a tag but without the accelerator you need:
+
+    <label> '/' '|' <tag>
+  
+If a menu item has a <tag> then it is the tag string that is passed to
+menuPick rather than the <label>. This is useful for localization of
+menu items as you don't need to change the menuPick handler for each
+language supported.
+
+The following tags should be used to label the standard edit menu items
+to enable them to be controlled by the system dialogs on Mac OS X
+(e.g. answer file, ask file etc.):
+
+- undo
+- redo
+- cut
+- copy
+- paste
+- clear
+- select all
+- preferences
+
+Changes:
+In version 3.5 menu tags were added to the menu item specification.
+
 References: pulldown (command), property (glossary),
 tabbed button (glossary), menu item (glossary), handler (glossary),
 message (glossary), menu (glossary), button menu (glossary),
