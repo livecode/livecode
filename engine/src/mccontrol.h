@@ -369,12 +369,13 @@ public:
 
 
 // MCControl has lots of derived classes so this (fragile!) specialisation is
-// needed to account for them.
+// needed to account for them. It depends on the correctness of the CT_x_CONTROL
+// enum values (i.e everything within that range must derive from MCControl).
 template <>
 inline MCControl* MCObjectCast<MCControl>(MCObject* p_object)
 {
     Chunk_term t_type = p_object->gettype();
-    MCAssert(t_type != CT_UNDEFINED && t_type != CT_STACK && t_type != CT_CARD && t_type != CT_AUDIO_CLIP && t_type != CT_VIDEO_CLIP);
+    MCAssert(t_type >= CT_FIRST_CONTROL && t_type <= CT_LAST_CONTROL);
     return static_cast<MCControl*> (p_object);
 }
 
