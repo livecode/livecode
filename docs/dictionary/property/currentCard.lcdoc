@@ -7,8 +7,6 @@ Syntax:
 get the currentCard of <stack>
 set the currentCard of <stack> to <cardName>
 
-Value: short name of a card in a stack
-
 Summary:
 The short name of the <current card> of a stack
 
@@ -26,9 +24,15 @@ put the currentCard of this stack
 --The currentCard property can be retrieved or set for a stack that is not currently an opened file
 set currentCard of stack "/Users/admin/Desktop/example.livecode" to "ExampleOfCardNamedFoo"
 
-Description:
-Use the <currentCard> property to change the <current card> of a stack, or find out which card is the <current card> of a stack. The taget stack does not need to be the frontmost stack, visible and the stack file need need not be open (file write access is needed in order to set the property).
+Value: The short name of a card in a stack
 
-References: current card (glossary), card, stack, property, this
+Description:
+Use the <currentCard> property to change the <current card> of a stack,
+or find out which card is the <current card> of a stack.
+The target stack does not need to be the frontmost stack or otherwise visible,
+nor does the stack file need not be open (file write access is needed in
+order to set the property).
+
+References: current card (glossary), card (object), stack (object), property (glossary), this (keyword)
 
 Tags: navigation
