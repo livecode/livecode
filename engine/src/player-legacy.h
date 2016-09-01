@@ -36,6 +36,12 @@ struct MCPlayerOffscreenBuffer;
 //  since we use &MCControl::kPropertyTable
 class MCPlayer : public MCControl, public MCPlayerInterface
 {
+public:
+    
+    enum { kObjectType = CT_PLAYER };
+    
+private:
+    
 #ifdef FEATURE_MPLAYER
 	char *command;
 	Atom atom;

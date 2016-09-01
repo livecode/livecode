@@ -912,7 +912,7 @@ void MCScreenDC::flushevents(uint2 e)
 	else if (e == FE_KEYUP)
 		t_mask = kMCPlatformEventKeyUp;
 	
-	if (t_mask != nil)
+	if (t_mask != 0)
 		MCPlatformFlushEvents(t_mask);
 }
 

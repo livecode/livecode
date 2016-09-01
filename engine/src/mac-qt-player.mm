@@ -264,8 +264,8 @@ MCQTKitPlayer::~MCQTKitPlayer(void)
 	
     // MW-2014-07-16: [[ Bug 12506 ]] Make sure we unhook the callbacks before releasing (it
     //   seems it takes a while for QTKit to actually release the objects!).
-    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
-    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, 0);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, 0);
     
     [[NSNotificationCenter defaultCenter] removeObserver: m_observer];
     [m_observer release];
@@ -401,7 +401,7 @@ void MCQTKitPlayer::DoSwitch(void *ctxt)
 			t_player -> m_current_frame = nil;
 		}
 
-		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
+		SetMovieDrawingCompleteProc([t_player -> m_movie quickTimeMovie], movieDrawingCallAlways, nil, 0);
         
 		// Switching to non-offscreen
 		t_player -> m_offscreen = t_player -> m_pending_offscreen;
@@ -527,8 +527,8 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
     m_has_invalid_filename = false;
 	
     // MW-2014-07-18: [[ Bug ]] Clean up callbacks before we release.
-    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, nil);
-    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, nil);
+    MCSetActionFilterWithRefCon([m_movie quickTimeMovieController], nil, 0);
+    SetMovieDrawingCompleteProc([m_movie quickTimeMovie], movieDrawingCallAlways, nil, 0);
 	[m_movie release];
     
     // PM-2014-09-02: [[ Bug 13306 ]] Make sure we reset the previous value of loadedtime when loading a new movie

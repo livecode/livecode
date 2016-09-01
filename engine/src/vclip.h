@@ -24,6 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCVideoClip : public MCObject
 {
+public:
+    
+    enum { kObjectType = CT_VIDEO_CLIP };
+    
+private:
+    
 	real8 scale;
 	uint2 framerate;
 	uint1 *frames;
