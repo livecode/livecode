@@ -592,11 +592,7 @@ typedef const struct __CFData *CFDataRef;
 //
 
 #if defined(__cplusplus) /* C++ */
-#	if defined(__GCC__)
-#		define nil __null
-#	else
-#		define nil uintptr_t(0)
-#	endif
+#   define nil nullptr
 
 #else /* C */
 #	if defined(__GCC__)
