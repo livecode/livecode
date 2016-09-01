@@ -274,7 +274,7 @@ void MCPurchaseGetPurchaseDate(MCExecContext& ctxt,MCPurchase *p_purchase, integ
 {
     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
     
-    if (t_android_data->purchase_time != nil)
+    if (t_android_data->purchase_time != 0)
     {
         r_date = (integer_t)(t_android_data->purchase_time);
         return;
