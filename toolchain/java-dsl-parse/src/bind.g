@@ -216,13 +216,24 @@
         GetUnqualifiedIdName(QualifiedName -> DefName)
         IsNameEqualToName(Name, DefName)
 
-    'rule' IsNameOfDefinition(Name, method(_, _, Id, _, _, _, _)):
-        Id'Name -> QualifiedName
+    'rule' IsNameOfDefinition(Name, method(_, _, Id, _, Alias, _, _)):
+        (|
+            where(Alias -> id(AliasId))
+            AliasId'Name -> QualifiedName
+        ||
+            Id'Name -> QualifiedName
+        |)
+
         GetUnqualifiedIdName(QualifiedName -> DefName)
         IsNameEqualToName(Name, DefName)
 
-    'rule' IsNameOfDefinition(Name, constructor(_, _, Id, _, _)):
-        Id'Name -> QualifiedName
+    'rule' IsNameOfDefinition(Name, constructor(_, _, Id, _, Alias)):
+        (|
+            where(Alias -> id(AliasId))
+            AliasId'Name -> QualifiedName
+        ||
+            Id'Name -> QualifiedName
+        |)
         GetUnqualifiedIdName(QualifiedName -> DefName)
         IsNameEqualToName(Name, DefName)
         
@@ -257,11 +268,21 @@
     'rule' Declare(variable(Position, _, Name, _)):
         DeclareId(Name)
 
-    'rule' Declare(method(Position, _, Name, _, _, _, _)):
-        DeclareId(Name)
+    'rule' Declare(method(Position, _, Name, _, Alias, _, _)):
+        (|
+            where(Alias -> id(AliasName))
+            DeclareId(AliasName)
+        ||
+            DeclareId(Name)
+        |)
 
-    'rule' Declare(constructor(Position, _, Name, _, _)):
-        DeclareId(Name)
+    'rule' Declare(constructor(Position, _, Name, _, Alias)):
+        (|
+            where(Alias -> id(AliasName))
+            DeclareId(AliasName)
+        ||
+            DeclareId(Name)
+        |)
         
     'rule' Declare(class(Position, _, template(_, Name, _), Definitions, _, _)):
         DeclareId(Name)
@@ -317,12 +338,22 @@
     'rule' Define(PackageId, variable(Position, Modifiers, Name, Type)):
         DefineSymbolId(Name, Modifiers, PackageId, variable, Type)
 
-    'rule' Define(PackageId, method(Position, Modifiers, Name, signature(Params, _), _, Type, Throws)):
-        DefineSymbolId(Name, Modifiers, PackageId, method, Type)
+    'rule' Define(PackageId, method(Position, Modifiers, Name, signature(Params, _), Alias, Type, Throws)):
+        (|
+            where(Alias -> id(AliasName))
+            DefineSymbolId(AliasName, Modifiers, PackageId, method, Type)
+        ||
+            DefineSymbolId(Name, Modifiers, PackageId, method, Type)
+        |)
         DefineParameters(PackageId, Params)
 
-    'rule' Define(PackageId, constructor(Position, Modifiers, Name, signature(Params, _), _)):
-        DefineSymbolId(Name, Modifiers, PackageId, constructor, nil)
+    'rule' Define(PackageId, constructor(Position, Modifiers, Name, signature(Params, _), Alias)):
+        (|
+            where(Alias -> id(AliasName))
+            DefineSymbolId(AliasName, Modifiers, PackageId, constructor, nil)
+        ||
+            DefineSymbolId(Name, Modifiers, PackageId, constructor, nil)
+        |)
         DefineParameters(PackageId, Params)
         
     'rule' Define(PackageId, class(Position, Modifiers, template(TypePosition, Name, Parameters), Definitions, _, _)):
@@ -433,8 +464,13 @@
         ApplyId(Id)
         Apply(Type)
 
-    'rule' Apply(DEFINITION'method(_, _, Id, signature(Params, _), _, Returns, Throws)):
-        ApplyId(Id)
+    'rule' Apply(DEFINITION'method(_, _, Id, signature(Params, _), Alias, Returns, Throws)):
+        (|
+            where(Alias -> id(AliasName))
+            ApplyId(AliasName)
+        ||
+            ApplyId(Id)
+        |)
 
         EnterScope
 
@@ -448,8 +484,13 @@
 
         Apply(Throws)
 
-    'rule' Apply(DEFINITION'constructor(_, _, Id, signature(Params, _), _)):
-        ApplyId(Id)
+    'rule' Apply(DEFINITION'constructor(_, _, Id, signature(Params, _), Alias)):
+        (|
+            where(Alias -> id(AliasName))
+            ApplyId(AliasName)
+        ||
+            ApplyId(Id)
+        |)
 
         EnterScope
 

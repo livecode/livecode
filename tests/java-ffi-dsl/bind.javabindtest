@@ -52,3 +52,25 @@ end package
 %EXPECT PASS
 %ERROR "not declared" AT BEFORE_INHERITS
 %ENDTEST
+
+%TEST BindConstructorPreviouslyDeclared
+foreign package java.test named com.livecode.wrap
+class A
+	constructor A()
+	constructor %{BEFORE_CONSTRUCTOR_ID}A(param as String)
+end class
+end package
+%EXPECT PASS
+%ERROR "already declared" AT BEFORE_CONSTRUCTOR_ID
+%ENDTEST
+
+%TEST BindConstructorPreviouslyDeclaredAlias
+foreign package java.test named com.livecode.wrap
+class A
+	constructor A()
+	constructor A(param as String) named AVariant
+end class
+end package
+%EXPECT PASS
+%SUCCESS
+%ENDTEST

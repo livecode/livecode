@@ -138,11 +138,16 @@
         OutputWrite("\n")
 
     'rule' OutputDefinitions(method(_, Modifiers, Id, Signature, Alias, Return, Throws)):
-        QuerySymbolId(Id -> SymbolInfo)
-        ResolveIdName(Id -> SymbolName)
+        (|
+            where(Alias -> id(AliasName))
+            QuerySymbolId(AliasName -> SymbolInfo)
+        ||
+            QuerySymbolId(Id -> SymbolInfo)
+        |)
+        ResolveIdName(Id -> Name)
         OutputWrite("   ")
         OutputModifiers(Modifiers)
-        OutputWriteI("method ", SymbolName, "")
+        OutputWriteI("method ", Name, "")
         OutputSignature(Signature)
         OutputOptionalAlias(Alias)
         OutputOptionalThrows(Throws)
@@ -151,11 +156,16 @@
         OutputWrite("\n")
 
     'rule' OutputDefinitions(constructor(_, Modifiers, Id, Signature, Alias)):
-        QuerySymbolId(Id -> SymbolInfo)
-        ResolveIdName(Id -> SymbolName)
+        (|
+            where(Alias -> id(AliasName))
+            QuerySymbolId(AliasName -> SymbolInfo)
+        ||
+            QuerySymbolId(Id -> SymbolInfo)
+        |)
+        ResolveIdName(Id -> Name)
         OutputWrite("   ")
         OutputModifiers(Modifiers)
-        OutputWriteI("constructor ", SymbolName, "")
+        OutputWriteI("constructor ", Name, "")
         OutputSignature(Signature)
         OutputOptionalAlias(Alias)
 
