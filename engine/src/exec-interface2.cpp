@@ -3772,7 +3772,7 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		MCObjectHandle t_source_handle, t_new_owner_handle, t_new_target_handle;
 		t_source_handle = p_source . object -> GetHandle();
 		t_new_owner_handle = t_new_owner -> GetHandle();
-		t_new_target_handle = t_new_target != NULL ? t_new_target -> GetHandle() : MCObjectHandle(NULL);
+		t_new_target_handle = t_new_target != nil ? t_new_target -> GetHandle() : nil;
         
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;

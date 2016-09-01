@@ -4248,7 +4248,7 @@ MCObjectHandle MCObject::GetHandle(void) const
 	{
 		m_weak_proxy = new MCObjectProxy(this);
         if (!m_weak_proxy)
-            return MCObjectHandle(NULL);
+            return nil;
 	}
 
 	return MCObjectHandle(m_weak_proxy);
