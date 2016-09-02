@@ -37,6 +37,7 @@ Example:
 go invisible stack "Preferences"
 
 Example:
+local tStackFile, tStackFolder
 put the effective filename of me into tStackFile
 set the itemDelimiter to "/"
 put item 1 to -2 of tStackFile into tStackFolder
