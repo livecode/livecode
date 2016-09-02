@@ -720,7 +720,7 @@ Boolean MCQTEffectsDialog(MCStringRef &r_data)
 			case codecParameterDialogConfirm:
 			case userCanceledErr:
 				QTDismissStandardParameterDialog(createdDialogID);
-				createdDialogID =nil;
+				createdDialogID = 0;
 				break;
 		}
 	}

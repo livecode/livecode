@@ -1517,7 +1517,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCAutoStringRef t_type, t_error;
         MCAutoValueRef t_value;
         MCS_query_registry(t_key, &t_value, &t_type, &t_error);
-		if (*t_value != nil && !MCValueIsEmpty(*t_value))
+        
+        MCAutoNumberRef t_enabled;
+        if (*t_value != nil && ctxt.ConvertToNumber(*t_value, &t_enabled) && MCNumberFetchAsInteger(*t_enabled) == 1)
 		{
             MCStringRef t_key2;
             t_key2 = MCSTR("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
@@ -1533,31 +1535,6 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				MCValueAssign(MChttpproxy, *t_http_proxy);
 			}
 		}
-		else
-		{
-            MCStringRef t_key3;
-            t_key3 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-            MCAutoStringRef t_type3, t_error3;
-            MCAutoValueRef t_value3;
-            MCS_query_registry(t_key3, &t_value3, &t_type3, &t_error3);
-            
-            if (*t_value3 != nil && !MCValueIsEmpty(*t_value3))
-			{
-				MCAutoStringRef t_host;
-                /* UNCHECKED */ ctxt . ConvertToString(*t_value3, &t_host);
-                MCStringRef t_key4;
-                t_key4 = MCSTR("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-                MCAutoStringRef t_type4, t_error4;
-                MCAutoValueRef t_value4;
-                MCS_query_registry(t_key4, &t_value4, &t_type4, &t_error4);
-				MCAutoNumberRef t_port;
-                /* UNCHECKED */ ctxt . ConvertToNumber(*t_value4, &t_port);
-				MCAutoStringRef t_http_proxy;
-                /* UNCHECKED */ MCStringFormat(&t_http_proxy, "%@:%@", *t_host, *t_port);
-				MCValueAssign(MChttpproxy, *t_http_proxy);
-            }
-		}
-        
 
 		// On NT systems 'cmd.exe' is the command processor
 		MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));

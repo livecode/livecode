@@ -158,10 +158,14 @@ struct MCStackAttachment
 
 class MCStack : public MCObject
 {
-	friend class MCHcstak;
-	friend class MCHccard;
+public:
+    
+    enum { kObjectType = CT_STACK };
 
 protected:
+    
+    friend class MCHcstak;
+    friend class MCHccard;
     
 	Window window;
 	MCCursorRef cursor;
@@ -311,8 +315,6 @@ protected:
 	MCStackObjectVisibility m_hidden_object_visibility;
     
 public:
-    
-    enum { kObjectType = CT_STACK };
     
 	Boolean menuwindow;
 

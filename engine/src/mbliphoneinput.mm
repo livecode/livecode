@@ -351,9 +351,9 @@ static MCNativeControlEnumEntry s_contenttype_enum[] =
 
 static MCNativeControlEnumEntry s_textalign_enum[] =
 { 
-	{"left", UITextAlignmentLeft},
-	{"right", UITextAlignmentRight},
-	{"center", UITextAlignmentCenter},
+	{"left", NSTextAlignmentLeft},
+	{"right", NSTextAlignmentRight},
+	{"center", NSTextAlignmentCenter},
 	{nil, 0}
 };
 
@@ -614,18 +614,18 @@ void MCiOSInputControl::SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTe
     
     if (t_field)
     {
-        UITextAlignment t_align;
+        NSTextAlignment t_align;
         
         switch (p_align)
         {
             case kMCNativeControlInputTextAlignCenter:
-                t_align = UITextAlignmentCenter;
+                t_align = NSTextAlignmentCenter;
                 break;
             case kMCNativeControlInputTextAlignLeft:
-                t_align = UITextAlignmentLeft;
+                t_align = NSTextAlignmentLeft;
                 break;
             case kMCNativeControlInputTextAlignRight:
-                t_align = UITextAlignmentRight;
+                t_align = NSTextAlignmentRight;
                 break; 
         }
         [t_field setTextAlignment: t_align];
@@ -889,13 +889,13 @@ void MCiOSInputControl::GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTe
     {
         switch ([t_field textAlignment])
         {
-            case UITextAlignmentCenter:
+            case NSTextAlignmentCenter:
                 r_align = kMCNativeControlInputTextAlignCenter;
                 return;
-            case UITextAlignmentLeft:
+            case NSTextAlignmentLeft:
                 r_align = kMCNativeControlInputTextAlignLeft;
                 return;
-            case UITextAlignmentRight:
+            case NSTextAlignmentRight:
                 r_align = kMCNativeControlInputTextAlignRight;
                 return;
         }

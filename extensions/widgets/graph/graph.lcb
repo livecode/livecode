@@ -313,6 +313,8 @@ public handler OnCreate() returns nothing
 	put [] into mHilitedCoordinates
 	put "0,0,0,255" into mHilitedCoordinatesColor
 	put true into mRecalculateAll
+	
+	EnsureMarkerStyles()
 end handler
 
 ----------

@@ -26,6 +26,12 @@ class MCScrollbar;
 
 class MCGroup : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_GROUP };
+
+private:
+    
 	friend class MCHcbkgd;
 	friend class MCHcstak;
 	MCControl *controls;
