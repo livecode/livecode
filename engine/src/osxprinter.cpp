@@ -1708,9 +1708,35 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
             {
                 CFStringRef t_string;
                 /* UNCHECKED */ MCStringConvertToCFStringRef(*t_text, t_string);
-                
+				
+				// Attributed strings, by default, assume a black text color (if no color
+				// attribute is present) and this overrides the current foreground color
+				// in the CGContext. To ensure that the CGContext's current foreground is
+				// used, the kCTForegroundColorFromContextAttributeName attribute must be
+				// set to true for the string.
+				
+				CFStringRef t_attr_names[2] =
+				{
+					kCTFontAttributeName,
+					kCTForegroundColorFromContextAttributeName,
+				};
+				
+				void *t_attr_values[2] =
+				{
+					(void *)t_font,			/* kCTFontAttributeName */
+					(void *)kCFBooleanTrue, /* kCTForegroundColorFromContextAttributeName */
+				};
+				
+				MCStaticAssert(sizeof(t_attr_names) / sizeof(t_attr_names[0]) ==
+							   sizeof(t_attr_values) / sizeof(t_attr_values[0]));
+				
                 CFDictionaryRef t_attributes;
-                t_attributes = CFDictionaryCreate(NULL, (const void**)&kCTFontAttributeName, (const void**)&t_font, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+                t_attributes = CFDictionaryCreate(NULL,
+												  (const void **)t_attr_names,
+												  (const void **)t_attr_values,
+												  sizeof(t_attr_names) / sizeof(t_attr_names[0]),
+												  &kCFTypeDictionaryKeyCallBacks,
+												  &kCFTypeDictionaryValueCallBacks);
                 
                 CFAttributedStringRef t_attributed_string;
                 t_attributed_string = CFAttributedStringCreate(NULL, t_string, t_attributes);
@@ -1735,6 +1761,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
             // with a reversed y-axis, we need to apply a scale, too.
             CGContextConcatCTM(m_context, CGAffineTransformMake(1, 0, 0, -1, 0, m_page_height));
             CGContextSetTextPosition(m_context, x, m_page_height - y);
+			CGContextSetTextDrawingMode(m_context, kCGTextFill);
             CTLineDraw(t_line, m_context);
             
             CFRelease(t_line);
