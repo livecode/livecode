@@ -366,7 +366,7 @@ void MCWin32DSFreeMediaType(AM_MEDIA_TYPE &t_type)
 	if (t_type.cbFormat != 0)
 	{
 		CoTaskMemFree(t_type.pbFormat);
-		t_type.cbFormat = nil;
+		t_type.cbFormat = 0;
 		t_type.pbFormat = nil;
 	}
 	if (t_type.pUnk != nil)
