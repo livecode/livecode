@@ -22,7 +22,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 class MCCard : public MCObject
 {
 	friend class MCHccard;
+public:
+    
+    enum { kObjectType = CT_CARD };
+	
 protected:
+    
+    friend class MCHccard;
 	MCObjptr *objptrs;
 	MCObjptr *kfocused;
 	MCObjptr *oldkfocused;

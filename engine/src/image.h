@@ -304,6 +304,12 @@ private:
 
 class MCImage : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_IMAGE };
+
+private:
+    
 	friend class MCHcbmap;
 	
 	MCImageRep *m_rep;
