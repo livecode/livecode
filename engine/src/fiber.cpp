@@ -19,15 +19,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "fiber.h"
 
-#include <pthread.h>
+#include "mcmanagedpthread.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCFiber
 {
 	MCFiber *next;
-	pthread_t thread;
-	bool have_thread; /* True if thread is live */
+	MCManagedPThread thread;
 	bool owns_thread;
 	bool finished;
 	uindex_t depth;
@@ -133,7 +132,7 @@ static void *MCFiberOwnedThreadRoutine(void *p_context)
 bool MCFiberConvert(MCFiberRef& r_fiber)
 {
 	MCFiberRef self;
-	if (!MCMemoryNew(self))
+	if (!MCMemoryCreate(self))
 		return false;
 	
 	// If we have no fibers already, initialize ourselves.
@@ -142,7 +141,6 @@ bool MCFiberConvert(MCFiberRef& r_fiber)
 	
 	// Get the thread id of the fiber and link it into the fiber chain.
 	self -> thread = pthread_self();
-	self -> have_thread = true;
 	self -> next = s_fibers;
 	s_fibers = self;
 	
@@ -158,29 +156,20 @@ bool MCFiberConvert(MCFiberRef& r_fiber)
 bool MCFiberCreate(size_t p_stack_size, MCFiberRef& r_fiber)
 {
 	MCFiberRef self;
-	if (!MCMemoryNew(self))
+	if (!MCMemoryCreate(self))
 		return false;
 	
 	if (s_fibers == nil)
 		MCFiberInitialize();
 
-	/* N.b. We can't initialise self->thread because pthread_t is an
-	 * implementation-dependent type that could be anything, and the
-	 * specification doesn't make an initialisation constant
-	 * available */
-	self -> have_thread = false;
 	self -> next = s_fibers;
 	s_fibers = self;
 
-	if (pthread_create(&self -> thread, nil, MCFiberOwnedThreadRoutine, self) != 0)
+	self->thread.Create(nil, MCFiberOwnedThreadRoutine, self);
+	if (!self->thread)
 	{
 		MCFiberDestroy(self);
 		return false;
-	}
-	else
-	{
-		/* Thread is now live */
-		self -> have_thread = true;
 	}
 	
 	r_fiber = self;
@@ -194,7 +183,7 @@ void MCFiberDestroy(MCFiberRef self)
 	MCAssert(self -> depth == 0);
 	
 	// If the thread is owned by the fiber then wait on it to finish.
-	if (self -> owns_thread && self -> have_thread)
+	if (self -> owns_thread && self -> thread)
 	{
 		// A fiber that owns its thread cannot destroy itself.
 		MCAssert(self != s_fiber_current);
@@ -204,10 +193,7 @@ void MCFiberDestroy(MCFiberRef self)
 			MCFiberMakeCurrent(self);
 		
 		// Join to the thread.
-		pthread_join(self -> thread, nil);
-
-		// The thread is now gone.
-		self -> have_thread = false;
+		self->thread.Join(nil);
 	}
 	
 	// Remove the fiber record from the list.
@@ -222,7 +208,7 @@ void MCFiberDestroy(MCFiberRef self)
 		s_fibers = self -> next;
 	
 	// Delete the record.
-	MCMemoryDelete(self);
+	MCMemoryDestroy(self);
 	
 	// If there are now no fibers, finalize our state.
 	if (s_fibers == nil)
@@ -271,7 +257,7 @@ void MCFiberCall(MCFiberRef p_target, MCFiberCallback p_callback, void *p_contex
 
 bool MCFiberIsCurrentThread(MCFiberRef self)
 {
-	return pthread_equal(pthread_self(), self -> thread);
+	return self->thread.IsCurrent();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

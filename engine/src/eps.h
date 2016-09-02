@@ -24,6 +24,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCEPS : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_EPS };
+    
+private:
+    
 	uint4 size;
 	char *postscript;
 	char *prolog;

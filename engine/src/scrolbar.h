@@ -37,6 +37,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCScrollbar : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_SCROLLBAR };
+    
+private:
+    
 	real8 thumbpos;
 	real8 thumbsize;
 	real8 lineinc;

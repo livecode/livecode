@@ -1050,19 +1050,19 @@ void MCStoreProductRequestResponseEvent::Dispatch()
                      && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_symbol_key, *t_currency_symbol));
     }
     
-    if (t_success && *t_unicode_description != nil)
+    if (t_success && *t_unicode_description != 0)
     {
         t_success = (MCNameCreateWithCString("unicode description", &t_unicode_description_key)
                      && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_description_key, *t_utf16_description));
     }
     
-    if (t_success && *t_unicode_title != nil)
+    if (t_success && *t_unicode_title != 0)
     {
         t_success = (MCNameCreateWithCString("unicode title", &t_unicode_title_key)
                      && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_title_key, *t_utf16_title));
     }
     
-    if (t_success && *t_unicode_currency_symbol != nil)
+    if (t_success && *t_unicode_currency_symbol != 0)
     {
         t_success = (MCNameCreateWithCString("unicode currency symbol", &t_unicode_currency_symbol_key)
                      && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_currency_symbol_key, *t_utf16_currency_symbol));

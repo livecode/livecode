@@ -24,7 +24,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCColors : public MCControl
 {
+public:
+    
+    enum { kObjectType = CT_COLOR_PALETTE };
+    
+private:
+    
 	uint4 selectedcolor;
+    
 public:
 	MCColors();
 	MCColors(const MCColors &cref);
