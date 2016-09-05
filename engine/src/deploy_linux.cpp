@@ -707,17 +707,21 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	if (t_success && (!MCStringIsEmpty(p_params . payload)) && t_payload_section == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorLinuxNoPayloadSection);
 
-	// Next check that there are no sections after the project section.
+	// Next check that there are no loadable sections after the project section.
 	// (This check implies there are no loadable segments after the project
-	// section since the section table is ordered by vaddr and segments can only
-	// contain stuff in sections).
+	// section since the section table is ordered by vaddr within segments and
+    // we check segment ordering later).
 	if (t_success)
-		for(typename T::Shdr *t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+    {
+		for (typename T::Shdr* t_section = t_project_section + 1; t_section < t_section_headers + t_header . e_shnum; t_section += 1)
+        {
 			 if (t_section -> sh_addr > t_project_section -> sh_addr)
 			 {
 				 t_success = MCDeployThrow(kMCDeployErrorLinuxBadSectionOrder);
 				 break;
 			 }
+         }
+    }
 
 	// Now we must search for the segment containing the payload/project sections.
 	// At present, we required that these sections sit in their own segment and
