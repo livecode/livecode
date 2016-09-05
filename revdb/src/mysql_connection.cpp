@@ -58,7 +58,7 @@ Bool DBConnection_MYSQL::connect(char **args, int numargs)
 	if (t_delimiter != NULL)
 	{
 		t_port_string = (t_delimiter + (1 * sizeof(char)));
-		*t_delimiter = NULL;
+		*t_delimiter = '\0';
 	}
 
 	int t_port;
