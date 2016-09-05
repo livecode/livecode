@@ -28,8 +28,6 @@
 		'-s RESERVED_FUNCTION_POINTERS=1024',
 		'-s TOTAL_MEMORY=67108864',
 		'-s WARN_ON_UNDEFINED_SYMBOLS=1',
-
-		'-Werror=conversion-null',
 	],
 
 	'cflags_c':
@@ -44,9 +42,6 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 		'-std=<(c++_std)',
-
-		'-Werror=mismatched-tags',
-		'-Werror=overloaded-virtual',
 	],
 
 	'target_conditions':
@@ -60,6 +55,18 @@
 					'-Wextra',
 					'-Wno-unused-parameter',
 					'-Wno-ignored-attributes',
+
+					'-Werror=conversion-null',
+					'-Werror=logical-not-parentheses',
+					'-Werror=return-type',
+					'-Werror=tautological-compare',
+					'-Werror=uninitialized',
+				],
+				'cflags_cc':
+				[
+					'-Werror=mismatched-tags',
+					'-Werror=overloaded-virtual',
+					'-Werror=delete-non-virtual-dtor',
 				],
 			},
 			{
