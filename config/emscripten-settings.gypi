@@ -28,6 +28,8 @@
 		'-s RESERVED_FUNCTION_POINTERS=1024',
 		'-s TOTAL_MEMORY=67108864',
 		'-s WARN_ON_UNDEFINED_SYMBOLS=1',
+
+		'-Werror=conversion-null',
 	],
 
 	'cflags_c':
