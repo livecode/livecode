@@ -15,16 +15,16 @@ OS: mac, windows, linux, ios, android, html5
 Platforms: desktop, server, mobile
 
 Example:
-(1 &gt; 0) and (1 = 0)
+put (1 > 0) and (1 = 0)
 -- evaluates to false
 
 Example:
-(1 &gt; 0) and (1 = 1) and (0 = 0)
+put (1 > 0) and (1 = 1) and (0 = 0)
 -- evaluates to true
 
 Example:
 local myCount
-if the shiftKey is down and myCount &gt; 1 then exit mouseUp
+if the shiftKey is down and myCount > 1 then exit mouseUp
 
 Parameters:
 value1 (bool):
