@@ -24,9 +24,10 @@ LiveCode supports Linux installations which meet the following requirements:
 
 * Required dependencies for core functionality:
   * glibc 2.13 or later
+  * glib 2.0 or later
 
 * Optional requirements for GUI functionality:
-  * GTK/GDK/Glib 2.24 or later
+  * GTK/GDK 2.24 or later
   * Pango with Xft support
   * esd (optional, needed for audio output)
   * mplayer (optional, needed for media player functionality)
