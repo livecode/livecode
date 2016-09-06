@@ -233,6 +233,7 @@ sub generateModule
     output "}";
     output ;
 
+
     output "int initialise_weak_link_${module}(void)";
     output "{";
 
@@ -249,12 +250,30 @@ sub generateModule
 	
     output "{";
     output "#ifdef _DEBUG";
-    output "    fprintf(stderr, \"Unable to load library: $unixLibrary\\n\");";
+    output "    fprintf(stderr, \"Warning: could not load library: $unixLibrary\\n\");";
     output "#endif";
     output "return 0;";
     output "}";
     output "return -1;";
     output "}";
+	
+	output ;
+	output "#if defined(_LINUX)";
+	output "void initialise_required_weak_link_${module}(void)";
+	output "{";
+	output "  if (!initialise_weak_link_${module}())";
+	output "  {";
+	output "    fprintf(stderr, \"Fatal: could not load required library \\\'${module}\\\' (tried %s)\\n\",";
+	foreach my $item (split(',', $unixLibrary))
+	{
+		output "      \"$item;\"";
+	}
+	output "    );";
+	output "    exit(-1);";
+	output "  }";
+	output "}";
+	output "#endif";
+	output ;
 	
 	foreach my $symbol (@symbols)
 	{
