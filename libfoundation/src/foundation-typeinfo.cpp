@@ -217,7 +217,13 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     // have unnamed typeinfos which we need to compare with potentially named
     // handler type typeinfos).
     MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source) || MCTypeInfoIsOptional(source));
-    
+	
+	// If the two types are the same, they conform.
+	if (source == target)
+	{
+		return true;
+	}
+	
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
     if (!MCTypeInfoResolve(source, t_resolved_source))
