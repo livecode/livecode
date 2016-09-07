@@ -551,7 +551,7 @@ function deployIsValidSDK pSDK
    // SN-2015-03-24: [[ Bug 15037 ]] We accept any SDK having a simulator for
    //  which we provide an engine.
    repeat for each line tSDK in tSDKList
-      if matchtext(tSDK, "iPhoneSimulator([0-9]\.[0-9]).sdk", tSDKVersion) and \
+      if matchtext(tSDK, "iPhoneSimulator([0-9]+\.[0-9]+).sdk", tSDKVersion) and \
             tSDKVersion is among the items of deployUsableIosSdk() then
          put true into tValidSDK
          exit repeat
