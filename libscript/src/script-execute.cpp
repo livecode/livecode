@@ -513,10 +513,18 @@ MCScriptExecuteContext::ConvertToResolvedType(MCValueRef p_value,
 		t_to_desc = MCForeignTypeInfoGetDescriptor(p_to_type.type);
 	}
 	
-	if (t_from_desc != nil)
+    if (t_from_desc == t_to_desc)
+    {
+        // The two types are the same or are both non-foreign - no conversion is
+        // needed at this stage.
+        r_new_value = MCValueRetain(p_value);
+    }
+	else if (t_from_desc != nil)
 	{
-		// Import the contents of the foreign value as its bridge type.
-		if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
+        // Import the contents of the foreign value as its bridge type. Note
+        // that not all types can be imported (i.e there is no bridging type)
+		if (t_from_desc->doimport == nil ||
+            !t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
 								   false,
 								   r_new_value))
 		{
