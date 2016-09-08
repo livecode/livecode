@@ -258,6 +258,14 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     // the source type, or one of the source's supertypes.
     if (MCTypeInfoIsForeign(source . type))
     {
+        // If both sides are foreign, do they have a bridge type in common?
+        if (MCTypeInfoIsForeign(target.type))
+        {
+            if (source.type->foreign.descriptor.bridgetype != kMCNullTypeInfo &&
+                source.type->foreign.descriptor.bridgetype == target.type->foreign.descriptor.bridgetype)
+                return true;
+        }
+        
         // Check to see if the target is the source's bridge type.
         if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
             target . named_type == source . type -> foreign . descriptor . bridgetype)
