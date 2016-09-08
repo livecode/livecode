@@ -213,11 +213,6 @@ bool MCTypeInfoResolve(MCTypeInfoRef self, MCResolvedTypeInfo& r_resolution)
 MC_DLLEXPORT_DEF
 bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
 {
-    // We require that source is concrete for all but handler types (as handlers
-    // have unnamed typeinfos which we need to compare with potentially named
-    // handler type typeinfos).
-    MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source) || MCTypeInfoIsOptional(source));
-	
 	// If the two types are the same, they conform.
 	if (source == target)
 	{
