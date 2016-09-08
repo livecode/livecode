@@ -664,12 +664,34 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
 		// it is a bridging conversion so we must export.
 		if (MCTypeInfoIsForeign(t_resolved_from_type.type))
 		{
-			if (!t_slot_desc->copy(MCForeignValueGetContentsPtr(p_value),
-								   x_slot_ptr))
-			{
-				Rethrow();
-				return false;
-			}
+            const MCForeignTypeDescriptor *t_from_desc =
+                MCForeignTypeInfoGetDescriptor(t_resolved_from_type.type);
+            
+            // If the two foreign types are the same, copy the contents
+            if (t_slot_desc == t_from_desc)
+            {
+                if (!t_slot_desc->copy(MCForeignValueGetContentsPtr(p_value),
+                                       x_slot_ptr))
+                {
+                    Rethrow();
+                    return false;
+                }
+            }
+            else
+            {
+                // Bridging to the common bridging type and back again is required
+                // Note that we can only get here if the bridging type is common
+                // (otherwise the types wouldn't conform).
+                MCAssert(t_slot_desc->bridgetype == t_from_desc->bridgetype);
+                
+                MCAutoValueRef t_bridged_value;
+                if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value), false, &t_bridged_value) ||
+                    !t_slot_desc->doexport(*t_bridged_value, false, x_slot_ptr))
+                {
+                    Rethrow();
+                    return false;
+                }
+            }
 		}
 		else
 		{
