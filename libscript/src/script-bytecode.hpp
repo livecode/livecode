@@ -357,12 +357,14 @@ private:
 		// We use a simple scoring mechanism to determine which method to use. If
 		// input type for an argument is equal to expected type, then this is a
 		// score of zero. If input type for an argument conforms to expected type, then
-		// this is a score of 1. The method with the lowest score is chosen, with
-		// priority given to the first in the list in the case of a tie.
+		// this is a score of 1. The method with the lowest score is chosen
+        // unless multiple variants have the same score, which is an error.
 		
 		uindex_t t_min_score = UINDEX_MAX;
 		MCScriptDefinition *t_min_score_definition = nil;
 		MCScriptInstanceRef t_min_score_instance = nil;
+        bool t_min_score_ambiguous = false;
+        
 		for(uindex_t t_handler_idx = 0; t_handler_idx < p_group -> handler_count; t_handler_idx++)
 		{
 			MCScriptInstanceRef t_current_instance;
@@ -419,14 +421,22 @@ private:
 				t_current_score += 1;
 			}
 
-			if (t_current_score < t_min_score)
+            if (t_current_score == t_min_score)
+            {
+                // The minimum score is ambiguous - multiple alternatives have
+                // equal scores.
+                t_min_score_ambiguous = true;
+            }
+			else if (t_current_score < t_min_score)
 			{
-				t_min_score = t_current_score;
+                // A new minimum score has been found
+                t_min_score = t_current_score;
 				t_min_score_definition = t_current_definition;
 				t_min_score_instance = t_current_instance;
+                t_min_score_ambiguous = false;
 			}
 		}
-		if (t_min_score_definition == NULL)
+		if (t_min_score_ambiguous || t_min_score_definition == NULL)
 		{
 			ctxt.ThrowUnableToResolveMultiInvoke(p_group,
 												 p_arguments,
