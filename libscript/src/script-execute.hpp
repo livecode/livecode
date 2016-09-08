@@ -900,7 +900,7 @@ MCScriptExecuteContext::PopFrame(uindex_t p_result_reg)
 		}
 		
 		// Now copy back the out parameters - if any.
-		if (m_frame->mapping != nil)
+		if (t_popped_frame->mapping != nil)
 		{
 			for(uindex_t i = 0; i < t_parameter_count; i++)
 			{
