@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -211,7 +211,9 @@ static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimul
 		}
 	}
 	
-	if (t_root != nil)
+    // As of Xcode 8, DTiPhoneSimulatorSystemRoot is no longer used, so don't worry if we can't find one.
+    // As long as we have a SimRuntime we can still launch apps.
+	if (t_root != nil || t_runtime != nil)
 	{
 		r_root = t_root;
 		r_runtime = t_runtime;
@@ -520,11 +522,6 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 	
 	if (t_success)
 	{
-		if (s_simulator_system_root == nil)
-		{
-			s_simulator_system_root = [s_simulator_proxy getDefaultRoot];
-			[s_simulator_system_root retain];
-		}
 		
 		DTiPhoneSimulatorApplicationSpecifier *t_app_spec;
 		DTiPhoneSimulatorSessionConfig *t_session_config;
@@ -540,7 +537,16 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 		
 		[t_session_config setApplicationToSimulateOnStart:t_app_spec];
 		
-		[t_session_config setSimulatedSystemRoot:s_simulator_system_root];
+        // As of Xcode 8, DTiPhoneSimulatorSystemRoot (s_simulator_system_root) is no longer used.
+        if ([t_session_config respondsToSelector: @selector(setSimulatedSystemRoot:)])
+        {
+            if (s_simulator_system_root == nil)
+            {
+                s_simulator_system_root = [s_simulator_proxy getDefaultRoot];
+                [s_simulator_system_root retain];
+            }
+            [t_session_config setSimulatedSystemRoot:s_simulator_system_root];
+        }
 		
 		// MM-2014-10-07: [[ Bug 13584 ]] As well as setting the sys root, also set the sim runtime where applicable.
 		//   Ensures we launch the correct version of the simulator.
@@ -585,13 +591,13 @@ bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariabl
 			{
 				if (!(t_is_ipad && [[t_device name] hasPrefix: @"iPad"] || !t_is_ipad && [[t_device name] hasPrefix: @"iPhone"]))
 					continue;
-				
+
 				NSString *t_dev_plist_path;
 				t_dev_plist_path = [[t_device devicePath] stringByAppendingPathComponent: @"device.plist"];
 				if ([[NSFileManager defaultManager] fileExistsAtPath: t_dev_plist_path])
 				{					
 					NSDictionary *t_dev_plist;
-					t_dev_plist= [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];					
+					t_dev_plist = [NSDictionary dictionaryWithContentsOfFile: t_dev_plist_path];
 					if (t_dev_plist != nil)
 					{
 						NSNumber *t_state;
