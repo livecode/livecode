@@ -4,11 +4,8 @@ if [ "$LIVECODE_DEP_FILE" == "" ]; then
     LIVECODE_DEP_FILE="$SRCROOT/$PRODUCT_NAME.ios"
 fi
 
-SDK_MAJORVERSION=${SDK_NAME: -3}
-SDK_MAJORVERSION=${SDK_MAJORVERSION: 0:1}
-SDK_MINORVERSION=${SDK_NAME: -1}
-
-SDK_PLATFORM=${SDK_NAME: 0:${#SDK_NAME}-3}
+read SDK_MAJORVERSION SDK_MINORVERSION <<<${SDK_NAME//[^0-9]/ }
+read SDK_PLATFORM <<<${SDK_NAME//[0-9.]/ }
 
 if [ -f "$LIVECODE_DEP_FILE" ]; then
 
@@ -21,7 +18,7 @@ if [ -f "$LIVECODE_DEP_FILE" ]; then
     STATIC_FRAMEWORKS=${STATIC_FRAMEWORKS//static-framework /-framework }
 
     # Frameworks may not exist in older sdks so conditionally include
-    for MAJORVERSION in 3 4 5 6 7 8 9; do
+    for MAJORVERSION in 3 4 5 6 7 8 9 10; do
         for MINORVERSION in 0 1 2 3 4; do
             if [[ $SDK_MAJORVERSION -lt $MAJORVERSION || ($SDK_MAJORVERSION == $MAJORVERSION && $SDK_MINORVERSION -lt $MINORVERSION) ]]; then
                 DEPS="$(sed "/framework-$MAJORVERSION\.$MINORVERSION /d" <<< "$DEPS")"
@@ -131,13 +128,13 @@ else
 	# Link architecture-specifically the libraries
 	for ARCH in $(echo $ARCHS | tr " " "\n")
 	do
-		LCEXT_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext_${ARCH}"
+      LCEXT_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext_${ARCH}"
 		DYLIB_FILE="$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib_${ARCH}"
 
 		if [ $ARCH = "arm64" -o $ARCH = "x86_64" ]; then
 			MIN_VERSION="7.0.0"
 		else
-			MIN_VERSION="5.1.1"
+			MIN_VERSION="6.0.0"
 		fi
 
 		# Build the 'dylib' form of the external - this is used by simulator builds, and as
@@ -173,8 +170,7 @@ fi
 # through XCode; the lcext file is for standalone (device) builds from the IDE.
 mkdir -p "$SRCROOT/binaries"
 
-SUFFIX=${SDK_NAME: -3}
-SUFFIX="-${SUFFIX//\./_}"
+SUFFIX="-${SDK_MAJORVERSION}_${SDK_MINORVERSION}"
 if [ "$SDK_PLATFORM" == "iphonesimulator" ]; then
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries/$PRODUCT_NAME-Simulator$SUFFIX.dylib"
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries"
