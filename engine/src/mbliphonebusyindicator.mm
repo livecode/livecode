@@ -115,7 +115,7 @@ static com_runrev_livecode_MCBusyIndicator *s_busy_indicator = nil;
     // Create the text
     m_label = [[UILabel alloc] initWithFrame:CGRectMake (10, t_busy_size.height - 85, t_busy_size.width - 20, 70)];
     m_label.textColor = [UIColor whiteColor];
-    m_label.textAlignment = UITextAlignmentCenter;
+    m_label.textAlignment = NSTextAlignmentCenter;
     
     // PM-2015-03-16: [[ Bug 14946 ]] Allow up to 3 lines for the text
     m_label.numberOfLines = 3;

@@ -1004,7 +1004,10 @@ IO_stat MCDispatch::dosavescriptonlystack(MCStack *sptr, const MCStringRef p_fna
 	{
 		MCAutoStringRef t_script_body;
 
-		// Write out the standard script stack header, and then the script itself
+        // Ensure script isn't encrypted if a password was removed in session
+        sptr -> unsecurescript(sptr);
+        
+        // Write out the standard script stack header, and then the script itself
 		MCStringFormat(&t_script_body, "script \"%@\"\n%@", sptr -> getname(), sptr->_getscript());
 
 		// Convert line endings - but only if the native line ending isn't CR!

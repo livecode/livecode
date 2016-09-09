@@ -2679,12 +2679,13 @@ void MCCard::clean()
 	do
 	{
 		check = False;
-		MCControl *control = tptr->getref();
+		MCObjectHandle control = tptr->Get();
 		MCObjptr *ntptr = tptr->next();
-		if (control == NULL)
+        
+        // If the control has been deleted, remove it from the object list
+		if (!control.IsValid())
 		{
-			tptr->remove
-			(objptrs);
+			tptr->remove(objptrs);
 			delete tptr;
 			if (objptrs == NULL)
 				break;

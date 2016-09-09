@@ -48,7 +48,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 
 #include <jni.h>
-#include <pthread.h>
+#include "mcmanagedpthread.h"
 #include <android/log.h>
 #include <android/bitmap.h>
 #include <GLES/gl.h>
@@ -78,10 +78,10 @@ typedef void (*co_yield_callback_t)(void *);
 // fact we don't have direct access to the run-loop. The Android UI runs on one
 // thread, while the engine runs on its own.
 
-static pthread_t s_android_ui_thread;
-static pthread_t s_android_engine_thread;
+static MCManagedPThread s_android_ui_thread;
+static MCManagedPThread s_android_engine_thread;
 
-static pthread_t s_coroutine_thread;
+static MCManagedPThread *s_coroutine_thread;
 static pthread_mutex_t s_coroutine_mutex;
 static pthread_cond_t s_coroutine_condition;
 
@@ -1373,16 +1373,16 @@ static void *mobile_main(void *arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void co_yield(pthread_t p_yieldee)
+static void co_yield(MCManagedPThread & p_yieldee)
 {
 	pthread_mutex_lock(&s_coroutine_mutex);
-	s_coroutine_thread = p_yieldee;
+	s_coroutine_thread = &p_yieldee;
 	pthread_mutex_unlock(&s_coroutine_mutex);
 
 	pthread_cond_signal(&s_coroutine_condition);
 
 	pthread_mutex_lock(&s_coroutine_mutex);
-	while(s_coroutine_thread != pthread_self())
+	while (!s_coroutine_thread->IsCurrent())
 		pthread_cond_wait(&s_coroutine_condition, &s_coroutine_mutex);
 	pthread_mutex_unlock(&s_coroutine_mutex);
 }
@@ -1390,7 +1390,7 @@ static void co_yield(pthread_t p_yieldee)
 static void co_enter_engine(void)
 {
 	pthread_mutex_lock(&s_coroutine_mutex);
-	while(s_coroutine_thread != pthread_self())
+	while (!s_coroutine_thread->IsCurrent())
 		pthread_cond_wait(&s_coroutine_condition, &s_coroutine_mutex);
 	pthread_mutex_unlock(&s_coroutine_mutex);
 }
@@ -1398,7 +1398,7 @@ static void co_enter_engine(void)
 static void co_leave_engine(void)
 {
 	pthread_mutex_lock(&s_coroutine_mutex);
-	s_coroutine_thread = s_android_ui_thread;
+	s_coroutine_thread = &s_android_ui_thread;
 	pthread_mutex_unlock(&s_coroutine_mutex);
 
 	pthread_cond_signal(&s_coroutine_condition);
@@ -1980,16 +1980,19 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobj
 	s_engine_running = false;
 
 	// The android ui thread is this one
+	MCMemoryReinit(s_android_ui_thread);
 	s_android_ui_thread = pthread_self();
 
 	// Initialize our mutex, condition and initial coroutine
 	pthread_mutex_init(&s_coroutine_mutex, NULL);
 	pthread_cond_init(&s_coroutine_condition, NULL);
-	s_coroutine_thread = s_android_ui_thread;
+	s_coroutine_thread = &s_android_ui_thread;
 
 	// Now we must create the engine thread, it will immediately yield.
-	s_android_engine_thread = nil;
-	if (pthread_create(&s_android_engine_thread, nil, mobile_main, nil) != 0)
+	MCMemoryReinit(s_android_engine_thread);
+
+	s_android_engine_thread.Create(nil, mobile_main, nil);
+	if (!s_android_engine_thread)
 	{
 		s_engine_running = false;
 		return;
@@ -2072,8 +2075,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 
 	void *t_result;
 	MCLog("Engine has finalized", 0);
-	pthread_join(s_android_engine_thread, &t_result);
-	s_android_engine_thread = nil;
+	s_android_engine_thread.Join(&t_result);
 
 	pthread_cond_destroy(&s_coroutine_condition);
 	pthread_mutex_destroy(&s_coroutine_mutex);
@@ -2851,9 +2853,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doNativeNotify(JNIEnv *env
 
 bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_options)
 {
-	pthread_t t_current_thread;
-	t_current_thread = pthread_self();
-	
 	// If this is a jump, then handle things differently.
 	if ((p_options & (kMCExternalRunOnMainThreadJumpToUI | kMCExternalRunOnMainThreadJumpToEngine)) != 0)
 	{
@@ -2862,14 +2861,14 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		
 		if ((p_options & kMCExternalRunOnMainThreadJumpToUI) != 0)
 		{
-			if (t_current_thread == s_android_ui_thread)
+			if (s_android_ui_thread.IsCurrent())
 				((co_yield_callback_t)p_callback)(p_callback_state);
 			else
 				co_yield_to_android_and_call((co_yield_callback_t)p_callback, p_callback_state);
 		}
 		else
 		{
-			if (t_current_thread == s_android_engine_thread)
+			if (s_android_engine_thread.IsCurrent())
 				((co_yield_callback_t)p_callback)(p_callback_state);
 			else
 				co_yield_to_engine_and_call((co_yield_callback_t)p_callback, p_callback_state);
@@ -2880,7 +2879,8 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 	
 	// If the current thread is not the engine thread, then we must poke
 	// the main thread (i.e. we are on a non-main thread).
-	if (t_current_thread != s_android_engine_thread && t_current_thread != s_android_ui_thread)
+	if (!s_android_engine_thread.IsCurrent() &&
+	    !s_android_ui_thread.IsCurrent())
 	{
 		if ((p_options & kMCExternalRunOnMainThreadPost) == 0)
 		{

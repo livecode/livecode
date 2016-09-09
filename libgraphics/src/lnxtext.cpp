@@ -81,13 +81,14 @@ static bool lnx_pango_initialize(void)
 	bool t_success;
 	t_success = true;
 	
-	// MW-2013-12-19: [[ Bug 11559 ]] Use '=' not '=='!
+	// Note: these libraries should be listed in dependency order
 	if (t_success)
 		t_success =
-			initialise_weak_link_pango() != 0 &&
-			initialise_weak_link_pangoft2() != 0 &&
+			initialise_weak_link_glib() != 0 &&
 			initialise_weak_link_gobject() != 0 &&
-			initialise_weak_link_glib() != 0;
+			initialise_weak_link_pango() != 0 &&
+			initialise_weak_link_pangoft2() != 0;
+			
     
     if (t_success)
         t_success = lnx_pango_objects_intialize();

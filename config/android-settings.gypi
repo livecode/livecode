@@ -33,6 +33,7 @@
 					'-Wall',
 					'-Wextra',
 					'-Wno-unused-parameter',	# Just contributes build noise
+					'-Werror=conversion-null',
 				],
 				
 				'cflags_c':

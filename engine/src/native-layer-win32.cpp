@@ -308,9 +308,9 @@ MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view
 extern HINSTANCE MChInst;
 bool getcontainerclass(ATOM &r_class)
 {
-	static ATOM s_container_class = nil;
+	static ATOM s_container_class = 0;
 
-	if (s_container_class == nil)
+	if (s_container_class == 0)
 	{
 		WNDCLASSEX t_class;
 		MCMemoryClear(t_class);
@@ -325,7 +325,7 @@ bool getcontainerclass(ATOM &r_class)
 		DWORD t_err;
 		t_err = GetLastError();
 
-		if (s_container_class == nil)
+		if (s_container_class == 0)
 			return false;
 	}
 

@@ -777,7 +777,7 @@ static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_p
 {
     kern_return_t	kernResult;
     CFMutableDictionaryRef classesToMatch;
-    if ((kernResult = IOMasterPort(NULL, masterPort)) != KERN_SUCCESS)
+    if ((kernResult = IOMasterPort(0, masterPort)) != KERN_SUCCESS)
         return kernResult;
     if ((classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue)) == NULL)
         return kernResult;
@@ -3722,8 +3722,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     virtual Boolean GetDevices(MCStringRef& r_devices)
     {
         MCAutoListRef t_list;
-        io_iterator_t SerialPortIterator = NULL;
-        mach_port_t masterPort = NULL;
+        io_iterator_t SerialPortIterator = 0;
+        mach_port_t masterPort = 0;
         io_object_t thePort;
         if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
         {

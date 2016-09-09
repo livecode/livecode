@@ -232,7 +232,7 @@ static bool MCNotifyIsMainThread(void)
 #if defined(USE_WINTHREADS)
 	return GetCurrentThreadId() == s_main_thread_id;
 #elif defined(USE_PTHREADS)
-	return pthread_self() == s_main_thread;
+	return pthread_equal(pthread_self(), s_main_thread);
 #else
 #error Threading API not specified
 #endif
