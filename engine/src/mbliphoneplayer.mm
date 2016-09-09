@@ -554,7 +554,7 @@ void MCiOSPlayerControl::GetPlayRate(MCExecContext& ctxt, double& r_rate)
 void MCiOSPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
     if (m_controller != nil)
-        r_duration = [m_controller duration];
+        r_duration = [m_controller duration] * 1000;
     else
         r_duration = 0;
 }
@@ -562,7 +562,7 @@ void MCiOSPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
 void MCiOSPlayerControl::GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
     if (m_controller != nil)
-        r_duration = [m_controller playableDuration];
+        r_duration = [m_controller playableDuration] * 1000;
     else
         r_duration = 0;
 }
