@@ -178,7 +178,43 @@ bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool
     t_cstring . Lock(p_string);
     
     const char *sptr = *t_cstring;
-	uindex_t l = strlen(sptr);
+    uindex_t l = strlen(sptr);
+    bool done;
+    integer_t i = MCU_strtol(sptr, l, '\0', done, false, p_convert_octals);
+    if (done)
+    {
+        r_converted = i;
+        return l == 0;
+    }
+    sptr = *t_cstring;
+    l = MCMin(R8L - 1U, strlen(sptr));
+    MCU_skip_spaces(sptr, l);
+    // bugs in MSL means we need to check these things
+    // MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
+    //   of these tests.
+    if (l == 0 || (l > 1 && (((MCNativeCharFold((uint8_t)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint8_t)sptr[2])))
+                              || (sptr[1] == '+' || sptr[1] == '-')))))
+        return false;
+    char buff[R8L];
+    memcpy(buff, sptr, l);
+    buff[l] = '\0';
+    const char *newptr;
+    r_converted = strtod((char *)buff, (char **)&newptr);
+    if (newptr == buff)
+        return false;
+    l = buff + l - newptr;
+    MCU_skip_spaces(newptr, l);
+    if (l != 0)
+        return false;
+    return true;
+}
+
+
+MC_DLLEXPORT_DEF
+bool MCTypeConvertDataToReal(MCDataRef p_data, real64_t& r_converted, bool p_convert_octals)
+{
+    const char *sptr = (const char *)MCDataGetBytePtr(p_data);
+	uindex_t l = MCDataGetLength(p_data);
 	bool done;
 	integer_t i = MCU_strtol(sptr, l, '\0', done, false, p_convert_octals);
 	if (done)
@@ -186,8 +222,8 @@ bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool
 		r_converted = i;
 		return l == 0;
 	}
-	sptr = *t_cstring;
-	l = MCMin(R8L - 1U, strlen(sptr));
+	sptr = (const char *)MCDataGetBytePtr(p_data);;
+	l = MCMin(R8L - 1U, MCDataGetLength(p_data));
 	MCU_skip_spaces(sptr, l);
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most

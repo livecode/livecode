@@ -153,11 +153,12 @@ bool MCExecContext::ConvertToNumber(MCValueRef p_value, MCNumberRef& r_number)
         }
     case kMCValueTypeCodeData:
         {
-            MCAutoStringRef t_string;
-            if (MCStringDecode((MCDataRef)p_value, kMCStringEncodingNative, false, &t_string))
-                return ConvertToNumber((MCValueRef)*t_string, r_number);
-            else
+            double t_number;
+            t_number = 0.0;
+            if (!MCTypeConvertDataToReal((MCDataRef)p_value, t_number, m_convertoctals))
                 break;
+            
+            return MCNumberCreateWithReal(t_number, r_number);
         }
     default:
         break;
