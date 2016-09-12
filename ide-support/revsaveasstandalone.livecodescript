@@ -291,9 +291,19 @@ command revDoSaveAsStandalone pStack, pFolder
    revStandaloneProgress "Preparing to build standalone..."
    
    -- pre build message
-   try
-      dispatch "savingStandalone" to stack pStack
-   end try
+   local tHasDesktop
+   repeat for each item tTarget in revSBDesktopTargets()
+      if sStandaloneSettingsA[tTarget] then
+         put true into tHasDesktop
+         exit repeat
+      end if
+   end repeat
+   
+   if tHasDesktop then
+      try
+         dispatch "savingStandalone" to stack pStack
+      end try
+   end if
    
    try
       -- Create an appropriate output dir
@@ -366,9 +376,11 @@ command revDoSaveAsStandalone pStack, pFolder
       end repeat
       
       -- post build message
-      try
-         dispatch "standaloneSaved" to stack pStack with pFolder & slash
-      end try
+      if tHasDesktop then
+         try
+            dispatch "standaloneSaved" to stack pStack with pFolder & slash
+         end try
+      end if
       
    catch tError
       revAbort
