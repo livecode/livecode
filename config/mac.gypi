@@ -129,6 +129,7 @@
 							'-Werror=logical-not-parentheses',
 							'-Werror=conversion-null',
 							'-Werror=missing-declarations',
+							'-Werror=mismatched-new-delete',
 						],
 					},
 				},

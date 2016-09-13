@@ -335,7 +335,7 @@ char *MCS_resolvepath(const char *p_path)
   char *newname = new char[PATH_MAX + 2];
   if ((size = readlink(tildepath, newname, PATH_MAX)) < 0) {
     delete tildepath;
-    delete newname;
+    delete[] newname;
     return NULL;
   }
   delete tildepath;
@@ -349,9 +349,9 @@ char *MCS_resolvepath(const char *p_path)
     else
       sptr++;
     strcpy(sptr, newname);
-    delete newname;
+    delete[] newname;
     newname = MCS_resolvepath(fullpath);
-    delete fullpath;
+    delete[] fullpath;
   }
   return newname;
 

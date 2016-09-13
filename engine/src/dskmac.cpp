@@ -303,7 +303,7 @@ OSErr MCAppleEventHandlerDoSpecial(const AppleEvent *ae, AppleEvent *reply, long
 			err = errAEEventNotHandled;
 	// do nothing if the AE is not handled,
 	// let the standard AE dispacher to dispatch this AE
-	delete p3val;
+	delete[] p3val;
 	return err;
 }
 
@@ -2385,7 +2385,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             return;
         }
         if (p_reply == True)
@@ -2595,7 +2595,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             
             r_value = MCValueRetain(kMCEmptyString);
             return false;
@@ -3730,7 +3730,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             char *buffer = new char[6 + I2L];
             sprintf(buffer, "error %d", errno);
             MCresult->copysvalue(buffer);
-            delete buffer;
+            delete[] buffer;
             return false;
         }
         if (!MCListCreateMutable('\n', &t_list))
