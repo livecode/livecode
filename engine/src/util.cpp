@@ -2939,7 +2939,7 @@ void* MCU_loadmodule_stringref(MCStringRef p_module)
         if (!MCStringCopy(*t_path, &t_filename))
             return nil;
     }
-    else
+    else if (MCcmd)
     {
         uindex_t t_last_slash_index;
         if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
@@ -2951,7 +2951,8 @@ void* MCU_loadmodule_stringref(MCStringRef p_module)
             return nil;
     }
 
-    t_handle = MCS_loadmodule(*t_filename);
+	if (*t_filename != nil)
+    	t_handle = MCS_loadmodule(*t_filename);
     
     return t_handle;
 }

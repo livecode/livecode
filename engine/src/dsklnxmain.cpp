@@ -42,6 +42,8 @@ int X_close();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" void initialise_required_weak_link_glib();
+
 void X_main_loop(void)
 {
 	while(!MCquit)
@@ -58,11 +60,40 @@ int platform_main(int argc, char *argv[], char *envp[])
 	// format. To do this, the system locale needs to be retrieved.
 	setlocale(LC_ALL, "");
 	MCsysencoding = strclone(nl_langinfo(CODESET));
-	
-	if (!MCInitialize() || !MCSInitialize() ||
-	    !MCModulesInitialize() || !MCScriptInitialize())
+		
+	if (!MCInitialize())
+	{
+		fprintf(stderr, "Fatal: initialization failed\n");
 		exit(-1);
-    
+	}
+	
+	if (!MCSInitialize())
+	{
+		fprintf(stderr, "Fatal: platform initialization failed\n");
+		exit(-1);
+	}
+	
+	if (!MCModulesInitialize())
+	{
+		fprintf(stderr, "Fatal: built-in module initialization failed\n");
+		exit(-1);
+	}
+	
+	if (!MCScriptInitialize())
+	{
+		fprintf(stderr, "Fatal: script initialization failed\n");
+		exit(-1);
+	}
+	
+	// Linux needs the platform layer to be initialised early so that it can
+	// use it to load the weakly-linked dynamic libraries that the engine
+	// depends on.
+	MCS_preinit();
+		
+	// Core initialisation complete; 
+	// This depends on libFoundation and MCsystem being initialised first
+	initialise_required_weak_link_glib();
+	
 	// Convert the argv array to StringRefs
 	MCStringRef* t_argv;
 	/* UNCHECKED */ MCMemoryNewArray(argc, t_argv);
@@ -91,6 +122,8 @@ int platform_main(int argc, char *argv[], char *envp[])
 	
 	if (!X_init(argc, t_argv, t_envp))
     {
+		// Try to print an informative error message or, failing that, just
+		// report that an error occurred.
 		if (MCresult != nil)
         {
             MCExecContext ctxt(nil, nil, nil);
@@ -102,6 +135,11 @@ int platform_main(int argc, char *argv[], char *envp[])
             /* UNCHECKED */ t_autostring . Lock(*t_string);
             fprintf(stderr, "Startup error - %s\n", *t_autostring);
 		}
+		else
+		{
+			fprintf(stderr, "Fatal: unknown startup error\n");
+		}
+		
 		exit(-1);
 	}
 	
