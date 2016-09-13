@@ -137,8 +137,60 @@ class SDKInstaller(object):
         for version in versions:
             self._install_sdk(xcode_app, platform, version)
 
+class CachingSDKInstaller(SDKInstaller):
+    def __init__(self, base_dir, cache_dir):
+        super(CachingSDKInstaller, self).__init__(base_dir)
+        self._cache_dir = cache_dir
+
+    def _cached_sdk_path(self, platform, version):
+        tmpl = "{0}/{1}/{1}{2}.sdk"
+        return os.path.abspath(tmpl.format(self._cache_dir, platform, version))
+
+    def _check_cached_sdk_path(self, platform, version):
+        path = self._cached_sdk_path(platform, version)
+        if os.path.exists(path) and os.path.isdir(path):
+            return path
+        else:
+            return None
+
+    def _cache_sdk(self, platform, version):
+        # Check cache
+        cache = self._check_cached_sdk_path(platform, version)
+        if cache is not None:
+            return
+
+        # Search app bundles
+        original = super(CachingSDKInstaller, self)._find_sdk(platform, version)
+        if original is None:
+            return
+
+        # Copy the original into cache
+        # N.b. use `cp -a` in order to make sure all resource forks etc. are
+        # preserved
+        self._diagnostic("Caching {} {} SDK".format(platform, version))
+
+        cache = self._cached_sdk_path(platform, version)
+
+        platform_dir = os.path.dirname(cache)
+        if not os.path.isdir(platform_dir):
+            os.makedirs(platform_dir)
+
+        cmd = ["/bin/cp", "-a", original, cache]
+        subprocess.check_call(cmd)
+
+    def _find_sdk(self, platform, version):
+        # Any available SDKs should have already been cached
+        return self._check_cached_sdk_path(platform, version)
+
+    def _install_sdk(self, xcode_app, platform, version):
+        self._cache_sdk(platform, version)
+        super(CachingSDKInstaller, self)._install_sdk(xcode_app, platform, version)
+
 if __name__ == "__main__":
-    installer = SDKInstaller(".")
+    if "--cache" in sys.argv:
+        installer = CachingSDKInstaller(".", "./XcodeSDKs")
+    else:
+        installer = SDKInstaller(".")
     installer.install("iPhoneOS", iphoneos_versions)
     installer.install("iPhoneSimulator", iphonesimulator_versions)
     installer.install("MacOSX", macosx_versions)
