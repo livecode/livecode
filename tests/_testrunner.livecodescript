@@ -19,6 +19,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 -- FIXME provide this on the command line
 constant kLogFilename = "_test_suite.log"
 
+local sFilePathA
+
+
 on startup
    send "TestRunnerMain" to me in 0
 end startup
@@ -29,32 +32,37 @@ end startup
 
 private function getCommandLineInfo
    local tRawArg, tSelfCommand, tSelfScript, tInArgs, tArgs
-
-   put false into tInArgs
-
-   -- Treat everything up to & including the first
-   -- ".livecodescript" file as the command for running the test
-   -- runner, and everything after it as test runner arguments
-   put the commandName into tSelfCommand[1]
-   repeat for each element tRawArg in the commandArguments
-
-      if tInArgs then
-         put tRawArg into tArgs[1 + the number of elements in tArgs]
-      else
-         put tRawArg into tSelfCommand[1 + the number of elements in tSelfCommand]
-         if tRawArg ends with ".livecodescript" then
-            put tRawArg into tSelfScript
-            put true into tInArgs
-         end if
-      end if
-
-   end repeat
-
+   
    local tInfo
-   put tSelfCommand into tInfo["self-command"]
-   put tSelfScript into tInfo["self-script"]
-   put tArgs into tInfo["args"]
-
+   if the environment is "command line" then
+      put false into tInArgs
+      
+      -- Treat everything up to & including the first
+      -- ".livecodescript" file as the command for running the test
+      -- runner, and everything after it as test runner arguments
+      put the commandName into tSelfCommand[1]
+      repeat for each element tRawArg in the commandArguments
+         
+         if tInArgs then
+            put tRawArg into tArgs[1 + the number of elements in tArgs]
+         else
+            put tRawArg into tSelfCommand[1 + the number of elements in tSelfCommand]
+            if tRawArg ends with ".livecodescript" then
+               put tRawArg into tSelfScript
+               put true into tInArgs
+            end if
+         end if
+         
+      end repeat
+      
+      put tSelfCommand into tInfo["self-command"]
+      put tSelfScript into tInfo["self-script"]
+      put tArgs into tInfo["args"]
+      
+   else
+      put the filename of me into tInfo["self-script"]
+   end if
+   
    return tInfo
 end getCommandLineInfo
 
@@ -196,18 +204,18 @@ end invokeGetStackFolder
 
 -- Add the test runner library stack to the backscripts
 private command runLoadLibrary pInfo
-	-- Compute the filename of the library stack
-	local tFilename
-	put pInfo["self-script"] into tFilename
-
-	set the itemDelimiter to slash
-	put "_testerlib.livecodescript" into item -1 of tFilename
-
-	-- Load the library
-	local tStackname
-	put the name of stack tFilename into tStackname
-
-	send "revLoadLibrary" to stack tStackname
+   -- Compute the filename of the library stack
+   local tFilename
+   put pInfo["self-script"] into tFilename
+   
+   set the itemDelimiter to slash
+   put "_testerlib.livecodescript" into item -1 of tFilename
+   
+   -- Load the library
+   local tStackname
+   put the name of stack tFilename into tStackname
+   
+   send "revLoadLibrary" to stack tStackname
 end runLoadLibrary
 
 -- Run all the test scripts that can be found below the current
@@ -383,3 +391,262 @@ private command logSummaryLine pTapResults, pTestName
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
    write tMessage & return to stdout
 end logSummaryLine
+
+----------------------------------------------------------------
+-- GUI
+----------------------------------------------------------------
+
+on preOpenStack
+   if the environment is "command line" then
+      exit preOpenStack
+   end if
+   
+   local tInfo
+   put the filename of me into tInfo["self-script"]
+   invokeLoadLibrary tInfo
+   runLoadLibrary tInfo
+   
+   TestOutputToVariable
+   
+   repeat with x=the number of controls of me down to 1
+      delete control x of me
+   end repeat
+   
+   set the width of me to 640
+   set the height of me to 480
+   set the location of me to the screenLoc
+   set the visible of me to true
+   set the defaultStack to the short name of me
+   
+   create button "Run All Tests"
+   set the rect of button "Run All Tests" to 9,9,131,32
+   
+   create button "Edit Script"
+   set the rect of button "Edit Script" to 139,9,239,32
+   set the enabled of btn "Edit Script" to false
+   
+   create button "New Test"
+   set the rect of button "New Test" to 247,9,347,32
+   
+   create widget "tests" as "com.livecode.widget.treeView"
+   set the rect of widget "tests" to 0,39,640,480
+   set the sortType of widget "tests" to "text"
+   set the readOnly of widget "tests" to true
+   
+   local tPath
+   put the filename of me into tPath
+   set the itemDelimiter to slash
+   put "lcs" into the last item of tPath
+   
+   local tTestArray
+   ParseTestFiles tTestArray, tPath, "Community"
+   put "tests/lcs" into item -3 to -1 of tPath
+   if there is a directory tPath then
+      ParseTestFiles tTestArray, tPath, "Commercial"
+   end if
+   
+   set the arrayData of widget "tests" to tTestArray
+end preOpenStack
+
+command ParseTestFiles @xTestArray, pPath, pRootNode
+   local tTestArray, tDirectory, tOldDirectory, tFiles
+   set the itemDelimiter to slash
+   repeat for each element tFile in TesterGetTestFileNames(pPath)
+      local tName
+      put item -1 of tFile into tName
+      put TesterGetPrettyTestName(tName) into tName
+      
+      local tArrayPath
+      put tFile into tArrayPath
+      --delete char 1 to the length of pPath + 1 of tArrayPath 
+      split tArrayPath with slash
+      
+      put tName into tArrayPath[the number of elements of tArrayPath]
+      put pPath & slash & tFile into sFilePathA[pRootNode][tArrayPath]
+      
+      repeat for each element tCommand in TesterParseTestCommandNames(sFilePathA[pRootNode][tArrayPath])
+         delete char 1 to 4 of tCommand
+         put empty into xTestArray[pRootNode][tArrayPath][tCommand]
+      end repeat
+   end repeat
+end ParseTestFiles
+
+command hiliteChanged
+   local tArrayPath
+   put the hilitedElement of widget "tests" into tArrayPath
+   split tArrayPath by comma
+   set the enabled of btn "Edit Script" to there is a file sFilePathA[tArrayPath]
+end hiliteChanged
+
+command actionDoubleClick pArrayPath
+   split pArrayPath by comma
+   invokeTestsInIDE pArrayPath
+end actionDoubleClick
+
+on mouseUp pButton
+   if pButton is 1 then
+      local tArrayPath
+      switch the short name of the target
+         case "Run All Tests"
+            invokeTestsInIDE
+            break
+         case "Edit Script"
+            put the hilitedElement of widget "tests" into tArrayPath
+            split tArrayPath by comma
+            if there is a stack sFilePathA[tArrayPath] then
+               edit the script of stack sFilePathA[tArrayPath]
+            end if
+            break
+         case "New Test"
+            local tStackName
+            put the hilitedElement of widget "tests" into tArrayPath
+            split tArrayPath by comma
+            
+            local tTempPath
+            put tArrayPath[1] into tTempPath[1]
+            
+            local tIndex
+            repeat with tIndex = 2 to the number of elements of tArrayPath
+               put tArrayPath[tIndex] into tTempPath[tIndex]
+               if sFilePathA[tTempPath] is not an array then
+                  exit repeat
+               end if
+               put toUpper(char 1 of tArrayPath[tIndex]) & char 2 to -1 of tArrayPath[tIndex] after tStackName
+            end repeat
+            
+            if tArrayPath[1] is "Commercial" then
+               put "Commercial" before tStackName
+            end if
+            
+            local tStack
+            repeat until tStack is not empty
+               ask question "What is the name of your new test?" with tStackName as sheet
+               if the result is "cancel" or it is empty then
+                  exit mouseUp
+               end if
+               
+               if there is a stack it then
+                  answer error "There is already a stack with that name" as sheet
+               else
+                  put it into tStack
+               end if
+            end repeat
+            
+            create script only stack tStack
+            
+            local tScript
+            local tDate
+            put the seconds into tDate
+            convert tDate to dateItems
+            put "/*" & return & \
+                  "Copyright (C) "& item 1 of tDate &" LiveCode Ltd." & return & \
+                  return & \
+                  "This file is part of LiveCode."  & return & \
+                  return & \
+                  "LiveCode is free software; you can redistribute it and/or modify it under"  & return & \
+                  "the terms of the GNU General Public License v3 as published by the Free"  & return & \
+                  "Software Foundation."  & return & \
+                  return & \
+                  "LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY"  & return & \
+                  "WARRANTY; without even the implied warranty of MERCHANTABILITY or"  & return & \
+                  "FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License"  & return & \
+                  "for more details."  & return & \
+                  return & \
+                  "You should have received a copy of the GNU General Public License"  & return & \
+                  "along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */"  & return & \
+                  return & \
+                  return & \
+                  "on TestSetup" &  return & \
+                  "    -- pre test setup" &  return & \
+                  "end TestSetup" &  return & \
+                  return & \
+                  return & \
+                  "on Test"&tStack &  return & \
+                  "    TestAssert " & quote & "successful test" & quote & ", true" &  return & \
+                  "end Test"&tStack &  return & \
+                  return & \
+                  return & \
+                  "on TestTeardown" &  return & \
+                  "    -- pre test cleanup" &  return & \
+                  "end TestTeardown" &  return into tScript
+            
+            set the script of stack tStack to tScript
+            edit the script of stack tStack
+            break
+      end switch
+   end if
+   pass mouseUp
+end mouseUp
+
+private command invokeTestsInIDE pArrayPath
+   local tTestArray, tInfo, tScriptPath
+   put empty 
+   put the filename of me into tInfo["self-script"]
+   
+   if pArrayPath is not empty then
+      if there is a file sFilePathA[pArrayPath] then
+         put sFilePathA[pArrayPath] into tInfo["invoke"]["script"]
+      else
+         put pArrayPath into tScriptPath
+         delete variable tScriptPath[the number of elements of tScriptPath]
+         if there is a file sFilePathA[tScriptPath] then
+            put sFilePathA[tScriptPath] into tInfo["invoke"]["script"]
+            put "Test" & pArrayPath[the number of elements of pArrayPath] into tInfo["invoke"]["command"]
+         end if
+      end if
+      
+      if tInfo["invoke"]["script"] is not empty then
+         if tInfo["invoke"]["command"] is not empty then
+            invokeTest tInfo
+            local tLogForWriting
+            put TestFetchAndClearOutput() into tLogForWriting
+            filter tLogForWriting without "ok *"
+            if tLogForWriting is empty then
+               put "all OK" into tLogForWriting
+            end if
+            put textEncode(tLogForWriting,"utf8") into tLogForWriting
+            replace numToChar(13) with numToChar(10) in tLogForWriting
+            put tLogForWriting into url ("binfile:~/" & kLogFilename)
+         else
+            invokeTestScriptIDE tInfo, pArrayPath
+            return empty
+         end if
+      end if
+   else
+      invokeTestScriptsRecursiveIDE tInfo, pArrayPath   
+   end if
+end invokeTestsInIDE
+
+private command invokeTestScriptsRecursiveIDE tInfo, pArrayPath
+   local tKeys
+   if pArrayPath is empty then
+      put the keys of sFilePathA into tKeys
+   else
+      put the keys of sFilePathA[pArrayPath] into tKeys
+   end if
+   
+   local tNewNode
+   put the number of elements of pArrayPath+1 into tNewNode
+   repeat for each key tKey in tKeys
+      put tKey into pArrayPath[tNewNode]
+      if sFilePathA[pArrayPath] is an array then
+         put empty into tInfo["invoke"]["script"]
+         invokeTestScriptsRecursiveIDE tInfo, pArrayPath
+      else if there is a file sFilePathA[pArrayPath] then
+         put sFilePathA[pArrayPath] into tInfo["invoke"]["script"]
+         invokeTestScriptIDE tInfo, pArrayPath
+      end if
+   end repeat
+end invokeTestScriptsRecursiveIDE
+
+private command invokeTestScriptIDE pInfo, pArrayPath
+   local tTestArray
+   put the arrayData of widget "tests" into tTestArray
+   
+   repeat for each key tCommand in tTestArray[pArrayPath]
+      local tInfo
+      put "Test" & tCommand into tInfo["invoke"]["command"]
+      invokeTest tInfo
+   end repeat
+   put TestFetchAndClearOutput() & return after msg
+end invokeTestScriptIDE
