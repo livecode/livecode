@@ -300,7 +300,10 @@ private function logHighlight pString
   end if
 end logHighlight
 
+<<<<<<< 5d9e983b38e989d8bb4fa6390ebaf4ca65c91505
 <<<<<<< 96a1876b0c4aaee0f03e3abc8205ea0bd5c2ed3c
+=======
+>>>>>>> tests: Add TesterLog handler
 command TesterLog pStatus, pDescription
    local tMessage
    put logHighLight(the toUpper of pStatus) into tMessage
@@ -312,8 +315,11 @@ command TesterLog pStatus, pDescription
    write tMessage && pDescription & return to stdout
 end TesterLog
 
+<<<<<<< 5d9e983b38e989d8bb4fa6390ebaf4ca65c91505
 =======
 >>>>>>> tests: Move colour-logging code into tester common library.
+=======
+>>>>>>> tests: Add TesterLog handler
 command TesterLogSummaryLine pTapResults, pTestName
    local tTotal, tPassed, tWorst, tMessage
 
@@ -321,6 +327,7 @@ command TesterLogSummaryLine pTapResults, pTestName
    put TesterTapGetTestCount(pTapResults) into tTotal
 
    put TesterTapGetWorstResult(pTapResults) into tWorst
+<<<<<<< 5d9e983b38e989d8bb4fa6390ebaf4ca65c91505
 <<<<<<< 96a1876b0c4aaee0f03e3abc8205ea0bd5c2ed3c
    put pTestName into tMessage
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
@@ -337,4 +344,9 @@ command TesterLogSummaryLine pTapResults, pTestName
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
    write tMessage & return to stdout
 >>>>>>> tests: Move colour-logging code into tester common library.
+=======
+   put pTestName into tMessage
+   put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
+   TesterLog tWorst, tMessage
+>>>>>>> tests: Add TesterLog handler
 end TesterLogSummaryLine
