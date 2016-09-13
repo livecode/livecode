@@ -302,7 +302,7 @@ typedef enum MCInvokeStatus
 	
 	// An execution error occured while running the script
 	kMCInvokeStatusExecutionError = 2
-};
+} MCInvokeStatus;
 	
 // MCThreadCallback is the signature of the function to be invoked when a run on main thread
 // callback is requested.

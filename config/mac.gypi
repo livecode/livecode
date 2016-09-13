@@ -128,6 +128,7 @@
 							'-Werror=tautological-compare',
 							'-Werror=logical-not-parentheses',
 							'-Werror=conversion-null',
+							'-Werror=missing-declarations',
 						],
 					},
 				},
