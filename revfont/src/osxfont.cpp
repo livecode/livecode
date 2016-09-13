@@ -51,7 +51,7 @@ FontLoadStatus FontLoad(const char *p_filename)
 			t_status = kFontLoadStatusNotFound;
 	}
 
-    ATSFontContainerRef t_container = nil;
+    ATSFontContainerRef t_container = kATSFontContainerRefUnspecified;
 	if (t_status == kFontLoadStatusSuccess)
 	{
 		OSStatus t_os_status;
@@ -71,8 +71,7 @@ bool FontUnload(const char *p_filename)
 	bool t_success;
 	t_success = true;
 
-	ATSFontContainerRef t_container;
-	t_container = NULL;
+	ATSFontContainerRef t_container = kATSFontContainerRefUnspecified;
 	if (t_success)
 	{
 		t_container = s_font_map[p_filename];

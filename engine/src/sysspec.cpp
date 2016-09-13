@@ -260,7 +260,7 @@ void MCS_common_init(void)
 	MCStackSecurityInit();
 }
 
-void MCS_init(void)
+void MCS_preinit()
 {
 #if defined(_WINDOWS_SERVER)
 	MCsystem = MCDesktopCreateWindowsSystem();
@@ -283,7 +283,14 @@ void MCS_init(void)
 #else
 #error Unknown server platform.
 #endif
+}
 
+void MCS_init()
+{
+    // Do the pre-init if not already complete
+    if (MCsystem == nil)
+        MCS_preinit();
+    
 #ifdef _SERVER
 #ifndef _WINDOWS_SERVER
 	signal(SIGUSR1, handle_signal);

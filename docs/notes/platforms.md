@@ -17,16 +17,23 @@ LiveCode supports the following versions of Windows:
 
 ## Linux
 
-LiveCode supports Linux installations which meet the following requirements:
+LiveCode supports the following Linux distributions, on 32-bit or
+64-bit Intel/AMD or compatible processors:
 
-* Supported CPU architectures:
-  * 32-bit or 64-bit Intel/AMD or compatible processor
+* Ubuntu 14.04 and 16.04
+* Fedora 23 & 24
+* Debian 7 (Wheezy) and 8 (Jessie) [server]
+* CentOS 7 [server]
+
+LiveCode may also run on Linux installations which meet the following
+requirements:
 
 * Required dependencies for core functionality:
   * glibc 2.13 or later
+  * glib 2.0 or later
 
 * Optional requirements for GUI functionality:
-  * GTK/GDK/Glib 2.24 or later
+  * GTK/GDK 2.24 or later
   * Pango with Xft support
   * esd (optional, needed for audio output)
   * mplayer (optional, needed for media player functionality)
@@ -71,10 +78,21 @@ We currently support the following iOS Simulators:
 
 ## Android
 
+
 LiveCode allows you to save your stack as an Android application, and
 also to deploy it on an Android device or simulator from the IDE.
 
 Android deployment is possible from Windows, Linux and Mac OSX.
+
+The Android engine supports devices using ARMv6, ARMv7 or ARMv8
+processors.  It will run on the following versions of Android:
+
+* 2.3.3-2.3.7 (Gingerbread)
+* 4.0 (Ice Cream Sandwich)
+* 4.1-4.3 (Jelly Bean)
+* 4.4 (KitKat)
+* 5.0-5.1 (Lollipop)
+* 6.0 (Marshmallow)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
@@ -92,7 +110,7 @@ section of the LiveCode IDE's preferences, you can deploy your stack
 to Android devices.
 
 Some users have reported successful Android Watch deployment, but it
-is not yet officially supported.
+is not officially supported.
 
 ## HTML5
 
