@@ -300,6 +300,17 @@ private function logHighlight pString
   end if
 end logHighlight
 
+command TesterLog pStatus, pDescription
+   local tMessage
+   put logHighLight(the toUpper of pStatus) into tMessage
+   put ":" after tMessage
+   if the number of chars in pStatus < 5 then
+      put space after tMessage
+   end if
+   
+   write tMessage && pDescription & return to stdout
+end TesterLog
+
 command TesterLogSummaryLine pTapResults, pTestName
    local tTotal, tPassed, tWorst, tMessage
 
@@ -307,14 +318,7 @@ command TesterLogSummaryLine pTapResults, pTestName
    put TesterTapGetTestCount(pTapResults) into tTotal
 
    put TesterTapGetWorstResult(pTapResults) into tWorst
-   put logHighLight(the toUpper of tWorst) into tMessage
-   put ":" after tMessage
-   if the number of chars in tWorst < 5 then
-      put space after tMessage
-   end if
-
-   put space & pTestName after tMessage
-
+   put pTestName into tMessage
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
-   write tMessage & return to stdout
+   TesterLog tWorst, tMessage
 end TesterLogSummaryLine
