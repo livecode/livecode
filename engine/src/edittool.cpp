@@ -113,7 +113,7 @@ bool MCGradientEditTool::mdown(int2 x, int2 y, uint2 which)
 
 bool MCGradientEditTool::mfocus(int2 x, int2 y)
 {
-	if (m_gradient_edit_point == MAXUINT4)
+	if (m_gradient_edit_point == kInvalidEditPoint)
 	{
 		if (gradient != NULL)
 		{
