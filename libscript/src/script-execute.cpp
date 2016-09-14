@@ -719,18 +719,26 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
 		const MCForeignTypeDescriptor *t_from_desc =
 				MCForeignTypeInfoGetDescriptor(t_resolved_from_type.type);
 		
-		// If the source is foreign, then it must be the bridge type
-		// of the slot, so we must import.
-		MCValueRef t_bridged_value;
-		if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
-								   false,
-								   t_bridged_value))
-		{
-			Rethrow();
-			return false;
-		}
-		
-		*(MCValueRef *)x_slot_ptr = t_bridged_value;
+        // If the type of the destination slot is not exactly the foreign type,
+        // import as the bridge type.
+        if (t_from_desc->bridgetype != kMCNullTypeInfo &&
+            t_resolved_from_type.type != p_slot_type.type)
+        {
+            MCValueRef t_bridged_value;
+            if (!t_from_desc->doimport(MCForeignValueGetContentsPtr(p_value),
+                                       false,
+                                       t_bridged_value))
+            {
+                Rethrow();
+                return false;
+            }
+            
+            *(MCValueRef *)x_slot_ptr = t_bridged_value;
+        }
+		else
+        {
+            *(MCValueRef *)x_slot_ptr = MCValueRetain(p_value);
+        }
 	}
 	else if (MCTypeInfoIsHandler(p_slot_type.type) &&
 			 MCHandlerTypeInfoIsForeign(p_slot_type.type))
