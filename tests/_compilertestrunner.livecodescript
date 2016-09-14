@@ -102,9 +102,9 @@ private command doRun pInfo
    if tScript is empty then
       runAllScripts pInfo
    else if tCommand is empty then
-      runTestScript pInfo, tScript
+      runCompilerTestScript pInfo, tScript
    else
-      runTestCommand pInfo, tScript, tCommand
+      runCompilerTest pInfo, tScript, tCommand
    end if
 
    put the result into tAnalysis
@@ -459,6 +459,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             put empty into tCode
             put empty into tExpectation
             put empty into tAssertions
+            put empty into tPositions
             put "code" into tState
          else if tToken is "%EXPECT" then
             -- We only allow %EXPECT directives after code blocks
