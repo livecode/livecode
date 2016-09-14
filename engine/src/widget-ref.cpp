@@ -148,7 +148,7 @@ bool MCWidgetBase::HasProperty(MCNameRef p_property)
 bool MCWidgetBase::HasHandler(MCNameRef p_handler)
 {
     MCTypeInfoRef t_signature;
-    return MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
+    return MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), p_handler, t_signature);
 }
 
 bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
@@ -223,7 +223,7 @@ bool MCWidgetBase::QueryPropertyOfChunk(MCNameRef p_property, MCNameRef p_chunk_
         return false;
     
     MCTypeInfoRef t_handler_typeinfo;
-    if (!MCScriptQueryHandlerOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
+    if (!MCScriptQueryHandlerSignatureOfModule(MCScriptGetModuleOfInstance(m_instance), *t_handler, t_handler_typeinfo))
         return false;
 
     if (p_is_getter)

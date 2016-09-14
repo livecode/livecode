@@ -980,7 +980,7 @@ bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperLis
 											 r_handler_names);
 }
 
-bool MCScriptQueryHandlerOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* get */ MCTypeInfoRef& r_signature)
+bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* get */ MCTypeInfoRef& r_signature)
 {
     MCScriptHandlerDefinition *t_def;
     
@@ -993,6 +993,42 @@ bool MCScriptQueryHandlerOfModule(MCScriptModuleRef self, MCNameRef p_handler, /
     r_signature = self -> types[t_def -> type] -> typeinfo;
     
     return true;
+}
+
+bool MCScriptCopyHandlerParametersOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* copy */ MCProperListRef& r_names)
+{
+    MCScriptHandlerDefinition *t_def;
+    
+    if (!self -> is_usable)
+	{
+        return false; // TODO - throw error
+    }
+	
+    if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
+	{
+        return false; // TODO - throw error
+	}
+	
+	MCAutoProperListRef t_names;
+	if (!MCProperListCreateMutable(&t_names))
+	{
+		return false;
+	}
+	
+	for(uindex_t i = 0; i < MCHandlerTypeInfoGetParameterCount(self->types[t_def->type]->typeinfo); i++)
+	{
+		if (!MCProperListPushElementOntoBack(*t_names,
+											 MCScriptGetNameOfParameterInModule(self,
+																				t_def,
+																				i)))
+		{
+			return false;
+		}
+	}
+	
+	r_names = t_names.Take();
+	
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

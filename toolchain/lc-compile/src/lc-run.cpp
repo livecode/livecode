@@ -450,8 +450,8 @@ MCRunListHandlers (MCScriptModuleRef p_module)
 		                              kMCNameTypeInfo));
 		t_handler_name = (MCNameRef) t_handler_val;
 
-		if (!MCScriptQueryHandlerOfModule (p_module, t_handler_name,
-		                                   t_signature))
+		if (!MCScriptQueryHandlerSignatureOfModule (p_module, t_handler_name,
+		                                            t_signature))
 			return false;
 
 		/* Only accept handlers with arity 0 */

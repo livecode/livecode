@@ -206,7 +206,12 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef module, MCNameRef event, /* ge
 bool MCScriptCopyHandlersOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
 
 // Query the signature of the given handler.
-bool MCScriptQueryHandlerOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
+bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
+
+// Copy the names of the parameters in the signature of the given handler.
+// Note: If the module has had debugging info stripped, the list will be all
+// empty names.
+bool MCScriptCopyHandlerParametersOfModule(MCScriptModuleRef module, MCNameRef handler, /* copy */ MCProperListRef& r_names);
 
 // Emit an interface definition for the module.
 bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef module, MCStreamRef stream);

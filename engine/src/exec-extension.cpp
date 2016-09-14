@@ -345,7 +345,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
     t_ext = *(MCLoadedExtension **)MCForeignValueGetContentsPtr(t_ptr);
     
     MCTypeInfoRef t_signature;
-    MCScriptQueryHandlerOfModule(t_ext -> module, p_message, t_signature);
+    MCScriptQueryHandlerSignatureOfModule(t_ext -> module, p_message, t_signature);
     
     uindex_t t_arg_count;
     t_arg_count = MCHandlerTypeInfoGetParameterCount(t_signature);
