@@ -142,6 +142,9 @@
     
     'rule' DeclareImportedDefinitions(foreignhandler(Position, _, Name, _, _)):
         DeclareId(Name)
+
+    'rule' DeclareImportedDefinitions(bridgedhandler(Position, _, Name, _, _)):
+        DeclareId(Name)
     
     'rule' DeclareImportedDefinitions(property(Position, _, Name, _, _)):
         DeclareId(Name)
@@ -206,6 +209,9 @@
     'rule' Declare(foreignhandler(Position, _, Name, _, _)):
         DeclareId(Name)
     
+    'rule' Declare(bridgedhandler(Position, _, Name, _, _)):
+        DeclareId(Name)
+
     'rule' Declare(property(Position, _, Name, _, _)):
         DeclareId(Name)
     
@@ -297,6 +303,10 @@
         DefineUnsafeSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
         DefineParameters(Name, Parameters)
 
+    'rule' Define(ModuleId, bridgedhandler(Position, Access, Name, Signature:signature(Parameters, _), _)):
+        DefineSymbolId(Name, ModuleId, Access, handler, handler(Position, foreign, Signature))
+        DefineParameters(Name, Parameters)
+
     'rule' Define(ModuleId, property(Position, Access, Name, Getter, Setter)):
         DefineSymbolId(Name, ModuleId, Access, property, nil)
 
@@ -385,6 +395,16 @@
         LeaveScope
         
     'rule' Apply(DEFINITION'foreignhandler(_, _, _, signature(Parameters, Type), _)):
+        -- The type of the foreign handler is resolved in the current scope.
+        Apply(Type)
+        
+        -- Enter a new scope to check parameters.
+        EnterScope
+        DeclareParameters(Parameters)
+        Apply(Parameters)
+        LeaveScope
+
+    'rule' Apply(DEFINITION'bridgedhandler(_, _, _, signature(Parameters, Type), _)):
         -- The type of the foreign handler is resolved in the current scope.
         Apply(Type)
         
@@ -833,6 +853,9 @@
         DumpBindings(Body)
     'rule' DumpBindings(DEFINITION'foreignhandler(_, _, Name, Signature, _)):
         DumpId("foreign handler", Name)
+        DumpBindings(Signature)
+    'rule' DumpBindings(DEFINITION'bridgedhandler(_, _, Name, Signature, _)):
+        DumpId("__bridged handler", Name)
         DumpBindings(Signature)
     'rule' DumpBindings(DEFINITION'property(_, _, Name, Getter, OptionalSetter)):
         DumpId("property", Name)

@@ -234,6 +234,9 @@
     'rule' GenerateManifestDefinitions(foreignhandler(_, public, Name, Signature, _)):
         GenerateManifestHandlerDefinition(Name, Signature)
 
+    'rule' GenerateManifestDefinitions(bridgedhandler(_, public, Name, Signature, _)):
+        GenerateManifestHandlerDefinition(Name, Signature)
+
     'rule' GenerateManifestDefinitions(property(_, public, Name, Getter, OptionalSetter)):
         QuerySymbolId(Getter -> GetInfo)
         GetInfo'Type -> GetDefType
@@ -535,6 +538,9 @@
     'rule' GenerateDefinitionIndexes(foreignhandler(_, _, Name, _, _)):
         GenerateDefinitionIndex("foreignhandler", Name)
 
+    'rule' GenerateDefinitionIndexes(bridgedhandler(_, _, Name, _, _)):
+        GenerateDefinitionIndex("bridgedhandler", Name)
+
     'rule' GenerateDefinitionIndexes(property(_, _, Name, _, _)):
         GenerateDefinitionIndex("property", Name)
 
@@ -616,6 +622,9 @@
         GenerateExportedDefinition(Id)
 
     'rule' GenerateExportedDefinitions(foreignhandler(_, public, Id, _, _)):
+        GenerateExportedDefinition(Id)
+
+    'rule' GenerateExportedDefinitions(bridgedhandler(_, public, Id, _, _)):
         GenerateExportedDefinition(Id)
 
     'rule' GenerateExportedDefinitions(property(_, _, Id, _, _)):
@@ -712,6 +721,14 @@
         Info'Index -> DefIndex
         EmitForeignHandlerDefinition(DefIndex, Position, Name, TypeIndex, Binding)
         
+    'rule' GenerateDefinitions(bridgedhandler(Position, _, Id, Signature, Binding)):
+        GenerateType(handler(Position, foreign, Signature) -> TypeIndex)
+        
+        QuerySymbolId(Id -> Info)
+        Id'Name -> Name
+        Info'Index -> DefIndex
+        EmitForeignHandlerDefinition(DefIndex, Position, Name, TypeIndex, Binding)
+
     'rule' GenerateDefinitions(property(Position, _, Id, Getter, OptionalSetter)):
         QuerySymbolId(Id -> Info)
         Id'Name -> Name
