@@ -786,8 +786,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
 bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
-    
-    // Lookup the definition (throws if not found).
+	
     MCScriptHandlerDefinition *t_definition;
     if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_handler, t_definition))
     {
@@ -797,6 +796,20 @@ bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_
     
     return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
+
+bool MCScriptCopyHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_name, MCHandlerRef& r_handler)
+{
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
+	
+    // Lookup the definition (throws if not found).
+    MCScriptHandlerDefinition *t_definition;
+    if (!MCScriptLookupHandlerDefinitionInModule(self -> module, p_name, t_definition))
+	{
+        return MCScriptThrowHandlerNotFoundError(self -> module, p_name);
+	}
+	
+	return MCScriptEvaluateHandlerOfInstanceInternal(self, t_definition, r_handler);
+}	
 
 ////////////////////////////////////////////////////////////////////////////////
 

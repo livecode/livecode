@@ -251,6 +251,9 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handl
 // Call a handler of an instance if found, it doesn't throw an error if not.
 bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
+// Create a handler-ref for the given handler in the instance.
+bool MCScriptCopyHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, /* copy */ MCHandlerRef& r_handler);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCScriptBytecodeParameterType
