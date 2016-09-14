@@ -60,4 +60,4 @@ addons:
       - libgtk2.0-dev
       - libpopt-dev
       - libesd0-dev
-      - liblcms-dev
+      - liblcms2-dev
