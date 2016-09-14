@@ -384,7 +384,7 @@
 'action' FinalizeLiterals()
 
 'condition' MakeIntegerLiteral(Token: STRING -> Literal: INT)
-'action' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
+'condition' MakeDoubleLiteral(Token: STRING -> Literal: DOUBLE)
 'action' MakeStringLiteral(Token: STRING -> Literal: STRING)
 'condition' UnescapeStringLiteral(Position:POS, String: STRING -> UnescapedString: STRING)
 'action' MakeNameLiteral(Token: STRING -> Literal: NAME)
