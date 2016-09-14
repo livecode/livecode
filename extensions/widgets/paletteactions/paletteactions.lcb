@@ -275,6 +275,7 @@ end handler
 private handler positionToRect(in pPoint as Point, out rTab as Boolean, out rIndex as Integer) returns Boolean
 	variable tRect as Rectangle
 	variable tCount as Integer
+    put rectangle [0,0,0,0] into tRect
 	put 0 into tCount
 	repeat for each element tRect in mTabRects
 		add 1 to tCount
