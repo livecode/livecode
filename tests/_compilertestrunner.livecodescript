@@ -102,7 +102,7 @@ private command doRun pInfo
    if tScript is empty then
       runAllScripts pInfo
    else if tCommand is empty then
-      runTestScript pInfo, tScript
+      runCompilerTestScript pInfo, tScript
    else
       runTestCommand pInfo, tScript, tCommand
    end if
@@ -210,7 +210,7 @@ private command runCompilerTest pInfo, pScriptFile, pTest
    put tempName() into tTestInterfaceFile
    put textEncode(tTestInfo["code"], "utf8") into url ("binfile:" & tTestFile)
    reportCompilerTestDiag format("output test source file to '%s'", tTestFile)
-   reportCompilerTestDiag tTestInfo["code"]
+   reportCompilerTestDiagWithLineNumbers tTestInfo["code"]
 
    -- Build the command line
    local tCompilerCmdLine
@@ -459,6 +459,7 @@ private command processCompilerTest pInfo, pScriptFile, pTest, @rCompilerTest
             put empty into tCode
             put empty into tExpectation
             put empty into tAssertions
+            put empty into tPositions
             put "code" into tState
          else if tToken is "%EXPECT" then
             -- We only allow %EXPECT directives after code blocks
@@ -641,6 +642,17 @@ private command reportCompilerTestDiag pMessage
       end repeat
    end if
 end reportCompilerTestDiag
+
+private command reportCompilerTestDiagWithLineNumbers pMessage
+   if $LCC_VERBOSE is not empty then
+      local tLineNumber
+      put 1 into tLineNumber
+      repeat for each line tLine in pMessage
+         write "DIAG:" && format("%4d", tLineNumber) && ":" && tLine & return to stderr
+         add 1 to tLineNumber
+      end repeat
+   end if
+end reportCompilerTestDiagWithLineNumbers
 
 ----------------------------------------------------------------
 -- Logging helpers
