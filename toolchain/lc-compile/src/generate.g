@@ -1632,6 +1632,13 @@
 
 'action' FullyResolveType(TYPE -> TYPE)
 
+'action' GenerateCastInRegister(INT, INT, POS, EXPRESSION, TYPE, INT)
+
+    'rule' GenerateCastInRegister(Result, Context, Position, Value, Type, Output)
+        GenerateType(Type -> TypeIndex)
+        GenerateExpression(Result, Context, Value -> ValueReg)
+        EmitCast(TypeIndex, Output, ValueReg)
+
 'action' GenerateCallInRegister(INT, INT, POS, ID, EXPRESSIONLIST, INT)
 
     'rule' GenerateCallInRegister(Result, Context, Position, Handler, Arguments, Output):
@@ -1739,8 +1746,8 @@
         GenerateInvoke_FreeArgument(Right)
         EmitResolveLabel(ShortLabel)
 
-    'rule' GenerateExpressionInRegister(Result, Context, as(_, _, _), Output):
-        -- TODO
+    'rule' GenerateExpressionInRegister(Result, Context, as(Position, Value, Type), Output):
+        GenerateCastInRegister(Result, Context, Position, Value, Type, Output)
     
     'rule' GenerateExpressionInRegister(Result, Context, List:list(Position, Elements), Output):
         (|
