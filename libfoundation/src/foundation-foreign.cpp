@@ -49,6 +49,8 @@ MC_DLLEXPORT_DEF MCTypeInfoRef MCForeignSSizeTypeInfo() { return kMCSSizeTypeInf
 MC_DLLEXPORT_DEF
 bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignValueRef& r_value)
 {
+    MCAssert(MCTypeInfoIsNamed(p_typeinfo));
+    
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
@@ -72,6 +74,8 @@ bool MCForeignValueCreate(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignV
 MC_DLLEXPORT_DEF
 bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, MCForeignValueRef& r_value)
 {
+    MCAssert(MCTypeInfoIsNamed(p_typeinfo));
+    
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
@@ -95,6 +99,8 @@ bool MCForeignValueCreateAndRelease(MCTypeInfoRef p_typeinfo, void *p_contents, 
 MC_DLLEXPORT_DEF
 bool MCForeignValueExport(MCTypeInfoRef p_typeinfo, MCValueRef p_value, MCForeignValueRef& r_value)
 {
+    MCAssert(MCTypeInfoIsNamed(p_typeinfo));
+    
     MCTypeInfoRef t_resolved_typeinfo;
     t_resolved_typeinfo = __MCTypeInfoResolve(p_typeinfo);
     
