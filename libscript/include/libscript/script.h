@@ -180,6 +180,12 @@ bool MCScriptIsModuleALibrary(MCScriptModuleRef module);
 // Returns true if the module is a widget.
 bool MCScriptIsModuleAWidget(MCScriptModuleRef module);
 
+// Returns a list of the constants defined by the module.
+bool MCScriptCopyConstantsOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_constant_names);
+
+// Queries the value of the given constant.
+bool MCScriptQueryConstantOfModule(MCScriptModuleRef module, MCNameRef name, /* get */ MCValueRef& r_constant_value);
+
 // List the module's direct dependencies.
 bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_module_names);
 

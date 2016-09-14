@@ -828,6 +828,45 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool
+__MCScriptCopyDefinitionsOfModule(MCScriptModuleRef self,
+								  MCScriptDefinitionKind p_kind,
+								  /* copy */ MCProperListRef& r_names)
+{
+	MCAutoProperListRef t_names;
+	if (!MCProperListCreateMutable(&t_names))
+	{
+		return false;
+	}
+	
+	for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+	{
+		MCScriptDefinition *t_definition =
+			self->definitions[self->exported_definitions[i].index];
+		
+		if (p_kind != kMCScriptDefinitionKindNone &&
+			t_definition->kind != p_kind)
+		{
+			continue;
+		}
+		
+		if (!MCProperListPushElementOntoBack(*t_names,
+											 self->exported_definitions[i].name))
+		{
+			return false;
+		}
+	}
+	
+	if (!t_names.MakeImmutable())
+	{
+		return false;
+	}
+	
+	r_names = t_names.Take();
+	
+	return true;
+}
+
 bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_module_names)
 {
     MCAutoProperListRef t_modules;
@@ -844,21 +883,33 @@ bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef self, /* copy */ MCPrope
     return true;
 }
 
+bool MCScriptCopyConstantsOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_constant_names)
+{
+	return __MCScriptCopyDefinitionsOfModule(self,
+											 kMCScriptDefinitionKindConstant,
+											 r_constant_names);
+}
+
+bool MCScriptQueryConstantOfModule(MCScriptModuleRef self, MCNameRef p_constant, MCValueRef& r_constant_value)
+{
+	MCScriptConstantDefinition *t_constant_def = nil;
+	if (!MCScriptLookupConstantDefinitionInModule(self,
+												  p_constant,
+												  t_constant_def))
+	{
+		return false;
+	}
+	
+	r_constant_value = self->values[t_constant_def->value];
+	
+	return true;
+}
+
 bool MCScriptCopyPropertiesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_property_names)
 {
-    MCAutoProperListRef t_props;
-    if (!MCProperListCreateMutable(&t_props))
-        return false;
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindProperty)
-            if (!MCProperListPushElementOntoBack(*t_props, self -> exported_definitions[i] . name))
-                return false;
-    
-    if (!MCProperListCopy(*t_props, r_property_names))
-        return false;
-    
-    return true;
+	return __MCScriptCopyDefinitionsOfModule(self,
+											 kMCScriptDefinitionKindProperty,
+											 r_property_names);
 }
 
 bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property, /* get */ MCTypeInfoRef& r_getter, /* get */ MCTypeInfoRef& r_setter)
@@ -902,19 +953,9 @@ bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property,
 
 bool MCScriptCopyEventsOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_event_names)
 {
-    MCAutoProperListRef t_events;
-    if (!MCProperListCreateMutable(&t_events))
-        return false;
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindEvent)
-            if (!MCProperListPushElementOntoBack(*t_events, self -> exported_definitions[i] . name))
-                return false;
-    
-    if (!MCProperListCopy(*t_events, r_event_names))
-        return false;
-    
-    return true;
+	return __MCScriptCopyDefinitionsOfModule(self,
+											 kMCScriptDefinitionKindEvent,
+											 r_event_names);
 }
 
 bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* get */ MCTypeInfoRef& r_signature)
@@ -934,19 +975,9 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* ge
 
 bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_handler_names)
 {
-    MCAutoProperListRef t_handlers;
-    if (!MCProperListCreateMutable(&t_handlers))
-        return false;
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind == kMCScriptDefinitionKindHandler)
-            if (!MCProperListPushElementOntoBack(*t_handlers, self -> exported_definitions[i] . name))
-                return false;
-    
-    if (!MCProperListCopy(*t_handlers, r_handler_names))
-        return false;
-    
-    return true;
+	return __MCScriptCopyDefinitionsOfModule(self,
+											 kMCScriptDefinitionKindHandler,
+											 r_handler_names);
 }
 
 bool MCScriptQueryHandlerOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* get */ MCTypeInfoRef& r_signature)
@@ -983,78 +1014,115 @@ void MCScriptReleaseRawModule(MCScriptModule *p_module)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef self, MCNameRef p_property, MCScriptPropertyDefinition*& r_definition)
+static bool
+__MCScriptLookupDefinitionInModule(MCScriptModuleRef self,
+								   MCScriptDefinitionKind p_kind,
+								   MCNameRef p_name,
+								   MCScriptDefinition*& r_definition)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
+    for(uindex_t i = 0; i < self->exported_definition_count; i++)
     {
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindProperty)
+        if (p_kind != kMCScriptDefinitionKindNone &&
+			self->definitions[self->exported_definitions[i].index]->kind != p_kind)
+		{
             continue;
+		}
         
-        if (!MCNameIsEqualTo(p_property, self -> exported_definitions[i] . name))
+        if (!MCNameIsEqualTo(p_name,
+							 self->exported_definitions[i].name))
+		{
             continue;
-        
-        r_definition = static_cast<MCScriptPropertyDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
+        }
+		
+        r_definition = self->definitions[self->exported_definitions[i].index];
+		
         return true;
     }
     
     return false;
+	
+}
+
+bool MCScriptLookupConstantDefinitionInModule(MCScriptModuleRef self, MCNameRef p_constant, MCScriptConstantDefinition*& r_definition)
+{
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+	
+	MCScriptDefinition *t_definition = nil;
+	if (!__MCScriptLookupDefinitionInModule(self,
+											kMCScriptDefinitionKindConstant,
+											p_constant,
+											t_definition))
+	{
+		return false;
+	}
+	
+	r_definition = static_cast<MCScriptConstantDefinition *>(t_definition);
+	
+	return true;
+}
+
+bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef self, MCNameRef p_property, MCScriptPropertyDefinition*& r_definition)
+{
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+	
+	MCScriptDefinition *t_definition = nil;
+	if (!__MCScriptLookupDefinitionInModule(self,
+											kMCScriptDefinitionKindProperty,
+											p_property,
+											t_definition))
+	{
+		return false;
+	}
+	
+	r_definition = static_cast<MCScriptPropertyDefinition *>(t_definition);
+	
+	return true;
 }
 
 bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef self, MCNameRef p_property, MCScriptEventDefinition*& r_definition)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-    {
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindEvent)
-            continue;
-        
-        if (!MCNameIsEqualTo(p_property, self -> exported_definitions[i] . name))
-            continue;
-        
-        r_definition = static_cast<MCScriptEventDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
-        return true;
-    }
-    
-    return false;
+	
+	MCScriptDefinition *t_definition = nil;
+	if (!__MCScriptLookupDefinitionInModule(self,
+											kMCScriptDefinitionKindEvent,
+											p_property,
+											t_definition))
+	{
+		return false;
+	}
+	
+	r_definition = static_cast<MCScriptEventDefinition *>(t_definition);
+	
+	return true;
 }
 
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p_handler, MCScriptHandlerDefinition*& r_definition)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-    {
-        if (self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindHandler &&
-            self -> definitions[self -> exported_definitions[i] . index] -> kind != kMCScriptDefinitionKindForeignHandler)
-            continue;
-        
-        if (!MCNameIsEqualTo(p_handler, self -> exported_definitions[i] . name))
-            continue;
-        
-        r_definition = static_cast<MCScriptHandlerDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
-        return true;
-    }
-    
-    return false;
+	
+	MCScriptDefinition *t_definition = nil;
+	if (!__MCScriptLookupDefinitionInModule(self,
+											kMCScriptDefinitionKindHandler,
+											p_handler,
+											t_definition))
+	{
+		return false;
+	}
+	
+	r_definition = static_cast<MCScriptHandlerDefinition *>(t_definition);
+	
+	return true;
 }
 
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-    
-    for(uindex_t i = 0; i < self -> exported_definition_count; i++)
-    {
-        if (!MCNameIsEqualTo(p_name, self -> exported_definitions[i] . name))
-            continue;
-        
-        r_definition = static_cast<MCScriptHandlerDefinition *>(self -> definitions[self -> exported_definitions[i] . index]);
-        return true;
-    }
-    
-    return false;
+	
+	return __MCScriptLookupDefinitionInModule(self,
+											  kMCScriptDefinitionKindNone,
+											  p_name,
+											  r_definition);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
