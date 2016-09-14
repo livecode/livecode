@@ -982,7 +982,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             return MCErrorThrowUnboundType(t_return_type);
         
         ffi_type *t_ffi_return_type;
-        if (t_return_type != kMCNullTypeInfo)
+        if (t_resolved_return_type.named_type != kMCNullTypeInfo)
         {
             if (MCTypeInfoIsForeign(t_resolved_return_type . type))
                 t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);
