@@ -538,8 +538,7 @@ MCScriptExecuteContext::ConvertToResolvedType(MCValueRef p_value,
         // don't try to export. This allows optional foreign slots to be set to
         // undefined when the type has no bridging type; without this, it is not
         // possible to set these slots to undefined!
-        if (t_to_desc->doexport == nil &&
-            p_to_type.is_optional &&
+        if (p_to_type.is_optional &&
             p_value == kMCNull)
         {
             r_new_value = MCValueRetain(kMCNull);
