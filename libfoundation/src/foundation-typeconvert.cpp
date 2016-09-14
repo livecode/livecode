@@ -171,7 +171,11 @@ static real64_t MCU_strtor8(const char *&r_str, uindex_t &r_len, int8_t p_delim,
     //   of these tests.
     if (l == 0 || (l > 1 && (((MCNativeCharFold((uint8_t)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint8_t)sptr[2])))
                               || (sptr[1] == '+' || sptr[1] == '-')))))
-        return false;
+    {
+        r_done = false;
+        return 0;
+    }
+
     char buff[R8L];
     memcpy(buff, sptr, l);
     buff[l] = '\0';
