@@ -547,7 +547,7 @@ MCScriptExecuteContext::ConvertToResolvedType(MCValueRef p_value,
         else
         {
             // Export the foreign value
-            if (!MCForeignValueExport(p_to_type.type,
+            if (!MCForeignValueExport(p_to_type.named_type,
                                       p_value,
                                       (MCForeignValueRef&)r_new_value))
             {
