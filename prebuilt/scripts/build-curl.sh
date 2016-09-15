@@ -14,6 +14,7 @@ CURL_CONFIG="--disable-debug \
             --enable-http --enable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-dict --disable-telnet \
             --disable-tftp --disable-pop3 --disable-imap --disable-smtp \
             --disable-manual \
+            --enable-shared=no \
             --disable-sspi --disable-crypto-auth --disable-cookies \
             --without-gnutls --without-polarssl --without-nss --without-libssh2 --without-librtmp --without-libidn"
 
