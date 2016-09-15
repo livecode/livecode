@@ -1000,7 +1000,7 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef self, MCNameRef p_h
     return true;
 }
 
-bool MCScriptCopyHandlerParameterNamesOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* copy */ MCProperListRef& r_names)
+bool MCScriptListHandlerParameterNamesOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* copy */ MCProperListRef& r_names)
 {
     MCScriptHandlerDefinition *t_def;
     
