@@ -396,6 +396,7 @@ void MCScriptReleaseRawModule(MCScriptModule *module);
 
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
+bool MCScriptLookupConstantDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptConstantDefinition*& r_definition);
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
 bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptEventDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);

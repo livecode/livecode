@@ -434,7 +434,7 @@ MCRunListHandlers (MCScriptModuleRef p_module)
 	MCAutoProperListRef t_handler_list; /* List of MCNameRef */
 	MCAutoStringRef t_message;
 
-	if (!MCScriptCopyHandlersOfModule (p_module, &t_handler_list))
+	if (!MCScriptListHandlerNamesOfModule (p_module, &t_handler_list))
 		return false;
 
 	if (!MCStringMutableCopy (kMCEmptyString, &t_message))
@@ -450,8 +450,8 @@ MCRunListHandlers (MCScriptModuleRef p_module)
 		                              kMCNameTypeInfo));
 		t_handler_name = (MCNameRef) t_handler_val;
 
-		if (!MCScriptQueryHandlerOfModule (p_module, t_handler_name,
-		                                   t_signature))
+		if (!MCScriptQueryHandlerSignatureOfModule (p_module, t_handler_name,
+		                                            t_signature))
 			return false;
 
 		/* Only accept handlers with arity 0 */
@@ -513,7 +513,7 @@ main (int argc,
 		if (!MCScriptCreateInstanceOfModule (*t_module, &t_instance))
 			MCRunStartupError(MCSTR("Create Instance"));
 
-		if (!MCScriptCallHandlerOfInstance(*t_instance,
+		if (!MCScriptCallHandlerInInstance(*t_instance,
 		                                   t_config.m_handler,
 		                                   NULL, 0,
 		                                   &t_ignored_retval))
