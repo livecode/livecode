@@ -830,25 +830,6 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool
-__MCScriptThrowModuleNotUsableError(MCScriptModuleRef self)
-{
-	return MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable"),
-										  "name", self -> name,
-									      nil);
-}
-
-static bool
-__MCScriptThrowDefinitionNotFoundInModuleError(MCScriptModuleRef self,
-											   MCScriptDefinitionKind p_kind,
-											   MCNameRef p_name)
-{
-	return MCErrorThrowGenericWithMessage(MCSTR("%{kind} definition %{name} not found in %{module}"),
-										  "kind", __MCScriptDefinitionKindToString(p_kind),
-										  "name", p_name,
-										  "module", self->name);
-}
-
-static bool
 __MCScriptCopyDefinitionsOfModule(MCScriptModuleRef self,
 								  MCScriptDefinitionKind p_kind,
 								  /* copy */ MCProperListRef& r_names)
@@ -915,19 +896,21 @@ bool MCScriptQueryConstantOfModule(MCScriptModuleRef self, MCNameRef p_constant,
 	MCScriptConstantDefinition *t_constant_def = nil;
 	
     if (!self -> is_usable)
+<<<<<<< 1fb0d29f93562a02cfbf804a02e01ba1199685b4
 <<<<<<< 104ad92cf8c2e86cccf39cfb0e4652146ae943d9
 		return false;
 =======
         return __MCScriptThrowModuleNotUsableError(self);
 >>>>>>> [[ Script ]] Cleanup
+=======
+		return false;
+>>>>>>> [[ Script ]] Correct functionality of Query methods in MCScript
 	
 	if (!MCScriptLookupConstantDefinitionInModule(self,
 												  p_constant,
 												  t_constant_def))
 	{
-        return __MCScriptThrowDefinitionNotFoundInModuleError(self,
-															  kMCScriptDefinitionKindConstant,
-															  p_constant);
+		return false;
 	}
 	
 	r_constant_value = self->values[t_constant_def->value];
@@ -947,6 +930,7 @@ bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property,
     MCScriptPropertyDefinition *t_def;
     
     if (!self -> is_usable)
+<<<<<<< 1fb0d29f93562a02cfbf804a02e01ba1199685b4
 <<<<<<< 104ad92cf8c2e86cccf39cfb0e4652146ae943d9
 		return false;
     
@@ -958,6 +942,12 @@ bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property,
     if (!MCScriptLookupPropertyDefinitionInModule(self, p_property, t_def))
         return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindProperty, p_property);
 >>>>>>> [[ Script ]] Cleanup
+=======
+		return false;
+    
+    if (!MCScriptLookupPropertyDefinitionInModule(self, p_property, t_def))
+		return false;
+>>>>>>> [[ Script ]] Correct functionality of Query methods in MCScript
     
     MCScriptDefinition *t_getter;
     t_getter = t_def -> getter != 0 ? self -> definitions[t_def -> getter - 1] : nil;
@@ -1000,6 +990,7 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* ge
     MCScriptEventDefinition *t_def;
     
     if (!self -> is_usable)
+<<<<<<< 1fb0d29f93562a02cfbf804a02e01ba1199685b4
 <<<<<<< 104ad92cf8c2e86cccf39cfb0e4652146ae943d9
 		return false;
     
@@ -1011,6 +1002,12 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* ge
     if (!MCScriptLookupEventDefinitionInModule(self, p_event, t_def))
         return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindEvent, p_event);
 >>>>>>> [[ Script ]] Cleanup
+=======
+		return false;
+    
+    if (!MCScriptLookupEventDefinitionInModule(self, p_event, t_def))
+		return false;
+>>>>>>> [[ Script ]] Correct functionality of Query methods in MCScript
     
     r_signature = self -> types[t_def -> type] -> typeinfo;
     
@@ -1029,6 +1026,7 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef self, MCNameRef p_h
     MCScriptHandlerDefinition *t_def;
     
     if (!self -> is_usable)
+<<<<<<< 1fb0d29f93562a02cfbf804a02e01ba1199685b4
 <<<<<<< 104ad92cf8c2e86cccf39cfb0e4652146ae943d9
 		return false;
     
@@ -1040,6 +1038,12 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef self, MCNameRef p_h
     if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
         return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindProperty, p_handler);
 >>>>>>> [[ Script ]] Cleanup
+=======
+		return false;
+    
+    if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
+		return false;
+>>>>>>> [[ Script ]] Correct functionality of Query methods in MCScript
     
     r_signature = self -> types[t_def -> type] -> typeinfo;
     
@@ -1052,6 +1056,7 @@ bool MCScriptCopyHandlerParameterNamesOfModule(MCScriptModuleRef self, MCNameRef
     
     if (!self -> is_usable)
 	{
+<<<<<<< 1fb0d29f93562a02cfbf804a02e01ba1199685b4
 <<<<<<< 104ad92cf8c2e86cccf39cfb0e4652146ae943d9
 		return false;
 	}
@@ -1067,6 +1072,14 @@ bool MCScriptCopyHandlerParameterNamesOfModule(MCScriptModuleRef self, MCNameRef
 	{
         return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindHandler, p_handler);
 >>>>>>> [[ Script ]] Cleanup
+=======
+		return false;
+	}
+	
+    if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
+	{
+		return false;
+>>>>>>> [[ Script ]] Correct functionality of Query methods in MCScript
 	}
 	
 	MCAutoProperListRef t_names;

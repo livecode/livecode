@@ -214,12 +214,17 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef module, MCNameRef h
 
 // Copy the names of the parameters in the signature of the given handler.
 // Note: If the module has had debugging info stripped, the list will be all
+<<<<<<< 1fb0d29f93562a02cfbf804a02e01ba1199685b4
 <<<<<<< 7027eeeb3c04fbbc1df8c19532dcf353654dec26
 // empty names. If the handler doesn't exist, or module is not usable, false is
 // returned.
 =======
 // empty names.
 >>>>>>> [[ Script ]] Tweak naming of some libscript functions
+=======
+// empty names. If the handler doesn't exist, or module is not usable, false is
+// returned.
+>>>>>>> [[ Script ]] Correct functionality of Query methods in MCScript
 bool MCScriptListHandlerParameterNamesOfModule(MCScriptModuleRef module, MCNameRef handler, /* copy */ MCProperListRef& r_names);
 
 // Emit an interface definition for the module.
