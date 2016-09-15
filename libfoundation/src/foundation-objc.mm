@@ -21,14 +21,14 @@
 
 @implementation NSString (com_runrev_livecode_foundation_NSStringAdditions)
 
-+ (NSString *)stringWithMCStringRef: (MCStringRef)p_string_ref;
++ (NSString *)stringWithMCStringRef: (MCStringRef)p_string_ref
 {
 	CFStringRef t_string;
 	/* UNCHECKED */ MCStringConvertToCFStringRef(p_string_ref, t_string);
 	return [((NSString *)t_string) autorelease];
 }
 
-+ (NSString *)stringWithMCNameRef: (MCNameRef)p_name_ref;
++ (NSString *)stringWithMCNameRef: (MCNameRef)p_name_ref
 {
 	CFStringRef t_string;
 	/* UNCHECKED */ MCStringConvertToCFStringRef(MCNameGetString(p_name_ref), t_string);
@@ -41,7 +41,7 @@
 
 @implementation NSData (com_runrev_livecode_foundation_NSDataAdditions)
 
-+ (NSData *)dataWithMCDataRef: (MCDataRef)p_data_ref;
++ (NSData *)dataWithMCDataRef: (MCDataRef)p_data_ref
 {
 	CFDataRef t_data;
 	/* UNCHECKED */ MCDataConvertToCFDataRef(p_data_ref, t_data);
