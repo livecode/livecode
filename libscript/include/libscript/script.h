@@ -186,31 +186,36 @@ bool MCScriptListDependencyNamesOfModule(MCScriptModuleRef module, /* copy */ MC
 // Returns a list of the constants defined by the module.
 bool MCScriptListConstantNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_constant_names);
 
-// Queries the value of the given constant.
+// Queries the value of the given constant. If the constant doesn't exist, or
+// module is not usable, false is returned.
 bool MCScriptQueryConstantOfModule(MCScriptModuleRef module, MCNameRef name, /* get */ MCValueRef& r_constant_value);
 
 // Returns a list of properties implemented by the module.
 bool MCScriptListPropertyNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_property_names);
 
-// Queries the type of the given property. If the setting type is nil, then the property
-// is read-only.
+// Queries the type of the given property. If the setting type is nil, then the
+// property is read-only. If the property doesn't exist, or  module is not
+// usable, false is returned.
 bool MCScriptQueryPropertyOfModule(MCScriptModuleRef module, MCNameRef property, /* get */ MCTypeInfoRef& r_getter, /* get */ MCTypeInfoRef& r_setter);
 
 // Returns a list of the events declared by the module.
 bool MCScriptListEventNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_event_names);
 
-// Query the signature of the given event.
+// Query the signature of the given event. If the event doesn't exist, or
+// module is not usable, false is returned.
 bool MCScriptQueryEventOfModule(MCScriptModuleRef module, MCNameRef event, /* get */ MCTypeInfoRef& r_signature);
 
 // Returns a list of the handlers declared by the module.
 bool MCScriptListHandlerNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
 
-// Query the signature of the given handler.
+// Query the signature of the given handler. If the handler doesn't exist, or
+// module is not usable, false is returned.
 bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
 
 // Copy the names of the parameters in the signature of the given handler.
 // Note: If the module has had debugging info stripped, the list will be all
-// empty names.
+// empty names. If the handler doesn't exist, or module is not usable, false is
+// returned.
 bool MCScriptListHandlerParameterNamesOfModule(MCScriptModuleRef module, MCNameRef handler, /* copy */ MCProperListRef& r_names);
 
 // Emit an interface definition for the module.
