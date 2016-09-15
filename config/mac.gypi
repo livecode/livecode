@@ -136,6 +136,7 @@
 							'-Werror=missing-field-initializers',
 							'-Werror=objc-literal-compare',
 							'-Werror=shadow',
+							'-Werror=unreachable-code',
 						],
 					},
 				},

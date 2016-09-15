@@ -1153,6 +1153,98 @@ void MCS_secure_socket(MCSocket *s, Boolean sslverify, MCNameRef end_hostname)
 
 bool MCS_hostaddress(MCStringRef &r_host_address)
 {
+#if defined(_MACOSX)
+    bool t_success;
+    t_success = true;
+    
+    SCDynamicStoreRef t_store;
+    t_store = NULL;
+    if (t_success)
+    {
+        t_store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("JSEvaluator"), NULL, NULL);
+        if (t_store == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_network_key;
+    t_network_key = NULL;
+    if (t_success)
+    {
+        t_network_key = SCDynamicStoreKeyCreateNetworkGlobalEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, kSCEntNetIPv4);
+        if (t_network_key == NULL)
+            t_success = false;
+    }
+    
+    CFDictionaryRef t_network_value;
+    t_network_value = NULL;
+    if (t_success)
+    {
+        t_network_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_network_key);
+        if (t_network_value == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_interface;
+    t_interface = NULL;
+    if (t_success)
+    {
+        t_interface = (CFStringRef)CFDictionaryGetValue(t_network_value, kSCDynamicStorePropNetPrimaryInterface);
+        if (t_interface == NULL)
+            t_success = false;
+    }
+    
+    CFStringRef t_interface_key;
+    t_interface_key = NULL;
+    if (t_success)
+    {
+        t_interface_key = (CFStringRef)SCDynamicStoreKeyCreateNetworkInterfaceEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, t_interface, kSCEntNetIPv4);
+        if (t_interface_key == NULL)
+            t_success = false;
+    }
+    
+    CFDictionaryRef t_interface_value;
+    t_interface_value = NULL;
+    if (t_success)
+    {
+        t_interface_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_interface_key);
+        if (t_interface_value == NULL)
+            t_success = false;
+    }
+    
+    char *t_result;
+    t_result = NULL;
+    if (t_success)
+    {
+        CFArrayRef t_addresses;
+        t_addresses = (CFArrayRef)CFDictionaryGetValue(t_interface_value, CFSTR("Addresses"));
+        if (t_addresses != NULL)
+        {
+            CFStringRef t_string;
+            t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
+            if (t_string != NULL)
+                t_result = osx_cfstring_to_cstring(t_string, false, false);
+        }
+    }
+    
+    if (t_interface_value != NULL)
+        CFRelease(t_interface_value);
+    
+    if (t_interface_key != NULL)
+        CFRelease(t_interface_key);
+    
+    if (t_network_value != NULL)
+        CFRelease(t_network_value);
+    
+    if (t_network_key != NULL)
+        CFRelease(t_network_key);
+    
+    if (t_store != NULL)
+        CFRelease(t_store);
+    
+    return MCStringCreateWithCString(t_result, r_host_address);
+ 
+#else
+    
 #if defined(_WINDOWS)
 	if (!wsainit())
 		return NULL;
@@ -1174,102 +1266,13 @@ bool MCS_hostaddress(MCStringRef &r_host_address)
 			}
 		}
 	}
-#elif defined(_MACOSX)
-	bool t_success;
-	t_success = true;
 
-	SCDynamicStoreRef t_store;
-	t_store = NULL;
-	if (t_success)
-	{
-		t_store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("JSEvaluator"), NULL, NULL);
-		if (t_store == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_network_key;
-	t_network_key = NULL;
-	if (t_success)
-	{
-		t_network_key = SCDynamicStoreKeyCreateNetworkGlobalEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, kSCEntNetIPv4);
-		if (t_network_key == NULL)
-			t_success = false;
-	}
-
-	CFDictionaryRef t_network_value;
-	t_network_value = NULL;
-	if (t_success)
-	{
-		t_network_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_network_key);
-		if (t_network_value == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_interface;
-	t_interface = NULL;
-	if (t_success)
-	{
-		t_interface = (CFStringRef)CFDictionaryGetValue(t_network_value, kSCDynamicStorePropNetPrimaryInterface);
-		if (t_interface == NULL)
-			t_success = false;
-	}
-
-	CFStringRef t_interface_key;
-	t_interface_key = NULL;
-	if (t_success)
-	{
-		t_interface_key = (CFStringRef)SCDynamicStoreKeyCreateNetworkInterfaceEntity(kCFAllocatorDefault, kSCDynamicStoreDomainState, t_interface, kSCEntNetIPv4);
-		if (t_interface_key == NULL)
-			t_success = false;
-	}
-
-	CFDictionaryRef t_interface_value;
-	t_interface_value = NULL;
-	if (t_success)
-	{
-		t_interface_value = (CFDictionaryRef)SCDynamicStoreCopyValue(t_store, t_interface_key);
-		if (t_interface_value == NULL)
-			t_success = false;
-	}
-
-	char *t_result;
-	t_result = NULL;
-	if (t_success)
-	{
-		CFArrayRef t_addresses;
-		t_addresses = (CFArrayRef)CFDictionaryGetValue(t_interface_value, CFSTR("Addresses"));
-		if (t_addresses != NULL)
-		{
-			CFStringRef t_string;
-			t_string = (CFStringRef)CFArrayGetValueAtIndex(t_addresses, 0);
-			if (t_string != NULL)
-				t_result = osx_cfstring_to_cstring(t_string, false, false);
-		}
-	}
-	
-	if (t_interface_value != NULL)
-		CFRelease(t_interface_value);
-
-	if (t_interface_key != NULL)
-		CFRelease(t_interface_key);
-
-	if (t_network_value != NULL)
-		CFRelease(t_network_value);
-
-	if (t_network_key != NULL)
-		CFRelease(t_network_key);
-
-	if (t_store != NULL)
-		CFRelease(t_store);
-
-	return MCStringCreateWithCString(t_result, r_host_address);
-
-#elif defined(_LINUX)
-#else
 #endif
 
 	r_host_address = MCValueRetain(kMCEmptyString);
     return true;
+    
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
