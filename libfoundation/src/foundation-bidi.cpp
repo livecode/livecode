@@ -522,11 +522,11 @@ static void bidiApplyRuleI2(isolating_run_sequence& irs, uint8_t *classes, uint8
 
 bool MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, uint8_t *&r_levels, uindex_t& r_level_size)
 {
-    intenum_t t_base_level;
+    uint8_t t_base_level;
     if (p_base_level == kMCTextDirectionAuto)
         t_base_level = MCBidiFirstStrongIsolate(p_string, 0);
     else
-        t_base_level = p_base_level;
+        t_base_level = uint8_t(p_base_level);
     
     uindex_t t_length;
     t_length = MCStringGetLength(p_string);
@@ -559,7 +559,7 @@ bool MCBidiResolveTextDirection(MCStringRef p_string, intenum_t p_base_level, ui
     
     // Counters
     const uindex_t MAX_DEPTH = 125;
-    uindex_t t_current_level = t_base_level;
+    uint8_t t_current_level = t_base_level;
     uindex_t t_overflow_isolates = 0;
     uindex_t t_overflow_embedding = 0;
     uindex_t t_valid_isolates = 0;
@@ -877,7 +877,7 @@ uint8_t MCBidiFirstStrongIsolate(MCStringRef p_string, uindex_t p_offset)
         if (MCUnicodeCodepointIsHighSurrogate(t_char) &&
             MCUnicodeCodepointIsLowSurrogate(t_low = MCStringGetCharAtIndex(p_string, p_offset + 1)))
         {
-            t_char = MCUnicodeSurrogatesToCodepoint(t_char, t_low);
+            t_char = MCUnicodeSurrogatesToCodepoint(uint16_t(t_char), uint16_t(t_low));
             t_increment = 2;
         }
         
