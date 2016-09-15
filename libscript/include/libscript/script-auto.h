@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -29,6 +29,13 @@ public:
 	MCAutoScriptObjectRefBase (void)
 		: m_value(nil)
 	{}
+
+	explicit MCAutoScriptObjectRefBase (T p_value)
+		: m_value(nil)
+	{
+		if (nil != p_value)
+			m_value = REF (p_value);
+	}
 
 	~MCAutoScriptObjectRefBase (void)
 	{
