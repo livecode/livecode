@@ -300,6 +300,7 @@ private function logHighlight pString
   end if
 end logHighlight
 
+<<<<<<< 96a1876b0c4aaee0f03e3abc8205ea0bd5c2ed3c
 command TesterLog pStatus, pDescription
    local tMessage
    put logHighLight(the toUpper of pStatus) into tMessage
@@ -311,6 +312,8 @@ command TesterLog pStatus, pDescription
    write tMessage && pDescription & return to stdout
 end TesterLog
 
+=======
+>>>>>>> tests: Move colour-logging code into tester common library.
 command TesterLogSummaryLine pTapResults, pTestName
    local tTotal, tPassed, tWorst, tMessage
 
@@ -318,7 +321,20 @@ command TesterLogSummaryLine pTapResults, pTestName
    put TesterTapGetTestCount(pTapResults) into tTotal
 
    put TesterTapGetWorstResult(pTapResults) into tWorst
+<<<<<<< 96a1876b0c4aaee0f03e3abc8205ea0bd5c2ed3c
    put pTestName into tMessage
    put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
    TesterLog tWorst, tMessage
+=======
+   put logHighLight(the toUpper of tWorst) into tMessage
+   put ":" after tMessage
+   if the number of chars in tWorst < 5 then
+      put space after tMessage
+   end if
+
+   put space & pTestName after tMessage
+
+   put space & "[" & tPassed & "/" & tTotal & "]" after tMessage
+   write tMessage & return to stdout
+>>>>>>> tests: Move colour-logging code into tester common library.
 end TesterLogSummaryLine
