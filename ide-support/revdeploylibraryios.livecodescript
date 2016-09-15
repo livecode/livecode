@@ -18,10 +18,10 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "6.1,7.1,8.2,9.2,9.3"
+   return "6.1,7.1,8.2,9.2,10.0"
 end deployUsableIosSdk
 
-// SN-2015-05-01: [[ Xcode 6.4 ]] Return the pair iOS SDK / Xcode for the current MacOS version
+// SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
    local tList, tMacVersion
    put deploySanatizeSystemVersion() into tMacVersion
@@ -33,20 +33,20 @@ function deployGetIphoneOSes
       put "8.2,6.2" into tList[1]
    else if tMacVersion < 101100 then
       put "8.2,6.2" into tList[1]
-      // Xcode 7.0 can be installed from Mac OSX 10.10.4 onwards
-      if tMacVersion >= 101004 then
+      // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
+      if tMacVersion >= 101005 then
          put "9.2,7.2" into tList[2]
       end if
    else
-   	  // Xcode 7.3 requires a Mac running OS X 10.11 or later
-      put "9.3,7.3" into tList[1]
+      // Xcode 8.0 requires a Mac running Mac OS 10.11.5 or later
+      put "10.0,8.0" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "5.1.1,6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3"
+   return "6.0,6.1,7.0,7.1,8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -545,7 +545,7 @@ function deployIsValidSDK pSDK
    // SN-2015-03-24: [[ Bug 15037 ]] We accept any SDK having a simulator for
    //  which we provide an engine.
    repeat for each line tSDK in tSDKList
-      if matchtext(tSDK, "iPhoneSimulator([0-9]\.[0-9]).sdk", tSDKVersion) and \
+      if matchtext(tSDK, "iPhoneSimulator([0-9]+\.[0-9]+).sdk", tSDKVersion) and \
             tSDKVersion is among the items of deployUsableIosSdk() then
          put true into tValidSDK
          exit repeat

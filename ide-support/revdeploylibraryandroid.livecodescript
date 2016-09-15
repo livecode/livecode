@@ -127,7 +127,7 @@ command deployAutoconfigureJDK
          put the result into tJDK
          break
       case "macos"
-         put line 1 of shell("/usr/libexec/java_home -v 1.6") into tJDK
+         put line 1 of shell("/usr/libexec/java_home") into tJDK
          break
       case "linux"
          break
