@@ -77,6 +77,15 @@ void GetRowOfPosition(long p_position, long *r_row)
     *r_row = ((p_position / COLUMNS_PER_ROW) % ROWS_PER_FILE) + 1;
 }
 
+void GetRowTextOfPosition(long p_position, const char **r_text)
+{
+	FileRef t_file = NULL;
+	long t_row = 0;
+	GetFileOfPosition(p_position, &t_file);
+	GetRowOfPosition(p_position, &t_row);
+	*r_text = GetFileLineText(t_file, t_row);
+}
+
 void GetFileOfPosition(long p_position, FileRef *r_file)
 {
     long t_index;

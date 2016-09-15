@@ -45,6 +45,7 @@ void GetColumnOfPosition(PositionRef position, long *r_column);
 void GetRowOfPosition(PositionRef position, long *r_row);
 void GetFileOfPosition(PositionRef position, FileRef *r_file);
 void GetFilenameOfPosition(PositionRef position, const char **r_filename);
+void GetRowTextOfPosition(PositionRef position, const char **r_text);
 
 void GetCurrentPosition(PositionRef *r_result);
 void yyGetPos(PositionRef *r_result);

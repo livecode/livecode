@@ -169,6 +169,22 @@ static void _PrintPosition(long p_position)
     fprintf(stderr, "%s:%ld:%ld: ", t_path, t_row, t_column);
 }
 
+/* Print the source code line that contains p_position, and another
+ * line below it with a caret pointing "up" to the exact character
+ * that the position specifies. */
+static void _PrintContext(long p_position)
+{
+	const char *t_text = NULL;
+	long t_column;
+	GetRowTextOfPosition(p_position, &t_text);
+	GetColumnOfPosition(p_position, &t_column);
+	if (NULL != t_text)
+	{
+		fprintf(stderr, " %s\n", t_text);
+		fprintf(stderr, " %*c\n", (int)t_column, '^');
+	}
+}
+
 static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
@@ -189,6 +205,7 @@ static void _Warning(long p_position, const char *p_message)
     {
         _PrintPosition(p_position);
         fprintf(stderr, "warning: %s\n", p_message);
+        _PrintContext(p_position);
     }
 }
 
@@ -201,6 +218,7 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
     fprintf(stderr, "error: ");
     fprintf(stderr, p_message, p_string);
     fprintf(stderr, "\n");
+    _PrintContext(p_position);
     s_error_count += 1;
 }
 
@@ -219,6 +237,7 @@ static void _WarningS(long p_position, const char *p_message, const char *p_stri
         fprintf(stderr, "warning: ");
         fprintf(stderr, p_message, p_string);
         fprintf(stderr, "\n");
+        _PrintContext(p_position);
     }
 }
 
