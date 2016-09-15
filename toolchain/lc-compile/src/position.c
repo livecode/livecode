@@ -227,6 +227,11 @@ struct File
     char *path;
     char *name;
     unsigned int index;
+
+	int line_text_initialized;
+	char *line_text_buffer;
+	const char **line_text;
+	int line_count;
 };
 
 static FileRef s_files;
@@ -290,7 +295,9 @@ void AddFile(const char *p_filename)
         Fatal_OutOfMemory();
     
     t_new_file -> index = s_next_file_index++;
-    
+
+	t_new_file->line_text_initialized = 0;
+
     for(t_last_file_ptr = &s_files; *t_last_file_ptr != NULL; t_last_file_ptr = &((*t_last_file_ptr) -> next))
         ;
     
@@ -334,6 +341,141 @@ void GetFilePath(FileRef p_file, const char **r_path)
 void GetFileName(FileRef p_file, const char **r_name)
 {
     *r_name = p_file -> name;
+}
+
+static int __FindNextSeparator(const char *p_buffer, int p_length,
+                               int p_start, int *r_sep)
+{
+	for (*r_sep = p_start; *r_sep < p_length; ++*r_sep)
+	{
+		if (p_buffer[*r_sep] == '\n')
+			return 1;
+
+		if (p_buffer[*r_sep] == '\r')
+		{
+			if (p_buffer[1+ *r_sep] == '\n')
+				return 2;
+			else
+				return 1;
+		}
+	}
+	return 0;
+}
+
+/* Scan a file and build an array of line texts.  This is expensive,
+ * so it's performed lazily and _only_ if it's needed for printing
+ * warning or error messages.
+ *
+ * As per SEPARATOR.t, \r, \n, and \r\n are all considered to be line
+ * breaks.
+ */
+static void __InitializeFileLines(FileRef x_file)
+{
+	FILE *t_stream = NULL;
+	long t_file_length = 0;
+	char *t_raw_text = NULL;
+	const char **t_lines = NULL;
+	int t_line_count = 0;
+	int t_offset = 0;
+	int t_last_offset = 0;
+	int t_eol_length = 0;
+
+	if (0 != x_file->line_text_initialized)
+		return;
+
+	x_file->line_text_initialized = 1;
+	x_file->line_text_buffer = NULL;
+	x_file->line_text = NULL;
+	x_file->line_count = 0;
+
+	t_stream = fopen(x_file->path, "rb");
+
+	/* Allocate and fill a buffer with the entire file contents. */
+	if (0 > fseek(t_stream, 0, SEEK_END))
+		goto cleanup;
+	t_file_length = ftell(t_stream);
+	if (0 > t_file_length)
+		goto cleanup;
+
+	if (0 > fseek(t_stream, 0, SEEK_SET))
+		goto cleanup;
+
+	t_raw_text = malloc((t_file_length + 1) * sizeof(*t_raw_text));
+	if (NULL == t_raw_text)
+		Fatal_OutOfMemory();
+
+	if ((size_t) t_file_length != fread(t_raw_text, 1, t_file_length,
+	                                    t_stream))
+		goto cleanup;
+	t_raw_text[t_file_length] = 0; /* nul-terminate */
+
+	fclose(t_stream);
+
+	/* Scan the file contents twice: once to count the number of
+	 * lines, and once to fill a pointer array with offset
+	 * pointers. */
+	t_line_count = 1;
+	t_offset = 0;
+	while (t_offset < t_file_length)
+	{
+		t_eol_length = __FindNextSeparator(t_raw_text, t_file_length,
+		                                   t_offset, &t_offset);
+		++t_line_count;
+		t_offset += t_eol_length;
+	}
+
+	/* The lines array contains an extra, empty line at the end, which
+	 * is necessary because when lc-compile detects an error at the
+	 * end of the file (e.g. missing an "end module", it gives a
+	 * position *after* the last byte in the file. For consistency,
+	 * this "line" is actually a pointer to the additional nul byte
+	 * that was added to the end of the raw text buffer above. */
+	t_lines = malloc((t_line_count + 1) * sizeof(*t_lines));
+	if (NULL == t_lines)
+		Fatal_OutOfMemory();
+
+	t_line_count = 0;
+	t_offset = 0;
+	t_last_offset = 0;
+	while (t_offset < t_file_length)
+	{
+		t_eol_length = __FindNextSeparator(t_raw_text, t_file_length,
+		                                   t_offset, &t_offset);
+		if (0 < t_eol_length)
+			t_raw_text[t_offset] = 0; /* nul-terminate the line */
+		t_offset += t_eol_length;
+
+		t_lines[t_line_count++] = (t_raw_text + t_last_offset);
+		t_last_offset = t_offset;
+	}
+	/* Add the extra empty line */
+	t_lines[t_line_count++] = (t_raw_text + t_file_length);
+
+	x_file->line_text_buffer = t_raw_text;
+	t_raw_text = NULL;
+	x_file->line_text = t_lines;
+	t_lines = NULL;
+	x_file->line_count = t_line_count;
+
+	Debug("Built message context data for %s (%i lines)",
+	      x_file->path, x_file->line_count);
+
+ cleanup:
+	if (NULL != t_raw_text)
+		free(t_raw_text);
+	if (NULL != t_lines)
+		free(t_lines);
+	return;
+}
+
+const char *GetFileLineText(FileRef p_file, long p_row)
+{
+	__InitializeFileLines(p_file);
+	if (p_file->line_text == NULL)
+		return NULL;
+	if (p_row > p_file->line_count)
+		Fatal_InternalInconsistency("Examining line index beyond end of file");
+	return p_file->line_text[p_row-1];
 }
 
 void GetFileIndex(FileRef p_file, long *r_index)
