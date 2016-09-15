@@ -206,8 +206,6 @@ static void _ErrorS(long p_position, const char *p_message, const char *p_string
 
 static void _WarningS(long p_position, const char *p_message, const char *p_string)
 {
-    long t_row, t_column;
-    
     if (IsDependencyCompile())
         return;
 
@@ -217,8 +215,6 @@ static void _WarningS(long p_position, const char *p_message, const char *p_stri
     }
     else
     {
-        GetColumnOfPosition(p_position, &t_column);
-        GetRowOfPosition(p_position, &t_row);
         _PrintPosition(p_position);
         fprintf(stderr, "warning: ");
         fprintf(stderr, p_message, p_string);
