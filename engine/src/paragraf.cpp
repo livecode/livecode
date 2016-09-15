@@ -278,10 +278,19 @@ bool MCParagraph::TextIsPunctuation(codepoint_t p_codepoint)
 
 bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, findex_t &r_next)
 {
-	codepoint_t t_cp;
 	uindex_t t_length = MCStringGetLength(p_string);
-	while (p_after < t_length && !TextIsParagraphBreak(MCStringGetCodepointAtIndex(p_string, p_after)))
+	while (p_after < t_length)
+	{
+		codepoint_t t_char =
+			MCStringGetCodepointAtIndex(p_string, p_after);
+		
+		if (TextIsParagraphBreak(t_char))
+			break;
+		
 		p_after++;
+		if (t_char > UNICHAR_MAX)
+			p_after++;
+	}
 	
 	if (p_after == t_length)
 		return false;
