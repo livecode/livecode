@@ -62,15 +62,15 @@ error being thrown.
 If the stack has not yet been saved, its <filename of stack> <property>
 is <empty>.
 
->*Cross-platform note:*  On <OS X|OS X systems>, <standalone
-> application|standalone applications> are stored as <application
-> bundle|application bundles>. A <application bundle|bundle> behaves
-> like a <file> but is actually a <folder>, and the <main stack> of a
-> <standalone application> is inside this <folder>. The <filename of
-> stack> <property> reports the location of the application inside the
-> <application bundle|bundle>, not the <application bundle|bundle's>
-> location. For example, if the <application bundle|bundle's> <file
-> path> is "/Volumes/Disk/MyApp.app/", the filename of the application's
+>*Cross-platform note:*  On <OS X|OS X systems>, 
+> <standalone application|standalone applications> are stored as 
+> <application bundle|application bundles>. A <application bundle|bundle>
+> behaves like a <file> but is actually a <folder>, and the <main stack>
+> of a <standalone application> is inside this <folder>. The 
+> <filename of stack> <property> reports the location of the application
+> inside the <application bundle|bundle>, not the <application bundle|bundle's>
+> location. For example, if the <application bundle|bundle's> 
+> <file path> is "/Volumes/Disk/MyApp.app/", the filename of the application's
 > <main stack> might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
 
 References: application bundle (glossary), defaultFolder (property), 
