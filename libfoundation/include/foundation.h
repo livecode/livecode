@@ -2105,7 +2105,7 @@ MC_DLLEXPORT const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 // The native length may be different from the string char count.
 MC_DLLEXPORT const char_t *MCStringGetNativeCharPtrAndLength(MCStringRef self, uindex_t& r_native_length);
 
-// Returns the Unicode codepoint at the given codepoint index
+// Returns the Unicode codepoint at the given index
 MC_DLLEXPORT codepoint_t MCStringGetCodepointAtIndex(MCStringRef string, uindex_t index);
 
 // Returns the char at the given index.
