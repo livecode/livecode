@@ -226,7 +226,6 @@ struct File
     FileRef next;
     char *path;
     char *name;
-    FILE *stream;
     unsigned int index;
 };
 
