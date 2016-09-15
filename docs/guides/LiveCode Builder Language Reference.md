@@ -40,6 +40,8 @@ follows:
 
  - **Identifier**: [A-Za-z_][A-Za-z0-9_.]*
  - **Integer**: [0-9]+
+ - **Binary Integer**: 0b[01]+
+ - **Hexadecimal Integer**: 0x[0-9a-fA-F]+
  - **Real**: [0-9]+"."[0-9]+([eE][-+]?[0-9]+)?
  - **String**: "[^\n\r"]*"
  - **Separator**: Any whitespace containing at least one newline
