@@ -163,7 +163,7 @@ bool MCWidgetBase::SetProperty(MCNameRef p_property, MCValueRef p_value)
 		t_host -> lockforexecution();
 	
     bool t_success;
-    t_success = MCScriptSetPropertyOfInstance(m_instance, p_property, p_value);
+    t_success = MCScriptSetPropertyInInstance(m_instance, p_property, p_value);
 	
 	if (t_host != nil)
 		t_host -> unlockforexecution();
@@ -185,7 +185,7 @@ bool MCWidgetBase::GetProperty(MCNameRef p_property, MCValueRef& r_value)
 		t_host -> lockforexecution();
 	
     bool t_success;
-    t_success = MCScriptGetPropertyOfInstance(m_instance, p_property, r_value);
+    t_success = MCScriptGetPropertyInInstance(m_instance, p_property, r_value);
 	
 	if (t_host != nil)
 		t_host -> unlockforexecution();
@@ -863,7 +863,7 @@ bool MCWidgetBase::DoDispatch(MCNameRef p_event, MCValueRef *x_args, uindex_t p_
 	
 	bool t_success;
 	MCAutoValueRef t_retval;
-	t_success = MCScriptCallHandlerOfInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
+	t_success = MCScriptCallHandlerInInstanceIfFound(m_instance, p_event, x_args, p_arg_count, &t_retval);
 	
 	if (t_host != nil)
 		t_host -> unlockforexecution();

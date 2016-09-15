@@ -867,7 +867,7 @@ __MCScriptCopyDefinitionsOfModule(MCScriptModuleRef self,
 	return true;
 }
 
-bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_module_names)
+bool MCScriptListDependenciesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_module_names)
 {
     MCAutoProperListRef t_modules;
     if (!MCProperListCreateMutable(&t_modules))
@@ -883,7 +883,7 @@ bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef self, /* copy */ MCPrope
     return true;
 }
 
-bool MCScriptCopyConstantsOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_constant_names)
+bool MCScriptListConstantNamesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_constant_names)
 {
 	return __MCScriptCopyDefinitionsOfModule(self,
 											 kMCScriptDefinitionKindConstant,
@@ -905,7 +905,7 @@ bool MCScriptQueryConstantOfModule(MCScriptModuleRef self, MCNameRef p_constant,
 	return true;
 }
 
-bool MCScriptCopyPropertiesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_property_names)
+bool MCScriptListPropertyNamesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_property_names)
 {
 	return __MCScriptCopyDefinitionsOfModule(self,
 											 kMCScriptDefinitionKindProperty,
@@ -951,7 +951,7 @@ bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property,
     return true;
 }
 
-bool MCScriptCopyEventsOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_event_names)
+bool MCScriptListEventNamesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_event_names)
 {
 	return __MCScriptCopyDefinitionsOfModule(self,
 											 kMCScriptDefinitionKindEvent,
@@ -973,7 +973,7 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* ge
     return true;
 }
 
-bool MCScriptCopyHandlersOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_handler_names)
+bool MCScriptListHandlerNamesOfModule(MCScriptModuleRef self, /* copy */ MCProperListRef& r_handler_names)
 {
 	return __MCScriptCopyDefinitionsOfModule(self,
 											 kMCScriptDefinitionKindHandler,
@@ -995,7 +995,7 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef self, MCNameRef p_h
     return true;
 }
 
-bool MCScriptCopyHandlerParametersOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* copy */ MCProperListRef& r_names)
+bool MCScriptCopyHandlerParameterNamesOfModule(MCScriptModuleRef self, MCNameRef p_handler, /* copy */ MCProperListRef& r_names)
 {
     MCScriptHandlerDefinition *t_def;
     

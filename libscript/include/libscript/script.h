@@ -180,30 +180,30 @@ bool MCScriptIsModuleALibrary(MCScriptModuleRef module);
 // Returns true if the module is a widget.
 bool MCScriptIsModuleAWidget(MCScriptModuleRef module);
 
+// List the module's direct dependencies.
+bool MCScriptListDependencyNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_module_names);
+
 // Returns a list of the constants defined by the module.
-bool MCScriptCopyConstantsOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_constant_names);
+bool MCScriptListConstantNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_constant_names);
 
 // Queries the value of the given constant.
 bool MCScriptQueryConstantOfModule(MCScriptModuleRef module, MCNameRef name, /* get */ MCValueRef& r_constant_value);
 
-// List the module's direct dependencies.
-bool MCScriptCopyDependenciesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_module_names);
-
 // Returns a list of properties implemented by the module.
-bool MCScriptCopyPropertiesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_property_names);
+bool MCScriptListPropertyNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_property_names);
 
 // Queries the type of the given property. If the setting type is nil, then the property
 // is read-only.
 bool MCScriptQueryPropertyOfModule(MCScriptModuleRef module, MCNameRef property, /* get */ MCTypeInfoRef& r_getter, /* get */ MCTypeInfoRef& r_setter);
 
 // Returns a list of the events declared by the module.
-bool MCScriptCopyEventsOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_event_names);
+bool MCScriptListEventNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_event_names);
 
 // Query the signature of the given event.
 bool MCScriptQueryEventOfModule(MCScriptModuleRef module, MCNameRef event, /* get */ MCTypeInfoRef& r_signature);
 
 // Returns a list of the handlers declared by the module.
-bool MCScriptCopyHandlersOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
+bool MCScriptListHandlerNamesOfModule(MCScriptModuleRef module, /* copy */ MCProperListRef& r_handler_names);
 
 // Query the signature of the given handler.
 bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef module, MCNameRef handler, /* get */ MCTypeInfoRef& r_signature);
@@ -211,7 +211,7 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef module, MCNameRef h
 // Copy the names of the parameters in the signature of the given handler.
 // Note: If the module has had debugging info stripped, the list will be all
 // empty names.
-bool MCScriptCopyHandlerParametersOfModule(MCScriptModuleRef module, MCNameRef handler, /* copy */ MCProperListRef& r_names);
+bool MCScriptListHandlerParameterNamesOfModule(MCScriptModuleRef module, MCNameRef handler, /* copy */ MCProperListRef& r_names);
 
 // Emit an interface definition for the module.
 bool MCScriptWriteInterfaceOfModule(MCScriptModuleRef module, MCStreamRef stream);
@@ -246,18 +246,18 @@ void MCScriptReleaseInstance(MCScriptInstanceRef instance);
 MCScriptModuleRef MCScriptGetModuleOfInstance(MCScriptInstanceRef instance);
 
 // Get a property of an instance.
-bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
+bool MCScriptGetPropertyInInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef& r_value);
 // Set a property of an instance.
-bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
+bool MCScriptSetPropertyInInstance(MCScriptInstanceRef instance, MCNameRef property, MCValueRef value);
 
 // Call a handler of an instance.
-bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+bool MCScriptCallHandlerInInstance(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
 // Call a handler of an instance if found, it doesn't throw an error if not.
-bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
+bool MCScriptCallHandlerInInstanceIfFound(MCScriptInstanceRef instance, MCNameRef handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_value);
 
 // Create a handler-ref for the given handler in the instance.
-bool MCScriptCopyHandlerOfInstance(MCScriptInstanceRef instance, MCNameRef handler, /* copy */ MCHandlerRef& r_handler);
+bool MCScriptEvaluateHandlerBindingInInstance(MCScriptInstanceRef instance, MCNameRef handler, /* copy */ MCHandlerRef& r_handler);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -600,7 +600,7 @@ void MCScriptResolveDefinitionInInstance(MCScriptInstanceRef self,
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_property, MCValueRef& r_value)
+bool MCScriptGetPropertyInInstance(MCScriptInstanceRef self, MCNameRef p_property, MCValueRef& r_value)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
@@ -655,7 +655,7 @@ bool MCScriptGetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_propert
     return true;
 }
 
-bool MCScriptSetPropertyOfInstance(MCScriptInstanceRef self, MCNameRef p_property, MCValueRef p_value)
+bool MCScriptSetPropertyInInstance(MCScriptInstanceRef self, MCNameRef p_property, MCValueRef p_value)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
@@ -770,7 +770,7 @@ static bool MCScriptCallHandlerOfInstanceDirect(MCScriptInstanceRef self, MCScri
     return true;
 }
 
-bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
+bool MCScriptCallHandlerInInstance(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
     
@@ -783,7 +783,7 @@ bool MCScriptCallHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_handler
 }
 
 
-bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
+bool MCScriptCallHandlerInInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_handler, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
 	
@@ -797,7 +797,7 @@ bool MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self, MCNameRef p_
     return MCScriptCallHandlerOfInstanceDirect(self, t_definition, p_arguments, p_argument_count, r_value);
 }
 
-bool MCScriptCopyHandlerOfInstance(MCScriptInstanceRef self, MCNameRef p_name, MCHandlerRef& r_handler)
+bool MCScriptEvaluateHandlerBindingInInstance(MCScriptInstanceRef self, MCNameRef p_name, MCHandlerRef& r_handler)
 {
     __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindInstance);
 	
