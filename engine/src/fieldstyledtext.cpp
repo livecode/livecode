@@ -617,8 +617,8 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
     if (MCArrayFetchValue(p_block_value, false, MCNAME("style"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
 		MCArrayRef t_array;
-		/* UNCHECKED */ ctxt . ConvertToArray(t_valueref, t_array);
-		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
+		if (ctxt . ConvertToArray(t_valueref, t_array))
+            /* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);
 	}
 	// Get the metadata (if any)
 	MCAutoStringRef t_metadata;

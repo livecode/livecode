@@ -555,17 +555,20 @@ Author URI: http://www.livecode.com/
 /***************************************************************************
  * FONTS
 ****************************************************************************/
+/***
+template use for PDF generation requires use of "DejaVu Sans"  instead of "FontAwesome", hence comment out of this line
+[bug 18111]
 @font-face{ font-family: FontAwesome; font-style: normal; font-weight: normal; src: url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.eot) format("embedded-opentype"), url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.woff) format("woff"), url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.ttf) format("truetype"), url(http://livecode.com/wp-content/themes/omega/assets/fonts/fontawesome-webfont.svg) format("svg"); }
-
+***/
 /* ************************************************
  * BASE STYLES
  **************************************************/
 a{ text-decoration:none; color:#799327; } /* aecf36 */
 a:hover{ color:#585858}
 
-h1,h2,h3,h4{ font-family:FontAwesome; font-style:normal; font-weight:normal}
-h1{ font-weight:normal}
-h2{ margin:2em 0 0.5em 0; font-weight:normal}
+h1,h2,h3,h4{ font-family:"DejaVu Sans"; font-style:normal; font-weight:bold}
+h1{ font-weight:bold}
+h2{ margin:2em 0 0.5em 0; font-weight:bold}
 h3{ margin:1.5em 0 0.1em 0}
 p{ font-size:13px;line-height:135%}
 
@@ -608,7 +611,7 @@ table{border-spacing:1em 2px;}
   }
 
   h1,h2,h3,h4 {
-    font-family: FontAwesome, "DejaVu Sans", sans-serif;
+    font-family: "DejaVu Sans", sans-serif;
     page-break-inside: avoid;
   }
 
