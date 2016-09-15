@@ -748,6 +748,7 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
                 if (t_symbol == nil)
                 {
                     MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable - unable to resolve foreign type '%{type}'"),
+												   "name", self -> name,
                                                    "type", t_type -> binding,
                                                    nil);
 					goto error_cleanup;
@@ -829,6 +830,25 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool
+__MCScriptThrowModuleNotUsableError(MCScriptModuleRef self)
+{
+	return MCErrorThrowGenericWithMessage(MCSTR("%{name} not usable"),
+										  "name", self -> name,
+									      nil);
+}
+
+static bool
+__MCScriptThrowDefinitionNotFoundInModuleError(MCScriptModuleRef self,
+											   MCScriptDefinitionKind p_kind,
+											   MCNameRef p_name)
+{
+	return MCErrorThrowGenericWithMessage(MCSTR("%{kind} definition %{name} not found in %{module}"),
+										  "kind", __MCScriptDefinitionKindToString(p_kind),
+										  "name", p_name,
+										  "module", self->name);
+}
+
+static bool
 __MCScriptCopyDefinitionsOfModule(MCScriptModuleRef self,
 								  MCScriptDefinitionKind p_kind,
 								  /* copy */ MCProperListRef& r_names)
@@ -893,11 +913,17 @@ bool MCScriptListConstantNamesOfModule(MCScriptModuleRef self, /* copy */ MCProp
 bool MCScriptQueryConstantOfModule(MCScriptModuleRef self, MCNameRef p_constant, MCValueRef& r_constant_value)
 {
 	MCScriptConstantDefinition *t_constant_def = nil;
+	
+    if (!self -> is_usable)
+        return __MCScriptThrowModuleNotUsableError(self);
+	
 	if (!MCScriptLookupConstantDefinitionInModule(self,
 												  p_constant,
 												  t_constant_def))
 	{
-		return false;
+        return __MCScriptThrowDefinitionNotFoundInModuleError(self,
+															  kMCScriptDefinitionKindConstant,
+															  p_constant);
 	}
 	
 	r_constant_value = self->values[t_constant_def->value];
@@ -917,10 +943,10 @@ bool MCScriptQueryPropertyOfModule(MCScriptModuleRef self, MCNameRef p_property,
     MCScriptPropertyDefinition *t_def;
     
     if (!self -> is_usable)
-        return false; // TODO - throw error
+        return __MCScriptThrowModuleNotUsableError(self);
     
     if (!MCScriptLookupPropertyDefinitionInModule(self, p_property, t_def))
-        return false; // TODO - throw error
+        return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindProperty, p_property);
     
     MCScriptDefinition *t_getter;
     t_getter = t_def -> getter != 0 ? self -> definitions[t_def -> getter - 1] : nil;
@@ -963,10 +989,10 @@ bool MCScriptQueryEventOfModule(MCScriptModuleRef self, MCNameRef p_event, /* ge
     MCScriptEventDefinition *t_def;
     
     if (!self -> is_usable)
-        return false; // TODO - throw error
+        return __MCScriptThrowModuleNotUsableError(self);
     
     if (!MCScriptLookupEventDefinitionInModule(self, p_event, t_def))
-        return false; // TODO - throw error
+        return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindEvent, p_event);
     
     r_signature = self -> types[t_def -> type] -> typeinfo;
     
@@ -985,10 +1011,10 @@ bool MCScriptQueryHandlerSignatureOfModule(MCScriptModuleRef self, MCNameRef p_h
     MCScriptHandlerDefinition *t_def;
     
     if (!self -> is_usable)
-        return false; // TODO - throw error
+        return __MCScriptThrowModuleNotUsableError(self);
     
     if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
-        return false; // TODO - throw error
+        return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindProperty, p_handler);
     
     r_signature = self -> types[t_def -> type] -> typeinfo;
     
@@ -1001,12 +1027,12 @@ bool MCScriptCopyHandlerParameterNamesOfModule(MCScriptModuleRef self, MCNameRef
     
     if (!self -> is_usable)
 	{
-        return false; // TODO - throw error
+        return __MCScriptThrowModuleNotUsableError(self);
     }
 	
     if (!MCScriptLookupHandlerDefinitionInModule(self, p_handler, t_def))
 	{
-        return false; // TODO - throw error
+        return __MCScriptThrowDefinitionNotFoundInModuleError(self, kMCScriptDefinitionKindHandler, p_handler);
 	}
 	
 	MCAutoProperListRef t_names;
@@ -1050,16 +1076,17 @@ void MCScriptReleaseRawModule(MCScriptModule *p_module)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool
+template <typename T, MCScriptDefinitionKind K> static bool
 __MCScriptLookupDefinitionInModule(MCScriptModuleRef self,
-								   MCScriptDefinitionKind p_kind,
 								   MCNameRef p_name,
-								   MCScriptDefinition*& r_definition)
+								   T*& r_definition)
 {
+    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
+	
     for(uindex_t i = 0; i < self->exported_definition_count; i++)
     {
-        if (p_kind != kMCScriptDefinitionKindNone &&
-			self->definitions[self->exported_definitions[i].index]->kind != p_kind)
+        if (K != kMCScriptDefinitionKindNone &&
+			self->definitions[self->exported_definitions[i].index]->kind != K)
 		{
             continue;
 		}
@@ -1070,7 +1097,7 @@ __MCScriptLookupDefinitionInModule(MCScriptModuleRef self,
             continue;
         }
 		
-        r_definition = self->definitions[self->exported_definitions[i].index];
+        r_definition = static_cast<T*>(self->definitions[self->exported_definitions[i].index]);
 		
         return true;
     }
@@ -1081,84 +1108,42 @@ __MCScriptLookupDefinitionInModule(MCScriptModuleRef self,
 
 bool MCScriptLookupConstantDefinitionInModule(MCScriptModuleRef self, MCNameRef p_constant, MCScriptConstantDefinition*& r_definition)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-	
-	MCScriptDefinition *t_definition = nil;
-	if (!__MCScriptLookupDefinitionInModule(self,
-											kMCScriptDefinitionKindConstant,
-											p_constant,
-											t_definition))
-	{
-		return false;
-	}
-	
-	r_definition = static_cast<MCScriptConstantDefinition *>(t_definition);
-	
-	return true;
+	return __MCScriptLookupDefinitionInModule<MCScriptConstantDefinition,
+											  kMCScriptDefinitionKindConstant>(self,
+																			   p_constant,
+																			   r_definition);
 }
 
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef self, MCNameRef p_property, MCScriptPropertyDefinition*& r_definition)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-	
-	MCScriptDefinition *t_definition = nil;
-	if (!__MCScriptLookupDefinitionInModule(self,
-											kMCScriptDefinitionKindProperty,
-											p_property,
-											t_definition))
-	{
-		return false;
-	}
-	
-	r_definition = static_cast<MCScriptPropertyDefinition *>(t_definition);
-	
-	return true;
+	return __MCScriptLookupDefinitionInModule<MCScriptPropertyDefinition,
+											  kMCScriptDefinitionKindProperty>(self,
+																			   p_property,
+																			   r_definition);
 }
 
-bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef self, MCNameRef p_property, MCScriptEventDefinition*& r_definition)
+bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef self, MCNameRef p_event, MCScriptEventDefinition*& r_definition)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-	
-	MCScriptDefinition *t_definition = nil;
-	if (!__MCScriptLookupDefinitionInModule(self,
-											kMCScriptDefinitionKindEvent,
-											p_property,
-											t_definition))
-	{
-		return false;
-	}
-	
-	r_definition = static_cast<MCScriptEventDefinition *>(t_definition);
-	
-	return true;
+	return __MCScriptLookupDefinitionInModule<MCScriptEventDefinition,
+											  kMCScriptDefinitionKindEvent>(self,
+																			p_event,
+																			r_definition);
 }
 
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef self, MCNameRef p_handler, MCScriptHandlerDefinition*& r_definition)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-	
-	MCScriptDefinition *t_definition = nil;
-	if (!__MCScriptLookupDefinitionInModule(self,
-											kMCScriptDefinitionKindHandler,
-											p_handler,
-											t_definition))
-	{
-		return false;
-	}
-	
-	r_definition = static_cast<MCScriptHandlerDefinition *>(t_definition);
-	
-	return true;
+	return __MCScriptLookupDefinitionInModule<MCScriptHandlerDefinition,
+											  kMCScriptDefinitionKindHandler>(self,
+																			  p_handler,
+																			  r_definition);
 }
 
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition)
 {
-    __MCScriptValidateObjectAndKind__(self, kMCScriptObjectKindModule);
-	
-	return __MCScriptLookupDefinitionInModule(self,
-											  kMCScriptDefinitionKindNone,
-											  p_name,
-											  r_definition);
+	return __MCScriptLookupDefinitionInModule<MCScriptDefinition,
+											  kMCScriptDefinitionKindNone>(self,
+																		   p_name,
+																		   r_definition);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
