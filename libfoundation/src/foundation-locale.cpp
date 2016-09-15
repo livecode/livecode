@@ -1149,9 +1149,7 @@ bool MCLocaleWordBreakIteratorAdvance(MCStringRef self, MCBreakIteratorRef p_ite
 			if (MCStringCodepointIsWordPart(t_cp))
 				break;
 			
-			t_left_break++;
-			if (t_cp > UNICHAR_MAX)
-				t_left_break++;
+			t_left_break += MCUnicodeCodepointGetCodeunitLength(t_cp);
         }
         
         if (t_left_break < t_right_break)

@@ -1745,8 +1745,8 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			MCStringGetCodepointAtIndex(p_typing, i);
 		
 		// Compute the number of codeunits used by the char
-		uindex_t t_cp_advance =
-			t_cp_char <= UNICHAR_MAX ? 1 : 2;
+		uindex_t t_cp_length =
+			MCUnicodeCodepointGetCodeunitLength(t_cp_char);
 		
 		KeySym keysym = t_cp_char;
         MCAutoStringRef t_char;
@@ -1761,7 +1761,7 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			keysym |= XK_Class_codepoint;
 		else
         {
-            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_advance), &t_char);
+            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
 			t_string = *t_char;
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
@@ -1775,7 +1775,7 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 		
 		// If the codepoint was in SMP, then make sure we bump two codeunit
 		// indicies.
-		i += t_cp_advance - 1;
+		i += t_cp_length - 1;
 	}
     
     // AL-2014-01-07 return lock mods to false

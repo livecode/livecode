@@ -2348,15 +2348,13 @@ bool MCStringUnmapTrueWordIndices(MCStringRef self, MCLocaleRef p_locale, MCRang
             while (t_left_break < t_right_break)
             {
 				// NB: GetCodepointAtIndex takes a code-unit index
-				codepoint_t t_char =
+				codepoint_t t_cp =
 					MCStringGetCodepointAtIndex(self, t_left_break);
-                if (MCStringCodepointIsWordPart(t_char))
+                if (MCStringCodepointIsWordPart(t_cp))
                     break;
 				
 				// If the char is in the SMP, it is two codeunits long.
-				t_left_break++;
-				if (t_char > UNICHAR_MAX)
-					t_left_break++;
+				t_left_break += MCUnicodeCodepointGetCodeunitLength(t_cp);
             }
             
             if (t_left_break < t_right_break)

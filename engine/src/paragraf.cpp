@@ -287,9 +287,7 @@ bool MCParagraph::TextFindNextParagraph(MCStringRef p_string, findex_t p_after, 
 		if (TextIsParagraphBreak(t_char))
 			break;
 		
-		p_after++;
-		if (t_char > UNICHAR_MAX)
-			p_after++;
+		p_after += MCUnicodeCodepointGetCodeunitLength(t_char);
 	}
 	
 	if (p_after == t_length)
