@@ -111,6 +111,20 @@ public:
 		return MCMemoryResizeArray (p_new_count, m_values, m_count);
 	}
 
+	bool Extend(uindex_t p_new_count)
+	{
+		MCAssert(p_new_count >= m_count);
+		return Resize(p_new_count);
+	}
+
+	bool Push(T p_value)
+	{
+		if (!(nil == m_values ? New(1) : Extend(m_count + 1)))
+			return false;
+		m_values[m_count - 1] = REF(p_value);
+		return true;
+	}
+
 	T & operator [] (const int p_index)
 	{
 		MCAssert (nil != m_values);
