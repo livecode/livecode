@@ -482,8 +482,13 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    delete the last char of tDeploy["externals"]
    
    -- Put the redirects if any
-   -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redircts, we use symlinks with the iOS 8 sim.
-   if char 1 of tSDKs["sim"]["suffix"] < 8 then
+   -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
+   -- PM-2016-09-16: [[ Bug 18414 ]] iOS 10 - tSDKs["sim"]["suffix"] is x_y on iOS x.y
+   local tSimVersion, tOldItemDel
+   put tSDKs["sim"]["suffix"] into tSimVersion
+   put the itemdel into tOldItemDel
+   set the itemdel to"_"
+   if item 1 of tSimVersion < 8 then
       put tRedirects into tDeploy["redirects"]
    else
       put empty into tDeploy["redirects"]
@@ -501,6 +506,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          end if
       end repeat
    end if
+   set the itemdel to tOldItemDel
    
    -- Output file to create
    put pAppBundle & slash & tName into tDeploy["output"]
