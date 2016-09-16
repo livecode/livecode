@@ -90,19 +90,19 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0};
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = {0};
+MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #elif defined(__EMSCRIPTEN__)
-MCCapsuleInfo MCcapsule = {0};
+MCCapsuleInfo MCcapsule = {0, {0, 0, 0}};
 #endif
 
 MCLicenseParameters MClicenseparameters =

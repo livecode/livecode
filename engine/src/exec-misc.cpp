@@ -98,10 +98,10 @@ MC_EXEC_DEFINE_GET_METHOD(Misc, IsVoiceOverRunning, 1)
 
 static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
 {
-    { "default", kMCMiscStatusBarStyleDefault},
-    { "translucent", kMCMiscStatusBarStyleTranslucent},
-    { "opaque", kMCMiscStatusBarStyleOpaque},
-    { "solid", kMCMiscStatusBarStyleSolid}
+    { "default", kMCMiscStatusBarStyleDefault, false},
+    { "translucent", kMCMiscStatusBarStyleTranslucent, false},
+    { "opaque", kMCMiscStatusBarStyleOpaque, false},
+    { "solid", kMCMiscStatusBarStyleSolid, false}
 };
 
 static MCExecEnumTypeInfo _kMCMiscStatusBarStyleTypeInfo =
@@ -115,15 +115,15 @@ MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo = &_kMCMiscStatusBarStyleTypeI
 
 static MCExecEnumTypeElementInfo _kMCMiscKeyboardTypeElementInfo[] =
 {
-    { "default", kMCMiscKeyboardTypeDefault},
-    { "alphabet", kMCMiscKeyboardTypeAlphabet},
-    { "numeric", kMCMiscKeyboardTypeNumeric},
-    { "decimal", kMCMiscKeyboardTypeDecimal},
-    { "number", kMCMiscKeyboardTypeNumber},
-    { "phone", kMCMiscKeyboardTypePhone},
-    { "email", kMCMiscKeyboardTypeEmail},
-    { "url", kMCMiscKeyboardTypeUrl},
-    { "contact", kMCMiscKeyboardTypeContact}
+    { "default", kMCMiscKeyboardTypeDefault, false},
+    { "alphabet", kMCMiscKeyboardTypeAlphabet, false},
+    { "numeric", kMCMiscKeyboardTypeNumeric, false},
+    { "decimal", kMCMiscKeyboardTypeDecimal, false},
+    { "number", kMCMiscKeyboardTypeNumber, false},
+    { "phone", kMCMiscKeyboardTypePhone, false},
+    { "email", kMCMiscKeyboardTypeEmail, false},
+    { "url", kMCMiscKeyboardTypeUrl, false},
+    { "contact", kMCMiscKeyboardTypeContact, false}
 };
 
 static MCExecEnumTypeInfo _kMCMiscKeyboardTypeTypeInfo =
@@ -137,17 +137,17 @@ MCExecEnumTypeInfo* kMCMiscKeyboardTypeTypeInfo = &_kMCMiscKeyboardTypeTypeInfo;
 
 static MCExecEnumTypeElementInfo _kMCMiscKeyboardReturnKeyElementInfo[] =
 {
-    { "default", kMCMiscKeyboardReturnKeyDefault},
-    { "go", kMCMiscKeyboardReturnKeyGo},
-    { "google", kMCMiscKeyboardReturnKeyGoogle},
-    { "join", kMCMiscKeyboardReturnKeyJoin},
-    { "next", kMCMiscKeyboardReturnKeyNext},
-    { "route", kMCMiscKeyboardReturnKeyRoute},
-    { "search", kMCMiscKeyboardReturnKeySearch},
-    { "send", kMCMiscKeyboardReturnKeySend},
-    { "yahoo", kMCMiscKeyboardReturnKeyYahoo},
-    { "done", kMCMiscKeyboardReturnKeyDone},
-    { "emergency call", kMCMiscKeyboardReturnKeyEmergencyCall}
+    { "default", kMCMiscKeyboardReturnKeyDefault, false},
+    { "go", kMCMiscKeyboardReturnKeyGo, false},
+    { "google", kMCMiscKeyboardReturnKeyGoogle, false},
+    { "join", kMCMiscKeyboardReturnKeyJoin, false},
+    { "next", kMCMiscKeyboardReturnKeyNext, false},
+    { "route", kMCMiscKeyboardReturnKeyRoute, false},
+    { "search", kMCMiscKeyboardReturnKeySearch, false},
+    { "send", kMCMiscKeyboardReturnKeySend, false},
+    { "yahoo", kMCMiscKeyboardReturnKeyYahoo, false},
+    { "done", kMCMiscKeyboardReturnKeyDone, false},
+    { "emergency call", kMCMiscKeyboardReturnKeyEmergencyCall, false}
 };
 
 static MCExecEnumTypeInfo _kMCMiscKeyboardReturnKeyTypeInfo =

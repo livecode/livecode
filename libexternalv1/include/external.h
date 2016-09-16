@@ -644,7 +644,7 @@ const char *MCErrorToString(MCError t_error);
 	{ 2, m_name, m_function },
 
 #define MC_EXTERNAL_HANDLERS_END \
-	{ 0 } };
+	{ 0, nil, nil } };
 
 #elif !defined(__EXCEPTIONS)
 
@@ -667,7 +667,7 @@ const char *MCErrorToString(MCError t_error);
 	{ 2, m_name, m_function },
 
 #define MC_EXTERNAL_HANDLERS_END \
-	{ 0 } }; }
+	{ 0, nil, nil } }; }
 
 #endif
 
@@ -1479,7 +1479,7 @@ template<MCExternalHandlerProc u_handler> bool MCExternalHandlerWrapper(MCVariab
 	{ 2, m_name, m_function },
 
 #define MC_EXTERNAL_HANDLERS_END \
-	{ 0 } }; }
+	{ 0, nil, nil } }; }
 
 #endif
 
