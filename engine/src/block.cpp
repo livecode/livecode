@@ -756,12 +756,12 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	if (t_next_block != parent -> getblocks())
 	{
 		if (t_next_block -> GetLength() == 0)
-			t_next_block_char = -2;
+			t_next_block_char = CODEPOINT_NONE-1;
 		else
 			t_next_block_char = parent->GetCodepointAtIndex(t_next_block -> m_index);
 	}
 	else
-		t_next_block_char = -1;
+		t_next_block_char = CODEPOINT_NONE;
 
     // FG-2013-10-21 [[ Field speedups ]]
     // Previously, we used to calculate the length of the entire block here in order
@@ -836,7 +836,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
                     t_end_of_block = true;
                 }
                 
-                if (t_next_char == -1 ||
+                if (t_next_char == CODEPOINT_NONE ||
                     MCUnicodeCanBreakBetween(t_this_char, t_next_char))
                 {
                     t_can_break = true;
