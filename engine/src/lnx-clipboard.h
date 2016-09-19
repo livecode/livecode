@@ -112,8 +112,8 @@ public:
     virtual bool FlushData();
     virtual uindex_t GetMaximumItemCount() const;
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
-    virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_list) const;
-    virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const;
+	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const;
+	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
     
     // Gets the item that was most recently pushed to the system (this is used
     // to respond to selection requests in order to perform copies)

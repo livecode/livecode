@@ -111,6 +111,8 @@ public:
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
     virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_path) const;
     virtual MCStringRef DecodeTransferredFileList(MCDataRef p_encoded_path) const;
+	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const;
+	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
     
     // Constructor. The NSPasteboard being wrapped is required.
     MCMacRawClipboard(NSPasteboard* p_pasteboard);
