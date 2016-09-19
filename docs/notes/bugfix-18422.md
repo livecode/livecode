@@ -1,1 +1,1 @@
-# Fixed crash when launching the ios 9.2 simulator
+# Fix crash when launching the iOS 9.2 simulator
