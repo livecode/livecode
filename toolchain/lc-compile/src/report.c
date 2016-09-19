@@ -189,6 +189,7 @@ static void _Error(long p_position, const char *p_message)
 {
     _PrintPosition(p_position);
     fprintf(stderr, "error: %s\n", p_message);
+    _PrintContext(p_position);
     s_error_count += 1;
 }
 
