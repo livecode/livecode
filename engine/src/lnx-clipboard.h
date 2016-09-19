@@ -112,11 +112,16 @@ public:
     virtual bool FlushData();
     virtual uindex_t GetMaximumItemCount() const;
     virtual MCStringRef GetKnownTypeString(MCRawClipboardKnownType p_type) const;
+<<<<<<< 11e68589c0449e9ba7a4b4f2aa88ec937178a90f
 <<<<<<< e8cb2329856f8af3e51e476667c75682f9c4493c
     virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_list) const;
     virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const;
 =======
 >>>>>>> [[ Bug 17622 ]] Encode/decode html text transferred on the clipboard
+=======
+    virtual MCDataRef EncodeFileListForTransfer(MCStringRef p_file_list) const;
+    virtual MCStringRef DecodeTransferredFileList(MCDataRef p_data) const;
+>>>>>>> [[ Bug 17622 ]] Fix accidentally-removed method declarations
 	virtual MCDataRef EncodeHTMLFragmentForTransfer(MCDataRef p_html) const;
 	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
     
