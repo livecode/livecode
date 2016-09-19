@@ -33,6 +33,8 @@
 
 extern "C" int OutputFileAsC;
 int OutputFileAsC = 0;
+extern "C" int OutputFileAsAuxC;
+int OutputFileAsAuxC = 0;
 extern "C" int OutputFileAsBytecode;
 int OutputFileAsBytecode = 0;
 
@@ -338,9 +340,22 @@ static bool __FindEmittedModule(NameRef p_name, EmittedModule*& r_module)
 
 void EmitFinish(void)
 {
-    if (s_output_code_file != NULL && IsBootstrapCompile())
+    if (s_output_code_file != NULL && (OutputFileAsAuxC || IsBootstrapCompile()))
     {
-        if (fprintf(s_output_code_file, "builtin_module_descriptor* g_builtin_modules[] =\n{\n") < 0)
+		const char *t_builtin_name;
+		const char *t_modules_name;
+		if (OutputFileAsAuxC)
+		{
+			t_builtin_name = "g_builtin_aux_module";
+			t_modules_name = "MCModulesAux";
+		}
+		else
+		{
+			t_builtin_name = "g_builtin_module";
+			t_modules_name = "MCModules";
+		}
+		
+        if (fprintf(s_output_code_file, "builtin_module_descriptor* %ss[] =\n{\n", t_builtin_name) < 0)
             goto error_cleanup;
         
         for(unsigned int i = 0; i < s_ordered_module_count; i++)
@@ -354,7 +369,7 @@ void EmitFinish(void)
         if (fprintf(s_output_code_file, "};\n\n") < 0)
             goto error_cleanup;
         
-        if (fprintf(s_output_code_file, "unsigned int g_builtin_module_count = sizeof(g_builtin_modules) / sizeof(builtin_module_descriptor*);\n\n") < 0)
+        if (fprintf(s_output_code_file, "unsigned int %s_count = sizeof(%ss) / sizeof(builtin_module_descriptor*);\n\n", t_builtin_name, t_builtin_name) < 0)
             goto error_cleanup;
 		for(unsigned int i = 0; i < s_ordered_module_count; i++)
 		{
@@ -367,7 +382,7 @@ void EmitFinish(void)
                     goto error_cleanup;
             }
 		}
-        if (fprintf(s_output_code_file, "int MCModulesInitialize(void)\n{\n") < 0)
+        if (fprintf(s_output_code_file, "int %sInitialize(void)\n{\n", t_modules_name) < 0)
             goto error_cleanup;
 		for(unsigned int i = 0; i < s_ordered_module_count; i++)
         {
@@ -394,7 +409,7 @@ void EmitFinish(void)
                     goto error_cleanup;
             }
 		}
-        if (fprintf(s_output_code_file, "void MCModulesFinalize(void)\n{\n") < 0)
+        if (fprintf(s_output_code_file, "void %sFinalize(void)\n{\n", t_modules_name) < 0)
             goto error_cleanup;
         for(unsigned int i = s_ordered_module_count; i > 0; i--)
         {
