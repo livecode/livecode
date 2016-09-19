@@ -275,7 +275,8 @@ int main(int argc, char *argv[])
         // Instead, we need to use the SimServiceContext class, making sure we fetch the correct context for the current version of Xcode.
         id t_service_context;
         t_service_context = NSClassFromString(@"SimServiceContext");
-        if (t_service_context != nil)
+		// PM-2016-09-19: [[ Bug 18422] We want to use SimServiceContext class *only* in xcode 8
+        if (t_service_context != nil && [t_service_context respondsToSelector:@selector(sharedServiceContextForDeveloperDir)])
         {
             NSString *t_dev_dir;
             t_dev_dir = [NSString stringWithFormat: @"%s", argv[1]];
