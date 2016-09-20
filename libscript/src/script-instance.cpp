@@ -1387,15 +1387,48 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance
     }
     else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
     {
-#if !defined(TARGET_SUBPLATFORM_ANDROID)
-        if (p_throw)
-            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not supported on this platform"), nil);
+        if (MCStringIsEqualToCString(*t_calling, "", kMCStringOptionCompareCaseless))
+            p_handler -> java . call_type = MCJavaCallTypeInstance;
+        else if (MCStringIsEqualToCString(*t_calling, "instance", kMCStringOptionCompareCaseless))
+            p_handler -> java . call_type = MCJavaCallTypeInstance;
+        else if (MCStringIsEqualToCString(*t_calling, "static", kMCStringOptionCompareCaseless))
+            p_handler -> java . call_type = MCJavaCallTypeStatic;
+        else if (MCStringIsEqualToCString(*t_calling, "nonvirtual", kMCStringOptionCompareCaseless))
+            p_handler -> java . call_type = MCJavaCallTypeNonVirtual;
         
-        r_bound = false;
-        return true;
-#else
-        return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not implemented yet"), nil);
-#endif
+        p_handler -> is_java = true;
+
+        MCNewAutoNameRef t_class_name;
+        if (!MCNameCreate(*t_library, &t_class_name))
+            return false;
+        
+        p_handler -> java . class_name = MCValueRetain(*t_class_name);
+        
+        MCAutoStringRef t_signature;
+        if (!MCStringFormat(&t_signature, "%@%@", *t_arguments, *t_return))
+            return false;
+        
+        if (!MCJavaGetArgumentTypes(*t_arguments,
+                                    p_handler -> java . arg_types,
+                                    p_handler -> java . arg_count))
+            return false;
+        
+        p_handler -> java . return_type = MCJavaMapTypeCode(*t_return);
+        
+        void *t_method_id;
+        t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_signature);
+        
+        if (t_method_id != nil)
+        {
+            p_handler -> java . method_id = t_method_id;
+        }
+        else
+        {
+            if (p_throw)
+                return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding not supported on this platform"), nil);
+            r_bound = false;
+            return true;
+        }
     }
     
 #ifdef _WIN32
@@ -1437,6 +1470,9 @@ static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScr
         
         return true;
     }
+    
+    if (p_handler -> is_java)
+        return true;
     
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
