@@ -67,14 +67,14 @@ tStyledTextArray[&lt;n&gt;] = &lt;last paragraph array&gt;
 
 Each paragraph array has up to two keys:
 
-tParagraphArray["style"] = &lt;array containing paragraph-level
-styles&gt; tParagraphArray["runs"] = &lt;paragraph content array&gt;
+- "style" : array containing paragraph-level styles 
+- "runs" : paragraph content array
 
 The style array contains the values for each of the paragraph styles set
 on that paragraph. The list of styles that are supported are: textAlign,
 listStyle, listDepth, listIndent, firstIndent, leftIndent, rightIndent,
 spaceAbove, spaceBelow, tabStops, tabAlign, backgroundColor, borderWidth,
-borderColor, hGrid, vGrid, dontWrap, padding.
+borderColor, hGrid, vGrid, dontWrap, padding and hidden.
 
 The paragraph content array is a numerically-indexed array of runs, each
 index representing each run in the paragraph in order:
@@ -85,9 +85,10 @@ tParagraphContentArray[&lt;n&gt;] = &lt;last paragraph run array&gt;
 
 Each paragraph run array has up to three keys:
 
-tRunArray["style"] = &lt;array containing character-level styles for the
-run&gt; tRunArray["metadata"] = &lt;metadata of the run (if present)&gt;
-tRunArray["text" (or "unicodeText")] = &lt;text content of run&gt;
+- "style" : array containing character-level styles for the
+run
+- "metadata" : metadata of the run (if present)
+- "text" (or "unicodeText") : text content of run
 
 The style array contains the values for each of the characters styles
 set on that run. The list of styles that are supported are: textFont,
@@ -128,23 +129,28 @@ notation ]
 When setting the styledText property, the engine uses a very permissive
 algorithm to parse the arrays as follows:
 
-parseStyledTextArray pStyledText
-repeat for each element tEntry of pStyledText
-if tEntry is a sequence then
-parseStyledTextArray tEntry
-else if tEntry has key runs then
-begin paragraph with style tEntry[style]
-parseStyledTextRunArray tEntry[runs]
-end paragraph
-else if tEntry is an array then
-append tEntry[text] with style tEntry[style]
+    parseStyledTextArray pStyledText
+       repeat for each element tEntry of pStyledText
+          if tEntry is a sequence then
+             parseStyledTextArray tEntry
+          else if tEntry has key runs then
+             begin paragraph with style tEntry[style]
+                parseStyledTextRunArray tEntry[runs]
+             end paragraph
+          else if tEntry is an array then
+             append tEntry[text] with style tEntry[style]
 
-parseStyledTextRunArray pRun
-repeat for each element tRun in pRuns
-if tRun is a sequence then
-parseStyledTextRunArray tRun
-else
-append tRun[text] with style tEntry[style]
+             parseStyledTextRunArray pRun
+             repeat for each element tRun in pRuns
+                if tRun is a sequence then
+                    parseStyledTextRunArray tRun
+                else
+                    append tRun[text] with style tEntry[style]
+                end if
+             end repeat
+         end if
+      end repeat
+    end parseStyledTextArray
 
 Changes:
 Support for the <tabAlign> paragraph style was added in version 8.1.2
@@ -154,4 +160,3 @@ textShift (property), metadata (property), textFont (property),
 RTFText (property), textStyle (property)
 
 Tags: text processing
-
