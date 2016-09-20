@@ -41,10 +41,42 @@
 --   template parameters
 
 'sweep' CheckBindings(ANY)
-
-    'rule' CheckBindings(PACKAGE'package(_, _, _, _)):
     --
-    -- TODO : checking
+
+    'rule' CheckBindings(DEFINITION'constant(Position, _, Type, Value)):
+        (|
+            where(Value -> nil)
+        ||
+            IsExpressionSimpleConstant(Value)
+        ||
+            Error_ConstantsMustBeSimple(Position)
+        |)
+        CheckBindings(Type)
+
+    'rule' CheckBindings(DEFINITION'class(Position, _, _, Definitions, Inherits, Implements)):
+        (|
+        /* BD2 */ CheckBindingIsClass(Inherits)
+        ||
+            Error_ClassesMayOnlyInheritFromClasses(Position)
+        |)
+
+        (|
+        /* BD2 */ CheckBindingIsInterface(Implements)
+        ||
+            Error_ClassesMayOnlyImplementInterfaces(Position)
+        |)
+        CheckBindings(Inherits)
+        CheckBindings(Implements)
+        CheckBindings(Definitions)
+
+    'rule' CheckBindings(DEFINITION'interface(Position, _, Definitions, Inherits)):
+        (|
+        /* BD2 */ CheckBindingIsInterface(Inherits)
+        ||
+            Error_InterfacesMayOnlyInheritFromInterfaces(Position)
+        |)
+        CheckBindings(Inherits)
+        CheckBindings(Definitions)
 
 'condition' CheckParameters(TYPELIST, TYPE)
 
@@ -169,6 +201,7 @@
     'rule' ResolveIdQualifiedName(Id -> Name)
         Id'Name -> QName
         QName'Name -> Name
+
 
 'action' GetQualifiedName(ID, QUALIFIEDNAME -> NAME)
 
