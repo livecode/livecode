@@ -232,7 +232,7 @@ MCScriptExecuteContext::InvokeForeign(MCScriptInstanceRef p_instance,
 	
 	if (p_handler_def->function == nil)
 	{
-		if (!MCScriptBindForeignHandlerOfInstanceInternal(p_instance,
+		if (!MCScriptBindForeignHandlerInInstanceInternal(p_instance,
 														  p_handler_def))
 		{
 			Rethrow();

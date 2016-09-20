@@ -44,6 +44,11 @@ LCC_CMD = $(LCS_ENGINE) -ui $(LCC_COMPILERTESTRUNNER) run
 
 LCC_LOG = _compiler_test_suite.log
 
+########## lc-run test params
+
+LC_RUN_TESTS ?= $(top_srcdir)/tests/_lcruntests.livecodescript
+LC_RUN_TEST_CMD = $(LCS_ENGINE) -ui $(LC_RUN_TESTS)
+
 ################################################################
 # Top-level targets
 ################################################################
@@ -128,6 +133,19 @@ compiler-check: $(LC_COMPILE)
 	cmd="$(LCC_CMD)"; \
 	echo "$$cmd" $(_PRINT_RULE); \
 	$$cmd
+
+################################################################
+# Basic LCB runner test
+################################################################
+
+lc-run-check: $(LC_RUN) lcm_compile
+	@export LC_RUN="$(LC_RUN)"; \
+	export LCM_DIR="$(LCM_DIR)/lc-run"; \
+	cmd="$(LC_RUN_TEST_CMD)"; \
+	echo "$$cmd" $(_PRINT_RULE); \
+	$$cmd
+
+.PHONY: lc-run-check
 
 ################################################################
 # LCB-only tests

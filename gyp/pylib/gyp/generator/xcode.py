@@ -609,7 +609,8 @@ def GenerateOutput(target_list, target_dicts, data, params):
 
     if parallel_builds:
       pbxp.SetProperty('attributes',
-                       {'BuildIndependentTargetsInParallel': 'YES'})
+                       {'BuildIndependentTargetsInParallel': 'YES',
+                       'LastUpgradeCheck': 100000 })
 
     # Add gyp/gypi files to project
     if not generator_flags.get('standalone'):

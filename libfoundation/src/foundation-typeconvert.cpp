@@ -153,6 +153,55 @@ static integer_t MCU_strtol(const char *sptr, uindex_t &l, int8_t c, bool &done,
 	return value;
 }
 
+static real64_t MCU_strtor8(const char *&r_str, uindex_t &r_len, int8_t p_delim,  bool &r_done, bool convertoctals)
+{
+    const char *sptr = r_str;
+    uindex_t l = r_len;
+    bool done;
+    integer_t i = MCU_strtol(sptr, l, p_delim, done, false, convertoctals);
+    if (done)
+    {
+        r_done = done;
+        return i;
+    }
+    l = MCMin(R8L - 1U, strlen(sptr));
+    MCU_skip_spaces(sptr, l);
+    // bugs in MSL means we need to check these things
+    // MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
+    //   of these tests.
+    if (l == 0 || (l > 1 && (((MCNativeCharFold((uint8_t)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint8_t)sptr[2])))
+                              || (sptr[1] == '+' || sptr[1] == '-')))))
+    {
+        r_done = false;
+        return 0;
+    }
+
+    char buff[R8L];
+    memcpy(buff, sptr, l);
+    buff[l] = '\0';
+    const char *newptr;
+    
+    real64_t t_value;
+    t_value = strtod((char *)buff, (char **)&newptr);
+    if (newptr == buff)
+    {
+        r_done = false;
+        return 0;
+    }
+    
+    l = buff + l - newptr;
+    MCU_skip_spaces(newptr, l);
+    if (l != 0)
+    {
+        r_done = false;
+        return 0;
+    }
+    
+    r_done = true;
+    return t_value;
+    
+}
+
 MC_DLLEXPORT_DEF
 bool MCTypeConvertStringToLongInteger(MCStringRef p_string, integer_t& r_converted)
 {
@@ -177,36 +226,31 @@ bool MCTypeConvertStringToReal(MCStringRef p_string, real64_t& r_converted, bool
     MCAutoStringRefAsCString t_cstring;
     t_cstring . Lock(p_string);
     
-    const char *sptr = *t_cstring;
-	uindex_t l = strlen(sptr);
-	bool done;
-	integer_t i = MCU_strtol(sptr, l, '\0', done, false, p_convert_octals);
-	if (done)
-	{
-		r_converted = i;
-		return l == 0;
-	}
-	sptr = *t_cstring;
-	l = MCMin(R8L - 1U, strlen(sptr));
-	MCU_skip_spaces(sptr, l);
-	// bugs in MSL means we need to check these things
-	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
-	//   of these tests.
-	if (l == 0 || (l > 1 && (((MCNativeCharFold((uint8_t)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint8_t)sptr[2])))
-                              || (sptr[1] == '+' || sptr[1] == '-')))))
-		return false;
-	char buff[R8L];
-	memcpy(buff, sptr, l);
-	buff[l] = '\0';
-	const char *newptr;
-	r_converted = strtod((char *)buff, (char **)&newptr);
-	if (newptr == buff)
-		return false;
-	l = buff + l - newptr;
-	MCU_skip_spaces(newptr, l);
-	if (l != 0)
-		return false;
-	return true;
+    const char *t_sptr = *t_cstring;
+    uindex_t t_length = strlen(t_sptr);
+    bool t_done;
+    
+    real64_t t_value = MCU_strtor8(t_sptr, t_length, '\0', t_done, p_convert_octals);
+    
+    if (t_done)
+        r_converted = t_value;
+    
+    return t_done;
+}
+
+
+MC_DLLEXPORT_DEF
+bool MCTypeConvertDataToReal(MCDataRef p_data, real64_t& r_converted, bool p_convert_octals)
+{
+    const char *t_sptr = (const char *)MCDataGetBytePtr(p_data);
+	uindex_t t_length = MCDataGetLength(p_data);
+	bool t_done;
+    real64_t t_value = MCU_strtor8(t_sptr, t_length, '\0', t_done, p_convert_octals);
+    
+    if (t_done)
+        r_converted = t_value;
+    
+    return t_done;
 }
 
 MC_DLLEXPORT_DEF

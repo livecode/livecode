@@ -436,7 +436,7 @@ MCScriptExecuteContext::FetchHandler(MCScriptInstanceRef p_instance,
 	}
 	
 	MCHandlerRef t_handler;
-	if (!MCScriptEvaluateHandlerOfInstanceInternal(p_instance,
+	if (!MCScriptEvaluateHandlerInInstanceInternal(p_instance,
 												   p_handler_def,
 												   t_handler))
 	{
@@ -457,7 +457,7 @@ MCScriptExecuteContext::FetchForeignHandler(MCScriptInstanceRef p_instance,
 	}
 	
 	bool t_bound;
-	if (!MCScriptTryToBindForeignHandlerOfInstanceInternal(p_instance,
+	if (!MCScriptTryToBindForeignHandlerInInstanceInternal(p_instance,
 														   p_handler_def,
 														   t_bound))
 	{
@@ -471,7 +471,7 @@ MCScriptExecuteContext::FetchForeignHandler(MCScriptInstanceRef p_instance,
 	}
 	
 	MCHandlerRef t_handler;
-	if (!MCScriptEvaluateHandlerOfInstanceInternal(p_instance,
+	if (!MCScriptEvaluateHandlerInInstanceInternal(p_instance,
 												   p_handler_def,
 												   t_handler))
 	{

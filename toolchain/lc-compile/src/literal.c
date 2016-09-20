@@ -69,15 +69,91 @@ void FinalizeLiterals(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static int __ComputeIntegerLiteralBaseAndStart(const char *p_literal, int* r_base, const char** r_literal_start)
+{
+	if (p_literal[0] == '0')
+	{
+		if (p_literal[1] == 'x' || p_literal[1] == 'X')
+		{
+			*r_base = 16;
+			*r_literal_start = p_literal + 2;
+			return 1;
+		}
+		
+		if (p_literal[1] == 'b' || p_literal[1] == 'B')
+		{
+			*r_base = 2;
+			*r_literal_start = p_literal + 2;
+			return 1;
+		}
+		
+		if (p_literal[1] == '\0')
+		{
+			*r_base = 10;
+			*r_literal_start = p_literal;
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	*r_base = 10;
+	*r_literal_start = p_literal;
+	
+	return 1;
+}
+
+// A token is an integer literal if it matches:
+//   0
+//   [1-9][0-9]*
+//   0b[01]+
+//   0x[0-9A-Fa-f]+
+// All other patterns cause this condition to fail.
+int IsIntegerLiteral(const char *p_token)
+{
+	int t_base = 0;
+	const char *t_literal_start = NULL;
+	char *t_end = NULL;
+	
+	// If the token starts with more than one '0' then we aren't
+	// an integer literal.
+	if (p_token[0] == '0' && p_token[1] == '0')
+	{
+		return 0;
+	}
+	
+	// Compute the base of the literal based on the prefix.
+	if (!__ComputeIntegerLiteralBaseAndStart(p_token, &t_base, &t_literal_start))
+	{
+		return 0;
+	}
+	
+	// Try to convert using strtoul.
+	strtoul(t_literal_start, &t_end, t_base);
+	
+	// If the end of the conversion is not the end of the string, then
+	// the value is not valid.
+	if (*t_end != '\0')
+	{
+		return 0;
+	}
+	
+	return 1;
+}
+
 // Integer literals are actually unsigned, even though they pass through as
 // longs. Indeed, a -ve integer literal is not possible since it is prevented
 // by the token's regex.
 int MakeIntegerLiteral(const char *p_token, long *r_literal)
 {
-    unsigned long t_value;
-	errno = 0;
+	int t_base = 0;
+	const char *t_literal_start = NULL;
+    unsigned long t_value = 0;
+	
+	__ComputeIntegerLiteralBaseAndStart(p_token, &t_base, &t_literal_start);
 
-    t_value = strtoul(p_token, NULL, 10);
+	errno = 0;
+    t_value = strtoul(t_literal_start, NULL, t_base);
     
     if (errno == ERANGE || t_value > 0xFFFFFFFFU)
         return 0;
@@ -87,14 +163,181 @@ int MakeIntegerLiteral(const char *p_token, long *r_literal)
     return 1;
 }
 
-void MakeDoubleLiteral(const char *p_token, long *r_literal)
+// Match 0 | [1-9][0-9]*
+static int
+__MatchInt(const char **x_token_ptr, int* r_found)
 {
-    double *t_value;
-    t_value = (double *)malloc(sizeof(double));
-    if (t_value == NULL)
+	// If there are no digits, there is no int.
+	if (!isdigit(*(*x_token_ptr)))
+	{
+		*r_found = 0;
+		return 1;
+	}
+	
+	// If there is zero before a digit, it is malformed.
+	if ((*x_token_ptr)[0] == '0' &&
+		isdigit((*x_token_ptr)[1]))
+	{
+		return 1;
+	}
+	
+	*x_token_ptr += 1;
+	
+	// Match [0-9]*
+	while(isdigit(*x_token_ptr[0]))
+	{
+		*x_token_ptr += 1;
+	}
+	
+	*r_found = 1;
+	
+	return 1;
+}
+
+// Match [0-9]+
+static int
+__MatchZeroesInt(const char **x_token_ptr, int* r_found)
+{
+	// If there are no digits, there is no int.
+	if (!isdigit(*x_token_ptr[0]))
+	{
+		*r_found = 0;
+		return 1;
+	}
+	
+	// Match [0-9]*
+	while(isdigit(*x_token_ptr[0]))
+	{
+		*x_token_ptr += 1;
+	}
+	
+	*r_found = 1;
+	
+	return 1;
+}
+
+int IsDoubleLiteral(const char *p_token)
+{
+	// We check the pattern against:
+	//   I:Int P:Period F:ZeroesInt E:(Exp PlusMinus Int)
+	// Where the valid combinations are:
+	//   I+P
+	//   I+E
+	//   I+P+E
+	//   I+P+F
+	//   I+P+F+E
+	//   P+F
+	//   P+F+E
+	
+	int t_found_int = 0;
+	int t_found_point = 0;
+	int t_found_frac = 0;
+	int t_found_exp = 0;
+	int t_found_bits = 0;
+	const char *t_token_ptr = p_token;
+	char *t_end = NULL;
+
+	// Match I - if the Int is malformed, its not a double.
+	if (!__MatchInt(&t_token_ptr, &t_found_int))
+	{
+		return 0;
+	}
+	
+	// Match P
+	if (*t_token_ptr == '.')
+	{
+		t_found_point = 1;
+		t_token_ptr++;
+	}
+	
+	// Match F - if the ZeroesInt is malformed, its not a double
+	if (!__MatchZeroesInt(&t_token_ptr, &t_found_frac))
+	{
+		return 0;
+	}
+	
+	// Match E
+	if (*t_token_ptr == 'e' || *t_token_ptr == 'E')
+	{
+		t_token_ptr++;
+		if (*t_token_ptr == '+' || *t_token_ptr == '-')
+		{
+			t_token_ptr++;
+		}
+		if (!__MatchInt(&t_token_ptr, &t_found_exp))
+		{
+			return 0;
+		}
+	}
+	
+	// If we aren't at end of the token, its not a double.
+	if (*t_token_ptr != '\0')
+	{
+		return 0;
+	}
+	
+	#define I 8
+	#define P 4
+	#define F 2
+	#define E 1
+	
+	// Now check valid combinations by computing it as a bitset
+	t_found_bits =
+		(t_found_int * I) |
+		(t_found_point * P) |
+		(t_found_frac * F) |
+		(t_found_exp * E);
+	
+	switch(t_found_bits)
+	{
+		case I+P:
+		case I+E:
+		case I+P+E:
+		case I+P+F:
+		case I+P+F+E:
+		case P+F:
+		case P+F+E:
+			break;
+		
+		default:
+			return 0;
+	}
+	
+	#undef E
+	#undef F
+	#undef P
+	#undef I
+	
+	// Finally check that strtod likes it!
+	strtod(p_token, &t_end);
+	if (*t_end != '\0')
+	{
+		return 0;
+	}
+	
+	return 1;
+}
+
+int MakeDoubleLiteral(const char *p_token, long *r_literal)
+{
+    double *t_value_slot = NULL;
+	double t_value = 0.0;
+	
+    t_value_slot = (double *)malloc(sizeof(double));
+    if (t_value_slot == NULL)
         Fatal_OutOfMemory();
-    *t_value = atof(p_token);
-    *r_literal = (long)t_value;
+	
+	errno = 0;
+	t_value = strtod(p_token, NULL);
+	if (errno == ERANGE)
+	{
+		return 0;
+	}
+	
+	*t_value_slot = t_value;
+    *r_literal = (long)t_value_slot;
+	
+	return 1;
 }
 
 static int char_to_nibble(char p_char, unsigned int *r_nibble)

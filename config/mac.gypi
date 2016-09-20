@@ -127,6 +127,13 @@
 							'-Werror=return-type',
 							'-Werror=tautological-compare',
 							'-Werror=logical-not-parentheses',
+							'-Werror=conversion-null',
+							'-Werror=missing-declarations',
+							'-Werror=mismatched-new-delete',
+							'-Werror=constant-logical-operand',
+							'-Werror=unknown-pragmas',
+							'-Werror=missing-field-initializers',
+							'-Werror=objc-literal-compare',
 						],
 					},
 				},
@@ -136,7 +143,7 @@
 						'GCC_INHIBIT_ALL_WARNINGS': 'YES',
 						'WARNING_CFLAGS':
 						[
-							'-Wno-return-type',
+							'-w',
 						],
 					},
 				},

@@ -42,9 +42,6 @@
 		'-fno-exceptions',
 		'-fno-rtti',
 		'-std=<(c++_std)',
-
-		'-Werror=mismatched-tags',
-		'-Werror=overloaded-virtual',
 	],
 
 	'target_conditions':
@@ -58,6 +55,18 @@
 					'-Wextra',
 					'-Wno-unused-parameter',
 					'-Wno-ignored-attributes',
+
+					'-Werror=conversion-null',
+					'-Werror=logical-not-parentheses',
+					'-Werror=return-type',
+					'-Werror=tautological-compare',
+					'-Werror=uninitialized',
+				],
+				'cflags_cc':
+				[
+					'-Werror=mismatched-tags',
+					'-Werror=overloaded-virtual',
+					'-Werror=delete-non-virtual-dtor',
 				],
 			},
 			{

@@ -262,13 +262,17 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     // MW-2014-10-02: [[ iOS 8 Support ]] We need this global initialized as early as
     //   possible.
     // Setup the value of the major OS version global.
-    NSString *t_sys_version;
-    t_sys_version = [[UIDevice currentDevice] systemVersion];
-    MCmajorosversion = ([t_sys_version characterAtIndex: 0] - '0') * 100;
-    MCmajorosversion += ([t_sys_version characterAtIndex: 2] - '0') * 10;
-    if ([t_sys_version length] == 5)
-        MCmajorosversion += [t_sys_version characterAtIndex: 4] - '0';
+	// PM-2016-09-08: [[ Bug 18327 ]] Take into account if x.y.z version of iOS has more than one digits in x,y,z
+    NSArray *t_sys_version_array = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
     
+    MCmajorosversion = [[t_sys_version_array objectAtIndex:0] intValue] * 100;
+    MCmajorosversion += [[t_sys_version_array objectAtIndex:1] intValue] * 10;
+    
+    if ([t_sys_version_array count] == 3)
+    {
+        MCmajorosversion += [[t_sys_version_array objectAtIndex:2] intValue];
+    }
+
 	// We are done (successfully) so return ourselves.
 	return self;
 }

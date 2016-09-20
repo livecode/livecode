@@ -876,6 +876,8 @@ static MCValueCustomCallbacks kMCWidgetCustomValueCallbacks =
     __MCWidgetEqual,
     __MCWidgetHash,
     __MCWidgetDescribe,
+    nil,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

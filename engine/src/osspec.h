@@ -41,6 +41,7 @@ enum MCSRegistryValueType
 ///////////////////////////////////////////////////////////////////////////////
 
 
+extern void MCS_preinit();
 extern void MCS_init();
 extern void MCS_shutdown();
 extern void MCS_seterrno(int value);

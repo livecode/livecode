@@ -1457,7 +1457,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 	}
 	if (state & CS_GRAB)
 	{
-		if (flags && F_AUTO_HILITE)
+		if (flags & F_AUTO_HILITE)
 		{
 			if (starthilite)
 				state &= ~CS_HILITED;

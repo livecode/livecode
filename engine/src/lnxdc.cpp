@@ -56,7 +56,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 static Boolean pserror;
 Bool debugtest = False;
 
-extern "C" int initialise_weak_link_Xinerama(void);
 extern "C" int initialise_weak_link_fontconfig(void);
 
 ////////////////////////////////////////////////////////////////////////////////

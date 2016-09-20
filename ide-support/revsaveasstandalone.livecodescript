@@ -290,6 +290,21 @@ command revDoSaveAsStandalone pStack, pFolder
    
    revStandaloneProgress "Preparing to build standalone..."
    
+   -- pre build message
+   local tHasDesktop
+   repeat for each item tTarget in revSBDesktopTargets()
+      if sStandaloneSettingsA[tTarget] then
+         put true into tHasDesktop
+         exit repeat
+      end if
+   end repeat
+   
+   if tHasDesktop then
+      try
+         dispatch "savingStandalone" to stack pStack
+      end try
+   end if
+   
    try
       -- Create an appropriate output dir
       local tOutputFolder
@@ -353,6 +368,14 @@ command revDoSaveAsStandalone pStack, pFolder
                break
          end switch
       end repeat
+      
+      -- post build message
+      if tHasDesktop then
+         try
+            dispatch "standaloneSaved" to stack pStack with pFolder & slash
+         end try
+      end if
+      
    catch tError
       revAbort
       if word 1 of tError = "Standalone:" then 
@@ -494,21 +517,12 @@ private on revStandalonePreBuild pStack, pFolder, @rStackName, @rStackFileName, 
    
    set the defaultStack to the short name of stack tStackFileName
    
-   -- pre build message
-   try
-      dispatch "savingStandalone" to stack tStackFileName
-   end try
-   
    put tStackName into rStackName
    put tStackFileName into rStackFileName
    put tStackFileList into rStackFileList
 end revStandalonePreBuild
 
 private on revStandalonePostBuild pStackFileName, pFolder
-   -- post build message
-   try
-      dispatch "standaloneSaved" to stack pStackFileName with pFolder
-   end try
 end revStandalonePostBuild
 
 private command revStandaloneCopyInclusions pStack, pStackFileList, pStackSourceFile, \ 

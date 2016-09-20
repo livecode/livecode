@@ -237,7 +237,10 @@ DEFINE_ERROR_I(UnableToFindImportedModule, "Unable to find imported module '%s'"
 DEFINE_ERROR_S(MalformedToken, "Illegal token '%s'");
 DEFINE_ERROR_S(MalformedEscapedString, "Illegal escape in string '%s'");
 DEFINE_ERROR(MalformedSyntax, "Syntax error");
+DEFINE_ERROR(InvalidIntegerLiteral, "Malformed integer literal");
+DEFINE_ERROR(InvalidDoubleLiteral, "Malformed real literal");
 DEFINE_ERROR(IntegerLiteralOutOfRange, "Integer literal too big");
+DEFINE_ERROR(DoubleLiteralOutOfRange, "Real literal too big");
 
 DEFINE_ERROR_I(IdentifierPreviouslyDeclared, "Identifier '%s' already declared");
 DEFINE_ERROR_I(IdentifierNotDeclared, "Identifier '%s' not declared");

@@ -58,9 +58,9 @@ enum
 
 static MCExecEnumTypeElementInfo _kMCPickButtonTypeElementInfo[] =
 {
-	{ "cancel", kMCPickButtonCancel },
-	{ "done", kMCPickButtonDone },
-	{ "canceldone", kMCPickButtonCancelAndDone },
+	{ "cancel", kMCPickButtonCancel, false },
+	{ "done", kMCPickButtonDone, false },
+	{ "canceldone", kMCPickButtonCancelAndDone, false },
 };
 
 static MCExecEnumTypeInfo _kMCPickButtonTypeTypeInfo =

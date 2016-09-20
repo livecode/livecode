@@ -395,6 +395,7 @@ void MCScriptReleaseRawModule(MCScriptModule *module);
 
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
+bool MCScriptLookupConstantDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptConstantDefinition*& r_definition);
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
 bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptEventDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
@@ -443,24 +444,24 @@ void
 MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
 bool
-MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+MCScriptCallHandlerInInstanceInternal(MCScriptInstanceRef instance,
 									  MCScriptHandlerDefinition *handler,
 									  MCValueRef *arguments,
 									  uindex_t argument_count,
 									  MCValueRef& r_result);
 
 bool
-MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+MCScriptEvaluateHandlerInInstanceInternal(MCScriptInstanceRef instance,
 										  MCScriptCommonHandlerDefinition *handler,
 										  MCHandlerRef& r_handler);
 
 bool
-MCScriptTryToBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+MCScriptTryToBindForeignHandlerInInstanceInternal(MCScriptInstanceRef instance,
 												  MCScriptForeignHandlerDefinition *handler,
 												  bool& r_bound);
 
 bool
-MCScriptBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef instance,
+MCScriptBindForeignHandlerInInstanceInternal(MCScriptInstanceRef instance,
 											 MCScriptForeignHandlerDefinition *handler);
 
 bool

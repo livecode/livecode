@@ -195,7 +195,7 @@ __MCHandlerTypeInfoConformsToPropertySetter(MCTypeInfoRef p_typeinfo)
 }
 
 static bool
-__MCScriptCallHandlerDefinitionOfInstance(MCScriptInstanceRef self,
+__MCScriptCallHandlerDefinitionInInstance(MCScriptInstanceRef self,
 										  MCScriptHandlerDefinition *p_handler_def,
 										  MCValueRef *p_arguments,
 										  uindex_t p_argument_count,
@@ -222,7 +222,7 @@ __MCScriptCallHandlerDefinitionOfInstance(MCScriptInstanceRef self,
 }
 
 static bool
-__MCScriptGetVariablePropertyOfInstance(MCScriptInstanceRef self,
+__MCScriptGetVariablePropertyInInstance(MCScriptInstanceRef self,
 										MCScriptVariableDefinition *p_variable_def,
 										MCValueRef& r_value)
 {
@@ -236,7 +236,7 @@ __MCScriptGetVariablePropertyOfInstance(MCScriptInstanceRef self,
 }
 
 static bool
-__MCScriptGetHandlerPropertyOfInstance(MCScriptInstanceRef self,
+__MCScriptGetHandlerPropertyInInstance(MCScriptInstanceRef self,
 									   MCScriptHandlerDefinition *p_handler_def,
 									   MCValueRef& r_value)
 {
@@ -244,7 +244,7 @@ __MCScriptGetHandlerPropertyOfInstance(MCScriptInstanceRef self,
 	__MCScriptAssert__(__MCHandlerTypeInfoConformsToPropertyGetter(self->module->types[p_handler_def->type]->typeinfo),
 					   "incorrect signature for property getter");
 	
-	return __MCScriptCallHandlerDefinitionOfInstance(self,
+	return __MCScriptCallHandlerDefinitionInInstance(self,
 													 p_handler_def,
 													 nil,
 													 0,
@@ -252,7 +252,7 @@ __MCScriptGetHandlerPropertyOfInstance(MCScriptInstanceRef self,
 }
 
 static bool
-__MCScriptSetVariablePropertyOfInstance(MCScriptInstanceRef self,
+__MCScriptSetVariablePropertyInInstance(MCScriptInstanceRef self,
 										MCScriptVariableDefinition *p_variable_def,
 										MCValueRef p_value)
 {
@@ -264,7 +264,7 @@ __MCScriptSetVariablePropertyOfInstance(MCScriptInstanceRef self,
 }
 
 static bool
-__MCScriptSetHandlerPropertyOfInstance(MCScriptInstanceRef self,
+__MCScriptSetHandlerPropertyInInstance(MCScriptInstanceRef self,
 									   MCScriptHandlerDefinition *p_handler_def,
 									   MCValueRef p_value)
 {
@@ -272,7 +272,7 @@ __MCScriptSetHandlerPropertyOfInstance(MCScriptInstanceRef self,
 	__MCScriptAssert__(__MCHandlerTypeInfoConformsToPropertySetter(self->module->types[p_handler_def->type]->typeinfo),
 					   "incorrect signature for property setter");
 	
-	return __MCScriptCallHandlerDefinitionOfInstance(self,
+	return __MCScriptCallHandlerDefinitionInInstance(self,
 													 p_handler_def,
 													 &p_value,
 													 1,
@@ -280,7 +280,7 @@ __MCScriptSetHandlerPropertyOfInstance(MCScriptInstanceRef self,
 }
 
 bool
-MCScriptGetPropertyOfInstance(MCScriptInstanceRef self,
+MCScriptGetPropertyInInstance(MCScriptInstanceRef self,
 							  MCNameRef p_property,
 							  MCValueRef& r_value)
 {
@@ -310,7 +310,7 @@ MCScriptGetPropertyOfInstance(MCScriptInstanceRef self,
 		case kMCScriptDefinitionKindVariable:
 		{
 			MCValueRef t_value;
-			if (!__MCScriptGetVariablePropertyOfInstance(self,
+			if (!__MCScriptGetVariablePropertyInInstance(self,
 														 static_cast<MCScriptVariableDefinition *>(t_getter),
 														 t_value))
 			{
@@ -329,7 +329,7 @@ MCScriptGetPropertyOfInstance(MCScriptInstanceRef self,
 				
 		case kMCScriptDefinitionKindHandler:
 		{
-			if (!__MCScriptGetHandlerPropertyOfInstance(self,
+			if (!__MCScriptGetHandlerPropertyInInstance(self,
 														static_cast<MCScriptHandlerDefinition *>(t_getter),
 														r_value))
 			{
@@ -348,7 +348,7 @@ MCScriptGetPropertyOfInstance(MCScriptInstanceRef self,
 }
 
 bool
-MCScriptSetPropertyOfInstance(MCScriptInstanceRef self,
+MCScriptSetPropertyInInstance(MCScriptInstanceRef self,
 							  MCNameRef p_property,
 							  MCValueRef p_value)
 {
@@ -422,7 +422,7 @@ MCScriptSetPropertyOfInstance(MCScriptInstanceRef self,
 	{
 		case kMCScriptDefinitionKindVariable:
 		{
-			if (!__MCScriptSetVariablePropertyOfInstance(self,
+			if (!__MCScriptSetVariablePropertyInInstance(self,
 														 static_cast<MCScriptVariableDefinition *>(t_setter),
 														 p_value))
 			{
@@ -433,7 +433,7 @@ MCScriptSetPropertyOfInstance(MCScriptInstanceRef self,
 			
 		case kMCScriptDefinitionKindHandler:
 		{
-			if (!__MCScriptSetHandlerPropertyOfInstance(self,
+			if (!__MCScriptSetHandlerPropertyInInstance(self,
 														static_cast<MCScriptHandlerDefinition *>(t_setter),
 														p_value))
 			{
@@ -455,13 +455,13 @@ MCScriptSetPropertyOfInstance(MCScriptInstanceRef self,
 }
 
 bool
-MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self,
+MCScriptCallHandlerInInstanceInternal(MCScriptInstanceRef self,
 									  MCScriptHandlerDefinition *p_handler_def,
 									  MCValueRef *p_arguments,
 									  uindex_t p_argument_count,
 									  MCValueRef& r_value)
 {
-	return __MCScriptCallHandlerDefinitionOfInstance(self,
+	return __MCScriptCallHandlerDefinitionInInstance(self,
 													 p_handler_def,
 													 p_arguments,
 													 p_argument_count,
@@ -469,7 +469,7 @@ MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef self,
 }
 
 bool
-MCScriptCallHandlerOfInstance(MCScriptInstanceRef self,
+MCScriptCallHandlerInInstance(MCScriptInstanceRef self,
 							  MCNameRef p_handler,
 							  MCValueRef *p_arguments,
 							  uindex_t p_argument_count,
@@ -487,7 +487,7 @@ MCScriptCallHandlerOfInstance(MCScriptInstanceRef self,
 												 p_handler);
 	}
 	
-	return MCScriptCallHandlerOfInstanceInternal(self,
+	return MCScriptCallHandlerInInstanceInternal(self,
 												 t_handler_def,
 												 p_arguments,
 												 p_argument_count,
@@ -495,7 +495,7 @@ MCScriptCallHandlerOfInstance(MCScriptInstanceRef self,
 }
 
 bool
-MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self,
+MCScriptCallHandlerInInstanceIfFound(MCScriptInstanceRef self,
 									 MCNameRef p_handler,
 									 MCValueRef *p_arguments,
 									 uindex_t p_argument_count,
@@ -513,7 +513,7 @@ MCScriptCallHandlerOfInstanceIfFound(MCScriptInstanceRef self,
 		return true;
 	}
 
-	return MCScriptCallHandlerOfInstanceInternal(self,
+	return MCScriptCallHandlerInInstanceInternal(self,
 												 t_handler_def,
 												 p_arguments,
 												 p_argument_count,
@@ -941,7 +941,7 @@ __MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance,
 }
 
 bool
-MCScriptTryToBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef p_instance,
+MCScriptTryToBindForeignHandlerInInstanceInternal(MCScriptInstanceRef p_instance,
 												  MCScriptForeignHandlerDefinition *p_handler,
 												  bool& r_bound)
 {
@@ -951,7 +951,7 @@ MCScriptTryToBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef p_instance
 }
 
 bool
-MCScriptBindForeignHandlerOfInstanceInternal(MCScriptInstanceRef p_instance,
+MCScriptBindForeignHandlerInInstanceInternal(MCScriptInstanceRef p_instance,
 											 MCScriptForeignHandlerDefinition *p_handler)
 {
 	return __MCScriptPrepareForeignFunction(p_instance,
@@ -993,7 +993,7 @@ __MCScriptInternalHandlerInvoke(void *p_context,
 	if (context->definition->kind != kMCScriptDefinitionKindHandler)
 		return MCErrorThrowGeneric(MCSTR("out-of-frame indirect foreign handler calls not yet supported"));
 	
-	return MCScriptCallHandlerOfInstanceInternal(context->instance,
+	return MCScriptCallHandlerInInstanceInternal(context->instance,
 												 static_cast<MCScriptHandlerDefinition *>(context->definition),
 												 p_arguments,
 												 p_argument_count,
@@ -1069,7 +1069,7 @@ MCScriptInternalHandlerQuery(MCHandlerRef p_handler,
 }
 
 static uindex_t
-__MCScriptComputeHandlerIndexOfInstance(MCScriptInstanceRef p_instance,
+__MCScriptComputeHandlerIndexInInstance(MCScriptInstanceRef p_instance,
 										MCScriptCommonHandlerDefinition *p_handler)
 {
 	uindex_t t_min, t_max;
@@ -1090,14 +1090,14 @@ __MCScriptComputeHandlerIndexOfInstance(MCScriptInstanceRef p_instance,
 }
 
 bool
-MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance,
+MCScriptEvaluateHandlerInInstanceInternal(MCScriptInstanceRef p_instance,
 										  MCScriptCommonHandlerDefinition *p_handler_def,
 										  MCHandlerRef& r_handler)
 {
 	// Compute the index in the handler table of p_handler; then, if it is the
 	// definition we are looking for, return its previously computed value.
 	uindex_t t_index;
-	t_index = __MCScriptComputeHandlerIndexOfInstance(p_instance,
+	t_index = __MCScriptComputeHandlerIndexInInstance(p_instance,
 													  p_handler_def);
 	if (t_index < p_instance->handler_count &&
 		p_instance->handlers[t_index].definition == p_handler_def)

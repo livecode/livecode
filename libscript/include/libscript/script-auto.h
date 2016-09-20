@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2015-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -29,6 +29,13 @@ public:
 	MCAutoScriptObjectRefBase (void)
 		: m_value(nil)
 	{}
+
+	explicit MCAutoScriptObjectRefBase (T p_value)
+		: m_value(nil)
+	{
+		if (nil != p_value)
+			m_value = REF (p_value);
+	}
 
 	~MCAutoScriptObjectRefBase (void)
 	{
@@ -102,6 +109,20 @@ public:
 	bool Resize(uindex_t p_new_count)
 	{
 		return MCMemoryResizeArray (p_new_count, m_values, m_count);
+	}
+
+	bool Extend(uindex_t p_new_count)
+	{
+		MCAssert(p_new_count >= m_count);
+		return Resize(p_new_count);
+	}
+
+	bool Push(T p_value)
+	{
+		if (!(nil == m_values ? New(1) : Extend(m_count + 1)))
+			return false;
+		m_values[m_count - 1] = REF(p_value);
+		return true;
 	}
 
 	T & operator [] (const int p_index)

@@ -16,8 +16,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#ifdef __VISUALC__
 #pragma optimize("agt", on)
 #pragma optimize("y", off)
+#endif
 
 typedef unsigned int uint32_t;
 typedef unsigned short uint16_t; 

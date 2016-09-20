@@ -44,7 +44,7 @@ For example, if your username is "sophie", then you can create a
 module named `community.livecode.sophie.mymodule`.
 
 For the main LiveCode repository, please use module names beginning with
-`com.livecode`
+`com.livecode`.
 
 Always write module names in lower case.
 
@@ -80,21 +80,29 @@ For `Boolean` variables, please try to use "yes or no" names.  For example:
 
 Give handlers `TitleCase` names.
 
-In general, please use verbs to name your handlers.  For example,
+Use verbs to name your handlers.  For example,
 
     handler RotateShape(inout xShape, in pAngleInDegrees)
-        -- ...
+       -- ...
     end handler
+
+### Naming types
+
+Give types `TitleCase` names.
+
+To distinguish from handlers, use nouns to name your types.  For example,
+
+    type RotationAngle is Number
 
 ## Documenting the source code
 
-You should add in-line documentation to `syntax` and `handler` definitions in
-LiveCode Builder source code.  It is particularly important to add in-line
-documentation to all syntax and to any public handlers that aren't primarily
-accessed using syntax.
+You should add in-line documentation to `syntax` and `handler`
+definitions in LiveCode Builder source code.  It is particularly
+important to add documentation to all syntax and to any public
+handlers that aren't primarily accessed using syntax.
 
 In-line documentation for a handler or syntax definition is extracted from a
-`/* */` comment block immediately before the start of the definition.
+`/** */` comment block immediately before the start of the definition.
 
 Please refer to the [Extending LiveCode](Extending LiveCode.md) guide for full
 details of the syntax of in-line documentation comments, including examples.
@@ -108,10 +116,10 @@ want to create three tabs labelled "Things", "Stuff", and "Misc":
     constant kTabNames is ["Things", "Stuff", "Misc"]
 
     handler CreateTabs()
-        variable tName
-        repeat for each element tName in kTabNames
-            -- Create the tab
-        end repeat
+       variable tName
+       repeat for each element tName in kTabNames
+          -- Create the tab
+       end repeat
     end handler
 
 In particular, please avoid any "magic numbers" in your code.
@@ -120,7 +128,7 @@ In particular, please avoid any "magic numbers" in your code.
 
 ### Indentation
 
-Please indent with tab characters.  Please use one tab character per level of
+Please indent with tab characters.  Use one tab character per level of
 indentation.
 
 Please do not use a level of indentation at `module` level.
@@ -133,23 +141,39 @@ For example:
 
     -- Example handler
     handler Fizzbuzz(in pIsFizz)
-        if pIsFizz then
-            return "Fizz"
-        else
-            -- Maybe this should have a capital letter
-            return "buzz"
-        end if
+       if pIsFizz then
+          return "Fizz"
+       else
+          -- Maybe this should have a capital letter
+          return "buzz"
+       end if
     end handler
 
     end module
 
-If it's necessary to mix spaces and tabs for indentation, please use 4 spaces
+If it's necessary to mix spaces and tabs for indentation, please use 3 spaces
 per tab.
+
+### Wrapping
+
+Avoid lines longer than 80 characters.  Break long lines using a `\`
+continuation character.  Indent continuation lines by two levels. For
+example:
+
+    constant kWordList is ["a", "very", "long", "list", "that", "is", "much",\
+          "more", "readable", "when", "wrapped", "nicely"]
+
+When breaking a handler definition or handler type definition, break
+long lines at commas:
+
+    handler ProcessStringAndArray(in pStringArg as String, \
+          in pArrayArg as Array) returns Boolean
 
 ### Handler declarations, definitions and calls
 
-In handler type declarations and definitions, don't insert whitespace between
-the handler name and the parameter list.  For example:
+In handler definitions and handler type definitions, don't insert
+whitespace between the handler name and the parameter list.  For
+example:
 
     handler type Fizz()   -- Good
     handler type Buzz ()  -- Bad
@@ -166,3 +190,117 @@ Please observe the same formatting in handler calls.  For example:
     variable tIsEqual
     FormatAsString(3.1415, tFormatted)             -- Good
     IsEqualTo (tFormatted,"3.1415") into tIsEqual  -- Bad
+
+### List and array literals
+
+In list and array literals, please add a space between each element,
+after the comma.  For array literals, also insert space between key
+and value, after the colon.  For example:
+
+    constant kPowersOfTwo is [1, 2, 4, 8]
+    constant kBordeWidths is {"top": 0, "bottom": 0, "left": 1, "right": 2}
+
+## Widget-specific guidelines
+
+This section contains recommendations that are specific to writing
+widgets.
+
+As a general rule, try to minimize surprise for users who mix widgets
+with classic LiveCode controls by using similarly named events and
+properties with similar semantics.
+
+### Writing load handlers
+
+When writing an `OnLoad()` handler to initialise a widget from
+serialised state:
+
+- Always call property setters to update the widget state.  Do not set
+  instance variables directly.
+
+- Always check that the property array contains each key rather than
+  accessing it unilaterally.
+
+- If keys are absent from the property array, do not set them to
+  default values.  Rely on the `OnCreate()` handler to have already
+  done that.
+
+Example:
+
+    public handler OnLoad(in pProperties)
+       if "showBorder" is among the keys of pProperties then
+          SetShowBorder(pProperties["showBorder"])
+       end if
+       if "opaque" is among the keys of pProperties then
+          SetShowBackground(pProperties["opaque"])
+       end if
+    end handler
+
+### Classic control properties
+
+Where possible, try to make the names and and effects of widget
+properties as similar as possible to properties of classic controls.
+For example:
+
+- **label**: the text for the primary text label
+- **showBorder**: whether to display an outline
+- **opaque**: whether to fill in the background
+
+### Host control properties
+
+When relying on properties that are implemented by the widget host
+control, such as the classic color and pattern properties, include
+`metadata` definitions to display them in the PI, but do not include a
+`property` definition.
+
+Because there is no `property` definition, the documentation for the
+host control property must be placed in the top-level documentation
+block comment before the start of widget definition.
+
+For example, to shadow the `borderColor` host control property:
+
+    /**
+    Test widget that demonstrates shadowing the
+    <borderColor(property)> property.
+
+    ...
+
+    Name: borderColor
+    Type: property
+
+    Syntax: set the borderColor of <widget> to <color>
+    Syntax: get the borderColor of <widget>
+
+    Summary: Color for drawing circular outline
+
+    Description:
+    The <borderColor> property controls the color used to draw the
+    widget's outline.
+    */
+    widget org.example.host_control_property
+
+    -- ...
+
+    metadata borderColor.editor  is "com.livecode.pi.color
+    metadata borderColor.section is "Colors"
+    metadata borderColor.label   is "Border color"
+    metadata borderColor.default is "109,109,109"
+
+    -- ...
+
+    end widget
+
+### Events
+
+Always implement:
+
+- `OnCreate()`
+- `OnSave()`
+- `OnLoad()`
+- `OnPaint()`
+
+You should _usually_ implement:
+
+- `OnGeometryChanged()`: if you have any non-trivial recomputation
+  required to handle resizing
+- `OnMouseDown()`/`OnMouseUp()`/`OnMouseMove()`: always `post` these to
+  script in order to behave like a classic control
