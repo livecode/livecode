@@ -14,6 +14,7 @@
 		[
 			'bind.g',
 			'check.g',
+			'output.g',
 			'support.g',
 			'types.g',
 		],

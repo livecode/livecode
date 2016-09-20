@@ -19,6 +19,7 @@
 'use'
     bind
     check
+    output
     types
     support
 
@@ -45,6 +46,11 @@
             ErrorsDidOccur()
         ||
             CheckPackages(Packages)
+            (|
+                ErrorsDidOccur()
+            ||
+                OutputPackages(Packages)
+            |)
         |)
 
 'action' BindPackages(PACKAGELIST, PACKAGELIST)

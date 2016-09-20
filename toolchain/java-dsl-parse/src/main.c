@@ -32,11 +32,12 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: java-dsl-parse [OPTION ...] [--] SOURCEFILE\n"
+"Usage: java-dsl-parse [OPTION ...] --check OUTFILE [--] SOURCEFILE\n"
 "\n"
 "Parse a Java FFI DSL source file.\n"
 "\n"
 "Options:\n"
+"      --check OUTFILE        Filename for reconstructed output.\n"
 "      -Werror                Turn all warnings into errors.\n"
 "  -v, --verbose              Output extra debugging information.\n"
 "  -h, --help                 Print this message.\n"
@@ -61,6 +62,11 @@ static void full_main(int argc, char *argv[])
         const char *optarg = (argi + 1 < argc) && 0 != strncmp(argv[argi+1], "--", 2) ? argv[argi+1] : NULL;
         if (!end_of_args)
         {
+            if (0 == strcmp(opt, "--check") && optarg)
+            {
+                SetOutputFile(argv[++argi]);
+                continue;
+            }
             /* FIXME This should be expanded to support "-W error",
              * "--warn error", "--warn=error", etc.  Also options for
              * enabling/disabling/errorifying particular warning
