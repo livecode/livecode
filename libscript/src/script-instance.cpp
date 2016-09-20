@@ -1190,6 +1190,34 @@ static bool __split_binding(MCStringRef& x_string, codepoint_t p_char, MCStringR
     return true;
 }
 
+static bool __split_function_signature(MCStringRef p_string, MCStringRef& r_function, MCStringRef& r_arguments, MCStringRef& r_return)
+{
+    MCAutoStringRef t_head, t_args, t_return;
+    uindex_t t_open_bracket_offset, t_close_bracket_offset;
+    if (!MCStringFirstIndexOfChar(p_string, '(', 0, kMCStringOptionCompareExact, t_open_bracket_offset) ||
+        !MCStringFirstIndexOfChar(p_string, ')', 0, kMCStringOptionCompareExact, t_close_bracket_offset))
+    {
+        r_function = MCValueRetain(p_string);
+        r_arguments = MCValueRetain(kMCEmptyString);
+        r_return = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+    if (!MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_open_bracket_offset, t_close_bracket_offset + 1), &t_args))
+        return false;
+    
+    if (!MCStringCopySubstring(p_string, MCRangeMake(t_close_bracket_offset + 1, UINDEX_MAX), &t_return))
+        return false;
+    
+    if (!MCStringCopySubstring(p_string, MCRangeMake(0, t_open_bracket_offset), &t_head))
+        return false;
+    
+    r_arguments = MCValueRetain(*t_args);
+    r_return = MCValueRetain(*t_return);
+    r_function = MCValueRetain(*t_head);
+    return true;
+}
+
 static bool MCScriptPlatformLoadSharedLibrary(MCStringRef p_path, void*& r_handle)
 {
 #if defined(_WIN32)
@@ -1286,12 +1314,12 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance
     MCAutoStringRef t_language;
     MCAutoStringRef t_library;
     MCAutoStringRef t_class;
-    MCAutoStringRef t_function;
+    MCAutoStringRef t_function_string;
     MCAutoStringRef t_calling;
     if (!__split_binding(t_rest, ':', &t_language) ||
         !__split_binding(t_rest, '>', &t_library) ||
         !__split_binding(t_rest, '.', &t_class) ||
-        !MCStringDivideAtChar(t_rest, '!', kMCStringOptionCompareExact, &t_function, &t_calling))
+        !MCStringDivideAtChar(t_rest, '!', kMCStringOptionCompareExact, &t_function_string, &t_calling))
     {
         MCValueRelease(t_rest);
         return false;
@@ -1299,10 +1327,14 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance
     
     MCValueRelease(t_rest);
     
+    MCAutoStringRef t_arguments, t_return, t_function;
+    if (!__split_function_signature(*t_function_string, &t_function, &t_arguments, &t_return))
+        return false;
+    
     int t_cc;
     if (!MCStringIsEmpty(*t_calling))
     {
-        static const char *s_callconvs[] = { "default", "sysv", "stdcall", "thiscall", "fastcall", "cdecl", "pascal", "register", nil};
+        static const char *s_callconvs[] = { "default", "sysv", "stdcall", "thiscall", "fastcall", "cdecl", "pascal", "register", "instance", "static", "nonvirtual", nil};
         for(t_cc = 0; s_callconvs[t_cc] != nil; t_cc++)
             if (MCStringIsEqualToCString(*t_calling, s_callconvs[t_cc], kMCStringOptionCompareCaseless))
                 break;
@@ -1335,7 +1367,7 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance
         if (!MCScriptPlatformLoadSharedLibraryFunction(t_module, *t_function, t_pointer))
             return false;
         
-        p_handler -> function = t_pointer;
+        p_handler -> native . function = t_pointer;
     }
     else if (MCStringIsEqualToCString(*t_language, "cpp", kMCStringOptionCompareExact))
     {
@@ -1390,7 +1422,13 @@ static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScr
     if (!p_throw && !r_bound)
         return true;
     
-    if (p_handler -> function == nil)
+    bool t_resolved;
+    if (p_handler -> is_java)
+        t_resolved = p_handler -> java . method_id != nil;
+    else
+        t_resolved = p_handler -> native . function != nil;
+    
+    if (!t_resolved)
     {
         if (p_throw)
             return MCScriptThrowUnableToResolveForeignHandlerError(p_instance -> module, p_handler);
@@ -1403,8 +1441,11 @@ static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScr
     MCTypeInfoRef t_signature;
     t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
     
-    if (!MCHandlerTypeInfoGetLayoutType(t_signature, t_abi, p_handler -> function_cif))
+    if (!MCHandlerTypeInfoGetLayoutType(t_signature, t_abi, p_handler -> native . function_cif))
+    {
+        // Should throw proper error message?
         return MCErrorThrowGeneric(nil);
+    }
     
     if (!p_throw)
         r_bound = true;
@@ -1414,11 +1455,13 @@ static bool MCScriptPrepareForeignFunction(MCScriptInstanceRef p_instance, MCScr
 
 static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstanceRef p_instance, MCScriptForeignHandlerDefinition *p_handler, uindex_t *p_arguments, uindex_t p_arity)
 {
-    if (p_handler -> function == nil)
+    if (!p_handler -> is_bound)
     {
         bool t_bound;
         if (!MCScriptPrepareForeignFunction(p_instance, p_handler, true, t_bound))
             return false;
+        
+        p_handler -> is_bound = t_bound;
     }
     
     MCTypeInfoRef t_signature;
@@ -1677,7 +1720,20 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
     if (t_success)
     {
         uint8_t t_result[64];
-        ffi_call((ffi_cif *)p_handler -> function_cif, (void(*)())p_handler -> function, &t_result, t_args);
+        
+        if (p_handler -> is_java)
+        {
+            MCJavaCallJNIMethod(p_handler -> java . class_name,
+                                p_handler -> java . method_id,
+                                p_handler -> java . call_type,
+                                p_handler -> java . return_type,
+                                &t_result,
+                                p_handler -> java . arg_types,
+                                t_args,
+                                p_arity);
+        }
+        else
+            ffi_call((ffi_cif *)p_handler -> native . function_cif, (void(*)())p_handler -> native . function, &t_result, t_args);
         
         // If no error is pending then do the copyback of the result, and then
         // arguments. Otherwise we just continue the throw.
@@ -2713,7 +2769,7 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef p_instance, M
         t_signature = p_instance -> module -> types[t_handler_definition -> type] -> typeinfo;
         
         bool t_bound;
-        if (t_handler_definition -> function == nil)
+        if (t_handler_definition -> native . function == nil)
         {
             if (!MCScriptPrepareForeignFunction(p_instance, t_handler_definition, false, t_bound))
                 return false;
