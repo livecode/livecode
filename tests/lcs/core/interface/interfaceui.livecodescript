@@ -182,7 +182,9 @@ if the platform is "win32" then
 else if the platform is "MacOS" then 
 	TestAssert "test", the screenname is "local Mac"  
 else if the platform is "Linux" then
-	TestAssert "test", the screenname is ":0.0" or the screenname is ":0"
+	local tScreenMajor, tScreenMinor
+	TestAssert "screenname is well-formed X11 display ID", \
+			matchText(the screenname, ":[0-9]+(?:\.[0-9]+)?")
 end if
 
 end TestInterface44
