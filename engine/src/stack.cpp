@@ -1572,6 +1572,12 @@ void MCStack::toolchanged(Tool p_new_tool)
         curcard->toolchanged(p_new_tool);
 }
 
+void MCStack::OnViewTransformChanged()
+{
+	if (curcard != nil)
+		curcard->OnViewTransformChanged();
+}
+
 void MCStack::OnAttach()
 {
 	if (curcard != nil)

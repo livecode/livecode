@@ -629,6 +629,9 @@ public:
 	// IM-2016-01-19: [[ NativeWidgets ]] Informs the object that its visible area has changed.
 	virtual void viewportgeometrychanged(const MCRectangle &p_rect);
 	
+	// IM-2016-09-20: [[ Bug 16965 ]] Inform the object that the stack view transform has changed.
+	virtual void OnViewTransformChanged();
+	
 	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it has been opened.
 	virtual void OnOpen();
 	// IM-2015-12-16: [[ NativeWidgets ]] Informs the object that it will be closed.
