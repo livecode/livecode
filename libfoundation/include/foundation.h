@@ -2013,7 +2013,8 @@ MC_DLLEXPORT MCStringRef MCSTR(const char *string);
 
 MC_DLLEXPORT const char *MCStringGetCString(MCStringRef p_string);
 MC_DLLEXPORT bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCStringOptions options);
-
+MC_DLLEXPORT bool MCStringSubstringIsEqualToCString(MCStringRef string, MCRange p_range, const char *cstring, MCStringOptions options);
+    
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 MC_DLLEXPORT bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
@@ -2311,6 +2312,7 @@ MC_DLLEXPORT hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 MC_DLLEXPORT bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 MC_DLLEXPORT bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
+MC_DLLEXPORT bool MCStringSubstringIsEqualToNativeChars(MCStringRef self, MCRange p_range, const char_t *p_chars, uindex_t p_char_count, MCStringOptions p_options);
 
 // Returns true if the substring is equal to the other, according to options
 MC_DLLEXPORT bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange range, MCStringRef p_other, MCStringOptions p_options);
