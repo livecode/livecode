@@ -256,6 +256,7 @@
     EmitBeginOpcode
     EmitContinueOpcode
     EmitEndOpcode
+    EmitCast
 
     OutputBeginManifest
     OutputEnd
@@ -348,11 +349,14 @@
     Error_IllegalNumberOfArgumentsForOpcode
     Error_BytecodeNotAllowedInSafeContext
     Error_UnsafeHandlerCallNotAllowedInSafeContext
+    Error_IncompatibleTypes
+    Error_NoInvokeCandidates
 
     Warning_MetadataClausesShouldComeAfterUseClauses
     Warning_DeprecatedTypeName
     Warning_UnsuitableNameForDefinition
     Warning_DeprecatedSyntax
+    Warning_ImplicitTypeConversion
 
 --------------------------------------------------------------------------------
 
@@ -651,6 +655,7 @@
 'action' EmitBeginOpcode(Opcode: STRING)
 'action' EmitContinueOpcode(Output: INT)
 'action' EmitEndOpcode()
+'action' EmitCast(TypeIndex: INT, OutputReg: INT, InputReg: INT)
 
 'action' EmitAttachRegisterToExpression(INT, EXPRESSION)
 'action' EmitDetachRegisterFromExpression(EXPRESSION)
@@ -769,9 +774,13 @@
 'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
 'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
 
+'action' Error_IncompatibleTypes(Position: POS, SourceType: STRING, TargetType: STRING)
+'action' Error_NoInvokeCandidates(Position: POS, Reasons: MCSTRINGREF)
+
 'action' Warning_MetadataClausesShouldComeAfterUseClauses(Position: POS)
 'action' Warning_DeprecatedTypeName(Position: POS, NewType: STRING)
 'action' Warning_UnsuitableNameForDefinition(Position: POS, Identifier: NAME)
 'action' Warning_DeprecatedSyntax(Position: POS, Message: STRING)
+'action' Warning_ImplicitTypeConversion(Position: POS, SourceType: STRING, TargetType: STRING)
 
 --------------------------------------------------------------------------------
