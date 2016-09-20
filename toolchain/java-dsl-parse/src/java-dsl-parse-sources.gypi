@@ -15,6 +15,7 @@
 			'bind.g',
 			'check.g',
 			'output.g',
+			'generate.g',
 			'support.g',
 			'types.g',
 		],
