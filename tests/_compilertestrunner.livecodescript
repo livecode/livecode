@@ -394,12 +394,21 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
       else if tState is "marker" then
          -- The marker should point at the correct column within the
          -- input source line
+<<<<<<< 909b2b94fe4d6f1cad8e71e5b44e25ec37b8257e
 
          -- TODO the marker position should come from the position
          -- indicated in the code block, not from the position
          -- reported by the compiler.
          put format(merge("%[[tColumn]]s^"),"") into tMarker
 
+=======
+
+         -- TODO the marker position should come from the position
+         -- indicated in the code block, not from the position
+         -- reported by the compiler.
+         put format(merge("%[[tColumn]]s^"),"") into tMarker
+
+>>>>>>> Make compiler front-end tests check warning/error context info.
          if tOutputLine is tMarker then
             return true
          end if
