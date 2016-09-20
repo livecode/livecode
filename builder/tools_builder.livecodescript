@@ -553,12 +553,6 @@ private function escapeArg pArg
    return pArg
 end escapeArg
 
-private function findSigningIdentity
-   get shell("/usr/bin/security -q find-identity -v")
-   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
-   return it
-end findSigningIdentity
-
 command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    -- Compute the name of the installer bundle
    local tOutputFileStub, tOutputFileFolder
@@ -641,7 +635,7 @@ command toolsBuilderMakeAppBundle pVersion, pEdition, pPlatform
    end if
 
    -- Find the signing identity and sign the app bundle
-   get findSigningIdentity()
+   get builderFindSigningIdentity()
    if it is not empty then
       builderLog "message", "Signing macosx app bundle" && "'" & tAppBundle & "'"
       wait 1 second

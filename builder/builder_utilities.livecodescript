@@ -1,6 +1,6 @@
 ﻿script "BuilderUtilities"
 
-constant kMergExtVersion = "2016-9-15"
+constant kMergExtVersion = "2016-9-19"
 constant kTSNetVersion = "1.2.3"
 
 local sEngineDir
@@ -649,3 +649,11 @@ command builderExtUnpack pEdition
       builderTSNetUnpack builderTSNetVersion(), tEdition
    end if
 end builderExtUnpack
+
+////////////////////////////////////////////////////////////////////////////////
+
+function builderFindSigningIdentity
+   get shell("/usr/bin/security -q find-identity -v")
+   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   return it
+end builderFindSigningIdentity
