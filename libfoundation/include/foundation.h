@@ -1779,6 +1779,15 @@ MC_DLLEXPORT bool MCJavaCreateJavaObjectTypeInfo();
     
 MC_DLLEXPORT bool MCJavaObjectCreate(void *value, MCJavaObjectRef& r_obj);
 MC_DLLEXPORT void *MCJavaObjectGetObject(const MCJavaObjectRef p_obj);
+
+MC_DLLEXPORT bool MCJavaGetArgumentTypes(MCStringRef p_arguments, int *&r_argument_types, uindex_t& r_count);
+
+MC_DLLEXPORT bool MCJavaCallJNIMethod(MCNameRef p_class, void *p_method_id, int p_call_type, int p_return_type, void *r_return, int *p_arg_types, void **p_args, uindex_t p_arg_count);
+MC_DLLEXPORT bool MCJavaCallConstructor(MCNameRef p_class_name, MCListRef p_args, MCJavaObjectRef& r_object);
+MC_DLLEXPORT void *MCJavaGetMethodId(MCNameRef p_class, MCStringRef p_method_name, MCStringRef p_signature);
+MC_DLLEXPORT int MCJavaMapTypeCode(MCStringRef p_return_type);
+MC_DLLEXPORT bool MCJavaConvertJStringToStringRef(MCJavaObjectRef p_object, MCStringRef &r_string);
+MC_DLLEXPORT bool MCJavaConvertStringRefToJString(MCStringRef p_string, MCJavaObjectRef &r_object);
     
 ////////////////////////////////////////////////////////////////////////////////
 //
