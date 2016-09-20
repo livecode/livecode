@@ -649,3 +649,11 @@ command builderExtUnpack pEdition
       builderTSNetUnpack builderTSNetVersion(), tEdition
    end if
 end builderExtUnpack
+
+////////////////////////////////////////////////////////////////////////////////
+
+function builderFindSigningIdentity
+   get shell("/usr/bin/security -q find-identity -v")
+   filter it with "*Developer ID Application: Runtime Revolution Ltd*"
+   return it
+end builderFindSigningIdentity
