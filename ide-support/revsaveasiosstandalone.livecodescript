@@ -695,9 +695,15 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       -- make sure you have permission to clear extended attributes from bundle files
       get shell("chmod -R u+w" && quote & pAppBundle & quote)
+      if the result is not 0 then
+         throw "setting permissions failed with error:" && it
+      end if
       
       -- clear extended attributes from bundle files
       get shell("xattr -cr" && quote & pAppBundle & quote)
+      if the result is not 0 then
+         throw "clearing extended attributes failed with error:" && it
+      end if
       
       --try
       -- Perform the codesigning of the main bundle
