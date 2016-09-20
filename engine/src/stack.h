@@ -361,6 +361,8 @@ public:
 	
     virtual void toolchanged(Tool p_new_tool);
 	
+	virtual void OnViewTransformChanged();
+	
 	virtual void OnAttach();
 	virtual void OnDetach();
     

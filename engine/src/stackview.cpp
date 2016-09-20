@@ -444,12 +444,17 @@ void MCStack::view_update_transform(bool p_ensure_onscreen)
 	
 	// IM-2013-10-03: [[ FullscreenMode ]] if the transform has changed, redraw everything
 	// IM-2013-12-20: [[ ShowAll ]] if the stack viewport has changed, redraw everything
-	if (!MCU_equal_rect(t_stack_visible_rect, m_view_stack_visible_rect) || !MCGAffineTransformIsEqual(t_transform, m_view_transform))
+	bool t_rect_changed, t_transform_changed;
+	t_rect_changed = !MCU_equal_rect(t_stack_visible_rect, m_view_stack_visible_rect);
+	t_transform_changed = !MCGAffineTransformIsEqual(t_transform, m_view_transform);
+	if (t_rect_changed || t_transform_changed)
 	{
 		m_view_transform = t_transform;
 		m_view_stack_visible_rect = t_stack_visible_rect;
 		
 		view_dirty_all();
+		if (t_transform_changed)
+			this->OnViewTransformChanged();
 	}
 	
 	// PM-2015-07-17: [[ Bug 13754 ]] Make sure stack does not disappear off screen when changing the scalefactor

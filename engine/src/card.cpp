@@ -1323,6 +1323,22 @@ void MCCard::toolchanged(Tool p_new_tool)
     }
 }
 
+void MCCard::OnViewTransformChanged()
+{
+	if (objptrs != nil)
+	{
+		MCObjptr *t_ptr = objptrs;
+		do
+		{
+			MCObject *t_obj = t_ptr->getref();
+			if (t_obj != nil)
+				t_obj->OnViewTransformChanged();
+			t_ptr = t_ptr->next();
+		}
+		while (t_ptr != objptrs);
+	}
+}
+
 void MCCard::OnAttach()
 {
 	if (objptrs != NULL)
