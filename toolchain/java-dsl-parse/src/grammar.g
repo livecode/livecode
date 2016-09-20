@@ -19,6 +19,7 @@
 'use'
     bind
     check
+    generate
     output
     types
     support
@@ -50,6 +51,7 @@
                 ErrorsDidOccur()
             ||
                 OutputPackages(Packages)
+                GeneratePackages(Packages)
             |)
         |)
 

@@ -32,12 +32,13 @@ static void
 usage(int status)
 {
     fprintf(stderr,
-"Usage: java-dsl-parse [OPTION ...] --check OUTFILE [--] SOURCEFILE\n"
+"Usage: java-dsl-parse [OPTION ...] --check OUTFILE --output OUTFILE [--] SOURCEFILE\n"
 "\n"
 "Parse a Java FFI DSL source file.\n"
 "\n"
 "Options:\n"
 "      --check OUTFILE        Filename for reconstructed output.\n"
+"      --output OUTFILE       Filename for generated LCB output.\n"
 "      -Werror                Turn all warnings into errors.\n"
 "  -v, --verbose              Output extra debugging information.\n"
 "  -h, --help                 Print this message.\n"
@@ -65,6 +66,11 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "--check") && optarg)
             {
                 SetOutputFile(argv[++argi]);
+                continue;
+            }
+            if (0 == strcmp(opt, "--output") && optarg)
+            {
+                SetOutputLCBFile(argv[++argi]);
                 continue;
             }
             /* FIXME This should be expanded to support "-W error",
