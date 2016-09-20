@@ -79,6 +79,7 @@
 				'src/foundation-error.cpp',
 				'src/foundation-filters.cpp',
 				'src/foundation-foreign.cpp',
+				'src/foundation-java.cpp',
 				'src/foundation-handler.cpp',
 				'src/foundation-list.cpp',
 				'src/foundation-locale.cpp',
@@ -181,6 +182,7 @@
 										[
 											'$(SDKROOT)/System/Library/Frameworks/CoreFoundation.framework',
 											'$(SDKROOT)/System/Library/Frameworks/Foundation.framework',
+											'$(SDKROOT)/System/Library/Frameworks/JavaVM.framework',
 										],
 									},
 									{
@@ -188,6 +190,7 @@
 										[
 											'-framework', 'CoreFoundation',
 											'-framework', 'Foundation',
+											'-framework', 'JavaVM',
 										],
 									},
 								],

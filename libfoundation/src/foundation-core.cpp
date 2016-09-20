@@ -76,7 +76,10 @@ bool MCInitialize(void)
     
     if (!__MCStreamInitialize())
         return false;
-    
+
+    if (!__MCJavaInitialize())
+        return false;
+
 	return true;
 }
 
@@ -98,6 +101,7 @@ void MCFinalize(void)
 	__MCStringFinalize();
 	__MCValueFinalize();
     __MCUnicodeFinalize();
+    __MCJavaFinalize();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
