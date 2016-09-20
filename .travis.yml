@@ -30,7 +30,7 @@ install: (cd prebuilt && ./fetch-libraries.sh linux)
 # the default test suite.
 script: >
   if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
-      make all-linux && make check-linux
+      make all-linux && xvfb-run make check-linux
   fi
 
 addons:
@@ -61,3 +61,4 @@ addons:
       - libpopt-dev
       - libesd0-dev
       - liblcms-dev
+      - xvfb
