@@ -4,9 +4,9 @@ Type: command
 
 Syntax: do <statementList>
 
-Syntax: do <statementList> in <caller>
+Syntax: do <statementList> in { caller | <object> }
 
-Syntax: do <statementList> as a <lternateLanguageName>
+Syntax: do <statementList> as <alternateLanguageName>
 
 Summary:
 <execute|Executes> a list of <statement|statements>.
@@ -30,17 +30,17 @@ do "select" && line 3 of field "Objects"
 Example:
 do field "Statements" as AppleScript
 
+Example:
+-- Use JavaScript to hide "myButton" in the page displayed in a browser widget.
+do "document.getElementById('myButton').hidden = 'hidden'" in widget "myBrowser"
+
 Parameters:
 statementList:
 A LiveCode statement, a container with one or more statements, or a
 string that evaluates to a statement.
 
-caller:
-Has the effect of executing the statementList in the context of the
-handler. 
-
-lternateLanguageName:
-
+object:
+A LiveCode object to execute the script.
 
 alternateLanguageName:
 On Mac OS and OS X systems, the alternateLanguageName is a script
@@ -52,7 +52,7 @@ alternateLanguages function. If you specify an alternateLanguageName,
 the statementList must be written in the specified language.
 
 The result:
-On Mac OS X systems, if you use the do as a <lternateLanguageName> form,
+On Mac OS X systems, if you use the do as <alternateLanguageName> form,
 any result returned by the script language is placed in the <result>. On
 Windows systems, the <result> function will return the value of the
 global variable called "result" in the script that was executed (or
@@ -85,14 +85,25 @@ do "result = 1 + 1" as "vbscript"
 To see how to create a numbered set of variables see the dictionary
 entry for the <local command>.
 
-The ability to specify an <alternateLanguageName> on Windows systems was
-added in LiveCode 2.9.
+If `in caller` is specified then the statements are executed in the
+the context of the calling handler. If `in <object>` is specified then the
+statements are executed as with the target object executing the script
+and therefore being able to be referred to as `me` within the script. 
+
+> *Note:* If the object is a widget then it is up to the widget
+> implementation to execute the script by handling the `OnDo` message.
 
 Changes:
 The <alternateLanguageName> option was introduced in version 1.1. In
 previous versions, it was not possible to include AppleScript or other
 <Open Scripting Architecture (OSA)|OSA> languages in a <LiveCode>
 <handler>. 
+
+The ability to specify an <alternateLanguageName> on Windows systems was
+added in LiveCode 2.9.
+
+The ability to specify a target widget was introduced in version 8.0. The
+ability to specify any target object as introduced in version 8.2.
 
 References: debugDo (command), breakpoint (command), local (command),
 call (command), local command (command), result (function),

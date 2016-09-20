@@ -2690,8 +2690,8 @@ enum Exec_errors
 	// {EE-0880} launch: error in widget expression
 	EE_LAUNCH_BADWIDGETEXP,
 
-	// {EE-0881} do: error in widget expression
-	EE_DO_BADWIDGETEXP,
+	// {EE-0881} do: error in object expression
+	EE_DO_BADOBJECTEXP,
 
     // {EE-0882} documentFilename: bad filename
     EE_DOCUMENTFILENAME_BADFILENAME, 
