@@ -2024,8 +2024,14 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
       appendToStringList tExtensionFile, tModules
    end repeat
    
-   local tLibraryStack
+   local tLibraryStack, tIncludeDataGrid
    repeat for each line tLibrary in pStandaloneSettings["scriptLibraries"]
+      -- Special-case data grid at the moment, as it is not initialised 
+      -- using revLoadLibrary
+      if tLibrary is "DataGrid" then
+         put true into tIncludeDataGrid
+         next repeat
+      end if
       # AL-2015-03-05: [[ Bug 14813 ]] Transform script library display name to stack name at deploy time
       put revSBStackNameFromScriptLibraryName(tLibrary) into tLibraryStack
       if there is a stack tLibraryStack then
@@ -2078,7 +2084,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
    end if
    
    -- If the datagrid is used, then include the library as an aux stack
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
+   if tIncludeDataGrid or "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
       appendToStringList the effective filename of stack "revDataGridLibrary", tResavedAux
    end if
    
