@@ -283,6 +283,22 @@ void MCGroup::toolchanged(Tool p_new_tool)
 	}
 }
 
+void MCGroup::OnViewTransformChanged()
+{
+	MCControl::OnViewTransformChanged();
+	if (controls != nil)
+	{
+		MCControl *t_ctrl;
+		t_ctrl = controls;
+		do
+		{
+			t_ctrl->OnViewTransformChanged();
+			t_ctrl = t_ctrl->next();
+		}
+		while (t_ctrl != controls);
+	}
+}
+
 void MCGroup::OnAttach()
 {
 	MCControl::OnAttach();

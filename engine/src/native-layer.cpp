@@ -85,6 +85,11 @@ bool MCNativeLayer::OnPaint(MCGContextRef p_context)
 	return doPaint(p_context);
 }
 
+void MCNativeLayer::OnViewTransformChanged()
+{
+	doSetGeometry(m_rect);
+}
+
 void MCNativeLayer::OnGeometryChanged(const MCRectangle &p_new_rect)
 {
 	if (!m_defer_geometry_changes)
