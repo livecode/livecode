@@ -308,12 +308,14 @@
         ||
             ResolveIdName(Id -> Name)
         |)
-        TypeToUnqualifiedName(ObjType -> ObjName)
-        OutputWriteI("public handler ", ObjName, "_Constructor_")
-        OutputWriteI("", Name, "")
-        GenerateSignatureWithReturnType(ObjType, Signature)
-
+        TypeToQualifiedName(ObjType -> ClassName)
+        OutputWriteI("public handler ", Name, "_Constructor(in pArgs as List)")
         OutputWrite("\n")
+        OutputWrite("\tvariable tObject as JObject\n")
+        OutputWrite("\tunsafe\n")
+        OutputWriteI("\t\tput GetObject(\"", ClassName, "\", pArgs) into tObject\n")
+        OutputWrite("\tend unsafe\n")
+        OutputWrite("\treturn tObject\n")
         OutputWrite("end handler")
         OutputWrite("\n\n")
 
