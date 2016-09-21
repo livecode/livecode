@@ -121,6 +121,21 @@ void yyGetPos(long *r_result)
 static const char *ImportedModuleDir[8];
 static int ImportedModuleDirCount = 0;
 static const char *s_interface_output_file = NULL;
+static const char *ImportedModuleNames[32];
+static int ImportedModuleNameCount = 0;
+
+static int IsImportedModuleName(const char *p_name)
+{
+	int i;
+	for(i = 0; i < ImportedModuleNameCount; i++)
+	{
+		if (strcmp(p_name, ImportedModuleNames[i]) == 0)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
 
 void AddImportedModuleDir(const char *p_dir)
 {
@@ -130,11 +145,32 @@ void AddImportedModuleDir(const char *p_dir)
         Fatal_InternalInconsistency("Too many module paths");
 }
 
+void AddImportedModuleName(const char *p_name)
+{
+	if (IsImportedModuleName(p_name))
+	{
+		return;
+	}
+	
+	if (ImportedModuleNameCount == sizeof(ImportedModuleNames) / sizeof(const char *))
+	{
+		Fatal_InternalInconsistency("Too many imported module names");
+		return;
+	}
+	
+	ImportedModuleNames[ImportedModuleNameCount++] = p_name;
+}
+
 int AddImportedModuleFile(const char *p_name)
 {
     char t_path[MAXPATHLEN];
 	FILE *t_file;
-    
+	
+	if (IsImportedModuleName(p_name))
+	{
+		return 1;
+	}
+	
     t_file = NULL;
     if (ImportedModuleDirCount > 0)
     {

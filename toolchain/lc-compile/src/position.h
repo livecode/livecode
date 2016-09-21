@@ -54,6 +54,7 @@ void InitializeFiles(void);
 void FinalizeFiles(void);
 
 void AddImportedModuleDir(const char *dir);
+void AddImportedModuleName(const char *name);
 int AddImportedModuleFile(const char *name);
     
 void AddFile(const char *filename);
