@@ -932,7 +932,7 @@ private command compilerExecuteCopy @self, pCommand
             
             -- Link the new file to the base file
             put tProcess & ":" & tBaseItemSourcePath into self["base_files"][tProcess & ":" & tItemSourcePath]
-         else if tProcess among the words of "sign codesign" then
+         else if tProcess is among the words of "sign codesign" then
             -- If we are signing, and we aren't basing on an older version then we base the signed item
             -- on the unsigned one.
             put "none:" & tItemSourcePath into self["base_files"][tProcess & ":" & tItemSourcePath]
