@@ -352,7 +352,7 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
    put "search" into tState
    repeat for each line tOutputLine in pCompilerOutput
       local tFile, tLine, tColumn, tType, tMessage
-      local tSourceLine, tMarker
+      local tSourceLine, tCharOffset, tOutputChar, tMarker
 
       if tState is "search" then
          -- The format of each output line is:
@@ -383,13 +383,21 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
 
       else if tState is "source line" then
          -- The format of the source line output is a space followed
-         -- by the corresponding line of the input source file.
+         -- by the corresponding line of the input source file.  The
+         -- compiler may replace any of the source characters with
+         -- spaces (for example, to remove control characters).
 
-         put " " & line tLine of pTestInfo["code"] into tSourceLine
+        put " " & line tLine of pTestInfo["code"] into tSourceLine
 
-         if tOutputLine is tSourceLine then
-            put "marker" into tState
-         end if
+        repeat with tCharOffset = 1 to the number of chars in tOutputLine
+           put char tCharOffset of tOutputLine into tOutputChar
+           if tOutputChar is not " " and \
+                 tOutputChar is not char tCharOffset of tSourceLine then
+              return false
+           end if
+         end repeat
+
+         put "marker" into tState
 
       else if tState is "marker" then
          -- The marker should point at the correct column within the
@@ -402,6 +410,8 @@ private function doesCompilerOutputSatisfyAssertion pCompilerOutput, pCompilerEx
 
          if tOutputLine is tMarker then
             return true
+         else
+            return false
          end if
       end if
    end repeat
