@@ -126,6 +126,12 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 		MCField::formattabstops(P_TAB_STOPS, p_style . tabs, p_style . tab_count, &t_string);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabStops"), *t_string);
 	}
+	if (p_style . has_tab_alignments || p_effective)
+	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCField::formattabalignments(p_style . tab_alignments, p_style . tab_alignment_count, &t_string);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabAlign"), *t_string);
+	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
