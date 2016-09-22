@@ -73,7 +73,7 @@ styles&gt; tParagraphArray["runs"] = &lt;paragraph content array&gt;
 The style array contains the values for each of the paragraph styles set
 on that paragraph. The list of styles that are supported are: textAlign,
 listStyle, listDepth, listIndent, firstIndent, leftIndent, rightIndent,
-spaceAbove, spaceBelow, tabStops, backgroundColor, borderWidth,
+spaceAbove, spaceBelow, tabStops, tabAlign, backgroundColor, borderWidth,
 borderColor, hGrid, vGrid, dontWrap, padding.
 
 The paragraph content array is a numerically-indexed array of runs, each
@@ -145,6 +145,9 @@ if tRun is a sequence then
 parseStyledTextRunArray tRun
 else
 append tRun[text] with style tEntry[style]
+
+Changes:
+Support for the <tabAlign> paragraph style was added in version 8.1.2
 
 References: HTMLText (property), textSize (property), flagged (property),
 textShift (property), metadata (property), textFont (property),
