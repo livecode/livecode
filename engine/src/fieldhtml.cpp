@@ -1957,34 +1957,6 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 				}
 			}
 			break;
-			case kImportHtmlAttrTabAlignments:
-			{
-				if (r_style . has_tab_alignments)
-				{
-					MCMemoryDeallocate(r_style . tab_alignments);
-					r_style . tab_alignments = nil;
-					r_style . tab_alignment_count = 0;
-				}
-				if (MCField::parsetabalignments(t_value, r_style . tab_alignments, r_style . tab_alignment_count))
-				{
-					r_style . has_tab_alignments = true;
-				}
-			}
-			break;
-			case kImportHtmlAttrTabAlignments:
-			{
-				if (r_style . has_tab_alignments)
-				{
-					MCMemoryDeallocate(r_style . tab_alignments);
-					r_style . tab_alignments = nil;
-					r_style . tab_alignment_count = 0;
-				}
-				if (MCField::parsetabalignments(t_value, r_style . tab_alignments, r_style . tab_alignment_count))
-				{
-					r_style . has_tab_alignments = true;
-				}
-			}
-			break;
 			case kImportHtmlAttrBgColor:
             {
 				MCColor t_color;
