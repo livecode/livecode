@@ -167,6 +167,8 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 		t_inherited_paragraph_style . first_indent = indent;
 		t_inherited_paragraph_style . tab_count = ntabs;
 		t_inherited_paragraph_style . tabs = tabs;
+		t_inherited_paragraph_style . tab_alignment_count = nalignments;
+		t_inherited_paragraph_style . tab_alignments = alignments;
 		t_inherited_paragraph_style . border_color = getcoloraspixel(DI_BORDER);
 	}
 
