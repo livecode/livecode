@@ -44,6 +44,7 @@ struct MCFieldParagraphStyle
 	bool has_space_above : 1;
 	bool has_space_below : 1;
 	bool has_tabs : 1;
+	bool has_tab_alignments : 1;
 	bool has_background_color : 1;
 	bool has_border_width : 1;
 	bool has_list_indent : 1;
@@ -74,6 +75,8 @@ struct MCFieldParagraphStyle
 	int16_t space_below;
 	uint16_t tab_count;
 	uint16_t *tabs;
+	uindex_t tab_alignment_count;
+	intenum_t *tab_alignments;
 	uint32_t background_color;
 	uint32_t border_color;
     MCStringRef metadata;
