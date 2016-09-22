@@ -622,7 +622,7 @@ on ulGetFormat pUrl,pCount
       ## I.M. 2010-03-11  Need to check result and handle immediate failure where
       ##  no callback message will be sent
       if the result is not empty then
-         ulHostNameToAddressCallback tResolveHost, empty
+         ulHostNameToAddressCallback tResolveHost, empty, the result
       end if
       
       if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
@@ -636,7 +636,7 @@ end ulGetFormat
 
 ################################################################################
 
-on ulHostNameToAddressCallback, pHostname, pIP
+on ulHostNameToAddressCallback pHostname, pIP
    local tURL, tOffset
    local tPre, tHost, tPort, tUser, tPass, tFilename, tURLHost, tURLPort
    local tConnectHost, tBadAddress
@@ -664,7 +664,11 @@ on ulHostNameToAddressCallback, pHostname, pIP
    end if
    
    if tBadAddress then
-      put "invalid host address" into laUrlErrorStatus[tURL]
+      if the paramCount >= 3 then
+         put param(3) into laUrlErrorStatus[tURL]
+      else
+         put "invalid host address" into laUrlErrorStatus[tURL]
+      end if
       if laLoadReq[tURL] then
          put "error" into laUrlLoadStatus[tURL]
          delete local laLoadingUrls[tURL]
@@ -712,7 +716,7 @@ on ulHostNameToAddressCallback, pHostname, pIP
       end if
    end if
    
-   ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
+   ## AL-2013-07-30: [[ Bug 10796 ]] HTTP "get URL" omits port number from HOST header
    ## delete this array at the end so that 'get url' can use the port and protocol data.
    subtract 1 from laURLFormat[tURL]["references"]
    if laURLFormat[tURL]["references"] is 0 then
