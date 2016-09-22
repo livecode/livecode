@@ -579,6 +579,10 @@ public:
 	//   routine to do both stops and widths.
 	static bool parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count);
 	static void formattabstops(Properties which, uint16_t *tabs, uint16_t tab_count, MCStringRef& r_result);
+
+	// IM-2016-09-22: [[ Bug 14645 ]] Convert tab alignments array to / from string
+	static bool parsetabalignments(MCStringRef p_data, intenum_t *&r_alignments, uindex_t &r_alignment_count);
+	static bool formattabalignments(const intenum_t *p_alignments, uindex_t p_alignment_count, MCStringRef &r_result);
 	
 	// MW-2012-02-22: [[ FieldChars ]] Count the number of characters (not bytes) between
 	//   start and end in the given field.
