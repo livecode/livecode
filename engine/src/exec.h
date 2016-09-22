@@ -5565,6 +5565,7 @@ void MCMiscGetIsVoiceOverRunning(MCExecContext& ctxt, bool& r_is_vo_running);
 
 bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value);
 bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_type, MCValueRef& x_value);
+bool MCExtensionConvertScriptToBuilder(MCValueRef p_value, MCValueRef& r_out_value);
 
 Exec_stat MCExtensionCatchError(MCExecContext& ctxt);
 

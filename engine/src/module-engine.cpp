@@ -469,7 +469,18 @@ MCValueRef MCEngineDoSendToObjectWithArguments(bool p_is_function, MCStringRef p
         s_last_message_was_handled = false;
 
 	/* Provide a return value iff the result was set */
-	t_result = MCValueRetain(MCresult->isclear() ? kMCNull : MCresult->getvalueref());
+	
+	if (!MCresult->isclear())
+	{
+		if (!MCExtensionConvertScriptToBuilder(MCresult->getvalueref(), t_result))
+		{
+			return nil;
+		}
+	}
+	else
+	{
+		t_result = MCValueRetain(kMCNull);
+	}
     
 cleanup:
     MCEngineFreeScriptParameters(t_params);
@@ -569,8 +580,16 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecExecuteScript(MCStringRef p_s
         MCEngineThrowScriptError();
         return nil;
     }
-    
-    return MCValueRetain(MCresult -> getvalueref());
+	
+	// Ensure the types are consistent with the builder type-world (i.e. convert
+	// names to strings).
+	MCAutoValueRef t_result;
+	if (!MCExtensionConvertScriptToBuilder(MCresult->getvalueref(), &t_result))
+	{
+		return nil;
+	}
+	
+    return t_result.Take();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -758,6 +758,11 @@ bool MCExtensionConvertFromScriptType(MCExecContext& ctxt, MCTypeInfoRef p_as_ty
     return MCExtensionThrowTypeConversionError(p_as_type, x_value);
 }
 
+bool MCExtensionConvertScriptToBuilder(MCValueRef p_value, MCValueRef& r_out_value)
+{
+	return __script_ensure_names_are_strings(p_value, r_out_value);
+}
+
 // Ensure that if the input value is a name it comes out as a string.
 // Ensure that if the input value is an array, all elements that are names (recursed)
 // come out as strings.
