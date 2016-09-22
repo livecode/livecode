@@ -1404,19 +1404,18 @@ static bool MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance
         
         p_handler -> java . class_name = MCValueRetain(*t_class_name);
         
-        MCAutoStringRef t_signature;
-        if (!MCStringFormat(&t_signature, "%@%@", *t_arguments, *t_return))
-            return false;
+        MCTypeInfoRef t_signature;
+        t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
         
-        if (!MCJavaGetArgumentTypes(*t_arguments,
-                                    p_handler -> java . arg_types,
-                                    p_handler -> java . arg_count))
-            return false;
+        if (!MCJavaCheckSignature(t_signature, *t_arguments, *t_return, p_handler -> java . call_type))
+            return MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("java binding string does not match foreign handler signature"), nil);
         
-        p_handler -> java . return_type = MCJavaMapTypeCode(*t_return);
+        MCAutoStringRef t_signature_string;
+        if (!MCStringFormat(&t_signature_string, "%@%@", *t_arguments, *t_return))
+            return false;
         
         void *t_method_id;
-        t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_signature);
+        t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_signature_string);
         
         if (t_method_id != nil)
         {
@@ -1762,9 +1761,8 @@ static bool MCScriptPerformForeignInvoke(MCScriptFrame*& x_frame, MCScriptInstan
             MCJavaCallJNIMethod(p_handler -> java . class_name,
                                 p_handler -> java . method_id,
                                 p_handler -> java . call_type,
-                                p_handler -> java . return_type,
+                                t_signature,
                                 &t_result,
-                                p_handler -> java . arg_types,
                                 t_args,
                                 p_arity);
         }

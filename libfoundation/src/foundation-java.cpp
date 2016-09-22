@@ -101,6 +101,42 @@ static java_type_map type_map[] =
     {"D", kMCJavaTypeDouble},
 };
 
+typedef struct __MCJavaObject *MCJavaObjectRef;
+
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCJavaObjectTypeInfo;
+
+MC_DLLEXPORT_DEF MCTypeInfoRef MCJavaGetObjectTypeInfo() { return kMCJavaObjectTypeInfo; }
+
+static bool __GetExpectedTypeCode(MCTypeInfoRef p_type, MCJavaType& r_code)
+{
+    if (p_type == kMCIntTypeInfo)
+        r_code = kMCJavaTypeLong;
+    else if (p_type == kMCBoolTypeInfo)
+        r_code = kMCJavaTypeBoolean;
+    else if (p_type == kMCFloatTypeInfo)
+        r_code = kMCJavaTypeFloat;
+    else if (p_type == kMCDoubleTypeInfo)
+        r_code = kMCJavaTypeDouble;
+    else if (p_type == kMCJavaObjectTypeInfo)
+        r_code = kMCJavaTypeObject;
+    else
+    {
+        MCResolvedTypeInfo t_src, t_target;
+        if (!MCTypeInfoResolve(p_type, t_src))
+            return false;
+        
+        if (!MCTypeInfoResolve(kMCJavaObjectTypeInfo, t_target))
+            return false;
+        
+        if (!MCResolvedTypeInfoConforms(t_src, t_target))
+            return false;
+        
+        r_code = kMCJavaTypeObject;
+    }
+    
+    return true;
+}
+
 #ifdef TARGET_SUPPORTS_JAVA
 void MCJavaDoAttachCurrentThread()
 {
@@ -369,22 +405,29 @@ static bool __JavaJNINonVirtualMethodResult(jobject p_instance, jclass p_class, 
     return true;
 }
 
-static bool __JavaJNIGetParams(void **args, uindex_t p_count, int *p_types, jvalue *&r_params)
+static bool __JavaJNIGetParams(void **args, MCTypeInfoRef p_signature, jvalue *&r_params)
 {
+    uindex_t t_param_count;
+    t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
+        
     MCAutoArray<jvalue> t_args;
-    if (!t_args . New(p_count))
+    if (!t_args . New(t_param_count))
         return false;
     
-    for (uindex_t i = 0; i < p_count; i++)
+    for (uindex_t i = 0; i < t_param_count; i++)
     {
-        switch (p_types[i])
+        MCTypeInfoRef t_type;
+        t_type = MCHandlerTypeInfoGetParameterType(p_signature, i);
+        
+        MCJavaType t_expected;
+        if (!__GetExpectedTypeCode(t_type, t_expected))
+            return false;
+            
+        switch (t_expected)
         {
+            case kMCJavaTypeArray:
             case kMCJavaTypeObject:
                 t_args[i] . l = (jobject)MCJavaObjectGetObject(*(MCJavaObjectRef *)args[i]);
-                break;
-            case kMCJavaTypeArray:
-                // Not yet implemented
-                MCAssert(false);
                 break;
             case kMCJavaTypeBoolean:
                 t_args[i].z = *(jboolean *)args[i];
@@ -413,7 +456,7 @@ static bool __JavaJNIGetParams(void **args, uindex_t p_count, int *p_types, jval
         }
     }
     
-    t_args . Take(r_params, p_count);
+    t_args . Take(r_params, t_param_count);
     return true;
 }
 
@@ -429,12 +472,6 @@ static bool MCJavaClassNameToPathString(MCNameRef p_class_name, MCStringRef& r_s
     return MCStringCopy(*t_escaped, r_string);
 }
 #endif
-
-typedef struct __MCJavaObject *MCJavaObjectRef;
-
-MC_DLLEXPORT_DEF MCTypeInfoRef kMCJavaObjectTypeInfo;
-
-MC_DLLEXPORT_DEF MCTypeInfoRef MCJavaGetObjectTypeInfo() { return kMCJavaObjectTypeInfo; }
 
 struct __MCJavaObjectImpl
 {
@@ -557,10 +594,18 @@ static MCJavaType MCJavaMapTypeCodeSubstring(MCStringRef p_type_code, MCRange p_
     return kMCJavaTypeObject;
 }
 
-MC_DLLEXPORT_DEF
 int MCJavaMapTypeCode(MCStringRef p_type_code)
 {
     return (int)MCJavaMapTypeCodeSubstring(p_type_code, MCRangeMake(0, MCStringGetLength(p_type_code)));
+}
+
+static bool MCJavaTypeConforms(MCTypeInfoRef p_type, MCJavaType p_code)
+{
+    MCJavaType t_code;
+    if (!__GetExpectedTypeCode(p_type, t_code))
+        return false;
+        
+    return t_code == p_code;
 }
 
 static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
@@ -588,35 +633,54 @@ static bool __NextArgument(MCStringRef p_arguments, MCRange& x_range)
         if (!MCStringFirstIndexOfChar(p_arguments, ';', x_range . offset, kMCStringOptionCompareExact, t_length))
             return false;
     }
-
+    
     x_range . length = t_length;
     return true;
 }
 
 MC_DLLEXPORT_DEF
-bool MCJavaGetArgumentTypes(MCStringRef p_arguments, int *&r_argument_types, uindex_t& r_count)
+bool MCJavaCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type)
 {
+    uindex_t t_param_count;
+    t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
+    
+    uindex_t t_first_param = 0;
+    if ((MCJavaCallType)p_call_type != MCJavaCallTypeStatic)
+    {
+        t_first_param = 1;
+    }
+    
     // Remove brackets from arg string
     MCAutoStringRef t_args;
-    if (!MCStringCopySubstring(p_arguments, MCRangeMake(1, MCStringGetLength(p_arguments) - 2), &t_args))
+    if (!MCStringCopySubstring(p_args, MCRangeMake(1, MCStringGetLength(p_args) - 2), &t_args))
         return false;
     
-    MCAutoArray<int> t_types;
-    t_types . New(0);
-
     MCRange t_range = MCRangeMake(0, 0);
-    while (__NextArgument(p_arguments, t_range))
+    
+    // Check the types of the arguments.
+    for(uindex_t i = t_first_param; i < t_param_count; i++)
     {
-        if (!t_types . Push((int)MCJavaMapTypeCodeSubstring(p_arguments, t_range)))
+        MCTypeInfoRef t_type;
+        t_type = MCHandlerTypeInfoGetParameterType(p_signature, i);
+        if (!__NextArgument(*t_args, t_range))
+            return false;
+        MCJavaType t_jtype;
+        t_jtype = MCJavaMapTypeCodeSubstring(*t_args, t_range);
+        
+        if (!MCJavaTypeConforms(t_type, t_jtype))
             return false;
     }
     
-    t_types . Take(r_argument_types, r_count);
-    return true;
+    MCJavaType t_return_code;
+    t_return_code = (MCJavaType)MCJavaMapTypeCode(p_return);
+    
+    MCTypeInfoRef t_return_type;
+    t_return_type = MCHandlerTypeInfoGetReturnType(p_signature);
+    return MCJavaTypeConforms(t_return_type, t_return_code);
 }
 
 MC_DLLEXPORT_DEF
-bool MCJavaCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, int p_return_type, void *r_return, int *p_arg_types, void **p_args, uindex_t p_arg_count)
+bool MCJavaCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_type, MCTypeInfoRef p_signature, void *r_return, void **p_args, uindex_t p_arg_count)
 {
 #ifdef TARGET_SUPPORTS_JAVA
     jmethodID t_method_id = (jmethodID)p_method_id;
@@ -632,34 +696,42 @@ bool MCJavaCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p_call_t
     if (!t_class_cstring . Lock(*t_class))
         return false;
     
-    /*
-     convert_params_to_jvalue_array
-     */
-    bool t_is_instance = p_call_type != MCJavaCallTypeStatic;
     jvalue *t_params = nil;
-    if (t_is_instance)
-        __JavaJNIGetParams(&p_args[1], p_arg_count - 1, p_arg_types, t_params);
-    else
-        __JavaJNIGetParams(p_args, p_arg_count, p_arg_types, t_params);
+    if (!__JavaJNIGetParams(p_args, p_signature, t_params))
+        return false;
+    
+    uindex_t t_param_count = MCHandlerTypeInfoGetParameterCount(p_signature);
+    
+    MCJavaType t_return_type;
+    if (!__GetExpectedTypeCode(MCHandlerTypeInfoGetReturnType(p_signature), t_return_type))
+        return false;
     
     switch (p_call_type)
     {
         case MCJavaCallTypeInstance:
         {
             // Java object on which to call instance method should always be first argument.
-            jobject t_instance = (jobject)MCJavaObjectGetObject(*(MCJavaObjectRef *)p_args[0]);
-            return __JavaJNIInstanceMethodResult(t_instance, t_method_id, t_params, p_return_type, r_return);
+            MCAssert(t_param_count > 0);
+            jobject t_instance = t_params[0].l;
+            if (t_param_count > 1)
+                return __JavaJNIInstanceMethodResult(t_instance, t_method_id, &t_params[1], t_return_type, r_return);
+            else
+                return __JavaJNIInstanceMethodResult(t_instance, t_method_id, nil, t_return_type, r_return);
         }
         case MCJavaCallTypeStatic:
         {
             jclass t_target_class = s_env -> FindClass(*t_class_cstring);
-            return __JavaJNIStaticMethodResult(t_target_class, t_method_id, t_params, p_return_type, r_return);
+            return __JavaJNIStaticMethodResult(t_target_class, t_method_id, t_params, t_return_type, r_return);
         }
         case MCJavaCallTypeNonVirtual:
         {
-            jobject t_instance = (jobject)MCJavaObjectGetObject(*(MCJavaObjectRef *)p_args[0]);
+            MCAssert(t_param_count > 0);
+            jobject t_instance = t_params[0].l;
             jclass t_target_class = s_env -> FindClass(*t_class_cstring);
-            return __JavaJNINonVirtualMethodResult(t_instance, t_target_class, t_method_id, t_params, p_return_type, r_return);
+            if (t_param_count > 1)
+                return __JavaJNINonVirtualMethodResult(t_instance, t_target_class, t_method_id, &t_params[1], t_return_type, r_return);
+            else
+                return __JavaJNINonVirtualMethodResult(t_instance, t_target_class, t_method_id, nil, t_return_type, r_return);
         }
     }
 #endif
