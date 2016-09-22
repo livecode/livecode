@@ -4019,7 +4019,7 @@ bool MCStringDelimitedOffset(MCStringRef self,
         
         if (r_before != nil)
         {
-            if (t_before > 0)
+            if (t_index > p_skip)
             {
                 r_before -> offset = p_range . offset + t_before;
                 r_before -> length = 1;
