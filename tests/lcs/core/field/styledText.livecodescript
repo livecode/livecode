@@ -36,16 +36,17 @@ on TestParagraphTabAlignRoundtrip
    set the styledText of field "TestField" to tStyledText
    TestAssert "styledText supports tabAlign", the tabAlign of line 1 of field "TestField" is "left,center,right"
    
-   put the styledText of field 1 into tStyledText
+   put the styledText of field "testField" into tStyledText
    TestAssert "styledText roundtrips tabAlign", tStyledText[1]["style"]["tabAlign"] is "left,center,right"
 
-   set the tabAlign of line 1 of field "TestField" to empty
-   set the tabAlign of field 1 to "right,center,left"
+   // clear field styles
+   set the text of field "testField" to "left" & tab & "center" & tab & "right"
+   set the tabAlign of field "testField" to "right,center,left"
 
-   put the styledText of field 1 into tStyledText
+   put the styledText of field "testField" into tStyledText
    TestAssert "styledText doesn't include inherited tabAlign", tabAlign is not among the keys of tStyledText[1]["style"]
    
-   put the effective styledText of field 1 into tStyledText
+   put the effective styledText of field "testField" into tStyledText
    TestAssert "effective htmlText does include inherited tabAlign", tStyledText[1]["style"]["tabAlign"] is "right,center,left"
 
    delete stack "Test"
