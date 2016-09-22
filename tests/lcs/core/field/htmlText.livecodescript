@@ -48,14 +48,14 @@ on TestParagraphTabAlignRoundtrip
 
    create field "TestField"
 
-   set the htmlText of field "TestField" to "<p tabalign='left,center,right'>left&#9;center&#9;right</p>"
+   set the htmlText of field "TestField" to q("<p tabalign='left,center,right'>left&#9;center&#9;right</p>")
    TestAssert "htmlText supports tabAlign", the tabAlign of line 1 of field "TestField" is "left,center,right"
-   TestAssert "htmlText roundtrips tabAlign", the htmlText of field "TestField" is "<p tabalign='left,center,right'>left&#9;center&#9;right</p>"
-
-   set the tabAlign of line 1 of field "TestField" to empty
-   set the tabAlign of field 1 to "right,center,left"
-   TestAssert "htmlText doesn't include inherited tabAlign", the htmltext of field 1 is "<p>left&#9;center&#9;right</p>"
-   TestAssert "effective htmlText does include inherited tabAlign", the effective htmltext of field 1 is "<p tabalign='right,center,left'>left&#9;center&#9;right</p>"
+   TestAssert "htmlText roundtrips tabAlign", the htmlText of field "TestField" is q("<p tabalign='left,center,right'>left&#9;center&#9;right</p>")
+   
+   set the text of field "TestField" to "left" & tab & "center" & tab & "right"
+   set the tabAlign of field "TestField" to "right,center,left"
+   TestAssert "htmlText doesn't include inherited tabAlign", the htmltext of field "TestField" is q("<p>left&#9;center&#9;right</p>")
+   TestAssert "effective htmlText does include inherited tabAlign", the effective htmltext of field "TestField" contains q("tabalign='right,center,left'")
 
    delete stack "Test"
 end TestParagraphTabAlignRoundtrip
