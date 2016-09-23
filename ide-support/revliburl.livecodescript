@@ -3235,6 +3235,12 @@ on socketError x, pErr
       if x is among the lines of keys(laFTPCommandStatus) then ##may be waiting for a server reply
          put pErr into laFTPCommandStatus[x] ##unblock waits
       end if
+      
+      ## Handle cleanup for load url
+      if laLoadReq[laUrl[x]] then
+         ulHttpLateCleanUp x
+      end if
+        
    else if x is among the lines of keys(laControlXDataMap)then##must be ftp passive data socket
       put laControlXDataMap[x] into tControlSocket
       put false into laStatus[laUrl[tControlSocket]] ##unblock waits
