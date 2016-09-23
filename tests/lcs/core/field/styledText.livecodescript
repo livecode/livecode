@@ -1,4 +1,4 @@
-script "CoreFieldHtmlText"
+script "CoreFieldStyledText"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
