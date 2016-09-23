@@ -865,22 +865,18 @@ private command compilerExecuteCopy @self, pCommand
          case "executable"
             local tExeType
             put sniffExecutable(abstractPinFile(tItemSourcePath)) into tExeType
-            if tExeType is "macosx" then
-               if tSourceType is not "ios" then
-                  get self["context"]["TargetArchitectures"]
-                  sort items of it ascending
-                  put "slim-" & it  into tProcess
-                  if "i386" is among the items of it then
-                     put "i" after tSuffix
-                  end if
-                  if "ppc" is among the items of it then
-                     put "p" after tSuffix
-                  end if
-                  if "x86_64" is among the items of it then
-                     put "a" after tSuffix
-                  end if
-               else
-                  put "codesign" into tProcess
+            if tExeType is "macosx" and tSourceType is not "ios" then
+               get self["context"]["TargetArchitectures"]
+               sort items of it ascending
+               put "slim-" & it  into tProcess
+               if "i386" is among the items of it then
+                  put "i" after tSuffix
+               end if
+               if "ppc" is among the items of it then
+                  put "p" after tSuffix
+               end if
+               if "x86_64" is among the items of it then
+                  put "a" after tSuffix
                end if
             else if tExeType is "windows" and compilerEvaluateOptVar(self, "SignExecutables") and self["options"]["sign.certificate"] is not empty then
                put "sign" into tProcess
@@ -932,7 +928,7 @@ private command compilerExecuteCopy @self, pCommand
             
             -- Link the new file to the base file
             put tProcess & ":" & tBaseItemSourcePath into self["base_files"][tProcess & ":" & tItemSourcePath]
-         else if tProcess is among the words of "sign codesign" then
+         else if tProcess is "sign" then
             -- If we are signing, and we aren't basing on an older version then we base the signed item
             -- on the unsigned one.
             put "none:" & tItemSourcePath into self["base_files"][tProcess & ":" & tItemSourcePath]
@@ -1260,8 +1256,6 @@ private function compilerProcessItem @self, pProcess, pFile
       put compilerProcessText(self, abstractContentsOfBinaryFile(pFile)) into url ("binfile:" & tDerivedFile)
    else if pProcess is "sign" then
       put compilerProcessSign(self, pFile) into tDerivedFile
-   else if pProcess is "codesign" then
-      put compilerProcessCodesign(self, pFile) into tDerivedFile
    else if pProcess begins with "slim-" then
       put compilerProcessSlim(self, pFile, char 6 to -1 of pProcess) into tDerivedFile
    else
@@ -1350,34 +1344,6 @@ private function compilerProcessCodesign @self, pFile
    
    return tFile
 end compilerProcessCodesign
-
-
-private function compilerProcessSign @self, pFile
-   local tSignParams
-   put abstractPinFile(pFile) into tSignParams["input"]
-   put compilerMakeTemporaryFile(self, "sign") into tSignParams["output"]
-   put self["options"]["sign.certificate"] into tSignParams["certificate"]
-   put self["options"]["sign.privatekey"] into tSignParams["privatekey"]
-   put self["options"]["sign.password"] into tSignParams["passphrase"]
-   put self["options"]["sign.timestamper"] into tSignParams["timestamper"]
-   put self["options"]["sign.url"] into tSignParams["url"]
-   
-   set the itemDelimiter to slash
-   put self["options"]["sign.description"] & ":" && the last item of pFile into tSignParams["description"]
-   set the itemDelimiter to comma
-   
-   compilerProgress self, "Signing '" & tSignParams["input"] & "'"
-   _internal sign windows tSignParams
-   if the result is not empty then
-      compilerBuildWarning self, "signing of '" & pFile & "' failed - " & the result
-   end if
-   
-   if there is no file tSignParams["output"] then
-      return empty
-   end if
-   
-   return tSignParams["output"]
-end compilerProcessSign
 
 private function compilerMakeTemporaryFile @self, pTag
    local tFolder
