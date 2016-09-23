@@ -19,6 +19,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 on TestSetup
     TestLoadExtension "com.livecode.library.json"
     TestLoadExtension "com.livecode.widget.clock"
+
+    TestDiagnostic the defaultfolder
+    load extension from file "../_tests/_build/lcs/core/engine/_extension.lcm"
+    if the result is not empty then
+       throw "Failed to load test support extension:" && the result
+    end if
 end TestSetup
 
 /////////
@@ -45,3 +51,10 @@ on TestUnloadWidgetModuleAfterDeletion
     send "_TestUnloadWidgetModuleAfterDeletion_DoDeleteAndUnload" to me in 0 millisecs
     wait 1 millisecond with messages
 end TestUnloadWidgetModuleAfterDeletion
+
+/////////
+
+on TestExtensionBridgeNames
+   TestAssert "LCS names bridge to LCB strings", \
+         TestExtensionBridgeNames_Handler()
+end TestExtensionBridgeNames
