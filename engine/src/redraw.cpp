@@ -1242,7 +1242,10 @@ void MCRedrawRestoreLockScreen(uint2 p_lock)
 	MClockscreen = p_lock;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen lock restore");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 void MCRedrawLockScreen(void)
@@ -1250,7 +1253,10 @@ void MCRedrawLockScreen(void)
 	MClockscreen++;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen lock");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 void MCRedrawUnlockScreen(void)
@@ -1261,7 +1267,10 @@ void MCRedrawUnlockScreen(void)
 	MClockscreen--;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen unlock");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 void MCRedrawUnlockScreenWithEffects(void)
@@ -1280,7 +1289,10 @@ void MCRedrawUnlockScreenWithEffects(void)
 	}
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen unlock with effects");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 void MCRedrawForceUnlockScreen(void)
@@ -1288,7 +1300,10 @@ void MCRedrawForceUnlockScreen(void)
 	MClockscreen = 0;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen force unlock");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1322,7 +1337,10 @@ void MCRedrawScheduleUpdateForStack(MCStack *stack)
 	s_screen_is_dirty = true;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after update for stack");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 bool MCRedrawIsScreenUpdateEnabled(void)
@@ -1335,7 +1353,10 @@ void MCRedrawDisableScreenUpdates(void)
 	s_screen_updates_disabled = true;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen updates disabled");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 void MCRedrawEnableScreenUpdates(void)
@@ -1343,7 +1364,10 @@ void MCRedrawEnableScreenUpdates(void)
 	s_screen_updates_disabled = false;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("schedule update after screen updates enabled");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 void MCRedrawDoUpdateScreen(void)
@@ -1356,7 +1380,9 @@ void MCRedrawDoUpdateScreen(void)
 	
 	if (s_screen_updates_disabled)
 		return;
-		
+	
+    MCLog("screen unlocked, dirty, updates enabled");
+    
 	MCStacknode *t_stacks;
 	t_stacks = MCstacks -> topnode();
 	if (t_stacks == nil)
@@ -1377,8 +1403,12 @@ void MCRedrawDoUpdateScreen(void)
             //  which was not the case beforehand - and the redrawing could nest
             //  here, and eventually set s_screen_is_dirty to false (l.1383)
             if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+            {
+                MCLog("bug 15705 - reschedule");
                 MCActionsSchedule(kMCActionsUpdateScreen);
+            }
 
+            MCLog("%s triggered redraw", sptr -> getname_cstring());
             MCRedrawUpdateScreen();
 			return;
 		}
@@ -1389,10 +1419,15 @@ void MCRedrawDoUpdateScreen(void)
 	}
 	while (tptr != t_stacks->prev());
 
+    MCLog("all stacks updated");
+    
 	s_screen_is_dirty = false;
 	
 	if (MClockscreen == 0 && s_screen_is_dirty && !s_screen_updates_disabled)
+    {
+        MCLog("screen dirtied by another thread");
         MCActionsSchedule(kMCActionsUpdateScreen);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

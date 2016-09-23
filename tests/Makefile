@@ -17,7 +17,7 @@ LCS_LOG = _lcs_test_suite.log
 LCS_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.livecodescript
 
 ifeq ($(LCS_TESTENGINE),development)
-LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
+LCS_CMD = $(guess_dev_engine) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run
 else
 LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run
 endif
@@ -94,7 +94,7 @@ $(LCM_DIR)/deps.mk: $(LCM_SOURCES) Makefile $(LC_COMPILE) | $(LCM_DIR)
 	    --output $(LCM_DIR)/$$lcm -- $$lcb >> $@; \
 	done; \
 	$(LC_COMPILE) $(LC_COMPILE_FLAGS) --deps make -- $(LCM_SOURCES) >> $@ ; \
-	sed -i 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
+	sed -i -e 's,\(.* \([^ ]*\)\.lcb\)$$,$(LCM_DIR)/\2.lcm \1,g' $@
 
 ########## Build rules
 

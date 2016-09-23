@@ -148,9 +148,9 @@ else if the platform is "android" then
 put "arm,i386" into tProcessors
 else if the platform is "iphone" then
 put "arm,arm64,i386,x86_64" into tProcessors
-else if the platform is among the items of "Mac OS,Linux" then
+else if the platform is among the items of "MacOS,Linux" then
    // Mac and Linux
-   put line 1 of shell("uname -m") into tProcessors
+   put "x86,x86_64" into tProcessors
 else
    -- Unknown platform for "the processor"
 end if

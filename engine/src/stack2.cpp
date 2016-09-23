@@ -1993,6 +1993,8 @@ void MCStack::reopenwindow()
 
 Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentptr, Window_position wpos,  Object_pos walign)
 {
+    MCLog("openrect called on %s", getname_cstring());
+    
 	MCRectangle myoldrect = rect;
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
@@ -2043,6 +2045,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			}
 			else
 			{
+                MCLog("need resize");
 				state |= CS_NEED_RESIZE;
 				MCRedrawScheduleUpdateForStack(this);
 			}

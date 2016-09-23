@@ -90,6 +90,7 @@ void MCStack::setgeom()
 	//   remote dialog/menu windows.
 	if (window == NULL)
 	{
+        MCLog("window null in setgeom");
 		// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 		MCRedrawLockScreen();
 		state &= ~CS_NEED_RESIZE;

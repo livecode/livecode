@@ -44,6 +44,14 @@ else
   BUILD_PROJECT := livecode
 endif
 
+# Prettifying output for CI builds
+ifeq ($(TRAVIS),true)
+  XCODEBUILD := set -o pipefail && $(XCODEBUILD)
+  XCODEBUILD_FILTER := | xcpretty
+else
+  XCODEBUILD_FILTER :=
+endif 
+
 include Makefile.common
 
 ################################################################
@@ -109,10 +117,12 @@ config-mac:
 	./config.sh --platform mac
 
 compile-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default \
+	  $(XCODEBUILD_FILTER)
 
 check-mac:
-	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
+	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check \
+	  $(XCODEBUILD_FILTER)
 	$(MAKE) check-common-mac
 
 
