@@ -17,7 +17,7 @@ LCS_LOG = _lcs_test_suite.log
 LCS_TESTRUNNER ?= $(top_srcdir)/tests/_testrunner.livecodescript
 
 ifeq ($(LCS_TESTENGINE),development)
-LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(guess_dev_engine) $(LCS_ENGINE_FLAGS)
+LCS_CMD = $(guess_dev_engine) $(LCS_TESTRUNNER) run
 else
 LCS_CMD = $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run
 endif

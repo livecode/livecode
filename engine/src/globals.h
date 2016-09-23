@@ -510,6 +510,7 @@ inline void MCActionsRunSome(uint32_t mask)
 
 inline void MCRedrawUpdateScreen(void)
 {
+    MCLog("update screen");
     MCActionsRunSome(kMCActionsUpdateScreen);
 }
 

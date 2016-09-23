@@ -1526,6 +1526,7 @@ void MCActionsDoRunSome(uint32_t p_mask)
     
     if ((t_actions & kMCActionsUpdateScreen) != 0)
     {
+        MCLog("update screen no longer required");
         MCactionsrequired &= ~kMCActionsUpdateScreen;
         MCRedrawDoUpdateScreen();
     }

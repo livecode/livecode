@@ -817,6 +817,7 @@ IO_stat MCDispatch::doreadfile(MCStringRef p_openpath, MCStringRef p_name, IO_ha
     MCS_seek_set(stream, 0);
     if (stacks == NULL)
     {
+        MCLog("setting noui to true");
         MCnoui = True;
         MCscreen = new MCUIDC;
         /* UNCHECKED */ MCStackSecurityCreateStack(stacks);
