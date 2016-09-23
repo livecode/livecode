@@ -54,7 +54,13 @@ end TestUnloadWidgetModuleAfterDeletion
 
 /////////
 
+function TestExtensionBridgeNames_Version
+   return the version
+end TestExtensionBridgeNames_Version
+
 on TestExtensionBridgeNames
-   TestAssert "LCS names bridge to LCB strings", \
-         TestExtensionBridgeNames_Handler()
+   TestAssert "LCS names bridge to LCB strings in execute script", \
+         TestExtensionBridgeNames_ExecuteScript()
+   TestAssert "LCS names bridge to LCB strings in send", \
+         TestExtensionBridgeNames_Send()
 end TestExtensionBridgeNames

@@ -1,7 +1,17 @@
 library com.livecode.lcs_tests.core.extension
 
-public handler TestExtensionBridgeNames_Handler()
+public handler TestExtensionBridgeNames_ExecuteScript()
 	execute script "return the version"
+	return the result is a string
+end handler
+
+public handler TestExtensionBridgeNames_Send()
+	variable tScriptObject
+	resolve script object "stack \qCoreEngineExtensions\q"
+	put the result into tScriptObject
+	test diagnostic tScriptObject
+
+	send function "TestExtensionBridgeNames_Version" to tScriptObject
 	return the result is a string
 end handler
 
