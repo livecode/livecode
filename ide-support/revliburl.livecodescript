@@ -1306,6 +1306,7 @@ on ulDoProcess x,y
          
          ##normal case
       case laLength[laUrl[x]] is not empty
+      case laStatusCode[laUrl[x]] is "204"  -- When a 204 is returned no data is returned, just the length of the data in the header.
          
          put  laTmpData[laUrl[x]] into tData
          ulStoreData laUrl[x],tData
