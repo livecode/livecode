@@ -27,7 +27,6 @@ env:
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
    - CXX_STD: "c++11"
-   - LCS_ENGINE_FLAGS: "-ui"
 
 # Install any required tools
 before_install:
@@ -43,9 +42,17 @@ install:
 script: >
   if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
     if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
+      LICENSE_FILE=livecode-firstrun.lcf
+      LICENSE_DIR="$HOME/.runrev/licenses"
+      [ -d "$LICENSE_DIR" ] || mkdir -p "$LICENSE_DIR"
+      touch "$LICENSE_DIR/$LICENSE_FILE"
       make all-linux && make check-linux
     fi
     if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then
+      LICENSE_FILE=livecode-firstrun.lcf
+      LICENSE_DIR="$HOME/Library/Application Support/RunRev/Licenses"
+      [ -d "$LICENSE_DIR" ] || mkdir -p "$LICENSE_DIR"
+      touch "$LICENSE_DIR/$LICENSE_FILE"
       make all-mac && make check-mac
     fi
   fi
