@@ -6,6 +6,11 @@
 sudo: required
 dist: trusty
 
+# Build on both Linux and OSX
+os:
+  - linux
+  - osx
+
 language: c++
 
 # Skip vulcan CI branches
@@ -23,14 +28,25 @@ env:
    - secure: "R/JfoBMrkhCGWhfWM1m3gPHuLtMBlp2SIK1R9BaPbRsbGBUJmAg9V0g0YXSaw8SVxoyuiL/jsLtHPfDeub9oTxrYydew+6/4KaoQdG7EGXQJfBhH2f0ag/hTKJfXnmZX9jMMnTxPf5Axjq+w4E6sKkU2+d1oAJRhrqzYNwDhVlc="
    - CXX_STD: "c++11"
 
+# Install any required tools
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then sudo gem install xcpretty ; fi
+
 # Set up the source tree by fetching Linux-specific prebuilt objects
-install: (cd prebuilt && ./fetch-libraries.sh linux)
+install: 
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux) ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
 script: >
   if [ "${COVERITY_SCAN_BRANCH}" != "1" ]; then
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
       make all-linux && make check-linux
+    fi
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then
+      make all-mac && make check-mac
+    fi
   fi
 
 addons:
