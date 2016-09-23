@@ -536,13 +536,6 @@ MCStack::~MCStack()
 		close();
 	extraclose(false);
 
-	if (needs != NULL)
-	{
-		while (nneeds--)
-
-			needs[nneeds]->removelink(this);
-		delete needs;
-	}
 	if (substacks != NULL)
 	{
 		while (substacks != NULL)
@@ -1316,7 +1309,8 @@ bool MCStack::isdeletable(bool p_check_flag)
     //   make sure we throw an error.
     if (parent == NULL || scriptdepth != 0 ||
         (p_check_flag && getflag(F_S_CANT_DELETE)) ||
-        MCdispatcher->gethome() == this || this -> isediting())
+        MCdispatcher->gethome() == this || this -> isediting() ||
+        MCdispatcher->getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
@@ -1381,7 +1375,10 @@ Boolean MCStack::del(bool p_check_flag)
 {
     if (!isdeletable(true))
 	   return False;
-	
+    
+    MCscreen->ungrabpointer();
+    MCdispatcher->removemenu();
+    
     setstate(True, CS_DELETE_STACK);
     
 	if (opened)
@@ -1427,6 +1424,15 @@ Boolean MCStack::del(bool p_check_flag)
 	//   flag set, flush the parentscripts table.
 	if (getextendedstate(ECS_HAS_PARENTSCRIPTS))
 		MCParentScript::FlushStack(this);
+    
+    if (needs != NULL)
+    {
+        while (nneeds--)
+            needs[nneeds]->removelink(this);
+        
+        delete needs;
+        needs = NULL;
+    }
     
     // MCObject now does things on del(), so we must make sure we finish by
     // calling its implementation.

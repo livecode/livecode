@@ -1740,7 +1740,15 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 
 	for (i = 0 ; i < MCStringGetLength(p_typing); i++)
 	{
-		KeySym keysym = MCStringGetCodepointAtIndex(p_typing, i);
+		// Fetch the codepoint at the given codeunit index
+		codepoint_t t_cp_char =
+			MCStringGetCodepointAtIndex(p_typing, i);
+		
+		// Compute the number of codeunits used by the char
+		uindex_t t_cp_length =
+			MCUnicodeCodepointGetCodeunitLength(t_cp_char);
+		
+		KeySym keysym = t_cp_char;
         MCAutoStringRef t_char;
 		if (keysym < 0x20 || keysym == 0xFF)
 		{
@@ -1753,7 +1761,7 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 			keysym |= XK_Class_codepoint;
 		else
         {
-            MCStringCopySubstring(p_typing, MCRangeMake(i, 1), &t_char);
+            MCStringCopySubstring(p_typing, MCRangeMake(i, t_cp_length), &t_char);
 			t_string = *t_char;
         }
         // PM-2014-10-03: [[ Bug 13907 ]] Make sure we don't pass nil to kdown
@@ -1764,6 +1772,10 @@ void MCInterfaceExecType(MCExecContext& ctxt, MCStringRef p_typing, uint2 p_modi
 		real8 delay = nexttime - MCS_time();
 		if (MCscreen->wait(delay, False, False))
 			ctxt . LegacyThrow(EE_TYPE_ABORT);
+		
+		// If the codepoint was in SMP, then make sure we bump two codeunit
+		// indicies.
+		i += t_cp_length - 1;
 	}
     
     // AL-2014-01-07 return lock mods to false

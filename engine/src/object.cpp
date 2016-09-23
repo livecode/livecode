@@ -858,7 +858,7 @@ void MCObject::deselect()
 
 bool MCObject::isdeletable(bool p_check_flag)
 {
-    if (parent == NULL || scriptdepth != 0)
+    if (parent == NULL || scriptdepth != 0 || MCdispatcher -> getmenu() == this || MCmenuobjectptr == this)
     {
         MCAutoValueRef t_long_name;
         getnameproperty(P_LONG_NAME, 0, &t_long_name);
