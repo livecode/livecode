@@ -46,7 +46,7 @@ script: >
       LICENSE_DIR="$HOME/.runrev/licenses"
       [ -d "$LICENSE_DIR" ] || mkdir -p "$LICENSE_DIR"
       touch "$LICENSE_DIR/$LICENSE_FILE"
-      make all-linux && make check-linux
+      make all-linux && xvfb-run make check-linux
     fi
     if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then
       LICENSE_FILE=livecode-firstrun.lcf
@@ -85,3 +85,4 @@ addons:
       - libpopt-dev
       - libesd0-dev
       - liblcms-dev
+      - xvfb
