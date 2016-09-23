@@ -5312,6 +5312,9 @@ end _proxyFromHTTPProxy
 
 command libURLProcessCookies pBoolean
    put pBoolean is true into lvHandleCookies
+   if not pBoolean then
+      put empty into laCookies
+   end if
 end libURLProcessCookies
 
 
@@ -5504,6 +5507,28 @@ private command _extractCookies pURL, pHeader
    
    return empty
 end _extractCookies
+
+
+private function _extractPath pURL
+   local tCharNo
+   local tPath
+
+   put "/" into tPath
+   put offset("://", pURL) into tCharNo
+   if tCharNo > 0 then
+      put char tCharNo + 3 to -1 of pURL into pURL
+      put offset("/", pURL) into tCharNo
+      if tCharNo > 0 then
+         put char tCharNo to -1 of pURL into tPath
+         put offset("?", tPath) into tCharNo
+         if tCharNo > 0 then
+            delete char tCharNo to -1 of tPath
+         end if
+      end if
+  end if
+
+  return tPath
+end _extractPath
 
 
 function libURLInternetTimeStampInGMT
