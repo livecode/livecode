@@ -256,8 +256,8 @@ bool MCPDFPrintingDevice::BeginDocument(const MCCustomPrinterDocument& p_documen
 
 	if (t_success)
 	{
-		cairo_pdf_object_t t_value;
-		t_value.type = CAIRO_PDF_OBJECT_TYPE_STRING;
+		cairo_pdf_value_t t_value;
+		t_value.type = CAIRO_PDF_VALUE_TYPE_STRING;
 		if (p_document.option_count > 0)
 		{
 			t_success = MCMemoryNewArray(p_document.option_count, m_option_keys);
@@ -293,8 +293,8 @@ bool MCPDFPrintingDevice::BeginDocument(const MCCustomPrinterDocument& p_documen
 
 	if (t_success)
 	{
-		cairo_pdf_object_t t_date_object;
-		t_date_object.type = CAIRO_PDF_OBJECT_TYPE_DATE;
+		cairo_pdf_value_t t_date_object;
+		t_date_object.type = CAIRO_PDF_VALUE_TYPE_DATE;
 		t_success = set_cairo_pdf_datetime_to_now(t_date_object.date);
 		if (t_success)
 			cairo_pdf_surface_set_metadata(m_surface, "CreationDate", &t_date_object);
