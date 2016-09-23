@@ -1218,8 +1218,11 @@ bool MCProperty::resolveprop(MCExecContext& ctxt, Properties& r_which, MCNameRef
             
             // AL-2015-08-27: [[ Bug 15798 ]] If the index is quoted, we don't want to include the
             //  quotes in the index name.
-            if (MCStringGetCodepointAtIndex(*t_string, t_offset + 1) == '"' &&
-                MCStringGetCodepointAtIndex(*t_string, t_end_offset - 1) == '"')
+			
+			// As we are only looking for an ASCII char, GetCharAtIndex is
+			// sufficient (no need for GetCodepointAtIndex).
+            if (MCStringGetCharAtIndex(*t_string, t_offset + 1) == '"' &&
+                MCStringGetCharAtIndex(*t_string, t_end_offset - 1) == '"')
             {
                 t_offset++;
                 t_end_offset--;

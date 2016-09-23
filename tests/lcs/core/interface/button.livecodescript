@@ -49,3 +49,19 @@ on TestIconGravity
    TestAssert "clone button preserves iconGravity", \
                   the iconGravity of button "TestButtonClone" is "top"
 end TestIconGravity
+
+on TestBug18293
+   if the environment is "command line" then
+      TestSkip "deleting popped up menu stack shouldn't crash", "not supported in no ui mode"
+      return empty
+   end if
+   create stack "popup menu"
+   create stack "test"
+   go stack "test"
+   create button "test"
+   set the menumode of button "test" to "popup"
+   set the menuname of button "test" to "popup menu"
+   click at the loc of button "test"
+   delete stack "popup menu"
+   TestAssert "deleting popped up menu stack shouldn't crash", true
+end TestBug18293
