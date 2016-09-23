@@ -12,7 +12,7 @@ image
 
 Introduced: 1.0
 
-OS: mac, windows, linux, ios, android
+OS: mac, windows, linux, ios, android, html5
 
 Platforms: desktop, server, mobile
 
@@ -21,11 +21,23 @@ on mouseUp
   answer "You clicked" && the name of the target
 end mouseUp
 
+Example:
+# checking the right button
+on mouseUp pBtnNum
+  if pBtnNum is 3 then
+    answer "You used the right button."
+  end if
+end mouseUp
+
 Parameters:
-pButtonNumber (enum): Specifies which mouse button was pressed:
-- "1": the mouse button on Mac OS systems and the left button on Windows and Unix systems.
-- "2": the middle button on Unix systems.
-- "3": the right button on Windows and Unix systems and Control-click on Mac OS systems.
+mouseButtonNumber (enum):
+The mouseButtonNumber specifies which mouse button was pressed:
+
+-  1 is the the left button on systems with a multi-button mouse
+   and the mouse button on Mac OS systems with a single-button mouse.
+-  2 is the middle button on systems with a three-button mouse.
+-  3 is the right button on systems with a multi-button mouse and 
+   Control-click on Mac OS systems with a single-button mouse.
 
 Description:
 Handle the <mouseUp> <message> to perform an action when the user
@@ -34,38 +46,39 @@ releases the <mouse button> after clicking.
 The <mouseUp> <message> is sent to the <control> that was clicked, or to
 the <card> if no <control> was under the <mouse pointer>.
 
+>*Note:*  If the user clicks a transparent <pixel> in an <image>,
+> the <mouseUp> <message> is sent to the <object(glossary)> behind the
+> <image>, not to the <image>.
+
 The <mouseUp> <message> is sent only when the <Browse tool> is being
 used. If an <unlock|unlocked> <field> is clicked with <mouse button> 1
 or 2, no <mouseUp> <message> is sent.
 
 If the mouse has moved outside the control that was originally clicked
-before the user releases the mouse button, the mouseRelease <message> is
-sent instead of <mouseUp>. If the click is the second click of a double
-click, the <mouseDoubleUp> message is sent instead of <mouseUp>.
+before the user releases the mouse button, the <mouseRelease> <message> is
+sent instead of <mouseUp>. If the click is the second click of a 
+<double-click>, the <mouseDoubleUp> message is sent instead of <mouseUp>.
 
 >*Tip:*  If the user clicks several times in rapid succession (for
 > example, if the user clicks an "Increase" button that increases a
 > number by 1), some of the clicks may send a <mouseDoubleUp> <message>
 > instead of <mouseUp>. If your <script> only handles the <mouseUp>
-> <message>, these accidental double clicks will be lost. One way to
+> <message>, these accidental double-click|double-clicks> will be lost. One way to
 > prevent this is to install a <handler> in an <object(glossary)> that's
-> further in the <message path>, to re-send double clicks:
+> further in the <message path>, to re-send double-click|double-clicks>:
 
     on mouseDoubleUp
-       if "on mouseUp" is in the script of the target \
-          and "on mouseDoubleUp" is not in the script of the target then 
-          send "mouseUp" to the target
-       end if
+      if "on mouseUp" is in the script of the target and \
+         "on mouseDoubleUp" is not in the script of the target then
+       send "mouseUp" to the target
+      end if
     end mouseDoubleUp
 
-If the user double-clicks an object whose script contains a <mouseUp>
-<handler> but no <mouseDoubleUp>, the above <handler> will automatically
-send a <mouseUp> to the <object(glossary)> so the second click can be
-handled normally (instead of as a double-click).
 
->*Important:*  If the user clicks a transparent <pixel> in an <image>,
-> the <mouseUp> <message> is sent to the <object(glossary)> behind the
-> <image>, not to the <image>.
+If the user <double-click|double-clicks> an object whose script contains a 
+<mouseUp> <handler> but no <mouseDoubleUp>, the above <handler> will 
+automatically send a <mouseUp> to the <object(glossary)> so the second 
+click can be handled normally (instead of as a <double-click>).
 
 References: click (command), mouseClick (function), field (glossary),
 handler (glossary), mouse button (glossary), Browse tool (glossary),
@@ -73,7 +86,8 @@ message (glossary), message path (glossary), unlock (glossary),
 card (glossary), pixel (glossary), mouse pointer (glossary),
 image (glossary), object (glossary), control (keyword),
 mouseStillDown (message), mouseDoubleUp (message),
-mouseUpInBackdrop (message), script (property)
+mouseRelease (message), mouseUpInBackdrop (message), 
+script (property), double-click (glossary)
 
-Tags: ui
+Tags: ui, message
 
