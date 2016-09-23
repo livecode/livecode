@@ -1550,26 +1550,27 @@ bool MCField::formattabalignments(const intenum_t *p_alignments, uindex_t p_alig
         switch (p_alignments[i])
         {
             case kMCParagraphTextAlignLeft:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "left");
+                if (!MCListAppendCString(*t_list, "left"))
+					return false;
                 break;
                 
             case kMCParagraphTextAlignRight:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "right");
+                if (!MCListAppendCString(*t_list, "right"))
+					return false;
                 break;
                 
             case kMCParagraphTextAlignCenter:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "center");
+                if (!MCListAppendCString(*t_list, "center"))
+					return false;
                 break;
                 
             case kMCParagraphTextAlignJustify:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "justify");
+                if (!MCListAppendCString(*t_list, "justify"))
+					return false;
                 break;
                 
             default:
-            {
-                MCAssert(false);
-                return false;
-            }
+				MCUnreachableReturn(false);
         }
     }
     
