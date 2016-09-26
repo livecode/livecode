@@ -433,6 +433,8 @@ void MCControl::select()
 
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	layer_redrawall();
+	
+	getcard()->dirtyselection(rect);
 }
 
 void MCControl::deselect()
@@ -446,6 +448,8 @@ void MCControl::deselect()
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
         
+		getcard()->dirtyselection(rect);
+
         state &= ~(CS_SELECTED | CS_MOVE | CS_SIZE | CS_CREATE);
 	}
 }
@@ -790,20 +794,20 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 	}
 }
 
-void MCControl::sizerects(MCRectangle *rects)
+void MCControl::sizerects(const MCRectangle &p_object_rect, MCRectangle r_rects[8])
 {
 	int2 x[3];
 	int2 y[3];
 
 	uint2 handlesize = MCsizewidth;
-    
-    x[0] = rect.x - (handlesize >> 1);
- 	x[1] = rect.x + ((rect.width - handlesize) >> 1);
-    x[2] = rect.x + rect.width - (handlesize >> 1);
-    y[0] = rect.y - (handlesize >> 1);
- 	y[1] = rect.y + ((rect.height - handlesize) >> 1);
-    y[2] = rect.y + rect.height - (handlesize >> 1);
 
+	x[0] = p_object_rect.x - (handlesize >> 1);
+	x[1] = p_object_rect.x + ((p_object_rect.width - handlesize) >> 1);
+	x[2] = p_object_rect.x + p_object_rect.width - (handlesize >> 1);
+	y[0] = p_object_rect.y - (handlesize >> 1);
+	y[1] = p_object_rect.y + ((p_object_rect.height - handlesize) >> 1);
+	y[2] = p_object_rect.y + p_object_rect.height - (handlesize >> 1);
+	
 	uint2 i;
 	uint2 j;
 	uint2 k = 0;
@@ -811,9 +815,9 @@ void MCControl::sizerects(MCRectangle *rects)
 		for (j = 0 ; j < 3 ; j++)
 			if (i != 1 || j != 1)
 			{
-				rects[k].width = rects[k].height = handlesize;
-				rects[k].x = x[j];
-				rects[k].y = y[i];
+				r_rects[k].width = r_rects[k].height = handlesize;
+				r_rects[k].x = x[j];
+				r_rects[k].y = y[i];
 				k++;
 			}
 }
@@ -833,7 +837,7 @@ void MCControl::drawselected(MCDC *dc)
     drawmarquee(dc, rect);
     
     MCRectangle rects[8];
-    sizerects(rects);
+    sizerects(rect, rects);
     if (flags & F_LOCK_LOCATION)
         dc->setfillstyle(FillStippled, nil, 0, 0);
     else
@@ -1173,7 +1177,7 @@ uint2 MCControl::sizehandles(int2 px, int2 py)
 	if (!(flags & F_LOCK_LOCATION))
 	{
 		MCRectangle rects[8];
-		sizerects(rects);
+		sizerects(rect, rects);
 		int2 i;
 		for (i = 7 ; i >= 0 ; i--)
         {
@@ -1719,9 +1723,6 @@ MCRectangle MCControl::geteffectiverect(void) const
 	MCRectangle t_rect;
 	t_rect = MCU_reduce_rect(rect, -gettransient());
 
-    if (state & CS_SELECTED)
-        t_rect = MCU_reduce_rect(t_rect, -MCsizewidth);
-    
 	if (m_bitmap_effects != nil)
 		MCBitmapEffectsComputeBounds(m_bitmap_effects, t_rect, t_rect);
 
