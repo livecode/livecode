@@ -68,5 +68,5 @@ image (glossary), object (glossary), control (keyword),
 scrollbarBeginning (message), scrollbarLineInc (message),
 mouseDown (message), mouseStillDown (message), repeatDelay (property)
 
-Tags: ui, messages
+Tags: ui
 
