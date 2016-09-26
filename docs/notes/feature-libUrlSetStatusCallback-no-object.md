@@ -1,6 +1,3 @@
----
-version: 8.2
----
 # libURLSetStatusCallback no longer requires a target object for the message
 
 Passing an object reference as a second parameter to libURLSetStatusCallback 
