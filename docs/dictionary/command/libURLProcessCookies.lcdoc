@@ -6,7 +6,7 @@ Syntax: libURLProcessCookies {true|false}
 
 Associations: internet library
 
-Introduced: 8.2
+Introduced: 9.0
 
 OS: mac, windows, linux
 
@@ -23,7 +23,7 @@ libURLProcessCookies false
 Description:
 <libURLProcessCookies> sets whether or not the libURL will transparently parse
 and store cookies sent from a server and then send those cookies back to the server
-with any requests.
+with any requests. By default this setting is off.
 
 >*Important:*  The <libURLProcessCookies> <command> is part of the 
 > <Internet library> on desktop platforms. To ensure that the <command> 

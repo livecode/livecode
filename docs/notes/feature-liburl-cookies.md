@@ -1,6 +1,3 @@
----
-version: 8.2
----
 # Transparent cookie support in libURL
 
 libURLProcessCookies has been added to libURL. Passing in true for the first parameter 
