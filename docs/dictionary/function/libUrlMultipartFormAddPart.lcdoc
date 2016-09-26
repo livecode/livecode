@@ -24,8 +24,8 @@ Example:
 put empty into tForm
 put "dave" into tName
 put "hello" into tMessage
-if libURLMultipartFormData (tForm, "name", tName, "message", tMessage) \
-     is not empty then
+put libURLMultipartFormData (tForm, "name", tName, "message", tMessage) into tError
+if tError is not empty then
    ##handle error and exit
 end if
 set the httpHeaders to line 1 of tForm
