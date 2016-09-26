@@ -2,11 +2,11 @@ Name: and
 
 Type: operator
 
-Syntax: <value1> and <value2> [and <value3> ...]
+Syntax: <leftValue> and <rightValue>
 
 Summary:
-Allows the creation of compound <boolean> expressions, which <evaluate> to true 
-if all <operand|operands> are true, false otherwise. 
+Allows the construction of compound <boolean> expressions, which <evaluate> to true 
+if both <operand|operands> are true, false otherwise. 
 
 Introduced: 1.0
 
@@ -27,16 +27,12 @@ local myCount
 if the shiftKey is down and myCount > 1 then exit mouseUp
 
 Parameters:
-value1 (bool):
-Value1 is true or false, or an expression that evaluates to
+leftValue: (bool):
+leftValue is true or false, or an expression that evaluates to
 true or false.
 
-value2: (bool):
-Value2 is true or false, or an expression that evaluates to
-true or false.
-
-value3: (bool):
-Value3 is true or false, or an expression that evaluates to
+rightValue (bool):
+rightValue is true or false, or an expression that evaluates to
 true or false.
 
 
@@ -44,23 +40,25 @@ Description:
 Use the <and> <operator> to combine two or more <logical>
 <value(glossary)|values> into a compound <boolean> <expression>. 
 
-If <value1> is false or <value2> is false, or if both <value1> and
-<value2> are false, then the <and> <operation> <evaluate|Evaluates> to
-false. If <value1> and <value2> are both true, the <expression> <value1>
-and <value2> <evaluate|Evaluates> to true. In an <expression> with more 
-than two operands, if any of the operands <evaluate|evaluates> to false, 
+If <leftValue> is false or <rightValue> is false, or if both <leftValue> and
+<rightValue> are false, then the <and> <operation> <evaluate|evaluates> to
+false. If <leftValue> and <rightValue> are both true, the <expression> `leftValue
+and rightValue` <evaluate|evaluates> to true. In an <expression> with more 
+than two <operand|operands>, there is an implicit grouping of the first pair, 
+so that the first pair is <evaluate|evaluated> first, then subsequent values
+are <evaluate|evaluated>. If any of the operands <evaluate|evaluates> to false, 
 the entire <expression> <evaluate|evaluates> to false. You can combine 
 the <logical> <operator|operators> <and>, <or>, and <not> 
 in an <expression>.
 
 >*Note:* LiveCode uses what is known as "short-circuit evaluation" for
-> <logical> <operator(glossary)|operators>. This means that <value1> is
-> <evaluate|evaluated> first. If <value1> is false, the <expression>
-> value1 and value2 is false regardless of what <value2> is (because the
+> <logical> <operator(glossary)|operators>. This means that <leftValue> is
+> <evaluate|evaluated> first. If <leftValue> is false, the <expression>
+> `leftValue and rightValue` is false regardless of what <rightValue> is (because the
 > <expression> <evaluate|evaluates> to false unless both the values are
-> true). In this case, LiveCode does not <evaluate> <value2>, since
-> doing so is not necessary to determine the <value(function)> of <value1>
-> or <value2>. For example, evaluating the <expression> `asin(2)` normally
+> true). In this case, LiveCode does not <evaluate> <rightValue>, since
+> doing so is not necessary to determine the <value(function)> of <leftValue>
+> or <rightValue>. For example, evaluating the <expression> `asin(2)` normally
 > causes an <execution error> (because 2 is not a legal <argument> for the
 > arc sine function), but <evaluate|evaluating> the <expression> 
 > `(1 = 0) and (asin(2) = 1)` does not cause an error: since `(1 = 0)` is 
