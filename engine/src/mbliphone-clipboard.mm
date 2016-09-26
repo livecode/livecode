@@ -109,3 +109,14 @@ MCStringRef MCIPhoneRawClipboard::DecodeTransferredFileList(MCDataRef p_data) co
 {
     return NULL;
 }
+
+MCDataRef MCIPhoneRawClipboard::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	return NULL;
+}
+
+MCDataRef MCIPhoneRawClipboard::DecodeTransferredHTML(MCDataRef p_html) const
+{
+	return NULL;
+}
+
