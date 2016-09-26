@@ -4556,7 +4556,7 @@ function ulSubForm @pData, ,pFiles, pSubBoundary, pMimeTypes, pEncodings
     put CRLF & "Content-Transfer-Encoding:" &&  tEnc after pData
     put CRLF & CRLF after pData
     put url ("binfile:" & tFile) after pData
-    if the result <> empty then return "error" & the result
+    if the result <> empty then return "error" && the result
     put CRLF after pData
   end repeat
   put "--" & pSubBoundary & "--" after pData
