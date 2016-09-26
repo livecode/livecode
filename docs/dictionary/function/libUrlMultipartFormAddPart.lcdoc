@@ -33,8 +33,8 @@ delete line 1 of tForm
 put "&lt;file&gt;" & "C:/myfile.gif" into tFile
 put "image/gif" into tType
 put "binary" into tEnc
-if libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) \
-    is empty then
+put libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) into tError
+if tError is empty then
    ##handle error and exit
 else
    post tForm to url tURL
