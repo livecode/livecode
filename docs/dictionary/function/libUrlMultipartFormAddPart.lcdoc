@@ -38,8 +38,8 @@ if libURLMultipartFormAddPart(tForm,"file", tFile, tType, tEnc) \
    ##handle error and exit
 else
    post tForm to url tURL
-   set the httpHeaders to empty
 end if
+set the httpHeaders to empty
 
 Parameters:
 value:
