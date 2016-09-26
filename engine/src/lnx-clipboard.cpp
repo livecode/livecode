@@ -315,6 +315,16 @@ MCStringRef MCLinuxRawClipboard::DecodeTransferredFileList(MCDataRef p_data) con
     return t_paths;
 }
 
+MCDataRef MCLinuxRawClipboard::EncodeHTMLFragmentForTransfer(MCDataRef p_html) const
+{
+	return MCValueRetain(p_html);
+}
+
+MCDataRef MCLinuxRawClipboard::DecodeTransferredHTML(MCDataRef p_html) const
+{
+	return MCValueRetain(p_html);
+}
+
 const MCLinuxRawClipboardItem* MCLinuxRawClipboard::GetSelectionItem() const
 {
     if (m_selected_item)
