@@ -1,10 +1,10 @@
 [submodule "ide"]
 	path = ide
-	url = https://github.com/runrev/livecode-ide
+	url = https://github.com/livecode/livecode-ide
 	branch = develop-8.1
 [submodule "thirdparty"]
 	path = thirdparty
-	url = https://github.com/runrev/livecode-thirdparty
+	url = https://github.com/livecode/livecode-thirdparty
 	branch = develop-8.1
 [submodule "libcpptest/googletest"]
 	path = libcpptest/googletest
