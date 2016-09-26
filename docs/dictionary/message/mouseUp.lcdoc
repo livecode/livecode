@@ -89,5 +89,5 @@ mouseStillDown (message), mouseDoubleUp (message),
 mouseRelease (message), mouseUpInBackdrop (message), 
 script (property), double-click (glossary)
 
-Tags: ui, messages
+Tags: ui
 
