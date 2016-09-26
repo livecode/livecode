@@ -26,10 +26,10 @@ put empty into tForm
 put "http://www.someserver.com/cgi-bin/form.cgi" into tUrl
 put "dave" into tName put "hello" into tMessage
 put "&lt;file&gt;" & "C:/myfile.txt" into tFile
-if libURLMultipartFormData \
- (tForm, "name", tName, "message", tMessage, "file", tFile) \
- is not empty then
- answer it ##error
+put libURLMultipartFormData \
+ (tForm, "name", tName, "message", tMessage, "file", tFile) into tError
+if tError is not empty then
+ answer tError ##error
 else
  set the httpHeaders to line 1 of tForm
  post line 2 to -1 of tForm to url tUrl
