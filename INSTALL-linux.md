@@ -47,9 +47,8 @@ However, if you wish to compile something more specific than "everything", you'l
 
 **Note:** The following information is provided for reference purposes.  It should be possible to build and run LiveCode on any modern Linux desktop distribution.
 
-### Linux x86-64
-
-The x86-64 Linux build environment used for compiling LiveCode is based on Debian Wheezy.
+The x86-64 and x86 Linux build environments used for compiling
+LiveCode are based on Debian Wheezy.
 
 The following additional packages are installed:
 
@@ -74,45 +73,3 @@ The following additional packages are installed:
 * pkg-config
 * libgtk2.0-dev
 * zip
-
-### Linux x86
-
-The x86 Linux build environment used for compiling LiveCode is based on Debian Squeeze.
-
-The following additional packages are installed:
-
-* build-essential
-* automake
-* libtool
-* zlib1g-dev
-* gettext
-* pkg-config
-* libtiff-dev
-* libpng-dev
-* libatk1.0-dev
-* libpango1.0-dev
-* libcairo2-dev
-* libxext-dev
-* libffi-dev
-* curl
-* flex
-* bison
-* libx11-dev
-* libxext-dev
-* libxrender-dev
-* libxft-dev
-* libxinerama-dev
-* libxv-dev
-* libxcursor-dev
-* libfreetype6-dev
-* libpopt-dev
-* libesd0-dev
-* liblcms-dev
-* pkgconfig
-* zip
-
-In addition, LiveCode requires a more modern version of GTK+ than is available in the Debian Squeeze repositories.  The following packages are compiled and installed from source:
-
-* [GLib 2.34.3](http://ftp.gnome.org/pub/gnome/sources/glib/2.34/glib-2.34.3.tar.xz)
-* [GDK-PixBuf 2.26.5](http://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/2.26/gdk-pixbuf-2.26.5.tar.xz)
-* [GTK+ 2.24.23](http://ftp.gnome.org/pub/gnome/sources/gtk+/2.24/gtk+-2.24.23.tar.xz)

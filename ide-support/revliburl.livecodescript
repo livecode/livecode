@@ -3909,7 +3909,7 @@ on ulSendAuthMessage pMethod, pUrl, pHeaderString
     end if
   end repeat
   if tMessage <> empty and exists(tObject) then
-    send tMessage && quote & pUrl & quote & "," & pHeaderString to tObject
+    send tMessage &&  "pUrl, pHeaderString" to tObject
     return the result ## must ensure this contains data
   else
     return empty ##possible problems
