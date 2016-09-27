@@ -413,12 +413,17 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 	}
 
 	// We don't allow ',' in stack names - so coerce to '_'.
-	MCStringFindAndReplaceChar(p_name, ',', '_', kMCCompareExact);
+	MCAutoStringRef t_new_string;
+	if (t_success)
+		t_success = MCStringMutableCopy(p_name, &t_new_string);
+	
+	if (t_success)
+		t_success = MCStringFindAndReplaceChar(*t_new_string, ',', '_', kMCCompareExact);
 
 	if (t_success)
 	{
 		// If the name is going to be empty, coerce to 'Untitled'.
-		if (MCStringGetLength(p_name) == 0)
+		if (MCStringGetLength(*t_new_string) == 0)
 		{
 			MCAutoStringRef t_untitled;
 			t_success = MCStringCreateWithCString(MCuntitledstring, &t_untitled);
@@ -426,7 +431,7 @@ void MCStack::SetName(MCExecContext& ctxt, MCStringRef p_name)
 				MCObject::SetName(ctxt, *t_untitled);
 		}
 		else
-			MCObject::SetName(ctxt, p_name);
+			MCObject::SetName(ctxt, *t_new_string);
 	}
 
 	if (t_success && !ctxt . HasError())
