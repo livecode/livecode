@@ -2072,7 +2072,10 @@ bool MCGroup::computeminrect(Boolean scrolling)
 		
 		// IM-2016-09-27: [[ Bug 17779 ]] redrawselection handles if selected
 		if (getselected())
+		{
 			getcard()->dirtyselection(oldrect);
+			getcard()->dirtyselection(rect);
+		}
 		
 		// IM-2015-12-16: [[ NativeLayer ]] The group rect has changed, so send geometry change notification.
 		geometrychanged(getrect());
