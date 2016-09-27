@@ -200,6 +200,7 @@ static void _PrintContext(long p_position)
 	}
 
 	fprintf(stderr, " %s\n %*c\n", t_text, (int)t_column, '^');
+	free(t_text);
 }
 
 static void _Error(long p_position, const char *p_message)
