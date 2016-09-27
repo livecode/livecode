@@ -284,7 +284,9 @@ on getUrl x
          put empty into lvBlockingUrl ##clear
          return tRetResult with urlResult tRetData
       else
-         put empty into lvBlockingUrl ##fixes issue with NTLM auth
+         if lvAuthBlockBypass is true then
+           put empty into lvBlockingUrl ##fixes issue with NTLM auth
+         end if
          return 1
       end if
    else ##blocked by previous request
