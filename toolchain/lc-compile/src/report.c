@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 
 extern int IsDependencyCompile(void);
 
@@ -174,15 +175,31 @@ static void _PrintPosition(long p_position)
  * that the position specifies. */
 static void _PrintContext(long p_position)
 {
-	const char *t_text = NULL;
+	const char *t_raw_text = NULL;
+	char *t_text = NULL;
 	long t_column;
-	GetRowTextOfPosition(p_position, &t_text);
+	int i;
+	GetRowTextOfPosition(p_position, &t_raw_text);
 	GetColumnOfPosition(p_position, &t_column);
-	if (NULL != t_text)
+
+	if (NULL == t_raw_text)
+		return;
+
+	/* Replace ASCII control characters in the raw text with spaces.
+	 * This has two goals: it simplifies aligning the context
+	 * indicator caret, and it ensures that control characters in the
+	 * LCB source code can't screw with your terminal emulator.  Note
+	 * that this doesn't try to cope with invalid Unicode values. */
+	t_text = strdup(t_raw_text);
+	if (NULL == t_text)
+		Fatal_OutOfMemory();
+	for (i = 0; t_text[i] != 0; ++i)
 	{
-		fprintf(stderr, " %s\n", t_text);
-		fprintf(stderr, " %*c\n", (int)t_column, '^');
+		if (t_text[i] < 0x20 || t_text[i] == 0x7F)
+			t_text[i] = ' ';
 	}
+
+	fprintf(stderr, " %s\n %*c\n", t_text, (int)t_column, '^');
 }
 
 static void _Error(long p_position, const char *p_message)
