@@ -1326,32 +1326,24 @@ private function compilerProcessSlim @self, pInputFile, pTargetArchs
    return tDerivedFile
 end compilerProcessSlim
 
-private function compilerProcessSign @self, pFile
-   local tSignParams
-   put abstractPinFile(pFile) into tSignParams["input"]
-   put compilerMakeTemporaryFile(self, "sign") into tSignParams["output"]
-   put self["options"]["sign.certificate"] into tSignParams["certificate"]
-   put self["options"]["sign.privatekey"] into tSignParams["privatekey"]
-   put self["options"]["sign.password"] into tSignParams["passphrase"]
-   put self["options"]["sign.timestamper"] into tSignParams["timestamper"]
-   put self["options"]["sign.url"] into tSignParams["url"]
-   
-   set the itemDelimiter to slash
-   put self["options"]["sign.description"] & ":" && the last item of pFile into tSignParams["description"]
-   set the itemDelimiter to comma
-   
-   compilerProgress self, "Signing '" & tSignParams["input"] & "'"
-   _internal sign windows tSignParams
-   if the result is not empty then
-      compilerBuildWarning self, "signing of '" & pFile & "' failed - " & the result
-   end if
-   
-   if there is no file tSignParams["output"] then
+private function compilerProcessCodesign @self, pFile
+   local tFile
+   put abstractPinFile(pFile) into tFile
+   -- Find the signing identity and sign the app bundle
+   get builderFindSigningIdentity()
+   if it is empty then
+      compilerBuildWarning self, "Signing identity not found"
       return empty
    end if
    
-   return tSignParams["output"]
-end compilerProcessSign
+   get shell("/usr/bin/codesign --sign" && word 2 of it && "--verbose=2" && quote & tFile & quote)
+   if the result is not zero then
+      compilerBuildWarning self, "Signing of executable '" & pFile & "' failed -" && the result
+      return empty
+   end if
+   
+   return tFile
+end compilerProcessCodesign
 
 private function compilerMakeTemporaryFile @self, pTag
    local tFolder
