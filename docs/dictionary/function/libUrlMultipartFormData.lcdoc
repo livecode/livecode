@@ -37,9 +37,6 @@ else
  set the httpHeaders to empty
 end if
 
-The result:
-## check the result, etc., here.
-
 Description:
 The function can be called in a number of ways depending on the
 parameters passed. In all cases, the first parameter must be a variable
