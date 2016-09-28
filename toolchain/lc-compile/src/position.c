@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "report.h"
 #include "position.h"
@@ -419,6 +420,7 @@ static void __InitializeFileLines(FileRef x_file)
 	t_raw_text[t_file_length] = 0; /* nul-terminate */
 
 	fclose(t_stream);
+	t_stream = NULL;
 
 	/* Scan the file contents twice: once to count the number of
 	 * lines, and once to fill a pointer array with offset
@@ -470,10 +472,11 @@ static void __InitializeFileLines(FileRef x_file)
 	      x_file->path, x_file->line_count);
 
  cleanup:
+	if (NULL != t_stream)
+		fclose(t_stream);
 	if (NULL != t_raw_text)
 		free(t_raw_text);
-	if (NULL != t_lines)
-		free(t_lines);
+	assert(NULL == t_lines);
 	return;
 }
 
