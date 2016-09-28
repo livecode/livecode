@@ -37,7 +37,7 @@ updated.
 
 objectLongID:
 The long ID of the object to send the message to. If <messageName> is 
-not empty but <objectLongID> is empty then the message will be sent to
+not empty and <objectLongID> is not specified then the message will be sent to
 the revLibURL library stack. The message can be handled in a frontscript,
 backscript, or library stack.
 
