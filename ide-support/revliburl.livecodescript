@@ -636,7 +636,7 @@ end ulGetFormat
 
 ################################################################################
 
-on ulHostNameToAddressCallback pHostname, pIP
+on ulHostNameToAddressCallback pHostname, pIP, pOptionalError
    local tURL, tOffset
    local tPre, tHost, tPort, tUser, tPass, tFilename, tURLHost, tURLPort
    local tConnectHost, tBadAddress
@@ -664,8 +664,8 @@ on ulHostNameToAddressCallback pHostname, pIP
    end if
    
    if tBadAddress then
-      if the paramCount >= 3 then
-         put param(3) into laUrlErrorStatus[tURL]
+      if pOptionalError is not empty then
+         put pOptionalError into laUrlErrorStatus[tURL]
       else
          put "invalid host address" into laUrlErrorStatus[tURL]
       end if
