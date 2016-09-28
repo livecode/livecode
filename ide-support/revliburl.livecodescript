@@ -3566,7 +3566,12 @@ end libUrlSetLogField
 on libUrlSetStatusCallback pMessage,pObject
   ##pObject must be a long ID
   ##Allow empty value in which case we use send to self.
-  if pMessage <> empty then
+  if pMessage is not empty and the paramCount is 1 then
+    put pMessage & comma into lvStatusCallback
+  else if pMessage is not empty and the paramCount is 2 then
+    if not exists(pObject) then
+      return "Invalid callback target object" for error
+    end if
     put pMessage & comma & pObject into lvStatusCallback
   else
     put empty into lvStatusCallback
