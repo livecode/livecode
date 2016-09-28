@@ -3570,7 +3570,7 @@ on libUrlSetStatusCallback pMessage,pObject
     put pMessage & comma into lvStatusCallback
   else if pMessage is not empty and the paramCount is 2 then
     if not exists(pObject) then
-      return "Invalid callback target object" for error
+      return "invalid callback target object" for error
     end if
     put pMessage & comma & pObject into lvStatusCallback
   else
