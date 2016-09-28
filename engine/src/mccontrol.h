@@ -156,7 +156,9 @@ public:
 
 	void redraw(MCDC *dc, const MCRectangle &dirty);
 
-	void sizerects(MCRectangle *rects);
+	// IM-2016-09-26: [[ Bug 17247 ]] Return rect of selection handles for the given object rect
+	static void sizerects(const MCRectangle &p_object_rect, MCRectangle rects[8]);
+	
 	void drawselected(MCDC *dc);
 	void drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
 	               Arrow_direction dir, Boolean border, Boolean hilite);
