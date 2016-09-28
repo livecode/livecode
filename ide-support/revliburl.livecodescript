@@ -610,15 +610,7 @@ on ulGetFormat pUrl,pCount
       # clear status before resolving hostname
       put empty into laStatus[pUrl]
       
-      ## I.M 2010.03.24  with engine versions < 4.5 calling hostnametoaddress with
-      ## an extra parameter will throw an error, so encase in a try ... catch block
-      ## and call without callback handler
-      try
-         get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
-      catch pError
-         get hostNameToAddress(tResolveHost)
-         if the result is empty then ulHostNameToAddressCallback tResolveHost, it
-      end try
+      get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
       ## I.M. 2010-03-11  Need to check result and handle immediate failure where
       ##  no callback message will be sent
       if the result is not empty then
