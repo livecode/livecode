@@ -78,11 +78,11 @@ For `Boolean` variables, please try to use "yes or no" names.  For example:
 
 ### Naming handlers
 
-Give handlers `TitleCase` names.
+Give handlers `camelCase` names.
 
 Use verbs to name your handlers.  For example,
 
-    handler RotateShape(inout xShape, in pAngleInDegrees)
+    handler rotateShape(inout xShape, in pAngleInDegrees)
        -- ...
     end handler
 
@@ -96,13 +96,42 @@ To distinguish from handlers, use nouns to name your types.  For example,
 
 ## Documenting the source code
 
-You should add in-line documentation to `syntax` and `handler`
-definitions in LiveCode Builder source code.  It is particularly
-important to add documentation to all syntax and to any public
-handlers that aren't primarily accessed using syntax.
-
-In-line documentation for a handler or syntax definition is extracted from a
+In-line documentation for a definition is extracted from a
 `/** */` comment block immediately before the start of the definition.
+
+Always add a top-level documentation block at the start of the LCB
+file describing your widget, library or module.  In addition, add
+in-line documentation to all of the following:
+
+- `syntax` definitions
+- `property` definitions
+- `public handler` definitions in libraries and modules
+- `public variable` definitions in modules
+
+It is particularly important to add documentation to all syntax and to
+any public handlers that aren't primarily accessed using syntax.
+
+Additionally, add documentation for all messages that are posted by a
+widget.  The documentation for each message must be placed in the
+top-level documentation block for the widget.  For example:
+
+    /*
+    The navigation bar widget is intended for use in mobile apps for
+    switching between cards, although there are many other possible
+    uses.
+
+    ...
+
+    Name: hiliteChanged
+    Type: message
+    Syntax: on hiliteChanged
+    Summary: Sent when a navigation item is selected
+
+    ...
+    */
+    widget com.livecode.widget.navbar
+    -- ..
+    end widget
 
 Please refer to the [Extending LiveCode](Extending LiveCode.md) guide for full
 details of the syntax of in-line documentation comments, including examples.
@@ -115,7 +144,7 @@ want to create three tabs labelled "Things", "Stuff", and "Misc":
 
     constant kTabNames is ["Things", "Stuff", "Misc"]
 
-    handler CreateTabs()
+    handler createTabs()
        variable tName
        repeat for each element tName in kTabNames
           -- Create the tab
@@ -140,7 +169,7 @@ For example:
     module org.example.indent
 
     -- Example handler
-    handler Fizzbuzz(in pIsFizz)
+    handler fizzBuzz(in pIsFizz)
        if pIsFizz then
           return "Fizz"
        else
@@ -166,7 +195,7 @@ example:
 When breaking a handler definition or handler type definition, break
 long lines at commas:
 
-    handler ProcessStringAndArray(in pStringArg as String, \
+    handler processStringAndArray(in pStringArg as String, \
           in pArrayArg as Array) returns Boolean
 
 ### Handler declarations, definitions and calls
@@ -175,21 +204,21 @@ In handler definitions and handler type definitions, don't insert
 whitespace between the handler name and the parameter list.  For
 example:
 
-    handler type Fizz()   -- Good
-    handler type Buzz ()  -- Bad
+    handler type Fizzer()   -- Good
+    handler type Buzzer ()  -- Bad
 
 In handler parameter lists, please add a space between each parameter.  For
 example:
 
-    handler FormatAsString(in pValue, out rFormat) -- Good
-    handler IsEqualTo(in pLeft,in pRight)          -- Bad
+    handler formatAsString(in pValue, out rFormat) -- Good
+    handler isEqualTo(in pLeft,in pRight)          -- Bad
 
 Please observe the same formatting in handler calls.  For example:
 
     variable tFormatted
     variable tIsEqual
-    FormatAsString(3.1415, tFormatted)             -- Good
-    IsEqualTo (tFormatted,"3.1415") into tIsEqual  -- Bad
+    formatAsString(3.1415, tFormatted)             -- Good
+    isEqualTo (tFormatted,"3.1415") into tIsEqual  -- Bad
 
 ### List and array literals
 
@@ -198,7 +227,7 @@ after the comma.  For array literals, also insert space between key
 and value, after the colon.  For example:
 
     constant kPowersOfTwo is [1, 2, 4, 8]
-    constant kBordeWidths is {"top": 0, "bottom": 0, "left": 1, "right": 2}
+    constant kBorderWidths is {"top": 0, "bottom": 0, "left": 1, "right": 2}
 
 ## Widget-specific guidelines
 
@@ -211,27 +240,25 @@ properties with similar semantics.
 
 ### Writing load handlers
 
-When writing an `OnLoad()` handler to initialise a widget from
+When writing an `onLoad()` handler to initialise a widget from
 serialised state:
 
 - Always call property setters to update the widget state.  Do not set
   instance variables directly.
-
 - Always check that the property array contains each key rather than
   accessing it unilaterally.
-
 - If keys are absent from the property array, do not set them to
-  default values.  Rely on the `OnCreate()` handler to have already
+  default values.  Rely on the `onCreate()` handler to have already
   done that.
 
 Example:
 
-    public handler OnLoad(in pProperties)
+    public handler onLoad(in pProperties)
        if "showBorder" is among the keys of pProperties then
-          SetShowBorder(pProperties["showBorder"])
+          setShowBorder(pProperties["showBorder"])
        end if
        if "opaque" is among the keys of pProperties then
-          SetShowBackground(pProperties["opaque"])
+          setShowBackground(pProperties["opaque"])
        end if
     end handler
 
@@ -293,14 +320,14 @@ For example, to shadow the `borderColor` host control property:
 
 Always implement:
 
-- `OnCreate()`
-- `OnSave()`
-- `OnLoad()`
-- `OnPaint()`
+- `onCreate()`
+- `onSave()`
+- `onLoad()`
+- `onPaint()`
 
 You should _usually_ implement:
 
-- `OnGeometryChanged()`: if you have any non-trivial recomputation
+- `onGeometryChanged()`: if you have any non-trivial recomputation
   required to handle resizing
-- `OnMouseDown()`/`OnMouseUp()`/`OnMouseMove()`: always `post` these to
+- `onMouseDown()`/`onMouseUp()`/`onMouseMove()`: always `post` these to
   script in order to behave like a classic control
