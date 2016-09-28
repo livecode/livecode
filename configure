@@ -1,0 +1,675 @@
+#!/bin/bash
+# Copyright (C) 2015-2016 LiveCode Ltd.
+#
+# This file is part of LiveCode.
+#
+# LiveCode is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License v3 as published by the Free
+# Software Foundation.
+#
+# LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+usage () {
+  cat <<EOF
+Use gyp to generate project files when compiling LiveCode.
+
+Usage:
+  config.sh [--platform PLATFORM] [options ...] [gyp_options ...]
+
+Options:
+  -t, --target TRIPLE
+                    Set the triple identifying the target machine
+  -h, --host TRIPLE
+                    Set the triple identifying the host machine
+  -h, --help        Print this message
+
+gyp Options:
+
+    --generator-output DIR
+                    Puts generated build files under DIR
+    --depth PATH    Set DEPTH gyp variable to a relative path to PATH
+    -f, format FORMATS
+                    Output formats to generate
+    -Gmsvs_version=WIN_MSVS_VERSION
+                    Version of Microsoft Visual Studio to be used
+    -Gandroid_ndk_version=ANDROID_NDK_VERSION
+                    Version of Android Native Development Kit to be used
+    -Dtarget_sdk=XCODE_TARGET_SDK
+                    Compile LiveCode using the specified SDK in Xcode
+    -Dhost_sdk=XCODE_HOST_SDK
+                    Compile build tools using the specified SDK in Xcode
+
+All unrecognised options get passed directly to gyp.  If you don't specify an
+required option, config.sh will try to guess a suitable value.
+
+The currently-supported TARGET TRIPLEs are:
+
+  universal-mac-sdk_macosx10.{9..11}
+  universal-ios-sdk_iphone{os,simulator}{...}
+  x86-linux
+  x86_64-linux
+  armeabi-android
+  x86-win32
+  emscripten
+  
+The following TARGET TRIPLEs may build but are unsupported:
+
+  armv6-linux-gnueabihf
+  armv7a-linux
+  armeabi_v7a-android
+  x86-android
+  x86_64-android
+  
+The following TARGET TRIPLEs are recognised but will not build:
+
+  arm64_v8a-android
+  mipsel-android
+  mips64el-android
+  
+The currently-supported HOST TRIPLES are:
+
+  universal-mac-sdk_macosx10.{9..11}
+  x86-linux
+  x86_64-linux
+  x86-win32
+  
+The following HOST TRIPLEs may build but are unsupported:
+
+  armv6-linux-gnueabihf
+
+EOF
+  exit $1
+}
+
+guess_host_triple () {
+    case "$(uname -s)" in
+        Darwin)
+            echo "universal-mac"
+            return 0 ;;
+        Linux)
+            case "$(uname -p)" in
+                i*86)
+                    echo "x86-linux"
+                    return 0 ;;
+                *)
+                    echo "$(uname -p)-linux"
+                    return 0 ;;
+            esac ;;
+        MINGW*)
+            echo "x86-win32"
+            return 0 ;;
+    esac
+    return 1
+}
+
+default_mac_sdk () {
+    echo "sdk_macosx10.9"
+    return 0
+}
+
+expand_mac_triple () {
+    local triple=$1
+    case "${triple}" in
+        mac)
+            echo "universal-mac-$(default_mac_sdk)"
+            return 0 ;;
+        *-mac)
+            echo "${triple}-$(default_mac_sdk)"
+            return 0 ;;
+        *-mac-*)
+            echo "${triple}"
+            return 0 ;;
+    esac
+    return 1
+}
+
+expand_ios_triple () {
+    local triple=$1
+    case "${triple}" in
+        ios-sdk_iphoneos*|ios-sdk_iphonesimulator*)
+            echo "universal-${triple}"
+            return 0 ;;
+        *-ios-sdk_iphoneos*|*-ios-sdk_iphonesimulator*)
+            echo "${triple}"
+            return 0 ;;
+    esac
+    return 1
+}
+
+expand_linux_triple () {
+    local triple=$1
+    case "${triple}" in
+        linux*)
+            echo "$(uname -p)-linux"
+            return 0 ;;
+        *linux*|*android*)
+            echo "${triple}"
+            return 0 ;;
+    esac
+    return 1
+}
+
+expand_win32_triple () {
+    local triple=$1
+    case "${triple}" in
+        x86-win32)
+            echo "x86-win32"
+            return 0 ;;
+    esac
+    return 1
+}
+
+expand_emscripten_triple () {
+    local triple=$1
+    case "${triple}" in
+        emscripten|js-emscripten)
+            echo "js-emscripten"
+            return 0 ;;
+    esac
+    return 1
+}
+
+expand_triple () {
+    local triple=$1
+    local which=$2
+    local expand_command=""
+    local expanded_triple=""
+    case "${triple}" in
+        *mac*)
+            expand_command="expand_mac_triple" ;;
+        *ios*)
+            expand_command="expand_ios_triple" ;;
+        *linux*|*android*)
+            expand_command="expand_linux_triple" ;;
+        *win32*)
+            expand_command="expand_mac_triple" ;;
+        *emscripten*)
+            expand_command="expand_emscripten_triple" ;;
+    esac
+    if [ ! -z "${expand_command}" ] ; then
+        expanded_triple="$(${expand_command} ${triple})"
+        if [ $? -eq 0 ] ; then
+            echo "${expanded_triple}"
+            return 0
+        fi
+    fi
+    
+    # Invalid or unknown triple
+    echo "ERROR: invalid ${which} triple (${triple})" >&2
+    return 1
+}
+
+arch_from_triple () {
+    local triple=$1
+    local arch=${triple%%-*}
+    case "${arch}" in
+        armeabi)
+            echo "armv6" ;;
+        armeabi_v7a)
+            echo "armv7a" ;;
+        arm64_v8a)
+            echo "arm64-v8a" ;;
+        i?86)
+            echo "x86" ;;
+        universal)
+            case "${triple}" in
+                universal-mac-sdk*) 
+                    echo "i386" ;;
+                universal-ios-sdk_iphoneos5* | \
+                universal-ios-sdk_iphoneos6* | \
+                universal-ios-sdk_iphoneos7*)		 	  
+                    echo "armv7" ;;
+                universal-ios-sdk_iphoneos*)       		  
+                    echo "armv7 arm64" ;;
+                universal-ios-sdk_iphonesimulator5* | \
+                universal-ios-sdk_iphonesimulator6* | \
+                universal-ios-sdk_iphonesimulator7*)
+                 	echo "i386" ;;
+                universal-ios-sdk_iphonesimulator*)
+                    echo "i386 x86_64" ;;
+            esac
+            ;;
+        *)
+            echo ${arch} ;;
+    esac
+    return 0
+}
+
+sdk_from_triple () {
+    local triple="$1"
+    case "${triple}" in
+        *-ios-sdk_*)
+            echo "${triple##*-ios-sdk_}" ;;
+        *-mac-sdk_*)
+            echo "${triple##*-mac-sdk_}" ;;
+        *)
+            echo "" ;;
+    esac
+    return 0
+}
+
+invoke_gyp () {
+  echo gyp/gyp "$@" 2>&1
+  exec gyp/gyp "$@"
+}
+
+################################################################
+# Parse command-line options
+################################################################
+
+num_save_opts=0
+
+while [[ $# > $num_save_opts ]]; do
+
+  key="$1"
+
+  case "$key" in
+    -h|--help)
+      usage 1
+      ;;
+    -t|--target)
+      TARGET="$2"
+      shift
+      ;;
+    -h|--host)
+      HOST="$2"
+      shift
+      ;;
+    --generator-output)
+      GENERATOR_OUTPUT="$2"
+      shift
+      ;;
+    --depth)
+      DEPTH="$2"
+      shift
+      ;;
+    -f|--format)
+      FORMATS="$2 ${FORMATS}"
+      shift
+      ;;
+
+    # Intercept -D options that config.sh tries to generate
+    -D*)
+      d="${key#*=}"
+      case "$key" in
+        -Dhost_sdk=*)    XCODE_HOST_SDK="$d" ;;
+        -Dtarget_sdk=*)  XCODE_TARGET_SDK="$d" ;;
+        *) # Pass directly through to gyp
+          set x "$@" "$key"
+          let num_save_opts++
+          shift
+          ;;
+      esac
+      ;;
+
+    # Intercept -G options that config.sh tries to generate
+    -G*)
+      d="${key#*=}"
+      case "$key" in
+        -Gmsvs_version=*)        WIN_MSVS_VERSION="$d" ;;
+        -Gandroid_ndk_version=*) ANDROID_NDK_VERSION="$d" ;;
+
+        *) # Pass directly through to gyp
+          set x "$@" "$key"
+          let num_save_opts++
+          shift
+          ;;
+      esac
+      ;;
+    *) # Unrecognised option
+      echo "ERROR: Unrecognised option '$key'"
+      exit 1
+      ;;
+  esac
+
+  shift
+done
+
+################################################################
+# Guess and validate platform
+################################################################
+
+# If no host specified, try to guess the host
+if [ -z "${HOST}" ] ; then
+  HOST=$(guess_host_triple)
+  if [ $? -ne 0 ] ; then
+    echo "ERROR: Cannot guess host; specify '--host <name>'" >&2
+    exit 1
+  fi
+fi
+
+# If no target is specified, use the host
+if [ -z "${TARGET}" ] ; then
+    TARGET="${HOST}"
+fi
+
+################################################################
+# Guess other relevant options
+################################################################
+
+# Guess generator output directory from platform
+if test -z "$GENERATOR_OUTPUT"; then
+  GENERATOR_OUTPUT="build-${TARGET}/livecode"
+fi
+
+# Expand the target and host triples
+HOST="$(expand_triple ${HOST} host)"
+if [ $? -ne 0 ] ; then exit 1 ; fi
+TARGET="$(expand_triple ${TARGET} target)"
+if [ $? -ne 0 ] ; then exit 1 ; fi
+
+# Extract target OS from triple
+case "${TARGET}" in
+    *linux*) OS="linux" ;;
+    *android*) OS="android" ;;
+    *mac*) OS="mac" ;;
+    *ios*) OS="ios" ;;
+    *win32*) OS="win" ;;
+    *emscripten*) OS="emscripten" ;;
+esac
+
+# Extract host OS from the triple
+case "${HOST}" in
+    *linux*) HOST_OS="linux" ;;
+    *mac*) HOST_OS="mac" ;;
+    *win32*) HOST_OS="win" ;;
+esac
+
+# Extract host and target architectures from triples
+TARGET_ARCH="$(arch_from_triple ${TARGET})"
+HOST_ARCH="$(arch_from_triple ${HOST})"
+
+# Linux and Android ABI suffixes
+if [ "${OS}" = "linux" ] ; then
+    case "${TARGET}" in
+        *-linux-*)
+            TARGET_ABI="${TARGET##*-}" ;;
+        *)
+            TARGET_ABI="" ;;
+    esac
+elif [ "${OS}" = "android" ] ; then
+    case "${TARGET_ARCH}" in
+        armv6|armv7)
+            TARGET_ABI="androideabi" ;;
+        *)
+            TARGET_ABI="android" ;;
+    esac
+fi
+if [ "${HOST_OS}" = "linux" ] ; then
+    case "${HOST}" in
+        *-linux-*)
+            HOST_ABI="${HOST##*-}" ;;
+        *)
+            HOST_ABI="" ;;
+    esac    
+fi
+
+# SDKs to use for MacOS/iOS
+TARGET_SDK="$(sdk_from_triple ${TARGET})"
+HOST_SDK="$(sdk_from_triple ${HOST})"
+
+# If no output type specified, guess from platform:
+if test -z "$FORMATS"; then
+  case ${OS} in
+    # Always use Linux-style makefiles for Android as the Android toolchain
+    # is more Linux-y than Darwin-y
+    linux|android|emscripten) FORMATS="make-linux" ;;
+    mac|ios)       FORMATS="xcode" ;;
+    win)           FORMATS="msvs" ;;
+  esac
+fi
+
+# Default "depth"
+if test -z "$DEPTH"; then
+  DEPTH=.
+fi
+
+# Default Visual Studio version
+if test -z "$WIN_MSVS_VERSION"; then
+  WIN_MSVS_VERSION=2010
+fi
+
+# Location of Perl when running Windows builds
+WIN_PERL=${WIN_PERL:-"C:/perl/bin/perl.exe"}
+
+# Android default settings and tools
+if test "${OS}" = "android" ; then
+    ANDROID_NDK_VERSION=${ANDROID_NDK_VERSION:-r10d}
+    ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-17}
+
+    # Attempt to locate an Android NDK
+    if [ -z "${ANDROID_NDK}" -a "${OS}" = "android" ] ; then
+        # Try the symlink we suggest in INSTALL-android.md
+        if [ -d "${HOME}/android/toolchain/android-ndk" ] ; then
+            ANDROID_NDK="${HOME}/android/toolchain/android-ndk"
+        else
+            echo >&2 "Error: Android NDK not found (set \$ANDROID_NDK)"
+            exit 1
+        fi
+    fi
+
+    # Attempt to locate an Android SDK
+    if [ -z "${ANDROID_SDK}" ] ; then
+        # Try the symlink we suggest in INSTALL-android.md
+        if [ -d "${HOME}/android/toolchain/android-sdk" ] ; then
+            ANDROID_SDK="${HOME}/android/toolchain/android-sdk"
+        else
+            echo >&2 "Error: Android SDK not found (set \$ANDROID_SDK)"
+            exit 1
+        fi
+    fi
+
+    # Attempt to guess the Android build tools version
+    if [ -z "${ANDROID_BUILD_TOOLS}" ] ; then
+        # Check for a sub-folder in the appropriate place
+        # Possibly fragile - are there ever multiple sub-folders?
+        if [ ! "$(echo \"${ANDROID_SDK}/build-tools/\"*)" = "${ANDROID_SDK}/build-tools/*" ] ; then
+            ANDROID_BUILD_TOOLS=$(basename $(echo "${ANDROID_SDK}/build-tools/"*))
+        else
+            echo >&2 "Error: Android build tools not found (set \$ANDROID_BUILD_TOOLS)"
+            exit 1
+        fi
+    fi
+
+    if [ -z "${ANDROID_TOOLCHAIN}" ] ; then
+        # Android toolchain names (as used by the Android build system)
+        # See https://developer.android.com/ndk/guides/standalone_toolchain.html for details
+        case "${TARGET_ARCH}" in
+            armv6|armv7a)
+                ANDROID_TOOLCHAIN_NAME="arm-linux-androideabi"
+                ANDROID_TOOLCHAIN_SHORT_NAME="arm-linux-androideabi"
+                ;;
+            arm64-v8a)
+                ANDROID_TOOLCHAIN_NAME="aarch64-linux-android"
+                ANDROID_TOOLCHAIN_SHORT_NAME="aarch64-linux-android"
+                ;;
+            x86)
+                ANDROID_TOOLCHAIN_NAME="i686-linux-android"
+                ANDROID_TOOLCHAIN_SHORT_NAME="x86"
+                ;;
+            x86_64)
+                ANDROID_TOOLCHAIN_NAME="x86_64-linux-android"
+                ANDROID_TOOLCHAIN_SHORT_NAME="x86_64"
+                ;;
+            mipsel)
+                ANDROID_TOOLCHAIN_NAME="mipsel-linux-android"
+                ANDROID_TOOLCHAIN_SHORT_NAME="mipsel-linux-android"
+                ;;
+            mips64el)
+                ANDROID_TOOLCHAIN_NAME="mips64el-linux-android"
+                ANDROID_TOOLCHAIN_SHORT_NAME="mips64el-linux-android"
+                ;;
+        esac
+        
+        # Try the folder we suggest in INSTALL-android.md
+        if [ -d "${HOME}/android/toolchain/standalone-${ANDROID_TOOLCHAIN_SHORT_NAME}" ] ; then
+            ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone-${ANDROID_TOOLCHAIN_SHORT_NAME}/bin/${ANDROID_TOOLCHAIN_NAME}-"
+        elif [ -d "${HOME}/android/toolchain/standalone" ] ; then
+            ANDROID_TOOLCHAIN="${HOME}/android/toolchain/standalone/bin/${ANDROID_TOOLCHAIN_NAME}-"
+        else
+            echo >&2 "Error: Android toolchain not found (set \$ANDROID_TOOLCHAIN)"
+            exit 1
+        fi
+    fi
+
+    # Set the appropriate ABI flags for the compiler
+    # See https://developer.android.com/ndk/guides/abis.html for appropriate flags
+    case "${TARGET_ARCH}" in
+        armv6)
+            ANDROID_ABI_FLAGS="-target armv5te-none-linux-androideabi -march=armv6"
+            ;;
+        armv7a)
+            ANDROID_ABI_FLAGS="-target armv7-none-linux-androideabi -march=armv7a -mthumb -mfloat-abi=softfp -mfpu=vfpv3-d16"
+            ;;
+        arm64-v8a)
+            ANDROID_ABI_FLAGS="-target aarch64-none-linux-android"
+            ;;
+        mips)
+            ANDROID_ABI_FLAGS="-target mipsel-none-linux-android"
+            ;;
+        mips64)
+            ANDROID_ABI_FLAGS="-target mips64el-none-linux-android"
+            ;;
+        x86)
+            ANDROID_ABI_FLAGS="-target i686-none-linux-android -march=i686 -mtune=intel -mssse3 -mfpmath=sse -m32"
+            ;;
+        x86_64)
+            ANDROID_ABI_FLAGS="-target x86_64-none-linux-android -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
+            ;;
+    esac
+
+    ANDROID_AR=${AR:-${ANDROID_TOOLCHAIN}ar}
+    ANDROID_CC=${CC:-${ANDROID_TOOLCHAIN}clang ${ANDROID_ABI_FLAGS} -integrated-as}
+    ANDROID_CXX=${CXX:-${ANDROID_TOOLCHAIN}clang++ ${ANDROID_ABI_FLAGS} -integrated-as}
+    ANDROID_LINK=${LINK:-${ANDROID_TOOLCHAIN}clang++ ${ANDROID_ABI_FLAGS} -integrated-as -fuse-ld=bfd}
+    ANDROID_OBJCOPY=${OBJCOPY:-${ANDROID_TOOLCHAIN}objcopy}
+    ANDROID_OBJDUMP=${OBJDUMP:-${ANDROID_TOOLCHAIN}objdump}
+    ANDROID_STRIP=${STRIP:-${ANDROID_TOOLCHAIN}strip}
+
+    if [ -z "${JAVA_SDK}" ] ; then
+        # Utility used to locate Java on OSX systems
+        if [ -x /usr/libexec/java_home ] ; then
+            ANDROID_JAVA_SDK="$(/usr/libexec/java_home)"
+        elif [ -d /usr/lib/jvm/default ] ; then
+            ANDROID_JAVA_SDK=/usr/lib/jvm/default
+        elif [ -d /usr/lib/jvm/default-java ] ; then
+            ANDROID_JAVA_SDK=/usr/lib/jvm/default-java
+        else
+            echo >&2 "Error: no Java SDK found - set \$JAVA_SDK"
+            exit 1
+        fi
+    else
+        ANDROID_JAVA_SDK="${JAVA_SDK}"
+    fi
+
+fi # End of Android defaults & tools
+
+# Linux cross-compilation
+if [ "${OS}" = "linux" -a "${HOST}" != "${TARGET}" ] ; then
+
+		# Is there a toolchain directory and prefix set?
+		if [ -z "${TARGET_TOOLCHAIN_DIR}" ] ; then
+			TARGET_TOOLCHAIN_DIR="${HOME}/x-tools/${TARGET}/bin"
+		fi
+		if [ -z "${TARGET_TOOLCHAIN_PREFIX}" ] ; then
+			TARGET_TOOLCHAIN_PREFIX="${TARGET}-"
+		fi
+		
+		# Cross-compile root image mount directory
+		if [ -z "${TARGET_ROOT_DIR}" ] ; then
+			TARGET_ROOT_DIR="${HOME}/x-root/${TARGET}"
+		fi
+		
+		export TARGET_TOOLCHAIN="${TARGET_TOOLCHAIN_DIR}/${TARGET_TOOLCHAIN_PREFIX}"
+		
+		export AR=${AR:-${TARGET_TOOLCHAIN}ar}
+		export CC=${CC:-${TARGET_TOOLCHAIN}gcc}
+		export CXX=${CXX:-${TARGET_TOOLCHAIN}g++}
+		export LINK=${LINK:-${TARGET_TOOLCHAIN}g++}
+		export OBJCOPY=${OBJCOPY:-${TARGET_TOOLCHAIN}objcopy}
+		export OBJDUMP=${OBJDUMP:-${TARGET_TOOLCHAIN}objdump}
+		export STRIP=${STRIP:-${TARGET_TOOLCHAIN}strip}
+		
+		# Add the cross-root's libraries to the link path but only *after* the 
+		# toolchain's system libraries. If they end up before these paths,
+		# references to libc.so and ld-linux.so stop working.
+		export LINK="${LINK} -L=/lib -L=/usr/lib -L${TARGET_ROOT_DIR}/usr/lib -L${TARGET_ROOT_DIR}/usr/lib/${TARGET}"
+		
+		linux_extra_args="-Dcross_compile=1"
+		
+fi
+
+# Emscripten default settings and tools
+if test "${OS}" = "emscripten" ; then
+    NODE_JS=${NODE_JS:-node}
+fi
+
+
+################################################################
+# Invoke gyp
+################################################################
+
+format_args="$(for f in ${FORMATS}; do echo --format ${f} ; done)"
+
+if test "${OS}" = "win" ; then
+	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT}"
+else
+	basic_args="${format_args} --depth ${DEPTH} --generator-output ${GENERATOR_OUTPUT} -G default_target=default"
+fi
+
+if [ "${BUILD_EDITION}" == "commercial" ] ; then
+  basic_args="${basic_args} ../livecode-commercial.gyp"
+fi
+
+case ${OS} in
+  linux)
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dhost_os=${HOST_OS}" "-Dtarget_arch=${TARGET_ARCH}" "-Dtarget_abi=${TARGET_ABI}" "-Dhost_abi=${HOST_ABI}" ${linux_extra_args} "$@"
+    ;;
+  emscripten)
+    export NODE_JS
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dhost_os=${HOST_OS}" "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    ;;
+  android)
+    export ANDROID_BUILD_TOOLS
+    export ANDROID_NDK
+    export ANDROID_PLATFORM
+    export ANDROID_SDK
+
+    export JAVA_SDK="${ANDROID_JAVA_SDK}"
+
+    export AR="${ANDROID_AR}"
+    export CC="${ANDROID_CC}"
+    export CXX="${ANDROID_CXX}"
+    export LINK="${ANDROID_LINK}"
+    export OBJCOPY="${ANDROID_OBJCOPY}"
+    export OBJDUMP="${ANDROID_OBJDUMP}"
+    export STRIP="${ANDROID_STRIP}"
+    invoke_gyp $basic_args "-DOS=${OS}" "-Dhost_os=${HOST_OS}" \
+                           "-Dtarget_arch=${TARGET_ARCH}" \
+                           "-Dtarget_abi=${TARGET_ABI}" \
+                           "-Dhost_arch=${HOST_ARCH}" \
+                           "-Dhost_abi=${HOST_ABI}" \
+                           -Dcross_compile=1 \
+                           "-Gandroid_ndk_version=${ANDROID_NDK_VERSION}" "$@"
+    ;;
+  win)
+    invoke_gyp $basic_args "-Gmsvs_version=${WIN_MSVS_VERSION}" \
+                           "-Dunix_configure=1" \
+                           "-Dperl=${WIN_PERL}" "$@"
+    ;;
+  mac|ios)
+    invoke_gyp $basic_args "-DOS=${OS}" \
+                           "-Dtarget_sdk=${TARGET_SDK}" \
+                           "-Dhost_sdk=${HOST_SDK}" \
+                           "-Dtarget_arch=${TARGET_ARCH}" "$@"
+    ;;
+  *)
+    echo "ERROR: Bad configuration for generating project files"
+    exit 1 ;;
+esac
