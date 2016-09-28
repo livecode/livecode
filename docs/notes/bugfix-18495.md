@@ -1,0 +1,1 @@
+# libUrlMultipartFormAddPart allowed for the passing of multiple files separated by commas. The handler failed to work for files that have commas in the name, however. The undocumented behaviour has been removed, you can use libURLMultipartFormAddPart once for each file instead.
