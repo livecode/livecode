@@ -1,0 +1,25 @@
+[
+	{
+		"include": "\\.(?:cpp|c|hpp|h)$",
+		"exclude": "/(thirdparty|prebuilt|libcpptest/googletest)/|(~$)",
+		"lints":
+		[
+			"TextEndsWithNewlineLint"
+		],
+		"interpretation": "text utf-8",
+		"permissive": true
+	},
+
+
+
+	{
+		"include": "/(?:docs|ide)/notes/",
+		"exclude": "~$",
+		"lints":
+		[
+			"ReleaseNoteV1Lint"
+		],
+		"interpretation": "text utf-8",
+		"permissive": false
+	}
+]

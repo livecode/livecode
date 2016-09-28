@@ -52,6 +52,10 @@ include Makefile.common
 
 all: all-$(guess_platform)
 check: check-$(guess_platform)
+lint: lint-$(guess_platform)
+
+lint-common-%:
+	$(MAKE) -C lints bin_dir=../$*-bin
 
 check-common-%:
 	$(MAKE) -C tests bin_dir=../$*-bin
@@ -79,6 +83,8 @@ all-linux-%:
 	$(MAKE) compile-linux-$*
 
 $(addsuffix -linux,all config compile check): %: %-$(guess_linux_arch)
+
+lint-linux: lint-common-linux-$(guess_linux_arch)
 
 ################################################################
 # Android rules
@@ -115,6 +121,7 @@ check-mac:
 	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
 	$(MAKE) check-common-mac
 
+lint-mac: lint-common-mac
 
 all-mac:
 	$(MAKE) config-mac
