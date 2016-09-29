@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2015 LiveCode Ltd.
+   Copyright (C) 2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-system.h"
 #include "em-filehandle.h"
@@ -676,7 +676,7 @@ MCEmscriptenSystem::FileExists(MCStringRef p_path)
 	if (!MCEmscriptenStatPath(p_path, t_stat_buf))
 	{
 		/* If the error is ENOENT, then consume the error; we've
-		 * successfully detected that the file does not exist. */
+		* successfully detected that the file does not exist. */
 		if (errno == ENOENT)
 		{
 			errno = 0;
@@ -695,7 +695,7 @@ MCEmscriptenSystem::FolderExists(MCStringRef p_path)
 	if (!MCEmscriptenStatPath(p_path, t_stat_buf))
 	{
 		/* If the error is ENOENT, then consume the error; we've
-		 * successfully detected that the file does not exist. */
+		* successfully detected that the file does not exist. */
 		if (errno == ENOENT)
 		{
 			errno = 0;
@@ -1119,7 +1119,7 @@ MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 
 void
 MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
-                    MCStringRef p_language)
+                                        MCStringRef p_language)
 {
 	/* Successfully do nothing */
 }

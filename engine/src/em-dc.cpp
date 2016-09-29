@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
@@ -62,8 +62,8 @@ Boolean
 MCScreenDC::open()
 {
 	return
-		MCEmscriptenEventInitialize() &&
-		MCEmscriptenViewInitialize();
+	        MCEmscriptenEventInitialize() &&
+	        MCEmscriptenViewInitialize();
 }
 
 
@@ -277,61 +277,61 @@ extern "C" int32_t MCEmscriptenDialogShowPrompt(const unichar_t* p_message, size
 int32_t
 MCScreenDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking)
 {
-    // Default to returning an unsuccessful result
-    int32_t t_result = -1;
-    
-    // We need to have a UTF-16 string pointer for the message string. The other
-    // parameters are not supported by the JavaScript built-in dialogues.
-    MCAutoStringRefAsUTF16String t_message_u16;
-    t_message_u16.Lock(p_message);
-    
-    switch (p_button_count)
-    {
-		case 0:
-			// If no buttons specified, assume that an "OK" button is fine
-        case 1:
-            // Only one button - treat it as an "OK" button
-            t_result = MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
-            break;
-            
-        case 2:
-            // Two buttons - treat it as an "OK"/"Cancel" button pair
-            t_result = MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size());
-            break;
-            
-        default:
-            // Not supported
-            break;
-    }
-    
-    return t_result;
+	// Default to returning an unsuccessful result
+	int32_t t_result = -1;
+
+	// We need to have a UTF-16 string pointer for the message string. The other
+	// parameters are not supported by the JavaScript built-in dialogues.
+	MCAutoStringRefAsUTF16String t_message_u16;
+	t_message_u16.Lock(p_message);
+
+	switch (p_button_count)
+	{
+	case 0:
+	// If no buttons specified, assume that an "OK" button is fine
+	case 1:
+		// Only one button - treat it as an "OK" button
+		t_result = MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
+		break;
+
+	case 2:
+		// Two buttons - treat it as an "OK"/"Cancel" button pair
+		t_result = MCEmscriptenDialogShowConfirm(t_message_u16.Ptr(), t_message_u16.Size());
+		break;
+
+	default:
+		// Not supported
+		break;
+	}
+
+	return t_result;
 }
 
 bool
 MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
-    MCAutoStringRefAsUTF16String t_message_u16;
-    MCAutoStringRefAsUTF16String t_default_u16;
-    t_message_u16.Lock(p_message);
-    t_default_u16.Lock(p_initial);
-    
-    unichar_t* t_result;
-    size_t t_result_length;
-    if (!MCEmscriptenDialogShowPrompt(t_message_u16.Ptr(), t_message_u16.Size(), t_default_u16.Ptr(), t_default_u16.Size(), &t_result, &t_result_length))
-    {
-        return false;
-    }
-    
-    MCStringCreateWithBytesAndRelease((byte_t*)t_result, t_result_length, kMCStringEncodingUTF16, false, r_result);
-    return true;
+	MCAutoStringRefAsUTF16String t_message_u16;
+	MCAutoStringRefAsUTF16String t_default_u16;
+	t_message_u16.Lock(p_message);
+	t_default_u16.Lock(p_initial);
+
+	unichar_t* t_result;
+	size_t t_result_length;
+	if (!MCEmscriptenDialogShowPrompt(t_message_u16.Ptr(), t_message_u16.Size(), t_default_u16.Ptr(), t_default_u16.Size(), &t_result, &t_result_length))
+	{
+		return false;
+	}
+
+	MCStringCreateWithBytesAndRelease((byte_t*)t_result, t_result_length, kMCStringEncodingUTF16, false, r_result);
+	return true;
 }
 
 
 void
 MCScreenDC::platform_querymouse(int16_t& r_x, int16_t& r_y)
 {
-    // There is no asynchronous mouse position in Emscripten; just whatever the
-    // browser has told us about.
-    r_x = MCmousex;
-    r_y = MCmousey;
+	// There is no asynchronous mouse position in Emscripten; just whatever the
+	// browser has told us about.
+	r_x = MCmousex;
+	r_y = MCmousey;
 }

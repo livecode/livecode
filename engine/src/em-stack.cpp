@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
@@ -122,9 +122,9 @@ MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
 
 	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_valid));
 
-    MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
+	MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
 
-    MCHtmlCanvasStackSurface t_surface(t_rect);
+	MCHtmlCanvasStackSurface t_surface(t_rect);
 	view_surface_redrawwindow(&t_surface, t_region);
 }
 

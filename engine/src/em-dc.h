@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef __MC_EMSCRIPTEN_DC_H__
 #define __MC_EMSCRIPTEN_DC_H__
@@ -34,7 +34,7 @@ extern "C" MCStack *MCEmscriptenGetCurrentStack(void);
 
 /* ---------------------------------------------------------------- */
 
-class MCScreenDC: public MCUIDC
+class MCScreenDC : public MCUIDC
 {
 public:
 	/* ---------- Construction/destruction */
@@ -59,14 +59,14 @@ public:
 
 	/* Get the stack being shown in the default canvas. */
 	MCStack *GetCurrentStack();
-    
-    /* Pops up simple ask/answer dialogues */
-    virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
-    virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 
-    /* Mouse management */
-    virtual void platform_querymouse(int16_t& r_x, int16_t& r_y);
-    
+	/* Pops up simple ask/answer dialogues */
+	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, bool p_blocking);
+	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
+
+	/* Mouse management */
+	virtual void platform_querymouse(int16_t& r_x, int16_t& r_y);
+
 protected:
 	void UpdateFocus();
 	void FitWindow();

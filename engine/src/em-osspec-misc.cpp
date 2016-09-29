@@ -1,20 +1,20 @@
 /*                                                                     -*-c++-*-
 
-Copyright (C) 2003-2015 LiveCode Ltd.
+   Copyright (C) 2003-2015 LiveCode Ltd.
 
-This file is part of LiveCode.
+   This file is part of LiveCode.
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+   LiveCode is free software; you can redistribute it and/or modify it under
+   the terms of the GNU General Public License v3 as published by the Free
+   Software Foundation.
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+   LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+   for more details.
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU General Public License
+   along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
@@ -57,11 +57,11 @@ MCS_put(MCExecContext &ctxt, MCSPutKind p_kind, MCStringRef p_string)
 	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
-		t_success = MCmb -> set(ctxt, p_string);
+		t_success = MCmb->set(ctxt, p_string);
 		break;
 	case kMCSPutAfterMessage:
 		// SN-2014-04-11 [[ FasterVariable ]] parameter updated to use the new 'set' operation on variables
-		t_success = MCmb -> set(ctxt, p_string, kMCVariableSetAfter);
+		t_success = MCmb->set(ctxt, p_string, kMCVariableSetAfter);
 		break;
 	default:
 		t_success = false;
