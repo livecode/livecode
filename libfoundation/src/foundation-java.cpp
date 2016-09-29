@@ -51,7 +51,8 @@ bool __MCJavaInitialize()
     vm_args.options = options;
     vm_args.ignoreUnrecognized = false;
     
-    JNI_CreateJavaVM(&s_jvm, (void **)&s_env, &vm_args);
+    int ret = JNI_CreateJavaVM(&s_jvm, (void **)&s_env, &vm_args);
+    return ret == 0;
 #endif
     return true;
 }
