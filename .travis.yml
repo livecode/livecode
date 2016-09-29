@@ -55,7 +55,7 @@ script: >
       ;;
   esac
 
-  if [[ ! -v COVERITY_SCAN_BRANCH ]]; then
+  if [[ -z "${COVERITY_SCAN_BRANCH}" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
     make all-${BUILD_PLATFORM} &&
