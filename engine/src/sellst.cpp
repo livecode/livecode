@@ -540,12 +540,9 @@ void MCSellist::continuemove(int2 x, int2 y)
 		}
 		if (cptr->moveable())
 		{
-			// IM-2014-09-09: [[ Bug 13222 ]] Use the layer_setrect method to ensure the old
-			// effectiverect is appropriately dirtied when edittools are displayed for a graphic
-			if (cptr->resizeparent())
-				cptr->setrect(trect);
-			else
-				cptr->layer_setrect(trect, false);
+			// IM-2016-09-27: [[ Bug 17779 ]] Change to always calling layer_setrect, which invalidates selection handles if required.
+			cptr->layer_setrect(trect, false);
+			cptr->resizeparent();
 		}
 		tptr = tptr->next();
 	}

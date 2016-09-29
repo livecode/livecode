@@ -1111,25 +1111,16 @@ static void FreeData(void *info, const void *data, size_t size)
 	free(info);
 }
 
-static CGColorSpaceRef OSX_CGColorSpaceCreateWithProfile(const char *p_profile_path)
+static CGColorSpaceRef OSX_CGColorSpaceCreateWithProfile(CFStringRef p_name)
 {
-	OSStatus t_err;
-	t_err = noErr;
-
-	CMProfileLocation t_location;
-	t_location . locType = cmPathBasedProfile;
-	strcpy(t_location . u . pathLoc . path, p_profile_path);
-	
-	CMProfileRef t_profile;
-	t_profile = NULL;
-	
-	t_err = CMOpenProfile(&t_profile, &t_location);
-	if (t_err == noErr)
+	ColorSyncProfileRef t_profile =
+		ColorSyncProfileCreateWithName(p_name);
+	if (t_profile != nil)
 	{
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateWithPlatformColorSpace(t_profile);
 		
-		CMCloseProfile(t_profile);
+		CFRelease(t_profile);
 		
 		return t_colorspace;
 	}
@@ -1142,7 +1133,7 @@ static CGColorSpaceRef OSX_CGColorSpaceCreateGenericGray(void)
 	static CGColorSpaceRef s_colorspace = NULL;
 	if (s_colorspace == NULL)
 	{
-		s_colorspace = OSX_CGColorSpaceCreateWithProfile("/System/Library/ColorSync/Profiles/Generic Gray Profile.icc");
+		s_colorspace = OSX_CGColorSpaceCreateWithProfile(kColorSyncGenericGrayProfile);
 		if (s_colorspace == NULL)
 			s_colorspace = CGColorSpaceCreateDeviceGray();
 	}
@@ -1157,7 +1148,7 @@ CGColorSpaceRef OSX_CGColorSpaceCreateGenericRGB(void)
 	static CGColorSpaceRef s_colorspace = NULL;
 	if (s_colorspace == NULL)
 	{
-		s_colorspace = OSX_CGColorSpaceCreateWithProfile("/System/Library/ColorSync/Profiles/Generic RGB Profile.icc");
+		s_colorspace = OSX_CGColorSpaceCreateWithProfile(kColorSyncGenericRGBProfile);
 		if (s_colorspace == NULL)
 			s_colorspace = CGColorSpaceCreateDeviceRGB();
 	}

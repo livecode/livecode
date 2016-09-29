@@ -5132,8 +5132,13 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 
 bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_replacement, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
+	__MCAssertIsMutableString(self);
 
+	// Ensure the string is not indirect
+	if (__MCStringIsIndirect(self))
+		if (!__MCStringResolveIndirect(self))
+			return false;
+	
 	if (p_options == kMCStringOptionCompareExact || p_options == kMCStringOptionCompareNonliteral)
 	{
 		// Simplest case, just substitute pattern for replacement.
@@ -5157,6 +5162,8 @@ bool MCStringFindAndReplaceChar(MCStringRef self, char_t p_pattern, char_t p_rep
 
 bool MCStringFindAndReplaceNative(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
+	__MCAssertIsMutableString(self);
+	
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
         if (!__MCStringResolveIndirect(self))
@@ -5579,7 +5586,7 @@ MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStrin
 MC_DLLEXPORT_DEF
 bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoint_t p_replacement, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
+	__MCAssertIsMutableString(self);
 
     // Ensure the string is not indirect.
     if (__MCStringIsIndirect(self))
@@ -5635,7 +5642,7 @@ bool MCStringFindAndReplaceChar(MCStringRef self, codepoint_t p_pattern, codepoi
 MC_DLLEXPORT_DEF
 bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef p_replacement, MCStringOptions p_options)
 {
-	__MCAssertIsString(self);
+	__MCAssertIsMutableString(self);
 	__MCAssertIsString(p_pattern);
 	__MCAssertIsString(p_replacement);
 
