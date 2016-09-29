@@ -217,6 +217,11 @@ public:
 	// IM-2013-09-13: [[ RefactorGraphics ]] render the card selection rect
 	void drawselectionrect(MCContext *);
     void drawselectedchildren(MCDC *dc);
+	
+	// IM-2016-09-26: [[ Bug 17247 ]] request redraw of the area occupied by
+	//      selection marquee + handles
+	void dirtyselection(const MCRectangle &p_rect);
+	
     bool updatechildselectedrect(MCRectangle& x_rect);
     
 	Exec_stat openbackgrounds(bool p_is_preopen, MCCard *p_other);

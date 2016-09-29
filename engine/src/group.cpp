@@ -2086,6 +2086,13 @@ bool MCGroup::computeminrect(Boolean scrolling)
 			t_all = true;
 		state = oldstate;
 		
+		// IM-2016-09-27: [[ Bug 17779 ]] redrawselection handles if selected
+		if (getselected())
+		{
+			getcard()->dirtyselection(oldrect);
+			getcard()->dirtyselection(rect);
+		}
+		
 		// IM-2015-12-16: [[ NativeLayer ]] The group rect has changed, so send geometry change notification.
 		geometrychanged(getrect());
 		
@@ -3116,23 +3123,4 @@ void MCGroup::scheduledelete(bool p_is_child)
 		}
 		while(t_control != controls);
 	}
-}
-
-MCRectangle MCGroup::geteffectiverect(void) const
-{
-    MCRectangle t_rect;
-    t_rect = MCControl::geteffectiverect();
-    
-    if (controls != NULL)
-    {
-        MCControl *t_control;
-        t_control = controls;
-        do
-        {   t_rect = MCU_union_rect(t_rect, t_control -> geteffectiverect());
-            t_control = t_control -> next();
-        }
-        while(t_control != controls);
-    }
-    
-    return t_rect;
 }

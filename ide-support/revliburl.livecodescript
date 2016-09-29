@@ -610,19 +610,11 @@ on ulGetFormat pUrl,pCount
       # clear status before resolving hostname
       put empty into laStatus[pUrl]
       
-      ## I.M 2010.03.24  with engine versions < 4.5 calling hostnametoaddress with
-      ## an extra parameter will throw an error, so encase in a try ... catch block
-      ## and call without callback handler
-      try
-         get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
-      catch pError
-         get hostNameToAddress(tResolveHost)
-         if the result is empty then ulHostNameToAddressCallback tResolveHost, it
-      end try
+      get hostNameToAddress(tResolveHost, "ulHostnameToAddressCallback")
       ## I.M. 2010-03-11  Need to check result and handle immediate failure where
       ##  no callback message will be sent
       if the result is not empty then
-         ulHostNameToAddressCallback tResolveHost, empty
+         ulHostNameToAddressCallback tResolveHost, empty, the result
       end if
       
       if laLoadReq[pUrl] is empty or  laAuthRecursCount[pUrl] > 0 then ##dc 170205
@@ -636,7 +628,7 @@ end ulGetFormat
 
 ################################################################################
 
-on ulHostNameToAddressCallback, pHostname, pIP
+on ulHostNameToAddressCallback pHostname, pIP, pOptionalError
    local tURL, tOffset
    local tPre, tHost, tPort, tUser, tPass, tFilename, tURLHost, tURLPort
    local tConnectHost, tBadAddress
@@ -664,7 +656,11 @@ on ulHostNameToAddressCallback, pHostname, pIP
    end if
    
    if tBadAddress then
-      put "invalid host address" into laUrlErrorStatus[tURL]
+      if pOptionalError is not empty then
+         put pOptionalError into laUrlErrorStatus[tURL]
+      else
+         put "invalid host address" into laUrlErrorStatus[tURL]
+      end if
       if laLoadReq[tURL] then
          put "error" into laUrlLoadStatus[tURL]
          delete local laLoadingUrls[tURL]
@@ -712,7 +708,7 @@ on ulHostNameToAddressCallback, pHostname, pIP
       end if
    end if
    
-   ## AL-2013-07-30: [[ Bug 10796 ]]  HTTP "get URL" omits port number from HOST header
+   ## AL-2013-07-30: [[ Bug 10796 ]] HTTP "get URL" omits port number from HOST header
    ## delete this array at the end so that 'get url' can use the port and protocol data.
    subtract 1 from laURLFormat[tURL]["references"]
    if laURLFormat[tURL]["references"] is 0 then
@@ -1306,6 +1302,7 @@ on ulDoProcess x,y
          
          ##normal case
       case laLength[laUrl[x]] is not empty
+      case laStatusCode[laUrl[x]] is "204"  -- When a 204 is returned no data is returned, just the length of the data in the header.
          
          put  laTmpData[laUrl[x]] into tData
          ulStoreData laUrl[x],tData
@@ -3235,6 +3232,12 @@ on socketError x, pErr
       if x is among the lines of keys(laFTPCommandStatus) then ##may be waiting for a server reply
          put pErr into laFTPCommandStatus[x] ##unblock waits
       end if
+      
+      ## Handle cleanup for load url
+      if laLoadReq[laUrl[x]] then
+         ulHttpLateCleanUp x
+      end if
+        
    else if x is among the lines of keys(laControlXDataMap)then##must be ftp passive data socket
       put laControlXDataMap[x] into tControlSocket
       put false into laStatus[laUrl[tControlSocket]] ##unblock waits
