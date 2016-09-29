@@ -33,7 +33,8 @@
 
     'rule' GeneratePackages(List):
         OutputLCBBegin()
-        OutputWrite("module com.livecode.wrapped.java \n\n")
+        OutputWrite("module com.livecode.module.javasupport \n\n")
+        OutputWrite("use com.livecode.foreign\n")
         OutputWrite("use com.livecode.java\n")
         GeneratingPackageIndex <- 1
         GenerateForEachPackage(List)

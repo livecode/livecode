@@ -8,6 +8,42 @@
 	'targets':
 	[
 		{
+			'target_name': 'java-dsl-generate-module',
+			'type': 'none',
+			
+			'dependencies':
+			[
+				'java-dsl-parse',
+			],
+			
+			'actions':
+			[
+				{
+					'action_name': 'java-dsl-generate-support-module',
+					'message': 'Generating java support lcb module',
+					
+					'action':
+					[
+						'<(PRODUCT_DIR)/java-dsl-parse<(EXECUTABLE_SUFFIX)',
+						'--output',
+						'../../extensions/modules/java-support/java-support.lcb',
+						'<@(_inputs)',
+					],
+					
+					'inputs':
+					[
+						'dsl-sources/java.lang.il',
+						'dsl-sources/java.lang.reflect.il',
+					],
+			
+					'outputs':
+					[
+						'../../extensions/modules/java-support/java-support.lcb',
+					],
+				}
+			],
+		},
+		{
 			'target_name': 'java-dsl-parse',
 			'type': 'none',
 			
