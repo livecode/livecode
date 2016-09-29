@@ -4214,15 +4214,50 @@ function ulStripUrl pUrl
 end ulStripUrl
 --------------------------------
 function ul_TraceLocals ##DEBUG ROUTINE, used in development
-  local e,tRetVal,tDoString
+  local e,tRetVal,tDoString,tKeys
   
   repeat for each item e in line 3 of the localNames
     put e & cr after tRetVal
-    put "put keys(" & e & ") & cr after tRetVal" into tDoString
+    put "put the keys of" && e && "into tKeys" into tDoString
+    do tDoString
+    if tKeys is empty then
+       put "put" && e && "& cr after tRetVal" into tDoString
+    else
+       put "put ul_PrintKeys(" & e & ") & cr after tRetVal" into tDoString
+    end if
     do tDoString
   end repeat
   return tRetVal
 end ul_TraceLocals
+--------------------------------
+function ul_PrintKeys @pArray, pDimension
+   local tKeys, tKey, tText
+   
+   if pDimension is empty then put 0 into pDimension
+    
+   put the keys of pArray into tKeys
+   sort tKeys numeric
+     
+   repeat for each line tKey in tKeys
+      if pArray[tKey] is an array then
+         put _printCharXTimes(space, pDimension * 5) & tKey & cr after tText
+         put ul_PrintKeys(pArray[tKey], pDimension + 1) after tText
+      else
+         put _printCharXTimes(space, pDimension * 5) &  tKey & ":" && line 1 of pArray[tKey] & cr after tText
+      end if
+   end repeat
+     
+   return tText
+end ul_PrintKeys
+-------------------------------- 
+private function _printCharXTimes pChar, pTimes
+   local tStr
+     
+   repeat with i = 1 to pTimes
+      put pChar after tStr
+   end repeat
+   return tStr
+end _printCharXTimes
 --------------------------------
 function ulFtpCommand pCommandString, pSocket
   ##executes ftp commands
